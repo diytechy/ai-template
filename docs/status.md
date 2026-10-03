@@ -47,6 +47,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
     assumption has evidence; Status/standing only), and the rest of the
     handoff's "For the owner" list.
 
+  **Do not claim these though the frontier lists them:** WI-667, WI-657, WI-697,
+  WI-684 and WI-688 (and WI-541's remaining parts) wait on the owner or on a
+  person's act; the owner will unblock them in the next session. They stay
+  `queued`, not `deferred`. WI-667's proposed ruling is awaiting signature, and
+  its Context and first Done-when still describe the old evidence design.
+
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
   dispatcher claims nothing until a reviewed commit deletes it, so work is
   taken by a coordinator session, not the loop. The roles hold: Codex Sol builds through the CLI and the coordinator
