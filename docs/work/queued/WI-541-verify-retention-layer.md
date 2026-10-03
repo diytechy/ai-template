@@ -130,3 +130,15 @@ Still owed: real multi-step adjudication occupancy, cache TTLs, replay time. Tho
 two measurements need large contexts; a scaled measurement (20k to 100k) with an
 extrapolation is possible but would not meet the 100k-700k wording without the
 owner's ruling.
+
+### Large-context replay, measured 2026-10-02 (codex-cli 0.157.1, default model, `--sandbox read-only`, low effort)
+
+A 418 KB random-word prompt tokenized to 212,530 input tokens (82% of the 258,400
+window), because random words tokenize badly; the window caps one session below the
+row's 100k-700k wording, so 700k is unreachable on this model. First request: 10 s wall.
+An immediate `codex exec resume` of the same thread: 6 s wall; the second request's
+input was 212,548 tokens of which 212,352 were cached (cumulative `turn.completed`
+usage 425,078 input, 224,768 cached, which is why the exec stream's usage is a running
+total). Cache TTL probes (resume after 6 and then 10 further idle minutes) were started
+in the background; results go in the log fragment if they land. Not done: occupancy on a
+real multi-step adjudication brief through the kit's own session path.
