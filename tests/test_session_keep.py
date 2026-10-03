@@ -881,12 +881,14 @@ def _codex_turn(root, total, cfg=ON, thread=None):
     )
 
 
-def test_codex_prompt_drop_differences_running_totals_and_labels_inference(
-    tmp_path, monkeypatch
-):
-    for total in (15489, 35911, 71822):
+def test_codex_rollout_prompt_drop_labels_inference(tmp_path, monkeypatch):
+    prompts = []
+    for total, prompt in ((15489, 15489), (35911, 20422), (71822, 35911)):
+        prompts.append(prompt)
+        _codex_rollout(tmp_path, prompts)
         out = _codex_turn(tmp_path, total)
         assert out.metrics["compacted"] is False
+    _codex_rollout(tmp_path, prompts + [15717])
     out = _codex_turn(tmp_path, 87539)
     assert out.metrics["compacted"] is True
     assert out.metrics["compaction-source"] == "inferred"
@@ -925,6 +927,7 @@ def test_codex_reported_rollout_compaction_takes_precedence(tmp_path):
 
 def test_codex_kit_reset_discards_prompt_comparison(tmp_path):
     cfg = keep.KeepConfig(context_reset_pct=50, reset_on_same_artifact=True)
+    _codex_rollout(tmp_path, [35911])
     _codex_turn(tmp_path, 35911, cfg)
     out = _codex_turn(tmp_path, 15717, cfg, thread="new-thread")
     assert out.metrics["session-gen"] == 2
@@ -933,7 +936,9 @@ def test_codex_kit_reset_discards_prompt_comparison(tmp_path):
 
 
 def test_codex_equal_prompt_is_not_compaction(tmp_path):
+    _codex_rollout(tmp_path, [10000])
     _codex_turn(tmp_path, 10000)
+    _codex_rollout(tmp_path, [10000, 10000])
     out = _codex_turn(tmp_path, 20000)
     assert out.metrics["compacted"] is False
 
@@ -982,8 +987,87 @@ def test_codex_unrelated_rollout_cannot_report_compaction(tmp_path):
     assert out.metrics["compacted"] is False
 
 
-def test_codex_multiple_exec_totals_compare_latest_request_differences(tmp_path):
+def test_codex_multiple_exec_totals_without_rollout_cannot_infer(tmp_path):
     retained = _keep(tmp_path, ON, family="OPENAI")
     stream = "\n".join(_codex_total(total) for total in (15489, 35911, 71822, 87539))
     out = svc.act(_call(tmp_path, "OPENAI", retained, _launch(stream)))
-    assert out.metrics["compaction-source"] == "inferred"
+    assert out.metrics["compaction-source"] == ""
+
+
+def _codex_rollout(root, prompts):
+    # Inline token_count variants of the live rollout, in request order.
+    retained = _keep(root, ON, family="OPENAI")
+    home = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    with keep.store_lock(root):
+        record = keep.store_load(root, "OPENAI", "OPENAI-ROUTE")
+        if record:
+            record.pop("lease", None)
+            keep.store_save(root, record)
+    home.mkdir(parents=True, exist_ok=True)
+    event = next(
+        json.loads(line)
+        for line in _fixture("codex-rollout.jsonl").splitlines()
+        if json.loads(line).get("payload", {}).get("type") == "token_count"
+    )
+    thread = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[0])["thread_id"]
+    lines = []
+    for prompt in prompts:
+        event["payload"]["info"]["last_token_usage"]["input_tokens"] = prompt
+        lines.append(json.dumps(event))
+    (home / f"rollout-test-{thread}.jsonl").write_text(
+        "\n".join(lines), encoding="utf-8"
+    )
+
+
+def test_codex_multi_request_exec_turn_then_smaller_turn_cannot_infer(tmp_path):
+    _codex_turn(tmp_path, 15154 + 15224)
+    out = _codex_turn(tmp_path, 15154 + 15224 + 15717)
+    assert out.metrics["compacted"] is False
+    assert out.metrics["compaction-source"] == ""
+
+
+@pytest.mark.parametrize("new", [[15717, 18200], [36000, 38000, 40000]])
+def test_codex_scans_every_new_rollout_request_from_stored_baseline(tmp_path, new):
+    _codex_rollout(tmp_path, [35911])
+    _codex_turn(tmp_path, 35911)
+    _codex_rollout(tmp_path, [35911] + new)
+    out = _codex_turn(tmp_path, 35911 + sum(new))
+    assert out.metrics["compacted"] is (new[0] < 35911)
+    assert out.metrics["compaction-source"] == ("inferred" if new[0] < 35911 else "")
+    assert (
+        keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")["request_prompt"] == new[-1]
+    )
+
+
+def test_codex_legacy_rollout_learns_baseline_without_rechecking_old_drop(tmp_path):
+    _codex_turn(tmp_path, 35911)
+    _codex_rollout(tmp_path, [35911, 15717])
+    out = _codex_turn(tmp_path, 51628)
+    assert out.metrics["compacted"] is False
+    record = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")
+    assert record["request_prompt"] == 15717
+    assert record["rollout_requests"] == 2
+    _codex_rollout(tmp_path, [35911, 15717, 18200, 20000])
+    out = _codex_turn(tmp_path, 89828)
+    assert out.metrics["compacted"] is False
+
+
+def test_codex_context_and_compaction_receive_same_ambient_environment(
+    tmp_path, monkeypatch
+):
+    seen = []
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "ambient"))
+    monkeypatch.setattr(svc, "_launch_env", lambda call: None)
+    monkeypatch.setattr(
+        svc.session_adapters.CodexAdapter,
+        "context",
+        lambda self, stream, env, sid: seen.append(env) or (sid, "", "", ""),
+    )
+    monkeypatch.setattr(
+        svc.session_adapters.CodexAdapter,
+        "compaction",
+        lambda self, stream, env, sid: seen.append(env) or {},
+    )
+    _codex_turn(tmp_path, 30378)
+    assert seen[0] is seen[1]
+    assert seen[1]["CODEX_HOME"] == str(tmp_path / "ambient")

@@ -473,8 +473,9 @@ class CodexAdapter(PlainAdapter):
         """The usage record of a codex `exec --json` call.
 
         Source: the LAST event carrying a `usage` object (`turn.completed`).
-        codex counts cached input INSIDE `input_tokens`, so its fresh part is
-        `input_tokens - cached_input_tokens - cache_write_input_tokens`.
+        Cached input is inside `input_tokens`; cache writes are taken as
+        included too, as the usage shape implies (not yet verified live).
+        Fresh is input less cache read and write, clamped at zero.
         Cache write stays blank when absent; no response model is reported.
         Its turn usage is cumulative over the thread, which is one call for a
         fresh session (scope `thread`).
@@ -493,7 +494,11 @@ class CodexAdapter(PlainAdapter):
         return usage_record(
             self.cli,
             self.provider,
-            fresh=None if total is None else total - (cached or 0) - (written or 0),
+            fresh=(
+                None
+                if total is None
+                else max(0, total - (cached or 0) - (written or 0))
+            ),
             cache_read=cached,
             cache_write=written,
             output=_count(usage.get("output_tokens")),

@@ -680,7 +680,7 @@ def test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header(
     assert "[REDACTED]" in header and "# raw-usage: [" in header
 
 
-@pytest.mark.parametrize("write", [None, 117])
+@pytest.mark.parametrize("write", [None, 117, 4000])
 def test_codex_cache_write_present_or_absent_inline_recording_variant(write):
     # Inline variants of the live line; the recording has only a reported zero.
     event = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[-1])
@@ -691,5 +691,5 @@ def test_codex_cache_write_present_or_absent_inline_recording_variant(write):
     assert usage["gen_ai.usage.cache_write.input_tokens"] == (
         "" if write is None else write
     )
-    assert usage["gen_ai.usage.input_tokens"] == 30378
-    assert usage["fresh-input-tokens"] == 30378 - 27392 - (write or 0)
+    assert usage["gen_ai.usage.input_tokens"] == max(30378, 27392 + (write or 0))
+    assert usage["fresh-input-tokens"] == max(0, 30378 - 27392 - (write or 0))

@@ -717,27 +717,26 @@ def keep_bookkeep(
 
 
 def _observe_compaction(record, observation, fresh):
-    """Remember compaction within this session only. Rollout prompts are
-    per request; exec prompts must be differenced from running totals. A
-    resumed legacy record without a baseline learns it before inferring.
+    """Infer only from new rollout requests, never exec turn sums. The
+    cursor excludes old requests; a legacy record first learns a baseline.
 
     Implements: SR-227, LLR-290
     """
     if not observation:
         return {}
     prompts = observation["prompts"]
-    previous = record.get("request_prompt")
-    total = 0 if fresh else record.get("input_total")
-    derived = []
-    for current in observation["totals"]:
-        if total is not None and current >= total:
-            derived.append(current - total)
-        total = current
-    record["input_total"] = total if observation["totals"] else None
-    requests = prompts or derived
-    pair = ([previous] if previous is not None and not prompts else []) + requests
-    inferred = len(pair) >= 2 and pair[-1] < pair[-2]
-    record["request_prompt"] = requests[-1] if requests else None
+    cursor = record.get("rollout_requests")
+    previous = record.get("request_prompt") if cursor is not None else None
+    requests = prompts[(cursor or 0) :] if fresh or cursor is not None else []
+    pair = ([previous] if previous is not None else []) + requests
+    inferred = any(current < prior for prior, current in zip(pair, pair[1:]))
+    if prompts:
+        record["request_prompt"] = prompts[-1]
+        record["rollout_requests"] = len(prompts)
+    else:
+        record.setdefault("request_prompt", None)
+    if observation["totals"]:
+        record["input_total"] = observation["totals"][-1]
     source = record.get("compaction_source", "")
     if observation["reported"]:
         source = "reported"

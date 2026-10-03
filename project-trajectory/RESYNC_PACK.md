@@ -6588,13 +6588,16 @@ reader compatibility can be retired; do not introduce new OI `needs` edges.
 *(Anchored at the preceding commit: the change lands in the commit after it.)*
 
 **What changed.** Codex usage reads `cache_write_input_tokens` when present,
-including zero, keeping inclusive input unchanged and subtracting cache writes
-from fresh input. Retained codex session records and logs carry `compacted`
+including zero. Cache writes are taken as included in input, as the usage
+shape implies but not yet verified live; fresh input subtracts both cache
+counts and is clamped at zero. Retained codex session records and logs carry `compacted`
 and its source (`compaction_source` in the store, `compaction-source` in logs):
 `reported` for a rollout `compacted` entry, otherwise `inferred` for a drop in
-the latest request prompt. Exec running totals are differenced within a session;
-a kit reset clears the comparison. Existing records learn a missing baseline
-before inferring. Other runners carry no compaction observation.
+any consecutive new rollout request prompt, starting from the stored prompt.
+A rollout request cursor excludes old requests. Exec turn totals never drive
+inference; without a readable rollout no new inference is recorded. A kit
+reset clears the comparison. Existing records without a rollout cursor learn
+the latest prompt and cursor before inferring. Other runners carry no compaction observation.
 
 **What to do.** Copy the updated `session_adapters.py`, `session_keep.py`,
 `session_service.py` and `agent_common.py`. Existing retained records need no
