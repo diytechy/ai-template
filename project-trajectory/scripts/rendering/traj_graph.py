@@ -659,6 +659,21 @@ def orthogonal_route(d, obstacles=()):
     )
 
 
+def _column_channels(edges, gap, side):
+    """Order each column's turns by its port heights, with opposing fans apart."""
+    channels, groups = {}, {}
+    for edge in edges:
+        groups.setdefault(edge[side], []).append(edge)
+    for group in groups.values():
+        for index, edge in enumerate(
+            sorted(group, key=lambda e: (e[2] if side == 1 else -e[4], e[0]))
+        ):
+            channels[edge[0], side] = gap * (
+                (1.05 if side == 1 else 0.2) + 0.25 * (index + 1) / (len(group) + 1)
+            )
+    return channels
+
+
 def _wire_channels(edges, gap, end_trim):
     """Allocate turns per column, rather than per port, and reserve their stubs.
 
@@ -667,18 +682,7 @@ def _wire_channels(edges, gap, end_trim):
     half-gap (clearing sibling fans), arrivals in the final quarter. Distinct
     columns and opposing fans therefore cannot claim the same vertical channel.
     """
-    channels = {}
-    for side in (1, 3):
-        groups = {}
-        for edge in edges:
-            groups.setdefault(edge[side], []).append(edge)
-        for group in groups.values():
-            for index, edge in enumerate(
-                sorted(group, key=lambda e: (e[2] if side == 1 else -e[4], e[0]))
-            ):
-                channels[edge[0], side] = gap * (
-                    (1.05 if side == 1 else 0.2) + 0.25 * (index + 1) / (len(group) + 1)
-                )
+    channels = _column_channels(edges, gap, 1) | _column_channels(edges, gap, 3)
     terminals = {
         e[0]: (
             (e[1], e[1] + channels[e[0], 1] / 2, e[2]),
@@ -687,6 +691,56 @@ def _wire_channels(edges, gap, end_trim):
         for e in edges
     }
     return channels, terminals
+
+
+def _occupied_lanes(taken, terminals, key, fan_terminals):
+    """Reserve other edges' terminal runs, including edges not yet routed."""
+    if not fan_terminals:
+        return taken
+    return taken + [
+        run for other, runs in terminals.items() if other != key for run in runs
+    ]
+
+
+def _arrival_lane(rt, y1, y2, fan_terminals, backward):
+    """A lower forward fan approaches from below to preserve connector order."""
+    if fan_terminals and not backward and rt and y2 > y1:
+        return rt[1] + rt[3] + _WIRE_CLEAR + 0.1
+    return None
+
+
+def _gap_route(xs, sy, y1, xt, ty, y2, start_reach, end_reach, occupied):
+    """Use separated turns in a box-free adjacent gap, clearing reserved runs."""
+    xa, xb = xs + start_reach, xt - end_reach
+    pref = (y1 + y2) / 2
+    blocked = [
+        (y - _LANE_SEP, y + _LANE_SEP)
+        for a, b, y in occupied
+        if min(xs, xt, xa, xb) <= b and max(xs, xt, xa, xb) >= a
+    ]
+    reach = 40 + len(occupied) * _LANE_SEP
+    lane = _lane_candidates(pref, blocked, pref - reach, pref + reach)[0]
+    return _detour_str(xs, sy, y1, xa, xb, xt, ty, y2, lane)
+
+
+def _reserve_route(taken, d, x1, xe, fan_terminals):
+    """Claim the middle lane and, for explicit ports, its full terminal span."""
+    seg = _lane_seg(d)
+    if seg is not None:
+        taken.append(
+            (min(x1, xe, seg[0]), max(x1, xe, seg[1]), seg[2]) if fan_terminals else seg
+        )
+
+
+def _detour_obstacles(obstacles, rs, rt, backward):
+    """Backward routes must clear their own boxes, except the source port edge."""
+    span = list(obstacles)
+    if backward:
+        if rs:
+            span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))
+        if rt:
+            span.append(rt)
+    return span
 
 
 def _route_edges(
@@ -769,13 +823,7 @@ def _route_edges(
     for key, x1, y1, x2, y2, src, tgt in sorted(
         edges, key=lambda e: (abs(e[3] - e[1]) if fan_terminals else 0, e[0])
     ):
-        occupied = taken
-        if fan_terminals:
-            # Reserve terminal runs before any middle lane is chosen, including
-            # future edges: a middle lane must not continue another port's stub.
-            occupied = taken + [
-                run for other, runs in terminals.items() if other != key for run in runs
-            ]
+        occupied = _occupied_lanes(taken, terminals, key, fan_terminals)
         xe = x2 - end_trim
         rs, rt = rects_by_id.get(src), rects_by_id.get(tgt)
         sy = y1 if fan_terminals else (rs[1] + rs[3] / 2 if rs else y1)
@@ -800,12 +848,7 @@ def _route_edges(
         if fan_terminals or _polyline_hits(direct, infl) or backward:
             start_reach = channels[key, 1]
             end_reach = channels[key, 3] - 2 * end_trim
-            span = list(obstacles)
-            if backward:  # route the lane around its own endpoint boxes too
-                if rs:
-                    span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))  # trim port edge
-                if rt:
-                    span.append(rt)
+            span = _detour_obstacles(obstacles, rs, rt, backward)
             d = _detour_d(
                 xs,
                 sy_r,
@@ -814,13 +857,7 @@ def _route_edges(
                 ty_r,
                 y2,
                 span,
-                # A forward fan arriving lower must approach from below, keeping
-                # nested routes in the same order as their input connectors.
-                lane_pref=(
-                    rt[1] + rt[3] + _WIRE_CLEAR + 0.1
-                    if fan_terminals and not backward and rt and y2 > y1
-                    else None
-                ),
+                lane_pref=_arrival_lane(rt, y1, y2, fan_terminals, backward),
                 stub=start_reach if fan_terminals else stub,
                 taken=occupied,
                 # The target stops short for its arrowhead; compensate that trim
@@ -828,31 +865,13 @@ def _route_edges(
                 end_stub=end_reach if fan_terminals else stub,
             )
         if d is None and fan_terminals:
-            # An adjacent-column gap has no intervening box. Use the same
-            # separated turns as detours, rather than one midpoint vertical
-            # joining another edge's arrival/departure on a shared row.
-            xa, xb = xs + start_reach, xt - end_reach
-            pref = (y1 + y2) / 2
-            blocked = [
-                (y - _LANE_SEP, y + _LANE_SEP)
-                for a, b, y in occupied
-                if min(xs, xt, xa, xb) <= b and max(xs, xt, xa, xb) >= a
-            ]
-            reach = 40 + len(occupied) * _LANE_SEP
-            lane = _lane_candidates(pref, blocked, pref - reach, pref + reach)[0]
-            d = _detour_str(xs, sy_r, y1, xa, xb, xt, ty_r, y2, lane)
+            d = _gap_route(xs, sy_r, y1, xt, ty_r, y2, start_reach, end_reach, occupied)
         if d is None:
             d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
                 xs, sy_r, xs + dx, y1, xt - dx, y2, xt, ty_r
             )
         d = _spliced_harness(d, lead, tail, (x1, sy, xs, y1), (xt, y2, xe, ty))
-        seg = _lane_seg(d)
-        if seg is not None:
-            taken.append(
-                (min(x1, xe, seg[0]), max(x1, xe, seg[1]), seg[2])
-                if fan_terminals
-                else seg
-            )
+        _reserve_route(taken, d, x1, xe, fan_terminals)
         out[key] = d
     return out
 
