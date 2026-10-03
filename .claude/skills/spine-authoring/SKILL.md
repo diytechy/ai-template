@@ -185,7 +185,7 @@ Questions:
   deriving lens — the hat, the design
   constraint, the implementation fact — and (iii) fed back upward so the
   need owner sees it. Name the deriving hat in **`Hat-Refs`** (roster names; the
-  cell IS the perspective record, and a name the roster does not declare is a
+  cell IS the row's perspective record, and a name the roster does not declare is a
   finding) and argue it in `Rationale`. A prose label alone is not the record: it
   resolves against nothing, so nothing can tell a retired hat from a live one.
   **Never silently trace a derived row to a
@@ -224,6 +224,16 @@ Questions:
   - **Which tiers carry it:** `SR` and `LLR` only. `SN` states the need a hat is
     a lens *on*, and `TC` records how a claim is checked; neither is a place an
     obligation is attributed, and neither schema declares the key.
+- **(c3) Leave the decomposition's perspective record beside it, and review
+  from it.** `Hat-Refs` cannot say that a perspective was weighed and found
+  nothing. The decomposing session runs `python scripts/hats.py record
+  <record-stem>.perspectives.toml --row <id> ...` next to its decomposition
+  record. That derives which hats applied and what each produced (own
+  `Hat-Refs`), and the session writes a one-line `no_finding` for each applicable
+  hat that produced nothing. As adjudicator, read that file, not the authoring
+  transcript, and run `record <file> --check`. MISSING, STALE or CONFLICT goes
+  back for a fix. Whether each no-finding is adequate is your judgement; the
+  check only proves that every applicable hat has an answer.
 - **(d) The advisories are detectors, not caps.** `scripts/trace.py` warns —
   never gates — on (i) an SR `Requirement` naming a concrete `.py` artifact,
   (ii) two SRs naming the same artifact token, (iii) an SN `acceptance` naming a

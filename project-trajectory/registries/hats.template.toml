@@ -77,11 +77,11 @@
 # composer proceeds without hats; leave it here broken and the composer
 # refuses loudly rather than quietly decomposing with no perspective at all.
 #
-# WHAT IS NOT BUILT YET (stated so its absence is not mistaken for coverage):
-# SN-036 also requires a per-decomposition RECORD of which hats were applied
-# and what each produced. Injection is the half that changes what decompositions
-# produce; the record only proves it happened, and it is a later artifact class.
-# Nothing gates on a hat today.
+# THE PER-DECOMPOSITION RECORD (SN-036's other half): `hats.py record` writes,
+# beside a decomposition, which hats applied and, for each that did, the rows it
+# produced or an explicit no-finding, and reports an applicable hat with
+# nothing recorded. Nothing gates on a hat today: that report, like the audit,
+# is warn-first.
 #
 # THREE KINDS OF SILENCE, DISTINGUISHED. A silent hat is one no row in your
 # registries can wake. There are exactly three reasons for that, and you must

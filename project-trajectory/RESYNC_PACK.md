@@ -6745,6 +6745,27 @@ approved case still owes a re-attest, as before.
 (keeping any contract header you added above it) and re-sync
 `scripts/acceptance_record.py`. No registry cell changes.
 
+### The per-decomposition perspective record [since 9702ca46]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/hats.py` gains a `record` subcommand. It writes a
+`<stem>.perspectives.toml` beside a decomposition's own record. The file lists
+which declared hats applied (each hat's `applies_when` over the parent needs),
+the scoped rows each produced (their own `Hat-Refs`), and an authored one-line
+`no_finding` for each applicable hat that produced nothing. `record <file>
+--check` reports MISSING (an applicable hat with neither), STALE and CONFLICT.
+It is warn-first: `--strict` exits 1, and no gate looks for these files. The
+`spine-authoring` skill (c3) and PROCESS.md §1 tell the decomposing session to
+write the record and the adjudicator to review from it. The shipped
+`hats.template.toml` header no longer says the record is unbuilt.
+
+**What to do.** Re-sync `scripts/hats.py`, `skills/spine-authoring/` and
+`PROCESS.md`. No migration: records are opt-in per decomposition, no existing
+file changes shape, and nothing gates on one. Your preserved
+`docs/requirements/hats.toml` keeps its old "not built yet" header comment.
+That comment is now stale, so edit it when you next touch the roster.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

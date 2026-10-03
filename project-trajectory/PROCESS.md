@@ -81,7 +81,11 @@ a **derived** SR naming the deriving hat in `Hat-Refs` — the SR/LLR cell listi
 by roster name, the perspectives a row is attributable to (an undeclared name is
 a finding; a blank means *not recorded*, never *none applied*). An LLR lists only
 what its own decomposition raised; the EFFECTIVE set derives as own + parents',
-so re-ruling one SR corrects no child cell. A domain
+so re-ruling one SR corrects no child cell. Each decomposition also leaves a
+perspective record beside it (`scripts/hats.py record`): which hats applied,
+and for each one the rows it produced or an explicit no-finding. An applicable
+hat with neither is reported, warn-first, and the independent review reads that
+record rather than the authoring transcript. A domain
 hat owns the `SR`/`LLR` rows in its area (identify them by the LLR `Module`
 or its component id) and brings its own release-checklist items.
 The SR `Aspect` tag is **not** that grouping: it is an optional, closed-vocabulary

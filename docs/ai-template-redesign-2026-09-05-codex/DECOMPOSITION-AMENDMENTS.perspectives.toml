@@ -1,0 +1,102 @@
+# PERSPECTIVE RECORD (SR-161) for one decomposition, written by
+# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a
+# person authors: subject, rows, tags, recorded_by, recorded_on, and each
+# perspective's no_finding. Comments are not kept.
+#   applicable = false                -> the roster predicate did not reach it
+#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)
+#   applicable = true, produced = []   -> considered: no_finding says why
+# Check: `hats.py record <this file> --check`.
+
+[decomposition]
+subject = "docs/ai-template-redesign-2026-09-05-codex/DECOMPOSITION-AMENDMENTS.md#implementation-review-subject-2026-09-06"
+rows = ["SR-184", "SR-185", "SR-186", "TC-209", "TC-210", "TC-211"]
+parents = ["SN-012", "SN-024", "SN-037"]
+recorded_by = "WI-688 builder (Claude Opus 5.5), retro-recorded 2026-10-03 from the decomposition record's own text; not the original authoring session"
+recorded_on = "2026-10-03"
+
+[perspective.SECURITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "No row spends a secret or credential or adds an irreversible action: SR-184/185/186 require review records (Critique provenance, a counterpart decision, a stopping decision), and approval and Status changes stay with the existing tier authority (Review and sequencing)."
+
+[perspective.FIRST-RUN-ADOPTER]
+applicable = true
+applies_when = "tags contains \"scripts\" or tags contains \"templates\" or tags contains \"process\""
+produced = []
+no_finding = "Reached through SN-012's process tag. SR-186 adds no row-count cap, quota, schema, form or machine gate (its rationale; disposition B6), and SR-184/185 reuse the existing Critique and review carriers (Implementation review subject: no new schema, gate or required LLR layer), so no adopter needs undocumented knowledge and no supported caller, preserved content or unfinished work is affected."
+
+[perspective.UNATTENDED-OPS]
+applicable = false
+applies_when = "tags contains \"unattended\" or tags contains \"loop\""
+produced = []
+
+[perspective.CROSS-PLATFORM]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"launcher\" or tags contains \"shell\""
+produced = []
+
+[perspective.MAINTAINER]
+applicable = true
+applies_when = "always"
+produced = ["SR-185", "SR-186"]
+
+[perspective.TEST-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = ["SR-184", "SR-185"]
+
+[perspective.UX-DESIGNER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "No row adds or changes a rendered surface; the obligations are the content of review records read as documents."
+
+[perspective.UX-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "No generated view changes. The one rendering-adjacent subject (H3/P9R) keeps its command, its exit 0/1 and its status writer, as the Implementation review subject records, so there is nothing new to verify rendered."
+
+[perspective.SAFETY]
+applicable = false
+applies_when = "tags contains \"safety\""
+produced = []
+
+[perspective.LEGAL]
+applicable = false
+applies_when = "tags contains \"legal\""
+produced = []
+
+[perspective.DATA-PROTECTION]
+applicable = false
+applies_when = "tags contains \"personal-data\""
+produced = []
+
+[perspective.ACCESSIBILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "No user-facing surface or interaction is introduced; the obligations concern what a review record contains."
+
+[perspective.PERFORMANCE]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "No bound is needed: the obligations add content to existing review records and introduce no new session, model call, runtime path or count sensor (disposition B6; H5's no new review session), so no speed, size, provider-usage or operator-time risk arises beyond the reviews already held."
+
+[perspective.CONSISTENCY]
+applicable = true
+applies_when = "always"
+produced = ["SR-185"]
+
+[perspective.INTEGRITY-RECOVERABILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "No new durable artifact is updated in place and no claim or reservation is introduced; the records are reviewed documents committed through the ordinary commit path."
+
+[perspective.PRODUCT-FITNESS]
+applicable = true
+applies_when = "always"
+produced = ["SR-184", "SR-186"]

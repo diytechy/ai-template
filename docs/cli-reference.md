@@ -448,6 +448,13 @@ _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to
 | `--kind` | the decomposition's declared kind |
 | `--tag` | a declared tag (repeatable) |
 | `--strict` | exit nonzero on the MECHANICAL findings only (a need tag no clause can evaluate); the judgement prompts never fail |
+| `path` |  |
+| `--row` | a scoped SR/LLR/TC id (repeatable) |
+| `--tag` | an extra declared tag (repeatable) |
+| `--subject` | the decomposition record it describes |
+| `--by` | who recorded the authored judgements |
+| `--check` | check only; write nothing |
+| `--strict` | exit nonzero on any finding |
 
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._

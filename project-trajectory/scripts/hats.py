@@ -11,11 +11,12 @@ prose and column headers and had NO mechanical existence at all: nothing put a
 perspective to a decomposition, and nothing could say whether one had ever been
 applied. The roster (`docs/requirements/hats.toml`) declares the perspectives;
 this module decides which of them a given decomposition must face; the brief
-composer embeds their questions. That is the INJECTION half. The per-decomposition
-RECORD half of SN-036's acceptance — which hats were applied and what each
-produced — is DELIBERATELY NOT BUILT HERE: injection alone already changes what
-a decomposition produces, while a record built first would be a form to fill in
-with nothing behind it (OI-19's sequencing). Nothing gates on a hat today.
+composer embeds their questions. That is the INJECTION half, built first because
+injection alone changes what a decomposition produces (OI-19's sequencing). The
+per-decomposition RECORD half (SR-161, LLR-297) followed it: `record` writes,
+beside a decomposition, which hats applied and what each produced, and reports
+an applicable hat with nothing recorded. See "the per-decomposition perspective
+record" below. Nothing gates on a hat today: every report here is warn-first.
 
 ABSENT IS OPT-OUT, MALFORMED IS A REFUSAL. An adopter who deletes the roster
 gets composers that proceed without hats — the roster is a layer, not a floor.
@@ -66,6 +67,9 @@ Usage (the CLI is a documentation aid; the module is library-first):
     python scripts/hats.py [--root .] list
     python scripts/hats.py [--root .] applicable [--scope S] [--kind K] [--tag T]...
     python scripts/hats.py [--root .] audit [--strict]
+    python scripts/hats.py [--root .] record PATH [--row ID]... [--tag T]...
+                                              [--subject S] [--by WHO] [--strict]
+    python scripts/hats.py [--root .] record PATH --check [--strict]
 
 (`--root` is the shared option and precedes the subcommand — it was written the
 other way round here until the `audit` command was added and the usage line was
@@ -75,6 +79,7 @@ run.)
 from __future__ import annotations
 
 import argparse
+import datetime
 import difflib
 import re
 import sys
@@ -84,6 +89,8 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from kitlib.observation import write_atomic
+from kitlib.spine import toml_fields, toml_string
 
 # Sibling: the spine's registry CARRIER (the check_need_form.py idiom). The
 # `audit` subcommand reads the STAKEHOLDER-NEED tier, and that tier's vocabulary
@@ -838,6 +845,362 @@ def _audit_lines(root):
     return lines, len(findings)
 
 
+# --- the per-decomposition perspective record (SR-161) ------------------------
+# WHY THIS EXISTS. `Hat-Refs` (LLR-183) records which perspectives a ROW is
+# attributable to. That cannot say what SR-161 asks about a DECOMPOSITION:
+# which declared perspectives applied to it, and, for each one that applied,
+# the requirements it produced or an explicit no-finding. "Did not apply" and
+# "applied, found nothing" are facts about the decomposition, so they live in
+# one file beside the decomposition's own record, `<stem>.perspectives.toml`.
+#
+# WHAT IS DERIVED AND WHAT IS AUTHORED. Applicability is the roster's own
+# predicate evaluated per parent need (never merged across sibling needs, the
+# rule the planner brief follows). `produced` is the in-scope rows whose OWN
+# `Hat-Refs` name the hat, which is LLR-183's "raised at this decomposition"
+# reading. Both are regenerated on every write. The one judgement a person
+# writes is `no_finding`, and a rewrite keeps it, along with the scope fields
+# (`subject`, `rows`, `tags`, `recorded_by`, `recorded_on`).
+#
+# WHY IT IS HERE AND NOT IN trace.py. Applicability needs the `applies_when`
+# grammar, and this module is its one home; trace.py may not import this one
+# (see trace.load_hat_names). WARN-FIRST, like `audit`: a check that gated
+# would red every adopter's older decompositions the day a hat was added.
+
+# The record's file-name suffix, beside the decomposition record it describes.
+RECORD_SUFFIX = ".perspectives.toml"
+
+# The spine rows a record may scope: (registry, id column), read via the carrier.
+SPINE_ROWS = (
+    ("docs/requirements/system-requirements.toml", "SR-ID"),
+    ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
+    ("docs/test/test-cases.toml", "TC-ID"),
+)
+
+# The [decomposition] keys, in written order; `parents` is derived.
+DECOMPOSITION_KEYS = (
+    "subject",
+    "rows",
+    "tags",
+    "parents",
+    "recorded_by",
+    "recorded_on",
+)
+_LIST_KEYS = ("rows", "tags", "parents")
+
+# The [perspective.<HAT>] keys, in written order; only `no_finding` is authored.
+PERSPECTIVE_KEYS = ("applicable", "applies_when", "produced", "no_finding")
+DERIVED_KEYS = ("applicable", "applies_when", "produced")
+
+RECORD_HEADER = (
+    "# PERSPECTIVE RECORD (SR-161) for one decomposition, written by\n"
+    "# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a\n"
+    "# person authors: subject, rows, tags, recorded_by, recorded_on, and each\n"
+    "# perspective's no_finding. Comments are not kept.\n"
+    "#   applicable = false                -> the roster predicate did not reach it\n"
+    "#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)\n"
+    "#   applicable = true, produced = []   -> considered: no_finding says why\n"
+    "# Check: `hats.py record <this file> --check`.\n\n"
+)
+
+_BARE_KEY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def _is_str_list(value):
+    return isinstance(value, list) and all(
+        isinstance(v, str) and v.strip() for v in value
+    )
+
+
+def _record_shape_errors(decomposition, perspectives):
+    """Each way a parsed record is not a record, as text (empty when sound)."""
+    errors = [
+        "unknown [decomposition] key `{}`".format(k)
+        for k in decomposition
+        if k not in DECOMPOSITION_KEYS
+    ]
+    errors += [
+        "`{}` must be a list of non-empty strings".format(k)
+        for k in _LIST_KEYS
+        if k in decomposition and not _is_str_list(decomposition[k])
+    ]
+    for name, entry in perspectives.items():
+        if not isinstance(entry, dict):
+            errors.append("[perspective.{}] is not a table".format(name))
+            continue
+        errors += [
+            "[perspective.{}] has unknown key `{}`".format(name, k)
+            for k in entry
+            if k not in PERSPECTIVE_KEYS
+        ]
+        note = entry.get("no_finding")
+        if note is not None and not (isinstance(note, str) and note.strip()):
+            errors.append(
+                "[perspective.{}] `no_finding` must be a reason, not empty".format(name)
+            )
+    return errors
+
+
+def read_record(path):
+    """`(decomposition, perspectives)` from a record file, or `({}, {})` when
+    there is none yet. A file that exists and is not a record raises
+    `HatsError`, for the roster's reason: a broken record read as an empty one
+    would report a decomposition as having faced nothing.
+
+    Implements: SR-161, LLR-297"""
+    path = Path(path)
+    if not path.exists():
+        return {}, {}
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        raise HatsError("{}: not a readable record ({})".format(path, exc)) from exc
+    decomposition = data.get("decomposition", {})
+    perspectives = data.get("perspective", {})
+    errors = [
+        "unknown top-level table `{}`".format(k)
+        for k in data
+        if k not in ("decomposition", "perspective")
+    ]
+    if not isinstance(decomposition, dict) or not isinstance(perspectives, dict):
+        errors.append("[decomposition] and [perspective.*] must be tables")
+    else:
+        errors += _record_shape_errors(decomposition, perspectives)
+    if errors:
+        raise HatsError("{}: {}".format(path, "; ".join(errors)))
+    return decomposition, perspectives
+
+
+def _spine_index(root):
+    """`{id: row}` over the SR, LLR and TC registries, examples excluded."""
+    index = {}
+    for rel, id_col in SPINE_ROWS:
+        for row in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+            index[str(row.get(id_col) or "")] = row
+    return index
+
+
+def _parent_srs(rid, index):
+    """The SR ids a scoped row hangs from: itself for an SR; an LLR's SR-Refs;
+    a TC's verified SRs, and the SR-Refs of a verified LLR. A dangling ref
+    contributes nothing: parentage is trace.py's finding, not this record's."""
+    row = index[rid]
+    if "SR-ID" in row:
+        return [rid]
+    out = []
+    for ref in _as_tags(row.get("SR-Refs")) + _as_tags(row.get("Verifies")):
+        target = index.get(ref) or {}
+        out += [ref] if "SR-ID" in target else _as_tags(target.get("SR-Refs"))
+    return out
+
+
+def _parent_needs(rows, index):
+    """The sorted SN ids the scoped rows reach through their SR parents."""
+    srs = {sr for rid in rows for sr in _parent_srs(rid, index)}
+    needs = {sn for sr in srs for sn in _as_tags((index.get(sr) or {}).get("SN-Refs"))}
+    return sorted(needs)
+
+
+def _with_tags(context, tags):
+    merged = list(dict.fromkeys([*context.get("tags", []), *tags]))
+    if merged:
+        context["tags"] = merged
+    return context
+
+
+def _record_contexts(root, parents, tags):
+    """One decomposition context per parent need, each widened by the record's
+    declared `tags`; a single tags-only context when the rows reach no need."""
+    if not parents:
+        return [_with_tags({}, tags)]
+    needs = {
+        str(n.get("id") or ""): n
+        for n in spine_carrier.load_needs(Path(root) / NEEDS_REL)
+    }
+    missing = [p for p in parents if p not in needs]
+    if missing:
+        raise HatsError(
+            "record parents name undeclared need(s) {}".format(", ".join(missing))
+        )
+    return [_with_tags(context_from_need(needs[p]), tags) for p in parents]
+
+
+def derive_record(root, rows, tags=()):
+    """`(parents, perspectives)`: the derived half of a record for the scoped
+    `rows`. Each perspective is `{applicable, applies_when, produced}` in roster
+    order; `{}` when the roster is absent (the layer's opt-out). A scoped id no
+    registry declares raises `HatsError`.
+
+    Implements: SR-161, LLR-297"""
+    index = _spine_index(root)
+    unknown = [r for r in rows if r not in index]
+    if unknown:
+        raise HatsError("record scopes unknown row id(s) {}".format(", ".join(unknown)))
+    parents = _parent_needs(rows, index)
+    roster = load(root)
+    if not roster:
+        return parents, {}
+    contexts = _record_contexts(root, parents, tags)
+    perspectives = {}
+    for hat in roster:
+        perspectives[hat["name"]] = {
+            "applicable": any(evaluate(hat["condition"], c) for c in contexts),
+            "applies_when": hat["applies_when"],
+            "produced": [
+                r for r in rows if hat["name"] in _as_tags(index[r].get("Hat-Refs"))
+            ],
+        }
+    return parents, perspectives
+
+
+def render_record(decomposition, perspectives):
+    """The record file's text: the header, `[decomposition]`, then one
+    `[perspective.<HAT>]` per entry, keys in their declared order.
+
+    Implements: SR-161, LLR-297"""
+    parts = [RECORD_HEADER, "[decomposition]\n"]
+    parts.append(
+        toml_fields(
+            (k, decomposition[k]) for k in DECOMPOSITION_KEYS if k in decomposition
+        )
+    )
+    for name, entry in perspectives.items():
+        key = name if _BARE_KEY_RE.match(name) else toml_string(name)
+        parts.append("\n[perspective.{}]\n".format(key))
+        parts.append(toml_fields((k, entry[k]) for k in PERSPECTIVE_KEYS if k in entry))
+    return "".join(parts)
+
+
+def write_record(root, rel, rows=None, subject=None, tags=None, by=None):
+    """Write or refresh the record at `rel` (under `root`), returning its path.
+
+    The given scope fields replace the file's; omitted ones keep it, so a bare
+    refresh regenerates from the file's own inputs. Every derived field is
+    regenerated; each authored `no_finding` is kept. An entry for a hat the
+    roster no longer declares is KEPT, never dropped, because it may hold
+    authored text; the check reports it until a person deletes it. Written
+    atomically, so an interrupted write leaves the previous record whole.
+
+    Implements: SR-161, LLR-297"""
+    path = Path(root) / rel
+    decomposition, kept = read_record(path)
+    decomposition = dict(decomposition)
+    for key, value in (("rows", rows), ("tags", tags)):
+        if value:
+            decomposition[key] = list(value)
+    if subject:
+        decomposition["subject"] = subject
+    if by:
+        decomposition["recorded_by"] = by
+        decomposition["recorded_on"] = datetime.date.today().isoformat()
+    if not decomposition.get("rows"):
+        raise HatsError(
+            "{}: a first write needs the decomposition's rows "
+            "(--row ID, repeatable)".format(path)
+        )
+    parents, perspectives = derive_record(
+        root, decomposition["rows"], decomposition.get("tags", ())
+    )
+    decomposition["parents"] = parents
+    for name, entry in perspectives.items():
+        if "no_finding" in kept.get(name, {}):
+            entry["no_finding"] = kept[name]["no_finding"]
+    perspectives.update({n: e for n, e in kept.items() if n not in perspectives})
+    write_atomic(path, render_record(decomposition, perspectives))
+    return path
+
+
+def _perspective_findings(name, have, want):
+    """The findings for one declared hat: `have` is the record's entry (None
+    when absent), `want` its regeneration. MISSING and CONFLICT are judged on
+    the regeneration, so a stale record still gets the right answer."""
+    if have is None:
+        cls = "MISSING" if want["applicable"] else "STALE"
+        return [
+            (
+                cls,
+                "{} has no entry (applicable: {}); rerun `hats.py record` "
+                "on this file".format(name, str(want["applicable"]).lower()),
+            )
+        ]
+    out = []
+    moved = [k for k in DERIVED_KEYS if have.get(k) != want[k]]
+    if moved:
+        out.append(
+            (
+                "STALE",
+                "{}: {} no longer match the roster and rows; rerun "
+                "`hats.py record` on this file".format(name, ", ".join(moved)),
+            )
+        )
+    note = have.get("no_finding")
+    if want["applicable"] and not want["produced"] and not note:
+        out.append(
+            (
+                "MISSING",
+                "{} applies to this decomposition and records "
+                "neither produced rows nor a no_finding".format(name),
+            )
+        )
+    if note and want["produced"]:
+        out.append(
+            (
+                "CONFLICT",
+                "{} carries a no_finding but produced {}".format(
+                    name, ", ".join(want["produced"])
+                ),
+            )
+        )
+    elif note and not want["applicable"]:
+        out.append(
+            (
+                "CONFLICT",
+                "{} carries a no_finding but does not apply: "
+                "not-applicable and considered-with-no-finding are different "
+                "answers, so delete the no_finding".format(name),
+            )
+        )
+    return out
+
+
+def record_findings(root, rel):
+    """`[(class, text)]` for the record at `rel`: MISSING (an applicable
+    perspective with neither produced rows nor a no_finding, SR-161's finding),
+    STALE (a derived field, or an entry, regeneration would change) and
+    CONFLICT (a no_finding the derivation contradicts). Empty when the roster
+    is absent. A missing or malformed record raises `HatsError`.
+
+    Implements: SR-161, LLR-297"""
+    path = Path(root) / rel
+    if not path.exists():
+        raise HatsError("{}: no record to check".format(path))
+    decomposition, perspectives = read_record(path)
+    if not decomposition.get("rows"):
+        raise HatsError("{}: [decomposition] declares no rows".format(path))
+    parents, derived = derive_record(
+        root, decomposition["rows"], decomposition.get("tags", ())
+    )
+    if not derived:
+        return []
+    findings = []
+    if decomposition.get("parents") != parents:
+        findings.append(
+            (
+                "STALE",
+                "parents are now {}; rerun `hats.py record` on this file".format(
+                    ", ".join(parents) or "(none)"
+                ),
+            )
+        )
+    for name, want in derived.items():
+        findings += _perspective_findings(name, perspectives.get(name), want)
+    findings += [
+        ("STALE", "{} is not a declared hat; delete its entry".format(name))
+        for name in perspectives
+        if name not in derived
+    ]
+    return findings
+
+
 # --- CLI (documentation aid; the module is library-first) ---------------------
 def _context_from_args(args):
     ctx = {}
@@ -880,6 +1243,43 @@ def _cmd_audit(args):
     return 1 if (args.strict and hard) else 0
 
 
+def _cmd_record(args):
+    """Write or refresh a perspective record (or only check it), then report
+    its findings. WARN-FIRST: `--strict` alone turns a finding into exit 1.
+
+    Implements: SR-161, LLR-297"""
+    if args.check and (args.row or args.tag or args.subject or args.by):
+        print(
+            "hats: record --check reads the file as it is; --row, --tag, "
+            "--subject and --by belong to a write",
+            file=sys.stderr,
+        )
+        return 2
+    if not args.check:
+        path = write_record(
+            args.root,
+            args.path,
+            rows=args.row,
+            subject=args.subject,
+            tags=args.tag,
+            by=args.by,
+        )
+        print("wrote {}".format(path))
+    findings = record_findings(args.root, args.path)
+    for cls, text in findings:
+        print("{}: {}".format(cls, text))
+    if not findings:
+        print(
+            "{}: no findings{}".format(
+                args.path,
+                ""
+                if roster_path(args.root).exists()
+                else " (no roster: hats are opted out here)",
+            )
+        )
+    return 1 if (args.strict and findings) else 0
+
+
 def main(argv=None):
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -912,6 +1312,29 @@ def main(argv=None):
         ),
     )
     aud.set_defaults(func=_cmd_audit)
+
+    rec = sub.add_parser(
+        "record",
+        help="write, refresh or check a decomposition's perspective record (SR-161)",
+    )
+    rec.add_argument(
+        "path", help="the record, relative to --root (<stem>" + RECORD_SUFFIX + ")"
+    )
+    rec.add_argument(
+        "--row", action="append", default=[], help="a scoped SR/LLR/TC id (repeatable)"
+    )
+    rec.add_argument(
+        "--tag", action="append", default=[], help="an extra declared tag (repeatable)"
+    )
+    rec.add_argument(
+        "--subject", default="", help="the decomposition record it describes"
+    )
+    rec.add_argument("--by", default="", help="who recorded the authored judgements")
+    rec.add_argument("--check", action="store_true", help="check only; write nothing")
+    rec.add_argument(
+        "--strict", action="store_true", help="exit nonzero on any finding"
+    )
+    rec.set_defaults(func=_cmd_record)
 
     args = ap.parse_args(argv)
     if not getattr(args, "cmd", None):
