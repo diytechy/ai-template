@@ -186,4 +186,22 @@ Re-judged on the lane at `fea1b8f3`: LLR-243 and TC-238 only. The other eighteen
 
 All twenty rows are now blessed, and the re-attestation is taken in the one combined act with WI-783.
 
-VERDICT: MEANING rows=20
+The re-judgement's machine line, superseded below: VERDICT MEANING rows=20.
+
+## The three retirements (carried in 2026-10-03)
+
+The coordinator carried these three rows into this sitting at `01230d18`. Intake's amendment walk iterates only rows still present in the live registry, so a removal never mints. I judged each as a removal: is retiring it right, and does its successor carry whatever of its obligation survives? I read:
+- the last approved text of each row in `docs/archive/last_approved`;
+- the retirement records in `docs/log.d/retired/`;
+- the owner's 2026-10-02 ruling, items 1, 2 and 6;
+- the successors' live text.
+
+`git grep` finds no live registry cell, script or test citing any of the three. The only remaining mentions are history: plans, ratify records, the RESYNC entry, the handoff, the retired-rows table and WI graph on the generated dashboard, and this row's spec. `check_trajectory` notes the two WIs (WI-632 and WI-771).
+
+- [MEANING] SR-200 (removed) -> before: the harness derives an assumption's evidence level (assumed, specified, monitored or sampled) from current results alone, and reports an approved, active assumption reading assumed or specified -> after: no such obligation; the row is retired, and SR-201 reports falsification -> ruling item 1 drops the ladder and any rule needing current evidence, so nothing of SR-200's obligation survives to be carried. Its one surviving principle, that a result never sets standing, is SR-201's acceptance: "a failing observation result is reported as falsification evidence without changing the assumption's validity cell". The re-judge freshness it shared (expiry or a changed judged state) is SR-215's own obligation. Retirement BLESSED.
+- [MEANING] LLR-237 (removed) -> before: `evidence_level`, `result_current` and `tier_covers` derive the level, and an approved-but-unevidenced advisory is raised -> after: none of these exist (`test_no_evidence_level_is_declared_or_computed` pins their absence), and LLR-238's worklist carries the falsification signal -> follows SR-200's retirement. Its "never sets the standing cell" lives on in LLR-238 ("never writes the standing cell"). Retirement BLESSED.
+- [MEANING] TC-232 (removed) -> before: table-driven assertions of the four levels, the tier contract and the unevidenced advisory -> after: none; TC-233 verifies SR-201 and LLR-238, including the standing cell left unchanged -> a case for a retired obligation has nothing left to verify. TC-233 covers what survives. IF-216, which it also verified, is now verified by TC-238. Retirement BLESSED.
+
+All twenty-three rows are blessed. They are re-attested in the one combined act with WI-783.
+
+VERDICT: MEANING rows=23
