@@ -38,10 +38,6 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      and WI-748 (the codex adapter's cache writes and compaction).
   3. WI-688 second to last; its judge sitting is WI-541's multi-step occupancy
      run, and WI-541 closes with it. WI-625 (deferred) last.
-  - **Carry TC-262, TC-263, TC-264 and TC-267 into the next spine-acts
-    adjudication** (the one the shrink-floor merge mints): `3e0a5f48` amended their approved method
-    cells on trunk outside a lane, so no adjudication was minted for them;
-    `docs/ratify/CURRENT.md` lists them. Add them to that row's `adjudicates`.
   - **WI-684:** re-sync `C:\Projects\FileBackup` (stamp `9b697cc`) as a
     scratch trial, after amending TC-036's inputs to add `RESYNC_PACK.md`.
     **Not worked in the 2026-10-02 session:** the owner starts it on

@@ -6,7 +6,7 @@ specref = "docs/requirements/low-level-requirements.toml"
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
-adjudicates = ["LLR-116", "TC-121"]
+adjudicates = ["LLR-116", "TC-121", "TC-262", "TC-263", "TC-264", "TC-267"]
 +++
 
 ## Context
@@ -24,3 +24,10 @@ Outcomes (§A5.2): flip rows back to Approved where no scope moved
 2), or draft the real scope-change / re-scope / cancellation rows in
 a `## Dispositions` section of THIS spec — intake mints them at this
 row's merge (drafts-not-mints, R1).
+
+Carried 2026-10-02 by the coordinator (wave 7): TC-262, TC-263, TC-264 and
+TC-267's approved `method` cells were amended on trunk outside a lane by
+`3e0a5f48` (WI-541's live codex and opencode recordings: each method now says
+its fixture is a live recording rather than a documented-shape one), so no merge
+minted an adjudication for them. `docs/ratify/CURRENT.md` lists them. Judge them
+in this sitting with the same outcomes.
