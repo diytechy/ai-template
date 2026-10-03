@@ -3,12 +3,23 @@ id = "WI-754"
 title = "re-judge TC-055: declared inputs changed [sha256:290aca698397] at merge bd9c2d5"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+TC-055 re-judged cross-family at 6e89705b, after WI-750: **RECORDED fail**
+(`docs/test/observations/TC-055.2026-10-03T055435Z.toml`; verdict
+`docs/reviews/wi-754-re-judge-tc-055-declared-inpu/001-REJUDGE-6e89705b.md`).
+Three independent Claude Opus 5.5 judges, one per width, on 268 native tiles.
+T2, T4 and T5 pass at every width (T4 fixed by WI-750). T8 fails at 1280 and 1680
+px: distinct edges share segments and meet end-to-end at the port fans, so the
+How view's CMP-006 hub reads as a chain, and the When roadmap draws 26 unrelated
+edge pairs over each other. Successor: WI-758.
 
 ## Context
 

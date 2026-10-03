@@ -148,3 +148,13 @@ inferred flag is unstated; reported-versus-inferred precedence untested), with a
 exact draft. Sonnet's cross-review: SOUND. The open-items page's "2 rows drifted" is
 a mislabel for two chains owing a first approval (SR-224; SR-227); the genuinely
 drifted rows remain SN-003, SN-008, SN-009 and SN-025, owed to the owner.
+
+### WI-754: TC-055 re-judged after WI-750, RECORDED fail on T8 only
+
+Rendered at 6e89705b, 268 native tiles, three independent Opus judges told that an
+anchor with only MINOR findings passes. T2, T4 and T5 pass at every width; WI-750
+fixed T4. T8 fails at 1280 and 1680 px: distinct edges share segments and meet
+end-to-end at the port fans (the How view's CMP-006 hub reads as a chain; 26
+unrelated edge pairs overlap in the When roadmap). WI-758 filed by hand: separate
+the lanes and bind the clause as a test, so T8's lane separation stops needing an
+LLM judgement (the owner's WI-747 direction).
