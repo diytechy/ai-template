@@ -2,12 +2,20 @@
 id = "WI-761"
 title = "adjudicate: LLR-289, TC-302 - approved/routed cell(s) amended on merged trunk 75acecb..4873bef (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-289", "TC-302"]
 +++
+
+## Deliverable
+
+Act seq 18: an independent Claude Opus 5.5 adjudicator ruled LLR-289 detail and
+TC-302 method/evidence (WI-759's example-reference amendment) MEANING and
+re-attested both; true of `open_item_wi_ref_findings` and
+`test_example_wi_refs_are_inert`. Sonnet 5.5 cross-review: SOUND at b790bd90.
+Verdict: `docs/reviews/wi-761-adjudicate-llr-289-tc-302/001-ADJUDICATE-ca6d79a.md`.
 
 ## Context
 

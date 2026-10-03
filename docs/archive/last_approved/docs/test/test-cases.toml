@@ -3034,18 +3034,18 @@ phase = 6
 [test.TC-302]
 verifies = ["LLR-289", "IF-073"]
 level = "Unit"
-method = "For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; a wi_refs entry naming a work item that exists only in the terminal archive yields none; an example row and an absent registry yield none from the checker."
+method = "For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; a wi_refs entry naming a work item that exists only in the terminal archive yields none; an example row, an example work-item reference and an absent registry yield none from the checker; an example reference alongside a real missing work id leaves the real dangling finding intact."
 tier = "Smoke"
 expected = "Dangling owner-gate pointers are reported, including historical pointers."
 automated = "Yes"
-evidence = "tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert; tests/test_open_item_readiness.py::test_only_queued_rows_are_held_and_a_drained_frontier_still_lists_gates"
+evidence = "tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert; tests/test_open_item_readiness.py::test_example_wi_refs_are_inert; tests/test_open_item_readiness.py::test_only_queued_rows_are_held_and_a_drained_frontier_still_lists_gates"
 status = "Approved"
 phase = 6
 
 [test.TC-303]
 verifies = ["SR-227", "LLR-290", "IF-266", "IF-247", "IF-248"]
 level = "Unit"
-method = "Drive retained codex calls through act with inline variants of recorded exec and rollout lines: two exec turns, the first a multi-request sum and the second a smaller single-request contribution, infer nothing without a readable rollout; multiple exec totals alone also infer nothing; a rollout compacted entry marks source reported; every new rollout request is compared with its predecessor, starting from the stored prompt baseline: 35911 followed by new requests 15717 then 18200 marks source inferred despite the later rise; a pure rise across several requests and equal prompts infer nothing; old rollout requests are not rechecked; a kit reset discards the comparison; a legacy record with no rollout cursor learns the latest prompt and cursor before inferring. Assert the retained store and written session log carry compacted and its source, and unrelated thread rollouts are ignored. Variants are synthetic, not new live recordings."
+method = "Drive retained codex calls through act with inline variants of recorded exec and rollout lines: two exec turns, the first a multi-request sum and the second a smaller single-request contribution, infer nothing without a readable rollout; multiple exec totals alone also infer nothing; a rollout compacted entry marks source reported; every new rollout request is compared with its predecessor, starting from the stored prompt baseline: 35911 followed by new requests 15717 then 18200 marks source inferred despite the later rise; a pure rise across several requests and equal prompts infer nothing; old rollout requests are not rechecked; a kit reset discards the comparison; a legacy record with no rollout cursor learns the latest prompt and cursor before inferring. After an inferred compaction, a later call whose new requests only rise still carries compacted with source inferred; a compacted entry arriving after an inferred source marks it reported, and a later drop leaves a reported source reported. Assert the retained store and written session log carry compacted and its source, and unrelated thread rollouts are ignored. Variants are synthetic, not new live recordings."
 tier = "Smoke"
 expected = "Compaction is reported or explicitly inferred within one retained session, with no comparison across a kit reset."
 automated = "Yes"
