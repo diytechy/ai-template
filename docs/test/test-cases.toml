@@ -3160,5 +3160,5 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-297 (parent SR-161)"
 automated = "Yes"
 evidence = "tests/test_hats_record.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
