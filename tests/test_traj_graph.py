@@ -712,7 +712,11 @@ def test_svg_frame_pads_only_the_side_that_carries_outboard_ink():
     )
     both = gt._svg_frame(692, 354, lanes)
     assert both.startswith('viewBox="-20 0 733 354" width="733"')
-    assert "max-width:733px" in both and "min-width:454px" in both
+    # WI-722 raised --nsub; the floor follows the emitted type, not the old scale.
+    floor = math.ceil(
+        733 * gt.traj_render.MIN_RENDERED_NODE_LABEL_PX / min(gt.NODE_TYPE_PX.values())
+    )
+    assert "max-width:733px" in both and "min-width:{}px".format(floor) in both
     # ...and a lane that only overruns the right edge does not shift the left one.
     right = gt._svg_frame(904, 150, '<path class="wire" d="M20.0,10.0 L923.0,10.0"/>')
     assert right.startswith('viewBox="0 0 925 150" width="925"')

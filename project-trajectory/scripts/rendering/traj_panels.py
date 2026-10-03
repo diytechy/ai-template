@@ -615,7 +615,7 @@ def _station_svg(root):
         _st_edge(
             "build-{}".format(outcomes[1][0]),
             R - 88.0,
-            T + 16.0,
+            T + 26.0,
             R - 89.0,
             oy[1],
             qx=585.0,
@@ -624,7 +624,7 @@ def _station_svg(root):
         _st_edge(
             "build-{}".format(outcomes[2][0]),
             R - 88.0,
-            T + 26.0,
+            T + 16.0,
             R - 89.0,
             oy[2],
             qx=560.0,

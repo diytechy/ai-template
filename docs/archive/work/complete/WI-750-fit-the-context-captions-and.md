@@ -2,13 +2,34 @@
 id = "WI-750"
 title = "Fit the system-context crossing captions to their lane, and minimise avoidable wire crossings (TC-055 T4, T8)"
 workstream = "scripts"
-specref = "project-trajectory/scripts/rendering/traj_context.py"
+specref = ""
 sr_refs = ["SR-054"]
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+TC-055's T4 and T8 findings from WI-713, answered:
+
+- **T4:** each System-context crossing caption is fitted to the measured gap
+  between the party column and the system box from the token-derived estimate
+  (`_BSUB_CH`, 0.667 em: 33 characters, 231 of the lane's 234 units), painted after
+  the boxes, and ends in a visible ellipsis when cut; relationship labels sit clear
+  of their curves. Tested over the emitted SVG.
+- **T8:** the Process station's merged/partial exits swapped; the How view orders
+  nested lanes and same-row ports geometrically with staggered turns; the When
+  roadmap's detour trunk clears the "1+5" and "4" output fans. Each tested over
+  emitted geometry. Stopped, documented and pinned: the When roadmap's cyclic
+  return-route and perimeter crossings, which need joint routing beyond this row
+  (`traj_render.py`); TC-055's next re-judge decides whether a successor is needed.
+- **Also:** `tests/test_traj_graph.py`'s frame-padding pin read the pre-WI-722 0.62
+  floor and was red on trunk since 6a40d7b2; it now reads the token-derived floor.
+- No row and no golden fixture changed.
+- **Review:** Sonnet 5.5 SOUND at 9884f643, two minors
+  (`docs/reviews/2026-10-02-wave7/sonnet-wi750.md`).
 
 ## Context
 

@@ -106,3 +106,12 @@ item prompts; it now requires the smoke tier at `-n 2`.
 `test_svg_frame_pads_only_the_side_that_carries_outboard_ink` is red on trunk from
 6a40d7b2 (`1 failed, 30 passed`). WI-750's lane carries the fix. Lesson: a lane
 touching `rendering/` runs every `test_traj_*` module before it lands.
+
+### WI-750 lands: the System-context captions fit their lane; three crossings removed
+
+Sol built it; Sonnet: SOUND at 9884f643 (two minors). T4's captions are fitted to
+the measured lane from the token-derived estimate and painted after the boxes; T8's
+Process, How and When crossings named by WI-713 are removed and tested over emitted
+geometry, except the When roadmap's cyclic return routes, documented and pinned as
+needing joint routing. It also repairs `tests/test_traj_graph.py`'s floor pin, red on
+trunk since WI-722. TC-055 is due again at this merge (its rendering inputs changed).

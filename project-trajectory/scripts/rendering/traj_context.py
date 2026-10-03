@@ -29,6 +29,7 @@ clocks), so the `--check` freshness byte-compare stays stable; a repo with no
 
 from .traj_render import (
     SCROLL_CUE,
+    _BSUB_CH,
     _arrow_markers,
     _hscroll,
     _svg_fit_style,
@@ -50,7 +51,6 @@ CTX_GEOM = {
     "width": 900.0,  # viewBox width
     "pad": 46.0,  # below the last lane
     "cardpad": 26.0,  # an entity card's reach above/below its outermost lane
-    "carrymax": 54,  # `carries` chars on the wire before it truncates
     "namemax": 30,  # entity-name chars on its card
 }
 
@@ -148,6 +148,9 @@ def _ctx_wire(crossing, y):
     yet realized" without a hand-maintained annotation."""
     g = CTX_GEOM
     x1, x2 = g["gutter"] + g["entw"] + 6.0, g["sysx"] - 6.0
+    # The emitted --nsub token sets the estimate, as in the drill labels;
+    # the box-to-box gap (less end padding) sets capacity, not a fixed char cut.
+    carrymax = int((x2 - x1) // _BSUB_CH)
     direction = crossing["direction"]
     start, end = _CTX_HEADS.get(direction, (False, False))
     ifs = crossing["realized_by"]
@@ -180,7 +183,7 @@ def _ctx_wire(crossing, y):
             ly=y - 9.0,
             sy=y + 14.0,
             label=esc(label),
-            carries=esc(_ctx_cut(crossing["carries"], g["carrymax"])),
+            carries=esc(_ctx_cut(crossing["carries"], carrymax)),
         )
     )
 
@@ -206,7 +209,7 @@ def _ctx_rel_arc(rel, i, spans):
     return (
         '<g class="ctxrel" data-edge="{}"><title>{}</title>'
         '<path d="{}" marker-end="url(#ctxarrow)"/>'
-        '<text x="{:.1f}" y="{:.1f}" text-anchor="middle">{}</text></g>'.format(
+        '<text x="{:.1f}" y="{:.1f}" text-anchor="end">{}</text></g>'.format(
             esc(rel["id"]),
             esc(
                 "{} — {} → {} ({}): {}".format(
@@ -218,7 +221,9 @@ def _ctx_rel_arc(rel, i, spans):
                 )
             ),
             d,
-            qx,
+            # A quadratic's leftmost point is halfway to its control point.
+            # Put the label wholly outside the curve's reach, including REL-002.
+            (g["gutter"] + qx) / 2 - 8.0,
             (y1 + y2) / 2 - 8.0,
             esc(rel["id"]),
         )
@@ -276,9 +281,9 @@ def _context_svg(frame, project):
     body = (
         _arrow_markers(("ctxarrow", "ctxarrow-head"))
         + "".join(arcs)
-        + "".join(wires)
         + "".join(cards)
         + system
+        + "".join(wires)
     )
     return (
         '<svg class="ctxsvg" viewBox="0 0 {:.0f} {:.0f}" style="{}" '
