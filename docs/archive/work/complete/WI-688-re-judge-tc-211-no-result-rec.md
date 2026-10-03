@@ -3,12 +3,33 @@ id = "WI-688"
 title = "re-judge TC-211: no result recorded [sha256:aa064ee9542c] at merge 77fb093"
 workstream = "process"
 sr_refs = ["SR-186"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-211"]
 +++
+
+## Deliverable
+
+TC-211 **RECORDED pass** (`docs/test/observations/TC-211.2026-10-03T210347Z.toml`), after the SR-161 producer it was waiting on was built. The S11 in-lane cycle ran end to end:
+
+1. **Build (steps 1-2).** A Claude Opus builder wrote a design note, which the coordinator approved, and then built it. `hats.py record` writes a per-decomposition `<stem>.perspectives.toml`:
+   - applicability and production are derived;
+   - a no-finding is authored;
+   - `--check` reports MISSING, STALE and CONFLICT. It is warn-first, `--strict` exits 1, and no gate means no adopter migration.
+
+   It also wrote the record for the SR-184/185/186 decomposition TC-211 inspects. New rows: LLR-297 and TC-312. Amended: LLR-183's last clause, TC-211's `inputs` and IF-133's data cell.
+2. **Review and fix rounds, in the lane.**
+   - Codex Luna's MAJOR: authorship was not enforced. Fixed in fix round 1.
+   - An independent Opus adjudicator returned LLR-297 and TC-312: 12 of 14 mutations survived the tests. Fixed in fix round 2 with byte-exact cells and 10 test cases; all mutations are now caught.
+   - Luna's final-review MAJOR: TC-211's undeclared inputs. A one-cell coordinator fix.
+3. **Acts in the lane.**
+   - Act 26: LLR-297 and TC-312 approved; LLR-183 re-attested (CLARITY).
+   - Act 27: TC-211 re-attested (MEANING, blessed).
+4. **Judge (step 3) through the kit's own session path.** `agent_loop --wi WI-688` ran OPENAI-TERRA (gpt-5.6-terra), cross-family, in 301 s. Its verdict is at `docs/reviews/wi-688/001-ADJUDICATE-9e260e1.md`, and the session log is `docs/iteration/wi-688-001-20261003-160206.log`, which feeds WI-541's occupancy measurement.
+
+Reviews: `docs/reviews/2026-10-03-wave9/luna-wi688-r1.md` and `luna-wi688-final.md`. Verdicts 002-004 are under `docs/reviews/wi-688-re-judge-tc-211-no-result-rec/`.
 
 ## Context
 

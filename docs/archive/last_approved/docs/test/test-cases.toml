@@ -2179,7 +2179,7 @@ automated = "No"
 evidence = "docs/test/inspection-procedures.md#decomposition-proportionality-inspection-result"
 status = "Approved"
 phase = 5
-inputs = ["docs/test/inspection-procedures.md", "SR-186"]
+inputs = ["docs/test/inspection-procedures.md", "SR-186", "docs/ai-template-redesign-2026-09-05-codex/DECOMPOSITION-AMENDMENTS.md", "docs/ai-template-redesign-2026-09-05-codex/DECOMPOSITION-AMENDMENTS.perspectives.toml"]
 max_age = 90
 rubric = "docs/rubrics/decomposition-proportionality.md"
 trigger = "release"
@@ -3149,5 +3149,16 @@ tier = "Full"
 expected = "The check exits 0 and prints a warning naming a case and its missing rubric; strict mode never promotes these warnings to a failure."
 automated = "Yes"
 evidence = "tests/test_rejudge.py::test_trajectory_rubric_warning_survives_strict_and_no_work_items"
+status = "Approved"
+phase = 6
+
+[test.TC-312]
+verifies = ["SR-161", "LLR-297"]
+level = "Unit"
+method = "Over a temporary tree with a three-hat roster (one always, one reached by a parent need's tag, one reached by nothing), widened by conjunctive hats where a case needs one, and SR, LLR and TC rows, write a record and assert: applicability per parent need and production from the rows' own Hat-Refs, as derived; parents reached from an LLR through its SR-Refs, from a TC through an SR it verifies and from a TC through a verified LLR's SR-Refs; a hat whose predicate needs facts from two sibling needs does not apply; declared tags widen every parent context, shown by hats only the first or only the second parent need reaches with the tag, and a refresh keeps the tags; an unknown row, a first write without rows and a first write naming no recorder (--by) refuse; a written record carries recorded_by and a recorded_on date, a refresh keeps an earlier recorded_on, and a record missing either refuses; an applicable hat with nothing recorded is MISSING until a no_finding is written, and the no_finding and subject survive a refresh; the not-applicable and no-finding entries parse differently; a Hat-Refs edit makes the record STALE and the kept no_finding a CONFLICT, and an edit that removes a hat's only production makes it MISSING as well as STALE; a moved parent set, a moved applies_when and a newly declared hat that does not apply are each STALE; a no_finding on a not-applicable hat is a CONFLICT; an entry for a hat removed from the roster is kept on rewrite and reported STALE; a write interrupted at the final replace leaves the previous record byte-identical; a malformed record refuses; an absent roster writes no perspectives and checks vacuous; the CLI exits 0 with findings, 1 under --strict, 0 once they are answered, and 2 when --check is given write inputs."
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-297 (parent SR-161)"
+automated = "Yes"
+evidence = "tests/test_hats_record.py"
 status = "Approved"
 phase = 6

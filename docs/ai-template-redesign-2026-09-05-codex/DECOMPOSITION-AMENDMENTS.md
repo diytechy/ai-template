@@ -328,3 +328,5 @@ TC-211 retains its incomplete normal sample because the applicable SR-161
 machine perspective record is absent (the debt already stated in LLR-183).
 Publishing guidance does not claim every future contributor follows it, that
 TC-211 fully passed, or that the Drafted rows have been approved.
+
+2026-10-03 (WI-688): this decomposition's SR-161 perspective record is [DECOMPOSITION-AMENDMENTS.perspectives.toml](DECOMPOSITION-AMENDMENTS.perspectives.toml), written by `hats.py record`; its no-findings were retro-recorded by the WI-688 builder, not the original authoring session.

@@ -179,3 +179,40 @@ that the row has no Done-when section (S13, warn-first). Writing one after the c
 would itself be flagged as a post-claim edit, so the spec's numbered "Order" steps
 are its done criteria. The pause was then restored byte-identical to its 2026-09-04
 declaration, ending the scoped unpause.
+
+### WI-688 lands: TC-211 RECORDED pass; the first full in-lane cycle (acts 26 and 27)
+
+The SR-161 producer and the TC-211 judgement, built and judged inside lane `wi-688`
+under the owner's S11 direction.
+
+- **Build.** A Claude Opus builder's design note was approved before any code
+  (`hats.py record` and a per-decomposition `<stem>.perspectives.toml`, warn-first).
+  It then built LLR-297 and TC-312 and wrote the record for the SR-184/185/186
+  decomposition.
+- **Codex Luna** (`7733e2bf`): one MAJOR, authorship not enforced, fixed in round 1.
+- **The independent Opus adjudicator, in the lane:** it RETURNED LLR-297 and TC-312.
+  12 of 14 hats.py mutations survived the tests, and the row claimed an unenforced
+  file location. Fix round 2 applied its byte-exact cells and 10 test cases. It
+  re-judged APPROVE and took act 26 (LLR-183 re-attested as CLARITY).
+- **The judge, through the kit's own session path:** `agent_loop --wi WI-688
+  --base 9e260e1a` ran OPENAI-TERRA and recorded TC-211 = pass, inspecting the
+  complete sample and its SR-161 record.
+- **Luna's final review** (`0b6bb6a5`): one MAJOR, TC-211's inputs omitted the two
+  records. A one-cell coordinator fix, ruled MEANING and blessed. Act 27 re-attests
+  TC-211; the pass record stands, as the two files were unchanged since the
+  judgement.
+
+Kit findings from running the judge through the loop (not filed):
+
+- **A row whose build was folded into an adjudication row reads as judged
+  before its judge runs.** `worker_endstate` counts the build commits' `WI:`
+  trailers, so the judge needed `--base` set past them.
+- **ADJUDICATE heterogeneity enforces nothing when the build ran outside the loop.**
+  The tier is pinned by the row's BuildTier, and with no recorded implementer
+  family the first draw was ANTHROPIC-OPUS. That session was stopped before any edit
+  and relaunched with `--prefer-map ADJUDICATE=OPENAI-TERRA`.
+- **After the judge committed, the loop re-routed and stopped NEEDS-HUMAN (exit 7)**
+  ("TC-211 is no longer due") instead of DONE.
+- **The codex route reports no occupancy:** `context-used`, `context-window` and
+  `context-pct` are blank, with only cumulative usage (1,635,416 input,
+  1,513,216 cached). This is WI-541's owed measurement; see its close.
