@@ -104,3 +104,26 @@ At the landing, three of Sonnet's minors were folded in:
 Follow-up: Sonnet's MAJOR, outside the grant, is that the evidence ladder (ruling
 item 1) is still rendered and still required by approved rows. It is filed as its
 own row.
+
+### Batch N lands; WI-770 building; WI-771 filed; WI-697 still held
+
+The batch-N verdict lane landed (`e4a44886`), and intake minted the drafted
+successor as WI-770. Sol is building it from the draft's byte-exact cells.
+
+WI-771 is filed by hand (the coordinator's trunk commit): drop the assumption
+evidence ladder, the owner-ruled follow-up to WI-667's review. It needs WI-770 and
+builds only after WI-770's combined sitting acts, since its amendments drift the
+same registries.
+
+WI-697 (TC-279's first judgement) stays held. Its brief now composes, but the
+inspection procedure records TC-279's first result "once the case is approved",
+and TC-279 is still Drafted. Its first approval joins the combined sitting.
+
+That sitting, after WI-770 lands, covers:
+
+- the amendment adjudication WI-770's merge mints;
+- the first approval WI-770's merge mints, with TC-307 and TC-279 carried in;
+- TC-036, TC-055, TC-209, TC-210 and TC-211 carried into the amendment;
+- WI-768 (SR-033; the SR copy is blocked while SR-215 drifts);
+- WI-769 (LLR-295, LLR-296, TC-308..TC-310; the LLR and TC copies are blocked
+  likewise).
