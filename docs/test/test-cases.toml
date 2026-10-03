@@ -2853,7 +2853,7 @@ tier = "Release"
 expected = "Each sampled reader states what the part does and why it exists, in agreement with the part's linked rows; a reader who cannot, or whose statement contradicts those rows, is a failing sample and falsification evidence against DA-011"
 automated = "No"
 evidence = "docs/test/inspection-procedures.md#sampled-new-reader-inspection-result"
-status = "Drafted"
+status = "Approved"
 phase = 6
 assumption_refs = ["DA-011"]
 inputs = ["docs/rubrics/sampled-new-reader.md", "DA-011"]
@@ -3117,7 +3117,7 @@ tier = "Smoke"
 expected = "Only the real observation with a missing reference produces a warning naming its case and rubric."
 automated = "Yes"
 evidence = "tests/test_rejudge_rubric.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 [test.TC-308]
 verifies = ["LLR-295", "IF-115"]
@@ -3127,7 +3127,7 @@ tier = "Smoke"
 expected = "The scoped observation case is visible under its assumption chain and the act grants no approval of the assumption."
 automated = "Yes"
 evidence = "tests/test_assumption_observation_briefs.py::test_first_approval_shows_assumption_only_case"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-309]
@@ -3160,5 +3160,5 @@ tier = "Full"
 expected = "The check exits 0 and prints a warning naming a case and its missing rubric; strict mode never promotes these warnings to a failure."
 automated = "Yes"
 evidence = "tests/test_rejudge.py::test_trajectory_rubric_warning_survives_strict_and_no_work_items"
-status = "Drafted"
+status = "Approved"
 phase = 6
