@@ -25,10 +25,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-09-29-wave6-coordinator.md](handoff-2026-09-29-wave6-coordinator.md),
+  [handoff-2026-10-03-wave7-coordinator.md](handoff-2026-10-03-wave7-coordinator.md)
+  (WI-747 is mid-fix-round: resume it first),
   then apply the owner's 2026-09-30/10-02 directions below (each is also
   noted in its WI row; the 2026-10-02 rulings are in WI-541, WI-667 and
-  WI-697). The open count is 13. Order, after the owner's 2026-10-02
+  WI-697). The open count is 7. Order, after the owner's 2026-10-02
   session:
   1. WI-747
      (judgement cadence: a rubric first, then a declared trigger no faster than

@@ -223,3 +223,10 @@ APPROVE at every width (T2, T4, T5, T8's crossing legibility; minor notes only),
 first pass this wave after WI-713 and WI-754 failed. The shrink floor (WI-722), the
 caption fit (WI-750) and the lane separation (WI-758) together closed it; two of
 T8's clauses are now tests rather than judgements.
+
+**A slip at WI-765's close:** the coordinator committed 46ececa8 although its smoke run
+had reported 6 failures (the hook runs the path-triggered sensors, not smoke). A rerun
+on the committed tree, untouched, was green (1959 passed, 2 skipped); the failures
+were transient, coinciding with a reviewer's concurrent test run on ~2 GB free (that
+reviewer saw two flaky failures pass on rerun too). Rule kept from here: never commit
+past a red smoke line; re-run first.
