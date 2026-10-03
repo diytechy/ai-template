@@ -7,10 +7,12 @@ specref = "docs/requirements/system-requirements.toml"
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
-adjudicates = ["LLR-254", "LLR-255", "SR-215", "TC-247", "TC-248"]
+adjudicates = ["LLR-254", "LLR-255", "SR-215", "TC-247", "TC-248", "TC-036", "TC-055", "TC-209", "TC-210", "TC-211"]
 +++
 
 ## Context
+
+Carried in by the coordinator 2026-10-03, as WI-770's spec (WI-766's draft, "Landing") commits: TC-036, TC-055, TC-209, TC-210 and TC-211. Their WI-747 amendments were ruled MEANING and blessable in WI-766's verdict, but could not be re-anchored while TC-248 stayed unblessed; no merge since has touched them, so no mint routes them here. Judge them afresh.
 
 Derived from `staged_spine_amendments` on the merged commit (§A5.2).
 Approved and ROUTED traced cells only; other traced cells are silent

@@ -6,10 +6,12 @@ specref = "docs/requirements/low-level-requirements.toml"
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "first-approval"
-adjudicates = ["LLR-293", "LLR-294", "TC-306", "TC-311"]
+adjudicates = ["LLR-293", "LLR-294", "TC-306", "TC-311", "TC-307", "TC-279"]
 +++
 
 ## Context
+
+Carried in by the coordinator 2026-10-03: TC-307 (returned by WI-767 for its parent's gap, given no text change by WI-770, so no mint routes it), and TC-279 (an assumption-only observation case WI-767's composer could not render; WI-667 added the arm).
 
 Derived from `staged_drafted_rows` on the merged commit (§A5.2).
 These spine rows are BELOW approval and no act has blessed them.
