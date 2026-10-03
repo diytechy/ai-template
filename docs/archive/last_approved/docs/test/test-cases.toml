@@ -571,7 +571,7 @@ verifies = ["SR-054", "LLR-055"]
 level = "Critique"
 method = """A fresh, family-heterogeneous CRITIQUE session (LLR-048/LLR-082 loop) adjudicates the generated PROJECT_STATE.html against docs/rubrics/dashboard-usability.md, receiving the rubric + SN/SR intent + the rendered PNG matrix from scripts/dashboard-shots/shoot.mjs (widths x themes x tabs) as the artifact recipe and never the implementer's self-assessment; VERDICT machine line cites numbered anchors."""
 tier = "Full"
-expected = """APPROVE citing numbered anchors. The rubric is the single home of the live-vs-retired anchor set: its header states the live set, and each retired anchor carries its retirement and binding in place. A verdict cites only anchors the rubric lists live, never a retired one; a clause a test now holds is verified through the LLR/TC chain the registry records, not by a verdict. Standing limit, so this row is never read as live coverage: the verdict recorded in Evidence is re-judged at a merge or release checkpoint when no result of it is on record, when a declared input changes, or when the record passes its declared max_age, never on every commit. This row's assurance is therefore as old as its latest recorded verdict, and a clause needing assurance newer than that is one to bind to a test rather than to re-judge here."""
+expected = "APPROVE citing numbered anchors. The rubric is the single home of the live-vs-retired anchor set: its header states the live set, and each retired anchor carries its retirement and binding in place. A verdict cites only anchors the rubric lists live, never a retired one; a clause a test now holds is verified through the LLR/TC chain the registry records, not by a verdict. Standing limit, so this row is never read as live coverage: the verdict recorded in Evidence is re-judged when no result of it is on record or when the record passes its declared max_age, and otherwise only when its declared trigger fires after its closed-work floor, never on every commit. This row's assurance is therefore as old as its latest recorded verdict, and a clause needing assurance newer than that is one to bind to a test rather than to re-judge here."
 automated = "No"
 evidence = "docs/reviews/074-CRITIQUE.md"
 status = "Approved"
@@ -3101,12 +3101,12 @@ phase = 4
 [test.TC-306]
 verifies = ["SR-215", "LLR-293", "IF-269"]
 level = "Integration"
-method = "Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor."
+method = "Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, a zero policy floor disabling the default, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor. Construct the cadence directly with a malformed policy floor, an unknown trigger and a git that cannot read history, and assert each raises ValueError."
 tier = "Full"
-expected = "A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both."
+expected = "A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both; a zero policy floor disables the default; a malformed floor, an unknown trigger or unreadable history raises ValueError rather than reading as not due."
 automated = "Yes"
 evidence = "tests/test_rejudge.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-307]
@@ -3133,18 +3133,18 @@ phase = 6
 [test.TC-309]
 verifies = ["LLR-295", "IF-115"]
 level = "Unit"
-method = "Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear."
+method = "Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief."
 tier = "Smoke"
-expected = "The complete re-judge brief composes under the assumption chain."
+expected = "The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason."
 automated = "Yes"
-evidence = "tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case"
+evidence = "tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime"
 status = "Drafted"
 phase = 6
 
 [test.TC-310]
-verifies = ["LLR-296", "IF-018"]
+verifies = ["SR-033", "LLR-296", "IF-018"]
 level = "Unit"
-method = "Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers; tolerate an absent registry without a section; assert the source registry remains byte-identical."
+method = "Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical."
 tier = "Smoke"
 expected = "Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set."
 automated = "Yes"

@@ -3136,6 +3136,6 @@ code_symbol = "assumption_checklist_lines"
 detail = "Read real DA rows through spine_carrier; emit a separate assumptions section with one ASSUMPTION DA-id item per active Approved row or row with no falsifier, including its falsifier or missing notice and the ids of the observation cases naming it in Assumption-Refs. Missing registries and empty selections emit no section. Checklist generation writes no registry; checking a box asserts only not falsified, and a person sets standing. Existing sections and phase selection remain intact through named readers and section renderers."
 rationale = "Assumptions about people and environments often have no development observation; release sign-off needs a recall prompt distinguishable from a requirement check. Missing falsifiers must be visible even on unsettled rows."
 test_refs = "TC-310"
-status = "Drafted"
+status = "Approved"
 component = "CMP-009"
 phase = 6
