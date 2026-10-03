@@ -229,3 +229,37 @@ handed to the next coordinator.
 The owner directed a new handoff: the next coordinator builds with Claude Opus at
 medium effort and reviews with Codex Luna (`gpt-6-luna`) at high effort. See
 [handoff-2026-10-03-wave8-coordinator.md](../handoff-2026-10-03-wave8-coordinator.md).
+
+### Resumed under the new roles; WI-697 lands: TC-279's first result, a pass
+
+The session resumed from the wave-8 handoff.
+
+- `.claude/agents/kit-builder.md` now exists: Claude Opus with `effort: medium`.
+  The key is confirmed in the Claude Code subagent docs.
+- A fresh independent Opus judge took WI-697's round 2 and recorded a pass on the
+  five sampled parts. It ruled that the coordinator's post-draw restriction was
+  not B2, on a better ground than the coordinator gave: the dropped fixture string
+  was never a part, it sorts last, and the next seeded draw yields the same sample.
+  So a fixed skip-a-non-part rule gives this sample.
+- Codex Luna (high) cross-reviewed it through `luna_review.sh`, the first real run
+  of the launcher, and found it SOUND
+  ([review](../reviews/2026-10-03-wave8/luna-wi697.md)). It reproduced both draws
+  and the six-item sequence, and the lane was unchanged. `git worktree add` is
+  blocked inside the Luna sandbox (read-only shared metadata), so Luna used
+  scratch script copies instead.
+
+Findings filed for later, not acted on:
+
+- `_render_drill`'s trace-bar branch has no recorded reason.
+- `declaration_sites` harvests `Implements:` text inside test-fixture strings.
+- The procedure should state its skip rule before a draw.
+- TC-279's result section is an input of TC-209, TC-210 and TC-211.
+
+A red on trunk, introduced and fixed by the coordinator: the cutover commit
+`3879545d` appended an observation-rubric index to `docs/rubrics/README.md`. That
+file is a byte-copy of the template's boilerplate
+(`test_dogfooded_boilerplate_matches_template`), and the commit ran only
+`check_docs`, not the smoke tier, so trunk was red from `3879545d` until this
+landing. The README is restored to the template's bytes. The index moves to
+`docs/README.md`, whose stale "resume from the September 26 handoff" pointer now
+defers to `status.md`.

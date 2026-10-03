@@ -192,3 +192,7 @@ This wave's record:
   confirmed on a scratch copy faster than another review round. This wave the
   IF-200 seam fix was confirmed that way (`check_trajectory --strict` exit 0 with
   the edit, ERROR without it). Say so in the log.
+- **Run the smoke tier on every commit, docs-only ones too.** The cutover commit
+  edited `docs/rubrics/README.md`, a byte-copy of the template that
+  `test_dogfood_sync.py` pins, ran only `check_docs`, and left trunk red until the
+  next landing. The dogfooded copies are listed in `BOILERPLATE_COPIES`.

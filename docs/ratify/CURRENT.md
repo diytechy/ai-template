@@ -392,7 +392,7 @@ _Evidence level now: assumed (computed at render time from the current results a
 
 **Evidenced by.** TC-279
 
-_Evidence level now: specified (computed at render time from the current results and the clock; not compared by the freshness check)._
+_Evidence level now: sampled (computed at render time from the current results and the clock; not compared by the freshness check)._
 
 **Falsifier.** A reader new to a sampled part cannot say what it does or why it exists from its code and linked records; or a part outside an earlier clean sample is found that no new reader can explain.
 

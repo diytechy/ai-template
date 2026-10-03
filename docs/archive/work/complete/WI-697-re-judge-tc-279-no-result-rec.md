@@ -2,13 +2,36 @@
 id = "WI-697"
 title = "re-judge TC-279: no result recorded [sha256:cf0861ee8f1d] at merge bcf1e9a"
 workstream = "process"
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 needs = ["WI-667", "WI-747"]
 brief = "rejudge"
 adjudicates = ["TC-279"]
 +++
+
+## Deliverable
+
+TC-279's first judgement is RECORDED pass
+(`docs/test/observations/TC-279.2026-10-03T164808Z.toml`, expiring 2027-01-01). The
+pass establishes nothing beyond the five sampled parts.
+
+- **Round 1** (`001-ADJUDICATE-f2bc66c.md`): NEEDS-JUDGEMENT. The coordinator's draw
+  counted only docstring back-links (423 parts, not the harvest's 516).
+- **Round 2** (`002-ADJUDICATE-f2bc66c.md`, sample in `SAMPLE-r2-f2bc66c.md`): a
+  seeded draw from `gen_arch_map.declaration_sites` (516 parts, seed from trunk
+  HEAD `f2bc66c1`).
+  - The independent Opus judge accepted the replacement of one drawn test-fixture
+    string as a skip-a-non-part rule. The entry sorts last, and the next draw gives
+    the same sample, so it is not B2.
+  - Five fresh Claude Sonnet readers all agree with their parts' rows (R1 and R2
+    hold, neither B1 nor B2).
+- **Findings raised, not acted on:**
+  - `_render_drill`'s trace-bar branch has no recorded reason.
+  - The harvest counts `Implements:` text inside test-fixture strings.
+  - The result section is an input of TC-209, TC-210 and TC-211.
+- **Cross-review:** Codex Luna (high) found it SOUND at 2ece5f6a
+  (`docs/reviews/2026-10-03-wave8/luna-wi697.md`).
 
 ## Context
 

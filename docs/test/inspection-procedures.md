@@ -97,9 +97,57 @@ not reach.
 
 ### Sampled new-reader inspection result
 
-**NOT YET TAKEN.** No sample has been drawn. The case is Drafted with its
-assumption, and its first result is recorded through the observation writer
-once the case is approved.
+**PASS (sample only) — 2026-10-03, round 2, [WI-697 Claude Opus 5.5 adjudication](../reviews/wi-697-re-judge-tc-279-no-result-rec/002-ADJUDICATE-f2bc66c.md); [sample record](../reviews/wi-697-re-judge-tc-279-no-result-rec/SAMPLE-r2-f2bc66c.md).**
+Recorded through `record_observation.py`. This pass establishes nothing
+about the parts the sample did not reach.
+
+**The draw.** The population is every function, class, module-level block or
+module header that `gen_arch_map.declaration_sites` encloses an `Implements:`
+line to, under the `[paths]` roots in `docs/stack.ini`: 516 parts. The seed is
+trunk HEAD `f2bc66c1`, fixed by rule. One drawn key was not a part. It was a
+line inside a test-fixture string (`tests/test_trajectory_arch.py`
+`MOD_A_SRC`) naming rows that do not exist. It was skipped, and the next
+seeded draw was taken. That is exactly the draw the coordinator's after-the-fact
+live-id restriction produced. The adjudicator ruled the skip a population rule
+rather than a selection. It did not adopt the live-id proxy as the definition
+of a part.
+
+All five readers were fresh Claude Sonnet 5.5 sessions that did not author
+their part and were told so. Each read the part and its linked rows, from the
+registry files rather than the generated views, a deviation that is recorded
+and does not break R1.
+
+**The five statements:**
+
+- `gen_arch_map.MAPPING_FINDING_POLICY` (SR-163, LLR-276): the one declared
+  warn-versus-gate table, missing and stale gating, unresolved and unmapped
+  warning, so the burn-down needs no flag day. **Agrees.**
+- `session_service.KeepWarmer` (SR-227, LLR-270): a one-turn keep-warm ping
+  that runs on its own thread under a warm lease and is recorded only over a
+  clean trunk, so the cache stays warm without blocking the scheduler or
+  racing an adjudication. **Agrees.**
+- `consolidate.close_refusal` (SR-220, LLR-210): the pre-close gate, whose
+  six refusals run in a fixed order so that the refusal names the row.
+  **Agrees.**
+- `gen_release_checklist._rejudge_checklist_line` (SR-215, LLR-255): the
+  release checklist's required re-judge item, with the due count read through
+  rejudge's pure decision and never shown as zero. **Agrees.**
+- `traj_render._render_drill` (SR-054, LLR-100): the drill markup with its
+  breadcrumb nav and controller, the never-without-a-way-back return path.
+  **Agrees.** The reader could not say why only two drills get the trace bar.
+  No linked row records that reason; it is surfaced as a finding, not ruled B1.
+
+No reader failed to explain its part, and none contradicted its rows.
+
+**Round 1 (superseded draw, no result).**
+[001-ADJUDICATE-f2bc66c.md](../reviews/wi-697-re-judge-tc-279-no-result-rec/001-ADJUDICATE-f2bc66c.md),
+[sample](../reviews/wi-697-re-judge-tc-279-no-result-rec/SAMPLE-f2bc66c.md).
+Round 1 drew from 423 functions and classes with an `Implements:` docstring.
+That frame left out module headers, module-level blocks and comment-linked
+functions, about a fifth of the back-linked parts, so no result was recorded.
+Its five readers all agreed with their rows. On part 3, `kitlib.spine.sn_all_ids`,
+one branch was misstated. Round 1 ruled that short of B1, and round 2 does not
+revisit it. A person may still overrule that ruling and record `fail`.
 
 ## Bounded abnormal inputs for the OI-85 inspection
 
