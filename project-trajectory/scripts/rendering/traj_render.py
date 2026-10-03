@@ -62,16 +62,16 @@ _FOCUSABLE = re.compile(r"tabindex\s*=|<a\s[^>]*href\s*=", re.I)
 # size, so the box never scales.
 #
 # The fix is scale-to-fit WITH A LEGIBILITY FLOOR, not unbounded scaling. Pure
-# scale-to-fit trades T7 for T4 — squeezing a 900px graph into 390px shrinks a
-# 12px label to ~5px, which is the "readable at default zoom" floor T4 forbids.
-# So the SVG scales down only to SHRINK_FLOOR of its natural width; past that it
-# stops shrinking and the container's existing scroll + `.scrollcue` affordance
-# takes over. That is the row's own rule — "keep the sideways-scroll hint only as
-# a fallback for content that genuinely cannot fit" — made mechanical, and it is
-# stated as residue rather than hidden: a view whose natural width exceeds
-# 390 / SHRINK_FLOOR still scrolls, with the cue.
+# scale-to-fit stops at the 9px label floor. With 10.5px sub-labels, about 86%
+# of natural width is the shrink limit; narrower containers scroll.
+# Stop shrinking when the smallest emitted node type token reaches 9 CSS px;
+# past that width the container's existing scroll + `.scrollcue` takes over.
+# The same scale emits the CSS tokens, so the floor follows type-scale changes.
+# Round the minimum width UP: rounding down would let labels fall below 9px.
 # Implements: SR-054, LLR-116
-SHRINK_FLOOR = 0.62  # smallest fraction of natural width before scrolling resumes
+MIN_RENDERED_NODE_LABEL_PX = 9
+# Implements: SR-054, LLR-116
+NODE_TYPE_PX = {"nlabel": 12, "nsub": 10.5, "nhead": 13}
 
 
 def _svg_fit_style(width):
@@ -80,7 +80,8 @@ def _svg_fit_style(width):
 
     Implements: SR-054, LLR-116"""
     return "width:100%;max-width:{:.0f}px;min-width:{:.0f}px;height:auto".format(
-        width, width * SHRINK_FLOOR
+        width,
+        math.ceil(width * MIN_RENDERED_NODE_LABEL_PX / min(NODE_TYPE_PX.values())),
     )
 
 
@@ -173,8 +174,7 @@ def _svg_frame(width, height, body):
     outside the layout box (WI-367). The declared natural width grows with it, so a
     diagram that already fits its card renders at exactly its former scale and only
     the clipped stubs appear; one that was already scaled to fit shrinks by the pad
-    fraction (measured: the How-SW root layer 0.800 -> 0.782 CSS px per unit at
-    1680px, its 12px labels 9.60 -> 9.38px, far above the `SHRINK_FLOOR` floor)."""
+    fraction, subject to the shared rendered-label floor."""
     left, right, top, bottom = _ink_overflow(width, height, body)
     box_w, box_h = width + left + right, height + top + bottom
     return 'viewBox="{:d} {:d} {:.0f} {:.0f}" width="{:.0f}" style="{}"'.format(
@@ -508,8 +508,10 @@ PORT_R = 4.5
 MAX_TIER_COL = DRILL_GEOM[0]  # 172 — the declared upper bound (the former width)
 TIER_COL_MIN = 96  # a floor so a short-label block stays a comfortable click target
 TIER_COL_PAD = 24  # fixed padding around the widest label (≈12px each side)
-_BLAB_CH = 7  # px/char, over-estimates the shared bold node label (`--nlabel`, `.blab`)
-_BSUB_CH = 5  # px/char, over-estimates the shared sub-label (`--nsub`, `.bsub`)
+# Conservative sans averages retain label capacity; the padding covers wider
+# glyphs. Ceil keeps integer geometry conservative at fractional type sizes.
+_BLAB_CH = math.ceil(0.7 * NODE_TYPE_PX["nlabel"])  # bold label (`.blab`)
+_BSUB_CH = math.ceil(0.65 * NODE_TYPE_PX["nsub"])  # regular sub-label (`.bsub`)
 CEDGE_LEN = 9  # the containment arrow's shaft length (a horizontal parent→child →)
 
 

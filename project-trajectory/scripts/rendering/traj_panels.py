@@ -865,7 +865,7 @@ def _station_panel(root):
         oi=oi_link,
     )
     # WI-415 (390px legibility): the ring no longer shrinks past the shared
-    # SHRINK_FLOOR (_station_svg's inline style), so a narrow viewport now
+    # rendered-label floor (_station_svg's inline style), so a narrow viewport now
     # overflows instead of blurring the notes to ~3.3 CSS px — the SAME
     # scroll-signal pattern the OKF graph / drill / seam / module views already
     # carry (WI-219/WI-256), not a new affordance invented for this panel.
@@ -1031,7 +1031,7 @@ def process_panel(root, wis, stats, stage_record=None):
         # last, emphasized on its own theme-invariant fill token.
         "#process .station{margin:.7rem 0;}"
         # WI-415 (390px legibility): sizing lives in the inline `style=` attribute
-        # (`_svg_fit_style`, the same SHRINK_FLOOR-governed floor the icicle/dag/
+        # (`_svg_fit_style`, the same rendered-label floor the icicle/dag/
         # know diagrams already use), not here — a hardcoded `max-width:860px`
         # with no `min-width` let the ring shrink all the way to the viewport,
         # which is what rendered ~3.3 CSS px note text at 390 px.

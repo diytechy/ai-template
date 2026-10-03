@@ -679,7 +679,32 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 3 chain(s): SR-222, SR-224, SR-227</summary>
+<summary>Waiting for automated adjudication — 4 chain(s): SR-054, SR-222, SR-224, SR-227</summary>
+
+## SR-054 — Dashboard usability (rubric-adjudicated)
+
+> **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
+
+> **Rationale.** Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded judgement, re-judged when a declared input changes or the record expires rather than on every commit — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
+
+
+### LLR LLR-116
+_approved — re-attestation owed_
+- **Detail**
+  - before: The mechanized core of usability anchor T7 (docs/rubrics/dashboard-usability.md). Every emitted SVG (all three wrappers: _svg_wrap for dag/sw/know, the icicle panel, _drill_layer_svg) carries width:100% + max-width:<natural> + min-width:<natural x SHRINK_FLOOR> instead of a FIXED pixel width, so a diagram fills its container and scales down as the viewport narrows. SCOPE and its deliberate narrowing: a view whose natural width exceeds 390 / SHRINK_FLOOR still scrolls horizontally WITH its cue — the row's own fallback rule made mechanical. Closing that remainder needs a narrow-width re-layout (stacked columns), which is not this row.
+  - after: The mechanized core of usability anchor T7 (docs/rubrics/dashboard-usability.md). Every emitted SVG carries width:100% + max-width:<natural> + min-width:<ceil(natural x 9 / smallest emitted node type token in px)> instead of a FIXED pixel width, so a diagram fills its container and scales down until its smallest rendered node label reaches 9 px. The node type tokens are emitted from NODE_TYPE_PX (12 px labels, 10.5 px sub-labels, 13 px headlines). The minimum width is rounded up to a whole pixel so no node label renders below 9 px; it is derived from the smallest emitted token, not a hand-set ratio. A view whose minimum width exceeds its container scrolls horizontally WITH its cue. Closing that remainder needs a narrow-width re-layout (stacked columns), which is not this row.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: _svg_fit_style/SHRINK_FLOOR
+  - after: _svg_fit_style/MIN_RENDERED_NODE_LABEL_PX/NODE_TYPE_PX
+
+### TC TC-121
+- **Expected**
+  - before: Every emitted svg scales to fit its container; zero svgs keep the pre-fix fixed-width shape; the shrink floor is pinned to the one declared constant rather than re-hardcoded in the test.
+  - after: Every emitted SVG scales to fit its container; zero SVGs keep the pre-fix fixed-width shape. Every emitted node type token is at least 9 px at natural size and at the emitted minimum width, which never exceeds natural width and is the smallest whole-pixel width meeting the 9 px floor.
+- **Method**
+  - before: Generate the dashboard and derive EVERY emitted <svg> from the document (not a hand list, so a fourth emitter cannot skip the rule); assert each carries the responsive style and none keeps a bare fixed width; assert the emitted min/max ratio equals the declared SHRINK_FLOOR constant.
+  - after: Generate the dashboard and derive EVERY emitted <svg> from the document (not a hand list, so a fourth emitter cannot skip the rule); assert each carries the responsive style and none keeps a bare fixed width. Read every emitted node type token; assert labels are 12 px and sub-labels 10.5 px, and every node type token is at least 9 px at natural size. For every emitted SVG, assert 0 < min-width <= natural width and every emitted node type token scaled by min-width / natural width is at least 9 px; assert reducing min-width by one pixel would put the smallest token below 9 px.
 
 ## SR-222 — Every model session is recorded in one usage record, whichever provider CLI serves it
 

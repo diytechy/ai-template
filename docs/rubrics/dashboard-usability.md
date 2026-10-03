@@ -152,7 +152,7 @@ under a label or inside a port fan.
   you believe you see is a gap in that test and routes through change-intake.
   T7 is no longer yours either — `TC-121` holds every emitted diagram to scale-to-fit
   with a legibility floor. A view that still scrolls sideways at 390px is the
-  floor working as designed (its natural width exceeds 390 / SHRINK_FLOOR), not
+  floor working as designed (its natural width exceeds 390 × 10.5 / 9), not
   a T7 finding; if you believe it is a defect, that is a gap in `TC-121` and
   routes through change-intake, never a verdict.
 

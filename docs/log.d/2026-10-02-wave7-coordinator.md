@@ -35,3 +35,16 @@ sandbox, and the continuation recovered the red by restoring HEAD's files (1 fai
 123 passed) before the green (124 passed). Sonnet 5.5: SOUND, two cosmetic minors
 accepted. The shared fixture now forces SR/LLR/TC statuses to Approved in its temp
 copy; the reviewer checked every caller and the regex's anchoring.
+
+### WI-722 lands: the shrink floor is a 9 px rendered-label minimum
+
+Rebuilt from trunk (the first build's commit was lost). Sol's first build ran its
+tests on an improvised interpreter under the elevated sandbox; the coordinator
+re-ran them with the repo venv. Three Sonnet rounds: NOT YET SOUND at e5e42767 (the
+seam graph's literal 10 px label renders 8.57 px at the floor; the drill width
+estimates were stale), NOT YET SOUND at ed57db9f (the estimates over-corrected to
+1.0 em, halving label capacity), SOUND at 45a0bab2 (0.7/0.65 em pinned to a
+0.65-0.85 em band; a seam budget of its own; a scan of every emitted SVG for
+non-token text sizes). One 27-character component name now truncates at the 172 px
+column cap, from the larger type; noted for WI-713. LLR-116 and TC-121 amended in
+place for this merge's adjudication, which also carries TC-262/263/264/267.

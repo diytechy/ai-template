@@ -176,7 +176,7 @@ else:
         PORT_R,
         RING_INKS,
         SCROLL_CUE,
-        SHRINK_FLOOR,
+        NODE_TYPE_PX,
         STATUS_BUCKET,
         STATUS_BUCKET_LABEL,
         STATUS_FILL,
@@ -369,7 +369,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
        Add a step only with a role no existing step covers, and say the role. */
     /* node: per-node label, its sub-label, and a once-per-diagram headline
        (the Process hub title and the icicle lane heads are the same role). */
-    --nlabel:10px; --nsub:8.5px; --nhead:13px;
+    $node_type_tokens
     /* page: tiny < xsmall < small < body < lead < display < hero. */
     --tiny:.75rem; --xsmall:.8rem; --small:.85rem; --body:.9rem;
     --lead:1.05rem; --display:1.4rem; --hero:2rem;
@@ -1045,6 +1045,9 @@ def build_html(root, wis):
         for tier, fill in TIER_FILL.items()
     )
     return HTML_TEMPLATE.substitute(
+        node_type_tokens=" ".join(
+            f"--{name}:{size:g}px;" for name, size in NODE_TYPE_PX.items()
+        ),
         asof=html.escape(_asof(root)),
         tier_legend=tier_legend,
         tier_color_js=json.dumps(TIER_FILL),

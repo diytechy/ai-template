@@ -2,13 +2,44 @@
 id = "WI-722"
 title = "Raise the diagram shrink floor to a rendered-pixel label minimum, and settle TC-055's T5 at 1280 px (OI-96)"
 workstream = "scripts"
-specref = "docs/requirements/open-items.toml"
+specref = ""
 sr_refs = ["SR-054"]
 needs = []
 buildtier = "medium"
 priority = 0
 safety_class = "spine"
 +++
+
+## Deliverable
+
+The diagram shrink floor is a rendered-pixel label minimum (OI-96 (a), the owner's
+2026-09-29 direction), rebuilt from trunk after the first build's loss.
+
+- **Type scale:** one `NODE_TYPE_PX` table (`traj_render.py`) emits 12 px node
+  labels, 10.5 px sub-labels and the existing 13 px headline; every SVG text size
+  goes through these tokens (the seam graph's literal `font-size="10"` included).
+- **Floor:** each SVG's `min-width` is `ceil(natural x 9 / smallest emitted token)`,
+  so no node label renders below 9 px and a diagram shrinks to about 86% of natural
+  width before it scrolls with its cue; `min-width` never exceeds natural width.
+- **Layout estimates:** drill column and truncation estimates derived from the tokens
+  (0.7 em bold, 0.65 em regular), pinned to a 0.65-0.85 em band; seam labels have
+  their own regular-weight budget (19 characters). Against trunk, most drill columns
+  widen (124 -> 164 px); one 27-character component name truncates at the 172 px
+  column cap because of the larger type.
+- **Tests:** every emitted SVG is scanned for a text size outside the tokens
+  (attributes, inline styles, CSS rules, `font:` shorthand, `#id` selectors), with
+  the seam graph forced; floor, band and seam-budget tests read emitted values.
+- **Rows amended in place** (status left Approved, for this merge's spine-acts
+  adjudication): LLR-116 `detail` (and its `code_symbol` pointer), TC-121 `method`
+  and `expected`; the rubric's T7 threshold expression.
+- **T5 at 1280 px:** recorded, not judged: the roadmap (natural 1408 px, min 1207 px)
+  does not fit beside the 320 px detail column, so the scroll cue's right-edge
+  gradient applies, and phase 3 is also trace-muted by the default selection. The
+  perceptual call is WI-713's.
+- **Reviews:** Sonnet 5.5, three rounds (`docs/reviews/2026-10-02-wave7/sonnet-wi722-r2.md`
+  to `-r4.md`): NOT YET SOUND (a literal 10 px seam label below the floor; stale
+  width estimates), NOT YET SOUND (estimates over-corrected to 1.0 em), SOUND at
+  45a0bab2.
 
 ## Context
 
