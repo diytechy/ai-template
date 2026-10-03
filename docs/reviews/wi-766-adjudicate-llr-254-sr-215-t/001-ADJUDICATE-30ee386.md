@@ -32,3 +32,12 @@ Gap noted for the successor, not a reason on its own to withhold the text: SR-21
 Because TC-248 is not blessed, the test-case registry cannot be copied this sitting. A copy is refused while any drifted approved row in it is left out of `--reattests`. So the six TC rows I would bless stay drifted, and they are re-judged with the corrective amendment. SR-215 and LLR-254 are not re-anchored. The follow-up is drafted in `## Dispositions` of `docs/work/queued/WI-766-adjudicate-llr-254-sr-215-t.md`.
 
 VERDICT: MEANING rows=9
+
+## Addendum 2026-10-03 (after the Sonnet cross-review of eb709653)
+
+The recorded lines above stand as written. This addendum corrects two things.
+
+1. **The bless list.** My TC-247 line records that the naming check was dropped, yet the Re-attestation section would bless TC-247. That is inconsistent. LLR-254 still requires the draft to name "the case, reason, rubric and changed inputs or trigger", and TC-247 is LLR-254's only verifier, so its amended Method leaves that clause unverified. **Corrected: I would NOT bless TC-247.** It joins SR-215, LLR-254 and TC-248 among the rows the successor amends. The rows I would bless as written are now TC-036, TC-055, TC-209, TC-210 and TC-211. The coordinator carries them into the successor's amendment adjudication.
+2. **The stage-gate gap is narrower than I wrote.** PROCESS.md "Observation judgement" and RESYNC_PACK.md do name `intake.py rejudge --checkpoint stage-gate`. What is missing is a prompt AT the gate: no step of the gate procedure tells the person signing a rung to run it, the way the release checklist's required item does for release.
+
+The machine line above is unchanged: every row was already MEANING, and `rows=9` stands.

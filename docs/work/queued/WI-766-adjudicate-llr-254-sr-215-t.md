@@ -69,13 +69,17 @@ Advisory registry joins (WI-388; never gating):
 
 ## Dispositions
 
-Verdict: `docs/reviews/wi-766-adjudicate-llr-254-sr-215-t/001-ADJUDICATE-30ee386.md`
-(MEANING on all nine rows). TC-036, TC-055, TC-209, TC-210, TC-211 and TC-247 would be
-blessed as written, but they could not be re-anchored: TC-248 is not blessed, and it
-shares their registry. SR-215, LLR-254 and TC-248 return with the findings below.
+Verdict: `docs/reviews/wi-766-adjudicate-llr-254-sr-215-t/001-ADJUDICATE-30ee386.md`,
+MEANING on all nine rows; its 2026-10-03 addendum corrects the bless list. The
+rows blessed as written are TC-036, TC-055, TC-209, TC-210 and TC-211. SR-215,
+LLR-254, TC-247 and TC-248 return. WI-767 returned LLR-293, LLR-294, TC-306
+and TC-307
+(`docs/reviews/wi-767-adjudicate-llr-293-llr-294/001-ADJUDICATE-30ee386.md`).
+One lane carries every returned row. Two lanes would couple through the
+snapshot: a registry copy is refused while any approved row in it has drifted.
 
 ```toml
-title = "Correct SR-215, LLR-254 and TC-248 after WI-747's cadence amendment so their text reads one way and verifies what it states"
+title = "Rework the SR-215 cadence rows WI-766 and WI-767 returned, and prompt the stage-gate re-judge at the gate"
 workstream = "process"
 buildtier = "medium"
 safety_class = "spine"
@@ -83,31 +87,97 @@ sr_refs = ["SR-215"]
 priority = 2
 ```
 
-Amend only these three approved rows, through the amendment route. A new
-amendment adjudication then re-judges them together with TC-036, TC-055,
-TC-209, TC-210, TC-211 and TC-247, which are still drifted and should
-re-attest as they stand.
+Each cell below is replaced whole with the text given. Write it byte-exact
+apart from TOML escaping.
 
-- **SR-215 AcceptanceCriteria and LLR-254 Detail:** reword "No result is due
-  immediately" / "No record is due immediately" to say what PROCESS.md says: "A
-  case with no result is due immediately".
-- **SR-215 AcceptanceCriteria:** keep only the mechanized half of the rubric
-  clause, "an observation case with no rubric reference is reported as a
-  warning". Leave the authoring rule (a numbered rubric written before the
-  first judgement) in its one home, PROCESS.md "Observation judgement".
-  `trace.py` currently flags SR-215 for naming a rubric while Verification is
-  Test.
-- **SR-215 Coincident and Title:** restate them for the cadence decision. The
-  closed-WI floor is a limit derived from the owner's cost and determinism
-  direction (WI-747), not an outcome coincident with the need. If the floor
-  makes the row derived, label it.
-- **LLR-254 Detail:** state `checkpoint_for`'s obligation (it is already in
-  CodeSymbol): it returns the case's explicit release or stage-gate checkpoint,
-  else merge.
-- **TC-248 Method:** restore that the generated release checklist carries a
-  REQUIRED item naming the release re-judge command and the due count. This is
-  LLR-255's clause, and TC-248 is its only verifier.
+**Prohibitions.**
+- Change no other cell of these rows, and no cell of any other approved row.
+  TC-036, TC-055, TC-209, TC-210, TC-211, LLR-265 and TC-261 stay
+  byte-identical.
+- Under ruling R2, no SR-215 cell names a script, command, file or function.
+- Do not flip any Status. Amended rows stay `Approved`; reworked rows stay
+  `Drafted`. The approvals are the adjudications' to give.
+- Change no production code. The only code edits allowed are the test
+  assertions the TC-247 bullet names.
+- Do not touch TC-279. It waits for WI-667.
 
-Out of scope: LLR-293, LLR-294, TC-306, TC-307 and LLR-255. WI-767's
-successor owns them, including where the stage-gate command entry and its
-verification live. Do not touch code beyond what a reworded row needs.
+**Landing.** The merge mints an amendment adjudication for SR-215, LLR-254,
+LLR-255, TC-247 and TC-248, and a first-approval adjudication for LLR-293,
+LLR-294, TC-306, TC-307 and the new TC. The coordinator carries TC-036,
+TC-055, TC-209, TC-210 and TC-211 into the amendment adjudication's
+`adjudicates` list (as in wave 6, carrying held approvals) and checks that they
+render. That lets one sitting re-anchor the whole test-case registry.
+
+**SR-215 (amend).** `trace.py` currently flags it because its Rationale and
+AcceptanceCriteria use the word "rubric" while Verification is Test. The
+replacement text below contains no "rubric", so the finding clears. Confirm
+that `trace.py --strict` no longer prints the "SR SR-215 ... names a CRITIQUE
+instrument" advisory.
+- `title` -> `At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging`
+- `requirement` -> `When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.`
+- `rationale` -> `Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.`
+- `acceptance_criteria` -> `A case with no result is due at once, and a case whose result expired is due at once; neither waits for the floor. Otherwise a declared trigger (matching changed files, a change to a module tagged with the named component, release preparation, or a stage-gate check) makes a case due only once the configured number of closed work items has passed since its latest record was committed; a case may raise that number but not lower it. With no trigger, a change to its declared inputs makes it due, subject to the same floor; with neither a trigger nor inputs, only absence and expiry make it due. Inputs and policy are read at the checkpoint revision. An open re-judge item suppresses a second, and the decision runs no model. An observation case that cites no written pass criteria is reported as a warning, never a failure, including under strict checking.`
+- `coincident` -> `The needs ask that an accepted observation not stand on a state it never judged, and that it be judged against written criteria. Filing one re-judge item for each case that is unjudged, expired or triggered past its floor, and warning on a case that cites no criteria, is that outcome within the cost bound the floor sets. The judging itself is the re-judge item's own.`
+- `hat_refs` stays `["TEST-ENGINEER", "PERFORMANCE"]`. PERFORMANCE already records the cost lens the floor derives from, and the new Rationale argues it.
+
+**LLR-254 (amend).**
+- `detail` -> `A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. checkpoint_for(root, rev, tc) returns the case's Trigger when it names the release or stage-gate checkpoint, else merge. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. A case with no record is due at once, and an expired record is due at once; neither waits for the floor. Without a trigger, a changed input digest is due subject to the floor; without inputs, only absence and expiry make a case due. checkpoint_drafts drafts each due case once, suppressing an open item by its typed Brief and Adjudicates cells, never by title. A draft names the case, the reason, the rubric and the changed inputs or the fired trigger, and its title carries the case id and the inputs-digest prefix. Committed links are excluded by the observation writer's own link predicate. No model runs.`
+
+**LLR-255 (amend; its module is intake.py).**
+- `detail`: replace only the sentence `` mint_rejudge(root, rev, checkpoint) files them through _mint, and `intake.py rejudge --checkpoint release` is the release-preparation entry. `` with `` mint_rejudge(root, rev, checkpoint) files them through _mint; `intake.py rejudge --checkpoint release` is the release-preparation entry and `intake.py rejudge --checkpoint stage-gate` the stage-gate-preparation entry, and the command refuses a merge checkpoint, which only the merge slot runs. `` Every other sentence of the cell stays byte-exact.
+
+**TC-247 (amend).**
+- `method` -> `checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only once the configured closed-WI floor is met. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. A draft names the case, its reason, its rubric and the changed input or the fired trigger, and its title carries the case id and the inputs-digest prefix. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs.`
+- No test today asserts that a draft's context names the rubric, or the fired trigger for a triggered case. Add those assertions to `tests/test_rejudge.py`, and change nothing else in it.
+
+**TC-248 (amend).**
+- `method` -> `Driven through intake on a real git repository. A merged work item satisfying an observation case's trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. Release preparation mints for expired or release-triggered due cases, and the generated release checklist carries one required item naming the release re-judge command and the count of cases due at the release checkpoint. The stage-gate command files one item for a stage-gate-triggered case past its floor, none at merge and none while one is open, and the command refuses a merge checkpoint. Minting follows the mint checks and preserves unrelated uncommitted edits.`
+- `expected` -> `Satisfies SR-215's acceptance at every checkpoint: a work-item merge, release preparation and stage-gate preparation each file one re-judge item per due case and never a second while one is open.`
+- The stage-gate clause is
+  `tests/test_rejudge.py::test_stage_gate_trigger_is_filed_through_the_cli_not_at_merge`,
+  and the merge refusal is
+  `tests/test_rejudge.py::test_the_cli_refuses_a_manual_merge_checkpoint`.
+  Both modules are already in its Evidence cell.
+
+**LLR-293 (rework, Drafted).**
+- `detail` -> `Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.`
+- This drops both intake CLI sentences; LLR-255 now carries the entries.
+
+**LLR-294 (rework, Drafted).** It rests on SR-215's new acceptance clause, "An
+observation case that cites no written pass criteria is reported as a warning,
+never a failure, including under strict checking". If that clause is reworded,
+keep it meaning the same, or this row loses its parent.
+- `detail` -> `observation_rubric_findings returns one warning for each real observation case omitting Rubric, naming the case. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict.`
+- This drops "Creation requires the numbered rubric first". That rule's one home is PROCESS.md "Observation judgement", which keeps it.
+
+**TC-306 (rework, Drafted).**
+- `expected` -> `A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both.`
+
+**TC-307 (Drafted).** No text change. It verifies the function half, and the
+new case below verifies the check_trajectory half. `test_rejudge.py` is
+outside the smoke tier, so citing it here would contradict `Tier = Smoke`.
+
+**New TC (Drafted), next id from the watermark.**
+- `verifies` = `["SR-215", "LLR-294", "IF-269"]`
+- `level` = `"Integration"`, `tier` = `"Full"`, `automated` = `"Yes"`
+- `method` = `Run the trajectory check with --strict on a tree holding no work items and a real observation case with no rubric reference.`
+- `expected` = `The check exits 0 and prints one warning naming the case and the missing rubric; strict mode never promotes it to a failure.`
+- `evidence` = `tests/test_rejudge.py::test_trajectory_rubric_warning_survives_strict_and_no_work_items`
+- `phase` = `6`, `status` = `"Drafted"`
+
+**The gate prompt (shipped skill).** In
+`project-trajectory/skills/gate-advance/SKILL.md`, insert this paragraph
+directly after the paragraph beginning "Run the checks with
+`scripts/check.py`":
+
+> **File the stage-gate re-judges before you sign (required).** At the commit
+> you are about to sign, run `python scripts/intake.py rejudge --checkpoint
+> stage-gate`. It files one re-judge item for each observation case whose
+> declared `stage-gate` trigger is due past its closed-work floor, and none
+> while one is open (PROCESS.md "Observation judgement"). Paste its output into
+> the `docs/log.md` audit entry beside the check output.
+
+Then regenerate the dogfooded copies under `.claude/skills/gate-advance/` and
+`.agents/skills/gate-advance/` (`gen_skills_index.py --check-agents` must
+pass). Add a RESYNC_PACK.md entry for the shipped skill change. Nothing else
+in the skill changes.
