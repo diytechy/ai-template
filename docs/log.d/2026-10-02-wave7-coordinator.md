@@ -1,7 +1,8 @@
 ## 2026-10-02 — wave 7 (coordinator): Sol 6.1 builds, Sonnet 5.5 reviews
 
-Deferred open items: none — the owner ruled every question this session raised
-(recorded in WI-541, WI-657, WI-667, WI-697 and WI-746, and as the new WI-747 and
+Deferred open items: OI-98, OI-99 - the owner's holds filed by WI-746 (WI-684 from
+2026-10-03; WI-688 until second to last). Every other question this session raised
+was ruled (recorded in WI-541, WI-657, WI-667, WI-697 and WI-746, and as WI-747 and
 WI-748).
 
 ### Setup and the owner's 2026-10-02 rulings
@@ -192,3 +193,10 @@ landing the merged tree failed the ratchet on WI-750's growth (`_route_edges` 40
 naming WI-750, since this is the first commit whose hook enforces the ratchet. The
 pre-commit hook now runs complexity, dupes-census and readability (~4 s) on every
 commit here. Lanes cut before this landing (WI-758, WI-747) will meet it at theirs.
+
+### Spine-acts batch M (WI-762, WI-763): LLR-195 and LLR-206 re-attested; LLR-291 and TC-304 approved (seq 20)
+
+One independent Opus adjudicator, one combined act. Sonnet's cross-review: SOUND,
+recommending a one-clause SR-006 amendment (its text ties step selection to the
+stage; the path trigger only adds runs), surfaced to the owner. Also: the log
+fragment's deferral header now names OI-98 and OI-99, the holds pending since WI-746.

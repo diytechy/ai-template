@@ -3052,3 +3052,14 @@ automated = "Yes"
 evidence = "tests/test_session_keep.py"
 status = "Approved"
 phase = 6
+
+[test.TC-304]
+verifies = ["LLR-291", "LLR-195", "LLR-206", "IF-267"]
+level = "Unit"
+method = "In memory, a matching code, baseline, script or config change selects a step below its rung, an unrelated change does not, reaching the rung selects with no change, and unknown changes select. Blank and absent paths retain rung-only selection. Mock git reads to drive no staged diff, failed reads, an unresolvable lane base, a base-to-tip change, deletion and both rename paths. Drive the hook CLI through main and assert only selected path-declaring steps except smoke run, while ordinary gates retain smoke. Read the live declaration and assert all four sensors cover their code, baseline, script and config inputs."
+tier = "Smoke"
+expected = "Sensors run whenever their rung or declared change trigger selects them; unknown changes run them and undeclared triggers preserve adopter behavior."
+automated = "Yes"
+evidence = "tests/test_step_path_trigger.py"
+status = "Approved"
+phase = 5

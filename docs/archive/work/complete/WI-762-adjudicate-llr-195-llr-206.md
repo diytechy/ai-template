@@ -2,12 +2,19 @@
 id = "WI-762"
 title = "adjudicate: LLR-195, LLR-206 - approved/routed cell(s) amended on merged trunk 8773677..c58af7a (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-195", "LLR-206"]
 +++
+
+## Deliverable
+
+Spine-acts batch M, act seq 20: an independent Claude Opus 5.5 adjudicator ruled
+LLR-195 and LLR-206 detail (WI-657's rung-OR-path selection) MEANING and
+re-attested both, true of `check.py` and `kitlib/config.py`. Sonnet 5.5
+cross-review: SOUND at 8415796a (`docs/reviews/2026-10-02-wave7/sonnet-batch-m.md`).
 
 ## Context
 
