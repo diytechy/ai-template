@@ -53,8 +53,8 @@ Usage:
     python scripts/schedule.py [--root .] simulate --jobs N [--format text|json]
 
 Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit's
-independently-copyable-script convention (the F5 rule): schedule.py stays a
-self-contained drop-in, never importing the sibling engines.
+independently-copyable-script convention (the F5 rule). Owner gates are read
+through `_load`'s lazy `spine_carrier` import.
 
 Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the
 interface seams this module declares (process.md §8; rows of record in

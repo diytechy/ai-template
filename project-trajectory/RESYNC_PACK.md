@@ -6576,7 +6576,8 @@ edge into `needs`. The work-item row format and directory status are unchanged.
 
 **What to do.** Take schedule.py, traj_status.py, agent_brief.py, intake.py and
 check_trajectory.py and spine_carrier.py together with the work/open-item
-template guidance. Review
+template guidance and `prompts/adjudicate-disposition.template.md` (refresh
+`prompts/CATALOG.md` with `gen_prompt_catalog.py`). Review
 pending `wi_refs` against IF-073 in the owner registry header: move context-only
 references into prose, retain ruled history, and record hand-held gates there.
 The approved legacy OI-edge contract requires separate amendment before its

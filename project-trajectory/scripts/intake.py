@@ -294,14 +294,14 @@ _DRAFT_KEYS = frozenset(
         # is a lineage fact, not a revival — the superseded row stays terminal
         # and its scope stays exactly what it was.
         "supersedes",
-        # OI-73 exit (B), as a typed dependency: where the answer is human-owed
+        # OI-73 exit (B), as an owner gate: where the answer is human-owed
         # and the adjudicator found no alternative route, the draft carries the
         # owner's brief here, as the typed `[open_item]` table
         # (`OPEN_ITEM_CELLS`). The mint creates a `pending` open item from it
-        # (id from the watermark's OI space) and lands that OI id in THIS
-        # successor's `needs`, so the ruling gates the successor's readiness
+        # (id from the watermark's OI space) and lists THIS successor in its
+        # `wi_refs`, so the ruling gates the successor's readiness
         # rather than relying on adjudicator restraint. A standalone OI exit no
-        # longer exists — the OI is always a dependency of a queued successor.
+        # longer exists — the OI always gates a queued successor (IF-073).
         "open_item",
     }
 )
