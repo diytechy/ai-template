@@ -2,12 +2,16 @@
 id = "WI-789"
 title = "adjudicate: LLR-267, LLR-290 - approved/routed cell(s) amended on merged trunk e78204b..439a2bb (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-267", "LLR-290"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). LLR-267 and LLR-290 were ruled MEANING, blessed and re-attested at act 28, by verdict `docs/reviews/wi-787-codex-occupancy-default-home/001-ADJUDICATE-AMENDMENT-da2037a.md`. Both rows are byte-identical to their `docs/archive/last_approved/` anchors at this row's mint (2abce2fb).
 
 ## Context
 
