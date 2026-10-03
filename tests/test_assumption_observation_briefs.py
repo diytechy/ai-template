@@ -68,6 +68,8 @@ def test_rejudge_shows_assumption_only_case(tmp_path, monkeypatch):
     assert_chain(text)
     assert "- TC-279 — observes DA-011" in text
     case_at = text.index("- TC-279 — observes DA-011")
+    method_at = text.index("Method:")
+    assert method_at > case_at
     for shown in (
         "DA-011",
         "A new reader understands the code.",
