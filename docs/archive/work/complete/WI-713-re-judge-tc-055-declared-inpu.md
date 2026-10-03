@@ -3,13 +3,31 @@ id = "WI-713"
 title = "re-judge TC-055: declared inputs changed [sha256:ea557b20f45c] at merge cfef8d1"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 needs = ["WI-722"]
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+TC-055 re-judged cross-family at cafa07ab, after WI-722 landed: **RECORDED fail**
+(`docs/test/observations/TC-055.2026-10-03T043914Z.toml`; verdict
+`docs/reviews/wi-713-re-judge-tc-055-declared-inpu/001-REJUDGE-cafa07ab.md`).
+
+- Three independent Claude Opus 5.5 judges, one per width (Codex wrote the
+  rendering), on 270 native-resolution tiles of the declared matrix.
+- T2 and T5 pass at every width. T4 fails at every width: the System-context
+  diagram's crossing captions are clipped under the boxes at both ends (a
+  character-count cut sized for the old type scale). T8 fails at 1680 px (MAJOR)
+  and 1280 px (MINOR): avoidable crossings in the Process station cycle, the How
+  top view's lane order, and the When roadmap's trunk beside the port fans.
+- The shrink floor this row waited on (WI-722) holds: no judge found a node label
+  below the floor or a T7-class finding.
+- Successor: WI-750 (fit the context captions; minimise the crossings). The next
+  merge that changes the rendering makes TC-055 due again.
 
 ## Context
 

@@ -48,3 +48,15 @@ estimates were stale), NOT YET SOUND at ed57db9f (the estimates over-corrected t
 non-token text sizes). One 27-character component name now truncates at the 172 px
 column cap, from the larger type; noted for WI-713. LLR-116 and TC-121 amended in
 place for this merge's adjudication, which also carries TC-262/263/264/267.
+
+### WI-713: TC-055 re-judged cross-family, RECORDED fail
+
+The coordinator rendered the declared matrix at cafa07ab and cut it into 270
+native-resolution tiles (Playwright clips at scale 1 over the scale-2 shots; no
+image library is installed). Three independent Claude Opus 5.5 judges, one per width,
+saw only the composed brief, the rubric, SR-054, LLR-055, its needs and the tiles.
+T2 and T5 pass at every width. T4 fails at every width (the System-context crossing
+captions clipped under the boxes, a 54-character cut sized for the type WI-722
+raised). T8 fails at 1680 px (MAJOR) and 1280 px (MINOR): avoidable crossings in
+three diagrams. Recorded `fail` through `record_observation.py`, naming the judges.
+WI-722's floor itself held. Successor WI-750, filed by hand.
