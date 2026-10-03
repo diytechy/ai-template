@@ -3,12 +3,21 @@ id = "WI-752"
 title = "TC-302 return: state and evidence LLR-289's terminal-row resolution (a wi_refs entry naming an archived work item is no finding), and drive the checker, not only the scheduler, on a repo with no open-items registry"
 workstream = "process"
 sr_refs = ["SR-148"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Tests"
 +++
+
+## Deliverable
+
+WI-751's exact return, applied as drafted: TC-302's method states that a `wi_refs`
+entry naming an archived work item yields no finding and that the checker yields
+none on an absent registry; its evidence adds the archived-work test; one assert
+drives the checker after the registry is removed. TC-302 stays Drafted for this
+merge's first approval. No code change. Sonnet 5.5: SOUND at d0c11f8e
+(`docs/reviews/2026-10-02-wave7/sonnet-wi752.md`).
 
 ## Context
 

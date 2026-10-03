@@ -93,3 +93,16 @@ An independent Claude Opus 5.5 adjudicator approved LLR-288, LLR-289 and TC-301 
 returned TC-302 (archive resolution and the absent-registry case untested in its
 Method), drafting one exact replacement row. Sonnet's cross-review: SOUND. The lane
 was cut from the trunk tip, so its snapshot stands as taken.
+
+### WI-752 lands: TC-302's return applied as drafted
+
+Sol (low) applied WI-751's exact replacement to TC-302 and added the one assert; no
+code change, nothing went red because the behaviour already held. Sonnet: SOUND. The
+shared builder prompt had told builders not to run the whole smoke tier, against the
+item prompts; it now requires the smoke tier at `-n 2`.
+
+**A slip found here:** WI-722's landing ran four traj test modules, not
+`tests/test_traj_graph.py`, and that slow-tier module still pinned the old floor:
+`test_svg_frame_pads_only_the_side_that_carries_outboard_ink` is red on trunk from
+6a40d7b2 (`1 failed, 30 passed`). WI-750's lane carries the fix. Lesson: a lane
+touching `rendering/` runs every `test_traj_*` module before it lands.

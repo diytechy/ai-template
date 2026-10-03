@@ -3034,10 +3034,10 @@ phase = 6
 [test.TC-302]
 verifies = ["LLR-289", "IF-073"]
 level = "Unit"
-method = "For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; an example row and absent registry yield none."
+method = "For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; a wi_refs entry naming a work item that exists only in the terminal archive yields none; an example row and an absent registry yield none from the checker."
 tier = "Smoke"
 expected = "Dangling owner-gate pointers are reported, including historical pointers."
 automated = "Yes"
-evidence = "tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert"
+evidence = "tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert; tests/test_open_item_readiness.py::test_only_queued_rows_are_held_and_a_drained_frontier_still_lists_gates"
 status = "Drafted"
 phase = 6

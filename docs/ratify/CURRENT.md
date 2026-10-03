@@ -688,18 +688,13 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 > **Rationale.** Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
 
 
-### TC TC-302 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-302
-- **Verifies**: LLR-289;IF-073
-- **Level**: Unit
-- **Method**: For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; an example row and absent registry yield none.
-- **Tier**: Smoke
-- **Expected**: Dangling owner-gate pointers are reported, including historical pointers.
-- **Automated**: Yes
-- **Evidence**: tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert
-- **Status**: Drafted
-- **Phase**: 6
+### TC TC-302, Drafted — never approved
+- **Method**
+  - before: For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; an example row and absent registry yield none.
+  - after: For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; a wi_refs entry naming a work item that exists only in the terminal archive yields none; an example row and an absent registry yield none from the checker.
+- **Evidence**
+  - before: tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert
+  - after: tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert; tests/test_open_item_readiness.py::test_only_queued_rows_are_held_and_a_drained_frontier_still_lists_gates
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
