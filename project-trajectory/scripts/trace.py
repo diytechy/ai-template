@@ -4039,12 +4039,9 @@ def current_approval_brief(root):
 # Excluded from the freshness comparison, and named ONCE here so the renderer and
 # the gate can never disagree about which lines are derived (the renderer's own
 # note points back at this constant).
-# The assumption section's evidence line is derived from current results rather
-# than from the registry, so it is excluded on the same terms (SR-203).
 _DERIVED_STAMP_PREFIXES = (
     "_Baseline: ",
     "_Approval provenance: ",
-    "_Evidence level now: ",
 )
 
 
@@ -4419,11 +4416,6 @@ ASSUMPTIONS_REL = "docs/requirements/assumptions.toml"
 # The reserved `--approve` scope that renders the assumption section alone.
 ASSUMPTION_SCOPE = "assumptions"
 _ASSUMPTION_ID = re.compile(r"(?:DA|SUR)-\d+", re.IGNORECASE)
-# The evidence level is derived from current results and the clock, which move on
-# commits that move no row (a sample expiring, the suite's record binding a new
-# tree), so its line is left out of the freshness comparison, like the
-# git-derived stamps, and says it was computed when the brief was rendered.
-_EVIDENCE_NOW = "_Evidence level now: "
 # The cells each tier's section shows in a line of their own rather than in its
 # cell list (SR-203 "shows its cells": every other non-empty cell is listed).
 _DA_SHOWN = frozenset({"DA-ID", "EffectAt", "Falsifier"})
@@ -4478,8 +4470,10 @@ def _listed(label, items):
 
 def _assumption_lines(chain):
     """An assumption's body: citing requirements and the needs they reach
-    first, then its landing crossings, its cells, its evidence and falsifier,
-    and a fidelity assumption's surrogate beside it."""
+    first, then its landing crossings, its cells (status and standing among
+    them), the cases that can falsify it and its falsifier, and a fidelity
+    assumption's surrogate beside it. No evidence level: an assumption
+    carries none (owner ruling 2026-10-02)."""
     row, sur = chain["row"], chain["surrogate"]
     out = _listed("Relied on by.", ["{} — {}: {}".format(*c) for c in chain["citing"]])
     out += _listed("Serving.", ["{} — {}".format(*n) for n in chain["needs"]])
@@ -4492,11 +4486,8 @@ def _assumption_lines(chain):
     shown = _DA_SHOWN | ({"RealizedBy"} if sur else set())
     out += _listed("Cells.", _cell_bullets(row, shown))
     out += [
-        "**Evidenced by.** {}".format(", ".join(chain["cases"]) or "no test case"),
-        "",
-        "{}{} (computed at render time from the current results and the"
-        " clock; not compared by the freshness check)._".format(
-            _EVIDENCE_NOW, chain["level"]
+        "**Can be falsified by.** {}".format(
+            ", ".join(chain["cases"]) or "no test case"
         ),
         "",
         "**Falsifier.** {}".format(chain["falsifier"] or "(none declared)"),
@@ -4548,7 +4539,6 @@ def assumption_brief_lines(root, srs, tcs, ids=None):
         for c in ("EXT-ID", "B-ID")
     )
     reg["needs"] = spine_carrier.needs_for_root(Path(root))
-    reg.update(record_observation.evidence_inputs(root, tcs, das, reg["bifs"]))
     lines = [
         "## Assumptions and surrogates {}".format(
             "owing an approval" if ids is None else "named in the scope"
@@ -6730,13 +6720,13 @@ def main():
     findings.frame_backlink_findings += need_source_findings(
         reg.sn_needs, need_source_anchors(docs.parent, reg.sn_needs)
     )
-    # The observation records and what they evidence (SR-199..SR-202): the
-    # records, digests and acts are read here, once, for the same reason; a
+    # The observation records and what they can falsify (SR-199, SR-201,
+    # SR-202): the records and acts are read here, once, for the same reason; a
     # malformed or out-of-policy record joins the integrity floor, the rest the
     # warn pipe.
     # With the assumption gate on, a falsified assumption fails through the
     # gate's boundary step instead of riding the worklist too (SR-201).
-    inputs = record_observation.evidence_inputs(docs.parent, reg.tcs, reg.das, reg.bifs)
+    inputs = record_observation.evidence_inputs(docs.parent, reg.das, reg.bifs)
     gate = assumption_gate_enabled(docs)
     observed, observed_advisories = observation_evidence_findings(
         reg.srs, reg.das, reg.tcs, reg.sn_needs, reg.bifs, gate=gate, **inputs

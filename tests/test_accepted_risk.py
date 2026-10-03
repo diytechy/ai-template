@@ -1,14 +1,15 @@
 """An accepted risk, bound to the approval act that accepted it (TC-234).
 
-An assumption relied on without evidence may carry a recorded accepted risk,
-and while nothing evidences it, it reads COVERED by that risk (SR-202). The
-acceptance is a judgment about one assumption serving particular needs, so it
-is bound to their texts as they stood in the act that accepted it: a later
-change to either, even one re-approved on its own, or a failed sample added
-after the act, reopens it, and it reads UNPROVEN, naming the trigger, until an
-act accepts the risk again or a current passing result evidences it. Time
-alone never reopens it, and the order of a failed sample is read from commit
-ancestry, never from the timestamp the record carries.
+An assumption may carry a recorded accepted risk, and while that acceptance
+stands it reads COVERED by it (SR-202). The acceptance is a judgment about one
+assumption serving particular needs, so it is bound to their texts as they
+stood in the act that accepted it: a later change to either, even one
+re-approved on its own, or a failed sample added after the act, reopens it,
+and it reads UNPROVEN, naming the trigger, until an act accepts the risk
+again. A passing result restores nothing: an assumption carries no evidence
+level (owner ruling 2026-10-02), and a passed sample proves nothing beyond
+itself. Time alone never reopens it, and the order of a failed sample is read
+from commit ancestry, never from the timestamp the record carries.
 
 Driven on real git repositories, with the approval act performed the way the
 kit performs one (`baseline_snapshot.copy_live`, then a commit), so the
@@ -182,18 +183,15 @@ def _utc(moment):
     return moment.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _state(root, now=None):
-    """`(state, reasons)` for DA-001 as the checker composes it: the evidence
-    level from the records on disk, the act from history."""
-    now = now or _now()
+def _state(root):
+    """`(state, reasons)` for DA-001 as the checker composes it: the records
+    on disk, the act from history. No clock is read."""
     (da,) = CARRIER.load(root / DA_REL, "DA-ID", keep_examples=False)
     tcs = CARRIER.load(root / TC_REL, "TC-ID", keep_examples=False)
     needs = CARRIER.load_needs(root / NEEDS_REL)
     records = OBS.read_records(root)
-    digests = {"TC-001": WRITER.inputs_digest(root, [NOTES_REL])}
-    level = RULES.evidence_level(da, tcs, records, None, digests, now=now)
     view = SNAP.risk_acceptance_view(root, "DA-001")
-    return RULES.accepted_risk_state(da, level, view, needs, tcs, records)
+    return RULES.accepted_risk_state(da, view, needs, tcs, records)
 
 
 def _observe(root, outcome, observed=None, expires=None):
@@ -223,13 +221,11 @@ def _reattest(root):
 
 
 def _restorations(root):
-    """The two restorations, checked separately from one reopened state: a
-    current passing result evidences it (and removing that result returns it
-    to unproven), and an act re-attesting it re-binds the risk."""
+    """From one reopened state: a current passing result restores nothing, and
+    an act re-attesting the assumption re-binds the risk."""
     path = _observe(root, "pass")
-    assert _state(root)[0] == RULES.RISK_EVIDENCED
-    path.unlink()
     assert _state(root)[0] == RULES.RISK_UNPROVEN
+    path.unlink()
     _reattest(root)
     assert _state(root) == (RULES.RISK_COVERED, [])
 
@@ -253,7 +249,7 @@ def test_an_assumption_with_no_accepted_risk_has_no_risk_state(repo):
     (da,) = CARRIER.load(root / DA_REL, "DA-ID", keep_examples=False)
     da = dict(da)
     da.pop("AcceptedRisk")
-    assert RULES.accepted_risk_state(da, RULES.LEVEL_SPECIFIED, None, [], [], []) == (
+    assert RULES.accepted_risk_state(da, None, [], [], []) == (
         None,
         [],
     )
@@ -405,12 +401,13 @@ def test_a_failing_record_the_act_already_held_does_not_reopen_it(tmp_path):
 
 def test_advancing_the_clock_by_a_year_changes_nothing(repo):
     root, _act = repo
-    a_year_on = _now() + datetime.timedelta(days=365)
-    assert _state(root, now=a_year_on) == (RULES.RISK_COVERED, [])
-    # A passing result that expires meanwhile drops the evidence, never the risk.
+    # The rule takes no clock, so a year's passing is a record a year old: a
+    # passing result, current or long expired, moves nothing either way.
+    a_year_ago = _now() - datetime.timedelta(days=365)
+    _observe(root, "pass", observed=a_year_ago)
+    assert _state(root) == (RULES.RISK_COVERED, [])
     _observe(root, "pass")
-    assert _state(root)[0] == RULES.RISK_EVIDENCED
-    assert _state(root, now=a_year_on) == (RULES.RISK_COVERED, [])
+    assert _state(root) == (RULES.RISK_COVERED, [])
 
 
 def test_a_shallow_clone_missing_the_act_reads_unproven_with_the_reason(repo, tmp_path):

@@ -24,10 +24,10 @@ honestly (`check.py` places them):
                                           each reaching one is coincident or
                                           bridged by a cited assumption
                                           (SR-212's Arch arm)
-  assumption-evidence   DevStg-Release   each relied-on assumption has current
-                                          evidence that supports a positive
-                                          claim, or an accepted risk that has
-                                          not reopened (SR-206)
+  assumption-evidence   DevStg-Release   no relied-on assumption is
+                                          falsified unless an accepted risk
+                                          that has not reopened covers it
+                                          (SR-206); no result is asked for
 
 WHY OFF MEANS ADVISORY, NOT SILENT. With the setting absent or off the step
 prints the same findings as advisories and passes, so a project weighing the
@@ -37,7 +37,9 @@ WHAT IT NEVER TOUCHES. The findings are the step's alone: the derived stage
 never reads them and its single release producer stays the harness evidence
 verdict (spine map D16). The rules are `assumption_rules.py`'s, pure; this
 module reads the registries, the observation records and the approval acts
-once, and hands them in.
+once, and hands them in. The release step keeps its name,
+`assumption-evidence`, for the projects already running it, though an
+assumption carries no evidence level (owner ruling 2026-10-02).
 
 Implements: SR-205, SR-206, SR-212, LLR-242, LLR-243, LLR-244
 
@@ -50,9 +52,8 @@ Contract IF-230: the assumption gate's steps, as a command.
     assumption_gate = true`) or `ADVISORY: <finding>` otherwise, then a summary
     line naming the step, and exits 1 when a finding FAILS, else 0. It reads
     the registries under `<root>/docs`, and for `assumption-evidence` the
-    observation records, the suite's evidence record and the approval acts
-    accepting risks; it writes nothing. `check.py` runs it as the built-in
-    steps of the same names.
+    observation records and the approval acts accepting risks; it writes
+    nothing. `check.py` runs it as the built-in steps of the same names.
 
 Python 3.11+, stdlib only; Windows + POSIX.
 """
@@ -79,30 +80,18 @@ STEPS = (
 
 
 def _evidence_findings(root, reg):
-    """SR-206's findings: the evidence levels, the current passing cases and
-    each accepted risk's reading, read once, then judged. Read whatever the
-    frame declares: SR-206 exempts no project from the release gate, so an
-    evidencing case's inputs are digested with no crossing declared too."""
-    ev = record_observation.evidence_inputs(
-        root, reg.tcs, reg.das, reg.bifs, framed=True
-    )
-    reads = (ev["records"], ev["suite_proof"], ev["digests"])
-    levels = {d["DA-ID"]: rules.evidence_level(d, reg.tcs, *reads) for d in reg.das}
-    current = [t for t in reg.tcs if rules.result_current(t, *reads)]
-    # The risk is read as though nothing evidenced the assumption: the gate
-    # consults it only once the evidence has not counted.
+    """SR-206's findings: each accepted risk's reading, read once, then the
+    standing of each relied-on assumption judged. Read whatever the frame
+    declares: SR-206 exempts no project from the release gate.
+    """
+    ev = record_observation.evidence_inputs(root, reg.das, reg.bifs, framed=True)
     risks = {
         d["DA-ID"]: rules.accepted_risk_state(
-            d,
-            rules.LEVEL_SPECIFIED,
-            ev["views"].get(d["DA-ID"]),
-            reg.sn_needs,
-            reg.tcs,
-            ev["records"],
+            d, ev["views"].get(d["DA-ID"]), reg.sn_needs, reg.tcs, ev["records"]
         )
         for d in reg.das
     }
-    return rules.release_gate_findings(reg.das, reg.srs, levels, risks, current)
+    return rules.release_gate_findings(reg.das, reg.srs, risks)
 
 
 def step_findings(root, step):

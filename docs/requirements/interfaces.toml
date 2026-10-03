@@ -2012,9 +2012,9 @@ component = "CMP-006"
 notes = """source - the module consumes only the shipped package's TOML string emitter. The records live under docs/test/observations/, one file named by its case and its colon-free UTC instant, so records written on different lanes never collide; a leading-dot name is the temporary file of a write in progress and is never read. The directory is not a declared stage input and lies outside the release evidence's source surface, so recording a sample moves neither."""
 
 [interface.IF-215]
-rationale = """A result the harness cannot produce needs one sanctioned writer, which judges a record before it exists: the same format and policy rules the checker applies to a record it finds, so a refused record is never written and a written one never fails the check. The module's second face is the checker's read of what judging the records needs - the records, the digests of the inputs as they stand, the suite's evidence record and each accepted risk's act - so the writer and the reader digest one way and the checker grows by composition lines alone."""
+rationale = """A result the harness cannot produce needs one sanctioned writer, which judges a record before it exists: the same format and policy rules the checker applies to a record it finds, so a refused record is never written and a written one never fails the check. The module's second face is the checker's read of what judging the records needs - the records and each accepted risk's act - so the writer and the checker read one record format and the checker grows by composition lines alone."""
 owner = "scripts/record_observation"
-requestors = ["external:downstream adopter", "scripts/check_assumption_gate", "scripts/rejudge", "scripts/trace", "scripts/traj_parse"]
+requestors = ["external:downstream adopter", "scripts/check_assumption_gate", "scripts/rejudge", "scripts/trace"]
 channel = "cli"
 data = "--tc --outcome pass|fail --by [--expires] [--root]: one record or a REFUSED line and exit 1; evidence_inputs, inputs_digest for trace; inputs_digest(root, inputs, outside) and REGISTRY_DIRS for rejudge; evidence_inputs for check_assumption_gate"
 version = "v1"
@@ -2023,15 +2023,15 @@ component = "CMP-006"
 notes = """No tie-back: the argv comes IN from the adopter's own session, and the frame declares no IN crossing for an invocation - recording a sample is the session's own act. The command never opens the test-case registry for writing."""
 
 [interface.IF-216]
-rationale = """The observation records are judged, and turned into an assumption's evidence level, a falsification worklist and an accepted risk's reading, by the same pure join layer as the rest of the assumption tier; the checker reads every file and every commit these rules need and hands them in, so the rules stay testable on in-memory rows and the checker grows by composition lines alone."""
+rationale = """The observation records are judged, and turned into a falsification worklist and an accepted risk's reading, by the same pure join layer as the rest of the assumption tier; the checker reads every file and every commit these rules need and hands them in, so the rules stay testable on in-memory rows and the checker grows by composition lines alone."""
 owner = "scripts/assumption_rules"
-requestors = ["scripts/trace", "scripts/record_observation", "scripts/traj_parse"]
+requestors = ["scripts/trace", "scripts/record_observation"]
 channel = "call"
-data = "observation_evidence_findings -> (integrity, advisories); record_policy_problem, evidence_level, falsification_worklist, accepted_risk_state"
+data = "observation_evidence_findings -> (integrity, advisories); record_policy_problem, falsification_worklist, accepted_risk_state"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """The rules read no file, no clock but the instant they are handed, and no git: the records, the suite's evidence record, the inputs digests and each accepted risk's act arrive already read. The writer reads the one policy rule, record_policy_problem, so its refusal and the checker's finding are one statement."""
+notes = """The rules read no file, no clock and no git: the records and each accepted risk's act arrive already read. No evidence level is derived: an assumption carries none. The writer reads the one policy rule, record_policy_problem, so its refusal and the checker's finding are one statement."""
 
 [interface.IF-217]
 rationale = """An accepted risk is bound to the approval act that accepted it, and only the history of the acceptance record says which act that was; the module that writes the record is the one that reads it back, so the reading follows the record's own format and the pure rule compares texts it never has to find."""
@@ -2067,26 +2067,26 @@ component = "CMP-008"
 notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The import is deferred into the brief's rendering, so every other trace run loads nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
 
 [interface.IF-226]
-rationale = """An assumption is approved for what it lets the requirements claim, so the brief an approver reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, its evidence and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the approver reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""
+rationale = """An assumption is approved for what it lets the requirements claim, so the brief an approver reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, the test cases that can falsify it and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the approver reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""
 owner = "scripts/assumption_rules"
 requestors = ["scripts/trace"]
 channel = "call"
-data = "assumption_chain(da_id, reg) -> {id, kind, row, citing, needs, landing, cases, level, falsifier, surrogate} or {id, kind, row, emulates, named_by}, or None"
+data = "assumption_chain(da_id, reg) -> {id, kind, row, citing, needs, landing, cases, falsifier, surrogate} or {id, kind, row, emulates, named_by}, or None"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """Rows and already-read evidence inputs in, one dict out, with no I/O: the brief reads the registries and the observation records once and hands them in. The same evidence level the checker reports is the one the brief shows."""
+notes = """Rows in, one dict out, with no I/O: the brief reads the registries once and hands them in. No result is read and no evidence level is shown: cases lists the test cases that can falsify the assumption."""
 
 [interface.IF-227]
-rationale = """A reviewer starting from an outcome needs to see what it relies on and whether that has been checked, and neither the per-assumption reports nor the approval brief starts from a need. Deriving the view from the registries and the current results in the dashboard's source layer, through the same classification and evidence rules the checker applies, keeps it from going stale the way a hand-written summary does and keeps the page and the checker agreeing."""
+rationale = """A reviewer starting from an outcome needs to see what it relies on and whether any of it has been shown false, and neither the per-assumption reports nor the approval brief starts from a need. Deriving the view from the registries in the dashboard's source layer, through the same classification rule the checker applies, keeps it from going stale the way a hand-written summary does and keeps the page and the checker agreeing."""
 owner = "scripts/traj_parse"
 requestors = ["scripts/gen_trajectory"]
 channel = "call"
-data = "need_assumptions(root) -> {need id: {assumptions: [{id, text, standing, level, citing}], coincident, unclassified}}, or {} (no real assumption)"
+data = "need_assumptions(root) -> {need id: {assumptions: [{id, text, status, standing, falsifier, cases, citing}], coincident, unclassified}}, or {} (no assumption)"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """The facade hands each need's entry to traj_views.need_assumption_block, which renders it into the need's detail panel. An empty map is the view's omit condition, so a project without the tier renders byte-identically. The evidence level reads the clock, so an observation's expiry moves the page."""
+notes = """The facade hands each need's entry to traj_views.need_assumption_block, which renders it into the need's detail panel. An empty map is the view's omit condition, so a project without the tier renders byte-identically. No evidence level is read or shown, so no clock moves the page."""
 
 [interface.IF-233]
 rationale = """A builder changing a module needs the tests that pin it while iterating, and the spine already records that link: the module's design rows, the test cases verifying them and those cases' evidence. Printing it from the registries, one file per line, gives the inner loop a list a test runner takes whole, with no second map to keep in step and no file-name guess that misses the suites named for the script they drive."""
@@ -2133,11 +2133,11 @@ component = "CMP-007"
 notes = """The gate's setting is read from `[checks] assumption_gate`, absent or unreadable reading off, so a project that never opts in sees advisories and never a failure. It writes nothing."""
 
 [interface.IF-231]
-rationale = """Whether a requirement's argument holds is a join across rows the tier already judges, and the reach check, the evidence level and the accepted risk each have one derivation here. Keeping the gate's four rules beside them, pure, means the gate fails exactly what the reports report, and the step that runs them grows by its reads alone."""
+rationale = """Whether a requirement's argument holds is a join across rows the tier already judges, and the reach check and the accepted risk each have one derivation here. Keeping the gate's four rules beside them, pure, means the gate fails exactly what the reports report, and the step that runs them grows by its reads alone."""
 owner = "scripts/assumption_rules"
 requestors = ["scripts/check_assumption_gate"]
 channel = "call"
-data = "boundary_gate_findings(srs, das, surs, reach, have_frame) · reach_gaps(...) -> {DA id: [reasons]} · crossing_gate_findings(srs, das, bifs) · interface_form_gate_findings(srs, ifs, llrs) · if_reached_srs(ifs, llrs) · module_srs(llrs) · release_gate_findings(das, srs, levels, risks, tcs) -> [finding]"
+data = "boundary_gate_findings(srs, das, surs, reach, have_frame) · reach_gaps(...) -> {DA id: [reasons]} · crossing_gate_findings(srs, das, bifs) · interface_form_gate_findings(srs, ifs, llrs) · if_reached_srs(ifs, llrs) · module_srs(llrs) · release_gate_findings(das, srs, risks) -> [finding]"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"

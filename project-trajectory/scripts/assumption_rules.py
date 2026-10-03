@@ -29,21 +29,24 @@ link stays on the requirement: an assumption's needs are derived from the
 requirements citing it (`da_citing_srs`), and nothing records them on the
 assumption.
 
-EVIDENCE FOR AN ASSUMPTION IS A TEST CASE (SR-197): its `Assumption-Refs` name
-the assumptions it evidences, in place of or beside what its `Verifies` names.
-And many such tests are OBSERVATIONS (a person reading a render, a measurement
-across an adopter's first week) that the harness cannot rerun. A test case
-recorded as not automated declares the inputs its judgment reads, how many days
-its result holds, and, evidencing an assumption, how it samples (SR-198), so a
-changed input or an expired lifetime can make the result stale without anyone
-re-judging it. Those declarations are judged here too; they apply to every
-observation case, with or without a frame.
+A TEST CASE NAMES THE ASSUMPTIONS IT CAN FALSIFY (SR-197): its
+`Assumption-Refs`, in place of or beside what its `Verifies` names. And many
+such tests are OBSERVATIONS (a person reading a render, a measurement across an
+adopter's first week) that the harness cannot rerun. A test case recorded as
+not automated declares the inputs its judgment reads, how many days its result
+holds, and, citing an assumption, how it samples (SR-198), so a changed input
+or an expired lifetime can make the result stale without anyone re-judging it.
+Those declarations are judged here too; they apply to every observation case,
+with or without a frame.
 
 AND THE RESULTS THEMSELVES. Each observation result is a record of its own
 (`kitlib.observation`, SR-199), judged here against the case it names. An
-assumption's evidence level is derived from current results alone, never from
-a cell (SR-200); one shown false, by its standing or by a failing sample, is
-listed with every requirement, need and case relying on it (SR-201); and a
+assumption carries NO EVIDENCE LEVEL (owner ruling 2026-10-02): a passed
+observation proves nothing beyond its sample, so no result raises an
+assumption and no rule asks one for current evidence. The one evidence-shaped
+signal is falsification: one shown false, by its standing or by a failing
+sample, is listed with every requirement, need and case relying on it
+(SR-201), and recording it false stays a person's act on its `Standing`. A
 recorded accepted risk covers an assumption only while the texts the act
 accepting it saw still stand and no sample has failed since (SR-202).
 `trace.main` has the files and the history these rules need read once
@@ -138,36 +141,31 @@ Contract IF-208: the tier's two pointer rules that land in OTHER classes, which
     each an `ObstacleHats` entry the roster names in `hat_names` do not hold,
     joining the dangling-hat class; an empty `hat_names` means no roster, so
     every named perspective fails. Neither waits for a declared crossing.
-Contract IF-216: the observation results and what they evidence, the rules
+Contract IF-216: the observation results and what they can falsify, the rules
     `trace.py` composes and the writer's one policy read. Rows and already-read
-    inputs in, findings and readings out, with no I/O, no git and no clock but
-    the `now` handed in. `observation_evidence_findings(srs, das, tcs, needs,
-    bifs, *, records, raw_files, suite_proof, digests, views, now=None,
-    gate=False)` returns `(integrity, advisories)`: every record file that is
-    not a whole record or that its case does not allow joins the integrity
-    floor, naming the file, with or without a frame; where the frame declares
-    a crossing, the approved-but-unevidenced assumptions, the falsification
-    worklist and each reopened accepted risk ride the warn pipe. Its rules are
-    public: `record_policy_problem(tid, tc, observed_at, expires)` (the
-    writer's refusal and the checker's finding, one statement),
-    `observation_record_findings`, `tier_covers`, `result_current`,
-    `evidence_level` (one of `EVIDENCE_LEVELS`), `evidence_level_advisories`,
-    `falsification_worklist` and `accepted_risk_state` (one of `RISK_COVERED`,
-    `RISK_UNPROVEN`, `RISK_EVIDENCED`, with its reasons). `suite_proof` is the
-    harness's evidence record as `{"outcome", "tier", "bound"}` or None, and a
-    view is `baseline_snapshot.risk_acceptance_view`'s dict.
+    inputs in, findings and readings out, with no I/O, no git and no clock.
+    `observation_evidence_findings(srs, das, tcs, needs, bifs, *, records,
+    raw_files, views, gate=False)` returns `(integrity, advisories)`: every
+    record file that is not a whole record or that its case does not allow
+    joins the integrity floor, naming the file, with or without a frame; where
+    the frame declares a crossing, the falsification worklist and each
+    reopened accepted risk ride the warn pipe. Its rules are public:
+    `record_policy_problem(tid, tc, observed_at, expires)` (the writer's
+    refusal and the checker's finding, one statement),
+    `observation_record_findings`, `falsification_worklist` and
+    `accepted_risk_state` (one of `RISK_COVERED`, `RISK_UNPROVEN`, with its
+    reasons). A view is `baseline_snapshot.risk_acceptance_view`'s dict.
 Contract IF-226: the chain the approval brief renders for one assumption or
     surrogate, read by `trace.py`'s brief. `assumption_chain(da_id, reg)`
     returns a dict, or None for an id the registry does not declare, and reads
-    no file: `reg` maps `srs`, `needs`, `das`, `surs`, `exts`, `bifs`, `tcs`
-    and the evidence inputs `records`, `suite_proof`, `digests` and `now` to
-    what the caller already read, a missing key reading as empty. An
+    no file: `reg` maps `srs`, `needs`, `das`, `surs`, `exts`, `bifs` and
+    `tcs` to what the caller already read, a missing key reading as empty. An
     assumption's chain carries `citing` as `(id, title, requirement)`, `needs`
-    as `(id, need)`, `landing` as `(crossing, entity, name)`, `cases`, `level`
-    (one of `EVIDENCE_LEVELS`), `falsifier` and, for a fidelity assumption,
-    `surrogate`, that surrogate's chain; a surrogate's carries `emulates` as
-    `(id, name)` and `named_by` as `(id, assumption)`. Both carry `row`, the
-    row itself.
+    as `(id, need)`, `landing` as `(crossing, entity, name)`, `cases` (the
+    test cases that can falsify it), `falsifier` and, for a fidelity
+    assumption, `surrogate`, that surrogate's chain; a surrogate's carries
+    `emulates` as `(id, name)` and `named_by` as `(id, assumption)`. Both
+    carry `row`, the row itself.
 Contract IF-231: the assumption gate's rules, read by the gate's check step
     (`check_assumption_gate.py`). Rows and already-derived readings in,
     finding strings out, with no I/O; whether a finding fails or advises is
@@ -178,10 +176,9 @@ Contract IF-231: the assumption gate's rules, read by the gate's check step
     `interface_form_gate_findings(srs, ifs, llrs)` (SR-212's Boundary and Arch
     arms), over `if_reached_srs(ifs, llrs) -> {interface id: [requirement
     ids]}` and `module_srs(llrs) -> {module: [requirement ids]}`; and
-    `release_gate_findings(das, srs, levels, risks, tcs)` (SR-206), with
-    `levels` mapping each assumption id to its `evidence_level`, `risks` to its
-    `accepted_risk_state` pair, and `tcs` the cases holding a current passing
-    result. A `-000` row is never judged.
+    `release_gate_findings(das, srs, risks)` (SR-206), with `risks` mapping
+    each assumption id to its `accepted_risk_state` pair. A `-000` row is never
+    judged.
 """
 
 import datetime
@@ -213,10 +210,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     )
     from kitlib.spine import is_approved, is_founded, norm_module
 
-# The observation record's reader and the whole-suite tiers the evidence level
-# reads (SR-199, SR-200): the shipped package again, importable once the block
-# above has put this directory on the path.
-from kitlib.evidence import WHOLE_SUITE_TIERS
+# The observation record's reader (SR-199): the shipped package again,
+# importable once the block above has put this directory on the path.
 from kitlib.observation import format_utc, latest, parse_utc
 from kitlib.observation import problem as record_problem
 from kitlib.spine import is_approved, is_founded
@@ -1215,61 +1210,29 @@ def obstacle_hat_findings(das, hat_names):
     ]
 
 
-# --- OBSERVATION RESULTS, AND WHAT THEY EVIDENCE (SR-199..SR-202) -------------
+# --- OBSERVATION RESULTS, AND WHAT THEY CAN FALSIFY (SR-199, SR-201, SR-202) --
 # A test case says what a test IS; its results say what it last FOUND. The
-# automated half of those results is the harness's whole-suite evidence record;
-# the observation half is one file per result (`kitlib.observation`). The rules
-# below judge those files against the cases they name, derive from them how
-# well each assumption is evidenced, list what relies on an assumption shown
-# false, and read whether an accepted risk still covers one. Every input that
+# observation half of those results is one file per result
+# (`kitlib.observation`). The rules below judge those files against the cases
+# they name, list what relies on an assumption shown false, and read whether an
+# accepted risk still covers one. No rule here derives how well an assumption
+# holds: an assumption carries no evidence level (owner ruling 2026-10-02),
+# since a passed observation proves nothing beyond its sample. Every input that
 # lives on disk or in git arrives already read: `record_observation.evidence_inputs`
-# reads the records, the suite's record, the declared inputs' digests and each
-# accepted risk's act, once, and `trace.main` hands them here.
+# reads the records and each accepted risk's act, once, and `trace.main` hands
+# them here.
 
-# THE EVIDENCE LEVELS (SR-200), weakest first. `assumed`: no test case names
-# the assumption, so nothing could evidence it. `specified`: a case does, but
-# none has a current passing result. `monitored`: a current passing result
-# from an automated case or an observation read continuously in operation.
-# `sampled`: a current passing result from a sampled observation. A sampled
-# pass is the weaker of the two positive levels, since a passed sparse sample
-# bounds discovery rather than showing the assumption holds, so where both
-# are current the level reads monitored.
-# Implements: SR-200, LLR-237
-LEVEL_ASSUMED = "assumed"
-# Implements: SR-200, LLR-237
-LEVEL_SPECIFIED = "specified"
-# Implements: SR-200, LLR-237
-LEVEL_MONITORED = "monitored"
-# Implements: SR-200, LLR-237
-LEVEL_SAMPLED = "sampled"
-# Implements: SR-200, LLR-237
-EVIDENCE_LEVELS = (LEVEL_ASSUMED, LEVEL_SPECIFIED, LEVEL_MONITORED, LEVEL_SAMPLED)
-
-# THE KIT'S CUMULATIVE TIER CONTRACT (process.md §4, spine map D23): a run at
-# one tier runs every case at or below it, and a case with no tier is Full.
-# The same ranks `check_perf.TIER_ORDER` declares for the performance gate,
-# pinned equal by tests/test_assumption_rules.py rather than imported, since
-# this module imports no sibling script.
-TIER_RANK = {"smoke": 0, "full": 1, "release": 2, "all": 2}
-DEFAULT_CASE_TIER = "full"
-
-# AN ACCEPTED RISK'S READING (SR-202). `covered`: nothing evidences the
-# assumption and the risk accepted for it still stands. `unproven`: the risk
-# has reopened. `evidenced`: a current passing result makes the risk moot.
+# AN ACCEPTED RISK'S READING (SR-202). `covered`: the risk accepted for the
+# assumption still stands. `unproven`: the risk has reopened. No result makes
+# a risk moot.
 RISK_COVERED = "covered"
 RISK_UNPROVEN = "unproven"
-RISK_EVIDENCED = "evidenced"
 
 # An assumption's cells the risk's acceptance is NOT bound to: its id, its
 # maturity (an act moves it) and the accepted risk itself.
 _UNBOUND_CELLS = frozenset({"DA-ID", "Status", "AcceptedRisk"})
 # A served need's cells the acceptance IS bound to, in the needs' own keys.
 _BOUND_NEED_CELLS = ("need", "acceptance")
-
-
-def _now(now):
-    """`now`, or the current instant in UTC when the caller passes none."""
-    return now or datetime.datetime.now(datetime.timezone.utc)
 
 
 def _unique(ids):
@@ -1282,11 +1245,6 @@ def _citing_cases(did, tcs):
     return [
         tid for tid, tc in _real(tcs, "TC-ID") if did in refs(tc.get("Assumption-Refs"))
     ]
-
-
-def _claims_approval(row):
-    """Approved or founded: a row whose text a human has blessed."""
-    return is_approved(row) or is_founded(row)
 
 
 def record_policy_problem(tid, tc, observed_at, expires):
@@ -1350,129 +1308,13 @@ def observation_record_findings(records, raw_files, tcs):
     return out
 
 
-def tier_covers(record_tier, case_tier):
-    """Whether a whole-suite evidence record at `record_tier` ran a case
-    declared at `case_tier`, under the cumulative tier contract: a full record
-    runs Smoke and Full cases, a release or all record runs every case, and a
-    record at any other tier, smoke included, proves nothing. A case with no
-    tier is Full; one outside the vocabulary counts as Release.
-
-    Implements: SR-200, LLR-237
-    """
-    ran = (record_tier or "").strip().lower()
-    if ran not in WHOLE_SUITE_TIERS:
-        return False
-    declared = (case_tier or "").strip().lower() or DEFAULT_CASE_TIER
-    return TIER_RANK.get(declared, TIER_RANK["release"]) <= TIER_RANK[ran]
-
-
-def result_current(tc, records, suite_proof, digests, now=None):
-    """Whether a case has a CURRENT PASSING result: the one freshness rule.
-
-    An automated case's result is the harness's evidence record, which covers
-    the whole suite and names no case: `suite_proof` is that record as
-    `{"outcome", "tier", "bound"}` (`bound`: its binding is this tree's), or
-    None when there is none, and it proves the case only when it passed, is
-    bound to this tree and its tier runs the case's (`tier_covers`). An
-    observation case's result is its latest record: current while it passed,
-    has not expired at `now`, and judged the digest `digests` gives for the
-    case's declared inputs now. A case declaring no inputs is judged by its
-    expiry alone. No clock is read but `now`, and no cell is written.
-
-    Implements: SR-200, LLR-237
-    """
-    if not is_observation_tc(tc):
-        proof = suite_proof or {}
-        return (
-            proof.get("outcome") == "pass"
-            and bool(proof.get("bound"))
-            and tier_covers(proof.get("tier"), tc.get("Tier"))
-        )
-    tid = _cell(tc, "TC-ID")
-    record = latest(records, tid)
-    if record is None or record.get("outcome") != "pass":
-        return False
-    expires = parse_utc(record.get("expires"))
-    if expires is None or _now(now) >= expires:
-        return False
-    if not refs(tc.get("Inputs")):
-        return True
-    return record.get("judged") == (digests or {}).get(tid)
-
-
-def _evidence_kind(tc):
-    """The positive level a current passing result from `tc` gives, or None:
-    an automated case and a monitored observation give monitored, a sampled
-    observation sampled, and an observation declaring no policy nothing."""
-    if not is_observation_tc(tc):
-        return LEVEL_MONITORED
-    return {"monitored": LEVEL_MONITORED, "sampled": LEVEL_SAMPLED}.get(
-        _cell(tc, "Sampling")
-    )
-
-
-def evidence_level(da, tcs, records, suite_proof, digests, now=None):
-    """SR-200: one of `EVIDENCE_LEVELS` for the assumption `da`, derived from
-    current results alone.
-
-    No case naming it in `Assumption-Refs` gives assumed. Otherwise each citing
-    case with a current passing result (`result_current`) contributes its kind
-    (`_evidence_kind`), monitored outranking sampled, and anything else is
-    specified. An expired or stale result therefore reads specified, never
-    falsified: an old pass is missing evidence, not contrary evidence. No cell
-    of the assumption is read but its id, so no cell sets the level, and none
-    is written.
-
-    Implements: SR-200, LLR-237
-    """
-    did = _cell(da, "DA-ID")
-    cases = dict(_real(tcs, "TC-ID"))
-    citing = [cases[tid] for tid in _citing_cases(did, tcs)]
-    if not citing:
-        return LEVEL_ASSUMED
-    kinds = {
-        _evidence_kind(tc)
-        for tc in citing
-        if result_current(tc, records, suite_proof, digests, now)
-    }
-    for level in (LEVEL_MONITORED, LEVEL_SAMPLED):
-        if level in kinds:
-            return level
-    return LEVEL_SPECIFIED
-
-
-def evidence_level_advisories(das, tcs, records, suite_proof, digests, now=None):
-    """SR-200's report: one advisory per approved, active assumption whose
-    evidence level reads assumed or specified, naming it. A Drafted assumption
-    is still being written and a falsified one is the falsification worklist's;
-    neither is reported here.
-    """
-    why = {
-        LEVEL_ASSUMED: "no test case names it in Assumption-Refs, so nothing "
-        "could evidence it",
-        LEVEL_SPECIFIED: "no test case evidencing it has a current passing result",
-    }
-    out = []
-    for did, da in _real(das, "DA-ID"):
-        if not _claims_approval(da) or _cell(da, "Standing") != "active":
-            continue
-        level = evidence_level(da, tcs, records, suite_proof, digests, now)
-        if level in why:
-            out.append(
-                "assumption {} is approved and active but reads {}: {}".format(
-                    did, level, why[level]
-                )
-            )
-    return out
-
-
 def falsification_worklist(das, srs, tcs, records, gate=False):
     """SR-201's worklist: one advisory per assumption shown false, listing the
     requirements citing it (`da_citing_srs`), the needs those requirements
     name and the cases naming it in `Assumption-Refs`, each row once.
 
     An assumption is listed when its `Standing` reads falsified, or when the
-    latest record of any case evidencing it failed: that record is
+    latest record of any case naming it failed: that record is
     falsification evidence and is reported as such, but recording the
     assumption false stays a judgment, so no cell is written. An active
     assumption with no failing latest record is not listed. With the gate that
@@ -1498,27 +1340,32 @@ def falsification_worklist(das, srs, tcs, records, gate=False):
         needs = _unique(
             n for sid in relying for n in refs(requirements[sid].get("SN-Refs"))
         )
-        if falsified:
-            why = "is falsified (its Standing reads falsified)"
-        else:
-            why = (
-                "has falsification evidence: the latest record {} failed, and "
-                "recording it false stays a judgment, so its Standing still "
-                "reads {}".format(
-                    ", ".join(r.get("file") or r["tc"] for r in failing),
-                    _cell(da, "Standing") or "(unset)",
-                )
-            )
         out.append(
-            "assumption {} {} — relied on by {}; serving {}; evidenced by {}".format(
+            "assumption {} {} — relied on by {}; serving {}; can be falsified "
+            "by {}".format(
                 did,
-                why,
+                _falsified_why(da, failing),
                 ", ".join(relying) or "no requirement",
                 ", ".join(needs) or "no need",
                 ", ".join(cases) or "no test case",
             )
         )
     return out
+
+
+def _falsified_why(da, failing):
+    """Why the worklist lists an assumption: its Standing reads falsified, or
+    the failing latest records of the cases naming it, its Standing unchanged."""
+    if _cell(da, "Standing") == "falsified":
+        return "is falsified (its Standing reads falsified)"
+    return (
+        "has falsification evidence: the latest record {} failed, and "
+        "recording it false stays a judgment, so its Standing still "
+        "reads {}".format(
+            ", ".join(r.get("file") or r["tc"] for r in failing),
+            _cell(da, "Standing") or "(unset)",
+        )
+    )
 
 
 def _assumption_drift(did, then, now, act):
@@ -1570,7 +1417,7 @@ def _need_drift(did, view, needs, act):
 
 def _late_failures(did, view, tcs, records, act):
     """The reopening reasons failed samples give: each failing record of a case
-    evidencing the assumption that the act's tree did not hold, which orders it
+    naming the assumption that the act's tree did not hold, which orders it
     after the act by commit ancestry, whatever instant it names."""
     known = set(view.get("known") or ())
     cases = set(_citing_cases(did, tcs))
@@ -1586,17 +1433,16 @@ def _late_failures(did, view, tcs, records, act):
     ]
 
 
-def accepted_risk_state(da, level, view, needs, tcs=(), records=()):
+def accepted_risk_state(da, view, needs, tcs=(), records=()):
     """SR-202: `(state, reasons)` for an assumption's accepted risk, or
     `(None, [])` when it records none.
 
-    A current passing result (`level` monitored or sampled) makes the risk
-    moot: `RISK_EVIDENCED`. Otherwise the risk is bound to the approval act
-    that accepted it (`view`, read by `baseline_snapshot.risk_acceptance_view`:
+    No result makes the risk moot: a passed observation proves nothing beyond
+    its sample. The risk is bound to the approval act that accepted it (`view`, read by `baseline_snapshot.risk_acceptance_view`:
     the act, and the rows and record files as they stood there), and it reads
     `RISK_UNPROVEN`, naming each trigger, when the assumption's bound cells or
     the need or acceptance text of a need it served then differ now, or when a
-    failing record of a case evidencing it is not in the act's tree. A later
+    failing record of a case naming it is not in the act's tree. A later
     re-approval of a changed need clears nothing, since the comparison is with
     the act, not with the latest recorded copy; accepting the risk again in an
     act moves the anchor. With no act found (history too shallow, no act
@@ -1608,8 +1454,6 @@ def accepted_risk_state(da, level, view, needs, tcs=(), records=()):
     did = _cell(da, "DA-ID")
     if not _cell(da, "AcceptedRisk"):
         return None, []
-    if level in (LEVEL_MONITORED, LEVEL_SAMPLED):
-        return RISK_EVIDENCED, []
     if not view or not view.get("act"):
         reason = (view or {}).get("reason") or "no record of its acceptance was read"
         return RISK_UNPROVEN, [
@@ -1624,9 +1468,7 @@ def accepted_risk_state(da, level, view, needs, tcs=(), records=()):
     return (RISK_UNPROVEN, reasons) if reasons else (RISK_COVERED, [])
 
 
-def accepted_risk_advisories(
-    das, tcs, needs, records, suite_proof, digests, views, now=None
-):
+def accepted_risk_advisories(das, tcs, needs, records, views):
     """SR-202's report: one advisory per assumption whose accepted risk has
     reopened, naming each trigger. `views` maps an assumption id to its
     `baseline_snapshot.risk_acceptance_view`.
@@ -1635,17 +1477,12 @@ def accepted_risk_advisories(
     for did, da in _real(das, "DA-ID"):
         if not _cell(da, "AcceptedRisk"):
             continue
-        level = evidence_level(da, tcs, records, suite_proof, digests, now)
-        state, reasons = accepted_risk_state(
-            da, level, views.get(did), needs, tcs, records
-        )
+        state, reasons = accepted_risk_state(da, views.get(did), needs, tcs, records)
         if state == RISK_UNPROVEN:
             out.append(
                 "assumption {}'s accepted risk has reopened, and it reads "
                 "unproven until the risk is accepted again in a reviewed "
-                "approval or current evidence arrives: {}".format(
-                    did, "; ".join(reasons)
-                )
+                "approval: {}".format(did, "; ".join(reasons))
             )
     return out
 
@@ -1659,32 +1496,25 @@ def observation_evidence_findings(
     *,
     records,
     raw_files,
-    suite_proof,
-    digests,
     views,
-    now=None,
     gate=False,
 ):
-    """The observation results and what they evidence, as `trace.main` composes
-    them: `(integrity, advisories)`.
+    """The observation results and what they can falsify, as `trace.main`
+    composes them: `(integrity, advisories)`.
 
     INTEGRITY: every record file that is not a whole record or that its case
     does not allow (`observation_record_findings`), with or without a frame,
-    since an observation case need not evidence an assumption. ADVISORIES,
-    where the frame declares a crossing: approved, active assumptions without
-    current evidence, the falsification worklist and each reopened accepted
-    risk. `gate` is the assumption gate's setting, read by the caller.
+    since an observation case need not name an assumption. ADVISORIES, where
+    the frame declares a crossing: the falsification worklist and each
+    reopened accepted risk. No assumption is reported for lacking a result.
+    `gate` is the assumption gate's setting, read by the caller.
     """
     integrity = observation_record_findings(records, raw_files, tcs)
     if not bifs:
         return integrity, []
-    advisories = (
-        evidence_level_advisories(das, tcs, records, suite_proof, digests, now)
-        + falsification_worklist(das, srs, tcs, records, gate=gate)
-        + accepted_risk_advisories(
-            das, tcs, needs, records, suite_proof, digests, views, now
-        )
-    )
+    advisories = falsification_worklist(
+        das, srs, tcs, records, gate=gate
+    ) + accepted_risk_advisories(das, tcs, needs, records, views)
     return integrity, advisories
 
 
@@ -1693,8 +1523,8 @@ def observation_evidence_findings(
 # approver's question is whether those requirements may rely on it (SR-203).
 # The brief therefore needs, for one row, everything that question reads: the
 # requirements citing it with their text, the needs derived through them,
-# where its outcome lands and whose crossing that is, what evidences it and at
-# what level now, and what would show it false. A fidelity assumption is
+# where its outcome lands and whose crossing that is, the cases that can
+# falsify it, and what would show it false. A fidelity assumption is
 # meaningless without its surrogate, and a surrogate without the assumptions
 # stating its fidelity, so each carries the other.
 
@@ -1734,15 +1564,14 @@ def assumption_chain(da_id, reg):
     `(id, title, requirement text)`, the needs derived through them as
     `(id, need text)` in first-seen order, each landing crossing as
     `(crossing, entity, entity name)`, the cases naming it in
-    `Assumption-Refs` with its current `evidence_level`, its falsifier, and,
+    `Assumption-Refs` (the ones that can falsify it), its falsifier, and,
     for a fidelity assumption, its surrogate's chain. For a SURROGATE: its row,
     the parties it emulates as `(id, name)` and the assumptions naming it as
     `(id, assumption text)`.
 
     `reg` is a mapping of rows already read: `srs`, `needs` (the carrier's need
-    rows), `das`, `surs`, `exts`, `bifs` and `tcs`, and the evidence inputs
-    `evidence_level` reads, `records`, `suite_proof`, `digests` and `now`. A
-    missing key reads as empty. Nothing is read from disk here.
+    rows), `das`, `surs`, `exts`, `bifs` and `tcs`. A missing key reads as
+    empty. Nothing is read from disk here, and no result is read at all.
 
     Implements: SR-203, LLR-240
     """
@@ -1763,7 +1592,6 @@ def assumption_chain(da_id, reg):
     )
     crossings = {_cell(b, "B-ID"): _cell(b, "Entity") for b in reg.get("bifs") or ()}
     entities = _named(reg.get("exts") or (), "EXT-ID", "Name")
-    tcs = reg.get("tcs") or ()
     named = refs(row.get("RealizedBy"))
     return {
         "id": da_id,
@@ -1782,15 +1610,7 @@ def assumption_chain(da_id, reg):
             (bid, crossings.get(bid, ""), entities.get(crossings.get(bid, ""), ""))
             for bid in refs(row.get("EffectAt"))
         ],
-        "cases": _citing_cases(da_id, tcs),
-        "level": evidence_level(
-            row,
-            tcs,
-            reg.get("records") or (),
-            reg.get("suite_proof"),
-            reg.get("digests") or {},
-            reg.get("now"),
-        ),
+        "cases": _citing_cases(da_id, reg.get("tcs") or ()),
         "falsifier": _cell(row, "Falsifier"),
         "surrogate": _surrogate_chain(named[0], reg) if len(named) == 1 else None,
     }
@@ -1810,9 +1630,10 @@ def assumption_chain(da_id, reg):
 #                    level-0 interfaces approved with the frame;
 #   DevStg-Arch      the same form judged against the boundary interfaces that
 #                    realize the crossings, once they exist (SR-212's Arch arm);
-#   DevStg-Release   evidence: each relied-on assumption has a current passing
-#                    result of a kind that supports a positive claim, or an
-#                    accepted risk that has not reopened (SR-206).
+#   DevStg-Release   standing: no relied-on assumption is falsified unless
+#                    an accepted risk that has not reopened covers it
+#                    (SR-206). No result is asked for: an assumption carries
+#                    no evidence level (owner ruling 2026-10-02).
 #
 # With the gate off the step prints the same findings as advisories and
 # passes. The rules below return the findings alone; which of the two they
@@ -1882,55 +1703,35 @@ def boundary_gate_findings(srs, das, surs, reach, have_frame):
     return out
 
 
-def release_gate_findings(das, srs, levels, risks, tcs):
-    """SR-206's release gate, as findings naming the assumption and what is
-    missing, over each assumption at least one requirement cites.
+def release_gate_findings(das, srs, risks):
+    """SR-206's release gate, as findings naming the assumption, the
+    requirements relying on it and why it blocks, over each assumption at
+    least one requirement cites.
 
-    It passes with a monitored evidence level (`levels`, `evidence_level` per
-    assumption id: a current passing monitored observation or automated
-    result); with a sampled level only while one of the current sampled cases
-    citing it declares a sampling model (`sampling_model_declared`), since a
-    sparse sample can falsify but not prove; or with an accepted risk that
-    reads covered (`risks`, `accepted_risk_state` per assumption id, read as
-    though nothing evidenced it: the gate consults the risk only once the
-    evidence has not counted, and a sampled result with no sampling model
-    must not read the risk moot). `tcs` are the test cases holding a current
-    passing result (`result_current`), the only ones a sampled level can rest
-    on.
+    It reads STANDING, never a result: an active assumption passes whatever
+    results it has or lacks, since a passed observation proves nothing beyond
+    its sample and a failing one sets nothing until a person records the
+    assumption false. A falsified assumption passes only while its accepted
+    risk reads covered (`risks`, `accepted_risk_state` per assumption id); with
+    no accepted risk, or one reopened, it fails, naming the reopening
+    triggers.
 
     Implements: SR-206, LLR-243
     """
     cited = da_citing_srs(srs)
-    current = dict(_real(tcs, "TC-ID"))
     out = []
-    for did, _da in _real(das, "DA-ID"):
-        if did not in cited:
-            continue
-        level = levels.get(did, LEVEL_ASSUMED)
-        if level == LEVEL_MONITORED:
-            continue
-        cases = _citing_cases(did, tcs)
-        if level == LEVEL_SAMPLED and any(
-            sampling_model_declared(current[tid]) for tid in cases
-        ):
+    for did, da in _real(das, "DA-ID"):
+        if did not in cited or _cell(da, "Standing") != "falsified":
             continue
         reading, reasons = risks.get(did) or (None, [])
         if reading == RISK_COVERED:
             continue
-        missing = (
-            "its only current passing results are sampled and none of their "
-            "test cases declares a sampling model (sample_size and "
-            "acceptance_rule)"
-            if level == LEVEL_SAMPLED
-            else "it has no current passing monitored or automated result "
-            "(evidence level {})".format(level)
-        )
         risk = "its accepted risk has reopened: " + "; ".join(reasons or ["?"])
         out.append(
-            "assumption {}, relied on by {}: {}, and {}".format(
+            "assumption {}, relied on by {}: it is falsified (its Standing reads "
+            "falsified), and {}".format(
                 did,
                 ", ".join(cited[did]),
-                missing,
                 risk if reading else "it records no accepted risk",
             )
         )

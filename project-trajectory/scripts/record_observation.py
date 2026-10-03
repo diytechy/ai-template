@@ -34,8 +34,7 @@ edit to its neighbours does not.
 
 AND WHAT JUDGING THEM READS. The checker's rules read no file, so the reads
 they need live beside the writer that produces the records:
-`evidence_inputs` reads the record files, the digests of what each evidencing
-case reads now, the suite's evidence record and each accepted risk's approval
+`evidence_inputs` reads the record files and each accepted risk's approval
 act, once per run, and `trace.py` hands them to the rules.
 
 WHAT IT NEVER DOES. It never opens the test-case registry for writing, so
@@ -67,10 +66,10 @@ Contract IF-215: the observation writer, as a command and as a call.
     carrier's tiers, the needs, the work items and the registry CSVs) digested
     as that row's cells as its reader reads them, `(absent)` when the tier
     holds no such row. And
-    `evidence_inputs(root, tcs, das, bifs, framed=None)` is the checker's read of
+    `evidence_inputs(root, das, bifs, framed=None)` is the checker's read of
     everything judging the records needs, returned as the keyword arguments of
-    `assumption_rules.observation_evidence_findings`: `records`, `raw_files`,
-    `suite_proof`, `digests` and `views`.
+    `assumption_rules.observation_evidence_findings`: `records`, `raw_files`
+    and `views`.
 
 Python 3.11+, stdlib only; Windows + POSIX.
 """
@@ -91,10 +90,8 @@ import assumption_rules  # noqa: E402
 import baseline_snapshot  # noqa: E402
 import spine_carrier  # noqa: E402
 from kitlib import config as kitconfig  # noqa: E402
-from kitlib import evidence as kitevidence  # noqa: E402
 from kitlib import observation as kitobservation  # noqa: E402
 from kitlib import registry as kitregistry  # noqa: E402
-from kitlib import stage as kitstage  # noqa: E402
 from kitlib.spine import load_csv, refs  # noqa: E402
 
 TC_REGISTRY = "docs/test/test-cases.toml"
@@ -297,44 +294,25 @@ def inputs_digest(root, inputs, links=None):
     return "sha256:" + fold.hexdigest()
 
 
-def _suite_proof(root):
-    """The harness's evidence record as `{outcome, tier, command, revision,
-    binding, bound}`, `bound` saying whether its binding is this tree's, or
-    None when there is no record."""
-    record = kitevidence.read(root)
-    if record is None:
-        return None
-    return dict(record, bound=record.get("binding") == kitstage.evidence_binding(root))
-
-
-def evidence_inputs(root, tcs, das, bifs, framed=None):
+def evidence_inputs(root, das, bifs, framed=None):
     """What judging the observation records reads from disk and git
-    (SR-199..SR-202), read once, as the keyword arguments of
+    (SR-199, SR-201, SR-202), read once, as the keyword arguments of
     `assumption_rules.observation_evidence_findings`.
 
     The FILE READ half of those rules, which read no file: the record files
     and their parsed records always; and where the frame declares a crossing
-    and the registry an assumption, each evidencing observation case's inputs
-    digest, each accepted risk's approval act
-    (`baseline_snapshot.risk_acceptance_view`) and, only when an automated case
-    evidences an assumption, the suite's evidence record, since whether it is
-    bound to this tree is a hash over the whole source surface. `framed`
-    overrides whether a crossing is declared: the release gate judges
-    evidence whatever the frame declares (SR-206), so it reads as framed.
+    and the registry an assumption, each accepted risk's approval act
+    (`baseline_snapshot.risk_acceptance_view`). No digest and no suite record
+    is read: an assumption carries no evidence level, so nothing asks whether
+    a result is current. `framed` overrides whether a crossing is declared:
+    the release gate judges standing whatever the frame declares (SR-206), so
+    it reads as framed.
     """
     raw = kitobservation.read_files(root)
     tier = bool((bool(bifs) if framed is None else framed) and das)
-    links = link_paths(root) if tier else frozenset()
-    cited = [t for t in tcs if tier and refs(t.get("Assumption-Refs"))]
-    observed = [t for t in cited if assumption_rules.is_observation_tc(t)]
     return {
         "records": kitobservation.read_records(root, raw),
         "raw_files": raw,
-        "suite_proof": _suite_proof(root) if len(observed) < len(cited) else None,
-        "digests": {
-            t["TC-ID"]: inputs_digest(root, refs(t.get("Inputs")), links)
-            for t in observed
-        },
         "views": {
             d["DA-ID"]: baseline_snapshot.risk_acceptance_view(root, d["DA-ID"])
             for d in das

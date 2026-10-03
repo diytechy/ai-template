@@ -1314,7 +1314,7 @@ sn_refs = ["SN-043", "SN-024", "SN-008"]
 boundary_refs = ["B-09"]
 hat_refs = ["TEST-ENGINEER", "PERFORMANCE"]
 requirement = "The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored."
-rationale = """An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampled result supports a positive claim only under a stated sampling model, so the model is declared where a project wants that claim. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current."""
+rationale = """An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampling model states how many samples are judged and what counts as a failing one, so a failed sample is recognizable as falsification evidence; a passed sample proves nothing beyond itself. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current."""
 acceptance_criteria = "A test case is an observation test case when it is recorded as not automated — a judgment the harness cannot rerun — whether it verifies a requirement or evidences an assumption; each declares the inputs its judgment reads and a result lifetime in days, one evidencing an assumption also declares a sampling policy of sampled or monitored, and a sampled one may declare a sampling model made of a whole-number sample size of at least one and a non-empty acceptance rule, whose adequacy for the claim is judged when the test case is approved; an omitted input list, lifetime or policy is reported without failing the check, naming the row; a lifetime under seven days, an input path that is absolute or still climbs out of the repository once normalized, a policy outside the pair, or a sampling model missing either part or carrying a sample size below one fails the check naming the row; an automated test case declares none of these; declaring or changing any of them re-opens the test case's attestation."
 priority = "S"
 verification = "Test"
@@ -1334,21 +1334,7 @@ priority = "M"
 verification = "Test"
 status = "Approved"
 phase = 6
-coincident = """The needs ask for each premise showing whether a current result evidences it; the observation result recorded apart, with its outcome, observer, expiry and judged digest, is that record."""
-
-[requirement.SR-200]
-title = "An assumption's evidence level is derived from current results"
-sn_refs = ["SN-043", "SN-008"]
-boundary_refs = ["B-09"]
-hat_refs = ["TEST-ENGINEER"]
-requirement = "The delivered harness shall derive each assumption's evidence level from current results alone, treating a result as not current once it expires or once the digest of its test case's declared inputs differs from the digest it judged."
-rationale = """Approval blesses a row's text and says nothing about whether it holds, so whether an assumption is evidenced is a property of results and never of a cell. One freshness rule — expiry or a changed judged state, whichever comes first — serves both assumption results and the re-judging of observation tests, so the two never disagree about what is stale. Expiry returns the level to specified rather than to falsified, because an old pass is missing evidence, not contrary evidence."""
-acceptance_criteria = "An assumption with no evidencing test case reads assumed; one whose evidencing test cases have no current passing result reads specified; a current passing result from an automated or monitoring test case reads monitored; a current passing result from a sampled test case reads sampled; an expired result, or one whose judged digest differs from the current digest of its test case's declared inputs, reads specified and never falsified; an automated assumption test case's result is read from the harness's tree-bound evidence record, which covers the whole suite and names no case, and counts only when the record passed for this tree and its tier runs the case's declared tier under the kit's cumulative tier contract; no cell sets the level; an approved, active assumption reading assumed or specified is reported without failing the check, naming it."
-priority = "M"
-verification = "Test"
-status = "Approved"
-phase = 6
-coincident = """The needs ask for a premise relied on without evidence being visible as such; the evidence level derived from current results alone is that visibility."""
+coincident = """The needs ask for each premise showing whether it has been shown false; the observation result recorded apart, with its outcome, observer, expiry and judged digest, is the record a failing observation is read from."""
 
 [requirement.SR-201]
 title = "A falsified assumption is reported with everything that relies on it"
@@ -1369,9 +1355,9 @@ title = "An accepted risk reopens on a failed sample or on any change to what it
 sn_refs = ["SN-043", "SN-029"]
 boundary_refs = ["B-09"]
 hat_refs = ["TEST-ENGINEER"]
-requirement = "When a sample for an assumption relied on under an accepted risk fails, or the text of the assumption or of a need it served when the risk was accepted changes after that acceptance, the delivered harness shall read the assumption as unproven until the risk is accepted again or current evidence arrives."
+requirement = "When a sample for an assumption relied on under an accepted risk fails, or the text of the assumption or of a need it served when the risk was accepted changes after that acceptance, the delivered harness shall read the assumption as unproven until the risk is accepted again."
 rationale = """A recorded accepted risk is a judgment about a particular assumption serving particular needs, so it cannot outlive a change to either, nor a sample showing the assumption failing. Binding the acceptance to the texts as they stood when it was made is what keeps a later, separate re-approval of a changed need from silently carrying the old risk forward. A clock would reopen it for no reason and teach readers to re-accept by reflex, so time alone never reopens it. Accepting again is a reviewed approval, like the first acceptance."""
-acceptance_criteria = "An assumption with a recorded accepted risk and no current evidence is read as covered by that risk; the acceptance is bound to the assumption's text and to the text of each need it served at the moment the risk was accepted; a failed sample, or any later change to a bound text — including one later re-approved on its own — reads the assumption as unproven and is reported naming the trigger; accepting the risk again in a reviewed approval, or a current passing result, restores it; the passage of time alone never reopens it."
+acceptance_criteria = "An assumption with a recorded accepted risk is read as covered by that risk; the acceptance is bound to the assumption's text and to the text of each need it served at the moment the risk was accepted; a failed sample, or any later change to a bound text — including one later re-approved on its own — reads the assumption as unproven and is reported naming the trigger; accepting the risk again in a reviewed approval restores it, and a passing result restores nothing; the passage of time alone never reopens it."
 priority = "S"
 verification = "Test"
 status = "Approved"
@@ -1383,14 +1369,14 @@ title = "The approval brief presents each assumption with its argument"
 sn_refs = ["SN-029", "SN-043"]
 boundary_refs = ["B-09"]
 hat_refs = ["UX-DESIGNER"]
-requirement = "The delivered approval brief shall present each assumption and surrogate awaiting approval with the requirements citing it, the needs it serves, the crossings its outcome lands on, its evidence and its falsifier."
-rationale = """An assumption is approved for what it lets the requirements claim, so the approver's decision is whether those requirements may rely on it. The brief therefore leads with the citing requirements and the needs they reach, then gives the assumption's evidence and what would show it false; judged apart from its citing rows, an assumption is approved in the abstract. The spine's existing brief renders only requirements, design rows and test cases. A fidelity assumption and its surrogate are judged together because each is meaningless without the other."""
-acceptance_criteria = "For each assumption in the batch the brief shows its cells, the requirements citing it with their text, the needs derived through them, each landing crossing with its party, its evidencing test cases with its current evidence level, and its falsifier; a fidelity assumption is shown beside its surrogate and the surrogate's emulated parties; a surrogate in the batch is shown with the assumptions naming it; a brief for a batch holding no assumption or surrogate is unchanged; the brief is generated from the registries and never hand-copied."
+requirement = "The delivered approval brief shall present each assumption and surrogate awaiting approval with the requirements citing it, the needs it serves, the crossings its outcome lands on, the test cases whose failure shows it false, and its falsifier."
+rationale = """An assumption is approved for what it lets the requirements claim, so the approver's decision is whether those requirements may rely on it. The brief therefore leads with the citing requirements and the needs they reach, then gives the test cases that can show the assumption false and what would show it false, never a result as evidence that it holds; judged apart from its citing rows, an assumption is approved in the abstract. The spine's existing brief renders only requirements, design rows and test cases. A fidelity assumption and its surrogate are judged together because each is meaningless without the other."""
+acceptance_criteria = "For each assumption in the batch the brief shows its cells, the requirements citing it with their text, the needs derived through them, each landing crossing with its party, the test cases that can show it false, and its falsifier, with no evidence level; a fidelity assumption is shown beside its surrogate and the surrogate's emulated parties; a surrogate in the batch is shown with the assumptions naming it; a brief for a batch holding no assumption or surrogate is unchanged; the brief is generated from the registries and never hand-copied."
 priority = "S"
 verification = "Test"
 status = "Approved"
 phase = 6
-coincident = """The needs ask for an owner approving a premise for what it lets the requirements claim; the brief showing each assumption's citing requirements, needs, landings, evidence and falsifier is that outcome."""
+coincident = """The needs ask for an owner approving a premise for what it lets the requirements claim; the brief showing each assumption's citing requirements, needs, landings, falsifying test cases and falsifier is that outcome."""
 
 [requirement.SR-204]
 title = "The assumption tier joins the stage at its first approval, each tier read on its own"
@@ -1422,18 +1408,18 @@ phase = 6
 coincident = """The needs ask for a boundary gate that holds each requirement to its premises; the failure naming the requirement, the assumption and the unmet condition is the gate's verdict."""
 
 [requirement.SR-206]
-title = "With the assumption gate on, release requires current evidence or an accepted risk for every relied-on assumption"
+title = "With the assumption gate on, release blocks on a relied-on assumption shown false unless an accepted risk covers it"
 sn_refs = ["SN-043", "SN-004", "SN-008"]
 boundary_refs = ["B-09"]
 hat_refs = ["TEST-ENGINEER"]
-requirement = "Where the assumption gate is enabled, the delivered harness shall fail the release gate for each assumption a system requirement relies on that has neither a current passing result of the kind its evidencing test cases declare nor a recorded accepted risk, counting a sampled result only under a declared sampling model."
-rationale = """A passed sparse sample shows only that a problem was not found in that sample — small random panels find anywhere from about half to nearly all of the known problems — so it can falsify an assumption but cannot prove one, and the gate accepts it only where a declared sampling model justifies a positive claim. The honest alternatives are to narrow the assumption's holding conditions until an automated check covers it, or to accept the risk on the record. Evidence is judged at release because that is the one rung where results exist."""
-acceptance_criteria = "With the gate enabled, an assumption with a current passing monitored or automated result passes; one whose only current passing result is sampled passes only where its test case declares a sampling model, a sample size of at least one and a non-empty acceptance rule, whose adequacy was judged when the test case was approved; one with a recorded accepted risk that has not reopened passes; any other relied-on assumption fails the release gate naming it and what is missing; with the gate disabled the same conditions are advisory; results are read as recorded after the harness ran."
+requirement = "Where the assumption gate is enabled, the delivered harness shall fail the release gate for each assumption a system requirement relies on that is recorded as falsified and is not covered by a recorded accepted risk that has not reopened."
+rationale = """A passed observation shows only that a problem was not found in what was observed, so no result proves an assumption holds and the gate asks for none; the one evidence-shaped signal is falsification, and recording an assumption false is a person's or an adjudication's act on its validity. At release the gate therefore reads validity: a falsified premise blocks unless a reviewed approval accepted the risk of relying on it and that acceptance still stands. The honest alternatives are to amend the assumption and the requirements relying on it, or to accept the risk on the record."""
+acceptance_criteria = "With the gate enabled, a relied-on assumption recorded as active passes, whatever results it has or lacks; one recorded as falsified passes only with a recorded accepted risk that has not reopened; any other falsified relied-on assumption fails the release gate naming it, the requirements relying on it and why it is not covered; a failing observation result alone changes no validity and fails nothing here; with the gate disabled the same conditions are advisory."
 priority = "M"
 verification = "Test"
 status = "Approved"
 phase = 6
-coincident = """The needs ask for a release gate that holds each relied-on premise to current evidence or an accepted risk; the failure naming the assumption is the gate's verdict."""
+coincident = """The needs ask for a release gate that holds each relied-on premise to whether it has been shown false; the failure naming the falsified assumption is the gate's verdict."""
 
 [requirement.SR-207]
 title = "An approval act refuses to carry drift it does not itself approve"
@@ -1593,18 +1579,18 @@ phase = 6
 coincident = """The need asks for the record showing a requirement's test cases approved before its implementation; each requirement implemented ahead of an approved test case, reported from the committed history, is that outcome."""
 
 [requirement.SR-218]
-title = "The state view shows, for each need, the assumptions it relies on and their evidence"
+title = "The state view shows, for each need, the assumptions it relies on and whether any has been shown false"
 sn_refs = ["SN-043", "SN-023"]
 boundary_refs = ["B-09"]
 hat_refs = ["UX-DESIGNER", "ACCESSIBILITY"]
-requirement = "The delivered state view shall show, for each stakeholder need, the assumptions its requirements rely on, with each assumption's validity and evidence level."
-rationale = """The need promises that a reviewer can see what each outcome relies on and whether it has been checked. The per-assumption reports and the approval brief answer other questions — what is wrong now, and what is being approved — and neither lets a reviewer start from an outcome. Deriving the view from the registries and results keeps it from going stale the way a hand-written summary does, and marking a failed or unevidenced premise in words as well as color keeps the signal readable for a reader who does not see color."""
-acceptance_criteria = "For each need the view lists every assumption cited by the need's requirements, once, with its validity, its evidence level and the requirements citing it; a need whose requirements are all coincident shows that; a need with an unclassified requirement shows the gap; a falsified assumption, or one relied on with no current evidence, is marked in text as well as by any color; the view is generated from the registries and results, never hand-maintained; a project with no assumption registry shows no assumption section."
+requirement = "The delivered state view shall show, for each stakeholder need, the assumptions its requirements rely on, with each assumption's status, validity and falsifier and the test cases whose failure shows it false."
+rationale = """The need promises that a reviewer can see what each outcome relies on and whether any of it has been shown false. The per-assumption reports and the approval brief answer other questions — what is wrong now, and what is being approved — and neither lets a reviewer start from an outcome. Deriving the view from the registries keeps it from going stale the way a hand-written summary does, and marking a falsified premise in words as well as color keeps the signal readable for a reader who does not see color."""
+acceptance_criteria = "For each need the view lists every assumption cited by the need's requirements, once, with its approval status, its validity, its falsifier, the test cases that can show it false and the requirements citing it; a need whose requirements are all coincident shows that; a need with an unclassified requirement shows the gap; a falsified assumption is marked in text as well as by any color, and no evidence level is shown; the view is generated from the registries, never hand-maintained; a project with no assumption registry shows no assumption section."
 priority = "S"
 verification = "Test"
 status = "Approved"
 phase = 6
-coincident = """The needs ask for a reviewer seeing each outcome's premises and whether they are evidenced; the per-need view of each assumption with its validity and evidence level is that outcome."""
+coincident = """The needs ask for a reviewer seeing each outcome's premises and whether any has been shown false; the per-need view of each assumption with its validity, its falsifier and the test cases that can show it false is that outcome."""
 
 [requirement.SR-219]
 title = "A requirement's system of interest is derived from its crossings, and one spanning both is reported"

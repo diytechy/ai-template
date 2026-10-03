@@ -28,10 +28,10 @@ automated = "No"
 evidence = "docs/test/manual-smoke.md"
 status = "Drafted"
 phase = """Delivery phase = the max Phase of the SR/LLR it Verifies (a bare integer; blank only on a pre-approval Drafted row). See process.md 'Phased delivery'."""
-assumption_refs = ["DA-000"]  # the DOMAIN ASSUMPTION(S) in docs/requirements/assumptions.toml this case evidences, in place of or beside what it verifies. A case naming only assumptions needs no verifies; a case naming neither is an orphan, and an id no assumption row declares fails the check. A POINTER: moving it re-opens no approval. An assumption-only case belongs to every phase of the requirements citing its assumptions.
+assumption_refs = ["DA-000"]  # the DOMAIN ASSUMPTION(S) in docs/requirements/assumptions.toml this case can falsify, in place of or beside what it verifies. A case naming only assumptions needs no verifies; a case naming neither is an orphan, and an id no assumption row declares fails the check. A POINTER: moving it re-opens no approval. An assumption-only case belongs to every phase of the requirements citing its assumptions.
 inputs = ["docs/test/manual-smoke.md", "SR-000"]  # OBSERVATION CASES ONLY (automated = "No"): the repository paths and registry row ids the judgment reads, so a change to any of them makes the result stale. Omitted on an observation case, it is reported; an automated case declares none of these observation cells.
 max_age = 30  # OBSERVATION CASES ONLY: how many whole days the result holds before it is taken again. Omitted, it is reported; under 7 or not a whole number, the check fails.
-sampling = "sampled"  # OBSERVATION CASES EVIDENCING AN ASSUMPTION: sampled (judged over a sample of the population the assumption speaks about) | monitored (read continuously in operation). Omitted, it is reported; any other value fails the check.
+sampling = "sampled"  # OBSERVATION CASES CITING AN ASSUMPTION: sampled (judged over a sample of the population the assumption speaks about) | monitored (read continuously in operation). Omitted, it is reported; any other value fails the check.
 sample_size = 5  # SAMPLED CASES, OPTIONAL: the sampling model's whole-number sample size, at least 1. Declare it together with acceptance_rule or not at all; one without the other fails the check. Whether the model supports the claim is judged when the case is approved.
 acceptance_rule = "State what a passing sample is - e.g. at least four of five readers find the entry point unaided."
 

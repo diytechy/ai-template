@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 277
+design_rows = 276
 seam_rows = 221
-requirements_placed = 114
+requirements_placed = 113
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -64,7 +64,6 @@ sr_refs = [
   "SR-197",
   "SR-198",
   "SR-199",
-  "SR-200",
   "SR-201",
   "SR-202",
   "SR-203",
@@ -167,7 +166,6 @@ llr_refs = [
   "LLR-234",
   "LLR-235",
   "LLR-236",
-  "LLR-237",
   "LLR-238",
   "LLR-239",
   "LLR-240",
@@ -1094,8 +1092,6 @@ seam_boundary_refs = [
   "IF-190",
   "IF-199",
   "IF-200",
-  "IF-215",
-  "IF-216",
   "IF-228",
   "IF-254",
   "IF-257",
