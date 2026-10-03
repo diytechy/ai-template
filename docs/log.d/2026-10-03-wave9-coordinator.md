@@ -259,3 +259,36 @@ Noted, not filed:
 - TC-263's method does not name the three new cases. Its evidence file covers them.
 - The IF row note at `interfaces.toml:2285` still says "under the launch's
   CODEX_HOME".
+
+### WI-788 widened: session families, reset terms, a glossary and spine authoring (owner, 2026-10-03)
+
+The owner does not want to maintain an adjudicator and a retained adjudicator as two
+things.
+
+- **The adjudicator becomes one role:** a session that is retained by default until
+  declared reset terms are met. "Reset every time" is today's behaviour.
+- **Session families** follow the same structure.
+- **One call method** continues a session or re-initializes it.
+- **A `docs/glossary.md`** is referenced from PROCESS.md.
+- **Judgements and reviews stay independent.**
+- **Spine authoring, owner's proposal:** the adjudicator drafts, a retained
+  adjudication reviewer edits, and the adjudicator makes a final pass.
+
+The coordinator compared this with the code. The call path and the resume-or-mint
+and drain/retire machinery already exist (`session_service`, `session_keep`).
+
+| Gap | Where it stands |
+|---|---|
+| Default | Retention ships off |
+| Scope | Adjudication briefs only |
+| Keying | Per route |
+| Families | None |
+| Independent adjudicator | The coordinator's bypasses the service |
+
+The design must state its changes to three rulings:
+
+- S10's "reviewers never" (a retained adjudication reviewer);
+- OI-69's owner-turned dial;
+- the brief's "a judge never amends what it judges".
+
+All of it is folded into WI-788's design note, with no new row.

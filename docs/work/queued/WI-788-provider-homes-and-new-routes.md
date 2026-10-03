@@ -1,6 +1,6 @@
 +++
 id = "WI-788"
-title = "Per-route provider homes for multiple accounts, and new routes: SuperGrok, Google's CLI, FreeAI through opencode"
+title = "Session families with reset terms, a glossary, per-route provider homes, and new routes"
 workstream = "process"
 specref = "docs/agents.toml"
 sr_refs = ["SR-222"]
@@ -86,5 +86,84 @@ Two halves. The second is built only after the owner reviews the first.
    - A RESYNC_PACK entry.
 
    Nothing forces an adopter to install a new CLI.
+
+## Scope widened 2026-10-03 (owner): session families, reset terms, a glossary, and spine authoring
+
+The owner's words, in order:
+
+> "I do not want to maintain an adjudicator vs a retained adjudicator. There might
+> just need to be a glossary.md referenced by process.md. Adjudication must be
+> performed by an adjudicator, which is a session that is retained by default until
+> reset conditions are met at which point it should be reinitialized (The reset terms
+> must be defined, which may include resetting every time - resulting in equivalent
+> behavior today), similar sessions I would expect to hold similar retention
+> structures ([plan and build],[review and judge]). I would expect a similar call
+> method ... another function either continues a session (retained), or determines
+> it's reset condition is met and initializes a new session with the appropriate
+> model along with the expected prompt."
+
+> "judgements and reviews should always be independent. The other item I missed is
+> probably related to spine authoring and author reviews ... Perhaps in those cases
+> the adjudicator should draft the authoring, and the author review can update the
+> same spine text, followed by one more pass from the adjudicator. That way the
+> adjudicator maintains the full scope spine / vision, but a dedicated retained
+> reviewer is able to run / act as a second check. This probably just needs to be the
+> adjudication reviewer."
+
+How it compares with the code (checked 2026-10-03):
+
+- **Already built.**
+  - One call path for every role (`session_service.call`; S7).
+  - A resume-or-mint decision (`plan_keep` -> `session_keep.keep_for`, per-route lease).
+  - Declared drain and retire rules (`drain_reason`, `_before_launch`): crest of
+    occupancy over the dial, a governing-template change or a CLI version change; an
+    optional same-artifact guard; retire at a clear point when no open chain remains.
+  - Keep-warm.
+  - `context_reset_pct = 0` is exactly "reset every time".
+- **The gaps.**
+  - Retention ships OFF.
+  - It covers only `role == "ADJUDICATE"` for `retain_for` briefs (`disposition`,
+    `amendment`, `red-tc`).
+  - It is keyed per route, while model choice happens before the service, in
+    `agent_loop`'s router.
+  - It has no notion of a session family.
+  - The coordinator's independent adjudicator (Agent-tool subagents) bypasses the
+    service entirely: no routing, no session log, no retention.
+- **Rulings this touches; the design note must state each change explicitly.**
+  - S10 (DECIDED 2026-09-23): "the adjudicator's lands; builder retention a separate
+    ruled experiment; reviewers never". A retained adjudication reviewer narrows
+    "reviewers never". The coordinator's reading of "independent": it never reviews
+    its own work, and it is always a different session, and preferably family, from
+    the adjudicator it checks.
+  - OI-69: turning the dial on is the owner's act. "Retained by default" turns it.
+  - The amendment brief: a judge never amends the row it judges. Under the proposed
+    spine-authoring flow, the adjudicator drafts, the adjudication reviewer edits, and
+    the adjudicator makes a final pass. The design must say which act carries
+    approval, and why the reviewer's independent edit keeps it from being
+    self-approval.
+
+Added to Done-when half 1 (the design note, owner checkpoint):
+
+- `docs/glossary.md`, referenced from PROCESS.md, with one term per concept:
+  - adjudicator (a role performed by a session, retained under declared reset terms);
+  - session family;
+  - reset terms;
+  - adjudication reviewer;
+  - reviewer;
+  - judge (an observation re-judge);
+  - arbiter;
+  - independent adjudicator (the coordinator's hand role).
+
+  It retires the "adjudicator vs retained adjudicator" split.
+- Session families and their declared reset terms: [plan and build], [adjudicate],
+  [adjudication review], [review], [judge]. Each says whether it is retained, its
+  reset terms ("every call" is one valid setting), and its independence rule (a
+  review or judgement never runs in a session that authored what it judges).
+- The one call method: continue a retained session, or, when its reset terms are met,
+  initialize a new one with the routed model and the expected prompt. Where today's
+  router-before-service split needs to move, say so.
+- The spine-authoring flow above, as an option with its approval act stated, against
+  today's builder-authors / adjudicator-approves split and the S11 in-lane plan.
+- The proposed defaults, each named as a change to a ruling where it is one.
 
 ## Deliverable
