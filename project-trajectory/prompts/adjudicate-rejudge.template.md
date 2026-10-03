@@ -33,6 +33,11 @@ You are an INDEPENDENT adjudicator launched by the unattended coordinator. A che
 
 Judge the case by its Method, against its Expected, on the project as it stands at HEAD. Read the declared inputs; do not take the case's own earlier result, or anyone's notes about it, as evidence.
 
+An assumption-only observation case is shown under its assumption's chain,
+including the statement, falsifier and standing. Follow its Method against the
+real thing: a failed observation is falsification evidence; a passed sample
+establishes nothing beyond that sample. A person or adjudication sets standing.
+
 If the Method is one you can carry out yourself (reading a rendered page, inspecting a document, critiquing an output), do it, then record the result with:
 
     python scripts/record_observation.py --tc {tc} --outcome pass|fail --by "<your model and this row's id>"

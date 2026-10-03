@@ -276,7 +276,8 @@ BASELINE = {
     # The emitted bundle is byte-identical, so this is a pure shape change.
     ("gen_okf.py", "emit"): 25,
     ("gen_okf.py", "main"): 13,
-    ("gen_release_checklist.py", "main"): 20,
+    # WI-667: main dropped below C901 after phase selection and checklist
+    # sections moved to named functions; remove its former baseline of 20.
     # WI-431 (batch-2 carrier, repo-lock §8.1): a NEW row at 12, and the growth
     # is the emitter taking a second job rather than a branch nobody needed.
     # `rows_to_toml` now interleaves the source's COMMENT lines with its row

@@ -3115,3 +3115,27 @@ detail = "observation_rubric_findings returns one warning for each real observat
 status = "Drafted"
 component = "CMP-008"
 phase = 6
+
+[design.LLR-295]
+sr_refs = ["SR-146", "SR-215"]
+title = "Assumption-only observation cases in adjudicator briefs"
+module = "project-trajectory/scripts/adjudicate_brief.py"
+code_symbol = "_assumption_case_chain/_render_assumption_cases/_rejudge_case_text"
+detail = "Cases with Assumption-Refs and no Verifies render through trace.assumption_brief_lines, showing the assumption id, statement, falsifier and standing. First approval applies the same Drafted, scope and authority intersection as SR chains, lists the case cells and derives the test registry approval token without authorizing the assumption. Re-judge validates Method, Expected and MaxAge and shows the observation instruction beneath its assumption chain. An unresolved assumption refuses composition."
+rationale = "A case outside the requirement forest must remain visible to its judge, while showing its premise must not widen the approval act to that premise. Reusing the assumption approval renderer gives the two briefs the same chain."
+test_refs = "TC-308;TC-309"
+status = "Drafted"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-296]
+sr_refs = ["SR-033"]
+title = "Assumption confirmations in the release checklist"
+module = "project-trajectory/scripts/gen_release_checklist.py"
+code_symbol = "assumption_checklist_lines"
+detail = "Read real DA rows through spine_carrier; emit a separate assumptions section with one ASSUMPTION DA-id item per active Approved row or row with no falsifier, including its falsifier or missing notice and TC ids naming it in Assumption-Refs. Missing registries and empty selections emit no section. Checklist generation writes no registry; checking a box asserts only not falsified, and a person sets standing. Existing sections and phase selection remain intact through named readers and section renderers."
+rationale = "Assumptions about people and environments often have no development observation; release sign-off needs a recall prompt distinguishable from a requirement check. Missing falsifiers must be visible even on unsettled rows."
+test_refs = "TC-310"
+status = "Drafted"
+component = "CMP-009"
+phase = 6

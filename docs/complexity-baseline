@@ -105,7 +105,6 @@ project-trajectory/scripts/gen_open_items.py	_none_declaration_findings	16	30	AB
 project-trajectory/scripts/gen_open_items.py	deferral_findings	22	56
 project-trajectory/scripts/gen_open_items.py	fragment_declarations	16	23
 project-trajectory/scripts/gen_open_items.py	md_block	17	28
-project-trajectory/scripts/gen_release_checklist.py	main	85	210
 project-trajectory/scripts/gen_skills_index.py	check_agent_sync	22	30
 project-trajectory/scripts/gen_skills_index.py	collect_skills	24	27
 project-trajectory/scripts/gen_skills_index.py	main	16	84

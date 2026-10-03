@@ -3119,3 +3119,35 @@ automated = "Yes"
 evidence = "tests/test_rejudge_rubric.py"
 status = "Drafted"
 phase = 6
+[test.TC-308]
+verifies = ["LLR-295", "IF-115"]
+level = "Unit"
+method = "Compose a first-approval brief scoped to a Drafted assumption-only case; assert its assumption statement, falsifier and standing, case Method, approval label and test-registry token are shown, without an assumption-registry token."
+tier = "Smoke"
+expected = "The scoped observation case is visible under its assumption chain and the act grants no approval of the assumption."
+automated = "Yes"
+evidence = "tests/test_assumption_observation_briefs.py::test_first_approval_shows_assumption_only_case"
+status = "Drafted"
+phase = 6
+
+[test.TC-309]
+verifies = ["LLR-295", "IF-115"]
+level = "Unit"
+method = "Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear."
+tier = "Smoke"
+expected = "The complete re-judge brief composes under the assumption chain."
+automated = "Yes"
+evidence = "tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case"
+status = "Drafted"
+phase = 6
+
+[test.TC-310]
+verifies = ["LLR-296", "IF-018"]
+level = "Unit"
+method = "Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers; tolerate an absent registry without a section; assert the source registry remains byte-identical."
+tier = "Smoke"
+expected = "Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set."
+automated = "Yes"
+evidence = "tests/test_release_assumptions.py"
+status = "Drafted"
+phase = 6

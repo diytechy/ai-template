@@ -671,6 +671,15 @@ _A drifted row's approved text moved from its `docs/archive/last_approved` copy:
   - before: A plain launch derives what to do next from the tracked WI DAG plus Git — never from prose or a hand-maintained pointer, and never from predefined tracks; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated, never hand-copied.
   - after: A plain launch derives what to do next from the tracked WI DAG plus Git alone; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated from that tracked state.
 
+### SN-043 — DRIFTED
+
+- **Acceptance**
+  - before: Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows whether a current result evidences it; a premise relied on without evidence is visible as such, and a premise shown false is reported with every requirement that relied on it.
+  - after: Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows its approval status and whether it has been shown false; a premise shown false is reported with every requirement that relied on it.
+- **Need**
+  - before: **Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether each of those premises has itself been checked.
+  - after: **Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether any of those premises has been shown false.
+
 
 _No chain on a rung the human-approval dial holds owes an act; every chain in this brief waits for automated adjudication._
 
@@ -679,7 +688,47 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 7 chain(s): SR-036, SR-054, SR-184, SR-185, SR-186, SR-215, SR-224</summary>
+<summary>Waiting for automated adjudication — 9 chain(s): SR-033, SR-036, SR-054, SR-146, SR-184, SR-185, SR-186, SR-215, SR-224</summary>
+
+## SR-033 — Release checklist generation
+
+> **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate and differentiable assumption confirmations.
+
+> **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did.
+
+
+### SR SR-033
+- **AcceptanceCriteria**
+  - before: Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation.
+  - after: Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation; a separate assumptions section lists each active Approved assumption and any assumption with no falsifier once, with an ASSUMPTION DA-id marker, its falsifier or an explicit missing-falsifier notice, and the observation case ids naming it, if present. A falsified or Drafted assumption with a falsifier is omitted. An absent assumptions registry produces no section or error. Checking an assumption asserts only not falsified; the generator does not change standing, which a person sets.
+- **Requirement**
+  - before: The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate.
+  - after: The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate and differentiable assumption confirmations.
+
+### LLR LLR-296 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-296
+- **SR-Refs**: SR-033
+- **Title**: Assumption confirmations in the release checklist
+- **Module**: project-trajectory/scripts/gen_release_checklist.py
+- **CodeSymbol**: assumption_checklist_lines
+- **Detail**: Read real DA rows through spine_carrier; emit a separate assumptions section with one ASSUMPTION DA-id item per active Approved row or row with no falsifier, including its falsifier or missing notice and TC ids naming it in Assumption-Refs. Missing registries and empty selections emit no section. Checklist generation writes no registry; checking a box asserts only not falsified, and a person sets standing. Existing sections and phase selection remain intact through named readers and section renderers.
+- **Rationale**: Assumptions about people and environments often have no development observation; release sign-off needs a recall prompt distinguishable from a requirement check. Missing falsifiers must be visible even on unsettled rows.
+- **TestRefs**: TC-310
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 6
+
+### TC TC-310 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-310
+- **Verifies**: LLR-296;IF-018
+- **Level**: Unit
+- **Method**: Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers; tolerate an absent registry without a section; assert the source registry remains byte-identical.
+- **Tier**: Smoke
+- **Expected**: Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set.
+- **Automated**: Yes
+- **Evidence**: tests/test_release_assumptions.py
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-036 — Deliberate re-sync integration
 
@@ -716,6 +765,50 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 - **Trigger**
   - before: (empty)
   - after: component:CMP-009
+
+## SR-146 — Prompts are reviewable files with a per-session audit trail
+
+> **Requirement.** Every prompt the delivered loop launches shall be a shipped, reviewable file with strictly filled slots — listed by digest in a freshness-gated generated catalogue, each session recording which template it used and the fingerprint of what it rendered to.
+
+> **Rationale.** Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
+
+
+### LLR LLR-295 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-295
+- **SR-Refs**: SR-146;SR-215
+- **Title**: Assumption-only observation cases in adjudicator briefs
+- **Module**: project-trajectory/scripts/adjudicate_brief.py
+- **CodeSymbol**: _assumption_case_chain/_render_assumption_cases/_rejudge_case_text
+- **Detail**: Cases with Assumption-Refs and no Verifies render through trace.assumption_brief_lines, showing the assumption id, statement, falsifier and standing. First approval applies the same Drafted, scope and authority intersection as SR chains, lists the case cells and derives the test registry approval token without authorizing the assumption. Re-judge validates Method, Expected and MaxAge and shows the observation instruction beneath its assumption chain. An unresolved assumption refuses composition.
+- **Rationale**: A case outside the requirement forest must remain visible to its judge, while showing its premise must not widen the approval act to that premise. Reusing the assumption approval renderer gives the two briefs the same chain.
+- **TestRefs**: TC-308;TC-309
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-308 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-308
+- **Verifies**: LLR-295;IF-115
+- **Level**: Unit
+- **Method**: Compose a first-approval brief scoped to a Drafted assumption-only case; assert its assumption statement, falsifier and standing, case Method, approval label and test-registry token are shown, without an assumption-registry token.
+- **Tier**: Smoke
+- **Expected**: The scoped observation case is visible under its assumption chain and the act grants no approval of the assumption.
+- **Automated**: Yes
+- **Evidence**: tests/test_assumption_observation_briefs.py::test_first_approval_shows_assumption_only_case
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-309 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-309
+- **Verifies**: LLR-295;IF-115
+- **Level**: Unit
+- **Method**: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear.
+- **Tier**: Smoke
+- **Expected**: The complete re-judge brief composes under the assumption chain.
+- **Automated**: Yes
+- **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-184 — Critique acceptance records intent-derived rubric anchors
 
@@ -821,6 +914,19 @@ _traced — routes to adjudication_
 - **Component**: CMP-008
 - **Phase**: 6
 
+### LLR LLR-295 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-295
+- **SR-Refs**: SR-146;SR-215
+- **Title**: Assumption-only observation cases in adjudicator briefs
+- **Module**: project-trajectory/scripts/adjudicate_brief.py
+- **CodeSymbol**: _assumption_case_chain/_render_assumption_cases/_rejudge_case_text
+- **Detail**: Cases with Assumption-Refs and no Verifies render through trace.assumption_brief_lines, showing the assumption id, statement, falsifier and standing. First approval applies the same Drafted, scope and authority intersection as SR chains, lists the case cells and derives the test registry approval token without authorizing the assumption. Re-judge validates Method, Expected and MaxAge and shows the observation instruction beneath its assumption chain. An unresolved assumption refuses composition.
+- **Rationale**: A case outside the requirement forest must remain visible to its judge, while showing its premise must not widen the approval act to that premise. Reusing the assumption approval renderer gives the two briefs the same chain.
+- **TestRefs**: TC-308;TC-309
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
 ### TC TC-247
 - **Expected**
   - before: Satisfies SR-215's acceptance: a changed, expired or unjudged observation case gets exactly one open re-judge item naming it and what changed; an unchanged one gets none; an open item suppresses another; no model runs; a case with no inputs judged by expiry.
@@ -855,6 +961,30 @@ _traced — routes to adjudication_
 - **Expected**: Only the real observation with a missing reference produces a warning naming its case and rubric.
 - **Automated**: Yes
 - **Evidence**: tests/test_rejudge_rubric.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-308 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-308
+- **Verifies**: LLR-295;IF-115
+- **Level**: Unit
+- **Method**: Compose a first-approval brief scoped to a Drafted assumption-only case; assert its assumption statement, falsifier and standing, case Method, approval label and test-registry token are shown, without an assumption-registry token.
+- **Tier**: Smoke
+- **Expected**: The scoped observation case is visible under its assumption chain and the act grants no approval of the assumption.
+- **Automated**: Yes
+- **Evidence**: tests/test_assumption_observation_briefs.py::test_first_approval_shows_assumption_only_case
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-309 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-309
+- **Verifies**: LLR-295;IF-115
+- **Level**: Unit
+- **Method**: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear.
+- **Tier**: Smoke
+- **Expected**: The complete re-judge brief composes under the assumption chain.
+- **Automated**: Yes
+- **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case
 - **Status**: Drafted
 - **Phase**: 6
 
