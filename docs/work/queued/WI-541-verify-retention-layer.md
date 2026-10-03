@@ -107,3 +107,26 @@ PINEAPPLE, usage input 27,152, cached 24,064, output 101, `reasoning_output_toke
 memory: usage and thread id parse correctly, reasoning 27, cache write still ""
 (the finding above), no occupancy from the exec stream. No new fixture was needed;
 this closes the "route command" item. Not committed as a fixture.
+
+### Compaction ceiling, observed 2026-10-02
+
+`codex exec --json --sandbox read-only -c model_reasoning_effort=low -c
+model_auto_compact_token_limit=20000`, six sequential file reads, one session. The
+override IS honoured on codex-cli 0.157.1, so the ceiling is reachable for about 50k
+tokens, not near the 258,400 window. Observed: request prompts grew 15,489 ->
+20,422 -> 35,911; the provider compacted (a `compacted` entry with a
+`replacement_history` in the rollout) and the next request's prompt fell to 15,717.
+Findings, not patched:
+- the `exec --json` stdout stream carries NO compaction event (event types seen:
+  thread.started, turn.started, item.started/completed, turn.completed); only the
+  rollout file records it, so the plan's "`codex thread/compacted` event on the stream"
+  source for `compacted = true` does not exist for `exec`;
+- no code under `project-trajectory/scripts/` sets `compacted` at all (grep finds none),
+  so the plan's "compaction is logged on the session's row" is unbuilt for every route;
+- the kit's reset fires before the provider compacts only if its dial is below the
+  provider's limit; with the default codex limit unmeasured here, that stays an
+  assumption until a run without the override approaches it.
+Still owed: real multi-step adjudication occupancy, cache TTLs, replay time. Those
+two measurements need large contexts; a scaled measurement (20k to 100k) with an
+extrapolation is possible but would not meet the 100k-700k wording without the
+owner's ruling.
