@@ -93,3 +93,15 @@ The landing sweep (`cbda7d44`) then minted **WI-785** over LLR-243 and TC-238: t
 re-mint trap, live. Both rows were byte-identical to their act-25 anchors at the
 mint. The coordinator closed WI-785 as already settled, citing the re-judgement and
 the act, without a second sitting. The S11 plan's slice 1 removes the trap.
+
+### WI-777: TC-055 RECORDED pass, judged by Codex Luna
+
+The declared matrix was rendered at `2e46707c` and cut into 268 native tiles of at
+most 1500 px. The judges had to be Codex family, because WI-771's assumption-view
+code was written by Claude Opus. Six Codex Luna (high) judges ran, one per width and
+theme, with the tiles attached through `codex exec -i`. A probe showed about 5k tokens
+per tile, so a 120-tile width was split by theme.
+
+All six approved, with zero findings
+([verdict](../reviews/wi-777-re-judge-tc-055-declared-trig/001-REJUDGE-2e46707c.md)).
+Their verdicts were terser than WI-765's Opus judges', and the record says so.

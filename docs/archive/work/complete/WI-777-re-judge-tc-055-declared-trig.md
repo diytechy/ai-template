@@ -3,13 +3,17 @@ id = "WI-777"
 title = "re-judge TC-055: declared trigger fired [sha256:716c0a85af65] at merge ba68016"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 needs = ["WI-775"]
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+TC-055 was re-judged cross-family at 2e46707c, after WI-771 changed the rendered assumption view: **RECORDED pass** (`docs/test/observations/TC-055.2026-10-03T191502Z.toml`). Six independent Codex Luna (high) judges, one per width and theme, judged 268 native tiles. T2, T4, T5 and T8's crossing legibility pass at every width in both themes, with zero findings. Verdict: `docs/reviews/wi-777-re-judge-tc-055-declared-trig/001-REJUDGE-2e46707c.md`.
 
 ## Context
 
