@@ -933,9 +933,9 @@ def open_item_wi_ref_findings(root, wis):
     return [
         "{}: wi_refs names unknown work item {}".format(row["OI-ID"], wid)
         for row in spine_carrier.load(Path(root) / OPEN_ITEMS_REL, "OI-ID")
-        if not row["OI-ID"].endswith("-000")
+        if not _kitspine.is_example(row["OI-ID"])
         for wid in _split_refs(row.get("WI-Refs", ""))
-        if wid not in ids
+        if not _kitspine.is_example(wid) and wid not in ids
     ]
 
 

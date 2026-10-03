@@ -679,7 +679,29 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 2 chain(s): SR-224, SR-227</summary>
+<summary>Waiting for automated adjudication — 3 chain(s): SR-148, SR-224, SR-227</summary>
+
+## SR-148 — Autonomous loop work selection: what it derives from, and in what order
+
+> **Requirement.** The delivered loop content shall select the work an unattended run does next from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
+
+> **Rationale.** Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
+
+
+### LLR LLR-289
+- **Detail**
+  - before: Report each real open item's wi_refs entry that names no work item, checking pending and ruled history against live and terminal work rows and ignoring example rows.
+  - after: Report each real open item's wi_refs entry that names no work item, checking pending and ruled history against live and terminal work rows and ignoring example rows and example work-item references.
+
+### TC TC-302
+_approved — re-attestation owed_
+- **Method**
+  - before: For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; a wi_refs entry naming a work item that exists only in the terminal archive yields none; an example row and an absent registry yield none from the checker.
+  - after: For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; a wi_refs entry naming a work item that exists only in the terminal archive yields none; an example row, an example work-item reference and an absent registry yield none from the checker; an example reference alongside a real missing work id leaves the real dangling finding intact.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert; tests/test_open_item_readiness.py::test_only_queued_rows_are_held_and_a_drained_frontier_still_lists_gates
+  - after: tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert; tests/test_open_item_readiness.py::test_example_wi_refs_are_inert; tests/test_open_item_readiness.py::test_only_queued_rows_are_held_and_a_drained_frontier_still_lists_gates
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 

@@ -73,6 +73,18 @@ def test_dangling_wi_refs_are_findings(tmp_path, state):
     assert "OI-98" in findings[0] and "WI-999" in findings[0]
 
 
+@pytest.mark.parametrize("state", ["pending", "ruled"])
+def test_example_wi_refs_are_inert(tmp_path, state):
+    repo(tmp_path, state)
+    path = tmp_path / "docs/requirements/open-items.toml"
+    path.write_text(
+        path.read_text().replace('"WI-684"', '"WI-000", "WI-999"'),
+        encoding="utf-8",
+    )
+    findings = ct.open_item_wi_ref_findings(tmp_path, [])
+    assert findings == ["OI-98: wi_refs names unknown work item WI-999"]
+
+
 def test_examples_and_absent_registry_are_inert(tmp_path):
     repo(tmp_path)
     path = tmp_path / "docs/requirements/open-items.toml"
