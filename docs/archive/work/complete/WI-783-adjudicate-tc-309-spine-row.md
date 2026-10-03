@@ -2,12 +2,16 @@
 id = "WI-783"
 title = "adjudicate: TC-309 - spine row(s) authored Drafted on merged trunk e95c85f..5afc927 await a FIRST APPROVAL; read the whole chain, then approve (flip + snapshot) or return with findings"
 workstream = "process"
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "first-approval"
 adjudicates = ["TC-309", "TC-310"]
 +++
+
+## Deliverable
+
+Act seq 25 (combined with WI-782): TC-309 and TC-310 are approved. The independent Claude Opus 5.5 adjudicator ruled `OUTCOME: APPROVE rows=2`. Probes showed WI-780's earlier returns closed: putting the case above the chain, dropping `Expected` from the refusal cells, a CRLF-to-LF rewrite of the registry, and listing an automated case each fail the tests. Codex Luna (high) cross-review: SOUND at 1b2bbfa4. Verdict: `docs/reviews/wi-783-adjudicate-tc-309-spine-row/001-ADJUDICATE-d040ad7.md`.
 
 ## Context
 

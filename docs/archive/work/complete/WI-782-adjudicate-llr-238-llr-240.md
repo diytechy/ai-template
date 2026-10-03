@@ -3,14 +3,30 @@ id = "WI-782"
 title = "adjudicate: LLR-238, LLR-240, LLR-243, LLR-258, SR-191, SR-192, SR-197, SR-198, SR-199, SR-201, SR-202, SR-203, SR-206, SR-218, TC-227, TC-233, TC-234, TC-235, TC-238, TC-251 - approved/routed cell(s) amended on merged trunk 1273a99..25f7f0a (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-191", "SR-192", "SR-197", "SR-198", "SR-199", "SR-201", "SR-202", "SR-203"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
-adjudicates = ["LLR-238", "LLR-240", "LLR-243", "LLR-258", "SR-191", "SR-192", "SR-197", "SR-198", "SR-199", "SR-201", "SR-202", "SR-203", "SR-206", "SR-218", "TC-227", "TC-233", "TC-234", "TC-235", "TC-238", "TC-251"]
+adjudicates = ["SR-200", "LLR-237", "TC-232", "LLR-238", "LLR-240", "LLR-243", "LLR-258", "SR-191", "SR-192", "SR-197", "SR-198", "SR-199", "SR-201", "SR-202", "SR-203", "SR-206", "SR-218", "TC-227", "TC-233", "TC-234", "TC-235", "TC-238", "TC-251"]
 +++
 
+## Deliverable
+
+Act seq 25 (one combined act with WI-783): all 23 rows are re-attested. The independent Claude Opus 5.5 adjudicator ruled the 20 rows WI-771 amended and the three rows it retired.
+
+- **CLARITY:** 9 rows, where "evidences an assumption" became "can falsify an assumption".
+- **MEANING, blessed:** 11 rows: the ladder dropped from the brief, the gate, the accepted-risk binding and the per-need view.
+- **Retirements:** SR-200, LLR-237 and TC-232, carried in mid-sitting, blessed with their successors SR-201, LLR-238 and TC-233.
+
+LLR-243 and TC-238 were first returned, because the reopening of a risk accepted while the assumption was active had no test. Under the owner's 2026-10-03 S11 direction the return was fixed in this lane, not minted:
+- an Opus builder applied the byte-exact fix list (fea1b8f3);
+- the adjudicator re-judged it and blessed it (c042a79c), with the probe failing two tests.
+
+Codex Luna (high) cross-review: SOUND at 1b2bbfa4, no findings (`docs/reviews/2026-10-03-wave9/luna-wi782.md`). Verdict: `docs/reviews/wi-782-adjudicate-llr-238-llr-240/001-ADJUDICATE-d040ad7.md`.
+
 ## Context
+
+Carried in by the coordinator 2026-10-03, mid-sitting: SR-200, LLR-237 and TC-232, the three approved rows WI-771 retired (successors SR-201, LLR-238 and TC-233; records under `docs/log.d/retired/`). Intake's amendment walk reads only rows still present in the live registry, so a removal mints no adjudication. The combined act's copy was refused naming them, so this sitting judges the removals too.
 
 Derived from `staged_spine_amendments` on the merged commit (§A5.2).
 Approved and ROUTED traced cells only; other traced cells are silent

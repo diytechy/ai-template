@@ -57,3 +57,34 @@ slow-tier modules, which the commit bar does not run:
 WI-784 was filed by hand. A Claude Opus builder fixed both, from red (2 failed) to
 green; the 28 affected modules gave 929 passed. Codex Luna (high) found it SOUND at
 `e7e0117d` with no findings ([review](../reviews/2026-10-03-wave9/luna-wi784.md)).
+
+### Spine-acts batch R (WI-782, WI-783): act seq 25, the first sitting with an in-lane fix round
+
+One independent Claude Opus 5.5 adjudicator sat both kit-composed briefs in lane
+`build/wi-782`. Under the owner's S11 direction, a return is fixed inside the lane.
+
+- **WI-782** (WI-771's 20 amended rows): 9 CLARITY, 11 MEANING. It blessed 18 and
+  returned LLR-243 and TC-238: the reopening of a risk accepted while its assumption
+  was active had no test, and adding `Standing` to `_UNBOUND_CELLS` still passed the
+  whole suite.
+- **The fix round, in the lane:** the verdict carried byte-exact cells and a test
+  diff. A Claude Opus builder applied them (`fea1b8f3`). The probe failed 2 tests and
+  was reverted. The same adjudicator, resumed, re-judged and blessed both rows
+  (`c042a79c`). No row was minted and no new session was started for the fix.
+- **WI-783:** TC-309 and TC-310 were approved. Probes showed WI-780's three earlier
+  returns closed.
+- **The act's copy was refused on WI-771's three retirements**, SR-200, LLR-237 and
+  TC-232. No adjudication row named them. The coordinator carried them into WI-782's
+  scope (`01230d18`), and the adjudicator blessed each against its successor.
+- **Act seq 25** (`1b2bbfa4`): TC-309 and TC-310 approved, 23 rows re-attested, and
+  every copy byte-identical to live. Codex Luna (high) found it SOUND, with no
+  findings, reproducing the probe
+  ([review](../reviews/2026-10-03-wave9/luna-wi782.md)).
+
+Two mint gaps surfaced; neither is filed yet:
+
+- **Removals are unrouted.** `staged_spine_amendments` iterates only the rows present
+  after the merge, so an approved row deleted from a registry mints no adjudication.
+  The next act's copy then refuses on it, and it surfaces only at that point.
+- **The re-mint trap** (S11 plan §4.2). Its landing sweep is recorded with the next
+  commit.
