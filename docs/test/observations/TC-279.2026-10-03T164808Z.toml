@@ -1,0 +1,9 @@
+# OBSERVATION RECORD, written by scripts/record_observation.py. Do not edit:
+# a new sample is a new record, and a record that fails to parse, or whose
+# case or lifetime does not allow it, fails the traceability check.
+tc = "TC-279"
+outcome = "pass"
+observed_at = "2026-10-03T16:48:08Z"
+provenance = "Claude Opus 5.5 adjudicator, WI-697 round 2; readers: 5 fresh Claude Sonnet 5.5 sessions"
+expires = "2027-01-01T16:48:08Z"
+judged = "sha256:c87c0543f99f86678e148ec3f8a36b6df74ec53a011d02d3f425c963c41a18a6"
