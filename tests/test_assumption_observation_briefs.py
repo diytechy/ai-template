@@ -67,3 +67,26 @@ def test_rejudge_shows_assumption_only_case(tmp_path, monkeypatch):
     assert reason is None, reason
     assert_chain(text)
     assert "- TC-279 — observes DA-011" in text
+
+
+def test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime(
+    tmp_path, monkeypatch
+):
+    root = assumption_repo(tmp_path)
+    case = carrier.load(root / "docs/test/test-cases.toml", "TC-ID")[0]
+    monkeypatch.setattr(ab.rejudge, "checkpoint_for", lambda *a: "release")
+    monkeypatch.setattr(ab.rejudge, "explain", lambda d: "No result recorded.")
+    for row, cell in (
+        ({**case, "Assumption-Refs": "DA-099"}, "DA-099"),
+        ({key: value for key, value in case.items() if key != "MaxAge"}, "MaxAge"),
+    ):
+        monkeypatch.setattr(
+            ab.rejudge, "due_cases", lambda *a, **kw: [{"tc": "TC-279", "row": row}]
+        )
+        text, reason = ab.compose(
+            root,
+            {"WI-ID": "WI-002", "Brief": "rejudge", "Adjudicates": "TC-279"},
+            "verdict.md",
+        )
+        assert text is None
+        assert cell in reason

@@ -19,6 +19,7 @@ import csv
 import io
 import os
 import subprocess
+import types
 
 import pytest
 from conftest import (
@@ -33,6 +34,7 @@ from conftest import (
 pytestmark = env_gate_skipif("git")
 
 rejudge = load_script("rejudge")
+observation_cadence = load_script("observation_cadence")
 intake = load_script("intake")
 record_observation = load_script("record_observation")
 adjudicate_brief = load_script("adjudicate_brief")
@@ -278,6 +280,44 @@ def test_case_floor_can_raise_but_not_lower_default(tmp_path):
     assert not case_due(root, sha)
     sha = close_work(root, 11)
     assert case_due(root, sha)
+
+
+def test_a_zero_policy_floor_disables_the_default(tmp_path):
+    root, _ = cadence_repo(tmp_path, "files:src/*", floor=0)
+    _write(root, "docs/process.toml", "[checks]\nobservation_min_work_items = 0\n")
+    _commit(root, "zero floor policy")
+    _write(root, "src/a.txt", "changed\n")
+    sha = _commit(root, "trigger change without closed work")
+    assert case_due(root, sha)
+
+
+def test_cadence_refuses_what_it_cannot_read(tmp_path):
+    root, sha = cadence_repo(tmp_path)
+    since = _git(root, "rev-parse", "HEAD~1").strip()
+    snap = tmp_path / "snap"
+    _write(snap, "docs/process.toml", '[checks]\nobservation_min_work_items = "ten"\n')
+    with pytest.raises(ValueError):
+        observation_cadence.Cadence(root, sha, snap, "merge", rejudge._run_git)
+
+    _write(snap, "docs/process.toml", "[checks]\nobservation_min_work_items = 0\n")
+    cadence = observation_cadence.Cadence(root, sha, snap, "merge", rejudge._run_git)
+    with pytest.raises(ValueError):
+        cadence.eligible({"Trigger": "nightly"}, since, "merge")
+
+    def unreadable_git(*args):
+        return types.SimpleNamespace(returncode=1, stdout=b"")
+
+    cadence = observation_cadence.Cadence(root, sha, snap, "merge", unreadable_git)
+    with pytest.raises(ValueError):
+        cadence.eligible({"Trigger": ""}, since, "merge")
+
+
+def test_an_uncommitted_policy_change_moves_nothing(tmp_path):
+    root, _ = cadence_repo(tmp_path, "files:src/*")
+    _write(root, "src/a.txt", "changed\n")
+    sha = _commit(root, "trigger change without closed work")
+    _write(root, "docs/process.toml", "[checks]\nobservation_min_work_items = 0\n")
+    assert not case_due(root, sha)
 
 
 def test_raised_floor_and_bookkeeping_do_not_count(tmp_path):
