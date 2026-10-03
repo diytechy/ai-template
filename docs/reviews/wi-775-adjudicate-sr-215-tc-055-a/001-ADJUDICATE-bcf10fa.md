@@ -20,3 +20,17 @@ A note that does not withhold the blessing: for a `release` or `stage-gate` trig
 Both rows are named in the combined act's `--reattests`.
 
 VERDICT: MEANING rows=2
+
+## Addendum 2026-10-03 (arbitration; the lines above are unchanged)
+
+Codex Luna's cross-review of act seq 23 ruled SR-215's re-attestation not earned,
+and an independent Claude Opus arbiter ruled **B**
+(`docs/reviews/2026-10-03-wave8/ARBITRATION.md`). A `release` or `stage-gate`
+trigger makes a case due at its checkpoint with no input change
+(`observation_cadence.py:141`). So the rationale's "a declared trigger narrows
+which changes make it due" and its list of ends are wrong for two of the four
+trigger kinds.
+
+The coordinator retook act seq 23 without SR-215 in `--reattests`. TC-055 is
+still re-attested. The arbiter's replacement sentence rides WI-776's drafted
+successor.

@@ -37,7 +37,7 @@ both returned rows: both are Drafted rows in the test-case registry, and one
 first-approval sitting can judge them together.
 
 ```toml
-title = "Verify the re-judge brief's Method and Expected refusals, and close TC-310's wording"
+title = "Verify the re-judge brief's Method and Expected refusals; close TC-310 and SR-215 wording"
 workstream = "process"
 buildtier = "quick"
 safety_class = "spine"
@@ -84,9 +84,17 @@ apart from TOML escaping.
   becoming "SR-033's inclusion set". `tests/test_release_assumptions.py` does
   not change.
 
+**SR-215 (amend, Approved; added 2026-10-03 by arbitration ruling B).** Replace
+ONLY the `rationale` cell's sentence that begins "The closed-work floor and the
+declared trigger are cost limits" with this sentence, byte-exact; every other
+sentence of the cell stays as it is:
+
+`The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires.`
+
 **Prohibitions.**
 - The only registry edits are TC-309's `method`, `expected` and `evidence`,
-  and TC-310's `method` and `expected`. Every other cell of every row stays
+  TC-310's `method` and `expected`, and the one sentence of SR-215's
+  `rationale` given above. Every other cell of every row stays
   byte-identical. That includes LLR-295, TC-308, LLR-296, TC-306, TC-033,
   TC-310's `verifies`, and both rows' other cells.
 - Do not flip any Status. TC-309 and TC-310 stay `Drafted`; their approval is
@@ -97,8 +105,11 @@ apart from TOML escaping.
 - No RESYNC entry: nothing shipped to an adopter changes.
 
 **Landing.** TC-309 and TC-310 are Drafted, so the merge mints one
-first-approval adjudication over the two. The test-case registry's approved copy is not
-affected by this lane. A work branch commits no generated artifact; the
+first-approval adjudication over the two; SR-215 is Approved and amended, so the
+merge also mints an amendment adjudication for it. SR-215 stays drifted until
+that sitting acts, which blocks any act copying the system-requirements registry.
+WI-771 amends rows in all three registries, so the coordinator sits these with
+WI-771's adjudications in one combined act. A work branch commits no generated artifact; the
 generated views that name the old test (`docs/ratify/CURRENT.md`,
 `docs/open-items.html`) are regenerated trunk-side.
 
