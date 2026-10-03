@@ -9,7 +9,11 @@
 # Contract IF-073: one `[open_item.OI-###]` table per owner decision, carrying
 #     `title`, `status`, `raised`, `one_line`, `decision`, `blast_radius`,
 #     `options`, `recommendation` and `wi_refs`. `status` is `pending` or
-#     `ruled`, and only a pending row renders as a brief card — a ruled row is
+#     `ruled`. `wi_refs` names work items that wait on this ruling: a queued
+#     work item listed by a pending row is blocked until it is ruled, with no
+#     edit to that work item. Context-only references belong in prose, not
+#     `wi_refs`; ruled rows retain their references as history. Only a pending
+#     row renders as a brief card — a ruled row is
 #     history, and the Decisions log is its record. `-000` example rows are
 #     dropped, and an absent registry renders an empty queue rather than
 #     failing, so a repo carrying no decisions still has the surface.
@@ -3667,3 +3671,25 @@ recommendation = "(a): it names the relationship the nine rows actually have, so
 wi_refs = ["WI-707", "WI-655", "WI-723"]
 ruled_date = "2026-09-28"
 ruling_ref = "docs/log.d/2026-09-28-owner-ruling-oi97.md"
+
+[open_item.OI-98]
+title = "Owner re-sync from 2026-10-03"
+status = "pending"
+raised = "2026-10-02"
+one_line = "The owner must perform the re-sync from 2026-10-03 and rule this item to release WI-684."
+decision = "The owner must perform the re-sync from 2026-10-03 and rule this item to release WI-684."
+blast_radius = "Only WI-684's readiness is held; its registry status stays queued."
+options = "Keep the hold until the owner's condition is met; then rule the release."
+recommendation = "Keep pending until the owner performs the required act."
+wi_refs = ["WI-684"]
+
+[open_item.OI-99]
+title = "Owner hold until second to last"
+status = "pending"
+raised = "2026-10-02"
+one_line = "The owner must release WI-688 when it is second to last in the queue and rule this item."
+decision = "The owner must release WI-688 when it is second to last in the queue and rule this item."
+blast_radius = "Only WI-688's readiness is held; its registry status stays queued."
+options = "Keep the hold until the owner's condition is met; then rule the release."
+recommendation = "Keep pending until the owner performs the required act."
+wi_refs = ["WI-688"]

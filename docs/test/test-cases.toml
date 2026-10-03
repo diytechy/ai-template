@@ -3019,3 +3019,25 @@ automated = "Yes"
 evidence = "tests/test_session_keep.py"
 status = "Approved"
 phase = 6
+
+[test.TC-301]
+verifies = ["LLR-288", "IF-054", "IF-073", "IF-264", "IF-265", "IF-164"]
+level = "Integration"
+method = "On a temporary spec registry, hold a queued row through a pending open item's wi_refs, verify the frontier and simulation omit it without stealing a mutex, then rule the item and verify readiness with the spec unchanged. Project ready and blocked rows apart in the frontier and status snapshot, with each gating id, title and owner-surface anchor. Check multiple gates, absent and example registries, and the worker brief's refusal."
+tier = "Smoke"
+expected = "One readiness calculation drives every gate consumer; status remains the directory and ruling alone releases work."
+automated = "Yes"
+evidence = "tests/test_open_item_readiness.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-302]
+verifies = ["LLR-289", "IF-073"]
+level = "Unit"
+method = "For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; an example row and absent registry yield none."
+tier = "Smoke"
+expected = "Dangling owner-gate pointers are reported, including historical pointers."
+automated = "Yes"
+evidence = "tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert"
+status = "Drafted"
+phase = 6

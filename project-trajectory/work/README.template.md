@@ -22,6 +22,9 @@ restates, and the readers **raise** on a directory outside that set rather than
 skip it quietly — so inventing a folder here takes rows OUT of the registry
 instead of adding a state to it.
 
+Readiness follows IF-054; owner gates follow [IF-073](../requirements/open-items.toml)
+(the registry header). `needs` names work items only.
+
 ## A terminal row STAYS in the registry — under the archive (WI-504)
 
 `complete/`, `cancelled/`, `partial/` and `restructured/` are the four terminal

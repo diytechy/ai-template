@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 268
-seam_rows = 215
+design_rows = 270
+seam_rows = 217
 requirements_placed = 114
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -356,6 +356,7 @@ seam_boundary_refs = [
   "IF-244",
   "IF-258",
   "IF-262",
+  "IF-265",
 ]
 
 [component_view.CMP-007]
@@ -665,6 +666,8 @@ llr_refs = [
   "LLR-282",
   "LLR-283",
   "LLR-284",
+  "LLR-288",
+  "LLR-289",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -690,6 +693,7 @@ modules = [
   "project-trajectory/scripts/bookkeeping.py",
   "project-trajectory/scripts/census.py",
   "project-trajectory/scripts/check.py",
+  "project-trajectory/scripts/check_trajectory.py",
   "project-trajectory/scripts/consolidate.py",
   "project-trajectory/scripts/dispatch.py",
   "project-trajectory/scripts/gen_release_checklist.py",
@@ -720,6 +724,7 @@ modules = [
   "project-trajectory/scripts/trunk_step.py",
 ]
 seam_internal_refs = [
+  "IF-009",
   "IF-044",
   "IF-046",
   "IF-053",
@@ -743,6 +748,7 @@ seam_internal_refs = [
   "IF-155",
   "IF-173",
   "IF-175",
+  "IF-177",
   "IF-186",
   "IF-194",
   "IF-195",
@@ -758,6 +764,7 @@ seam_internal_refs = [
   "IF-256",
   "IF-260",
   "IF-261",
+  "IF-264",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -767,7 +774,6 @@ seam_boundary_refs = [
   "IF-005",
   "IF-006",
   "IF-008",
-  "IF-009",
   "IF-010",
   "IF-011",
   "IF-012",
@@ -775,6 +781,7 @@ seam_boundary_refs = [
   "IF-015",
   "IF-018",
   "IF-022",
+  "IF-023",
   "IF-034",
   "IF-037",
   "IF-040",
@@ -783,14 +790,20 @@ seam_boundary_refs = [
   "IF-047",
   "IF-050",
   "IF-054",
+  "IF-056",
   "IF-059",
   "IF-060",
   "IF-068",
   "IF-069",
   "IF-071",
+  "IF-073",
   "IF-075",
+  "IF-077",
   "IF-078",
   "IF-080",
+  "IF-082",
+  "IF-083",
+  "IF-084",
   "IF-085",
   "IF-086",
   "IF-088",
@@ -812,6 +825,7 @@ seam_boundary_refs = [
   "IF-123",
   "IF-124",
   "IF-129",
+  "IF-131",
   "IF-133",
   "IF-139",
   "IF-144",
@@ -833,7 +847,6 @@ seam_boundary_refs = [
   "IF-171",
   "IF-172",
   "IF-176",
-  "IF-177",
   "IF-178",
   "IF-179",
   "IF-187",
@@ -850,6 +863,8 @@ seam_boundary_refs = [
   "IF-244",
   "IF-253",
   "IF-254",
+  "IF-263",
+  "IF-265",
 ]
 
 [component_view.CMP-009]
@@ -1069,6 +1084,7 @@ seam_boundary_refs = [
   "IF-228",
   "IF-254",
   "IF-257",
+  "IF-264",
 ]
 
 [unplaced]

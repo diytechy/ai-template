@@ -6564,6 +6564,24 @@ premises its own argument relies on. Repositories not using joint delivery need
 no registry edit, and the assumption tier remains warn-only until its declared
 gate is armed.
 
+### Owner-registry gates for queued work [since 2a902b50]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Readiness loads the IF-073 owner gates through the scheduler;
+its records carry the gating ids and titles. Frontier/status projections list
+blocked work apart, worker briefs hold it, and the trajectory checker reports
+dangling `wi_refs`. Intake keeps the successor in `wi_refs` and writes no OI
+edge into `needs`. The work-item row format and directory status are unchanged.
+
+**What to do.** Take schedule.py, traj_status.py, agent_brief.py, intake.py and
+check_trajectory.py and spine_carrier.py together with the work/open-item
+template guidance. Review
+pending `wi_refs` against IF-073 in the owner registry header: move context-only
+references into prose, retain ruled history, and record hand-held gates there.
+The approved legacy OI-edge contract requires separate amendment before its
+reader compatibility can be retired; do not introduce new OI `needs` edges.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -1411,10 +1411,7 @@ _HUMAN_OWED = _HUMAN_OWED_HEAD + _OPEN_ITEM_TABLE + "```\n"
 
 
 def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
-    # OI-73 exit (B): a human-owed answer becomes a PENDING open item minted
-    # from the watermark's OI space, and its id lands in the queued successor's
-    # needs — the ruling gates readiness, not adjudicator restraint. No
-    # standalone OI exit: the OI is always a dependency of a successor.
+    # The successor waits through IF-073's wi_refs; needs stays WI-to-WI.
     root = git_repo(tmp_path)
     write_sr(root)
     write_open_items(root)
@@ -1437,23 +1434,15 @@ def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
     assert refusal is None, refusal
     assert len(minted) == 1
     successor = minted[0][0]
-    # the successor hard-depends on the minted OI id...
     rows = queued_rows(root)
-    preds = rows[successor]["Predecessors"]
-    assert preds.startswith("OI-"), preds
-    # ...and that OI is a real, PENDING row in the registry.
-    tr = load_script("trace")
-    states = tr.open_item_states(root)
-    assert states.get(preds) == "pending"
-    # The edge still GATES: the scheduler reads the successor as waiting on
-    # the owner's ruling, not ready.
+    assert rows[successor]["Predecessors"] == ""
+    oi_rows = intake.spine_carrier.load(root / intake.OPEN_ITEMS_REL, "OI-ID")
+    oi = next(r for r in oi_rows if successor in intake._split(r.get("WI-Refs")))
+    assert oi["Status"] == "pending"
     sched = load_script("schedule")
-    records = {
-        r["id"]: r
-        for r in sched.evaluate(sched._load(root), oi_status=sched.load_oi_status(root))
-    }
-    assert records[successor]["disposition"] == "waiting"
-    assert "waiting:open-item-pending:" + preds in records[successor]["reasons"]
+    records = {r["id"]: r for r in sched.evaluate(sched._load(root))}
+    assert records[successor]["disposition"] == "blocked"
+    assert "blocked:open-item-pending:" + oi["OI-ID"] in records[successor]["reasons"]
 
 
 def test_the_minted_open_item_carries_the_adjudicators_brief_verbatim(tmp_path):

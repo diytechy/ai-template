@@ -49,9 +49,13 @@ the only filesystem it touches is `resolve()`'s existence check — because the
 one thing that MUST NOT be duplicated eleven ways is the dual-home refusal.
 Every caller does its own reading, so a script keeps deciding its own I/O.
 
-Contracts: IF-102, IF-104, IF-105, IF-106, IF-107, IF-108, IF-109, IF-110, IF-111, IF-112, IF-114, IF-118, IF-119, IF-120, IF-122, IF-128, IF-133, IF-142, IF-178 — the seams this module declares (process.md §8; rows of record
+Contracts: IF-102, IF-104, IF-105, IF-106, IF-107, IF-108, IF-109, IF-110, IF-111, IF-112, IF-114, IF-118, IF-265, IF-119, IF-120, IF-122, IF-128, IF-133, IF-142, IF-178 — the seams this module declares (process.md §8; rows of record
 in docs/requirements/interfaces.toml).
 
+Contract IF-265: `load(path, "OI-ID")` supplies the scheduler's IF-073
+    owner-registry rows under carrier-neutral column names. An absent file
+    returns no rows; malformed content raises rather than publishing an empty
+    queue. Both TOML and legacy CSV use the same load boundary.
 Contract IF-102: the carrier's whole read surface, as trace.py imports it — and
     as the spine readers that JOINED it read it rather than each restating the
     vocabulary: acceptance_record, check_trajectory, gen_arch_map,

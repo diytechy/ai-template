@@ -18,7 +18,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 66 changed, 53 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
+- `docs/requirements/interfaces.toml` — 66 changed, 55 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -679,7 +679,64 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 3 chain(s): SR-222, SR-224, SR-227</summary>
+<summary>Waiting for automated adjudication — 4 chain(s): SR-148, SR-222, SR-224, SR-227</summary>
+
+## SR-148 — Autonomous loop work selection: what it derives from, and in what order
+
+> **Requirement.** The delivered loop content shall select the work an unattended run does next from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
+
+> **Rationale.** Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
+
+
+### LLR LLR-288 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-288
+- **SR-Refs**: SR-148
+- **Title**: Registry-owned owner gates in shared readiness
+- **Module**: project-trajectory/scripts/schedule.py
+- **CodeSymbol**: _load/load_wis/hard_preds_satisfied
+- **Detail**: Load IF-073 gates into internal scheduler data. The shared readiness predicate refuses a queued gated row, including mutex candidacy, and evaluate reports it blocked with every gating id and title. A ruled gate releases the row without editing it.
+- **Rationale**: A human decision is not an integrated work predecessor; the owner registry already holds its state.
+- **TestRefs**: TC-301
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-289 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-289
+- **SR-Refs**: SR-148
+- **Title**: Resolve owner gates against the whole work registry
+- **Module**: project-trajectory/scripts/check_trajectory.py
+- **CodeSymbol**: open_item_wi_ref_findings
+- **Detail**: Report each real open item's wi_refs entry that names no work item, checking pending and ruled history against live and terminal work rows and ignoring example rows.
+- **Rationale**: An unresolved gate cannot identify the work it is meant to hold.
+- **TestRefs**: TC-302
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-301 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-301
+- **Verifies**: LLR-288;IF-054;IF-073;IF-264;IF-265;IF-164
+- **Level**: Integration
+- **Method**: On a temporary spec registry, hold a queued row through a pending open item's wi_refs, verify the frontier and simulation omit it without stealing a mutex, then rule the item and verify readiness with the spec unchanged. Project ready and blocked rows apart in the frontier and status snapshot, with each gating id, title and owner-surface anchor. Check multiple gates, absent and example registries, and the worker brief's refusal.
+- **Tier**: Smoke
+- **Expected**: One readiness calculation drives every gate consumer; status remains the directory and ruling alone releases work.
+- **Automated**: Yes
+- **Evidence**: tests/test_open_item_readiness.py
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-302 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-302
+- **Verifies**: LLR-289;IF-073
+- **Level**: Unit
+- **Method**: For pending and ruled open-item rows whose wi_refs names an absent work item, assert one finding naming the item and the missing work id; an example row and absent registry yield none.
+- **Tier**: Smoke
+- **Expected**: Dangling owner-gate pointers are reported, including historical pointers.
+- **Automated**: Yes
+- **Evidence**: tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-222 — Every model session is recorded in one usage record, whichever provider CLI serves it
 

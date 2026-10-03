@@ -579,7 +579,7 @@ Contracts (interfaces): IF-048, IF-157, IF-158
 
 ### `scripts/schedule`
 _Derive the dependency-ready WI frontier and its deterministic schedule._
-Contracts (interfaces): IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172
+Contracts (interfaces): IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264
 
 | Option | Help |
 |---|---|

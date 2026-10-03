@@ -917,7 +917,7 @@ component = "CMP-008"
 owner = "docs/work/"
 consumers = ["scripts/schedule", "external:downstream adopter"]
 channel = "file"
-data = "status; needs edges (a ~ prefix is soft); absent safety class = unclassified"
+data = "status; work-item needs edges (a ~ prefix is soft); IF-073 owner gates; absent safety class = unclassified"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
@@ -1021,9 +1021,9 @@ notes = """Built and consumed together. The endpoints are the OTHER readers of t
 
 [interface.IF-073]
 owner = "docs/requirements/open-items.toml"
-consumers = ["scripts/gen_open_items", "external:downstream adopter"]
+consumers = ["scripts/gen_open_items", "scripts/schedule", "external:downstream adopter"]
 channel = "file"
-data = "status: pending | ruled"
+data = "status: pending | ruled; wi_refs: work items waiting on this ruling"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -2352,3 +2352,23 @@ data = "architecture inventories and findings for seams, contracts, components, 
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
+
+[interface.IF-264]
+owner = "scripts/schedule"
+consumers = ["scripts/traj_status", "scripts/agent_brief", "scripts/dispatch", "scripts/integrate"]
+channel = "call"
+data = "work rows and IF-073 gates -> readiness records carrying gating ids and titles"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Load owner gates once into scheduler data so readiness and its projections agree without changing the work-item format."
+
+[interface.IF-265]
+owner = "scripts/spine_carrier"
+consumers = ["scripts/schedule"]
+channel = "call"
+data = "open-items registry path -> carrier-neutral OI rows"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+rationale = "Read scheduling gates through the same carrier boundary as the owner surface, refusing unreadable data."

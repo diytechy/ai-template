@@ -56,10 +56,16 @@ Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit
 independently-copyable-script convention (the F5 rule): schedule.py stays a
 self-contained drop-in, never importing the sibling engines.
 
-Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172 — the
+Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
+Contract IF-264: `_load(root)` reads the work registry and the IF-073 owner
+    registry together; `load_wis(rows, open_items=())` attaches each pending
+    gate's id/title to internal scheduler records. `hard_preds_satisfied` is
+    the shared readiness predicate, used by disposition and mutex selection;
+    `evaluate` carries `open_items` on its records for consumers to project.
+    Neither registry is mutated. No open-item registry means no gates.
 Contract IF-053: SR-148's obligation delivered here as a pure library its
     siblings import. `load_wis(rows)` (over `load_registry_rows`, or `_load`
     for the whole read at once) turns the spec-folder work registry into
@@ -294,11 +300,27 @@ def _int(value, default=0):
         return default
 
 
-def load_wis(rows):
-    """Parse work-item rows into a list of scheduler WI dicts (skips the inert
+def load_wis(rows, open_items=()):
+    """Attach the IF-073 gates to internal scheduler data, never to WI rows.
+
+    Implements: SR-148, LLR-288
+
+    Parse work-item rows into a list of scheduler WI dicts (skips the inert
     `-000` example row and any malformed/duplicate id, exactly like
     check_trajectory.load_wis — a broken registry is the validator's job to
     report, not the scheduler's to crash on)."""
+    gates = {}
+    for item in open_items:
+        oid = (item.get("OI-ID") or "").strip()
+        if (
+            oid.endswith("-000")
+            or (item.get("Status") or "").strip().lower() != "pending"
+        ):
+            continue
+        for wid in _split_refs(item.get("WI-Refs", "")):
+            gates.setdefault(wid, []).append(
+                {"id": oid, "title": (item.get("Title") or "").strip()}
+            )
     wis, seen = [], set()
     for r in rows:
         wid = (r.get("WI-ID") or "").strip()
@@ -312,6 +334,7 @@ def load_wis(rows):
             {
                 "id": wid,
                 "title": (r.get("Title") or "").strip(),
+                "open_items": sorted(gates.get(wid, []), key=lambda o: o["id"]),
                 "status": (r.get("Status") or "queued").strip().lower(),
                 "preds": preds,
                 # Hard OPEN-ITEM edges (OI-73): satisfied when the OI leaves
@@ -454,18 +477,19 @@ def _oi_satisfied(oid, oi_status):
 
 
 def hard_preds_satisfied(wi, status, oi_status=None):
-    """Every hard predecessor is satisfied. A WI edge is satisfied only by an
-    integrated `done` predecessor; an unknown id (dangling edge — the
-    validator's error) or a `cancelled`/`partial` predecessor (WI-267: terminal,
-    will never integrate) counts as NOT satisfied. A hard OPEN-ITEM edge
-    (OI-73) is satisfied once its row leaves `pending`, read from `oi_status`. A
-    `restructured` predecessor is not satisfied either (2026-09-02 restructure
-    plan §1.6): the absorbing close RE-POINTS the edge to the successor, so a
-    surviving edge onto the absorbed row is a re-point that did not happen.
-    The scheduler fails closed rather than scheduling on a broken or dead-ended
-    graph."""
+    """Every hard predecessor is satisfied, and IF-073 permits readiness.
+
+    Implements: SR-148, LLR-288
+
+    A WI edge is satisfied only by an integrated `done` predecessor; an
+    unknown, cancelled, partial or restructured predecessor is not satisfied.
+    The legacy OI-edge reader remains under its approved contract: an edge
+    is satisfied once the item leaves pending, using `oi_status`.
+    """
     oi_status = oi_status or {}
-    if not all(status.get(p) == _DONE for p in wi["preds"]):
+    if (wi["status"] == "queued" and wi.get("open_items")) or not all(
+        status.get(p) == _DONE for p in wi["preds"]
+    ):
         return False
     return all(_oi_satisfied(o, oi_status) for o in wi.get("oi_preds", ()))
 
@@ -600,6 +624,7 @@ def evaluate(wis, reserved=None, oi_status=None):
                 # `concurrency` value beside it (see the axis header above).
                 "exclusive_keys": w["exclusive"],
                 "reasons": reasons,
+                "open_items": w.get("open_items", []),
                 "_key": order_key(w, rank, downstream[w["id"]], hardpath[w["id"]]),
             }
         )
@@ -747,6 +772,10 @@ def _disposition(
     if wi["id"] in reserved:
         return "reserved", ["reserved:claimed-by-live-train"]
     if not hard_preds_satisfied(wi, status, oi_status):
+        if st == "queued" and wi.get("open_items"):
+            return "blocked", [
+                "blocked:open-item-pending:" + o["id"] for o in wi["open_items"]
+            ]
         return "waiting", _waiting_reasons(wi, status, oi_status)
     if not is_schedulable(concurrency):
         return "excluded", list(class_reasons) + ["excluded:unclassified-fail-closed"]
@@ -800,7 +829,16 @@ def simulate(wis, jobs, reserved=None, oi_status=None):
 
 # --- CLI ----------------------------------------------------------------------
 def _load(root):
-    return load_wis(load_registry_rows(Path(root) / REGISTRY))
+    """Read the work registry and its IF-073 gates together.
+
+    Implements: SR-148, LLR-288
+    """
+    import spine_carrier
+
+    return load_wis(
+        load_registry_rows(Path(root) / REGISTRY),
+        spine_carrier.load(Path(root) / "docs/requirements/open-items.toml", "OI-ID"),
+    )
 
 
 def _cmd_ready(args):

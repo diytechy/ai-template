@@ -14,6 +14,9 @@
 # log; `scripts/gen_open_items.py` renders every pending row into the generated
 # docs/open-items.html the owner actually reads.
 #
+# `wi_refs` follows IF-073 in the live registry header; see
+# docs/requirements/interfaces.toml.
+#
 # WRITE FOR A RULER, NOT FOR THE RECORD. These cells are read by a human
 # deciding, usually several at a sitting, and a brief that buries its question
 # under its history costs the ruling it was written to get. The renderer

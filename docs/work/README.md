@@ -24,7 +24,8 @@ Contract IF-054: the same registry read for READINESS. A row offers its status,
     and the defaults are chosen to fail closed: an absent safety class is
     `unclassified` and is never scheduled, an absent priority is 0, an absent
     exclusive is empty. A hard edge is satisfied only by an integrated `done`
-    predecessor — a cancelled one never satisfies it.
+    predecessor — a cancelled one never satisfies it. A queued row must also
+    have no pending owner gate under IF-073 (requirements/open-items.toml).
 Contract IF-079: the registry as one of the two interchangeable FORMS. The
     frontmatter keys, the filename rule and the status-by-directory bijection
     are this format's definition, and the legacy row-per-line CSV is the other
@@ -66,6 +67,9 @@ is documented in the [WI-000 exemplar](queued/WI-000-example.md) beside this fil
 restates, and the readers **raise** on a directory outside that set rather than
 skip it quietly — so inventing a folder here takes rows OUT of the registry
 instead of adding a state to it.
+
+Readiness follows IF-054; owner gates follow [IF-073](../requirements/open-items.toml)
+(the registry header). `needs` names work items only.
 
 ## A terminal row STAYS in the registry — under the archive (WI-504)
 
