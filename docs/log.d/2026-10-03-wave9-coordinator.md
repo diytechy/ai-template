@@ -216,3 +216,24 @@ Kit findings from running the judge through the loop (not filed):
 - **The codex route reports no occupancy:** `context-used`, `context-window` and
   `context-pct` are blank, with only cumulative usage (1,635,416 input,
   1,513,216 cached). This is WI-541's owed measurement; see its close.
+
+### WI-541 closes; WI-787 and WI-788 filed (owner, 2026-10-03)
+
+The owner asked whether codex context percent could be had at all. It can. The
+kit's `CodexAdapter.context`, applied to WI-688's judge session rollout, gives
+114,766 / 258,400 = 44% by the corrected meaning. The session log was blank only
+because LLR-267 reads the rollout under the launch's `CODEX_HOME`, which no codex
+route sets.
+
+- **WI-541 closed as done**, on the owner's word: "I'm okay closing WI-541 with the
+  current state". The recorded disagreement is the blank log fields.
+- **WI-787** (owner: "it should fall to default so every adopter is able to
+  inherit"): fall back to codex's default home. This amends LLR-267 and LLR-290.
+- **WI-788**, on the owner's direction:
+  - per-route provider homes for multiple accounts on codex and claude (already
+    ruled by OI-69 (e1), and expressible through a route's `env` cell, but unused
+    here);
+  - new routes: SuperGrok (untested allowed), Google's CLI, and FreeAI through
+    opencode.
+
+  It is research and a design note first, at an owner checkpoint.

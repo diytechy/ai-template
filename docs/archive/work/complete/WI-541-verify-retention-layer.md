@@ -1,7 +1,7 @@
 +++
 id = "WI-541"
 title = "Verify the retention layer on this box before the dial is turned: windows, compaction ceiling, occupancy, TTLs, replay"
-specref = "docs/plans/2026-08-29-adjudicator-session-retention-plan.md#5-sequenced-work-each-a-wi-none-starts-while--exists"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = ["WI-620", "WI-688"]
@@ -9,6 +9,20 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Verified on this box and closed as done with the state at 2026-10-03 (owner, 2026-10-03: "I'm okay closing WI-541 with the current state"). The retention dial stays at 0; turning it on is the owner's act.
+
+- **Window:** 258,400 (codex), recorded beside the configured fallback.
+- **Compaction ceiling:** observed with `model_auto_compact_token_limit=20000`. The exec stream carries no compaction event, which became WI-748's inference.
+- **Cache TTL:** between 6 and 10 minutes on this box.
+- **Replay:** 6-7 s cached, 10-40 s uncached at 212k tokens. The 100k-700k clause is met at the window's top, per the owner's ruling.
+- **Live codex and opencode recordings:** in place of the fixtures. The opencode pathway was re-checked.
+- **Occupancy on a real multi-step, tool-using adjudication through the kit's own session path:** WI-688's TC-211 judge sitting, `docs/iteration/wi-688-001-20261003-160206.log`, OPENAI-TERRA, 21 requests, prompt growing 17,635 -> 114,766 tokens, no compaction.
+  - The kit's own `CodexAdapter.context`, applied to that session's rollout with `CODEX_HOME` set, gives **114,766 / 258,400 = 44%** by the corrected meaning (the latest request's prompt). That is at or under 100.
+  - **The disagreement, recorded:** the session log itself left `context-used`, `context-window` and `context-pct` blank. LLR-267 reads the rollout only under the launch's `CODEX_HOME`, and no codex route sets it. The log's 1,635,416 "input tokens" is the running total of all 21 requests, not occupancy.
+  - The fix is WI-787: fall back to codex's default home. Per-route homes (OI-69 (e1)) are WI-788.
 
 ## Context
 
