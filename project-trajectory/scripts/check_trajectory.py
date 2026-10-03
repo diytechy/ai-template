@@ -205,6 +205,7 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from observation_cadence import observation_rubric_findings
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
 # WI-448): one home for behaviours this module used to spell out itself — the
@@ -3231,6 +3232,9 @@ def main():
         + if_tc_allow_hygiene_findings(root)
         + codesymbol_crosscheck_findings(root)
         + loop_held_status_findings(root)
+        + observation_rubric_findings(
+            spine_carrier.load(root / "docs/test/test-cases.toml", "TC-ID")
+        )
     ):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 

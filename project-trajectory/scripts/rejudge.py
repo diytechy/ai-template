@@ -11,11 +11,9 @@ cannot rerun, like a person reading a render. Its result is a record of its own
 (`kitlib/observation.py`) carrying an expiry and a digest of the inputs the
 case declares it reads, as they stood when judged. That judgment holds only for
 the state it looked at, and nothing re-fires it once that state moves. So at
-the two checkpoints the owner ruled — a work item merging, and a release being
-prepared — each case's declared inputs are hashed, and a case is DUE when that
-digest no longer equals its latest result's judged digest, when that result has
-expired, or when it has no result at all. A case declaring no inputs has no
-digest to move, so it is judged by expiry and absence alone.
+the checkpoints, committed policy and inputs are read without a model. Cadence
+and explicit triggers are decided by observation_cadence; the rule's home is
+PROCESS.md "Observation judgement". First judgement and expiry are backstops.
 
 THE CHECK RUNS NO MODEL. It reads git and hashes files; the expensive part,
 the re-judgment itself, runs only when the filed item is picked up. And one
@@ -57,16 +55,16 @@ in docs/requirements/interfaces.toml).
 Contract IF-228: the checkpoint re-judge decision, as calls.
     `observation_test_cases(root, rev)` returns the test-case rows at the
     commit `rev` names whose `Automated` reads No, the `-000` example excluded.
-    `due_cases(root, rev, now=None)` returns, per due case in registry order, a
+    `due_cases(root, rev, now=None, *, checkpoint="merge")` returns, per due case in registry order, a
     dict of `tc`, `row`, `why` (one of `WHY_NEVER`, `WHY_CHANGED`,
-    `WHY_EXPIRED`), `digest` (the inputs digest at `rev`, `""` for none),
+    `WHY_EXPIRED`, `WHY_TRIGGER`), `digest` (the inputs digest at `rev`, `""` for none),
     `record` (the latest record or None) and `changed` (the declared inputs
     named as changed). `checkpoint_drafts(root, rev, checkpoint, now=None,
     rows=None)` returns the intake drafts for the due cases that have no open
     re-judge item in the work-item registry (`rows`, read from `root` when not
     given): one per case, kind `adjudication`, brief `rejudge`, `adjudicates`
     the case, its title carrying the case id, the digest prefix, the
-    checkpoint and the commit. `checkpoint` is one of `CHECKPOINTS`, else
+    checkpoint and the commit. `checkpoint` is one of `CHECKPOINTS` (merge, release, stage-gate), else
     ValueError. `now` is the instant a result's expiry is compared with (the
     clock when not given). Every call reads git only, extracting each revision
     it reads once, streamed and in pathspec chunks; an input is read at its
@@ -86,6 +84,7 @@ import tempfile
 from pathlib import Path
 
 import assumption_rules
+import observation_cadence
 import record_observation
 import spine_carrier
 from kitlib import observation as kitobservation
@@ -105,15 +104,15 @@ TC_REGISTRY = "docs/test/test-cases.toml"
 BRIEF = "rejudge"
 KIND = "adjudication"
 
-# The two checkpoints the owner ruled. Phase close joins only once it has a
-# defined trigger; until then it is refused rather than guessed at.
+# Explicit checkpoint kinds; Tier alone never manufactures a trigger.
 # Implements: SR-215, LLR-254
-CHECKPOINTS = ("merge", "release")
+CHECKPOINTS = ("merge", "release", "stage-gate")
 
 # Why a case is due, in the order the decision asks.
 WHY_NEVER = "no result recorded"
 WHY_CHANGED = "declared inputs changed"
 WHY_EXPIRED = "result expired"
+WHY_TRIGGER = "declared trigger fired"
 
 # Statuses a work item occupies while it is still somebody's to run.
 OPEN_STATUSES = frozenset({"draft", "queued", "active", "deferred"})
@@ -341,7 +340,7 @@ def observation_test_cases(root, rev):
     return _cases_at(root, _commit_of(root, rev))[1]
 
 
-def _judge(row, names, here, records, now):
+def _judge(row, names, here, records, now, cadence):
     """One case's judgement against the checkpoint snapshot `here`, or None
     when it is not due."""
     tc = str(row.get("TC-ID") or "").strip()
@@ -350,21 +349,38 @@ def _judge(row, names, here, records, now):
     judgement = {"tc": tc, "row": row, "digest": digest, "record": latest}
     if latest is None:
         return dict(judgement, why=WHY_NEVER, changed=[])
-    if names and digest != latest["judged"]:
-        return dict(judgement, why=WHY_CHANGED, changed=list(names))
     if _expired(latest, now):
         return dict(judgement, why=WHY_EXPIRED, changed=[])
+    since = _added_at(cadence.root, cadence.revision, latest)
+    try:
+        eligible = cadence.eligible(row, since, cadence.checkpoint)
+    except ValueError as exc:
+        raise RejudgeError(str(exc)) from exc
+    if not eligible:
+        return None
+    if row.get("Trigger"):
+        return dict(judgement, why=WHY_TRIGGER, changed=[row["Trigger"]])
+    if names and digest != latest["judged"]:
+        return dict(judgement, why=WHY_CHANGED, changed=list(names))
     return None
 
 
-def due_cases(root, rev, now=None):
-    """Each observation case due for re-judging at the commit `rev` names, in
-    registry order: one with no result, one whose declared inputs no longer
-    hash to its latest result's judged digest, or one whose latest result has
-    expired by `now`. A case declaring no inputs has nothing to hash, so only
-    absence and expiry make it due. The open-item guard is not applied here:
-    this is whether the case needs judging, which the release checklist counts
-    and the re-judge brief re-derives live.
+def _cadence(root, sha, snapshot, checkpoint):
+    try:
+        return observation_cadence.Cadence(root, sha, snapshot, checkpoint, _run_git)
+    except ValueError as exc:
+        raise RejudgeError(str(exc)) from exc
+
+
+def _checkpoint(checkpoint):
+    if checkpoint not in CHECKPOINTS:
+        raise ValueError("unknown checkpoint {!r}".format(checkpoint))
+
+
+def due_cases(root, rev, now=None, *, checkpoint="merge"):
+    """Cases due at the committed checkpoint under the observation cadence rule
+    in PROCESS.md. Absence and expiry bypass cadence; triggers and input-change
+    fallback obey the floor. The open-item guard is applied by checkpoint_drafts.
 
     ONE SNAPSHOT PER REVISION: the checkpoint's commit is extracted once, with
     the records and every case's inputs; then each OTHER commit a changed
@@ -375,20 +391,22 @@ def due_cases(root, rev, now=None):
     Implements: SR-215, LLR-254
     """
     sha = _commit_of(root, rev)
+    _checkpoint(checkpoint)
     now = now or datetime.datetime.now(datetime.timezone.utc)
     _rel, cases = _cases_at(root, sha)
     if not cases:
         return []
     named = [(row, refs(row.get("Inputs"))) for row in cases]
     with tempfile.TemporaryDirectory(prefix="rejudge-") as scratch:
-        union = [kitobservation.OBSERVATIONS_DIR]
+        union = [kitobservation.OBSERVATIONS_DIR, "docs/process.toml"]
         for _row, names in named:
             union += _support_paths(names)
         here = _snapshot(root, sha, union, Path(scratch) / "at")
         records = kitobservation.read_records(here[0])
+        cadence = _cadence(root, sha, here[0], checkpoint)
         due, judged_at = [], {}
         for row, names in named:
-            item = _judge(row, names, here, records, now)
+            item = _judge(row, names, here, records, now, cadence)
             if item is None:
                 continue
             due.append(item)
@@ -442,9 +460,11 @@ def explain(due):
         return "its declared inputs changed since its result {} was judged: {}".format(
             record["file"], "; ".join(due["changed"]) or "(none named)"
         )
-    return "its result {} expired at {}; its declared inputs are unchanged".format(
-        record["file"], record["expires"]
-    )
+    if due["why"] == WHY_TRIGGER:
+        return "its declared trigger {} fired after its work-item floor".format(
+            due["row"]["Trigger"]
+        )
+    return "its result {} expired at {}".format(record["file"], record["expires"])
 
 
 def _context(due, checkpoint, sha):
@@ -465,6 +485,7 @@ def _context(due, checkpoint, sha):
             "- What changed: {}.".format(explain(due)),
             "- Method: {}".format(_cell(row, "Method") or "(not declared)"),
             "- Expected: {}".format(_cell(row, "Expected") or "(not declared)"),
+            "- Rubric: {}".format(_cell(row, "Rubric") or "(not declared)"),
             "- Declared inputs: {}".format(
                 "; ".join(inputs) if inputs else "none, so it is judged by expiry alone"
             ),
@@ -508,14 +529,9 @@ def checkpoint_drafts(root, rev, checkpoint, now=None, rows=None):
 
     Implements: SR-215, LLR-254
     """
-    if checkpoint not in CHECKPOINTS:
-        raise ValueError(
-            "unknown checkpoint {!r} (expected one of {})".format(
-                checkpoint, ", ".join(CHECKPOINTS)
-            )
-        )
+    _checkpoint(checkpoint)
     sha = _commit_of(root, rev)
-    due = due_cases(root, sha, now)
+    due = due_cases(root, sha, now, checkpoint=checkpoint)
     if not due:
         return []
     if rows is None:

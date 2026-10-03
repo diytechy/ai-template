@@ -6603,6 +6603,31 @@ the latest prompt and cursor before inferring. Other runners carry no compaction
 `session_service.py` and `agent_common.py`. Existing retained records need no
 migration. Treat `inferred` as a prompt-drop observation, not a provider event.
 
+### Observation rubric and judgement cadence [since 87736778]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Observation TC rows now carry `rubric`, `trigger` and optional
+`min_work_items`; both carriers preserve them and `gen_cases` derives its legacy
+CSV header from the same schema/column map. `rejudge` delegates closed-work
+cadence to the new shipped `observation_cadence.py`, reads the default
+`[checks] observation_min_work_items` at the checkpoint commit, and respects
+file, component, release and explicit stage-gate triggers. `check_trajectory`
+warns on missing rubric references. The rule lives in
+[PROCESS.md observation judgement](PROCESS.md#observation-judgement).
+
+**What to do.** Take the kit-owned scripts/templates wholesale, including
+`observation_cadence.py`; add `observation_min_work_items = 10` under `[checks]`
+in the preserved project process config. Add rubric references and numbered
+anchors before new observations are first judged. Existing cases may keep
+undeclared triggers: input changes remain their trigger under the floor.
+Declare triggers deliberately and raise a case floor with `min_work_items`
+where needed. Closed work must be archived in the standard terminal folders;
+a history without archived closes does not satisfy the floor. Record expiry
+still forces re-judgement. Gate preparation may call the existing mint API with
+`stage-gate`; the release CLI/checklist use the release checkpoint. No carrier
+migration is required for existing rows with omitted cells.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

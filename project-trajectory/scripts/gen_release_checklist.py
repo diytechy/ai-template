@@ -107,7 +107,7 @@ def _rejudge_checklist_line(root):
     """
     try:
         count = "{} observation test case(s) due now".format(
-            len(rejudge.due_cases(root, "HEAD"))
+            len(rejudge.due_cases(root, "HEAD", checkpoint="release"))
         )
     except rejudge.RejudgeError as exc:
         count = "the due count could not be read ({})".format(exc)

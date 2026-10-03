@@ -1138,7 +1138,21 @@ def rejudge_values(root, row):
         )
     tc = scope[0]
     try:
-        due = [d for d in rejudge.due_cases(root, "HEAD") if d["tc"] == tc]
+        case = next(
+            (
+                r
+                for r in rejudge.observation_test_cases(root, "HEAD")
+                if r["TC-ID"] == tc
+            ),
+            {},
+        )
+        trigger = case.get("Trigger")
+        checkpoint = trigger if trigger in ("release", "stage-gate") else "merge"
+        due = [
+            d
+            for d in rejudge.due_cases(root, "HEAD", checkpoint=checkpoint)
+            if d["tc"] == tc
+        ]
     except rejudge.RejudgeError as exc:
         return None, "the re-judge decision could not be read: {}".format(exc)
     if not due:
@@ -1151,14 +1165,17 @@ def rejudge_values(root, row):
     if missing:
         return None, "{} has no `{}` cell".format(tc, "`, `".join(missing))
     inputs = (case.get("Inputs") or "").strip()
+    rubric = (case.get("Rubric") or "").strip()
     text = (
         "- {tc} — verifies {Verifies}\n"
         "  - Method: {Method}\n"
         "  - Expected: {Expected}\n"
         "  - Declared inputs: {inputs}\n"
+        "  - Rubric: {rubric}\n"
         "  - Result lifetime: {age} days"
     ).format(
         tc=tc,
+        rubric=rubric or "none declared",
         inputs=inputs or "none declared, so only its expiry makes it due",
         age=case["MaxAge"].strip(),
         **cells,

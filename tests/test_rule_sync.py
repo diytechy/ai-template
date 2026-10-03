@@ -1039,6 +1039,7 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
 
     checks = tomllib.loads(text)["checks"]
     assert checks == {
+        "observation_min_work_items": 10,
         "trajectory_check": True,
         "interfaces_check": True,
         "components_check": True,
