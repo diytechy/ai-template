@@ -2,13 +2,24 @@
 id = "WI-759"
 title = "An open item's wi_refs naming the example WI-000 is inert: the scaffold's commit floor is red since WI-746"
 workstream = "process"
-specref = "project-trajectory/scripts/check_trajectory.py"
+specref = ""
 sr_refs = ["SR-148"]
 needs = []
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+A freshly bootstrapped scaffold's commit floor is green again: an open item's
+`wi_refs` entry naming the example `WI-000` is inert. `open_item_wi_ref_findings`
+reuses `kitlib.spine.is_example` for the open-item row and the referenced work id;
+a real dangling id beside an example reference is still reported
+(`test_example_wi_refs_are_inert`). The two hook tests red since WI-746 pass; the
+hook modules were run outside the Codex sandbox (34 passed). LLR-289 detail and
+TC-302 method and evidence amended in place for this merge's adjudication.
+Sonnet 5.5: SOUND at da3f4f77 (`docs/reviews/2026-10-02-wave7/sonnet-wi759.md`).
 
 ## Context
 

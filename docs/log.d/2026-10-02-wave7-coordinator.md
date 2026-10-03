@@ -164,3 +164,9 @@ LLM judgement (the owner's WI-747 direction).
 Sol (low) applied batch L's exact return and wrote the second test so it exercises the
 stored reported source (the drafted form passed trivially). Sonnet: SOUND. Sol
 resumed at 02:30 after the usage limit.
+
+### WI-759 lands: an example wi_refs entry is inert; the scaffold hook tests are green
+
+Sol (low) reused `kitlib.spine.is_example`; the two hook tests red since WI-746 pass.
+The hook modules fail inside the Codex sandbox (Git Bash), so the coordinator ran
+them outside it: 34 passed. Sonnet: SOUND.
