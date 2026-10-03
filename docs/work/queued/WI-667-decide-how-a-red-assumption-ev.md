@@ -100,3 +100,22 @@ assumption holds; only a failed one is evidence that it does not").
    observable (a missing one stays an advisory, `no_falsifier_advisories`), and
    nothing connects a failed observation to `standing`; that step is a person's
    act. A falsifier no one can reproduce simply never fires.
+8. The release checklist surfaces assumptions (folded 2026-10-02, owner: "fold it
+   in"). `gen_release_checklist.py` (IF-018) gains an assumptions section: one item
+   per `active` Approved assumption, plus any with no falsifier, so a missing
+   falsifier is visible where a person looks. Each item must be DIFFERENTIABLE as
+   an assumption confirmation from the release checklist's other items (needs,
+   Demonstration/Manual/Inspection requirements, release-tier and manual test
+   cases, seams, budgets): its own section heading and an id-and-kind marker, for
+   example `- [ ] ASSUMPTION DA-011 — has its falsifier been observed? <falsifier>
+   (method: TC-279)`, not the plain `<ID> — <what to confirm>` shape, so a reader
+   and a test can tell it from a requirement check. Checking it asserts "not
+   falsified"; a flag sets nothing itself (a person sets `standing`). Absent-tolerant
+   like the other optional registries; a kit change, so a RESYNC entry and the
+   amendment of the SR-033/SN-004 rows through the adjudication route.
+9. Accepted limit (owner question 2026-10-02): the build can observe only the
+   assumptions about itself (DA-011's readability sample, at the re-judge
+   checkpoint). Assumptions about people and environments outside the repo (DA-002,
+   DA-012) have no mid-development evaluation; their falsifier fires only through
+   an incidental report, a field note or a review, and the release checklist is
+   the one standing prompt, a recall question to a person, not a test.
