@@ -25,17 +25,18 @@ landing, review round and bar) and [reviews/2026-10-02-wave7/](reviews/2026-10-0
 ## Resume first: WI-747 is mid-fix-round
 
 `build/wi-747` (worktree `C:/Projects/ai-template.wt/wi-747`, tip dfe92989) was
-reviewed NOT YET SOUND (scratchpad copy of the review is lost with the session; its
-substance): the `stage-gate` re-judge trigger had no production caller (intake's CLI
-accepts only `release`, `intake.py:3193`) while amended SR-215 claims it fires. A Sol
-fix round was running at handoff to (1) add `stage-gate` as an intake rejudge CLI
-checkpoint with a test and name the command in SR-215/LLR-293/PROCESS.md, (2) extract
-`rejudge.checkpoint_for(case)` so `adjudicate_brief.rejudge_values` drops under the
-complexity threshold, (3) re-check two flaky `tests/test_rejudge.py` cases.
+reviewed NOT YET SOUND: the `stage-gate` re-judge trigger had no production caller
+(intake's CLI accepted only `release`) while amended SR-215 claimed it fires. **The Sol
+fix round COMPLETED after this handoff was written and left 8 files uncommitted in the
+worktree**: `stage-gate` accepted by the intake rejudge CLI with tests (red 6 failed,
+then green), `rejudge.checkpoint_for(root, rev, tc)` extracted (`rejudge_values` now
+14), SR-215, LLR-293, PROCESS.md and RESYNC_PACK.md name the command. Its report, the
+review it answers, the fix prompt and the original build report (29 changed cells
+quoted) are in `C:/Projects/ai-template.wt/wi-747-notes/` (outside the repo).
 
-1. `git -C C:/Projects/ai-template.wt/wi-747 status --short`: if the fix round left
-   changes, verify them (the lane's uncommitted diff against dfe92989), commit on the
-   lane, and send a Sonnet confirmation review; if it left nothing, re-run the round.
+1. Verify the round's uncommitted diff against dfe92989 (re-run its tests with the
+   repo venv and one fixed `--basetemp`), regenerate the generated files, commit on the
+   lane, and send a Sonnet confirmation review citing `wi-747-notes/sonnet-wi747-r1.md`.
 2. Land it: the lane predates WI-657, WI-758 and others, so expect conflicts in
    generated files, `docs/id-watermark`, the registries (append-only: keep both
    sides) and `RESYNC_PACK.md`; run `check_complexity --mode enforce` on the merged
