@@ -96,11 +96,12 @@ Contracts (interfaces): IF-014
 
 ### `scripts/check`
 _The check harness — one command that runs every quality gate locally and in CI._
-Contracts (interfaces): IF-013, IF-040, IF-144, IF-197
+Contracts (interfaces): IF-013, IF-040, IF-144, IF-197, IF-267
 
 | Option | Help |
 |---|---|
-| `--stage`, `--stage-cleared`, `--gate` | the rung the repo is IN: every step whose threshold this rung is AT OR ABOVE runs (default: the derived effective stage in docs/stage, else all). Drafting a row cannot lower it — the derivation reads the SETTLED spine — so there is no dial that turns product checks off by opening an approval window. The retired G1/G2/G3 and DevBar-* value spellings are accepted as aliases and warn; `--gate` is accepted silently as the prior flag name, `--stage-cleared` warns. |
+| `--stage`, `--stage-cleared`, `--gate` | the rung the repo is IN: every step whose threshold this rung is AT OR ABOVE runs; paths can also select below it (default: the derived effective stage in docs/stage, else all). Drafting a row cannot lower it — the derivation reads the SETTLED spine — so there is no dial that turns product checks off by opening an approval window. The retired G1/G2/G3 and DevBar-* value spellings are accepted as aliases and warn; `--gate` is accepted silently as the prior flag name, `--stage-cleared` warns. |
+| `--path-triggered` | run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor bar) |
 | `--tier` |  |
 | `--coverage` |  |
 | `--phase` | delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevStg-Impl approval criterion to that phase (process.md §4 'Phased delivery') |

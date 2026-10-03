@@ -97,6 +97,24 @@ mode = symbols
 # file's summary, when yours isn't one of the defaults (# // --):
 # comment-prefixes = # // --
 
+# A [step:<name>] may add `paths =` repo-relative, case-sensitive fnmatch
+# globs, comma/whitespace separated; `*` also spans `/`. Rung OR matching
+# change selects it. Unknown changes run it. Include its baseline, script and
+# config. Blank/absent paths preserves rung-only selection. The hook excludes
+# smoke, already run by hand at the commit bar; gates retain it. For example:
+# [step:complexity]
+# command = <your complexity command>
+# from-stage = DevStg-Impl
+# paths =
+# [step:dupes-census]
+# command = <your census command>
+# from-stage = DevStg-Impl
+# paths =
+# [step:smoke]
+# command = <your smoke command>
+# from-stage = DevStg-Tests
+# paths =
+
 # --- Readability measures: the per-change report ------------------------------
 # scripts/check_readability.py reads the CHANGE under review — the index against
 # HEAD, or on a claimed work branch the merge base to the tip — runs each
@@ -132,6 +150,9 @@ gating =
 [step:readability]
 command = {py} scripts/check_readability.py --root .
 from-stage = DevStg-Impl
+# Optional per-stack path trigger; blank preserves rung-only selection.
+# paths = src/* tests/* docs/complexity-baseline scripts/check_readability.py scripts/check_complexity.py docs/stack.ini
+paths =
 
 # --- Generated-artifact set (the trunk lane's declared ownership, §5.2) -------
 # The COMPLETE set of generated/derived artifacts the TRUNK LANE owns

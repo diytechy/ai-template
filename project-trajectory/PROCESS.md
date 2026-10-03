@@ -1039,7 +1039,7 @@ lives in `docs/stage` — **generated** by
 `scripts/derive_stage.py` from the artifact states, not hand-set (§4 "Stages and
 gates"; the model:
 [process-options.md](process-options.md#derived-gate-model)). `check.py` defaults
-`--stage` to it and runs every step declared at or above it, so **CI enforces the
+`--stage` to it and selects by rung or declared paths (below), so **CI enforces the
 bar the project has actually earned** — a fresh scaffold deriving DevStg-Reqs is
 green, and more steps select when a batch of artifacts is **approved in a reviewed
 commit** and `docs/stage` is regenerated. The `derived-stage` step
@@ -1142,7 +1142,9 @@ pip needed to run them):
 
 - `scripts/check.py` — the harness itself. Stage-scoped (`--stage <rung>|all`,
   defaulting to the derived effective stage in `docs/stage`; a step runs when
-  that rung is at or above the one it declares), runs
+  that rung is at or above the one it declares OR a change matches its
+  `docs/stack.ini` `paths` trigger; unknown changes run path-declaring steps,
+  blank/absent paths stays rung-only), runs
   format · lint · tests · coverage · traceability · generated-artifact freshness, and exits
   nonzero on any failure. Wire it to your stack by editing `docs/stack.ini` (the
   commands/paths/tiers/coverage; its built-in `steps()` fallback is unchanged);

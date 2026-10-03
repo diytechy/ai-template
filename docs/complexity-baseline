@@ -4,13 +4,14 @@
 # path	function	cognitive	sloc	reason
 project-trajectory/scripts/acceptance_record.py	staged_spine_amendments	20	19
 project-trajectory/scripts/adjudicate_brief.py	_amended_rows	17	19	RE-KEYED 2026-09-27 (WI-657): WI-646 (26c086dd) split the row selection out of `amendment_values` (20 -> 3, below the threshold) when it scoped the amendment brief to its own rows; 17 here, net -3 across the pair. Not a bump.
+project-trajectory/scripts/agent_brief.py	critique_brief	31	49
+project-trajectory/scripts/agent_brief.py	critique_control	18	20
+project-trajectory/scripts/agent_brief.py	worker_prompt	16	70	2026-10-03, WI-746 (9dbb5103): pending-open-item guard joins scheduler disposition and formats gates before assigning a worker; keeping the refusal at the assignment boundary prevents a held WI reaching the worker.
 project-trajectory/scripts/agent_common.py	latest_trailer_evidence	17	14
 project-trajectory/scripts/agent_common.py	preflight	33	104
 project-trajectory/scripts/agent_common.py	regenerate_index	16	43
 project-trajectory/scripts/agent_loop.py	RoutingState.route_intent	21	24
 project-trajectory/scripts/agent_loop.py	build_worker_assignment	28	66
-project-trajectory/scripts/agent_loop.py	critique_brief	31	49
-project-trajectory/scripts/agent_loop.py	critique_control	18	20
 project-trajectory/scripts/agent_loop.py	map_preflight	41	70
 project-trajectory/scripts/agent_loop.py	route_session	37	145	deliberate re-stamp at arming, reason recorded: 35 -> 37 came with the stall-guard row (C4 pre-dispatch probe + C5 relaxed reviewer rung, landed 2026-08-30 while this sensor was report-only; measured 35 at trunk 8ac501de, 37 after); the ratchet holds at 37 and the decomposition is owed to the decomposition debt owner, not paid by raising this number again
 project-trajectory/scripts/agent_loop.py	run_iteration	16	89	RE-STAMPED DOWN 18 -> 16 (WI-657): the drop landed with the redesign-prerequisites sitting (77612fb2, 2026-09-06) and was never recorded; the arming-era reason this row carried (17 -> 18, the stall guard's review-owed end state) no longer describes the number.
@@ -21,6 +22,7 @@ project-trajectory/scripts/agent_route.py	load_registry	24	65
 project-trajectory/scripts/agent_route.py	main	16	62
 project-trajectory/scripts/agent_session.py	_wait_for_exit	16	24
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
+project-trajectory/scripts/assumption_rules.py	_classify	16	24	2026-10-03, WI-723 (3b872471): joint-delivery classification adds sibling-reference validation and class precedence to the sole classification parse (crossing to 16); WI-729 (17c54c2f) adds shared-need validation at the same score, so a declared sibling alone cannot establish joint delivery.
 project-trajectory/scripts/assumption_rules.py	falsification_worklist	19	38	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (19) came with WI-632 (ae3d625e): SR-201's worklist joins an assumption's two falsification signals (its Standing, a failed latest record) to the citing requirements, their needs and the evidencing cases, each once. Repair is owed on trunk: the join is three lookups a sibling could build.
 project-trajectory/scripts/assumption_rules.py	release_gate_findings	16	36	ABSORBED FROM TRUNK at the WI-657 integration (2026-09-27), not introduced by it: this new row came with WI-638 (f7885a49), which landed while the ratchet was red (WI-657 is what brought it back to green). SR-206's release step asks, for every assumption a requirement relies on, current evidence or an unreopened accepted risk, each arm its own guarded branch. Repair is owed on trunk: the evidence arms are a table.
 project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	20	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
@@ -56,15 +58,9 @@ project-trajectory/scripts/check_privacy.py	Scanner.scan_line	25	22
 project-trajectory/scripts/check_privacy.py	scan_diff_text	43	39
 project-trajectory/scripts/check_stubs.py	find_stubs	17	19
 project-trajectory/scripts/check_stubs.py	stub_kind	16	24
-project-trajectory/scripts/check_trajectory.py	_classifiable_edges	16	27
-project-trajectory/scripts/check_trajectory.py	_cross_component_scan	19	41
 project-trajectory/scripts/check_trajectory.py	backlog_staleness_findings	22	32
 project-trajectory/scripts/check_trajectory.py	cell_integrity_errors	24	23
-project-trajectory/scripts/check_trajectory.py	codesymbol_crosscheck_findings	29	43
 project-trajectory/scripts/check_trajectory.py	completion_reconciliation_findings	18	45
-project-trajectory/scripts/check_trajectory.py	contract_body_findings	22	40
-project-trajectory/scripts/check_trajectory.py	if_tc_allow_hygiene_findings	27	54
-project-trajectory/scripts/check_trajectory.py	interface_findings	37	89
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
 project-trajectory/scripts/check_trajectory.py	load_wis	16	35	sloc column re-measured 34 -> 35 at dc3c9e68 (informational; the ratchet compares cognitive, which 8fa0f0f3 pushed to 17 and dc3c9e68 repaired back to 16)
 project-trajectory/scripts/check_trajectory.py	main	45	151
@@ -150,6 +146,7 @@ project-trajectory/scripts/rendering/traj_views.py	sw_containment	23	190	RE-KEYE
 project-trajectory/scripts/rendering/traj_views.py	when_view	22	74	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/schedule.py	hard_path_lengths	20	32
 project-trajectory/scripts/schedule.py	kind_of	16	17
+project-trajectory/scripts/schedule.py	load_wis	20	40	2026-10-03, WI-746 (9dbb5103): index pending open-item WI-Refs and attach sorted owner gates while loading scheduler data; malformed/example rows remain excluded and WI rows are not mutated.
 project-trajectory/scripts/score_reviews.py	corroboration	16	21
 project-trajectory/scripts/score_reviews.py	main	26	95
 project-trajectory/scripts/score_reviews.py	parse_verdict	21	39
@@ -181,9 +178,16 @@ project-trajectory/scripts/trace_text.py	provenance_findings	16	21
 project-trajectory/scripts/trace_text.py	provenance_tokens	19	18
 project-trajectory/scripts/traj_parse.py	_okf_nodes	39	49
 project-trajectory/scripts/traj_parse.py	frame_context	19	82
-project-trajectory/scripts/traj_parse.py	need_assumptions	17	40	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (17) came with WI-633 (6ee918f5): the per-need assumption view's data (SR-218), each assumption listed once in first-cited order with its coincident and unclassified sets. Repair is owed on trunk.
+project-trajectory/scripts/traj_parse.py	need_assumptions	20	48	+3 (17 -> 20) 2026-10-03, WI-723 (3b872471): compose each need's joint requirements and Delivered-With siblings beside its assumption and coincident views; the per-need view must expose the new classification rather than misreport joint rows as unclassified. Earlier: ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (17) came with WI-633 (6ee918f5): the per-need assumption view's data (SR-218), each assumption listed once in first-cited order with its coincident and unclassified sets. Repair is owed on trunk.
 project-trajectory/scripts/traj_parse.py	runtime_flows	22	26
+project-trajectory/scripts/traj_status.py	_frontier_lines	16	49	2026-10-03, WI-746 (9dbb5103): render ready and blocked scheduler records together, including linked owner gates and the empty-ready case; otherwise the generated frontier hides why queued work cannot start.
 project-trajectory/scripts/traj_status.py	_open_item_oneliners	16	17
+project-trajectory/scripts/trajectory_arch.py	_classifiable_edges	16	27
+project-trajectory/scripts/trajectory_arch.py	_cross_component_scan	19	41
+project-trajectory/scripts/trajectory_arch.py	codesymbol_crosscheck_findings	29	43
+project-trajectory/scripts/trajectory_arch.py	contract_body_findings	22	40
+project-trajectory/scripts/trajectory_arch.py	if_tc_allow_hygiene_findings	27	54
+project-trajectory/scripts/trajectory_arch.py	interface_findings	37	89
 project-trajectory/scripts/wi_convert.py	parse_spec	19	35
 tests/test_bootstrap.py	test_every_sibling_imported_module_is_shipped_by_mapping	33	50
 tests/test_dependency_ledger.py	undeclared_imports	19	21
@@ -194,7 +198,7 @@ tests/test_import_layers.py	strongly_connected	41	40
 tests/test_spine_rules.py	_independent_meta_expectations	46	73
 tests/test_trace.py	test_this_repos_own_provenance_allow_entries_all_still_bite	28	44
 tests/test_trace_briefs.py	test_every_cell_of_an_owing_row_appears_in_its_section	17	18	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (17) came with WI-633 (6ee918f5): the test walks every non-empty cell of every owing row across two tiers. Repair is owed on trunk: a parametrized test per tier.
-tests/test_traj_graph.py	_wire_through_box_violations	24	39
+tests/test_traj_graph.py	_wire_through_box_violations	32	45	+8 (24 -> 32) 2026-10-03, WI-727 (b689eada): filter source/target boxes once, use the shared bounds-prefiltered hit test on the normal path, and retain exact per-box diagnostics only on violations; this removes repeated geometry work without weakening the through-box invariant.
 tests/test_traj_graph.py	test_svg_viewbox_contains_every_routed_wire	24	49
 tests/test_traj_graph.py	test_t8_no_wire_passes_through_an_unrelated_node_box	28	30
 tests/test_traj_render.py	test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill	16	48
@@ -203,5 +207,6 @@ tests/test_traj_render_sweeps.py	test_a1_every_wired_control_pairs_click_with_fo
 tests/test_traj_render_sweeps.py	test_a1_every_wired_interaction_selector_matches_only_focusable_elements	16	40
 tests/test_traj_render_sweeps.py	test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors	33	45
 tests/test_traj_render_sweeps.py	test_u2_every_concept_fill_comes_from_one_declared_vocabulary	21	37
+tests/test_traj_views.py	_svg_type_escapes	19	33	2026-10-03, WI-722 (6a40d7b2): inspect each SVG's viewBox/rendered height and text spans against its declared scale and 9 px shrink floor, including zero-height and unusable-scale cases; the helper measures actual rendered label size across the existing tile families.
 tests/test_trajectory_arch.py	_csv_body_to_toml	34	56
 tests/test_trajectory_arch.py	write_arch	32	53

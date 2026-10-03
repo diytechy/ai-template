@@ -1680,9 +1680,13 @@ The kit ships the measure **report-only**, and arming it is this layer:
    directions: growth ("simplify, or take a reviewed bump whose reason is
    recorded at the row") and improvement ("re-stamp downward in the same
    commit, so the ratchet only tightens").
-4. **Place the step where it runs.** A step declared from a rung the repo has
-   not reached, or left out of the per-commit bar, does not run, and the
-   baseline drifts silently until a gate run finds fifty findings at once.
+4. **Declare when it runs.** In `docs/stack.ini`, a step runs at or above
+   `from-stage` OR on a change matching its optional `paths`: repo-relative,
+   case-sensitive fnmatch globs (comma/whitespace separated; `*` spans `/`).
+   Include its baseline, script and config. The hook's `--path-triggered` runs
+   these steps using the gate's selector: staged paths first, else a claimed
+   lane's integration base to HEAD. An empty or unreadable change runs them.
+   Blank/absent paths keeps rung-only selection; patterns belong to your stack.
 
 The escapes the finding names are the design moves the kit's
 `deep-module-design` skill states: decompose outward into a sibling, express a

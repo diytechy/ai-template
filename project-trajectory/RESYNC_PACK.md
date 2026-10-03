@@ -6583,6 +6583,27 @@ references into prose, retain ruled history, and record hand-held gates there.
 The approved legacy OI-edge contract requires separate amendment before its
 reader compatibility can be retired; do not introduce new OI `needs` edges.
 
+### Sensor steps: optional path triggers [since 83db9d75]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A `[step:<name>]` may declare `paths`: comma/whitespace-separated,
+repo-relative case-sensitive fnmatch patterns (`*` spans `/`). The gate selects
+at or above `from-stage` OR when a changed path matches. Staged changes take
+precedence, else a claimed lane uses its integration base to HEAD. Empty or
+unreadable changes run path-declaring steps. Deletions and both rename paths
+count. The hook invokes `check.py --path-triggered` for the same selection over
+only opted-in steps except `smoke`: its per-commit bar is already run by hand,
+so the hook does not repeat it. Smoke remains rung- or path-selected at gates.
+Blank or absent paths keeps the existing rung-only rule.
+
+**What to do.** Take `scripts/check.py`, `scripts/kitlib/config.py` and
+`hooks/pre-commit` wholesale. Retain your stack's step commands and rungs; add
+paths only where the sensor should run below its rung, including its source,
+tests, baseline, script and config. The template's readability section shows
+the optional key; complexity, census and smoke examples remain inactive so
+this change arms no new downstream gate. The PROCESS docs explain selection.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -14,6 +14,13 @@ format/lint/test commands with your own (or drop the ones you don't have); keep
 the traceability/flows/doc-navigability/perf-budgets steps — they're
 stdlib-only and stack-agnostic.
 
+Contracts: IF-267
+
+Contract IF-267: --path-triggered runs only steps declaring nonempty paths,
+    except smoke, selected by the same rung-or-path rule as ordinary gates.
+    Unknown changes run them. Smoke remains in the manually run commit bar
+    and ordinary gate plans. The hook reads the normal results and exit status.
+
 Design choices that keep it honest and CI-friendly:
     - **Never a false green.** Any failing required step makes the whole run exit
       nonzero. We print the real command output; we do not summarize it away.
@@ -59,7 +66,8 @@ Usage:
                             [--staged-divergence [--strict]]
 
     --stage     The rung the repo is IN. Every step whose declared threshold
-                this rung is AT OR ABOVE runs — "when is it relevant to run
+                this rung is AT OR ABOVE runs; declared paths also select below it.
+                Unknown changes run path-declaring steps — "when is it relevant to run
                 these checks", not "what did I pass that permits them" (OI-51).
                 Default: the repo's **derived effective stage** from
                 `docs/stage`, computed by derive_stage.py over the SETTLED spine
@@ -156,7 +164,14 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
+from kitlib.config import (
+    RETIRED_STAGE_ALIASES,
+    step_paths,
+    step_threshold as _step_threshold,
+    _LEGACY_GATES_WARNED as _LEGACY_GATES_WARNED,
+)
 from kitlib.config import utf8_console as _utf8_console
+import fnmatch
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
 # WI-448): the best-effort-off-git subprocess pattern this module used to spell
@@ -395,7 +410,10 @@ def extra_steps(profile, subs):
 
     `from-stage` is the rung the step becomes RELEVANT at and the step runs
     whenever the repo is at or above it (see _step_threshold; the retired
-    `gates =` membership list still translates).
+    `gates =` membership list still translates). Optional `paths =` patterns
+    also select it below that rung; an unknown change runs every such step.
+    Patterns are repo-relative, case-sensitive fnmatch globs (`*` spans `/`),
+    comma/whitespace separated. Include the baseline, script and config.
 
     `{py}/{src}/{tests}/{coverage}/{tier}` expand as in every other command, and
     the required-import set is auto-derived from the argv (a `{py} -m <mod>` step
@@ -430,86 +448,6 @@ def extra_steps(profile, subs):
             )
         out.append((name, _requires(cmd), cmd, threshold, layer))
     return out
-
-
-# THE LEGACY `gates =` TRANSLATION, and it preserves an adopter's effective
-# behavior rather than the tag's face value (WI-498 slice 2). A `gates =` list
-# named the BARS a step ran at, and the bar was a MIN over every in-scope row:
-# `DevStg-Reqs` is the floor every repo sits at, while `DevStg-Tests` was reached
-# only by a spine already fully decomposed and TC'd — which is the DevStg-Impl
-# RUNG — and `DevStg-Impl` was never reached at all under the OI-30 D2 ceiling.
-# So the rung that reproduces each listed bar under an at-or-above rule is:
-_LEGACY_BAR_THRESHOLD = {
-    _kitladder.STAGE_REQS: _kitladder.STAGE_NEEDS,
-    _kitladder.STAGE_TESTS: _kitladder.STAGE_IMPL,
-    _kitladder.STAGE_IMPL: _kitladder.STAGE_IMPL,
-}
-
-# Sections already warned about, so the notice is ONCE PER RUN as promised and
-# not once per `steps()` call — the plan is built two or three times in a single
-# invocation (the lane map resolves at ALL; `--list` and the run each rebuild),
-# and a migration notice repeated per rebuild reads as a malfunction.
-_LEGACY_GATES_WARNED = set()
-
-
-def _step_threshold(profile, section):
-    """The rung a declared `[step:<name>]` becomes relevant at.
-
-    `from-stage = <rung>` is the declared spelling: any of the eight ladder rungs,
-    and the step runs whenever the repo is AT OR ABOVE it. Default `DevStg-Impl`,
-    unchanged in value from the retired `gates =` default — a project-specific
-    gate grades a built thing.
-
-    `gates = <space/comma list>` IS ACCEPTED AND TRANSLATED, with one stderr line
-    per run. It is the retired membership spelling, and unlike the `--stage` CLI
-    aliases the FILE can be named here, so the notice says which section to fix
-    rather than leaving an adopter to guess. The lowest listed bar picks the rung
-    (`_LEGACY_BAR_THRESHOLD`); the retired `G1|G2|G3` tags translate first,  check_vocab: allow
-    exactly as they always did. Both spellings at once is an authoring error and
-    fails LOUDLY, like every other profile error — silently preferring one would
-    make a step's real threshold unreadable from the file."""
-    has_new = profile.has_option(section, "from-stage")
-    has_old = profile.has_option(section, "gates")
-    if has_new and has_old:
-        sys.exit(
-            "check: docs/stack.ini [{}] declares both `from-stage` and the "
-            "retired `gates` — keep `from-stage` and delete `gates`".format(section)
-        )
-    if has_new:
-        value = profile.get(section, "from-stage").strip()
-        if value not in _kitladder.LADDER_RUNGS:
-            sys.exit(
-                "check: docs/stack.ini [{}] from-stage is {!r}; expected one of "
-                "{}".format(section, value, "|".join(_kitladder.STAGE_ORDER))
-            )
-        return value
-    if not has_old:
-        return _kitladder.STAGE_IMPL
-    bars = []
-    for tok in profile.get(section, "gates").replace(",", " ").split():
-        tok = RETIRED_STAGE_ALIASES.get(tok, tok)
-        if tok not in _LEGACY_BAR_THRESHOLD:
-            sys.exit(
-                "check: docs/stack.ini [{}] gates has {!r}; expected a "
-                "space/comma list of {}".format(
-                    section, tok, "|".join(_LEGACY_BAR_THRESHOLD)
-                )
-            )
-        bars.append(tok)
-    if not bars:
-        return _kitladder.STAGE_IMPL
-    threshold = min((_LEGACY_BAR_THRESHOLD[b] for b in bars), key=_kitladder.stage_ord)
-    if section not in _LEGACY_GATES_WARNED:
-        _LEGACY_GATES_WARNED.add(section)
-        print(
-            "check: docs/stack.ini [{}] uses the RETIRED `gates =` membership "
-            "list — reading it as `from-stage = {}`. Selection is now AT OR "
-            "ABOVE one rung (OI-51); update the section to say so.".format(
-                section, threshold
-            ),
-            file=sys.stderr,
-        )
-    return threshold
 
 
 def extra_step_lanes(profile):
@@ -1367,21 +1305,6 @@ STAGES = list(_kitladder.STAGE_ORDER) + [ALL]
 # through this table and then through `_LEGACY_BAR_THRESHOLD`, and every entry
 # below lands on the same threshold it did before (Impl -> Impl, Reqs -> Needs).
 # Only the CURRENT-STAGE direction moves, which is the one that was wrong.
-RETIRED_STAGE_ALIASES = {  # check_vocab: allow
-    # The Reqs bar IS the floor every repo sits at.
-    "G1": _kitladder.STAGE_REQS,  # check_vocab: allow
-    # The Tests bar was reached ONLY by a spine already fully decomposed and
-    # TC'd, which on the ladder is the DevStg-Impl RUNG — three above the word
-    # it shares with the bar.
-    "G2": _kitladder.STAGE_IMPL,  # check_vocab: allow
-    "G3": _kitladder.STAGE_IMPL,  # check_vocab: allow
-    # The `DevBar-*` prefix, retired 2026-08-18. `DevBar-Release` resolves to
-    # `DevStg-Impl`, NOT to `DevStg-Release`: that bar never certified the
-    # Release rung, and the alias carries the correction.
-    "DevBar-Reqs": _kitladder.STAGE_REQS,  # check_vocab: allow
-    "DevBar-Tests": _kitladder.STAGE_IMPL,  # check_vocab: allow
-    "DevBar-Release": _kitladder.STAGE_IMPL,  # check_vocab: allow
-}
 
 
 def at_or_above(current, threshold):
@@ -1515,34 +1438,52 @@ def resolve_stage(explicit, root="."):
     return record["stage"]
 
 
+def changed_paths(root):
+    """The staged change, else a claimed lane's base-to-tip change, or unknown.
+
+    Empty diffs cannot identify the change under review. Treat them and failed
+    reads as unknown, so sensors run rather than silently missing work. Disable
+    renames to include both the old and new path, and retain deletions.
+
+    Implements: SR-006, LLR-291
+    """
+    flags = ["--name-only", "-z", "--no-renames", "--no-ext-diff", "--no-textconv"]
+    names = _kitgit.git_bytes(root, ["diff", "--cached", *flags])
+    if names == b"" and _work_branch(root):
+        import agent_common
+
+        base = agent_common.default_base(root)
+        names = (
+            _kitgit.git_bytes(root, ["diff", base, "HEAD", *flags]) if base else None
+        )
+    return {os.fsdecode(p) for p in names.split(b"\0") if p} if names else None
+
+
+def _path_matches(patterns, changes):
+    """Unknown changes run every opted-in step; known changes match literally."""
+    return bool(patterns) and (
+        changes is None
+        or any(fnmatch.fnmatchcase(p, pat) for p in changes for pat in patterns)
+    )
+
+
 def resolve_plan(stage, coverage, tier, phase, profile):
-    """Every step this invocation will run: the steps whose threshold this repo's
-    stage is AT OR ABOVE.
+    """Select by stage rung OR a declared path trigger.
 
-    ONE TIER, WHERE THERE WERE THREE (WI-498 slice 2). The gating plan used to be
-    followed by a PRODUCT-REGRESSION FLOOR (`floor_plan`, WI-473) that put back
-    the product steps a drafted row had knocked out, and then by an ADVISORY tier
-    (`advisory_plan`, owner ruling 2026-07-27) that re-ran warn-only whatever an
-    approval window had suppressed. Both existed for ONE reason: the derived
-    BAR was a min over every in-scope row, so a single ordinary draft dropped it
-    to what a fresh scaffold reads and steps silently stopped running.
+    Staged paths take precedence over a claimed lane's base-to-tip change.
+    Unknown changes run path-declaring steps; steps without paths stay rung-only.
+    The hook restricts this same plan to opted-in steps in _invocation_plan.
 
-    THE EFFECTIVE STAGE ABSORBS BOTH, by construction rather than by compensation.
-    `docs/stage`'s headline value is derived over the SETTLED rows — drafts
-    excluded, and a phase that has earned nothing ignored rather than folded in
-    (`derive_stage`, slice 1) — so drafting a row cannot lower selection at all,
-    for ANY step rather than only the product ones the floor covered. There is
-    nothing left for the floor to restore and nothing left for the advisory tier
-    to report on, so both retire here with the axis that needed them. What the
-    advisory tier bought (a suppressed step still gets SEEN) the new selection
-    delivers strictly more strongly: the step is not suppressed, so it GATES.
-
-    Kept as its own function rather than folded back into `main()` for the stated
-    reason it was extracted: `main()`'s C901 complexity is pinned to the digit by
-    tests/test_complexity_ratchet.py, and this repo's rule is to decompose rather
-    than re-stamp the ratchet."""
+    Implements: SR-006, LLR-291
+    """
     plan = steps(coverage, tier, stage, phase, profile)
-    return [s for s in plan if at_or_above(stage, s[3])]
+    paths = step_paths(profile)
+    changes = changed_paths(Path.cwd()) if paths else None
+    return [
+        s
+        for s in plan
+        if at_or_above(stage, s[3]) or _path_matches(paths.get(s[0], ()), changes)
+    ]
 
 
 def _print_steps(plan):
@@ -2363,6 +2304,17 @@ def _clear_stale_coverage_report(plan):
         )
 
 
+def _invocation_plan(args, coverage, profile):
+    """Resolve the gate bar, restricting the hook to opted-in sensors."""
+    if args.path_triggered and not step_paths(profile):
+        return ALL, []
+    stage = resolve_stage(args.stage)
+    plan = resolve_plan(stage, coverage, args.tier, args.phase, profile)
+    if args.path_triggered:
+        plan = [s for s in plan if s[0] in step_paths(profile) and s[0] != "smoke"]
+    return stage, plan
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -2400,12 +2352,17 @@ def main():
         metavar="{" + ",".join(STAGES) + "}",
         default=None,
         help="the rung the repo is IN: every step whose threshold this rung is "
-        "AT OR ABOVE runs (default: the derived effective stage in docs/stage, "
+        "AT OR ABOVE runs; paths can also select below it (default: the derived effective stage in docs/stage, "
         "else all). Drafting a row cannot lower it — the derivation reads the "
         "SETTLED spine — so there is no dial that turns product checks off by "
         "opening an approval window. The retired G1/G2/G3 and DevBar-* "  # check_vocab: allow
         "value spellings are accepted as aliases and warn; `--gate` is accepted "
         "silently as the prior flag name, `--stage-cleared` warns.",
+    )
+    ap.add_argument(
+        "--path-triggered",
+        action="store_true",
+        help="run only steps declaring paths except smoke, selected by rung or changed paths (the hook's sensor bar)",
     )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument(
@@ -2595,8 +2552,7 @@ def main():
     # without ever consulting it, and resolving it can now cost a subprocess
     # (`_derive_stage`, on a fingerprint miss). The pre-commit hook takes exactly
     # those two paths, so the floor no longer pays for a value it never reads.
-    stage = resolve_stage(args.stage)
-    plan = resolve_plan(stage, coverage, args.tier, args.phase, profile)
+    stage, plan = _invocation_plan(args, coverage, profile)
 
     if args.list:
         print("Plan at stage {} (tier {}):".format(stage, args.tier))

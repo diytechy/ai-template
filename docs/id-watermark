@@ -19,7 +19,7 @@
 # correction: B 7 -> 8 (OI-47)
 # correction: REL 3 -> 4 (OI-47)
 #
-# basis: B=11 CMP=9 DA=17 EXT=7 IF=265 LLR=289 OI=99 PB=4 REL=2 SN=44 SR=227 STK=4 SUR=3 TC=302 WI=751
+# basis: B=11 CMP=9 DA=17 EXT=7 IF=267 LLR=291 OI=99 PB=4 REL=2 SN=44 SR=227 STK=4 SUR=3 TC=304 WI=751
 #
 ASSET = 0
 B = 11
@@ -27,8 +27,8 @@ CMP = 9
 DA = 17
 DP = 1
 EXT = 7
-IF = 265
-LLR = 289
+IF = 267
+LLR = 291
 MOD = 0
 OI = 99
 PART = 0
@@ -39,5 +39,5 @@ SN = 44
 SR = 227
 STK = 4
 SUR = 3
-TC = 302
+TC = 304
 WI = 751

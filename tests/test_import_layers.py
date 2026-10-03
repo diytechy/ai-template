@@ -364,9 +364,13 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # stayed in agent_loop. Both already defer their distinct intake reads, so
     # one former module edge now appears on both sides of the new seam; no
     # function acquired an import and the cycle set below is unchanged.
-    assert 14 <= deferred <= 29, (
+    # RE-STAMPED 29 -> 30 (2026-10-03, WI-657): check -> agent_common reads
+    # the existing integration-base rule only for an empty index on a claimed
+    # lane. Deferring it preserves check.py's kitlib-only floor; sharing it
+    # avoids a second claim/merge-base policy. No cycle or layer edge grew.
+    assert 14 <= deferred <= 30, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..29 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..30 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "
