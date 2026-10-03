@@ -29,15 +29,25 @@ This wave's record:
     1. verifies it;
     2. regenerates the generated files with `trunk_step.py --regen`;
     3. commits it on the lane.
-- **Reviewer: Codex Luna (`gpt-6-luna`), high effort.** This launch line was probed
-  and works (a one-line reply, exit 0):
-
-      ~/.vscode/extensions/openai.chatgpt-26.930.31428-win32-x64/bin/windows-x86_64/codex.exe exec -m gpt-6-luna -c model_reasoning_effort="high" -c 'windows.sandbox="unelevated"' -s read-only -C <worktree> --skip-git-repo-check -o <out.md> - < <prompt.md>
-
+- **Reviewer: Codex Luna (`gpt-6-luna`), high effort, through the codex CLI.**
+  The set-up lives outside the repo in `C:/Projects/ai-template.wt/coordinator-tools/`
+  (its README has the exact commands):
+  - `review-prompt.template.md` is the reviewer brief.
+  - `mkprompt.py` fills its slots and refuses to write the prompt while any slot
+    is unfilled.
+  - `luna_review.sh <worktree> <prompt> <out> [effort]` launches the newest VS
+    Code extension codex.exe with
+    `exec -m gpt-6-luna -c model_reasoning_effort="high" -c 'windows.sandbox="unelevated"' -s workspace-write --add-dir C:/Projects/ai-template.wt/review-tmp`.
+    - It writes the review to `<out>` and the transcript to `<out>.log`.
+    - It exits 3 if the reviewer changed the lane.
+  - Run the launcher with `run_in_background`. Its allow rule is in
+    `.claude/settings.local.json`.
+  - Probed end to end on 2026-10-03:
+    - `-s read-only` cannot run Python at all ("no usable temporary directory").
+    - `workspace-write` with the added scratch root and a LITERAL `--basetemp`
+      under it ran `tests/test_rule_sync.py`: 42 passed, lane unchanged.
+    - The sandbox shell is PowerShell, so `$TEMP` is empty there.
   - There is no 6.1 Luna; the models cache lists `gpt-6-luna` and `gpt-5.6-luna`.
-  - Under `-s read-only` a reviewer probably cannot write pytest's temp
-    directory. Either have it read and reason while the coordinator runs the
-    named tests, or try `-s workspace-write` with an explicit no-edit instruction.
   - Builder and reviewer are now cross-family (Claude builds, Codex reviews).
   - Luna also takes the cross-reviews of adjudication acts, which Sonnet did this
     wave.
