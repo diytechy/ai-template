@@ -16,6 +16,7 @@ import shutil
 
 from conftest import ROOT, load_script
 from traj_fixtures import (
+    _every_emitter_document,
     write_arch_src,
     write_cont_src,
     CONT_CMPS,
@@ -1031,6 +1032,81 @@ def test_t2_small_spine_keeps_the_flat_icicle(tmp_path):
 _FIT_RE = re.compile(
     r'style="width:100%;max-width:(\d+)px;min-width:(\d+)px;height:auto"'
 )
+
+
+def _svg_type_escapes(page):
+    """Check presentation attributes, inline styles and stylesheet px overrides.
+
+    The page uses tokens for HTML type too, so rejecting all stylesheet px
+    font sizes also catches inherited SVG sizes without guessing CSS selectors.
+    """
+    tokens = set(re.findall(r"--(n\w+):[\d.]+px", page))
+    allowed = {"var(--{})".format(token) for token in tokens}
+    escapes = []
+    svg_classes = set()
+    for svg in re.findall(r"<svg\b.*?</svg>", page, re.S):
+        for classes in re.findall(r'class="([^"]*)"', svg):
+            svg_classes.update(classes.split())
+        sizes = re.findall(r"\bfont-size\s*=\s*[\"\']([^\"\']+)", svg)
+        sizes += re.findall(r"font-size\s*:\s*([^;\"'}]+)", svg)
+        escapes.extend(size for size in sizes if size.strip() not in allowed)
+    for css in re.findall(r"<style\b[^>]*>(.*?)</style>", page, re.S):
+        escapes.extend(re.findall(r"font-size\s*:\s*[\d.]+px\b", css))
+        for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+            classes = set(re.findall(r"\.([\w-]+)", selector))
+            targets_svg = re.search(r"\b(?:svg|text|tspan)\b", selector) or (
+                classes and classes <= svg_classes
+            )
+            if targets_svg:
+                sizes = re.findall(r"font-size\s*:\s*([^;}]+)", body)
+                escapes.extend(size for size in sizes if size.strip() not in allowed)
+    return escapes
+
+
+def test_t7_every_svg_text_size_uses_a_declared_node_token(tmp_path):
+    documents = _every_emitter_document(tmp_path)
+    fresh = [(label, page) for label, page in documents if label != "shipped"]
+    seam = dict(fresh)["how-sw-flat"]
+    assert '<path class="swedge"' in seam and "src/m" in seam
+    for label, page in fresh:
+        assert re.search(r"<svg\b", page), label
+        assert not _svg_type_escapes(page), (label, _svg_type_escapes(page))
+
+
+def test_t7_scan_detects_attribute_inline_and_css_size_escapes():
+    for markup in (
+        '<svg><text font-size="10">label</text></svg>',
+        '<svg><text style="font-size:10px">label</text></svg>',
+        '<style>.label{font-size:10px}</style><svg><text class="label"/></svg>',
+        "<style>svg text{font-size:var(--body)}</style><svg><text/></svg>",
+    ):
+        assert _svg_type_escapes(markup), markup
+
+
+def test_t4_drill_character_estimates_cover_emitted_type_tokens(tmp_path):
+    make_repo(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    tokens = dict(re.findall(r"--(n\w+):([\d.]+)px", html_of(tmp_path)))
+    gt = load_script("gen_trajectory")
+    # One em covers wide Latin glyphs (M/W), ellipses and full-width glyphs;
+    # average-character estimates cannot safely budget arbitrary node prose.
+    assert gt._BLAB_CH >= 1.0 * float(tokens["nlabel"])
+    assert gt._BSUB_CH >= 1.0 * float(tokens["nsub"])
+
+
+def test_t4_seam_node_labels_fit_their_rectangles(tmp_path):
+    from traj_fixtures import _how_sw_flat
+
+    _how_sw_flat(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    page = html_of(tmp_path)
+    size = float(re.search(r"--nlabel:([\d.]+)px", page).group(1))
+    nodes = re.findall(r"<g><title>.*?</title><rect.*?</g>", page, re.S)
+    assert nodes, "vacuous - no seam nodes"
+    for node in nodes:
+        width = float(re.search(r'width="([\d.]+)"', node).group(1))
+        label = html.unescape(re.search(r"<text\b[^>]*>(.*?)</text>", node).group(1))
+        assert len(label) * size <= width - 24, (label, width, size)
 
 
 def test_t7_every_emitted_svg_scales_to_fit(tmp_path):

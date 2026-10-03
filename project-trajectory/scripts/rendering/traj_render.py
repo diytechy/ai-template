@@ -62,8 +62,8 @@ _FOCUSABLE = re.compile(r"tabindex\s*=|<a\s[^>]*href\s*=", re.I)
 # size, so the box never scales.
 #
 # The fix is scale-to-fit WITH A LEGIBILITY FLOOR, not unbounded scaling. Pure
-# scale-to-fit trades T7 for T4 — squeezing a 900px graph into 390px shrinks a
-# 12px label to ~5px, which is the "readable at default zoom" floor T4 forbids.
+# scale-to-fit stops at the 9px floor: the 10.5px sub-label permits shrinking
+# to about 86% of natural width, then scrolling preserves readable labels.
 # Stop shrinking when the smallest emitted node type token reaches 9 CSS px;
 # past that width the container's existing scroll + `.scrollcue` takes over.
 # The same scale emits the CSS tokens, so the floor follows type-scale changes.
@@ -508,8 +508,10 @@ PORT_R = 4.5
 MAX_TIER_COL = DRILL_GEOM[0]  # 172 — the declared upper bound (the former width)
 TIER_COL_MIN = 96  # a floor so a short-label block stays a comfortable click target
 TIER_COL_PAD = 24  # fixed padding around the widest label (≈12px each side)
-_BLAB_CH = 7  # px/char, over-estimates the shared bold node label (`--nlabel`, `.blab`)
-_BSUB_CH = 5  # px/char, over-estimates the shared sub-label (`--nsub`, `.bsub`)
+# Budget one em per character, including wide M/W and full-width glyphs rather
+# than average prose widths; ceil keeps integer geometry conservative at 10.5px.
+_BLAB_CH = math.ceil(NODE_TYPE_PX["nlabel"])  # 1.0 x bold label px (`.blab`)
+_BSUB_CH = math.ceil(NODE_TYPE_PX["nsub"])  # 1.0 x sub-label px (`.bsub`)
 CEDGE_LEN = 9  # the containment arrow's shaft length (a horizontal parent→child →)
 
 

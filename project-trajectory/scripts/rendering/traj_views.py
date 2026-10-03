@@ -32,8 +32,10 @@ from .traj_render import (
     SW_NODE_FILL,
     TIER_COL,
     TIER_FILL,
+    _BLAB_CH,
     _arrow_markers,
     _drill_layer_svg,
+    _fit_lines,
     _hscroll,
     _render_drill,
     _ring_style,
@@ -626,13 +628,13 @@ def sw_graph(root, mods):
         x, y = pos[k]
         info = nodes[k]
         disp = info["display"]
-        short = disp if len(disp) <= 22 else disp[:21] + "…"
+        short = _fit_lines(disp, (SW_COL_W - 24) // _BLAB_CH, 1)[0]
         tip = "{} ({})".format(disp, info["kind"])
         node_svg.append(
             "<g><title>{}</title>"
             '<rect x="{:.1f}" y="{:.1f}" width="{}" height="{}" rx="8" '
             'fill="{}"></rect><text x="{:.1f}" y="{:.1f}" text-anchor="middle" '
-            'dominant-baseline="central" fill="#fff" font-size="10">{}</text>'
+            'dominant-baseline="central" fill="#fff" style="font-size:var(--nlabel)">{}</text>'
             "</g>".format(
                 esc(tip),
                 x,
