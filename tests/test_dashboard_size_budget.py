@@ -86,7 +86,16 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # the merge commit's log entry and sits well inside the number above, so the
 # stamp is kept rather than re-raised: a ceiling re-raised per merge stops
 # measuring anything.
-MAX_BYTES = 3_025_000
+# 3,025,000 -> 3,480,000, WI-746 (2026-10-02). Regenerating with
+# python project-trajectory/scripts/gen_trajectory.py at acc1e195 measured
+# 3,026,786 bytes against 3,013,555 at 2a902b50: +13,231. The new
+# IF-264/IF-265 architecture renderings and detail payloads add 11,231;
+# LLR-288/LLR-289 and TC-301/TC-302 detail payloads add 2,000. These are
+# distinct registry views, not duplicate open-item or blocked-list embeds.
+# Restore ~15% headroom for ordinary growth, as the earlier stamps prescribe.
+# Measurement and reason travel in the coordinator handoff; no generated
+# artifact is retained by this fix round.
+MAX_BYTES = 3_480_000
 
 
 def test_dashboard_stays_within_its_size_budget():

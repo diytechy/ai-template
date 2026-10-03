@@ -54,7 +54,7 @@ Usage:
 
 Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit's
 independently-copyable-script convention (the F5 rule). Owner gates are read
-through `_load`'s lazy `spine_carrier` import.
+through the shared `spine_carrier` loader.
 
 Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the
 interface seams this module declares (process.md §8; rows of record in
@@ -129,6 +129,8 @@ import json
 import re
 import sys
 from pathlib import Path
+
+import spine_carrier
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
@@ -309,7 +311,7 @@ def load_wis(rows, open_items=()):
     `-000` example row and any malformed/duplicate id, exactly like
     check_trajectory.load_wis — a broken registry is the validator's job to
     report, not the scheduler's to crash on)."""
-    gates = {}
+    owner_holds = {}
     for item in open_items:
         oid = (item.get("OI-ID") or "").strip()
         if (
@@ -318,7 +320,7 @@ def load_wis(rows, open_items=()):
         ):
             continue
         for wid in _split_refs(item.get("WI-Refs", "")):
-            gates.setdefault(wid, []).append(
+            owner_holds.setdefault(wid, []).append(
                 {"id": oid, "title": (item.get("Title") or "").strip()}
             )
     wis, seen = [], set()
@@ -334,7 +336,7 @@ def load_wis(rows, open_items=()):
             {
                 "id": wid,
                 "title": (r.get("Title") or "").strip(),
-                "open_items": sorted(gates.get(wid, []), key=lambda o: o["id"]),
+                "open_items": sorted(owner_holds.get(wid, []), key=lambda o: o["id"]),
                 "status": (r.get("Status") or "queued").strip().lower(),
                 "preds": preds,
                 # Hard OPEN-ITEM edges (OI-73): satisfied when the OI leaves
@@ -833,8 +835,6 @@ def _load(root):
 
     Implements: SR-148, LLR-288
     """
-    import spine_carrier
-
     return load_wis(
         load_registry_rows(Path(root) / REGISTRY),
         spine_carrier.load(Path(root) / "docs/requirements/open-items.toml", "OI-ID"),

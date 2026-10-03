@@ -26,6 +26,7 @@ try:
     import agent_route
     import agent_session
     import prompts
+    import schedule
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -33,6 +34,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_route
     import agent_session
     import prompts
+    import schedule
     import spine_carrier
 
 from kitlib import decisions as kdecisions
@@ -247,8 +249,6 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
 
     Implements: SR-026, LLR-061
     """
-    import schedule
-
     held = next(
         (
             r
