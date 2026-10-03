@@ -12,13 +12,13 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781)._
 
-_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 87736778 (2026-10-03) — the record's maturity cells have not moved since._
+_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is dfe92989 (2026-10-03) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 66 changed, 58 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679, WI-746, WI-748.
+- `docs/requirements/interfaces.toml` — 66 changed, 58 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-671, WI-672, WI-677, WI-678, WI-679, WI-746, WI-747, WI-748.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -790,9 +790,14 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
   - after: When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; an undeclared trigger preserves input-change triggering under that floor. It keeps at most one open item per case.
 
 ### LLR LLR-254
+_approved — re-attestation owed_
 - **Detail**
   - before: A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. A committed link is not content: it is never written into the extracted tree and is excluded from the digest by the observation writer's own link predicate, so a declared link reads as absent, a link inside a declared directory contributes nothing, and a change to a link's target makes no case due. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs.
   - after: A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. No record is due immediately; expired records bypass the floor. Without a trigger, changed input digests are due under the floor; without inputs, only absence and expiry fire. checkpoint_drafts drafts each due case once, suppressing an open item by typed Brief and Adjudicates cells, never by title. It names the case, reason, rubric and changed inputs or trigger. Committed links are excluded by the observation writer’s own link predicate. No model runs.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: observation_test_cases/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
+  - after: observation_test_cases/checkpoint_for/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
 
 ### LLR LLR-293 — ADDED since the snapshot, Drafted — never approved
 - **LLR-ID**: LLR-293
@@ -800,7 +805,7 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 - **Title**: The observation cadence policy
 - **Module**: project-trajectory/scripts/observation_cadence.py
 - **CodeSymbol**: Cadence
-- **Detail**: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy and unreadable history raise ValueError. Zero explicitly disables the default floor.
+- **Detail**: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. Gate preparation files due cases through `python scripts/intake.py rejudge --checkpoint stage-gate`; release preparation uses `python scripts/intake.py rejudge --checkpoint release`. History is cached per result commit; malformed policy and unreadable history raise ValueError. Zero explicitly disables the default floor.
 - **Status**: Drafted
 - **Component**: CMP-008
 - **Phase**: 6

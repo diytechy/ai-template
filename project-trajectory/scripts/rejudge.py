@@ -55,6 +55,8 @@ in docs/requirements/interfaces.toml).
 Contract IF-228: the checkpoint re-judge decision, as calls.
     `observation_test_cases(root, rev)` returns the test-case rows at the
     commit `rev` names whose `Automated` reads No, the `-000` example excluded.
+    `checkpoint_for(root, rev, tc)` selects the case's explicit checkpoint,
+    or merge for file/component triggers and a missing case.
     `due_cases(root, rev, now=None, *, checkpoint="merge")` returns, per due case in registry order, a
     dict of `tc`, `row`, `why` (one of `WHY_NEVER`, `WHY_CHANGED`,
     `WHY_EXPIRED`, `WHY_TRIGGER`), `digest` (the inputs digest at `rev`, `""` for none),
@@ -338,6 +340,16 @@ def observation_test_cases(root, rev):
     Implements: SR-215, LLR-254
     """
     return _cases_at(root, _commit_of(root, rev))[1]
+
+
+def checkpoint_for(root, rev, tc):
+    """Select the case's explicit checkpoint; file/component triggers use merges.
+
+    Implements: SR-215, LLR-254
+    """
+    case = next((r for r in observation_test_cases(root, rev) if r["TC-ID"] == tc), {})
+    trigger = case.get("Trigger")
+    return trigger if trigger in CHECKPOINTS else "merge"
 
 
 def _judge(row, names, here, records, now, cadence):

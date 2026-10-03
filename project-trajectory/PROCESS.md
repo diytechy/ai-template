@@ -804,8 +804,8 @@ repository paths), `component:CMP-###` (modules/owners tagged by LLR/IF rows),
 the input-digest change rule under the floor. First judgement and expiry also
 apply to cases without inputs. `Tier` still selects harness cost; it does not
 implicitly declare an observation trigger. `rejudge.checkpoint_drafts` accepts
-merge, release and stage-gate checkpoints; gate preparation can file through
-`intake.mint_rejudge(root, rev, "stage-gate")`. Keep one open re-judge WI per case;
+merge, release and stage-gate checkpoints; gate preparation runs
+`python scripts/intake.py rejudge --checkpoint stage-gate`. Keep one open re-judge WI per case;
 the decision runs no model.
 
 **Test tiers (run cost vs. confidence).** Running the whole suite every iteration

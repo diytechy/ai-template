@@ -6624,9 +6624,22 @@ undeclared triggers: input changes remain their trigger under the floor.
 Declare triggers deliberately and raise a case floor with `min_work_items`
 where needed. Closed work must be archived in the standard terminal folders;
 a history without archived closes does not satisfy the floor. Record expiry
-still forces re-judgement. Gate preparation may call the existing mint API with
-`stage-gate`; the release CLI/checklist use the release checkpoint. No carrier
+still forces re-judgement. Gate preparation runs
+`python scripts/intake.py rejudge --checkpoint stage-gate`; the release
+CLI/checklist use the release checkpoint. No carrier
 migration is required for existing rows with omitted cells.
+
+### Stage-gate re-judge CLI checkpoint [since dfe92989]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The existing intake rejudge CLI now accepts `stage-gate`
+as well as `release`, using the same committed-revision decision and mint.
+
+**What to do.** Refresh `scripts/intake.py`, `scripts/rejudge.py` and
+`scripts/adjudicate_brief.py`. During gate preparation run
+`python scripts/intake.py rejudge --checkpoint stage-gate` (or supply
+`--rev <commit>` for the checkpoint revision).
 
 ## 5. Promotion: when this pack stops being prose
 

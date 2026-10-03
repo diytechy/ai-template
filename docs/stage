@@ -38,5 +38,5 @@ phase = 6
 per-phase = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Impl;6=DevStg-Impl
 per-phase-live = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Impl;6=DevStg-Reqs
 drafted = 26
-fingerprint = sha256:f614584f4fb614ecbbbb975ec4cc27060af4fbc5a7a614c629347b121475732a
-# computed 2026-10-03 (as-of 87736778)
+fingerprint = sha256:9fac55d60839149b3bf2b49e1520c929eb7560d16739ca32d5d7e05be04c066d
+# computed 2026-10-03 (as-of dfe92989)

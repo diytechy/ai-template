@@ -1115,7 +1115,7 @@ def _prior_lines(cons, rows, bodies):
 
 # The case cells `{case}` lists. Method and Expected are REQUIRED: they are the
 # whole instruction, and a dash there would read as "nothing to check".
-REJUDGE_CELLS = ("Verifies", "Method", "Expected")
+REJUDGE_CELLS = ("Verifies", "Method", "Expected", "MaxAge")
 
 
 def rejudge_values(root, row):
@@ -1138,16 +1138,7 @@ def rejudge_values(root, row):
         )
     tc = scope[0]
     try:
-        case = next(
-            (
-                r
-                for r in rejudge.observation_test_cases(root, "HEAD")
-                if r["TC-ID"] == tc
-            ),
-            {},
-        )
-        trigger = case.get("Trigger")
-        checkpoint = trigger if trigger in ("release", "stage-gate") else "merge"
+        checkpoint = rejudge.checkpoint_for(root, "HEAD", tc)
         due = [
             d
             for d in rejudge.due_cases(root, "HEAD", checkpoint=checkpoint)
@@ -1160,8 +1151,6 @@ def rejudge_values(root, row):
     case = due[0]["row"]
     cells = {name: (case.get(name) or "").strip() for name in REJUDGE_CELLS}
     missing = [name for name, value in cells.items() if not value]
-    if not (case.get("MaxAge") or "").strip():
-        missing.append("MaxAge")
     if missing:
         return None, "{} has no `{}` cell".format(tc, "`, `".join(missing))
     inputs = (case.get("Inputs") or "").strip()

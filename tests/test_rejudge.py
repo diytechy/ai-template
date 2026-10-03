@@ -543,6 +543,45 @@ def _queued_rejudges(root):
     ]
 
 
+def test_stage_gate_trigger_is_filed_through_the_cli_not_at_merge(tmp_path, capsys):
+    root, _ = cadence_repo(tmp_path, "stage-gate")
+    close_work(root, 10)
+    sha = close_work(root, 11)
+    assert rejudge.checkpoint_drafts(root, sha, "merge", now=NOW) == []
+    assert _queued_rejudges(root) == []
+    args = ["--root", str(root), "rejudge", "--checkpoint", "stage-gate", "--rev", sha]
+    assert intake.main(args) == 0, capsys.readouterr()
+    minted = _queued_rejudges(root)
+    assert [r["Adjudicates"] for r in minted] == ["TC-002"]
+    assert "stage-gate" in minted[0]["Title"]
+    assert intake.main(args) == 0, capsys.readouterr()
+    assert len(_queued_rejudges(root)) == 1
+    row = {"WI-ID": minted[0]["WI-ID"], "Adjudicates": "TC-002"}
+    values, why = adjudicate_brief.rejudge_values(root, row)
+    assert why is None, why
+    assert values["tc"] == "TC-002"
+
+
+@pytest.mark.parametrize(
+    "trigger,expected",
+    [
+        ("release", "release"),
+        ("stage-gate", "stage-gate"),
+        ("files:src/*", "merge"),
+        ("component:CMP-001", "merge"),
+        ("", "merge"),
+    ],
+)
+def test_checkpoint_for_maps_explicit_triggers(monkeypatch, trigger, expected):
+    monkeypatch.setattr(
+        rejudge,
+        "observation_test_cases",
+        lambda root, rev: [{"TC-ID": "TC-002", "Trigger": trigger}],
+    )
+    assert rejudge.checkpoint_for(None, "HEAD", "TC-002") == expected
+    assert rejudge.checkpoint_for(None, "HEAD", "TC-absent") == "merge"
+
+
 def test_the_release_subcommand_mints_for_an_expired_result_once(tmp_path, capsys):
     root = git_repo(tmp_path)
     now = datetime.datetime.now(UTC).replace(microsecond=0)

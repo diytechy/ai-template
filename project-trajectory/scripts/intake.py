@@ -3184,13 +3184,13 @@ def main(argv=None):
     cons_cmd.set_defaults(func=_cmd_consolidate)
     rejudge_cmd = sub.add_parser(
         "rejudge",
-        help="release preparation's checkpoint (SR-215): one re-judge row per "
-        "observation test case whose inputs changed since its latest result, "
-        "whose result expired, or which has none (merges check in the slot)",
+        help="file due re-judges at release/stage-gate; merges check in the slot",
     )
-    # RELEASE ONLY: a by-hand merge checkpoint would judge a commit no merge
+    # PREPARATION ONLY: a by-hand merge checkpoint would judge a commit no merge
     # landed, once per invocation rather than once per merged work item.
-    rejudge_cmd.add_argument("--checkpoint", required=True, choices=("release",))
+    rejudge_cmd.add_argument(
+        "--checkpoint", required=True, choices=rejudge.CHECKPOINTS[1:]
+    )
     rejudge_cmd.add_argument(
         "--rev", default="HEAD", help="the commit judged (default: HEAD)"
     )
