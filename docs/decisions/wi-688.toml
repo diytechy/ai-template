@@ -1,0 +1,8 @@
+high_risk = []
+
+[decision.D-001]
+decided = "Recorded TC-211 as pass after independently inspecting the complete scoped decomposition, its validated SR-161 perspective record, and the supplied paraphrasing-child counterexample."
+alternative = "Record fail or leave the case unjudged because the earlier observation had lacked an SR-161 record."
+reversal_cost = "A later stale or falsifying observation requires a new recorded result; this record itself is retained."
+why_not_escalated = "The current procedure permits an independent inspection judgment, and this call changes no registry, spine row, kit file, approval, or external state."
+review = ""
