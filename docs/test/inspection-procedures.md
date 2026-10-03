@@ -97,9 +97,43 @@ not reach.
 
 ### Sampled new-reader inspection result
 
-**NOT YET TAKEN.** No sample has been drawn. The case is Drafted with its
-assumption, and its first result is recorded through the observation writer
-once the case is approved.
+**INCOMPLETE — 2026-10-03, [WI-697 Claude Opus 5.5 adjudication](../reviews/wi-697-re-judge-tc-279-no-result-rec/001-ADJUDICATE-f2bc66c.md); [sample record](../reviews/wi-697-re-judge-tc-279-no-result-rec/SAMPLE-f2bc66c.md).**
+
+**The draw.** Seed: trunk HEAD `f2bc66c1`. Five parts were drawn at random
+from 423 functions and classes whose docstrings contain `Implements:`. All five
+readers were fresh Claude Sonnet 5.5 sessions that did not author their part
+and were told so.
+
+**The five statements:**
+
+- `session_keep.write_tombstone` (SR-227, LLR-270): writes a lockless tombstone
+  so that a failed resumed session is retired even without the lock. **Agrees.**
+- `session_keep.load_honoured` (SR-227, LLR-270): every locked read applies a
+  pending tombstone (it retires the session and drops the lease) before
+  anything else. **Agrees.** The reader flagged an edge it could not explain: a
+  tombstone is dropped unapplied when there is no record. That is the
+  clean-up for a session that no longer exists, and it does not contradict
+  the rows.
+- `kitlib.spine.sn_all_ids` (SR-189, LLR-215): the single need-id universe,
+  scraped from the need tables only, so ids in stakeholder prose stay out.
+  **Agrees on purpose and main behaviour.** One branch is misstated: a TOML
+  document with no `need` table yields the empty set, not a whole-text scrape.
+- `trace.triangle_findings` (SR-157, LLR-002): a TC that pairs an SR with an
+  LLR is checked against the LLR's own SR-Refs, as an always-on integrity
+  finding. **Agrees.**
+- `traj_render._cedge_marker` (SR-054, LLR-105): returns a per-ink arrow marker
+  and a contrast-safe ink for a hex fill, or the plain marker for a theme
+  token, so the arrow clears 3:1. **Agrees.**
+
+No reader failed to explain its part, and none contradicted the rows'
+account of it.
+
+**Why no result is recorded.** The draw's frame left out the module-level
+blocks and the comment back-links that this procedure counts as parts, about a
+fifth of the back-linked parts. It also held 8 parts with no back-link. The
+remaining work is a redraw over the full part population, with fresh readers,
+recorded through the observation writer. A pass would still establish nothing
+about the parts the sample did not reach.
 
 ## Bounded abnormal inputs for the OI-85 inspection
 
