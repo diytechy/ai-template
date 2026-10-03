@@ -45,3 +45,12 @@ Findings that do not withhold the blessing, for the record:
 - The gate-advance paragraph says the stage-gate command files items for cases whose `stage-gate` trigger is due. The command also files no-result and expired cases and other triggered cases at that revision. The paragraph is not a row under judgement, and its required step is correct.
 
 VERDICT: MEANING rows=10
+
+## Addendum 2026-10-03 (after the Sonnet cross-review of 1d0c7bf2)
+
+The recorded lines, the machine line and the re-attestations in act seq 22 stand. Two misses are recorded here, and the coordinator has ruled that the act is not redone for them.
+
+1. **TC-055's Expected was not read.** I ruled TC-055 on its amended cells alone (Rubric, Trigger, MinWorkItems). Its unamended `expected` still states the old cadence: "re-judged at a merge or release checkpoint when no result of it is on record, when a declared input changes, or when the record passes its declared max_age". With the Trigger now `component:CMP-009` and a floor of 10, an input change no longer makes it due. So the re-attested row carries a stale sentence. That sentence is a standing limit in the row's Expected, not its pass criterion, but it is false. Had I read it, I would have withheld TC-055's re-attestation and routed the fix to the successor lane. The exact replacement of TC-055 `expected` is now in the follow-up drafted in `docs/work/queued/WI-773-adjudicate-llr-293-llr-294.md` `## Dispositions`. That lane's merge mints an amendment adjudication for it.
+2. **SR-215's Rationale overclaims a bound.** "It lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items" holds only for a case with no trigger, where an input change fires it. A `release` or `stage-gate` trigger, or a `files:` or `component:` trigger that a change does not match, lets a judgement outlive more, bounded only by expiry. The Requirement and AcceptanceCriteria cells state the rule correctly; the Rationale's gloss on it does not. An exact replacement sentence is in the same follow-up, and its merge re-adjudicates SR-215.
+
+Sonnet also noted that TC-247 was blessed under a looser standard than the rows I returned: its Method's policy-file clause has no test. The verdict above already routes that test to the follow-up lane, and the follow-up keeps it.

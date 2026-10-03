@@ -19,3 +19,12 @@ It also carries the test-only addition WI-772's verdict noted for TC-247.
 A note outside this act, for WI-771: the procedure text in `docs/test/inspection-procedures.md` still says the inspection "evidences DA-011". That is ladder wording in a document, not in a row.
 
 OUTCOME: RETURN rows=6
+
+## Addendum 2026-10-03 (after the Sonnet cross-review of 1d0c7bf2)
+
+The recorded lines and the machine line stand. The `## Dispositions` draft in this row's spec was revised before any build, in four places:
+
+1. **The code change now has its seam.** The first draft's `import assumption_rules` in `gen_release_checklist` was a cross-component edge (CMP-008/CMP-009 to CMP-006/CMP-007) with no declared seam, and `check_trajectory --strict` errors on it. The draft now adds `scripts/gen_release_checklist` to the requestors of IF-200, the seam `is_observation_tc` already rides. That keeps one predicate in one home. The prohibitions permit exactly that cell and that import.
+2. **TC-055 `expected` and SR-215 `rationale`** gain exact replacements, recorded in the addendum to WI-772's verdict. So the lane's merge also mints an amendment adjudication, and the draft's Landing paragraph says how the two adjudications must sit.
+3. **The TC-306 refusal test is specified exactly:** `cadence_repo`, the real `since` commit, a snapshot directory holding `docs/process.toml`, and `rejudge._run_git`.
+4. **The Bar adds** `check_trajectory.py --strict`.
