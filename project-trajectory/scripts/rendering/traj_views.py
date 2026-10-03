@@ -7,6 +7,7 @@ re-exports, so consumers are unchanged.
 
 import html
 import json
+import math
 import re
 from dataclasses import dataclass
 
@@ -32,7 +33,7 @@ from .traj_render import (
     SW_NODE_FILL,
     TIER_COL,
     TIER_FILL,
-    _BLAB_CH,
+    NODE_TYPE_PX,
     _arrow_markers,
     _drill_layer_svg,
     _fit_lines,
@@ -551,6 +552,8 @@ def dag_svg(wis):
 
 # --- the How-SW interface graph (WI-056), reusing the WI-DAG layouter -----------
 
+# Seam labels use regular-weight nlabel type, unlike the bold drill labels.
+_SW_LABEL_CH = math.ceil(0.65 * NODE_TYPE_PX["nlabel"])
 SW_COL_W = 168
 SW_COL_GAP = 64
 SW_ROW_H = 40
@@ -628,7 +631,7 @@ def sw_graph(root, mods):
         x, y = pos[k]
         info = nodes[k]
         disp = info["display"]
-        short = _fit_lines(disp, (SW_COL_W - 24) // _BLAB_CH, 1)[0]
+        short = _fit_lines(disp, (SW_COL_W - 16) // _SW_LABEL_CH, 1)[0]
         tip = "{} ({})".format(disp, info["kind"])
         node_svg.append(
             "<g><title>{}</title>"

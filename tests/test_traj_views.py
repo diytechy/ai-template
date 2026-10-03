@@ -11,8 +11,11 @@ and no label ink outside the block it belongs to.
 """
 
 import html
+import math
 import re
 import shutil
+
+import pytest
 
 from conftest import ROOT, load_script
 from traj_fixtures import (
@@ -1035,30 +1038,42 @@ _FIT_RE = re.compile(
 
 
 def _svg_type_escapes(page):
-    """Check presentation attributes, inline styles and stylesheet px overrides.
+    """Check presentation attributes, inline styles and stylesheet overrides.
 
     The page uses tokens for HTML type too, so rejecting all stylesheet px
-    font sizes also catches inherited SVG sizes without guessing CSS selectors.
+    font sizes also catches inherited SVG sizes. Match shorthand sizes and
+    selectors using the classes and ids actually present in SVGs.
     """
     tokens = set(re.findall(r"--(n\w+):[\d.]+px", page))
     allowed = {"var(--{})".format(token) for token in tokens}
+    shorthand = re.compile(
+        r"\bfont\s*:\s*(?:normal\s+|italic\s+|bold\s+|[1-9]00\s+)*"
+        r"(var\(--[\w-]+\)|[\d.]+(?:px|rem|em|%)|\w+)"
+    )
     escapes = []
     svg_classes = set()
+    svg_ids = set()
     for svg in re.findall(r"<svg\b.*?</svg>", page, re.S):
         for classes in re.findall(r'class="([^"]*)"', svg):
             svg_classes.update(classes.split())
+        svg_ids.update(re.findall(r'id="([^"]*)"', svg))
         sizes = re.findall(r"\bfont-size\s*=\s*[\"\']([^\"\']+)", svg)
         sizes += re.findall(r"font-size\s*:\s*([^;\"'}]+)", svg)
+        sizes += shorthand.findall(svg)
         escapes.extend(size for size in sizes if size.strip() not in allowed)
     for css in re.findall(r"<style\b[^>]*>(.*?)</style>", page, re.S):
         escapes.extend(re.findall(r"font-size\s*:\s*[\d.]+px\b", css))
         for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
             classes = set(re.findall(r"\.([\w-]+)", selector))
-            targets_svg = re.search(r"\b(?:svg|text|tspan)\b", selector) or (
-                classes and classes <= svg_classes
+            ids = set(re.findall(r"#([\w-]+)", selector))
+            targets_svg = (
+                re.search(r"\b(?:svg|text|tspan)\b", selector)
+                or (classes and classes <= svg_classes)
+                or bool(ids & svg_ids)
             )
             if targets_svg:
                 sizes = re.findall(r"font-size\s*:\s*([^;}]+)", body)
+                sizes += shorthand.findall(body)
                 escapes.extend(size for size in sizes if size.strip() not in allowed)
     return escapes
 
@@ -1073,14 +1088,21 @@ def test_t7_every_svg_text_size_uses_a_declared_node_token(tmp_path):
         assert not _svg_type_escapes(page), (label, _svg_type_escapes(page))
 
 
-def test_t7_scan_detects_attribute_inline_and_css_size_escapes():
-    for markup in (
+@pytest.mark.parametrize(
+    "markup",
+    (
         '<svg><text font-size="10">label</text></svg>',
         '<svg><text style="font-size:10px">label</text></svg>',
         '<style>.label{font-size:10px}</style><svg><text class="label"/></svg>',
         "<style>svg text{font-size:var(--body)}</style><svg><text/></svg>",
-    ):
-        assert _svg_type_escapes(markup), markup
+        '<svg><text style="font:10px sans-serif">label</text></svg>',
+        "<style>svg text{font:10px sans-serif}</style><svg><text/></svg>",
+        '<style>#label{font-size:var(--body)}</style><svg><text id="label"/></svg>',
+        '<style>#label{font:10px sans-serif}</style><svg><text id="label"/></svg>',
+    ),
+)
+def test_t7_scan_detects_attribute_inline_and_css_size_escapes(markup):
+    assert _svg_type_escapes(markup), markup
 
 
 def test_t4_drill_character_estimates_cover_emitted_type_tokens(tmp_path):
@@ -1088,25 +1110,47 @@ def test_t4_drill_character_estimates_cover_emitted_type_tokens(tmp_path):
     assert gen(tmp_path).returncode == 0
     tokens = dict(re.findall(r"--(n\w+):([\d.]+)px", html_of(tmp_path)))
     gt = load_script("gen_trajectory")
-    # One em covers wide Latin glyphs (M/W), ellipses and full-width glyphs;
-    # average-character estimates cannot safely budget arbitrary node prose.
-    assert gt._BLAB_CH >= 1.0 * float(tokens["nlabel"])
-    assert gt._BSUB_CH >= 1.0 * float(tokens["nsub"])
+    # Conservative averages retain capacity; padding absorbs wider glyphs.
+    for estimate, token in ((gt._BLAB_CH, "nlabel"), (gt._BSUB_CH, "nsub")):
+        assert 0.65 <= estimate / float(tokens[token]) <= 0.85
+    assert gt._BLAB_CH == math.ceil(0.7 * float(tokens["nlabel"]))
+    assert gt._BSUB_CH == math.ceil(0.65 * float(tokens["nsub"]))
 
 
 def test_t4_seam_node_labels_fit_their_rectangles(tmp_path):
     from traj_fixtures import _how_sw_flat
 
     _how_sw_flat(tmp_path)
+    names = (
+        "gen_trajectory",
+        "traj_render.py",
+        "abcdefghijklmnopqrs",
+        "abcdefghijklmnopqrst",
+    )
+    (tmp_path / "docs/requirements/interfaces.toml").write_text(
+        "".join(
+            if_row("IF-00{}".format(i), "src/m", name, "cli")
+            for i, name in enumerate(names, 1)
+        ),
+        encoding="utf-8",
+    )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     size = float(re.search(r"--nlabel:([\d.]+)px", page).group(1))
+    per_char = math.ceil(0.65 * size)
+    assert 0.65 <= per_char / size <= 0.85
     nodes = re.findall(r"<g><title>.*?</title><rect.*?</g>", page, re.S)
     assert nodes, "vacuous - no seam nodes"
+    labels = []
     for node in nodes:
         width = float(re.search(r'width="([\d.]+)"', node).group(1))
         label = html.unescape(re.search(r"<text\b[^>]*>(.*?)</text>", node).group(1))
-        assert len(label) * size <= width - 24, (label, width, size)
+        labels.append(label)
+        assert len(label) * per_char <= width - 16, (label, width, size)
+    assert set(names[:3]) <= set(labels), labels
+    budget = int((168 - 16) // per_char)
+    assert budget == 19
+    assert names[3][: budget - 1] + "…" in labels, labels
 
 
 def test_t7_every_emitted_svg_scales_to_fit(tmp_path):
