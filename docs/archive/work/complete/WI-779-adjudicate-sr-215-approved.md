@@ -3,12 +3,19 @@ id = "WI-779"
 title = "adjudicate: SR-215 - approved/routed cell(s) amended on merged trunk ae702b7..758519d (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-215"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["SR-215"]
 +++
+
+## Deliverable
+
+Act seq 24: SR-215's `rationale` is ruled MEANING and re-attested. An independent
+Claude Opus 5.5 adjudicator checked the whole cell against the code: the floor,
+all four trigger kinds, and first judgement and expiry. Codex Luna's cross-review
+found it SOUND at 6c421eab.
 
 ## Context
 

@@ -304,3 +304,25 @@ states this.
 The merge mints SR-215's amendment adjudication and the TC-309/TC-310 first
 approval. They sit together with WI-771's adjudications in one combined act once
 WI-771 lands.
+
+### Spine-acts batch Q (WI-779, WI-780): act seq 24 — SR-215 re-attested; TC-309 and TC-310 returned again
+
+These rows sat at once, without waiting for WI-771: nothing else had drifted in
+their registries, so no copy could be refused.
+
+- **SR-215:** an independent Claude Opus 5.5 adjudicator re-attested the
+  rationale after checking the whole cell against the code.
+- **TC-309 and TC-310:** returned a second time on test tightness. TC-309 has no
+  assertion that the chain appears above the case. TC-310's byte check runs after
+  line-ending conversion, and its automated-case exclusion rests on one substring.
+  The row text is right.
+- Codex Luna found the act SOUND
+  ([review](../reviews/2026-10-03-wave8/luna-wi779.md)) and judged both returns
+  real and proportionate.
+
+The owner asked why these adjudications happen after the merge rather than in the
+lane. The coordinator's account: the act is serial on trunk, and lanes neither
+self-approve nor mint. The cost is the return chain: WI-747's text has now taken
+five sittings. The coordinator offered an S11 plan in which a lane is adjudicated
+before landing and its returns become fix rounds inside the lane; the owner has
+not ruled.

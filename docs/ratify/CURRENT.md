@@ -730,11 +730,6 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 > **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
 
 
-### SR SR-215
-- **Rationale**
-  - before: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.
-  - after: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
-
 ### TC TC-309, Drafted — never approved
 - **Expected**
   - before: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
