@@ -35,3 +35,9 @@ the permission classifier refused the kit's own route flag
 (`--dangerously-bypass-approvals-and-sandbox`). The compaction-ceiling run,
 occupancy on a real multi-step adjudication, the cache TTLs and the 100k–700k
 replay times remain open on WI-541.
+
+**Addendum 2026-10-02.** The owner ran the kit's own route command (with the
+bypass flag the classifier refused the agent) in a terminal: same event shapes,
+final text PINEAPPLE, reasoning tokens 27, cache write 0; the adapter parses it.
+The route-command item is closed. The compaction-ceiling run, real multi-step
+occupancy, TTLs and replay times remain open.

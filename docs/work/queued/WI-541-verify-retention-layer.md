@@ -93,3 +93,17 @@ Still owed, and this row stays open for them:
   `--sandbox read-only` with no model pinned;
 - a finding on the codex adapter: 0.157.1 reports `cache_write_input_tokens`, which
   the adapter records as "not reported" (the TC-264 usage formula's codex arm).
+
+### The kit's own route command, run by the owner 2026-10-02
+
+The classifier refused the agent's run of
+`codex exec -c model_reasoning_effort=medium --model gpt-5.6-terra
+--dangerously-bypass-approvals-and-sandbox --json`, so the owner ran it in a terminal on
+codex-cli 0.157.1 (same read-a-file prompt). Result: the same event shapes as the
+`--sandbox read-only` fixture (thread.started, turn.started, command_execution
+started and completed, agent_message PINEAPPLE, turn.completed), final text
+PINEAPPLE, usage input 27,152, cached 24,064, output 101, `reasoning_output_tokens`
+27 (nonzero this time), `cache_write_input_tokens` 0. Fed through the adapter in
+memory: usage and thread id parse correctly, reasoning 27, cache write still ""
+(the finding above), no occupancy from the exec stream. No new fixture was needed;
+this closes the "route command" item. Not committed as a fixture.
