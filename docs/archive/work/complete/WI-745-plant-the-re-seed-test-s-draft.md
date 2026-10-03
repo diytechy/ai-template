@@ -2,13 +2,29 @@
 id = "WI-745"
 title = "Plant the re-seed test's Drafted LLR row itself: the phase-close full suite is red because no live LLR is Drafted any more"
 workstream = "process"
-specref = "tests/test_baseline_snapshot.py"
+specref = ""
 sr_refs = []
 needs = []
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+The re-seed test no longer depends on the live spine's approval progress, so the
+phase-close full suite's one red is gone.
+
+- `tests/test_baseline_snapshot.py`: the re-seed test plants its own Drafted LLR
+  before seeding (the `_seeded_with_a_drafted_sr` pattern), then flips it back as
+  the real flip; the assertion's meaning is unchanged.
+- `tests/baseline_snapshot_fixtures.py`: `_tree` sets every SR, LLR and TC status
+  to Approved in its temp copy, so every caller plants the maturity it needs and a
+  fully approved or fully drafted live spine cannot break the suite.
+- Proof: `test_baseline_snapshot` at the old HEAD 1 failed, 123 passed; with the
+  change 124 passed. Reviewer: 128 passed over both baseline modules.
+- **Review:** Sonnet 5.5, SOUND at b4d9d00b
+  (`docs/reviews/2026-10-02-wave7/sonnet-wi745.md`); two cosmetic minors accepted.
 
 ## Context
 

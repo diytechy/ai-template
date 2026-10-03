@@ -582,7 +582,9 @@ def test_a_RESEED_over_a_standing_record_is_judged_over_the_WHOLE_tree(tmp_path)
     """`--seed` against a standing record writes all seven registries, so its
     write set IS the whole tree and the scoped gate is the global one. Scoping
     must not turn the re-seed into the laundering path the gate closed."""
-    root = _seeded(tmp_path)
+    root = _tree(tmp_path)
+    _rewrite(root, LLR_REL, 'status = "Approved"', 'status = "Drafted"')
+    SNAP.copy_live(root, seed=True)
     sid, row = _first_row_at(root, "approved")
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
     _rewrite(root, LLR_REL, 'status = "Drafted"', 'status = "Approved"')  # a real flip

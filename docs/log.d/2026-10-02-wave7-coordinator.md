@@ -27,3 +27,11 @@ WI-748).
 Sol built it at `9d19e88d` (red then green; 148 passed over the session, dispatch and
 ratchet modules). Sonnet 5.5: SOUND, one minor (a malformed template is skipped too),
 accepted as built. Squash-landed with the bar below.
+
+### WI-745 lands: the re-seed test plants its own Drafted LLR
+
+Sol (low effort) built it; the first run could not start Python under the elevated
+sandbox, and the continuation recovered the red by restoring HEAD's files (1 failed,
+123 passed) before the green (124 passed). Sonnet 5.5: SOUND, two cosmetic minors
+accepted. The shared fixture now forces SR/LLR/TC statuses to Approved in its temp
+copy; the reviewer checked every caller and the regex's anchoring.
