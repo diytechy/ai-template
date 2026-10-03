@@ -80,6 +80,7 @@ def test_examples_and_absent_registry_are_inert(tmp_path):
     assert sched.frontier(sched._load(tmp_path))[0]["id"] == "WI-684"
     assert ct.open_item_wi_ref_findings(tmp_path, []) == []
     path.unlink()
+    assert ct.open_item_wi_ref_findings(tmp_path, []) == []
     assert sched.frontier(sched._load(tmp_path))[0]["id"] == "WI-684"
 
 
