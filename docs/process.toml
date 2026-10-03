@@ -154,7 +154,9 @@ keep_nondependent = false
 #   "off"    — never (the review rounds are the judgement)
 #   "sample" — spot-check at `complete_sample_rate`
 #   "always" — adjudicate every clean close too
-complete_review = "sample"
+# Owner 2026-10-02: "off" - review rounds and adjudication already judge every
+# close; of nine past spot checks one caught what nothing else did (WI-719).
+complete_review = "off"
 complete_sample_rate = 4
 # Whether an ADJUDICATE lane's verdict gets its own review round — and, in the
 # same breath, whether the merge slot demands one from it. The adjudicator is
