@@ -200,3 +200,12 @@ One independent Opus adjudicator, one combined act. Sonnet's cross-review: SOUND
 recommending a one-clause SR-006 amendment (its text ties step selection to the
 stage; the path trigger only adds runs), surfaced to the owner. Also: the log
 fragment's deferral header now names OI-98 and OI-99, the holds pending since WI-746.
+
+### WI-758 lands: lane separation routed and bound as a test (TC-305)
+
+Sol built it; Sonnet: NOT YET SOUND at e2874075 (`_route_edges` cognitive 40 -> 69,
+disproportionate), SOUND at c011016a after decomposition into six sibling helpers
+(38; render byte-identical). At the landing the baseline was re-stamped downward
+(`_route_edges` 48 -> 38, `_detour_d` 33 -> 23) and the test oracle `_violations` (19)
+entered with its reason. The rubric's T8 now binds lane separation to TC-305.
+TC-055 is due again at this merge.

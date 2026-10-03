@@ -2,13 +2,34 @@
 id = "WI-758"
 title = "Separate wires that share a lane at the port fans, and bind 'no two distinct edges share a segment' as a test (TC-055 T8)"
 workstream = "scripts"
-specref = "project-trajectory/scripts/rendering/traj_graph.py"
+specref = ""
 sr_refs = ["SR-054"]
 needs = []
 buildtier = "medium"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+TC-055's twice-failed T8 lane separation is now a test, not a judgement:
+
+- **Router** (`rendering/traj_graph.py`): separate departure and arrival channels
+  per column, reserved terminal runs, rejection of short shared lanes and joins,
+  so no two edges that share no endpoint overlap along a segment or meet end-to-end
+  outside a shared terminal. Decomposed after review into six sibling helpers
+  (`_route_edges` cognitive 38; the baseline re-stamped downward 48 -> 38 and
+  `_detour_d` 33 -> 23 at this landing).
+- **Test** (`tests/test_traj_lanes.py`): sweeps the freshly emitted How, When,
+  Process and System-context paths (every drill layer and relationship) and pins the
+  x=452 and x=220 joins WI-754 found; red at the base (2 failed), green after; its
+  real-registry sweep is slow-tier.
+- **Bound:** LLR-292 and TC-305 added Drafted (for this merge's first approval);
+  the rubric's T8 names lane separation test-bound to TC-305 (and box clearance to
+  TC-125), so a critique judges only crossing legibility.
+- **Reviews:** Sonnet 5.5, NOT YET SOUND at e2874075 (`_route_edges` 40 -> 69),
+  SOUND at c011016a after the decomposition (render byte-identical)
+  (`docs/reviews/2026-10-02-wave7/sonnet-wi758-r1.md`, `-r2.md`).
 
 ## Context
 

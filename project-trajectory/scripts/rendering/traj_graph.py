@@ -194,7 +194,6 @@ _MAX_LANES = 48  # WI-257: candidate lanes tried per pass (bounds dense-overlap 
 # WI-323 raised it from 24 because each band-edge lane now carries `_LANE_STACK`
 # rungs behind it, so the cap has to cover the same reach in BASE lanes as before.
 _LANE_SEP = 10.0  # two lanes closer than this in one corridor read as a single line
-_CORRIDOR_MIN_OVERLAP = 40.0  # shorter shared runs read as a crossing, not a corridor
 _LANE_STACK = 3  # outboard rungs offered behind each band-edge lane
 # WI-323 dialled `_LANE_SEP` against the shipped dashboard, not from theory: at the
 # 1.5px `--w-line` stroke, 6.0 cleared every clash at its OWN threshold yet still left
@@ -327,13 +326,12 @@ def _lane_seg(d):
 
 def _corridor_clash(xlo, xhi, lane, taken):
     """True when this lane would ride within `_LANE_SEP` of an already-placed lane
-    over a shared run longer than `_CORRIDOR_MIN_OVERLAP` — the pair then reads as ONE
-    line for that stretch and a reader cannot attribute it to one source and one
-    target (121-CRITIQUE MAJOR, second clause). A shorter shared run is a crossing in
-    open space, which T8 permits, so it is not a clash."""
+    over any shared run, including an end-to-end join. Even a short collinear
+    join reads as a connection between edges; perpendicular crossings remain
+    allowed in open space."""
     for txlo, txhi, ty in taken:
         if abs(ty - lane) < _LANE_SEP:
-            if min(xhi, txhi) - max(xlo, txlo) > _CORRIDOR_MIN_OVERLAP:
+            if min(xhi, txhi) - max(xlo, txlo) >= 0:
                 return True
     return False
 
@@ -493,8 +491,11 @@ def _detour_d(
     stub=_WIRE_STUB,
     taken=(),
     end_stub=None,
+    lane_pref=None,
 ):
-    """A path 'd' that leaves the source port (x1, port-center sy) rightward, runs a
+    """Implements: SR-054, LLR-120, LLR-292.
+
+    A path 'd' that leaves the source port (x1, port-center sy) rightward, runs a
     clear horizontal lane over/under the blocking `obstacles`, and enters the target
     port (xe, port-center ty) on a short horizontal stub. `y1`/`y2` are the fanned
     control heights (WI-256: the terminal lands on the port circle, the bend keeps
@@ -505,12 +506,12 @@ def _detour_d(
     re-verified clear of EVERY obstacle overlapping the routed x-span — a box
     sitting only in a port-stub corridor (formerly dropped from the lane search,
     letting the caller silently keep a through-box direct cubic) is now caught.
-    Lanes are tried nearest the endpoint midline first, so an already-clear detour
-    regenerates byte-for-byte; the first lane whose full polyline clears wins. When
+    Lanes are tried nearest `lane_pref` (the endpoint midline by default),
+    excluding occupied corridors; the first fully clear lane wins. When
     no lane is fully clear, the least-obstructed deterministic path is returned
     (never a silent through-box when a clear route exists within the searched
     lanes, and always terminating — the candidate set is finite). Returns None only
-    when no obstacle sits in the routed span at all (caller keeps the direct cubic).
+    when no obstacle sits in the routed span at all (the caller routes the gap).
 
     WI-257 MINOR 1: the stubs reach xa = x1+stub / xb = xe-stub — up to `stub` px
     OUTSIDE [x1, xe] — so the obstacle span and the hit accounting cover the
@@ -521,44 +522,41 @@ def _detour_d(
     the O(obstacles) per-box hit count runs only to rank the pathological
     no-clear-lane fallback.
 
-    WI-323: `taken` is the caller's corridor ledger — the (x_lo, x_hi, y) lane hops
-    already placed in this diagram. Preference order is clear-of-every-box AND
-    corridor-free, then clear-but-coincident, then the least-bad fallback. The middle
-    tier is exactly what this function returned before the ledger existed, so the
-    ledger can only move a wire from one FULLY CLEAR lane to another: the T8
-    through-box floor (LLR-120/TC-125) cannot regress through this parameter."""
+    `taken` is the caller's corridor ledger: (x_lo, x_hi, y) lane hops and
+    reserved terminal runs. Its bands enter the lane search, rather than merely
+    rejecting the first fixed set of candidates. The finite search retains the
+    least-obstructed fallback; artifact sweeps enforce box and lane clearance."""
     xa, xb = x1 + stub, xe - (stub if end_stub is None else end_stub)
     fox, fxh = min(x1, xe, xa, xb), max(x1, xe, xa, xb)
     full = [r for r in obstacles if r[0] < fxh and r[0] + r[2] > fox]
     if not full:
         return None
-    lox, hix = min(xa, xb), max(xa, xb)
-    lane_span = [r for r in full if r[0] < hix and r[0] + r[2] > lox]
-    y_pref = (y1 + y2) / 2.0
+    lox, hix = min(x1, xe, xa, xb), max(x1, xe, xa, xb)
+    y_pref = (y1 + y2) / 2.0 if lane_pref is None else lane_pref
     best = None  # (hit_count, d): the least-bad deterministic fallback
     shared = None  # first box-clear lane that still rides an occupied corridor
-    # First pass over just the lane-span boxes reproduces the legacy lane (byte
-    # stable); the second folds in the stub-corridor boxes to find a clear route
-    # (skipped when the two sets are identical — a redundant re-scan).
-    for src in (lane_span, full):
-        if not src:
-            continue
-        blocked = [(r[1] - clearance, r[1] + r[3] + clearance) for r in src]
-        lo = min(r[1] for r in src) - 40.0
-        hi = max(r[1] + r[3] for r in src) + 40.0
-        for lane in _lane_candidates(y_pref, blocked, lo, hi)[:_MAX_LANES]:
-            pts = _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane)
-            if not _polyline_hits(pts, full):
-                d = _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane)
-                if not _corridor_clash(min(xa, xb), max(xa, xb), lane, taken):
-                    return d  # early-exit: first box-clear, corridor-free lane wins
-                shared = shared or d
-                continue  # a clear lane cannot improve on `best`; keep looking
-            hits = sum(1 for r in full if _polyline_hits(pts, (r,)))
-            if best is None or hits < best[0]:
-                best = (hits, _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane))
-        if lane_span == full:
-            break  # the second pass would re-scan the identical obstacle set
+    # Test the entire stub/turn span once. Squaring can extend a straight lane
+    # beyond its cubic controls, so the ledger covers the full terminal span too.
+    blocked = [(r[1] - clearance, r[1] + r[3] + clearance) for r in full]
+    blocked += [
+        (y - _LANE_SEP, y + _LANE_SEP)
+        for a, b, y in taken
+        if min(hix, b) >= max(lox, a)
+    ]
+    reach = 40.0 + len(taken) * _LANE_SEP
+    lo = min(r[1] for r in full) - reach
+    hi = max(r[1] + r[3] for r in full) + reach
+    for lane in _lane_candidates(y_pref, blocked, lo, hi)[:_MAX_LANES]:
+        pts = _detour_points(x1, sy, y1, xa, xb, xe, ty, y2, lane)
+        if not _polyline_hits(pts, full):
+            d = _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane)
+            if not _corridor_clash(lox, hix, lane, taken):
+                return d  # early-exit: first box-clear, corridor-free lane wins
+            shared = shared or d
+            continue  # a clear lane cannot improve on `best`; keep looking
+        hits = sum(1 for r in full if _polyline_hits(pts, (r,)))
+        if best is None or hits < best[0]:
+            best = (hits, _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane))
     return shared or (best[1] if best else None)
 
 
@@ -661,21 +659,108 @@ def orthogonal_route(d, obstacles=()):
     )
 
 
+def _column_channels(edges, gap, side):
+    """Order each column's turns by its port heights, with opposing fans apart."""
+    channels, groups = {}, {}
+    for edge in edges:
+        groups.setdefault(edge[side], []).append(edge)
+    for group in groups.values():
+        for index, edge in enumerate(
+            sorted(group, key=lambda e: (e[2] if side == 1 else -e[4], e[0]))
+        ):
+            channels[edge[0], side] = gap * (
+                (1.05 if side == 1 else 0.2) + 0.25 * (index + 1) / (len(group) + 1)
+            )
+    return channels
+
+
+def _wire_channels(edges, gap, end_trim):
+    """Allocate turns per column, rather than per port, and reserve their stubs.
+
+    Implements: SR-054, LLR-292.
+    Squaring halves each cubic's reach. Departures lie just beyond the output
+    half-gap (clearing sibling fans), arrivals in the final quarter. Distinct
+    columns and opposing fans therefore cannot claim the same vertical channel.
+    """
+    channels = _column_channels(edges, gap, 1) | _column_channels(edges, gap, 3)
+    terminals = {
+        e[0]: (
+            (e[1], e[1] + channels[e[0], 1] / 2, e[2]),
+            (e[3] - channels[e[0], 3] / 2, e[3] - end_trim, e[4]),
+        )
+        for e in edges
+    }
+    return channels, terminals
+
+
+def _occupied_lanes(taken, terminals, key, fan_terminals):
+    """Reserve other edges' terminal runs, including edges not yet routed."""
+    if not fan_terminals:
+        return taken
+    return taken + [
+        run for other, runs in terminals.items() if other != key for run in runs
+    ]
+
+
+def _arrival_lane(rt, y1, y2, fan_terminals, backward):
+    """A lower forward fan approaches from below to preserve connector order."""
+    if fan_terminals and not backward and rt and y2 > y1:
+        return rt[1] + rt[3] + _WIRE_CLEAR + 0.1
+    return None
+
+
+def _gap_route(xs, sy, y1, xt, ty, y2, start_reach, end_reach, occupied):
+    """Use separated turns in a box-free adjacent gap, clearing reserved runs."""
+    xa, xb = xs + start_reach, xt - end_reach
+    pref = (y1 + y2) / 2
+    blocked = [
+        (y - _LANE_SEP, y + _LANE_SEP)
+        for a, b, y in occupied
+        if min(xs, xt, xa, xb) <= b and max(xs, xt, xa, xb) >= a
+    ]
+    reach = 40 + len(occupied) * _LANE_SEP
+    lane = _lane_candidates(pref, blocked, pref - reach, pref + reach)[0]
+    return _detour_str(xs, sy, y1, xa, xb, xt, ty, y2, lane)
+
+
+def _reserve_route(taken, d, x1, xe, fan_terminals):
+    """Claim the middle lane and, for explicit ports, its full terminal span."""
+    seg = _lane_seg(d)
+    if seg is not None:
+        taken.append(
+            (min(x1, xe, seg[0]), max(x1, xe, seg[1]), seg[2]) if fan_terminals else seg
+        )
+
+
+def _detour_obstacles(obstacles, rs, rt, backward):
+    """Backward routes must clear their own boxes, except the source port edge."""
+    span = list(obstacles)
+    if backward:
+        if rs:
+            span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))
+        if rt:
+            span.append(rt)
+    return span
+
+
 def _route_edges(
     edges, rects_by_id, min_dx, end_trim, fan_terminals=False, stub=_WIRE_STUB
 ):
-    """The one wire router every layered emitter calls. `edges` is a list of
+    """Implements: SR-054, LLR-120, LLR-292.
+
+    The one wire router every layered emitter calls. `edges` is a list of
     (key, x1, y1, x2, y2, src_id, tgt_id): x1,y1 the source OUTPUT port, x2 the
     target block's LEFT edge (untrimmed — the legacy dx is measured from it), y2
     the target port. `rects_by_id` maps a node id to its (x,y,w,h) box. Returns
     {key: d}. `fan_terminals=True` keeps the per-edge fan offsets as the actual
     endpoints instead of splicing them back to one centre port; the drill renderer
     uses that mode because it draws an explicit connector circle per edge. A wire
-    whose direct cubic clears every non-endpoint box keeps the
-    exact legacy `d` (byte-identical); a blocked wire detours (`_detour_d`).
-    `stub` sets the detour control reach: explicit-port diagrams use their
-    measured column gap, placing squared turns halfway across it, beyond the
-    shorter direct-wire stubs rather than through sibling output fans.
+    with shared-centre ports keeps its legacy direct cubic when clear; explicit
+    per-edge ports always use their allocated turns and reserved horizontal lanes.
+    `stub` sets the detour control reach. Explicit-port diagrams divide their
+    measured gap into separate departure and arrival channels (_wire_channels).
+    All their horizontal runs, including future terminal stubs, reserve lanes
+    before routing so a later middle lane cannot merge with another port fan.
 
     WI-256: the wire's TERMINALS snap to the port centers (rect mid-height) while
     its first/last control keeps the fanned `y1`/`y2`, so a steep fanned wire lands
@@ -723,6 +808,7 @@ def _route_edges(
     ordered = sorted(rects_by_id.items())
     out = {}
     strand = _port_strands(edges)
+    channels, terminals = _wire_channels(edges, stub, end_trim)
     # WI-323 (121-CRITIQUE MAJOR, second clause): the SHARED-CORRIDOR LEDGER. Each
     # wire was routed in isolation, so every long-haul wire pushed out of the same
     # node band picked the same nearest clear lane and several ran coincident for
@@ -737,6 +823,7 @@ def _route_edges(
     for key, x1, y1, x2, y2, src, tgt in sorted(
         edges, key=lambda e: (abs(e[3] - e[1]) if fan_terminals else 0, e[0])
     ):
+        occupied = _occupied_lanes(taken, terminals, key, fan_terminals)
         xe = x2 - end_trim
         rs, rt = rects_by_id.get(src), rects_by_id.get(tgt)
         sy = y1 if fan_terminals else (rs[1] + rs[3] / 2 if rs else y1)
@@ -758,19 +845,10 @@ def _route_edges(
         direct = _cubic_points((xs, sy_r), (xs + dx, y1), (xt - dx, y2), (xt, ty_r))
         backward = xt <= xs
         d = None
-        if _polyline_hits(direct, infl) or backward:
-            ko, _no = strand[0][key]
-            ki, _ni = strand[1][key]
-            # Stagger the square turns in port order too: correctly nested lanes
-            # must not merge onto one vertical before reaching distinct ports.
-            start_reach = stub + min(ko, _LEAD_RUNGS - 1) * _FAN_PITCH
-            end_reach = stub - 2 * end_trim - min(ki, _LEAD_RUNGS - 1) * _FAN_PITCH
-            span = list(obstacles)
-            if backward:  # route the lane around its own endpoint boxes too
-                if rs:
-                    span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))  # trim port edge
-                if rt:
-                    span.append(rt)
+        if fan_terminals or _polyline_hits(direct, infl) or backward:
+            start_reach = channels[key, 1]
+            end_reach = channels[key, 3] - 2 * end_trim
+            span = _detour_obstacles(obstacles, rs, rt, backward)
             d = _detour_d(
                 xs,
                 sy_r,
@@ -779,20 +857,21 @@ def _route_edges(
                 ty_r,
                 y2,
                 span,
+                lane_pref=_arrival_lane(rt, y1, y2, fan_terminals, backward),
                 stub=start_reach if fan_terminals else stub,
-                taken=taken,
+                taken=occupied,
                 # The target stops short for its arrowhead; compensate that trim
                 # so both squared detour turns clear the output half of the gap.
                 end_stub=end_reach if fan_terminals else stub,
             )
+        if d is None and fan_terminals:
+            d = _gap_route(xs, sy_r, y1, xt, ty_r, y2, start_reach, end_reach, occupied)
         if d is None:
             d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
                 xs, sy_r, xs + dx, y1, xt - dx, y2, xt, ty_r
             )
         d = _spliced_harness(d, lead, tail, (x1, sy, xs, y1), (xt, y2, xe, ty))
-        seg = _lane_seg(d)
-        if seg is not None:
-            taken.append(seg)
+        _reserve_route(taken, d, x1, xe, fan_terminals)
         out[key] = d
     return out
 
