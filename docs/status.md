@@ -29,15 +29,15 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (with the wave-8 handoff it names for roles, tools and recipe)
   (new roles from 2026-10-03: Claude Opus builds at medium effort, Codex Luna
   reviews at high), then apply the owner's 2026-09-30/10-02 directions below
-  (each is also noted in its WI row; the 2026-10-02 rulings are in WI-541; the
+  (each is also noted in its WI row; the 2026-10-02 rulings are in the retention-verification row; the
   assumption ruling is cited in the validation plan's 2026-10-03 supersession
   note; TC-279's first result is recorded). The 2026-10-03 wave-9 session's
   record is [log.d/2026-10-03-wave9-coordinator.md](log.d/2026-10-03-wave9-coordinator.md);
   act seq 25 has landed, and a return is now fixed in its lane (S11 direction).
-  **No coordinator work is ready:** every open row waits on an owner act.
-  1. WI-688 is now second to last. Releasing it means ruling OI-99. Its judge
-     sitting is WI-541's multi-step occupancy run, and WI-541 closes with it.
-     WI-625 (deferred) is last.
+  1. OI-99 is ruled (2026-10-03): the released re-judge row is claimed and
+     building on its own lane (the generated frontier names it). Its judge
+     sitting runs through the kit's own session path, and the retention-layer
+     verification row closes with it. The deferred row is last.
   2. Owner rulings that unblock design work: OI-100 (held-rung CLARITY
      re-attestation), the S11 plan's seven §6 questions, and the four
      MEANING-ruled needs (SN-003, SN-008, SN-025, SN-043; the adjudicator
@@ -75,14 +75,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   Seven owner questions are in its §6, and nothing in the integrator is built
   before they are ruled. Hand integration already follows it (owner direction 2026-09-28): one
   squash commit per item, with lane tips kept reachable in `archive/lanes`. S7's session service has landed, writing S8's adopted OTel schema, with
-  retention shipped off; its live verification is WI-541 (partly done). S6 is designed
+  retention shipped off; its live verification is the queued retention-verification row (partly done). S6 is designed
   with the assumption tier before its C3. S14's flag-axis count and
   duplicate-detection research have both landed.
-- **WI-688, when the owner releases it (held 2026-10-02):** resolve the existing SR-161 per-decomposition
-  perspective-record gap and complete TC-211's normal sample. Follow the
-  existing artifact adjudication route for the Drafted amendments; passing an
-  Inspection does not approve its requirement. Keep the scope proportional to
-  the missing obligation.
 - **Control launch:** retain the tracked `docs/work/pause` while preparing
   route-complete spending bounds, including in-flight drain, against the
   [settled control ruling](ai-template-redesign-2026-09-05-codex/CONTROL-DECISION.md#owner-ruling-2026-09-06).

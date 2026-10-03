@@ -51,3 +51,12 @@ is this row's scope, not a separate row. Order:
 
 `safety_class` stays `adjudication`; the build step (1) is ordinary work inside
 it, so the claimant should treat steps 1 to 2 as a build and step 3 as the judge.
+
+## Carried from status.md at the claim (2026-10-03)
+
+Follow the existing artifact adjudication route for the Drafted amendments; passing an
+Inspection does not approve its requirement. Keep the scope proportional to the
+missing obligation. Under the owner's S11 direction (2026-10-03), an adjudication
+return on this lane is fixed inside the lane and re-judged, not minted as a follow-up
+row. A redundant amendment row the landing sweep then mints (the re-mint trap) is
+closed by citing the act.
