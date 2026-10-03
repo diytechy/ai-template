@@ -2,12 +2,20 @@
 id = "WI-755"
 title = "adjudicate: LLR-268, TC-264 - approved/routed cell(s) amended on merged trunk 183ff1c..ba0ea43 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-268", "TC-264"]
 +++
+
+## Deliverable
+
+Spine-acts batch L, act seq 17: an independent Claude Opus 5.5 adjudicator ruled
+LLR-268 detail and TC-264 method (WI-748's codex cache-write amendments) MEANING and
+re-attested both; true of `CodexAdapter.usage`, with the cache-write inclusion
+hedged as unverified live. Sonnet 5.5 cross-review: SOUND at 8508347f
+(`docs/reviews/2026-10-02-wave7/sonnet-batch-l.md`).
 
 ## Context
 

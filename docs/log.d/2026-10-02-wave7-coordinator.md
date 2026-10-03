@@ -139,3 +139,12 @@ of requests, so the fallback could infer a false compaction; only the last reque
 pair was compared), SOUND at 630150c3 after the inference moved to rollout
 per-request prompts only, across every new pair. TC-264 and LLR-268 amended; the
 cache-write inclusion is hedged as unverified live.
+
+### Spine-acts batch L (WI-755, WI-756): LLR-268 and TC-264 re-attested; LLR-290 and TC-303 returned
+
+One independent Opus adjudicator sat over two briefs and took one act (seq 17):
+LLR-268 and TC-264 MEANING and re-attested; LLR-290 and TC-303 returned (the sticky
+inferred flag is unstated; reported-versus-inferred precedence untested), with an
+exact draft. Sonnet's cross-review: SOUND. The open-items page's "2 rows drifted" is
+a mislabel for two chains owing a first approval (SR-224; SR-227); the genuinely
+drifted rows remain SN-003, SN-008, SN-009 and SN-025, owed to the owner.
