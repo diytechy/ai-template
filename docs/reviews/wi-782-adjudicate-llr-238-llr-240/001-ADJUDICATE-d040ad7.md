@@ -152,4 +152,38 @@ No other cell of either row changes. Every other row's `Status` stays `Approved`
 - **TC-227 `method` still says the census and report "count assumption evidence".** WI-771 already logged this follow-up, and it is tied to the `assumption_evidence_rows` symbol.
 - **SR-191 versus SR-206 on projects with no frame.** SR-191's rationale says the tier "applies only where a frame is declared". SR-206's gate, and TC-238 explicitly, judge a project with no frame too. The behaviour predates WI-771. The two rows should say which one governs.
 - **IF-216 `requestors` omits `scripts/check_assumption_gate`.** That script calls `accepted_risk_state`, one of the calls IF-216 declares.
+
+First sitting's machine line, superseded by the re-judgement below: VERDICT MEANING rows=20.
+
+## Re-judgement after fix round 1 (fea1b8f3), 2026-10-03
+
+Re-judged on the lane at `fea1b8f3`: LLR-243 and TC-238 only. The other eighteen rows' rulings above stand unchanged.
+
+**What I checked myself.**
+- **The cell text:**
+  - I parsed the registries at `fea1b8f3` against `d040ad75`.
+  - LLR-243 `detail` and TC-238 `method` are byte-identical to Fix 1 and Fix 2 in this file.
+  - No other cell of any LLR or TC row moved, and no `Status` moved.
+- **The test change:** the `+`/`-` lines of `tests/test_assumption_gate.py` between `d040ad75` and `fea1b8f3` equal Fix 3's diff exactly.
+- **The suites:** `tests/test_assumption_gate.py`, `tests/test_assumption_rules.py` and `tests/test_accepted_risk.py` gave 195 passed.
+- **The probe:**
+  - I added `"Standing"` to `_UNBOUND_CELLS`.
+  - `test_the_release_step_fails_each_falsified_assumption_no_standing_risk_covers` and `test_the_release_step_is_advisory_with_the_gate_off` FAILED, each on DA-007 with no finding naming "Standing changed since the act".
+  - I reverted the probe, and the tree is clean.
+- **The lint:** `trace.py --strict` reports only LLR-292's pre-existing `minimal` finding, and nothing on LLR-243 or TC-238.
+
+- [MEANING] LLR-243 Detail -> before: `release_gate_findings(das, srs, levels, risks, tcs)` fails a relied-on assumption lacking a monitored or sampled level and an unreopened risk -> after (fix round 1):
+  - It fails each relied-on assumption whose standing reads falsified unless its accepted risk reads covered.
+  - Each failure names the assumption, the requirements relying on it and why.
+  - The rule reads no result itself. Records reach it only through a risk's reading, which the step computes.
+  - Standing is a bound cell, so a risk accepted while the assumption was active reopens when it is falsified.
+  -> the gate is replaced, so this is meaning. The Detail is now closed and consistent, and matches `release_gate_findings`, `_UNBOUND_CELLS` and `check_assumption_gate._evidence_findings`. BLESSED.
+- [MEANING] TC-238 Expected, Method, Verifies (+IF-216) -> before: monitored, automated, or sampled-under-model evidence passes -> after (fix round 1):
+  - An active assumption passes whatever its results.
+  - A falsified one passes only under an unreopened risk.
+  - A risk reopened by a text edit, a late failing sample, or a falsification after an act that accepted it while active fails, naming the trigger.
+  -> the asserted gate is replaced, so this is meaning. The newly stated case is now asserted (DA-007), and the probe shows it bites. BLESSED.
+
+All twenty rows are now blessed, and the re-attestation is taken in the one combined act with WI-783.
+
 VERDICT: MEANING rows=20
