@@ -172,3 +172,10 @@ control-launch ruling's owner-reviewed pause deletion is not spent.
 
 The owner also agreed that a redundant amendment row the landing sweep mints (the
 re-mint trap) is closed by citing the act, as WI-785 was.
+
+WI-688 was claimed on branch `wi-688` (`9702ca46`) after its id and WI-541's were
+moved out of status.md's hand prose (the claim refused on R-D). The claim warned
+that the row has no Done-when section (S13, warn-first). Writing one after the claim
+would itself be flagged as a post-claim edit, so the spec's numbered "Order" steps
+are its done criteria. The pause was then restored byte-identical to its 2026-09-04
+declaration, ending the scoped unpause.
