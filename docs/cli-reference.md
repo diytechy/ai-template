@@ -452,7 +452,7 @@ _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to
 | `--row` | a scoped SR/LLR/TC id (repeatable) |
 | `--tag` | an extra declared tag (repeatable) |
 | `--subject` | the decomposition record it describes |
-| `--by` | who recorded the authored judgements |
+| `--by` | who records the authored judgements (first write) |
 | `--check` | check only; write nothing |
 | `--strict` | exit nonzero on any finding |
 

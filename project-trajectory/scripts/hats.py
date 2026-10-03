@@ -67,8 +67,9 @@ Usage (the CLI is a documentation aid; the module is library-first):
     python scripts/hats.py [--root .] list
     python scripts/hats.py [--root .] applicable [--scope S] [--kind K] [--tag T]...
     python scripts/hats.py [--root .] audit [--strict]
-    python scripts/hats.py [--root .] record PATH [--row ID]... [--tag T]...
-                                              [--subject S] [--by WHO] [--strict]
+    python scripts/hats.py [--root .] record PATH --row ID... --by WHO
+                                              [--tag T]... [--subject S] [--strict]
+    python scripts/hats.py [--root .] record PATH [--strict]   # refresh in place
     python scripts/hats.py [--root .] record PATH --check [--strict]
 
 (`--root` is the shared option and precedes the subcommand — it was written the
@@ -940,11 +941,27 @@ def _record_shape_errors(decomposition, perspectives):
     return errors
 
 
+# The [decomposition] keys naming who recorded the authored judgements, and
+# when. Required in every record: a no-finding nobody can be asked about is an
+# assertion, not a record.
+AUTHORSHIP_KEYS = ("recorded_by", "recorded_on")
+
+
+def _authorship_errors(decomposition):
+    """A record that does not name who recorded it and when, as text."""
+    return [
+        "[decomposition] has no `{}` (rewrite it with --by WHO)".format(k)
+        for k in AUTHORSHIP_KEYS
+        if not (isinstance(decomposition.get(k), str) and decomposition[k].strip())
+    ]
+
+
 def read_record(path):
     """`(decomposition, perspectives)` from a record file, or `({}, {})` when
     there is none yet. A file that exists and is not a record raises
     `HatsError`, for the roster's reason: a broken record read as an empty one
-    would report a decomposition as having faced nothing.
+    would report a decomposition as having faced nothing. A record that does
+    not name who recorded it and when is not a record either.
 
     Implements: SR-161, LLR-297"""
     path = Path(path)
@@ -965,6 +982,7 @@ def read_record(path):
         errors.append("[decomposition] and [perspective.*] must be tables")
     else:
         errors += _record_shape_errors(decomposition, perspectives)
+        errors += _authorship_errors(decomposition)
     if errors:
         raise HatsError("{}: {}".format(path, "; ".join(errors)))
     return decomposition, perspectives
@@ -1077,8 +1095,11 @@ def write_record(root, rel, rows=None, subject=None, tags=None, by=None):
     refresh regenerates from the file's own inputs. Every derived field is
     regenerated; each authored `no_finding` is kept. An entry for a hat the
     roster no longer declares is KEPT, never dropped, because it may hold
-    authored text; the check reports it until a person deletes it. Written
-    atomically, so an interrupted write leaves the previous record whole.
+    authored text; the check reports it until a person deletes it. A first
+    write refuses without `by`, who records the authored judgements; giving
+    `by` stamps `recorded_on` with today's date, and a refresh without it keeps
+    both. Written atomically, so an interrupted write leaves the previous record
+    whole.
 
     Implements: SR-161, LLR-297"""
     path = Path(root) / rel
@@ -1096,6 +1117,11 @@ def write_record(root, rel, rows=None, subject=None, tags=None, by=None):
         raise HatsError(
             "{}: a first write needs the decomposition's rows "
             "(--row ID, repeatable)".format(path)
+        )
+    if not decomposition.get("recorded_by"):
+        raise HatsError(
+            "{}: a first write needs --by, naming who records the authored "
+            "judgements".format(path)
         )
     parents, perspectives = derive_record(
         root, decomposition["rows"], decomposition.get("tags", ())
@@ -1329,7 +1355,9 @@ def main(argv=None):
     rec.add_argument(
         "--subject", default="", help="the decomposition record it describes"
     )
-    rec.add_argument("--by", default="", help="who recorded the authored judgements")
+    rec.add_argument(
+        "--by", default="", help="who records the authored judgements (first write)"
+    )
     rec.add_argument("--check", action="store_true", help="check only; write nothing")
     rec.add_argument(
         "--strict", action="store_true", help="exit nonzero on any finding"

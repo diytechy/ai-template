@@ -227,8 +227,8 @@ Questions:
 - **(c3) Leave the decomposition's perspective record beside it, and review
   from it.** `Hat-Refs` cannot say that a perspective was weighed and found
   nothing. The decomposing session runs `python scripts/hats.py record
-  <record-stem>.perspectives.toml --row <id> ...` next to its decomposition
-  record. That derives which hats applied and what each produced (own
+  <record-stem>.perspectives.toml --row <id> ... --by <who>` next to its
+  decomposition record. That derives which hats applied and what each produced (own
   `Hat-Refs`), and the session writes a one-line `no_finding` for each applicable
   hat that produced nothing. As adjudicator, read that file, not the authoring
   transcript, and run `record <file> --check`. MISSING, STALE or CONFLICT goes

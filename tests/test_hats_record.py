@@ -25,6 +25,7 @@ is demonstrated able to fail.
 
 from __future__ import annotations
 
+import re
 import tomllib
 
 import pytest
@@ -102,7 +103,9 @@ def _tree(tmp_path, roster=ROSTER, srs=SRS):
 
 
 def _write(root, rows=("SR-001", "SR-002", "LLR-001", "TC-001")):
-    return hats.write_record(root, REC, rows=list(rows), subject="DECOMP.md")
+    return hats.write_record(
+        root, REC, rows=list(rows), subject="DECOMP.md", by="test session"
+    )
 
 
 def _parsed(root):
@@ -150,7 +153,12 @@ def test_write_derives_applicability_from_parents_and_production_from_hat_refs(
 def test_declared_tags_widen_every_parent_context(tmp_path):
     root = _tree(tmp_path)
     hats.write_record(
-        root, REC, rows=["SR-002"], subject="x", tags=["nothing-carries-this"]
+        root,
+        REC,
+        rows=["SR-002"],
+        subject="x",
+        tags=["nothing-carries-this"],
+        by="test session",
     )
     persp = _parsed(root)["perspective"]
     assert persp["UNREACHED"]["applicable"] is True
@@ -167,6 +175,43 @@ def test_an_unknown_row_refuses(tmp_path):
 def test_a_first_write_needs_rows(tmp_path):
     root = _tree(tmp_path)
     with pytest.raises(hats.HatsError, match="rows"):
+        hats.write_record(root, REC)
+
+
+# --- 1b. authorship: who recorded the authored judgements, and when -----------
+def test_a_first_write_without_by_refuses(tmp_path):
+    root = _tree(tmp_path)
+    with pytest.raises(hats.HatsError, match="--by"):
+        hats.write_record(root, REC, rows=["SR-001"], subject="DECOMP.md")
+    assert not (root / REC).exists()
+
+
+def test_the_record_names_who_and_when_and_a_refresh_keeps_them(tmp_path):
+    root = _tree(tmp_path)
+    _write(root)
+    decomposition = _parsed(root)["decomposition"]
+    assert decomposition["recorded_by"] == "test session"
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", decomposition["recorded_on"])
+    hats.write_record(root, REC)  # a refresh names nobody new
+    again = _parsed(root)["decomposition"]
+    assert again["recorded_by"] == "test session"
+    assert again["recorded_on"] == decomposition["recorded_on"]
+
+
+@pytest.mark.parametrize("field", ["recorded_by", "recorded_on"])
+def test_a_record_that_lost_its_authorship_refuses(tmp_path, field):
+    root = _tree(tmp_path)
+    _write(root)
+    path = root / REC
+    kept = [
+        ln
+        for ln in path.read_text(encoding="utf-8").splitlines(True)
+        if not ln.startswith(field + " =")
+    ]
+    path.write_text("".join(kept), encoding="utf-8")
+    with pytest.raises(hats.HatsError, match=field):
+        hats.record_findings(root, REC)
+    with pytest.raises(hats.HatsError, match=field):
         hats.write_record(root, REC)
 
 
@@ -277,6 +322,8 @@ def test_the_cli_is_warn_first_and_strict_exits_nonzero(tmp_path, capsys):
         "SR-002",
         "--subject",
         "DECOMP.md",
+        "--by",
+        "test session",
     )
     assert code == 0 and "MISSING" in out and "SCRIPTS" in out
     code, out = _cli(root, capsys, "--check")
