@@ -97,16 +97,33 @@ apart from TOML escaping.
 - Under ruling R2, no SR-215 cell names a script, command, file or function.
 - Do not flip any Status. Amended rows stay `Approved`; reworked rows stay
   `Drafted`. The approvals are the adjudications' to give.
-- Change no production code. The only code edits allowed are the test
-  assertions the TC-247 bullet names.
+- Change no production code. The only code edits allowed are these three:
+  the TC-247 assertions, a `Rubric` column in the `cadence_repo` helper of
+  `tests/test_rejudge.py` (the one sanctioned helper change), and the new
+  gate-advance doc-pin test in `tests/test_skills_index.py`.
 - Do not touch TC-279. It waits for WI-667.
 
-**Landing.** The merge mints an amendment adjudication for SR-215, LLR-254,
-LLR-255, TC-247 and TC-248, and a first-approval adjudication for LLR-293,
-LLR-294, TC-306, TC-307 and the new TC. The coordinator carries TC-036,
-TC-055, TC-209, TC-210 and TC-211 into the amendment adjudication's
-`adjudicates` list (as in wave 6, carrying held approvals) and checks that they
-render. That lets one sitting re-anchor the whole test-case registry.
+**Landing.** The merge mints two adjudications:
+- an amendment adjudication for SR-215, LLR-254, LLR-255, TC-247 and TC-248;
+- a first-approval adjudication for LLR-293, LLR-294, TC-306 and the new TC.
+
+Two rows ride in on neither mint, so the coordinator adds them:
+- It carries TC-036, TC-055, TC-209, TC-210 and TC-211 into the amendment
+  adjudication's `adjudicates` list (as in wave 6, carrying held approvals) and
+  checks that they render.
+- It carries TC-307 into the first-approval adjudication's `adjudicates` list.
+  TC-307 gets no text change, so `staged_drafted_rows` never mints it, and
+  `first_approval_values` renders `adjudicates` ∩ the live Drafted rows.
+- TC-279 stays out until WI-667 lands.
+
+The two adjudications must not act out of order. A first-approval copy of the
+LLR or TC registry is refused while LLR-254, LLR-255 or the drifted TC rows are
+unattested. Preferred: one sitting with one combined act, batch-M style. The
+first-approval flips and the amendment re-attestations go in one commit, under
+one `intake.py snapshot --approves "..." --reattests ...`, with both trailers.
+If they sit separately instead, the amendment adjudication's act lands first,
+and the coordinator adds a `needs` edge from the first-approval row to it after
+the mint.
 
 **SR-215 (amend).** `trace.py` currently flags it because its Rationale and
 AcceptanceCriteria use the word "rubric" while Verification is Test. The
@@ -124,20 +141,36 @@ instrument" advisory.
 - `detail` -> `A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. checkpoint_for(root, rev, tc) returns the case's Trigger when it names the release or stage-gate checkpoint, else merge. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. A case with no record is due at once, and an expired record is due at once; neither waits for the floor. Without a trigger, a changed input digest is due subject to the floor; without inputs, only absence and expiry make a case due. checkpoint_drafts drafts each due case once, suppressing an open item by its typed Brief and Adjudicates cells, never by title. A draft names the case, the reason, the rubric and the changed inputs or the fired trigger, and its title carries the case id and the inputs-digest prefix. Committed links are excluded by the observation writer's own link predicate. No model runs.`
 
 **LLR-255 (amend; its module is intake.py).**
-- `detail`: replace only the sentence `` mint_rejudge(root, rev, checkpoint) files them through _mint, and `intake.py rejudge --checkpoint release` is the release-preparation entry. `` with `` mint_rejudge(root, rev, checkpoint) files them through _mint; `intake.py rejudge --checkpoint release` is the release-preparation entry and `intake.py rejudge --checkpoint stage-gate` the stage-gate-preparation entry, and the command refuses a merge checkpoint, which only the merge slot runs. `` Every other sentence of the cell stays byte-exact.
+- `title` -> `The merge, release and stage-gate checkpoints file the re-judge items`
+- `detail` -> `` intake_after_merge adds rejudge.checkpoint_drafts(root, after, "merge") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint; `intake.py rejudge --checkpoint release` is the release-preparation entry and `intake.py rejudge --checkpoint stage-gate` the stage-gate-preparation entry, and the command refuses a merge checkpoint, which only the merge slot runs. Release and stage-gate preparation are a person's acts, so each is prompted where that person works. The release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming the release command and the count of observation cases due at the release checkpoint, read through rejudge's pure decision. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits. ``
+- This replaces the whole cell. Against today's cell, the changes are:
+  - the stage-gate entry and the merge refusal;
+  - "naming that command" becomes "naming the release command";
+  - the count is "due at the release checkpoint", which is what
+    `gen_release_checklist` passes;
+  - the gate-advance clause.
+  Everything else is today's text.
+- `module` and `code_symbol` stay unchanged. Do NOT add the skill file to
+  Module. No LLR's Module names a `.md` file today, and Module/CodeSymbol are
+  resolved against code by check_trajectory's cross-check. The doc-pin test
+  under TC-248 anchors the skill clause. The consequence: a `component:CMP-008`
+  trigger does not fire on an edit to the skill.
 
 **TC-247 (amend).**
 - `method` -> `checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only once the configured closed-WI floor is met. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. A draft names the case, its reason, its rubric and the changed input or the fired trigger, and its title carries the case id and the inputs-digest prefix. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs.`
-- No test today asserts that a draft's context names the rubric, or the fired trigger for a triggered case. Add those assertions to `tests/test_rejudge.py`, and change nothing else in it.
+- No test today asserts that a draft's context names the rubric, or the fired trigger for a triggered case. No `cadence_repo` case carries a `Rubric` (the brief prints "(not declared)"). Add a `Rubric` column for TC-002 in the `cadence_repo` helper, then add the two assertions to `tests/test_rejudge.py`. Change nothing else in it.
 
 **TC-248 (amend).**
-- `method` -> `Driven through intake on a real git repository. A merged work item satisfying an observation case's trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. Release preparation mints for expired or release-triggered due cases, and the generated release checklist carries one required item naming the release re-judge command and the count of cases due at the release checkpoint. The stage-gate command files one item for a stage-gate-triggered case past its floor, none at merge and none while one is open, and the command refuses a merge checkpoint. Minting follows the mint checks and preserves unrelated uncommitted edits.`
+- `method` -> `Driven through intake on a real git repository. A merged work item satisfying an observation case's trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. The release command mints for an expired case and not twice while its item is open; at the release checkpoint a release-triggered case is drafted only once its floor is met. The generated release checklist carries one required item naming the release re-judge command and the count of cases due at the release checkpoint. The stage-gate command files one item for a stage-gate-triggered case past its floor, none at merge and none while one is open, and the command refuses a merge checkpoint. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. Minting follows the mint checks and preserves unrelated uncommitted edits.`
 - `expected` -> `Satisfies SR-215's acceptance at every checkpoint: a work-item merge, release preparation and stage-gate preparation each file one re-judge item per due case and never a second while one is open.`
-- The stage-gate clause is
-  `tests/test_rejudge.py::test_stage_gate_trigger_is_filed_through_the_cli_not_at_merge`,
-  and the merge refusal is
-  `tests/test_rejudge.py::test_the_cli_refuses_a_manual_merge_checkpoint`.
-  Both modules are already in its Evidence cell.
+- `evidence` -> `tests/test_rejudge.py; tests/test_intake.py; tests/test_skills_index.py::test_gate_advance_names_the_stage_gate_rejudge_step`
+- Where each clause lives:
+  - Release minting: `tests/test_rejudge.py::test_the_release_subcommand_mints_for_an_expired_result_once`.
+  - Release-triggered drafting past the floor: `tests/test_rejudge.py::test_trigger_waits_for_closed_work_floor` (its `release` case).
+  - The checklist item: `tests/test_rejudge.py::test_the_release_checklist_carries_the_required_rejudge_item`.
+  - The stage-gate command: `tests/test_rejudge.py::test_stage_gate_trigger_is_filed_through_the_cli_not_at_merge`.
+  - The merge refusal: `tests/test_rejudge.py::test_the_cli_refuses_a_manual_merge_checkpoint`.
+  - The skill step: the new `tests/test_skills_index.py::test_gate_advance_names_the_stage_gate_rejudge_step`. It reads `project-trajectory/skills/gate-advance/SKILL.md`'s body (below the frontmatter) and asserts it contains the literal `python scripts/intake.py rejudge --checkpoint stage-gate` and the word "required".
 
 **LLR-293 (rework, Drafted).**
 - `detail` -> `Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.`
@@ -160,8 +193,8 @@ outside the smoke tier, so citing it here would contradict `Tier = Smoke`.
 **New TC (Drafted), next id from the watermark.**
 - `verifies` = `["SR-215", "LLR-294", "IF-269"]`
 - `level` = `"Integration"`, `tier` = `"Full"`, `automated` = `"Yes"`
-- `method` = `Run the trajectory check with --strict on a tree holding no work items and a real observation case with no rubric reference.`
-- `expected` = `The check exits 0 and prints one warning naming the case and the missing rubric; strict mode never promotes it to a failure.`
+- `method` = `Run the trajectory check with --strict on a tree holding no work items and real observation cases with no rubric reference.`
+- `expected` = `The check exits 0 and prints a warning naming a case and its missing rubric; strict mode never promotes these warnings to a failure.`
 - `evidence` = `tests/test_rejudge.py::test_trajectory_rubric_warning_survives_strict_and_no_work_items`
 - `phase` = `6`, `status` = `"Drafted"`
 
@@ -171,13 +204,23 @@ directly after the paragraph beginning "Run the checks with
 `scripts/check.py`":
 
 > **File the stage-gate re-judges before you sign (required).** At the commit
-> you are about to sign, run `python scripts/intake.py rejudge --checkpoint
-> stage-gate`. It files one re-judge item for each observation case whose
+> you are about to sign, run
+> `python scripts/intake.py rejudge --checkpoint stage-gate`
+> (keep the command on one line; the doc-pin matches it literally).
+> It files one re-judge item for each observation case whose
 > declared `stage-gate` trigger is due past its closed-work floor, and none
 > while one is open (PROCESS.md "Observation judgement"). Paste its output into
 > the `docs/log.md` audit entry beside the check output.
 
-Then regenerate the dogfooded copies under `.claude/skills/gate-advance/` and
-`.agents/skills/gate-advance/` (`gen_skills_index.py --check-agents` must
-pass). Add a RESYNC_PACK.md entry for the shipped skill change. Nothing else
-in the skill changes.
+(The parenthesis about one line is an instruction to you; do not insert it into
+the skill.)
+
+Then refresh the byte copies under `.claude/skills/gate-advance/` and
+`.agents/skills/gate-advance/` with
+`python project-trajectory/scripts/bootstrap.py --dest . --sync` (`--dest` is
+required). Confirm with
+`python project-trajectory/scripts/gen_skills_index.py --check-agents`, which
+only checks. Add a NEW RESYNC_PACK.md entry anchored
+`[since <trunk HEAD at build>]` for the shipped skill step. Do not extend the
+WI-747 entry anchored `[since 122816da]`: an adopter already synced past that
+anchor would never see an extension. Nothing else in the skill changes.
