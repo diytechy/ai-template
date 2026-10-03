@@ -186,9 +186,9 @@ def test_opencode_occupancy_is_the_last_steps_prompt_and_no_window_is_guessed():
     assert window == "" and pct == ""
 
 
-def test_codex_exec_usage_is_cumulative_so_no_occupancy_is_read_from_it():
+def test_codex_exec_usage_is_cumulative_so_no_occupancy_is_read_from_it(tmp_path):
     session_id, used, window, pct = adapters.adapter_for(["codex"]).context(
-        _fixture("codex-exec-json.jsonl")
+        _fixture("codex-exec-json.jsonl"), env={"CODEX_HOME": str(tmp_path)}
     )
     assert session_id == "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
     assert (used, window, pct) == ("", "", "")
@@ -207,6 +207,95 @@ def test_codex_occupancy_reads_the_last_request_from_its_rollout(tmp_path):
     assert used == 15224  # the last request's inclusive input, not 30378
     assert window == 258400
     assert pct == round(15224 * 100 / 258400)
+
+
+THREAD = "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
+
+
+def _put_rollout(home, text):
+    """Write `text` as THREAD's rollout under the codex home `home`."""
+    day = Path(home) / "sessions" / "2026" / "09" / "30"
+    day.mkdir(parents=True, exist_ok=True)
+    name = "rollout-2026-09-30T23-25-40-{}.jsonl".format(THREAD)
+    (day / name).write_text(text, encoding="utf-8")
+
+
+@pytest.fixture
+def default_home(tmp_path, monkeypatch):
+    """codex's default home, `<user home>/.codex`, with the user home
+    redirected into the test's own directory and no CODEX_HOME set: the
+    owner's real home is never read."""
+    user = tmp_path / "user"
+    user.mkdir()
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    monkeypatch.setenv("HOME", str(user))
+    monkeypatch.setenv("USERPROFILE", str(user))
+    return user / ".codex"
+
+
+def test_codex_occupancy_falls_back_to_codexs_default_home(default_home):
+    _put_rollout(default_home, _fixture("codex-rollout.jsonl"))
+    adapter = adapters.adapter_for(["codex"])
+    stream = _fixture("codex-exec-json.jsonl")
+    _, used, window, pct = adapter.context(stream, env={})
+    assert (used, window) == (15224, 258400)
+    assert pct == round(15224 * 100 / 258400)
+    # The compaction observations read the same rollout through the same home.
+    assert adapter.compaction(stream, {}, THREAD)["prompts"][-1] == 15224
+
+
+def test_codex_default_home_follows_the_launch_home_on_posix(
+    default_home, tmp_path, monkeypatch
+):
+    # codex's POSIX default is "${CODEX_HOME:-$HOME/.codex}" in the launch
+    # environment, so a route overriding HOME has codex write there, not under
+    # the service process's home (which here holds nothing).
+    monkeypatch.setattr(adapters, "LAUNCH_HOME_VARIABLE", "HOME", raising=False)
+    launch = tmp_path / "launch-user"
+    _put_rollout(launch / ".codex", _fixture("codex-rollout.jsonl"))
+    adapter = adapters.adapter_for(["codex"])
+    stream = _fixture("codex-exec-json.jsonl")
+    _, used, window, _ = adapter.context(stream, env={"HOME": str(launch)})
+    assert (used, window) == (15224, 258400)
+    prompts = adapter.compaction(stream, {"HOME": str(launch)}, THREAD)["prompts"]
+    assert prompts[-1] == 15224
+
+
+def test_codex_default_home_ignores_a_launch_home_override_on_windows(
+    default_home, tmp_path, monkeypatch
+):
+    # On Windows codex takes its default from the OS profile and ignores a
+    # launch's HOME and USERPROFILE, so the adapter does too.
+    monkeypatch.setattr(adapters, "LAUNCH_HOME_VARIABLE", None, raising=False)
+    _put_rollout(default_home, _fixture("codex-rollout.jsonl"))
+    launch = {"HOME": str(tmp_path / "x"), "USERPROFILE": str(tmp_path / "x")}
+    _, used, _, _ = adapters.adapter_for(["codex"]).context(
+        _fixture("codex-exec-json.jsonl"), env=launch
+    )
+    assert used == 15224
+
+
+def test_an_explicit_codex_home_wins_over_the_default(default_home, tmp_path):
+    _put_rollout(default_home, _fixture("codex-rollout.jsonl"))
+    explicit = tmp_path / "explicit"
+    _put_rollout(explicit, _fixture("codex-rollout.jsonl").replace("15224", "20000"))
+    _, used, _, _ = adapters.adapter_for(["codex"]).context(
+        _fixture("codex-exec-json.jsonl"), env={"CODEX_HOME": str(explicit)}
+    )
+    assert used == 20000
+
+
+def test_codex_occupancy_stays_blank_without_this_threads_rollout(default_home):
+    # Another thread's rollout sits in the home; this thread has none.
+    day = default_home / "sessions" / "2026" / "09" / "30"
+    day.mkdir(parents=True)
+    (day / "rollout-2026-09-30T23-25-40-another-thread.jsonl").write_text(
+        _fixture("codex-rollout.jsonl"), encoding="utf-8"
+    )
+    _, used, window, pct = adapters.adapter_for(["codex"]).context(
+        _fixture("codex-exec-json.jsonl"), env={}
+    )
+    assert (used, window, pct) == ("", "", "")
 
 
 def test_an_unknown_cli_reports_no_occupancy():

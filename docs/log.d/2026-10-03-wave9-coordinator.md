@@ -237,3 +237,25 @@ route sets.
     opencode.
 
   It is research and a design note first, at an owner checkpoint.
+
+### WI-787 lands: codex occupancy from codex's default home (act 28, in the lane)
+
+- **Build.** A Claude Opus builder (`kit-builder` agent) added one resolver,
+  `_codex_home`, used by both rollout readers. It verified `~/.codex` as codex's
+  default from the codex binary and this box. Red 1, then green.
+- **Codex Luna** (`da2037a7`):
+  - BLOCKER: the act was not yet taken. That was by design; the in-lane act was
+    in progress.
+  - MAJOR: the default came from the process home, not the launch environment.
+- **The independent Opus adjudicator, in the lane:** LLR-267 and LLR-290 were ruled
+  MEANING and blessed, with five mutations all caught. Act 28 (`55c0a1c1`) re-attests
+  them. It flagged the same launch-home point.
+- **Fix round 1** (`c3fc567a`): the launch's `HOME` on POSIX. On Windows, `codex
+  doctor --json` shows codex ignores a launch `HOME` or `USERPROFILE`, so the
+  process home stays. Code only; both rows still read true.
+- **Real case:** WI-688's judge thread now reads 44% with `CODEX_HOME` unset.
+
+Noted, not filed:
+- TC-263's method does not name the three new cases. Its evidence file covers them.
+- The IF row note at `interfaces.toml:2285` still says "under the launch's
+  CODEX_HOME".

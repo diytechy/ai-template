@@ -6766,6 +6766,25 @@ file changes shape, and nothing gates on one. Your preserved
 `docs/requirements/hats.toml` keeps its old "not built yet" header comment.
 That comment is now stale, so edit it when you next touch the roster.
 
+### Codex occupancy read from codex's default home [since e78204b4]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The codex adapter in `scripts/session_adapters.py` used to read
+a session's rollout only under a `CODEX_HOME` set in the launch environment, so
+a codex route that set none recorded blank `context-used`, `context-window` and
+`context-pct` columns, and a retained codex session's reset had no occupancy to
+act on. With no `CODEX_HOME` set it now reads the rollout under codex's own
+default home (`~/.codex`), the same place codex writes it. The lookup is still
+by the exact thread id, so no other session's file is read. A `CODEX_HOME` set
+in the launch environment, including a retained session's dedicated home,
+still wins.
+
+**What to do.** Re-sync `scripts/session_adapters.py`. There is nothing to
+configure: your codex sessions start recording occupancy, and compaction
+observations, on the next call. Session logs written before the re-sync keep
+their blank columns.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

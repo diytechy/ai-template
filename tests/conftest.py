@@ -57,6 +57,12 @@ _put_scripts_on_path()
 for _k in [k for k in os.environ if k.startswith("AGENT_")]:
     del os.environ[_k]
 
+# The codex adapter reads a thread's rollout under the inherited CODEX_HOME, or
+# under codex's default home (`~/.codex`) when none is set (WI-787), so a test
+# would otherwise read the owner's real rollouts. Pin it to a home that does not
+# exist; a test that needs a codex home sets its own (or unsets this one).
+os.environ["CODEX_HOME"] = str(ROOT / "tests" / "_no-codex-home")
+
 
 # --- WI-122 + WI-281: the meta commit-bar smoke tier --------------------------
 # The per-commit bar runs the fast SMOKE tier (docs/stack.ini [tiers]

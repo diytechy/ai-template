@@ -2,12 +2,28 @@
 id = "WI-787"
 title = "Read codex occupancy from codex's default home when the launch sets no CODEX_HOME"
 workstream = "process"
-specref = "project-trajectory/scripts/session_adapters.py"
+specref = ""
 sr_refs = ["SR-222", "SR-227"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+With no `CODEX_HOME` set, the codex adapter reads a thread's rollout from codex's own default home, through one resolver (`_codex_home`):
+- an explicit non-empty `CODEX_HOME` wins;
+- else, on POSIX, the launch's `HOME/.codex` (codex's own `${CODEX_HOME:-$HOME/.codex}`);
+- else the process home's `.codex`. On Windows, `codex doctor --json` shows codex ignores a launch `HOME` or `USERPROFILE` override.
+
+The lookup stays keyed by the exact thread id. Every adopter's codex sessions now record occupancy with nothing to configure. On this box, WI-688's judge thread reads 114,766 / 258,400 = 44%.
+
+Process:
+- A Claude Opus builder built it.
+- Codex Luna (`docs/reviews/2026-10-03-wave9/luna-wi787.md`):
+  - BLOCKER, the act not yet taken: answered by the in-lane act.
+  - MAJOR, the launch home: fixed in fix round 1.
+- An independent Opus adjudicator ruled LLR-267 and LLR-290 MEANING and blessed them, with five mutations all caught. Act 28 re-attested them, in the lane (`docs/reviews/wi-787-codex-occupancy-default-home/001-ADJUDICATE-AMENDMENT-da2037a.md`).
 
 ## Context
 
