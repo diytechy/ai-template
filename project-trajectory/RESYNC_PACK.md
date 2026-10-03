@@ -6651,6 +6651,27 @@ names the checkpoint revision); the release CLI/checklist use the release
 checkpoint. No carrier
 migration is required for existing rows with omitted cells.
 
+### Assumption observation briefs and release confirmations [since 30ee386b]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** First-approval and re-judge briefs show assumption-only
+observation cases under the existing assumption approval chain. The release
+checklist has a separate assumptions section: active Approved assumptions and
+any assumption with no falsifier appear once with an `ASSUMPTION DA-###` marker,
+the falsifier or missing notice, and linked observation case ids. A checked box
+asserts only not falsified; generation does not set standing.
+
+**What to do.** Re-sync `scripts/adjudicate_brief.py`,
+`prompts/adjudicate-rejudge.template.md` and `scripts/gen_release_checklist.py`,
+then regenerate `prompts/CATALOG.md` (`python scripts/gen_prompt_catalog.py`):
+the template's hash moves.
+These readers use the existing assumption registry and TC `assumption_refs`
+schema; migrate older spine carriers before adopting that schema. Regenerate
+the release checklist for the next sign-off and have a person recall the
+falsifiers and set standing when warranted. Repositories without an assumptions
+registry need no new registry or section.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -75,15 +75,21 @@ EXTENSION (at DevStg-Arch, where interfaces live)
 |---|---|---|
 | C1. The sitting | reverse §5.2; redraw the frames; create `assumptions.toml` with its arms **off** | schema on resync, deferred |
 | C2. Write the assumptions | DA rows, each a new Drafted claim; SR `da_refs` or `coincident` | none (warn-only, arms off) |
-| C3. Evidence | TC `assumption_refs` and `sampling` | schema on resync, deferred |
+| C3. Falsification | assumption-only observations and a person setting standing | schema on resync, deferred |
 | C4. Activation | turn the stage arms on: a deliberate stage regression and one approval batch | none beyond C1–C3 |
-| C5. Gate | every SR's argument bridged or coincident, with Approved, active, evidenced assumptions; opt-in | opt-in |
+| C5. Gate | every SR's argument bridged or coincident, with Approved, active assumptions; opt-in | opt-in |
 | E. Extension | interface allocation at DevStg-Arch (§9) | schema on resync, deferred |
 | Hats per piece | positive provenance only; `speaks_for` | template content |
 
 Decisions and open questions: §12.
 
 ---
+
+> **Supersession 2026-10-03:** the owner ruling of 2026-10-02 (recorded in WI-667, "Owner ruling 2026-10-02")
+> supersedes C3's positive-evidence model and C5's evidence arm. Assumptions
+> carry approval status, standing and a falsifier; observations can falsify
+> them but cannot establish positive evidence. A person or adjudication sets
+> standing. Historical decisions and review accounts below remain as recorded.
 
 ## 1. The gap, in this repo's own rows
 
@@ -1151,11 +1157,16 @@ needs — each a new Drafted claim — and, on every SR, `da_refs` or a `coincid
 waiver, and its `form`. **Warn-only, genuinely:** the arms are off, so nothing moves the derived
 stage.
 
-**C3 — evidence.** `assumption_refs`, `sampling` and `max_age` on TCs, with the
-seven-day floor checked mechanically; result records carrying the judged-state
-digest (§7, §10.2e, l). `sampling` and `max_age` are approved content, so the TCs
-that gain them join C4's re-attestation batch. Start with the metamorphic subset
-(§7(c)). Designed together with the sister plan's S6 runner.
+**C3 — falsification.** Observation cases retain `assumption_refs` and their
+Method for trying an assumption's falsifier against the real thing. A failing
+observation or an adjudication/outcome-review finding is falsification evidence;
+a person or adjudication then sets `standing = falsified`. A passed sample
+establishes nothing beyond its sample. The first-approval and re-judge briefs
+show an assumption-only case under its assumption's chain. The release checklist
+recalls active Approved assumptions and any missing falsifier. No positive
+evidence ladder, current-evidence gate or red-assumption dispatch route is built.
+`accepted_risk` reopen triggers stay. Observation judgement cadence is governed
+by WI-747, separately from assumption standing.
 
 **C4 — activation, in one reviewed commit (Q20).** With the arms still off, the
 owner reviews two batches: the **re-attestation batch** for the SRs and TCs whose
@@ -1168,25 +1179,18 @@ three DevStg-Tests steps (`smoke`, `design-flows`, `trajectory`; this repo's
 `smoke` step is declared in `docs/stack.ini`) for the window.
 
 **Findings, from C2 on** — warn-only: the §6.2 checks; a `falsified` assumption,
-reported with every SR and TC that cites it; an Approved, active assumption that
-is only `assumed` or `specified`; a Status change on a human-held rung in a
+reported with every SR and TC that cites it; a Status change on a human-held rung in a
 commit carrying the loop trailer (once §10.2i exists).
 
-**C5 — the gate — split by rung, so it cannot deadlock.** Opt-in for adopters,
+**C5 — the maturity gate.** Opt-in for adopters,
 with an applies-when; **enabled in this repository**, which is Q27's condition.
 The switch's home is settled with C5's implementation, and turning it on here
-is part of C5, not a later option. Passing
-results exist only after the harness runs, so evidence cannot gate an early rung.
+is part of C5, not a later option.
 
 - **At DevStg-Boundary — maturity only:** for every SR, either its `coincident`
   waiver holds, or each assumption it cites is **Approved** and **active**,
   lands on its stakeholders' party (or a mediating one), and — if a fidelity
   assumption — names an Approved surrogate.
-- **At DevStg-Release — evidence, after the harness:** each of those assumptions
-  has a **current passing result** of the right kind (§7: `monitored`, or
-  `sampled` with a justified sampling model) or a recorded `accepted_risk`. This
-  sits beside the existing Release input, `docs/test/evidence`, which the harness
-  writes after a passing run.
 
 With the extension, the Boundary half also runs per reached boundary IF (§9). The
 vision promises work built *"test-first with explicit approval gates so you can

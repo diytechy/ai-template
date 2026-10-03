@@ -34,3 +34,73 @@ Landing:
   folded in, because that entry was anchored at a lane-only sha.
 - PROCESS.md: 93,016 -> 94,466 (+1,450, the WI-747 rule), re-stamped in the
   byte-budget skill (4,444 bytes, cap 5,000) and its two mirrors.
+
+### Spine-acts batch N (WI-766, WI-767): returned; one successor drafted
+
+An independent Claude Opus 5.5 adjudicator sat over both briefs WI-747's merge
+minted. It approved nothing and re-attested nothing.
+
+- **WI-766** (amendment), `MEANING rows=9`. SR-215 and LLR-254 read "No result is
+  due immediately", inverting PROCESS.md's rule. SR-215's acceptance carried a rule
+  no check observes. TC-248 dropped the release item's required-and-named check,
+  and TC-247 dropped the draft-naming check. TC-036, TC-055, TC-209, TC-210 and
+  TC-211 are blessable, but they could not be re-anchored while TC-248 stayed
+  unblessed.
+- **WI-767** (first approval), `RETURN rows=4`. LLR-293 carried intake's CLI
+  entries, LLR-294 an unobservable creation rule, and TC-306 an Expected
+  contradicting its Method. TC-279 was not rendered by the composer (the WI-667
+  gap) and stays Drafted.
+
+Sonnet cross-reviewed two rounds:
+
+- [r1](../reviews/2026-10-03-wave8/sonnet-batch-n-r1.md): the drafts gave the six
+  TC rows no landing path, deferred the stage-gate question in a circle, and kept
+  the trace finding they cited.
+- [r2](../reviews/2026-10-03-wave8/sonnet-batch-n-r2.md): TC-307 was stranded, the
+  two sittings were unordered, LLR-255 was ambiguous, and the gate prompt had no
+  verifier.
+- The adjudicator answered each finding in new commits. The coordinator checked
+  the third revision against r2's four findings.
+
+The result is ONE successor in WI-766's Dispositions, covering every returned row
+plus a required stage-gate step in the shipped gate-advance skill, pinned by a
+test under TC-248. WI-767 points at it.
+
+Coordinator commitments recorded in that draft:
+
+- carry TC-036, TC-055, TC-209, TC-210 and TC-211 into the successor's amendment
+  adjudication, and TC-307 (and TC-279, after WI-667) into its first approval;
+- sit both in one combined act (batch-M style).
+
+Any act copying the LLR or TC registry is refused until LLR-254, LLR-255 and the
+drifted TC rows are re-attested. So WI-667's own adjudications wait for that
+sitting, or join it.
+
+Lesson: two Sonnet code reviews of WI-747 judged the code against its requirement
+text, and neither caught the requirement text itself contradicting the rule. The
+spine adjudicator did.
+
+### WI-667 lands: assumption-only observation cases in both briefs; the checklist confirms assumptions
+
+Sol built it as the owner's 2026-10-02 ruling narrowed it (no census arm). Red was
+4 failed and 3 passed; the 3 passes assert absence and pass vacuously before the
+change. Green was 7 passed. Sonnet 5.5 found it SOUND at `24cd3b91`
+([review](../reviews/2026-10-03-wave8/sonnet-wi667.md)). It probed the composer's
+dial, scope, Approved and dangling-DA refusals, and diffed the checklist
+before and after (byte-identical except the new section).
+
+At the commit:
+
+- The hook refused the lane until `gen_release_checklist.main`'s baseline row was
+  removed (85 -> under 15). A full `--restamp` would also have rewritten the SLOC
+  column of a dozen unrelated rows, so only the named row was deleted.
+
+At the landing, three of Sonnet's minors were folded in:
+
+- the plan's supersession note cites WI-667 by id;
+- the RESYNC entry names the prompt-catalogue regeneration;
+- SR-033's rationale states its SN-043 derivation, and its `sn_refs` gains SN-043.
+
+Follow-up: Sonnet's MAJOR, outside the grant, is that the evidence ladder (ruling
+item 1) is still rendered and still required by approved rows. It is filed as its
+own row.

@@ -675,8 +675,21 @@ def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
     lines = ["- chain of {} — {}".format(entry["id"], entry.get("title") or "")]
     import trace as tr
 
-    mine, drafted_ids = False, set()
-    for kind, rid, full in tr.spine_chain(entry["id"], srs, llrs_by_sr, tcs_by_ref):
+    body, mine, drafted_ids = _render_approval_rows(
+        root,
+        tr.spine_chain(entry["id"], srs, llrs_by_sr, tcs_by_ref),
+        scope,
+        registries,
+    )
+    return lines + body, mine, drafted_ids
+
+
+def _render_approval_rows(root, rows, scope, registries):
+    """Apply the same scope and authority to requirement and assumption chains."""
+    import trace as tr
+
+    lines, mine, drafted_ids = [], False, set()
+    for kind, rid, full in rows:
         drafted = tr.is_drafted(full)
         # THE INTERSECTION, in one expression: `Drafted` (the live model's
         # answer), IN SCOPE (the mint's question) and RELEASED (the dial's).
@@ -711,6 +724,53 @@ def _render_chain(root, entry, scope, srs, llrs_by_sr, tcs_by_ref, registries):
             # reads the rows in above.
             registries.setdefault(_REGISTRY_OF[kind], {})[rid] = True
     return lines, mine, drafted_ids
+
+
+def _assumption_case_chain(root, srs, tcs, cases):
+    """Reuse the assumption approval view for observation cases' premises.
+
+    Implements: SR-146, SR-215, LLR-295
+    """
+    import trace as tr
+
+    ids = sorted(
+        {
+            ref
+            for case in cases
+            for ref in re.split(r"[;,\s]+", case.get("Assumption-Refs", ""))
+            if ref
+        }
+    )
+    declared = {
+        r["DA-ID"]
+        for r in spine_carrier.load(Path(root) / tr.ASSUMPTIONS_REL, "DA-ID", False)
+    }
+    missing = set(ids) - declared
+    if missing:
+        raise ValueError(
+            "no assumption chain for {}".format(", ".join(sorted(missing)))
+        )
+    return tr.assumption_brief_lines(root, srs, tcs, ids=ids)
+
+
+def _render_assumption_cases(root, reg, scope, registries):
+    """Assumption-only cases bypass the SR forest, retaining its approval rules.
+
+    Implements: SR-146, LLR-295
+    """
+    cases = [
+        case
+        for case in reg.tcs
+        if case.get("Assumption-Refs")
+        and not case.get("Verifies")
+        and case["TC-ID"] in scope
+    ]
+    body, mine, awaiting = _render_approval_rows(
+        root, [("TC", case["TC-ID"], case) for case in cases], scope, registries
+    )
+    if not mine:
+        return [], awaiting
+    return _assumption_case_chain(root, reg.srs, reg.tcs, cases) + body, awaiting
 
 
 def first_approval_values(root, row):
@@ -837,6 +897,12 @@ def first_approval_values(root, row):
         # verdict it cannot be asked to give.
         if mine:
             lines += chain
+    try:
+        chain, drafted_here = _render_assumption_cases(root, reg, scope, registries)
+    except ValueError as exc:
+        return None, str(exc)
+    lines += chain
+    awaiting |= drafted_here
     if not lines:
         # WHICH of the three filters emptied it, named. "Nothing to rule on" is
         # a HOLD a human then has to diagnose, and the three causes take
@@ -1149,15 +1215,31 @@ def rejudge_values(root, row):
         return None, "the re-judge decision could not be read: {}".format(exc)
     if not due:
         return None, "{} is no longer due for re-judging at HEAD".format(tc)
-    case = due[0]["row"]
+    try:
+        text = _rejudge_case_text(root, tc, due[0]["row"])
+    except ValueError as exc:
+        return None, str(exc)
+    return {"case": text, "reason": rejudge.explain(due[0]), "tc": tc}, None
+
+
+def _rejudge_case_text(root, tc, case):
+    """The observation instruction with its declared requirement or assumption targets.
+
+    Implements: SR-215, LLR-295
+    """
     cells = {name: (case.get(name) or "").strip() for name in REJUDGE_CELLS}
-    missing = [name for name, value in cells.items() if not value]
+    assumption_only = bool(case.get("Assumption-Refs")) and not cells["Verifies"]
+    missing = [
+        name
+        for name, value in cells.items()
+        if not value and not (name == "Verifies" and assumption_only)
+    ]
     if missing:
-        return None, "{} has no `{}` cell".format(tc, "`, `".join(missing))
+        raise ValueError("{} has no `{}` cell".format(tc, "`, `".join(missing)))
     inputs = (case.get("Inputs") or "").strip()
     rubric = (case.get("Rubric") or "").strip()
     text = (
-        "- {tc} — verifies {Verifies}\n"
+        "- {tc} — {relation} {targets}\n"
         "  - Method: {Method}\n"
         "  - Expected: {Expected}\n"
         "  - Declared inputs: {inputs}\n"
@@ -1165,12 +1247,20 @@ def rejudge_values(root, row):
         "  - Result lifetime: {age} days"
     ).format(
         tc=tc,
+        relation="observes" if assumption_only else "verifies",
+        targets=case["Assumption-Refs"] if assumption_only else cells["Verifies"],
         rubric=rubric or "none declared",
         inputs=inputs or "none declared, so only its expiry makes it due",
         age=case["MaxAge"].strip(),
         **cells,
     )
-    return {"case": text, "reason": rejudge.explain(due[0]), "tc": tc}, None
+    chain = []
+    if assumption_only:
+        import trace as tr
+
+        reg = tr.load_registries(Path(root) / "docs")
+        chain = _assumption_case_chain(root, reg.srs, reg.tcs, [case])
+    return "\n".join(chain + [text])
 
 
 # Each shipped brief's assembler, the producer of EVERY slot its template

@@ -237,12 +237,12 @@ da_refs = ["DA-002", "DA-009"]
 
 [requirement.SR-033]
 title = "Release checklist generation"
-sn_refs = ["SN-004"]
+sn_refs = ["SN-004", "SN-043"]
 boundary_refs = ["B-09"]
 hat_refs = ["PERFORMANCE"]
-requirement = """The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate."""
-rationale = """Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did."""
-acceptance_criteria = """Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation."""
+requirement = """The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate and differentiable assumption confirmations."""
+rationale = """Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did. The assumptions section realizes SN-043 at the same gate: a premise can only be shown false by someone looking for its falsifier, so the checklist puts each active approved assumption, and any with no falsifier, in front of the person signing, marked apart from the requirement checks."""
+acceptance_criteria = """Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation; a separate assumptions section lists each active Approved assumption and any assumption with no falsifier once, with an ASSUMPTION DA-id marker, its falsifier or an explicit missing-falsifier notice, and the observation case ids naming it, if present. A falsified or Drafted assumption with a falsifier is omitted. An absent assumptions registry produces no section or error. Checking an assumption asserts only not falsified; the generator does not change standing, which a person sets."""
 priority = "S"
 verification = "Test"
 status = "Approved"

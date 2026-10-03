@@ -2,13 +2,40 @@
 id = "WI-667"
 title = "Decide how a red assumption-evidence test case reaches the dispatch census, once the red-TC rung is re-armed"
 workstream = "unattended"
-specref = "project-trajectory/scripts/census.py"
+specref = ""
 sr_refs = ["SR-197"]
 needs = ["WI-631"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Built as the owner's signed 2026-10-02 ruling narrowed it (items 1-9; the census's
+assumption half dropped, not built):
+
+- **Briefs** (`adjudicate_brief.py`, LLR-295): the first-approval and re-judge
+  composers render an assumption-only observation case (assumption_refs, no
+  Verifies; TC-279 for DA-011) under its assumption's chain, reusing the assumption
+  approval renderer through an extracted `_render_approval_rows`, so the scope and
+  dial checks are one code path. WI-697's brief now composes.
+- **Release checklist** (`gen_release_checklist.py`, IF-018, LLR-296): a separate
+  assumptions section, one `- [ ] ASSUMPTION <DA-ID> — has its falsifier been
+  observed? <falsifier> (method: <TC IDs>)` item per active Approved assumption and
+  per assumption with no falsifier; absent-registry tolerant; it sets nothing.
+  `main` decomposed (cognitive 85 -> under 15); output byte-identical otherwise.
+- **Rows:** SR-033 and SN-043 amended for adjudication (SN-043: premises "shown
+  false", not "checked"); SN-004 unchanged (no evidence-model claim). LLR-295,
+  LLR-296, TC-308..TC-310 Drafted. The plan's C3 narrows to the falsification route
+  and C5 loses its evidence arm, with a dated supersession note.
+- **Reviews:** Sonnet 5.5 SOUND at 24cd3b91. Folded in at the landing: the plan's
+  supersession note cites this row by id (a link to `queued/` would rot), the
+  RESYNC entry names the prompt-catalogue regeneration, SR-033's rationale states
+  its SN-043 derivation and `sn_refs` gains SN-043.
+- **Follow-up (owner-ruled, not this row's grant):** the evidence ladder (ruling
+  item 1) is still rendered by the shared assumption renderer and still required by
+  approved SR rows and the assumption gate; filed as its own row after this landing.
 
 ## Context
 

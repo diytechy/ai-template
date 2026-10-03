@@ -15,11 +15,14 @@ It pulls, from `docs/`:
     - Provided cross-project interfaces (IF, if present) -> contract still honored?
     - Performance budgets (PB, if present) -> still within allocation? (§9; the
       warn-tier runtime budgets never fail the gate, so a human confirms them here)
+    - Active Approved assumptions and any missing falsifier -> recall whether
+      the assumption has been falsified; a person sets standing
     - A REQUIRED re-judge item (SR-215): the command that files one re-judge
       work item per observation test case due at the release commit, with
       how many are due now
 
-Each line is `- [ ] <ID> — <what to confirm> (refs)`. The output is a *generated
+Ordinary rows use `- [ ] <ID> — <what to confirm> (refs)`; assumption rows use
+the differentiable `ASSUMPTION <DA-ID>` marker. The output is a *generated
 record*: regenerate it per release and keep the ticked copy as the sign-off
 artifact (use --version to file it under docs/releases/).
 
@@ -38,13 +41,18 @@ Contracts: IF-018 — the interface seam this module declares (process.md §8; r
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-018: the human release checklist, written as a Markdown document
-    whose every item is `- [ ] <ID> — <what to confirm> (refs)`. It collects
+    whose ordinary items are `- [ ] <ID> — <what to confirm> (refs)`. It collects
     exactly the rows a machine cannot honestly close: stakeholder needs and
     their acceptance intent, system specifications whose Verification is
     Demonstration, Manual or Inspection, release-tier and manual test cases,
     the declared interface seams, and the performance budgets whose runtime
-    tier never fails a gate. Its release-hygiene section always carries one
-    required item naming `intake.py rejudge --checkpoint release` and the
+    tier never fails a gate. Its assumptions section lists each active Approved
+    assumption and any assumption with no falsifier, once each, marked
+    `- [ ] ASSUMPTION <DA-ID> — <falsifier question> (method: <TC IDs>)`.
+    Checking an assumption asserts only that it has not been falsified; this
+    generator sets nothing, and a person sets standing. Its release-hygiene
+    section always carries one required item naming
+    `intake.py rejudge --checkpoint release` and the
     number of observation test cases due at HEAD, or why that number could not
     be read. `--phase` narrows to the listed phases while the
     foundation phase is never deferred; `--version` files the output under
@@ -148,22 +156,51 @@ def read_stakeholder_needs(md_path):
     ]
 
 
-def main():
-    _utf8_console()
-    ap = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    ap.add_argument("--docs", default="docs")
-    ap.add_argument("--version", default=None)
-    ap.add_argument(
-        "--phase",
-        default=None,
-        help="comma-separated phases in scope (blank Phase = every phase)",
-    )
-    ap.add_argument("--out", default=None)
-    args = ap.parse_args()
-    docs = Path(args.docs)
+def assumption_checklist_lines(docs, tcs):
+    """Recall falsifiers at sign-off; a checked box cannot establish a premise.
 
+    Implements: SR-033, LLR-296
+    """
+    rows = spine_carrier.load(
+        Path(docs) / "requirements/assumptions.toml", "DA-ID", False
+    )
+    items = []
+    for row in rows:
+        falsifier = (row.get("Falsifier") or "").strip()
+        if falsifier and not (
+            row.get("Status") == "Approved" and row.get("Standing") == "active"
+        ):
+            continue
+        rid = row["DA-ID"]
+        methods = [
+            tc["TC-ID"]
+            for tc in tcs
+            if rid in re.split(r"[;,\s]+", tc.get("Assumption-Refs", ""))
+        ]
+        items.append(
+            "- [ ] ASSUMPTION {} — has its falsifier been observed? {} (method: {})".format(
+                rid,
+                falsifier or "no falsifier declared",
+                ", ".join(methods) or "none declared",
+            )
+        )
+    if not items:
+        return []
+    return (
+        [
+            "",
+            "## 7. Assumptions — not falsified",
+            "",
+            "Checking a box asserts only ‘not falsified’; a person sets `standing`.",
+            "",
+        ]
+        + items
+        + [""]
+    )
+
+
+def _read_checklist_rows(docs):
+    """Read optional registries once; example rows are never release items."""
     needs = read_stakeholder_needs(docs / "requirements" / "stakeholder-needs.toml")
     srs = [
         r
@@ -190,40 +227,6 @@ def main():
         if r.get("PB-ID") and not is_example(r["PB-ID"])
     ]
 
-    phases = (
-        {p for p in re.split(r"[;,\s]+", args.phase.strip()) if p}
-        if args.phase
-        else None
-    )
-
-    def _phase_num(tag):
-        m = re.search(r"\d+", tag or "")
-        return int(m.group()) if m else None
-
-    # The foundation (minimum) phase is never phase-deferred (the phase doctrine,
-    # process.md §4) — the same rule trace.py's --phase filter applies, so a foundation
-    # SR stays on the release checklist under any --phase. Digit-parse (`v2`/`2` -> 2)
-    # so the minimum compares numerically; an all-blank registry has no parseable phase
-    # and the blank rule carries it unchanged.
-    foundation_phase = min(
-        (
-            n
-            for n in (_phase_num((r.get("Phase") or "").strip()) for r in srs)
-            if n is not None
-        ),
-        default=None,
-    )
-
-    def in_phase(sr_row):
-        tag = (sr_row.get("Phase") or "").strip()
-        if phases is None or not tag or tag in phases:
-            return True
-        n = _phase_num(tag)
-        return n is not None and n == foundation_phase
-
-    in_scope_sr_ids = {r["SR-ID"] for r in srs if in_phase(r)}
-    # An LLR is in scope when any of its parent SRs is, so TC `Verifies` cells
-    # that cite only LLR ids still resolve to the right phase.
     llrs = [
         r
         for r in spine_carrier.load(
@@ -231,59 +234,78 @@ def main():
         )
         if r.get("LLR-ID") and not is_example(r["LLR-ID"])
     ]
-    in_scope_ids = set(in_scope_sr_ids)
+    return needs, srs, llrs, tcs, ifs, pbs
+
+
+def _phase_num(tag):
+    m = re.search(r"\d+", tag or "")
+    return int(m.group()) if m else None
+
+
+def _in_phase(sr_row, phases, foundation_phase):
+    """The foundation and blank phases remain in scope under any phase filter."""
+    tag = (sr_row.get("Phase") or "").strip()
+    if phases is None or not tag or tag in phases:
+        return True
+    n = _phase_num(tag)
+    return n is not None and n == foundation_phase
+
+
+def _tc_in_scope(tc_row, phases, in_scope_ids):
+    cited = [x for x in re.split(r"[;,\s]+", tc_row.get("Verifies", "")) if x]
+    return phases is None or any(x in in_scope_ids for x in cited)
+
+
+def _scope_ids(srs, llrs, phases, foundation_phase):
+    """Resolve LLR-only test targets through any in-scope parent requirement."""
+    ids = {r["SR-ID"] for r in srs if _in_phase(r, phases, foundation_phase)}
     for r in llrs:
         parents = [p for p in re.split(r"[;,\s]+", r.get("SR-Refs", "")) if p]
-        if any(p in in_scope_sr_ids for p in parents):
-            in_scope_ids.add(r["LLR-ID"])
+        if any(p in ids for p in parents):
+            ids.add(r["LLR-ID"])
+    return ids
 
-    def tc_in_scope(tc_row):
-        cited = [x for x in re.split(r"[;,\s]+", tc_row.get("Verifies", "")) if x]
-        return phases is None or any(x in in_scope_ids for x in cited)
 
+def _provided_interface(row):
+    """A release confirms owned contracts read by an outside party."""
+    return not (row.get("Owner") or "").strip().startswith("external:") and any(
+        c.strip().startswith("external:")
+        for c in (row.get("Requestors") or row.get("Consumers") or "").split(";")
+    )
+
+
+def _manual_release_case(row):
+    """Unclassified cases remain human work, as do all release-tier cases."""
+    return row.get("Tier", "") == "Release" or row.get(
+        "Automated", ""
+    ).strip().lower() in ("no", "false", "")
+
+
+def _checklist_inputs(docs, phase):
+    """Select human sign-off rows using the foundation and TC parentage rules."""
+    needs, srs, llrs, tcs, ifs, pbs = _read_checklist_rows(docs)
+    phases = {p for p in re.split(r"[;,\s]+", phase.strip()) if p} if phase else None
+    foundation_phase = min(
+        (n for n in (_phase_num(r.get("Phase")) for r in srs) if n is not None),
+        default=None,
+    )
+    ids = _scope_ids(srs, llrs, phases, foundation_phase)
     human_srs = [
-        r for r in srs if r.get("Verification", "") in HUMAN_METHODS and in_phase(r)
+        r
+        for r in srs
+        if r.get("Verification", "") in HUMAN_METHODS
+        and _in_phase(r, phases, foundation_phase)
     ]
-    # A blank Automated cell intentionally counts as manual: an unclassified test
-    # must show up on the human checklist rather than silently drop off it.
+    # Blank Automated means unclassified: keep it visible for a person.
     manual_tcs = [
-        r
-        for r in tcs
-        if (
-            r.get("Tier", "") == "Release"
-            or (r.get("Automated", "").strip().lower() in ("no", "false", ""))
-        )
-        and tc_in_scope(r)
+        r for r in tcs if _manual_release_case(r) and _tc_in_scope(r, phases, ids)
     ]
-    # A cross-project contract is a seam this tree OWNS and an `external:`
-    # party reads (OI-67: the row is owner -> consumers, and there is no
-    # direction column to key on).
-    provided_ifs = [
-        r
-        for r in ifs
-        if not (r.get("Owner") or "").strip().startswith("external:")
-        and any(
-            c.strip().startswith("external:")
-            for c in (r.get("Requestors") or r.get("Consumers") or "").split(";")
-        )
-    ]
+    provided_ifs = [r for r in ifs if _provided_interface(r)]
+    return needs, human_srs, manual_tcs, provided_ifs, pbs, tcs
 
-    stamp = args.version or "(unreleased)"
-    if phases:
-        stamp += " — phase {}".format(args.phase)
-    today = datetime.date.today().isoformat()
-    L = [
-        "# Release Checklist — {}".format(stamp),
-        "",
-        "_Generated by `scripts/gen_release_checklist.py` on {}. Tick each box "
-        "after exercising the real product; keep the completed copy as the "
-        "DevStg-Impl sign-off record._".format(today),
-        "",
-        "- Version / build under test: __________   Date: __________   "
-        "Signed-off by: __________",
-        "",
-    ]
 
+def _need_lines(needs):
+    L = []
     L += ["## 1. Stakeholder needs met (acceptance)", ""]
     if needs:
         for uid, need, acc in needs:
@@ -292,6 +314,11 @@ def main():
     else:
         L.append("- [ ] _(no stakeholder needs registered)_")
 
+    return L
+
+
+def _human_requirement_lines(human_srs):
+    L = []
     L += [
         "",
         "## 2. Human-verified requirements (Demonstration / Manual / Inspection)",
@@ -310,6 +337,11 @@ def main():
     else:
         L.append("- [ ] _(every requirement is automated — nothing manual to verify)_")
 
+    return L
+
+
+def _manual_case_lines(manual_tcs):
+    L = []
     L += ["", "## 3. Release-tier & manual test cases", ""]
     if manual_tcs:
         for r in manual_tcs:
@@ -324,6 +356,11 @@ def main():
     else:
         L.append("- [ ] _(no release-tier or manual test cases)_")
 
+    return L
+
+
+def _interface_lines(provided_ifs):
+    L = []
     if provided_ifs:
         L += ["", "## 4. Cross-project contracts still honored", ""]
         for r in provided_ifs:
@@ -339,6 +376,11 @@ def main():
                 )
             )
 
+    return L
+
+
+def _budget_lines(pbs):
+    L = []
     if pbs:
         L += ["", "## 5. Performance budgets within allocation (§9)", ""]
         for r in pbs:
@@ -355,6 +397,53 @@ def main():
                 )
             )
 
+    return L
+
+
+def main():
+    """Write the release sign-off record.
+
+    Implements: SR-033, LLR-033
+    """
+    _utf8_console()
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument("--docs", default="docs")
+    ap.add_argument("--version", default=None)
+    ap.add_argument(
+        "--phase",
+        default=None,
+        help="comma-separated phases in scope (blank Phase = every phase)",
+    )
+    ap.add_argument("--out", default=None)
+    args = ap.parse_args()
+    docs = Path(args.docs)
+
+    needs, human_srs, manual_tcs, provided_ifs, pbs, tcs = _checklist_inputs(
+        docs, args.phase
+    )
+    stamp = args.version or "(unreleased)"
+    if args.phase and re.search(r"[^;,\s]", args.phase):
+        stamp += " — phase {}".format(args.phase)
+    today = datetime.date.today().isoformat()
+    L = [
+        "# Release Checklist — {}".format(stamp),
+        "",
+        "_Generated by `scripts/gen_release_checklist.py` on {}. Tick each box "
+        "after exercising the real product; keep the completed copy as the "
+        "DevStg-Impl sign-off record._".format(today),
+        "",
+        "- Version / build under test: __________   Date: __________   "
+        "Signed-off by: __________",
+        "",
+    ]
+
+    L += _need_lines(needs)
+    L += _human_requirement_lines(human_srs)
+    L += _manual_case_lines(manual_tcs)
+    L += _interface_lines(provided_ifs)
+    L += _budget_lines(pbs)
     L += [
         "",
         "## 6. Release hygiene",
@@ -370,6 +459,8 @@ def main():
         "stakeholder needs (wording, not just ids — the gate checks ids).",
         "",
     ]
+
+    L += assumption_checklist_lines(docs, tcs)
 
     if args.out:
         out = Path(args.out)

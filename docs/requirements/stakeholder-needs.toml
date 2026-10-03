@@ -364,9 +364,9 @@ status = "Approved"
 stakeholder_refs = ["STK-03"]
 tags = ["templates"]
 priority = "M"
-need = """**Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether each of those premises has itself been checked."""
+need = """**Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether any of those premises has been shown false."""
 why = """A system can pass every check on its own behavior and still fail the people it serves, because the step from what the system does to what they experience rests on premises nobody wrote down. An unwritten premise cannot be tested, so a false one surfaces only when a stakeholder is let down, and every requirement that relied on it has lost part of its argument without anyone seeing it."""
-acceptance = """Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows whether a current result evidences it; a premise relied on without evidence is visible as such, and a premise shown false is reported with every requirement that relied on it."""
+acceptance = """Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows its approval status and whether it has been shown false; a premise shown false is reported with every requirement that relied on it."""
 
 [need.SN-044]
 status = "Approved"
