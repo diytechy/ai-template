@@ -3050,5 +3050,5 @@ tier = "Smoke"
 expected = "Compaction is reported or explicitly inferred within one retained session, with no comparison across a kit reset."
 automated = "Yes"
 evidence = "tests/test_session_keep.py"
-status = "Drafted"
+status = "Approved"
 phase = 6

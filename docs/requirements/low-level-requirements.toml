@@ -3069,6 +3069,6 @@ code_symbol = "CodexAdapter.compaction;_observe_compaction"
 detail = "The codex adapter reads compacted entries and per-request input counts from the exact thread rollout under the launch CODEX_HOME, and turn.completed running input totals from exec. Retained bookkeeping records compacted and compaction-source in the call row and compacted and compaction_source in the store: reported for a rollout entry, otherwise inferred from any decrease across consecutive new rollout requests, starting with the stored request_prompt baseline and the first new request. Only rollout per-request prompts drive inference; without a readable rollout there is no new inference, and exec turn sums are retained only as a running-total baseline. The rollout request cursor and latest prompt baseline live in the retained record, so old requests are not rechecked and a kit reset starts a new comparison; a resumed legacy record lacking a rollout cursor first learns the latest prompt and cursor before inferring. Reported evidence takes precedence over inferred evidence. Once recorded, compacted and its source hold for every later call of that retained session, though the call shows no new evidence; a reported entry replaces an inferred source, and an inferred drop never replaces a reported one."
 rationale = "Provider compaction must remain visible when no exec event reports it, while a kit reset must not masquerade as provider compaction."
 test_refs = "TC-303"
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6

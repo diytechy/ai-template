@@ -3045,10 +3045,10 @@ phase = 6
 [test.TC-303]
 verifies = ["SR-227", "LLR-290", "IF-266", "IF-247", "IF-248"]
 level = "Unit"
-method = "Drive retained codex calls through act with inline variants of recorded exec and rollout lines: two exec turns, the first a multi-request sum and the second a smaller single-request contribution, infer nothing without a readable rollout; multiple exec totals alone also infer nothing; a rollout compacted entry marks source reported; every new rollout request is compared with its predecessor, starting from the stored prompt baseline: 35911 followed by new requests 15717 then 18200 marks source inferred despite the later rise; a pure rise across several requests and equal prompts infer nothing; old rollout requests are not rechecked; a kit reset discards the comparison; a legacy record with no rollout cursor learns the latest prompt and cursor before inferring. Assert the retained store and written session log carry compacted and its source, and unrelated thread rollouts are ignored. Variants are synthetic, not new live recordings."
+method = "Drive retained codex calls through act with inline variants of recorded exec and rollout lines: two exec turns, the first a multi-request sum and the second a smaller single-request contribution, infer nothing without a readable rollout; multiple exec totals alone also infer nothing; a rollout compacted entry marks source reported; every new rollout request is compared with its predecessor, starting from the stored prompt baseline: 35911 followed by new requests 15717 then 18200 marks source inferred despite the later rise; a pure rise across several requests and equal prompts infer nothing; old rollout requests are not rechecked; a kit reset discards the comparison; a legacy record with no rollout cursor learns the latest prompt and cursor before inferring. After an inferred compaction, a later call whose new requests only rise still carries compacted with source inferred; a compacted entry arriving after an inferred source marks it reported, and a later drop leaves a reported source reported. Assert the retained store and written session log carry compacted and its source, and unrelated thread rollouts are ignored. Variants are synthetic, not new live recordings."
 tier = "Smoke"
 expected = "Compaction is reported or explicitly inferred within one retained session, with no comparison across a kit reset."
 automated = "Yes"
 evidence = "tests/test_session_keep.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
