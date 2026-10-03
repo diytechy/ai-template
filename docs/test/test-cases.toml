@@ -2356,7 +2356,7 @@ verifies = ["SR-197", "LLR-231", "IF-201"]
 level = "Unit"
 method = "assumption_evidence_rows, the forest builder, the red-TC census and the report metrics called in memory on a spine holding a requirement-only case, an assumption-only case and a case citing both. The assumption-only case is listed under the assumption-evidence group, not the verifying-nothing bucket; the census and the report count assumption evidence apart from requirement evidence, with the both-citing case counted once in each; the verified-requirement join, the matrix and the triangle rule give the same answers as with the assumption references removed."
 tier = "Smoke"
-expected = "Satisfies SR-197's acceptance clause that wherever evidence is counted, assumption evidence is counted apart from requirement evidence."
+expected = "Satisfies SR-197's acceptance clause that wherever evidence is counted, the test cases that can falsify an assumption are counted apart from requirement evidence."
 automated = "Yes"
 evidence = "tests/test_evidence_partition.py"
 status = "Approved"
@@ -2409,7 +2409,7 @@ phase = 6
 [test.TC-233]
 verifies = ["SR-201", "LLR-238"]
 level = "Unit"
-method = "falsification_worklist called on in-memory rows. A falsified assumption cited by two requirements serving three needs, with two evidencing cases, lists each requirement, need and case exactly once. An active assumption with a failing latest record is listed as falsification evidence and its standing cell is unchanged. An active assumption with no failing record produces nothing. With the gate setting on, a falsified assumption is not listed a second time beside the boundary gate's failure."
+method = "falsification_worklist called on in-memory rows. A falsified assumption cited by two requirements serving three needs, with two cases that can falsify it, lists each requirement, need and case exactly once. An active assumption with a failing latest record is listed as falsification evidence and its standing cell is unchanged. An active assumption with no failing record produces nothing. With the gate setting on, a falsified assumption is not listed a second time beside the boundary gate's failure."
 tier = "Smoke"
 expected = "Satisfies SR-201's acceptance: the falsified assumption's requirements, needs and cases each listed once; a failing result reported without changing validity; no failure, no report."
 automated = "Yes"

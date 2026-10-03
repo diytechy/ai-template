@@ -12,13 +12,13 @@ _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781)._
 
-_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is dfcb7a81 (2026-10-03) — the record's maturity cells have not moved since._
+_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 94ccce56 (2026-10-03) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 66 changed, 59 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-667, WI-671, WI-672, WI-677, WI-678, WI-679, WI-746, WI-747, WI-748, WI-774.
+- `docs/requirements/interfaces.toml` — 66 changed, 59 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-667, WI-671, WI-672, WI-677, WI-678, WI-679, WI-746, WI-747, WI-748, WI-771, WI-774.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -654,7 +654,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 10 chain(s): SR-033, SR-146, SR-198, SR-199, SR-202, SR-203, SR-206, SR-215, SR-218, SR-224</summary>
+<summary>Waiting for automated adjudication — 14 chain(s): SR-033, SR-146, SR-191, SR-192, SR-197, SR-198, SR-199, SR-201, SR-202, SR-203, SR-206, SR-215, SR-218, SR-224</summary>
 
 ## SR-033 — Release checklist generation
 
@@ -696,17 +696,76 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 6
 
+## SR-191 — Domain assumptions are rows of their own
+
+> **Requirement.** Where a project declares its frame, the delivered process shall hold each domain assumption that a requirement's argument relies on as a row of its own stating where its outcome lands, what it assumes, the conditions under which it holds, the obstacle under which it fails, its maturity and its validity.
+
+> **Rationale.** A requirement states what the system does at its own interface, and a stakeholder need states what a person experiences; between them sits a claim about the world, and a false one makes a fully verified system deliver nothing. Unrecorded, the claim cannot be tested. A row gives it an id, so the test cases that can show it false are counted apart from evidence about the system's behavior, and one row cited wherever the claim applies replaces the same sentence written into every requirement it touches. The rows live apart from the frame, whose rows change only by ruling, so approving an assumption never carries unrelated drift in the frame's rows with it. Maturity and validity are separate fields because an approved assumption can later be shown false. Without a declared frame there is no crossing for an assumption to land on, so the tier applies only where a frame is declared.
+
+
+### SR SR-191
+- **Rationale**
+  - before: A requirement states what the system does at its own interface, and a stakeholder need states what a person experiences; between them sits a claim about the world, and a false one makes a fully verified system deliver nothing. Unrecorded, the claim cannot be tested. A row gives it an id, so evidence about it is counted apart from evidence about the system's behavior, and one row cited wherever the claim applies replaces the same sentence written into every requirement it touches. The rows live apart from the frame, whose rows change only by ruling, so approving an assumption never carries unrelated drift in the frame's rows with it. Maturity and validity are separate fields because an approved assumption can later be shown false. Without a declared frame there is no crossing for an assumption to land on, so the tier applies only where a frame is declared.
+  - after: A requirement states what the system does at its own interface, and a stakeholder need states what a person experiences; between them sits a claim about the world, and a false one makes a fully verified system deliver nothing. Unrecorded, the claim cannot be tested. A row gives it an id, so the test cases that can show it false are counted apart from evidence about the system's behavior, and one row cited wherever the claim applies replaces the same sentence written into every requirement it touches. The rows live apart from the frame, whose rows change only by ruling, so approving an assumption never carries unrelated drift in the frame's rows with it. Maturity and validity are separate fields because an approved assumption can later be shown false. Without a declared frame there is no crossing for an assumption to land on, so the tier applies only where a frame is declared.
+
+## SR-192 — A test stand-in for an outside party is a surrogate row naming the parties it emulates
+
+> **Requirement.** The delivered process shall record each stand-in that answers for an external party in tests as a surrogate row naming the external parties it emulates, cited by the assumption that states its fidelity.
+
+> **Rationale.** A stand-in for an outside party — a scripted model runner, a fresh scaffold in a temporary directory, a model judging a render in place of a person — is evidence only as far as it matches the party it replaces, and that match is itself an assumption. Recording the stand-in with its fidelity assumption lets cheap, continuous evidence against the stand-in sit beside the sparse samples whose failure shows the stand-in no longer matches. A stand-in is not a frame entity, whose enabling class means something the system depends on to run. Stand-ins for a project's own parts would name components approved at a later rung than the one that approves this row, so they belong to design-tier assumptions and are not accepted here.
+
+
+### SR SR-192
+- **Rationale**
+  - before: A stand-in for an outside party — a scripted model runner, a fresh scaffold in a temporary directory, a model judging a render in place of a person — is evidence only as far as it matches the party it replaces, and that match is itself an assumption. Recording the stand-in with its fidelity assumption lets cheap, continuous evidence against the stand-in sit beside sparse evidence that the stand-in still matches. A stand-in is not a frame entity, whose enabling class means something the system depends on to run. Stand-ins for a project's own parts would name components approved at a later rung than the one that approves this row, so they belong to design-tier assumptions and are not accepted here.
+  - after: A stand-in for an outside party — a scripted model runner, a fresh scaffold in a temporary directory, a model judging a render in place of a person — is evidence only as far as it matches the party it replaces, and that match is itself an assumption. Recording the stand-in with its fidelity assumption lets cheap, continuous evidence against the stand-in sit beside the sparse samples whose failure shows the stand-in no longer matches. A stand-in is not a frame entity, whose enabling class means something the system depends on to run. Stand-ins for a project's own parts would name components approved at a later rung than the one that approves this row, so they belong to design-tier assumptions and are not accepted here.
+
+## SR-197 — A test case names the assumptions it can falsify in a field of its own
+
+> **Requirement.** The delivered harness shall accept a test case that names the assumptions its failure shows false in place of, or beside, the requirements and design rows it verifies, placing a test case that names only assumptions in every phase of the requirements that cite them.
+
+> **Rationale.** A test that can show an assumption false is not evidence about the system's behavior, and counting both in one field would merge the two obligations the argument separates: that the system does what its requirements say, and that what they say reaches the outcome. A separate reference keeps the verified-requirement join exactly what it was, and lets a test of an assumption stand alone where no requirement is its subject. Every reader that counts evidence has to make the same split, or two views of one test case disagree about what it proves. Phase follows the requirements that rely on the assumption, because an assumption has no phase of its own.
+
+
+### SR SR-197
+- **AcceptanceCriteria**
+  - before: A test case naming only assumptions is valid and is not an orphan; a test case naming no requirement, design row or assumption is an orphan; an assumption reference naming an undeclared assumption fails the check naming the test case; an assumption-only test case belongs to each phase of the requirements citing its assumptions; wherever evidence is counted, assumption evidence is counted apart from requirement evidence; changing the assumption references re-opens no attestation.
+  - after: A test case naming only assumptions is valid and is not an orphan; a test case naming no requirement, design row or assumption is an orphan; an assumption reference naming an undeclared assumption fails the check naming the test case; an assumption-only test case belongs to each phase of the requirements citing its assumptions; wherever evidence is counted, the test cases that can falsify an assumption are counted apart from requirement evidence; changing the assumption references re-opens no attestation.
+- **Coincident**
+  - before: The need asks for a premise's evidence counted apart from the system's; a test case naming the assumptions it evidences, placed in the phases of the requirements citing them, is that outcome.
+  - after: The need asks for the tests that can show a premise false counted apart from the system's evidence; a test case naming the assumptions its failure shows false, placed in the phases of the requirements citing them, is that outcome.
+- **Rationale**
+  - before: Evidence about an assumption is not evidence about the system's behavior, and counting both in one field would merge the two obligations the argument separates: that the system does what its requirements say, and that what they say reaches the outcome. A separate reference keeps the verified-requirement join exactly what it was, and lets a test of an assumption stand alone where no requirement is its subject. Every reader that counts evidence has to make the same split, or two views of one test case disagree about what it proves. Phase follows the requirements that rely on the assumption, because an assumption has no phase of its own.
+  - after: A test that can show an assumption false is not evidence about the system's behavior, and counting both in one field would merge the two obligations the argument separates: that the system does what its requirements say, and that what they say reaches the outcome. A separate reference keeps the verified-requirement join exactly what it was, and lets a test of an assumption stand alone where no requirement is its subject. Every reader that counts evidence has to make the same split, or two views of one test case disagree about what it proves. Phase follows the requirements that rely on the assumption, because an assumption has no phase of its own.
+- **Requirement**
+  - before: The delivered harness shall accept a test case that evidences assumptions in place of, or beside, the requirements and design rows it verifies, placing a test case that evidences only assumptions in every phase of the requirements that cite them.
+  - after: The delivered harness shall accept a test case that names the assumptions its failure shows false in place of, or beside, the requirements and design rows it verifies, placing a test case that names only assumptions in every phase of the requirements that cite them.
+- **Title**
+  - before: A test case evidences assumptions in a field of its own
+  - after: A test case names the assumptions it can falsify in a field of its own
+
+### TC TC-227
+- **Expected**
+  - before: Satisfies SR-197's acceptance clause that wherever evidence is counted, assumption evidence is counted apart from requirement evidence.
+  - after: Satisfies SR-197's acceptance clause that wherever evidence is counted, the test cases that can falsify an assumption are counted apart from requirement evidence.
+
 ## SR-198 — An observation test declares what it reads, how long its result holds, and how it samples
 
-> **Requirement.** The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
+> **Requirement.** The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where its failure shows an assumption false, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
 
 > **Rationale.** An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampling model states how many samples are judged and what counts as a failing one, so a failed sample is recognizable as falsification evidence; a passed sample proves nothing beyond itself. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current.
 
 
 ### SR SR-198
+- **AcceptanceCriteria**
+  - before: A test case is an observation test case when it is recorded as not automated — a judgment the harness cannot rerun — whether it verifies a requirement or evidences an assumption; each declares the inputs its judgment reads and a result lifetime in days, one evidencing an assumption also declares a sampling policy of sampled or monitored, and a sampled one may declare a sampling model made of a whole-number sample size of at least one and a non-empty acceptance rule, whose adequacy for the claim is judged when the test case is approved; an omitted input list, lifetime or policy is reported without failing the check, naming the row; a lifetime under seven days, an input path that is absolute or still climbs out of the repository once normalized, a policy outside the pair, or a sampling model missing either part or carrying a sample size below one fails the check naming the row; an automated test case declares none of these; declaring or changing any of them re-opens the test case's attestation.
+  - after: A test case is an observation test case when it is recorded as not automated — a judgment the harness cannot rerun — whether it verifies a requirement or can falsify an assumption; each declares the inputs its judgment reads and a result lifetime in days, one that can falsify an assumption also declares a sampling policy of sampled or monitored, and a sampled one may declare a sampling model made of a whole-number sample size of at least one and a non-empty acceptance rule, whose adequacy for the claim is judged when the test case is approved; an omitted input list, lifetime or policy is reported without failing the check, naming the row; a lifetime under seven days, an input path that is absolute or still climbs out of the repository once normalized, a policy outside the pair, or a sampling model missing either part or carrying a sample size below one fails the check naming the row; an automated test case declares none of these; declaring or changing any of them re-opens the test case's attestation.
 - **Rationale**
   - before: An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampled result supports a positive claim only under a stated sampling model, so the model is declared where a project wants that claim. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current.
   - after: An observation — a person reading a render, a critique of a rendered view, a measurement taken across an adopter's first week — cannot be rerun for every tree, so its result is trusted only while the state it judged is unchanged, and for a declared time. Declaring the inputs it reads is what lets a changed input make the result stale without a model call; the lifetime floor keeps a judgment from being demanded more often than it can honestly be taken. The author proposes the lifetime and the row's approval accepts it, because how fast a premise can change is a judgment about the world. A sampling model states how many samples are judged and what counts as a failing one, so a failed sample is recognizable as falsification evidence; a passed sample proves nothing beyond itself. Omissions are reported rather than refused so observation tests written before these cells existed keep passing on upgrade; the declarations are approved content because they state how the row's claim is kept current.
+- **Requirement**
+  - before: The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where it evidences an assumption, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
+  - after: The delivered harness shall report an observation test case that omits the inputs its judgment reads, its result lifetime or, where its failure shows an assumption false, its sampling policy, and refuse one declaring a lifetime shorter than seven days, an input path outside the repository, or a sampling policy outside the closed pair of sampled and monitored.
 
 ## SR-199 — Observation results are recorded apart from their test case
 
@@ -719,6 +778,31 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Coincident**
   - before: The needs ask for each premise showing whether a current result evidences it; the observation result recorded apart, with its outcome, observer, expiry and judged digest, is that record.
   - after: The needs ask for each premise showing whether it has been shown false; the observation result recorded apart, with its outcome, observer, expiry and judged digest, is the record a failing observation is read from.
+
+## SR-201 — A falsified assumption is reported with everything that relies on it
+
+> **Requirement.** When an assumption is recorded as falsified, or an observation result fails on one of the test cases whose failure shows it false, the delivered harness shall report every system requirement and test case that relies on it.
+
+> **Rationale.** One assumption can sit under many requirements — every seam where the system consumes a model's output rests on the model runner honoring its contract — so when it is shown false, each of them loses part of its argument at once. Reporting the whole set turns one falsification into a worklist instead of a search. A failing sample is evidence against the assumption, but recording it as false is a judgment, so the report never flips the validity cell itself.
+
+
+### SR SR-201
+- **AcceptanceCriteria**
+  - before: A falsified assumption is reported with the requirements citing it, the needs they serve and the test cases evidencing it, each affected row listed once; a failing observation result is reported as falsification evidence against its assumption without changing the assumption's validity cell; an active assumption with no failing result produces no report; the report does not fail the check until the gate that relies on assumptions is enabled.
+  - after: A falsified assumption is reported with the requirements citing it, the needs they serve and the test cases that can show it false, each affected row listed once; a failing observation result is reported as falsification evidence against its assumption without changing the assumption's validity cell; an active assumption with no failing result produces no report; the report does not fail the check until the gate that relies on assumptions is enabled.
+- **Requirement**
+  - before: When an assumption is recorded as falsified, or an observation result evidencing it fails, the delivered harness shall report every system requirement and test case that relies on it.
+  - after: When an assumption is recorded as falsified, or an observation result fails on one of the test cases whose failure shows it false, the delivered harness shall report every system requirement and test case that relies on it.
+
+### LLR LLR-238
+- **Detail**
+  - before: falsification_worklist(das, srs, tcs, records) takes each assumption whose standing reads falsified, or whose latest observation record for any evidencing case failed, and lists the requirements citing it (da_citing_srs), the needs those requirements name, and the test cases citing it in Assumption-Refs, each row once. A failing record is reported as falsification evidence and never writes the standing cell. The list is advisory; with the gate enabled, a falsified assumption fails through the boundary gate's not-active condition instead, so it is never counted twice.
+  - after: falsification_worklist(das, srs, tcs, records) takes each assumption whose standing reads falsified, or whose latest observation record for any case that can falsify it failed, and lists the requirements citing it (da_citing_srs), the needs those requirements name, and the test cases citing it in Assumption-Refs, each row once. A failing record is reported as falsification evidence and never writes the standing cell. The list is advisory; with the gate enabled, a falsified assumption fails through the boundary gate's not-active condition instead, so it is never counted twice.
+
+### TC TC-233
+- **Method**
+  - before: falsification_worklist called on in-memory rows. A falsified assumption cited by two requirements serving three needs, with two evidencing cases, lists each requirement, need and case exactly once. An active assumption with a failing latest record is listed as falsification evidence and its standing cell is unchanged. An active assumption with no failing record produces nothing. With the gate setting on, a falsified assumption is not listed a second time beside the boundary gate's failure.
+  - after: falsification_worklist called on in-memory rows. A falsified assumption cited by two requirements serving three needs, with two cases that can falsify it, lists each requirement, need and case exactly once. An active assumption with a failing latest record is listed as falsification evidence and its standing cell is unchanged. An active assumption with no failing record produces nothing. With the gate setting on, a falsified assumption is not listed a second time beside the boundary gate's failure.
 
 ## SR-202 — An accepted risk reopens on a failed sample or on any change to what it was accepted for
 
