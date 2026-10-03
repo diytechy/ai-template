@@ -356,3 +356,14 @@ The landing:
 - The RESYNC entry was re-anchored at `1273a994`.
 - LLR-231 and TC-227's `method` keep the "assumption evidence" group name, which
   is tied to a code symbol: a follow-up topic, not filed.
+
+### WI-781 lands: TC-309 and TC-310's test assertions
+
+A Claude Opus builder added the assertions and demonstrated a red on three
+broken variants in a scratch copy. Codex Luna's only finding was a MINOR: the
+ordering check did not cover the case's Method line. The coordinator fixed it
+with one assertion, at `3dc73563`.
+
+At the landing, `test-cases.toml` conflicted with WI-771's edits. The coordinator
+first took trunk's side by mistake, then redid it with the table-wise merger, and
+checked that both lanes' cells were present.

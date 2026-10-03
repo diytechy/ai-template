@@ -3,11 +3,25 @@ id = "WI-781"
 title = "Assert the re-judge brief's chain order and the release checklist's registry bytes"
 workstream = "process"
 sr_refs = ["SR-146", "SR-215", "SR-033"]
-specref = "docs/archive/work/complete/WI-780-adjudicate-tc-309-tc-310-s.md"
+specref = ""
 buildtier = "quick"
 priority = 2
 safety_class = "spine"
 +++
+
+## Deliverable
+
+WI-780's draft (spine-acts batch Q) is applied:
+
+- **TC-309:** its method and expected now state the chain-above-case order. The
+  test asserts it, and also asserts that the case's Method follows the case
+  header; that second assertion closes Luna's one MINOR, fixed by the coordinator
+  at 3dc73563.
+- **TC-310:** its tests now compare the registry's bytes and assert that TC-280
+  is not listed.
+
+The code was already correct, so this closes a coverage gap. The red was
+demonstrated on three broken variants in a scratch copy.
 
 ## Context
 

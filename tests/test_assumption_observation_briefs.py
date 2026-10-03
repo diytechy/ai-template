@@ -67,6 +67,16 @@ def test_rejudge_shows_assumption_only_case(tmp_path, monkeypatch):
     assert reason is None, reason
     assert_chain(text)
     assert "- TC-279 — observes DA-011" in text
+    case_at = text.index("- TC-279 — observes DA-011")
+    method_at = text.index("Method:")
+    assert method_at > case_at
+    for shown in (
+        "DA-011",
+        "A new reader understands the code.",
+        "A reader cannot explain the code.",
+        "Standing**: active",
+    ):
+        assert text.index(shown) < case_at
 
 
 def test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell(
