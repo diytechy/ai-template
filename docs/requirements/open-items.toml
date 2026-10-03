@@ -3693,3 +3693,32 @@ blast_radius = "Only WI-688's readiness is held; its registry status stays queue
 options = "Keep the hold until the owner's condition is met; then rule the release."
 recommendation = "Keep pending until the owner performs the required act."
 wi_refs = ["WI-688"]
+
+[open_item.OI-100]
+title = "Re-attesting a reworded held-rung row whose meaning is unchanged"
+status = "pending"
+raised = "2026-10-03"
+one_line = """Owner direction 2026-10-03: a reworded need whose meaning is unchanged is re-approved automatically by the adjudication lane. Today an amended need reaches no adjudicator, and a held rung sends even a CLARITY verdict to the owner. Rule the mechanism."""
+decision = """Raised by the coordinator on the owner's direction of 2026-10-03, about the five needs (SN-003, SN-008, SN-009, SN-025, SN-043) that had waited four waves for the owner's re-attestation: "so long as the meaning has not changed, it can be reapproved automatically, this is part of the adjudication lane that I would expect the actual mechanical system to perform, if there appears to be a gap there please raise it as an OI."
+
+Three gaps stand between that expectation and the code:
+
+1. AN AMENDED NEED REACHES NO ADJUDICATOR. Intake mints an amendment adjudication from `acceptance_record.staged_spine_amendments`, which walks `SPINE_CSVS` (the requirement, design and test-case registries) only. The needs tier, and the assumption and surrogate tiers, are in `APPROVAL_ACT_CSVS` (the approval-act walk) but not in the amendment walk. So the meaning-or-clarity question is never asked of a need: SN-003, SN-008, SN-009 and SN-025 (amended by WI-616, 2026-09-28) and SN-043 (WI-667, then WI-771) went straight to the owner's brief.
+2. A HELD RUNG STOPS EVERY VERDICT AT THE OWNER. The amendment brief's aftermath (`prompts/adjudicate-amendment.template.md`) says that on a rung the dial holds, the adjudicator stops at the verdict and the signature is the owner's. Process.md §4, "A held rung's approval is the owner's act", forbids a mechanically triggered session to approve on a held rung. Neither tells a CLARITY re-anchor apart from an approval of new text. A CLARITY verdict says the owner's signature still describes the text. The drift stays, though, until the copy is re-anchored, and every copy of that registry is refused meanwhile.
+3. ONE MEANING ROW HOLDS ITS CLARITY SIBLINGS. The snapshot copy takes a whole registry and refuses while any drifted row in it goes unnamed. One need ruled MEANING therefore keeps every CLARITY-ruled need in the same file un-anchored until the owner signs.
+
+What happened this session (2026-10-03). An independent Claude Opus adjudicator ruled the five needs (`docs/reviews/2026-10-03-wave9/sn-reattest-verdict.md`). SN-009 is CLARITY. SN-003, SN-008, SN-025 and SN-043 are MEANING. Gap 3 then held SN-009 too: `intake.py snapshot --reattests SN-009` alone is refused, naming the four drifted siblings. So no need was re-anchored under the owner's delegation. The four MEANING rows, with the adjudicator's recommendations, wait for the owner. The adjudicator recommends signing SN-003, SN-008 and SN-043 as written, and not signing SN-025 as written (restore its "never from prose, a hand-maintained pointer or predefined tracks" exclusions)."""
+blast_radius = """Kit-wide.
+
+- Process.md §4's held-rung rule gains a stated carve-out.
+- Intake's amendment trigger widens to the needs tier, and possibly to the assumption and surrogate tiers.
+- The amendment brief's held-rung aftermath changes.
+- The loop-held status refusal is untouched, because a re-anchor moves no status.
+- Adopters who hold the needs rung would see need amendments minted as adjudication rows where today they surface only on the owner's brief. That needs a RESYNC entry, with no forced migration.
+
+The risk: an adjudicator who rules a meaning change CLARITY silently keeps a false owner signature on a held rung. The brief's fail-toward-meaning rule bounds that risk, and listing every held-rung re-anchor on the owner's surface makes it auditable after the fact."""
+options = """- (a) CLARITY RE-ANCHORS MECHANICALLY ON EVERY RUNG. Route need (and assumption/surrogate) amendments to adjudication. On a held rung, a CLARITY verdict re-anchors in the adjudication lane, and the act ledger names the verdict. A MEANING verdict on a held rung stays the owner's. FOR: it is the owner's stated expectation, and the owner reads only what changed meaning. AGAINST: the owner's signature can be carried over by a session's ruling, and a misruling is caught only after the fact.
+- (b) AS (a), WITH A CROSS-FAMILY CONFIRMATION. A held-rung CLARITY re-anchor waits for a second, different-family session to confirm CLARITY. FOR: two independent readings before a signature carries over. AGAINST: it adds a session to every held-rung rewording, which is the churn the owner wants gone.
+- (c) KEEP THE SIGNATURE THE OWNER'S, BUT RULE FIRST. Route need amendments to adjudication so the owner's brief carries a ruling, and the owner signs the CLARITY rows in bulk. FOR: no change to the held-rung doctrine. AGAINST: it is not automatic, which the owner asked for.
+- Sub-question, any option: gap 3. Either a copy may re-anchor only the named rows of a registry (a row-level anchor: a larger change to the snapshot), or the coupling stays and a MEANING row is signed in the same sitting as its CLARITY siblings."""
+recommendation = """(a). It is what the owner described. Re-anchoring text whose meaning did not move approves nothing new, so process.md §4's purpose (no session approves new text on a held rung) survives intact. The audit trail is the act ledger plus the verdict file. Keep gap 3's coupling for now: a MEANING need is the owner's to sign, and the coordinator can put it in the same sitting."""
