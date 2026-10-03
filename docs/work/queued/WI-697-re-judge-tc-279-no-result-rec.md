@@ -5,7 +5,7 @@ workstream = "process"
 specref = "docs/test/test-cases.toml"
 buildtier = "medium"
 safety_class = "adjudication"
-needs = ["WI-667"]
+needs = ["WI-667", "WI-747"]
 brief = "rejudge"
 adjudicates = ["TC-279"]
 +++
@@ -38,3 +38,11 @@ Proposed ruling 2026-10-02: see WI-667's "Proposed ruling". Under it TC-279 stay
 as a falsification check only (a failing sample is evidence against DA-011; a
 passing one proves nothing), and this re-judge still waits on WI-667's narrowed
 first Done-when.
+
+## Owner ruling 2026-10-02
+
+WI-667's proposed ruling is signed, and judgement cadence moved to WI-747. TC-279's
+first judgement waits on both: WI-667's brief arm, so its brief composes, and
+WI-747's rubric, so it is judged against one. Trim TC-279's declared inputs under
+WI-747's trigger rule; today they cover all of `project-trajectory/scripts` and
+both requirement registries, which would make it due after nearly every merge.

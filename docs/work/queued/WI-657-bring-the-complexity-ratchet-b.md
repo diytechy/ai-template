@@ -104,3 +104,15 @@ repo's derived stage. The owner is unsure how to mechanize that. Candidates to
 weigh when ruling: select by what the WI changes (code touched) rather than by
 `from-stage`; or declare per-step a trigger other than a stage rung. This
 bears on OI-68 Q3's "ARMED at DevStg-Impl" text.
+
+## Owner ruling 2026-10-02 (mechanization)
+
+Each stage-gated sensor step (`complexity`, `dupes-census`, `readability`,
+`smoke`) may declare a PATH TRIGGER in `docs/stack.ini`, and either selects the
+step: its declared rung, or a change that touches a declared path. When the hook
+or gate cannot tell what changed (no staged diff, an unresolvable base), the step
+RUNS. A step's trigger includes its own baseline file, script and config. A step
+that declares no paths keeps today's rung-only selection, so adopters need not
+migrate; the path patterns are per stack. Amend LLR-206 (and the rung text of
+OI-68 Q3 it carries) through the artifact adjudication route, with a test, and a
+RESYNC entry.

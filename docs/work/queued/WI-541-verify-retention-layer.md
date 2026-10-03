@@ -4,7 +4,7 @@ title = "Verify the retention layer on this box before the dial is turned: windo
 specref = "docs/plans/2026-08-29-adjudicator-session-retention-plan.md#5-sequenced-work-each-a-wi-none-starts-while--exists"
 workstream = "process"
 sr_refs = []
-needs = ["WI-620"]
+needs = ["WI-620", "WI-688"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
@@ -209,3 +209,15 @@ NOT the documented 30-minute minimum for GPT-5.6 and later. The model this CLI r
 the codex default (the rollout names it), so the doc's model scope may not cover it;
 that is unverified. A keep-warm ping for the codex route should fire at or under 5
 minutes. Finer probes (7, 8, 9 minutes) were not run.
+
+## Owner rulings 2026-10-02
+
+- 700k tokens cannot be reached: the model's window is 258,400. The 212k-token
+  measurement above is the recorded top, and the 100k-700k clause is met by it.
+- Occupancy on a real multi-step adjudication through the kit's session path is
+  taken from WI-688's judge sitting, so this row closes with WI-688 (held by the
+  owner, second to last in the queue).
+- The codex adapter findings are WI-748: read `cache_write_input_tokens`, which the
+  adapter hard-codes to empty (cache READS are parsed correctly), and infer
+  `compacted` from a drop in the latest request's prompt between turns, or from the
+  rollout's `compacted` entry.

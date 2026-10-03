@@ -27,18 +27,21 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **RESUME HERE:** start with the coordinator's
   [handoff-2026-09-29-wave6-coordinator.md](handoff-2026-09-29-wave6-coordinator.md),
   then apply the owner's 2026-09-30/10-02 directions below (each is also
-  noted in its WI row). The open count is 11. Buildable first jobs:
-  - the re-seed test fixture, so the phase-close full suite is green again
-    (WI-745);
-  - the keep-warmer start-failure fix, an exact adjudicator draft (WI-744);
-  - the diagram shrink floor's fix round, held mid-lane on the owner's
-    direction in OI-96: a 12 px and 10.5 px type scale with a 9 px floor
-    (WI-722), then TC-055's cross-family re-judge with a non-Codex judge.
-  - **WI-541** (live runs authorized): the live codex and opencode recordings
-    are in; still owed are the compaction-ceiling run, real multi-step
-    occupancy, cache TTLs, replay time, a recording of the kit's own route
-    command (the classifier refused its bypass flag) and a codex adapter
-    finding (`cache_write_input_tokens` now reported).
+  noted in its WI row; the 2026-10-02 rulings are in WI-541, WI-657, WI-667,
+  WI-697 and WI-746). The open count is 13. Order, after the owner's 2026-10-02
+  session:
+  1. WI-745 (the re-seed fixture, so the phase-close full suite is green), WI-744
+     (the keep-warmer start failure, an exact adjudicator draft) and WI-722 (the
+     shrink floor: 12 px and 10.5 px type, a 9 px floor, per OI-96; its first
+     build `d451cb64` is lost, so it is rebuilt from trunk with
+     `reviews/2026-09-28-wave6/sonnet-wi722-r1.md` as input), then WI-713
+     (TC-055's re-judge, a non-Codex judge).
+  2. WI-746 (a pending open item's `wi_refs` blocks a queued row), WI-747
+     (judgement cadence: a rubric first, then a declared trigger no faster than
+     every N work items), WI-667 (narrowed), WI-697, WI-657 (the path trigger)
+     and WI-748 (the codex adapter's cache writes and compaction).
+  3. WI-688 second to last; its judge sitting is WI-541's multi-step occupancy
+     run, and WI-541 closes with it. WI-625 (deferred) last.
   - **Carry TC-262, TC-263, TC-264 and TC-267 into the next spine-acts
     adjudication** (WI-722's merge): `3e0a5f48` amended their approved method
     cells on trunk outside a lane, so no adjudication was minted for them;
@@ -47,20 +50,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
     scratch trial, after amending TC-036's inputs to add `RESYNC_PACK.md`.
     **Not worked in the 2026-10-02 session:** the owner starts it on
     2026-10-03 (US Central).
-  - **WI-688:** now also builds the SR-161 perspective-record producer.
-    **Held by the owner (2026-10-02), second to last in the queue.** When it
-    runs, its judge sitting is WI-541's real multi-step occupancy run.
-  - **Owner rulings still open:** WI-657 (sensors run by what the WI does, not
-    by rung; mechanization undecided), WI-667 and WI-697 (the owner doubts an
-    assumption has evidence; Status/standing only), and the rest of the
-    handoff's "For the owner" list.
 
-  **Do not claim these though the frontier lists them:** WI-667, WI-657, WI-697,
-  WI-684 and WI-688 (and WI-541's remaining parts) wait on the owner or on a
-  person's act; the owner will unblock them in the next session. They stay
-  `queued`, not `deferred`. WI-667's proposed ruling is awaiting signature, and
-  its Context and first Done-when still describe the old evidence design. **WI-746** (queued) will make this mechanical: a row
-  waiting on an open item is blocked and says why; remove this note when it lands.
+  **Do not claim, though the frontier lists them:** WI-684 (the owner's, from
+  2026-10-03) and WI-688 (held by the owner until second to last). WI-746 makes
+  this mechanical; remove this note when it lands.
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
   dispatcher claims nothing until a reviewed commit deletes it, so work is
@@ -75,11 +68,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Assumption tier — C1 and C2 have landed and are approved:** the
   redrawn frame, checkpoint re-judging of observation tests, the assumption
   gate's four steps (behind `[checks] assumption_gate = false`), and C2's
-  assumption and surrogate rows with every SR's bridging. C3 (evidence) and
-  C4 (activation) come next, but the owner doubts an assumption has evidence
-  at all (WI-667, WI-697). A proposed ruling awaits the owner's signature
-  in WI-667: status and standing only, falsification as the one signal, no
-  evidence ladder; settle it before building C3. OI-97's joint-delivery class has
+  assumption and surrogate rows with every SR's bridging. The owner signed
+  WI-667's ruling on 2026-10-02: an assumption carries status and standing
+  only, falsification is the one signal, and there is no evidence ladder, so
+  C3 shrinks to the falsification route and C5 loses its evidence arm. OI-97's joint-delivery class has
   landed and is anchored.
 - **Sister plan — one plan still owed:** every question in the
   [notes on spine, sessions and tests](plans/2026-09-23-owner-notes-spine-sessions-and-tests.md)
@@ -134,15 +126,16 @@ _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` —
 - **In stage:** **DevStg-Impl** (stage 7 of 8, implementation in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-Impl;6=DevStg-Impl`, derived current **phase=6**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
 - **Spine:** **SN=31 SR=120 LLR=268 TC=271** (22 drafts) · 215 seams · 4 components.
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
+  - **WI-747** `P3` — Judge an observation case against a rubric, and re-judge it by a declared trigger no fast…
   - **WI-744** `P3` — Build the keep-warmer even when one routing row's argv cannot be built: KeepWarmer builds…
   - **WI-722** — Raise the diagram shrink floor to a rendered-pixel label minimum, and settle TC-055's T5…
-  - **WI-684** — re-judge TC-036: no result recorded [sha256:2f2f30dfba87] at merge 77fb093
   - **WI-688** — re-judge TC-211: no result recorded [sha256:aa064ee9542c] at merge 77fb093
+  - **WI-684** — re-judge TC-036: no result recorded [sha256:2f2f30dfba87] at merge 77fb093
   - **WI-657** `P3` — Code-quality sensors: bring the complexity ratchet back to green, add the flag-axis measu…
   - **WI-667** `P3` — Decide how a red assumption-evidence test case reaches the dispatch census, once the red-…
-  - **WI-541** `P3` — Verify the retention layer on this box before the dial is turned: windows, compaction cei…
   - **WI-745** `P3` — Plant the re-seed test's Drafted LLR row itself: the phase-close full suite is red becaus…
   - **WI-746** `P3` — Let a work item wait on an open item: a queued row with an unruled open item is blocked,…
+  - **WI-748** `P3` — Codex adapter: read cache-write tokens, and infer compaction from a prompt-size drop betw…
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit)** and the **standing rules** (claim refusal on prose ids,

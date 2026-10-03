@@ -119,3 +119,14 @@ assumption holds; only a failed one is evidence that it does not").
    DA-012) have no mid-development evaluation; their falsifier fires only through
    an incidental report, a field note or a review, and the release checklist is
    the one standing prompt, a recall question to a person, not a test.
+
+## Owner ruling 2026-10-02
+
+The proposed ruling above (items 1 to 9) is signed, except how often an
+observation case is judged, which moves to WI-747 (the judgement cadence and the
+rubric-first rule). So this row builds: the first Done-when, narrowed to rendering
+an assumption-only observation case under its assumption's chain in the
+first-approval and re-judge briefs; item 8's release-checklist assumptions
+section; and the amendments of SN-043, SR-033, SN-004 and the plan's C3 and C5
+through the artifact adjudication route. The second and third Done-when lines (the
+census's assumption half) are dropped, not built.

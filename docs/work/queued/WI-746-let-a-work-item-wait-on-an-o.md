@@ -28,44 +28,43 @@ details and context, which is where the unblocking decision lives. This needs no
 status directory: status stays the directory, and "blocked" is derived from the
 edge.
 
-## Design to confirm (the owner's call)
+## Design (ruled by the owner 2026-10-02)
 
-Preferred: let `needs` accept an open-item id (`needs = ["OI-96"]`) as a hard edge
-satisfied only once that open item's `status` is `ruled` (not `pending`). Then:
-- the scheduler's readiness (IF-054) and `agent_brief` treat an unruled OI edge as
-  unsatisfied, so the row is not claimable and is reported as blocked BY that OI;
-- the generated ready frontier drops it and a generated "Blocked" list names each
-  row beside the OI that gates it (the OI's title and `open-items.html` anchor), so a
-  reader goes straight to the context needed to unblock it;
-- `check_trajectory` fails an OI id that resolves to no open item, and keeps the
-  acyclicity check over the mixed graph;
-- when the OI is ruled the edge is satisfied with no edit to the row, and the row
-  is claimable again.
+The open-item registry owns the block; the work-item row format does not change.
+Every open item already carries `wi_refs` (IF-073). The rule:
 
-Alternative to weigh: derive the block from an association field instead of `needs`
-(for example a `blocked_by` key), keeping `needs` for work-item predecessors only.
-Prefer the first unless the readiness code treats `needs` as work-item-only in too
-many places.
-
-A gate on a person's act (WI-684's re-sync, WI-688's producer before its re-run) is
-filed as an open item too, so it is blockable the same way: say so in the design.
+- A queued work item named in the `wi_refs` of an open item whose `status` is
+  `pending` is BLOCKED: the scheduler's readiness (IF-054) and `agent_brief` do not
+  offer it, and it is reported as blocked BY that open item. When the open item is
+  ruled, the block lifts with no edit to the work item.
+- `wi_refs` therefore changes meaning from "related to, or raised by" to "waits on
+  this ruling". A pending open item that only mentions a work item for context
+  must not list it there. State this once, in IF-073's contract, and link to it.
+- The generated ready frontier drops a blocked row. A generated "Blocked" list
+  names each blocked row beside the open item that gates it (the open item's title
+  and its `open-items.html` anchor), so a reader goes straight to the context
+  needed to unblock it.
+- `needs` stays work-item to work-item only. No `needs = ["OI-..."]` edge and no
+  new `blocked_by` key.
+- A gate on a person's act (WI-684's re-sync, WI-688's hold) is filed as a pending
+  open item that lists the row in `wi_refs`, so it is blockable the same way.
 
 ## Done-when
 
-- A queued row whose `needs` names a pending open item is not offered by the
-  scheduler's readiness, with a test; the same row is offered once the open item is
-  ruled.
+- A queued row named in a pending open item's `wi_refs` is not offered by the
+  scheduler's readiness, with a test; the same row is offered once that open item
+  is ruled, with no edit to the row.
 - The generated frontier and status snapshot show blocked rows apart from ready
-  ones, each with its gating open item; the dashboard and roadmap read status from
-  the directory still (no second statement of state).
-- A dangling open-item edge is a `check_trajectory` finding; a cycle through one is
-  still an error.
-- The contracts that state the rule (IF-054's readiness, IF-023's row format,
-  `docs/work/README.md`, `WI-000-example.md`, `PROCESS.md` where it describes `needs`)
-  say it once and link, not restate; a RESYNC entry covers the shipped scripts and
-  templates if they change.
-- The rows now waiting by hand (WI-541's remainder, WI-657, WI-667, WI-684, WI-688,
-  WI-697) are re-pointed at an open item each (filed or existing, consolidating
-  rather than adding where one already covers the gate), and the hand-written "do
-  not claim" note in `docs/status.md` is removed.
+  ones, each with its gating open item; the dashboard and roadmap still read status
+  from the directory (no second statement of state).
+- A `wi_refs` entry that resolves to no work item is a `check_trajectory` finding.
+- The rule is stated once, in IF-073's contract (the `wi_refs` cell's meaning) and
+  IF-054's readiness, and `docs/work/README.md`, `PROCESS.md` and the open-item
+  template link to it rather than restate it; the work-item row format (IF-023,
+  `WI-000-example.md`) does not change. A RESYNC entry covers the shipped scripts
+  and templates that change.
+- Existing ruled open items' `wi_refs` are left as history (a ruled item blocks
+  nothing). Every row still held by hand when this lands gets a pending open item
+  that lists it in `wi_refs`, consolidating where one already covers the gate, and
+  the hand-written "do not claim" note in `docs/status.md` is removed.
 - The commit bar passes.
