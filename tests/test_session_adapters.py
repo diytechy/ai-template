@@ -244,6 +244,37 @@ def test_codex_occupancy_falls_back_to_codexs_default_home(default_home):
     assert adapter.compaction(stream, {}, THREAD)["prompts"][-1] == 15224
 
 
+def test_codex_default_home_follows_the_launch_home_on_posix(
+    default_home, tmp_path, monkeypatch
+):
+    # codex's POSIX default is "${CODEX_HOME:-$HOME/.codex}" in the launch
+    # environment, so a route overriding HOME has codex write there, not under
+    # the service process's home (which here holds nothing).
+    monkeypatch.setattr(adapters, "LAUNCH_HOME_VARIABLE", "HOME", raising=False)
+    launch = tmp_path / "launch-user"
+    _put_rollout(launch / ".codex", _fixture("codex-rollout.jsonl"))
+    adapter = adapters.adapter_for(["codex"])
+    stream = _fixture("codex-exec-json.jsonl")
+    _, used, window, _ = adapter.context(stream, env={"HOME": str(launch)})
+    assert (used, window) == (15224, 258400)
+    prompts = adapter.compaction(stream, {"HOME": str(launch)}, THREAD)["prompts"]
+    assert prompts[-1] == 15224
+
+
+def test_codex_default_home_ignores_a_launch_home_override_on_windows(
+    default_home, tmp_path, monkeypatch
+):
+    # On Windows codex takes its default from the OS profile and ignores a
+    # launch's HOME and USERPROFILE, so the adapter does too.
+    monkeypatch.setattr(adapters, "LAUNCH_HOME_VARIABLE", None, raising=False)
+    _put_rollout(default_home, _fixture("codex-rollout.jsonl"))
+    launch = {"HOME": str(tmp_path / "x"), "USERPROFILE": str(tmp_path / "x")}
+    _, used, _, _ = adapters.adapter_for(["codex"]).context(
+        _fixture("codex-exec-json.jsonl"), env=launch
+    )
+    assert used == 15224
+
+
 def test_an_explicit_codex_home_wins_over_the_default(default_home, tmp_path):
     _put_rollout(default_home, _fixture("codex-rollout.jsonl"))
     explicit = tmp_path / "explicit"

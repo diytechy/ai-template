@@ -561,14 +561,24 @@ class CodexAdapter(PlainAdapter):
         }
 
 
+# The launch-environment variable codex takes its default home from: `HOME` on
+# POSIX ("${CODEX_HOME:-$HOME/.codex}"). On Windows codex reads the OS profile
+# and ignores a launch's HOME and USERPROFILE (`codex doctor` reports the same
+# home under either override), so no launch variable applies there.
+LAUNCH_HOME_VARIABLE = None if os.name == "nt" else "HOME"
+
+
 def _codex_home(env):
     """The codex home a launch under `env` writes its rollouts to: its
     `CODEX_HOME` when set and non-empty, else codex's own default, `.codex`
     in the user's home (codex documents "default `CODEX_HOME` is
-    `~/.codex`"). None when no user home can be determined."""
-    explicit = (env or {}).get("CODEX_HOME")
-    if explicit:
-        return Path(explicit)
+    `~/.codex`"). That home is the launch's `LAUNCH_HOME_VARIABLE` when it
+    sets one, else this process's home. None when no home can be found."""
+    env = env or {}
+    if env.get("CODEX_HOME"):
+        return Path(env["CODEX_HOME"])
+    if LAUNCH_HOME_VARIABLE and env.get(LAUNCH_HOME_VARIABLE):
+        return Path(env[LAUNCH_HOME_VARIABLE]) / ".codex"
     try:
         return Path.home() / ".codex"
     except (RuntimeError, OSError):
