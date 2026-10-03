@@ -18,10 +18,13 @@ This wave's record:
 - **Builder: Claude Opus, medium effort.**
   - Dispatch it with the Agent tool, `model: "opus"`, working in a pre-cut lane
     worktree.
-  - The Agent tool takes no effort parameter. An agent definition's frontmatter
-    sets it (`.claude/agents/<name>.md`). Confirm the frontmatter key with the
-    `claude-code-guide` agent before creating a `kit-builder` definition with
-    `model: opus` and medium effort. None exists yet.
+  - The Agent tool takes no effort parameter, so dispatch with
+    `subagent_type: "kit-builder"`. That definition is
+    `.claude/agents/kit-builder.md`, with frontmatter `model: opus` and
+    `effort: medium` (the `effort` key is confirmed in the Claude Code subagent
+    docs). It also carries the builder's standing rules.
+  - An agent definition loads at session start. If it is not listed, fall back to
+    `general-purpose` with `model: "opus"`.
   - An Opus builder is not sandboxed. It can run the hook test modules, sync the
     `.agents` skill mirror and run the whole smoke tier, which Sol could not.
   - Keep the rule that the builder leaves its change uncommitted. The coordinator
