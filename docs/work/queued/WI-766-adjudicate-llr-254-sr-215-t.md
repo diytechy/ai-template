@@ -66,3 +66,48 @@ Advisory registry joins (WI-388; never gating):
 - IF-050 scripts/derive_stage -> scripts/check;scripts/agent_common;scripts/check_trajectory;scripts/traj_parse;scripts/intake: file docs/stage — key = value fields plus a sha256 fingerprint of the declared inputs
 - IF-053 scripts/schedule <- scripts/census;scripts/dispatch;scripts/intake: call load_wis · _load, frontier, kind_of · SAFETY_CLASSES — the symbols census, dispatch and intake take; no write…
 - IF-090 scripts/intake <- scripts/integrate;scripts/dispatch;scripts/agent_loop: call intake_after_merge (integrate) · mint_gap_rows (dispatch) · context_block (agent_loop, advisory)
+
+## Dispositions
+
+Verdict: `docs/reviews/wi-766-adjudicate-llr-254-sr-215-t/001-ADJUDICATE-30ee386.md`
+(MEANING on all nine rows). TC-036, TC-055, TC-209, TC-210, TC-211 and TC-247 would be
+blessed as written, but they could not be re-anchored: TC-248 is not blessed, and it
+shares their registry. SR-215, LLR-254 and TC-248 return with the findings below.
+
+```toml
+title = "Correct SR-215, LLR-254 and TC-248 after WI-747's cadence amendment so their text reads one way and verifies what it states"
+workstream = "process"
+buildtier = "medium"
+safety_class = "spine"
+sr_refs = ["SR-215"]
+priority = 2
+```
+
+Amend only these three approved rows, through the amendment route. A new
+amendment adjudication then re-judges them together with TC-036, TC-055,
+TC-209, TC-210, TC-211 and TC-247, which are still drifted and should
+re-attest as they stand.
+
+- **SR-215 AcceptanceCriteria and LLR-254 Detail:** reword "No result is due
+  immediately" / "No record is due immediately" to say what PROCESS.md says: "A
+  case with no result is due immediately".
+- **SR-215 AcceptanceCriteria:** keep only the mechanized half of the rubric
+  clause, "an observation case with no rubric reference is reported as a
+  warning". Leave the authoring rule (a numbered rubric written before the
+  first judgement) in its one home, PROCESS.md "Observation judgement".
+  `trace.py` currently flags SR-215 for naming a rubric while Verification is
+  Test.
+- **SR-215 Coincident and Title:** restate them for the cadence decision. The
+  closed-WI floor is a limit derived from the owner's cost and determinism
+  direction (WI-747), not an outcome coincident with the need. If the floor
+  makes the row derived, label it.
+- **LLR-254 Detail:** state `checkpoint_for`'s obligation (it is already in
+  CodeSymbol): it returns the case's explicit release or stage-gate checkpoint,
+  else merge.
+- **TC-248 Method:** restore that the generated release checklist carries a
+  REQUIRED item naming the release re-judge command and the due count. This is
+  LLR-255's clause, and TC-248 is its only verifier.
+
+Out of scope: LLR-293, LLR-294, TC-306, TC-307 and LLR-255. WI-767's
+successor owns them, including where the stage-gate command entry and its
+verification live. Do not touch code beyond what a reworded row needs.
