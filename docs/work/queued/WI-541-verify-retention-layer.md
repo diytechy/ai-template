@@ -176,7 +176,18 @@ adjudication through the kit's own session path is still owed.
   owner's machine slept mid-gap; the resumed prefix, routing or eviction under load could
   differ). Do not size a keep-warm cadence to 30 minutes on the docs' word; repeat the
   probe before relying on either figure.
-- Claude Code, for comparison: its docs page and release notes describe a 5-minute
-  default with `ENABLE_PROMPT_CACHING_1H=1` selecting 1 hour (and
-  `FORCE_PROMPT_CACHING_5M=1` pinning 5 minutes); a third-party post claims the default
-  fell from 1 hour to 5 in March 2026, which I did not verify.
+- Claude Code, for comparison (CORRECTED 2026-10-02 after reading its prompt-caching
+  page, code.claude.com/docs/en/prompt-caching; the first note here said "5-minute
+  default" and was incomplete). The TTL is decided per request, in two buckets. MAIN
+  CONVERSATION (interactive turns, non-interactive `claude -p` runs, Agent SDK turns):
+  one hour on a Claude subscription within plan usage, five minutes with an API key,
+  usage credits or a cloud provider. EVERYTHING ELSE (subagents, workflows, teammates,
+  forks, compaction, titles): five minutes, except a few server-controlled helper
+  requests. Controls (v2.1.242 and later): `promptCacheTtl` setting or
+  `CLAUDE_CODE_PROMPT_CACHE_TTL` for the main bucket; `subagentPromptCacheTtl` or
+  `CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL` for the rest; a subagent's own `cacheTtl`
+  under its `experimental` frontmatter; `ENABLE_PROMPT_CACHING_1H=1` for both;
+  `FORCE_PROMPT_CACHING_5M=1` overrides all. Values are `5m` or `1h`. The kit's claude
+  route is `claude -p`, the main-conversation bucket, so a keep-warm cadence depends on
+  how the box authenticates; `claude -p "hello" --output-format json` shows which TTL
+  was written (`usage.cache_creation.ephemeral_1h_input_tokens` vs `_5m_`).
