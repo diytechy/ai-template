@@ -527,7 +527,8 @@ def test_the_arms_list_at_their_rungs_and_the_stage_fold_takes_no_interface(
 # no accepted risk; DA-004 falsified under a risk accepted in the act that
 # still stands; DA-005 falsified under a risk reopened by an edit to its text
 # after that act; DA-006 falsified under a risk reopened by a failing sample
-# recorded after it.
+# recorded after it; DA-007 active when its risk was accepted, then recorded
+# falsified after the act, which reopens that risk (Standing is a bound cell).
 
 RELEASE_DAS = (
     _assumption("DA-001")
@@ -536,10 +537,11 @@ RELEASE_DAS = (
     + _assumption("DA-004", standing="falsified", accepted_risk="Ship it anyway.")
     + _assumption("DA-005", standing="falsified", accepted_risk="Ship it anyway.")
     + _assumption("DA-006", standing="falsified", accepted_risk="Ship it anyway.")
+    + _assumption("DA-007", accepted_risk="Ship it anyway.")
 )
 
 RELEASE_SRS = "".join(
-    _requirement("SR-00{}".format(i), da=["DA-00{}".format(i)]) for i in range(1, 7)
+    _requirement("SR-00{}".format(i), da=["DA-00{}".format(i)]) for i in range(1, 8)
 )
 
 
@@ -577,6 +579,7 @@ RELEASE_FAILURES = {
     "DA-003": ("falsified", "no accepted risk"),
     "DA-005": ("falsified", "reopened"),
     "DA-006": ("falsified", "reopened", "failed after the act"),
+    "DA-007": ("falsified", "reopened", "Standing changed since the act"),
 }
 
 
@@ -639,6 +642,16 @@ def _release_repo(scaffold, gate):
             'holds_when = "The screen is in view and lit."',
             1,
         ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    text = da.read_text(encoding="utf-8")
+    marker = "[assumption.DA-007]\n"
+    head, tail = text.split(marker)
+    da.write_text(
+        head
+        + marker
+        + tail.replace('standing = "active"', 'standing = "falsified"', 1),
         encoding="utf-8",
         newline="\n",
     )
