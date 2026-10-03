@@ -25,12 +25,14 @@ is demonstrated able to fail.
 
 from __future__ import annotations
 
+import functools
 import re
 import tomllib
 
 import pytest
 
 from conftest import load_script
+from kitlib import observation
 
 hats = load_script("hats")
 
@@ -60,6 +62,7 @@ tags = ["scripts"]
 [need.SN-002]
 status = "Approved"
 need = "Another need."
+tags = ["ops"]
 """
 
 SRS = """
@@ -82,6 +85,10 @@ title = "A design row"
 TCS = """
 [test.TC-001]
 verifies = ["SR-001"]
+method = "A method."
+
+[test.TC-002]
+verifies = ["LLR-001"]
 method = "A method."
 """
 
@@ -341,3 +348,139 @@ def test_the_cli_refuses_inputs_alongside_check(tmp_path, capsys):
         hats.main(["--root", str(root), "record", REC, "--check", "--row", "SR-001"])
         == 2
     )
+
+
+# --- 7. derivation edges, refresh retention, and the atomic write -------------
+SIBLING_ROSTER = (
+    ROSTER
+    + """
+[hat.BOTH]
+applies_when = 'tags contains "scripts" and tags contains "ops"'
+asks = "q"
+listens_for = "f"
+
+[hat.EXTRA-OPS]
+applies_when = 'tags contains "extra" and tags contains "ops"'
+asks = "q"
+listens_for = "f"
+
+[hat.EXTRA-SCRIPTS]
+applies_when = 'tags contains "extra" and tags contains "scripts"'
+asks = "q"
+listens_for = "f"
+"""
+)
+
+
+@pytest.mark.parametrize(
+    "rows, parents",
+    [(["LLR-001"], ["SN-002"]), (["TC-001"], ["SN-001"]), (["TC-002"], ["SN-002"])],
+)
+def test_parents_are_reached_through_llr_and_tc_rows(tmp_path, rows, parents):
+    root = _tree(tmp_path)
+    hats.write_record(root, REC, rows=rows, by="test session")
+    assert _parsed(root)["decomposition"]["parents"] == parents
+
+
+def test_applicability_is_never_merged_across_sibling_needs(tmp_path):
+    root = _tree(tmp_path, roster=SIBLING_ROSTER)
+    hats.write_record(root, REC, rows=["SR-001", "SR-002"], by="test session")
+    assert _parsed(root)["perspective"]["BOTH"]["applicable"] is False
+
+
+def test_declared_tags_widen_each_parent_context_and_a_refresh_keeps_them(tmp_path):
+    root = _tree(tmp_path, roster=SIBLING_ROSTER)
+    hats.write_record(
+        root, REC, rows=["SR-001", "SR-002"], tags=["extra"], by="test session"
+    )
+    hats.write_record(root, REC)
+    data = _parsed(root)
+    assert data["decomposition"]["tags"] == ["extra"]
+    assert data["perspective"]["EXTRA-OPS"]["applicable"] is True
+    assert data["perspective"]["EXTRA-SCRIPTS"]["applicable"] is True
+
+
+def test_a_refresh_keeps_an_earlier_recorded_on(tmp_path):
+    root = _tree(tmp_path)
+    _write(root)
+    path = root / REC
+    text = re.sub(
+        r'recorded_on = "[^"]*"',
+        'recorded_on = "2000-01-01"',
+        path.read_text(encoding="utf-8"),
+    )
+    path.write_text(text, encoding="utf-8")
+    hats.write_record(root, REC)
+    assert _parsed(root)["decomposition"]["recorded_on"] == "2000-01-01"
+
+
+def test_a_moved_parent_set_is_stale(tmp_path):
+    root = _tree(tmp_path)
+    _write(root)
+    _set_no_finding(root, "SCRIPTS", "Touches no script.")
+    (root / "docs/requirements/system-requirements.toml").write_text(
+        SRS.replace('sn_refs = ["SN-002"]', 'sn_refs = ["SN-001"]'), encoding="utf-8"
+    )
+    findings = hats.record_findings(root, REC)
+    assert any(
+        c == "STALE" and t.startswith("parents are now SN-001;") for c, t in findings
+    ), findings
+
+
+def test_missing_is_judged_on_the_regeneration(tmp_path):
+    root = _tree(
+        tmp_path,
+        srs=SRS.replace(
+            'hat_refs = ["ALWAYS-ON"]', 'hat_refs = ["ALWAYS-ON", "SCRIPTS"]'
+        ),
+    )
+    _write(root)
+    (root / "docs/requirements/system-requirements.toml").write_text(
+        SRS, encoding="utf-8"
+    )
+    findings = hats.record_findings(root, REC)
+    assert _classes(findings) == ["MISSING", "STALE"]
+    assert any(c == "MISSING" and "SCRIPTS" in t for c, t in findings)
+
+
+def test_an_interrupted_write_leaves_the_previous_record_whole(tmp_path, monkeypatch):
+    root = _tree(tmp_path)
+    _write(root)
+    before = (root / REC).read_bytes()
+
+    def boom(src, dst):
+        raise OSError("interrupted")
+
+    monkeypatch.setattr(
+        hats, "write_atomic", functools.partial(observation.write_atomic, replace=boom)
+    )
+    with pytest.raises(OSError, match="interrupted"):
+        _write(root, rows=("SR-001",))
+    assert (root / REC).read_bytes() == before
+
+
+def test_a_moved_predicate_and_a_new_hat_are_reported(tmp_path):
+    root = _tree(tmp_path)
+    _write(root)
+    _set_no_finding(root, "SCRIPTS", "Touches no script.")
+    (root / "docs/requirements/hats.toml").write_text(
+        ROSTER.replace(
+            "applies_when = 'tags contains \"scripts\"'",
+            'applies_when = \'tags contains "scripts" or tags contains "ops"\'',
+        )
+        + """
+[hat.LATE]
+applies_when = 'tags contains "nothing-carries-this"'
+asks = "q"
+listens_for = "f"
+""",
+        encoding="utf-8",
+    )
+    findings = hats.record_findings(root, REC)
+    assert any(
+        c == "STALE" and t.startswith("SCRIPTS: applies_when") for c, t in findings
+    ), findings
+    assert any(
+        c == "STALE" and t.startswith("LATE has no entry") for c, t in findings
+    ), findings
+    assert _classes(findings) == ["STALE"]
