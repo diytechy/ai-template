@@ -2,13 +2,36 @@
 id = "WI-748"
 title = "Codex adapter: read cache-write tokens, and infer compaction from a prompt-size drop between turns"
 workstream = "process"
-specref = "project-trajectory/scripts/session_adapters.py"
+specref = ""
 sr_refs = []
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+The codex adapter's two gaps from WI-541's live runs, closed:
+
+- **Cache writes:** the usage record reads `cache_write_input_tokens` (and
+  `reasoning_output_tokens`) when reported and leaves them empty when absent. Fresh
+  input subtracts cached and cache-write tokens, clamped at zero; that codex's
+  `input_tokens` includes cache writes is taken from the usage shape and is not yet
+  verified live (the only live line reports 0), and the rows say so.
+- **Compaction:** a retained session's row records `compacted` with
+  `compaction-source` `reported` (the rollout's `compacted` entry) or `inferred` (a
+  drop across any consecutive pair of NEW rollout per-request prompts, from the
+  stored baseline, with a cursor so old requests are not rechecked). Exec
+  `turn.completed` totals are per-turn sums of requests (15154 + 15224 = 30378 in the
+  live fixtures), so they never drive an inference; a kit reset clears the
+  comparison.
+- **Rows:** TC-264 method and LLR-268 detail amended in place (Approved, for this
+  merge's adjudication); IF-266, LLR-290, TC-303 added Drafted. A RESYNC entry; the
+  session log gains `compacted` and `compaction-source`.
+- **Reviews:** Sonnet 5.5, NOT YET SOUND at 72b035e5 (per-turn sums read as request
+  prompts; only the last pair compared), SOUND at 630150c3
+  (`docs/reviews/2026-10-02-wave7/sonnet-wi748-r1.md`, `-r2.md`).
 
 ## Context
 

@@ -1497,11 +1497,12 @@ def write_session_log(iter_dir, meta, transcript):
         "context-used",
         "context-window",
         "context-pct",
-        # The keep operation's two columns, "" on every call it did not
-        # retain: which generation of a retained session answered, and why
-        # this call drained or retired it.
+        # Retention accounting: generation, reset reason and codex compaction
+        # with its reported or inferred source; blank where not observed.
         "session-gen",
         "reset-reason",
+        "compacted",
+        "compaction-source",
         "invocation-id",
         "attempt-id",
         "source-event",

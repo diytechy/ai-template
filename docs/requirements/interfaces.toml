@@ -2372,3 +2372,13 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 rationale = "Read scheduling gates through the same carrier boundary as the owner surface, refusing unreadable data."
+
+[interface.IF-266]
+owner = "scripts/session_adapters"
+consumers = ["scripts/session_service", "scripts/session_keep"]
+channel = "call"
+data = "compaction(stream, env, session_id) -> {reported: bool, prompts: list[int], totals: list[int]} for codex, else {}"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Keep provider event shapes in the adapter while retained bookkeeping owns comparisons across calls and resets."

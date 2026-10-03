@@ -131,3 +131,11 @@ on the full disk. The coordinator executed its recorded steps. A first attempt
 chained a failed status flip into an empty snapshot act (seq 16, `approved = []`);
 caught at once and reset on the unreviewed lane, then redone correctly. Sonnet's
 cross-review: SOUND.
+
+### WI-748 lands: codex cache writes read, compaction recorded reported or inferred
+
+Sol built it; Sonnet: NOT YET SOUND at 72b035e5 (exec turn totals are per-turn sums
+of requests, so the fallback could infer a false compaction; only the last request
+pair was compared), SOUND at 630150c3 after the inference moved to rollout
+per-request prompts only, across every new pair. TC-264 and LLR-268 amended; the
+cache-write inclusion is hedged as unverified live.

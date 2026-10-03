@@ -117,9 +117,7 @@ def test_codex_usage_is_mapped_inclusive_with_fresh_input_derived():
     assert usage["gen_ai.provider.name"] == "openai"
     assert usage["gen_ai.usage.input_tokens"] == 30378  # codex counts cache inside
     assert usage["gen_ai.usage.cache_read.input_tokens"] == 27392
-    assert (
-        usage["gen_ai.usage.cache_write.input_tokens"] == ""
-    )  # codex 0.157.1 now reports 0; the adapter does not read it (WI-541 finding)
+    assert usage["gen_ai.usage.cache_write.input_tokens"] == 0
     assert usage["gen_ai.usage.output_tokens"] == 47
     assert usage["gen_ai.usage.reasoning.output_tokens"] == 0
     assert usage["fresh-input-tokens"] == 30378 - 27392
@@ -680,3 +678,18 @@ def test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header(
     assert key not in text
     header = text.split("# ---")[0]
     assert "[REDACTED]" in header and "# raw-usage: [" in header
+
+
+@pytest.mark.parametrize("write", [None, 117, 4000])
+def test_codex_cache_write_present_or_absent_inline_recording_variant(write):
+    # Inline variants of the live line; the recording has only a reported zero.
+    event = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[-1])
+    event["usage"].pop("cache_write_input_tokens")
+    if write is not None:
+        event["usage"]["cache_write_input_tokens"] = write
+    usage = adapters.CodexAdapter().usage(json.dumps(event))
+    assert usage["gen_ai.usage.cache_write.input_tokens"] == (
+        "" if write is None else write
+    )
+    assert usage["gen_ai.usage.input_tokens"] == max(30378, 27392 + (write or 0))
+    assert usage["fresh-input-tokens"] == max(0, 30378 - 27392 - (write or 0))

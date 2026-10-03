@@ -283,6 +283,9 @@ def act(call, metrics=None):
                 minted,
                 outcome,
                 reported_error=session_adapters.reported_error(stream),
+                compaction=adapter.compaction(
+                    stream, os.environ if env is None else env, metrics["session-id"]
+                ),
             )
         )
     return outcome
