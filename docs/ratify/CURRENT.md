@@ -6,7 +6,7 @@ _Baseline: `docs/archive/last_approved` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-10-03 (1fda46ed)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-10-03 (a9791303)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-10-03 (439a2bb0)._
 _Baseline: `docs/test/test-cases.toml` copied 2026-10-03 (a9791303)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
