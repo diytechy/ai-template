@@ -132,3 +132,26 @@ Follow-ups noted, not filed:
   - `SPINE_APPROVED_CELLS`' `Implements:` tag names no SR-215 row.
 - **The hook's dupes-census** warns of 5 groups over a 0 baseline (not a gate). It
   predates this session's commits.
+
+### OI-100 reframed (owner review, 2026-10-03)
+
+The owner asked whether OI-100 duplicated an earlier mechanism. It does not in code,
+but its wording did. Its option (a) said a CLARITY verdict "re-anchors
+mechanically", which reads as re-opening OI-45. OI-45 was ruled (b) on 2026-08-20:
+the scripted re-bless arm is retired.
+
+The traced facts:
+
+- The meaning-or-clarity judgement already exists: WI-388's amendment trigger and
+  brief, with ruled decision 2's aftermath, which re-attests on a released rung and
+  recommends on a held one.
+- It runs on trunk only, at a merge or a hand sweep.
+- It walks requirements, design rows and test cases only. WI-572 left needs out as
+  "its own decision", and that decision was never made.
+
+OI-100 now asks for two narrow extensions of that mechanism:
+
+- route need and assumption amendments to it;
+- let an adjudicator session's CLARITY verdict re-attest on a held rung.
+
+Both are judgement acts, and no script gains authority.
