@@ -3039,5 +3039,5 @@ tier = "Smoke"
 expected = "Dangling owner-gate pointers are reported, including historical pointers."
 automated = "Yes"
 evidence = "tests/test_open_item_readiness.py::test_dangling_wi_refs_are_findings; tests/test_open_item_readiness.py::test_examples_and_absent_registry_are_inert; tests/test_open_item_readiness.py::test_only_queued_rows_are_held_and_a_drained_frontier_still_lists_gates"
-status = "Drafted"
+status = "Approved"
 phase = 6

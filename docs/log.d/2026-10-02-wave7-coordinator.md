@@ -115,3 +115,19 @@ Process, How and When crossings named by WI-713 are removed and tested over emit
 geometry, except the When roadmap's cyclic return routes, documented and pinned as
 needing joint routing. It also repairs `tests/test_traj_graph.py`'s floor pin, red on
 trunk since WI-722. TC-055 is due again at this merge (its rendering inputs changed).
+
+### The disk filled; WI-753 approved TC-302 (act seq 16)
+
+The C: drive (931 GB) reached 0 bytes free at about 00:20. Cause: this session's own
+pytest scratch, 148 `--basetemp` directories of 250-420 MB each under `%TEMP%` (a new
+path per run, never wiped) on a drive already near full; the full unfiltered suite
+started on trunk died of it. All 148 and `C:\Projects\.pytest-tmp`'s runs were
+deleted, back to ~3.6 GB free. Builders and the coordinator now use one fixed
+`--basetemp` per lane, which pytest wipes per run. The full suite is NOT re-run:
+it needs more free space than the drive has.
+
+WI-753: the independent Opus adjudicator ruled TC-302 APPROVE, but its commit failed
+on the full disk. The coordinator executed its recorded steps. A first attempt
+chained a failed status flip into an empty snapshot act (seq 16, `approved = []`);
+caught at once and reset on the unreviewed lane, then redone correctly. Sonnet's
+cross-review: SOUND.
