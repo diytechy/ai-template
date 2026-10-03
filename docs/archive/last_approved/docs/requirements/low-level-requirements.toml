@@ -3084,3 +3084,15 @@ test_refs = "TC-304"
 status = "Approved"
 component = "CMP-007"
 phase = 5
+
+[design.LLR-292]
+sr_refs = ["SR-054"]
+title = "Separate emitted wire lanes (T8 objective floor)"
+module = "project-trajectory/scripts/rendering/traj_graph.py"
+code_symbol = "_wire_channels/_route_edges/_detour_d"
+detail = "Across freshly emitted How, When, Process and System-context SVGs, including every drill layer, distinct edges do not overlap along a segment or join end-to-end outside a shared actual terminal. Give departures and arrivals separate channels per column and reserve terminal runs before selecting middle lanes. Shared node identity alone does not permit a join outside the node's port. Perpendicular crossings remain under the T8 critique; no claim is made that crossing count is minimal."
+rationale = "A shared segment or collinear join makes two wires read as one connection. The emitted path geometry can settle that claim mechanically, including the final orthogonal conversion."
+test_refs = "TC-305"
+status = "Approved"
+component = "CMP-009"
+phase = 4
