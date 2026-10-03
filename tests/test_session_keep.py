@@ -925,6 +925,54 @@ def test_codex_reported_rollout_compaction_takes_precedence(tmp_path):
     )
 
 
+def test_codex_inferred_compaction_holds_on_later_rising_requests(tmp_path):
+    _codex_rollout(tmp_path, [35911])
+    _codex_turn(tmp_path, 35911)
+    _codex_rollout(tmp_path, [35911, 15717])
+    out = _codex_turn(tmp_path, 51628)
+    assert out.metrics["compaction-source"] == "inferred"
+    _codex_rollout(tmp_path, [35911, 15717, 18000])
+    out = _codex_turn(tmp_path, 69628)
+    assert out.metrics["compacted"] is True
+    assert out.metrics["compaction-source"] == "inferred"
+
+
+def test_codex_reported_replaces_inferred_and_holds_on_new_drop(tmp_path):
+    _codex_rollout(tmp_path, [35911])
+    _codex_turn(tmp_path, 35911)
+    _codex_rollout(tmp_path, [35911, 15717])
+    out = _codex_turn(tmp_path, 51628)
+    assert out.metrics["compaction-source"] == "inferred"
+    _codex_rollout(tmp_path, [35911, 15717])
+    retained = _keep(tmp_path, ON, family="OPENAI")
+    home = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    thread = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[0])["thread_id"]
+    rollout = home / f"rollout-test-{thread}.jsonl"
+    entry = json.loads(_fixture("codex-rollout.jsonl").splitlines()[0])
+    entry.update(type="compacted", payload={"replacement_history": []})
+    rollout.write_text(
+        rollout.read_text(encoding="utf-8") + "\n" + json.dumps(entry) + "\n",
+        encoding="utf-8",
+    )
+    out = svc.act(_call(tmp_path, "OPENAI", retained, _launch(_codex_total(51628))))
+    assert out.metrics["compacted"] is True
+    assert out.metrics["compaction-source"] == "reported"
+    record = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")
+    assert record["compaction_source"] == "reported"
+    assert record["rollout_requests"] == 2
+    assert record["request_prompt"] == 15717
+    # Rewrite without the old compacted entry: only the stored source can win
+    # over this new drop beyond the cursor, not a re-read reported observation.
+    _codex_rollout(tmp_path, [35911, 15717, 10000])
+    out = _codex_turn(tmp_path, 61628)
+    assert out.metrics["compacted"] is True
+    assert out.metrics["compaction-source"] == "reported"
+    record = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")
+    assert record["compaction_source"] == "reported"
+    assert record["rollout_requests"] == 3
+    assert record["request_prompt"] == 10000
+
+
 def test_codex_kit_reset_discards_prompt_comparison(tmp_path):
     cfg = keep.KeepConfig(context_reset_pct=50, reset_on_same_artifact=True)
     _codex_rollout(tmp_path, [35911])

@@ -3,12 +3,22 @@ id = "WI-757"
 title = "LLR-290/TC-303 return: state that a retained session's compacted flag and source hold for its later calls, and verify that and the reported-over-inferred precedence"
 workstream = "process"
 sr_refs = ["SR-227"]
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "quick"
 priority = 3
 safety_class = "spine"
 bar = "DevStg-Tests"
 +++
+
+## Deliverable
+
+Batch L's exact return applied: LLR-290 states that once recorded, compacted and its
+source hold for every later call of the retained session, a reported entry replaces
+an inferred source, and an inferred drop never replaces a reported one; TC-303 says
+so; two tests in `tests/test_session_keep.py` pin it (the second rewrites the rollout
+without the compacted entry so the stored reported source must hold). Both rows stay
+Drafted for this merge's first approval; no code change. Sonnet 5.5: SOUND at
+70b00b7e (`docs/reviews/2026-10-02-wave7/sonnet-wi757.md`).
 
 ## Context
 

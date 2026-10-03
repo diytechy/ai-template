@@ -158,3 +158,9 @@ end-to-end at the port fans (the How view's CMP-006 hub reads as a chain; 26
 unrelated edge pairs overlap in the When roadmap). WI-758 filed by hand: separate
 the lanes and bind the clause as a test, so T8's lane separation stops needing an
 LLM judgement (the owner's WI-747 direction).
+
+### WI-757 lands: LLR-290 and TC-303 state and test the sticky compaction source
+
+Sol (low) applied batch L's exact return and wrote the second test so it exercises the
+stored reported source (the drafted form passed trivially). Sonnet: SOUND. Sol
+resumed at 02:30 after the usage limit.
