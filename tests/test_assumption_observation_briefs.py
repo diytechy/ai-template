@@ -69,7 +69,7 @@ def test_rejudge_shows_assumption_only_case(tmp_path, monkeypatch):
     assert "- TC-279 — observes DA-011" in text
 
 
-def test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime(
+def test_rejudge_refuses_an_unresolved_assumption_or_a_missing_cell(
     tmp_path, monkeypatch
 ):
     root = assumption_repo(tmp_path)
@@ -78,6 +78,8 @@ def test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime(
     monkeypatch.setattr(ab.rejudge, "explain", lambda d: "No result recorded.")
     for row, cell in (
         ({**case, "Assumption-Refs": "DA-099"}, "DA-099"),
+        ({key: value for key, value in case.items() if key != "Method"}, "Method"),
+        ({key: value for key, value in case.items() if key != "Expected"}, "Expected"),
         ({key: value for key, value in case.items() if key != "MaxAge"}, "MaxAge"),
     ):
         monkeypatch.setattr(

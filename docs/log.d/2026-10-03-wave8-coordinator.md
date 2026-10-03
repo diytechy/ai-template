@@ -287,3 +287,20 @@ lists are right. That replaced a second Luna round.
 
 SR-215 stays drifted until WI-776's successor lands, and its sitting must be
 combined with WI-771's, which drifts the same registries.
+
+### WI-778 lands: TC-309, TC-310 and SR-215's rationale (batch P's successor)
+
+A Claude Opus builder, following kit-builder.md's rules (the definition loads only
+in a new session, so it ran as `general-purpose` with Opus), applied the draft
+byte-exact. No behavioural red was possible: the code already refused both cases,
+so this was a coverage gap.
+
+Codex Luna (high) verified every authored change. Its one MAJOR was that the lane
+commits regenerated views. The coordinator refuted it: the hook requires those
+views fresh, and the landing regenerates them
+([review](../reviews/2026-10-03-wave8/luna-wi778.md)). The review template now
+states this.
+
+The merge mints SR-215's amendment adjudication and the TC-309/TC-310 first
+approval. They sit together with WI-771's adjudications in one combined act once
+WI-771 lands.

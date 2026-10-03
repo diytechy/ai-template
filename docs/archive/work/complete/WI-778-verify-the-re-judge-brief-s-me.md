@@ -3,11 +3,28 @@ id = "WI-778"
 title = "Verify the re-judge brief's Method and Expected refusals; close TC-310 and SR-215 wording"
 workstream = "process"
 sr_refs = ["SR-146", "SR-215", "SR-033"]
-specref = "docs/archive/work/complete/WI-776-adjudicate-llr-296-tc-306-t.md"
+specref = ""
 buildtier = "quick"
 priority = 2
 safety_class = "spine"
 +++
+
+## Deliverable
+
+WI-776's adjudicator draft applied, with arbitration ruling B's SR-215 sentence:
+
+- **TC-309:** its method, expected and evidence state and test the missing
+  Method and Expected refusals. The renamed test
+  `..._or_a_missing_cell` gains two tuple entries; this closes a coverage gap,
+  since the code already refused both.
+- **TC-310:** "fixture registries" and "SR-033's inclusion set".
+- **SR-215:** the rationale sentence now names the checkpoint triggers.
+- No production code changed.
+
+Codex Luna (high) found one MAJOR: the lane committed regenerated views. The
+coordinator refuted it, because the hook requires the regeneration and the
+landing regenerates on trunk (`docs/reviews/2026-10-03-wave8/luna-wi778.md`).
+Every authored change was verified as specified.
 
 ## Context
 
