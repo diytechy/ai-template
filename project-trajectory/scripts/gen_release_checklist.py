@@ -95,6 +95,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import rejudge
 
+import assumption_rules
+
 HUMAN_METHODS = {"Demonstration", "Manual", "Inspection"}
 
 # The release checkpoint's command, as a person preparing a release runs it.
@@ -175,7 +177,8 @@ def assumption_checklist_lines(docs, tcs):
         methods = [
             tc["TC-ID"]
             for tc in tcs
-            if rid in re.split(r"[;,\s]+", tc.get("Assumption-Refs", ""))
+            if assumption_rules.is_observation_tc(tc)
+            and rid in re.split(r"[;,\s]+", tc.get("Assumption-Refs", ""))
         ]
         items.append(
             "- [ ] ASSUMPTION {} — has its falsifier been observed? {} (method: {})".format(

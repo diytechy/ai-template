@@ -1970,7 +1970,7 @@ notes = """cross-component crossing declared per the architecture rule: check_te
 [interface.IF-200]
 rationale = """An observation test case's declaration is judged by the same pure join layer as the assumption tier, beside it rather than inside the tier's entry point, because the declaration applies to every case the harness cannot rerun whether or not the frame declares a crossing; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""
 owner = "scripts/assumption_rules"
-requestors = ["scripts/trace", "scripts/rejudge", "scripts/record_observation", "scripts/observation_cadence"]
+requestors = ["scripts/trace", "scripts/rejudge", "scripts/record_observation", "scripts/observation_cadence", "scripts/gen_release_checklist"]
 channel = "call"
 data = "observation_tc_findings -> (failures, advisories); data: is_observation_tc, sampling_model_declared, input_escape, input_path"
 version = "v1"

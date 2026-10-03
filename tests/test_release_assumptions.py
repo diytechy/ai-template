@@ -17,7 +17,8 @@ def generate(tmp_path, monkeypatch, rows=None):
         tests = docs / "test"
         tests.mkdir()
         (tests / "test-cases.toml").write_text(
-            '[test.TC-279]\nassumption_refs = ["DA-011"]\nautomated = "Yes"\n',
+            '[test.TC-279]\nassumption_refs = ["DA-011"]\nautomated = "No"\n'
+            '[test.TC-280]\nassumption_refs = ["DA-011"]\nautomated = "Yes"\n',
             encoding="utf-8",
         )
     monkeypatch.setattr(sys, "argv", ["gen_release_checklist", "--docs", str(docs)])
@@ -58,6 +59,7 @@ def test_no_falsifier_is_visible_even_when_drafted(tmp_path, monkeypatch):
 def test_ineligible_assumptions_omitted(tmp_path, monkeypatch, old, new):
     text = generate(tmp_path, monkeypatch, ACTIVE.replace(old, new))
     assert "ASSUMPTION DA-011" not in text
+    assert "## 7. Assumptions" not in text
 
 
 def test_missing_assumptions_registry_has_no_section(tmp_path, monkeypatch):

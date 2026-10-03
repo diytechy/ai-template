@@ -192,3 +192,40 @@ through the follow-up lane, whose merge re-adjudicates it.
 
 SN-043's need-text amendment (WI-667) is the owner's to re-attest, beside SN-003,
 SN-008, SN-009 and SN-025.
+
+### WI-774 lands: batch O's returned rows reworked; TC-055 and SR-215 corrected
+
+Sol applied WI-773's draft. Red: 1 failed (the checklist named an automated TC as a
+method). Six new tests pinned behaviour that already held, closing coverage gaps.
+Sonnet 5.5 found it SOUND at `cca8c710`
+([review](../reviews/2026-10-03-wave8/sonnet-wi774.md)): the cells match the draft,
+IF-200 changed in `requestors` only, and `check_trajectory --strict` is clean.
+
+### WI-697: round 1 NEEDS-JUDGEMENT; round 2's readers done; cut over
+
+The coordinator's first draw for TC-279 counted only docstring `Implements:` parts
+(423). The independent Opus judge recorded nothing, `NEEDS-JUDGEMENT`, on lane
+`build/wi-697` at `53912f68`. The kit's harvest, `gen_arch_map.declaration_sites`,
+finds 516 parts. The 93 missing ones were module headers, module-level blocks and
+comment-linked functions.
+
+All five round-1 statements agreed with their rows. The judge noted that
+`sn_all_ids`' reader misdescribed one branch (short of B1).
+
+Round 2 redrew with the same seed rule:
+
+- The population is the harvest's distinct (file, enclosing symbol) pairs,
+  restricted to sites naming a live spine id. One hit was a test-fixture string
+  naming LLR-900/901, rows that do not exist. That rule was stated after the
+  unrestricted draw surfaced the hit, and both draws are kept.
+- Five fresh Sonnet readers stated each part, all with high confidence.
+
+The statements, draws and scripts are in
+`C:/Projects/ai-template.wt/wi-697-notes/` (outside the repo). The judging is
+handed to the next coordinator.
+
+### Cutover (owner, 2026-10-03)
+
+The owner directed a new handoff: the next coordinator builds with Claude Opus at
+medium effort and reviews with Codex Luna (`gpt-6-luna`) at high effort. See
+[handoff-2026-10-03-wave8-coordinator.md](../handoff-2026-10-03-wave8-coordinator.md).

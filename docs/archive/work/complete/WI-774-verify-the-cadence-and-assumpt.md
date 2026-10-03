@@ -3,11 +3,27 @@ id = "WI-774"
 title = "Verify the cadence and assumption-brief refusals, list only observation cases as an assumption's method, and correct SR-215's floor rationale and TC-055's stale cadence"
 workstream = "process"
 sr_refs = ["SR-215", "SR-033", "SR-054"]
-specref = "docs/archive/work/complete/WI-773-adjudicate-llr-293-llr-294.md"
+specref = ""
 buildtier = "medium"
 priority = 2
 safety_class = "spine"
 +++
+
+## Deliverable
+
+WI-773's adjudicator draft applied:
+
+- **LLR-296:** lists only the observation cases naming an assumption. The filter
+  runs through IF-200's seam: `gen_release_checklist` joins its requestors, with
+  one `import assumption_rules` and the filter in `assumption_checklist_lines`.
+- **TC-306, TC-309 and TC-310:** state and test the cadence refusals, the composer
+  refusals and the omitted-section case.
+- **TC-247:** gains its uncommitted-policy test.
+- **Act seq 22's two misses, corrected:** TC-055's `expected` and SR-215's
+  rationale.
+- **Red:** 1 failed. The checklist named an automated case as a method. Six new
+  tests pinned behaviour that already held, so they closed coverage gaps.
+- **Review:** Sonnet 5.5 found it SOUND at cca8c710.
 
 ## Context
 

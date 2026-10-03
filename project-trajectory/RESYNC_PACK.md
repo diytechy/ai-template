@@ -6685,6 +6685,19 @@ mirrors. Before signing a rung, run
 `python scripts/intake.py rejudge --checkpoint stage-gate` at the commit being
 signed and paste its output into `docs/log.md` beside the check output.
 
+### Observation methods in the assumptions release checklist [since f2bc66c1]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The release checklist's assumptions section now lists only
+observation cases (`Automated = No`) as an assumption's method. Automated test
+cases carrying `Assumption-Refs` drop from that method list.
+
+**What to do.** Re-sync `scripts/gen_release_checklist.py` and regenerate the
+release checklist for the next sign-off. Adopters whose automated test cases
+carry `Assumption-Refs` will see those cases drop from the assumptions method
+list; their registry references remain intact.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
