@@ -848,6 +848,10 @@ def _drill_layer_svg(blocks, edges, marker_scope):
     # Backward dependencies need an outboard lane. Reserve a visible top/bottom
     # gutter before routing so those square U-turns stay inside the drawing instead
     # of relying on a clipped negative-y lane at the card edge.
+    # Aggregated phase/component graphs can be cyclic: no ordering makes all
+    # edges forward. Return routes are necessary with left inputs/right outputs;
+    # minimising their remaining crossings needs joint routing, beyond this
+    # local lane-order and sibling-port clearance fix (WI-750 handback).
     backward = sum(pos[b][0] <= pos[a][0] + col_w for a, b, _t in wire_edges)
     if backward:
         gutter = min(38, 8 + backward * 10)

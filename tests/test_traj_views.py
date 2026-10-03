@@ -163,6 +163,169 @@ def sw_section(root):
     return html_of(root).split('id="sw"', 1)[1].split("</section>", 1)[0]
 
 
+@pytest.mark.parametrize("short_first", (False, True))
+def test_wi750_context_captions_fit_the_emitted_gap(tmp_path, short_first):
+    import xml.etree.ElementTree as ET
+
+    make_repo(tmp_path)
+    write_frame(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    size = float(re.search(r"--nsub:([\d.]+)px", html_of(tmp_path)).group(1))
+    per_char = math.ceil(0.65 * size)
+    assert 0.65 <= per_char / size <= 0.85
+    gt = load_script("gen_trajectory")
+    assert gt.traj_context._BSUB_CH == per_char
+    frame = load_script("traj_parse").frame_context(ROOT)
+    # Exercise the real long captions plus an uncut one, without editing the frame.
+    if short_first:
+        frame["crossings"][0]["carries"] = "short"
+    svg = ET.fromstring(gt.traj_context._context_svg(frame, "project"))
+    system = svg.find(".//g[@data-node='system']/rect")
+    parties = svg.findall(".//g[@class='ctxent']/rect")
+    left = max(float(r.get("x")) + float(r.get("width")) for r in parties)
+    right = float(system.get("x"))
+    captions = svg.findall(".//text[@class='ctxwsub']")
+    assert len(captions) == len(frame["crossings"])
+    for caption, crossing in zip(captions, frame["crossings"]):
+        x = float(caption.get("x"))
+        half = len(caption.text) * per_char / 2
+        assert left + 6 <= x - half <= x + half <= right - 6
+        full = " ".join(crossing["carries"].split())
+        assert caption.text == full or caption.text.endswith("…")
+        assert full in svg.find(".//g[@data-edge='%s']/title" % crossing["id"]).text
+    if short_first:
+        assert captions[0].text == "short"
+    children = list(svg)
+    system_group = svg.find(".//g[@data-node='system']")
+    assert all(
+        children.index(g) > children.index(system_group)
+        for g in svg.findall(".//g[@data-edge]")
+        if "ctxcross" in g.get("class", "")
+    )
+
+
+def test_wi750_context_relationship_labels_clear_their_curves():
+    import xml.etree.ElementTree as ET
+
+    gt = load_script("gen_trajectory")
+    frame = load_script("traj_parse").frame_context(ROOT)
+    svg = ET.fromstring(gt.traj_context._context_svg(frame, "project"))
+    relations = svg.findall(".//g[@class='ctxrel']")
+    assert any(g.get("data-edge") == "REL-002" for g in relations)
+    per_char = math.ceil(0.65 * gt.NODE_TYPE_PX["nsub"])
+    for rel in relations:
+        nums = list(map(float, re.findall(r"-?[\d.]+", rel.find("path").get("d"))))
+        x0, y0, qx, qy, x1, y1 = nums
+        label = rel.find("text")
+        lx, ly = float(label.get("x")), float(label.get("y"))
+        half = len(label.text) * per_char / 2
+        if label.get("text-anchor") == "end":
+            lx -= half
+        for i in range(201):
+            t = i / 200
+            x = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * qx + t * t * x1
+            y = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * qy + t * t * y1
+            assert not (
+                lx - half - 2 <= x <= lx + half + 2
+                and ly - gt.NODE_TYPE_PX["nsub"] - 2 <= y <= ly + 3
+            ), rel.get("data-edge")
+
+
+def _wi750_segments(layer):
+    return {
+        (a, b): list(zip(points, points[1:]))
+        for d, a, b in re.findall(
+            r'<path class="wire" d="([^"]+)" data-from="([^"]+)" data-to="([^"]+)"',
+            layer,
+        )
+        for points in [
+            [
+                tuple(map(float, p.split(",")))
+                for p in re.findall(r"[ML](-?[\d.]+,-?[\d.]+)", d)
+            ]
+        ]
+    }
+
+
+def test_wi750_how_nested_lanes_do_not_cross(tmp_path):
+    gt = load_script("gen_trajectory")
+    root = _real_repo_snapshot(tmp_path)
+    _, panel = gt.sw_containment(root, gt.sw_modules(root))
+    routes = _wi750_segments(
+        re.search(
+            r'<div class="layer" data-layer="sw-0"[^>]*>(.*?)</div>', panel, re.S
+        ).group(1)
+    )
+    for pair in (
+        (("cmp:CMP-007", "cmp:CMP-006"), ("cmp:CMP-008", "cmp:CMP-006")),
+        (("cmp:CMP-006", "cmp:CMP-007"), ("cmp:CMP-006", "cmp:CMP-008")),
+    ):
+        for a, b in routes[pair[0]]:
+            for c, d in routes[pair[1]]:
+                # These explicit ports are distinct: even a T-junction or shared
+                # vertical makes two independently selectable wires ambiguous.
+                if a[0] == b[0] and c[1] == d[1]:
+                    assert not (
+                        min(c[0], d[0]) <= a[0] <= max(c[0], d[0])
+                        and min(a[1], b[1]) <= c[1] <= max(a[1], b[1])
+                    ), pair
+                if a[1] == b[1] and c[0] == d[0]:
+                    assert not (
+                        min(a[0], b[0]) <= c[0] <= max(a[0], b[0])
+                        and min(c[1], d[1]) <= a[1] <= max(c[1], d[1])
+                    ), pair
+                if a[0] == b[0] == c[0] == d[0]:
+                    assert max(min(a[1], b[1]), min(c[1], d[1])) > min(
+                        max(a[1], b[1]), max(c[1], d[1])
+                    ), pair
+
+
+def test_wi750_when_trunks_clear_sibling_output_fans(tmp_path):
+    gt = load_script("gen_trajectory")
+    root = _real_repo_snapshot(tmp_path)
+    ct = load_script("check_trajectory")
+    wis, integrity = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))
+    assert not integrity
+    layer = _layer_with(gt.when_view(root, wis), 'data-tier="phase"')
+    routes = _wi750_segments(layer)
+    # Phase aggregation contains reciprocal dependencies (1 <-> unphased).
+    # Hence a return route is unavoidable under the fixed port convention.
+    # This pins that limitation, not a claim that all perimeter crossings are
+    # unavoidable: their joint minimisation is the stopped WI-750 router part.
+    assert ("1", "unphased") in routes and ("unphased", "1") in routes
+    assert any(segments[-1][1][0] < segments[0][0][0] for segments in routes.values())
+    for node in ("1+5", "4"):
+        block = re.search(
+            r'data-node="%s"[^>]*>.*?</g>' % re.escape(node), layer
+        ).group()
+        rect = re.search(
+            r'<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"', block
+        )
+        x, y, w, h = map(float, rect.groups())
+        columns = sorted(set(map(float, re.findall(r'<rect x="([\d.]+)"', layer))))
+        fan_reach = (next(cx for cx in columns if cx > x) - x - w) / 2
+        port_ys = list(
+            map(
+                float,
+                re.findall(
+                    r'<circle class="port out wire-port" cx="[^"]+" cy="([^"]+)"', block
+                ),
+            )
+        )
+        assert port_ys
+        fan_top, fan_bottom = min(port_ys) - gt.PORT_R, max(port_ys) + gt.PORT_R
+        for endpoints, segments in routes.items():
+            if node in endpoints:
+                continue
+            for a, b in segments:
+                assert not (
+                    a[0] == b[0]
+                    and x + w < a[0] < x + w + fan_reach
+                    and min(a[1], b[1]) < fan_bottom
+                    and max(a[1], b[1]) > fan_top
+                ), (node, endpoints, a, b)
+
+
 def test_context_view_renders_the_declared_frame(tmp_path):
     make_repo(tmp_path)
     write_arch_src(tmp_path)

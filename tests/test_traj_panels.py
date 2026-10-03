@@ -30,6 +30,34 @@ from traj_fixtures import (
 )
 
 
+def test_wi750_station_build_outcome_curves_do_not_cross(tmp_path):
+    gt = load_script("gen_trajectory")
+    svg = gt.traj_panels._station_svg(tmp_path)
+    curves = {}
+    for outcome in ("merged", "partial"):
+        d = re.search(r'data-edge="build-%s" d="([^"]+)"' % outcome, svg).group(1)
+        x0, y0, qx, qy, x1, y1 = map(float, re.findall(r"-?[\d.]+", d))
+        points = []
+        for i in range(1001):
+            t = i / 1000
+            points.append(
+                (
+                    (1 - t) ** 2 * x0 + 2 * (1 - t) * t * qx + t * t * x1,
+                    (1 - t) ** 2 * y0 + 2 * (1 - t) * t * qy + t * t * y1,
+                )
+            )
+        curves[outcome] = points
+    # The farther outcome takes the outer arc at every shared height.
+    for y in range(100, 244):
+        xs = {}
+        for outcome, points in curves.items():
+            for (xa, ya), (xb, yb) in zip(points, points[1:]):
+                if ya <= y <= yb:
+                    xs[outcome] = xa + (xb - xa) * (y - ya) / (yb - ya)
+                    break
+        assert xs["partial"] < xs["merged"], (y, xs)
+
+
 # --- WI-070: the Knowledge tab consumes the committed OKF bundle ----------------
 
 

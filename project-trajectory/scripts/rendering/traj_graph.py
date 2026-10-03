@@ -150,7 +150,17 @@ def _port_fan(groups, other_of, pos, row_h, row_gap, max_span=None):
             for e in items:
                 offsets[e] = 0.0
             continue
-        items_sorted = sorted(items, key=lambda e: (pos[other_of(e)][1], e))
+        # Same-row neighbours still have a geometric order. In explicit-port
+        # diagrams the nearest producer/leftward target takes the upper port;
+        # otherwise id order can reverse a whole nested return-lane family.
+        items_sorted = sorted(
+            items,
+            key=lambda e: (
+                pos[other_of(e)][1],
+                -pos[other_of(e)][0] if max_span is not None else 0,
+                e,
+            ),
+        )
         slot_span = row_h + row_gap - _FAN_PITCH
         if max_span is not None:
             slot_span = min(slot_span, max_span)
@@ -472,7 +482,17 @@ def _detour_str(x1, sy, y1, xa, xb, xe, ty, y2, lane):
 
 
 def _detour_d(
-    x1, sy, y1, xe, ty, y2, obstacles, clearance=_WIRE_CLEAR, stub=_WIRE_STUB, taken=()
+    x1,
+    sy,
+    y1,
+    xe,
+    ty,
+    y2,
+    obstacles,
+    clearance=_WIRE_CLEAR,
+    stub=_WIRE_STUB,
+    taken=(),
+    end_stub=None,
 ):
     """A path 'd' that leaves the source port (x1, port-center sy) rightward, runs a
     clear horizontal lane over/under the blocking `obstacles`, and enters the target
@@ -507,7 +527,7 @@ def _detour_d(
     tier is exactly what this function returned before the ledger existed, so the
     ledger can only move a wire from one FULLY CLEAR lane to another: the T8
     through-box floor (LLR-120/TC-125) cannot regress through this parameter."""
-    xa, xb = x1 + stub, xe - stub
+    xa, xb = x1 + stub, xe - (stub if end_stub is None else end_stub)
     fox, fxh = min(x1, xe, xa, xb), max(x1, xe, xa, xb)
     full = [r for r in obstacles if r[0] < fxh and r[0] + r[2] > fox]
     if not full:
@@ -641,7 +661,9 @@ def orthogonal_route(d, obstacles=()):
     )
 
 
-def _route_edges(edges, rects_by_id, min_dx, end_trim, fan_terminals=False):
+def _route_edges(
+    edges, rects_by_id, min_dx, end_trim, fan_terminals=False, stub=_WIRE_STUB
+):
     """The one wire router every layered emitter calls. `edges` is a list of
     (key, x1, y1, x2, y2, src_id, tgt_id): x1,y1 the source OUTPUT port, x2 the
     target block's LEFT edge (untrimmed — the legacy dx is measured from it), y2
@@ -651,6 +673,9 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim, fan_terminals=False):
     uses that mode because it draws an explicit connector circle per edge. A wire
     whose direct cubic clears every non-endpoint box keeps the
     exact legacy `d` (byte-identical); a blocked wire detours (`_detour_d`).
+    `stub` sets the detour control reach: explicit-port diagrams use their
+    measured column gap, placing squared turns halfway across it, beyond the
+    shorter direct-wire stubs rather than through sibling output fans.
 
     WI-256: the wire's TERMINALS snap to the port centers (rect mid-height) while
     its first/last control keeps the fanned `y1`/`y2`, so a steep fanned wire lands
@@ -706,7 +731,12 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim, fan_terminals=False):
     # per-call (one diagram, one coordinate system) and filled in the sorted edge
     # order above, so which wire wins the innermost lane is deterministic.
     taken = []
-    for key, x1, y1, x2, y2, src, tgt in sorted(edges, key=lambda e: e[0]):
+    # Explicit-port drill lanes nest shortest spans first: a longer span takes
+    # the outer lane, so its descending leg cannot cut the shorter sibling hop.
+    # Shared-centre-port emitters retain their harness allocation order.
+    for key, x1, y1, x2, y2, src, tgt in sorted(
+        edges, key=lambda e: (abs(e[3] - e[1]) if fan_terminals else 0, e[0])
+    ):
         xe = x2 - end_trim
         rs, rt = rects_by_id.get(src), rects_by_id.get(tgt)
         sy = y1 if fan_terminals else (rs[1] + rs[3] / 2 if rs else y1)
@@ -729,13 +759,32 @@ def _route_edges(edges, rects_by_id, min_dx, end_trim, fan_terminals=False):
         backward = xt <= xs
         d = None
         if _polyline_hits(direct, infl) or backward:
+            ko, _no = strand[0][key]
+            ki, _ni = strand[1][key]
+            # Stagger the square turns in port order too: correctly nested lanes
+            # must not merge onto one vertical before reaching distinct ports.
+            start_reach = stub + min(ko, _LEAD_RUNGS - 1) * _FAN_PITCH
+            end_reach = stub - 2 * end_trim - min(ki, _LEAD_RUNGS - 1) * _FAN_PITCH
             span = list(obstacles)
             if backward:  # route the lane around its own endpoint boxes too
                 if rs:
                     span.append((rs[0], rs[1], rs[2] - 0.1, rs[3]))  # trim port edge
                 if rt:
                     span.append(rt)
-            d = _detour_d(xs, sy_r, y1, xt, ty_r, y2, span, taken=taken)
+            d = _detour_d(
+                xs,
+                sy_r,
+                y1,
+                xt,
+                ty_r,
+                y2,
+                span,
+                stub=start_reach if fan_terminals else stub,
+                taken=taken,
+                # The target stops short for its arrowhead; compensate that trim
+                # so both squared detour turns clear the output half of the gap.
+                end_stub=end_reach if fan_terminals else stub,
+            )
         if d is None:
             d = "M{:.1f},{:.1f} C{:.1f},{:.1f} {:.1f},{:.1f} {:.1f},{:.1f}".format(
                 xs, sy_r, xs + dx, y1, xt - dx, y2, xt, ty_r
@@ -790,6 +839,7 @@ def route_graph(
         min_dx,
         end_trim,
         fan_terminals,
+        stub=geom.col_gap if fan_terminals else _WIRE_STUB,
     )
     return routes, out_off, in_off
 
