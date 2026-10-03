@@ -688,7 +688,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 5 chain(s): SR-033, SR-054, SR-146, SR-215, SR-224</summary>
+<summary>Waiting for automated adjudication — 4 chain(s): SR-033, SR-146, SR-215, SR-224</summary>
 
 ## SR-033 — Release checklist generation
 
@@ -697,30 +697,18 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 > **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did. The assumptions section realizes SN-043 at the same gate: a premise can only be shown false by someone looking for its falsifier, so the checklist puts each active approved assumption, and any with no falsifier, in front of the person signing, marked apart from the requirement checks.
 
 
-### LLR LLR-296, Drafted — never approved
-- **Detail**
-  - before: Read real DA rows through spine_carrier; emit a separate assumptions section with one ASSUMPTION DA-id item per active Approved row or row with no falsifier, including its falsifier or missing notice and TC ids naming it in Assumption-Refs. Missing registries and empty selections emit no section. Checklist generation writes no registry; checking a box asserts only not falsified, and a person sets standing. Existing sections and phase selection remain intact through named readers and section renderers.
-  - after: Read real DA rows through spine_carrier; emit a separate assumptions section with one ASSUMPTION DA-id item per active Approved row or row with no falsifier, including its falsifier or missing notice and the ids of the observation cases naming it in Assumption-Refs. Missing registries and empty selections emit no section. Checklist generation writes no registry; checking a box asserts only not falsified, and a person sets standing. Existing sections and phase selection remain intact through named readers and section renderers.
-
-### TC TC-310, Drafted — never approved
-- **Method**
-  - before: Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers; tolerate an absent registry without a section; assert the source registry remains byte-identical.
-  - after: Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical.
-- **Verifies**
-  - before: LLR-296;IF-018
-  - after: SR-033;LLR-296;IF-018
-
-## SR-054 — Dashboard usability (rubric-adjudicated)
-
-> **Requirement.** The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text.
-
-> **Rationale.** Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. The bar is therefore written from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable. Most of it turned out to be pinnable and is now held mechanically; one clause about a first-time reader's experience is not, and it rests on a recorded judgement, re-judged when a declared input changes or the record expires rather than on every commit — the residue named at the child, and stated there as a limit rather than implied as coverage. Fan-out re-stamp: the child count is that same anchor census, not a decision count — this row states one perceptual property, and each anchor pinned to a test as it was mechanized left an LLR behind, so the fan-out rises as the row is mechanized. Findability is the designer's — a declared reader and the decision answered without hunting (C-UXD-1) — and legibility-as-robustness is the engineer's — real widths and real volumes, nothing clipped or overlapping (C-UXE-2). Both are `always` in this repo, so unlike its two siblings this row's deriving lens is reachable today.
-
-
-### TC TC-055
-- **Expected**
-  - before: APPROVE citing numbered anchors. The rubric is the single home of the live-vs-retired anchor set: its header states the live set, and each retired anchor carries its retirement and binding in place. A verdict cites only anchors the rubric lists live, never a retired one; a clause a test now holds is verified through the LLR/TC chain the registry records, not by a verdict. Standing limit, so this row is never read as live coverage: the verdict recorded in Evidence is re-judged at a merge or release checkpoint when no result of it is on record, when a declared input changes, or when the record passes its declared max_age, never on every commit. This row's assurance is therefore as old as its latest recorded verdict, and a clause needing assurance newer than that is one to bind to a test rather than to re-judge here.
-  - after: APPROVE citing numbered anchors. The rubric is the single home of the live-vs-retired anchor set: its header states the live set, and each retired anchor carries its retirement and binding in place. A verdict cites only anchors the rubric lists live, never a retired one; a clause a test now holds is verified through the LLR/TC chain the registry records, not by a verdict. Standing limit, so this row is never read as live coverage: the verdict recorded in Evidence is re-judged when no result of it is on record or when the record passes its declared max_age, and otherwise only when its declared trigger fires after its closed-work floor, never on every commit. This row's assurance is therefore as old as its latest recorded verdict, and a clause needing assurance newer than that is one to bind to a test rather than to re-judge here.
+### TC TC-310 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
+- **TC-ID**: TC-310
+- **Verifies**: SR-033;LLR-296;IF-018
+- **Level**: Unit
+- **Method**: Generate release checklists from minimal registries: assert the assumptions heading and ASSUMPTION DA-id marker, falsifier and observation case id, and that an automated case naming the same assumption is not listed; include a missing-falsifier Drafted row; omit falsified and Drafted rows with falsifiers, and emit no section when every row is omitted; tolerate an absent registry without a section; assert the source registry remains byte-identical.
+- **Tier**: Smoke
+- **Expected**: Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set.
+- **Automated**: Yes
+- **Evidence**: tests/test_release_assumptions.py
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-146 — Prompts are reviewable files with a per-session audit trail
 
@@ -729,16 +717,18 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 > **Rationale.** Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.) C-SEC-5 requires that content composed for dispatch to an external model runner carry a DECLARED inclusion rule rather than an implicit one — a prompt assembled inside source is an unreviewed egress path no write-side gate covers, and shipping it as a reviewable file with a digest is what makes that rule readable.
 
 
-### TC TC-309, Drafted — never approved
-- **Expected**
-  - before: The complete re-judge brief composes under the assumption chain.
-  - after: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
-- **Method**
-  - before: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear.
-  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
-- **Evidence**
-  - before: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case
-  - after: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
+### TC TC-309 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
+- **TC-ID**: TC-309
+- **Verifies**: LLR-295;IF-115
+- **Level**: Unit
+- **Method**: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
+- **Tier**: Smoke
+- **Expected**: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
+- **Automated**: Yes
+- **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-215 — At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
 
@@ -747,29 +737,18 @@ _Every owing row of these chains sits on a rung `[attestation] human_approval_th
 > **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger narrows which changes make it due at all, so a judgement can stand on changes it never judged until a qualifying change meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
 
 
-### SR SR-215
-- **Rationale**
-  - before: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.
-  - after: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the owner directed (the PERFORMANCE lens): no change makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger narrows which changes make it due at all, so a judgement can stand on changes it never judged until a qualifying change meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
-
-### TC TC-306, Drafted — never approved
-- **Expected**
-  - before: A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both.
-  - after: A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both; a zero policy floor disables the default; a malformed floor, an unknown trigger or unreadable history raises ValueError rather than reading as not due.
-- **Method**
-  - before: Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor.
-  - after: Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, a zero policy floor disabling the default, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor. Construct the cadence directly with a malformed policy floor, an unknown trigger and a git that cannot read history, and assert each raises ValueError.
-
-### TC TC-309, Drafted — never approved
-- **Expected**
-  - before: The complete re-judge brief composes under the assumption chain.
-  - after: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
-- **Method**
-  - before: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear.
-  - after: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
-- **Evidence**
-  - before: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case
-  - after: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
+### TC TC-309 — Drafted, never approved
+_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
+- **TC-ID**: TC-309
+- **Verifies**: LLR-295;IF-115
+- **Level**: Unit
+- **Method**: Compose the re-judge template for a due assumption-only case with no Verifies; assert its assumption id, statement, falsifier and standing and the observation Method appear. The same case citing an assumption the registry does not declare refuses composition naming that assumption, and the same case with no MaxAge refuses naming that cell; neither returns a brief.
+- **Tier**: Smoke
+- **Expected**: The complete re-judge brief composes under the assumption chain, and an undeclared assumption or a missing MaxAge refuses with its reason.
+- **Automated**: Yes
+- **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case; tests/test_assumption_observation_briefs.py::test_rejudge_refuses_an_unresolved_assumption_or_a_missing_lifetime
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 

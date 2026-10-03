@@ -3106,7 +3106,7 @@ tier = "Full"
 expected = "A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both; a zero policy floor disables the default; a malformed floor, an unknown trigger or unreadable history raises ValueError rather than reading as not due."
 automated = "Yes"
 evidence = "tests/test_rejudge.py"
-status = "Drafted"
+status = "Approved"
 phase = 6
 
 [test.TC-307]
