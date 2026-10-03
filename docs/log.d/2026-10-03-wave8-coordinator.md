@@ -127,3 +127,24 @@ That sitting, after WI-770 lands, covers:
 - WI-768 (SR-033; the SR copy is blocked while SR-215 drifts);
 - WI-769 (LLR-295, LLR-296, TC-308..TC-310; the LLR and TC copies are blocked
   likewise).
+
+### WI-770 lands: the SR-215 cadence rows reworked; the gate prompts the stage-gate re-judge
+
+Sol applied WI-766's draft. All 19 replacement cells were checked mechanically
+against the spec. Red: 6 failed (the doc pin and five rubric assertions; the
+fired-trigger assertion already held, so it was a coverage gap). Green: 6 passed.
+
+The sandbox refused the `.agents` mirror, so the coordinator synced it with
+`bootstrap.py --dest . --sync`.
+
+Sonnet 5.5 found it SOUND at `719dcaeb`
+([review](../reviews/2026-10-03-wave8/sonnet-wi770.md)). It checked:
+
+- the nine protected rows are md5-identical;
+- no production code changed and no Status flipped;
+- the skill paragraph is placed and worded exactly as drafted;
+- TC-311 is true of its test.
+
+At the landing, the RESYNC entry was re-anchored at the parent, `00467fc7`.
+
+Next is the combined sitting this merge's adjudications open (see the plan above).

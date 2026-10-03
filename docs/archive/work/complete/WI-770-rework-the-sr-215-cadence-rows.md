@@ -3,11 +3,31 @@ id = "WI-770"
 title = "Rework the SR-215 cadence rows WI-766 and WI-767 returned, and prompt the stage-gate re-judge at the gate"
 workstream = "process"
 sr_refs = ["SR-215"]
-specref = "docs/archive/work/complete/WI-766-adjudicate-llr-254-sr-215-t.md"
+specref = ""
 buildtier = "medium"
 priority = 2
 safety_class = "spine"
 +++
+
+## Deliverable
+
+WI-766's adjudicator draft applied byte-exact (19 replacement cells checked
+mechanically):
+
+- SR-215 now states the no-result rule the right way round, names no script, and
+  drops the rubric clause that tripped trace's CRITIQUE-instrument advisory.
+- LLR-254 and LLR-255 amended; LLR-255 carries the release and stage-gate command
+  entries and the gate-advance clause.
+- TC-247 and TC-248 amended, with TC-247's naming assertions and TC-248's doc-pin
+  evidence.
+- LLR-293, LLR-294 and TC-306 reworked (Drafted); TC-311 added (Drafted).
+- The shipped gate-advance skill gains a required pre-sign step,
+  `python scripts/intake.py rejudge --checkpoint stage-gate`, pinned by
+  `tests/test_skills_index.py::test_gate_advance_names_the_stage_gate_rejudge_step`.
+- RESYNC entry re-anchored at the landing's parent.
+- No production code changed, and no Status flipped.
+
+Sonnet 5.5: SOUND at 719dcaeb.
 
 ## Context
 

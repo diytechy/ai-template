@@ -207,6 +207,14 @@ row per boundary.
 Run the checks with `scripts/check.py` (it selects every step at or above the rung
 in `docs/stage`); paste the real output into the `docs/log.md` audit log.
 
+**File the stage-gate re-judges before you sign (required).** At the commit
+you are about to sign, run
+`python scripts/intake.py rejudge --checkpoint stage-gate`
+It files one re-judge item for each observation case whose
+declared `stage-gate` trigger is due past its closed-work floor, and none
+while one is open (PROCESS.md "Observation judgement"). Paste its output into
+the `docs/log.md` audit entry beside the check output.
+
 ## Sync before you approve (iteration-branch repos)
 
 **Policy-flip sweep.** A change to any dial in `docs/process.toml` —

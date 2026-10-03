@@ -6672,6 +6672,19 @@ the release checklist for the next sign-off and have a person recall the
 falsifiers and set standing when warranted. Repositories without an assumptions
 registry need no new registry or section.
 
+### Required stage-gate observation re-judges [since 00467fc7]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The shipped gate-advance skill requires filing due stage-gate
+observation re-judges before signing a rung, and recording the command output
+beside the check output in the audit log.
+
+**What to do.** Re-sync `skills/gate-advance/SKILL.md` and refresh its agent
+mirrors. Before signing a rung, run
+`python scripts/intake.py rejudge --checkpoint stage-gate` at the commit being
+signed and paste its output into `docs/log.md` beside the check output.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
