@@ -170,3 +170,12 @@ resumed at 02:30 after the usage limit.
 Sol (low) reused `kitlib.spine.is_example`; the two hook tests red since WI-746 pass.
 The hook modules fail inside the Codex sandbox (Git Bash), so the coordinator ran
 them outside it: 34 passed. Sonnet: SOUND.
+
+### WI-761 and WI-760: LLR-289/TC-302 re-attested (seq 18); LLR-290/TC-303 approved (seq 19)
+
+Two independent Opus adjudicators sat in parallel from different trunk points; both
+lanes took act seq 18. WI-761 (re-attesting WI-759's amendment) landed first; WI-760's
+snapshot was then retaken on the merged tree (no refusal, `last_approved/` reset, the
+exact command re-run) as seq 19. Both cross-reviewed SOUND by Sonnet. The temp volume
+filled once mid-review again (a reviewer's test hit `OSError`); free space hovers
+around 2 GB, consumed outside this session.

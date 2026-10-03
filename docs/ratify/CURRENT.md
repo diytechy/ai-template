@@ -6,8 +6,8 @@ _Baseline: `docs/archive/last_approved` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-09-29 (d46c5278)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-10-03 (d9424572)._
-_Baseline: `docs/test/test-cases.toml` copied 2026-10-03 (d9424572)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-10-03 (dc80849f)._
+_Baseline: `docs/test/test-cases.toml` copied 2026-10-03 (dc80849f)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781)._
@@ -679,7 +679,7 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 2 chain(s): SR-224, SR-227</summary>
+<summary>Waiting for automated adjudication — 1 chain(s): SR-224</summary>
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
@@ -700,40 +700,6 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **AcceptanceCriteria**: A skill whose description is shorter than the declared floor fails the check, which names that skill and not a skill at the floor; a description at the floor passes; the kit's shipped skills clear the floor.
 - **Priority**: C
 - **Verification**: Test
-- **Status**: Drafted
-- **Phase**: 6
-
-## SR-227 — Where the retention dial is on, an adjudication resumes a retained session and resets it only when that is safe
-
-> **Requirement.** Where the declared adjudicator retention dial is above zero, the delivered loop content shall launch each adjudication of a retained class by resuming the route's active, unheld session in its model runner's resume form; mint and record a session id where the route has no active session; wait a bounded time where its active session is held, then run unretained and state why; record each call like any other; drain the session when its latest request's occupancy reaches the dial or the inputs it judges under change; retire it only when no work it has a stake in is pending; retire it at once when a call on it fails; let no two calls use one retained session at once; write the retention state only whole, by one writer at a time; and make any keep-warm call one bounded turn that never blocks the scheduler.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that a configured agent implement toward the vision with no human curating what comes next; it does not name retaining a session, so this obligation arrives through three lenses rather than through the need's text. The performance lens listens for an operating-cost risk left unassessed: a run that spins a fresh adjudicator for every small work item reloads the spine on each call, and the usage record makes that cost visible, while resuming a session by id uses the provider's prompt cache. The unattended-operations lens listens for a silent degrade: a retained session that has filled, or judges under rules that have since changed, or that a failed call left in an unknown state, degrades every later judgement with nothing paging anyone, so the drain, the change rules and the immediate retirement are part of the obligation, not tuning. The integrity lens listens for a durable artifact updated in place without an all-or-nothing guarantee and for a claim nothing can reclaim: two calls resuming one transcript at once corrupt it, so one call at a time holds a session, under a hold that expires when its holder is gone. Retiring only when no work the session has a stake in is pending is what keeps a review, rework and re-review round trip in one session, which is the continuity the layer exists for; a session is retained as a transcript a bounded process replays, never as a long-lived process, so an unattended run still cannot wait o… [327 more chars — read the registry row]
-
-
-### LLR LLR-290 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **LLR-ID**: LLR-290
-- **SR-Refs**: SR-227
-- **Title**: Record reported and inferred codex compaction within a retained session
-- **Module**: project-trajectory/scripts/session_adapters.py;project-trajectory/scripts/session_keep.py
-- **CodeSymbol**: CodexAdapter.compaction;_observe_compaction
-- **Detail**: The codex adapter reads compacted entries and per-request input counts from the exact thread rollout under the launch CODEX_HOME, and turn.completed running input totals from exec. Retained bookkeeping records compacted and compaction-source in the call row and compacted and compaction_source in the store: reported for a rollout entry, otherwise inferred from any decrease across consecutive new rollout requests, starting with the stored request_prompt baseline and the first new request. Only rollout per-request prompts drive inference; without a readable rollout there is no new inference, and exec turn sums are retained only as a running-total baseline. The rollout request cursor and latest prompt baseline live in the retained record, so old requests are not rechecked and a kit reset starts a new comparison; a resumed legacy record lacking a rollout cursor first learns the latest prompt and cursor before inferring. Reported evidence takes precedence over inferred evidence. Once recorded, compacted and its source hold for every later call of that retained session, though the call shows no new evidence; a reported entry replaces an inferred source, and an inferred drop never replaces a reported one.
-- **Rationale**: Provider compaction must remain visible when no exec event reports it, while a kit reset must not masquerade as provider compaction.
-- **TestRefs**: TC-303
-- **Status**: Drafted
-- **Component**: CMP-008
-- **Phase**: 6
-
-### TC TC-303 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **TC-ID**: TC-303
-- **Verifies**: SR-227;LLR-290;IF-266;IF-247;IF-248
-- **Level**: Unit
-- **Method**: Drive retained codex calls through act with inline variants of recorded exec and rollout lines: two exec turns, the first a multi-request sum and the second a smaller single-request contribution, infer nothing without a readable rollout; multiple exec totals alone also infer nothing; a rollout compacted entry marks source reported; every new rollout request is compared with its predecessor, starting from the stored prompt baseline: 35911 followed by new requests 15717 then 18200 marks source inferred despite the later rise; a pure rise across several requests and equal prompts infer nothing; old rollout requests are not rechecked; a kit reset discards the comparison; a legacy record with no rollout cursor learns the latest prompt and cursor before inferring. After an inferred compaction, a later call whose new requests only rise still carries compacted with source inferred; a compacted entry arriving after an inferred source marks it reported, and a later drop leaves a reported source reported. Assert the retained store and written session log carry compacted and its source, and unrelated thread rollouts are ignored. Variants are synthetic, not new live recordings.
-- **Tier**: Smoke
-- **Expected**: Compaction is reported or explicitly inferred within one retained session, with no comparison across a kit reset.
-- **Automated**: Yes
-- **Evidence**: tests/test_session_keep.py
 - **Status**: Drafted
 - **Phase**: 6
 
