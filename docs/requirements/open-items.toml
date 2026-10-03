@@ -3685,14 +3685,16 @@ wi_refs = ["WI-684"]
 
 [open_item.OI-99]
 title = "Owner hold until second to last"
-status = "pending"
+status = "ruled"
 raised = "2026-10-02"
-one_line = "The owner must release WI-688 when it is second to last in the queue and rule this item."
-decision = "The owner must release WI-688 when it is second to last in the queue and rule this item."
+one_line = "RULED 2026-10-03: WI-688 is released, now second to last (only the deferred WI-625 follows). It is claimed through the kit's own path under a scoped unpause."
+decision = """The owner must release WI-688 when it is second to last in the queue and rule this item. RULED 2026-10-03 by the owner: release, with a scoped unpause. The tracked `docs/work/pause` is deleted only so WI-688 can be claimed through `integrate.py claim`. Its judge sitting (step 3) then runs through the kit's own session path, which WI-541's owed occupancy measurement needs. The pause is restored in the next commit. The control-launch ruling's owner-reviewed pause deletion is NOT spent by this. The owner noted that development is not running from agent-resume, so an unpaused window starts no process."""
 blast_radius = "Only WI-688's readiness is held; its registry status stays queued."
 options = "Keep the hold until the owner's condition is met; then rule the release."
 recommendation = "Keep pending until the owner performs the required act."
 wi_refs = ["WI-688"]
+ruled_date = "2026-10-03"
+ruling_ref = "docs/log.d/2026-10-03-wave9-coordinator.md"
 
 [open_item.OI-100]
 title = "Route amended needs to the existing meaning-or-clarity adjudication, and let a CLARITY verdict re-attest on a held rung"

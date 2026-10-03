@@ -481,7 +481,7 @@ set:
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
 | `process.toml` `secrets_scan` | `true` | **opt-out** `false` | `true` |
 | `process.toml` `privacy_review` | `"require"` | opt-down `"warn-unwired"` (the unwired reviewer warns instead of blocking) | `"require"` |
-| `process.toml` `blackout` | `"12:00-12:00"` — **disabled**, shipped in window shape so the format is visible (UTC, Mon–Fri when populated) | fill in your own `HH:MM-HH:MM`; empty value (or start == end) disables | `""` — disabled; the tracked [pause](docs/work/pause) separately holds the unattended frontier |
+| `process.toml` `blackout` | `"12:00-12:00"` — **disabled**, shipped in window shape so the format is visible (UTC, Mon–Fri when populated) | fill in your own `HH:MM-HH:MM`; empty value (or start == end) disables | `""` — disabled; the tracked pause (`docs/work/pause`, present only while paused) separately holds the unattended frontier |
 | `process.toml` `guardrails` | `"off"` | **opt-in** model-substring allowlist / `"all except …"` | `"off"` (no vendored core — reason in the key's comment) |
 | `process.toml` `trajectory_check` | `true` — the WI registry validator + its dashboard | **opt-out** `false` (vacuous anyway on a placeholder-only registry) | `true` |
 | `process.toml` `okf_export` | `true` | **opt-out** `false` | `false` since 2026-08-18 — the layer still ships; this repo stopped exporting its own bundle (551 files) and deleted it ([declared absent](docs/declared-absences)) |

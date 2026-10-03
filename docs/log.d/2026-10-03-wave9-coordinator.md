@@ -155,3 +155,20 @@ OI-100 now asks for two narrow extensions of that mechanism:
 - let an adjudicator session's CLARITY verdict re-attest on a held rung.
 
 Both are judgement acts, and no script gains authority.
+
+### OI-99 ruled: WI-688 released under a scoped unpause (owner, 2026-10-03)
+
+WI-688 is now second to last. The owner released it and chose a scoped unpause:
+
+- delete `docs/work/pause` in this commit;
+- claim WI-688 through `integrate.py claim`;
+- restore the pause in the next commit.
+
+The kit's own claim path is needed because WI-541's owed occupancy measurement is
+taken from WI-688's judge sitting through the kit's session path. That path starts
+at a claim, and a claim is refused while the pause exists. The owner noted that
+development is not running from agent-resume, so the window starts no process. The
+control-launch ruling's owner-reviewed pause deletion is not spent.
+
+The owner also agreed that a redundant amendment row the landing sweep mints (the
+re-mint trap) is closed by citing the act, as WI-785 was.
