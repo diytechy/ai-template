@@ -59,3 +59,14 @@ session-local codenames.
 
 The `-000` example is inert (it names no real requirement), so a fresh scaffold
 that never adopts `Critique` verification carries it for free.
+
+## Observation rubrics
+
+Observation test cases reference a numbered rubric written before their first
+judgement ([PROCESS.md observation judgement](../../project-trajectory/PROCESS.md#observation-judgement)):
+[counterpart-review](counterpart-review.md) (TC-210),
+[critique-provenance](critique-provenance.md) (TC-209),
+[decomposition-proportionality](decomposition-proportionality.md) (TC-211),
+[resync-inspection](resync-inspection.md) (TC-036),
+[sampled-new-reader](sampled-new-reader.md) (TC-279) and
+[dashboard-usability](dashboard-usability.md) (TC-055).

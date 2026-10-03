@@ -25,18 +25,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-03-wave7-coordinator.md](handoff-2026-10-03-wave7-coordinator.md)
-  and the wave-8 log fragment
-  [log.d/2026-10-03-wave8-coordinator.md](log.d/2026-10-03-wave8-coordinator.md)
-  (act seq 22 approved the cadence and assumption rows; four returned rows have
-  one drafted follow-up),
-  then apply the owner's 2026-09-30/10-02 directions below (each is also
-  noted in its WI row; the 2026-10-02 rulings are in WI-541 and WI-697; the
-  assumption ruling is cited in the validation plan's 2026-10-03 supersession
-  note). Order, after the owner's 2026-10-02 session:
-  1. Batch O's follow-up lane (minted at its merge) and its one combined
-     sitting; WI-697 (TC-279 is approved, so its first judgement can run beside
-     it); then WI-771 (the evidence ladder), after that sitting acts.
+  [handoff-2026-10-03-wave8-coordinator.md](handoff-2026-10-03-wave8-coordinator.md)
+  (new roles from 2026-10-03: Claude Opus builds at medium effort, Codex Luna
+  reviews at high), then apply the owner's 2026-09-30/10-02 directions below
+  (each is also noted in its WI row; the 2026-10-02 rulings are in WI-541 and
+  WI-697; the assumption ruling is cited in the validation plan's 2026-10-03
+  supersession note). Order:
+  1. One combined sitting over WI-775 and WI-776; WI-697 (TC-279's first
+     judgement: round 2's draw and readers are ready outside the repo); WI-777
+     (TC-055 re-judge, after WI-775); then WI-771 (the evidence ladder), after
+     that sitting acts.
   2. WI-688 second to last; its judge sitting is WI-541's multi-step occupancy
      run, and WI-541 closes with it. WI-625 (deferred) last.
   - **WI-684:** re-sync `C:\Projects\FileBackup` (stamp `9b697cc`) as a
@@ -46,10 +44,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
   dispatcher claims nothing until a reviewed commit deletes it, so work is
-  taken by a coordinator session, not the loop. The roles hold: Codex Sol builds through the CLI and the coordinator
-  commits for it, Claude Sonnet reviews, and an independent Opus agent
+  taken by a coordinator session, not the loop. The roles (owner, 2026-10-03): Claude Opus builds at medium
+  effort and the coordinator commits for it, Codex Luna (`gpt-6-luna`)
+  reviews at high effort through the CLI, and an independent Opus agent
   arbitrates, adjudicates and spot-checks. File new work into an open
-  item's Context before minting a row. The builders' `codex exec` launch
+  item's Context before minting a row. The reviewers' `codex exec` launch
   runs under a temporary `Bash(codex exec *)` allow rule in
   `.claude/settings.local.json` (owner, 2026-09-28): remove it when the
   queue drains. Recheck Git and the generated frontier before choosing
