@@ -3081,6 +3081,6 @@ code_symbol = "changed_paths/resolve_plan/step_paths/step_threshold"
 detail = "A step's optional paths key is a comma/whitespace-separated list of repo-relative case-sensitive fnmatch patterns, where * spans /. Selection is at or above from-stage OR a matching changed path. Staged paths take precedence; with an empty index a claimed lane uses its integration base to HEAD. Failed or empty change reads run all path-declaring steps. Deletions and both rename sides count. Blank or absent paths preserves rung-only selection. The hook invokes --path-triggered, which runs only path-declaring steps except smoke selected by that same rule; smoke stays in the manually run commit bar and remains rung- or path-selected at ordinary gates. The per-stack declaration includes the sensor baseline, script and config."
 rationale = "A sensor can protect a code change below a process rung only when selection reads what the change touches; a missing change set must select rather than silently bypass it. Optional declarations avoid forcing adopters to migrate."
 test_refs = "TC-304"
-status = "Drafted"
+status = "Approved"
 component = "CMP-007"
 phase = 5

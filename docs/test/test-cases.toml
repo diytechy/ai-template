@@ -3061,5 +3061,5 @@ tier = "Smoke"
 expected = "Sensors run whenever their rung or declared change trigger selects them; unknown changes run them and undeclared triggers preserve adopter behavior."
 automated = "Yes"
 evidence = "tests/test_step_path_trigger.py"
-status = "Drafted"
+status = "Approved"
 phase = 5
