@@ -113,3 +113,10 @@ def test_every_shipped_description_clears_the_floor():
     gen = load_script("gen_skills_index")
     rows = gen.collect_skills(SKILLS)
     assert gen.short_descriptions(rows) == []
+
+
+def test_gate_advance_names_the_stage_gate_rejudge_step():
+    text = (SKILLS / "gate-advance" / "SKILL.md").read_text(encoding="utf-8")
+    body = text.split("---", 2)[2]
+    assert "python scripts/intake.py rejudge --checkpoint stage-gate" in body
+    assert "required" in body

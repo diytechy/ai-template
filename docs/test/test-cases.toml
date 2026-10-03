@@ -2574,7 +2574,7 @@ phase = 6
 [test.TC-247]
 verifies = ["SR-215", "LLR-254", "IF-228"]
 level = "Integration"
-method = "checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only under the configured closed-WI floor. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs."
+method = "checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only once the configured closed-WI floor is met. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. A draft names the case, its reason, its rubric and the changed input or the fired trigger, and its title carries the case id and the inputs-digest prefix. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs."
 tier = "Full"
 expected = "Satisfies SR-215 acceptance: missing or expired evidence is due; other judgements obey their trigger and floor, and each due case has at most one open re-judge item."
 automated = "Yes"
@@ -2585,11 +2585,11 @@ phase = 6
 [test.TC-248]
 verifies = ["SR-215", "LLR-255", "IF-229"]
 level = "Integration"
-method = "Driven through intake on a real git repository. A merged work item satisfying an observation case’s trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. Release preparation mints for expired or release-triggered due cases; the generated checklist counts cases using the release checkpoint. Minting follows the mint checks and preserves unrelated uncommitted edits."
+method = "Driven through intake on a real git repository. A merged work item satisfying an observation case's trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. The release command mints for an expired case and not twice while its item is open; at the release checkpoint a release-triggered case is drafted only once its floor is met. The generated release checklist carries one required item naming the release re-judge command and the count of cases due at the release checkpoint. The stage-gate command files one item for a stage-gate-triggered case past its floor, none at merge and none while one is open, and the command refuses a merge checkpoint. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. Minting follows the mint checks and preserves unrelated uncommitted edits."
 tier = "Full"
-expected = "Satisfies SR-215's acceptance at both checkpoints: a work-item merge and release preparation each file one re-judge item per due case and never a second while one is open."
+expected = "Satisfies SR-215's acceptance at every checkpoint: a work-item merge, release preparation and stage-gate preparation each file one re-judge item per due case and never a second while one is open."
 automated = "Yes"
-evidence = "tests/test_rejudge.py; tests/test_intake.py"
+evidence = "tests/test_rejudge.py; tests/test_intake.py; tests/test_skills_index.py::test_gate_advance_names_the_stage_gate_rejudge_step"
 status = "Approved"
 phase = 6
 
@@ -3103,7 +3103,7 @@ verifies = ["SR-215", "LLR-293", "IF-269"]
 level = "Integration"
 method = "Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor."
 tier = "Full"
-expected = "Only the declared trigger after the closed-WI floor fires; absence and expiry bypass both."
+expected = "A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both."
 automated = "Yes"
 evidence = "tests/test_rejudge.py"
 status = "Drafted"
@@ -3149,5 +3149,16 @@ tier = "Smoke"
 expected = "Assumption confirmations are differentiable, absent-tolerant and read-only, with the ruled inclusion set."
 automated = "Yes"
 evidence = "tests/test_release_assumptions.py"
+status = "Drafted"
+phase = 6
+
+[test.TC-311]
+verifies = ["SR-215", "LLR-294", "IF-269"]
+level = "Integration"
+method = "Run the trajectory check with --strict on a tree holding no work items and real observation cases with no rubric reference."
+tier = "Full"
+expected = "The check exits 0 and prints a warning naming a case and its missing rubric; strict mode never promotes these warnings to a failure."
+automated = "Yes"
+evidence = "tests/test_rejudge.py::test_trajectory_rubric_warning_survives_strict_and_no_work_items"
 status = "Drafted"
 phase = 6

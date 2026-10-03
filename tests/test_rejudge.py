@@ -190,12 +190,12 @@ def cadence_repo(tmp_path, trigger="", floor=2, *, expired=(), unrecorded=()):
     reader = csv.DictReader(io.StringIO(TEST_CASES))
     out = io.StringIO()
     writer = csv.DictWriter(
-        out, fieldnames=[*reader.fieldnames, "Trigger", "MinWorkItems"]
+        out, fieldnames=[*reader.fieldnames, "Trigger", "MinWorkItems", "Rubric"]
     )
     writer.writeheader()
     for row in reader:
         if row["TC-ID"] == "TC-002":
-            row.update(Trigger=trigger, MinWorkItems=floor)
+            row.update(Trigger=trigger, MinWorkItems=floor, Rubric="docs/rubric.md")
         writer.writerow(row)
     _write(root, TC_CSV, out.getvalue())
     _write(root, "docs/process.toml", "[checks]\nobservation_min_work_items = 2\n")
@@ -238,6 +238,19 @@ def test_trigger_waits_for_closed_work_floor(tmp_path, trigger, checkpoint, path
     sha = close_work(root, 11)
     assert case_due(root, sha, checkpoint)
     assert rejudge.checkpoint_drafts(root, sha, checkpoint, now=NOW)
+    assert (
+        not trigger
+        or f"its declared trigger {trigger} fired"
+        in drafts_by_case(rejudge.checkpoint_drafts(root, sha, checkpoint, now=NOW))[
+            "TC-002"
+        ]["context"]
+    )
+    assert (
+        "- Rubric: docs/rubric.md"
+        in drafts_by_case(rejudge.checkpoint_drafts(root, sha, checkpoint, now=NOW))[
+            "TC-002"
+        ]["context"]
+    )
 
 
 @pytest.mark.parametrize(

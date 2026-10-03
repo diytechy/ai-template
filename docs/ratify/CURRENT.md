@@ -872,33 +872,47 @@ _traced — routes to adjudication_
   - before: (empty)
   - after: release
 
-## SR-215 — At a checkpoint, a changed or expired observation test is queued once for re-judging
+## SR-215 — At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
 
-> **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; an undeclared trigger preserves input-change triggering under that floor. It keeps at most one open item per case.
+> **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
 
-> **Rationale.** Judgements cost time and model calls and vary across sessions. A fixed rubric makes the pass criterion reviewable; a closed-work floor and explicit trigger avoid frequent re-judgements, while first judgement and expiry keep missing or old evidence from standing indefinitely.
+> **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.
 
 
 ### SR SR-215
 - **AcceptanceCriteria**
   - before: At a work-item merge and at release preparation, each observation test case has its declared inputs hashed; one whose digest differs from its last result's judged digest, or whose last result has expired, or which has no result yet, gets exactly one open re-judge work item naming it and what changed; an unchanged, unexpired one gets none; a later checkpoint while that item is open adds none; the check runs no model; an observation test case declaring no inputs is judged by its expiry alone.
-  - after: Every observation case references a numbered rubric written before its first judgement; existing omissions warn. No result is due immediately; expiry is a backstop independent of the floor. Otherwise matching files, a tagged component, release or a stage gate makes it due only after the configured number of closed WIs since its latest record was committed; a case may raise that floor. With no trigger, only changed declared inputs fire under the floor. Inputs and policy are read at the checkpoint revision. An open re-judge item suppresses a second; the decision runs no model.
+  - after: A case with no result is due at once, and a case whose result expired is due at once; neither waits for the floor. Otherwise a declared trigger (matching changed files, a change to a module tagged with the named component, release preparation, or a stage-gate check) makes a case due only once the configured number of closed work items has passed since its latest record was committed; a case may raise that number but not lower it. With no trigger, a change to its declared inputs makes it due, subject to the same floor; with neither a trigger nor inputs, only absence and expiry make it due. Inputs and policy are read at the checkpoint revision. An open re-judge item suppresses a second, and the decision runs no model. An observation case that cites no written pass criteria is reported as a warning, never a failure, including under strict checking.
+- **Coincident**
+  - before: The needs ask for an observation's result re-judged when what it judged changes; one re-judge item filed per stale case is that outcome, and the judging itself is the re-judge item's own.
+  - after: The needs ask that an accepted observation not stand on a state it never judged, and that it be judged against written criteria. Filing one re-judge item for each case that is unjudged, expired or triggered past its floor, and warning on a case that cites no criteria, is that outcome within the cost bound the floor sets. The judging itself is the re-judge item's own.
 - **Rationale**
   - before: A judgment made by inspection, critique or observation holds only for the state it looked at, and nothing re-fires it once that state moves. Hashing each test case's declared inputs at a merge or a release costs no model call, so the expensive part — the re-judgment — runs only when something it looked at changed or its result aged out, and one open item per test case keeps a busy week from filing the same judgment many times.
-  - after: Judgements cost time and model calls and vary across sessions. A fixed rubric makes the pass criterion reviewable; a closed-work floor and explicit trigger avoid frequent re-judgements, while first judgement and expiry keep missing or old evidence from standing indefinitely.
+  - after: Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor is a cost limit the owner directed (the PERFORMANCE lens): it lets an accepted judgement outlive changes to what it judged for at most the configured number of closed work items, while first judgement and expiry keep missing or old evidence from standing indefinitely.
 - **Requirement**
   - before: When a work item merges or a release is prepared, the delivered harness shall file one re-judge work item for each observation test case whose declared inputs changed since its last result or whose last result expired, never filing a second while one is open.
-  - after: When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; an undeclared trigger preserves input-change triggering under that floor. It keeps at most one open item per case.
+  - after: When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
+- **Title**
+  - before: At a checkpoint, a changed or expired observation test is queued once for re-judging
+  - after: At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
 
 ### LLR LLR-254
 _approved — re-attestation owed_
 - **Detail**
   - before: A pure sibling of consolidate.py that intake imports. observation_test_cases(root, rev) reads the observation cases at a revision. checkpoint_drafts(root, rev, checkpoint) digests each case's declared inputs as read from git at that revision, not from the working tree, and drafts one re-judge work item for each case whose digest differs from its latest record's judged digest, whose latest record has expired, or which has no record. A case declaring no inputs is judged by expiry and absence alone. A committed link is not content: it is never written into the extracted tree and is excluded from the digest by the observation writer's own link predicate, so a declared link reads as absent, a link inside a declared directory contributes nothing, and a change to a link's target makes no case due. _open_rejudge(rows, tc) finds an open re-judge item for the case by its typed cells, never by title, because a title match would also find the closed items in the archive. A draft names the case and what changed, and its title carries the case id and the digest prefix. No model runs.
-  - after: A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. No record is due immediately; expired records bypass the floor. Without a trigger, changed input digests are due under the floor; without inputs, only absence and expiry fire. checkpoint_drafts drafts each due case once, suppressing an open item by typed Brief and Adjudicates cells, never by title. It names the case, reason, rubric and changed inputs or trigger. Committed links are excluded by the observation writer’s own link predicate. No model runs.
+  - after: A sibling of consolidate.py imported by intake. observation_test_cases(root, rev) reads observation cases at a revision. checkpoint_for(root, rev, tc) returns the case's Trigger when it names the release or stage-gate checkpoint, else merge. due_cases(root, rev, now, checkpoint) reads committed inputs and records and uses the cadence decision to apply the configured closed-WI floor and declared trigger. A case with no record is due at once, and an expired record is due at once; neither waits for the floor. Without a trigger, a changed input digest is due subject to the floor; without inputs, only absence and expiry make a case due. checkpoint_drafts drafts each due case once, suppressing an open item by its typed Brief and Adjudicates cells, never by title. A draft names the case, the reason, the rubric and the changed inputs or the fired trigger, and its title carries the case id and the inputs-digest prefix. Committed links are excluded by the observation writer's own link predicate. No model runs.
 _traced — routes to adjudication_
 - **CodeSymbol**
   - before: observation_test_cases/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
   - after: observation_test_cases/checkpoint_for/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
+
+### LLR LLR-255
+- **Detail**
+  - before: intake_after_merge adds rejudge.checkpoint_drafts(root, after, "merge") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint, and `intake.py rejudge --checkpoint release` is the release-preparation entry. Release preparation is a person's act, so the release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming that command and the count of due observation cases, read through rejudge's pure decision. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits.
+  - after: intake_after_merge adds rejudge.checkpoint_drafts(root, after, "merge") to its drafts inside the held merge slot, so the check runs once per merged work item. mint_rejudge(root, rev, checkpoint) files them through _mint; `intake.py rejudge --checkpoint release` is the release-preparation entry and `intake.py rejudge --checkpoint stage-gate` the stage-gate-preparation entry, and the command refuses a merge checkpoint, which only the merge slot runs. Release and stage-gate preparation are a person's acts, so each is prompted where that person works. The release checklist, a view that may not import intake, carries a required item from _rejudge_checklist_line naming the release command and the count of observation cases due at the release checkpoint, read through rejudge's pure decision. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. The minted row's brief and verdict entries are added where its kind requires them. Filing goes through the mint path's staging, which has to stage and restore only what it wrote before this runs in a checkout holding uncommitted edits.
+- **Title**
+  - before: The merge and release checkpoints file the re-judge items
+  - after: The merge, release and stage-gate checkpoints file the re-judge items
 
 ### LLR LLR-293 — ADDED since the snapshot, Drafted — never approved
 - **LLR-ID**: LLR-293
@@ -906,7 +920,7 @@ _traced — routes to adjudication_
 - **Title**: The observation cadence policy
 - **Module**: project-trajectory/scripts/observation_cadence.py
 - **CodeSymbol**: Cadence
-- **Detail**: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. Gate preparation files due cases through `python scripts/intake.py rejudge --checkpoint stage-gate`; release preparation uses `python scripts/intake.py rejudge --checkpoint release`. History is cached per result commit; malformed policy and unreadable history raise ValueError. Zero explicitly disables the default floor.
+- **Detail**: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
 - **Status**: Drafted
 - **Component**: CMP-008
 - **Phase**: 6
@@ -917,7 +931,7 @@ _traced — routes to adjudication_
 - **Title**: The observation rubric-reference advisory
 - **Module**: project-trajectory/scripts/observation_cadence.py
 - **CodeSymbol**: observation_rubric_findings
-- **Detail**: observation_rubric_findings returns one warning for each real observation case omitting Rubric. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict. Creation requires the numbered rubric first.
+- **Detail**: observation_rubric_findings returns one warning for each real observation case omitting Rubric, naming the case. Automated and example cases are excluded. check_trajectory prints the warnings before its no-WI return and never promotes them under strict.
 - **Status**: Drafted
 - **Component**: CMP-008
 - **Phase**: 6
@@ -941,12 +955,20 @@ _traced — routes to adjudication_
   - after: Satisfies SR-215 acceptance: missing or expired evidence is due; other judgements obey their trigger and floor, and each due case has at most one open re-judge item.
 - **Method**
   - before: checkpoint_drafts driven on a real git repository. An observation case whose declared input changed since its latest record gets one draft naming it and the input; one whose record expired gets one; one with no record gets one; an unchanged, unexpired one gets none; a case declaring no inputs is judged by expiry and absence alone. An open re-judge item for a case, found by its typed cells, suppresses a second draft; a closed item in the archive with an identical title does not. Inputs are read at the given revision: an uncommitted edit to an input changes nothing. A committed link is excluded: a result recorded through the writer on a declared link, or on a directory holding one, is not due at the checkpoint where the platform cannot create a link, a change to the link's target does not make it due, and a directory link to itself is harmless. No agent command is spawned.
-  - after: checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only under the configured closed-WI floor. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs.
+  - after: checkpoint_drafts driven on a real git repository. No result and expiry are due independently of the floor. Changed inputs with no trigger are due only once the configured closed-WI floor is met. File, component, release and stage-gate triggers are due only when they fire and the floor is met; a case may raise but cannot lower the default floor. A draft names the case, its reason, its rubric and the changed input or the fired trigger, and its title carries the case id and the inputs-digest prefix. An open typed re-judge item suppresses a second; a closed archived item with the same title does not. Policy and inputs are read at the given revision: uncommitted changes affect neither. Committed links are excluded, including self-links and platforms checking them out as text. No model runs.
 
 ### TC TC-248
+_approved — re-attestation owed_
+- **Expected**
+  - before: Satisfies SR-215's acceptance at both checkpoints: a work-item merge and release preparation each file one re-judge item per due case and never a second while one is open.
+  - after: Satisfies SR-215's acceptance at every checkpoint: a work-item merge, release preparation and stage-gate preparation each file one re-judge item per due case and never a second while one is open.
 - **Method**
   - before: Driven through intake on a real git repository. A merged work item whose merge changes an observation case's declared input mints one re-judge item; a second merge while that item is open mints none. The release subcommand mints for a case whose record expired, and the generated release checklist carries a required item naming that command and the number of due cases. Minting runs through the mint path's checks, and a checkout holding an unrelated uncommitted edit keeps it.
-  - after: Driven through intake on a real git repository. A merged work item satisfying an observation case’s trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. Release preparation mints for expired or release-triggered due cases; the generated checklist counts cases using the release checkpoint. Minting follows the mint checks and preserves unrelated uncommitted edits.
+  - after: Driven through intake on a real git repository. A merged work item satisfying an observation case's trigger and closed-WI floor mints one re-judge item; another merge while it is open mints none. The release command mints for an expired case and not twice while its item is open; at the release checkpoint a release-triggered case is drafted only once its floor is met. The generated release checklist carries one required item naming the release re-judge command and the count of cases due at the release checkpoint. The stage-gate command files one item for a stage-gate-triggered case past its floor, none at merge and none while one is open, and the command refuses a merge checkpoint. The shipped gate-advance skill names the stage-gate command as a required step before a rung is signed. Minting follows the mint checks and preserves unrelated uncommitted edits.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_rejudge.py; tests/test_intake.py
+  - after: tests/test_rejudge.py; tests/test_intake.py; tests/test_skills_index.py::test_gate_advance_names_the_stage_gate_rejudge_step
 
 ### TC TC-306 — ADDED since the snapshot, Drafted — never approved
 - **TC-ID**: TC-306
@@ -954,7 +976,7 @@ _traced — routes to adjudication_
 - **Level**: Integration
 - **Method**: Drive committed file, component, release and stage-gate triggers and an undeclared input-change case. Assert due and not-due, floor blocking and threshold crossing, a raised floor and a lower attempted override, bookkeeping exclusion, first judgement and expiry bypass, revision-bound reads and a fresh record resetting the floor.
 - **Tier**: Full
-- **Expected**: Only the declared trigger after the closed-WI floor fires; absence and expiry bypass both.
+- **Expected**: A declared trigger fires only after the closed-WI floor; with no declared trigger, a change to declared inputs fires subject to the same floor; absence and expiry bypass both.
 - **Automated**: Yes
 - **Evidence**: tests/test_rejudge.py
 - **Status**: Drafted
@@ -993,6 +1015,18 @@ _traced — routes to adjudication_
 - **Expected**: The complete re-judge brief composes under the assumption chain.
 - **Automated**: Yes
 - **Evidence**: tests/test_assumption_observation_briefs.py::test_rejudge_shows_assumption_only_case
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-311 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-311
+- **Verifies**: SR-215;LLR-294;IF-269
+- **Level**: Integration
+- **Method**: Run the trajectory check with --strict on a tree holding no work items and real observation cases with no rubric reference.
+- **Tier**: Full
+- **Expected**: The check exits 0 and prints a warning naming a case and its missing rubric; strict mode never promotes these warnings to a failure.
+- **Automated**: Yes
+- **Evidence**: tests/test_rejudge.py::test_trajectory_rubric_warning_survives_strict_and_no_work_items
 - **Status**: Drafted
 - **Phase**: 6
 
