@@ -32,7 +32,11 @@ Contract IF-247: the retained-session record, one JSON object per route at
     is the runner's `--version` when it was minted, `lease` is `{holder,
     until}` while one call owns it, and `governing_hash`, `window`,
     `occupancy`, `pct`, `started`, `last_used` and `last_used_epoch` record
-    what it was last seen under. Every read-modify-write holds the store lock
+    what it was last seen under. Codex records also keep `input_total` and
+    `request_prompt` as comparison baselines, `compacted` and
+    `compaction_source` (reported, inferred or empty). A fresh generation has
+    no prior compaction or comparison baseline.
+    Every read-modify-write holds the store lock
     (`out/adjudicator/.lock`, created exclusively, stale after two minutes);
     a record is written whole through its own temporary file and a replace; a
     file that does not parse, or names another route, reads as no session.
@@ -47,7 +51,9 @@ Contract IF-248: the keep call surface the session service composes.
     held past `lease_wait`; `keep_argv(adapter, argv, keep)` is the resume or
     mint argv; `keep_bookkeep(root, keep, minted, outcome)` folds a finished
     call in, applies the reset rules, releases the lease and returns the
-    `session-gen` and `reset-reason` columns; `keep_abandon(root, keep,
+    `session-gen` and `reset-reason` columns and, with a codex observation
+    supplied as `compaction=`, `compacted` and `compaction-source`;
+    `keep_abandon(root, keep,
     reason)` retires the session of a launch that raised, through a tombstone
     (`<record>.retire`, written whole without the lock) that every locked read
     applies first (`load_honoured`) when the lock cannot be had at once;
@@ -668,7 +674,9 @@ def _unusable(outcome, reported_error):
     return outcome.code != 0 or bool(outcome.timed_out) or reported_error
 
 
-def keep_bookkeep(root, keep, minted, outcome, reported_error=False):
+def keep_bookkeep(
+    root, keep, minted, outcome, reported_error=False, *, compaction=None
+):
     """Fold one retained call into its record, under the store lock, and
     decide its reset: an unusable session (a non-zero exit, a timeout, an
     error the runner reported) retires at once; one whose occupancy reached
@@ -685,6 +693,9 @@ def keep_bookkeep(root, keep, minted, outcome, reported_error=False):
         )
         if record is None:
             return {"session-gen": "", "reset-reason": "store moved on"}
+        compaction_columns = _observe_compaction(
+            record, compaction, not keep.session_id
+        )
         _observe(record, keep, m)
         if not record["session_id"]:
             _retire(record, "session id unavailable")
@@ -698,7 +709,43 @@ def keep_bookkeep(root, keep, minted, outcome, reported_error=False):
                 record["state"], record["reset_reason"] = STATE_DRAINING, reason
         record.pop("lease", None)
         store_save(root, record)
-    return {"session-gen": record["generation"], "reset-reason": record["reset_reason"]}
+    return {
+        "session-gen": record["generation"],
+        "reset-reason": record["reset_reason"],
+        **compaction_columns,
+    }
+
+
+def _observe_compaction(record, observation, fresh):
+    """Remember compaction within this session only. Rollout prompts are
+    per request; exec prompts must be differenced from running totals. A
+    resumed legacy record without a baseline learns it before inferring.
+
+    Implements: SR-227, LLR-290
+    """
+    if not observation:
+        return {}
+    prompts = observation["prompts"]
+    previous = record.get("request_prompt")
+    total = 0 if fresh else record.get("input_total")
+    derived = []
+    for current in observation["totals"]:
+        if total is not None and current >= total:
+            derived.append(current - total)
+        total = current
+    record["input_total"] = total if observation["totals"] else None
+    requests = prompts or derived
+    pair = ([previous] if previous is not None and not prompts else []) + requests
+    inferred = len(pair) >= 2 and pair[-1] < pair[-2]
+    record["request_prompt"] = requests[-1] if requests else None
+    source = record.get("compaction_source", "")
+    if observation["reported"]:
+        source = "reported"
+    elif inferred and not source:
+        source = "inferred"
+    record["compaction_source"] = source
+    record["compacted"] = bool(source)
+    return {"compacted": bool(source), "compaction-source": source}
 
 
 def _observe(record, keep, m):

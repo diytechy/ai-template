@@ -17,7 +17,7 @@ is none of the three gets the plain adapter, which changes nothing.
 Stdlib only, Python 3.11+, Windows/POSIX. A coordinator-layer module: the
 session service (`session_service`) imports it, and it imports no kit sibling.
 
-Contracts: IF-245 — the interface seam this module declares (process.md §8;
+Contracts: IF-245, IF-266 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 
 Contract IF-245: the per-CLI adapter surface. `adapter_for(argv)` returns the
@@ -40,6 +40,12 @@ Contract IF-245: the per-CLI adapter surface. `adapter_for(argv)` returns the
     (never 0); `context(stream, env, session_id)` returns
     `(session_id, used, window, pct)`, the context occupancy of the session's
     LATEST model request, each field "" where the CLI does not report it.
+
+Contract IF-266: retained-call compaction observations. `compaction(stream,
+env, session_id)` returns an empty mapping for other runners; codex returns
+`reported` (a compacted rollout entry), `prompts` (rollout request inputs)
+and `totals` (exec turn.completed running inputs). The keep operation owns
+differencing across calls and clears its baseline on a kit reset.
 """
 
 import json
@@ -225,6 +231,10 @@ class PlainAdapter:
 
     def context(self, stream, env=None, session_id=""):
         return "", "", "", ""
+
+    def compaction(self, stream, env, session_id):
+        """No compaction observation for an unknown or non-codex runner."""
+        return {}
 
     def mint(self, argv):
         """`(argv, minted_id)` for a retained session's first call. A CLI
@@ -464,9 +474,10 @@ class CodexAdapter(PlainAdapter):
 
         Source: the LAST event carrying a `usage` object (`turn.completed`).
         codex counts cached input INSIDE `input_tokens`, so its fresh part is
-        `input_tokens - cached_input_tokens`; it reports no cache write and no
-        response model, which stay blank. Its turn usage is cumulative over the
-        thread, which is one call for a fresh session (scope `thread`).
+        `input_tokens - cached_input_tokens - cache_write_input_tokens`.
+        Cache write stays blank when absent; no response model is reported.
+        Its turn usage is cumulative over the thread, which is one call for a
+        fresh session (scope `thread`).
 
         Implements: SR-222, LLR-268
         """
@@ -478,12 +489,13 @@ class CodexAdapter(PlainAdapter):
                 thread = event.get("thread_id") or thread
         total = _count(usage.get("input_tokens"))
         cached = _count(usage.get("cached_input_tokens"))
+        written = _count(usage.get("cache_write_input_tokens"))
         return usage_record(
             self.cli,
             self.provider,
-            fresh=None if total is None else total - (cached or 0),
+            fresh=None if total is None else total - (cached or 0) - (written or 0),
             cache_read=cached,
-            cache_write=None,
+            cache_write=written,
             output=_count(usage.get("output_tokens")),
             reasoning=_count(usage.get("reasoning_output_tokens")),
             conversation=thread,
@@ -520,6 +532,34 @@ class CodexAdapter(PlainAdapter):
                 used = value
                 window = _count(_dig(info, "model_context_window")) or window
         return sid, used, window, _pct(used, window)
+
+    def compaction(self, stream, env, session_id):
+        """Reported rollout compaction and prompt observations, kept apart
+        from billed usage and occupancy. Exec inputs are running totals.
+
+        Implements: SR-227, LLR-290
+        """
+        rollout = [
+            e
+            for e, _ in json_events(
+                _codex_rollout((env or {}).get("CODEX_HOME"), session_id)
+            )
+        ]
+        prompts = [
+            _dig(e, "payload", "info", "last_token_usage", "input_tokens")
+            for e in rollout
+            if _dig(e, "payload", "type") == "token_count"
+        ]
+        totals = [
+            _dig(e, "usage", "input_tokens")
+            for e, _ in json_events(stream)
+            if e.get("type") == "turn.completed"
+        ]
+        return {
+            "reported": any(e.get("type") == "compacted" for e in rollout),
+            "prompts": [p for p in prompts if _count(p) is not None],
+            "totals": [t for t in totals if _count(t) is not None],
+        }
 
 
 def _codex_rollout(home, thread_id):

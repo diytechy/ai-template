@@ -6583,6 +6583,23 @@ references into prose, retain ruled history, and record hand-held gates there.
 The approved legacy OI-edge contract requires separate amendment before its
 reader compatibility can be retired; do not introduce new OI `needs` edges.
 
+### Codex cache writes and retained compaction observations [since 83db9d75]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Codex usage reads `cache_write_input_tokens` when present,
+including zero, keeping inclusive input unchanged and subtracting cache writes
+from fresh input. Retained codex session records and logs carry `compacted`
+and its source (`compaction_source` in the store, `compaction-source` in logs):
+`reported` for a rollout `compacted` entry, otherwise `inferred` for a drop in
+the latest request prompt. Exec running totals are differenced within a session;
+a kit reset clears the comparison. Existing records learn a missing baseline
+before inferring. Other runners carry no compaction observation.
+
+**What to do.** Copy the updated `session_adapters.py`, `session_keep.py`,
+`session_service.py` and `agent_common.py`. Existing retained records need no
+migration. Treat `inferred` as a prompt-drop observation, not a provider event.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

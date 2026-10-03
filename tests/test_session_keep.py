@@ -863,3 +863,127 @@ def test_take_warm_lease_reads_one_clock_per_decision(tmp_path, monkeypatch):
     )
     assert ping is None  # the session is never leased to the ping
     assert _state(tmp_path)["lease"]["holder"] != "keep-warm:x"
+
+
+# TC-303: inline variants of recorded events, not additional live recordings.
+def _codex_total(total, thread=None):
+    events = [json.loads(ln) for ln in _fixture("codex-exec-json.jsonl").splitlines()]
+    events[-1]["usage"]["input_tokens"] = total
+    if thread:
+        events[0]["thread_id"] = thread
+    return "\n".join(json.dumps(e) for e in events)
+
+
+def _codex_turn(root, total, cfg=ON, thread=None):
+    retained = _keep(root, cfg, family="OPENAI")
+    return svc.act(
+        _call(root, "OPENAI", retained, _launch(_codex_total(total, thread)))
+    )
+
+
+def test_codex_prompt_drop_differences_running_totals_and_labels_inference(
+    tmp_path, monkeypatch
+):
+    for total in (15489, 35911, 71822):
+        out = _codex_turn(tmp_path, total)
+        assert out.metrics["compacted"] is False
+    out = _codex_turn(tmp_path, 87539)
+    assert out.metrics["compacted"] is True
+    assert out.metrics["compaction-source"] == "inferred"
+    record = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")
+    assert record["compacted"] is True
+    assert record["request_prompt"] == 15717
+    monkeypatch.setattr(common, "commit_telemetry", lambda *a, **k: None)
+    path = svc.record(out, {"session": "compaction", "stamp": "now"})
+    text = path.read_text(encoding="utf-8")
+    assert "compacted: True" in text
+    assert "compaction-source: inferred" in text
+
+
+def test_codex_reported_rollout_compaction_takes_precedence(tmp_path):
+    retained = _keep(tmp_path, ON, family="OPENAI")
+    home = Path(retained.home_env["CODEX_HOME"])
+    thread = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[0])["thread_id"]
+    rollout = _fixture("codex-rollout.jsonl")
+    # The fixture lacks compacted: inline envelope variant with the observed
+    # WI-541 compacted/replacement_history shape; not a live recording.
+    entry = json.loads(rollout.splitlines()[0])
+    entry.update(type="compacted", payload={"replacement_history": []})
+    day = home / "sessions"
+    day.mkdir(parents=True, exist_ok=True)
+    (day / f"rollout-test-{thread}.jsonl").write_text(
+        rollout + json.dumps(entry) + "\n", encoding="utf-8"
+    )
+    out = svc.act(_call(tmp_path, "OPENAI", retained, _launch(_codex_total(30378))))
+    assert out.metrics["compacted"] is True
+    assert out.metrics["compaction-source"] == "reported"
+    assert (
+        keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")["compaction_source"]
+        == "reported"
+    )
+
+
+def test_codex_kit_reset_discards_prompt_comparison(tmp_path):
+    cfg = keep.KeepConfig(context_reset_pct=50, reset_on_same_artifact=True)
+    _codex_turn(tmp_path, 35911, cfg)
+    out = _codex_turn(tmp_path, 15717, cfg, thread="new-thread")
+    assert out.metrics["session-gen"] == 2
+    assert out.metrics["compacted"] is False
+    assert out.metrics["compaction-source"] == ""
+
+
+def test_codex_equal_prompt_is_not_compaction(tmp_path):
+    _codex_turn(tmp_path, 10000)
+    out = _codex_turn(tmp_path, 20000)
+    assert out.metrics["compacted"] is False
+
+
+def test_codex_rollout_request_drop_is_inferred_without_reported_entry(tmp_path):
+    retained = _keep(tmp_path, ON, family="OPENAI")
+    home = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    home.mkdir(parents=True, exist_ok=True)
+    events = [json.loads(ln) for ln in _fixture("codex-rollout.jsonl").splitlines()]
+    requests = [e for e in events if e.get("payload", {}).get("type") == "token_count"]
+    # Inline count variants: the recorded prompts grow rather than compact.
+    requests[0]["payload"]["info"]["last_token_usage"]["input_tokens"] = 35911
+    requests[-1]["payload"]["info"]["last_token_usage"]["input_tokens"] = 15717
+    thread = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[0])["thread_id"]
+    (home / f"rollout-test-{thread}.jsonl").write_text(
+        "\n".join(json.dumps(e) for e in events), encoding="utf-8"
+    )
+    out = svc.act(_call(tmp_path, "OPENAI", retained, _launch(_codex_total(87539))))
+    assert out.metrics["compaction-source"] == "inferred"
+    assert out.metrics["compacted"] is True
+
+
+def test_codex_legacy_record_learns_running_total_before_inference(tmp_path):
+    _codex_turn(tmp_path, 35911)
+    record = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")
+    record.pop("input_total")
+    record.pop("request_prompt")
+    keep.store_save(tmp_path, record)
+    out = _codex_turn(tmp_path, 51628)
+    assert out.metrics["compacted"] is False
+    assert keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")["request_prompt"] is None
+    out = _codex_turn(tmp_path, 67345)
+    assert out.metrics["compacted"] is False
+
+
+def test_codex_unrelated_rollout_cannot_report_compaction(tmp_path):
+    retained = _keep(tmp_path, ON, family="OPENAI")
+    day = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    day.mkdir(parents=True, exist_ok=True)
+    entry = json.loads(_fixture("codex-rollout.jsonl").splitlines()[0])
+    entry.update(type="compacted", payload={"replacement_history": []})
+    (day / "rollout-test-other-thread.jsonl").write_text(
+        json.dumps(entry), encoding="utf-8"
+    )
+    out = svc.act(_call(tmp_path, "OPENAI", retained, _launch(_codex_total(30378))))
+    assert out.metrics["compacted"] is False
+
+
+def test_codex_multiple_exec_totals_compare_latest_request_differences(tmp_path):
+    retained = _keep(tmp_path, ON, family="OPENAI")
+    stream = "\n".join(_codex_total(total) for total in (15489, 35911, 71822, 87539))
+    out = svc.act(_call(tmp_path, "OPENAI", retained, _launch(stream)))
+    assert out.metrics["compaction-source"] == "inferred"
