@@ -1,0 +1,75 @@
++++
+id = "WI-818"
+title = "The owner's verdict on a delegated decision: confirmed or overruled, and an overrule is acted on"
+workstream = "process"
+specref = "docs/requirements/system-requirements.toml#SR-225"
+sr_refs = ["SR-225"]
+buildtier = "medium"
+safety_class = "ordinary"
+priority = 3
++++
+
+## Context
+
+Filed by hand by the coordinator on 2026-10-04 at the owner's direction. Marking
+eleven high-risk delegated decisions in session, the owner said: "I wouldn't expect
+decisions to carry approval since they are already a selected direction. They are
+either confirmed by the user or overruled (or empty / ignored)." Asked whether to
+file the change as a row: "Yes that sounds appropriate".
+
+Today a delegated-decisions entry carries one key, `reviewed`
+(`kitlib/decisions.py`, WI-790; SR-225, LLR-283, IF-255). It answers only "seen or
+not": an owner who disagrees with a decision has no way to say so, and "reviewed"
+does not record which way the owner went. Any value outside the boolean vocabulary,
+`"confirmed"` included, is a format finding and keeps the entry in the queue.
+
+The change gives the owner's verdict its own key and makes an overrule actionable:
+
+- one key, `owner`, with two values, `confirmed` and `overruled`; absent means not
+  yet seen. The `reviewed` key retires: it is migrated, never read beside the new
+  key;
+- an overrule states the direction instead in the entry's `review` note;
+- an overrule is coupled to work at the commit, as OI-102 Q3 coupled a ruled open
+  item to its citing row: the commit that marks an entry overruled must, in the
+  same commit, file or amend a work item that cites that entry. No history walk,
+  no marker convention.
+
+Who sets the key stays a convention (the owner, or an agent at the owner's stated
+direction, recorded in the note): git cannot tell the owner's commit from an
+agent's without a marker convention, which the owner has ruled out.
+
+WI-808 (one landing per lane) also amends SR-225: it moves WHERE the record is
+checked (every landing); this row changes WHAT an entry records. Neither needs the
+other; whichever lands second amends SR-225 on top of the first.
+
+Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
+`docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
+
+## Done-when
+
+- `owner = "confirmed"` and `owner = "overruled"` are the only recognized values;
+  an absent key reads as not yet seen; any other value, and the retired `reviewed`
+  key, is a format finding and reads as not yet seen.
+- An `overruled` entry with a blank `review` note is a format finding.
+- The commit that sets an entry `overruled` is refused, at the pre-commit hook and
+  again by the merge slot on each lane commit against its parent, unless the same
+  commit files or amends a queued or active work item whose spec cites that entry
+  (the citation form, e.g. `docs/decisions/<run>.toml#D-NNN`, is fixed by this
+  row's build).
+- The owner surface lists entries not yet seen under "Decisions to review" (high
+  risk first, as today) and overruled entries under their own heading with the
+  citing work item, so an overrule never disappears silently.
+- A migrator rewrites `reviewed = true` to `owner = "confirmed"` (keeping each
+  note) and drops `reviewed = false`; this repo's records are migrated with it.
+- `decisions.template.toml`, the decisions note handed to delegated sessions, and
+  the `session-protocol` skill's wording are updated.
+- SR-225, LLR-283 and IF-255 are amended and pass adjudication of each row, on
+  whichever adjudication path is the one path when this row lands.
+- Tests: each value; an unknown value; the retired key; an overrule with no note;
+  an overrule with no citing work item refused at commit and at the merge slot; an
+  overrule filed with its citing row passing; the migrator on a fixture record.
+- The row's test bar: its affected modules' tests plus the smoke tier at `-n 2`.
+- Review bar: A (one cross-family REVIEW-A).
+- RESYNC_PACK: an entry anchored at a trunk commit. A forced migration, flagged as
+  such: adopters run the migrator at their next resync (the owner accepted the same
+  shape for WI-788's Q-1).
