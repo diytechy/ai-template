@@ -359,9 +359,11 @@ dial home.
      review and the family swap: prefer the eligible families other than the
      judged (or swapped-out) author's, ranked as D-031, when any remain;
   4. the family by its weight (the owner's answer to the composition question,
-     option (a): **weights set the family share**), by today's WI-236 weighted
-     rotation applied per family: unequal weights set proportional shares, and
-     equal weights fall to enable-list order, as they do today (D-036);
+     option (a): **weights set the family share**): a deterministic weighted
+     rotation over the eligible families in which every positive weight is a
+     literal share, so equal weights split evenly and 2:1 draws two to one.
+     This replaces WI-236's "equal weights collapse to the first candidate"
+     for family selection (D-036);
   5. the account within that family by pace (A2);
   6. a retained session continues until its reset terms are met; steps 4-5
      apply only when a session starts.
@@ -388,7 +390,7 @@ dial home.
     SR-154 amendment. Its Done-when gains a fixture each for: a kind with one
     eligible family (a fresh same-family session, logged, no decisions entry);
     a judging kind after a swap; the shipped template's all-families table
-    (equal weights draw as today, in enable-list order; unequal weights, e.g. 2:1, draw their proportional shares); `plan-critique` of each drafter's plan in a
+    (equal weights draw equal shares and 2:1 draws two to one, over a run of draws); `plan-critique` of each drafter's plan in a
     dual round; and a weight of 0 never drawn.
   - **S788-plan-kinds** routes `plan`, `plan-dual` and `plan-critique` through
     that table; **S788-single-plan**'s swap uses step 3; **S788-session-families**
