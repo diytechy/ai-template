@@ -25,29 +25,27 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-03-wave10-coordinator.md](handoff-2026-10-03-wave10-coordinator.md)
-  (with the wave-8 handoff it names for roles, tools and recipe). Approval acts
-  run to seq 28, and a return is fixed in its lane (S11 direction, the cycle in
-  that handoff). Order:
-  1. WI-788 half 1: research and a design note, then STOP for the owner. Its
-     spec carries the owner's direction, rulings on nine design risks, and
-     OI-101's rulings (2026-10-03).
-  2. The rows released by the 2026-10-03 rulings of OI-100 and OI-102 (see the
-     generated frontier).
-  3. Owner signatures still owed: the four MEANING-ruled needs (SN-003, SN-008,
+  [handoff-2026-10-04-wave11-coordinator.md](handoff-2026-10-04-wave11-coordinator.md).
+  It is an unattended build session: its order of work, the deltas since wave 10,
+  how assumptions are recorded (`docs/decisions/`), and the session prompt to
+  paste. The wave-8 and wave-10 handoffs it names still carry the roles, the
+  tools and the in-lane cycle. Approval acts run to seq 28.
+  1. The rows on the generated ready frontier, in the handoff's order. Every open
+     item that held them is ruled (OI-100 to OI-103, 2026-10-03/04). The
+     largest row stops at its design-note checkpoint for the owner.
+  2. Owner signatures still owed: the four MEANING-ruled needs (SN-003, SN-008,
      SN-025, SN-043; the adjudicator recommends restoring SN-025's exclusions
      before signing).
-  - **WI-684:** re-sync `C:\Projects\FileBackup` (stamp `9b697cc`) as a
-    scratch trial, after amending TC-036's inputs to add `RESYNC_PACK.md`.
-    The owner performs it and rules OI-98.
+  3. OI-98: the owner re-syncs `C:\Projects\FileBackup` (stamp `9b697cc`) as a
+     scratch trial, after TC-036's inputs gain `RESYNC_PACK.md`, then rules it.
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
   dispatcher claims nothing until a reviewed commit deletes it, so work is
   taken by a coordinator session, not the loop. The roles (owner, 2026-10-03): Claude Opus builds at medium
   effort and the coordinator commits for it, Codex Luna (`gpt-6-luna`)
   reviews at high effort through the CLI, and an independent Opus agent
-  arbitrates, adjudicates and spot-checks. File new work into an open
-  item's Context before minting a row. The reviewers' `codex exec` launch
+  arbitrates, adjudicates and spot-checks. File new work as a row; an open item is filed together with the queued row
+  that cites it (OI-102). The reviewers' `codex exec` launch
   runs under a temporary `Bash(codex exec *)` allow rule in
   `.claude/settings.local.json` (owner, 2026-09-28): remove it when the
   queue drains. Recheck Git and the generated frontier before choosing
