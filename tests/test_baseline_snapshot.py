@@ -1742,6 +1742,23 @@ def test_a_reattesting_act_records_its_verdict_and_refuses_a_bad_one(tmp_path):
     assert last["reattested"] == [sid] and last["verdict"] == "docs/reviews/v.md"
 
 
+def test_a_verdict_path_is_recorded_repo_relative_with_forward_slashes(tmp_path):
+    """Sol review 1, MINOR 1 (WI-791): the merge slot reads the recorded verdict
+    with `git show <rev>:<path>`, which resolves only the repository's own
+    forward-slash spelling. A Windows-spelt or absolute path that names the file
+    is recorded in that spelling, so a valid CLARITY act is not refused."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    verdict = root / "docs" / "reviews" / "v.md"
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text("- [CLARITY] {} title -> same\n".format(sid), "utf-8")
+    for spelt in ("docs\\reviews\\v.md", str(verdict), "./docs/reviews/v.md"):
+        _rewrite(root, SR_REL, row["Title"], row["Title"] + " +")
+        row["Title"] += " +"
+        SNAP.copy_live(root, reattests={sid}, verdict=spelt)
+        assert SNAP.read_acts(root)[-1]["verdict"] == "docs/reviews/v.md", spelt
+
+
 def test_a_malformed_ledger_refuses_the_act_before_the_record_moves(tmp_path):
     """The refusal comes before any copy or stamp: a person fixes the ledger
     and re-runs, and the record they fix is the record that stood."""
@@ -1908,7 +1925,8 @@ def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
     _rewrite(root, rel, 'status = "Drafted"', 'status = "Approved"')
     run_git("add", "-A")
     run_git("commit", "-m", "a lane approves the row")
-    refusal = _AR.merge_approval_refusal(root, drafted, _head(run_git), [], False)
+    head = _head(run_git)
+    refusal = _AR.merge_approval_refusal(root, drafted, head, [], False, trunk=head)
     assert refusal and rid in refusal and rel in refusal, refusal
     # ...and an approval with no copy behind it is the hole the rule reports.
     assert any(rel in f for f in SNAP.unanchored_findings(root))

@@ -51,3 +51,24 @@ alternative = "Move adjudication_action to a lower module (kitlib) so the brief 
 reversal_cost = "Move one pure function and update its importers, or drop the deferred import and pin the two texts' agreement by a test."
 why_not_escalated = "The spec names `intake.adjudication_action` as ruled decision 2's home; a second statement of the arm in the brief is the drift the kit's one-home rule forbids. Both ratchets allow a reviewed re-stamp with its reason."
 review = ""
+
+[decision.D-008]
+decided = "Sol review 1 MAJOR 1 confirmed and fixed at the root: merge_approval_refusal takes a REQUIRED keyword `trunk`, the commit the merge lands on, and held_reattest_refusal reads the dial there. integrate._approval_act_refusal passes trunk=head (trunk's tip at admission; the slot is held, so the in-slot refresh merges trunk into the branch and trunk itself does not move before the merge)."
+alternative = "Re-run the admission rungs after the in-slot refresh, or keep reading the merge base."
+reversal_cost = "One keyword argument and its callers (integrate plus the merge-slot tests)."
+why_not_escalated = "Reproduced: a lane forked while the rung was released, re-attesting with no verdict, was admitted after trunk held the rung (old API returned None). The act lands under trunk's authority, so that is what the rule reads; re-running every admission rung after refresh is a wider change to integrate the review did not ask for. Required, not defaulted, so no caller can silently fall back to the merge base."
+review = ""
+
+[decision.D-009]
+decided = "Sol review 1 MINOR 1 confirmed and fixed where the path is recorded: baseline_snapshot.verdict_rel spells --verdict repo-relative with forward slashes and no './' (an absolute path under the root is made relative); copy_live and intake.py snapshot both use it, and _refuse_verdict refuses an absolute path left outside the tree."
+alternative = "Normalize only at the merge slot's read."
+reversal_cost = "One helper and two call sites."
+why_not_escalated = "Reproduced: the backslash spelling of docs/reviews/v.md was recorded verbatim, and `git show <rev>:<that spelling>` cannot resolve it, so a valid CLARITY act was refused at merge. Recording one spelling keeps the ledger, the audit list and the merge read in agreement."
+review = ""
+
+[decision.D-010]
+decided = "Sol review 1 MINOR 2: ENFORCE SR-228's first-draft condition rather than change the SR. Under the held-rung allowance, a re-attested row that is below approval or absent at the act's head is refused at merge ('below approval (or absent) at the act'), whatever the verdict says."
+alternative = "Ask Terra to drop 'a first draft is not re-attested under this allowance' from SR-228's acceptance."
+reversal_cost = "Remove one check in _held_row_line."
+why_not_escalated = "Reproduced: a Drafted SR-001 in an amendment scope with a CLARITY verdict was recorded in `reattested` and admitted. A CLARITY ruling means the owner's signature still describes the row; a row below approval has no signature, so the ledger entry and the owner's audit list would claim a carried-over signature that never existed. The check is one registry read at the head; SR-228 as written is the correct rule."
+review = ""

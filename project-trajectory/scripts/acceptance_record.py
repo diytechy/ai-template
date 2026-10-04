@@ -85,14 +85,15 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     snapshot delta, the opposite pole from its readers' silent degrade, because
     a refusal is where the conservative direction belongs. All four share
     `_spine_row_sides`, so no reader can be the only one that sees a row.
-    `merge_approval_refusal(root, base, head, metas, adjudication)` is the
-    merge slot's one call: a lane's delta through `lane_approval_refusal`, an
+    `merge_approval_refusal(root, base, head, metas, adjudication, *, trunk)`
+    is the merge slot's one call: a lane's delta through `lane_approval_refusal`, an
     adjudication's flips through its first-approval scope, and its
     re-attestations — read from the act ledger entries the delta added — through
     `reattest_scope_refusal`, which refuses by name every re-attested row
     outside the `Adjudicates` scope of the amendment rows the lane claims, and
     `held_reattest_refusal`, which refuses by name every row re-attested on a
-    rung trunk's dial holds unless the act entry names a verdict file that
+    rung the dial at `trunk` (the commit the merge lands on) holds unless the
+    row is approved at the act and the act entry names a verdict file that
     rules the row CLARITY (`verdict_rulings` reads its `- [CLARITY] <id>`
     lines).
 Contract IF-129: the ONE cell-comparison basis.
@@ -827,16 +828,18 @@ def adjudication_approval_refusal(scope, delta):
     )
 
 
-def merge_approval_refusal(root, base, head, metas, adjudication):
+def merge_approval_refusal(root, base, head, metas, adjudication, *, trunk):
     """Apply one derived approval delta to its actor's authorization rule: an
     adjudication's flips to its first-approval scope, and its re-attestations
-    to its amendment scope (`reattest_scope_refusal`) and, on a held rung, to
-    the CLARITY verdict the act names (`held_reattest_refusal`)."""
+    to its amendment scope (`reattest_scope_refusal`) and, on a rung `trunk`'s
+    dial holds, to the CLARITY verdict the act names (`held_reattest_refusal`).
+    `trunk` is the commit the merge lands on: the authority the act lands under,
+    which the merge base is not once trunk has moved since the lane forked."""
     delta = approval_delta(root, base, head)
     if adjudication:
         refusal = reattest_scope_refusal(
             root, base, head, metas, delta
-        ) or held_reattest_refusal(root, base, head, delta)
+        ) or held_reattest_refusal(root, trunk, base, head, delta)
         if refusal:
             return refusal
         scope = first_approval_scope(metas)
@@ -967,39 +970,67 @@ def verdict_rulings(text):
     return out
 
 
+def _tier_of(rid):
+    """`(registry, id column)` of the amendment-walk tier row `rid` belongs to,
+    read off its prefix, or `(None, None)`."""
+    return next(
+        ((r, col) for r, col in AMENDMENT_CSVS if rid.startswith(col[:-2])),
+        (None, None),
+    )
+
+
 def _held_row(dial, rid):
     """Does `dial` hold the rung row `rid`'s tier is approved into? A row of a
     tier the amendment walk does not name is held, the direction every
     authority read fails."""
-    rel = next((r for r, col in AMENDMENT_CSVS if rid.startswith(col[:-2])), None)
+    rel, _col = _tier_of(rid)
     rung = _kitauthority.rung_for(rel) if rel else None
     return rung is None or _kitauthority.holds_under(dial, rung)
 
 
+def _below_approval(root, head, rid):
+    """Is row `rid` below approval, or absent, at `head`? Such a row carries no
+    signature for a CLARITY ruling to carry over (SR-228)."""
+    rel, col = _tier_of(rid)
+    row = _spine_rows_at(root, head + ":", rel, col).get(rid) if rel else None
+    return row is None or not _claims_approval(row)
+
+
+def _held_row_line(root, head, rid, act, rulings):
+    """The refusal line for one held-rung re-attested row, or None: a row below
+    approval at the act, an act naming no verdict, or a verdict that does not
+    rule the row CLARITY."""
+    if _below_approval(root, head, rid):
+        return (
+            "  {} is below approval (or absent) at the act, so it carries no "
+            "signature to re-attest".format(rid)
+        )
+    if not str(act.get("verdict") or "").strip():
+        return "  {} re-attested on a held rung, and act {} names no verdict".format(
+            rid, act.get("seq")
+        )
+    if rulings.get(rid) != "CLARITY":
+        return "  {} is not ruled CLARITY by {}".format(rid, act["verdict"])
+    return None
+
+
 def _held_act_lines(root, head, dial, act):
-    """The refusal lines for one act entry's held-rung re-attestations: each
-    held row when the act names no verdict, else each held row the named
-    verdict (read at `head`) does not rule CLARITY."""
+    """The refusal lines for one act entry's held-rung re-attestations, the
+    named verdict read at `head` (`_held_row_line` judges each row)."""
     held = sorted(str(r) for r in act.get("reattested") or [] if _held_row(dial, r))
     if not held:
         return []
     verdict = str(act.get("verdict") or "").strip()
-    if not verdict:
-        return [
-            "  {} re-attested on a held rung, and act {} names no verdict".format(
-                rid, act.get("seq")
-            )
-            for rid in held
-        ]
-    rulings = verdict_rulings(_git(root, ["show", "{}:{}".format(head, verdict)]))
-    return [
-        "  {} is not ruled CLARITY by {}".format(rid, verdict)
-        for rid in held
-        if rulings.get(rid) != "CLARITY"
-    ]
+    rulings = (
+        verdict_rulings(_git(root, ["show", "{}:{}".format(head, verdict)]))
+        if verdict
+        else {}
+    )
+    lines = (_held_row_line(root, head, rid, act, rulings) for rid in held)
+    return [line for line in lines if line]
 
 
-def held_reattest_refusal(root, base, head, delta=None):
+def held_reattest_refusal(root, trunk, base, head, delta=None):
     """Refuse an adjudication's act re-attesting a row on a HELD rung unless
     the act names the verdict that ruled the row CLARITY — or None.
 
@@ -1009,9 +1040,13 @@ def held_reattest_refusal(root, base, head, delta=None):
     session may re-attest it. The act names its verdict (`intake.py snapshot
     --verdict`), so the act ledger records which ruling carried the signature
     over and the owner's surface lists it for audit. A MEANING row stays the
-    owner's to sign. The dial is trunk's, read at `base`; only ledger entries
-    this merge adds are judged, so the owner's own acts on trunk never reach
-    this rule. The judgement is the session's: this only records and refuses.
+    owner's to sign, and a row below approval carries no signature to carry
+    over (SR-228). The dial is read at `trunk`, the commit the merge lands on:
+    the merge slot judges a branch before its in-slot refresh, so the merge base
+    can predate a hold trunk has since declared (Sol review 1, WI-791). Only
+    ledger entries this merge adds are judged, so the owner's own acts on trunk
+    never reach this rule. The judgement is the session's: this only records
+    and refuses.
 
     Implements: SR-178, LLR-278"""
     if not _wrote_ledger(delta or approval_delta(root, base, head)):
@@ -1019,7 +1054,7 @@ def held_reattest_refusal(root, base, head, delta=None):
     before, after = _ledger_acts(root, base), _ledger_acts(root, head)
     if before is None or after is None:
         return None  # `reattest_scope_refusal` names the unreadable ledger
-    dial = _kitauthority.dial_at(root, base)
+    dial = _kitauthority.dial_at(root, trunk)
     seen = {act.get("seq") for act in before if isinstance(act, dict)}
     lines = []
     for act in after:

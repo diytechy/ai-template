@@ -198,7 +198,7 @@ import shutil
 import subprocess
 import sys
 import tomllib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 # Sibling imports, the sanctioned idiom (see trace.py): run as a subprocess this
 # script's own dir is sys.path[0], and the guard covers an in-process import (a
@@ -1208,6 +1208,26 @@ def _refuse_reattests(root, reattests, snapshot, first_signing):
         )
 
 
+def verdict_rel(root, verdict):
+    """The verdict path as the act ledger records it: repo-relative, forward
+    slashes, no `./` — the one spelling `git show <rev>:<path>` resolves at the
+    merge slot (Sol review 1, WI-791: a Windows-spelt path named the file here
+    and was refused there). An absolute path under `root` is made relative;
+    one outside it is returned as given, for `_refuse_verdict` to refuse. None
+    for no verdict.
+
+    Implements: SR-207, LLR-245"""
+    if not verdict:
+        return None
+    text = str(verdict).strip().replace("\\", "/")
+    if Path(text).is_absolute():
+        try:
+            text = Path(text).resolve().relative_to(Path(root).resolve()).as_posix()
+        except ValueError:
+            return text
+    return PurePosixPath(text).as_posix()
+
+
 def _refuse_verdict(root, verdict, reattests):
     """Raise when this act's `verdict` cannot stand; return when it can.
 
@@ -1227,7 +1247,7 @@ def _refuse_verdict(root, verdict, reattests):
             "a verdict records the ruling that re-anchored the rows "
             "--reattests names".format(verdict)
         )
-    if not (Path(root) / verdict).is_file():
+    if Path(verdict).is_absolute() or not (Path(root) / verdict).is_file():
         raise SystemExit(
             "baseline_snapshot: REFUSED — --verdict {} is not a file in the tree; "
             "the act ledger records the verdict's path, so it must name the "
@@ -1323,6 +1343,7 @@ def copy_live(root, *, seed=False, approves=None, reattests=None, verdict=None):
 
     `verdict`, when given, is the verdict file that ruled the re-attested rows;
     the act's ledger entry records it (`_refuse_verdict` judges it first)."""
+    verdict = verdict_rel(root, verdict)
     _refuse_verdict(root, verdict, reattests)
     base = snapshot_root(root)
     if not base.is_dir():

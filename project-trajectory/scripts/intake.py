@@ -3152,7 +3152,7 @@ def _cmd_snapshot(args):
     root = Path(args.root).resolve()
     approves = baseline_snapshot.parse_approves(getattr(args, "approves", None))
     reattests = baseline_snapshot.parse_reattests(getattr(args, "reattests", None))
-    verdict = getattr(args, "verdict", None)
+    verdict = baseline_snapshot.verdict_rel(root, getattr(args, "verdict", None))
     written = baseline_snapshot.copy_live(
         root, seed=args.seed, approves=approves, reattests=reattests, verdict=verdict
     )

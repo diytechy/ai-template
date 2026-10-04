@@ -344,17 +344,22 @@ _AMENDMENT = [("WI-900.md", {"brief": "amendment", "adjudicates": ["SR-001"]})]
 
 def test_a_reattestation_outside_the_amendment_scope_is_refused_by_name(scaffold):
     base, head = _amendment_act(scaffold, {"SR-001", "SR-002"})
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True)
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
     assert refusal and "SR-002" in refusal and "OUTSIDE" in refusal, refusal
     assert "SR-001 " not in refusal, refusal
 
 
 def test_a_reattestation_inside_the_amendment_scope_merges(scaffold):
     base, head = _amendment_act(scaffold, {"SR-001"})
-    assert AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True) is None
+    assert (
+        AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True, trunk=head)
+        is None
+    )
     # The same act claimed by a first-approval row holds no re-attestation scope.
     first = [("WI-901.md", {"brief": "first-approval", "adjudicates": ["SR-001"]})]
-    refusal = AR.merge_approval_refusal(scaffold, base, head, first, True)
+    refusal = AR.merge_approval_refusal(scaffold, base, head, first, True, trunk=head)
     assert refusal and "SR-001" in refusal, refusal
 
 
@@ -364,14 +369,19 @@ def test_a_held_rung_reattestation_without_a_verdict_is_refused(scaffold):
     ledger shows it. The scaffold's dial holds every rung; an act naming no
     verdict is refused at merge, by row."""
     base, head = _amendment_act(scaffold, {"SR-001"}, held=True)
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True)
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
     assert refusal and "SR-001" in refusal and "names no verdict" in refusal, refusal
 
 
 def test_a_held_rung_reattestation_its_verdict_rules_CLARITY_merges(scaffold):
     text = "- [CLARITY] SR-001 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
     base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
-    assert AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True) is None
+    assert (
+        AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True, trunk=head)
+        is None
+    )
 
 
 def test_a_held_rung_reattestation_of_a_MEANING_row_is_refused(scaffold):
@@ -379,8 +389,68 @@ def test_a_held_rung_reattestation_of_a_MEANING_row_is_refused(scaffold):
     names: the adjudicator recommends it and never re-attests it."""
     text = "- [MEANING] SR-001 title -> moved\n\nVERDICT: MEANING rows=1\n"
     base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True)
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
     assert refusal and "SR-001" in refusal and "CLARITY" in refusal, refusal
+
+
+def test_a_held_rung_is_read_from_trunk_not_from_the_merge_base(scaffold):
+    """Sol review 1, MAJOR 1 (WI-791): the act lands under TRUNK's authority.
+    A lane forks while the rung is released and re-attests with no verdict;
+    trunk then holds the rung. The merge slot judges a branch before its
+    in-slot refresh, against the old merge base, so a guard reading the merge
+    base's dial would admit the act under an authority trunk has withdrawn."""
+    run_git = _git(scaffold)
+    _release(scaffold)
+    _append(scaffold, SR_REL, _SR.format(rid="SR-001", title="row one"))
+    SNAP.copy_live(scaffold, seed=True)
+    _commit(run_git, "seed")
+    trunk_branch = run_git("rev-parse", "--abbrev-ref", "HEAD")
+    _rewrite(scaffold, SR_REL, '"row one"', '"row one, amended"')
+    base = _commit(run_git, "the amendment")
+    run_git("checkout", "-q", "-b", "lane")
+    SNAP.copy_live(scaffold, reattests=frozenset({"SR-001"}))
+    head = _commit(run_git, "the lane's re-attesting act, no verdict")
+    run_git("checkout", "-q", trunk_branch)
+    set_process_key(scaffold, "attestation", "human_approval_through", "DevStg-Release")
+    trunk = _commit(run_git, "trunk holds every rung")
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=trunk
+    )
+    assert refusal and "SR-001" in refusal and "names no verdict" in refusal, refusal
+    # ...and the same act under a trunk that still releases the rung merges.
+    assert (
+        AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True, trunk=base)
+        is None
+    )
+
+
+def test_a_held_rung_reattestation_of_a_DRAFTED_row_is_refused(scaffold):
+    """Sol review 1, MINOR 2 (WI-791; SR-228's acceptance): a CLARITY verdict
+    says the owner's signature still describes the row, and a row below
+    approval carries no signature to carry over, so the held-rung allowance
+    never re-attests one, whatever its verdict says."""
+    run_git = _git(scaffold)
+    _append(
+        scaffold,
+        SR_REL,
+        _SR.format(rid="SR-001", title="row one").replace(
+            'status = "Approved"', 'status = "Drafted"'
+        ),
+    )
+    SNAP.copy_live(scaffold, seed=True)
+    _commit(run_git, "seed")
+    _rewrite(scaffold, SR_REL, '"row one"', '"row one, amended"')
+    base = _commit(run_git, "the amendment")
+    (scaffold / _VERDICT).parent.mkdir(parents=True, exist_ok=True)
+    (scaffold / _VERDICT).write_text("- [CLARITY] SR-001 title -> same\n", "utf-8")
+    SNAP.copy_live(scaffold, reattests=frozenset({"SR-001"}), verdict=_VERDICT)
+    head = _commit(run_git, "a held-rung act re-attesting a Drafted row")
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
+    assert refusal and "SR-001" in refusal and "below approval" in refusal, refusal
 
 
 def test_the_scripts_under_test_are_the_scaffolds_copies(scaffold):
@@ -521,7 +591,7 @@ def _mixed_act(root, approve_scope, amend_scope):
         ("WI-680.md", {"brief": "amendment", "adjudicates": amend_scope}),
         ("WI-681.md", {"brief": "first-approval", "adjudicates": approve_scope}),
     ]
-    return AR.merge_approval_refusal(root, base, head, metas, True)
+    return AR.merge_approval_refusal(root, base, head, metas, True, trunk=head)
 
 
 def test_a_mixed_approval_and_reattestation_act_merges(scaffold):
