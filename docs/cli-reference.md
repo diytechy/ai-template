@@ -114,6 +114,7 @@ Contracts (interfaces): IF-013, IF-040, IF-144, IF-197, IF-267
 | `--strict` | with --staged-divergence: exit 1 on a divergent artifact instead of warning. The ruled promotion path (OI-31: error 'once it has run clean for a program'); the step itself does NOT pass it today |
 | `--approval-immutable` | run ONLY the re-attestation-brief immutability enforcer and exit (WI-503): refuse a STAGED change (other than a plain add) to an existing docs/ratify/<date>-*.md. Fail-closed by default — no --strict, no warn mode. This is the self-invoked body of the 'approval-immutable' step, not a separate contract |
 | `--held-status` | run ONLY the 'held-status' step's body and exit (SR-208): under the loop marker, refuse a staged change to a held status |
+| `--ruling-sync` | run ONLY the 'ruling-sync' step's body and exit (WI-790): refuse a staged tree that rules an open item without updating the Done-when of each row citing it, or closing or removing the row |
 | `--loop-trailer` | the commit-msg hook's loop floor (SR-209): under the loop marker, exit 1 unless the message carries this run's Loop-Session trailer |
 | `--jobs` | run the plan's steps concurrently on N workers (0 = one per step); every step is read-only or writes a distinct artifact, except the two trace.py steps, which share a lane. Default 1: sequential, with each step's output streamed live exactly as before |
 
@@ -475,6 +476,7 @@ Contracts (interfaces): IF-090, IF-229, IF-243, IF-244
 | `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the owner's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
 | `--approves` | NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref copies the ONE registry it names and lands in the snapshot's prose stamp; it clears none of that registry's drifted rows (name those with --reattests) |
 | `--reattests` | RE-ATTEST these rows: comma-joined ids whose drifted approved text this act blesses without moving their Status. The refresh is refused while any row it would copy has drifted text neither flipped nor named here; the ids land in the snapshot's prose stamp |
+| `--verdict` | the verdict file that ruled the --reattests rows, recorded in the act ledger. Required at merge for a session's re-attestation on a held rung, where the verdict must rule each row CLARITY (OI-100) |
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._

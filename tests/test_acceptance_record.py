@@ -219,6 +219,22 @@ def test_the_cell_split_tables_still_cover_both_halves():
         assert acceptance_record.spine_cell_class(rel, "NoSuchColumn") == "approved"
 
 
+def test_the_amendment_walk_covers_every_tier_an_approval_act_blesses():
+    """OI-100 gap 1 (WI-791): the amendment walk's universe is a SIBLING
+    constant, equal to the approval act's — text an act can bless is text an
+    amendment can move away from its blessing. `SPINE_CSVS` stays the three
+    tiers its other readers (the first-approval mint, the test-first walk, the
+    retired flip) were written for, so widening the walk changed none of them."""
+    assert acceptance_record.AMENDMENT_CSVS == acceptance_record.APPROVAL_ACT_CSVS
+    walked = {col for _rel, col in acceptance_record.AMENDMENT_CSVS}
+    assert {"SN-ID", "DA-ID", "SUR-ID"} <= walked
+    assert [col for _rel, col in acceptance_record.SPINE_CSVS] == [
+        "SR-ID",
+        "LLR-ID",
+        "TC-ID",
+    ]
+
+
 def test_no_snapshotted_tier_can_go_unseen_by_the_approval_rung():
     """The approval-act reader's registry set and the snapshot's are ONE closed
     statement (WI-572 REVIEW-A round 7, MAJOR 1).

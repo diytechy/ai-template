@@ -18,9 +18,9 @@ is a refusal rather than a silently empty instruction.
 
 | Key | File | Digest | Slots |
 |---|---|---|---|
-| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:a777167b28a6` | `{aftermath}`, `{baseline}`, `{rows}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:6ad45636ed6a` | `{aftermath}`, `{baseline}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:861339ff1d07` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:7b892bfd19c2` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:160b2042c428` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-FIRST-APPROVAL` | [adjudicate-first-approval.template.md](adjudicate-first-approval.template.md) | `sha256:e650cc90fb83` | `{approves_rows}`, `{baseline}`, `{chain}`, `{registries}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-REJUDGE` | [adjudicate-rejudge.template.md](adjudicate-rejudge.template.md) | `sha256:5a1e40710449` | `{case}`, `{reason}`, `{tc}`, `{verdict}`, `{wi}` |

@@ -298,6 +298,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "staged-divergence",
         "approval-immutable",
         "held-status",
+        "ruling-sync",
         "assumption-gate",
         "crossing-allocation",
         "interface-allocation",
@@ -1220,6 +1221,18 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
+        # The ruling sync (WI-790, OI-102 Q3): a commit that takes an open item
+        # out of `pending` updates the Done-when of each row citing it, or
+        # closes or removes the row. Staged tree against HEAD, at every bar and
+        # for every committer; the merge slot asks the same question of each
+        # lane commit against its first parent, so `--no-verify` lands nothing.
+        (
+            "ruling-sync",
+            (),
+            [sys.executable, str(_SCRIPTS / "check.py"), "--ruling-sync"],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
         # The assumption gate (SR-205, SR-206, SR-212): one step per question,
         # each at the rung it can first be answered at, from maturity at the
         # frame to evidence at release. Steps, never stage conjuncts, so the
@@ -1921,6 +1934,36 @@ def _held_status_mode(args):
     sys.exit(1 if refusal else 0)
 
 
+def _ruling_sync_refusal(root="."):
+    """The `ruling-sync` step's judgement: the refusal for a staged tree that
+    takes an open item out of `pending` while a row open at HEAD cites it and
+    the tree neither updates that row's Done-when nor closes or removes it, or
+    None. Off git there is no commit to judge, and it answers None.
+
+    Implements: SR-148, LLR-298
+    """
+    if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
+        return None
+    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+
+    lines = acceptance_record.staged_ruling_sync_lines(root)
+    return "; ".join(lines) if lines else None
+
+
+def _ruling_sync_mode(args):
+    """The `--ruling-sync` entry point, `_held_status_mode`'s shape: EXIT 1
+    printing the refusal, or 0.
+
+    Implements: SR-148, LLR-298
+    """
+    if not args.ruling_sync:
+        return
+    refusal = _ruling_sync_refusal(".")
+    msg = refusal or "no staged ruling leaves a citing row out of sync"
+    print("  {:5} ruling-sync  {}".format("FAIL" if refusal else "ok", msg))
+    sys.exit(1 if refusal else 0)
+
+
 def _loop_trailer_mode(args):
     """The `--loop-trailer MSGFILE` entry point, the commit-msg hook's loop
     floor (SR-209): EXIT 1 naming the commit's subject when the loop marker is
@@ -2445,6 +2488,13 @@ def main():
         "the loop marker, refuse a staged change to a held status",
     )
     ap.add_argument(
+        "--ruling-sync",
+        action="store_true",
+        help="run ONLY the 'ruling-sync' step's body and exit (WI-790): refuse a "
+        "staged tree that rules an open item without updating the Done-when of "
+        "each row citing it, or closing or removing the row",
+    )
+    ap.add_argument(
         "--loop-trailer",
         metavar="MSGFILE",
         help="the commit-msg hook's loop floor (SR-209): under the loop marker, "
@@ -2479,6 +2529,7 @@ def main():
     _divergence_mode(args)  # exits when --staged-divergence selects it
     _approval_immutable_mode(args)  # exits when --approval-immutable selects it
     _held_status_mode(args)  # exits when --held-status selects it
+    _ruling_sync_mode(args)  # exits when --ruling-sync selects it
     # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow
     # it, so `resolve_stage` and `_step_stage` both see only canonical rungs.
     args.stage = (

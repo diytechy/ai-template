@@ -368,9 +368,14 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # the existing integration-base rule only for an empty index on a claimed
     # lane. Deferring it preserves check.py's kitlib-only floor; sharing it
     # avoids a second claim/merge-base policy. No cycle or layer edge grew.
-    assert 14 <= deferred <= 30, (
+    # RE-STAMPED 30 -> 31 (2026-10-04, WI-791): adjudicate_brief._aftermath
+    # reads ruled decision 2's one home, `intake.adjudication_action`, so the
+    # judge's brief cannot restate the held arm OI-100 amended. Deferred so
+    # composing a non-amendment brief pays nothing; intake imports no
+    # adjudicate_brief, so no cycle or layer edge grew.
+    assert 14 <= deferred <= 31, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..30 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..31 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 277
+design_rows = 278
 seam_rows = 221
-requirements_placed = 113
+requirements_placed = 114
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -76,6 +76,7 @@ sr_refs = [
   "SR-219",
   "SR-221",
   "SR-226",
+  "SR-228",
 ]
 sr_shared_refs = [
   "SR-017",
@@ -89,6 +90,7 @@ sr_shared_refs = [
   "SR-163",
   "SR-176",
   "SR-226",
+  "SR-228",
 ]
 llr_refs = [
   "LLR-001",
@@ -585,6 +587,7 @@ sr_refs = [
   "SR-223",
   "SR-225",
   "SR-227",
+  "SR-228",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -593,6 +596,7 @@ sr_shared_refs = [
   "SR-161",
   "SR-170",
   "SR-176",
+  "SR-228",
 ]
 llr_refs = [
   "LLR-026",
@@ -672,12 +676,13 @@ llr_refs = [
   "LLR-283",
   "LLR-284",
   "LLR-288",
-  "LLR-289",
   "LLR-290",
   "LLR-293",
   "LLR-294",
   "LLR-295",
   "LLR-297",
+  "LLR-298",
+  "LLR-299",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -706,6 +711,7 @@ modules = [
   "project-trajectory/scripts/check_trajectory.py",
   "project-trajectory/scripts/consolidate.py",
   "project-trajectory/scripts/dispatch.py",
+  "project-trajectory/scripts/gen_open_items.py",
   "project-trajectory/scripts/gen_release_checklist.py",
   "project-trajectory/scripts/handback.py",
   "project-trajectory/scripts/hats.py",
@@ -715,10 +721,12 @@ modules = [
   "project-trajectory/scripts/kitlib/decisions.py",
   "project-trajectory/scripts/kitlib/done_when.py",
   "project-trajectory/scripts/kitlib/provenance.py",
+  "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/station.py",
   "project-trajectory/scripts/kitlib/verdict.py",
   "project-trajectory/scripts/lane.py",
   "project-trajectory/scripts/observation_cadence.py",
+  "project-trajectory/scripts/pending.py",
   "project-trajectory/scripts/plan_artifacts.py",
   "project-trajectory/scripts/plan_briefs.py",
   "project-trajectory/scripts/plan_coverage_step.py",
@@ -746,6 +754,7 @@ seam_internal_refs = [
   "IF-065",
   "IF-066",
   "IF-081",
+  "IF-088",
   "IF-090",
   "IF-091",
   "IF-097",
@@ -810,6 +819,7 @@ seam_boundary_refs = [
   "IF-069",
   "IF-071",
   "IF-073",
+  "IF-074",
   "IF-075",
   "IF-077",
   "IF-078",
@@ -819,7 +829,6 @@ seam_boundary_refs = [
   "IF-084",
   "IF-085",
   "IF-086",
-  "IF-088",
   "IF-089",
   "IF-092",
   "IF-093",
@@ -832,11 +841,14 @@ seam_boundary_refs = [
   "IF-109",
   "IF-110",
   "IF-114",
+  "IF-118",
   "IF-119",
   "IF-120",
   "IF-121",
   "IF-123",
   "IF-124",
+  "IF-125",
+  "IF-126",
   "IF-129",
   "IF-131",
   "IF-133",

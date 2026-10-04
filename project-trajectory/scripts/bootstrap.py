@@ -350,6 +350,7 @@ Contract IF-014: SR-010's obligation delivered as a CLI here — the kit's
 """
 
 import argparse
+import json
 import re
 import shutil
 import subprocess
@@ -1624,6 +1625,50 @@ STACK_OI3_ROW = (
 )
 
 
+# OI-3's PLACEHOLDER ROW (WI-790, A5): every pending open item is filed with a
+# queued work item whose `needs` cites it, or the queue cannot surface the
+# decision and the scaffold's first check reports it uncited. A fresh scaffold
+# holds only the inert WI-000 exemplar, so the placeholder is WI-001: a title,
+# a safety class, the `OI-3` edge and the item's own registry record as its
+# spec of record until the ruling, which writes its criteria.
+STACK_OI3_WI = "WI-001"
+_SPEC_WRITER = (
+    "import json, sys; sys.path.insert(0, 'scripts'); import wi_convert; "
+    "wi_convert.write_spec_file('docs/work', json.loads(sys.argv[1]))"
+)
+
+
+def file_stack_placeholder(dest, stack):
+    """Write OI-3's queued placeholder row into the new repo and raise the WI
+    mark over it. The spec is written by the format's single writer
+    (`wi_convert.write_spec_file`, IF-159, which re-reads and verifies what it
+    wrote), run in the new repo the way the generators below are, because this
+    module imports nothing but the shared package. Raises on a failed write: a
+    scaffold with an uncited pending item is red on its first check.
+
+    Implements: SR-010, LLR-010
+    """
+    row = {
+        "WI-ID": STACK_OI3_WI,
+        "Title": "Rule {}: the {} toolchain commands".format(STACK_OI3_ID, stack),
+        "Status": "queued",
+        "Workstream": "process",
+        "SafetyClass": "ordinary",
+        "SpecRef": "docs/requirements/open-items.toml#{}".format(STACK_OI3_ID),
+        "Predecessors": STACK_OI3_ID,
+    }
+    proc = subprocess.run(
+        [sys.executable, "-B", "-c", _SPEC_WRITER, json.dumps(row)], cwd=str(dest)
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(
+            "could not file {}'s placeholder row {} (exit {})".format(
+                STACK_OI3_ID, STACK_OI3_WI, proc.returncode
+            )
+        )
+    raise_watermark(dest, "WI", int(STACK_OI3_WI.split("-")[1]))
+
+
 def seed_arch_map_mode(dest, stack, created, dry_run):
     """A non-Python stack starts on the stack-neutral file-level arch map:
     flip the fresh docs/stack.ini's [arch-map] mode to `files` (only on the
@@ -1666,7 +1711,9 @@ def append_stack_checklist(dest, stack, dry_run):
     _write_text_lf(status, text)
     # OI-3 is a Needs-<human> ask, so it owes a brief (check_docs S-3): append it
     # as a row of the open-items registry, which the generated owner surface
-    # renders. Idempotent — re-running bootstrap must not file OI-3 twice.
+    # renders, together with its queued placeholder row (WI-790), which is what
+    # puts the decision on the queue. Idempotent — re-running bootstrap must not
+    # file OI-3 or its row twice.
     #
     # AN APPEND, NOT A RE-SERIALIZATION — the same discipline `set_process_key`
     # states for `docs/process.toml` and `intake._apply_flips` for a spine
@@ -1700,6 +1747,7 @@ def append_stack_checklist(dest, stack, dry_run):
                 existing += "\n"
             _write_text_lf(open_items, existing + block)
             raise_watermark(dest, "OI", 3)
+            file_stack_placeholder(dest, stack)
     return True
 
 

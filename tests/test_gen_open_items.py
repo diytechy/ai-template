@@ -24,6 +24,8 @@ in the per-commit smoke tier; this module drives the generator as a subprocess
 over git-committed fixtures and runs at slice/phase close and in CI.
 """
 
+import csv
+import io
 import re
 import shutil
 import subprocess
@@ -66,7 +68,28 @@ def repo(tmp_path, sr_rows="", oi_rows="", llr_rows="", tc_rows=""):
         (docs / "requirements" / "open-items.csv").write_text(
             OI_HEADER + oi_rows, encoding="utf-8"
         )
+        _file_placeholders(docs, oi_rows)
     return tmp_path
+
+
+def _file_placeholders(docs, oi_rows):
+    """WI-790: a pending open item reaches the owner surface only through a
+    queued work item citing it, so the fixture files that placeholder row for
+    every pending row it writes (a decision nothing on the queue cites is an
+    integrity notice, not a card)."""
+    pending = [
+        rec[0]
+        for rec in csv.reader(io.StringIO(oi_rows))
+        if len(rec) > 2 and rec[2].strip().lower() == "pending"
+    ]
+    for n, oid in enumerate(pending, 1):
+        path = docs / "work" / "queued" / "WI-9{:02d}-placeholder.md".format(n)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            '+++\nid = "WI-9{:02d}"\ntitle = "Rule {}"\nneeds = ["{}"]\n'
+            'safety_class = "ordinary"\n+++\n'.format(n, oid, oid),
+            encoding="utf-8",
+        )
 
 
 def gen(root, *args):
@@ -524,6 +547,7 @@ def test_crlf_cell_is_stripped_at_the_source(tmp_path):
         OI_HEADER.encode("utf-8")
         + b'OI-6,CRLF cell,pending,,one line,"line one,\r\nline two",,,,,,\r\n'
     )
+    _file_placeholders(root / "docs", "OI-6,CRLF cell,pending\n")
     assert gen(root).returncode == 0
     raw = (root / "docs" / "open-items.html").read_bytes()
     assert b"\r" not in raw, "a CR from a registry cell reached the emitted view"

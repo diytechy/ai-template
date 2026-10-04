@@ -1169,21 +1169,96 @@ def _next_work_title(title):
     ).format(esc(head[:cut].rstrip()), esc(head[cut:]))
 
 
+# The dispositions the card lists, in the order it lists them (WI-790): ready
+# work, then rows an open item holds, then rows waiting on a predecessor.
+_NEXT_WORK_ORDER = ("ready", "blocked", "waiting")
+
+
+def _next_work_none(records):
+    """The card when nothing is listed: open work held elsewhere, or all done.
+
+    Implements: SR-054, LLR-115
+    """
+    open_left = any(r["disposition"] not in _TERMINAL_DISPOSITIONS for r in records)
+    msg = (
+        "No ready work — see the When roadmap for open items."
+        if open_left
+        else "All work items are done."
+    )
+    return (
+        '<div class="card nextwork"><div class="label">Next work</div>'
+        '<p class="nwnone">{}</p></div>'.format(esc(msg))
+    )
+
+
+def _next_work_item(record, by_id):
+    """One Next-work line, shaped by the record's disposition.
+
+    Implements: SR-054, LLR-115
+    """
+    wid = record["id"]
+    title = _next_work_title(by_id[wid].get("title", ""))  # already escaped markup
+    if record["disposition"] == "blocked":
+        return _blocked_item(record, title)
+    if record["disposition"] == "waiting":
+        status = {w: row["status"] for w, row in by_id.items()}
+        return _waiting_item(wid, title, by_id, status)
+    return '<li><span class="nwid">{}</span> <span class="nwt">{}</span></li>'.format(
+        esc(wid), title
+    )
+
+
+def _waiting_item(wid, title, by_id, status):
+    """One Next-work line for a waiting row, annotated with the unmet hard
+    predecessors that hold it (WI-267: a `cancelled` dead-end predecessor also
+    shows — never `done`).
+
+    Implements: SR-054, LLR-115
+    """
+    blockers = [p for p in by_id[wid]["preds"] if status.get(p) != "done"]
+    after = (
+        ' <span class="nwafter">after {}</span>'.format(esc(", ".join(blockers)))
+        if blockers
+        else ""
+    )
+    return (
+        '<li class="waiting"><span class="nwid">{}</span> '
+        '<span class="nwt">{}</span>{}</li>'.format(esc(wid), title, after)
+    )
+
+
+def _blocked_item(record, title):
+    """One Next-work line for a row an open item holds: the row, then each
+    pending item that holds it, named and linked to the owner surface's card.
+
+    Implements: SR-054, LLR-115
+    """
+    gates = ", ".join(
+        '<a href="docs/open-items.html#{i}">{i}</a>'.format(i=esc(o["id"]))
+        for o in record["open_items"]
+    )
+    return (
+        '<li class="waiting"><span class="nwid">{}</span> '
+        '<span class="nwt">{}</span> <span class="nwafter">held by {}</span>'
+        "</li>".format(esc(record["id"]), title, gates)
+    )
+
+
 def _next_work_html(root):
     """The hero "Next work" list as an HTML string, or "" when schedule.py is
     unavailable or the registry carries no real work items. Ready WIs first (in
-    the scheduler's deterministic build order), then the next waiting WIs
-    annotated with their blocking predecessor — so the surface is byte-stable
-    under the --check freshness compare and always either names the next work or
-    says why none is ready."""
+    the scheduler's deterministic build order), then the rows an open item holds,
+    each naming the item (WI-790: a pending decision blocks, it does not wait),
+    then the waiting WIs annotated with their blocking predecessor — so the
+    surface is byte-stable under the --check freshness compare and always either
+    names the next work or says why none is ready.
+
+    Implements: SR-054, LLR-115
+    """
     if traj_parse.schedule is None:
         return ""
     try:
-        wis = traj_parse.schedule.load_wis(
-            traj_parse.schedule.load_registry_rows(
-                root / "docs/requirements/work-items.csv"
-            )
-        )
+        wis = traj_parse.schedule._load(root)
         records = traj_parse.schedule.evaluate(
             wis, oi_status=traj_parse.schedule.load_oi_status(root)
         )
@@ -1191,50 +1266,16 @@ def _next_work_html(root):
         return ""
     if not wis:
         return ""
-    titles = {w["id"]: w.get("title", "") for w in wis}
     by_id = {w["id"]: w for w in wis}
-    status = {w["id"]: w["status"] for w in wis}
-    ready = [r for r in records if r["disposition"] == "ready"]
-    waiting = [r for r in records if r["disposition"] == "waiting"]
-    shown = (ready + waiting)[:_NEXT_WORK_CAP]
-
+    listed = sorted(
+        (r for r in records if r["disposition"] in _NEXT_WORK_ORDER),
+        key=lambda r: _NEXT_WORK_ORDER.index(r["disposition"]),
+    )
+    shown = listed[:_NEXT_WORK_CAP]
     if not shown:
-        open_left = any(r["disposition"] not in _TERMINAL_DISPOSITIONS for r in records)
-        msg = (
-            "No ready work — see the When roadmap for open items."
-            if open_left
-            else "All work items are done."
-        )
-        return (
-            '<div class="card nextwork"><div class="label">Next work</div>'
-            '<p class="nwnone">{}</p></div>'.format(esc(msg))
-        )
-
-    items = []
-    for r in shown:
-        wid = r["id"]
-        title = _next_work_title(titles.get(wid, ""))  # already escaped markup
-        if r["disposition"] == "waiting":
-            # The unmet hard predecessors that hold this WI (WI-267: a
-            # `cancelled` dead-end predecessor also shows — never `done`).
-            blockers = [p for p in by_id[wid]["preds"] if status.get(p) != "done"]
-            after = (
-                ' <span class="nwafter">after {}</span>'.format(
-                    esc(", ".join(blockers))
-                )
-                if blockers
-                else ""
-            )
-            items.append(
-                '<li class="waiting"><span class="nwid">{}</span> '
-                '<span class="nwt">{}</span>{}</li>'.format(esc(wid), title, after)
-            )
-        else:
-            items.append(
-                '<li><span class="nwid">{}</span> '
-                '<span class="nwt">{}</span></li>'.format(esc(wid), title)
-            )
-    extra = len(ready) + len(waiting) - len(shown)
+        return _next_work_none(records)
+    items = [_next_work_item(r, by_id) for r in shown]
+    extra = len(listed) - len(shown)
     if extra > 0:
         items.append(
             '<li class="nwmore">+{} more — see the When roadmap</li>'.format(extra)

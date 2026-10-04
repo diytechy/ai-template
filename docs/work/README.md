@@ -24,8 +24,19 @@ Contract IF-054: the same registry read for READINESS. A row offers its status,
     and the defaults are chosen to fail closed: an absent safety class is
     `unclassified` and is never scheduled, an absent priority is 0, an absent
     exclusive is empty. A hard edge is satisfied only by an integrated `done`
-    predecessor — a cancelled one never satisfies it. A queued row must also
-    have no pending owner gate under IF-073 (requirements/open-items.toml).
+    predecessor — a cancelled one never satisfies it. An `OI-###` entry in
+    `needs` is the row's edge to an open item (IF-073,
+    requirements/open-items.toml): satisfied once the item leaves `pending`,
+    and until then the row reads `blocked`, the item named. A placeholder row
+    may hold nothing but its item — a title, a safety class, the `OI-###`
+    edge and a `specref` naming the item's registry record. RULING an item
+    updates every open row citing it in the same commit: its Done-when gains
+    the decided criteria citing the item (a gate on a person's act gets a
+    confirmation criterion), its `specref` names a real spec, and its title,
+    build tier, `sr_refs` and safety class move where the ruling changes them
+    — or the row closes. A commit that rules an item while a citing row's
+    Done-when stays untouched is refused, at the pre-commit hook and for every
+    lane commit at the merge slot.
 Contract IF-079: the registry as one of the two interchangeable FORMS. The
     frontmatter keys, the filename rule and the status-by-directory bijection
     are this format's definition, and the legacy row-per-line CSV is the other
@@ -69,7 +80,8 @@ skip it quietly — so inventing a folder here takes rows OUT of the registry
 instead of adding a state to it.
 
 Readiness follows IF-054; owner gates follow IF-073 in `requirements/open-items.toml`
-(the registry header). `needs` names work items only.
+(the registry header). `needs` names work items, and the open items a row waits
+on (`OI-###`): ruling one updates the rows citing it in the same commit.
 
 ## A terminal row STAYS in the registry — under the archive (WI-504)
 

@@ -16,9 +16,13 @@ as `work-items.csv` is, i.e. never.
 
 WHAT IT RENDERS, in the order an owner needs it:
 
-  1. PENDING DECISIONS — one card per `Status=pending` row of the registry:
-     the one-line, what is being decided, blast radius, options, recommendation,
-     and the WI rows that carry the work.
+  1. PENDING DECISIONS — one card per `Status=pending` row a QUEUED work
+     item's `needs` cites (the queue projection, `pending.open_item_queue`,
+     WI-790): the one-line, what is being decided, blast radius, options,
+     recommendation, and the queued rows it holds. A pending row NO queued row
+     cites is not a card; it is named in an integrity notice above the cards,
+     linked to its registry record, and while one exists the section never
+     claims the owner queue is empty.
   2. APPROVAL & RE-ATTESTATION — every SR whose `Status` is `Drafted` (owes a
      first approval) or whose chain has DRIFTED from the approved snapshot
      (owes a re-attest — D-9 step 7 retired the `Modified` marker and left the
@@ -31,10 +35,17 @@ WHAT IT RENDERS, in the order an owner needs it:
      diff had no reason to show, plus the SR's own text where the amendment sits
      entirely in a child. A diff says what moved; an attestation asks whether the
      evidence still verifies what the row now SAYS, and the second question needs
-     the cells the first one omits (owner, 2026-07-27).
+     the cells the first one omits (owner, 2026-07-27). The section closes
+     with the AUDIT LIST: every act-ledger entry naming a verdict, i.e. each
+     re-attestation an adjudicator's CLARITY ruling carried over — on a held
+     rung, the owner's signature carried onto amended text (OI-100, WI-791).
   3. PENDING OWNER ACTIONS — the pointer projection `pending.py` already
      derives (blocked rows, the spine pointers, the tracked pause), reused
      verbatim rather than recomputed.
+  4. DECISIONS TO REVIEW — every delegated-decisions entry under
+     `docs/decisions/` not marked `reviewed` (`pending.decisions_to_review`),
+     the high-risk entries first, each with its disclosure fields and a link to
+     its record; when none is left, the count of entries marked reviewed.
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
 in `trace.reattest_model`, and the pending projection lives in
@@ -55,16 +66,27 @@ of record in docs/requirements/interfaces.toml).
 
 Contract IF-074: the generated owner decision surface at `docs/open-items.html` —
     the one document a human reads to rule. It carries, in this order: a card
-    per `Status=pending` open-item row (the one-line, the blast radius, the
-    options, the recommendation and the work items that carry it); an approval
+    per `Status=pending` open-item row a queued work item's `needs` cites (the
+    one-line, the blast radius, the options, the recommendation and the queued
+    rows it holds), with an integrity notice naming each pending row no queued
+    row cites, linked to its registry record, in place of any empty-queue
+    claim; an approval
     and re-attestation section listing every SR that owes a first approval or
     whose chain has drifted from the approved snapshot, with the whole chain's
     per-cell before/after, unchanged runs collapsible, additions and deletions
     marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION so an empty
-    section reads as *check the baseline* and never as *nothing changed*; and
-    the pending-owner-actions pointer projection. It renders and owns no second
-    opinion: the archaeology and cell comparison come from `trace.reattest_model`
-    and the pointers from `pending.pending_block`, so where this view and the
+    section reads as *check the baseline* and never as *nothing changed*,
+    closed by the audit list of every act-ledger entry that names a verdict
+    (newest first, its rows and its verdict file; "None recorded." when there
+    is none); the pending-owner-actions pointer projection; and, last,
+    "Decisions to review": every delegated-decisions entry not marked reviewed,
+    high-risk first, with its file, id, disclosure fields and a link to its
+    record, `-000` entries never shown, and the reviewed count when none is
+    left. It renders and owns no second
+    opinion: the queue comes from `pending.open_item_queue`, the decisions from
+    `pending.decisions_to_review`, the archaeology and cell comparison from
+    `trace.reattest_model` and the pointers from `pending.pending_block`, so
+    where this view and the
     `trace.py --approve` brief disagree the brief is authoritative and this is
     the bug. `--check` byte-compares the regenerated document against the
     committed one — a pure function of the committed tree, deterministic and
@@ -169,6 +191,7 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .baseline{font-size:var(--xsmall);color:var(--muted);font-family:var(--mono);}
 .empty{font-size:var(--small);border-left:3px solid var(--pending);
   padding-left:.75rem;}
+.notice{font-weight:600;}
 .row{border-top:1px solid var(--border);padding-top:.8rem;
   display:flex;flex-direction:column;gap:.45rem;}
 .row-head{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
@@ -296,24 +319,6 @@ def esc(text):
     return html.escape(normalize(text or ""), quote=True)
 
 
-def load_open_items(root):
-    """Rows of the open-items registry, `-000` example rows dropped (the
-    copy-ready placeholder convention every other registry uses). Missing file
-    -> [] : a repo that carries no decisions yet still renders a view.
-
-    Through `spine_carrier.load`, which is what makes the missing-file arm safe.
-    Reading the registry directly, an UNPARSEABLE carrier came back as no rows
-    and this view rendered "no open items" — the owner's decision queue
-    reporting empty because it could not be read, which is the false green D-5
-    built the None-not-`{}` rule for. `load` raises on that and returns `[]`
-    only when the registry genuinely is not there."""
-    return [
-        r
-        for r in spine_carrier.load(Path(root) / OPEN_ITEMS_REL, "OI-ID")
-        if (r.get("OI-ID") or "").startswith("OI-") and not r["OI-ID"].endswith("-000")
-    ]
-
-
 def _tokens(text):
     return re.findall(r"\s+|[^\s]+", text or "")
 
@@ -433,37 +438,75 @@ def _safe_link(match):
     return "{} ({})".format(text, target)
 
 
-def _brief_cards(items):
-    cards = []
-    for row in items:
-        if (row.get("Status") or "").strip().lower() != "pending":
-            continue
-        fields = []
-        for key, label in (
-            ("OneLine", "One line"),
-            ("Decision", "What is being decided"),
-            ("BlastRadius", "Blast radius"),
-            ("Options", "Options"),
-            ("Recommendation", "Recommendation"),
-            ("WI-Refs", "Work items"),
-        ):
-            val = (row.get(key) or "").strip()
-            if val:
-                fields.append(
-                    '<div class="field"><span class="k">{}</span>'
-                    '<div class="v">{}</div></div>'.format(esc(label), md_block(val))
-                )
-        cards.append(
-            '<article class="card" id="{i}"><h3><span class="rid">{i}</span>'
-            "<span>{t}</span></h3>{f}</article>".format(
-                i=esc(row["OI-ID"]),
-                t=esc((row.get("Title") or "").strip()),
-                f="".join(fields),
+_BRIEF_FIELDS = (
+    ("OneLine", "One line"),
+    ("Decision", "What is being decided"),
+    ("BlastRadius", "Blast radius"),
+    ("Options", "Options"),
+    ("Recommendation", "Recommendation"),
+)
+
+
+def _brief_card(row, citers):
+    """One pending decision's card, the queued rows it holds beside its brief.
+
+    Implements: SR-049, LLR-118
+    """
+    fields = []
+    for key, label in _BRIEF_FIELDS:
+        val = (row.get(key) or "").strip()
+        if val:
+            fields.append(
+                '<div class="field"><span class="k">{}</span>'
+                '<div class="v">{}</div></div>'.format(esc(label), md_block(val))
             )
+    fields.append(
+        '<div class="field"><span class="k">Holds (queued work items citing it)'
+        '</span><div class="v">{}</div></div>'.format(esc(", ".join(citers)))
+    )
+    return (
+        '<article class="card" id="{i}"><h3><span class="rid">{i}</span>'
+        "<span>{t}</span></h3>{f}</article>".format(
+            i=esc(row["OI-ID"]),
+            t=esc((row.get("Title") or "").strip()),
+            f="".join(fields),
         )
-    if not cards:
+    )
+
+
+def _uncited_notice(uncited, registry):
+    """The integrity notice (OI-102 Q2): each pending open item NO queued work
+    item cites, linked to its registry record. Such an item is invisible to the
+    queue, so the page says so rather than reading as an empty queue.
+
+    Implements: SR-049, LLR-118
+    """
+    links = ", ".join(
+        '<a href="{r}#{i}"><code>{i}</code></a>'.format(r=esc(registry), i=esc(oid))
+        for oid in uncited
+    )
+    return (
+        '<p class="empty notice" role="alert">{n} pending open item(s) that no '
+        "queued work item cites, so the queue cannot surface the decision: {l}. "
+        "File a queued placeholder row whose <code>needs</code> cites each one "
+        "(<code>check_trajectory</code> reports this as an error).</p>".format(
+            n=len(uncited), l=links
+        )
+    )
+
+
+def _brief_cards(queue, registry="requirements/open-items.toml"):
+    """Section 1 from the one queue projection: the integrity notice for any
+    uncited pending item, then one card per decision a queued row cites. The
+    "owner queue is empty" line is said only when both are empty.
+
+    Implements: SR-049, LLR-118
+    """
+    notice = _uncited_notice(queue["uncited"], registry) if queue["uncited"] else ""
+    cards = "".join(_brief_card(row, citers) for row, citers in queue["cards"])
+    if not cards and not notice:
         return '<p class="empty">No pending decision — the owner queue is empty.</p>'
-    return "".join(cards)
+    return notice + cards
 
 
 def _context_block(full, skip=(), heading="the rest of this row"):
@@ -814,6 +857,51 @@ def _offspine_census_block(rows):
     )
 
 
+def verdict_reattest_block(acts):
+    """The audit list closing section 2: every act-ledger entry that names a
+    verdict, newest first — the re-attestations an adjudicator's CLARITY
+    verdict carried over (OI-100, ruled 2026-10-03; WI-791). On a held rung
+    that act carries the owner's signature onto amended text, so it stays
+    listed here after the fact, for the owner to audit. An act naming no
+    verdict is not listed: it is the owner's own, or a released rung's.
+
+    Implements: SR-049, LLR-118"""
+    named = [a for a in acts if a.get("verdict")]
+    items = "".join(
+        "<li>act {seq} ({date}) — re-attested {rows} on the verdict "
+        "<code>{verdict}</code></li>".format(
+            seq=esc(str(a["seq"])),
+            date=esc(a["date"]),
+            rows=esc(", ".join(a["reattested"]) or "no row"),
+            verdict=esc(a["verdict"]),
+        )
+        for a in sorted(named, key=lambda a: a["seq"], reverse=True)
+    )
+    return (
+        '<div class="verdict-audit"><p class="sub"><strong>Re-attested on an '
+        "adjudicator's verdict</strong> — each act a session took on its own "
+        "CLARITY ruling, from the act ledger <code>{}/{}</code>. On a held rung "
+        "it carried your signature onto amended text: open the verdict to audit "
+        "it.</p>{}</div>\n".format(
+            esc(baseline_snapshot.SNAPSHOT_DIR),
+            esc(baseline_snapshot.ACTS),
+            '<ul class="pointers">{}</ul>'.format(items)
+            if items
+            else '<p class="sub">None recorded.</p>',
+        )
+    )
+
+
+def _ledger_entries(root):
+    """The act ledger's entries for the audit list, `[]` without a ledger. A
+    malformed ledger is an integrity finding `trace.py --strict-integrity`
+    reports by name; this view lists nothing from it rather than guessing."""
+    try:
+        return baseline_snapshot.read_acts(root)
+    except baseline_snapshot.ActLedgerError:
+        return []
+
+
 def _pointer_list(markdown_items):
     lines = [
         ln.strip()[2:].strip()
@@ -855,16 +943,14 @@ def render(root):
     # rename and step 7's retirement with nothing to re-key.
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
     offspine_rows = tr.offspine_census_rows(root)
-    items = load_open_items(root)
+    queue = pending.open_item_queue(root)
     pure = pending_block_text(root)
     # Each registry's OWN copy, named by the commit that last wrote it: a
     # refresh copies only what its act authorises, so one directory-wide stamp
     # named one copy's commit for every registry on the page.
     stamps = baseline_snapshot.registry_stamps(root)
     counts = {
-        "pending": sum(
-            1 for r in items if (r.get("Status") or "").strip().lower() == "pending"
-        ),
+        "pending": len(queue["cards"]),
         "attest": len(model),
         "rows": sum(len(e["rows"]) for e in model),
         # The drifted count is the one number that cannot be read off a Status
@@ -920,9 +1006,11 @@ def render(root):
         "row's remaining cells, and the SR text a chain-only amendment hangs "
         "from</span></div>\n"
         '<section class="band"><p class="eyebrow">2 · Approval &amp; '
-        "re-attestation</p>{attestations}</section>\n"
+        "re-attestation</p>{attestations}{audit}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending owner actions '
         "(derived)</p>{pointers}</section>\n"
+        '<section class="band" id="decisions-to-review"><p class="eyebrow">'
+        "4 · Decisions to review</p>{decisions}</section>\n"
         "<footer>Source: <code>{registry}</code> + the spine "
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
@@ -935,10 +1023,12 @@ def render(root):
     ).format(
         css=CSS,
         js=JS,
-        briefs=_brief_cards(items),
+        briefs=_brief_cards(queue, live_registry_rel(root).split("docs/", 1)[-1]),
+        decisions=decisions_block(*pending.decisions_to_review(root)),
         attestations=_attestation_cards(
             model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
         ),
+        audit=verdict_reattest_block(_ledger_entries(root)),
         pointers=_pointer_list(pure),
         offspine=_offspine_census_block(offspine_rows),
         # The LIVE carrier, never a hardcoded suffix: this view is the surface
@@ -947,6 +1037,73 @@ def render(root):
         registry=live_registry_rel(root),
         **counts,
     )
+
+
+_DECISION_FIELDS = (
+    ("decided", "Decided"),
+    ("alternative", "Alternative passed over"),
+    ("reversal_cost", "Reversal cost"),
+    ("why_not_escalated", "Why not escalated"),
+    ("review", "Owner note"),
+)
+
+
+def _decision_card(entry):
+    """One delegated decision left to review: its record and id, a high-risk
+    pill when the run hoisted it, and its disclosure fields.
+
+    Implements: SR-225, LLR-283
+    """
+    fields = "".join(
+        '<div class="field"><span class="k">{}</span><div class="v">{}</div>'
+        "</div>".format(esc(label), md_block(str(entry["fields"].get(key))))
+        for key, label in _DECISION_FIELDS
+        if str(entry["fields"].get(key) or "").strip()
+    )
+    flag = '<span class="pill approve">high risk</span>' if entry["high_risk"] else ""
+    if entry["reviewed"] is not None:
+        flag += '<span class="pill">reviewed = {}</span>'.format(
+            esc(repr(entry["reviewed"]))
+        )
+    return (
+        '<article class="card"><h3><span class="rid">{i}</span>{f}'
+        '<a href="{h}"><code>{p}</code></a></h3>{b}</article>'.format(
+            i=esc(entry["id"]),
+            f=flag,
+            h=esc(entry["file"].split("docs/", 1)[-1]),
+            p=esc(entry["file"]),
+            b=fields,
+        )
+    )
+
+
+def decisions_block(entries, findings, reviewed):
+    """Section 4, "Decisions to review": every entry not marked reviewed, as
+    `pending.decisions_to_review` orders them (high-risk first), then each
+    record's format findings; when none is left, the count marked reviewed.
+
+    Implements: SR-225, LLR-283
+    """
+    if entries is None:
+        return (
+            '<p class="empty">No delegated-decisions record under '
+            "<code>docs/decisions/</code>.</p>"
+        )
+    body = "".join(_decision_card(e) for e in entries)
+    if not entries:
+        body = (
+            '<p class="empty">Nothing left to review — {} entr{} marked '
+            "reviewed.</p>".format(reviewed, "y" if reviewed == 1 else "ies")
+        )
+    if findings:
+        body += (
+            '<p class="empty notice">Format findings (an unrecognized '
+            "<code>reviewed</code> value reads as not reviewed):</p>"
+            '<ul class="pointers">{}</ul>'.format(
+                "".join("<li>{}</li>".format(esc(f)) for f in findings)
+            )
+        )
+    return body
 
 
 def pending_block_text(root):

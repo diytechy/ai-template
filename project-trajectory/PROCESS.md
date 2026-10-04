@@ -653,7 +653,13 @@ human involvement — and now by the ORDER rather than by a hand-written pairing
 attended session on the owner's explicit delegation, the delegation and its
 scope recorded in the approving commit or its log entry. A mechanically
 triggered session (the unattended loop, a launcher-spawned worker) never
-approves on a held rung; that is what the hold is for. MECHANICAL: a
+approves on a held rung; that is what the hold is for. One stated case: an
+independent adjudicator session may **re-attest** an amended row it rules
+CLARITY — that approves no new text, it records that the owner's signature
+still describes the row — naming its verdict in the act (`--verdict`), so the
+act ledger records it and the owner's surface lists it for audit; the merge
+slot refuses one the verdict does not rule CLARITY. A MEANING row and a first
+draft stay the owner's. MECHANICAL: a
 loop-started commit must carry its `Loop-Session` trailer
 (`scripts/kitlib/provenance.py`), `check.py`'s `held-status` step and the merge
 slot refuse a held status such a commit moves, and `check_trajectory.py`
@@ -891,9 +897,11 @@ survey the set.
 **Open items — the owner decision surface, always shipped.** A decision deferred
 to the owner is a **row** in `docs/requirements/open-items.toml`, rendered by
 `gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <human>`
-bullets stay one-liners pointing at it. `wi_refs` follows IF-073 in that
-registry's header; readiness follows IF-054 in `docs/work/README.md` (`needs`
-names work items only). Every scaffold gets both whatever its
+bullets stay one-liners pointing at it. A work item that waits on a decision
+cites it in its `needs` and reads `blocked`; every pending item is filed with
+the queued row citing it, and ruling it updates that row in the same commit
+(IF-073 in the registry's header, IF-054 in `docs/work/README.md`). Every
+scaffold gets both whatever its
 profile — *you deferred and no `OI` row resolves it* is a finding only a repo
 that HAS the registry can act on. Three mechanisms keep the announcement and the
 queue from being two artifacts: a `docs/provenance-allow` entry **names** the

@@ -172,15 +172,17 @@ def test_cancelled_wi_is_never_scheduled_in_simulate():
 # (no acyclicity, no downstream count).
 
 
-def test_oi_edge_pending_holds_the_wi_waiting():
+def test_oi_edge_pending_holds_the_wi_blocked():
+    # WI-790: a pending open item BLOCKS the row that cites it, the item
+    # named; no `waiting` state is left for an open-item edge.
     wis = sched.load_wis([row("WI-002", preds="OI-70")])
     # Split cleanly: the OI is not a WI predecessor, it is an oi_pred.
     assert wis[0]["preds"] == [] and wis[0]["oi_preds"] == ["OI-70"]
     oi = {"OI-70": "pending"}
     assert [r["id"] for r in sched.frontier(wis, oi_status=oi)] == []
     d = next(r for r in sched.evaluate(wis, oi_status=oi) if r["id"] == "WI-002")
-    assert d["disposition"] == "waiting"
-    assert "waiting:open-item-pending:OI-70" in d["reasons"]
+    assert d["disposition"] == "blocked"
+    assert d["reasons"] == ["blocked:open-item-pending:OI-70"]
 
 
 def test_oi_edge_satisfied_once_ruled():
@@ -195,14 +197,15 @@ def test_absent_oi_edge_fails_closed():
     wis = sched.load_wis([row("WI-002", preds="OI-70")])
     assert [r["id"] for r in sched.frontier(wis, oi_status={})] == []
     d = next(r for r in sched.evaluate(wis, oi_status={}) if r["id"] == "WI-002")
-    assert d["disposition"] == "waiting"
+    assert d["disposition"] == "blocked"
+    assert d["reasons"] == ["blocked:open-item-unknown:OI-70"]
 
 
 def test_mixed_wi_and_oi_edges_both_gate():
     wis = sched.load_wis(
         [row("WI-001", status="done"), row("WI-002", preds="WI-001;OI-70")]
     )
-    # WI edge satisfied, OI edge still pending -> waiting.
+    # WI edge satisfied, OI edge still pending -> blocked.
     assert [r["id"] for r in sched.frontier(wis, oi_status={"OI-70": "pending"})] == []
     # Both satisfied -> ready.
     assert [r["id"] for r in sched.frontier(wis, oi_status={"OI-70": "ruled"})] == [

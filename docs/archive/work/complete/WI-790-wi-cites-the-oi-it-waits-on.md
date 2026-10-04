@@ -2,13 +2,30 @@
 id = "WI-790"
 title = "Work items cite the open items they wait on; open items stop carrying wi_refs"
 workstream = "process"
-specref = "docs/requirements/interfaces.toml"
-sr_refs = ["SR-148"]
+specref = ""
+sr_refs = ["SR-148", "SR-225", "SR-049", "SR-010"]
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+OI-102 (ruled 2026-10-03: Q1 confirmation criterion, Q2 integrity notice, Q3 the commit-time block) with amendments A1-A9, built on lane `wi-790` and landed by squash; the lane tip is kept in `archive/lanes`.
+
+- **The edge.** An `OI-###` token in a work item's `needs` is the one gate; every `wi_refs` reader is deleted (readiness, `check_trajectory`, intake's context join, the owner surface). `wi_refs` is declared historical metadata (`kitlib/spine.HISTORICAL_KEYS`); both registry headers say so.
+- **One queue projection** (`kitlib/spine.open_item_queue`) feeds the owner surface's cards, the status snapshot's open-items and Blocked lists, the uncited-pending ERROR (before the vacuous return) and the integrity notice.
+- **The sync ERROR** (LLR-298, TC-313): one function over a commit and its parent, at the pre-commit hook and per lane commit at the merge slot. A ruled (or removed) pending item's citing open rows must update their Done-when (raw text, non-empty) or close; the parent is read off the commit object, so a root commit closes nothing and an unreadable parent is refused by name; either registry carrier.
+- **Citation integrity** (LLR-299, TC-314): a pending item no queued row cites is an ERROR; an open row whose `specref` names the registry must anchor an item it cites and loses the reference once every cited item is ruled; backlog staleness clocks a registry `specref` per cited item.
+- **Blocked, not waiting:** schedule, status.md's Blocked list and the Next-work card name the holding item.
+- **Placeholders:** intake writes a minted item into its successor's `needs` with a row-specific `specref`; the disposition brief says the successor is the placeholder; bootstrap's OI-3 is filed with a queued placeholder WI-001; the template's OI-1/OI-2 are gone.
+- **Decisions to review:** the last section of `open-items.html`, with the `reviewed` key (truthy, falsy and unrecognized sets; an unrecognized value is a format finding), high-risk first; the status snapshot shows the count.
+- **Migration:** OI-98's `wi_refs` moved into WI-684's `needs`; ruled rows keep theirs as history. RESYNC_PACK entry re-anchored at the landing's parent; no forced migration.
+- **Spine** (GPT Terra; two in-lane fix rounds): new LLR-298, LLR-299, TC-313, TC-314 (approved); LLR-289 and TC-302 retired (records under `docs/log.d/retired/`); IF-054, IF-073, IF-074, IF-164, IF-255, IF-256, IF-264, IF-265 (Drafted) amended. The in-lane adjudicator (verdicts 001-004 under `docs/reviews/wi-790-wi-cites-the-oi-it-waits-on/`) took **act seq 30**: the four rows approved; SR-225, LLR-010, LLR-058, LLR-118, LLR-153, LLR-283, LLR-288, TC-010, TC-123, TC-147, TC-293, TC-301 and the two retirements re-attested.
+- **Reviews:** Codex 6.1 Sol round 1 at `9c39bab2` (5 MAJOR, 3 MINOR; all confirmed and fixed); the final review of the post-act tree (one MAJOR, an unreadable listed parent blob read as absent, and one MINOR, IF-073's specref clause, both fixed in 59215dca and re-checked SOUND). The full unfiltered suite on `9c39bab2`: 5030 passed, 17 skipped, 0 failed.
+- **Decisions record:** `docs/decisions/wi-790.toml`.
+- **Observations carried forward (not filed):** IF-073's consumers and notes are slightly off (schedule still reads the registry); no SR states the coupling between owner decisions and the work items citing them (LLR-298/299 sit under SR-148); LLR-198's detail does not describe `open_item_queue`; a lane's refresh merge that brings in a trunk ruling of an item cited only by a lane-side row must itself carry the citer's update, or it is refused for good.
 
 ## Context
 

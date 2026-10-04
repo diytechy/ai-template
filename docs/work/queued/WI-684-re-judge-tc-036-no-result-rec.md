@@ -3,6 +3,7 @@ id = "WI-684"
 title = "re-judge TC-036: no result recorded [sha256:2f2f30dfba87] at merge 77fb093"
 workstream = "process"
 sr_refs = ["SR-036"]
+needs = ["OI-98"]
 specref = "docs/test/test-cases.toml"
 buildtier = "medium"
 safety_class = "adjudication"

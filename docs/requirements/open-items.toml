@@ -8,15 +8,26 @@
 #
 # Contract IF-073: one `[open_item.OI-###]` table per owner decision, carrying
 #     `title`, `status`, `raised`, `one_line`, `decision`, `blast_radius`,
-#     `options`, `recommendation` and `wi_refs`. `status` is `pending` or
-#     `ruled`. `wi_refs` names work items that wait on this ruling: a queued
-#     work item listed by a pending row is blocked until it is ruled, with no
-#     edit to that work item. Context-only references belong in prose, not
-#     `wi_refs`; ruled rows retain their references as history. Only a pending
-#     row renders as a brief card — a ruled row is
-#     history, and the Decisions log is its record. `-000` example rows are
-#     dropped, and an absent registry renders an empty queue rather than
-#     failing, so a repo carrying no decisions still has the surface.
+#     `options` and `recommendation`. `status` is `pending` or `ruled`. WORK
+#     ITEMS POINT TO OPEN ITEMS (WI-790): a work item that waits on a ruling
+#     cites the item in its own `needs` and reads `blocked` until the item
+#     leaves `pending`; an open item carries no work-item pointer. Rows filed
+#     before WI-790 may carry `wi_refs`: it is history, preserved as written,
+#     and no reader derives a relationship from it; new rows carry none.
+#     Every pending row is filed together with a queued work item citing it —
+#     only a pending row a queued work item cites renders as a brief card, and
+#     a pending row no queued work item cites is an error. RULING an item
+#     updates the rows that cite it IN THE SAME COMMIT: each citing row's
+#     Done-when gains the decided criteria citing the item (a gate on a
+#     person's act gets a confirmation criterion, e.g. "OI-98 ruled
+#     2026-10-NN: the re-sync was performed"), its `specref` leaves this
+#     registry for a real spec, and its `title`, `buildtier`, `sr_refs` and
+#     `safety_class` move where the ruling changes them — or the row closes.
+#     A commit that rules an item and leaves a citing row's Done-when
+#     untouched is refused. A ruled row is history, and the Decisions log is
+#     its record. `-000` example rows are dropped, and an absent registry
+#     renders an empty queue rather than failing, so a repo carrying no
+#     decisions still has the surface.
 #
 [open_item.OI-000]
 title = "Example row - the shape of an owner decision brief"
@@ -27,7 +38,6 @@ decision = """What is being decided, who raised it and when, and any context a r
 blast_radius = """What breaks or changes if this is ruled either way - the honest cost, not the optimistic one."""
 options = """Option (a) ... · Option (b) ... · Option (c) ... - each with its FOR and AGAINST, separated by the middot the other registries use for lists-in-cells."""
 recommendation = "The driver's recommendation and WHY, in the same voice a reviewer would argue it."
-wi_refs = ["WI-000"]
 
 [open_item.OI-7]
 title = "WI-123: review-cadence dial"
@@ -3681,7 +3691,6 @@ decision = "The owner must perform the re-sync from 2026-10-03 and rule this ite
 blast_radius = "Only WI-684's readiness is held; its registry status stays queued."
 options = "Keep the hold until the owner's condition is met; then rule the release."
 recommendation = "Keep pending until the owner performs the required act."
-wi_refs = ["WI-684"]
 
 [open_item.OI-99]
 title = "Owner hold until second to last"
@@ -3848,3 +3857,32 @@ recommendation = """Q1 (a): partial exclusion needs a retake rule per writer, wh
 wi_refs = ["WI-788"]
 ruled_date = "2026-10-04"
 ruling_ref = "docs/log.d/2026-10-04-owner-rulings-oi103.md"
+
+[open_item.OI-104]
+title = "WI-788 checkpoint: approve the half-1 design note and its successor plan"
+status = "pending"
+raised = "2026-10-04"
+one_line = "Approve WI-788's half-1 design note and its twenty S788-* successor rows, ruling its questions Q-3 to Q-12; the coordinator then files the rows and WI-788 closes on the approved note."
+decision = """Raised 2026-10-04 by the wave-11 coordinator at WI-788's own checkpoint ("STOP at the note. The owner rules before any build"). The note is written, reviewed and adjudicated; nothing is built and no successor row is filed.
+
+WHERE TO READ IT. The note is on lane `wi-788` (worktree `C:/Projects/ai-template.wt/wi-788`, branch `wi-788` at f5ac7e6b), not on trunk: `docs/plans/2026-10-04-wi788-design/README.md` is the front door (what the note decides, the rulings it carries, 26 stated changes to existing rulings, the glossary draft, one amend/preserve/retire matrix, one dependency graph of twenty successor rows, the questions), with four chapters: state, evidence and recovery; sessions, routing and accounts; planning and tiering; adjudication, mint and landing authority. Its delegated calls are `docs/decisions/wi-788.toml` (31 entries; high risk D-001, D-002, D-010, D-016, D-022, D-027, D-031).
+
+HOW IT WAS MADE. Four Claude Opus planners drafted one chapter each and an Opus integrator reconciled them. Codex 6.1 Sol (gpt-6.1-sol, high) reviewed it NOT YET READY: 5 BLOCKER, 7 MAJOR, 3 MINOR (`docs/reviews/2026-10-04-wi788-note/sol-review.md` on the lane). The integrator confirmed 14 and fixed them, and partly refuted one. An independent Opus adjudicator ruled the three disputed points (all amended, applied verbatim) and checked all five blockers resolved (`adjudication.md` beside the review).
+
+WHAT TO RULE. The note as a whole, and its questions (README "Questions for the owner at the checkpoint"):
+- Q-3 spend: one live ask.py call and one live FreeLLMAPI call (recommend yes).
+- Q-4 provisioning: the FreeLLMAPI endpoint and the models to pin.
+- Q-5 dual-plan selection (a)/(b)/(c) (recommend (a), drafters select).
+- Q-6 per-item planning at the second consecutive CHANGES-REQUESTED (recommend).
+- Q-7 a station lane for idle mints and coordinator writes (recommend (a)).
+- Q-8 OI-101 Q2 collides with OI-103 Q4 for a lane that took an act (recommend (a), two commits in one landing, amending Q4).
+- Q-9 retitle WI-788.
+- Q-10 attribute an unlogged commit by its Co-Authored-By trailer (recommend keep).
+- Q-11 batched lanes under one landing (recommend (a)).
+- Q-12 the pause file stays the owner's act (recommend (a)).
+Q-1 is a forced-migration notice (D1-D6) and Q-2 is decided; object at the checkpoint if either should change."""
+blast_radius = """WI-788 is held at its checkpoint until this is ruled; nothing else is. The ruling releases half 2: the coordinator files the twenty S788-* rows in the note's graph on trunk, and WI-788 closes on the approved note. Q-8 and Q-11, if ruled as recommended, amend OI-103 Q4. Q-1 forces adopters still on one-word config or CSV/markdown carriers to migrate at their next resync. Q-3 authorizes spend; Q-4 provisions an endpoint."""
+options = """- (a) APPROVE AS WRITTEN, with the recommendations on Q-3 to Q-12.
+- (b) APPROVE WITH AMENDMENTS: name each change (a question answered differently, a successor row dropped or merged); the coordinator amends the note on the lane before filing rows.
+- (c) RETURN THE NOTE for another design round, naming what must change."""
+recommendation = "(a). Every BLOCKER of the independent review is resolved and adjudicated, the graph is acyclic with a review bar per row, and the questions left are the ones only the owner can answer: two collisions between your own rulings (Q-8, Q-11), spend and provisioning (Q-3, Q-4), and policy choices with recorded evidence (Q-5 to Q-7, Q-10, Q-12)."

@@ -778,6 +778,40 @@ def test_staged_spine_amendments_expose_the_traced_half_for_adjudication(tmp_pat
     assert ct.staged_spine_findings(tmp_path) == []
 
 
+_NEED_TOML = (
+    "[need.SN-001]\n"
+    'status = "Approved"\n'
+    'need = "{}"\n'
+    'why = "why"\n'
+    'priority = "M"\n'
+    'acceptance = "ac"\n'
+)
+
+
+def test_an_approved_needs_amendment_is_recorded_and_warned(tmp_path):
+    # OI-100 gap 1 (WI-791): the amendment walk covers the need tier, and the
+    # pre-commit warn reads the SAME walk, so what the author is warned about at
+    # the commit is exactly what the merge mints an adjudication for. The hat
+    # arm stays structurally silent: the need tier carries no `Hat-Refs`.
+    run_git = _init_spine_repo(tmp_path)
+    needs = tmp_path / "docs" / "requirements" / "stakeholder-needs.toml"
+    needs.write_text(_NEED_TOML.format("the attested need"), encoding="utf-8")
+    run_git("add", "-A")
+    run_git("commit", "-m", "the attested need")
+    needs.write_text(_NEED_TOML.format("the AMENDED need"), encoding="utf-8")
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    (record,) = ct.staged_spine_amendments(tmp_path)
+    assert (record["registry"], record["id"]) == (
+        "docs/requirements/stakeholder-needs.toml",
+        "SN-001",
+    )
+    assert record["approved"] == {"Need": ("the attested need", "the AMENDED need")}
+    (finding,) = ct.staged_spine_findings(tmp_path)
+    assert finding.startswith("SN-001: approved cell(s) Need amended"), finding
+    assert ct.staged_hat_refs_findings(tmp_path) == []
+
+
 def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path):
     # REVIEW-A finding 2. The seam's RECORD was consumable but its SCAN was not
     # callable where §A5.2 puts the trigger: adjudication is minted from a trunk

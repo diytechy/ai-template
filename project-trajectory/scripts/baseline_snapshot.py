@@ -86,7 +86,8 @@ Contracts: IF-123, IF-124, IF-125, IF-126, IF-217, IF-220 — the seams this mod
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-123: the `last_approved` baseline, write side and whole read side.
-    `copy_live(root, seed=False, approves=None, reattests=None)` mirrors ONLY
+    `copy_live(root, seed=False, approves=None, reattests=None, verdict=None)`
+    mirrors ONLY
     the registries an act authorises byte-for-byte into
     `docs/archive/last_approved/` — the seed copies the whole tree once, a
     refresh copies the registry a `Status` move happened in, every registry
@@ -108,7 +109,9 @@ Contract IF-123: the `last_approved` baseline, write side and whole read side.
     row and cell, uncapped. `approves` is `{registry rel: ref}`
     (`parse_approves` builds it from a `REGISTRY=REF` CLI value) and `reattests`
     a set of row ids (`parse_reattests`, from comma-joined ids of the
-    `SNAPSHOT_TIERS` tiers). Before every copy, a seed included, an id naming
+    `SNAPSHOT_TIERS` tiers); `verdict` is the repo path of the verdict file
+    that ruled the re-attested rows, refused without `reattests` or when no
+    such file is in the tree. Before every copy, a seed included, an id naming
     neither a live row nor a recorded one is refused, and so is any id at all
     on a first signing, which copies the whole tree and writes no stamp. The
     refs and re-attested ids land in the snapshot's prose stamp, every act that
@@ -171,9 +174,12 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
     tiers' rows the act carried into approval (a live row claiming approval
     whose prior recorded copy did not, or that the record did not hold), the
     needs file's need and stakeholder tiers among them (`NEED_TIERS`); and
-    `reattested`, the sorted ids its `reattests` named. FAILS CLOSED:
+    `reattested`, the sorted ids its `reattests` named; and, only when the act
+    named one, `verdict`, the verdict file that ruled those rows — the record a
+    held rung's CLARITY re-attestation carries (OI-100, WI-791). FAILS CLOSED:
     `acts_problems(text)` lists every fault (text that does not parse, a field
-    missing or mistyped, an id not of the kit's syntax, `seq` values not
+    missing or mistyped, an id not of the kit's syntax, a `verdict` that is
+    not a non-empty string, `seq` values not
     unique and increasing in file order), and `parse_acts(text)` returns the
     entries as dicts in file order, `[]` for no text, or raises
     `ActLedgerError` — it never returns the entries it could read.
@@ -480,12 +486,13 @@ def parse_reattests(spec):
     return frozenset(out)
 
 
-def act_summary(written, seed, approves, reattests):
+def act_summary(written, seed, approves, reattests, verdict=None):
     """The one line `intake.py snapshot` prints for an act that landed: how many
     files it copied and, when named, the refs and re-attested rows it recorded
-    into the snapshot's stamp. Kept beside the parsers that build its inputs so
-    the CLI edge stays a call."""
-    return "snapshot: {} registry file(s) copied to {}{}{}{}".format(
+    into the snapshot's stamp, and the verdict it recorded in the act ledger.
+    Kept beside the parsers that build its inputs so the CLI edge stays a
+    call."""
+    return "snapshot: {} registry file(s) copied to {}{}{}{}{}".format(
         len(written),
         SNAPSHOT_DIR,
         " (SEEDED — this is the first snapshot; it blesses the text you just ruled)"
@@ -500,6 +507,9 @@ def act_summary(written, seed, approves, reattests):
             ", ".join(sorted(reattests))
         )
         if reattests
+        else "",
+        " (VERDICT: {} — recorded in the act ledger)".format(verdict)
+        if verdict
         else "",
     )
 
@@ -1198,6 +1208,54 @@ def _refuse_reattests(root, reattests, snapshot, first_signing):
         )
 
 
+def verdict_rel(root, verdict):
+    """The verdict path as the act ledger records it: repo-relative, forward
+    slashes, no `./` — the one spelling `git show <rev>:<path>` resolves at the
+    merge slot (Sol review 1, WI-791: a Windows-spelt path named the file here
+    and was refused there). Every path, relative or absolute, is resolved
+    against `root`, so `..` segments are canonicalized (Sol final review): one
+    resolving inside the tree comes back repo-relative, and one resolving
+    outside it comes back ABSOLUTE, for `_refuse_verdict` to refuse. None for
+    no verdict.
+
+    Implements: SR-207, LLR-245"""
+    if not verdict:
+        return None
+    text = str(verdict).strip().replace("\\", "/")
+    full = (Path(root) / text).resolve()
+    try:
+        return full.relative_to(Path(root).resolve()).as_posix()
+    except ValueError:
+        return full.as_posix()
+
+
+def _refuse_verdict(root, verdict, reattests):
+    """Raise when this act's `verdict` cannot stand; return when it can.
+
+    A verdict is the ruling that carried the named rows' signature over, so it
+    needs rows to rule (`reattests`) and must name a file in the tree: the
+    ledger records the path, and a typo would land a ruling nobody can open.
+    Whether the verdict actually rules each row CLARITY is the merge slot's
+    question (`acceptance_record.held_reattest_refusal`), asked of the
+    committed file.
+
+    Implements: SR-207, LLR-245"""
+    if not verdict:
+        return
+    if not reattests:
+        raise SystemExit(
+            "baseline_snapshot: REFUSED — --verdict {} names no re-attested row; "
+            "a verdict records the ruling that re-anchored the rows "
+            "--reattests names".format(verdict)
+        )
+    if Path(verdict).is_absolute() or not (Path(root) / verdict).is_file():
+        raise SystemExit(
+            "baseline_snapshot: REFUSED — --verdict {} is not a file in the tree; "
+            "the act ledger records the verdict's path, so it must name the "
+            "verdict the session wrote".format(verdict)
+        )
+
+
 def _refresh_targets(root, approves, seed, base, reattests=frozenset()):
     """`(targets, first_signing)`: the registries a REFRESH of a standing
     snapshot copies, and whether this refresh is a first signing — or a raised
@@ -1233,7 +1291,7 @@ def _refresh_targets(root, approves, seed, base, reattests=frozenset()):
     return _authorised_registries(root, approves, snapshot, reattests), False
 
 
-def copy_live(root, *, seed=False, approves=None, reattests=None):
+def copy_live(root, *, seed=False, approves=None, reattests=None, verdict=None):
     """Mirror the registries an act AUTHORISES into `docs/archive/last_approved/`;
     the sorted list of repo-relative paths written.
 
@@ -1282,23 +1340,15 @@ def copy_live(root, *, seed=False, approves=None, reattests=None):
     `agent_loop`, not `dispatch`, not the hooks, not `check.py`. A step that
     REGENERATED the snapshot would defeat the whole mechanism: the snapshot is
     deliberately behind live whenever an amendment is pending, and that lag IS
-    the signal."""
+    the signal.
+
+    `verdict`, when given, is the verdict file that ruled the re-attested rows;
+    the act's ledger entry records it (`_refuse_verdict` judges it first)."""
+    verdict = verdict_rel(root, verdict)
+    _refuse_verdict(root, verdict, reattests)
     base = snapshot_root(root)
     if not base.is_dir():
-        if not seed:
-            raise SystemExit(
-                "baseline_snapshot: REFUSED — {} does not exist, and creating it "
-                "would bless whatever text happens to be in the tree right now. "
-                "The first snapshot rides the owner's signing commit: run "
-                "`intake.py snapshot --seed` there, after every pending row has "
-                "been ruled.".format(base)
-            )
-        # Before the directory exists, so a refused seed leaves no trace.
-        _refuse_reattests(root, frozenset(reattests or ()), None, True)
-        standing = []
-        base.mkdir(parents=True, exist_ok=True)
-        to_copy = set(SNAPSHOTTED)  # the seed blesses the whole tree, once
-        first_signing = True
+        standing, to_copy, first_signing = _seed_targets(root, base, seed, reattests)
     else:
         # The authority gate and the scope decision, keyed on the directory
         # EXISTING rather than on `seed`: creating is seeding and rewriting is
@@ -1313,28 +1363,11 @@ def copy_live(root, *, seed=False, approves=None, reattests=None):
     prior = _prior_record(root)
     written = []
     copied_rels = []
-    for rel in SNAPSHOTTED:
-        if rel not in to_copy:
-            continue
-        suffixes = (
-            spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
-        )
-        live = spine_carrier.resolve(Path(root) / rel, suffixes)
-        dest_dir = base / Path(rel).parent
-        # Every carrier path for this stem, so the STALE one is removed whether
-        # or not a live file is being written over it. Done before the copy, so
-        # a carrier change lands as delete-then-write rather than leaving both.
-        for cand in spine_carrier.carriers(rel, suffixes):
-            stale = base / cand
-            if stale.is_file() and (live is None or stale.name != live.name):
-                stale.unlink()
-        if live is None:
-            continue
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        dest = dest_dir / live.name
-        shutil.copyfile(live, dest)
-        written.append(dest.relative_to(Path(root)).as_posix())
-        copied_rels.append(rel)
+    for rel in (r for r in SNAPSHOTTED if r in to_copy):
+        dest = _copy_registry(root, base, rel)
+        if dest:
+            written.append(dest)
+            copied_rels.append(rel)
     written = sorted(written)
     # Every non-seed refresh that copied a registry is stamped, so the act's
     # scope is auditable whether a `--approves` ref or a `Status` move authorised
@@ -1349,9 +1382,56 @@ def copy_live(root, *, seed=False, approves=None, reattests=None):
     # typed ledger: the one record of which rows it named that a reader parses.
     if copied_rels:
         _record_act(
-            base, standing, _approved_by_act(root, copied_rels, prior), reattests or ()
+            base,
+            standing,
+            _approved_by_act(root, copied_rels, prior),
+            reattests or (),
+            verdict,
         )
     return written
+
+
+def _seed_targets(root, base, seed, reattests):
+    """`(standing acts, registries to copy, first_signing)` for an act on a
+    repo with no record yet: refused unless `seed`, then the whole tree, once.
+    Extracted from `copy_live` unchanged (WI-791)."""
+    if not seed:
+        raise SystemExit(
+            "baseline_snapshot: REFUSED — {} does not exist, and creating it "
+            "would bless whatever text happens to be in the tree right now. "
+            "The first snapshot rides the owner's signing commit: run "
+            "`intake.py snapshot --seed` there, after every pending row has "
+            "been ruled.".format(base)
+        )
+    # Before the directory exists, so a refused seed leaves no trace.
+    _refuse_reattests(root, frozenset(reattests or ()), None, True)
+    base.mkdir(parents=True, exist_ok=True)
+    return [], set(SNAPSHOTTED), True  # the seed blesses the whole tree, once
+
+
+def _copy_registry(root, base, rel):
+    """Copy one registry's live carrier into the record under `base`; the
+    repo-relative path written, or None when the registry has no live carrier.
+    Extracted from `copy_live`'s loop body unchanged (WI-791), so the writer
+    stays under the complexity bar as it grows its verdict argument."""
+    suffixes = (
+        spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
+    )
+    live = spine_carrier.resolve(Path(root) / rel, suffixes)
+    dest_dir = base / Path(rel).parent
+    # Every carrier path for this stem, so the STALE one is removed whether
+    # or not a live file is being written over it. Done before the copy, so
+    # a carrier change lands as delete-then-write rather than leaving both.
+    for cand in spine_carrier.carriers(rel, suffixes):
+        stale = base / cand
+        if stale.is_file() and (live is None or stale.name != live.name):
+            stale.unlink()
+    if live is None:
+        return None
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest = dest_dir / live.name
+    shutil.copyfile(live, dest)
+    return dest.relative_to(Path(root)).as_posix()
 
 
 def _prior_record(root):
@@ -1434,6 +1514,14 @@ def _entry_problems(n, entry, last_seq):
         out.append("{}: `date` is missing".format(where))
     elif _date_problem(entry["date"]):
         out.append("{}: `date` {}".format(where, _date_problem(entry["date"])))
+    return out + _named_rows_problems(where, entry)
+
+
+def _named_rows_problems(where, entry):
+    """The faults of an act entry's row lists and its optional `verdict`:
+    `approved` and `reattested` lists of row ids, and a `verdict`, when the
+    entry has one, naming a file (a non-empty string; OI-100, WI-791)."""
+    out = []
     for key in ("approved", "reattested"):
         ids = entry.get(key)
         if not isinstance(ids, list) or not all(isinstance(r, str) for r in ids):
@@ -1442,6 +1530,9 @@ def _entry_problems(n, entry, last_seq):
         bad = [r for r in ids if not _ROW_ID.fullmatch(r)]
         if bad:
             out.append("{}: `{}` holds non-ids {}".format(where, key, bad))
+    verdict = entry.get("verdict", "x")
+    if not isinstance(verdict, str) or not verdict.strip():
+        out.append("{}: `verdict` must name a verdict file".format(where))
     return out
 
 
@@ -1472,18 +1563,21 @@ def acts_problems(text):
 
 def parse_acts(text):
     """The act ledger's entries as `{seq, date, approved, reattested}` dicts in
-    file order; `[]` for no text. RAISES `ActLedgerError` on a malformed ledger
+    file order, with `verdict` on an entry that names one; `[]` for no text. RAISES `ActLedgerError` on a malformed ledger
     (`acts_problems`) rather than returning the entries it could read."""
     problems = acts_problems(text)
     if problems:
         raise ActLedgerError(problems)
     return [
-        {
-            "seq": entry["seq"],
-            "date": str(entry["date"]),
-            "approved": list(entry["approved"]),
-            "reattested": list(entry["reattested"]),
-        }
+        dict(
+            {
+                "seq": entry["seq"],
+                "date": str(entry["date"]),
+                "approved": list(entry["approved"]),
+                "reattested": list(entry["reattested"]),
+            },
+            **({"verdict": entry["verdict"]} if "verdict" in entry else {}),
+        )
         for entry in tomllib.loads(text or "").get("act", [])
     ]
 
@@ -1535,10 +1629,11 @@ def _standing_acts(root):
         ) from None
 
 
-def _record_act(base, standing, approved, reattested):
+def _record_act(base, standing, approved, reattested, verdict=None):
     """Append one act's entry to the ledger, numbered one above the `standing`
     entries `_standing_acts` read before the act began, creating the file with
-    its header when the record has none."""
+    its header when the record has none. `verdict` is written only when the
+    act named one, so an entry without it keeps the shape it always had."""
     path = base / ACTS
     text = path.read_text(encoding="utf-8") if path.is_file() else _ACTS_HEADER
     seq = max((a["seq"] for a in standing), default=0) + 1
@@ -1549,6 +1644,7 @@ def _record_act(base, standing, approved, reattested):
             ("approved", sorted(approved)),
             ("reattested", sorted(reattested)),
         ]
+        + ([("verdict", verdict)] if verdict else [])
     )
     path.write_text(
         text.rstrip("\n") + "\n\n[[act]]\n" + entry, encoding="utf-8", newline="\n"
@@ -1635,10 +1731,20 @@ def needs_owing(root, snapshot=None):
     first: every need or stakeholder owing an act against the recorded copy.
 
     Implements: SR-178, LLR-271"""
+    return tier_owing(root, NEED_TIERS, snapshot)
+
+
+def tier_owing(root, tiers, snapshot=None):
+    """`owing_rows` over each `(registry, id column)` of `tiers`, in order:
+    every row of those tiers owing an act against the recorded copy. The
+    amendment brief reads it for the tiers the requirement-chain model does
+    not hold — the needs, the assumptions and the surrogates (OI-100, WI-791).
+
+    Implements: SR-178, LLR-271"""
     if snapshot is None:
         snapshot = load_all(root)
     out = []
-    for rel, id_col in NEED_TIERS:
+    for rel, id_col in tiers:
         live = _tier_rows(root, rel, id_col)
         out += owing_rows(rel, id_col, live, rows_for(snapshot, rel, id_col))
     return out

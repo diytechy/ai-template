@@ -2,7 +2,6 @@
 # A row is a DEBT STATEMENT, NOT AN APPROVAL: the reason column records why it is carried, and the
 # baseline only ever tightens — re-stamp DOWNWARD or delete a row, never up to clear a finding.
 # path	function	cognitive	sloc	reason
-project-trajectory/scripts/acceptance_record.py	staged_spine_amendments	20	19
 project-trajectory/scripts/adjudicate_brief.py	_amended_rows	17	19	RE-KEYED 2026-09-27 (WI-657): WI-646 (26c086dd) split the row selection out of `amendment_values` (20 -> 3, below the threshold) when it scoped the amendment brief to its own rows; 17 here, net -3 across the pair. Not a bump.
 project-trajectory/scripts/agent_brief.py	critique_brief	31	49
 project-trajectory/scripts/agent_brief.py	critique_control	18	20
@@ -24,8 +23,6 @@ project-trajectory/scripts/agent_session.py	_wait_for_exit	16	24
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
 project-trajectory/scripts/assumption_rules.py	_classify	16	24	2026-10-03, WI-723 (3b872471): joint-delivery classification adds sibling-reference validation and class precedence to the sole classification parse (crossing to 16); WI-729 (17c54c2f) adds shared-need validation at the same score, so a declared sibling alone cannot establish joint delivery.
 project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	20	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
-project-trajectory/scripts/baseline_snapshot.py	_entry_problems	16	26	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (16) came with WI-632 (ae3d625e): the typed ledger's per-entry validation, one branch per malformed field. Repair is owed on trunk.
-project-trajectory/scripts/baseline_snapshot.py	copy_live	26	51	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 21 -> 24 with WI-635's row-level refusal (e123eb6d: the `reattests` argument, its seed-time refusal and its stamp) and 24 -> 26 with WI-632's typed act ledger (ae3d625e: the standing acts read before the copy, the entry written after). Each lane added its own arm to one function; decomposition is owed on trunk.
 project-trajectory/scripts/baseline_snapshot.py	refresh_ledger	21	25	RE-STAMPED DOWN 23 -> 21 (WI-657): landed with WI-635's row-level refusal (e123eb6d) and was never recorded.
 project-trajectory/scripts/baseline_snapshot.py	unanchored_findings	21	39
 project-trajectory/scripts/bookkeeping.py	_restore	20	35	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row came with WI-612 (c429dd0c) at 22 and fell to 20 with WI-647 (9da560b6): undoing an install path by path, where a dirty in-scope path that no longer matches what the install wrote is somebody else's edit. Repair is owed on trunk.
@@ -56,7 +53,6 @@ project-trajectory/scripts/check_privacy.py	Scanner.scan_line	25	22
 project-trajectory/scripts/check_privacy.py	scan_diff_text	43	39
 project-trajectory/scripts/check_stubs.py	find_stubs	17	19
 project-trajectory/scripts/check_stubs.py	stub_kind	16	24
-project-trajectory/scripts/check_trajectory.py	backlog_staleness_findings	22	32
 project-trajectory/scripts/check_trajectory.py	cell_integrity_errors	24	23
 project-trajectory/scripts/check_trajectory.py	completion_reconciliation_findings	18	45
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
@@ -135,7 +131,6 @@ project-trajectory/scripts/rendering/traj_graph.py	_detour_d	23	44	-10 (33 -> 23
 project-trajectory/scripts/rendering/traj_graph.py	_lane_candidates	18	21	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_graph.py	_route_edges	38	58	-10 (48 -> 38) 2026-10-03, WI-758: lane separation added, then decomposed outward into six sibling helpers (each <= 10) after review; re-stamped downward.
 project-trajectory/scripts/rendering/traj_graph.py	_seg_hits_rect	19	21	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
-project-trajectory/scripts/rendering/traj_panels.py	_next_work_html	22	64	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_render.py	_drill_layer_svg	28	140	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_views.py	_layer_edges	26	26	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_views.py	arch_icicle	53	153	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
@@ -143,7 +138,6 @@ project-trajectory/scripts/rendering/traj_views.py	sw_containment	23	190	RE-KEYE
 project-trajectory/scripts/rendering/traj_views.py	when_view	22	74	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/schedule.py	hard_path_lengths	20	32
 project-trajectory/scripts/schedule.py	kind_of	16	17
-project-trajectory/scripts/schedule.py	load_wis	20	40	2026-10-03, WI-746 (9dbb5103): index pending open-item WI-Refs and attach sorted owner gates while loading scheduler data; malformed/example rows remain excluded and WI rows are not mutated.
 project-trajectory/scripts/score_reviews.py	corroboration	16	21
 project-trajectory/scripts/score_reviews.py	main	26	95
 project-trajectory/scripts/score_reviews.py	parse_verdict	21	39
@@ -176,8 +170,6 @@ project-trajectory/scripts/trace_text.py	provenance_tokens	19	18
 project-trajectory/scripts/traj_parse.py	_okf_nodes	39	49
 project-trajectory/scripts/traj_parse.py	frame_context	19	82
 project-trajectory/scripts/traj_parse.py	runtime_flows	22	26
-project-trajectory/scripts/traj_status.py	_frontier_lines	16	49	2026-10-03, WI-746 (9dbb5103): render ready and blocked scheduler records together, including linked owner gates and the empty-ready case; otherwise the generated frontier hides why queued work cannot start.
-project-trajectory/scripts/traj_status.py	_open_item_oneliners	16	17
 project-trajectory/scripts/trajectory_arch.py	_classifiable_edges	16	27
 project-trajectory/scripts/trajectory_arch.py	_cross_component_scan	19	41
 project-trajectory/scripts/trajectory_arch.py	codesymbol_crosscheck_findings	29	43
