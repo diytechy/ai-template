@@ -99,7 +99,14 @@ Two halves. The second is built only after the owner reviews the first.
    - build on the S11 plan's §6 as ruled, not as open questions (OI-101 Q6).
    - end with a **slice plan**: the build divided into successor rows, each with its own
      lane, Done-when, review and test bar, ordered by `needs` edges (see "Scope widened
-     2026-10-04").
+     2026-10-04");
+   - cover every later section of this spec: each "Scope widened" section, each set of
+     owner directions and rulings, LS1 to LS10, U1, and amendments B1 to B12. It is
+     written as B12's four chapters, with the amend/preserve/retire matrix and the
+     dependency graph. These sections sit outside this Done-when heading only
+     because they accreted later; they bind it (B12);
+   - wait on OI-103 (Q1 to Q6). Each ruling is written into this spec, citing
+     OI-103, before the note is drafted.
 2. **Build what the owner approves, as successor rows.** At the checkpoint the
    coordinator files the slice plan's rows on trunk, and WI-788 closes on the approved
    note. The rows together deliver:
@@ -704,5 +711,149 @@ resumes, at two levels:
     - OpenCode resumes with `--session` from its own data directory.
   - The coordinator's subagent resume (SendMessage) has no store and no log, and
     risk 8 retires it.
+
+## Owner direction 2026-10-04: a rolling usage ledger on trunk
+
+The owner: "the generated usage should roll into WI-788, with the intent a rolling
+token usage with relevant columns is continuously appended at trunk with its own
+items and those of its work-tree lanes. Obviously we won't be able to record
+everything for this project because of how the session in Claude Code runs external
+to those mechanisms, but it is something we'll see in the first down-stream adopter
+checks."
+
+- **U1, the ledger.** One append-only usage ledger on trunk, generated from the
+  session logs. It holds a row per session for trunk's own sessions and every lane's.
+  - **Columns:** date, work item, lane, role or kind, route, provider, CLI, model,
+    the `gen_ai.usage.*` counts, fresh input, cost where known, wall seconds, outcome
+    and session id.
+  - **Recommended mechanism:** lanes keep writing their session logs. `trunk_step`,
+    which already compiles `log.d` into `log.md` at every refresh and bookkeeping
+    commit, appends the rows it has not yet seen. The file is then generated,
+    append-only and conflict-free, the same pattern as the log.
+  - **A discarded lane's usage** is harvested into the ledger before its work is
+    dropped (see OI-103 Q6).
+  - **A hard kill that wrote no session log:** the note designs how to recover its
+    usage, from the CLI's own record by session id or from a launch noted before the
+    session starts.
+  - **Placement:** U1 joins the session-store slice.
+  - **What it cannot cover here:** this repo's coordinator sessions (Claude Code
+    hand sittings and shell-launched reviews) run outside the service and stay
+    unrecorded until risk 8 moves them onto the entry point. The first downstream
+    adopter shows the full picture.
+
+## Amendments from the Sol review (2026-10-04)
+
+Codex Sol (gpt-6.1-sol, high effort, read-only, at `b61f450f`) reviewed the widened
+spec and rated it NOT-READY for design as written. Its brief and review are in
+`docs/reviews/2026-10-04-wi788-widened/`, which also carry its full inventory of
+carriers, modules, spine rows, docs and prompts. The coordinator confirmed findings 2,
+3, 6 and 9 in the code. The amendments below bind the design note and supersede
+earlier text where they differ. The decisions only the owner can make are in OI-103.
+
+- **B1 State: derived evidence, recorded decisions** (supersedes LS1's
+  recommendation and LS10's "same commit" promise).
+  - The provider derives a lane's current state from committed evidence and live
+    ownership (leases, locks, running processes).
+  - Committed records carry decisions (a merge intent, a merge action, a dispute's
+    resolution), never claims that a process or lock is still live.
+  - The note specifies recovery at every effect boundary: lease taken, process
+    launched, trunk advanced, worktree removed. Today's claim already orders its
+    effects so that an interruption is recoverable (`bookkeeping.py:68-80`).
+- **B2 Tree identity.** The merge reproduces the refreshed lane tree byte for byte, and
+  `Bar-Green` attests that exact tree (`integrate.py:9-14`, `kitlib/verdict.py`). So
+  `MERGE` is derived from git ancestry and `ARCHIVE` from refs and worktree inventory,
+  never written into the merged tree. A merge intent is committed before the final
+  bar. The note states where each record lives and which checkout writes it.
+- **B3 Lock coverage.** Locking the merge slot does not stop every writer that can
+  stale a sitting. Claims (under the dispatch lock), intake CLI mints, plan
+  artifacts' id allocation and keep-warm records all commit to trunk outside
+  `out/integrate.lock`.
+  - The adjudication authority must cover every writer that affects the sitting's
+    tree, queue or watermark (OI-103 Q1), and be held through trunk advancement, not
+    just `MERGE_ACTION`.
+  - Only once that coverage holds does the lock replace S11's freshness check.
+- **B4 Lock mechanics.** Risk 5's 20-minute figure bounds a wait to acquire, not how
+  long a sitting holds. The note specifies:
+  - one canonical lock location, an acquisition order, ownership transfer,
+    cancellation and expiry;
+  - waiting outside the merge slot and the dispatcher's tick, with non-blocking
+    scheduling;
+  - that risk 5's fresh session still takes the station authority;
+  - no "run unguarded on an unsupported filesystem" behaviour for this authority
+    (`agent_common.py:946-957`).
+- **B5 Final evidence after adjudication.** `JUDGE` and `MINT` write to the tree after
+  `REFRESH`. So the final independent review (S11 Q4, ruled always owed), the
+  regeneration and the `Bar-Green` bar run on the final staged tree, after every
+  substantive adjudication write. Nothing tracked changes the tree after that before
+  the merge. The note defines the back edge on rejection, and when the lock is
+  released.
+- **B6 The lock is not authorization.** `merge_approval_refusal` also requires
+  first-approval and amendment scopes from claimed adjudication rows
+  (`acceptance_record.py:805-824`; LLR-278, TC-278). These are replaced by an
+  independently recorded, previewed lane scope. Actor independence, held-rung
+  authority, named rows, snapshot coverage and out-of-scope refusals are kept.
+- **B7 Planning has two products.**
+  - An implementation plan for the assigned item, which leads to `BUILD`.
+  - A decomposition (dual-plan), which yields successor rows and a terminal parent.
+  - The selected plan's child allocation moves onto the one serialized allocator,
+    because `plan_artifacts` allocates ids directly today. Parent closure, PAGE
+    recovery and duplicate suppression are defined before automatic admission is
+    restored.
+- **B8 LS3 needs a typed scope declaration.** Today's plan tables carry `Plan-WI`,
+  title, covers, interfaces and predecessors, but no implementation scope and no
+  planner tier. The note adds a typed scope (files and functions), the planning
+  tier, the accepted plan's identity and a threshold (OI-103 Q5). Work that exceeds
+  the declared scope returns to the row's tier, and escalation still overrides.
+- **B9 Conditional resume** (supersedes LS10's unconditional session resume). A lane
+  resumes from evidence. Its session resumes only when its id and ownership are valid
+  under the reset terms. Today a launch exception abandons the retained session
+  (`session_service.py:238-243`), and an expired lease blocks reuse. The note designs
+  durable invocation and session discovery, and promises no finished-session log
+  after a hard interruption.
+- **B10 Attribution for every authoring kind.** Commit ranges are recorded for every
+  authoring kind through the entry point (build, adjudicator edits, author review),
+  and family exclusion comes from all authors of the judged scope, not BUILD logs
+  alone. OI-101 Q1's non-mutating final pass is recorded as the spine-authoring
+  exception to the blanket rule that "a review never runs in a session that authored
+  what it judges".
+- **B11 Precedence, where earlier text conflicts.**
+  - **Retention:** the second-pass defaults win (the shipped adjudicator is retained,
+    the builder resets every call, this repo's dial may stay as it is).
+  - **Spine authoring:** OI-101 Q1 wins over "as an option".
+  - **Risk 6:** it applies on lane and trunk (OI-101 Q2).
+  - **Routes:** Grok and FreeLLMAPI go through OpenCode, and Google is documentation
+    only (OI-101 Q3 and Q4). This supersedes the original per-provider research list
+    where they differ.
+  - **`ARBITRATION`** means selection under the chosen protocol. It does not mandate
+    an arbiter model call.
+  - **Calls and effects:** `ask` owns model and session calls, and the lane provider
+    owns lifecycle effects. Attended and loop paths share one landing operation.
+  - **The successor rows** deliver the whole widened scope, not just the original
+    half-2 bullets.
+  - **S11:** S11's freshness check is replaced only with complete writer exclusion
+    (B3). Its ruled exhaustion behaviour, 3 returns then land, is restated or amended
+    by OI-103 Q2.
+  - **LS9:** its refined wording supersedes the earlier LS9 proposal.
+- **B12 One dependency graph, a design split into chapters, and Done-when coverage.**
+  - **The design** is split into four linked chapters under one owner checkpoint:
+    1. state, evidence and recovery;
+    2. sessions, routing and accounts (including U1);
+    3. planning and tiering;
+    4. adjudication, mint and landing authority.
+
+    It closes with one amend/preserve/retire matrix (rows, contracts, docs, prompts;
+    the review lists them) and one dependency graph. That graph replaces both
+    numbered slice lists above, and successors are named by identifier, not ordinal.
+  - **The build order:** shared contracts, then the session and account foundation
+    with the provider moved onto today's flow unchanged in behaviour, then planning,
+    then adjudication with the text-then-act split and final evidence, then the
+    remaining routes. The provider slice is representation only, with no new locking,
+    minting authority or archive ordering. Homes come early, because retained homes
+    override route environments today.
+  - **Migration:** each successor that ships carries its own RESYNC entry, so
+    migration does not wait for the end.
+  - **Dependencies:** WI-790 (open-item placeholders, the commit-time sync rule,
+    "Decisions to review") and WI-791 (OI-100: need, assumption and surrogate
+    routing; held-rung CLARITY acts) are contracts LS6 consumes, not redesigns.
 
 ## Deliverable

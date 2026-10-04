@@ -3809,3 +3809,26 @@ recommendation = """Q1 (a): one rule, and the confirmation line is the honest re
 wi_refs = ["WI-790"]
 ruled_date = "2026-10-03"
 ruling_ref = "docs/log.d/2026-10-03-owner-rulings-oi100-oi102.md"
+
+[open_item.OI-103]
+title = "WI-788 lane-state design: six owner questions before the design note"
+status = "pending"
+raised = "2026-10-04"
+one_line = """Six decisions before WI-788's design note: what the adjudication lock freezes, what happens at owner input or round exhaustion, whether a resolution needs a fresh review, one landing policy, LS3's tier-reduction threshold, and the lane-recovery rule. Each has a recommendation."""
+decision = """Raised 2026-10-04 by the coordinator. Codex Sol (gpt-6.1-sol, high effort, read-only, at b61f450f) reviewed the widened WI-788 (`docs/reviews/2026-10-04-wi788-widened/`) and rated it NOT-READY for design. Its fixes that need no ruling are WI-788's amendments B1 to B12. These six would otherwise force the note to guess:
+
+1. WHAT THE ADJUDICATION LOCK FREEZES. Locking the merge slot does not stop claims, intake CLI mints, plan-artifact id allocation or keep-warm records from committing to trunk, and any of them can stale a sitting or collide on an id.
+2. OWNER INPUT AND EXHAUSTION. A sitting may need the owner, or may run out of rounds, while it holds the lock.
+3. RESOLVE AND THE REVIEW VERDICT. LS5 lets the adjudicator resolve a builder-reviewer dispute. Open: does that clear a reviewer's CHANGES-REQUESTED, or must a new independent review endorse the resulting tree?
+4. ONE LANDING POLICY. The loop merges with --no-ff and deletes the branch. The coordinator's hand path squashes and keeps lane tips in archive/lanes. One provider needs one policy.
+5. LS3'S TIER REDUCTION. LS3 drops a strong-planned build to medium tier when the plan limits it to one file or a few functions. That needs a mechanical qualifier.
+6. LANE RECOVERY (asked in chat 2026-10-04). Today recovery keeps everything: a resumed session is asked to reconcile the residue, a dirty session's leftovers are stashed, and a partial close commits the residue as-is. The owner leans towards "discard everything except token usage records"."""
+blast_radius = """WI-788 is held until this is ruled (wi_refs), and nothing else is. Q1 sets how long trunk is closed to other writers during a sitting. Q2 decides whether a person's delay can block the station. Q3 adds or saves a review session per resolved dispute. Q4 changes one of the two landing paths for every lane, and how lane history is kept. Q5 sets when a cheaper builder is used. Q6 retires three recovery paths (the reconcile note, the leftover stash, the as-is residue commit) if discard is chosen."""
+options = """- Q1. (a) COMPLETE EXCLUSION: every writer affecting the sitting's tree, queue or watermark waits (claims, mints, acts, keep-warm records). (b) SELECTED WRITES CONTINUE, each with an explicit invalidation and retake rule.
+- Q2. (a) RELEASE AND PARK for owner input: the lock is released, and on return the lane refreshes and is re-judged. Exhaustion keeps S11's ruled behaviour: after 3 returns the lane lands and its unsettled rows are minted. (b) Amend the exhaustion behaviour. Under either option, never wait for a person while holding the lock.
+- Q3. (a) A NEW INDEPENDENT REVIEW endorses the tree after a resolution, with the adjudicator's resolution as evidence. (b) The adjudicator's scoped resolution clears the named findings without another review.
+- Q4. (a) SQUASH, ONE COMMIT PER ITEM, lane tips kept in archive/lanes (today's hand path; a clean trunk history, with the detail recoverable). (b) --NO-FF, keeping the lane's commits on trunk (today's loop; full history in trunk, noisier). Under either, one policy for both paths, with the lane tip recoverable.
+- Q5. (a) A SMALL EXPLICIT THRESHOLD, for example at most N files and M functions, plus the accepted plan's identity; work beyond the declared scope returns to the row's tier. (b) An independently approved scope classification per plan.
+- Q6. (a) DISCARD EVERYTHING EXCEPT TOKEN USAGE: on recovery, harvest the usage into the ledger, then reset the worktree to its last commit. A builder that stops on purpose commits its evidence first, as the worker brief already says. (b) Keep today's model-judged reconcile, stash and as-is commit."""
+recommendation = """Q1 (a): partial exclusion needs a retake rule per writer, which is the complexity the lock exists to remove. Q2 (a): a person's delay must never hold the station, and the exhaustion rule is already ruled. Q3 (a): judgements stay independent; the adjudicator resolves a dispute, and an independent reviewer confirms the result. Q4 (a): one squash commit per item keeps trunk legible, and the archived tip keeps every lane commit recoverable. It is what the hand path already does, so only the loop changes. Q5 (a), with a small N and M the note proposes from the baseline data. Q6 (a): it replaces three recovery paths with one deterministic rule, loses at most one session's uncommitted work, and keeps the usage."""
+wi_refs = ["WI-788"]
