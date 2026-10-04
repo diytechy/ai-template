@@ -1028,7 +1028,7 @@ version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
-notes = """A pending item has at least one queued work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, its SpecRef names a real specification after the item is ruled, and any other changed field is synchronized. The queued citer is the item's placeholder; wi_refs is historical metadata. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
+notes = """A pending item has at least one queued work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, its SpecRef must name a real specification once every item it cites is non-pending, and any other changed field is synchronized. The queued citer is the item's placeholder; wi_refs is historical metadata. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
 
 [interface.IF-074]
 owner = "scripts/gen_open_items"

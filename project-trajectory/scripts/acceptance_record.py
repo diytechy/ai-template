@@ -1906,6 +1906,31 @@ def _tree_specs(root, rev):
     return specs
 
 
+class _UnreadableBlob(Exception):
+    """A path its tree lists whose blob git cannot read (a partial clone
+    offline, a damaged object store). The ruling sync refuses it by name:
+    a failed read is never an absent file (A1)."""
+
+
+def _show(root, prefix, path):
+    """The text of `prefix + path` (`prefix` a `git show` prefix: `"<rev>:"` or
+    `":"` for the index), None when the tree does not list the path; raises
+    `_UnreadableBlob` when it lists the path but its blob cannot be read.
+
+    Implements: SR-148, LLR-298
+    """
+    text = _git(root, ["show", prefix + path])
+    if text is not None:
+        return text
+    if prefix == ":":
+        listed = _git(root, ["ls-files", "--", path])
+    else:
+        listed = _git(root, ["ls-tree", "--name-only", prefix[:-1], "--", path])
+    if listed is None or listed.strip():
+        raise _UnreadableBlob(prefix + path)
+    return None
+
+
 def _registry_states(root, prefix):
     """`{OI id: status}` of the open-items registry in ONE tree (`prefix` a
     `git show` prefix), read through whichever carrier that tree uses (TOML,
@@ -1916,7 +1941,7 @@ def _registry_states(root, prefix):
     Implements: SR-148, LLR-298
     """
     for cand in _spine_carriers(OPEN_ITEMS_REGISTRY):
-        text = _git(root, ["show", prefix + cand])
+        text = _show(root, prefix, cand)
         if text is None:
             continue
         rows = spine_carrier.rows_from_text(text, "OI-ID", "." + cand.rsplit(".", 1)[1])
@@ -1956,7 +1981,7 @@ def _citing_rows(root, base, specs, ruled):
     for wid, path in sorted(specs.items()):
         if not path.startswith(WORK_DIR + "/"):
             continue  # under the archive: terminal, nothing owed
-        text = _git(root, ["show", "{}:{}".format(base, path)])
+        text = _show(root, base + ":", path)
         try:
             data, _body = _kitregistry.parse_spec_frontmatter(text or "", path)
         except ValueError:
@@ -1979,7 +2004,7 @@ def _sync_gap(root, new_prefix, head_path, before_text):
     """
     if head_path is None or not head_path.startswith(WORK_DIR + "/"):
         return None
-    after = _raw_done_when(_git(root, ["show", new_prefix + head_path]))
+    after = _raw_done_when(_show(root, new_prefix, head_path))
     if not after:
         return "it keeps no Done-when"
     if after == _raw_done_when(before_text):
@@ -2013,6 +2038,22 @@ def ruling_sync_lines(root, base, head=None):
         ]
     if not set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(names.splitlines()):
         return []
+    try:
+        return _judged_lines(root, base, head)
+    except _UnreadableBlob as exc:
+        return [
+            "{} is listed in its tree but its contents cannot be read (a partial "
+            "clone offline or a damaged object store), so whether this commit "
+            "rules an open item is unknown; fetch it and retry".format(exc)
+        ]
+
+
+def _judged_lines(root, base, head):
+    """`ruling_sync_lines` once the diff touches the registry: the ruled items,
+    then each citing row. Every blob it reads goes through `_show`.
+
+    Implements: SR-148, LLR-298
+    """
     new_prefix = ":" if head is None else head + ":"
     ruled = _ruled_items(
         _registry_states(root, base + ":"), _registry_states(root, new_prefix)

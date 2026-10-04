@@ -247,6 +247,11 @@ def test_a_parent_the_repository_cannot_read_is_refused_by_name(tmp_path):
     loose.unlink()
     (line,) = ar.commit_ruling_sync_lines(root, sha)
     assert parent[:10] in line and "cannot be read" in line and sha[:10] in line
+    # Sol final review, MAJOR 1: so is a blob its tree lists but the store
+    # cannot read — the parent's registry, or a parent citing spec — never
+    # read as an absent registry or a skipped row.
+    _unreadable_registry_blob_is_refused(tmp_path / "registry")
+    _unreadable_citing_spec_blob_is_refused(tmp_path / "spec")
 
 
 def test_the_csv_carrier_is_judged_like_the_toml_one(tmp_path):
@@ -331,3 +336,48 @@ def test_the_pre_commit_hook_runs_the_ruling_sync_step(tmp_path):
     proc = run_py([SCRIPTS / "check.py", "--run-steps", "ruling-sync"], root)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "WI-001" in proc.stdout + proc.stderr
+
+
+# --- Sol final review, MAJOR 1: a listed path whose blob cannot be read --------
+
+
+def _drop_blob(root, rev, path):
+    """Delete the loose object of `rev:path`: the tree still lists the path,
+    but its blob cannot be read (a partial clone offline, or a damaged store)."""
+    sha = _git(root, "rev-parse", "{}:{}".format(rev, path))
+    loose = root / ".git" / "objects" / sha[:2] / sha[2:]
+    loose.chmod(0o644)  # git writes objects read-only
+    loose.unlink()
+
+
+def _unreadable_registry_blob_is_refused(tmp_path):
+    # A1: a failed read is never an absent registry. Before this fix the
+    # parent's unreadable registry read as "no registry", nothing was pending,
+    # and the stale ruling passed both the staged and the committed checks.
+    root = _base(tmp_path)
+    base = _git(root, "rev-parse", "HEAD")
+    _items(root, OI_5="ruled", OI_6="pending")
+    _git(root, "add", "-A")
+    _drop_blob(root, base, OI)
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert OI in line and "cannot be read" in line
+    sha = _commit(root, "rule OI-5 without the row")
+    (line,) = ar.commit_ruling_sync_lines(root, sha)
+    assert OI in line and "cannot be read" in line
+
+
+def _unreadable_citing_spec_blob_is_refused(tmp_path):
+    # ...and an unreadable citing spec is never dropped from the citing set.
+    root = _base(tmp_path)
+    base = _git(root, "rev-parse", "HEAD")
+    spec = "docs/work/queued/WI-001-row.md"
+    _items(root, OI_5="ruled", OI_6="pending")
+    path = root / spec
+    path.write_text(
+        path.read_text(encoding="utf-8").replace('title = "row"', 'title = "row2"'),
+        encoding="utf-8",
+    )  # a new blob for the row, its Done-when untouched
+    _git(root, "add", "-A")
+    _drop_blob(root, base, spec)
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert spec in line and "cannot be read" in line
