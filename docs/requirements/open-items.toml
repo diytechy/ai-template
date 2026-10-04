@@ -3698,10 +3698,14 @@ ruling_ref = "docs/log.d/2026-10-03-wave9-coordinator.md"
 
 [open_item.OI-100]
 title = "Route amended needs to the existing meaning-or-clarity adjudication, and let a CLARITY verdict re-attest on a held rung"
-status = "pending"
+status = "ruled"
 raised = "2026-10-03"
-one_line = """Owner direction 2026-10-03: a reworded need whose meaning is unchanged is re-approved automatically by the adjudication lane. The kit already has that judgement for requirements, design rows and test cases, but not for needs. Rule two narrow extensions of it: route need (and assumption) amendments to it, and let an adjudicator's CLARITY verdict re-attest on a held rung. No script approves anything; OI-45 stands."""
-decision = """Raised by the coordinator on the owner's direction of 2026-10-03, about the five needs (SN-003, SN-008, SN-009, SN-025, SN-043) that had waited four waves for the owner's re-attestation: "so long as the meaning has not changed, it can be reapproved automatically, this is part of the adjudication lane that I would expect the actual mechanical system to perform, if there appears to be a gap there please raise it as an OI."
+one_line = """RULED 2026-10-03 (a), as recommended. Need, assumption and surrogate amendments route to the existing amendment adjudication. On a held rung, the adjudicator re-attests the rows it rules CLARITY and recommends the MEANING rows to the owner. The brief's CLARITY aftermath names its rows in the act (gap 0). Gap 3's coupling stays. WI-791 builds it."""
+decision = """RULED 2026-10-03 by the owner: "Agreed with recommendation." Option (a), with gap 3's coupling kept, as the recommendation says. WI-791 carries the build. Record: docs/log.d/2026-10-03-owner-rulings-oi100-oi102.md.
+
+Original question follows.
+
+Raised by the coordinator on the owner's direction of 2026-10-03, about the five needs (SN-003, SN-008, SN-009, SN-025, SN-043) that had waited four waves for the owner's re-attestation: "so long as the meaning has not changed, it can be reapproved automatically, this is part of the adjudication lane that I would expect the actual mechanical system to perform, if there appears to be a gap there please raise it as an OI."
 
 THE MECHANISM ALREADY EXISTS; this item extends it and builds nothing parallel.
 
@@ -3732,13 +3736,28 @@ options = """- (a) EXTEND BOTH. Route need, assumption and surrogate amendments 
 - (c) ROUTE ONLY. Make gap 1's decision; keep ruled decision 2 as it stands. The owner's brief then carries an adjudicator's ruling on each need, and the owner signs the CLARITY rows in bulk. FOR: no change to the held-rung doctrine. AGAINST: not automatic, which the owner asked for.
 - Sub-question, any option: gap 3. Either a copy may re-anchor only the named rows of a registry (a row-level anchor: a larger change to the snapshot), or the coupling stays and a MEANING row is signed in the same sitting as its CLARITY siblings."""
 recommendation = """(a). It is the owner's stated expectation, and it reuses WI-388's trigger and brief rather than adding a path. A CLARITY re-attestation approves no new text: it records that the owner's existing signature still describes the row. So process.md §4's purpose (no session approves new text on a held rung) and OI-45's (no script approves) both survive. Keep gap 3's coupling for now: a MEANING need is the owner's to sign, and the coordinator can put it in the same sitting."""
+ruled_date = "2026-10-03"
+ruling_ref = "docs/log.d/2026-10-03-owner-rulings-oi100-oi102.md"
 
 [open_item.OI-101]
 title = "WI-788 readiness: six owner questions before its half-1 design note is written"
-status = "pending"
+status = "ruled"
 raised = "2026-10-03"
-one_line = """Before WI-788's design note: who approves spine text in the draft, edit, final-pass flow; whether the text-then-act split applies on trunk; what FreeAI and SuperGrok mean; what live probing half 1 may do; where the glossary lives; and how the open S11 §6 questions relate. Each has a recommendation."""
-decision = """Raised 2026-10-03 by the coordinator. WI-788's spec was reviewed for unanswered owner decisions, by the coordinator and independently by Codex Sol (gpt-6.1-sol, high effort, read-only, at 6c28d32f). Each claim below was checked against the code. Research the note can settle on its own is not listed here. Six questions would otherwise force the note to guess:
+one_line = """RULED 2026-10-03. Q1 (a): the final pass is the approval act only if it changes nothing, bounded at 3 rounds. Q2 (a): lane and trunk. Q3: Grok and FreeAI both route through OpenCode. Q4: live probing is authorized, and only OpenCode needs it. Q5 (a): a kit-shipped glossary. Q6: the S11 §6 questions were already ruled; the record had missed it. Written into WI-788."""
+decision = """RULED 2026-10-03 by the owner, verbatim: "OI-101: Q1 - Agree with recommendation, Q2-Option a,Q3-I should be able to route FreeAI and grok through OpenCode, are you able to work with that cli or build inferences for it? Q4: Yes but this should only be necessary for OpenCode. Q5: a; Q6: Yes these were already ruled, interesting they are surfacing again, perhaps some documentation was missed."
+
+The coordinator's answer to Q3's question: yes. The kit already drives OpenCode: `session_adapters` has an Opencode adapter, `tests/golden/sessions/opencode-run-json.jsonl` records its `run --format json` stream, and the OPENCODE-KIMI and OPENCODE-GROK routes have run live, with stdin delivery verified on 1.18.29. Probed 2026-10-03 on 1.18.30:
+- `opencode models` lists a free `opencode/*-free` set (big-pickle, mimo-v2.5-free, nemotron-3-ultra-free and others) beside `opencode-go/grok-4.6`.
+- `opencode run -m opencode/big-pickle` answered PONG.
+- `mimo-v2.5-free` returned a server error, and a `--format json` run on big-pickle timed out at 120 s, so the free tier is not reliable.
+
+FreeAI is read as those free models. The WI-788 checkpoint confirms it.
+
+Q6: the repo records the owner's S11 direction ("adjudication in the lane: yes", wave-9 log, 2026-10-03). The plan written afterwards still listed seven §6 questions, and status.md and the handoff carried them as owed. They are now recorded as ruled, as their recommendations stand, in the plan's §6.
+
+Original question follows.
+
+Raised 2026-10-03 by the coordinator. WI-788's spec was reviewed for unanswered owner decisions, by the coordinator and independently by Codex Sol (gpt-6.1-sol, high effort, read-only, at 6c28d32f). Each claim below was checked against the code. Research the note can settle on its own is not listed here. Six questions would otherwise force the note to guess:
 
 1. THE APPROVAL ACT IN THE SPINE-AUTHORING FLOW. The flow is: the adjudicator drafts, the adjudication reviewer edits, and the adjudicator makes a final pass. Under the rule that a judgement never runs in a session that authored what it judges, both sessions are authors. So neither can simply approve. The spec leaves the approval act to the note, but the choice is about authority.
 2. TRUNK SCOPE OF RISK 6. The lane rule is ruled: no commit carries a spine-text change together with a snapshot update. Whether it also applies on trunk, which would retire "amend-plus-flip is approval" (`baseline_snapshot.py:1039`, executable, not only wording), is left as "may need removing". It changes the owner's own held-rung approvals: text is committed first, and the signature lands in a second commit.
@@ -3763,13 +3782,21 @@ options = """- Q1. (a) THE FINAL PASS IS THE ACT, IF IT CHANGES NOTHING: the adj
 - Q6. (a) RULE S11 Q1, Q3, Q4 AND Q7 NOW, BESIDE THIS ITEM, so the note builds on rulings. (b) The note proposes answers to them, and the owner rules both at the half-1 checkpoint."""
 recommendation = """Q1 (a): it keeps the owner's two-session shape and makes independence hold byte by byte; bound it at 3 rounds, like S11 Q2. Q2 (a): one rule everywhere is the no-dual-path direction of risk 7, and a second commit is cheap. Q3: the owner names FreeAI. For SuperGrok, keep the opencode route labelled untested, and add a direct route only for an account the owner actually holds. Q4 (a), plus the names of any accounts this repo should wire. Q5 (a): the term must resolve in an adopter's repo, and PROCESS.md's byte budget stays lean. Q6 (a): these are four short yes-or-no questions that already carry recommendations. Read Q7's "fallback" as a lane with exhausted rounds landing and today's mint taking its rows. If the owner reads that as a second path under risk 7, the note designs it out."""
 wi_refs = ["WI-788"]
+ruled_date = "2026-10-03"
+ruling_ref = "docs/log.d/2026-10-03-owner-rulings-oi100-oi102.md"
 
 [open_item.OI-102]
 title = "WI-790: release-only gates, what the owner sees for an uncited item, and how the sync error knows a ruling happened"
-status = "pending"
+status = "ruled"
 raised = "2026-10-03"
-one_line = """Three decisions before WI-790 is built: whether a person's-act gate must still change its row's Done-when; what open-items.html shows when a pending item has no queued citer; and whether the sync error reads git history or a history-free citation in the Done-when. Recommended: a confirmation criterion, an integrity notice, and the history-free citation."""
-decision = """Raised 2026-10-03 by the coordinator, from Codex Sol's review of WI-790 (`docs/reviews/2026-10-03-wi790-proposal/`; gpt-6.1-sol, high effort, read-only, at 83abd4d2). Sol rated the proposal NOT-SOUND as written. Its fixes that need no ruling are WI-790's amendments A1 to A9. These three would otherwise force the build to guess:
+one_line = """RULED 2026-10-03. Q1 (a): a ruling adds a confirmation criterion. Q2 (a): an integrity notice names uncited pending items. Q3, neither option: the commit that closes an open item is blocked unless the same commit updates or removes the Done-when of each open work item citing it. This needs only the commit's parent, not history. Written into WI-790."""
+decision = """RULED 2026-10-03 by the owner, verbatim: "OI-102: Q1: Agree to recommendation, Q2: Agree to recommendation, Q3: Why does this need git history? A commit should happen at the end of a session iteration. If that session (the adjudicator in this case) touches an OI status to close it without removing or updating the "Done When" section of the corresponding WI, the commit should block. That is neither of the options shown in the OI."
+
+The coordinator's reading of Q3: the rule compares a commit with its own parent (HEAD and the staged tree at the pre-commit hook; each lane commit and its first parent at the merge slot). In that one diff, every open item that leaves `pending` must be matched, for each open work item citing it in the parent tree, by a change to that row's Done-when section (updated or removed), or by the row being removed or closed. No deep history is read, so a shallow clone, a lane or a fresh scaffold behaves the same.
+
+Original question follows.
+
+Raised 2026-10-03 by the coordinator, from Codex Sol's review of WI-790 (`docs/reviews/2026-10-03-wi790-proposal/`; gpt-6.1-sol, high effort, read-only, at 83abd4d2). Sol rated the proposal NOT-SOUND as written. Its fixes that need no ruling are WI-790's amendments A1 to A9. These three would otherwise force the build to guess:
 
 1. A RELEASE-ONLY GATE. OI-98 gates WI-684 on a person's act (the owner's re-sync). WI-684's Done-when already names the observation to make. Under the owner's third-pass rule, ruling OI-98 must still change WI-684's Done-when.
 2. AN UNCITED PENDING ITEM. Design 4 shows a pending item on open-items.html only when a queued work item cites it, and amendment A2 makes an uncited one an ERROR. But a console error is not the owner's surface, and today the page then says "the owner queue is empty". An item whose only citer moved to draft, deferred or terminal, or was deleted, would vanish from the page.
@@ -3780,3 +3807,5 @@ options = """- Q1. (a) REQUIRE A CONFIRMATION CRITERION: recording the ruling ad
 - Q3. (a) GIT HISTORY: the transition is the latest pending-to-ruled change on first-parent history. Staged and merge candidates are compared as children of HEAD by the same engine. Missing history is an ERROR, and the shipped CI sets full-depth checkout. FOR: it compares real before and after text. AGAINST: every place a check runs needs full history, and adopters inherit that requirement. (b) HISTORY-FREE CITATION: the Done-when cites each open item with its state: "OI-NNN (pending)" while unruled, "OI-NNN (ruled)" once decided. It is an ERROR when a ruled item in `needs` has no "(ruled)" citation in the row's Done-when, or the Done-when still cites a ruled item as "(pending)". FOR: it is deterministic in a shallow clone, a staged tree, a merge or a fresh scaffold, with no CI change; it is literally "the work item updated with the OI reference" that the owner described. AGAINST: a citation can change without the criteria changing, but under (a) a cosmetic edit passes too, and the substance is the reviewer's judgement either way."""
 recommendation = """Q1 (a): one rule, and the confirmation line is the honest record that the gate was released. Q2 (a): it keeps the owner's queued-only rule and makes an invalid state visible where the owner looks. Q3 (b): it meets the owner's intent with no history dependency, so it works in every tree the bar checks, including adopters' shallow CI. The marker also makes a Done-when's open unknowns readable at a glance."""
 wi_refs = ["WI-790"]
+ruled_date = "2026-10-03"
+ruling_ref = "docs/log.d/2026-10-03-owner-rulings-oi100-oi102.md"

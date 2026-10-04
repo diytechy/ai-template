@@ -173,22 +173,25 @@ This supersedes the second pass's warn-tier reading. The coordinator's reading:
    - a pending open item that no queued work item cites. The owner could never see
      it.
 
-   One sync ERROR (third pass), joining the exit code. It is a rule of its own, not
-   an arm of the warn-tier backlog-staleness check, which never fails. For each open
-   row and each `OI-###` in its `needs` whose item is no longer `pending`:
-   - Find the transition commit: the commit at which the item's row first reads
-     non-pending (from the registry's history; the row's `ruled_date` is a
-     cross-check, not the clock).
-   - The row's Done-when section, as `kitlib.registry.done_when_section` reads it,
-     must differ between that commit's parent and the tree under check. Equal, or
-     absent at both, is an error that names the row, the item and the transition
-     commit.
-   - Once none of the row's cited items is pending, a `specref` still naming the
-     open-items registry is an error: the row needs its real spec of record.
-   - A row that is terminal in the tree under check is exempt.
-   - The coordinator flags for review: how the rule behaves without the needed
-     history (a shallow clone, an uncommitted ruling in the working tree). Under
-     WI-788 risk 7 it must not grow a second, degraded path.
+   One sync ERROR, a commit-time block (third pass; mechanism OI-102 Q3). The rule
+   reads one diff, a commit against its own parent, and no further history:
+   - For every open item whose row goes from `pending` to non-pending in that diff,
+     take each work item that is open in the parent tree and cites the item in
+     `needs` there.
+   - The same diff must update or remove that row's Done-when section (read from the
+     raw spec text), or remove or close the row.
+   - Otherwise the commit is refused, naming the row and the item.
+   - Removing the `needs` token in the same commit does not discharge the obligation,
+     because the citing set comes from the parent tree.
+   - Where it runs: the pre-commit hook (HEAD against the staged tree), which is where
+     a session iteration's commit lands, and the merge slot, which checks each lane
+     commit against its first parent (as it already does for `Loop-Session`
+     trailers), so a commit made with `--no-verify` is still refused before it reaches
+     trunk. It is one function over two trees in both places, not two rules.
+   - A first commit has an empty parent tree, so it closes nothing. A shallow clone, a
+     lane and a fresh scaffold all have a commit's parent.
+   - Separately, a state check needing no diff: an open row whose cited items are all
+     non-pending must not keep a `specref` naming the open-items registry.
 
    Backlog staleness keeps its two existing arms (SR rows and the SpecRef file). A
    `specref` into the open-items registry is clocked per cited item, not per file.
@@ -200,9 +203,9 @@ This supersedes the second pass's warn-tier reading. The coordinator's reading:
    - `schedule`'s `waiting:open-item-pending` reason folds into the single blocked
      disposition, which leaves no second state.
 8. **Migration.**
-   - OI-98's and OI-101's `wi_refs` move into WI-684's and WI-788's `needs`, and
-     those pending rows lose the cell.
-   - OI-100 gets a queued placeholder row: the build of its gaps.
+   - OI-98's `wi_refs` moves into WI-684's `needs`, and that pending row loses the
+     cell. OI-100, OI-101 and OI-102 were ruled on 2026-10-03, so their `wi_refs` stay
+     as history. OI-100's build row is WI-791.
    - Ruled rows keep `wi_refs` as history.
    - The RESYNC entry does the same for adopters, with no transition reader kept
      (WI-788 risk 9).
@@ -217,8 +220,8 @@ coordinator checked findings 3 to 7 against the code. The amendments below bind 
 build and supersede the design text where they differ. Three decisions are the
 owner's, in OI-102.
 
-- **A1 Sync error (design 6).** The mechanism waits on OI-102 Q3. What holds either
-  way:
+- **A1 Sync error (design 6).** The mechanism is design 6's commit-time block
+  (OI-102 Q3, ruled 2026-10-03). Also binding:
   - Read the Done-when from the raw spec text (`registry.done_when_section` over the
     whole file), never from the Deliverable parse, which clips at `## Context`.
   - An affected open row must keep a non-empty Done-when.
@@ -226,15 +229,15 @@ owner's, in OI-102.
   - The script decides only the mechanical condition. Whether the change carries the
     ruling, and whether `title`, `buildtier`, `sr_refs` or `safety_class` must move,
     is the independent reviewer's judgement. No script approves anything (OI-45).
-  - Whatever input the mechanism needs, its absence is an ERROR, never a skipped
-    comparison. Design 6's open paragraph on missing history is replaced by OI-102
-    Q3's answer.
+  - The rule reads only a commit and its parent, so it never skips for missing
+    history, and it has no second path.
 - **A2 Uncited pending items (design 4, design 6).** The uncited-pending finding is
   an unconditional ERROR (not only under `--strict`). It is evaluated before
   `check_trajectory`'s "vacuously clean" return, which today exits before any
   open-item finding when no work items exist. Cards, counts, the status entries and
-  the finding come from one queue projection. What the owner sees while an uncited
-  item exists is OI-102 Q2.
+  the finding come from one queue projection. While any uncited pending item
+  exists, `open-items.html` shows an integrity notice naming each one, linked to its
+  registry record, and drops the "owner queue is empty" claim (OI-102 Q2).
 - **A3 Every `wi_refs` consumer goes (design 3).** The consumers:
   - readiness (`schedule.py` around :315-339);
   - `check_trajectory.open_item_wi_ref_findings`, which is deleted;
@@ -308,21 +311,29 @@ owner's, in OI-102.
   a queued, blocked row citing the new item.
 - `check_trajectory` reports a `needs` OI token that resolves to no open item, and a
   pending open item that no queued work item cites.
-- `check_trajectory` fails (exit code, not only `--strict`) when an item cited in an
-  open row's `needs` has left `pending` and the row's Done-when is unchanged since the
-  transition, or its `specref` still names the open-items registry with no cited item
-  pending. The error names the row, the item and the transition commit. Tests cover:
-  - a row citing two items, one ruled without the Done-when updated (one error);
-  - the same ruling with the Done-when updated in the ruling commit (clean);
-  - a Done-when updated in a later commit (clean from that commit);
-  - a row closed in the ruling commit (exempt);
-  - a placeholder whose `specref` still names the registry after its last item is
-    ruled (error);
-  - a placeholder not warned by an unrelated new open item.
+- A commit whose diff takes an open item out of `pending` is refused, at the
+  pre-commit hook and for every lane commit at the merge slot, unless the same diff
+  updates or removes the Done-when of each row that cites the item in the parent tree
+  (or removes or closes that row). The refusal names the row and the item. Tests
+  cover:
+  - a row citing two items, one ruled without its Done-when touched (refused);
+  - the same ruling with the Done-when updated in that commit (accepted);
+  - the token removed in the ruling commit with the Done-when untouched (refused);
+  - a row closed in the ruling commit (accepted);
+  - a lane commit made with `--no-verify` that breaks the rule (refused at the merge
+    slot);
+  - a first commit (nothing to close).
+- `check_trajectory` fails when an open row whose cited items are all non-pending
+  still names the open-items registry as its `specref`. Backlog staleness clocks a
+  registry `specref` per cited item, with a test that an unrelated new item warns no
+  placeholder.
 - The disposition brief, the open-item template header and the ruling procedure say
-  that ruling an item updates the rows citing it in the same change: their
-  Done-when, a real `specref`, and `title`, `buildtier`, `sr_refs` and
-  `safety_class` where they change.
+  that ruling an item updates the rows citing it in the same commit: their Done-when,
+  a real `specref`, and `title`, `buildtier`, `sr_refs` and `safety_class` where they
+  change. Even a gate on a person's act gets a confirmation criterion citing the
+  item, for example "OI-98 ruled 2026-10-NN: the re-sync was performed" (OI-102 Q1).
+- `open-items.html` shows the integrity notice for uncited pending items, with tests
+  (OI-102 Q2).
 - A row held by a pending open item reads as blocked, with the item named, in
   `schedule`, status.md's Blocked list and the Next-work card. No `waiting` state is
   left for open-item edges.
@@ -337,5 +348,6 @@ owner's, in OI-102.
 - Migration as in design 8. The status.md filing note is updated.
 - A RESYNC_PACK entry migrates adopters.
 - The commit bar passes.
-- The amendments A1 to A9 are built. OI-102's rulings (Q1 to Q3) are written into
-  this spec, citing OI-102, before the build starts.
+- The amendments A1 to A9 are built, with OI-102's rulings (2026-10-03): Q1 is the
+  confirmation criterion, Q2 is the integrity notice, and Q3 is design 6's commit-time
+  block.

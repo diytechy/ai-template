@@ -316,6 +316,22 @@ of sittings (its need largely goes). Option (d) stays its own plan, now smaller.
 
 **Questions for the owner:**
 
+> **Ruled 2026-10-03.** The owner stated these questions were already ruled (OI-101 Q6,
+> `docs/log.d/2026-10-03-owner-rulings-oi100-oi102.md`). The repo had recorded only the
+> direction ("adjudication in the lane: yes", wave-9 log), so they are recorded here as
+> their recommendations stand:
+> - Q1: yes.
+> - Q2: 3 returns.
+> - Q3: the same adjudicator, resumed.
+> - Q4: the final review is always owed.
+> - Q5: keep the recommend-only sitting for now.
+> - Q6: a session retakes a stale act.
+> - Q7: one path, no dial.
+>
+> Under the owner's no-fallback rule (WI-788 risk 7), Q7's "fallback" is not a second
+> code path: a lane whose rounds are exhausted lands, and today's mint takes its
+> unsettled rows.
+
 1. Amend the 2026-09-01 ruling so that an independent adjudicator session may take
    the approval act in the authoring lane, as that lane's last commit, scoped to the
    rows the lane itself drafted or amended, and admitted only if no other act reached

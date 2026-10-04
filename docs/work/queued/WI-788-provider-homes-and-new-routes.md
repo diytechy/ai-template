@@ -76,10 +76,21 @@ Two halves. The second is built only after the owner reviews the first.
 
    STOP at the note. The owner rules before any build.
 
-   Unknowns this half waits on: OI-101, Q1 to Q6 (the spine-authoring approval act,
-   risk 6 on trunk, what FreeAI and SuperGrok name, half-1 probing and accounts, the
-   glossary's home, the S11 §6 overlap). Each ruling is written into this spec,
-   citing OI-101, before the note is drafted.
+   OI-101 (ruled 2026-10-03) settles what was unknown. The note must also:
+   - state the spine-authoring approval act as the adjudicator's final pass, valid
+     only if that pass changes nothing; any change goes back to the adjudication
+     reviewer, and the cycle is bounded at 3 rounds (OI-101 Q1);
+   - apply risk 6 on lane and trunk: no commit changes spine text together with a
+     snapshot update, which retires "amend-plus-flip is approval" everywhere
+     (OI-101 Q2);
+   - route Grok and FreeAI through OpenCode. FreeAI is OpenCode's free `opencode/*-free`
+     models (confirm at the checkpoint). Add no separate xAI or SuperGrok CLI route
+     (OI-101 Q3);
+   - live-probe OpenCode only (authorized). Google's CLI is researched from its
+     documentation and its route is marked untested (OI-101 Q4);
+   - put the glossary in a kit-shipped `project-trajectory/GLOSSARY.md`, linked from
+     PROCESS.md (OI-101 Q5);
+   - build on the S11 plan's §6 as ruled, not as open questions (OI-101 Q6).
 2. **Build what the owner approves.**
    - Route rows in `docs/agents.toml`, and in the shipped template where adopters need
      them.
@@ -149,7 +160,7 @@ How it compares with the code (checked 2026-10-03):
 
 Added to Done-when half 1 (the design note, owner checkpoint):
 
-- `docs/glossary.md`, referenced from PROCESS.md, with one term per concept:
+- `project-trajectory/GLOSSARY.md` (kit-shipped; OI-101 Q5), referenced from PROCESS.md, with one term per concept:
   - adjudicator (a role performed by a session, retained under declared reset terms);
   - session family;
   - reset terms;
