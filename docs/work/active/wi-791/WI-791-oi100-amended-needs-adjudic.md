@@ -2,8 +2,8 @@
 id = "WI-791"
 title = "Route amended needs to the meaning-or-clarity adjudication; CLARITY re-attests on a held rung"
 workstream = "process"
-specref = "docs/requirements/open-items.toml"
-sr_refs = []
+specref = "docs/requirements/system-requirements.toml#SR-228"
+sr_refs = ["SR-178", "SR-207", "SR-228"]
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"

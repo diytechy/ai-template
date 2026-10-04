@@ -654,7 +654,102 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 1 chain(s): SR-224</summary>
+<summary>Waiting for automated adjudication — 4 chain(s): SR-174, SR-178, SR-224, SR-228</summary>
+
+## SR-174 — Work-item identity is allocated once and never re-issued
+
+> **Requirement.** The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued.
+
+> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion.
+
+
+### LLR LLR-153
+_approved — re-attestation owed_
+- **Detail**
+  - before: The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SN-Refs, Verifies, and LLR SR-Refs per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers. flip_verified recommends only under attended, flips under single-approve/autonomous, and fails toward recommend on an unknown level. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent.
+  - after: The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments -> one amendment adjudication row listing each changed row/cell/before-after, including need, assumption and surrogate rows; (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers. adjudication_action recommends a held-rung MEANING verdict and permits its CLARITY re-attestation while retaining the first-approval hold; flip_verified recommends only under attended, flips under single-approve/autonomous, and fails toward recommend on an unknown level. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: intake_after_merge/mint_gap_rows/parse_dispositions/next_wi_id/context_block/flip_verified
+  - after: intake_after_merge/_amendment_drafts/mint_gap_rows/parse_dispositions/next_wi_id/context_block/adjudication_action/flip_verified
+- **SR-Refs**
+  - before: SR-174
+  - after: SR-174;SR-228
+
+### TC TC-147
+- **Evidence**
+  - before: tests/test_intake.py
+  - after: tests/test_intake.py::test_an_amended_approved_need_mints_one_amendment_row; tests/test_intake.py::test_amended_approved_assumption_and_surrogate_mint_one_row; tests/test_intake.py
+- **Verifies**
+  - before: SR-174;LLR-153;IF-091
+  - after: SR-174;SR-228;LLR-153;IF-091
+
+## SR-178 — Text that has moved away from its acceptance record is reported
+
+> **Requirement.** The kit shall report any recorded artifact whose text has moved away from the
+copy recording its acceptance - stakeholder needs included - regardless of any
+Status movement.
+
+> **Rationale.** THE DRIFT half, separable from SR-140 in the direction that matters: a record that exists and rides its approval commit, with nothing ever comparing live text against it, satisfies SR-140 completely and leaves every later amendment invisible. That is not a hypothetical - it is precisely the failure the git-history derivation had, and the reason a baseline on disk was owed at all.
+REGARDLESS OF STATUS MOVEMENT is the load-bearing clause, not a qualifier. The amendment machinery watches the Status flip, and the sanctioned staged-amendment path deliberately does not flip - so a rule keyed off the flip returns nothing on exactly the rows a sitting exists to judge. Reporting against the recorded copy is the only reading that survives that, because the copy is a baseline OUTSIDE the live file and a walk over the live file can never be one.
+THE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acceptance because the need tier is the one a sitting most wants to hold and the one the amendment-watching rules were last to reach: each rule walks the tiers it is given, so without the clause the need tier is left off the walk and no rule reaches it. Needs are compared row by row under the same approved and traced split as every other tier.
+WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in would … [231 more chars — read the registry row]
+
+
+### SR SR-178
+- **AcceptanceCriteria**
+  - before: An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; an approved cell moving under a row still claiming approval is reported, a merely traced cell moving is not, and a row below approval has no claim to fall from and is never reported; the status marker itself is never read as the movement, so a flip is neither an amendment nor a mask for one; and a stakeholder need is held to the same rule.
+  - after: An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; an approved cell moving under a row still claiming approval is reported, a merely traced cell moving is not, and a row below approval has no claim to fall from and is never reported; the status marker itself is never read as the movement, so a flip is neither an amendment nor a mask for one; and stakeholder needs, assumptions and surrogates are held to the same rule.
+
+### LLR LLR-158
+- **CodeSymbol**
+  - before: split_changed_cells/spine_cell_class/_APPROVED_TEXT/_spine_row_sides/staged_spine_amendments/_approval_act/staged_approval_acts/staged_drafted_rows/lane_approval_refusal/SPINE_CSVS/APPROVAL_ACT_CSVS/OUTSIDE_THE_APPROVAL_ACT
+  - after: split_changed_cells/spine_cell_class/_APPROVED_TEXT/_spine_row_sides/staged_spine_amendments/_amended_cells/_approval_act/staged_approval_acts/staged_drafted_rows/lane_approval_refusal/SPINE_CSVS/AMENDMENT_CSVS/APPROVAL_ACT_CSVS/OUTSIDE_THE_APPROVAL_ACT
+
+### LLR LLR-271
+- **CodeSymbol**
+  - before: NEED_TIERS/load_all/owing_rows/needs_owing/_approved_by_act/need_brief_lines
+  - after: NEED_TIERS/load_all/owing_rows/needs_owing/tier_owing/_approved_by_act/need_brief_lines
+
+### LLR LLR-278
+_approved — re-attestation owed_
+- **Detail**
+  - before: acceptance_record.merge_approval_refusal calls reattest_scope_refusal first for an adjudication lane, and it acts only when the merge delta wrote the act ledger. reattested_between reads the ledger at the merge base and the head and takes the ids re-attested by the entries whose seq the base does not hold, refusing by name when either side does not parse. Every such id outside amendment_scope - the union of the Adjudicates cells of the claimed amendment rows, empty when none is claimed - is refused by name before the first-approval judgement runs. An act that both approves rows and re-attests rows, claimed by a first-approval row and an amendment row together, merges when each half lies inside the scope of the row claiming it.
+  - after: acceptance_record.merge_approval_refusal calls reattest_scope_refusal and held_reattest_refusal for an adjudication lane, and they act only when the merge delta wrote the act ledger. reattested_between reads the ledger at the merge base and the head and takes the ids re-attested by the entries whose seq the base does not hold, refusing by name when either side does not parse. Every such id outside amendment_scope - the union of the Adjudicates cells of the claimed amendment rows, empty when none is claimed - is refused by name before the first-approval judgement runs. For a re-attested row whose tier trunk's dial holds, held_reattest_refusal reads the named verdict at the merge head and refuses unless verdict_rulings records that row as CLARITY; a MEANING ruling wins a conflicting tag. An act that both approves rows and re-attests rows, claimed by a first-approval row and an amendment row together, merges when each half lies inside the scope of the row claiming it and every held re-attestation has its CLARITY verdict.
+- **Title**
+  - before: A re-attestation held at merge to its amendment row's scope
+  - after: An adjudication re-attestation constrained at merge
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: amendment_scope/reattested_between/reattest_scope_refusal
+  - after: amendment_scope/reattested_between/_wrote_ledger/verdict_rulings/held_reattest_refusal/reattest_scope_refusal
+- **SR-Refs**
+  - before: SR-178
+  - after: SR-178;SR-228
+
+### TC TC-153
+- **Evidence**
+  - before: tests/test_baseline_snapshot.py::test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip; tests/test_baseline_drift.py::test_a_approved_cell_moving_under_an_approved_row_is_DRIFT; tests/test_baseline_drift.py::test_a_TRACED_cell_moving_is_NOT_drift; tests/test_baseline_drift.py::test_status_itself_is_never_the_amendment; tests/test_baseline_drift.py::test_a_row_below_approval_can_never_be_drifted
+  - after: tests/test_acceptance_record.py::test_the_amendment_walk_covers_every_tier_an_approval_act_blesses; tests/test_trajectory_staged.py::test_an_approved_needs_amendment_is_recorded_and_warned; tests/test_baseline_snapshot.py::test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip; tests/test_baseline_drift.py::test_a_approved_cell_moving_under_an_approved_row_is_DRIFT; tests/test_baseline_drift.py::test_a_TRACED_cell_moving_is_NOT_drift; tests/test_baseline_drift.py::test_status_itself_is_never_the_amendment; tests/test_baseline_drift.py::test_a_row_below_approval_can_never_be_drifted
+- **Verifies**
+  - before: SR-178;LLR-158
+  - after: SR-178;LLR-158;IF-091
+
+### TC TC-278
+_approved — re-attestation owed_
+- **Expected**
+  - before: Satisfies LLR-278 (parent SR-178): a re-attestation outside the amendment row's Adjudicates scope is refused at merge by name, and an act whose approvals and re-attestations each lie in the scope of the row claiming them merges.
+  - after: Satisfies LLR-278 (parents SR-178 and SR-228): a re-attestation outside the amendment row's Adjudicates scope is refused at merge by name; on a held rung only a verdict ruling the row CLARITY permits it; and an act whose approvals and re-attestations each lie in the scope of the row claiming them merges.
+- **Method**
+  - before: Driven on real git repositories made from scaffolds. An adjudication lane claiming an amendment row scoped to one requirement, whose act re-attests two amended requirements, is refused at merge naming the one outside the scope; an act re-attesting only the scoped row merges, and the same act claimed by a first-approval row is refused naming the row, since that lane holds no re-attestation scope. One act that approves a Drafted requirement and re-attests an amended one, claimed by a first-approval row scoped to the first and an amendment row scoped to the second, merges; the same act whose amendment row is scoped to another requirement is refused naming the re-attested row.
+  - after: Driven on real git repositories made from scaffolds. An adjudication lane claiming an amendment row scoped to one requirement, whose act re-attests two amended requirements, is refused at merge naming the one outside the scope; an act re-attesting only the scoped row merges, and the same act claimed by a first-approval row is refused naming the row, since that lane holds no re-attestation scope. With the rung held, a re-attestation without a verdict or with a MEANING verdict is refused by row, while a verdict ruling that row CLARITY merges. One act that approves a Drafted requirement and re-attests an amended one, claimed by a first-approval row scoped to the first and an amendment row scoped to the second, merges; the same act whose amendment row is scoped to another requirement is refused naming the re-attested row.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_snapshot_readers.py::test_a_reattestation_outside_the_amendment_scope_is_refused_by_name; tests/test_snapshot_readers.py::test_a_reattestation_inside_the_amendment_scope_merges; tests/test_snapshot_readers.py::test_a_mixed_approval_and_reattestation_act_merges; tests/test_snapshot_readers.py::test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused
+  - after: tests/test_snapshot_readers.py::test_a_reattestation_outside_the_amendment_scope_is_refused_by_name; tests/test_snapshot_readers.py::test_a_reattestation_inside_the_amendment_scope_merges; tests/test_snapshot_readers.py::test_a_held_rung_reattestation_without_a_verdict_is_refused; tests/test_snapshot_readers.py::test_a_held_rung_reattestation_its_verdict_rules_CLARITY_merges; tests/test_snapshot_readers.py::test_a_held_rung_reattestation_of_a_MEANING_row_is_refused; tests/test_snapshot_readers.py::test_a_mixed_approval_and_reattestation_act_merges; tests/test_snapshot_readers.py::test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused
+- **Verifies**
+  - before: SR-178;LLR-278;IF-091
+  - after: SR-178;SR-228;LLR-278;IF-091
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
@@ -676,6 +771,78 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Priority**: C
 - **Verification**: Test
 - **Status**: Drafted
+- **Phase**: 6
+
+## SR-228 — Held-rung CLARITY re-attestation
+
+> **Requirement.** Where the declared approval level holds a tier for a human, the delivered loop shall permit an independent adjudication to re-attest an approved amended row only when its verdict rules that amendment CLARITY.
+
+> **Rationale.** SN-029 delegates review on released tiers without skipping it, but an approved row whose wording is clarified on a held tier remains anchored to a signature the owner already gave. Treating that unchanged meaning as a new approval would strand every clarification with the owner; treating a meaning change the same way would carry a signature onto text the owner did not read. The verdict boundary keeps those alternatives separate: only the independent judgement that the signature still describes the row permits re-attestation, while a meaning change remains the owner's decision.
+
+_No approved baseline — absent from the docs/archive/last_approved snapshot — awaiting its first approval; current state only._
+
+### SR SR-228 (current)
+- **SR-ID**: SR-228
+- **Title**: Held-rung CLARITY re-attestation
+- **SN-Refs**: SN-029
+- **Boundary-Refs**: B-02
+- **Hat-Refs**: SECURITY
+- **Requirement**: Where the declared approval level holds a tier for a human, the delivered loop shall permit an independent adjudication to re-attest an approved amended row only when its verdict rules that amendment CLARITY.
+- **Rationale**: SN-029 delegates review on released tiers without skipping it, but an approved row whose wording is clarified on a held tier remains anchored to a signature the owner already gave. Treating that unchanged meaning as a new approval would strand every clarification with the owner; treating a meaning change the same way would carry a signature onto text the owner did not read. The verdict boundary keeps those alternatives separate: only the independent judgement that the signature still describes the row permits re-attestation, while a meaning change remains the owner's decision.
+- **AcceptanceCriteria**: On a held tier, an adjudication act re-attesting a row is refused unless its recorded verdict names that row as CLARITY; a MEANING verdict and an absent, unreadable or non-CLARITY verdict are refused by row; the recorded act names the verdict for later audit; and a first draft is not re-attested under this allowance.
+- **Priority**: S
+- **Verification**: Test
+- **Status**: Drafted
+- **Phase**: 6
+- **Aspect**: process
+
+### LLR LLR-153 (current)
+- **LLR-ID**: LLR-153
+- **SR-Refs**: SR-174;SR-228
+- **Title**: The unified trunk-side intake mint + the context block + the approval-level arms
+- **Module**: project-trajectory/scripts/intake.py
+- **CodeSymbol**: intake_after_merge/_amendment_drafts/mint_gap_rows/parse_dispositions/next_wi_id/context_block/adjudication_action/flip_verified
+- **Detail**: The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments -> one amendment adjudication row listing each changed row/cell/before-after, including need, assumption and surrogate rows; (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-neve… [430 more chars — read the registry row]
+- **Rationale**: A detected event must FORCE a row into the registry with nobody watching, and an id two lanes could pick at once must stay unrepresentable (R1).
+- **TestRefs**: (see TC-147)
+- **Status**: Approved
+- **Component**: CMP-008
+- **Phase**: 4
+
+### LLR LLR-278 (current)
+- **LLR-ID**: LLR-278
+- **SR-Refs**: SR-178;SR-228
+- **Title**: An adjudication re-attestation constrained at merge
+- **Module**: project-trajectory/scripts/acceptance_record.py
+- **CodeSymbol**: amendment_scope/reattested_between/_wrote_ledger/verdict_rulings/held_reattest_refusal/reattest_scope_refusal
+- **Detail**: acceptance_record.merge_approval_refusal calls reattest_scope_refusal and held_reattest_refusal for an adjudication lane, and they act only when the merge delta wrote the act ledger. reattested_between reads the ledger at the merge base and the head and takes the ids re-attested by the entries whose seq the base does not hold, refusing by name when either side does not parse. Every such id outside amendment_scope - the union of the Adjudicates cells of the claimed amendment rows, empty when none is claimed - is refused by name before the first-approval judgement runs. For a re-attested row whose tier trunk's dial holds, held_reattest_refusal reads the named verdict at the merge head and refuses unless verdict_rulings records that row as CLARITY; a MEANING ruling wins a conflicting tag. An act that both approves rows and re-attests rows, claimed by a first-approval row and an amendment row together, merges when each half lies inside the scope of the row claiming it and every held re-attestation has its CLARITY verdict.
+- **Rationale**: At merge the first-approval scope check read flips alone, and a re-attestation moves no cell, so an amendment act could re-anchor rows its verdict never ruled. The act ledger is the one record naming the rows each act re-attested, which makes the scope checkable where the merge is judged; a lane claiming no amendment has ruled no amended text, so it may re-anchor none.
+- **Status**: Approved
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-147 (current)
+- **TC-ID**: TC-147
+- **Verifies**: SR-174;SR-228;LLR-153;IF-091
+- **Level**: Integration
+- **Method**: Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): an approved SR amendment mints ONE adjudication row (id max+1, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-approve and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent).
+- **Tier**: Full
+- **Expected**: Satisfies SR-174 AcceptanceCriteria via the LLR-153 detail contract
+- **Automated**: Yes
+- **Evidence**: tests/test_intake.py::test_an_amended_approved_need_mints_one_amendment_row; tests/test_intake.py::test_amended_approved_assumption_and_surrogate_mint_one_row; tests/test_intake.py
+- **Status**: Approved
+- **Phase**: 4
+
+### TC TC-278 (current)
+- **TC-ID**: TC-278
+- **Verifies**: SR-178;SR-228;LLR-278;IF-091
+- **Level**: Integration
+- **Method**: Driven on real git repositories made from scaffolds. An adjudication lane claiming an amendment row scoped to one requirement, whose act re-attests two amended requirements, is refused at merge naming the one outside the scope; an act re-attesting only the scoped row merges, and the same act claimed by a first-approval row is refused naming the row, since that lane holds no re-attestation scope. With the rung held, a re-attestation without a verdict or with a MEANING verdict is refused by row, while a verdict ruling that row CLARITY merges. One act that approves a Drafted requirement and re-attests an amended one, claimed by a first-approval row scoped to the first and an amendment row scoped to the second, merges; the same act whose amendment row is scoped to another requirement is refused naming the re-attested row.
+- **Tier**: Full
+- **Expected**: Satisfies LLR-278 (parents SR-178 and SR-228): a re-attestation outside the amendment row's Adjudicates scope is refused at merge by name; on a held rung only a verdict ruling the row CLARITY permits it; and an act whose approvals and re-attestations each lie in the scope of the row claiming them merges.
+- **Automated**: Yes
+- **Evidence**: tests/test_snapshot_readers.py::test_a_reattestation_outside_the_amendment_scope_is_refused_by_name; tests/test_snapshot_readers.py::test_a_reattestation_inside_the_amendment_scope_merges; tests/test_snapshot_readers.py::test_a_held_rung_reattestation_without_a_verdict_is_refused; tests/test_snapshot_readers.py::test_a_held_rung_reattestation_its_verdict_rules_CLARITY_merges; tests/test_snapshot_readers.py::test_a_held_rung_reattestation_of_a_MEANING_row_is_refused; tests/test_snapshot_readers.py::test_a_mixed_approval_and_reattestation_act_merges; tests/test_snapshot_readers.py::test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused
+- **Status**: Approved
 - **Phase**: 6
 
 </details>
