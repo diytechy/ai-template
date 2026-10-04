@@ -167,7 +167,7 @@ This supersedes the second pass's warn-tier reading. The coordinator's reading:
    - **A placeholder may hold nothing but its open item:** a `title`,
      `safety_class`, `needs = ["OI-###"]`, and a `specref` naming the open-items
      registry, which is its spec of record until the ruling. It needs no Done-when.
-     The ruling fills it in (design 2), and design 6's sync warning prompts that.
+     The ruling fills it in (design 2), and design 6's sync error enforces that.
 6. **Checks.** Two `check_trajectory` findings:
    - a `needs` token that names no open item;
    - a pending open item that no queued work item cites. The owner could never see
@@ -206,6 +206,89 @@ This supersedes the second pass's warn-tier reading. The coordinator's reading:
    - Ruled rows keep `wi_refs` as history.
    - The RESYNC entry does the same for adopters, with no transition reader kept
      (WI-788 risk 9).
+
+## Amendments from the Sol review (2026-10-03)
+
+Codex Sol (gpt-6.1-sol, high effort, read-only, at `83abd4d2`) reviewed this
+proposal and rated it NOT-SOUND as written: the edge reversal is buildable, but
+design 6 was under-defined, and designs 3 to 5 missed readers, writers and checks.
+Its brief and review are in `docs/reviews/2026-10-03-wi790-proposal/`. The
+coordinator checked findings 3 to 7 against the code. The amendments below bind the
+build and supersede the design text where they differ. Three decisions are the
+owner's, in OI-102.
+
+- **A1 Sync error (design 6).** The mechanism waits on OI-102 Q3. What holds either
+  way:
+  - Read the Done-when from the raw spec text (`registry.done_when_section` over the
+    whole file), never from the Deliverable parse, which clips at `## Context`.
+  - An affected open row must keep a non-empty Done-when.
+  - Removing a `needs` token does not discharge a ruling's obligation.
+  - The script decides only the mechanical condition. Whether the change carries the
+    ruling, and whether `title`, `buildtier`, `sr_refs` or `safety_class` must move,
+    is the independent reviewer's judgement. No script approves anything (OI-45).
+  - Whatever input the mechanism needs, its absence is an ERROR, never a skipped
+    comparison. Design 6's open paragraph on missing history is replaced by OI-102
+    Q3's answer.
+- **A2 Uncited pending items (design 4, design 6).** The uncited-pending finding is
+  an unconditional ERROR (not only under `--strict`). It is evaluated before
+  `check_trajectory`'s "vacuously clean" return, which today exits before any
+  open-item finding when no work items exist. Cards, counts, the status entries and
+  the finding come from one queue projection. What the owner sees while an uncited
+  item exists is OI-102 Q2.
+- **A3 Every `wi_refs` consumer goes (design 3).** The consumers:
+  - readiness (`schedule.py` around :315-339);
+  - `check_trajectory.open_item_wi_ref_findings`, which is deleted;
+  - intake's context join (`intake._pending_oi_lines`, which reads `WI-Refs`), which
+    now joins kin rows' `needs` tokens;
+  - `gen_open_items`, which derives citing rows from the queue projection.
+
+  Historical `wi_refs` is opaque metadata that the carrier preserves. No consumer of
+  readiness, validation, context selection or rendering derives a relationship from
+  it.
+- **A4 Schema sync (design 3).** `wi_refs` stays in `kitlib/spine.OFFSPINE_KEYS` as
+  declared historical metadata. `tests/test_dogfood_sync.py` tells historical keys
+  apart from keys a new row authors, so the template can drop the key from its rows
+  while this repo's ruled rows keep it. There is no blanket exemption for the
+  registry.
+- **A5 Every open-item creation path pairs a placeholder (design 5).**
+  - The shipped template's pending OI-1 and OI-2 cite only `WI-000`. They become
+    inert examples (the `-000` convention) or ship with paired placeholder rows.
+  - Bootstrap's OI-3 is created together with its queued placeholder row, and both
+    watermarks are raised.
+  - The RESYNC entry migrates every pending adopter item, including those with no
+    `wi_refs`.
+- **A6 Placeholder validity (design 5).**
+  - The minimum is: `id` and a valid filename, `title`, `safety_class`, the `needs`
+    token, and a resolving `specref`.
+  - `_inject_open_item` supplies the registry reference when the successor has no
+    real `specref`, because `_draft_row` writes an omitted one as empty.
+  - The disposition brief's minimum says so.
+  - The reference is row-specific (`docs/requirements/open-items.toml#OI-NNN`). The
+    staleness clock and LLR-160's shared-spec overlap read it per item. The build
+    confirms that R-E resolves such an anchor.
+- **A7 Surfacing (design 7).** A rename of the reason code is not enough:
+  - gating ids and titles are filled in from `oi_preds`;
+  - blocked records join Next-work;
+  - status.md reuses the same records;
+  - a row with both kinds of edge keeps its work-item waiting reason as well;
+  - a missing open item stays unsatisfied, under the existing dangling-edge ERROR.
+- **A8 Definitions (passes and design).**
+  - The trigger is the registry state, a row going from `pending` to non-pending. It
+    is not page membership: design 4 also drops an item from the page when its sole
+    citer leaves `queued`.
+  - Every terminal state is exempt from the obligation: done, cancelled, partial and
+    restructured. Each keeps its own R-A record and lineage duties.
+  - A ruling satisfies readiness, while the sync error can still red the tree. The
+    claim checks readiness, not sync. The ruling's commit carries the updates.
+- **A9 Spine.**
+  - Also amended: IF-264, IF-265, IF-164, LLR-118 and TC-123 ("every pending row"),
+    and LLR-153 and TC-147 (intake context and mint).
+  - LLR-010 and TC-010 (a green scaffold) are extended.
+  - New traced rows cover the sync ERROR and the uncited-pending ERROR. WI-205's
+    rows stay advisory and carry only the per-item `specref` clock.
+  - Also changed: `kitlib/spine.py`, `spine_carrier.py`, `migrate_carrier.py`,
+    `bootstrap.py`, the shipped `ci/check.yml` (if Q3 needs history), both copies of
+    the WI exemplar guidance, and the test modules the review lists.
 
 ## Done-when
 
@@ -254,3 +337,5 @@ This supersedes the second pass's warn-tier reading. The coordinator's reading:
 - Migration as in design 8. The status.md filing note is updated.
 - A RESYNC_PACK entry migrates adopters.
 - The commit bar passes.
+- The amendments A1 to A9 are built. OI-102's rulings (Q1 to Q3) are written into
+  this spec, citing OI-102, before the build starts.
