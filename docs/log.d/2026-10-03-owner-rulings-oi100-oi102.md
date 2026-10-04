@@ -74,3 +74,12 @@ updated in the same commit:
 - WI-788 for OI-101;
 - WI-790 for OI-102;
 - the new WI-791 for OI-100.
+
+### Correction (2026-10-03, later): FreeAI is FreeLLMAPI
+
+The owner clarified: "FreeAI that I spoke about earlier was really just
+FreeLLMAPI, and it can be accessed like Grok through OpenCode CLI as an
+endpoint." The OI-101 record's reading (OpenCode's own `opencode/*-free` models)
+is superseded. WI-788's Done-when now names FreeLLMAPI as a custom endpoint
+provider behind OpenCode, with its URL and key kept per route and out of the
+tracked tree.

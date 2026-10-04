@@ -83,9 +83,15 @@ Two halves. The second is built only after the owner reviews the first.
    - apply risk 6 on lane and trunk: no commit changes spine text together with a
      snapshot update, which retires "amend-plus-flip is approval" everywhere
      (OI-101 Q2);
-   - route Grok and FreeAI through OpenCode. FreeAI is OpenCode's free `opencode/*-free`
-     models (confirm at the checkpoint). Add no separate xAI or SuperGrok CLI route
-     (OI-101 Q3);
+   - route Grok and FreeAI through OpenCode, and add no separate xAI or SuperGrok CLI
+     route (OI-101 Q3). "FreeAI" is **FreeLLMAPI** (owner, 2026-10-03: "really just
+     FreeLLMAPI, and it can be accessed like Grok through OpenCode CLI as an
+     endpoint"). It is not OpenCode's own free `opencode/*-free` models, as the OI-101
+     record first read it. The note settles:
+     - how OpenCode declares FreeLLMAPI as a custom endpoint provider;
+     - how a route row names that provider and model;
+     - how the endpoint's URL and key stay per route and out of the tracked tree;
+     - whether OpenCode's free models are worth a separate untested row;
    - live-probe OpenCode only (authorized). Google's CLI is researched from its
      documentation and its route is marked untested (OI-101 Q4);
    - put the glossary in a kit-shipped `project-trajectory/GLOSSARY.md`, linked from
