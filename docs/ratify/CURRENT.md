@@ -609,43 +609,6 @@ record runs through the live registry first.
 - DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
 
 
-## Stakeholder needs and stakeholders owing an act
-
-_A drifted row's approved text moved from its `docs/archive/last_approved` copy: once its meaning is ruled, re-anchor it with `intake.py snapshot --reattests <ROW-ID>`; until then an act copying the needs registry is refused. A row with no `Status` cell, or a `Drafted` one, owes its first approval._
-
-### SN-003 — DRIFTED
-
-- **Need**
-  - before: A team in any language can use this process: it is **stack-agnostic**, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference.
-  - after: A team can use this process on a stack whose tools it declares in a stack profile: it is **stack-agnostic**, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference.
-
-### SN-008 — DRIFTED
-
-- **Need**
-  - before: A reader can believe a **pass verdict**: gates are **honest**, and a pass verdict never hides a skipped check, a stub, or an unmet criterion.
-  - after: A reader can believe a **pass verdict**: gates are **honest**, and a pass verdict never hides a skipped check, a stub, or an unmet declared criterion.
-
-### SN-009 — DRIFTED
-
-- **Need**
-  - before: A team is protected from publishing a **secret or private identity**: it is caught before it publishes, in **every** repo, without extra setup.
-  - after: A team is protected from publishing a **secret or private identity**: in a repository that adopts this process, it is caught before it publishes, without extra setup.
-
-### SN-025 — DRIFTED
-
-- **Acceptance**
-  - before: A plain launch derives what to do next from the tracked WI DAG plus Git — never from prose or a hand-maintained pointer, and never from predefined tracks; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated, never hand-copied.
-  - after: A plain launch derives what to do next from the tracked WI DAG plus Git — never from prose or a hand-maintained pointer, and never from predefined tracks; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated from that tracked state, never hand-copied.
-
-### SN-043 — DRIFTED
-
-- **Acceptance**
-  - before: Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows whether a current result evidences it; a premise relied on without evidence is visible as such, and a premise shown false is reported with every requirement that relied on it.
-  - after: Each premise that a requirement relies on beyond the system's own behavior is recorded once, with where its outcome lands, the conditions it holds under, what would break it and the observation that would show it false, and each requirement either names the premises it relies on or states why its own behavior alone delivers its needs. Each premise shows its approval status and whether it has been shown false; a premise shown false is reported with every requirement that relied on it.
-- **Need**
-  - before: **Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether each of those premises has itself been checked.
-  - after: **Scope: template (adopters + this repo).** A reviewer can see, for each stakeholder outcome, what its delivery relies on beyond the system's own checked behavior, and whether any of those premises has been shown false.
-
 
 _No chain on a rung the human-approval dial holds owes an act; every chain in this brief waits for automated adjudication._
 
