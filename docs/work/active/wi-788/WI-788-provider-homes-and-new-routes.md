@@ -147,7 +147,7 @@ it sounds like your preliminary research shapes it well, but if you think there 
 more to uncover feel free to salt that into the plan as you see appropriate."
 
 What was found (record:
-[plans/2026-10-04-planning-before-build-research.md](../../plans/2026-10-04-planning-before-build-research.md)):
+[plans/2026-10-04-planning-before-build-research.md](../../../plans/2026-10-04-planning-before-build-research.md)):
 - **Dual-plan decomposition** (SN-024, SR-155) is an opt-in decomposition layer:
   rival breakdowns of a goal, cross-critique, two swapped arbiter runs, then the
   winner's rows are filed. It is not a per-item plan-before-build step. The builder
@@ -177,7 +177,7 @@ selecting the same plan at the end." The owner also recalls earlier notes on how
 arbiter could judge the plan itself. The coordinator did not find them in this repo;
 they may live downstream. What this repo records:
 - one round, DP-001 (2026-07-16,
-  [verdict](../../archive/plans/DP-001-dual-plan-loop-wiring/verdict.md));
+  [verdict](../../../archive/plans/DP-001-dual-plan-loop-wiring/verdict.md));
 - each cross-critique raised one finding;
 - both position-swapped arbiter runs selected the same plan (`plan-B-rev`), with
   nothing ported.

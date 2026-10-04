@@ -1,6 +1,6 @@
 # Planning before the build: preliminary research (2026-10-04)
 
-**Status:** preliminary research feeding [WI-788](../work/queued/WI-788-provider-homes-and-new-routes.md)'s
+**Status:** preliminary research feeding [WI-788](../work/active/wi-788/WI-788-provider-homes-and-new-routes.md)'s
 half-1 design note. It was gathered by a research subagent on 2026-10-03/04 and has
 not been checked further by the coordinator. The 2026 papers were read from their
 abstracts only. The questions WI-788 must still uncover are listed in its spec,
