@@ -3862,27 +3862,46 @@ ruling_ref = "docs/log.d/2026-10-04-owner-rulings-oi103.md"
 title = "WI-788 checkpoint: approve the half-1 design note and its successor plan"
 status = "pending"
 raised = "2026-10-04"
-one_line = "Approve WI-788's half-1 design note and its twenty S788-* successor rows, ruling its questions Q-3 to Q-12; the coordinator then files the rows and WI-788 closes on the approved note."
+one_line = "Approve WI-788's half-1 design note and its twenty S788-* successor rows, ruling its questions Q-3 to Q-12 (Q-4 moved to OI-105); the coordinator then files the rows and WI-788 closes on the approved note."
 decision = """Raised 2026-10-04 by the wave-11 coordinator at WI-788's own checkpoint ("STOP at the note. The owner rules before any build"). The note is written, reviewed and adjudicated; nothing is built and no successor row is filed.
 
-WHERE TO READ IT. The note is on lane `wi-788` (worktree `C:/Projects/ai-template.wt/wi-788`, branch `wi-788` at f5ac7e6b), not on trunk: `docs/plans/2026-10-04-wi788-design/README.md` is the front door (what the note decides, the rulings it carries, 26 stated changes to existing rulings, the glossary draft, one amend/preserve/retire matrix, one dependency graph of twenty successor rows, the questions), with four chapters: state, evidence and recovery; sessions, routing and accounts; planning and tiering; adjudication, mint and landing authority. Its delegated calls are `docs/decisions/wi-788.toml` (31 entries; high risk D-001, D-002, D-010, D-016, D-022, D-027, D-031).
+WHERE TO READ IT. The note is on lane `wi-788` (worktree `C:/Projects/ai-template.wt/wi-788`, branch `wi-788`), not on trunk: `docs/plans/2026-10-04-wi788-design/README.md` is the front door (what the note decides, the rulings it carries, 26 stated changes to existing rulings, the glossary draft, one amend/preserve/retire matrix, one dependency graph of twenty successor rows, the questions), with four chapters: state, evidence and recovery; sessions, routing and accounts; planning and tiering; adjudication, mint and landing authority. Its delegated calls are `docs/decisions/wi-788.toml` (31 entries; high risk D-001, D-002, D-010, D-016, D-022, D-027, D-031).
 
 HOW IT WAS MADE. Four Claude Opus planners drafted one chapter each and an Opus integrator reconciled them. Codex 6.1 Sol (gpt-6.1-sol, high) reviewed it NOT YET READY: 5 BLOCKER, 7 MAJOR, 3 MINOR (`docs/reviews/2026-10-04-wi788-note/sol-review.md` on the lane). The integrator confirmed 14 and fixed them, and partly refuted one. An independent Opus adjudicator ruled the three disputed points (all amended, applied verbatim) and checked all five blockers resolved (`adjudication.md` beside the review).
 
 WHAT TO RULE. The note as a whole, and its questions (README "Questions for the owner at the checkpoint"):
-- Q-3 spend: one live ask.py call and one live FreeLLMAPI call (recommend yes).
-- Q-4 provisioning: the FreeLLMAPI endpoint and the models to pin.
-- Q-5 dual-plan selection (a)/(b)/(c) (recommend (a), drafters select).
-- Q-6 per-item planning at the second consecutive CHANGES-REQUESTED (recommend).
-- Q-7 a station lane for idle mints and coordinator writes (recommend (a)).
-- Q-8 OI-101 Q2 collides with OI-103 Q4 for a lane that took an act (recommend (a), two commits in one landing, amending Q4).
-- Q-9 retitle WI-788.
-- Q-10 attribute an unlogged commit by its Co-Authored-By trailer (recommend keep).
-- Q-11 batched lanes under one landing (recommend (a)).
-- Q-12 the pause file stays the owner's act (recommend (a)).
+- Q-3 ANSWERED 2026-10-04: agreed, yes to both live calls (ask.py; FreeLLMAPI once its endpoint exists).
+- Q-4 MOVED to OI-105 at the owner's direction (2026-10-04): "the router isn't active yet so it will still be an open item to followup on when I have it". S788-routes builds what needs no endpoint; the FreeLLMAPI row and its live call wait on OI-105.
+- Q-5 ANSWERED 2026-10-04: (a), as recommended (drafters select).
+- Q-6 ANSWERED 2026-10-04: the second consecutive CHANGES-REQUESTED, as a trial ("I'm okay trying it"), re-measured after 20 lanes.
+- Q-7 ANSWERED 2026-10-04: (a), as recommended: a station lane mints its own carrier row and lands like any lane.
+- Q-8 ANSWERED by the owner 2026-10-04 (recorded on the lane, c5e0a154): "Within the lane, yes the landing text and the approval should be guarded against, but once that happens in lane (which is guarded mechanically) that lane can merge straight into the trunk as a single commit. Yes that does override a previous decision, but it's because the mechanism to mitigate risk is now placed in lane and as such doesn't require that protection burden at merge". This amends OI-101 Q2's trunk scope for landing commits; OI-103 Q4 stands. Coordinator's reading, to confirm at the ruling: a commit made directly on trunk (the owner's own signing) is still held to text-then-act.
+- Q-9 ANSWERED 2026-10-04: agreed.
+- Q-10 ANSWERED 2026-10-04: (a), as recommended (keep the trailer attribution).
+- Q-11 ANSWERED 2026-10-04: (a), as recommended: a batch lands as one landing naming every item.
+- Q-12 ANSWERED 2026-10-04: (a), "Ultimately, but it can be removed as needed temporarily to keep the chain moving": the pause is the owner's gate, and a coordinator may lift it by a scoped unpause, restored byte-identical.
+The owner's answers are recorded verbatim on the lane. Left for the ruling: approval of the note as a whole, and the coordinator's Q-8 reading.
 Q-1 is a forced-migration notice (D1-D6) and Q-2 is decided; object at the checkpoint if either should change."""
-blast_radius = """WI-788 is held at its checkpoint until this is ruled; nothing else is. The ruling releases half 2: the coordinator files the twenty S788-* rows in the note's graph on trunk, and WI-788 closes on the approved note. Q-8 and Q-11, if ruled as recommended, amend OI-103 Q4. Q-1 forces adopters still on one-word config or CSV/markdown carriers to migrate at their next resync. Q-3 authorizes spend; Q-4 provisions an endpoint."""
+blast_radius = """WI-788 is held at its checkpoint until this is ruled; nothing else is. The ruling releases half 2: the coordinator files the twenty S788-* rows in the note's graph on trunk, and WI-788 closes on the approved note. Q-8's answer amends OI-101 Q2's trunk scope for landing commits; Q-11, if ruled as recommended, reads OI-103 Q4's "per item" as "per lane" for a batch. Q-1 forces adopters still on one-word config or CSV/markdown carriers to migrate at their next resync. Q-3 authorizes spend; Q-4's provisioning moved to OI-105."""
 options = """- (a) APPROVE AS WRITTEN, with the recommendations on Q-3 to Q-12.
 - (b) APPROVE WITH AMENDMENTS: name each change (a question answered differently, a successor row dropped or merged); the coordinator amends the note on the lane before filing rows.
 - (c) RETURN THE NOTE for another design round, naming what must change."""
-recommendation = "(a). Every BLOCKER of the independent review is resolved and adjudicated, the graph is acyclic with a review bar per row, and the questions left are the ones only the owner can answer: two collisions between your own rulings (Q-8, Q-11), spend and provisioning (Q-3, Q-4), and policy choices with recorded evidence (Q-5 to Q-7, Q-10, Q-12)."
+recommendation = "(a). Every BLOCKER of the independent review is resolved and adjudicated, the graph is acyclic with a review bar per row, and the questions left are the ones only the owner can answer: one reading of your own ruling (Q-11; Q-8 is answered), spend and provisioning (Q-3, Q-4), and policy choices with recorded evidence (Q-5 to Q-7, Q-10, Q-12)."
+
+[open_item.OI-105]
+title = "FreeLLMAPI provisioning: the endpoint and the pinned models"
+status = "pending"
+raised = "2026-10-04"
+one_line = "When the owner's FreeLLMAPI router is running, name its endpoint and the models to pin, and confirm it holds a one-model chain per pinned id, so the FreeLLMAPI route row can ship and take its one live call."
+decision = """Moved out of OI-104 (WI-788's checkpoint, its question Q-4) at the owner's direction, 2026-10-04: "You can do whatever is desired to build up but the router isn't active yet so it will still be an open item to followup on when I have it".
+
+WHAT IS HELD. WI-788's design note (chapter 2 section 5) ships a FreeLLMAPI route row only for a pinned model id whose chain, declared in the account home's FreeLLMAPI configuration, holds that one model, so the row's family is knowable; a router alias such as `auto` is never a row. The one live call the owner authorized (OI-104 Q-3) checks that the served model equals the pinned one. Neither can happen without a running endpoint: the 2026-10-04 probes verified the per-route OpenCode config (`opencode models freellmapi` lists `freellmapi/auto`), and a run fails at the connection to 127.0.0.1:3001.
+
+WHAT IS NOT HELD. S788-routes builds everything that needs no endpoint: the FreeLLMAPI account template and OpenCode config, the Grok row, and the refusal of a FreeLLMAPI row with no declared one-model chain.
+
+WHAT TO RULE, once the router runs: the endpoint (a local install at :3001, or hosted), the model ids to pin, and whether FreeLLMAPI can declare a one-model chain per pinned id."""
+blast_radius = "Only the FreeLLMAPI route row and its live call (part of S788-routes' acceptance) wait on this; the rest of S788-routes and every other S788-* row proceed. Its queued placeholder WI-795 reads blocked."
+options = """- (a) PROVISION: name the endpoint and the pinned ids, confirming a one-model chain per id; the FreeLLMAPI row ships and its live call is recorded.
+- (b) PROVISION WITHOUT ONE-MODEL CHAINS: no FreeLLMAPI row ships (the note's rule), and the template stays for a later router.
+- (c) DROP FREELLMAPI: the template and config are retired and no row is planned."""
+recommendation = "Keep pending until the router is running, then (a) if FreeLLMAPI can declare a one-model chain per pinned id, else (b)."
