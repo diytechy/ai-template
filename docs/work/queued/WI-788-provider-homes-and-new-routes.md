@@ -75,6 +75,11 @@ Two halves. The second is built only after the owner reviews the first.
      added.
 
    STOP at the note. The owner rules before any build.
+
+   Unknowns this half waits on: OI-101, Q1 to Q6 (the spine-authoring approval act,
+   risk 6 on trunk, what FreeAI and SuperGrok name, half-1 probing and accounts, the
+   glossary's home, the S11 §6 overlap). Each ruling is written into this spec,
+   citing OI-101, before the note is drafted.
 2. **Build what the owner approves.**
    - Route rows in `docs/agents.toml`, and in the shipped template where adopters need
      them.
