@@ -199,6 +199,8 @@ Chapter 3 needs two kinds of [chapter 2's](2-sessions-routing-accounts.md) `ask`
 
 ### 4.4 Is the arbiter a standing step? No: option (a)
 
+> **Amended by the owner's checkpoint ruling** ([README A3](README.md#the-owners-checkpoint-ruling-2026-10-04)): a disagreement's open item offers running an independent third agent of the owner's choosing.
+
 | option | sessions after revision | what decides | cost, from §3.2 |
 |---|---|---|---|
 | (a) drafters select; disagreement to the owner | 2 short calls (continuations when retained) | adoption needs the rival author's concession | cheapest. The concession is a non-author's vote, so the self-preference confound in §3.2 disappears. |

@@ -46,6 +46,8 @@ one path with zero items, not a second mode.
 
 ## 2. One station authority (LS4, B3, B4; OI-103 Q1)
 
+> **Amended by the owner's checkpoint ruling** ([README A4](README.md#the-owners-checkpoint-ruling-2026-10-04)): approved as designed; the landing's hold time is a named iteration point.
+
 OI-103 Q1 (ruled): nothing the tool runs writes to trunk except through a work
 item's merge, under complete writer exclusion. The **station authority** is the
 one exclusion that every such writer takes.

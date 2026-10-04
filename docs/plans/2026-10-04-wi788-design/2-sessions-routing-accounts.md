@@ -110,7 +110,7 @@ family, model, route or account.
 1. **Label to tier.** The phase default (`agent_brief.phase_tier`), the
    BuildTier pin, `tier-up`, and OI-103 Q5's planned-build dial. The planner
    tier comes from chapter 3's plan record.
-2. **Exclusion from recorded authors** (risk 2, B10). Read the lane's committed
+2. **Exclusion from recorded authors** (risk 2, B10). (Amended, [README A1](README.md#the-owners-checkpoint-ruling-2026-10-04): the kind's eligible families come first; families are ranked only within that set, and a preference the declared table makes impossible is logged, not recorded for review.) Read the lane's committed
    session logs whose `commits` range meets the call's **judged scope**, for every
    authoring kind: build, plan, author, author-review, and adjudicate where it
    wrote beyond its verdict. Each kind's judged scope and exclusions are exact:
@@ -183,7 +183,7 @@ family, model, route or account.
    - **The router-before-service split moves here.** The store is read
      before `agent_route.select`. Today `plan_keep` runs on a route already
      drawn (`agent_loop.py:2587-2614`).
-4. **Availability and ratio.** `agent_route.select` keeps its rules. Cooldowns
+4. **Availability and ratio.** (Amended, [README A1-A2](README.md#the-owners-checkpoint-ruling-2026-10-04): the family by its per-kind weight, then the account by weekly pace.) `agent_route.select` keeps its rules. Cooldowns
    move from loop memory (`agent_loop.py:454`) into the store, keyed by
    `route@account`, so every lane and the coordinator share them.
 5. **The session lease** (risk 5, B4).

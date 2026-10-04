@@ -50,7 +50,7 @@ research record. Where a chapter and this page differ, this page wins.
   the second consecutive CHANGES-REQUESTED with the swap. A plan gate checks
   Done-when, SR and TC coverage. The OI-103 Q5 dial ships off.
 - **Risk 7:** eighteen dual paths, each retired or justified (ch.1 §7).
-- **The build:** twenty successor rows in [one graph](#the-dependency-graph-of-successor-rows),
+- **The build:** twenty-one successor rows (S788-usage-pacing added by the checkpoint ruling, A2) in [one graph](#the-dependency-graph-of-successor-rows),
   each with its own RESYNC entry.
 
 ### How the locks and the lease compose
@@ -97,6 +97,7 @@ critical section, so an expired or cancelled holder cannot land.
 | 2026-10-04 plan kinds: arbiter options, kinds, pickup, per-item planning | ch.3 §4.3-§4.7 |
 | Delegated decisions: note on every path, check at every landing, the gap | ch.2 §3 step 8; ch.4 §6 |
 | Half 2's bullets (routes, Google adapter, homes, spine rows, fixtures, RESYNC, no forced install) | S788-accounts, S788-routes, every row's RESYNC |
+| OI-104, the owner's checkpoint ruling (2026-10-04) | [A1-A4](#the-owners-checkpoint-ruling-2026-10-04) |
 
 **Gaps, named.**
 - **OI-101 Q4 against LS10.** Chapter 2 also live-probed claude and codex (resume
@@ -136,8 +137,10 @@ critical section, so an expired or cancelled holder cannot land.
 23. **LS4 "LOCK takes the lease and holds the merge slot"**: the leases, then the authority by one non-blocking try, nothing waited for under it; `out/integrate.lock` retires (ch.4 §2).
 24. **LS9's wording** in the rework brief, the reviewer brief (`[ADVICE]`) and `AGENTS.template.md`'s retry rule (ch.4 §9).
 25. **The coordinator's hand path to trunk**: a coordinator is an agent, so its trunk writes (filing, rulings records, status, log fragments) go through a station lane; only the owner's commits stay outside the tool. The pause file is Q-12 (ch.4 §2-§3).
-26. **Pending the owner, not settled here:** OI-103 Q4's "per item" for batched lanes (Q-11).
+26. **OI-103 Q4's "per item"** (owner, 2026-10-04, Q-11 (a)): a spine batch lands as one landing naming every item.
 27. **OI-101 Q2's trunk scope** (owner, 2026-10-04, Q-8): the text-then-act rule is enforced in the lane (the hook, and the landing's re-check of each lane commit); a lane's landing is one squash commit, not held to it (ch.4 §7).
+28. **SR-154's "wherever one is configured"** and D-022/D-031's pool: "configured for that kind", per the per-kind table (A1).
+29. **WI-236's "0 = fallback-only" weight**: for a kind, 0 means not eligible; the per-phase default tier moves from `agent_brief.py` into the per-kind table (A1).
 
 ## Glossary draft
 
@@ -282,6 +285,8 @@ graph TD
   mint --> dual
   WI790 --> dual
   accounts --> routes[S788-routes]
+  accounts --> pacing[S788-usage-pacing]
+  ask --> pacing
   ask --> routes
   provider --> rdp[S788-retire-runtime-dual-paths]
   accounts --> rlc[S788-retire-legacy-config-and-carriers]
@@ -306,6 +311,7 @@ graph TD
 | adjudication | S788-resolve-ls9 | `RESOLVE` and LS9 wording | sitting | medium | A | byte budget |
 | adjudication | S788-spine-authoring | The OI-101 Q1 flow | sitting, session-families, mint | strong | A+B | — |
 | planning, late | S788-dual-pickup | The dual pickup in a lane; the writer census | plan-kinds, lane-state-provider, mint, WI-790 | strong | A | the no-writer-outside-the-landing census |
+| routes | S788-usage-pacing | Weekly-pace account selection within a family (A2) | accounts, ask | strong | A+B | fixture readings for both providers, unreadable, stale, two Claude accounts |
 | routes | S788-routes | FreeLLMAPI, Grok, Gemini untested | accounts, ask | medium | A | one live call (Q-3; the FreeLLMAPI row waits on OI-105) |
 | consolidation | S788-retire-runtime-dual-paths | Dual paths needing no migration | lane-state-provider | medium | A | — |
 | consolidation | S788-retire-legacy-config-and-carriers | SN-028 window, non-TOML carriers | accounts | strong | A+B | scaffold bootstrap (forced migration) |
@@ -317,20 +323,135 @@ live row is dual). The provider slice adds no locking, minting or archive
 ordering (B12). Homes come first among code rows, because retained homes override
 route environments today.
 
+## The owner's checkpoint ruling (2026-10-04)
+
+**Approved with amendments.** The owner answered Q-1 and Q-3 to Q-12 (entries
+below), confirmed the coordinator's Q-8 reading, moved Q-4 to OI-105, and
+reviewed the high-risk decisions in session. Four amendments follow. **They
+override every chapter where they differ**; each chapter carries a pointer here.
+
+### A1. Routing per kind: the family mix, cross-family preference, and strength
+
+The owner's objectives: define the mix of families per session kind; if the mix
+permits, always prefer a family other than the builder's for review,
+adjudication, judging and selection; in this repo the only adjudicator family is
+Anthropic; and say where strength is defined. Today none of this is expressible:
+weights are per registry row, the "different family" filter runs before pins and
+weights, and a weight of 0 is fallback-only (`agent_route.py:656-716`), so an
+Anthropic-only adjudicator of Anthropic-built work cannot be declared. The tier
+per phase lives in code (`agent_brief.DEFAULT_PHASE_TIER`), outside SN-028's one
+dial home.
+
+- **One table per kind, in the one dial home** (`[routing.kind.<kind>]`):
+  - `families`: a weight per family; a family absent or at 0 is **not eligible**
+    for that kind (this replaces "0 = fallback-only" for kinds);
+  - `tier`: the kind's default tier, moved out of `agent_brief.py` (a WI's
+    `buildtier` still pins `build`; escalation only goes up).
+- **One ordering rule** for every `ask` call:
+  1. the kind's eligible families, rows at its tier (walking up);
+  2. hard exclusion of every session that authored the judged scope (ch.2 §3
+     step 2's table, unchanged);
+  3. for `review`, `judge`, `adjudicate`, `plan-critique` and the final review:
+     keep the eligible families other than the builder's, ranked as D-031, if
+     any remain;
+  4. the family by its weight (the owner's answer to the composition question,
+     option (a): **weights set the family share**);
+  5. the account within that family by pace (A2);
+  6. a retained session continues until its reset terms are met; steps 4-5
+     apply only when a session starts.
+- **Unmet preferences.** One the declared table makes impossible (an
+  Anthropic-only adjudicator of Anthropic-built work) is logged in the session
+  log only: the table is the owner's standing decision. One the eligible set
+  could have met but availability prevented (a cooldown, an outage) is logged
+  and also becomes a "Decisions to review" entry.
+- **This amends** D-022, D-031 and ch.2 §3 steps 2 and 4; SR-154's "a different
+  model family wherever one is configured" becomes "configured for that kind"
+  (amended through adjudication in S788-session-families).
+- **The shipped template** makes every family eligible at weight 1 for every
+  kind, with the cross-family preference: an adopter that trusts both families
+  gets today's behaviour.
+- **This repo's values** (owner, 2026-10-04: "currently my trust for
+  adjudication and building only lies with claude. Codex for authoring and
+  reviewing"; plan to Claude and judge to Codex agreed):
+
+  | kind | families | note |
+  |---|---|---|
+  | build, plan, adjudicate (with its `author` drafts) | ANTHROPIC | |
+  | review, judge, author-review, plan-critique, final review | OPENAI | Codex's authoring is the author-review edit of the adjudicator's draft (OI-101 Q1's flow) |
+  | plan-dual (a decomposition round's two drafters) | ANTHROPIC, OPENAI | a dual round needs two families (D-032) |
+
+- **Where strength is defined today**, for the glossary and S788-session-families:
+  the row's `tier` in `docs/agents.toml`; the row's effort, separately
+  (`CLAUDE_CODE_EFFORT_LEVEL` in `env`, `-c model_reasoning_effort` in
+  `cmd_template`); the per-phase default tier in `agent_brief.py:96`
+  (`AGENT_TIER_MAP` overrides); each WI's `buildtier`; escalation (up only);
+  then this note's plan `Tier` column and the OI-103 Q5 dial. Evidence:
+  `docs/knowledge/effort-tiering.md`. Two value drifts found on the way are
+  follow-ups, not part of this design: `ANTHROPIC-OPUS-STRONG`'s effort reads
+  `xhigh` in `env`, high in its newest note and medium in the file header; and
+  `OPENAI-SOL` runs at medium effort in the router, while hand reviews use high.
+
+### A2. Pacing across accounts within a family (new row S788-usage-pacing)
+
+The owner's objective: keep each subscription's weekly usage on target, so no
+account is left with a large unused budget while another is exhausted at reset,
+including several Claude subscriptions.
+
+- **The reading**, per account (each with its own home, ch.2 §4):
+  - Claude: the account's OAuth usage read (5-hour and 7-day used percent, with
+    reset times), read-only, **never refreshing a copy of the credential** (the
+    refresh token is single-use);
+  - Codex: `codex app-server`'s `account/rateLimits/read` under the account's
+    `CODEX_HOME`.
+
+  The reference implementation is the owner's gauges:
+  `MiniPC-Deployer/stack/ai-usage/ai_usage_feeder.py` and NagLight's
+  `internal/gauge/gauge.go`. Both endpoints are undocumented, so each is a route
+  contract with `verified`, like the routes in ch.2 §5.
+- **The rule.** `pace = 100 x (1 - elapsed fraction of the weekly window)`;
+  `headroom = remaining percent - pace`. Within the family step 4 chose, the
+  account with the largest headroom is drawn. An exhausted 5-hour window is a
+  cooldown. An account with no fresh reading counts as exactly on pace (headroom
+  0), logged.
+- **Scope.** Pacing chooses accounts within a family, never between families:
+  the family share is the owner's weights (A1, option (a)).
+- **Spine.** Budget pacing is a stakeholder outcome no current need covers, so
+  the row drafts a new need for the owner's signature before its SR rows.
+- **The row:** S788-usage-pacing, needs S788-accounts and S788-ask; strong; review
+  A+B; extra bar: fixture readings for both providers, an unreadable source, a
+  stale reading and two Claude accounts; RESYNC yes.
+
+### A3. Q-5's disagreement page offers a third agent
+
+When both drafters of a dual round select their own plan, the open item minted
+for the owner includes an option to run an independent third agent of the
+owner's choosing to select between the plans. It runs only when the owner picks
+that option; it is never automatic.
+
+### A4. D-016 stands, with a named iteration point
+
+The station authority is approved as designed ("Agreed may need more
+iteration, for now move forward with design"). The named cost to revisit after
+measurement: every landing, a coordinator's station lane included, holds the
+authority through the final review and the full declared bar (about 11 minutes
+median, about 40 minutes on a loaded box), which works against SN-012 (small
+changes stay cheap) and slows SN-027's fan-out. A candidate fix is a landing bar
+declared by the landing's change class, as one value of the one path.
+
 ## Questions for the owner at the checkpoint
 
 Ids are kept stable across the fix round; withdrawn ones say why.
 
-- **Q-1. Withdrawn, now a notice.** Retiring D1-D6 is already directed (risks 7 and 9). **Forced migration:** adopters still on one-word config or CSV/markdown carriers must run the migrators at their next resync (S788-retire-legacy-config-and-carriers). Flagged per CLAUDE.md; object at the checkpoint if one release of grace is wanted.
+- **Q-1. Accepted by the owner, 2026-10-04 ("Yes forced migration").** Withdrawn, now a notice. Retiring D1-D6 is already directed (risks 7 and 9). **Forced migration:** adopters still on one-word config or CSV/markdown carriers must run the migrators at their next resync (S788-retire-legacy-config-and-carriers). Flagged per CLAUDE.md; object at the checkpoint if one release of grace is wanted.
 - **Q-2. Withdrawn, decided.** Account homes live in the user config directory, outside every checkout (ch.2 §4): an implementation location, reversible.
 - **Q-3. Answered by the owner, 2026-10-04: agreed (yes to both).** Spend: authorize (i) one live `ask.py` call in S788-ask and (ii) one live FreeLLMAPI call in S788-routes once the endpoint exists? **Recommend yes to both.** (The Gemini recording is not asked: OI-101 Q4 rules Gemini documentation-only.)
 - **Q-4. Moved to OI-105 by the owner, 2026-10-04.** Provisioning, FreeLLMAPI: name the endpoint (local `:3001` or hosted) and the models to pin, and confirm FreeLLMAPI can hold a one-model chain per pinned id; without that, no FreeLLMAPI row ships (ch.2 §5). **Owner, 2026-10-04: "You can do whatever is desired to build up but the router isn't active yet so it will still be an open item to followup on when I have it".** So S788-routes builds everything that needs no endpoint (the account template, the OpenCode config, the Grok row, the one-model-chain refusal), and the FreeLLMAPI row and its one live call stay held by OI-105 (filed on trunk with its queued placeholder WI-795, at the owner's direction: "If Q-4 needs to stay open, please move it to a separate OI"), which the owner rules once the router runs. OI-104 no longer carries Q-4.
-- **Q-5. Answered by the owner, 2026-10-04: (a), as recommended.** Dual-plan selection, (a), (b) or (c)? **Recommend (a):** drafters select, a mutual self-select becomes your open item, and the losing drafter's concession is recorded as a second independence exception. The evidence is suggestive, not conclusive: in 8 rounds the two arbiter runs always agreed and ported nothing, and the arbiter picked its own family's plan in at least 7 (DP-003 unverified). Whether arbitration ever changed a selection cannot be told, because no drafter was asked to choose. ch.3 §3.2, §4.4.
+- **Q-5. Answered by the owner, 2026-10-04: (a), as recommended.** Dual-plan selection, (a), (b) or (c)? **Recommend (a):** drafters select, a mutual self-select becomes your open item, and the losing drafter's concession is recorded as a second independence exception. The evidence is suggestive, not conclusive: in 8 rounds the two arbiter runs always agreed and ported nothing, and the arbiter picked its own family's plan in at least 7 (DP-003 unverified). Whether arbitration ever changed a selection cannot be told, because no drafter was asked to choose. ch.3 §3.2, §4.4. **Owner addendum:** the open item a disagreement mints offers running an independent third agent, of the owner's choosing (A3).
 - **Q-6. Answered by the owner, 2026-10-04: the second consecutive CHANGES-REQUESTED, as a trial ("I'm okay trying it"), re-measured after 20 lanes.** Per-item planning: on declaration plus the second consecutive CHANGES-REQUESTED (with the swap), or also the first? **Recommend the second:** 13 of 34 first-CR lanes passed unaided. Re-measure after 20 lanes. ch.3 §4.7.
-- **Q-7. Answered by the owner, 2026-10-04: (a), as recommended ("Recommendation is fine").** Idle and CLI mints, and the coordinator's writes, have no lane.** (a) A station lane mints its own carrier row and lands like any lane; (b) a station lane with no row; (c) drop idle mints. **Recommend (a):** every landing is then a work item's. ch.4 §12.
-- **Q-8. Answered by the owner, 2026-10-04.** OI-101 Q2 (no commit carries spine text with a snapshot update) and OI-103 Q4 (one squash commit per item) collided for a lane that took an act. The owner: "Within the lane, yes the landing text and the approval should be guarded against, but once that happens in lane (which is guarded mechanically) that lane can merge straight into the trunk as a single commit. Yes that does override a previous decision, but it's because the mechanism to mitigate risk is now placed in lane and as such doesn't require that protection burden at merge". So the text-then-act rule is enforced IN THE LANE, at the pre-commit hook on every lane commit and again by the landing on each lane commit against its parent (so a `--no-verify` commit is still refused), and the lane then lands as ONE squash commit, which is not held to the rule. This amends OI-101 Q2's trunk scope for landing commits; OI-103 Q4 stands. Coordinator's reading, for the owner to confirm: any other commit made directly on trunk (the owner's own signing) still keeps text and act in separate commits, as Q2 ruled. ch.4 §7.
+- **Q-7. Answered by the owner, 2026-10-04: (a), as recommended ("Recommendation is fine").** Idle and CLI mints, and the coordinator's writes, have no lane. (a) A station lane mints its own carrier row and lands like any lane; (b) a station lane with no row; (c) drop idle mints. **Recommend (a):** every landing is then a work item's. ch.4 §12.
+- **Q-8. Answered by the owner, 2026-10-04.** OI-101 Q2 (no commit carries spine text with a snapshot update) and OI-103 Q4 (one squash commit per item) collided for a lane that took an act. The owner: "Within the lane, yes the landing text and the approval should be guarded against, but once that happens in lane (which is guarded mechanically) that lane can merge straight into the trunk as a single commit. Yes that does override a previous decision, but it's because the mechanism to mitigate risk is now placed in lane and as such doesn't require that protection burden at merge". So the text-then-act rule is enforced IN THE LANE, at the pre-commit hook on every lane commit and again by the landing on each lane commit against its parent (so a `--no-verify` commit is still refused), and the lane then lands as ONE squash commit, which is not held to the rule. This amends OI-101 Q2's trunk scope for landing commits; OI-103 Q4 stands. Coordinator's reading, **confirmed by the owner 2026-10-04** ("Yes you're reading on Q-8 is correct"): any other commit made directly on trunk (the owner's own signing) still keeps text and act in separate commits, as Q2 ruled. ch.4 §7.
 - **Q-9. Answered by the owner, 2026-10-04: agreed.** Retitle WI-788 ([Title](#title)); the rename is its own commit.
-- **Q-10. Answered by the owner, 2026-10-04: (a), as recommended.** Attribute an unlogged commit by its `Co-Authored-By:` trailer?** It is evidence in the judged commit itself, can only add an exclusion, and no one is asked to write it, but it sits near your "no marker convention" rule. (a) Keep it; (b) count every unlogged commit as a person's. **Recommend (a)** until hand sittings run on `ask.py`. ch.2 §3 step 2.
+- **Q-10. Answered by the owner, 2026-10-04: (a), as recommended.** Attribute an unlogged commit by its `Co-Authored-By:` trailer? It is evidence in the judged commit itself, can only add an exclusion, and no one is asked to write it, but it sits near your "no marker convention" rule. (a) Keep it; (b) count every unlogged commit as a person's. **Recommend (a)** until hand sittings run on `ask.py`. ch.2 §3 step 2.
 - **Q-11. Answered by the owner, 2026-10-04: (a), as recommended ("Recommendation is fine").** Batched lanes under Q4. The dispatcher batches spine rows into one lane sharing one re-attest window (`dispatch.py:25-38`); their items share one act and one tree and cannot be split per item. (a) A batch lands as one landing naming every item (Q4's "per item" read as "per lane" for batches, as the hand path already does: `eecd656d` closed nine WIs in one squash); (b) retire batching, so every lane holds one item and shared re-attestation is lost. **Recommend (a).** ch.4 §6.
 - **Q-12. The pause file.** Every coordinator write to trunk goes through a station lane, but a pause must stop claims at once and cannot wait for a sitting to land. (a) The pause is your act: the coordinator writes it only on your explicit instruction, as your commit (the hook's check applies); (b) it lands through a station lane, taking effect up to one sitting late; (c) it moves to an untracked file under the primary checkout's `out/`, read by the dispatcher, so it is no trunk write. **Recommend (a):** it is already your gate, and it stays visible in the tree. ch.4 §2. **Owner, 2026-10-04: "Ultimately, but it can be removed as needed temporarily to keep the chain moving".** So (a): the pause is the owner's gate and only the owner's instruction sets it; a coordinator may lift it temporarily by a scoped unpause (a reviewed deletion commit, its batch of claims, then a byte-identical restore), per the owner's 2026-10-04 batch direction.
 
