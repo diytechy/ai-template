@@ -34,8 +34,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   1. **OI-104, the owner's checkpoint on the largest row's design note.** The
      note is on lane `wi-788` (worktree `C:/Projects/ai-template.wt/wi-788`,
      `docs/plans/2026-10-04-wi788-design/README.md` first). Ruling it means
-     answering its questions Q-3 to Q-12 (two are collisions between the owner's
-     own rulings); the coordinator then files the successor rows and lands the
+     answering its questions Q-3 to Q-12 (Q-8 already answered, 2026-10-04);
+     the coordinator then files the successor rows and lands the
      lane.
   2. Owner signatures still owed: the four MEANING-ruled needs (SN-003, SN-008,
      SN-025, SN-043; the adjudicator recommends restoring SN-025's exclusions

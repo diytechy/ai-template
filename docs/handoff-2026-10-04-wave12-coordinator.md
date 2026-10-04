@@ -29,7 +29,7 @@ as the resume map.
     their acts, as the owner agreed.
 - **WI-788 is held at its checkpoint.** Its half-1 design note (four chapters,
   the amend/preserve/retire matrix, a graph of twenty `S788-*` successor rows,
-  questions Q-3 to Q-12) is committed on lane `wi-788` at `f5ac7e6b`, NOT on
+  questions Q-3 to Q-12) is committed on lane `wi-788` at `c5e0a154`, NOT on
   trunk; the row stays claimed. It was reviewed by Codex 6.1 Sol (5 BLOCKER,
   7 MAJOR, 3 MINOR, fixed), and an independent Opus adjudicator ruled the three
   disputed points. **OI-104** asks the owner to approve it, and the queued
@@ -49,9 +49,10 @@ as the resume map.
 1. **OI-104: WI-788's design note.** Read
    `C:/Projects/ai-template.wt/wi-788/docs/plans/2026-10-04-wi788-design/README.md`
    (the lane's worktree), then the chapter sections each question names. Rule
-   Q-3 to Q-12; two are collisions between your own rulings (Q-8: OI-101 Q2
-   against OI-103 Q4 for a lane that took an act; Q-11: batched lanes under one
-   squash). Ruling OI-104 must update WI-794's Done-when in the same commit (the
+   Q-3 to Q-12. Q-8 is answered (owner, 2026-10-04: the text-then-act guard lives
+   in the lane, and a landing is one squash; recorded on the lane); confirm the
+   coordinator's reading that a direct trunk commit is still held to it. Q-11
+   (batched lanes under one squash) is a reading of OI-103 Q4. Ruling OI-104 must update WI-794's Done-when in the same commit (the
    new sync rule refuses it otherwise).
 2. **The decisions below**, high risk first. Mark each reviewed with
    `reviewed = true` in its record; WI-788's record is on its lane until the lane
