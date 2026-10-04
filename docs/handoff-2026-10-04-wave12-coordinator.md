@@ -48,11 +48,13 @@ as the resume map.
 
 1. **OI-104: WI-788's design note.** Read
    `C:/Projects/ai-template.wt/wi-788/docs/plans/2026-10-04-wi788-design/README.md`
-   (the lane's worktree), then the chapter sections each question names. Rule
-   Q-3 to Q-12. Q-8 is answered (owner, 2026-10-04: the text-then-act guard lives
+   (the lane's worktree), then the chapter sections each question names.
+   **Q-3 to Q-12 are answered (owner, 2026-10-04, recorded on the lane); Q-4
+   moved to its own item, OI-105, which waits for the owner's FreeLLMAPI
+   router.** What remains is approving the note as a whole. Q-8 is answered (owner, 2026-10-04: the text-then-act guard lives
    in the lane, and a landing is one squash; recorded on the lane); confirm the
-   coordinator's reading that a direct trunk commit is still held to it. Q-11
-   (batched lanes under one squash) is a reading of OI-103 Q4. Ruling OI-104 must update WI-794's Done-when in the same commit (the
+   coordinator's reading that a direct trunk commit is still held to it. Q-11's
+   answer reads OI-103 Q4's "per item" as "per lane" for a batch. Ruling OI-104 must update WI-794's Done-when in the same commit (the
    new sync rule refuses it otherwise).
 2. **The decisions below**, high risk first. Mark each reviewed with
    `reviewed = true` in its record; WI-788's record is on its lane until the lane
