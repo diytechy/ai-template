@@ -189,9 +189,9 @@ shape by deriving it, and adds no repair.
 | Trunk advanced: claim | scratch → object → branch cut (`integrate.py:865-871`) → drift check → install → `update-ref` (`bookkeeping.py:68-80`) | `ABANDONED_CLAIM` between the cut and the advance; `BUILD` with no worktree after | `_drop_abandoned` re-cuts (`integrate.py:554-595`); `ensure_worktree` at launch |
 | Process: worker | holds the lane's `agent-loop.lock` | `PARKED`, + `UNCOMMITTED` if dirty | relaunch, with the reconcile note (`agent_loop.py:341-346`) |
 | Process: judging session | stash on dirt (`agent_loop.py:2414-2429`) | `STASHED_LEFTOVERS` | the named stash |
-| Process: refresh | `merge --no-commit` (`integrate.py:2570`) → trunk step → bar → commit | `INTERRUPTED_REFRESH`; the next refresh refuses it as dirty (`:2446-2453`) | **gap**: F1 |
+| Process: refresh | `merge --no-commit` (`integrate.py:2570`) → trunk step → bar → commit | `INTERRUPTED_REFRESH`; the next refresh refuses it as dirty (`:2446-2453`) | F1: the refresh aborts its own interrupted merge; S788-landing |
 | Process: model session, hard kill | the log is written after the call (`session_service.py:304-339`) | `SESSION_UNACCOUNTED` (a launch note with no log) | U1 harvest, [chapter 2](2-sessions-routing-accounts.md) |
-| Trunk advanced: landing | merge (`integrate.py:2962-2986`) → unload → intake mint, a second trunk commit (`:3008`) | landed + `UNLOAD_INCOMPLETE`; a mint owed | **gap**: "nothing ever retries" the unload (`:2918-2922`), and the mint is recovered by hand (`intake.py sweep`). `census` now sees the lane. Chapter 4 folds the mint into the landing (Q1) |
+| Trunk advanced: landing | merge (`integrate.py:2962-2986`) → unload → intake mint, a second trunk commit (`:3008`) | landed + `UNLOAD_INCOMPLETE`; a mint owed | **gap**: "nothing ever retries" the unload (`:2918-2922`), and the mint is recovered by hand (`intake.py sweep`). `census` now sees the lane. Chapter 4 folds the mint into the landing (Q1); F2's re-run is S788-landing's |
 | Worktree removed | `branch -d`, else `worktree remove` → `prune` → `branch -d` (`:2207-2300`) | `ARCHIVE` owed | re-run unload. Chapter 4 orders the `archive/lanes` write first (Q4) |
 
 **The U1 hook (chapter 2 owns U1).** The provider guarantees one thing: no
@@ -257,12 +257,18 @@ Each is surfaced here and not fixed in this design.
   `merge --no-commit` leaves the worktree mid-merge. The next refresh refuses
   it as dirty, and a person must run `git merge --abort`. The fix: the refresh
   aborts its own unfinished merge, identified by a `MERGE_HEAD` that equals a
-  trunk commit with no other change. It belongs in chapter 4's landing rows.
-  UNVERIFIED by probe.
+  trunk commit with no other change. **Assigned:** S788-landing's scope and
+  Done-when (a killed refresh is recovered by the next one). UNVERIFIED by
+  probe; the row's fixture is the probe. This is the tool repairing its own
+  half-done operation, not agent work, so OI-103 Q6 does not cover it.
 - **F2. Nothing retries an incomplete unload.** `census` now shows the lane.
-  Who retries it belongs to chapter 4's archive ordering.
+  **Assigned:** S788-landing orders `ARCHIVE` (`archive/lanes` first) and
+  re-derives it every tick, so an incomplete unload is re-run until closed.
 - **F3. `refs/stash` is one per repository.** So a lane's named leftovers stash
-  is visible from every worktree. UNVERIFIED by probe.
+  is visible from every worktree. UNVERIFIED by probe. **Assigned:**
+  S788-lane-state-provider probes it in its `STASHED_LEFTOVERS` fixture; the
+  stash is already named by branch, so sharing changes no derivation unless the
+  probe shows otherwise.
 
 ## 9. Closing sections
 
@@ -285,7 +291,8 @@ Each is surfaced here and not fixed in this design.
 | PROCESS.md lane lifecycle; GLOSSARY (lane state, condition, decision) | doc | amend | the states are named once | S788-glossary |
 | SR-027, LLR-029, LLR-030 | row | amend | D12 | S788-retire-runtime-dual-paths |
 | LLR-140 (rollup window) and its TC; IF-023 (`docs/work/README.md`) | row/contract | amend | D10, D11 | S788-retire-runtime-dual-paths |
-| SR-006, SR-137, SR-139, SR-147, LLR-155, LLR-277, LLR-291, IF-079 | row/contract | amend the cells that state a dual read (which ones: UNVERIFIED) | D1–D6 | S788-retire-legacy-config-and-carriers |
+| SR-137 (`requirement`, `acceptance_criteria`: the both-homes refusal becomes a refusal of any legacy one-word file, naming the migration); SR-139 (`acceptance_criteria`: drop "a legacy gate-policy word reads as all three dials"); LLR-155 (`detail`: drop "with the legacy file as fallback"; `code_symbol`: `config_conflicts` narrowed); LLR-277 (`detail`: drop the `.md` legacy tables); IF-079 (`data`: drop "the legacy row-per-line CSV form") | row/contract | amend those cells (read 2026-10-04 in the fix round) | D1–D6 | S788-retire-legacy-config-and-carriers |
+| SR-006, SR-147, LLR-291 | row | preserve: no cell states a dual read (SR-147's rationale only cites CSV as history; LLR-291 reads `from-stage`, the target) | — | — |
 | TC-253, LLR-058, IF-073 | row/contract | amend | D9 | WI-790 |
 
 ### 9.2 Proposed successor rows
@@ -301,7 +308,8 @@ Each is surfaced here and not fixed in this design.
   - every §2.1 transition and decision goes through `enact` or `decide`, and no
     lifecycle module calls another's effect directly;
   - there is a pure test per state and per condition;
-  - a repo fixture covers each §5 crash shape;
+  - a repo fixture covers each §5 crash shape (the `STASHED_LEFTOVERS` one
+    also probes F3);
   - the existing `test_dispatch`, `test_integrate_*`, `test_handback*` and
     `test_agent_loop_*` suites pass with only call sites edited;
   - no new lock, mint or archive ordering is added;
@@ -332,7 +340,8 @@ non-TOML carriers.
   - the RESYNC entry runs `migrate_legacy_config` and `migrate_carrier.py`;
   - a scaffold bootstrapped from an old-form fixture migrates and passes
     `check.py`;
-  - the amended rows pass in-lane adjudication.
+  - the amended rows pass adjudication (whichever path is the one path when
+    the row lands; it needs no sitting row).
 - **needs:** S788-accounts (both edit IF-045 and `agent_route`; chapter 2 §7's
   CSV-reader and `Provider`/`weak` retirements are built here).
 - **BuildTier:** strong.

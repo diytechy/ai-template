@@ -27,7 +27,8 @@ Neighbouring chapters own:
 
 ```
 REVIEW_REWORK done (APPROVE, or every open finding disputed)
- LOCK          station authority (§2), then the adjudicator lease (ch.2)
+ LOCK          the session leases (waited for holding nothing), then one
+               non-blocking try of the station authority (§2)
  REFRESH       merge trunk in, trunk_step, commit-tier bar
  RESOLVE       rule each recorded dispute            } one retained
  JUDGE         acts on the previewed scope            } adjudicator
@@ -69,16 +70,19 @@ one exclusion that every such writer takes.
 - **Acquisition order.** Take them in this order:
   1. the process's own `out/agent-loop.lock` (the dispatcher's in the primary
      checkout, the worker's in a lane worktree);
-  2. the station authority;
-  3. the adjudicator session lease (chapter 2);
+  2. the session leases the sitting needs, [adjudicate] and [adjudication
+     review] (chapter 2). This is the only wait (up to 1200 s,
+     [chapter 2 §3 step 5](2-sessions-routing-accounts.md#3-the-one-entry-point)),
+     and it holds no authority;
+  3. the station authority, one non-blocking try. If it is held, the sitting
+     releases its leases and re-enters `LOCK` on a later tick;
   4. the millisecond store locks.
 
-  Never wait for the authority while holding a session lease. A keep-warm ping
-  holds only the lease and never asks for the authority. So a sitting's wait
-  for the lease (up to 1200 s,
-  [chapter 2 §3 step 5](2-sessions-routing-accounts.md#3-the-one-entry-point))
-  happens inside the authority and cannot deadlock; the README states the
-  composition once ([README](README.md#how-the-locks-and-the-lease-compose)).
+  **Nothing waits while holding the authority** (OI-103 Q2). Under it, every
+  acquisition is one non-blocking try: a lease found busy then (a keep-warm
+  ping) gives that call a fresh, non-replacing session at once. No cycle can
+  form, because nothing that holds the authority waits, and nothing that waits
+  holds it ([README](README.md#how-the-locks-and-the-lease-compose)).
 - **Where it lives.** The authority's code is a lifecycle effect, so it sits in
   `scripts/lane_state.py` (B11), and its CLI is `lane_state.py release
   --reason`. This avoids a second `station` module beside `kitlib/station.py`.
@@ -92,25 +96,46 @@ one exclusion that every such writer takes.
   advance (B3). It is never handed between lanes.
 - **Release and cancellation.** The authority is released after `ARCHIVE`, or at
   once on `return` and on a refused `REFRESH`. The owner can cancel with
-  `lane_state.py release --reason`, which is recorded; the lane re-enters `LOCK`, and
-  its next `REFRESH` discards uncommitted sitting writes.
+  `lane_state.py release --reason`, which is recorded. Cancellation, in order:
+  1. stop the sitting's process (the holder's recorded pid);
+  2. harvest its sessions' usage (chapter 1 §5's U1 hook);
+  3. bump `generation`, so the cancelled holder can never land;
+  4. clear the record.
+
+  The lane then derives as `PARKED` (plus `UNCOMMITTED` if dirty). Its relaunch
+  gets today's reconcile note (OI-103 Q6), and it re-enters `LOCK`. Nothing is
+  discarded: a refresh refuses a dirty lane, as today (chapter 1 §6).
 - **Expiry.** `until` is the last renewal plus a TTL. The TTL is a dial,
   `[station] authority_ttl_minutes`, shipped at 120: above the p90 sitting on a
   loaded box (below). Every substate transition renews it. An acquirer that
   finds an expired lease retires it, bumps `generation` and records the steal.
-- **Fencing.** `MERGE` re-reads the record under the mutation lock and advances
-  trunk (an `update-ref` against the old head) only while its `generation` is
-  current, so an expired holder can never land.
+- **Fencing.** Every tool advance of a ref (the landing's trunk update, the
+  claim's branch create) happens while holding the mutation lock: re-read the
+  record, check that `generation` is the caller's, then `git update-ref <ref>
+  <new> <old>` (compare-and-swap; `""` as `<old>` for a create), then release.
+  The check and the advance are one critical section, so an expired or
+  cancelled holder can never land, and no tool writer can slip between them.
 - **Risk 5.** A fresh, non-replacing session drawn after the 20-minute lease
-  wait runs inside the same lane's authority: the authority is the lane's, the
-  lease is the session's.
+  wait still takes the authority afterwards, by the same non-blocking try: the
+  authority is the lane's, the lease is the session's.
 - **`out/integrate.lock` retires** (`integrate.py:3016-3030`). Its exclusivity
   is the authority held for the merge, and two locks over one decision is the
   dual path that risk 7 forbids.
-- **The owner's own trunk commits.** The pre-commit hook refuses one while
-  another holder has the authority. A `--no-verify` bypass is caught by the
-  fencing compare-and-swap: the lane re-runs `REFRESH` inside its own
-  authority, and a session retakes any stale act (S11 Q6).
+- **Who is outside the tool.** Only the owner's own commits (OI-103 Q1: "the
+  user might approve an item, but that generally not be done while the thread
+  is running"). A coordinator session is an agent, so everything it writes to
+  trunk lands through a work item's lane under the authority, like any tool
+  writer: filing rows, recording rulings, status and log fragments go through
+  a station lane (Q-4.1). The one coordinator write that cannot wait for a
+  landing is the pause file, which must stop claims at once; that is an owner
+  question (README Q-12).
+- **The owner's own trunk commits.** The pre-commit hook refuses one while a
+  holder has the authority. That check is advisory: the owner's commit is not
+  the tool's, and the exclusion that matters is the landing's compare-and-swap
+  above. If the owner's commit (or a `--no-verify` one) moves trunk under a
+  sitting, the landing's swap fails, naming the foreign commit; the lane re-runs
+  `REFRESH` inside its own authority, and a session retakes any stale act (S11
+  Q6).
 
 **Expected hold time.** The session figures are measured from session logs; the
 bar times are from CLAUDE.md:
@@ -144,7 +169,8 @@ does not add a retake path.
 | `trunk_step` (log compile, regen) | bookkeeping scratch and lane refresh | Lane-side only, inside the authority. This amends SR-170: "the serial merge step" becomes "under the station authority, on the tree that lands". |
 | Acts (flip and snapshot) | trunk-side adjudication lanes (`integrate.py:1154`) | In the lane, in `JUDGE` (§5, §7). |
 | The landing | `merge --no-ff` in the primary checkout (`:2962`) | A squash built away from the checkout and installed by `bookkeeping.py`'s scratch-and-install. That module stays as the landing's install; its claim and mint callers go (§6). |
-| Coordinator and owner commits | the hand path | Not the tool's, so they take only the hook's authority check. Routing them through WIs is out of scope (calls table). |
+| Coordinator commits (filing rows, rulings records, status, log fragments, claims by hand) | the hand path, straight to trunk | A **station lane** under the authority, landed like any lane (Q-4.1). The pause file is the open exception (README Q-12). |
+| The owner's own commits | the owner, rarely while the loop runs | Outside the tool: the hook's advisory check, and the landing's swap catches a move (§2). |
 
 ## 4. The sitting's states
 
@@ -274,7 +300,20 @@ as placeholder rows and handled after the merge.
 | `merge` | complete | the settled acts and the mints land with it |
 | `merge-partial` | partial (SR-144 report; the keep/discard split is ruled in `JUDGE`) | a successor is mandatory (OI-73). Quarantine is the case with an empty keep set and a `.patch` |
 | `cancel` | cancelled | judged never to be built; report and successor as today |
-| `return` | nothing: back to `BUILD` with the required fixes | releases the authority at once. The sitting's commit moves the specs back to `active/<branch>/`, so the lane derives as `BUILD` ([chapter 1 §2.1](1-state-evidence-recovery.md#21-admission-per-transition)). A fourth sitting may not return (S11 Q2) |
+| `return` | nothing: back to `BUILD` with the required fixes | releases the authority at once. The sitting's commit moves the specs back to `active/<branch>/`, so the lane derives as `BUILD` ([chapter 1 §2.1](1-state-evidence-recovery.md#21-admission-per-transition)). A fourth sitting may not return (S11 Q2): see exhaustion below |
+
+**Exhaustion: the fourth sitting, when a return is owed.** S11 Q2's ruled bound
+(3 returns, then land) applies to code as well as spine rows, and the red bar is
+never waived. The fourth sitting's outcome is `merge-partial`, never `merge`:
+- **an upheld code finding, bar green:** the work lands as `partial`, and `MINT`
+  mints the mandatory successor (OI-73) carrying each upheld finding as its
+  Done-when, with the parent cited in its `needs`;
+- **a red bar caused by the lane's own work:** the keep set is empty (the
+  quarantine shape): nothing of the lane's code lands, the `.patch` and the
+  report land, and the successor carries the patch and the failing bar output;
+- **unsettled spine rows:** minted unsettled, as S11 Q2 already rules.
+
+So the lane always leaves the station, and nothing red reaches trunk.
 
 The `[merge_action]` block is committed before the final bar: it is chapter 1's
 merge intent (B2). The specs' terminal folders are its effect, written in the
@@ -291,8 +330,10 @@ order:
    - `[consumption]`, against its list;
    - the minted rows.
 
-   It never reopens a resolved dispute (Q3). Its family differs from every
-   author of what it checks (B10). Its range adds only its verdict (S9).
+   It never reopens a resolved dispute (Q3). It is never a session that
+   authored any range in this sitting (an author-review session included), and
+   its family differs from the adjudicator's where the pool allows (chapter 2
+   §3 step 2's table). Its range adds only its verdict (S9).
 2. **Regeneration and the declared bar** run on the final staged tree, which is
    committed with `Bar-Green`. This is today's sequence
    (`integrate.py:2653-2712`).
@@ -303,7 +344,7 @@ commits (their tip archived first, S11 §3.8) and re-enters `JUDGE` or `MINT`,
 still holding the authority. This counts as an inner round, bounded at 3. At
 exhaustion the acts are dropped and their rows are minted unsettled. A red bar
 caused by a sitting write takes the same edge. A red bar caused by the lane's
-own work leads to `return`.
+own work leads to `return`, or at the fourth sitting to §4.4's exhaustion.
 
 **The lock is not authorization.** `merge_approval_refusal`
 (`acceptance_record.py:805-818`) takes its scope from claimed adjudication rows
@@ -314,7 +355,7 @@ and keeps every check:
 | Check | Kept as |
 |---|---|
 | Scope | the provider's scope record (§4.2). The merge re-derives it at its commit and compares it byte for byte, so it is independently recorded and tamper-evident |
-| Actor independence | each flip and snapshot write lies in a recorded `ADJUDICATE` range whose family differs from every author of the scoped rows (B10; attribution is chapter 2's). This replaces `_adjudication_lane` (`integrate.py:1139`) |
+| Actor independence | each flip and snapshot write lies in a recorded `ADJUDICATE` range whose session is an eligible `adjudicate` draw for the scoped rows under [chapter 2 §3 step 2's table](2-sessions-routing-accounts.md#3-the-one-entry-point): its family differs from every build and plan author of those rows; it is a different session from every author-review session; and a row whose text its own `author` range wrote is admitted only under B10's exception (an author-review range by another session follows it, and the act's pass changed no byte of it). This replaces `_adjudication_lane` (`integrate.py:1139`) |
 | Held-rung authority | `_held_status_refusal` (SR-208), unchanged |
 | Named rows, snapshot coverage, out-of-scope acts | `adjudication_approval_refusal` (`:753`) and `reattest_scope_refusal` (`:873`), fed the recorded scope |
 | Authority | the act lies after the lane's `LOCK`, under the current `generation` |
@@ -323,8 +364,19 @@ and keeps every check:
 
 **The operation.** The loop and the coordinator both land through `MERGE`
 (risk 8; B11):
-- One squash commit per item carries the final attested tree, `Lane-Tip:` and
-  the outcomes.
+- One landing per lane, one ref advance by compare-and-swap (§2). Its last
+  commit's tree is the final attested tree, and it carries `Lane-Tip:`, every
+  item's `WI:` and outcome. For a lane holding one item (every lane except a
+  spine batch) that is OI-103 Q4's one squash commit per item.
+- **A lane that took an act** collides with risk 6 on trunk (§7, README Q-8):
+  under option (a) the landing is two commits in the one ref advance (text,
+  then act); under option (b) it is one. This is the owner's ruling to make.
+- **A spine batch** (one branch, several WIs sharing one re-attest window,
+  `dispatch.py:25-38`) cannot be split per item: its items share one act and
+  one tree, and per-WI outcomes already live in each spec's folder. It lands
+  as one landing naming every item, which is what the hand path does today
+  (`eecd656d` closed nine WIs in one squash). Reading Q4's "per item" as "per
+  lane" for batches is README Q-11.
 - `ARCHIVE` then appends the two-parent `archive/lanes` commit (the
   `d4b36d71` recipe) by compare-and-swap.
 - Only then does it delete the branch and remove the worktree.
@@ -356,6 +408,12 @@ whichever path lands. `ask` hands every delegated session its note
   - 6 spot checks;
   - 7 trunk-side closes.
 
+<details><summary>The 75 closing commits with no record (commit: work items)</summary>
+
+eecd656d: WI-682 WI-683 WI-690 WI-691 WI-693 WI-694 WI-695 WI-696 WI-702; 312b2033: WI-706; 32687d47: WI-703; 83d866c8: WI-692; 5934f4c3: WI-707; e7fe487d: WI-704 WI-705 WI-708 WI-709; ec05c5ce: WI-710; cfef8d1d: WI-618; 78fd8fcd: WI-711; 6763d08d: WI-712 WI-714; 3bb6186c: WI-715; b90e84b6: WI-620; e827e697: WI-719; 2d264589: WI-716 WI-717 WI-718; bbe00d8a: WI-720; e86cae4f: WI-725; 3b872471: WI-723; d05b4b05: WI-721; 6f6613e2: WI-724 WI-726 WI-728; 17c54c2f: WI-729; b689eada: WI-727; e40ae0ae: WI-730 WI-731; 03debc71: WI-732; 5c71129f: WI-735; 7a6536f9: WI-733 WI-734; 5b75c39a: WI-736; 205d02cf: WI-738; 5dfd78c1: WI-545; d46c5278: WI-737; 4cbb73cf: WI-739; 3ecef627: WI-740; 896e88b4: WI-743; a4919610: WI-741 WI-742; dcef1f16: WI-744; 2a902b50: WI-745; 6a40d7b2: WI-722; 579cd187: WI-713; 9dbb5103: WI-746; 83db9d75: WI-749; b4b0ea39: WI-751; 85016f90: WI-752; bd9c2d54: WI-750; 183ff1c2: WI-753; ba0ea431: WI-748; d9424572: WI-755 WI-756; 7be21bc3: WI-754; 3a4afaf4: WI-757; 4873bef1: WI-759; dc80849f: WI-761; 87736778: WI-760; c58af7a6: WI-657; 1d688694: WI-762 WI-763; 5c74722c: WI-758; db0bc37f: WI-764; 46ececa8: WI-765; 1f1dc64e: WI-747; 4ba58905: WI-667; e4a44886: WI-766 WI-767; 1ffd8c5b: WI-770; f7d5a12a: WI-768 WI-769 WI-772 WI-773; ba68016b: WI-774; f0050d4c: WI-697; dfcb7a81: WI-775 WI-776; 758519de: WI-778; ed92c3fb: WI-779 WI-780; 25f7f0ad: WI-771; 5afc9270: WI-781; be6500f5: WI-784; 1fda46ed: WI-782 WI-783; 2e46707c: WI-785; c76acd99: WI-777; 863ee89b: WI-786; e78204b4: WI-541; 439a2bb0: WI-787; 5d0db869: WI-789
+
+</details>
+
 **Recommendation: accept the gap as history, with no backfill.** The four
 disclosure fields are the deciding session's own account, and those sessions
 are gone. A record written now would present reconstruction as disclosure,
@@ -381,7 +439,9 @@ that did not write it:
 - the reviewer's, by the adjudicator's unchanged final pass.
 
 **B10's one exception** to "a review never runs in a session that authored what
-it judges" is that non-mutating pass.
+it judges" is that non-mutating pass. It is carried, with the same scope, into
+`ask`'s routing and session reuse (chapter 2 §3 steps 2 and 3) and into act
+admission (§5), so all three admit exactly the flow above and nothing wider.
 
 **What stays with the builder.** Code findings still go back to the builder
 (`return`). This changes S11 §4.6 for spine text only. The two bounds stay
@@ -401,11 +461,31 @@ separate: 3 inner rounds per sitting, and 3 returns per lane.
 cell except `Status`, and add or remove no row. Text is committed first; the
 act (the flips, `snapshot`, the ledger and the views) second.
 
-**Where it is checked.** One function over two trees, at the commit, in two
+**Where it is checked.** One function over two trees, at the commit, in three
 places:
 - an ERROR step in the pre-commit hook;
 - each lane commit at the landing, as `_loop_trailer_refusal` already does
-  (`integrate.py:1289`), so a `--no-verify` commit is still caught.
+  (`integrate.py:1289`), so a `--no-verify` commit is still caught;
+- each commit the landing itself writes to trunk, against its trunk parent.
+
+**The collision on trunk (owner question, not settled here).** OI-101 Q2 says no
+commit changes spine text together with a snapshot update, on lane *and* trunk.
+OI-103 Q4 says one squash commit per item. A lane that amended spine text and
+then took the act has both changes in its range, so its one squash would carry
+both against its trunk parent. The two rulings cannot both hold for that lane.
+README Q-8 puts the options:
+- **(a) Two commits in one landing** (amends Q4 for act-taking lanes only). The
+  landing writes the text commit (the lane's tree at the parent of its first act
+  commit), then the act commit (the final attested tree), and advances trunk
+  once, by one compare-and-swap, to the second. Trunk's ref never points at the
+  first. Each is checked against its parent like any commit. The landing refuses
+  a lane whose range changes spine text after its first act (the sitting must
+  drop and retake that act, the existing back edge). Recommended: the coupling
+  rule then holds at every commit that changes trunk, which is the owner's
+  standing rule, and the lane still lands as one operation.
+- **(b) The squash as a replay** (amends Q2 on trunk). The landing writes one
+  commit; risk 6 is checked on each archived lane commit instead. The check no
+  longer runs at the commit that makes the trunk change.
 
 **What retires:**
 - the executable allowance, `baseline_snapshot.py:851-853` (documented at
@@ -420,7 +500,7 @@ places:
 
 **Consequences:**
 - The owner's held-rung approvals become two commits.
-- A squash joins a lane's text and act into one trunk commit; see Q-4.2.
+- An act-taking lane's landing shape waits on README Q-8 (above).
 
 ## 8. Rulings this changes (LS8, owner-confirmed)
 
@@ -520,7 +600,7 @@ row.
 
 | item | kind | fate | why | successor |
 |---|---|---|---|---|
-| SR-156, LLR-140, IF-080, IF-154, IF-173 | row/contract | amend | squash, one landing, claim lane-side, no `integrate.lock` | S788-landing |
+| LLR-140, IF-080, IF-154, IF-173 | row/contract | amend | squash, one landing, claim lane-side, no `integrate.lock` (SR-156 preserved: README matrix) | S788-landing |
 | SR-170, LLR-151 | row | amend | the authority replaces the "serial merge step" and the dispatch-lock claim | S788-station-authority |
 | SR-174, SR-140, SR-179, SR-207, SR-144, SR-208, SR-209, IF-101, IF-220 | row/contract | preserve | one allocator; flip and copy one act; mirror, report, held status and provenance unchanged | — |
 | SR-178, LLR-158, LLR-278, TC-153, TC-278, IF-091 | row/contract | amend | the act's scope comes from the lane's scope record (B6) | S788-sitting |
@@ -540,10 +620,19 @@ row.
 | `reviewer.template.md`; `worker.template.md:68-71` | prompt | amend | LS9; the act moves into the sitting | S788-resolve-ls9, S788-sitting |
 | PROCESS.md:447-451, :486-489; PROCESS_OPTIONS.md:435-513; AGENTS.template.md:172-176; concurrency-v2 §A2.0, §A5.2; runtime-flows.md; registry-machinery-reference.md | doc | amend | §7 to §9 | as above |
 | S11 plan §4.1, §4.2, §4.6, §7 | doc | superseded in part | §8 | — |
+| SR-173, LLR-220 | row | preserve | regeneration stays ordered and all-or-nothing, now at the final evidence; assumptions and surrogates stay inside the act | — |
+| LLR-137 | row | amend | `trunk_step` runs lane-side under the authority (and appends the ledger: chapter 2) | S788-station-authority, S788-session-store |
+| LLR-246 | row | amend | its writers move (`_claim_locked` lane-side, `commit_telemetry` to the spool, `_mint` into the lane); the held-status refusal applies at each new writer and at every lane commit at the landing | S788-station-authority, S788-session-store, S788-mint |
+| TC-218 | row | amend | a lane flip is refused unless it lies in an eligible ADJUDICATE range (§5), not refused at the slot by name | S788-sitting |
+| IF-123 | contract | amend | intake reads drift at the final tree, in `MINT` | S788-mint |
+| IF-129 | contract | amend | `staged_spine_findings` loses "re-attest it in this commit" | S788-text-then-act |
+| IF-228 | contract | amend | `checkpoint_drafts` is read at `MINT`, in the lane | S788-mint |
 
 ## 11. Proposed successor rows
 
-Each row's test bar is the commit bar plus the modules named.
+Each row's test bar is the commit bar plus the modules named. Each row's review
+bar is the README graph's "Review" column. Each row is landable on its own: its
+Done-when tests only what it and its `needs` provide.
 
 **S788-text-then-act:** risk 6 on lane and trunk.
 - **Scope:**
@@ -561,28 +650,46 @@ Each row's test bar is the commit bar plus the modules named.
 - **Scope:**
   - the record, the mutation lock, fencing, expiry and the `lane_state.py release` CLI;
   - the claim moved lane-side;
-  - the keep-warm and telemetry commits moved onto S788-session-store's spool;
-  - `integrate.lock` retired;
+  - today's landing (`integrate_one`) taking the authority; `integrate.lock` retired;
+  - cancellation (§2);
   - the hook check.
 - **Done-when:**
   - one acquirer wins and the other is refused, with the holder named;
-  - an expired holder cannot land;
+  - an expired or cancelled holder cannot advance a ref (the check and the
+    `update-ref` swap are one critical section);
   - an unlockable filesystem refuses;
-  - a claim waits during a sitting;
-  - a test enumerates every tool writer and finds none outside `MERGE`.
+  - a claim is refused while a landing holds the authority, and succeeds after;
+  - nothing that holds the authority waits: a test holds a lease elsewhere and
+    sees the holder take a fresh session at once;
+  - a cancelled sitting is stopped, its usage harvested, and the lane derives
+    `PARKED`; its relaunch gets the reconcile note.
+  (The census that no tool writer remains outside the landing belongs to the
+  last writer move, S788-dual-pickup.)
 - **needs:** S788-lane-state-provider, S788-session-store.
 - **BuildTier:** strong. **Modules:** integrate, dispatch, session. **RESYNC:**
   yes.
 
 **S788-landing:** the one landing.
 - **Scope:**
-  - the squash and `archive/lanes`;
+  - one landing per lane by compare-and-swap, its shape per README Q-8 and Q-11,
+    and `archive/lanes`;
   - `Lane-Tip:` and the audit;
   - one record check, with the hand path on it;
+  - **F1:** the refresh aborts its own interrupted merge (a `MERGE_HEAD` that is
+    a trunk commit, with no other change); any other dirt still refuses;
+  - **F2:** `ARCHIVE` is ordered (`archive/lanes` first, then the branch, then
+    the worktree) and re-derived every tick, so an incomplete unload is re-run
+    until the lane is closed;
   - the gap's log fragment.
 - **Done-when:**
-  - both paths yield one commit per item, equal to the attested tree;
+  - both paths yield one landing per lane whose final tree equals the attested
+    tree, and a single-item lane yields one commit per item (two under Q-8 (a)
+    when it took an act);
+  - a trunk moved under the lane fails the swap, naming the foreign commit;
   - the tip is reachable from `archive/lanes`;
+  - a refresh killed after `merge --no-commit` is recovered by the next one;
+  - an unload killed after `archive/lanes` and before `worktree remove` is
+    finished by the next tick;
   - a close that owes a record and has none is refused on either path.
 - **needs:** S788-station-authority, S788-ask.
 - **BuildTier:** strong. **Modules:** integrate, handback. **RESYNC:** yes.
@@ -597,10 +704,11 @@ evidence.
   - the briefs.
 - **Done-when:**
   - a build lane's Drafted rows are approved in the lane;
-  - an out-of-scope act, an act outside an ADJUDICATE range, or an act by an
-    author's family is refused;
+  - an out-of-scope act, an act outside an ADJUDICATE range, or an act by a
+    session that chapter 2's judged-scope table makes ineligible is refused;
   - a rejected final review drops the act;
-  - a fourth `return` is refused.
+  - a fourth `return` is refused, and the sitting's outcome is `merge-partial`
+    (green: the work lands; red: an empty keep set), with no red tree landed.
 - **needs:** S788-landing, S788-text-then-act, S788-session-families, WI-791.
 - **BuildTier:** strong. **Modules:** acceptance, integrate, agent_loop.
   **RESYNC:** yes.
@@ -617,6 +725,8 @@ evidence.
   - `open-item` yields a blocked placeholder row;
   - a settled amendment is never minted;
   - a merge re-judge is minted in the lane;
+  - an exhausted lane's upheld findings become its successor's Done-when;
+  - a coordinator's filing lands through a station lane;
   - sequential sittings never collide on an id.
 - **needs:** S788-sitting, WI-790.
 - **BuildTier:** strong. **Modules:** intake, consolidate. **RESYNC:** yes.
@@ -642,8 +752,10 @@ evidence.
   - the amendment brief.
 - **Done-when:**
   - a final pass that changes any byte cannot act;
+  - with the two-family pool, every kind in the flow has an eligible draw
+    (chapter 2 §3 step 2), and the act admits exactly B10's exception;
   - a fourth round is refused, and its rows are minted unsettled.
-- **needs:** S788-sitting, S788-session-families.
+- **needs:** S788-sitting, S788-session-families, S788-mint.
 - **BuildTier:** strong. **Modules:** prompts and range rules. **RESYNC:** yes.
 
 ## 12. Questions for the owner
@@ -660,14 +772,11 @@ consolidation census and the release re-judge. Options:
 
 **Recommend (a):** it keeps your words, "through a WI", literally.
 
-**Q-4.2. The squash meets risk 6 on trunk.** One squashed commit carries the
-lane's text and its act. Options:
-- (a) Check risk 6 on each lane commit at the landing, and on the owner's own
-  trunk commits. The squash counts as a replay.
-- (b) Land a spine lane as two trunk commits.
-
-**Recommend (a):** it keeps Q4's one commit per item, the archived tip keeps
-the separate commits, and the check still runs where the change is made.
+**Q-4.2. OI-101 Q2 and OI-103 Q4 collide for a lane that took an act.** The
+options and what each amends are in §7 ("The collision on trunk"): (a) two
+commits in one landing, amending Q4 for such lanes; (b) the squash as a replay,
+amending Q2 on trunk. **Recommend (a).** Neither is settled until the owner
+rules.
 
 ## 13. Research record
 
@@ -725,9 +834,10 @@ the separate commits, and the check still runs where the change is made.
 |---|---|---|---|
 | The REFRESH in the lock runs the commit-tier bar; the full bar runs once, at the end | the full bar at both | low | B5 and "no stale tests" both hold, at half the hold |
 | The authority is a lease with fencing | a long-held flock | medium | the hand path has no long-lived process |
+| Nothing waits under the authority: leases first (waiting holding nothing), then one non-blocking try of the authority | wait for the lease inside the authority | low | OI-103 Q2's reading, "a sitting never waits while holding the lock" |
 | The TTL is 120 min, as a dial | 30 min, or none | low | it covers the p90 loaded sitting |
 | `integrate.lock` folds into the authority | keep both | low | that would be risk 7's dual path |
 | Lane-side claims still take the authority | claims run free | low | Q1 (a) names claims |
 | Spine rounds stay in the sitting; code fixes `return` | every finding goes to the builder | medium | OI-101 Q1 gives the text to the adjudicator |
 | The gap is accepted as history | backfill | none | backfill would fabricate disclosures |
-| Coordinator hand commits take only the hook check | route them through WIs | low | they are the hand path's records |
+| ~~Coordinator hand commits take only the hook check~~ Withdrawn in the fix round: a coordinator is an agent, so its trunk writes go through a station lane; only the owner's commits are outside the tool, and the pause file is README Q-12 | — | — | OI-103 Q1's owner words |

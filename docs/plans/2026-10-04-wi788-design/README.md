@@ -31,17 +31,22 @@ research record. Where a chapter and this page differ, this page wins.
   outside every checkout. Grok and FreeLLMAPI run through OpenCode; Gemini is
   documented and untested. Every route records `verified`; none untested is
   enabled by default.
-- **One station authority** (a fenced lease) is the tool's only way to trunk.
-  Claims move lane-side, every mint moves into `ADJUDICATION.MINT`, keep-warm and
-  telemetry go through a spool, and `out/integrate.lock` retires.
+- **One station authority** (a fenced lease) is the tool's only way to trunk;
+  every ref advance is a compare-and-swap inside it. Claims move lane-side,
+  every mint moves into `ADJUDICATION.MINT`, keep-warm and telemetry go through a
+  spool, coordinator writes go through a station lane, and `out/integrate.lock`
+  retires. Only the owner's own commits are outside the tool.
 - **The sitting runs in the lane**: `LOCK`, `REFRESH`, `RESOLVE` (the adjudicator's
   call is final), `JUDGE` (acts on a recorded scope), `MINT` (every item consumed),
   `MERGE_ACTION`; then the final review, regeneration and bar on the final tree;
-  then one squash landing per item, on both paths.
+  then one landing per lane, on both paths (one squash commit for a single-item
+  lane; the act-taking and batched cases are Q-8 and Q-11). A fourth sitting that
+  owes a return ends `merge-partial` with a successor; nothing red lands.
 - **Spine text before act**, on lane and trunk. The adjudicator drafts, the
   adjudication reviewer edits, the adjudicator's unchanged final pass is the act.
 - **Planning has two products.** A decomposition is selected by its drafters (no
-  arbiter call recommended); an implementation plan is declared, or triggered at
+  arbiter call recommended; a PAGE closes the parent `partial` and mints a
+  successor that waits on the owner); an implementation plan is declared, or triggered at
   the second consecutive CHANGES-REQUESTED with the swap. A plan gate checks
   Done-when, SR and TC coverage. The OI-103 Q5 dial ships off.
 - **Risk 7:** eighteen dual paths, each retired or justified (ch.1 §7).
@@ -50,14 +55,18 @@ research record. Where a chapter and this page differ, this page wins.
 
 ### How the locks and the lease compose
 
-One order everywhere: the process's own `out/agent-loop.lock`, then the station
-authority, then the session lease, then the millisecond store locks. A sitting
-takes the authority and only then waits, up to 1200 s, for the adjudicator lease
-(ch.2 §3 step 5). The lease's only other holder is a keep-warm ping, which never
-asks for the authority, so no cycle can form. Every wait runs in the worker's own
-process, never in the dispatcher's tick or the landing. A fresh non-replacing
-session drawn after the wait runs inside the same lane's authority. The worst case
-adds 20 minutes to ch.4 §2's hold times.
+One order everywhere: the process's own `out/agent-loop.lock`, then the session
+leases, then the station authority, then the millisecond store locks (ch.4 §2).
+**Nothing waits while holding the authority** (OI-103 Q2). A sitting first takes
+its [adjudicate] and [adjudication review] leases, waiting up to 1200 s while
+holding nothing else (ch.2 §3 step 5); then it tries the authority once, without
+waiting, and on failure releases the leases and tries again on a later tick.
+Under the authority every acquisition is one non-blocking try, and a lease found
+busy (a keep-warm ping) gives that call a fresh, non-replacing session at once.
+Nothing holding the authority waits, so no cycle can form. Every wait runs in the
+worker's own process, never in the dispatcher's tick or the landing. Every tool
+ref advance re-checks the authority's generation and swaps the ref inside one
+critical section, so an expired or cancelled holder cannot land.
 
 ## Rulings carried
 
@@ -71,7 +80,7 @@ adds 20 minutes to ch.4 §2's hold times.
 | OI-101 Q3, Q4 (OpenCode routes, free-model row; probe OpenCode, Google from docs) | ch.2 §1, §5 (no `opencode/*-free` row); gap below |
 | OI-101 Q5, Q6 (kit glossary; S11 §6 as ruled) | [glossary](#glossary-draft); ch.4, changes 4-6 |
 | OI-103 Q1, Q2 (no tool write to trunk but a merge; never wait) | ch.4 §2, §3, §4.3, §5 |
-| OI-103 Q3, Q4 (final call; one squash, tip archived) | ch.4 §4.1, §6; ch.1 §1 |
+| OI-103 Q3, Q4 (final call; one squash, tip archived) | ch.4 §4.1, §6; ch.1 §1; Q4 against OI-101 Q2 is Q-8, and batched lanes are Q-11 |
 | OI-103 Q5, Q6 (tier dial; agent-judged recovery and U1 harvest) | ch.3 §4.8; ch.1 §5-§6, ch.2 §6 |
 | Risks 1-5 (store; family from records; retention first; no occupancy; lease) | ch.2 §4; §3 steps 2, 3, 5; §2; [composition](#how-the-locks-and-the-lease-compose) |
 | Risks 6-9 (text then act; no fallback modes; the coordinator on `ask`; RESYNC is the migration) | ch.4 §7; ch.1 §7, ch.2 §7; ch.2 §3, ch.4 §6; graph's RESYNC rule |
@@ -93,11 +102,12 @@ adds 20 minutes to ch.4 §2's hold times.
 - **OI-101 Q4 against LS10.** Chapter 2 also live-probed claude and codex (resume
   by id from another directory; a few cents), because LS10, the later
   instruction, asks for that probe of each CLI. Gemini was not probed.
-- **D1-D6's spine cells** (SR-006/137/139/147, LLR-155/277/291, IF-079) are not
-  named cell by cell; S788-retire-legacy-config-and-carriers names them.
-- **Unprobed:** F1 (a killed refresh), F3 (`refs/stash` across worktrees), the
-  Windows lock probe, FreeLLMAPI end to end, Gemini's stream fields, free plans
-  for claude and codex. **Hand-path liveness** is unknown until `ask.py` lands.
+- **Unprobed, each assigned:** F1 (a killed refresh) and F2 (an incomplete
+  unload) are S788-landing's Done-when; F3 (`refs/stash` across worktrees) is
+  probed by S788-lane-state-provider's fixture; the Windows lock probe stays
+  UNVERIFIED (the dispatcher passes its handles instead). The provider contracts
+  and the live checks still owed are tabled in ch.2 §5. **Hand-path liveness**
+  is unknown until `ask.py` lands.
 
 ## Changes to existing rulings
 
@@ -123,8 +133,10 @@ adds 20 minutes to ch.4 §2's hold times.
 20. **LS10**: "same commit" superseded by B1; "today's refresh resets" corrected (it refuses a dirty lane); claude's fixed-directory expectation refuted (ch.1 §6, ch.2 §1).
 21. **IF-045 "a second account is a second row"**: retired; OpenCode rows' `family` becomes the trainer (ch.2 §4-§5).
 22. **`retain_for`**: retired; `rejudge` moves to [judge] (ch.2 §2).
-23. **LS4 "LOCK takes the lease and holds the merge slot"**: the authority, then the lease; `out/integrate.lock` retires (ch.4 §2).
+23. **LS4 "LOCK takes the lease and holds the merge slot"**: the leases, then the authority by one non-blocking try, nothing waited for under it; `out/integrate.lock` retires (ch.4 §2).
 24. **LS9's wording** in the rework brief, the reviewer brief (`[ADVICE]`) and `AGENTS.template.md`'s retry rule (ch.4 §9).
+25. **The coordinator's hand path to trunk**: a coordinator is an agent, so its trunk writes (filing, rulings records, status, log fragments) go through a station lane; only the owner's commits stay outside the tool. The pause file is Q-12 (ch.4 §2-§3).
+26. **Pending the owner, not settled here:** OI-101 Q2 against OI-103 Q4 for act-taking lanes (Q-8), and OI-103 Q4's "per item" for batched lanes (Q-11).
 
 ## Glossary draft
 
@@ -178,10 +190,18 @@ Merged from the four chapters' matrices; **resolved** marks a disagreement settl
 |---|---|---|
 | SR-156 | preserve. **Resolved** (ch.1 preserve, ch.4 amend): its text names no merge form or lock (R2), and recovery still reads version control alone | — |
 | SR-140/144/148/174/179/207/208/209, LLR-073/283/290, SN-024/026, IF-064/101/137/220/266, TC-293 | preserve | — |
+| SR-173, LLR-220 (from Sol's inventory) | preserve: regeneration stays ordered and all-or-nothing, now at the final evidence; assumptions and surrogates stay inside the act | — |
+| LLR-137 | amend: `trunk_step` runs lane-side under the authority and appends the ledger | S788-station-authority, S788-session-store |
+| LLR-246 | amend: its writers move (claim, `commit_telemetry`, `_mint`); the held-status refusal applies at each new writer and per lane commit | S788-station-authority, S788-session-store, S788-mint |
+| TC-218 | amend: a lane flip is admitted only in an eligible ADJUDICATE range | S788-sitting |
+| IF-123, IF-228 | amend: drift and `checkpoint_drafts` read at `MINT`, in the lane | S788-mint |
+| IF-129 | amend: "re-attest it in this commit" goes | S788-text-then-act |
+| IF-242 | amend: `plan_coverage` joins `done_when`'s requestors | S788-plan-gate |
 | LLR-140 | amend: `code_symbol`, the rollup window (D10), `--no-ff` | S788-lane-state-provider, S788-retire-runtime-dual-paths, S788-landing |
 | LLR-150, LLR-182, IF-136, TC-205 (TC-132/143/144 if a test moves); IF-173; new LLR, IF, TCs for `lane_state` | amend / add | S788-lane-state-provider (IF-173 also S788-landing) |
 | SR-027, LLR-029/030, IF-023 (D10-D12) | amend | S788-retire-runtime-dual-paths |
-| SR-006/137/139/147, LLR-155/277/291, IF-079 (D1-D6, with ch.2 §7's CSV reader and `Provider`/`weak`) | amend | S788-retire-legacy-config-and-carriers |
+| SR-137 (requirement, AC), SR-139 (AC), LLR-155 (detail, code_symbol), LLR-277 (detail), IF-079 (data): the cells stating D1-D6's dual reads, named in ch.1 §9.1 | amend | S788-retire-legacy-config-and-carriers |
+| SR-006, SR-147, LLR-291 | preserve: no cell states a dual read (corrects ch.1's first list) | — |
 | TC-253, LLR-058, IF-073 (D9) | amend | WI-790 |
 | SR-154 | amend thrice, in `needs` order: exclusion from all authors; planning and the dial; final resolution | S788-ask, S788-single-plan, S788-resolve-ls9 |
 | SR-222, LLR-269; SR-225 | amend (ledger, `commits`, `_dp_session`; the note via `ask`, one landing check) | S788-session-store, S788-ask, S788-plan-kinds; S788-landing |
@@ -221,7 +241,12 @@ Merged from the four chapters' matrices; **resolved** marks a disagreement settl
 
 This replaces both numbered slice lists in the spec. Every row's test bar is its
 affected modules plus the smoke tier at `-n 2`, plus any extra named below, and
-every row carries its own RESYNC entry (risk 9).
+every row carries its own RESYNC entry (risk 9). **Review bar:** `A` is one
+cross-family REVIEW-A of the code; `A+B` adds an independent REVIEW-B, of
+another family where the pool allows, for the backbone rows and the forced
+migration. Every row that amends a spine row also passes adjudication of that
+row. Each row is landable on its own: its Done-when tests only what it and its
+`needs` provide (the writer census waits for the last writer move, S788-dual-pickup).
 
 ```mermaid
 graph TD
@@ -248,6 +273,7 @@ graph TD
   sitting --> resolve[S788-resolve-ls9]
   sitting --> spine[S788-spine-authoring]
   families --> spine
+  mint --> spine
   kinds --> dual[S788-dual-pickup]
   provider --> dual
   mint --> dual
@@ -258,28 +284,28 @@ graph TD
   accounts --> rlc[S788-retire-legacy-config-and-carriers]
 ```
 
-| Group | Row | Title | needs | Tier | Extra bar |
-|---|---|---|---|---|---|
-| contracts | S788-glossary | `GLOSSARY.md` and PROCESS.md wording | — | medium | `check_docs`, byte budget |
-| foundation | S788-accounts | Account tables, per-account homes | glossary | strong | scaffold bootstrap |
-| foundation | S788-lane-state-provider | The provider, representation only | glossary | strong | a fixture per crash shape |
-| foundation | S788-session-store | Store, invocations, ledger, spool | accounts, lane-state-provider | strong | per-CLI kill fixtures |
-| foundation | S788-ask | One entry point, today's kinds | session-store | strong | one live `ask.py` call (Q-3) |
-| foundation | S788-session-families | Families and reset terms | ask | strong | — |
-| planning | S788-plan-gate | A checkable plan gate | — | medium | — |
-| planning | S788-plan-kinds | Plan kinds through `ask`; drafter selection | ask, plan-gate | strong | — |
-| planning | S788-single-plan | Per-item planning, replan, tier dial | plan-kinds, lane-state-provider | strong | — |
-| adjudication | S788-text-then-act | Risk 6 on lane and trunk | — | medium | — |
-| adjudication | S788-station-authority | The authority; trunk writers moved | lane-state-provider, session-store | strong | every-writer test |
-| adjudication | S788-landing | One squash landing, one record check | station-authority, ask | strong | — |
-| adjudication | S788-sitting | `LOCK` to `MERGE_ACTION`, final evidence | landing, text-then-act, session-families, WI-791 | strong | — |
-| adjudication | S788-mint | `MINT`, consolidation, station lane | sitting, WI-790 | strong | — |
-| adjudication | S788-resolve-ls9 | `RESOLVE` and LS9 wording | sitting | medium | byte budget |
-| adjudication | S788-spine-authoring | The OI-101 Q1 flow | sitting, session-families | strong | — |
-| planning, late | S788-dual-pickup | The dual pickup, in a lane | plan-kinds, lane-state-provider, mint, WI-790 | strong | — |
-| routes | S788-routes | FreeLLMAPI, Grok, Gemini untested | accounts, ask | medium | one live call (Q-3, Q-4) |
-| consolidation | S788-retire-runtime-dual-paths | Dual paths needing no migration | lane-state-provider | medium | — |
-| consolidation | S788-retire-legacy-config-and-carriers | SN-028 window, non-TOML carriers | accounts | strong | scaffold bootstrap (Q-1) |
+| Group | Row | Title | needs | Tier | Review | Extra test bar |
+|---|---|---|---|---|---|---|
+| contracts | S788-glossary | `GLOSSARY.md` and PROCESS.md wording | — | medium | A | `check_docs`, byte budget |
+| foundation | S788-accounts | Account tables, per-account homes | glossary | strong | A | scaffold bootstrap; claude login isolation check |
+| foundation | S788-lane-state-provider | The provider, representation only | glossary | strong | A+B | a fixture per crash shape (F3 probe) |
+| foundation | S788-session-store | Store, invocations, ledger, spool | accounts, lane-state-provider | strong | A+B | per-CLI kill fixtures; usage baselines |
+| foundation | S788-ask | One entry point, today's kinds | session-store | strong | A+B | judged-scope tests; one live `ask.py` call (Q-3) |
+| foundation | S788-session-families | Families and reset terms | ask | strong | A | — |
+| planning | S788-plan-gate | A checkable plan gate | — | medium | A | — |
+| planning | S788-plan-kinds | Plan kinds through `ask`; drafter selection | ask, plan-gate | strong | A | — |
+| planning | S788-single-plan | Per-item planning, replan, tier dial | plan-kinds, lane-state-provider | strong | A | — |
+| adjudication | S788-text-then-act | Risk 6 on lane and trunk | — | medium | A+B | — |
+| adjudication | S788-station-authority | The authority, claims, cancellation | lane-state-provider, session-store | strong | A+B | — |
+| adjudication | S788-landing | One landing per lane; F1, F2; record check | station-authority, ask | strong | A+B | — |
+| adjudication | S788-sitting | `LOCK` to `MERGE_ACTION`, final evidence, exhaustion | landing, text-then-act, session-families, WI-791 | strong | A+B | — |
+| adjudication | S788-mint | `MINT`, consolidation, station lane | sitting, WI-790 | strong | A+B | — |
+| adjudication | S788-resolve-ls9 | `RESOLVE` and LS9 wording | sitting | medium | A | byte budget |
+| adjudication | S788-spine-authoring | The OI-101 Q1 flow | sitting, session-families, mint | strong | A+B | — |
+| planning, late | S788-dual-pickup | The dual pickup in a lane; the writer census | plan-kinds, lane-state-provider, mint, WI-790 | strong | A | the no-writer-outside-the-landing census |
+| routes | S788-routes | FreeLLMAPI, Grok, Gemini untested | accounts, ask | medium | A | one live call (Q-3, Q-4) |
+| consolidation | S788-retire-runtime-dual-paths | Dual paths needing no migration | lane-state-provider | medium | A | — |
+| consolidation | S788-retire-legacy-config-and-carriers | SN-028 window, non-TOML carriers | accounts | strong | A+B | scaffold bootstrap (forced migration) |
 
 (`needs` omits the `S788-` prefix.) **Order notes.** S788-dual-pickup follows
 S788-mint, against B12's "planning, then adjudication", because its children
@@ -290,37 +316,41 @@ route environments today.
 
 ## Questions for the owner at the checkpoint
 
-- **Q-1. Retire D1-D6 in one row?** Adopters still on one-word config or CSV/markdown carriers must migrate at their next resync. (a) One row, RESYNC running both migrators; (b) keep D6 one more release. **Recommend (a)** (risks 7, 9). ch.1 §9.3.
-- **Q-2. Where do account homes live?** (a) The user config directory, shared by every repo; (b) each clone's `out/accounts/`. **Recommend (a).** ch.2 §4.
-- **Q-3. Which live recordings do you authorize?** (i) One `ask.py` call; (ii) one FreeLLMAPI call once it exists; (iii) a Gemini install and recording. **Recommend (i), (ii); not (iii)** (OI-101 Q4; a synthetic fixture, marked unverified).
-- **Q-4. FreeLLMAPI:** name the endpoint (local `:3001` or hosted) and the models to pin. No `auto` row: its family and window change between calls. ch.2 §5.
-- **Q-5. Dual-plan selection, (a), (b) or (c)?** **Recommend (a):** drafters select, a mutual self-select becomes your open item, and the losing drafter's concession is recorded as a second independence exception. In 8 rounds the arbiter changed nothing and always picked its own family. ch.3 §4.4.
+Ids are kept stable across the fix round; withdrawn ones say why.
+
+- **Q-1. Withdrawn, now a notice.** Retiring D1-D6 is already directed (risks 7 and 9). **Forced migration:** adopters still on one-word config or CSV/markdown carriers must run the migrators at their next resync (S788-retire-legacy-config-and-carriers). Flagged per CLAUDE.md; object at the checkpoint if one release of grace is wanted.
+- **Q-2. Withdrawn, decided.** Account homes live in the user config directory, outside every checkout (ch.2 §4): an implementation location, reversible.
+- **Q-3. Spend:** authorize (i) one live `ask.py` call in S788-ask and (ii) one live FreeLLMAPI call in S788-routes once the endpoint exists? **Recommend yes to both.** (The Gemini recording is not asked: OI-101 Q4 rules Gemini documentation-only.)
+- **Q-4. Provisioning, FreeLLMAPI:** name the endpoint (local `:3001` or hosted) and the models to pin, and confirm FreeLLMAPI can hold a one-model chain per pinned id; without that, no FreeLLMAPI row ships (ch.2 §5).
+- **Q-5. Dual-plan selection, (a), (b) or (c)?** **Recommend (a):** drafters select, a mutual self-select becomes your open item, and the losing drafter's concession is recorded as a second independence exception. The evidence is suggestive, not conclusive: in 8 rounds the two arbiter runs always agreed and ported nothing, and the arbiter picked its own family's plan in at least 7 (DP-003 unverified). Whether arbitration ever changed a selection cannot be told, because no drafter was asked to choose. ch.3 §3.2, §4.4.
 - **Q-6. Per-item planning:** on declaration plus the second consecutive CHANGES-REQUESTED (with the swap), or also the first? **Recommend the second:** 13 of 34 first-CR lanes passed unaided. Re-measure after 20 lanes. ch.3 §4.7.
-- **Q-7. Idle and CLI mints have no lane.** (a) A station lane mints its own carrier row and lands like any lane; (b) a station lane with no row; (c) drop idle mints. **Recommend (a).** ch.4 §12.
-- **Q-8. The squash meets risk 6 on trunk.** (a) Check each lane commit at the landing and your own trunk commits, the squash counting as a replay; (b) two trunk commits per spine lane. **Recommend (a).** ch.4 §12.
+- **Q-7. Idle and CLI mints, and the coordinator's writes, have no lane.** (a) A station lane mints its own carrier row and lands like any lane; (b) a station lane with no row; (c) drop idle mints. **Recommend (a):** every landing is then a work item's. ch.4 §12.
+- **Q-8. Two of your rulings collide for a lane that took an act.** OI-101 Q2: no commit carries spine text with a snapshot update, on lane and trunk. OI-103 Q4: one squash commit per item. A lane that amended text and then took the act cannot satisfy both with one commit. (a) **Two commits in one landing** (text, then act; one ref advance), which amends Q4 for act-taking lanes; (b) **the squash as a replay**, checked per archived lane commit, which amends Q2 on trunk. **Recommend (a):** the coupling rule then holds at every commit that changes trunk. Neither is settled until you rule. ch.4 §7.
 - **Q-9. Retitle WI-788** ([Title](#title)); the rename is its own commit.
 - **Q-10. Attribute an unlogged commit by its `Co-Authored-By:` trailer?** It is evidence in the judged commit itself, can only add an exclusion, and no one is asked to write it, but it sits near your "no marker convention" rule. (a) Keep it; (b) count every unlogged commit as a person's. **Recommend (a)** until hand sittings run on `ask.py`. ch.2 §3 step 2.
+- **Q-11. Batched lanes under Q4.** The dispatcher batches spine rows into one lane sharing one re-attest window (`dispatch.py:25-38`); their items share one act and one tree and cannot be split per item. (a) A batch lands as one landing naming every item (Q4's "per item" read as "per lane" for batches, as the hand path already does: `eecd656d` closed nine WIs in one squash); (b) retire batching, so every lane holds one item and shared re-attestation is lost. **Recommend (a).** ch.4 §6.
+- **Q-12. The pause file.** Every coordinator write to trunk goes through a station lane, but a pause must stop claims at once and cannot wait for a sitting to land. (a) The pause is your act: the coordinator writes it only on your explicit instruction, as your commit (the hook's check applies); (b) it lands through a station lane, taking effect up to one sitting late; (c) it moves to an untracked file under the primary checkout's `out/`, read by the dispatcher, so it is no trunk write. **Recommend (a):** it is already your gate, and it stays visible in the tree. ch.4 §2.
 
 **Decided here, reversible at the checkpoint:** a dual round with one family
-available parks (risk 7; ch.3's question 2); the decisions-record gap, 75 owed
-since 2026-09-28, is accepted as history (ch.4 §6); the shipped retention dial is
-55.
+available parks (risk 7; ch.3's question 2); the decisions-record gap (75 commits
+since 2026-09-28, listed in ch.4 §6) is accepted as history; the shipped
+retention dial is 55; homes live in the user config directory.
 
 ## Research-to-uncover status
 
 | Item | Status | Where |
 |---|---|---|
 | Baseline: rounds, CR by tier, partials, tokens | partly: 48 loop lanes; hand path unlogged; 1 of 484 logs has `gen_ai.usage.*` | ch.3 §3.1 |
-| Drafter convergence | partly: 8 rounds, arbiter runs agreed 16 of 16; drafters' choice never recorded | ch.3 §3.2 |
+| Drafter convergence | partly: 8 rounds; arbiter runs agreed 16 of 16 and ported nothing; the arbiter picked its own family's plan in at least 7 (DP-003 unverified); drafters' choice never recorded, so the arbiter's effect on outcomes is unknown | ch.3 §3.2 |
 | Dual round's cost | partly: 8-11 sessions, 27-39 min; OpenAI tokens only | ch.3 §3.2 |
 | What the arbiter checks against | done (design): the plan gate | ch.3 §4.5 |
 | Replanning against drift | done | ch.3 §4.9 |
 | Knowledge packs | done | ch.3 §9 |
 | arXiv 2604.12147 in full; AdaCoder figures | done: the first holds more narrowly than claimed; the second holds on a narrow base | ch.3 §3.3 |
-| WI-199, WI-209, `DP-*` records | partly: WI-209 and DP-001 read; WI-199 not cited | ch.3 §9 |
+| WI-199, WI-209, `DP-*` records | done: WI-199 records no cost figures and names the routing-off degraded mode §4.3 retires | ch.3 §9 |
 | The owner's earlier arbiter notes | not found | ch.3 §3.2 |
 | LS10 probes: claude, codex, opencode | done: claude and codex resume by id anywhere; opencode needs `--dir` | ch.2 §1 |
-| The decisions-record gap | done: 77 closes, 2 records, 75 owed | ch.4 §6 |
+| The decisions-record gap | done: 77 closing commits, 2 records, 75 owed, listed | ch.4 §6 |
 
 ## Title
 

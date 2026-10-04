@@ -22,8 +22,9 @@ produces, how it is judged, and how a plan changes the build's tier.
    TC rows. A plan the gate fails cannot be selected or built from.
 4. **The dual pickup runs in the claimed lane.** Children are drafted with a
    provenance key and minted by chapter 4's one allocator. The round directory is
-   named by its work item, so no `DP-NNN` allocator remains. A PAGE hands the parent
-   back with an open item. The `--dual-plan` flag and the preflight refusal retire.
+   named by its work item, so no `DP-NNN` allocator remains. A PAGE closes the
+   parent `partial` and mints a successor decomposition row that carries the
+   round's evidence and waits on an open item. The `--dual-plan` flag and the preflight refusal retire.
 5. **A per-item planning step exists in two places:** by declaration
    (`planmode = "single"`), and on demand at the second consecutive CHANGES-REQUESTED,
    folded into the existing family swap. It never fires by BuildTier alone.
@@ -159,7 +160,8 @@ ran by hand, without logs.
 The plan file and round directory are named by the work item, so they are unique by
 construction. This retires the `DP` watermark allocation, one trunk writer fewer for
 B3. Existing `docs/archive/plans/DP-*` stay as history. `<n>` counts rounds within
-the item (a re-run after a PAGE is `round-2`).
+the item; a PAGE's re-run happens under its successor's id (§4.6 item 5), so in
+practice an item holds one round.
 
 ### 4.2 `PLANNING` for chapter 1's provider
 
@@ -257,20 +259,32 @@ The fix under risk 7; no interim guard.
    plan-local edges plus the parent. The parent closes `complete` in the same lane.
    At `ADJUDICATION.MINT`, chapter 4's allocator mints all children or none.
 4. **Duplicates.** A terminal parent is never re-admitted; `MINT` refuses a `source`
-   an existing spec already carries (this also covers a resumed partial mint); a
-   re-run opens a new `round-<n>`.
-5. **PAGE.** The lane commits the evidence and hands the parent back. The reason
-   becomes an open item with its WI-790 placeholder (an item on chapter 4's
-   consumption list, minted at `ADJUDICATION.MINT`), cited in the parent's `needs`,
-   so readiness holds the parent. The owner rules "adopt plan X from `round-<n>`"
-   (filed mechanically, as on SELECT) or "re-run" (`round-<n+1>`). This replaces
-   gilbert's ad-hoc "manual completion".
+   an existing spec already carries (this also covers a resumed partial mint).
+5. **PAGE.** A terminal parent can never be resumed (`handback.close_partial`
+   moves it to terminal `partial/`, `handback.py:449`; the schedule never puts a
+   `partial` row back on the frontier and requires a successor,
+   `schedule.py:680-690`). So a PAGE:
+   - commits the round's evidence in the lane, and the sitting's `MERGE_ACTION`
+     is `merge-partial`: the parent closes `partial`, with its report;
+   - at `MINT`, mints two things from the consumption list: the **open item**
+     (its WI-790 placeholder) stating the disagreement, and the mandatory
+     **successor** (OI-73): a decomposition row with `planmode = "dual"`, the
+     parent's goal and Done-when, `source = "<parent>/round-<n>:PAGE"`, its
+     `needs` citing the open item (so readiness holds it until the owner rules)
+     and the parent;
+   - the successor's lane reads the parent's `docs/plans/<parent>/round-<n>/`.
+     The owner's ruling on the open item becomes its Done-when line (WI-790's
+     rule): "adopt plan X from `<parent>/round-<n>`" makes its round a SELECT
+     from that evidence with no new drafting, filing X's rows as on SELECT;
+     "re-run" makes it run its own `docs/plans/<successor>/round-1/`.
+
+   This replaces gilbert's ad-hoc "manual completion".
 6. **Retired:** the preflight refusal; the `--dual-plan` flag and `_dual_plan_entry`
    (`agent_loop.py:3678-3734`, `:3920`), an off-lane trunk writer; the `DP` and WI
    allocation in `plan_artifacts`; `append_log_summary`.
 7. **Tests:** admit (claimed, enters `PLANNING.DUAL`, no loop); round (recorded
    fixtures reach SELECT); children (provenance, all-or-none mint); duplicate (a
-   repeated `source` is refused); page (owner-held open item holds the parent);
+   repeated `source` is refused); page (the parent closes `partial`; the minted successor carries the round and waits on the open item);
    resume (continues from `state.json`).
 
 ### 4.7 A per-item planning step
@@ -361,6 +375,7 @@ The fix under risk 7; no interim guard.
 | new LLR under SR-154 | row | add | the build-below-planner tier rule (`ask`'s build tier) | S788-single-plan |
 | SR-222 / LLR-269 | row | amend | `_dp_session` goes through `ask` | S788-plan-kinds |
 | IF-057, IF-060 | contract | amend | the gate's input grammar and exit meaning | S788-plan-gate |
+| IF-242 | contract | amend | `plan_coverage` joins `kitlib.done_when`'s requestors (the gate's `D#` clauses) | S788-plan-gate |
 | IF-058 | contract | amend | `STEP_SELECT`; `SELECTED` needs a concession | S788-plan-kinds |
 | IF-061 | contract | amend | the write side without allocators | S788-dual-pickup |
 | IF-066 | contract | amend | no `template` or `model` args: `ask` routes | S788-plan-kinds |
@@ -388,7 +403,7 @@ S788-lane-state-provider (chapter 1) and S788-mint (chapter 4). The full graph i
 |---|---|---|---|---|---|---|
 | S788-plan-gate | The plan gate becomes checkable: `D#`/`F#` clauses, `Excludes:` grammar, SR/TC diff for SINGLE, optional `Tier` column | a SINGLE plan missing a Done-when item exits 1 naming it; an excluded clause with a reason passes; the diff names an uncovered SR and an unnamed TC; existing DUAL fixtures byte-identical; LLR-069, TC-069, IF-057, IF-060 amended | none | medium | module tests + smoke | yes (planner grammar) |
 | S788-plan-kinds | `plan` and `plan-critique` through `ask`; runner loses route drawing and the ambient template; `STEP_SELECT` with the concession rule; `state.json` persisted; arbiter prompt retires | a fixture round makes no direct `session_service.call` or `planner_pair` call; a one-family pair parks; agreement adopts, mutual self-select PAGEs; an interrupted round resumes without re-spending; LLR-070/071/072/076, IF-058/066 amended | S788-ask, S788-plan-gate | strong | affected modules + smoke | yes (arbiter template retires) |
-| S788-dual-pickup | Restore the dual pickup in a lane: `PLANNING.DUAL`, round dirs by WI, provenance-keyed child drafts for MINT, parent closure, PAGE as handback + open item; `--dual-plan`, the preflight refusal and off-lane writers retire | the §4.6 item 7 tests; SR-155, LLR-074/095/096/132, TC-074/097/098, IF-061 amended; PROCESS_OPTIONS reworded | S788-plan-kinds, S788-lane-state-provider, S788-mint, WI-790 | strong | affected modules + smoke | yes (`--dual-plan` launchers stop; a dual row is claimed like any row) |
+| S788-dual-pickup | Restore the dual pickup in a lane: `PLANNING.DUAL`, round dirs by WI, provenance-keyed child drafts for MINT, parent closure, PAGE as a `partial` close with a minted successor and open item; `--dual-plan`, the preflight refusal and off-lane writers retire | the §4.6 item 7 tests; as the last trunk-writer move (B3), a census test that no tool writer remains outside the landing (chapter 4 §3); SR-155, LLR-074/095/096/132, TC-074/097/098, IF-061 amended; PROCESS_OPTIONS reworded | S788-plan-kinds, S788-lane-state-provider, S788-mint, WI-790 | strong | affected modules + smoke | yes (`--dual-plan` launchers stop; a dual row is claimed like any row) |
 | S788-single-plan | `planmode = "single"` (plan, gate, critique, ≤1 revision); replan folded into the swap; the `[planning]` dial; plan re-shown in rework briefs | a single row builds only after a gated, critiqued plan; CR CR yields one replan by the swapped family and a third CR tiers up; dial on: strong-planned row builds medium with `tier-reason`, dial off: unchanged; escalation still tiers up; SR-154, LLR-081 amended, new LLR + TC added | S788-plan-kinds, S788-lane-state-provider | strong | affected modules + smoke | yes (new dial, default false; new prompt) |
 
 Order: plan-gate → plan-kinds → {dual-pickup, single-plan}. **The dual regression stays
@@ -405,8 +420,9 @@ question 1 is Q-5 and question 3 is Q-6. Question 2 is decided there under risk 
    - **Recommend (a):** the drafters select, and a mutual self-select goes to the owner
      as an open item. Also record that a losing author's concession is a second
      exception to the independence rule.
-   - Why: the arbiter changed nothing in 8 rounds, ported nothing, and always picked
-     its own family's plan.
+   - Why: in 8 rounds the two arbiter runs always agreed and ported nothing, and the
+     arbiter picked its own family's plan in at least 7 (DP-003 unverified). Whether
+     arbitration ever changed a selection is unknown: no drafter was asked.
 2. **Dual rounds with only one family available: park, or run a same-family pair?**
    **Recommend park** (risk 7: no degraded mode). Every recorded round had two families
    at the start, and DP-003 degraded mid-round.
@@ -440,6 +456,12 @@ Read-only, from `C:/Projects/ai-template.wt/wi-788` unless named; every command 
   `git log --diff-filter=A` per review folder.
 - **Partials:** `grep -h "^buildtier" docs/archive/work/partial/WI-*.md` → 5× strong;
   `complete/` by tier: strong 142, medium 340, quick 105.
+- **WI-199's record** (`docs/archive/work/complete/WI-199-*.md`, read in the fix
+  round): the round's runner drew planners through `planner_pair`, with "ambient
+  template both hats = the recorded routing-off degraded mode", and mapped PAGE
+  per gate policy (attended: a NEEDS-HUMAN stop). It records no session, token or
+  wall-time figures, so it adds nothing to §3.2's cost evidence; the degraded
+  mode it names is the one §4.3 retires.
 - **Rounds:** `docs/archive/plans/DP-001-*`; in `C:/Projects/gilbert`,
   `find . -type d -name "DP-*"` (7), `grep` of critique, coverage and verdict lines,
   `git log` of the `dual-plan select` commits (10:34, 11:01, 11:33, 12:12 −0500,

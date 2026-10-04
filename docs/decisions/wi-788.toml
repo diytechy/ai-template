@@ -5,7 +5,7 @@
 # owner rules at the checkpoint; nothing here is built. Format:
 # project-trajectory/decisions.template.toml.
 
-high_risk = ["D-001", "D-002", "D-010", "D-016"]
+high_risk = ["D-001", "D-002", "D-010", "D-016", "D-022", "D-027"]
 
 [decision.D-001]
 decided = "Commits made outside the one entry point (no session log) are attributed to a family by their Co-Authored-By trailer, read from the judged commit itself, for family exclusion (ch.2 section 3 step 2; README Q-10)."
@@ -92,17 +92,17 @@ why_not_escalated = "Two tables of one fact is a dual path (risk 7); CSV appends
 review = ""
 
 [decision.D-013]
-decided = "Retained slots are keyed by family and scope, not by route; the lease wait is 1,200 s for every retained slot (ch.2)."
+decided = "Retained slots are keyed by family and scope, not by route (a slot records its route@account; only cooldowns are keyed by it); the lease wait is 1,200 s for every retained slot, and it is never waited while holding the station authority: a sitting takes its leases first, then tries the authority once without waiting (ch.2 section 3 step 5, ch.4 section 2; amended in the fix round after Sol's BLOCKER 2)."
 alternative = "Key per route as today; wait only on the adjudicator's lease."
 reversal_cost = "A store key and a constant."
 why_not_escalated = "Risk 3 needs one identity across route draws; risk 5's 20 minutes, applied as one rule."
 review = ""
 
 [decision.D-014]
-decided = "No route row for OpenCode's own free models; the decisions note is not handed to review, plan-critique, judge and arbitrate kinds (ch.2)."
-alternative = "An untested free-model row; the note to every kind."
-reversal_cost = "One row; one list."
-why_not_escalated = "The owner meant FreeLLMAPI and the probes found the free models unreliable; those kinds may only add a verdict file (S9)."
+decided = "No route row for OpenCode's own free models. The decisions note goes to every kind except those whose range S9 mechanically confines to the verdict file: S9 reads REVIEW-A/B today (kitlib/verdict.py:189, :944), and S788-ask extends it to CRITIQUE and plan-critique (and arbitrate under Q-5 (b)); judge gets the note, because an observation re-judge commits an observation record (adjudicate-rejudge.template.md:43-56). Amended in the fix round: the first version rested on the false premise that S9 confines every judge to its verdict (Sol BLOCKER 5)."
+alternative = "An untested free-model row; the note to every kind, or keep the S9 reader as is and hand the note to CRITIQUE and plan-critique too."
+reversal_cost = "One row; one phase list."
+why_not_escalated = "The owner meant FreeLLMAPI and the probes found the free models unreliable; the note's exclusion now follows a mechanical rule rather than a brief's wording."
 review = ""
 
 [decision.D-015]
@@ -113,8 +113,8 @@ why_not_escalated = "B5 and no-stale-tests both hold, at about half the hold tim
 review = ""
 
 [decision.D-016]
-decided = "The station authority is a fenced lease (out/station/authority.json found through the git common directory; a generation counter; a 120-minute expiry dial renewed per step; a filesystem that cannot lock refuses), and out/integrate.lock folds into it; lane-side claims still take it; coordinator and owner hand commits take only a pre-commit authority check (ch.4 section 2)."
-alternative = "A long-held kernel lock; keep integrate.lock beside the authority; route hand commits through work items."
+decided = "The station authority is a fenced lease (out/station/authority.json found through the git common directory; a generation counter; a 120-minute expiry dial renewed per step; a filesystem that cannot lock refuses), and out/integrate.lock folds into it; lane-side claims still take it; every tool ref advance re-checks the generation and swaps the ref inside one critical section; a coordinator's trunk writes go through a station lane, and only the owner's own commits stay outside the tool, with an advisory hook check and the landing's swap as the enforcement (ch.4 section 2). Amended in the fix round (Sol BLOCKER 2): the first version also exempted coordinator commits, which OI-103 Q1's words do not allow; the pause file, which cannot wait for a landing, is put to the owner as README Q-12."
+alternative = "A long-held kernel lock; keep integrate.lock beside the authority; let coordinator commits take only the hook check."
 reversal_cost = "Medium: the authority is the backbone of the adjudication slices."
 why_not_escalated = "OI-103 Q1 (complete exclusion) and B4 require one authority with stated mechanics; the hand path has no long-lived process to hold a kernel lock; two locks over one decision is risk 7's dual path."
 review = ""
@@ -152,4 +152,67 @@ decided = "The claude and codex resume-by-id probes (a few cents, local) were ru
 alternative = "Probe OpenCode only, as OI-101 Q4 reads."
 reversal_cost = "None: probes only."
 why_not_escalated = "The owner's session prompt of 2026-10-04 authorizes local CLI resume-by-id probes for claude and codex, and LS10 asks for them; the README's named gap is answered by that authorization."
+review = ""
+
+[decision.D-022]
+decided = "Each ask kind has an exact judged scope and exclusion list (ch.2 section 3 step 2's table); B10's exception (the adjudicator's own author ranges, each followed by another session's author-review range, and an unchanged pass) is applied identically in routing, session reuse (an excluded retained session gives a fresh non-replacing call, not a reset) and act admission (ch.4 section 5); the final review is never a session that authored any range in the sitting (fix round, Sol BLOCKER 3)."
+alternative = "Exclude every author's family for every kind, which forbids the ruled flow and leaves no eligible family in a two-family pool; or reset the retained session whenever it is excluded."
+reversal_cost = "Medium: the exclusion step of the unbuilt ask, and the act rung."
+why_not_escalated = "OI-101 Q1 and B10 are ruled; the table only makes them executable, and it is checked feasible for today's two-family pool."
+review = ""
+
+[decision.D-023]
+decided = "A dual-plan PAGE closes the parent partial and, at MINT, mints the open item and a successor decomposition row that carries the parent's round evidence and needs the open item; the owner's ruling becomes the successor's Done-when (adopt plan X, or re-run under the successor's own id) (ch.3 section 4.6, fix round, Sol BLOCKER 4)."
+alternative = "Hold the terminal parent on an open item and re-run it as round-2, which the schedule can never admit (handback.py:449, schedule.py:680)."
+reversal_cost = "Low."
+why_not_escalated = "Terminal-is-terminal (LLR-161) and the mandatory successor (OI-73) are existing rules; this applies them."
+review = ""
+
+[decision.D-024]
+decided = "At the fourth sitting, a lane that owes a return ends merge-partial: with a green bar its work lands partial and the minted successor carries each upheld finding; with a red bar caused by its own work the keep set is empty (the quarantine shape) and the successor carries the patch. Nothing red lands (ch.4 section 4.4, fix round, Sol MAJOR 3)."
+alternative = "Strand the lane, or waive the bar."
+reversal_cost = "Low."
+why_not_escalated = "S11 Q2 (3 returns, then land) is ruled; this is its executable form for code, using the existing partial and quarantine outcomes."
+review = ""
+
+[decision.D-025]
+decided = "Cancellation stops the sitting's process, harvests its usage, bumps the generation and leaves the lane PARKED for today's reconcile note (no discard); F1 (a killed refresh aborts its own merge) and F2 (ARCHIVE ordered and re-run each tick) are S788-landing's Done-when; F3 is probed by S788-lane-state-provider's fixture (fix round, Sol MAJOR 2)."
+alternative = "Discard uncommitted sitting writes on the next refresh, as the first version said."
+reversal_cost = "Low."
+why_not_escalated = "OI-103 Q6 keeps agent-judged recovery and a refresh refuses dirty work today; F1 is the tool repairing its own half-done operation."
+review = ""
+
+[decision.D-026]
+decided = "The successor graph is made dependency-complete without a cycle: S788-station-authority no longer requires every tool writer to pass the landing; the writer census moves to the last writer move, S788-dual-pickup; S788-spine-authoring needs S788-mint; S788-retire-legacy-config-and-carriers needs adjudication of its rows, not the sitting row; each row has a review bar (A, or A+B for the backbone rows and the forced migration) (fix round, Sol MAJOR 1)."
+alternative = "Add the missing edges directly, which creates a cycle (the landing needs the authority)."
+reversal_cost = "Low: row scopes and edges of unfiled rows."
+why_not_escalated = "B12 asks for independently landable rows in one graph."
+review = ""
+
+[decision.D-027]
+decided = "Landing is one landing per lane, one ref advance by compare-and-swap; a single-item lane is one squash commit per item; how an act-taking lane and a spine batch land are put to the owner (README Q-8, a conflict between OI-101 Q2 and OI-103 Q4; README Q-11, batches), each with a recommendation, not settled (fix round, Sol BLOCKER 1 and MAJOR 4)."
+alternative = "Present the squash as a replay (the first version), or retire batching."
+reversal_cost = "Medium once built: the landing's commit shape."
+why_not_escalated = "Escalated: one is a conflict between two owner rulings, the other a reading of one."
+review = ""
+
+[decision.D-028]
+decided = "U1 attributes usage per invocation: each adapter declares call or thread scope; thread-scope rows are end minus a stored baseline; kill recovery counts only entries after a cursor stored at launch (ch.2 section 6, fix round, Sol MAJOR 6)."
+alternative = "Count each invocation's reported usage as is, double-counting resumed codex threads."
+reversal_cost = "Low."
+why_not_escalated = "It is the only correct reading of a cumulative counter."
+review = ""
+
+[decision.D-029]
+decided = "Provider contracts are fixed from documentation (ch.2 section 5's table), with each remaining live check named with its row: a FreeLLMAPI row ships only for a pinned id with a declared one-model chain, else none; Gemini's adapter uses the documented stats fields with no occupancy; a non-ambient claude account stays unverified until a no-spend login-isolation check passes (fix round, Sol MAJOR 5)."
+alternative = "Leave the gaps UNVERIFIED for builders to guess."
+reversal_cost = "Low."
+why_not_escalated = "Documentation-derived; spend is put to the owner (Q-3, Q-4)."
+review = ""
+
+[decision.D-030]
+decided = "Owner questions trimmed with stable ids: Q-1 becomes a forced-migration notice (the retirement is already directed), Q-2 is decided (homes in the user config directory), Q-3 keeps only the spend authorizations (its Gemini option reopened OI-101 Q4); Q-11 (batched lanes) and Q-12 (the pause file) are added (fix round, Sol MINOR 2)."
+alternative = "Keep all ten questions as they were."
+reversal_cost = "None: the owner can still rule on any of them."
+why_not_escalated = "Keep only what needs the owner."
 review = ""

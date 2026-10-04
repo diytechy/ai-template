@@ -111,9 +111,23 @@ family, model, route or account.
    BuildTier pin, `tier-up`, and OI-103 Q5's planned-build dial. The planner
    tier comes from chapter 3's plan record.
 2. **Exclusion from recorded authors** (risk 2, B10). Read the lane's committed
-   session logs whose `commits` range meets the scope, for every authoring kind:
-   build, plan, author, author-review, and adjudicate where it wrote beyond its
-   verdict. Exclude each log's `provider`.
+   session logs whose `commits` range meets the call's **judged scope**, for every
+   authoring kind: build, plan, author, author-review, and adjudicate where it
+   wrote beyond its verdict. Each kind's judged scope and exclusions are exact:
+
+   | Kind | Judged scope | Excluded |
+   |---|---|---|
+   | review (REVIEW-A/B, CRITIQUE) | build and plan ranges | their authors' families; REVIEW-B also REVIEW-A's family |
+   | plan-critique | the critiqued plan's drafting range | its drafter's family |
+   | judge | the observation's range and the build it observes | their authors' families |
+   | author | builder text it adopts | builder families |
+   | author-review | the adjudicator's `author` ranges, and the builder text they adopt | the adjudicator's session always; the adjudicator's and builders' families where the pool allows (the owner's "preferably another family" is the rule's preference order, recorded per call) |
+   | adjudicate (RESOLVE, JUDGE, the final pass) | build, plan and author-review ranges | builder and planner families; every author-review session. Its own `author` ranges are **not** excluded: B10's one exception, admitted only when an author-review range by another session follows each and the pass changes no byte |
+   | final review ([adjudication review]) | the adjudicator's ADJUDICATE and MINT ranges only | every session that authored any range in this sitting; the adjudicator's family where the pool allows |
+
+   **With today's two-family pool** (builder family X, the other Y): review Y,
+   adjudicate Y, author-review a second Y session (preference unmet, recorded),
+   final review X. Every kind has an eligible draw.
    - A commit in scope that no log covers is attributed by its own
      `Co-Authored-By:` trailer when that names a registered model. Otherwise
      it counts as a person's commit, logged as `unattributed`.
@@ -131,9 +145,12 @@ family, model, route or account.
      `:506-547`) and `last_build_family` (`:3049-3067`). Neither is kept
      beside it.
 3. **Retention before the ratio** (risk 3). If the family is retained and its
-   slot holds an active session, use that session's route and account, unless
-   the family is excluded or a reset term is met. The `docs/agents-enabled`
-   ratio applies only at (re)initialization.
+   slot holds an active session, use that session's route and account, unless a
+   reset term is met, or step 2 excludes that session or its family for this
+   judged scope. An excluded retained session is not reset: the call runs a
+   fresh, non-replacing session (logged, never stored), and the slot keeps its
+   session for the next eligible call. The `docs/agents-enabled` ratio applies
+   only at (re)initialization.
    - **The router-before-service split moves here.** The store is read
      before `agent_route.select`. Today `plan_keep` runs on a route already
      drawn (`agent_loop.py:2587-2614`).
@@ -143,17 +160,17 @@ family, model, route or account.
 5. **The session lease** (risk 5, B4).
    - A retained slot is leased for the call. The caller waits up to 1200 s
      (today 120 s, `session_keep.py:544`), in its own process and never on the
-     dispatcher's tick.
+     dispatcher's tick, and **never while holding the station authority**
+     (OI-103 Q2).
    - Past that, the call runs a fresh session that **does not replace** the
      retained one: it is logged, never stored. `keep_for` already returns
      None, at `:591-598`.
-   - That session still takes chapter 4's station authority.
-   - **How the wait composes with the authority.** The order is chapter 4 §2's:
-     the process lock, then the station authority, then this lease, then the
-     store locks. A sitting therefore waits for the adjudicator lease while
-     already holding the authority. Only keep-warm pings, which never ask for
-     the authority, can contend, so no cycle can form. The worst case adds the
-     1200 s to the sitting's hold time
+   - **How it composes with the authority** (chapter 4 §2's order): a sitting
+     takes its leases first, waiting holding nothing, then tries the authority
+     once without waiting; if the authority is held it releases the leases and
+     tries again on a later tick. Under the authority every lease acquisition
+     is one non-blocking try, and a busy lease (a keep-warm ping) gives that call
+     a fresh, non-replacing session at once
      ([README](README.md#how-the-locks-and-the-lease-compose)).
 6. **Durable invocation** (B9). Before launch, an invocation record is written
    to the store: the id, kind, wi, lane, route, account, cwd, pid and start time.
@@ -172,11 +189,17 @@ family, model, route or account.
    (`session_service.py:342-351`). New columns: `kind`, `account`, `resumed`.
    The invocation record is removed when the log is written.
 8. **The decisions note.** `kitlib.decisions.session_note(mode, branch)`
-   (`scripts/kitlib/decisions.py:167-196`) is appended for every kind that may
-   write beyond its verdict: build, plan, author, author-review and adjudicate.
-   - Review, plan-critique, judge and arbitrate are excluded. **Reason:** S9
-     lets their range add only their verdict file, so their calls are recorded
-     there.
+   (`scripts/kitlib/decisions.py:167-196`) is appended for every kind except
+   those whose range a mechanical rule confines to their verdict file.
+   - **That rule is S9's**, and today it reads REVIEW-A/B only
+     (`kitlib/verdict.py:189`, `:944`). S788-ask extends its phase list to
+     CRITIQUE and plan-critique (and arbitrate under Q-5 (b)); those kinds then
+     skip the note, because their calls are recorded by their verdicts.
+   - **Every other kind gets it**, judge included: an observation re-judge
+     commits an observation record beside its verdict
+     (`prompts/adjudicate-rejudge.template.md:43-56`), so it can owe a record.
+     If a build finds a brief that asks a verdict-only kind to commit anything
+     else, that kind gets the note instead of the S9 entry.
    - The note moves from `agent_loop.session_body` (`agent_loop.py:387`,
      `:398`) into `ask`, so a coordinator's sitting gets it too.
    - Chapter 4 owns the landing check and the gap measurement.
@@ -224,7 +247,8 @@ existing `store_dir` rule (`session_keep.py:165-175`).
   - `[cooldown."<route>@<account>"]`;
   - `[invocation."<id>"]`.
 - **Keys.** A slot is keyed by family and scope, never by route, so a retained
-  session keeps one identity across route draws.
+  session keeps one identity across route draws. The slot *records* the
+  `route@account` its session runs on; only cooldowns are keyed by it.
 
 **Accounts.** Today IF-045 says "a second account or router is a second pair
 row" (`docs/agents.toml:16`). For codex that means three duplicated rows per
@@ -233,8 +257,8 @@ account.
   `notes` and an optional `env`.
 - An enable-list line may qualify a route: `OPENAI-SOL@WORK`. Unqualified means
   the person's own ambient login, exactly as today.
-- Slots and cooldowns key on `route@account`, because rate limits are per
-  account.
+- Cooldowns key on `route@account`, because rate limits are per account. A
+  slot records its session's `route@account` but is not keyed by it.
 - **Where a home lives:** `<user config dir>/project-trajectory/accounts/<ID>/`
   (`%APPDATA%` on Windows, `$XDG_CONFIG_HOME` or `~/.config` on POSIX). It is
   outside every checkout and shared by every repo on the box.
@@ -291,7 +315,15 @@ on (`session_keep.py:102-107`, `:316-328`), laid over the route's env
 - **The route row:** model `freellmapi/<model>`, `account = "FREELLMAPI"`, and
   `family` set to the model's trainer, so independence stays true.
 - **No `auto` row:** its family and window are unknowable, and it fails over
-  mid-session. Whether a pinned model also fails over is UNVERIFIED.
+  mid-session.
+- **A pinned model can fail over too.** The README says the router "retries the
+  next model in your chain on 429/5xx", and every response names the server in
+  an `X-Routed-Via` header, which OpenCode does not surface. **Contract:** a
+  FreeLLMAPI row ships only for a pinned id whose chain, declared in the
+  account home's FreeLLMAPI configuration, holds that one model, so the family
+  is the row's. If FreeLLMAPI cannot declare a one-model chain per id
+  (UNVERIFIED), no FreeLLMAPI row ships: a row whose family is unknowable would
+  break every exclusion.
 - **OpenCode's own `opencode/*-free` models get no row:**
   - they proved unreliable in OI-101's probe;
   - they are not what the owner meant;
@@ -309,6 +341,19 @@ on (`session_keep.py:102-107`, `:316-328`), laid over the route's env
   refuses (`project-trajectory/agents.template.toml:34-40`), to stdin.
 - **The Gemini adapter** is built from the documented schema, with a fixture
   labelled synthetic.
+
+**Contracts from documentation, and the live checks still owed.** Builders
+implement the left column; nothing in it is guessed. The right column is
+exactly what remains, which row owes it, and whether it costs model spend.
+
+| Item | Contract (source, read 2026-10-04) | Live check still owed |
+|---|---|---|
+| Claude Code plans | No Free-plan access; Pro, Max, Team premium seat or API billing (secondary sources: eesel.ai, costbench.com) | none: provisioning is the person's |
+| Codex plans | ChatGPT Free includes limited Codex access; CLI, web and IDE share one quota with a 5-hour window and a weekly cap (secondary: eesel.ai, developersdigest.tech) | none |
+| claude account isolation | `CLAUDE_CONFIG_DIR` moves "your settings, session history, and plugins" (code.claude.com/docs/en/settings). The docs do not say whether `~/.claude.json`, which holds the sign-in session, moves with it | S788-accounts, no model spend: two homes on Windows show two logins. Until it passes, a claude account other than the ambient login keeps `verified = ""` |
+| Gemini stream | `init` carries `session_id` and `model`; `result` carries `status` and `stats` (`total_tokens`, `input_tokens`, `output_tokens`, `duration_ms`, `tool_calls`) (geminicli.com headless docs; field names from secondary parsers). No cache split, no context window. Headless runs when stdin is not a TTY or with `-p`; prompt-on-stdin is not documented | S788-routes builds on a synthetic fixture: usage from `stats`, no occupancy, so every-call reset (§2). The row stays untested; a recording needs the owner's authorization, which OI-101 Q4 does not give |
+| FreeLLMAPI | as above: one-model chain, or no row | S788-routes, one live call once the owner names the endpoint (README Q-4): the served model equals the pinned one |
+| opencode directory binding | probed (§1) | none |
 
 ## 6. U1, the usage ledger
 
@@ -342,18 +387,35 @@ inside chapter 4's station authority, and the squash lands them. Lanes never wri
 - a discarded lane's logs, harvested by chapter 1's discard before the worktree
   goes (OI-103 Q6).
 
-Their logs go to `out/sessions/spool/`. The next refresh copies them into
-`docs/iteration/` and appends their rows. A spooled entry is deleted only once
+Their logs go to `out/sessions/spool/`. The next landing's final regeneration
+copies them into `docs/iteration/` and appends their rows. A spooled entry is deleted only once
 trunk's tree holds its log (a squash leaves no ancestry to test), so a
 rejected lane loses nothing. Rows are keyed by invocation id, never by session
 id, because a retained session spans many invocations.
 
+**Usage per invocation, not per session.** A retained session is resumed by
+many invocations, and some CLIs report usage for the whole session: codex's
+`turn.completed.usage` is cumulative over the thread
+(`session_adapters.py:480`, scope `thread`). Keying rows by invocation id stops
+duplicate rows, not double counting. So:
+- each adapter declares its usage scope, `call` or `thread` (codex already
+  does);
+- for a `thread`-scope adapter, the invocation record stores the session's
+  cumulative counters at launch (the previous invocation's final counters, kept
+  in the slot), and the row is the end counters minus that baseline;
+- claude's `result.usage` is taken as `call` scope; whether that holds for a
+  resumed session is UNVERIFIED, and S788-session-store's resumed-call fixture
+  pins it either way.
+
 **A hard kill with no log.**
-- The invocation record outlives the process.
+- The invocation record outlives the process. At launch it also stores a
+  **cursor** into the CLI's own record: the claude transcript's line count, the
+  codex rollout's line count, or opencode's message count.
 - The next `ask`, or the harvest, finds a record whose pid is dead and recovers
-  usage by session id: the claude transcript `projects/*/<id>.jsonl` in the
-  account home, the codex rollout `sessions/**/rollout-*-<id>.jsonl`, or
-  `opencode export <id>`.
+  usage by session id, counting **only entries after the cursor**: the claude
+  transcript `projects/*/<id>.jsonl` in the account home, the codex rollout
+  `sessions/**/rollout-*-<id>.jsonl`, or `opencode export <id>`. Earlier
+  invocations of the same session are never counted again.
 - It writes a `KILLED` log marked `recovered`, or `unavailable` when no id was
   seen. It never claims a finished session (B9).
 
@@ -439,7 +501,10 @@ each is its affected modules plus the smoke tier at `-n 2`.
     - the ledger, the spool and the harvest;
     - retire `iteration_index.md`.
   - **Done-when:**
-    - a mid-call kill is recovered into a `KILLED` log, from per-CLI fixtures;
+    - a mid-call kill is recovered into a `KILLED` log, from per-CLI fixtures,
+      counting only usage after the invocation's cursor;
+    - a resumed `thread`-scope session's row is end minus baseline, and the
+      claude resumed-call fixture pins its scope;
     - `trunk_step`'s append is idempotent;
     - spooled logs land exactly once;
     - the backfill covers every existing log;
@@ -458,6 +523,10 @@ each is its affected modules plus the smoke tier at `-n 2`.
     - a WI-688-shaped test passes: a build run outside the loop excludes its
       family from the judge;
     - an `ask.py` call writes a log and carries the note;
+    - S9's reader covers CRITIQUE and plan-critique, and every kind outside it
+      (judge included) receives the note;
+    - each kind's judged scope and exclusions match step 2's table, and an
+      excluded retained session yields a fresh, non-replacing call;
     - one live `ask.py` call has run, if the owner authorizes it.
   - **needs:** S788-session-store. **BuildTier:** strong.
 - **S788-session-families: session families with declared reset terms.**
@@ -484,14 +553,18 @@ each is its affected modules plus the smoke tier at `-n 2`.
   - **Done-when:**
     - untested rows are visibly unverified and enabled nowhere by default;
     - `opencode models freellmapi` resolves under the account home;
+    - a FreeLLMAPI row exists only with a declared one-model chain (§5);
     - one live FreeLLMAPI call is recorded once the owner's endpoint exists;
     - no adopter is forced to install a CLI.
   - **needs:** S788-accounts, S788-ask. **BuildTier:** medium.
 
 ## 10. Questions for the owner
 
-Consolidated in the [README](README.md#questions-for-the-owner-at-the-checkpoint)
-as Q-2 (homes), Q-3 (live recordings, including Gemini) and Q-4 (FreeLLMAPI).
+Consolidated in the [README](README.md#questions-for-the-owner-at-the-checkpoint).
+After the fix round: question 1 is decided (a) as a design call (an
+implementation location, no owner input needed); question 2's option (b) is
+withdrawn, because OI-101 Q4 already rules Gemini documentation-only; Q-3 asks
+only for spend authorization; question 3 is Q-4.
 
 1. **Where do account homes live?**
    - (a) The user config directory, shared by every repo on the box.
@@ -533,18 +606,23 @@ Versions: claude 2.1.289, codex-cli 0.160.0, opencode 1.18.30. No `gemini` or
 - github.com/tashfeenahmed/freellmapi (README, the raw `opencode.json`; MIT,
   pushed 2026-10-04);
 - opencode.ai/docs/providers and /docs/config;
-- code.claude.com/docs/en/env-vars;
+- code.claude.com/docs/en/env-vars and /docs/en/settings (`CLAUDE_CONFIG_DIR`,
+  `~/.claude.json`);
+- geminicli.com/docs/cli/headless and secondary stream parsers (littlebearapps.com
+  Gemini stream-json cheatsheet), for the `init`/`result` field names;
+- Codex and Claude Code plan access, secondary sources only (eesel.ai,
+  developersdigest.tech, costbench.com);
 - the google-gemini/gemini-cli `main` docs: `cli/headless.md`,
   `cli/session-management.md`, `cli/cli-reference.md`,
   `reference/configuration.md`, `resources/quota-and-pricing.md`;
 - registry.npmjs.org `@google/gemini-cli`;
 - xAI pricing, from secondary sources only (mem0.ai, eesel.ai, costbench.com).
 
-**UNVERIFIED:**
+**UNVERIFIED** (each with its owed check in §5's contracts table):
 - the FreeLLMAPI end-to-end call, opencode's usage events for it, and whether
-  a pinned model fails over;
-- Gemini's stats field names, its stdin delivery, and resume across
+  a one-model chain per pinned id can be declared;
+- Gemini's per-model and cache stats, its stdin delivery, and resume across
   directories;
 - xAI's free credits;
-- free plans for codex and Claude Code;
-- whether `CLAUDE_CONFIG_DIR` isolates the login on Windows.
+- whether `~/.claude.json` follows `CLAUDE_CONFIG_DIR` on Windows;
+- claude's `result.usage` scope on a resumed session.
