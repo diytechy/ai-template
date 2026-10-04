@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work-Item Lifecycle</title>
+<style>
+/* Layout: a sticky participant header and a sticky phase gutter around one scrolling SVG
+   sequence diagram, with phase bands behind the messages. Tokens follow PROJECT_STATE.html
+   so the diagram can drop into its Process tab. */
+:root {
+  --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --text: #0f172a; --muted: #64748b;
+  --accent: #4f46e5; --hand: #9333ea; --manual: #b45309; --planned: #b45309; --ok: #047857;
+  --b-claim: #e0e7ff; --b-plan: #fef3c7; --b-build: #dcfce7; --b-review: #cffafe;
+  --b-adj: #f3e8ff; --b-merge: #ffe4e6; --b-after: #f1f5f9;
+  --g-people: #64748b; --g-scripts: #4f46e5; --g-branch: #0f766e; --g-llm: #b45309;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, monospace;
+  --r-card: 12px; --r-ctl: 6px; --r-chip: 3px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1120; --surface: #0f172a; --border: #1e293b; --text: #e2e8f0; --muted: #94a3b8;
+  --accent: #818cf8; --hand: #c084fc; --manual: #f59e0b; --planned: #f59e0b; --ok: #34d399;
+  --b-claim: #1e1b4b; --b-plan: #3a2a06; --b-build: #052e1a; --b-review: #083344;
+  --b-adj: #2e1065; --b-merge: #4c0519; --b-after: #111827;
+  --g-people: #94a3b8; --g-scripts: #818cf8; --g-branch: #2dd4bf; --g-llm: #f59e0b;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1120; --surface: #0f172a; --border: #1e293b; --text: #e2e8f0; --muted: #94a3b8;
+  --accent: #818cf8; --hand: #c084fc; --manual: #f59e0b; --planned: #f59e0b; --ok: #34d399;
+  --b-claim: #1e1b4b; --b-plan: #3a2a06; --b-build: #052e1a; --b-review: #083344;
+  --b-adj: #2e1065; --b-merge: #4c0519; --b-after: #111827;
+  --g-people: #94a3b8; --g-scripts: #818cf8; --g-branch: #2dd4bf; --g-llm: #f59e0b;
+  color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--text); font: 15px/1.55 var(--font); }
+.wrap { max-width: 1400px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: grid; gap: 18px; }
+h1 { font-size: 1.5rem; margin: 0; text-wrap: balance; letter-spacing: -.01em }
+.lede { margin: 0; color: var(--muted); max-width: 72ch }
+code, .mono { font-family: var(--mono); font-size: .85em }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; font-size: .85rem }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center }
+.key { display: inline-flex; gap: 6px; align-items: center; color: var(--muted) }
+.key svg { flex: none }
+.toggles { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-left: auto }
+.toggles label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer }
+.toggles input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.scroller { overflow: auto; max-height: 78vh; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); }
+.canvas { position: relative }
+.head { position: sticky; top: 0; z-index: 3; display: flex; background: var(--surface); border-bottom: 1px solid var(--border) }
+.corner { position: sticky; left: 0; z-index: 4; flex: none; background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; align-items: flex-end; padding: 8px 12px; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted) }
+.body { display: flex }
+.gutter { position: sticky; left: 0; z-index: 2; flex: none; background: var(--surface); border-right: 1px solid var(--border) }
+.band-label { position: absolute; left: 0; right: 0; padding: 8px 10px 8px 12px; display: grid; gap: 3px; align-content: start; border-bottom: 1px solid var(--border) }
+.band-label .n { font: 600 .7rem/1 var(--mono); color: var(--muted) }
+.band-label .t { font-weight: 600; font-size: .82rem; line-height: 1.3; text-wrap: balance }
+.band-label .tag { justify-self: start; font-size: .68rem; padding: 1px 6px; border-radius: var(--r-chip); border: 1px solid currentColor; letter-spacing: .02em }
+.tag.hand { color: var(--hand) } .tag.manual { color: var(--manual) } .tag.planned { color: var(--planned) }
+svg text { font-family: var(--font) }
+.msg { cursor: pointer }
+.msg .hit { fill: transparent }
+.msg:hover .hit, .msg.sel .hit { fill: var(--accent); fill-opacity: .07 }
+.msg:focus-visible { outline: none } .msg:focus-visible .hit { fill: var(--accent); fill-opacity: .14 }
+.lbl { font-size: 11.5px; fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round }
+.cond { font-size: 10.5px; fill: var(--muted); font-style: italic; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round }
+.detail { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: 14px 16px; display: grid; gap: 6px }
+.detail .route { font-weight: 600 }
+.detail .meta { color: var(--muted); font-size: .85rem }
+.detail .src { font-family: var(--mono); font-size: .8rem; color: var(--accent); word-break: break-word }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px }
+.notes section { min-width: 0 }
+.notes h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 8px }
+.notes ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 6px; font-size: .88rem }
+@media (prefers-reduced-motion: no-preference) { .msg .hit { transition: fill-opacity .12s } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header style="display:grid;gap:6px">
+    <h1>Work-Item Lifecycle</h1>
+    <p class="lede">How one work item moves from trunk through its lane and back, as the unattended loop (<code>agent-resume</code>) runs it, read from the code at <code>813c73da</code>. Scripts trigger every model session through the session service. Select an arrow to see where it happens in the code.</p>
+  </header>
+
+  <div class="bar">
+    <div class="legend" aria-label="Legend">
+      <span class="key"><svg width="34" height="10" aria-hidden="true"><line x1="0" y1="5" x2="26" y2="5" stroke="currentColor" stroke-width="1.5" style="color:var(--text)"/><path d="M26 1 L33 5 L26 9 Z" style="fill:var(--text)"/></svg>Loop path</span>
+      <span class="key"><svg width="34" height="10" aria-hidden="true"><line x1="0" y1="5" x2="26" y2="5" stroke-width="1" stroke-dasharray="3 3" style="stroke:var(--muted)"/><path d="M26 1 L33 5 L26 9 Z" style="fill:var(--muted)"/></svg>Return</span>
+      <span class="key"><svg width="34" height="10" aria-hidden="true"><line x1="0" y1="5" x2="26" y2="5" stroke-width="1.5" stroke-dasharray="6 3" style="stroke:var(--hand)"/><path d="M26 1 L33 5 L26 9 Z" style="fill:var(--hand)"/></svg>Coordinator's hand path</span>
+      <span class="key"><svg width="34" height="10" aria-hidden="true"><line x1="0" y1="5" x2="26" y2="5" stroke-width="1.5" stroke-dasharray="1.5 3" stroke-linecap="round" style="stroke:var(--manual)"/><path d="M26 1 L33 5 L26 9 Z" style="fill:var(--manual)"/></svg>Manual only or planned</span>
+    </div>
+    <div class="toggles">
+      <label for="t-hand"><input type="checkbox" id="t-hand" checked> Hand path</label>
+      <label for="t-manual"><input type="checkbox" id="t-manual" checked> Manual and planned phases</label>
+    </div>
+  </div>
+
+  <div class="scroller" id="scroller" tabindex="0" aria-label="Sequence diagram, scrolls in both directions">
+    <div class="canvas" id="canvas">
+      <div class="head"><div class="corner" id="corner">Phase</div><svg id="hsvg" aria-hidden="true"></svg></div>
+      <div class="body"><div class="gutter" id="gutter"></div><svg id="bsvg" role="img" aria-label="Messages between kit scripts, branches and model sessions, grouped by phase"></svg></div>
+    </div>
+  </div>
+
+  <div class="detail" id="detail" aria-live="polite"></div>
+
+  <div class="notes">
+    <section>
+      <h2>Where the code differs from the expected phases</h2>
+      <ul>
+        <li><strong>No plan phase in the loop.</strong> The dual-plan round (two planners, cross-critique, two arbiter runs) runs only through <code>agent_loop.py --dual-plan</code>. The loop refuses a <code>PlanMode=dual</code> row at preflight.</li>
+        <li><strong>No adjudication inside a work lane.</strong> The merge slot refuses an approval act from a work lane. Adjudication and observation re-judges are separate rows that intake mints on trunk after the merge, each run in its own lane later.</li>
+        <li><strong>The refresh merges trunk into the lane</strong> (<code>git merge --no-ff --no-commit</code>), regenerates the derived views there, runs the full declared bar, and commits a <code>Bar-Green</code> attestation. Trunk never regenerates after the merge.</li>
+        <li><strong>The lane closes itself.</strong> The builder moves its spec to its terminal folder inside the lane; the merge never moves a spec.</li>
+        <li><strong>Merge and archive:</strong> the loop merges <code>--no-ff</code> and deletes the branch. Squash commits and <code>archive/lanes</code> refs are the coordinator's hand path only.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Dials that shape this run (this repo)</h2>
+      <ul>
+        <li>One lane at a time: <code>docs/stack.ini</code> declares no <code>lanes</code>.</li>
+        <li><code>review_rounds = 1</code>: REVIEW-A only. <code>adjudication_review = "when-minting"</code>.</li>
+        <li><code>human_approval_through = "DevStg-Boundary"</code>; <code>push = "human"</code>.</li>
+        <li>Retained adjudicator sessions are off (<code>context_reset_pct = 0</code>).</li>
+        <li><code>docs/work/pause</code> is tracked, so the loop claims nothing until a reviewed commit deletes it.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var P = [
+    ["owner", "Owner", "push · pause · rungs", "people"],
+    ["launch", "Launcher", "agent-resume", "people"],
+    ["drive", "Dispatcher", "agent_loop → dispatch", "scripts"],
+    ["sched", "Scheduler", "schedule.py", "scripts"],
+    ["integ", "Integrator", "integrate.py", "scripts"],
+    ["lanepy", "Lane runner", "lane.py", "scripts"],
+    ["intake", "Intake", "intake.py", "scripts"],
+    ["handback", "Handback", "handback.py", "scripts"],
+    ["tstep", "Trunk step", "trunk_step.py", "scripts"],
+    ["bar", "Bar", "check.py · hooks", "scripts"],
+    ["main", "Trunk", "main branch", "branch"],
+    ["lane", "Lane", "wi-N-slug worktree", "branch"],
+    ["worker", "Worker", "agent_loop --wi", "scripts"],
+    ["planrun", "Plan runner", "plan_runner.py", "scripts"],
+    ["router", "Router", "agent_route.py", "scripts"],
+    ["brief", "Briefs", "agent_brief · adjudicate_brief", "scripts"],
+    ["svc", "Session service", "session_service.py", "scripts"],
+    ["planner", "Planners", "A · B", "llm"],
+    ["arbiter", "Arbiter", "×2, swapped", "llm"],
+    ["builder", "Builder", "BUILD", "llm"],
+    ["reviewer", "Reviewer", "REVIEW-A (·B)", "llm"],
+    ["critique", "Critic", "CRITIQUE", "llm"],
+    ["design", "Design check", "DESIGN-CHECK", "llm"],
+    ["adjud", "Adjudicator", "ADJUDICATE", "llm"]
+  ];
+  var GROUPS = { people: ["People", "--g-people"], scripts: ["Kit scripts", "--g-scripts"], branch: ["Branches", "--g-branch"], llm: ["Model sessions", "--g-llm"] };
+
+  // m(from, to, label, cond, src, kind)  kind: "" loop | "ret" | "hand" | "manual"
+  function m(f, t, l, c, s, k) { return { f: f, t: t, l: l, c: c || "", s: s || "", k: k || "" }; }
+
+  var BANDS = [
+    { t: "Pre-work: select the row and claim it (queued → active)", fill: "--b-claim", msgs: [
+      m("launch", "drive", "start the drive; take out/agent-loop.lock", "relaunched on exit 11", "agent_loop.py:3401, :3387-3398"),
+      m("drive", "main", "read docs/work/pause; refuse a dirty trunk", "pause present → drain, exit 8", "dispatch.py:1444-1459"),
+      m("drive", "intake", "mint the consolidation census", "idle station", "dispatch.py:1142"),
+      m("drive", "sched", "frontier()", "", "dispatch.py:1198-1203"),
+      m("sched", "drive", "ready rows, ranked; adjudication rows first", "empty → gap census mints rows", "dispatch.py:370-388, :1302-1322", "ret"),
+      m("drive", "integ", "claim(WI, wi-N-slug)", "", "dispatch.py:1085 → integrate.py:738"),
+      m("integ", "integ", "refuse: pause · branch exists · no SpecRef · named in status.md · off frontier", "no Done-when → warning only", "integrate.py:650-735"),
+      m("integ", "main", "claim commit: spec queued/ → active/<branch>/ + regenerated views", "", "integrate.py:814-896")
+    ]},
+    { t: "Branch and worktree creation", fill: "--b-claim", msgs: [
+      m("integ", "lane", "cut wi-N-slug at the claim commit (before trunk advances)", "", "integrate.py:865-871"),
+      m("drive", "lanepy", "ensure_worktree; spawn the worker", "", "lane.py:115-125"),
+      m("lanepy", "lane", "worktree <repo>-drive/<branch>", "", "integrate.py:1616-1645"),
+      m("lanepy", "worker", "agent_loop.py --wi WI --worktree --train", "worker takes its own lock", "lane.py:66-112; agent_loop.py:3905")
+    ]},
+    { t: "Plan session (dual plan)", fill: "--b-plan", tag: ["manual", "manual only"], msgs: [
+      m("worker", "worker", "a PlanMode=dual row refuses at preflight; the lane parks", "loop path", "agent_loop.py:1317-1329; dispatch.py:630-639"),
+      m("owner", "planrun", "agent_loop.py --dual-plan WI-N", "", "agent_loop.py:3678-3734", "manual"),
+      m("planrun", "router", "draw planner routes A and B, cross-family", "", "plan_runner.py:102-154", "manual"),
+      m("planrun", "svc", "launch the two planner sessions", "", "plan_runner.py:274", "manual"),
+      m("svc", "planner", "plan A, plan B  ×2", "", "plan_runner.py:274", "manual")
+    ]},
+    { t: "Plan review (cross-critique)", fill: "--b-plan", tag: ["manual", "manual only"], msgs: [
+      m("planrun", "planrun", "coverage pre-pass and repair (script)", "", "plan_runner.py", "manual"),
+      m("svc", "planner", "each plan critiqued by the other planner's route, then revised  ×2", "", "plan_runner.py:326-330, :462-494", "manual")
+    ]},
+    { t: "Plan arbitration", fill: "--b-plan", tag: ["manual", "manual only"], msgs: [
+      m("svc", "arbiter", "two arbiter runs with plan positions swapped  ×2", "", "plan_runner.py:495-542", "manual"),
+      m("planrun", "main", "docs/plans/DP-NNN-<slug>/ and queued rows", "no commit in this path", "plan_artifacts.py:277-336", "manual")
+    ]},
+    { t: "Build session", fill: "--b-build", frame: "loop until the WI: trailer is committed and the spec has left active/", msgs: [
+      m("worker", "router", "draw a BUILD route", "tier from BuildTier, default medium; cooldowns", "agent_loop.py:1588, :506-552"),
+      m("router", "worker", "route (model, CLI, effort)", "", "agent_loop.py:2814-2906", "ret"),
+      m("worker", "brief", "worker_prompt", "+ rework findings after a review", "agent_brief.py:237-334"),
+      m("worker", "svc", "act(call)", "", "agent_loop.py:2619"),
+      m("svc", "builder", "launch the CLI, prompt on stdin", "", "session_service.py"),
+      m("builder", "lane", "commits · log.d fragment · Deliverable · spec → archive/work/complete · WI: trailer", "or Blocked-WI + BlockRef → exit 3", "prompts/worker.template.md:62-73"),
+      m("builder", "bar", "commit bar: pre-commit check.py + smoke tier", "test cycle; the full suite is not owed at close", ".githooks/pre-commit:299-300; worker.template.md:72"),
+      m("svc", "lane", "session log docs/iteration/<branch>-NNN.log (telemetry commit)", "", "agent_loop.py:3356-3364")
+    ]},
+    { t: "Build review and rework", fill: "--b-review", frame: "rework: 2× CHANGES-REQUESTED → swap family → tier up → page", msgs: [
+      m("worker", "router", "draw REVIEW-A, never the builder's family", "+ REVIEW-B when review_rounds = 2", "agent_loop.py:506-528"),
+      m("svc", "reviewer", "reviewer brief over base..HEAD", "every assigned row built; tree not already judged", "agent_loop.py:2178-2213"),
+      m("reviewer", "bar", "check.py --jobs 0 · trace.py --strict-integrity", "test cycle", "prompts/reviewer.template.md:39"),
+      m("reviewer", "lane", "verdict docs/reviews/<branch>/…-REVIEW-A-<sha>.md", "touching anything else → refused", "agent_loop.py:1691-1698, :2432-2479"),
+      m("worker", "lane", "scoreboard + Review-Verdict: trailer", "", "agent_loop.py:1984-2008"),
+      m("svc", "builder", "rework session with the findings", "CHANGES-REQUESTED", "agent_loop.py:1961-1981"),
+      m("svc", "critique", "CRITIQUE", "build touches a Critique-verified SR; ≤ 3", "agent_loop.py:2285-2309"),
+      m("svc", "design", "DESIGN-CHECK; its commit is the rework", "after a page on a loop-held tier", "agent_route.py:1004-1016"),
+      m("worker", "drive", "exit 0 done · 3–8 decided · 9 review owed · 2 or crash → park", "", "dispatch.py:743-786", "ret")
+    ]},
+    { t: "Build adjudication in the lane", fill: "--b-adj", tag: ["hand", "hand path · loop planned (S11)"], msgs: [
+      m("integ", "integ", "a work lane carrying an approval act is refused at merge", "loop path", "integrate.py:1154-1193"),
+      m("brief", "adjud", "adjudicate_brief.compose: the briefs the merge would mint", "independent adjudicator", "handoff wave 10 §cycle", "hand"),
+      m("adjud", "lane", "RETURN: a byte-exact fix; builder resumed, adjudicator re-judges", "", "handoff wave 10 §cycle", "hand"),
+      m("adjud", "lane", "the act: Status flips + intake.py snapshot, the lane's last spine commit", "", "handoff wave 10 §cycle", "hand"),
+      m("reviewer", "lane", "Codex Luna cross-reviews the act", "", "handoff wave 8", "hand")
+    ]},
+    { t: "Lane close and handback", fill: "--b-merge", msgs: [
+      m("drive", "handback", "close_partial", "decided non-zero exit", "dispatch.py:565-679"),
+      m("handback", "lane", "report docs/handbacks/<WI>-<branch>.md; spec → partial/", "", "handback.py:449-546"),
+      m("drive", "handback", "close_adjudication", "adjudication row finished", "dispatch.py:722-740"),
+      m("handback", "lane", "spec → complete/ with the WI: trailer", "", "handback.py:857-924")
+    ]},
+    { t: "Refresh: the lane is made compatible with trunk", fill: "--b-merge", msgs: [
+      m("drive", "lanepy", "spawn integrate.py refresh, outside the merge slot", "branch finished", "dispatch.py:770-775; lane.py:147-172"),
+      m("integ", "lane", "reset to the last work commit", "", "integrate.py:2592-2712"),
+      m("main", "lane", "git merge --no-ff --no-commit <trunk>", "generated files resolve to trunk's side", "integrate.py:2515-2589"),
+      m("tstep", "lane", "compile log.d → log.md; regenerate stage, dashboard, status.md, open-items.html, references", "", "trunk_step.py:540-628")
+    ]},
+    { t: "Test sequences: the declared bar on the refreshed lane", fill: "--b-merge", msgs: [
+      m("integ", "bar", "check.py --jobs 0 --tier all --trunk-lane --stage <bar>", "any SKIP refuses; adjudication-only scope skips the bar", "integrate.py:1756-1791, :1861-1980"),
+      m("bar", "integ", "green or red", "red + merged → fatal; red + nothing merged → quarantine once", "dispatch.py:789-822", "ret"),
+      m("integ", "lane", "commit with Bar-Green: tree=… work=…", "", "integrate.py:2650")
+    ]},
+    { t: "Merge slot: lock and checks", fill: "--b-merge", msgs: [
+      m("drive", "integ", "integrate(branches=[branch])", "", "dispatch.py:782"),
+      m("integ", "integ", "take out/integrate.lock (the merge slot)", "", "integrate.py:3016-3074"),
+      m("integ", "integ", "refuse: outcomes · report and decisions · minted ids · approval act · held status · Loop-Session · review scope · bar · RULING-7", "", "integrate.py:2858-2909"),
+      m("integ", "integ", "merge-ready: trunk is an ancestor and Bar-Green verifies", "else refresh inside the slot", "integrate.py:2940-2961")
+    ]},
+    { t: "The merge", fill: "--b-merge", msgs: [
+      m("lane", "main", "git merge --no-ff <branch>", "the refreshed tree, byte for byte", "integrate.py:2963-2977"),
+      m("integ", "main", "squash merge, one commit per item", "", "handoff wave 10 §landing", "hand")
+    ]},
+    { t: "Archive the lane", fill: "--b-merge", msgs: [
+      m("integ", "lane", "git branch -d; remove the clean worktree", "dirty worktree → left; drain exits 1", "integrate.py:2207-2300, :3077-3103"),
+      m("integ", "main", "tip kept in refs/heads/archive/lanes; worktree remove; branch -D", "", "handoff wave 10 §landing", "hand")
+    ]},
+    { t: "Intake: follow-up rows minted on trunk", fill: "--b-after", msgs: [
+      m("integ", "intake", "intake_after_merge", "", "integrate.py:3006-3013"),
+      m("intake", "main", "one mint commit: amendment · first-approval · dispose · Done-when changed · successors · rejudge · open items", "deterministic, no model", "intake.py:2373-2401"),
+      m("integ", "integ", "post-run audit; release the slot", "", "integrate.py:3067"),
+      m("integ", "intake", "intake.py sweep --before --after --merged", "", "intake.py:2462-2508", "hand")
+    ]},
+    { t: "Adjudication and judgement cycles (a minted row, next tick)", fill: "--b-adj", frame: "the same claim → lane → close → refresh → merge → mint cycle, with ADJUDICATE as the session", msgs: [
+      m("drive", "integ", "claim the adjudication row: exclusive, first in line", "", "dispatch.py:370-388"),
+      m("worker", "brief", "one of six briefs: first-approval · amendment · disposition · red-tc · consolidate · rejudge", "", "adjudicate_brief.py"),
+      m("worker", "router", "ADJUDICATE route, tier pinned by BuildTier", "nothing excludes the original builder's family", "agent_brief.py:423-443; agent_route.py:702-705"),
+      m("svc", "adjud", "adjudication session", "", "agent_loop.py:2357-2361"),
+      m("adjud", "lane", "verdict + WI: trailer; APPROVE: Status flips + intake.py snapshot in one commit; RETURN: ## Dispositions", "", "intake.py:3072-3137"),
+      m("adjud", "lane", "observation re-judge: OUTCOME RECORDED | NEEDS-JUDGEMENT", "rejudge rows", "adjudicate_brief.py:183-187"),
+      m("svc", "reviewer", "REVIEW-A of the act, cross-family", "adjudication_review = when-minting: spine or high-risk successor, or consolidate", "agent_policy.py:945-981; agent_loop.py:2245-2282"),
+      m("intake", "main", "successors minted from the Dispositions at that row's merge", "", "intake.py:1570-1614")
+    ]},
+    { t: "Owner acts", fill: "--b-after", msgs: [
+      m("owner", "main", "push; merge to main", "push = human", "dispatch.py:51-55"),
+      m("owner", "main", "delete or restore docs/work/pause in a reviewed commit", "", "docs/status.md"),
+      m("owner", "main", "sign held rungs; rule open items", "human_approval_through", "docs/process.toml")
+    ]}
+  ];
+
+  var COLW = 112, GUT = 220, HEADH = 74, BANDPAD = 14, ROW = 42;
+  var NS = "http://www.w3.org/2000/svg";
+  var idx = {}; P.forEach(function (p, i) { idx[p[0]] = i; });
+  var W = COLW * P.length;
+  function X(id) { return idx[id] * COLW + COLW / 2; }
+  function el(tag, attrs, parent, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function tok(name) { return "var(" + name + ")"; }
+  var hsvg = document.getElementById("hsvg"), bsvg = document.getElementById("bsvg");
+  var gutter = document.getElementById("gutter"), corner = document.getElementById("corner");
+  var detail = document.getElementById("detail");
+  var tHand = document.getElementById("t-hand"), tManual = document.getElementById("t-manual");
+  var selected = null;
+
+  function header() {
+    hsvg.innerHTML = "";
+    hsvg.setAttribute("width", W); hsvg.setAttribute("height", HEADH);
+    corner.style.width = GUT + "px";
+    var start = 0;
+    for (var i = 1; i <= P.length; i++) {
+      if (i === P.length || P[i][3] !== P[start][3]) {
+        var g = GROUPS[P[start][3]];
+        el("rect", { x: start * COLW + 4, y: 6, width: (i - start) * COLW - 8, height: 3, rx: 1.5, style: "fill:" + tok(g[1]) }, hsvg);
+        el("text", { x: start * COLW + 6, y: 22, "font-size": 10, "letter-spacing": ".06em", style: "fill:" + tok(g[1]) }, hsvg, g[0].toUpperCase());
+        start = i;
+      }
+    }
+    P.forEach(function (p, i) {
+      var x = i * COLW;
+      el("rect", { x: x + 5, y: 30, width: COLW - 10, height: 38, rx: 6, style: "fill:var(--surface);stroke:" + tok(GROUPS[p[3]][1]) + ";stroke-width:1.2" }, hsvg);
+      el("text", { x: x + COLW / 2, y: 46, "text-anchor": "middle", "font-size": 12, "font-weight": 600, style: "fill:var(--text)" }, hsvg, p[1]);
+      var sub = el("text", { x: x + COLW / 2, y: 60, "text-anchor": "middle", "font-size": 9.5, style: "fill:var(--muted);font-family:var(--mono)" }, hsvg, p[2]);
+      if (p[2].length > 19) sub.setAttribute("textLength", COLW - 16);
+    });
+  }
+
+  function visible(msg) {
+    if (msg.k === "hand" && !tHand.checked) return false;
+    if (msg.k === "manual" && !tManual.checked) return false;
+    return true;
+  }
+  function bandVisible(b) {
+    if (b.tag && b.tag[0] === "manual" && !tManual.checked) return false;
+    return b.msgs.some(visible);
+  }
+
+  function arrowHead(x, y, dir, color, parent) {
+    el("path", { d: "M" + x + " " + y + " l" + (-8 * dir) + " -4.5 l0 9 Z", style: "fill:" + color }, parent);
+  }
+
+  function draw() {
+    bsvg.innerHTML = ""; gutter.innerHTML = "";
+    var bands = BANDS.filter(bandVisible);
+    var H = 8;
+    bands.forEach(function (b) { H += BANDPAD * 2 + b.msgs.filter(visible).length * ROW + (b.frame ? 18 : 0); });
+    H += 8;
+    bsvg.setAttribute("width", W); bsvg.setAttribute("height", H);
+    gutter.style.width = GUT + "px"; gutter.style.height = H + "px";
+    var bandLayer = el("g", {}, bsvg), lifeLayer = el("g", {}, bsvg), msgLayer = el("g", {}, bsvg);
+    P.forEach(function (p) {
+      el("line", { x1: X(p[0]), y1: 0, x2: X(p[0]), y2: H, "stroke-dasharray": "2 4", style: "stroke:var(--border);stroke-width:1" }, lifeLayer);
+    });
+    var y = 8, n = 0, first = null;
+    bands.forEach(function (b) {
+      n++;
+      var msgs = b.msgs.filter(visible);
+      var h = BANDPAD * 2 + msgs.length * ROW + (b.frame ? 18 : 0);
+      el("rect", { x: 0, y: y, width: W, height: h, style: "fill:" + tok(b.fill) + ";fill-opacity:.55" }, bandLayer);
+      var lab = document.createElement("div");
+      lab.className = "band-label";
+      lab.style.top = y + "px"; lab.style.height = h + "px";
+      lab.style.background = "color-mix(in srgb, " + tok(b.fill) + " 55%, var(--surface))";
+      lab.innerHTML = '<span class="n">' + String(n).padStart(2, "0") + '</span><span class="t"></span>';
+      lab.querySelector(".t").textContent = b.t;
+      if (b.tag) { var tg = document.createElement("span"); tg.className = "tag " + b.tag[0]; tg.textContent = b.tag[1]; lab.appendChild(tg); }
+      gutter.appendChild(lab);
+      var my = y + BANDPAD + (b.frame ? 18 : 0) + ROW / 2 + 4;
+      var fr = b.frame ? { lo: Infinity, hi: -Infinity, y0: y + BANDPAD, y1: y + h - BANDPAD + 6 } : null;
+      msgs.forEach(function (msg) {
+        var g = drawMsg(msg, my, msgLayer);
+        if (!first && msg.k !== "manual") first = { g: g, msg: msg };
+        if (fr) { fr.lo = Math.min(fr.lo, X(msg.f), X(msg.t)); fr.hi = Math.max(fr.hi, X(msg.f), X(msg.t)); }
+        my += ROW;
+      });
+      if (fr) {
+        var fx = fr.lo - 30, fw = fr.hi - fr.lo + 160;
+        el("rect", { x: fx, y: fr.y0, width: fw, height: fr.y1 - fr.y0, rx: 6, fill: "none", "stroke-dasharray": "5 4", style: "stroke:var(--muted);stroke-width:1" }, bandLayer);
+        var tagw = Math.min(fw - 8, b.frame.length * 5.9 + 46);
+        el("rect", { x: fx, y: fr.y0, width: tagw, height: 16, rx: 6, style: "fill:var(--surface);stroke:var(--muted);stroke-width:1" }, bandLayer);
+        el("text", { x: fx + 8, y: fr.y0 + 11.5, "font-size": 10.5, "font-weight": 600, style: "fill:var(--muted)" }, bandLayer, "loop  " + b.frame);
+      }
+      y += h;
+    });
+    if (selected && document.body.contains(selected.g)) select(selected.g, selected.msg);
+    else if (first) select(first.g, first.msg);
+  }
+
+  function drawMsg(msg, y, layer) {
+    var g = el("g", { class: "msg", tabindex: 0, role: "button" }, layer);
+    var x1 = X(msg.f), x2 = X(msg.t);
+    var color = msg.k === "hand" ? "var(--hand)" : msg.k === "manual" ? "var(--manual)" : msg.k === "ret" ? "var(--muted)" : "var(--text)";
+    var dash = msg.k === "hand" ? "6 3" : msg.k === "manual" ? "1.5 3" : msg.k === "ret" ? "3 3" : "";
+    var sw = msg.k === "ret" ? 1 : 1.5;
+    var lo = Math.min(x1, x2), hi = Math.max(x1, x2);
+    var aria = P[idx[msg.f]][1] + " to " + P[idx[msg.t]][1] + ": " + msg.l;
+    g.setAttribute("aria-label", aria);
+    if (x1 === x2) {
+      el("rect", { class: "hit", x: x1 - 6, y: y - 20, width: 420, height: ROW - 2, rx: 4 }, g);
+      el("path", { d: "M" + x1 + " " + (y - 7) + " h26 v14 h-18", fill: "none", "stroke-dasharray": dash, "stroke-linecap": "round", style: "stroke:" + color + ";stroke-width:" + sw }, g);
+      arrowHead(x1 + 2, y + 7, -1, color, g);
+      el("text", { class: "lbl", x: x1 + 34, y: y - 2 }, g, msg.l);
+      if (msg.c) el("text", { class: "cond", x: x1 + 34, y: y + 12 }, g, "[" + msg.c + "]");
+    } else {
+      var dir = x2 > x1 ? 1 : -1;
+      var mid = (x1 + x2) / 2;
+      el("rect", { class: "hit", x: lo - 8, y: y - 20, width: Math.max(hi - lo + 16, 200), height: ROW - 2, rx: 4 }, g);
+      el("line", { x1: x1, y1: y, x2: x2 - 2 * dir, y2: y, "stroke-dasharray": dash, "stroke-linecap": "round", style: "stroke:" + color + ";stroke-width:" + sw }, g);
+      el("circle", { cx: x1, cy: y, r: 2.6, style: "fill:" + color }, g);
+      arrowHead(x2, y, dir, color, g);
+      el("text", { class: "lbl", x: mid, y: y - 6, "text-anchor": "middle" }, g, msg.l);
+      if (msg.c) el("text", { class: "cond", x: mid, y: y + 13, "text-anchor": "middle" }, g, "[" + msg.c + "]");
+    }
+    var tt = el("title", {}, g, aria + (msg.c ? " [" + msg.c + "]" : ""));
+    g.addEventListener("click", function () { select(g, msg); });
+    g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(g, msg); } });
+    return g;
+  }
+
+  var KIND = { "": "Loop path", ret: "Loop path (return)", hand: "Coordinator's hand path", manual: "Manual only, or planned and not built" };
+  function select(g, msg) {
+    if (selected && selected.g) selected.g.classList.remove("sel");
+    g.classList.add("sel"); selected = { g: g, msg: msg };
+    detail.innerHTML = '<div class="route"></div><div></div><div class="meta"></div><div class="src"></div>';
+    detail.children[0].textContent = P[idx[msg.f]][1] + " → " + P[idx[msg.t]][1];
+    detail.children[1].textContent = msg.l;
+    detail.children[2].textContent = KIND[msg.k] + (msg.c ? " · when: " + msg.c : "");
+    detail.children[3].textContent = msg.s ? "project-trajectory/scripts/ · " + msg.s : "";
+  }
+
+  [tHand, tManual].forEach(function (t) {
+    try { var v = localStorage.getItem("wil-" + t.id); if (v !== null) t.checked = v === "1"; } catch (e) {}
+    t.addEventListener("change", function () { try { localStorage.setItem("wil-" + t.id, t.checked ? "1" : "0"); } catch (e) {} draw(); });
+  });
+  document.getElementById("canvas").style.width = (GUT + W) + "px";
+  header(); draw();
+})();
+</script>
+</body>
+</html>
