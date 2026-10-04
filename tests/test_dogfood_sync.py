@@ -46,6 +46,9 @@ import pytest
 from conftest import ROOT, load_script
 
 CARRIER = load_script("spine_carrier")
+# Declared historical metadata (WI-790): keys older live rows keep and no new
+# row authors, so the template does not set them.
+HISTORICAL = CARRIER._kitspine.HISTORICAL_KEYS
 
 # --- census: live registry -> its shipped template ---------------------------
 REGISTRIES = {
@@ -367,7 +370,9 @@ def _toml_keys(path, table):
     return {k for row in rows.values() for k in row}
 
 
-def registry_key_drift(template_keys, live_keys, schema_keys, vocabulary):
+def registry_key_drift(
+    template_keys, live_keys, schema_keys, vocabulary, historical=()
+):
     """None when template, live registry and the SCHEMA OF RECORD agree, else a
     message naming the first disagreement.
 
@@ -389,8 +394,17 @@ def registry_key_drift(template_keys, live_keys, schema_keys, vocabulary):
         may not invent one nobody shipped;
       * schema keys ⊆ the carrier VOCABULARY — nothing declared can be a cell
         the loader would silently drop on the way through.
+
+    `historical` (WI-790, `kitlib.spine.HISTORICAL_KEYS`) are schema keys that
+    older live rows still carry and no new row authors: the template must NOT
+    set them, and the "template declares the schema" leg excludes them. A
+    declared exemption per key, never a blanket one for the registry.
     """
-    missing = sorted(schema_keys - template_keys)
+    historical = set(historical)
+    stale = sorted(template_keys & historical)
+    if stale:
+        return "template sets historical key(s) %s no new row authors" % ",".join(stale)
+    missing = sorted(schema_keys - historical - template_keys)
     if missing:
         return (
             "template no longer declares key(s) %s the tier schema states"
@@ -453,7 +467,9 @@ def test_template_declares_every_key_the_live_registry_uses(id_col):
     else:
         assert live, live_rel  # a registry with no rows would make this vacuous
     assert schema, id_col  # ...and an empty schema would pass everything
-    drift = registry_key_drift(tmpl, live, schema, CARRIER.REGISTRY_COLUMN)
+    drift = registry_key_drift(
+        tmpl, live, schema, CARRIER.REGISTRY_COLUMN, HISTORICAL.get(id_col, ())
+    )
     assert drift is None, "%s[%s]: %s" % (live_rel, table, drift)
 
 
@@ -850,6 +866,7 @@ def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(tmp_path, id_col, pl
             _toml_keys(live_copy, table),
             schema,
             CARRIER.REGISTRY_COLUMN,
+            HISTORICAL.get(id_col, ()),
         )
 
     assert verdict(live_src, tmpl_src) is None  # clean today
@@ -867,3 +884,22 @@ def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(tmp_path, id_col, pl
     assert dropped != tmpl_src, victim
     drift = verdict(live_src, dropped)
     assert drift is not None and victim in drift
+
+
+def test_a_historical_key_is_told_apart_from_an_authored_one():
+    """WI-790 (A4): `wi_refs` is declared historical for the open-items
+    registry. The live registry may still carry it on ruled rows, the shipped
+    template must not set it, and the exemption is that one key: dropping any
+    other schema key from the template is still drift."""
+    assert HISTORICAL == {"OI-ID": ("wi_refs",)}
+    schema = set(CARRIER.REGISTRY_KEYS["OI-ID"])
+    assert "wi_refs" in schema  # still declared, so the carrier preserves it
+    authored = schema - {"wi_refs"}
+    vocab = CARRIER.REGISTRY_COLUMN
+    assert registry_key_drift(authored, schema, schema, vocab, ("wi_refs",)) is None
+    drift = registry_key_drift(schema, schema, schema, vocab, ("wi_refs",))
+    assert drift is not None and "historical" in drift and "wi_refs" in drift
+    drift = registry_key_drift(
+        authored - {"title"}, schema, schema, vocab, ("wi_refs",)
+    )
+    assert drift is not None and "title" in drift

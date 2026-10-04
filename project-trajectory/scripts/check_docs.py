@@ -892,6 +892,7 @@ def _oi_coherence_warns(open_items, text):
         "requirements/open-items.toml (every owner ask carries its "
         "brief)".format(oid, oid)
         for oid in sorted(set(_OI_RE.findall(_needs_human_block(text))) - briefed)
+        if not oid.endswith("-000")  # the template's inert example (WI-790)
     ]
     warns += [
         "{}: briefed in requirements/open-items.toml but never named in "

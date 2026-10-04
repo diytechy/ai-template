@@ -6815,6 +6815,80 @@ and still parse. If your dial holds the needs rung, expect your next merged
 need amendment to mint an adjudication row rather than wait silently on your
 brief.
 
+### Work items cite the open items they wait on; decisions to review [since 15874031]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The edge between a work item and an owner decision reverses.
+A work item that waits on a decision cites it in its own `needs`
+(`needs = ["OI-7"]`) and reads `blocked`, the item named, until the item leaves
+`pending`; an open item carries no work-item pointer, and nothing reads a
+`wi_refs` cell any more (`kitlib.spine.HISTORICAL_KEYS` declares it historical:
+preserved on the rows that have it, authored by no new row). One queue
+projection (`kitlib.spine.open_item_queue`, read through
+`pending.open_item_queue`) now decides what the owner sees:
+
+- `open-items.html` shows a pending item as a card only when a queued work item
+  cites it, beside the rows it holds; a pending item no queued row cites is
+  named in an integrity notice instead, and `check_trajectory` reports it as an
+  ERROR at every gate, even in a repo with no work items.
+- The status snapshot's open-items bullets and its Blocked list read the same
+  projection, and the Next-work card names the item that holds a row.
+- `check_trajectory` fails an open row whose cited items are all ruled while
+  its `specref` still names the open-items registry, and backlog staleness
+  clocks such a `specref` per cited item.
+- A new pre-commit step, `ruling-sync` (`check.py --ruling-sync`), and a new
+  merge-slot rung refuse a commit that takes an open item out of `pending`
+  unless the same commit updates the Done-when of every row open in its parent
+  that cites the item, or closes or removes that row. Each lane commit is
+  judged against its first parent, so a `--no-verify` commit is still refused
+  before it lands.
+- `intake` writes a minted open item's id into its successor's `needs` and,
+  when the successor has no `specref`, points it at
+  `docs/requirements/open-items.toml#OI-NNN`. A non-Python bootstrap files its
+  OI-3 together with a queued placeholder `WI-001`.
+- The shipped open-items template drops its live example rows `OI-1` and
+  `OI-2` (the status template's examples now point at the inert `OI-000`) and
+  the `wi_refs` cell of its example row.
+- Delegated-decisions records gain a `reviewed` key (`kitlib.decisions`): the
+  owner marks an entry reviewed by setting it, and `open-items.html` ends with
+  "Decisions to review", listing every entry not marked reviewed, high-risk
+  first; the status snapshot counts them. A note in `review` alone no longer
+  marks an entry reviewed, and an unrecognized `reviewed` value is reported as
+  a format finding.
+
+**What to do.**
+
+1. Re-sync `scripts/schedule.py`, `scripts/check_trajectory.py`,
+   `scripts/acceptance_record.py`, `scripts/check.py`, `scripts/integrate.py`,
+   `scripts/intake.py`, `scripts/bootstrap.py`, `scripts/pending.py`,
+   `scripts/traj_status.py`, `scripts/gen_open_items.py`,
+   `scripts/agent_brief.py`, `scripts/check_docs.py`,
+   `scripts/migrate_carrier.py`, `scripts/rendering/traj_panels.py`,
+   `scripts/kitlib/spine.py`, `scripts/kitlib/decisions.py`,
+   `hooks/pre-commit` (its `--run-steps` list gains `ruling-sync`),
+   `prompts/adjudicate-disposition.template.md`, `decisions.template.toml`,
+   `PROCESS.md`, `STATUS.template.md` and both `work/` templates. If your repo
+   keeps its own pre-commit hook, add `ruling-sync` to its `--run-steps` list.
+2. **Migrate every pending open item** in `docs/requirements/open-items.toml`,
+   including those with no `wi_refs`. For each one, write its id into the
+   `needs` of each queued work item it holds. Then delete the pending row's
+   `wi_refs` cell. If no queued row should cite it, file a queued placeholder
+   (a `title`, a `safety_class`, `needs = ["OI-N"]` and
+   `specref = "docs/requirements/open-items.toml#OI-N"`). Leave ruled rows'
+   `wi_refs` as they are: they are history. No transition reader is kept, so a
+   pending item left uncited fails `check_trajectory` until it is cited.
+3. Edit your registry's header comment to say what the shipped template's
+   header now says: work items point to open items, older rows may carry
+   `wi_refs` as history, and ruling an item updates its citing rows in the
+   same commit.
+4. If your copy still has the template's example rows `OI-1` and `OI-2`, and
+   they are not decisions you mean to make, delete them, and point your
+   status.md's example bullets at `OI-000`.
+5. Regenerate `docs/open-items.html` and the status snapshot. Existing
+   decisions-record entries read as not reviewed until you set `reviewed`; no
+   record has to change shape.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -40,11 +40,17 @@ plan_briefs = load_script("plan_briefs")
 # --- the catalogue ------------------------------------------------------------
 
 
-def test_disposition_brief_gates_the_successor_through_open_item_wi_refs():
+def test_disposition_brief_makes_the_successor_the_open_items_placeholder():
+    # WI-790: the minted id lands in the successor's `needs`, the successor is
+    # the item's placeholder on the queue, and the ruling updates it in the
+    # same commit (OI-102 Q1: its Done-when gains the decided criteria).
     text = pr.load(pr.ADJUDICATE_DISPOSITION)
-    assert "lists the successor in the open item's `wi_refs`" in text
-    assert "successor stays queued but blocked until the owner rules" in text
-    assert "lands its id in the successor's `needs`" not in text
+    assert "writes its id into the successor's `needs`" in text
+    assert "the successor is the open item's PLACEHOLDER on the queue" in text
+    assert "queued but blocked until the owner rules" in text
+    assert "`docs/requirements/open-items.toml#OI-NNN`" in text
+    assert "Ruling the item updates the successor in the same commit" in text
+    assert "`wi_refs`" not in text
 
 
 def test_every_declared_prompt_key_has_a_shipped_file():

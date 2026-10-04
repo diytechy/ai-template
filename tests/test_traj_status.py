@@ -86,9 +86,28 @@ def make_status_repo(
         (root / "docs" / "requirements" / "open-items.csv").write_text(
             open_items, encoding="utf-8"
         )
+        cite_pending(root, open_items)
     if status is not None:
         (root / "docs" / "status.md").write_text(status, encoding="utf-8")
     return root
+
+
+def cite_pending(root, open_items):
+    """WI-790: the snapshot lists a pending open item only when a queued work
+    item cites it, so the fixture files a queued placeholder row per pending
+    row (`WI-9<n>` citing `OI-<n>`)."""
+    for line in open_items.splitlines()[1:]:
+        cells = line.split(",")
+        if len(cells) > 2 and cells[2] == "pending":
+            oid = cells[0]
+            wid = "WI-9{:02d}".format(int(oid.split("-")[1]))
+            path = root / "docs" / "work" / "queued" / "{}-rule.md".format(wid)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                '+++\nid = "{}"\ntitle = "Rule {}"\nneeds = ["{}"]\n'
+                'safety_class = "ordinary"\n+++\n'.format(wid, oid, oid),
+                encoding="utf-8",
+            )
 
 
 def test_core_collection_runs_without_the_rendering_package(tmp_path):
@@ -285,6 +304,7 @@ def test_status_check_fresh_and_stale(tmp_path):
         + "OI-5,a new ask,pending,,decide soon.,,,,,,,\n",
         encoding="utf-8",
     )
+    cite_pending(tmp_path, OPEN_ITEMS_HEADER + "OI-5,a new ask,pending\n")
     stale = run_status(tmp_path, "--check")
     assert stale.returncode == 1 and "STALE" in stale.stderr
     # regenerating restores freshness and now projects OI-5

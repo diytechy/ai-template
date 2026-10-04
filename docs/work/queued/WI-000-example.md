@@ -84,7 +84,10 @@ a wall of `= ""`.
 - `needs` — the predecessor id(s): the DAG edges. A bare id is a **hard** edge
   (it blocks; the graph must stay acyclic); a `~`-prefixed id is a **soft** edge
   (advisory ordering — it must resolve, never blocks, and renders dashed). The
-  `~` is meaning, not decoration, and is carried verbatim.
+  `~` is meaning, not decoration, and is carried verbatim. An `OI-###` id cites
+  the open item this row waits on: the row reads `blocked` until the item is
+  ruled, and the ruling's commit writes this row's Done-when with the decided
+  criteria citing the item (IF-054, IF-073).
 - `specref` — the forward bridge (rule R-E): a `docs/specs/WI-###.md` file or a
   `doc#anchor` that resolves while the item is open, and clears at close.
 - `buildtier` — an optional routing hint for the unattended coordinator:

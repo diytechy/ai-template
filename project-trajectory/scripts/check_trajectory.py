@@ -925,18 +925,54 @@ def load_known_ois(root):
     )
 
 
-def open_item_wi_ref_findings(root, wis):
-    """Resolve IF-073 pointers against the whole WI registry, history included.
+def uncited_open_item_findings(root, wi_rows):
+    """Each pending open item NO queued work item cites in its `needs` (WI-790):
+    the queue is the only route a decision reaches the owner by, so such an
+    item is invisible, and it is an ERROR whatever the gate. Read off the one
+    queue projection (`kitlib.spine.open_item_queue`) the owner surface and the
+    status snapshot also read. Vacuous without an open-items registry.
 
-    Implements: SR-148, LLR-289
+    Implements: SR-148
     """
-    ids = {w["id"] for w in wis}
+    path = Path(root) / OPEN_ITEMS_REL
+    if spine_carrier.resolve(path) is None:
+        return []
+    queue = _kitspine.open_item_queue(wi_rows, spine_carrier.load(path, "OI-ID"))
     return [
-        "{}: wi_refs names unknown work item {}".format(row["OI-ID"], wid)
-        for row in spine_carrier.load(Path(root) / OPEN_ITEMS_REL, "OI-ID")
-        if not _kitspine.is_example(row["OI-ID"])
-        for wid in _split_refs(row.get("WI-Refs", ""))
-        if not _kitspine.is_example(wid) and wid not in ids
+        "{}: pending, but no queued work item cites it in `needs`, so the "
+        "decision never reaches the owner's queue — file a queued placeholder "
+        "row citing it (WI-790)".format(oid)
+        for oid in queue["uncited"]
+    ]
+
+
+def open_item_specref_findings(root, wis):
+    """An open row whose cited open items are ALL ruled must not keep the
+    open-items registry as its `specref` (WI-790): the registry was the
+    placeholder's spec of record only until the ruling, which writes the row's
+    real criteria and points it at a real spec. A state check — no diff, no
+    history. An item absent from the registry is not ruled (the dangling-edge
+    ERROR reports it). Vacuous without a registry.
+
+    Implements: SR-148
+    """
+    path = Path(root) / OPEN_ITEMS_REL
+    if spine_carrier.resolve(path) is None:
+        return []
+    states = {
+        (r.get("OI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
+        for r in spine_carrier.load(path, "OI-ID")
+    }
+    return [
+        "{}: every open item it cites ({}) is ruled, but its specref still "
+        "names the open-items registry — the ruling owes the row its real "
+        "specref and criteria (WI-790)".format(
+            w["id"], ", ".join(w["oi_preds"]) or "none"
+        )
+        for w in wis
+        if w["status"] in OPEN_STATUSES
+        and w["specref"].split("#", 1)[0].strip() == OPEN_ITEMS_REL
+        and all(states.get(o, "pending") != "pending" for o in w["oi_preds"])
     ]
 
 
@@ -2318,7 +2354,9 @@ def backlog_staleness_findings(root, wis):
     amended requirement. Re-affirming is deliberately cheap — a content edit to
     the spec at the SAME path (frontmatter or body) re-dates the row and clears
     the warn (a *driven look*, not ceremony). Cited sources: each `SR-Refs` id (a
-    row of system-requirements.toml) and the `SpecRef` target file.
+    row of system-requirements.toml) and the `SpecRef` target file — except a
+    `SpecRef` into the open-items registry, which is clocked per cited open item
+    (`_specref_staleness`, WI-790), so filing an unrelated item warns nobody.
 
     SAME PATH is a real limitation, not a turn of phrase, and the warn text says
     so. The row clock reads `--follow --diff-filter=AM` (`_path_commit_time`,
@@ -2381,17 +2419,47 @@ def backlog_staleness_findings(root, wis):
                     "{}: cites {} amended after the WI row was last touched — "
                     "{}".format(w["id"], sr, BACKLOG_REAFFIRM_HINT)
                 )
-        pathpart = w["specref"].split("#", 1)[0].strip()
-        if pathpart:
-            if pathpart not in spec_time:
-                spec_time[pathpart] = _path_commit_time(root, pathpart)
-            t = spec_time[pathpart]
-            if t is not None and t > wi_time:
-                out.append(
-                    "{}: its SpecRef {} changed after the WI row was last touched "
-                    "— {}".format(w["id"], pathpart, BACKLOG_REAFFIRM_HINT)
-                )
+        out.extend(_specref_staleness(root, w, wi_time, spec_time))
     return out
+
+
+def _specref_staleness(root, w, wi_time, spec_time):
+    """The SpecRef arm of the backlog-staleness warn for one open row. A
+    `specref` into the open-items registry is clocked PER CITED ITEM (WI-790):
+    the row is stale only when an open item it cites — its `needs` tokens and
+    the reference's own `#OI-NNN` anchor — was edited after the row, never
+    because some other item was filed in the same file. Any other target is
+    clocked by its file. `spec_time` memoizes per path (and, for the registry,
+    the row-time map under its own key).
+
+    Implements: SR-148
+    """
+    pathpart, _hash, anchor = w["specref"].partition("#")
+    pathpart = pathpart.strip()
+    if not pathpart:
+        return []
+    if pathpart == OPEN_ITEMS_REL:
+        if OPEN_ITEMS_REL not in spec_time:
+            spec_time[OPEN_ITEMS_REL] = _blame_row_times(root, OPEN_ITEMS_REL)
+        times = spec_time[OPEN_ITEMS_REL] or {}
+        cited = list(dict.fromkeys(w["oi_preds"] + [anchor.strip()]))
+        return [
+            "{}: cites {} amended after the WI row was last touched — {}".format(
+                w["id"], oid, BACKLOG_REAFFIRM_HINT
+            )
+            for oid in cited
+            if times.get(oid) is not None and times[oid] > wi_time
+        ]
+    if pathpart not in spec_time:
+        spec_time[pathpart] = _path_commit_time(root, pathpart)
+    t = spec_time[pathpart]
+    if t is not None and t > wi_time:
+        return [
+            "{}: its SpecRef {} changed after the WI row was last touched — {}".format(
+                w["id"], pathpart, BACKLOG_REAFFIRM_HINT
+            )
+        ]
+    return []
 
 
 # Mirror of wi_convert.SLUG_CHARS, duplicated here DELIBERATELY: this module is
@@ -3284,13 +3352,17 @@ def main():
     wi_rows = read_registry_rows(root / WI_CSV, registry_errors)
     wis, integrity = load_wis(wi_rows)
     integrity = registry_errors + integrity
+    # The uncited-pending ERROR (WI-790) is evaluated BEFORE the vacuity
+    # return: a repo whose only open item has no queued row to cite it is
+    # exactly the repo that has no work items, and it must not read clean.
+    oi_errors = uncited_open_item_findings(root, wi_rows)
     if not wis and not integrity:
-        arch_errors = comp_errors + if_tc_errors
+        arch_errors = comp_errors + if_tc_errors + oi_errors
         if arch_errors:
             for e in arch_errors:
                 print("check_trajectory: ERROR - {}".format(e), file=sys.stderr)
             print(
-                "check_trajectory: {} architecture finding(s).".format(
+                "check_trajectory: {} finding(s) with no work items.".format(
                     len(arch_errors)
                 ),
                 file=sys.stderr,
@@ -3311,9 +3383,10 @@ def main():
     errors = (
         comp_errors
         + if_tc_errors
+        + oi_errors
         + integrity
         + validate(wis, load_known_srs(root), load_known_ois(root))
-        + open_item_wi_ref_findings(root, wis)
+        + open_item_specref_findings(root, wis)
     )
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
     # under --strict (DevStg-Tests+); vacuous until a spec adopts an `## Interfaces` section.

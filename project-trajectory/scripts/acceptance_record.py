@@ -124,6 +124,18 @@ Contract IF-196: the held status, read from a delta. `staged_status_moves(root,
     as held; `held_status_refusal(dial, moves)` joins them into the refusal,
     or returns None. A delta git cannot read is `[]`; a registry
     side that does not parse is one move naming the registry.
+
+THE RULING SYNC (WI-790; OI-102 Q3) is the third two-tree rule here, and the
+one with no dial: a commit that takes an open item out of `pending` must, in
+the same diff, update the Done-when of every work item open in its PARENT tree
+whose `needs` cites that item, or close or remove that row
+(`ruling_sync_lines`). It reads one commit and its parent and nothing further,
+so it never skips for missing history; the pre-commit hook asks it of HEAD and
+the staged tree (`staged_ruling_sync_lines`), and the merge slot of every lane
+commit and its first parent (`commit_ruling_sync_lines`) — one function over
+two trees in both places. It decides only that mechanical condition: whether
+the change carries the ruling, and whether a row's other fields must move, is
+the reviewer's judgement.
 """
 
 import tomllib
@@ -132,7 +144,9 @@ from pathlib import PurePosixPath
 try:
     import spine_carrier
     from kitlib import authority as _kitauthority
+    from kitlib import done_when as _kitdonewhen
     from kitlib import git as _kitgit
+    from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
@@ -141,7 +155,9 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
     from kitlib import authority as _kitauthority
+    from kitlib import done_when as _kitdonewhen
     from kitlib import git as _kitgit
+    from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
 
 # `git -C <root> <args>` stdout on success, else None (git absent, not a repo,
@@ -1853,3 +1869,162 @@ def committed_status_moves(root, rev):
                     {"registry": registry, "id": rid, "before": was, "after": now}
                 )
     return moves
+
+
+# --- THE RULING SYNC: a ruling updates the rows that cite it (WI-790) ---------
+# OI-102 Q3, ruled 2026-10-03: a commit-time block over ONE diff, a commit
+# against its own parent, with no history walk and no second path. The
+# trigger is the registry state (a row going from `pending` to anything else,
+# a deleted pending row included), never page membership; the citing set is
+# read from the PARENT tree, so dropping the `needs` token in the ruling's own
+# commit discharges nothing. Every terminal state discharges the obligation —
+# a closed row has no criteria left to update — because a terminal row lives
+# under the archive, so a row the commit moved there or removed is satisfied.
+OPEN_ITEMS_REGISTRY = "docs/requirements/open-items.toml"
+WORK_DIR = "docs/work"
+ARCHIVE_WORK_DIR = "docs/archive/work"
+_PENDING = "pending"
+
+
+def _tree_specs(root, rev):
+    """`{WI id: path}` of every spec in a tree (`rev` None is the index), or
+    None when git cannot list it. A `-000` example is never a row."""
+    roots = [WORK_DIR, ARCHIVE_WORK_DIR]
+    if rev is None:
+        out = _git(root, ["ls-files", "--"] + roots)
+    else:
+        out = _git(root, ["ls-tree", "-r", "--name-only", rev, "--"] + roots)
+    if out is None:
+        return None
+    specs = {}
+    for path in out.splitlines():
+        name = path.rsplit("/", 1)[-1]
+        wid = "-".join(name.split("-")[:2])
+        if name.startswith("WI-") and name.endswith(".md") and not wid.endswith("-000"):
+            specs[wid] = path
+    return specs
+
+
+def _ruled_items(before_text, after_text):
+    """The open items `pending` before and not after, or None when either side
+    does not parse (unreadable is not unchanged)."""
+    before = {} if before_text is None else _status_cells(before_text)
+    after = {} if after_text is None else _status_cells(after_text)
+    if before is None or after is None:
+        return None
+    return sorted(
+        oid
+        for oid, state in before.items()
+        if state.lower() == _PENDING and after.get(oid, "").lower() != _PENDING
+    )
+
+
+def _citing_rows(root, base, specs, ruled):
+    """`[(WI id, [ruled OI ids it cites], spec text)]` for every row OPEN in
+    the `base` tree (under `docs/work/`) whose `needs` cites a ruled item."""
+    rows = []
+    for wid, path in sorted(specs.items()):
+        if not path.startswith(WORK_DIR + "/"):
+            continue  # under the archive: terminal, nothing owed
+        text = _git(root, ["show", "{}:{}".format(base, path)])
+        try:
+            data, _body = _kitregistry.parse_spec_frontmatter(text or "", path)
+        except ValueError:
+            continue  # a malformed spec is the validator's finding, not this rule's
+        needs = ";".join(str(t) for t in data.get("needs") or [])
+        cited = [o for o in _kitspine.split_pred_edges(needs)[1] if o in ruled]
+        if cited:
+            rows.append((wid, cited, text))
+    return rows
+
+
+def _sync_gap(root, new_prefix, head_path, before_text):
+    """Why one citing row is out of sync in the new tree, or None when it is
+    satisfied: removed, closed (moved under the archive), or open with a
+    non-empty Done-when that differs from the parent's beyond ticks and
+    appended evidence (`kitlib.done_when.changes`)."""
+    if head_path is None or not head_path.startswith(WORK_DIR + "/"):
+        return None
+    after_text = _git(root, ["show", new_prefix + head_path]) or ""
+    if not _kitdonewhen.items(after_text):
+        return "it keeps no Done-when"
+    if not _kitdonewhen.changes(before_text, after_text):
+        return "its Done-when is unchanged"
+    return None
+
+
+def ruling_sync_lines(root, base, head=None):
+    """One line per (row, item) the diff `base` -> `head` leaves out of sync
+    (`head` None is the index): an open item leaves `pending` while a work item
+    open in `base` cites it in `needs`, and the same diff neither updates that
+    row's Done-when (non-empty afterwards, and changed beyond ticks and
+    evidence) nor closes or removes the row. `[]` when nothing leaves
+    `pending`. A diff git cannot read is a line, never a skip.
+
+    Implements: SR-148
+    """
+    args = ["diff", "--name-only", "--no-renames"]
+    args += ["--cached", base] if head is None else [base, head]
+    names = _git(root, args)
+    if names is None:
+        return [
+            "cannot read the diff against {}, so whether it rules an open item "
+            "is unknown".format(base)
+        ]
+    if OPEN_ITEMS_REGISTRY not in names.splitlines():
+        return []
+    new_prefix = ":" if head is None else head + ":"
+    ruled = _ruled_items(
+        _git(root, ["show", "{}:{}".format(base, OPEN_ITEMS_REGISTRY)]),
+        _git(root, ["show", new_prefix + OPEN_ITEMS_REGISTRY]),
+    )
+    if ruled is None:
+        return ["{} does not parse on one side of the diff".format(OPEN_ITEMS_REGISTRY)]
+    if not ruled:
+        return []
+    return _sync_lines(root, base, head, ruled)
+
+
+def _sync_lines(root, base, head, ruled):
+    """The per-row half of `ruling_sync_lines`, once the ruled items are known."""
+    base_specs, head_specs = _tree_specs(root, base), _tree_specs(root, head)
+    if base_specs is None or head_specs is None:
+        return ["cannot list the work items on both sides of the diff"]
+    new_prefix = ":" if head is None else head + ":"
+    lines = []
+    for wid, cited, text in _citing_rows(root, base, base_specs, ruled):
+        gap = _sync_gap(root, new_prefix, head_specs.get(wid), text)
+        if gap:
+            lines.append(
+                "{} cites {}, which this commit takes out of pending, and {}: "
+                "the ruling's commit updates the row's Done-when with the decided "
+                "criteria, citing the item, or closes or removes the row".format(
+                    wid, ", ".join(cited), gap
+                )
+            )
+    return lines
+
+
+def staged_ruling_sync_lines(root):
+    """`ruling_sync_lines` for the commit being made: the index against HEAD,
+    or against the empty tree before the first commit (which closes nothing).
+
+    Implements: SR-148
+    """
+    head = _git(root, ["rev-parse", "--verify", "--quiet", "HEAD"])
+    base = head.strip() if head and head.strip() else _empty_tree(root)
+    if base is None:
+        return ["cannot read HEAD or the empty tree, so the commit is unjudged"]
+    return ruling_sync_lines(root, base)
+
+
+def commit_ruling_sync_lines(root, rev):
+    """`ruling_sync_lines` for one commit against its FIRST parent; a root
+    commit has nothing to close and answers `[]`.
+
+    Implements: SR-148
+    """
+    parent = _git(root, ["rev-parse", "--verify", "--quiet", rev + "^1"])
+    if not parent or not parent.strip():
+        return []
+    return ruling_sync_lines(root, parent.strip(), rev)

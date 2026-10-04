@@ -316,3 +316,27 @@ def test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization(tmp_path):
     proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert registry.read_bytes() == raw
+
+
+def test_the_scaffolded_oi3_is_filed_with_its_queued_placeholder(tmp_path):
+    """WI-790 (A5): every open-item creation path pairs a placeholder. The
+    non-Python profile's OI-3 lands together with a queued WI-001 whose `needs`
+    cites it and whose `specref` is the item's own registry record, both
+    watermarks cover what was allocated, the row reads blocked, and the fresh
+    scaffold's checker is green under --strict (no uncited pending item)."""
+    dest = _bootstrap(tmp_path, "--stack", "node")
+    (spec,) = (dest / "docs" / "work" / "queued").glob("WI-001-*.md")
+    text = spec.read_text(encoding="utf-8")
+    assert 'needs = ["OI-3"]' in text
+    assert 'specref = "docs/requirements/open-items.toml#OI-3"' in text
+    assert 'safety_class = "ordinary"' in text
+    mark = (dest / "docs" / "id-watermark").read_text(encoding="utf-8")
+    assert "\nWI = 1\n" in mark and "\nOI = 3\n" in mark
+    proc = run_py(["scripts/check_trajectory.py", "--strict"], cwd=dest)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    proc = run_py(["scripts/schedule.py", "ready", "--explain"], cwd=dest)
+    assert "WI-001" in proc.stdout and "blocked:open-item-pending:OI-3" in proc.stdout
+    # A re-sync files neither the item nor its row twice.
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert len(list((dest / "docs" / "work").rglob("WI-001-*.md"))) == 1

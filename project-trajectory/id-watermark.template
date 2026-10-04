@@ -12,8 +12,9 @@
 # ever renumbered, ids from the superseded numbering are NOT covered and
 # may be re-pointed by a mint — record those at the registry instead.
 #
-# basis: a FRESH SCAFFOLD. The only allocated ids are the example rows the
-# templates seed (OI=2) — NOT all-zeros, which is why this file is generated
+# basis: a FRESH SCAFFOLD. OI=2 covers the two example rows the templates
+# once seeded live (OI-1, OI-2; inert since WI-790, and a mark never falls) —
+# NOT all-zeros, which is why this file is generated
 # from a real scaffold rather than written by hand: scaffold into an empty
 # dir, run `trace.py --bump-ids` there, and copy the result. It must cover
 # whatever ids the templates seed, or an adopter is red on day one

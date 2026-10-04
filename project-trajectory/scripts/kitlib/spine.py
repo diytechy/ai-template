@@ -91,7 +91,10 @@ __all__ = [
     "missing_cell_findings",
     "SPINE_TIER_KEYS",
     "OFFSPINE_KEYS",
+    "HISTORICAL_KEYS",
     "REGISTRY_KEYS",
+    "split_pred_edges",
+    "open_item_queue",
     "SYSTEM_VALUES",
     "FORM_VALUES",
     "SAMPLING_VALUES",
@@ -211,15 +214,18 @@ _OI_TOKEN_RE = re.compile(r"^OI-\d+$")
 def split_pred_edges(value):
     """Split a `Predecessors` cell into `(hard_wi, hard_oi, soft_wi)`.
 
-    The legacy `needs` token grammar stays readable for TC-253; nothing mints
-    OI edges now, and bare WI ids keep meaning exactly what they meant:
+    The `needs` token grammar. An `OI-###` token is THE edge between a work
+    item and the open item it waits on (WI-790, reversing WI-746's `wi_refs`
+    pointer): a work item cites the decision, and an open item carries no
+    pointer back. Bare WI ids keep meaning exactly what they meant:
 
       `WI-###`   a HARD (blocking) edge — satisfied only when that WI integrates
                  `done`, the acyclicity rule's node set.
       `~WI-###`  a SOFT (advisory-ordering) edge — must resolve, never blocks.
       `OI-###`   a HARD edge on an OPEN-ITEM ruling — satisfied when that open
-                 item leaves `pending` (`schedule.hard_preds_satisfied`), the
-                 legacy dependency retained for TC-253. An OI edge is hard
+                 item leaves `pending` (`schedule.hard_preds_satisfied`); while
+                 it is pending the row reads `blocked`, the item named. An OI
+                 edge is hard
                  BY RULING, so a `~` prefix on one is ignored rather than making
                  a soft OI edge — there is no such thing. OI ids are NOT graph
                  nodes (an open item never integrates), so they stay out of the
@@ -238,6 +244,73 @@ def split_pred_edges(value):
         else:
             hard_wi.append(bare)
     return hard_wi, hard_oi, soft
+
+
+def open_item_queue(work_rows, oi_rows):
+    """THE ONE QUEUE PROJECTION of the owner's pending decisions (WI-790): which
+    pending open items a QUEUED work item cites in its `needs`, and which no
+    queued row cites.
+
+    Returns `{"cards": [(oi_row, [citing ids])], "uncited": [OI ids],
+    "held": {WI id: [OI ids]}}`, every list in id order. `cards` is what the
+    owner surface renders and counts, `held` is the status snapshot's Blocked
+    list, and `uncited` is the integrity finding and the owner surface's notice:
+    a pending decision nothing on the queue cites is invisible to the queue.
+    One function feeds all of them, so the page, the snapshot and the checker
+    cannot disagree about what the owner owes.
+
+    `work_rows` are registry rows (`WI-ID`, `Status`, `Predecessors`) and
+    `oi_rows` open-item rows (`OI-ID`, `Status`); `-000` example rows on either
+    side are inert. A row that is not `queued` (drafted, deferred, claimed or
+    closed) surfaces nothing: the decision reaches the owner through the queue.
+
+    Implements: SR-148
+    """
+    pending = _pending_items(oi_rows)
+    held = _held_rows(work_rows, pending)
+    citers = {}
+    for wid in sorted(held, key=_id_number):
+        for oid in held[wid]:
+            citers.setdefault(oid, []).append(wid)
+    order = sorted(pending, key=_id_number)
+    return {
+        "cards": [(pending[o], citers[o]) for o in order if o in citers],
+        "uncited": [o for o in order if o not in citers],
+        "held": held,
+    }
+
+
+def _pending_items(oi_rows):
+    """`{OI id: row}` of every real (non-example) pending open item."""
+    pending = {}
+    for row in oi_rows:
+        oid = (row.get("OI-ID") or "").strip()
+        state = (row.get("Status") or "").strip().lower()
+        if oid.startswith("OI-") and not is_example(oid) and state == "pending":
+            pending[oid] = row
+    return pending
+
+
+def _held_rows(work_rows, pending):
+    """`{WI id: [pending OI ids its needs cite]}` for every real queued row
+    citing at least one item in `pending`."""
+    held = {}
+    for row in work_rows:
+        wid = (row.get("WI-ID") or "").strip()
+        if is_example(wid) or (row.get("Status") or "").strip() != "queued":
+            continue
+        cited = {
+            o for o in split_pred_edges(row.get("Predecessors"))[1] if o in pending
+        }
+        if cited:
+            held[wid] = sorted(cited, key=_id_number)
+    return held
+
+
+def _id_number(rid):
+    """`OI-98` -> 98: the numeric order ids are read in, never the lexical one."""
+    tail = rid.rsplit("-", 1)[-1]
+    return int(tail) if tail.isdigit() else 0
 
 
 # Source-file extensions stripped when normalizing a module path, so an IF
@@ -993,6 +1066,17 @@ OFFSPINE_KEYS = {
     "SUR-ID": ("name", "emulates", "description", "status"),
 }
 REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
+
+# DECLARED HISTORICAL METADATA (WI-790): keys a registry still CARRIES on rows
+# filed before a format change, which no new row authors. They stay in the
+# schema above, so the carrier preserves them byte-for-byte, but no reader
+# derives a relationship from them, and the shipped template's rows no longer
+# set them. `wi_refs` is the open-item registry's work-item pointer: since
+# WI-790 a work item's `needs` cites the open item it waits on, and an open
+# item points at nothing. `tests/test_dogfood_sync.py` reads this to tell a
+# historical key from a key a new row authors.
+# Implements: SR-189, LLR-215
+HISTORICAL_KEYS = {"OI-ID": ("wi_refs",)}
 
 # THE TWO SYSTEMS OF INTEREST one frame holds (SR-187, LLR-211): the system in
 # OPERATION, and the system that builds and DELIVERS it. A boundary crossing's

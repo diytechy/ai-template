@@ -61,11 +61,13 @@ interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
 Contract IF-264: `_load(root)` reads the work registry and the IF-073 owner
-    registry together; `load_wis(rows, open_items=())` attaches each pending
-    gate's id/title to internal scheduler records. `hard_preds_satisfied` is
-    the shared readiness predicate, used by disposition and mutex selection;
-    `evaluate` carries `open_items` on its records for consumers to project.
-    Neither registry is mutated. No open-item registry means no gates.
+    registry together; `load_wis(rows, open_items=())` attaches to each row the
+    id and title of every open item its `needs` cites. `hard_preds_satisfied`
+    is the shared readiness predicate, used by disposition and mutex selection:
+    an open-item edge is met once the item leaves `pending`. `evaluate` reads a
+    row held by an unmet open-item edge as `blocked`, its record's
+    `open_items` naming each item that holds it. Neither registry is mutated.
+    The open item carries no pointer to the row; the row cites the item.
 Contract IF-053: SR-148's obligation delivered here as a pure library its
     siblings import. `load_wis(rows)` (over `load_registry_rows`, or `_load`
     for the whole read at once) turns the spec-folder work registry into
@@ -303,26 +305,20 @@ def _int(value, default=0):
 
 
 def load_wis(rows, open_items=()):
-    """Attach the IF-073 gates to internal scheduler data, never to WI rows.
+    """Parse work-item rows into scheduler WI dicts, each carrying the id and
+    title of every open item its `needs` cites (WI-790: the row cites the
+    decision it waits on; an open item carries no pointer back).
 
     Implements: SR-148, LLR-288
 
-    Parse work-item rows into a list of scheduler WI dicts (skips the inert
-    `-000` example row and any malformed/duplicate id, exactly like
-    check_trajectory.load_wis — a broken registry is the validator's job to
-    report, not the scheduler's to crash on)."""
-    owner_holds = {}
-    for item in open_items:
-        oid = (item.get("OI-ID") or "").strip()
-        if (
-            oid.endswith("-000")
-            or (item.get("Status") or "").strip().lower() != "pending"
-        ):
-            continue
-        for wid in _split_refs(item.get("WI-Refs", "")):
-            owner_holds.setdefault(wid, []).append(
-                {"id": oid, "title": (item.get("Title") or "").strip()}
-            )
+    Skips the inert `-000` example row and any malformed/duplicate id, exactly
+    like check_trajectory.load_wis — a broken registry is the validator's job to
+    report, not the scheduler's to crash on. `open_items` supplies only the
+    titles; whether an edge is met is `oi_status`'s answer at evaluation."""
+    titles = {
+        (item.get("OI-ID") or "").strip(): (item.get("Title") or "").strip()
+        for item in open_items
+    }
     wis, seen = [], set()
     for r in rows:
         wid = (r.get("WI-ID") or "").strip()
@@ -336,7 +332,7 @@ def load_wis(rows, open_items=()):
             {
                 "id": wid,
                 "title": (r.get("Title") or "").strip(),
-                "open_items": sorted(owner_holds.get(wid, []), key=lambda o: o["id"]),
+                "open_items": [{"id": o, "title": titles.get(o, "")} for o in oi_preds],
                 "status": (r.get("Status") or "queued").strip().lower(),
                 "preds": preds,
                 # Hard OPEN-ITEM edges (OI-73): satisfied when the OI leaves
@@ -454,8 +450,8 @@ def _status(wis):
 
 
 # The one open-item state that does NOT satisfy a hard OI edge (OI-73): a
-# `pending` open item is an unanswered human question, so a successor that
-# hard-depends on it stays `waiting` until the row is ruled. Any other PRESENT
+# `pending` open item is an unanswered human question, so a row that cites it
+# reads `blocked` until the item is ruled (WI-790). Any other PRESENT
 # state — `ruled` — satisfies the edge; an OI id absent from the states map
 # (never minted, the row gone, or no registry) is NOT satisfied (fails closed,
 # the validator's dangling-edge error), matching an unknown WI predecessor.
@@ -479,21 +475,32 @@ def _oi_satisfied(oid, oi_status):
 
 
 def hard_preds_satisfied(wi, status, oi_status=None):
-    """Every hard predecessor is satisfied, and IF-073 permits readiness.
+    """Every hard predecessor is satisfied: the one readiness predicate.
 
     Implements: SR-148, LLR-288
 
     A WI edge is satisfied only by an integrated `done` predecessor; an
     unknown, cancelled, partial or restructured predecessor is not satisfied.
-    The legacy OI-edge reader remains under its approved contract: an edge
-    is satisfied once the item leaves pending, using `oi_status`.
+    An open-item edge (`OI-###` in `needs`) is satisfied once the item leaves
+    `pending`, read from `oi_status`; an item absent from it is not.
     """
     oi_status = oi_status or {}
-    if (wi["status"] == "queued" and wi.get("open_items")) or not all(
-        status.get(p) == _DONE for p in wi["preds"]
-    ):
+    if not all(status.get(p) == _DONE for p in wi["preds"]):
         return False
     return all(_oi_satisfied(o, oi_status) for o in wi.get("oi_preds", ()))
+
+
+def _open_item_holds(wi, oi_status):
+    """The open items whose unmet edge holds `wi`, as `{"id", "title"}`, in the
+    row's citation order: pending, or absent from the registry (which the
+    validator reports as a dangling edge).
+
+    Implements: SR-148, LLR-288
+    """
+    oi_status = oi_status or {}
+    return [
+        o for o in wi.get("open_items", ()) if not _oi_satisfied(o["id"], oi_status)
+    ]
 
 
 def _hard_children(wis):
@@ -593,7 +600,7 @@ def evaluate(wis, reserved=None, oi_status=None):
     one per WI, ordered by the deterministic key. `reserved` is an optional set of
     WI ids already claimed by a live train (excluded from the ready frontier).
     `oi_status` is the `{OI-###: state}` map that resolves hard open-item edges
-    (OI-73); omitted (or `{}`) a WI carrying an OI edge stays `waiting`, since an
+    (OI-73); omitted (or `{}`) a WI carrying an OI edge reads `blocked`, since an
     unresolved open item never satisfies its edge.
 
     Implements: SR-148, LLR-058, LLR-123
@@ -626,7 +633,10 @@ def evaluate(wis, reserved=None, oi_status=None):
                 # `concurrency` value beside it (see the axis header above).
                 "exclusive_keys": w["exclusive"],
                 "reasons": reasons,
-                "open_items": w.get("open_items", []),
+                # The open items that hold this row (WI-790): read off the
+                # same edges the disposition used, so a consumer projects the
+                # gate the scheduler applied and never a second reading of it.
+                "open_items": _open_item_holds(w, oi_status),
                 "_key": order_key(w, rank, downstream[w["id"]], hardpath[w["id"]]),
             }
         )
@@ -711,7 +721,7 @@ _DEAD_PRED_CODES = (
 )
 
 
-def _waiting_reasons(wi, status, oi_status=None):
+def _waiting_reasons(wi, status):
     """Reason codes for a WI held `waiting` on unmet hard predecessors. WI-267
     design-decision 3, extended to `partial` by OI-73 and to `restructured` by
     the 2026-09-02 restructure plan: a cancelled, partial OR restructured
@@ -723,11 +733,9 @@ def _waiting_reasons(wi, status, oi_status=None):
     and the checker never disagree on whether an edge is dead. `restructured`
     (2026-09-02 restructure plan §1.6) is the third such state and the third
     code: an absorbed row's inbound edges are re-pointed to its successor at the
-    close, so an edge still naming it is a missed re-point, not a dead scope. An unmet hard
-    OPEN-ITEM edge (OI-73) is its own reason code too — a `pending` open item is
-    an unanswered human question, a waiting reason the scheduler had no
-    vocabulary for before the typed OI edge existed."""
-    oi_status = oi_status or {}
+    close, so an edge still naming it is a missed re-point, not a dead scope. An
+    unmet OPEN-ITEM edge is not a waiting reason: it makes the row `blocked`
+    (`_held_disposition`), and this list carries only the work-item half."""
     unmet = [p for p in wi["preds"] if status.get(p) != _DONE]
     # The dead-edge codes LEAD the list, in this table's order — which is fixed
     # only for stability, since all three states are equally
@@ -739,13 +747,7 @@ def _waiting_reasons(wi, status, oi_status=None):
             reasons.append("waiting:hard-pred-%s:%s" % (code, ",".join(dead)))
     if unmet:
         reasons.append("waiting:hard-preds-not-done:%s" % ",".join(unmet))
-    oi_unmet = [o for o in wi.get("oi_preds", ()) if not _oi_satisfied(o, oi_status)]
-    if oi_unmet:
-        reasons.append("waiting:open-item-pending:%s" % ",".join(oi_unmet))
-    # A WI reaches `waiting` only because SOME hard edge is unmet; name the WI
-    # arm even when the sole unmet edge is an open item, so the code is never
-    # empty (the old single-reason form always emitted this line).
-    return reasons or ["waiting:hard-preds-not-done:"]
+    return reasons
 
 
 def _disposition(
@@ -774,11 +776,7 @@ def _disposition(
     if wi["id"] in reserved:
         return "reserved", ["reserved:claimed-by-live-train"]
     if not hard_preds_satisfied(wi, status, oi_status):
-        if st == "queued" and wi.get("open_items"):
-            return "blocked", [
-                "blocked:open-item-pending:" + o["id"] for o in wi["open_items"]
-            ]
-        return "waiting", _waiting_reasons(wi, status, oi_status)
+        return _held_disposition(wi, status, oi_status)
     if not is_schedulable(concurrency):
         return "excluded", list(class_reasons) + ["excluded:unclassified-fail-closed"]
     # Exclusive-key conflict: another WI owns a key this one needs.
@@ -787,6 +785,28 @@ def _disposition(
         if owner and owner != wi["id"]:
             return "excluded", ["excluded:exclusive-conflict:%s@%s" % (k, owner)]
     return "ready", list(class_reasons) + ["ready"]
+
+
+def _held_disposition(wi, status, oi_status):
+    """`blocked` while an open-item edge is unmet, naming each item (and keeping
+    the work-item waiting reasons of a row that has both kinds of edge);
+    otherwise `waiting` on its work-item predecessors. No `waiting` state is
+    left for an open-item edge (WI-790).
+
+    Implements: SR-148, LLR-288
+    """
+    waiting = _waiting_reasons(wi, status)
+    holds = _open_item_holds(wi, oi_status)
+    if not holds:
+        return "waiting", waiting
+    known = oi_status or {}
+    codes = [
+        "blocked:open-item-{}:{}".format(
+            "pending" if o["id"] in known else "unknown", o["id"]
+        )
+        for o in holds
+    ]
+    return "blocked", codes + waiting
 
 
 def frontier(wis, reserved=None, oi_status=None):
@@ -831,7 +851,7 @@ def simulate(wis, jobs, reserved=None, oi_status=None):
 
 # --- CLI ----------------------------------------------------------------------
 def _load(root):
-    """Read the work registry and its IF-073 gates together.
+    """Read the work registry and the open items its rows cite, together.
 
     Implements: SR-148, LLR-288
     """

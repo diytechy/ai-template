@@ -23,7 +23,8 @@ skip it quietly — so inventing a folder here takes rows OUT of the registry
 instead of adding a state to it.
 
 Readiness follows IF-054; owner gates follow IF-073 in `requirements/open-items.toml`
-(the registry header). `needs` names work items only.
+(the registry header). `needs` names work items, and the open items a row waits
+on (`OI-###`): ruling one updates the rows citing it in the same commit.
 
 ## A terminal row STAYS in the registry — under the archive (WI-504)
 

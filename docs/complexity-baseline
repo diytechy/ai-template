@@ -53,7 +53,6 @@ project-trajectory/scripts/check_privacy.py	Scanner.scan_line	25	22
 project-trajectory/scripts/check_privacy.py	scan_diff_text	43	39
 project-trajectory/scripts/check_stubs.py	find_stubs	17	19
 project-trajectory/scripts/check_stubs.py	stub_kind	16	24
-project-trajectory/scripts/check_trajectory.py	backlog_staleness_findings	22	32
 project-trajectory/scripts/check_trajectory.py	cell_integrity_errors	24	23
 project-trajectory/scripts/check_trajectory.py	completion_reconciliation_findings	18	45
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
@@ -132,7 +131,6 @@ project-trajectory/scripts/rendering/traj_graph.py	_detour_d	23	44	-10 (33 -> 23
 project-trajectory/scripts/rendering/traj_graph.py	_lane_candidates	18	21	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_graph.py	_route_edges	38	58	-10 (48 -> 38) 2026-10-03, WI-758: lane separation added, then decomposed outward into six sibling helpers (each <= 10) after review; re-stamped downward.
 project-trajectory/scripts/rendering/traj_graph.py	_seg_hits_rect	19	21	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
-project-trajectory/scripts/rendering/traj_panels.py	_next_work_html	22	64	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_render.py	_drill_layer_svg	28	140	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_views.py	_layer_edges	26	26	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_views.py	arch_icicle	53	153	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
@@ -140,7 +138,6 @@ project-trajectory/scripts/rendering/traj_views.py	sw_containment	23	190	RE-KEYE
 project-trajectory/scripts/rendering/traj_views.py	when_view	22	74	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/schedule.py	hard_path_lengths	20	32
 project-trajectory/scripts/schedule.py	kind_of	16	17
-project-trajectory/scripts/schedule.py	load_wis	20	40	2026-10-03, WI-746 (9dbb5103): index pending open-item WI-Refs and attach sorted owner gates while loading scheduler data; malformed/example rows remain excluded and WI rows are not mutated.
 project-trajectory/scripts/score_reviews.py	corroboration	16	21
 project-trajectory/scripts/score_reviews.py	main	26	95
 project-trajectory/scripts/score_reviews.py	parse_verdict	21	39
@@ -173,8 +170,6 @@ project-trajectory/scripts/trace_text.py	provenance_tokens	19	18
 project-trajectory/scripts/traj_parse.py	_okf_nodes	39	49
 project-trajectory/scripts/traj_parse.py	frame_context	19	82
 project-trajectory/scripts/traj_parse.py	runtime_flows	22	26
-project-trajectory/scripts/traj_status.py	_frontier_lines	16	49	2026-10-03, WI-746 (9dbb5103): render ready and blocked scheduler records together, including linked owner gates and the empty-ready case; otherwise the generated frontier hides why queued work cannot start.
-project-trajectory/scripts/traj_status.py	_open_item_oneliners	16	17
 project-trajectory/scripts/trajectory_arch.py	_classifiable_edges	16	27
 project-trajectory/scripts/trajectory_arch.py	_cross_component_scan	19	41
 project-trajectory/scripts/trajectory_arch.py	codesymbol_crosscheck_findings	29	43
