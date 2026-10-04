@@ -150,11 +150,13 @@ PROCESS.md and shipped by S788-glossary. One term per concept; it retires the
 >
 > **session family.** Kinds that share one retention slot and one independence rule: [plan and build], [adjudicate], [adjudication review], [review], [judge].
 >
+> **independence.** A judgement never runs in a session that authored what it judges (B10's non-mutating final pass excepted). Other families are ranked preferences, dropped only when the enabled pool cannot meet them, each unmet one recorded.
+>
 > **reset terms.** The declared conditions under which a family's next call starts a fresh session. "Every call" is a value of the terms, not a second path.
 >
 > **adjudicator.** The role that rules on spine rows, disputes and dispositions and takes the approval act, performed by an [adjudicate] session retained until its reset terms are met.
 >
-> **adjudication reviewer.** The [adjudication review] session that edits the adjudicator's spine drafts and reviews a sitting's writes; never the adjudicator's session, preferably another family.
+> **adjudication reviewer.** The [adjudication review] session that edits the adjudicator's spine drafts and reviews a sitting's writes; never the adjudicator's session, preferably another family than the adjudicator's, then than the builders'.
 >
 > **reviewer.** A [review] session judging a build round or a plan; never retained, never a recorded author of what it reviews.
 >

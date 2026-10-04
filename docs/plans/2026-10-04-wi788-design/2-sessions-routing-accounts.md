@@ -117,17 +117,46 @@ family, model, route or account.
 
    | Kind | Judged scope | Excluded |
    |---|---|---|
-   | review (REVIEW-A/B, CRITIQUE) | build and plan ranges | their authors' families; REVIEW-B also REVIEW-A's family |
+   | review (REVIEW-A/B, CRITIQUE) | build and plan ranges | their authors' sessions; families ranked (see "A lane built by both families" below); REVIEW-B also REVIEW-A's family where the pool allows |
    | plan-critique | the critiqued plan's drafting range | its drafter's family |
-   | judge | the observation's range and the build it observes | their authors' families |
+   | judge | the observation's range and the build it observes | their authors' sessions; families ranked, as for review |
    | author | builder text it adopts | builder families |
-   | author-review | the adjudicator's `author` ranges, and the builder text they adopt | the adjudicator's session always; the adjudicator's and builders' families where the pool allows (the owner's "preferably another family" is the rule's preference order, recorded per call) |
-   | adjudicate (RESOLVE, JUDGE, the final pass) | build, plan and author-review ranges | builder and planner families; every author-review session. Its own `author` ranges are **not** excluded: B10's one exception, admitted only when an author-review range by another session follows each and the pass changes no byte |
+   | author-review | the adjudicator's `author` ranges, and the builder text they adopt | the adjudicator's session always; then two ranked preferences, the adjudicator's family first and the builders' families second, a preference dropped only when the pool cannot meet it and the unmet one recorded per call (the owner's "preferably another family", stated against "the adjudicator it checks") |
+   | adjudicate (RESOLVE, JUDGE, the final pass) | build, plan and author-review ranges | every build, plan and author-review session; builder and planner families ranked, as for review. Its own `author` ranges are **not** excluded: B10's one exception, admitted only when an author-review range by another session follows each and the pass changes no byte |
    | final review ([adjudication review]) | the adjudicator's ADJUDICATE and MINT ranges only | every session that authored any range in this sitting; the adjudicator's family where the pool allows |
 
    **With today's two-family pool** (builder family X, the other Y): review Y,
-   adjudicate Y, author-review a second Y session (preference unmet, recorded),
-   final review X. Every kind has an eligible draw.
+   adjudicate Y, author-review an X session (the builder-family preference
+   unmet, recorded), final review a fresh X session that authored nothing in
+   the sitting. Every approved byte is then read by another family before the
+   act: the builder's by the adjudicator, the adjudicator's drafts by the
+   author-review, the author-review's edits by the adjudicator's unchanged
+   pass. Every kind has an eligible draw for a lane built by one family.
+
+   **A lane built by both families** (today's implementer swap,
+   `agent_loop.py:618-621`, which chapter 3 §4.7 keeps). Its build ranges carry
+   X and then Y, so excluding every author's family would leave `review` and
+   `adjudicate` no draw in a two-family pool. The rows above are therefore read
+   with dispute 2's one rule (the 2026-10-04 adjudication): **sessions are
+   excluded hard; families are ranked preferences**, dropped only when the
+   pool cannot meet them, the unmet one recorded per call. For `review`,
+   `judge` and `adjudicate` the ranking is:
+   1. not the family of the latest authoring range in the judged scope (the
+      bytes being judged as they now stand);
+   2. not the family of any earlier authoring range.
+
+   After a swap (X built, Y reviewed twice, Y rebuilt): review X, adjudicate X,
+   each with preference 2 unmet and recorded. Every byte still has a
+   cross-family read before the act: X's earlier ranges were read by Y as
+   reviewer and as swapped builder; Y's ranges by the X reviewer and the X
+   adjudicator. With one family enabled, both preferences are unmet: that is
+   SR-154's documented same-family mode, the same rule with a smaller pool, not
+   a second path. The set of eligible sessions is never empty, because a fresh
+   session is always eligible, so the entry point never stops for this. An
+   unmet preference is owner-visible without stopping anything: `ask` writes it
+   in the session log's `exclusion-unmet` field and as an entry in the lane's
+   decisions record, which feeds WI-790's "Decisions to review" (LS9's rule:
+   advice the owner may simply take is a decision entry, not an open item).
    - A commit in scope that no log covers is attributed by its own
      `Co-Authored-By:` trailer when that names a registered model. Otherwise
      it counts as a person's commit, logged as `unattributed`.
@@ -191,15 +220,28 @@ family, model, route or account.
 8. **The decisions note.** `kitlib.decisions.session_note(mode, branch)`
    (`scripts/kitlib/decisions.py:167-196`) is appended for every kind except
    those whose range a mechanical rule confines to their verdict file.
-   - **That rule is S9's**, and today it reads REVIEW-A/B only
-     (`kitlib/verdict.py:189`, `:944`). S788-ask extends its phase list to
-     CRITIQUE and plan-critique (and arbitrate under Q-5 (b)); those kinds then
-     skip the note, because their calls are recorded by their verdicts.
+   - **That rule is S9's.** Today it covers REVIEW-A/B only, in two parts: the
+     phase set `REVIEW_PHASES` (`kitlib/verdict.py:189`, read at `:944`; the
+     live arm runs only for a review, `agent_loop.py:2460-2463`) and the
+     verdict-file identity (`scope_offenders` through `round_file`, whose
+     `ROUND_FILE_RE` admits only `REVIEW-[A-Z]` names, `kitlib/verdict.py:219-222`,
+     `:822-842`). S788-ask gives S9 its own phase set and leaves
+     `REVIEW_PHASES` alone (it also drives `is_review`, `agent_loop.py:2866`,
+     and the owed review phases, `kitlib/verdict.py:1174`). Each added kind's
+     verdict file is stated:
+     - **CRITIQUE** commits only its verdict
+       (`prompts/critique.template.md:24-46`), named `<n>-CRITIQUE-<sha7>.md`
+       (`agent_loop.py:1703-1705`); S9 admits exactly that file, in both arms.
+     - **plan-critique**, and arbitrate under Q-5 (b), end in one block and
+       commit nothing (`prompts/dual-plan-critic.template.md:65-77`,
+       `prompts/dual-plan-arbiter.template.md:78-80`); the runner writes the
+       block (`plan_runner.py:490-492`), so S9 admits an empty range.
+
+     Those kinds then skip the note, because their calls are recorded by their
+     verdicts.
    - **Every other kind gets it**, judge included: an observation re-judge
      commits an observation record beside its verdict
      (`prompts/adjudicate-rejudge.template.md:43-56`), so it can owe a record.
-     If a build finds a brief that asks a verdict-only kind to commit anything
-     else, that kind gets the note instead of the S9 entry.
    - The note moves from `agent_loop.session_body` (`agent_loop.py:387`,
      `:398`) into `ask`, so a coordinator's sitting gets it too.
    - Chapter 4 owns the landing check and the gap measurement.

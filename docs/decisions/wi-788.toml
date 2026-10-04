@@ -5,7 +5,7 @@
 # owner rules at the checkpoint; nothing here is built. Format:
 # project-trajectory/decisions.template.toml.
 
-high_risk = ["D-001", "D-002", "D-010", "D-016", "D-022", "D-027"]
+high_risk = ["D-001", "D-002", "D-010", "D-016", "D-022", "D-027", "D-031"]
 
 [decision.D-001]
 decided = "Commits made outside the one entry point (no session log) are attributed to a family by their Co-Authored-By trailer, read from the judged commit itself, for family exclusion (ch.2 section 3 step 2; README Q-10)."
@@ -155,7 +155,7 @@ why_not_escalated = "The owner's session prompt of 2026-10-04 authorizes local C
 review = ""
 
 [decision.D-022]
-decided = "Each ask kind has an exact judged scope and exclusion list (ch.2 section 3 step 2's table); B10's exception (the adjudicator's own author ranges, each followed by another session's author-review range, and an unchanged pass) is applied identically in routing, session reuse (an excluded retained session gives a fresh non-replacing call, not a reset) and act admission (ch.4 section 5); the final review is never a session that authored any range in the sitting (fix round, Sol BLOCKER 3)."
+decided = "Each ask kind has an exact judged scope and exclusion list (ch.2 section 3 step 2's table): authoring sessions are excluded hard, families are ranked preferences recorded when unmet (for author-review the adjudicator's family first, then the builders', per the 2026-10-04 adjudication of dispute 2); B10's exception (the adjudicator's own author ranges, each followed by another session's author-review range, and an unchanged pass) is applied identically in routing, session reuse (an excluded retained session gives a fresh non-replacing call, not a reset) and act admission (ch.4 section 5); the final review is never a session that authored any range in the sitting (fix round, Sol BLOCKER 3)."
 alternative = "Exclude every author's family for every kind, which forbids the ruled flow and leaves no eligible family in a two-family pool; or reset the retained session whenever it is excluded."
 reversal_cost = "Medium: the exclusion step of the unbuilt ask, and the act rung."
 why_not_escalated = "OI-101 Q1 and B10 are ruled; the table only makes them executable, and it is checked feasible for today's two-family pool."
@@ -215,4 +215,11 @@ decided = "Owner questions trimmed with stable ids: Q-1 becomes a forced-migrati
 alternative = "Keep all ten questions as they were."
 reversal_cost = "None: the owner can still rule on any of them."
 why_not_escalated = "Keep only what needs the owner."
+review = ""
+
+[decision.D-031]
+decided = "A lane built by both families (today's implementer swap, agent_loop.py:618-621) is settled by the one rule the adjudication ruled for dispute 2: for review, judge and adjudicate, authoring sessions are excluded hard and families are ranked preferences (first not the latest authoring range's family, then not an earlier one's), dropped only when the pool cannot meet them; the unmet preference is recorded in the session log (exclusion-unmet) and as a decisions-record entry for WI-790's Decisions to review. Act admission (ch.4 section 5) follows the same ranking. The eligible set is never empty, so the entry point never stops for this (ch.2 section 3 step 2)."
+alternative = "Keep hard family exclusion and stop the lane with an open item when the set is empty; or narrow review's judged scope to the swapped ranges only."
+reversal_cost = "Medium: the exclusion step and the act rung of unbuilt code."
+why_not_escalated = "SR-154's approved text already degrades only to the documented same-family mode, and the adjudicator ruled that a ranked, recorded preference is one rule, not a risk-7 path; after a swap every byte still gets a cross-family read before the act. Not escalated, but it is owner-visible through the recorded entries."
 review = ""

@@ -153,9 +153,12 @@ already building keep building.
 writer in §3 has moved (B3, B11). The proof needs no new rung. The landing's
 compare-and-swap and today's ancestor check (`integrate.py:1648`, `:2731`)
 refuse any trunk move the authority did not make, naming the foreign commit.
-Under full coverage that refusal is unreachable. If it is reached, it exposes
-a defect: a writer the authority does not cover. The fix moves that writer; it
-does not add a retake path.
+The landing has one answer to that refusal, whoever moved trunk: the lane
+re-runs `REFRESH` inside its own authority, and a session retakes any stale
+act (S11 Q6). Under full coverage only the owner's own commit (above) can
+cause it. A foreign commit the tool made exposes a defect, a writer the
+authority does not cover; the fix moves that writer (the writer census,
+S788-dual-pickup) and adds no second answer for it.
 
 ## 3. Every trunk writer today, and where it moves
 
@@ -355,7 +358,7 @@ and keeps every check:
 | Check | Kept as |
 |---|---|
 | Scope | the provider's scope record (§4.2). The merge re-derives it at its commit and compares it byte for byte, so it is independently recorded and tamper-evident |
-| Actor independence | each flip and snapshot write lies in a recorded `ADJUDICATE` range whose session is an eligible `adjudicate` draw for the scoped rows under [chapter 2 §3 step 2's table](2-sessions-routing-accounts.md#3-the-one-entry-point): its family differs from every build and plan author of those rows; it is a different session from every author-review session; and a row whose text its own `author` range wrote is admitted only under B10's exception (an author-review range by another session follows it, and the act's pass changed no byte of it). This replaces `_adjudication_lane` (`integrate.py:1139`) |
+| Actor independence | each flip and snapshot write lies in a recorded `ADJUDICATE` range whose session is an eligible `adjudicate` draw for the scoped rows under [chapter 2 §3 step 2's table](2-sessions-routing-accounts.md#3-the-one-entry-point): it is a different session from every build, plan and author-review session of those rows; its family follows chapter 2's ranked preferences (not the latest build author's family, then not an earlier one's, an unmet preference recorded per call); and a row whose text its own `author` range wrote is admitted only under B10's exception (an author-review range by another session follows it, and the act's pass changed no byte of it). This replaces `_adjudication_lane` (`integrate.py:1139`) |
 | Held-rung authority | `_held_status_refusal` (SR-208), unchanged |
 | Named rows, snapshot coverage, out-of-scope acts | `adjudication_approval_refusal` (`:753`) and `reattest_scope_refusal` (`:873`), fed the recorded scope |
 | Authority | the act lies after the lane's `LOCK`, under the current `generation` |
@@ -707,6 +710,8 @@ evidence.
   - an out-of-scope act, an act outside an ADJUDICATE range, or an act by a
     session that chapter 2's judged-scope table makes ineligible is refused;
   - a rejected final review drops the act;
+  - a landing whose swap fails on a foreign trunk commit re-enters `REFRESH`
+    under the same authority, and a stale act is retaken by a session;
   - a fourth `return` is refused, and the sitting's outcome is `merge-partial`
     (green: the work lands; red: an empty keep set), with no red tree landed.
 - **needs:** S788-landing, S788-text-then-act, S788-session-families, WI-791.
