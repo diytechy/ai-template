@@ -76,10 +76,14 @@ Implements: SR-168, LLR-139, LLR-198
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import NamedTuple
 
 import baseline_snapshot
-from traj_parse import _spine
+from kitlib import decisions as _kitdecisions
+from kitlib import registry as _kitregistry
+from kitlib import spine as _kitspine
+from traj_parse import _spine, ct
 
 # --- the pending-owner-actions projection (WI-234) ------------------------------
 # `--status` also splices a second GENERATED block — at the END of
@@ -294,3 +298,58 @@ def pending_block(root):
     items = pending_items(root)
     body = "\n".join(i.line for i in items) if items else PENDING_NONE
     return "{}\n\n{}".format(PENDING_LEAD, body)
+
+
+# --- the owner's decision queue and the decisions to review (WI-790) -----------
+OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
+WORK_REL = "docs/work"
+DECISIONS_REL = _kitdecisions.DECISIONS_DIR
+
+
+def open_item_queue(root):
+    """THE QUEUE PROJECTION over the committed tree: `kitlib.spine.open_item_queue`
+    fed the work registry and the open-items registry. The owner surface's cards
+    and counts, its integrity notice and the status snapshot's open-items and
+    Blocked lists all read this one call, so no two of them can disagree about
+    which decisions the owner owes. An absent registry is an empty queue; an
+    unreadable one raises (the carrier's rule), never an empty queue.
+
+    Implements: SR-168, LLR-198
+    """
+    root = Path(root)
+    work_dir = root / WORK_REL
+    rows = _kitregistry.read_spec_rows(work_dir) if work_dir.is_dir() else []
+    # The carrier through the checker's own handle, the `traj_status` idiom:
+    # this read model reaches the registry carrier the way its siblings do.
+    return _kitspine.open_item_queue(
+        rows, ct.spine_carrier.load(root / OPEN_ITEMS_REL, "OI-ID")
+    )
+
+
+def decisions_to_review(root):
+    """`(entries, findings, reviewed)` over every delegated-decisions record
+    under `docs/decisions/`: the entries not marked reviewed, each the
+    `kitlib.decisions.review_queue` dict plus its `file` (repo-relative), with
+    every record's high-risk entries first, then by file and id; each record's
+    format findings, prefixed by its file; and how many entries are marked
+    reviewed. `None` for `entries` when the directory is absent: a repo that
+    never records decisions has nothing to review, which is not the same claim
+    as having reviewed everything.
+
+    Implements: SR-225, LLR-283
+    """
+    folder = Path(root) / DECISIONS_REL
+    if not folder.is_dir():
+        return None, [], 0
+    entries, findings, reviewed = [], [], 0
+    for path in sorted(folder.glob("*.toml")):
+        rel = "{}/{}".format(DECISIONS_REL, path.name)
+        text = path.read_text(encoding="utf-8")
+        shown, count = _kitdecisions.review_queue(text)
+        reviewed += count
+        entries += [dict(e, file=rel) for e in shown]
+        findings += [
+            "{}: {}".format(rel, f) for f in _kitdecisions.record_findings(text)
+        ]
+    entries.sort(key=lambda e: (not e["high_risk"], e["file"]))
+    return entries, findings, reviewed

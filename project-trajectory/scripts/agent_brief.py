@@ -252,7 +252,9 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
     held = next(
         (
             r
-            for r in schedule.evaluate(schedule._load(root))
+            for r in schedule.evaluate(
+                schedule._load(root), oi_status=schedule.load_oi_status(root)
+            )
             if r["id"] == wi and r["disposition"] == "blocked"
         ),
         None,

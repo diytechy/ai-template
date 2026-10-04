@@ -48,10 +48,12 @@ decisions, session notes — appends to the log this header points at, never her
     blockers first**; keep each a one-liner and put the depth in the
     [open-items registry](requirements/open-items.toml), which
     `scripts/gen_open_items.py` renders to `docs/open-items.html`)_:
-    - OI-1 — decide: keep or drop the legacy export flag (blocks: DevStg-Reqs) →
-      [system-requirements.toml](requirements/system-requirements.toml)
+    - OI-000 — example: decide whether the legacy export flag stays in scope
+      (blocks: DevStg-Reqs) → [open-items.toml](requirements/open-items.toml)
+      _(replace it with your first real decision, filed with the queued work
+      item that cites it)_
   - **In flight** _(driver; no approval needed)_:
-    - OI-2 — pinning SR-000's acceptance predicate →
+    - OI-000 — example: pinning SR-000's acceptance predicate →
       [system-requirements.toml](requirements/system-requirements.toml)
 - **Assumptions (unattended):** _(decisions taken without sign-off while running
   unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,

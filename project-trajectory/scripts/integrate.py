@@ -1289,6 +1289,38 @@ def _held_status_refusal(root, branch):
     return "{} - {}; nothing was merged".format(branch, refusal) if refusal else None
 
 
+def _ruling_sync_refusal(root, branch):
+    """THE RULING SYNC AT THE SLOT (WI-790, OI-102 Q3): a refusal string, or None.
+
+    Every commit of the lane, oldest first, is judged against its FIRST parent
+    by the same function the pre-commit hook runs over the staged tree
+    (`acceptance_record.commit_ruling_sync_lines`): a commit that takes an open
+    item out of `pending` must update the Done-when of each row open in its
+    parent that cites the item, or close or remove the row. The hook is opt-in
+    and `--no-verify` skips it; the slot is where a commit made either way is
+    refused before it reaches trunk. Every lane, whoever runs the slot. A range
+    git cannot read is a refusal, never a skip.
+
+    Implements: SR-148, LLR-298
+    """
+    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
+
+    code, out = ac.git(
+        root, "rev-list", "--reverse", "--topo-order", _head(root) + ".." + branch
+    )
+    if code != 0:
+        return "cannot read {}'s commits to check their rulings; nothing was merged:\n{}".format(
+            branch, ac._failure_tail(out)
+        )
+    for sha in out.split():
+        lines = acceptance_record.commit_ruling_sync_lines(root, sha)
+        if lines:
+            return "{} commit {}: {}; nothing was merged".format(
+                branch, sha[:10], "; ".join(lines)
+            )
+    return None
+
+
 def _loop_trailer_refusal(root, branch):
     """THE PROVENANCE FLOOR AT THE SLOT (SR-209): a refusal string, or None.
 
@@ -2900,7 +2932,9 @@ def _merge_refusal(root, branch, wi_ids):
     refusal = _held_status_refusal(root, branch)  # SR-208
     if refusal:
         return outcomes, refusal
-    refusal = _loop_trailer_refusal(root, branch)  # SR-209
+    refusal = _loop_trailer_refusal(root, branch) or _ruling_sync_refusal(
+        root, branch
+    )  # SR-209, then the ruling sync (WI-790)
     if refusal:
         return outcomes, refusal
     refusal = _review_scope_refusal(root, branch)  # S9

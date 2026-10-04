@@ -59,3 +59,47 @@ Claimed on `wi-791` (`484b411c`) and landed by squash; the lane tip is in
   `held_reattest_refusal` (it runs only for all-adjudication lanes), so on a held
   rung an in-lane re-attestation would not meet SR-228's refusal. It belongs to
   WI-788's in-lane sitting (`S788-sitting`).
+
+### WI-790 (OI-102): work items cite the open items they wait on; Decisions to review
+
+Claimed on `wi-790` (`15874031`) after WI-791 landed (both touch `intake.py`), and
+landed by squash; the lane tip is in `archive/lanes`.
+
+- **Build** (Opus builder): the `OI-###` token in `needs` is the one edge, and every
+  `wi_refs` reader is deleted; one queue projection feeds the owner surface, the
+  status snapshot and the uncited-pending ERROR; the commit-time sync rule (a
+  commit against its parent, at the hook and per lane commit at the merge slot);
+  blocked, not waiting; placeholders on every open-item creation path; "Decisions
+  to review" at the bottom of `open-items.html` with the `reviewed` key; OI-98's
+  `wi_refs` moved into WI-684's `needs`. The shipped template's OI-1/OI-2 went, and
+  two slow-tier trace fixtures that leaned on them now file their own row.
+- **Spine** (GPT Terra): new LLR-298, LLR-299, TC-313, TC-314; LLR-289 and TC-302
+  retired with records; about twenty-five rows amended. One scripted edit turned
+  IF-073's `consumers` list into a string; the smoke tier caught it.
+- **Sol round 1** (`9c39bab2`): 5 MAJOR, 3 MINOR, all confirmed. The worst: the
+  sync rule read a ruling commit at a shallow boundary as a root commit and passed
+  it; the CSV carrier bypassed it; the claim-time comparator discarded an added
+  criterion carrying a path.
+- **The full unfiltered suite** on `9c39bab2`, from a detached worktree with a fixed
+  basetemp: 5030 passed, 17 skipped, 0 failed, in 2140.8 s on a loaded box.
+- **In-lane adjudication** (independent Opus): round 1 returned all sixteen rows
+  (blessing the two retirements). The authored cells had replaced lists of cases
+  with "the existing cases hold", dropped clauses the code keeps, and claimed
+  untested behaviour; 12 of 45 mutation probes survived. Round 2 settled every row
+  (44 of 45 caught; I3, a narrower variant of the old join, noted). **Act seq 30**
+  (`6f67736b`): LLR-298, LLR-299, TC-313 and TC-314 approved; SR-225, LLR-010,
+  LLR-058, LLR-118, LLR-153, LLR-283, LLR-288, TC-010, TC-123, TC-147, TC-293,
+  TC-301 and the two retirements re-attested.
+- **Sol final review** of the post-act tree: one MAJOR (an unreadable listed parent
+  blob read as absent, a partial clone offline reaches it) fixed in `59215dca` with
+  one reader that refuses by name; IF-073's specref clause corrected. Re-check:
+  SOUND. The builder folded the new cases into the existing TC-313 test rather
+  than raise the smoke tier's membership budget.
+- **Sessions:** 1 builder (resumed 5 times), 1 Terra session (resumed 5 times), 1
+  adjudicator (resumed once), 3 Sol sessions, 1 full suite.
+- **Follow-ups, not filed:** IF-073's consumers and notes are slightly off; no SR
+  states the coupling between owner decisions and the work items that cite them
+  (LLR-298/299 sit under SR-148); LLR-198's detail does not describe
+  `open_item_queue`; a refresh merge that brings in a trunk ruling of an item cited
+  only by a lane-side row must itself carry the citer's update, or it is refused
+  for good, and the lane workflow should say so.

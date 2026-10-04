@@ -716,7 +716,7 @@ status = "Drafted"
 owner = "scripts/traj_status"
 consumers = ["scripts/agent_common", "external:downstream adopter"]
 channel = "file"
-data = "docs/status.md — the block between the GENERATED STATUS markers: derived stage, spine counts, the ready frontier"
+data = """docs/status.md generated block: stage, spine counts, ready frontier, cited items and held rows, uncited items, review count, Blocked list"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -917,13 +917,13 @@ component = "CMP-008"
 owner = "docs/work/"
 consumers = ["scripts/schedule", "external:downstream adopter"]
 channel = "file"
-data = "status; work-item needs edges (a ~ prefix is soft); IF-073 owner gates; absent safety class = unclassified"
+data = """status; needs edges (WI-### or OI-###; ~ is soft); pending OI blocks its citer; absent safety class = unclassified"""
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
 coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
-notes = """Published contract, not a single consumer: same population as IF-023/024/079 - 9+ kit scripts walk the WI registry, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
+notes = """Published contract, not a single consumer: kit scripts walk the work registry and downstream adopters author it. An open row — draft, queued, active, deferred, or blocked — whose SpecRef names the open-items registry under either carrier errors when its #OI anchor is not one of its needs OI tokens, or when every cited item is non-pending; a missing item remains pending and the dangling-edge check reports it. A queued placeholder cites a pending OI through needs."""
 
 [interface.IF-055]
 owner = "scripts/schedule"
@@ -1021,20 +1021,20 @@ notes = """Built and consumed together. The endpoints are the OTHER readers of t
 
 [interface.IF-073]
 owner = "docs/requirements/open-items.toml"
-consumers = ["scripts/gen_open_items", "scripts/schedule", "external:downstream adopter"]
+consumers = ["scripts/gen_open_items", "external:downstream adopter"]
 channel = "file"
-data = "status: pending | ruled; wi_refs: work items waiting on this ruling"
+data = """status: pending | ruled; queued work-item needs edges cite pending items"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
-notes = "built and consumed together; published contract, not a single consumer - 7 kit scripts read the OI registry directly (check_docs, check_trajectory, gen_open_items, intake, migrate_carrier, trace, traj_status), and every downstream adopter authors their own decisions. Ties to B-05 as the template's own delivered spine-registry format."
+notes = """A pending item has at least one queued work-item citer. A ruling updates every citing row in the same commit: its Done-when adds a criterion citing the item, its SpecRef must name a real specification once every item it cites is non-pending, and any other changed field is synchronized. The queued citer is the item's placeholder; wi_refs is historical metadata. Published contract, not a single consumer: kit scripts parse the registry and downstream adopters author decisions."""
 
 [interface.IF-074]
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = "docs/open-items.html — pending decisions, approval and re-attest chains, verdict-named re-attestation audit, pending owner actions"
+data = """docs/open-items.html — cited pending decisions, uncited-item notice, approval/re-attest chains, verdict audit, owner actions; Decisions to review last"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -2234,22 +2234,22 @@ rationale = """A delegated run's record is a file the session that made the call
 owner = "scripts/kitlib/decisions"
 consumers = ["scripts/integrate"]
 channel = "file"
-data = "docs/decisions/<run>.toml: high_risk (entry ids); [decision.D-<n>] decided, alternative, reversal_cost, why_not_escalated, review"
+data = """docs/decisions/<run>.toml: high_risk (entry ids); [decision.D-<n>] decided, alternative, reversal_cost, why_not_escalated, review, reviewed (optional)"""
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """The owner is the module that states the file's shape; the file itself arrives as a commit on the lane's branch, authored by the delegated session the loop briefed, and the merge slot reads it off that branch. The owner of the project edits its review cells in place afterwards; no reader judges a review cell, so the note carries whatever meaning the owner gives it. An entry numbered -000 is the shipped example and is never judged."""
+notes = """The owner is the module that states the file's shape; the file arrives on the lane's branch and the merge slot reads it there. reviewed is optional and records whether an owner-facing review queue should retain an entry. An entry numbered -000 is the shipped example and is never judged."""
 
 [interface.IF-256]
 rationale = """The merge slot, the loop and the dial reader each ask the record's questions - where a run's record belongs, what makes an entry malformed, whether a close owes one, what a session is told, and which words the dial takes - and answering them in three places is how a session gets told one path while the slot reads another. One imported module answers all of them."""
 owner = "scripts/kitlib/decisions"
 requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/agent_common"]
 channel = "call"
-data = "MODES; REQUIRED_KEYS; record_path(run) -> path; record_findings(text) -> [finding]; owed(mode, outcomes) -> bool; session_note(mode, run) -> text"
+data = """record_path; record_findings; reviewed_state; review_queue(text) -> (entries, reviewed_count); MODES, REQUIRED_KEYS, REVIEWED_*; owed; session_note"""
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader."""
+notes = """source — the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader. review_queue returns entry dictionaries with id, high_risk, fields, and raw reviewed value or None; it orders high-risk entries first then id, skips -000, and returns an empty list and zero for unparseable text."""
 
 [interface.IF-257]
 rationale = """A retired row's record is written by the retirement and read by three parties: the traceability check that reports a missing or moved record, the dashboard that lists the records with their deleting commits, and a session that meets a spent id and looks it up. Declaring the files' path and shape as one contract keeps the writer and every reader on one shape, and one file per id keeps the lookup a path rather than a search and the write conflict-free across parallel branches."""
@@ -2357,11 +2357,11 @@ component = "CMP-006"
 owner = "scripts/schedule"
 consumers = ["scripts/traj_status", "scripts/agent_brief", "scripts/dispatch", "scripts/integrate"]
 channel = "call"
-data = "work rows and IF-073 gates -> readiness records carrying gating ids and titles"
+data = """work rows and their needs OI edges -> readiness records carrying unmet item ids and titles"""
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-rationale = "Load owner gates once into scheduler data so readiness and its projections agree without changing the work-item format."
+rationale = """One readiness calculation projects each unmet open-item edge as a blocked record, so every consumer presents the same held work and item title."""
 
 [interface.IF-265]
 owner = "scripts/spine_carrier"
@@ -2371,7 +2371,7 @@ data = "open-items registry path -> carrier-neutral OI rows"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-rationale = "Read scheduling gates through the same carrier boundary as the owner surface, refusing unreadable data."
+rationale = """Read the titles of cited open items through the carrier boundary, refusing unreadable data."""
 
 [interface.IF-266]
 owner = "scripts/session_adapters"

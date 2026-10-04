@@ -897,9 +897,11 @@ survey the set.
 **Open items — the owner decision surface, always shipped.** A decision deferred
 to the owner is a **row** in `docs/requirements/open-items.toml`, rendered by
 `gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <human>`
-bullets stay one-liners pointing at it. `wi_refs` follows IF-073 in that
-registry's header; readiness follows IF-054 in `docs/work/README.md` (`needs`
-names work items only). Every scaffold gets both whatever its
+bullets stay one-liners pointing at it. A work item that waits on a decision
+cites it in its `needs` and reads `blocked`; every pending item is filed with
+the queued row citing it, and ruling it updates that row in the same commit
+(IF-073 in the registry's header, IF-054 in `docs/work/README.md`). Every
+scaffold gets both whatever its
 profile — *you deferred and no `OI` row resolves it* is a finding only a repo
 that HAS the registry can act on. Three mechanisms keep the announcement and the
 queue from being two artifacts: a `docs/provenance-allow` entry **names** the

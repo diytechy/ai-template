@@ -17,9 +17,12 @@ Contract IF-164: the generated region of `docs/status.md` — the block between
     the GENERATED STATUS markers, and nothing outside them. It carries derived
     facts only: a banner naming the command that regenerates it, the derived
     stage line with its per-phase detail, one spine line (SN/SR/LLR/TC counts,
-    drafts, seams, components), the pending open-item one-liners, and the
-    dependency-ready frontier in build order, so a closed row drops out of the
-    file on the next run. Deterministic — sorted inputs, no clock — and written
+    drafts, seams, components), the open items a queued work item cites (one
+    line each, naming the rows they hold) with any uncited pending item named
+    beside them and the count of delegated decisions left to review, then the
+    dependency-ready frontier in build order and the Blocked list (each row an
+    open item holds, beside each pending item that holds it), so a closed row
+    drops out of the file on the next run. Deterministic — sorted inputs, no clock — and written
     LF on every platform, so `--check` byte-compares it and reports STALE rather
     than writing. A status.md that is absent or carries no marker pair is left
     untouched and passes vacuously; a duplicated marker is refused rather than
@@ -58,6 +61,8 @@ from traj_parse import cmp_rows, spine_stats
 # blockref vocabulary at WI-553/OI-70 — its queued-row source had zero producers.)
 from pending import (  # noqa: F401
     PAUSE_MALFORMED,
+    decisions_to_review,
+    open_item_queue,
     pause_pending as _pause_pending,
     pending_block,
     spine_pending as _spine_pending,
@@ -132,9 +137,6 @@ def _spine_counts(root, snapshot=None):
     }
 
 
-_OI_ID_RE = re.compile(r"\bOI-\d+\b")
-
-
 def _clean_oneliner(s):
     """Normalize a projected one-liner: Markdown link `[text](url)` -> its text,
     stray emphasis/backticks dropped, whitespace collapsed. Keeps the snapshot
@@ -151,39 +153,73 @@ def _first_sentence(s):
     return (m.group(1) if m else s).strip()
 
 
-def _open_item_oneliners(root):
-    """`[(OI-id, one-liner)]` for every PENDING decision, id-order — the status
-    snapshot's one-line-per-item projection.
+def _open_item_oneliners(root, queue=None):
+    """`[(OI-id, one-liner, [citing WI ids])]` for every pending decision a
+    QUEUED work item cites, id-order — the status snapshot's one-line-per-item
+    projection, read off the one queue projection (`pending.open_item_queue`,
+    WI-790) so the snapshot lists exactly the cards the owner surface renders.
 
-    Reads the open-items registry (WI-322, OI-10 ruled option (b); TOML since
-    repo-lock §8.1, either carrier resolves):
-    the registry is the source and `docs/open-items.html` is the rendered owner
-    surface, so a markdown section parse has nothing left to parse. The
-    one-liner is the row's `OneLine` cell, else the first sentence of its
+    The one-liner is the row's `OneLine` cell, else the first sentence of its
     `Recommendation` — the same fallback the markdown contract had, kept so a
     row that states only a recommendation still projects something useful.
-    Empty when the registry is absent (a repo carrying no decisions)."""
-    p = root / "docs" / "requirements" / "open-items.toml"
-    if ct.spine_carrier.resolve(p) is None:
-        return []
+    Empty when the registry is absent (a repo carrying no decisions). The
+    registry is read through the CARRIER: an unreadable registry raises rather
+    than publishing "no pending decisions"."""
+    queue = queue if queue is not None else open_item_queue(root)
     out = []
-    # Through the CARRIER, not `read_rows`: this projection is spliced into
-    # `status.md` and an unreadable registry that came back as no rows would
-    # publish "no pending decisions" — the owner's queue reporting empty because
-    # it could not be parsed. `load` raises there and returns [] only when the
-    # registry is genuinely absent.
-    for row in ct.spine_carrier.load(p, "OI-ID"):
-        oid = (row.get("OI-ID") or "").strip()
-        if not _OI_ID_RE.fullmatch(oid) or oid.endswith("-000"):
-            continue
-        if (row.get("Status") or "").strip().lower() != "pending":
-            continue  # a ruled row is history; the Decisions log holds it
+    for row, citers in queue["cards"]:
         one = (row.get("OneLine") or "").strip()
         if not one:
             reco = (row.get("Recommendation") or "").strip()
             one = _first_sentence(reco) if reco else ""
-        out.append((oid, _clean_oneliner(one)))
-    return sorted(out, key=lambda t: int(t[0].split("-")[1]))
+        out.append((row["OI-ID"].strip(), _clean_oneliner(one), citers))
+    return out
+
+
+def _open_item_lines(root, queue):
+    """The snapshot's open-items block: one bullet per decision a queued row
+    cites, naming the rows it holds; the uncited pending items, which no queued
+    row surfaces (a `check_trajectory` ERROR); and the count of delegated
+    decisions left to review, linked to the owner surface's section. Empty when
+    there is nothing to say."""
+    ois = _open_item_oneliners(root, queue)
+    entries = decisions_to_review(root)[0]
+    if not ois and not queue["uncited"] and entries is None:
+        return []
+    lines = []
+    if ois or queue["uncited"]:
+        # The LIVE carrier's name, never a hardcoded suffix: this block is
+        # spliced into status.md, and a link at the file the repo no longer has
+        # is a broken link on the working surface (check_docs's own hard
+        # finding), manufactured by a generator.
+        oi_rel = ct.spine_carrier.stem("requirements/open-items.toml") + (
+            ct.spine_carrier.resolve(
+                root / "docs" / "requirements" / "open-items.toml"
+            ).suffix
+        )
+        lines.append(
+            "- **Open items** _(the pending rows of [{oi}]({oi}) a queued work "
+            "item cites; each item's blast radius, options and recommendation "
+            "render in [open-items.html](open-items.html), the generated owner "
+            "surface):_".format(oi=oi_rel)
+        )
+        lines.extend(
+            "  - **{}** — {} _(holds {})_".format(oid, one, ", ".join(citers))
+            for oid, one, citers in ois
+        )
+    if queue["uncited"]:
+        lines.append(
+            "  - _Uncited — pending, but no queued work item cites it, so the "
+            "queue cannot surface it:_ {}".format(", ".join(queue["uncited"]))
+        )
+    if entries is not None:
+        lines.append(
+            "- **Decisions to review:** {} — "
+            "[open-items.html](open-items.html#decisions-to-review)".format(
+                len(entries)
+            )
+        )
+    return lines
 
 
 # The eight-rung stage ladder's descriptions, for the generated snapshot line.
@@ -314,24 +350,9 @@ def status_block(root):
             cp="" if comps == 1 else "s",
         ),
     ]
-    ois = _open_item_oneliners(root)
-    if ois:
-        # The LIVE carrier's name, never a hardcoded suffix: this block is
-        # spliced into status.md, and a link at the file the repo no longer has
-        # is a broken link on the working surface (check_docs's own hard
-        # finding), manufactured by a generator.
-        oi_rel = ct.spine_carrier.stem("requirements/open-items.toml") + (
-            ct.spine_carrier.resolve(
-                root / "docs" / "requirements" / "open-items.toml"
-            ).suffix
-        )
-        lines.append(
-            "- **Open items** _(pending rows of [{oi}]({oi}); each ".format(oi=oi_rel)
-            + "item's blast radius, options and recommendation render in "
-            "[open-items.html](open-items.html), the generated owner surface):_"
-        )
-        lines.extend("  - **{}** — {}".format(oid, one) for oid, one in ois)
-    lines.extend(_frontier_lines(root))
+    queue = open_item_queue(root)
+    lines.extend(_open_item_lines(root, queue))
+    lines.extend(_frontier_lines(root, queue))
     return "\n".join(lines)
 
 
@@ -347,21 +368,24 @@ def status_block(root):
 _FRONTIER_CAP = 12
 
 
-def _frontier_lines(root):
+def _frontier_lines(root, queue=None):
     """The `- **Ready frontier**` generated bullet: dependency-ready WIs in
-    scheduler order, id + one-line title, followed by blocked rows and their gates.
-    Empty when neither list has rows or schedule.py is unavailable."""
+    scheduler order, id + one-line title, followed by the Blocked list — each
+    queued row an open item holds, beside each pending item that holds it, read
+    off the same queue projection as the open-items block (WI-790). Empty when
+    neither list has rows or schedule.py is unavailable."""
     if traj_parse.schedule is None:
         return []
+    queue = queue if queue is not None else open_item_queue(root)
     try:
         wis = traj_parse.schedule._load(root)
         records = traj_parse.schedule.evaluate(
             wis, oi_status=traj_parse.schedule.load_oi_status(root)
         )
         ready = [r for r in records if r["disposition"] == "ready"]
-        blocked = [r for r in records if r["disposition"] == "blocked"]
     except (OSError, ValueError):
         return []
+    blocked = queue["held"]
     if not ready and not blocked:
         return []
     titles = {w["id"]: w.get("title", "") for w in wis}
@@ -387,17 +411,26 @@ def _frontier_lines(root):
             )
         )
     if blocked:
-        out.append("- **Blocked** _(owner gates; see IF-073):_")
-        for r in blocked:
-            gates = "; ".join(
-                "[{} — {}](open-items.html#{})".format(o["id"], o["title"], o["id"])
-                for o in r["open_items"]
-            )
-            out.append(
-                "  - **{}** — {} — {}".format(
-                    r["id"], _clip_title(titles.get(r["id"], "")), gates
-                )
-            )
+        out.extend(_blocked_lines(blocked, queue, titles))
+    return out
+
+
+def _blocked_lines(blocked, queue, titles):
+    """The Blocked list: one bullet per queued row a pending open item holds,
+    in id order, each gate linked to its card on the owner surface."""
+    oi_titles = {
+        row["OI-ID"].strip(): (row.get("Title") or "").strip()
+        for row, _citers in queue["cards"]
+    }
+    out = ["- **Blocked** _(held by a pending open item its `needs` cites):_"]
+    for wid in sorted(blocked, key=lambda w: int(w.split("-")[1])):
+        gates = "; ".join(
+            "[{} — {}](open-items.html#{})".format(o, oi_titles.get(o, ""), o)
+            for o in blocked[wid]
+        )
+        out.append(
+            "  - **{}** — {} — {}".format(wid, _clip_title(titles.get(wid, "")), gates)
+        )
     return out
 
 

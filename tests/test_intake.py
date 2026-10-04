@@ -1509,7 +1509,11 @@ _HUMAN_OWED = _HUMAN_OWED_HEAD + _OPEN_ITEM_TABLE + "```\n"
 
 
 def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
-    # The successor waits through IF-073's wi_refs; needs stays WI-to-WI.
+    # WI-790: a handback disposition with an `[open_item]` table yields a
+    # queued, blocked row citing the new item in its `needs` - the successor is
+    # the item's placeholder on the queue - and the open item carries no
+    # pointer back. Given no specref, the mint points the row at the item's own
+    # registry record, which R-E resolves.
     root = git_repo(tmp_path)
     write_sr(root)
     write_open_items(root)
@@ -1533,14 +1537,34 @@ def test_the_close_mints_a_pending_oi_that_gates_the_successor(tmp_path):
     assert len(minted) == 1
     successor = minted[0][0]
     rows = queued_rows(root)
-    assert rows[successor]["Predecessors"] == ""
     oi_rows = intake.spine_carrier.load(root / intake.OPEN_ITEMS_REL, "OI-ID")
-    oi = next(r for r in oi_rows if successor in intake._split(r.get("WI-Refs")))
-    assert oi["Status"] == "pending"
+    (oi,) = oi_rows
+    assert oi["Status"] == "pending" and not oi.get("WI-Refs")
+    assert rows[successor]["Predecessors"] == oi["OI-ID"]
+    # This draft's own specref is kept; a successor drafted without a real
+    # specref gets the item's registry record instead (A6).
+    assert rows[successor]["SpecRef"] == "docs/work/complete/WI-008-adjudicate.md"
     sched = load_script("schedule")
-    records = {r["id"]: r for r in sched.evaluate(sched._load(root))}
+    records = {
+        r["id"]: r
+        for r in sched.evaluate(sched._load(root), oi_status=sched.load_oi_status(root))
+    }
+    assert records[successor]["status"] == "queued"
     assert records[successor]["disposition"] == "blocked"
     assert "blocked:open-item-pending:" + oi["OI-ID"] in records[successor]["reasons"]
+    ct = load_script("check_trajectory")
+    wis = ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))[0]
+    (row,) = [w for w in wis if w["id"] == successor]
+    assert ct.specref_findings(root, row) == []
+    assert (
+        ct.uncited_open_item_findings(root, ct.read_registry_rows(root / ct.WI_CSV))
+        == []
+    )
+    bare, refusal = intake._inject_open_item(
+        root, {"title": "t", "open_item": dict(_BRIEF)}, "WI-099"
+    )
+    assert refusal is None
+    assert bare["specref"] == "docs/requirements/open-items.toml#" + bare["needs"][-1]
 
 
 def test_the_minted_open_item_carries_the_adjudicators_brief_verbatim(tmp_path):
@@ -1579,16 +1603,19 @@ def test_the_minted_open_item_carries_the_adjudicators_brief_verbatim(tmp_path):
     # `decision` ("what is being decided") is derived from the one-line, so the
     # row carries every brief cell a hand-filed pending row does.
     assert row["decision"] == _BRIEF["one_line"]
-    assert row["status"] == "pending" and row["wi_refs"] == [successor]
-    # Rendered through the owner surface's own card builder, over the row as
-    # its registry reader hands it over: no special case, every cell shown.
+    assert row["status"] == "pending" and "wi_refs" not in row
+    # Rendered through the owner surface's own card builder, over the one
+    # queue projection: no special case, every cell shown, beside the row
+    # that cites it.
     gen = load_script("gen_open_items")
-    items = [r for r in gen.load_open_items(root) if r.get("OI-ID") == oi_id]
-    card = gen._brief_cards(items)
+    pend = load_script("pending")
+    card = gen._brief_cards(pend.open_item_queue(root))
+    assert 'id="{}"'.format(oi_id) in card
     for label in ("One line", "What is being decided", "Blast radius"):
         assert label in card, label
-    for label in ("Options", "Recommendation", "Work items"):
+    for label in ("Options", "Recommendation", "Holds"):
         assert label in card, label
+    assert successor in card
 
 
 _WHERE = "docs/work/complete/WI-008-adjudicate.md"
@@ -1702,8 +1729,9 @@ def test_a_non_string_cell_mints_nothing_and_renders_nothing(tmp_path):
     assert refusal is not None and "options (int)" in refusal, refusal
     assert registry.read_bytes() == before_bytes
     gen = load_script("gen_open_items")
-    assert gen.load_open_items(root) == []
-    assert "No pending decision" in gen._brief_cards(gen.load_open_items(root))
+    queue = load_script("pending").open_item_queue(root)
+    assert queue["cards"] == [] and queue["uncited"] == []
+    assert "No pending decision" in gen._brief_cards(queue)
 
 
 def test_an_open_item_table_with_an_unknown_cell_is_refused():
@@ -1826,7 +1854,11 @@ def context_repo(tmp_path):
         "OI-ID,Title,Status,Raised,OneLine,Decision,BlastRadius,Options,"
         "Recommendation,WI-Refs,RuledDate,RulingRef\n"
         "OI-002,widget premise,pending,2026-08-01,is the widget premise still "
-        "true,,,,,WI-005,,\n",
+        "true,,,,,,,\n"
+        # OI-003's historical `wi_refs` names WI-005, but no kin cites it in
+        # `needs`: since WI-790 nothing derives a relationship from that cell.
+        "OI-003,stale pointer,pending,2026-08-01,a pointer nobody reads,,,,,"
+        "WI-005,,\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -1846,7 +1878,14 @@ def context_repo(tmp_path):
             "with no driving necessity\n"
         ),
     )
-    write_spec(root, "queued", "WI-005", sr_refs=["SR-001"], specref="seed.txt")
+    write_spec(
+        root,
+        "queued",
+        "WI-005",
+        sr_refs=["SR-001"],
+        specref="seed.txt",
+        needs=["OI-002"],
+    )
     _commit(root, "the joined registries", when=T_CODE)
     return root
 
@@ -1859,7 +1898,8 @@ def test_the_context_block_renders_from_real_joins_in_failure_cost_order(tmp_pat
     text = intake.context_block(root, row, rows)
     # Every join present...
     assert "WI-002" in text and "REFUTED" in text  # precedent WITH ITS REASONS
-    assert "OI-002" in text  # pending OI whose WI-Refs intersect
+    assert "OI-002" in text  # a pending OI the row cites in `needs` (WI-790)
+    assert "OI-003" not in text  # a historical `wi_refs` pointer is read by nothing
     assert "LLR-001" in text and "src/widget.py" in text and "widget_f" in text
     assert "tests/test_widget.py" in text  # the TC evidence map
     assert "docs/knowledge/widgetry" in text  # LLR.Component -> CMP.Knowledge

@@ -710,12 +710,17 @@ def test_the_scaffolded_brief_is_written_through_the_schema():
     assert written == sorted(written, key=schema.index)
 
 
-def test_the_scaffolded_brief_refuses_a_key_the_schema_does_not_declare(tmp_path):
+def test_the_scaffolded_brief_refuses_a_key_the_schema_does_not_declare(
+    tmp_path, monkeypatch
+):
     # DRIVEN RED, because a refusal nothing exercises is a claim. `check_docs`
     # S-3 reads the brief's cells; a cell under an unmapped key comes back from
     # the carrier as a column no consumer reads, so the ask renders as briefed
     # with an empty brief. The scaffolder now raises instead of writing it.
     BOOTSTRAP = load_script("bootstrap")
+    # This fixture is a bare docs/ tree with no scripts/ to run the spec
+    # writer in; the placeholder row (WI-790) is test_profile's subject.
+    monkeypatch.setattr(BOOTSTRAP, "file_stack_placeholder", lambda dest, stack: None)
     docs = tmp_path / "docs"
     (docs / "requirements").mkdir(parents=True)
     (docs / "requirements" / "open-items.toml").write_text("", encoding="utf-8")

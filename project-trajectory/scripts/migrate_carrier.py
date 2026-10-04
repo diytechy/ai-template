@@ -124,9 +124,10 @@ OFFSPINE = {
 #
 # `WI-Refs` (open-items) JOINS THEM and `Version` (agents) DOES NOT, both by the
 # same measurement the `TestRefs` paragraph above describes. Every live and
-# shipped `WI-Refs` cell is empty or a bare `WI-###`, and its only consumer
-# already splits it (`intake._pending_oi_lines` -> `agent_common._refs`), so the
-# typed array is what the cell already meant. `Version` reads numeric — `4.8`,
+# shipped `WI-Refs` cell is empty or a bare `WI-###`, so the typed array is
+# what the cell already meant. (Since WI-790 the cell is declared historical
+# metadata, `kitlib.spine.HISTORICAL_KEYS`: carried byte-for-byte on the rows
+# that have it, read by no consumer; a work item's `needs` cites its open item.) `Version` reads numeric — `4.8`,
 # `5.6` — and is exactly the trap: as a TOML float it stops being the text the
 # registry stores, and `agent_route._version_key` parses its dotted-numeric
 # tuple out of that text. A carrier change has no licence to renormalise a

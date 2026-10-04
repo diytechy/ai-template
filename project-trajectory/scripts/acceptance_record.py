@@ -124,6 +124,18 @@ Contract IF-196: the held status, read from a delta. `staged_status_moves(root,
     as held; `held_status_refusal(dial, moves)` joins them into the refusal,
     or returns None. A delta git cannot read is `[]`; a registry
     side that does not parse is one move naming the registry.
+
+THE RULING SYNC (WI-790; OI-102 Q3) is the third two-tree rule here, and the
+one with no dial: a commit that takes an open item out of `pending` must, in
+the same diff, update the Done-when of every work item open in its PARENT tree
+whose `needs` cites that item, or close or remove that row
+(`ruling_sync_lines`). It reads one commit and its parent and nothing further,
+so it never skips for missing history; the pre-commit hook asks it of HEAD and
+the staged tree (`staged_ruling_sync_lines`), and the merge slot of every lane
+commit and its first parent (`commit_ruling_sync_lines`) — one function over
+two trees in both places. It decides only that mechanical condition: whether
+the change carries the ruling, and whether a row's other fields must move, is
+the reviewer's judgement.
 """
 
 import tomllib
@@ -133,6 +145,7 @@ try:
     import spine_carrier
     from kitlib import authority as _kitauthority
     from kitlib import git as _kitgit
+    from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
@@ -142,6 +155,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import spine_carrier
     from kitlib import authority as _kitauthority
     from kitlib import git as _kitgit
+    from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
 
 # `git -C <root> <args>` stdout on success, else None (git absent, not a repo,
@@ -1853,3 +1867,263 @@ def committed_status_moves(root, rev):
                     {"registry": registry, "id": rid, "before": was, "after": now}
                 )
     return moves
+
+
+# --- THE RULING SYNC: a ruling updates the rows that cite it (WI-790) ---------
+# OI-102 Q3, ruled 2026-10-03: a commit-time block over ONE diff, a commit
+# against its own parent, with no history walk and no second path. The
+# trigger is the registry state (a row going from `pending` to anything else,
+# a deleted pending row included), never page membership; the citing set is
+# read from the PARENT tree, so dropping the `needs` token in the ruling's own
+# commit discharges nothing. Every terminal state discharges the obligation —
+# a closed row has no criteria left to update — because a terminal row lives
+# under the archive, so a row the commit moved there or removed is satisfied.
+OPEN_ITEMS_REGISTRY = "docs/requirements/open-items.toml"
+WORK_DIR = "docs/work"
+ARCHIVE_WORK_DIR = "docs/archive/work"
+_PENDING = "pending"
+
+
+def _tree_specs(root, rev):
+    """`{WI id: path}` of every spec in a tree (`rev` None is the index), or
+    None when git cannot list it. A `-000` example is never a row.
+
+    Implements: SR-148, LLR-298
+    """
+    roots = [WORK_DIR, ARCHIVE_WORK_DIR]
+    if rev is None:
+        out = _git(root, ["ls-files", "--"] + roots)
+    else:
+        out = _git(root, ["ls-tree", "-r", "--name-only", rev, "--"] + roots)
+    if out is None:
+        return None
+    specs = {}
+    for path in out.splitlines():
+        name = path.rsplit("/", 1)[-1]
+        wid = "-".join(name.split("-")[:2])
+        if name.startswith("WI-") and name.endswith(".md") and not wid.endswith("-000"):
+            specs[wid] = path
+    return specs
+
+
+class _UnreadableBlob(Exception):
+    """A path its tree lists whose blob git cannot read (a partial clone
+    offline, a damaged object store). The ruling sync refuses it by name:
+    a failed read is never an absent file (A1)."""
+
+
+def _show(root, prefix, path):
+    """The text of `prefix + path` (`prefix` a `git show` prefix: `"<rev>:"` or
+    `":"` for the index), None when the tree does not list the path; raises
+    `_UnreadableBlob` when it lists the path but its blob cannot be read.
+
+    Implements: SR-148, LLR-298
+    """
+    text = _git(root, ["show", prefix + path])
+    if text is not None:
+        return text
+    if prefix == ":":
+        listed = _git(root, ["ls-files", "--", path])
+    else:
+        listed = _git(root, ["ls-tree", "--name-only", prefix[:-1], "--", path])
+    if listed is None or listed.strip():
+        raise _UnreadableBlob(prefix + path)
+    return None
+
+
+def _registry_states(root, prefix):
+    """`{OI id: status}` of the open-items registry in ONE tree (`prefix` a
+    `git show` prefix), read through whichever carrier that tree uses (TOML,
+    else CSV — `spine_carrier`'s resolution, as `_spine_rows_at` reads a spine
+    registry): `{}` when the tree has neither, None when it does not parse.
+    `-000` example rows are dropped.
+
+    Implements: SR-148, LLR-298
+    """
+    for cand in _spine_carriers(OPEN_ITEMS_REGISTRY):
+        text = _show(root, prefix, cand)
+        if text is None:
+            continue
+        rows = spine_carrier.rows_from_text(text, "OI-ID", "." + cand.rsplit(".", 1)[1])
+        if rows is None:
+            return None
+        return {
+            rid: (row.get("Status") or "").strip()
+            for rid, row in rows.items()
+            if not str(rid).endswith("-000")
+        }
+    return {}
+
+
+def _ruled_items(before, after):
+    """The open items `pending` in `before` and not in `after` (two
+    `_registry_states` maps), or None when either side does not parse
+    (unreadable is not unchanged).
+
+    Implements: SR-148, LLR-298
+    """
+    if before is None or after is None:
+        return None
+    return sorted(
+        oid
+        for oid, state in before.items()
+        if state.lower() == _PENDING and after.get(oid, "").lower() != _PENDING
+    )
+
+
+def _citing_rows(root, base, specs, ruled):
+    """`[(WI id, [ruled OI ids it cites], spec text)]` for every row OPEN in
+    the `base` tree (under `docs/work/`) whose `needs` cites a ruled item.
+
+    Implements: SR-148, LLR-298
+    """
+    rows = []
+    for wid, path in sorted(specs.items()):
+        if not path.startswith(WORK_DIR + "/"):
+            continue  # under the archive: terminal, nothing owed
+        text = _show(root, base + ":", path)
+        try:
+            data, _body = _kitregistry.parse_spec_frontmatter(text or "", path)
+        except ValueError:
+            continue  # a malformed spec is the validator's finding, not this rule's
+        needs = ";".join(str(t) for t in data.get("needs") or [])
+        cited = [o for o in _kitspine.split_pred_edges(needs)[1] if o in ruled]
+        if cited:
+            rows.append((wid, cited, text))
+    return rows
+
+
+def _sync_gap(root, new_prefix, head_path, before_text):
+    """Why one citing row is out of sync in the new tree, or None when it is
+    satisfied: removed, closed (moved under the archive), or open with a
+    non-empty Done-when section whose RAW text differs from the parent's (A1:
+    read from the raw spec text; whether the change carries the ruling is the
+    reviewer's judgement, not this rule's).
+
+    Implements: SR-148, LLR-298
+    """
+    if head_path is None or not head_path.startswith(WORK_DIR + "/"):
+        return None
+    after = _raw_done_when(_show(root, new_prefix, head_path))
+    if not after:
+        return "it keeps no Done-when"
+    if after == _raw_done_when(before_text):
+        return "its Done-when is unchanged"
+    return None
+
+
+def _raw_done_when(text):
+    """A spec's Done-when section as raw text, outer blank lines trimmed."""
+    return "\n".join(_kitregistry.done_when_section(text or "")).strip()
+
+
+def ruling_sync_lines(root, base, head=None):
+    """One line per (row, item) the diff `base` -> `head` leaves out of sync
+    (`head` None is the index): an open item leaves `pending` while a work item
+    open in `base` cites it in `needs`, and the same diff neither updates that
+    row's Done-when (non-empty afterwards, and its raw section changed) nor
+    closes or removes the row. The registry is read through either carrier.
+    `[]` when nothing leaves `pending`. A diff git cannot read is a line,
+    never a skip.
+
+    Implements: SR-148, LLR-298
+    """
+    args = ["diff", "--name-only", "--no-renames"]
+    args += ["--cached", base] if head is None else [base, head]
+    names = _git(root, args)
+    if names is None:
+        return [
+            "cannot read the diff against {}, so whether it rules an open item "
+            "is unknown".format(base)
+        ]
+    if not set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(names.splitlines()):
+        return []
+    try:
+        return _judged_lines(root, base, head)
+    except _UnreadableBlob as exc:
+        return [
+            "{} is listed in its tree but its contents cannot be read (a partial "
+            "clone offline or a damaged object store), so whether this commit "
+            "rules an open item is unknown; fetch it and retry".format(exc)
+        ]
+
+
+def _judged_lines(root, base, head):
+    """`ruling_sync_lines` once the diff touches the registry: the ruled items,
+    then each citing row. Every blob it reads goes through `_show`.
+
+    Implements: SR-148, LLR-298
+    """
+    new_prefix = ":" if head is None else head + ":"
+    ruled = _ruled_items(
+        _registry_states(root, base + ":"), _registry_states(root, new_prefix)
+    )
+    if ruled is None:
+        return [
+            "the open-items registry does not parse on one side of the diff, "
+            "so whether it rules an open item is unknown"
+        ]
+    if not ruled:
+        return []
+    return _sync_lines(root, base, head, ruled)
+
+
+def _sync_lines(root, base, head, ruled):
+    """The per-row half of `ruling_sync_lines`, once the ruled items are known.
+
+    Implements: SR-148, LLR-298
+    """
+    base_specs, head_specs = _tree_specs(root, base), _tree_specs(root, head)
+    if base_specs is None or head_specs is None:
+        return ["cannot list the work items on both sides of the diff"]
+    new_prefix = ":" if head is None else head + ":"
+    lines = []
+    for wid, cited, text in _citing_rows(root, base, base_specs, ruled):
+        gap = _sync_gap(root, new_prefix, head_specs.get(wid), text)
+        if gap:
+            lines.append(
+                "{} cites {}, which this commit takes out of pending, and {}: "
+                "the ruling's commit updates the row's Done-when with the decided "
+                "criteria, citing the item, or closes or removes the row".format(
+                    wid, ", ".join(cited), gap
+                )
+            )
+    return lines
+
+
+def staged_ruling_sync_lines(root):
+    """`ruling_sync_lines` for the commit being made: the index against HEAD,
+    or against the empty tree before the first commit (which closes nothing).
+
+    Implements: SR-148, LLR-298
+    """
+    head = _git(root, ["rev-parse", "--verify", "--quiet", "HEAD"])
+    base = head.strip() if head and head.strip() else _empty_tree(root)
+    if base is None:
+        return ["cannot read HEAD or the empty tree, so the commit is unjudged"]
+    return ruling_sync_lines(root, base)
+
+
+def commit_ruling_sync_lines(root, rev):
+    """`ruling_sync_lines` for one commit against its FIRST parent, read off
+    the commit object itself (not `rev^1`, which a shallow boundary hides). A
+    true root commit — no parent in its object — has nothing to close and
+    answers `[]`; a parent the repository cannot read (a shallow clone, a
+    missing object) is refused by name, never read as a root (A1).
+
+    Implements: SR-148, LLR-298
+    """
+    body = _git(root, ["cat-file", "commit", rev])
+    if body is None:
+        return ["cannot read commit {}, so it is unjudged".format(rev)]
+    head = body.split("\n\n", 1)[0].splitlines()
+    parents = [line.split()[1] for line in head if line.startswith("parent ")]
+    if not parents:
+        return []
+    if _git(root, ["cat-file", "-e", parents[0] + "^{commit}"]) is None:
+        return [
+            "commit {}'s parent {} cannot be read in this repository (a shallow "
+            "clone or a missing object), so whether it rules an open item is "
+            "unknown; fetch the parent and retry".format(rev[:10], parents[0][:10])
+        ]
+    return ruling_sync_lines(root, parents[0], rev)

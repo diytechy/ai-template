@@ -7,15 +7,35 @@
 #
 # THE `-000` ROW BELOW IS THE SCHEMA. There is no header line to declare a
 # column, so this example row is the only place the vocabulary is written down:
-# it sets EVERY key the registry has, with the guidance for each as its value.
+# it sets EVERY key a new row authors, with the guidance for each as its value
+# (the historical `wi_refs` below is not one).
 # Delete it on the first real entry.
 #
 # `status` leaves `pending` when the ruling lands in docs/log.md's Decisions
-# log; `scripts/gen_open_items.py` renders every pending row into the generated
-# docs/open-items.html the owner actually reads.
+# log; `scripts/gen_open_items.py` renders every pending row a queued work
+# item cites into the generated docs/open-items.html the owner actually reads.
 #
-# `wi_refs` follows IF-073 in the live registry header; see
-# docs/requirements/interfaces.toml.
+# WORK ITEMS POINT TO OPEN ITEMS, NEVER THE REVERSE. A work item that waits on
+# a decision cites it in its own `needs` (`needs = ["OI-7"]`) and reads
+# `blocked` until the item is ruled; an open item carries no work-item
+# pointer. Older registries may still carry a `wi_refs` cell on rows filed
+# before this changed: it is history, preserved as written, and nothing reads
+# it. New rows carry none.
+#
+# FILE EVERY OPEN ITEM WITH ITS PLACEHOLDER. A pending item no queued work item
+# cites never reaches the owner's queue, so the checker reports it as an error.
+# The placeholder may hold nothing but its item: a `title`, a `safety_class`,
+# `needs = ["OI-7"]` and `specref = "docs/requirements/open-items.toml#OI-7"`.
+#
+# RULING AN ITEM UPDATES THE ROWS THAT CITE IT, IN THE SAME COMMIT. Set
+# `status` away from `pending` and, in that commit, write each citing row's
+# Done-when with the decided criteria citing the item (even a gate on a
+# person's act gets one, e.g. "OI-7 ruled 2026-01-02: the re-sync was
+# performed"), point its `specref` at a real spec, and move `title`,
+# `buildtier`, `sr_refs` or `safety_class` where the ruling changes them — or
+# close the row. The commit-time check refuses a ruling that leaves a citing
+# row's Done-when untouched. The rule's home is the work-item format's
+# readiness contract (IF-054) and this registry's (IF-073).
 #
 # WRITE FOR A RULER, NOT FOR THE RECORD. These cells are read by a human
 # deciding, usually several at a sitting, and a brief that buries its question
@@ -73,27 +93,5 @@ recommendation = """Name the option in the FIRST sentence, then at most three bu
 - the deciding reason - the one fact that makes this option right;
 - any guard the ruling needs to be safe;
 - the sequencing: what this must precede or follow, and why."""
-wi_refs = ["WI-000"]
 ruled_date = """the date the ruling landed (ISO), set together with status leaving `pending` — absent while the item is open."""
 ruling_ref = """where the ruling is recorded — the docs/log.md Decisions anchor, or the design doc section that carries it. Absent while the item is open."""
-
-[open_item.OI-1]
-title = "Decide: keep or drop the legacy export flag"
-status = "pending"
-one_line = "rule the legacy export flag (blocks: DevStg-Reqs) - rec: drop it unless a consumer is named"
-decision = "Whether the legacy export flag stays in scope for v1 (blocks: DevStg-Reqs)."
-blast_radius = "Every consumer of the legacy format, and the SR that would carry it."
-options = "keep and specify it · drop it · defer behind a flag until a consumer asks"
-recommendation = """drop it unless a real consumer is named - an unspecified flag is a support cost with no owner."""
-wi_refs = ["WI-000"]
-
-[open_item.OI-2]
-title = "Pinning SR-000's acceptance predicate"
-status = "pending"
-one_line = "rule the acceptance predicate for SR-000 - rec: the measurable form"
-decision = "Which measurable predicate SR-000 is accepted against."
-blast_radius = "The TC that verifies it, and any LLR decomposed from it."
-options = "the measurable form · the descriptive form the draft carries"
-recommendation = "take the measurable form - a predicate a test cannot evaluate is not acceptance."
-wi_refs = ["WI-000"]
-

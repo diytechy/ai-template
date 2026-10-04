@@ -8,15 +8,26 @@
 #
 # Contract IF-073: one `[open_item.OI-###]` table per owner decision, carrying
 #     `title`, `status`, `raised`, `one_line`, `decision`, `blast_radius`,
-#     `options`, `recommendation` and `wi_refs`. `status` is `pending` or
-#     `ruled`. `wi_refs` names work items that wait on this ruling: a queued
-#     work item listed by a pending row is blocked until it is ruled, with no
-#     edit to that work item. Context-only references belong in prose, not
-#     `wi_refs`; ruled rows retain their references as history. Only a pending
-#     row renders as a brief card — a ruled row is
-#     history, and the Decisions log is its record. `-000` example rows are
-#     dropped, and an absent registry renders an empty queue rather than
-#     failing, so a repo carrying no decisions still has the surface.
+#     `options` and `recommendation`. `status` is `pending` or `ruled`. WORK
+#     ITEMS POINT TO OPEN ITEMS (WI-790): a work item that waits on a ruling
+#     cites the item in its own `needs` and reads `blocked` until the item
+#     leaves `pending`; an open item carries no work-item pointer. Rows filed
+#     before WI-790 may carry `wi_refs`: it is history, preserved as written,
+#     and no reader derives a relationship from it; new rows carry none.
+#     Every pending row is filed together with a queued work item citing it —
+#     only a pending row a queued work item cites renders as a brief card, and
+#     a pending row no queued work item cites is an error. RULING an item
+#     updates the rows that cite it IN THE SAME COMMIT: each citing row's
+#     Done-when gains the decided criteria citing the item (a gate on a
+#     person's act gets a confirmation criterion, e.g. "OI-98 ruled
+#     2026-10-NN: the re-sync was performed"), its `specref` leaves this
+#     registry for a real spec, and its `title`, `buildtier`, `sr_refs` and
+#     `safety_class` move where the ruling changes them — or the row closes.
+#     A commit that rules an item and leaves a citing row's Done-when
+#     untouched is refused. A ruled row is history, and the Decisions log is
+#     its record. `-000` example rows are dropped, and an absent registry
+#     renders an empty queue rather than failing, so a repo carrying no
+#     decisions still has the surface.
 #
 [open_item.OI-000]
 title = "Example row - the shape of an owner decision brief"
@@ -27,7 +38,6 @@ decision = """What is being decided, who raised it and when, and any context a r
 blast_radius = """What breaks or changes if this is ruled either way - the honest cost, not the optimistic one."""
 options = """Option (a) ... · Option (b) ... · Option (c) ... - each with its FOR and AGAINST, separated by the middot the other registries use for lists-in-cells."""
 recommendation = "The driver's recommendation and WHY, in the same voice a reviewer would argue it."
-wi_refs = ["WI-000"]
 
 [open_item.OI-7]
 title = "WI-123: review-cadence dial"
@@ -3681,7 +3691,6 @@ decision = "The owner must perform the re-sync from 2026-10-03 and rule this ite
 blast_radius = "Only WI-684's readiness is held; its registry status stays queued."
 options = "Keep the hold until the owner's condition is met; then rule the release."
 recommendation = "Keep pending until the owner performs the required act."
-wi_refs = ["WI-684"]
 
 [open_item.OI-99]
 title = "Owner hold until second to last"
