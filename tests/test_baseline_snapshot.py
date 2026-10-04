@@ -1702,6 +1702,46 @@ def test_a_well_formed_act_ledger_parses_in_file_order():
     assert SNAP.acts_problems("") == [] and SNAP.parse_acts(None) == []
 
 
+def test_a_ledger_entry_may_name_the_verdict_that_ruled_it():
+    """OI-100 gap 2 (WI-791): an act may name the verdict file that ruled its
+    re-attested rows. The field is optional, so every entry written before it
+    still parses in its old shape; when present it is a non-empty path."""
+    named = _GOOD_ACT + 'verdict = "docs/reviews/v.md"\n'
+    assert SNAP.acts_problems(named) == []
+    (entry,) = SNAP.parse_acts(named)
+    assert entry["verdict"] == "docs/reviews/v.md"
+    assert "verdict" not in SNAP.parse_acts(_GOOD_ACT)[0]
+    for bad in ('verdict = ""\n', "verdict = 3\n"):
+        problems = SNAP.acts_problems(_GOOD_ACT + bad)
+        assert problems and "`verdict`" in problems[0], problems
+
+
+def test_a_reattesting_act_records_its_verdict_and_refuses_a_bad_one(tmp_path):
+    """`copy_live(..., verdict=)` writes the verdict into the act's ledger entry.
+    A verdict needs re-attested rows to rule, and must name a file in the tree:
+    a typo would otherwise land a ruling nobody can open in the record."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
+    with pytest.raises(SystemExit) as no_rows:
+        SNAP.copy_live(root, approves={SR_REL: "x"}, verdict="docs/reviews/v.md")
+    assert "--verdict" in str(no_rows.value), no_rows.value
+    with pytest.raises(SystemExit) as no_file:
+        SNAP.copy_live(root, reattests={sid}, verdict="docs/reviews/v.md")
+    assert "docs/reviews/v.md" in str(no_file.value), no_file.value
+    verdict = root / "docs" / "reviews" / "v.md"
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text(
+        "- [CLARITY] {} title -> same\n\nVERDICT: CLARITY rows=1\n".format(sid),
+        encoding="utf-8",
+    )
+    proc = _snapshot_cli(root, "--reattests", sid, "--verdict", "docs/reviews/v.md")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "VERDICT: docs/reviews/v.md" in proc.stdout, proc.stdout
+    last = SNAP.read_acts(root)[-1]
+    assert last["reattested"] == [sid] and last["verdict"] == "docs/reviews/v.md"
+
+
 def test_a_malformed_ledger_refuses_the_act_before_the_record_moves(tmp_path):
     """The refusal comes before any copy or stamp: a person fixes the ledger
     and re-runs, and the record they fix is the record that stood."""

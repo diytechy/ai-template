@@ -13,7 +13,14 @@ import shutil
 import subprocess
 
 import pytest
-from conftest import SCRIPTS, load_script, pin_autocrlf, run_py, skip_without_env_gates
+from conftest import (
+    SCRIPTS,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    set_process_key,
+    skip_without_env_gates,
+)
 
 SNAP = load_script("baseline_snapshot")
 AR = load_script("acceptance_record")
@@ -294,10 +301,24 @@ def _load(root, rel, id_col):
 # --- a re-attestation held to its amendment's scope at merge (TC-271) ---------
 
 
-def _amendment_act(root, reattests):
+def _release(root):
+    """Release every rung to the loop. The scaffold's shipped dial holds them
+    all, and a held rung's re-attestation by an adjudication is the separate
+    rule `test_a_held_rung_reattestation_*` pins (WI-791)."""
+    set_process_key(root, "attestation", "human_approval_through", "DevStg-Below")
+
+
+_VERDICT = "docs/reviews/v.md"
+
+
+def _amendment_act(root, reattests, held=False, verdict=None):
     """Amend two approved rows, commit that as the merge base, then take the
-    act re-attesting `reattests` as the head; returns (base, head)."""
+    act re-attesting `reattests` as the head; returns (base, head). `held`
+    keeps the scaffold's dial; `verdict`, when given, is the verdict file's
+    text, committed with the act and named by it."""
     run_git = _git(root)
+    if not held:
+        _release(root)
     _append(root, SR_REL, _SR.format(rid="SR-001", title="row one"))
     _append(root, SR_REL, _SR.format(rid="SR-002", title="row two"))
     SNAP.copy_live(root, seed=True)
@@ -306,7 +327,14 @@ def _amendment_act(root, reattests):
         title = "row one" if rid == "SR-001" else "row two"
         _rewrite(root, SR_REL, '"{}"'.format(title), '"{}, amended"'.format(title))
     base = _commit(run_git, "the amendments")
-    SNAP.copy_live(root, reattests=frozenset(reattests))
+    if verdict is not None:
+        (root / _VERDICT).parent.mkdir(parents=True, exist_ok=True)
+        (root / _VERDICT).write_text(verdict, encoding="utf-8")
+    SNAP.copy_live(
+        root,
+        reattests=frozenset(reattests),
+        verdict=_VERDICT if verdict is not None else None,
+    )
     head = _commit(run_git, "the re-attesting act")
     return base, head
 
@@ -328,6 +356,31 @@ def test_a_reattestation_inside_the_amendment_scope_merges(scaffold):
     first = [("WI-901.md", {"brief": "first-approval", "adjudicates": ["SR-001"]})]
     refusal = AR.merge_approval_refusal(scaffold, base, head, first, True)
     assert refusal and "SR-001" in refusal, refusal
+
+
+def test_a_held_rung_reattestation_without_a_verdict_is_refused(scaffold):
+    """OI-100 gap 2 (WI-791): on a held rung an adjudication re-attests only a
+    row its verdict rules CLARITY, and the act names that verdict so the act
+    ledger shows it. The scaffold's dial holds every rung; an act naming no
+    verdict is refused at merge, by row."""
+    base, head = _amendment_act(scaffold, {"SR-001"}, held=True)
+    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True)
+    assert refusal and "SR-001" in refusal and "names no verdict" in refusal, refusal
+
+
+def test_a_held_rung_reattestation_its_verdict_rules_CLARITY_merges(scaffold):
+    text = "- [CLARITY] SR-001 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
+    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
+    assert AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True) is None
+
+
+def test_a_held_rung_reattestation_of_a_MEANING_row_is_refused(scaffold):
+    """A MEANING row on a held rung is the owner's to sign, whatever the act
+    names: the adjudicator recommends it and never re-attests it."""
+    text = "- [MEANING] SR-001 title -> moved\n\nVERDICT: MEANING rows=1\n"
+    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
+    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, True)
+    assert refusal and "SR-001" in refusal and "CLARITY" in refusal, refusal
 
 
 def test_the_scripts_under_test_are_the_scaffolds_copies(scaffold):
@@ -446,6 +499,7 @@ def _mixed_act(root, approve_scope, amend_scope):
     carries a Drafted row into approval AND re-attests an amended approved
     row, claimed by a first-approval row and an amendment row together."""
     run_git = _git(root)
+    _release(root)
     _append(root, SR_REL, _SR.format(rid="SR-001", title="row one"))
     _append(
         root,

@@ -1,0 +1,53 @@
+# docs/decisions/wi-791.toml — WI-791's delegated decisions record (OI-100,
+# ruled 2026-10-03 option (a)). Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-003"]
+
+[decision.D-001]
+decided = "The amendment walk reads a SIBLING constant, acceptance_record.AMENDMENT_CSVS, defined as an alias of APPROVAL_ACT_CSVS (SR, LLR, TC, SN, DA, SUR); SPINE_CSVS keeps its three tiers."
+alternative = "Widen SPINE_CSVS itself, or write AMENDMENT_CSVS as a second hand-written literal."
+reversal_cost = "One constant and one argument in staged_spine_amendments; no data migrates."
+why_not_escalated = "OI-100's blast_radius names 'a one-constant widening, or a sibling constant' and leaves the choice to the build. Widening SPINE_CSVS would silently widen its other readers (the first-approval mint staged_drafted_rows, check_test_first, the retired flip). The alias says the rule (text an act can bless is text an amendment can move) and cannot drift from the approval set."
+review = ""
+
+[decision.D-002]
+decided = "The pre-commit amend-without-flip warn takes the SAME scope as the mint: staged_spine_findings reads staged_spine_amendments, which now walks AMENDMENT_CSVS, so an approved need, assumption or surrogate amended without a re-attestation warns at the commit. The Hat-Refs arm stays structurally silent on those tiers."
+alternative = "Keep the warn at SR/LLR/TC by giving staged_spine_amendments a registries parameter and passing SPINE_CSVS from the warn."
+reversal_cost = "Pass SPINE_CSVS from staged_spine_findings; one line plus the pinning test."
+why_not_escalated = "OI-100 says to decide the warn's scope in the same change and state it. The warn is warn-only. Telling the author at the commit about exactly the rows the merge will route is consistent with the ruling; a narrower warn would hide from the author the event it is about to trigger."
+review = ""
+
+[decision.D-003]
+decided = "Gap 2's 'must name the verdict' is enforced at the merge slot: acceptance_record.held_reattest_refusal (called from merge_approval_refusal on an adjudication lane) refuses each row re-attested on a rung trunk's dial holds unless the act's ledger entry names a verdict file whose '- [CLARITY] <id>' line rules it. The snapshot CLI only records --verdict and refuses a verdict with no --reattests or naming no file."
+alternative = "Leave the rule review-only (doctrine plus brief), or enforce it in intake.py snapshot itself, where the actor (owner or session) is unknown."
+reversal_cost = "Remove one call in merge_approval_refusal; the tests releasing the dial in test_snapshot_readers.py's TC-271 fixtures would then be unnecessary but harmless."
+why_not_escalated = "The spec requires the act ledger to show the verdict and says the script only records and refuses; the merge slot is the one place the actor (an adjudication lane) is known, and the owner's own trunk acts never reach it. Risk: a delegated attended session acting for the owner in an adjudication LANE on a held MEANING row would be refused; the owner's delegation path is the trunk sitting."
+review = ""
+
+[decision.D-004]
+decided = "The audit listing lives at the end of open-items.html section 2 (Approval & re-attestation), rendered by gen_open_items.verdict_reattest_block from the act ledger: every entry naming a verdict, newest first, with 'None recorded.' when empty. It lists every verdict-carrying act, not only held-rung ones."
+alternative = "Put it in section 3 (pending.py's pending-owner-actions projection), or filter to held-rung acts only."
+reversal_cost = "Move one renderer call; regenerate open-items.html."
+why_not_escalated = "Section 3 items are counted by dispatch.owner_cards for the drained-queue banner, so a permanent audit entry there would keep the banner non-empty forever. Section 2 is where re-attestation is already the subject. The ledger does not record the dial at act time, so filtering by held rung would re-derive history; every held-rung adjudicator act carries a verdict by D-003, so listing all verdict acts is a superset."
+review = ""
+
+[decision.D-005]
+decided = "The amendment brief renders the new tiers: adjudicate_brief._unchained_amended_rows reads baseline_snapshot.tier_owing (needs_owing generalised) for SN/DA/SUR rows in scope, and _aftermath derives each held-rung verdict's arm from intake.adjudication_action through a deferred import."
+alternative = "Leave the brief unchanged as OI-100's blast_radius says ('The brief and the mint are unchanged')."
+reversal_cost = "Revert two helpers; a need-scoped amendment row would then refuse composition and hold for a human."
+why_not_escalated = "Verified: amendment_values reads only trace.reattest_model's SR chains, so a need-scoped row refused as 'nothing in scope' (red test test_a_need_scoped_amendment_row_composes_with_its_before_and_after). Gap 1 is inert without it; the brief's question and template slots are unchanged."
+review = ""
+
+[decision.D-006]
+decided = "adjudication_action gains a verdict parameter with three arms: loop-held -> 'flip'; human-held with CLARITY -> 'reattest'; human-held otherwise -> 'recommend'. flip_verified and the 'adjudicate' CLI pass no verdict and are unchanged."
+alternative = "Add a --verdict flag to 'intake.py adjudicate' so the retired flip tool prints the new arm."
+reversal_cost = "One default parameter and one line."
+why_not_escalated = "That CLI's mechanical arm is retired (OI-45) and predates the MEANING/CLARITY brief; the live consumer of the doctrine is the brief's aftermath (D-005)."
+review = ""
+
+[decision.D-007]
+decided = "Two ratchets re-stamped with reasons rather than decomposed: intake.py's size baseline 1658 -> 1672 (the --verdict flag, the held arm's CLARITY case, the Context wording) and test_import_layers' deferred-import window 30 -> 31 (adjudicate_brief._aftermath reads intake.adjudication_action). acceptance_record's pinned import surface was kept: verdict rows are parsed with string methods, not `re`."
+alternative = "Move adjudication_action to a lower module (kitlib) so the brief imports it without a deferred edge, or restate the held arm's wording in adjudicate_brief with no import."
+reversal_cost = "Move one pure function and update its importers, or drop the deferred import and pin the two texts' agreement by a test."
+why_not_escalated = "The spec names `intake.adjudication_action` as ruled decision 2's home; a second statement of the arm in the brief is the drift the kit's one-home rule forbids. Both ratchets allow a reviewed re-stamp with its reason."
+review = ""

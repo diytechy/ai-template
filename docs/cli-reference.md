@@ -475,6 +475,7 @@ Contracts (interfaces): IF-090, IF-229, IF-243, IF-244
 | `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the owner's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
 | `--approves` | NAME THE APPROVAL ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref copies the ONE registry it names and lands in the snapshot's prose stamp; it clears none of that registry's drifted rows (name those with --reattests) |
 | `--reattests` | RE-ATTEST these rows: comma-joined ids whose drifted approved text this act blesses without moving their Status. The refresh is refused while any row it would copy has drifted text neither flipped nor named here; the ids land in the snapshot's prose stamp |
+| `--verdict` | the verdict file that ruled the --reattests rows, recorded in the act ledger. Required at merge for a session's re-attestation on a held rung, where the verdict must rule each row CLARITY (OI-100) |
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._

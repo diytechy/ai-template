@@ -31,7 +31,10 @@ WHAT IT RENDERS, in the order an owner needs it:
      diff had no reason to show, plus the SR's own text where the amendment sits
      entirely in a child. A diff says what moved; an attestation asks whether the
      evidence still verifies what the row now SAYS, and the second question needs
-     the cells the first one omits (owner, 2026-07-27).
+     the cells the first one omits (owner, 2026-07-27). The section closes
+     with the AUDIT LIST: every act-ledger entry naming a verdict, i.e. each
+     re-attestation an adjudicator's CLARITY ruling carried over — on a held
+     rung, the owner's signature carried onto amended text (OI-100, WI-791).
   3. PENDING OWNER ACTIONS — the pointer projection `pending.py` already
      derives (blocked rows, the spine pointers, the tracked pause), reused
      verbatim rather than recomputed.
@@ -61,8 +64,10 @@ Contract IF-074: the generated owner decision surface at `docs/open-items.html` 
     whose chain has drifted from the approved snapshot, with the whole chain's
     per-cell before/after, unchanged runs collapsible, additions and deletions
     marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION so an empty
-    section reads as *check the baseline* and never as *nothing changed*; and
-    the pending-owner-actions pointer projection. It renders and owns no second
+    section reads as *check the baseline* and never as *nothing changed*,
+    closed by the audit list of every act-ledger entry that names a verdict
+    (newest first, its rows and its verdict file; "None recorded." when there
+    is none); and the pending-owner-actions pointer projection. It renders and owns no second
     opinion: the archaeology and cell comparison come from `trace.reattest_model`
     and the pointers from `pending.pending_block`, so where this view and the
     `trace.py --approve` brief disagree the brief is authoritative and this is
@@ -814,6 +819,51 @@ def _offspine_census_block(rows):
     )
 
 
+def verdict_reattest_block(acts):
+    """The audit list closing section 2: every act-ledger entry that names a
+    verdict, newest first — the re-attestations an adjudicator's CLARITY
+    verdict carried over (OI-100, ruled 2026-10-03; WI-791). On a held rung
+    that act carries the owner's signature onto amended text, so it stays
+    listed here after the fact, for the owner to audit. An act naming no
+    verdict is not listed: it is the owner's own, or a released rung's.
+
+    Implements: SR-049, LLR-118"""
+    named = [a for a in acts if a.get("verdict")]
+    items = "".join(
+        "<li>act {seq} ({date}) — re-attested {rows} on the verdict "
+        "<code>{verdict}</code></li>".format(
+            seq=esc(str(a["seq"])),
+            date=esc(a["date"]),
+            rows=esc(", ".join(a["reattested"]) or "no row"),
+            verdict=esc(a["verdict"]),
+        )
+        for a in sorted(named, key=lambda a: a["seq"], reverse=True)
+    )
+    return (
+        '<div class="verdict-audit"><p class="sub"><strong>Re-attested on an '
+        "adjudicator's verdict</strong> — each act a session took on its own "
+        "CLARITY ruling, from the act ledger <code>{}/{}</code>. On a held rung "
+        "it carried your signature onto amended text: open the verdict to audit "
+        "it.</p>{}</div>\n".format(
+            esc(baseline_snapshot.SNAPSHOT_DIR),
+            esc(baseline_snapshot.ACTS),
+            '<ul class="pointers">{}</ul>'.format(items)
+            if items
+            else '<p class="sub">None recorded.</p>',
+        )
+    )
+
+
+def _ledger_entries(root):
+    """The act ledger's entries for the audit list, `[]` without a ledger. A
+    malformed ledger is an integrity finding `trace.py --strict-integrity`
+    reports by name; this view lists nothing from it rather than guessing."""
+    try:
+        return baseline_snapshot.read_acts(root)
+    except baseline_snapshot.ActLedgerError:
+        return []
+
+
 def _pointer_list(markdown_items):
     lines = [
         ln.strip()[2:].strip()
@@ -920,7 +970,7 @@ def render(root):
         "row's remaining cells, and the SR text a chain-only amendment hangs "
         "from</span></div>\n"
         '<section class="band"><p class="eyebrow">2 · Approval &amp; '
-        "re-attestation</p>{attestations}</section>\n"
+        "re-attestation</p>{attestations}{audit}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending owner actions '
         "(derived)</p>{pointers}</section>\n"
         "<footer>Source: <code>{registry}</code> + the spine "
@@ -939,6 +989,7 @@ def render(root):
         attestations=_attestation_cards(
             model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
         ),
+        audit=verdict_reattest_block(_ledger_entries(root)),
         pointers=_pointer_list(pure),
         offspine=_offspine_census_block(offspine_rows),
         # The LIVE carrier, never a hardcoded suffix: this view is the surface

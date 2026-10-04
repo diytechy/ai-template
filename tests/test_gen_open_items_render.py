@@ -399,3 +399,28 @@ def test_an_ABSENT_registry_with_live_entries_is_a_finding_not_a_silence(tmp_pat
     # ...and with no entries either, the vacuum is still a vacuum.
     (root / "docs" / "provenance-allow").write_text("", encoding="utf-8")
     assert gi.deferral_findings(root, None) == []
+
+
+def test_a_verdict_reattestation_stays_listed_on_the_owner_surface(tmp_path):
+    """OI-100 (WI-791): on a held rung an adjudicator's CLARITY verdict carries
+    the owner's signature over, so every act that names a verdict stays listed
+    on the owner's surface, for audit after the fact. An act naming no verdict
+    is the owner's own or a released rung's, and is not listed here."""
+    gi = load_script("gen_open_items")
+    acts = [
+        {"seq": 1, "date": "2026-10-03", "approved": ["SR-001"], "reattested": []},
+        {
+            "seq": 2,
+            "date": "2026-10-04",
+            "approved": [],
+            "reattested": ["SN-009"],
+            "verdict": "docs/reviews/v.md",
+        },
+    ]
+    block = gi.verdict_reattest_block(acts)
+    assert "SN-009" in block and "docs/reviews/v.md" in block, block
+    assert "act 2" in block and "act 1" not in block, block
+    assert "None recorded" in gi.verdict_reattest_block(acts[:1])
+    repo(tmp_path, oi_rows=PENDING_OI)
+    page = gi.render(tmp_path)
+    assert "re-attested on an adjudicator" in page.lower(), page

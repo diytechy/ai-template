@@ -653,7 +653,13 @@ human involvement — and now by the ORDER rather than by a hand-written pairing
 attended session on the owner's explicit delegation, the delegation and its
 scope recorded in the approving commit or its log entry. A mechanically
 triggered session (the unattended loop, a launcher-spawned worker) never
-approves on a held rung; that is what the hold is for. MECHANICAL: a
+approves on a held rung; that is what the hold is for. One stated case: an
+independent adjudicator session may **re-attest** an amended row it rules
+CLARITY — that approves no new text, it records that the owner's signature
+still describes the row — naming its verdict in the act (`--verdict`), so the
+act ledger records it and the owner's surface lists it for audit; the merge
+slot refuses one the verdict does not rule CLARITY. A MEANING row and a first
+draft stay the owner's. MECHANICAL: a
 loop-started commit must carry its `Loop-Session` trailer
 (`scripts/kitlib/provenance.py`), `check.py`'s `held-status` step and the merge
 slot refuse a held status such a commit moves, and `check_trajectory.py`

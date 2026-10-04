@@ -776,6 +776,73 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     assert "the mechanical tool's act, not yours" in template  # in the NOTES only
 
 
+_NEED_TOML = (
+    "[need.SN-001]\n"
+    'status = "Approved"\n'
+    'need = "{}"\n'
+    'why = "why"\n'
+    'priority = "M"\n'
+    'acceptance = "ac"\n'
+)
+
+
+def _need_amendment_repo(tmp_path):
+    """The demo spine plus one approved need, seeded, then the need amended —
+    the shape the widened amendment mint routes (OI-100 gap 1)."""
+    repo = _spine_repo(tmp_path)
+    needs = repo / "docs" / "requirements" / "stakeholder-needs.toml"
+    needs.write_text(_NEED_TOML.format("a team can use it"), encoding="utf-8")
+    baseline_snapshot.copy_live(repo, seed=True)
+    needs.write_text(_NEED_TOML.format("a team can use the kit"), encoding="utf-8")
+    return repo
+
+
+def test_a_need_scoped_amendment_row_composes_with_its_before_and_after(tmp_path):
+    # OI-100 gap 1 (WI-791): the mint now routes need amendments, so the brief
+    # must render them. The SR-chain model holds no need, so before WI-791 a
+    # need-scoped row refused as "nothing in scope" and held for a human.
+    repo = _need_amendment_repo(tmp_path)
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SN-001"))
+    assert why is None, why
+    assert re.findall(r"^- (\S+) (\S+)", values["rows"], re.M) == [("SN", "SN-001")]
+    assert "a team can use it" in values["rows"]  # before
+    assert "a team can use the kit" in values["rows"]  # after
+    assert "stakeholder-needs" in values["baseline"]
+
+
+def test_a_held_rung_CLARITY_verdict_is_the_sessions_reattestation(tmp_path):
+    # OI-100 gap 2 (WI-791), ruled decision 2's amended held arm, as the judge
+    # is told it: on a held rung a CLARITY verdict is re-attested BY THE
+    # SESSION, naming the verdict so the act ledger records it; a MEANING
+    # verdict stops and is recommended to the owner.
+    repo = _need_amendment_repo(tmp_path)
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SN-001"))
+    assert why is None, why
+    after = values["aftermath"]
+    assert "still HOLDS for a human" in after
+    assert "--verdict" in after and "CLARITY" in after
+    assert "the signature is the owner's" in after
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Below")
+    values, _why = ab.amendment_values(repo, _am_row(Adjudicates="SN-001"))
+    assert "RELEASED" in values["aftermath"]
+    assert "--verdict" not in values["aftermath"]
+
+
+def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold():
+    # OI-100 gap 0: followed literally, "a CLARITY verdict owes nothing further"
+    # left the row drifted from its anchor for good. Gap 3 stays: one MEANING
+    # row holds its CLARITY siblings in the same registry until the owner signs.
+    template = (
+        SCRIPTS.parent / "prompts" / "adjudicate-amendment.template.md"
+    ).read_text(encoding="utf-8")
+    body = template.split("-->", 1)[1]
+    assert "owes nothing further" not in body
+    assert "CLARITY" in body and "--reattests" in body and "--verdict" in body
+    assert "same sitting" in body
+    assert "first draft" in body
+
+
 # --- the amendment brief's scope and its per-registry anchor -----------------
 #
 # The same widening WI-572 closed for the first-approval arm, found live in this
