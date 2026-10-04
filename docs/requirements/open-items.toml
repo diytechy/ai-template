@@ -3860,10 +3860,28 @@ ruling_ref = "docs/log.d/2026-10-04-owner-rulings-oi103.md"
 
 [open_item.OI-104]
 title = "WI-788 checkpoint: approve the half-1 design note and its successor plan"
-status = "pending"
+status = "ruled"
 raised = "2026-10-04"
-one_line = "Approve WI-788's half-1 design note and its twenty S788-* successor rows, ruling its questions Q-3 to Q-12 (Q-4 moved to OI-105); the coordinator then files the rows and WI-788 closes on the approved note."
-decision = """Raised 2026-10-04 by the wave-11 coordinator at WI-788's own checkpoint ("STOP at the note. The owner rules before any build"). The note is written, reviewed and adjudicated; nothing is built and no successor row is filed.
+one_line = """RULED 2026-10-04: approved with amendments. The owner answered Q-1 and Q-3 to Q-12 (Q-4 moved to OI-105), confirmed the Q-8 reading, reviewed the high-risk decisions, and added A1 (one routing table per kind: family weights, 0 = not eligible, the kind's tier; this repo: build, plan and adjudicate to Anthropic, review, judge and author-review to OpenAI), A2 (weekly-pace account selection within a family, new row S788-usage-pacing), A3 (a dual round's disagreement page offers a third agent) and A4 (D-016 stands, its landing hold time an iteration point). WI-794 carries the follow-through."""
+decision = """RULED 2026-10-04 by the owner, in session, over several answers. Verbatim, in order:
+- Q-3 "Agree"; Q-5 "Agree with recommendation"; Q-6 "I'm okay trying it"; Q-9 and Q-10 "Agree"; Q-12 "Ultimately, but it can be removed as needed temporarily to keep the chain moving".
+- Q-4: "You can do whatever is desired to build up but the router isn't active yet so it will still be an open item to followup on when I have it", then "If Q-4 needs to stay open, please move it to a separate OI".
+- Q-7 and Q-11: "Recommendation is fine". Q-8's reading: "Yes you're reading on Q-8 is correct". Q-1: "Yes forced migration".
+- The decisions: "D-002: Good", "D-012: Good" (read as D-010, flagged in session, not corrected), "D-016: Agreed may need more iteration, for now move forward with design".
+- On D-022/D-031: "the preferred adjudicator can share the same family as the builder. It's not preferred if both models have appropriate strength, but currently my trust for adjudication and building only lies with claude. Codex for authoring and reviewing." Then four objectives: a mix of families per session type; auto-switching to the account with the largest gap between current and target weekly usage (the owner's HomeHub gauges), including several Claude subscriptions; preferring a family other than the builder's for review, adjudication, judging and selection when the weights permit, with Anthropic the only adjudicator here; and where strength is defined. Composition "Opt a" (weights set the family share; pace picks the account within the family); an unread account counts as on pace; pacing is its own row with a new need; plan to Claude, judge to Codex.
+- On Q-5's disagreement page: "that OI that's minted could ask the user to run an independent 3rd agent if desired."
+
+The coordinator's reading, folded into the note on lane wi-788 (README "The owner's checkpoint ruling", A1-A4, which overrides the chapters):
+- A1: one routing table per kind in the one dial home (family weights, a family at 0 or absent not eligible; the kind's tier, moved out of agent_brief.py); one ordering rule: eligible families, hard exclusion of authoring sessions, a family other than the builder's for judging kinds where eligible, the family by weight, the account by pace, retention first. A preference the table makes impossible is logged only. This repo: build, plan and adjudicate to Anthropic; review, judge, author-review, plan-critique and the final review to OpenAI; a dual round's drafters both (D-032). SR-154 reads "configured for that kind".
+- A2: S788-usage-pacing (needs S788-accounts, S788-ask) draws the account with the largest weekly headroom (remaining minus pace) within the chosen family, reading each account as the owner's gauges do, never refreshing a credential copy; drafts a new need for the owner's signature. Twenty-one successor rows.
+- A3: the open item a dual-round disagreement mints offers running an independent third agent of the owner's choosing.
+- A4: D-016 stands; the landing's hold time (final review plus full bar on every landing, station lanes included) is a named iteration point against SN-012 and SN-027.
+
+Record: docs/log.d/2026-10-04-owner-rulings-oi104.md.
+
+Original question follows.
+
+Raised 2026-10-04 by the wave-11 coordinator at WI-788's own checkpoint ("STOP at the note. The owner rules before any build"). The note is written, reviewed and adjudicated; nothing is built and no successor row is filed.
 
 WHERE TO READ IT. The note is on lane `wi-788` (worktree `C:/Projects/ai-template.wt/wi-788`, branch `wi-788`), not on trunk: `docs/plans/2026-10-04-wi788-design/README.md` is the front door (what the note decides, the rulings it carries, 26 stated changes to existing rulings, the glossary draft, one amend/preserve/retire matrix, one dependency graph of twenty successor rows, the questions), with four chapters: state, evidence and recovery; sessions, routing and accounts; planning and tiering; adjudication, mint and landing authority. Its delegated calls are `docs/decisions/wi-788.toml` (31 entries; high risk D-001, D-002, D-010, D-016, D-022, D-027, D-031).
 
@@ -3887,6 +3905,8 @@ options = """- (a) APPROVE AS WRITTEN, with the recommendations on Q-3 to Q-12.
 - (b) APPROVE WITH AMENDMENTS: name each change (a question answered differently, a successor row dropped or merged); the coordinator amends the note on the lane before filing rows.
 - (c) RETURN THE NOTE for another design round, naming what must change."""
 recommendation = "(a). Every BLOCKER of the independent review is resolved and adjudicated, the graph is acyclic with a review bar per row, and the questions left are the ones only the owner can answer: one reading of your own ruling (Q-11; Q-8 is answered), spend and provisioning (Q-3, Q-4), and policy choices with recorded evidence (Q-5 to Q-7, Q-10, Q-12)."
+ruled_date = "2026-10-04"
+ruling_ref = "docs/log.d/2026-10-04-owner-rulings-oi104.md"
 
 [open_item.OI-105]
 title = "FreeLLMAPI provisioning: the endpoint and the pinned models"

@@ -40,3 +40,18 @@ alternative = "Run it once, at the end only, as the session prompt states."
 reversal_cost = "None."
 why_not_escalated = "The extra run cost wall time only and moved no state; the end-of-session run the prompt asks for still happens."
 review = ""
+
+[decision.D-006]
+decided = "The owner's in-session verdicts on WI-788's high-risk decisions were transcribed into docs/decisions/wi-788.toml as reviewed = true, each with a review note quoting the verdict; 'D-012: Good' was read as D-010 (the value the coordinator had just raised), flagged in session and not corrected."
+alternative = "Leave every entry unmarked for the owner to mark by hand, or mark D-012 as written."
+reversal_cost = "None: set the key back to false or delete it."
+why_not_escalated = "Each mark records a verdict the owner gave in words; the D-010 reading was put to the owner, who did not correct it."
+review = ""
+
+[decision.D-007]
+decided = "On OI-104's ruling, WI-794 keeps its needs and title, gains a Done-when (land WI-788's lane, close WI-788, file the twenty-one rows) and points its specref at the ruling's log record, since a ruled placeholder may not keep the open-items registry as its spec."
+alternative = "Close WI-794 at the ruling and carry the follow-through on WI-788 alone."
+reversal_cost = "Low: one row."
+why_not_escalated = "WI-794's own Context says the ruling writes its Done-when; the specref rule (WI-790 A6) leaves the log record as the real spec on trunk."
+review = ""
+

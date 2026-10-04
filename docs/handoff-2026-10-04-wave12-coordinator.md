@@ -46,7 +46,10 @@ as the resume map.
 
 ## For the owner, in order
 
-1. **OI-104: WI-788's design note.** Read
+1. **OI-104: WI-788's design note. RULED 2026-10-04: approved with amendments
+   A1-A4** (the note's README section "The owner's checkpoint ruling", on lane
+   `wi-788`; record `docs/log.d/2026-10-04-owner-rulings-oi104.md`). What
+   follows is the history of the ask. Read
    `C:/Projects/ai-template.wt/wi-788/docs/plans/2026-10-04-wi788-design/README.md`
    (the lane's worktree), then the chapter sections each question names.
    **Q-3 to Q-12 are answered (owner, 2026-10-04, recorded on the lane); Q-4
