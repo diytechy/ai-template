@@ -1,0 +1,14 @@
+# docs/decisions/coordinator-2026-10-04.toml — the wave-11 coordinator's
+# DECISIONS RECORD for its calls on trunk (the unattended session of
+# 2026-10-04; the owner is away and reviews afterwards). The format and
+# doctrine are project-trajectory/decisions.template.toml's. Lane calls go in
+# the lane's own docs/decisions/<branch>.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Each scoped unpause's deletion commit counts as 'reviewed' when it passes the commit bar and cites the owner's written session authorization of 2026-10-04; no separate review session is drawn for the one-file deletion."
+alternative = "Draw a Codex Sol review of each pause-deletion commit before the claim."
+reversal_cost = "None: the pause is restored byte-identical in the commit after each claim, so nothing claims in the window but the authorized row."
+why_not_escalated = "The owner's session prompt authorizes exactly this sequence (delete, claim, restore) for WI-791, WI-790 and WI-788; the earlier scoped unpause (OI-99, 236038e8) took the same form."
+review = ""
