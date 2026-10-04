@@ -29,6 +29,10 @@ Deferred open items: none
   (family exclusions and the swap become ranked preferences), D-036 (literal
   family shares change adopters' equal-weight draws) in `docs/decisions/wi-788.toml`;
   D-006 and D-007 in `docs/decisions/coordinator-2026-10-04.toml`.
-- **Follow-ups (topics, not filed)**: the `ANTHROPIC-OPUS-STRONG` effort drift in
-  `docs/agents.toml` (env `xhigh`, notes high, header medium); `OPENAI-SOL`'s
-  router effort (medium) against the hand reviews' high.
+- **The Anthropic lineup** (owner, 2026-10-04): strong = Opus 5.5 at high
+  (`ANTHROPIC-OPUS-STRONG`, whose env had drifted to `xhigh`), medium = Sonnet 5.5
+  at medium (`ANTHROPIC-SONNET-MEDIUM`), quick = Sonnet 5.5 at low
+  (`ANTHROPIC-SONNET-QUICK`, replacing the bare `sonnet` alias at high); the Opus
+  medium row is catalog-only. `claude-sonnet-5-5` was probed live. `OPENAI-SOL`
+  stays at medium in the router: the owner ran this session's hand reviews at high
+  for depth.

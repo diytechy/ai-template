@@ -13,6 +13,9 @@
 # with ANTHROPIC-OPUS still leading medium (retiring the WI-160/WI-161 Sol pin;
 # reviewer/critic heterogeneity still wins). Re-add ANTHROPIC-FABLE here to
 # restore Fable at strong when access returns.
+# Owner directive 2026-10-04: strong = Opus 5.5 at high (ANTHROPIC-OPUS-STRONG),
+# medium = Sonnet 5.5 at medium (ANTHROPIC-SONNET-MEDIUM), quick = Sonnet 5.5 at
+# low (ANTHROPIC-SONNET-QUICK); the Opus medium row is catalog-only.
 # Per tier the ANTHROPIC row leads, with the OPENAI sibling as cross-family draw.
 # WI-236 grammar: an id may carry optional per-phase draw weights after
 # whitespace — `<ID>[ <PHASE>=<int>]...`, PHASE in BUILD|REVIEW|CRITIQUE|
@@ -39,8 +42,8 @@
 ANTHROPIC-OPUS-STRONG
 OPENAI-SOL
 # OPENCODE-KIMI  # row commented out in docs/agents.toml (owner, 2026-10-04)
-ANTHROPIC-OPUS
+ANTHROPIC-SONNET-MEDIUM
 OPENAI-TERRA
 # OPENCODE-GROK  # row commented out in docs/agents.toml (owner, 2026-10-04)
-ANTHROPIC-SONNET
+ANTHROPIC-SONNET-QUICK
 OPENAI-LUNA
