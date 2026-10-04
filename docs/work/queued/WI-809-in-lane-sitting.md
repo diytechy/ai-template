@@ -3,7 +3,7 @@ id = "WI-809"
 title = "The in-lane adjudication sitting from LOCK to MERGE_ACTION, with final evidence"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-sitting"
-sr_refs = ["SR-178"]
+sr_refs = ["SR-178", "SR-228"]
 needs = ["WI-808", "WI-806", "WI-802"]
 buildtier = "strong"
 safety_class = "ordinary"
@@ -31,6 +31,11 @@ WI-791's contract (complete, so dropped from `needs`).
 - An out-of-scope act, an act outside an ADJUDICATE range, or an act by a session
   that ch.2's judged-scope table makes ineligible is refused.
 - A rejected final review drops the act.
+- The act rung applies SR-228's held re-attestation refusal to in-lane acts: a row
+  re-attested on a rung trunk's dial holds is refused unless the act names a
+  verdict file whose `- [CLARITY] <id>` line rules it, and a row below approval is
+  refused (OI-100; the follow-up WI-791 recorded, since an in-lane act never
+  reaches the merge slot's `held_reattest_refusal`; owner, 2026-10-04).
 - A landing whose swap fails on a foreign trunk commit re-enters `REFRESH` under
   the same authority, and a stale act is retaken by a session.
 - A fourth `return` is refused, and the sitting's outcome is `merge-partial` (green:

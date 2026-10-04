@@ -236,7 +236,8 @@ decided = "In this repo's per-kind table (README A1), a decomposition round's tw
 alternative = "Make plan ANTHROPIC-only for dual rounds too, so every dual round parks for want of a second family (change 18); or give plan a small OPENAI weight, so single plans would sometimes go to Codex."
 reversal_cost = "Low: one table entry in this repo's values; nothing is built."
 why_not_escalated = "The owner's 'plan to Claude' was given for planning in general; a dual round exists to compare two families' plans, so an Anthropic-only round is not a dual round. Flagged high risk so the owner sees it."
-review = ""
+review = "Confirmed by the owner, 2026-10-04, in session."
+reviewed = true
 
 [decision.D-033]
 decided = "Kinds the owner did not name are assigned by role in this repo's values: the adjudicator's author drafts go with adjudicate (ANTHROPIC); plan-critique and the final review of the adjudicator's writes go with review (OPENAI)."
@@ -257,11 +258,13 @@ decided = "Every family exclusion in ch.2 section 3 step 2's table, plan-critiqu
 alternative = "Keep the hard family exclusions and the hard family swap, which leaves plan-critique, author and the swap with no eligible draw under this repo's table; or make the owner's Anthropic-only build a dual path for the swap."
 reversal_cost = "Low: unbuilt; one ordering rule in S788-ask."
 why_not_escalated = "The owner set the table ('my trust for adjudication and building only lies with claude') and said a same-family draw is allowed but not preferred; the ranked-preference rule is the one rule the 2026-10-04 adjudication ruled for dispute 2. Flagged high risk because Q-6's swap, in this repo, becomes a fresh same-family session."
-review = ""
+review = "Confirmed by the owner, 2026-10-04, in session."
+reviewed = true
 
 [decision.D-036]
 decided = "A1's step 4 makes family weights literal shares, as the owner ruled ('weights set the family share', option (a)): a deterministic weighted rotation over the eligible families, so equal weights split evenly and 2:1 draws two to one. This replaces WI-236's 'equal weights collapse to the first candidate' for family selection. An adopter with two families eligible for one kind at equal weights will see draws alternate after re-sync wherever both families remain in the weighted draw after preferences and availability (a judging kind's cross-family preference still picks the other family), which S788-ask's RESYNC_PACK entry states with the fix (unequal weights, or 0 to make a family ineligible). Revised after Sol review 3: the first version kept the first-candidate collapse, which re-decided the owner's ruling."
 alternative = "Keep the first-candidate collapse for equal weights, so adopters draw as today; rejected because it contradicts the owner's ruled answer."
 reversal_cost = "Low: one rule in S788-ask's step 4, unbuilt."
 why_not_escalated = "The owner ruled option (a) explicitly; this implements it literally. The adopter-visible change is flagged per CLAUDE.md in the RESYNC entry, as the owner accepted for Q-1's forced migration. High risk because adopters' draws change."
-review = ""
+review = "Confirmed by the owner, 2026-10-04, in session."
+reviewed = true

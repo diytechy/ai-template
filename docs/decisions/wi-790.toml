@@ -11,16 +11,16 @@ decided = "The shipped open-items template's live example rows OI-1 and OI-2 are
 alternative = "Ship two queued placeholder work items (WI-001, WI-002) in every scaffold citing OI-1 and OI-2, as A5's second option allows."
 reversal_cost = "Low: restore the two rows from git and add two template work items plus their MAPPING rows."
 why_not_escalated = "A5 names both options; shipping fake queued work in every adopter's registry would put an example decision on a real queue, which is the worse of the two, and the change is reversible."
-review = ""
-reviewed = false
+review = "Confirmed by the owner, 2026-10-04, in session."
+reviewed = true
 
 [decision.D-002]
 decided = "Bootstrap files OI-3's placeholder WI-001 by running the format's single writer, wi_convert.write_spec_file, as a subprocess in the new repo (the way it already runs trace.py and gen_open_items.py there), and raises the WI watermark to 1."
 alternative = "Have bootstrap write the five-key spec text itself (a second writer of the spec format, against IF-159's single-writer contract), or import wi_convert (against the rule that bootstrap imports only the shared package)."
 reversal_cost = "Low: one function in bootstrap.py."
 why_not_escalated = "A5 requires the pair; the subprocess keeps both standing contracts (the single spec writer and bootstrap's import rule) intact, and a failed write raises rather than leaving an uncited item."
-review = ""
-reviewed = false
+review = "Confirmed by the owner, 2026-10-04, in session."
+reviewed = true
 
 [decision.D-003]
 decided = "The ruling-sync trigger counts a pending row DELETED from the registry as leaving pending, the same as a status change."
@@ -43,8 +43,8 @@ decided = "The merge-slot ruling-sync rung judges every lane (a person's lane to
 alternative = "Judge only loop lanes, as the held-status rung does, or give the rung its own if-block."
 reversal_cost = "Low: one call site in integrate._merge_refusal."
 why_not_escalated = "OI-102 Q3 and the Done-when say 'every lane commit at the merge slot', with no dial; the rung is independent of loop provenance."
-review = ""
-reviewed = false
+review = "Confirmed by the owner, 2026-10-04, in session."
+reviewed = true
 
 [decision.D-006]
 decided = "The one queue projection lives in kitlib/spine.py (open_item_queue) over plain registry rows, with pending.open_item_queue as the views' committed-tree reader; check_trajectory calls the kitlib function directly."
@@ -139,8 +139,8 @@ decided = "The merge-slot form reads a commit's first parent off the commit obje
 alternative = "Keep rev^1 and treat an unresolvable parent as a root commit (the skip A1 forbids), or walk history to recover it."
 reversal_cost = "One function, acceptance_record.commit_ruling_sync_lines."
 why_not_escalated = "A1 states the rule never skips for missing history; refusing by name is the one path, with no degraded mode."
-review = ""
-reviewed = false
+review = "Confirmed by the owner, 2026-10-04, in session."
+reviewed = true
 
 [decision.D-018]
 decided = "The sync rule reads the open-items registry in each tree through spine_carrier's carrier resolution (TOML, else CSV), and the specref checks match the registry by its carrier-free stem, so a CSV-carrier adopter is judged like a TOML one (Sol review 1, MAJOR 2). intake's mint stays TOML-only, as before."
