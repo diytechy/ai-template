@@ -1,0 +1,155 @@
+# docs/decisions/wi-788.toml — WI-788 half 1's delegated decisions record (the
+# design note under docs/plans/2026-10-04-wi788-design/, drafted unattended on
+# 2026-10-04 by four Claude Opus chapter planners and an integrator, then
+# reviewed by Codex 6.1 Sol). Every entry is a call inside a DESIGN PROPOSAL the
+# owner rules at the checkpoint; nothing here is built. Format:
+# project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-002", "D-010", "D-016"]
+
+[decision.D-001]
+decided = "Commits made outside the one entry point (no session log) are attributed to a family by their Co-Authored-By trailer, read from the judged commit itself, for family exclusion (ch.2 section 3 step 2; README Q-10)."
+alternative = "Count such commits as a person's commits (no family), or refuse to judge a range holding unlogged commits."
+reversal_cost = "Small: one reader in the proposed ask exclusion step; nothing is built yet."
+why_not_escalated = "It is also raised to the owner as Q-10, because it sits close to the owner's no-marker-convention rule; the note justifies it as evidence inside the judged scope that can only add an exclusion, so a wrong or missing trailer fails toward today's behaviour."
+review = ""
+
+[decision.D-002]
+decided = "B2 is changed: MERGE is derived from trunk's tree (each spec the lane tip holds in a terminal folder sits at the same path on trunk), not from git ancestry, because the ruled squash landing (OI-103 Q4) takes the lane tip out of trunk's ancestry; the Lane-Tip trailer is the landing audit's link only, never a state input (ch.1 section 1, change 19)."
+alternative = "Derive MERGE from the Lane-Tip trailer, or keep --no-ff merges so ancestry holds."
+reversal_cost = "Low: a derivation rule in a proposed module; the squash ruling stands either way."
+why_not_escalated = "OI-103 Q4 (ruled) makes ancestry unavailable after a squash, so B2's wording cannot hold as written; the tree test needs no history walk."
+review = ""
+
+[decision.D-003]
+decided = "No DONE state: ARCHIVE plus a closed flag (ch.1)."
+alternative = "A distinct DONE state after ARCHIVE."
+reversal_cost = "Low: an enum member."
+why_not_escalated = "The owner's state list ends at ARCHIVE; a closed flag reports it without a second terminal state."
+review = ""
+
+[decision.D-004]
+decided = "Session decisions keep their own commits and are admitted after the fact by the existing range rules (S9, S11 section 4.7), rather than routed through the provider's decide (ch.1)."
+alternative = "Route every session decision through lane_state.decide."
+reversal_cost = "Medium: the provider's interface and the session briefs."
+why_not_escalated = "B12 makes the provider slice representation only, with no new authority; routing sessions through it would add one."
+review = ""
+
+[decision.D-005]
+decided = "The provider is two modules: pure enums and state_of in kitlib/station.py, effects in scripts/lane_state.py, which also hosts the station authority (ch.1; integrator)."
+alternative = "One module, or a separate station module for the authority."
+reversal_cost = "Low: module layout of unbuilt code."
+why_not_escalated = "The kit's WI-483 split (pure outcome reading in kitlib) is the precedent, and B11 gives lifecycle effects to the provider."
+review = ""
+
+[decision.D-006]
+decided = "Liveness comes from the dispatcher's process handles, otherwise from a lock probe, never from the pid written in a lock file (ch.1)."
+alternative = "Read the pid in the lock file."
+reversal_cost = "Low."
+why_not_escalated = "B1 forbids committed or written claims of liveness; a pid file is such a claim."
+review = ""
+
+[decision.D-007]
+decided = "out/review-owed retires in the provider slice; the unguarded-lock fallback (D12 of the dual-path census) retires for the per-worktree lock too; the manual-worker base fallback (D16) stays justified until hand sittings run on ask (ch.1 section 7)."
+alternative = "Keep the census agent's reading that D12 is justified."
+reversal_cost = "Low: each is a successor row's scope."
+why_not_escalated = "The owner's no-fallback rule (risk 7) decides D12; D16 has no replacement until ask exists."
+review = ""
+
+[decision.D-008]
+decided = "Dual-plan round directories are named by work item (docs/plans/<WI>/round-<n>/), retiring the DP id allocator (ch.3)."
+alternative = "Keep DP allocation, moved into MINT."
+reversal_cost = "Low."
+why_not_escalated = "It removes a trunk writer outright, which OI-103 Q1 asks for."
+review = ""
+
+[decision.D-009]
+decided = "On-demand replanning fires at the second consecutive CHANGES-REQUESTED, folded into the family swap; the OI-103 Q5 dial skips on-demand replans and decomposition children; a child's tier is the plan's Tier column, else the parent's BuildTier; dual rows stay high-risk and exclusive; an on-demand replan gets no plan-critique (ch.3). Raised as README Q-6."
+alternative = "Fire at the first CHANGES-REQUESTED; apply the dial everywhere; keep the hard-coded medium child tier; drop exclusivity; critique every replan."
+reversal_cost = "Low each: values and rules of unbuilt code."
+why_not_escalated = "Each follows the recorded baseline (13 of 34 first-failure lanes passed the next round unaided) or the ruled dial's wording; the trigger point is also put to the owner."
+review = ""
+
+[decision.D-010]
+decided = "The shipped template retains the adjudicator and the adjudication reviewer at context_reset_pct = 55; this repo stays at 0 (ch.2 section 2)."
+alternative = "Ship 60, or ship retention off."
+reversal_cost = "One template value, but every adopter that re-syncs inherits it."
+why_not_escalated = "The owner's second pass directs retained adjudication for adopters; 55 is the retention plan of record's figure, below the reported ~60% degradation point."
+review = ""
+
+[decision.D-011]
+decided = "The rejudge brief moves to the [judge] family; all five adjudication briefs are retained, so retain_for retires (ch.2 section 2)."
+alternative = "Keep rejudge under [adjudicate] with a stated exclusion."
+reversal_cost = "One mapping."
+why_not_escalated = "It follows the glossary's definition of judge; the retain_for gap is drift, per the owner's second pass."
+review = ""
+
+[decision.D-012]
+decided = "The usage ledger U1 is docs/usage-ledger.csv, appended at the final regeneration inside the station authority, and replaces docs/iteration_index.md (no caller since 2026-09-06) (ch.2 section 6)."
+alternative = "Markdown or JSONL; keep the iteration index beside it."
+reversal_cost = "A one-time conversion; restoring a generator."
+why_not_escalated = "Two tables of one fact is a dual path (risk 7); CSV appends cleanly."
+review = ""
+
+[decision.D-013]
+decided = "Retained slots are keyed by family and scope, not by route; the lease wait is 1,200 s for every retained slot (ch.2)."
+alternative = "Key per route as today; wait only on the adjudicator's lease."
+reversal_cost = "A store key and a constant."
+why_not_escalated = "Risk 3 needs one identity across route draws; risk 5's 20 minutes, applied as one rule."
+review = ""
+
+[decision.D-014]
+decided = "No route row for OpenCode's own free models; the decisions note is not handed to review, plan-critique, judge and arbitrate kinds (ch.2)."
+alternative = "An untested free-model row; the note to every kind."
+reversal_cost = "One row; one list."
+why_not_escalated = "The owner meant FreeLLMAPI and the probes found the free models unreliable; those kinds may only add a verdict file (S9)."
+review = ""
+
+[decision.D-015]
+decided = "REFRESH inside the lock runs the commit-tier bar; the full declared bar runs once, on the final tree (ch.4)."
+alternative = "The full bar at both points."
+reversal_cost = "Low."
+why_not_escalated = "B5 and no-stale-tests both hold, at about half the hold time."
+review = ""
+
+[decision.D-016]
+decided = "The station authority is a fenced lease (out/station/authority.json found through the git common directory; a generation counter; a 120-minute expiry dial renewed per step; a filesystem that cannot lock refuses), and out/integrate.lock folds into it; lane-side claims still take it; coordinator and owner hand commits take only a pre-commit authority check (ch.4 section 2)."
+alternative = "A long-held kernel lock; keep integrate.lock beside the authority; route hand commits through work items."
+reversal_cost = "Medium: the authority is the backbone of the adjudication slices."
+why_not_escalated = "OI-103 Q1 (complete exclusion) and B4 require one authority with stated mechanics; the hand path has no long-lived process to hold a kernel lock; two locks over one decision is risk 7's dual path."
+review = ""
+
+[decision.D-017]
+decided = "Spine-text rounds stay inside the sitting (the adjudicator drafts, the adjudication reviewer edits); a code finding goes back to the builder as a return (ch.4 section 7)."
+alternative = "Every finding returns to the builder."
+reversal_cost = "Medium."
+why_not_escalated = "OI-101 Q1 (ruled) gives spine text to the adjudicator's drafting flow."
+review = ""
+
+[decision.D-018]
+decided = "The decisions-record gap is accepted as history: since 2026-09-28, 75 closes owed a record and 2 carry one; none is backfilled (ch.4 section 6)."
+alternative = "Backfill records for the 75 closes."
+reversal_cost = "None."
+why_not_escalated = "A backfilled record would be written by a session that did not make the calls, so its disclosure fields would be fabricated."
+review = ""
+
+[decision.D-019]
+decided = "A return moves the specs back to active/<branch>/ in the sitting's commit, and the landing refuses a lane whose folders disagree with its recorded merge action; S788-dual-pickup is ordered after S788-mint; S788-glossary is a medium-tier docs row; SR-156 is preserved (integrator)."
+alternative = "A separate return record; restore the pickup before MINT; strong tier; amend SR-156."
+reversal_cost = "Low each."
+why_not_escalated = "Each keeps one derivation (ch.1) or follows B7's one allocator; SR-156 names no merge form and R2 forbids naming one."
+review = ""
+
+[decision.D-020]
+decided = "The glossary's text is carried in the note's README, and the kit-shipped project-trajectory/GLOSSARY.md file is built by the first successor row (S788-glossary), not in half 1 (coordinator)."
+alternative = "Ship GLOSSARY.md in half 1 with the note."
+reversal_cost = "None: the text is ready to copy."
+why_not_escalated = "The spec says STOP at the note and the owner rules before any build; a shipped kit file is a build, and the slice plan already makes the glossary slice 1."
+review = ""
+
+[decision.D-021]
+decided = "The claude and codex resume-by-id probes (a few cents, local) were run alongside the authorized OpenCode live probes, under the owner's 2026-10-04 session authorization (coordinator)."
+alternative = "Probe OpenCode only, as OI-101 Q4 reads."
+reversal_cost = "None: probes only."
+why_not_escalated = "The owner's session prompt of 2026-10-04 authorizes local CLI resume-by-id probes for claude and codex, and LS10 asks for them; the README's named gap is answered by that authorization."
+review = ""
