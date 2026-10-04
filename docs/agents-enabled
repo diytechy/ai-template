@@ -38,9 +38,9 @@
 #     silent fall-back to the single-model path.
 ANTHROPIC-OPUS-STRONG
 OPENAI-SOL
-OPENCODE-KIMI
+# OPENCODE-KIMI  # row commented out in docs/agents.toml (owner, 2026-10-04)
 ANTHROPIC-OPUS
 OPENAI-TERRA
-OPENCODE-GROK
+# OPENCODE-GROK  # row commented out in docs/agents.toml (owner, 2026-10-04)
 ANTHROPIC-SONNET
 OPENAI-LUNA
