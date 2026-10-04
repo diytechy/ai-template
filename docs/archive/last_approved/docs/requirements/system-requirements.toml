@@ -560,7 +560,7 @@ rationale = """THE DRIFT half, separable from SR-140 in the direction that matte
 REGARDLESS OF STATUS MOVEMENT is the load-bearing clause, not a qualifier. The amendment machinery watches the Status flip, and the sanctioned staged-amendment path deliberately does not flip - so a rule keyed off the flip returns nothing on exactly the rows a sitting exists to judge. Reporting against the recorded copy is the only reading that survives that, because the copy is a baseline OUTSIDE the live file and a walk over the live file can never be one.
 THE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acceptance because the need tier is the one a sitting most wants to hold and the one the amendment-watching rules were last to reach: each rule walks the tiers it is given, so without the clause the need tier is left off the walk and no rule reaches it. Needs are compared row by row under the same approved and traced split as every other tier.
 WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in would make every flip read as an amendment and every amendment invisible behind its own flip), and the remainder splits into an approved half and a traced half. Two readers of one basis rather than two rules that agree until they do not."""
-acceptance_criteria = """An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; an approved cell moving under a row still claiming approval is reported, a merely traced cell moving is not, and a row below approval has no claim to fall from and is never reported; the status marker itself is never read as the movement, so a flip is neither an amendment nor a mask for one; and a stakeholder need is held to the same rule."""
+acceptance_criteria = """An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; an approved cell moving under a row still claiming approval is reported, a merely traced cell moving is not, and a row below approval has no claim to fall from and is never reported; the status marker itself is never read as the movement, so a flip is neither an amendment nor a mask for one; and stakeholder needs, assumptions and surrogates are held to the same rule."""
 priority = "S"
 verification = "Test"
 status = "Approved"
@@ -1715,3 +1715,17 @@ verification = "Test"
 status = "Approved"
 phase = 6
 da_refs = ["DA-017"]
+
+[requirement.SR-228]
+title = "Held-rung CLARITY re-attestation"
+sn_refs = ["SN-029"]
+boundary_refs = ["B-02"]
+hat_refs = ["SECURITY"]
+requirement = "Where the declared approval level holds a tier for a human, the delivered loop shall permit an independent adjudication to re-attest an approved amended row only when its verdict rules that amendment CLARITY."
+rationale = "SN-029 delegates review on released tiers without skipping it, but an approved row whose wording is clarified on a held tier remains anchored to a signature the owner already gave. Treating that unchanged meaning as a new approval would strand every clarification with the owner; treating a meaning change the same way would carry a signature onto text the owner did not read. The verdict boundary keeps those alternatives separate: only the independent judgement that the signature still describes the row permits re-attestation, while a meaning change remains the owner's decision."
+acceptance_criteria = "On a held tier, an adjudication act re-attesting a row is refused unless its recorded verdict names that row as CLARITY; a MEANING verdict and an absent, unreadable or non-CLARITY verdict are refused by row; the recorded act names the verdict for later audit; and a first draft is not re-attested under this allowance."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+aspect = "process"

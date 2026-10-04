@@ -1726,6 +1726,6 @@ rationale = "SN-029 delegates review on released tiers without skipping it, but 
 acceptance_criteria = "On a held tier, an adjudication act re-attesting a row is refused unless its recorded verdict names that row as CLARITY; a MEANING verdict and an absent, unreadable or non-CLARITY verdict are refused by row; the recorded act names the verdict for later audit; and a first draft is not re-attested under this allowance."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6
 aspect = "process"
