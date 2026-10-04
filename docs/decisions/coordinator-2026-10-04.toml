@@ -26,3 +26,17 @@ alternative = "Land the note on trunk and return the row to queued, or close WI-
 reversal_cost = "Low: the lane lands as it stands once the owner approves, or is refreshed and amended."
 why_not_escalated = "The spec closes WI-788 on the APPROVED note (half 2: the coordinator files the slice rows and WI-788 closes); un-claiming is not one of the integrator's three outcomes, and a partial close would mint a successor the owner has not ruled."
 review = ""
+
+[decision.D-004]
+decided = "WI-788's checkpoint is filed as pending OI-104 plus a queued placeholder row WI-794 citing it in needs (WI-790's rule, live since its landing), rather than an OI with wi_refs; WI-788 itself stays claimed on its lane and does not cite OI-104."
+alternative = "Add OI-104 to WI-788's own needs (an active row the uncited-pending check does not count, and whose spec lives on both trunk and the lane), or file the item with wi_refs before WI-790 landed."
+reversal_cost = "Low: one placeholder row; the ruling writes its Done-when, or the row is cancelled and WI-788 cites the item."
+why_not_escalated = "The owner's WI-790 rulings make a queued placeholder the way every hand-filed open item reaches the owner's surface; the placeholder is not one of the note's successor rows, which stay unfiled as the session prompt requires."
+review = ""
+
+[decision.D-005]
+decided = "The full unfiltered suite was run twice: once on WI-790's lane tip before its adjudication (to catch slow-tier reds while rounds remained), and once on trunk at the session's end."
+alternative = "Run it once, at the end only, as the session prompt states."
+reversal_cost = "None."
+why_not_escalated = "The extra run cost wall time only and moved no state; the end-of-session run the prompt asks for still happens."
+review = ""

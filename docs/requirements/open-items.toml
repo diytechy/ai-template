@@ -3857,3 +3857,32 @@ recommendation = """Q1 (a): partial exclusion needs a retake rule per writer, wh
 wi_refs = ["WI-788"]
 ruled_date = "2026-10-04"
 ruling_ref = "docs/log.d/2026-10-04-owner-rulings-oi103.md"
+
+[open_item.OI-104]
+title = "WI-788 checkpoint: approve the half-1 design note and its successor plan"
+status = "pending"
+raised = "2026-10-04"
+one_line = "Approve WI-788's half-1 design note and its twenty S788-* successor rows, ruling its questions Q-3 to Q-12; the coordinator then files the rows and WI-788 closes on the approved note."
+decision = """Raised 2026-10-04 by the wave-11 coordinator at WI-788's own checkpoint ("STOP at the note. The owner rules before any build"). The note is written, reviewed and adjudicated; nothing is built and no successor row is filed.
+
+WHERE TO READ IT. The note is on lane `wi-788` (worktree `C:/Projects/ai-template.wt/wi-788`, branch `wi-788` at f5ac7e6b), not on trunk: `docs/plans/2026-10-04-wi788-design/README.md` is the front door (what the note decides, the rulings it carries, 26 stated changes to existing rulings, the glossary draft, one amend/preserve/retire matrix, one dependency graph of twenty successor rows, the questions), with four chapters: state, evidence and recovery; sessions, routing and accounts; planning and tiering; adjudication, mint and landing authority. Its delegated calls are `docs/decisions/wi-788.toml` (31 entries; high risk D-001, D-002, D-010, D-016, D-022, D-027, D-031).
+
+HOW IT WAS MADE. Four Claude Opus planners drafted one chapter each and an Opus integrator reconciled them. Codex 6.1 Sol (gpt-6.1-sol, high) reviewed it NOT YET READY: 5 BLOCKER, 7 MAJOR, 3 MINOR (`docs/reviews/2026-10-04-wi788-note/sol-review.md` on the lane). The integrator confirmed 14 and fixed them, and partly refuted one. An independent Opus adjudicator ruled the three disputed points (all amended, applied verbatim) and checked all five blockers resolved (`adjudication.md` beside the review).
+
+WHAT TO RULE. The note as a whole, and its questions (README "Questions for the owner at the checkpoint"):
+- Q-3 spend: one live ask.py call and one live FreeLLMAPI call (recommend yes).
+- Q-4 provisioning: the FreeLLMAPI endpoint and the models to pin.
+- Q-5 dual-plan selection (a)/(b)/(c) (recommend (a), drafters select).
+- Q-6 per-item planning at the second consecutive CHANGES-REQUESTED (recommend).
+- Q-7 a station lane for idle mints and coordinator writes (recommend (a)).
+- Q-8 OI-101 Q2 collides with OI-103 Q4 for a lane that took an act (recommend (a), two commits in one landing, amending Q4).
+- Q-9 retitle WI-788.
+- Q-10 attribute an unlogged commit by its Co-Authored-By trailer (recommend keep).
+- Q-11 batched lanes under one landing (recommend (a)).
+- Q-12 the pause file stays the owner's act (recommend (a)).
+Q-1 is a forced-migration notice (D1-D6) and Q-2 is decided; object at the checkpoint if either should change."""
+blast_radius = """WI-788 is held at its checkpoint until this is ruled; nothing else is. The ruling releases half 2: the coordinator files the twenty S788-* rows in the note's graph on trunk, and WI-788 closes on the approved note. Q-8 and Q-11, if ruled as recommended, amend OI-103 Q4. Q-1 forces adopters still on one-word config or CSV/markdown carriers to migrate at their next resync. Q-3 authorizes spend; Q-4 provisions an endpoint."""
+options = """- (a) APPROVE AS WRITTEN, with the recommendations on Q-3 to Q-12.
+- (b) APPROVE WITH AMENDMENTS: name each change (a question answered differently, a successor row dropped or merged); the coordinator amends the note on the lane before filing rows.
+- (c) RETURN THE NOTE for another design round, naming what must change."""
+recommendation = "(a). Every BLOCKER of the independent review is resolved and adjudicated, the graph is acyclic with a review bar per row, and the questions left are the ones only the owner can answer: two collisions between your own rulings (Q-8, Q-11), spend and provisioning (Q-3, Q-4), and policy choices with recorded evidence (Q-5 to Q-7, Q-10, Q-12)."
