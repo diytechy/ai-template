@@ -220,4 +220,65 @@ Added to Done-when half 1 (the design note, owner checkpoint):
    - It also states how the coordinator's hand sittings can call the same entry, so
      the independent adjudicator stops being a bypass.
 
+## Owner rulings on the design risks (2026-10-03)
+
+The coordinator raised nine risks of one labelled entry point. The owner answered
+each, and the design note follows these answers.
+
+1. **One session store absorbs session_keep's.** One file records each retained
+   session's id per role and per route, for example the main adjudicator, and each
+   builder session with its route such as `agent.ANTHROPIC-OPUS-STRONG`.
+   - Coordinator notes: today's store is one JSON per route under the untracked
+     `out/adjudicator/`, behind a store lock. Session ids are machine-local, so the
+     file belongs untracked, not at the tracked root, or clones and lanes would carry
+     stale ids and conflict.
+   - TOML is readable through stdlib, and the kit has its own writer.
+2. **Builder family comes from what is already recorded; nothing new is built.**
+   Each kit session log already commits `role`, `provider`, `roster-row` and the
+   `commits` range (e.g. `docs/iteration/wi-688-001-*.log`).
+   - The change: read the lane's BUILD-role logs over `base..HEAD` instead of
+     `route_intent`'s in-memory `last_impl_family`.
+   - What the logs cannot cover is work run outside the service: the hand path,
+     closed by 8.
+3. **Retention has priority over the usage ratio.** A retained session keeps its
+   route until reset, and the ratio applies at (re)initialization. The documented
+   assumption: the ratios are made up over time.
+4. **A family that reports no occupancy declares fallback reset terms.**
+   - Claude does report occupancy: its stream-json `result.modelUsage.<model>.contextWindow`
+     plus the last request's usage. The live fixture
+     `tests/golden/sessions/claude-stream-json.jsonl` (claude-code 2.1.266) gives
+     48,267 / 1,000,000 = 5% through `ClaudeAdapter.context`.
+   - Codex reports it since WI-787.
+   - opencode reports no window.
+5. **Lock fallback.** A caller waits about 20 minutes for the retained adjudicator's
+   lease (today `lease_wait = 120` s), then runs a fresh session that does NOT replace
+   the retained one. `keep_for` already returns None rather than re-minting.
+6. **Mechanize the self-approval guard.** In a lane, no commit may carry a spine-text
+   change together with a snapshot update. So text is committed, and reviewed, before
+   any act re-anchors it.
+   - This replaces the current allowance "amend-plus-flip is approval" in the snapshot
+     refusal's own message. The owner notes that allowance may need removing on trunk
+     too.
+7. **No fallback modes for a single point of failure.** A single point of failure is
+   fixed, not wrapped in extra code paths. The design must not add a degenerate or
+   legacy mode for robustness. "Reset every call" is a value of the one path, not a
+   second path.
+   - The owner asked whether this pattern exists elsewhere. The note lists known dual
+     paths as consolidation candidates: the legacy one-word config fallback, CSV and
+     TOML carrier dual support, the legacy open-item reader in `needs` (TC-253), and
+     any second recording wrapper. Each is retired or justified.
+8. **The coordinator calls the same function.** No subagent bypass. The note
+   settles the communication path:
+   - the prompt on stdin, which the kit already uses (immune to command-line caps and
+     Windows shim re-parsing), or a prompt file the call names;
+   - results as files in the lane plus the captured final message (codex `-o`, claude
+     stream-json);
+   - continuity through each CLI's own resume form instead of the Agent tool's.
+
+   Known constraint: the permission classifier once refused codex's
+   `--dangerously-bypass-approvals-and-sandbox` for an agent run (WI-541 notes); it
+   ran under bypass mode on 2026-10-03.
+9. **The RESYNC entry is the migration.** It moves the appropriate configs; no
+   transition wrapper is kept.
+
 ## Deliverable
