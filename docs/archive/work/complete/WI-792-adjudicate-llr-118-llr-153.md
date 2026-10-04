@@ -3,12 +3,16 @@ id = "WI-792"
 title = "adjudicate: LLR-118, LLR-153, LLR-158, LLR-167, LLR-245, LLR-271, LLR-278, SR-178, TC-123, TC-147, TC-153, TC-161, TC-240, TC-278 - approved/routed cell(s) amended on merged trunk 2aad71a..9c9e83b (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-174", "SR-178", "SR-207"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-118", "LLR-153", "LLR-158", "LLR-167", "LLR-245", "LLR-271", "LLR-278", "SR-178", "TC-123", "TC-147", "TC-153", "TC-161", "TC-240", "TC-278"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). The fourteen rows were ruled by the in-lane adjudicator over three rounds (verdicts 001, 003 and 005 under `docs/reviews/wi-791-oi100-amended-needs-adjudic/`; SR-178 CLARITY, the rest MEANING and blessed) and re-attested at act seq 29. The system-requirements, low-level-requirements and test-cases registries are byte-identical to their `docs/archive/last_approved/` anchors at this row's mint (c27d316d).
 
 ## Context
 
