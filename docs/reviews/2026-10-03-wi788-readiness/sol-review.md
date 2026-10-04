@@ -1,6 +1,6 @@
 **VERDICT: NOT-READY.** The architecture can largely be designed from the recorded direction, but the spec leaves owner decisions about approval authority, trunk scope, provider identity and live-probe authorization unanswered.
 
-References below are relative to the repo; **WI** means [WI-788](../../work/active/wi-788/WI-788-provider-homes-and-new-routes.md). No files were modified.
+References below are relative to the repo; **WI** means [WI-788](../../archive/work/complete/WI-788-provider-homes-and-new-routes.md). No files were modified.
 
 **OPEN ITEMS FOR THE OWNER:**
 
