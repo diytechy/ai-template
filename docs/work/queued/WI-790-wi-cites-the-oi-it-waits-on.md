@@ -119,6 +119,27 @@ The coordinator's reading:
   - A title edit renames the file and does not clear the warning (WI-362).
   - An unrelated edit made after the ruling also clears it.
 
+## Owner rulings, third pass (2026-10-03): the sync rule is an error, and it is specific
+
+> "Related to the change, it should just fail / error instead of warn, but perhaps
+> shoudl be more specific: If an open item transitions from to closed (such that it
+> no longer appears in open-items.html), the work item must also be modified and it's
+> "Done When" and other applicable fields must be updated."
+
+This supersedes the second pass's warn-tier reading. The coordinator's reading:
+- **The trigger** is an open item cited in an open row's `needs` leaving `pending`,
+  which is the moment it leaves `open-items.html`.
+- **The obligation** falls on every open row citing that item. Its Done-when section
+  must differ from what it was before the transition. Its `specref` must stop naming
+  the open-items registry once none of its cited items is pending.
+- **The other fields** (`title`, `buildtier`, `sr_refs`, `safety_class`) are "where
+  applicable". The rule cannot tell when a change is owed, so the ruling's recorder
+  and the row's reviewer judge them, and the brief says so.
+- **Closing the row** (cancelled or restructured) in the same change also satisfies
+  the rule, since a terminal row has no criteria to update.
+- **In practice:** the commit that rules an open item updates its rows, or the bar
+  stays red until they are updated.
+
 ## Design (confirmed 2026-10-03)
 
 1. **The edge is the `OI-###` token in `needs`**: the reader TC-253 already approves,
@@ -152,12 +173,26 @@ The coordinator's reading:
    - a pending open item that no queued work item cites. The owner could never see
      it.
 
-   One sync warning: backlog staleness gains a third cited source. For each
-   `OI-###` in an open row's `needs` whose item is ruled, it warns when the item's
-   registry row changed after the row's last content edit: "modify or remove the
-   work item". It stays warn-tier, like the rest of that check.
-   - A `specref` into the open-items registry is clocked per cited item, not per
-     file. Otherwise every new open item would warn every placeholder.
+   One sync ERROR (third pass), joining the exit code. It is a rule of its own, not
+   an arm of the warn-tier backlog-staleness check, which never fails. For each open
+   row and each `OI-###` in its `needs` whose item is no longer `pending`:
+   - Find the transition commit: the commit at which the item's row first reads
+     non-pending (from the registry's history; the row's `ruled_date` is a
+     cross-check, not the clock).
+   - The row's Done-when section, as `kitlib.registry.done_when_section` reads it,
+     must differ between that commit's parent and the tree under check. Equal, or
+     absent at both, is an error that names the row, the item and the transition
+     commit.
+   - Once none of the row's cited items is pending, a `specref` still naming the
+     open-items registry is an error: the row needs its real spec of record.
+   - A row that is terminal in the tree under check is exempt.
+   - The coordinator flags for review: how the rule behaves without the needed
+     history (a shallow clone, an uncommitted ruling in the working tree). Under
+     WI-788 risk 7 it must not grow a second, degraded path.
+
+   Backlog staleness keeps its two existing arms (SR rows and the SpecRef file). A
+   `specref` into the open-items registry is clocked per cited item, not per file.
+   Otherwise every new open item would warn every placeholder.
 7. **Surface the block** (agreed). An open-item edge gates as `blocked` with its
    item named, not as `waiting`:
    - status.md's Blocked list shows the row beside each pending item that holds it;
@@ -190,13 +225,21 @@ The coordinator's reading:
   a queued, blocked row citing the new item.
 - `check_trajectory` reports a `needs` OI token that resolves to no open item, and a
   pending open item that no queued work item cites.
-- Backlog staleness warns for each ruled open item in an open row's `needs` whose
-  registry row changed after the row's last content edit. Tests cover:
-  - a row citing two items, one ruled after its last edit (one warning);
-  - an edit to the row (cleared);
-  - a terminal row (exempt);
-  - a placeholder whose `specref` names the open-items registry, which is not warned
-    by an unrelated new open item.
+- `check_trajectory` fails (exit code, not only `--strict`) when an item cited in an
+  open row's `needs` has left `pending` and the row's Done-when is unchanged since the
+  transition, or its `specref` still names the open-items registry with no cited item
+  pending. The error names the row, the item and the transition commit. Tests cover:
+  - a row citing two items, one ruled without the Done-when updated (one error);
+  - the same ruling with the Done-when updated in the ruling commit (clean);
+  - a Done-when updated in a later commit (clean from that commit);
+  - a row closed in the ruling commit (exempt);
+  - a placeholder whose `specref` still names the registry after its last item is
+    ruled (error);
+  - a placeholder not warned by an unrelated new open item.
+- The disposition brief, the open-item template header and the ruling procedure say
+  that ruling an item updates the rows citing it in the same change: their
+  Done-when, a real `specref`, and `title`, `buildtier`, `sr_refs` and
+  `safety_class` where they change.
 - A row held by a pending open item reads as blocked, with the item named, in
   `schedule`, status.md's Blocked list and the Next-work card. No `waiting` state is
   left for open-item edges.
