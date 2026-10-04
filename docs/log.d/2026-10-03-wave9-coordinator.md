@@ -292,3 +292,23 @@ The design must state its changes to three rulings:
 - the brief's "a judge never amends what it judges".
 
 All of it is folded into WI-788's design note, with no new row.
+
+### Session close (final): handoff to wave 10
+
+Trunk `refactor_again`, clean, nothing pushed. Approval acts run to seq 28. The
+resume map is
+[handoff-2026-10-03-wave10-coordinator.md](../handoff-2026-10-03-wave10-coordinator.md).
+
+- **Open:**
+  - WI-788 (research and a design note first, with an owner checkpoint);
+  - WI-684 (OI-98);
+  - WI-625 (deferred).
+- **Owed by the owner:** OI-100, the S11 plan's §6 questions, the four MEANING-ruled
+  needs, and the `hats.toml` header comment.
+
+Follow-ups noted, not filed, added since the earlier close list:
+
+- TC-263's method does not name WI-787's three cases.
+- `interfaces.toml`'s codex-adapter note still reads "under the launch's
+  CODEX_HOME".
+- The four `agent_loop` findings from WI-688's judge run (above).

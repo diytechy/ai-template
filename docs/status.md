@@ -25,27 +25,19 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-03-wave9-coordinator.md](handoff-2026-10-03-wave9-coordinator.md)
-  (with the wave-8 handoff it names for roles, tools and recipe)
-  (new roles from 2026-10-03: Claude Opus builds at medium effort, Codex Luna
-  reviews at high), then apply the owner's 2026-09-30/10-02 directions below
-  (each is also noted in its WI row; the 2026-10-02 rulings are in the closed retention-verification row; the
-  assumption ruling is cited in the validation plan's 2026-10-03 supersession
-  note; TC-279's first result is recorded). The 2026-10-03 wave-9 session's
-  record is [log.d/2026-10-03-wave9-coordinator.md](log.d/2026-10-03-wave9-coordinator.md);
-  act seq 25 has landed, and a return is now fixed in its lane (S11 direction).
-  1. OI-99 is ruled (2026-10-03): the released re-judge row is claimed and
-     building on its own lane (the generated frontier names it). Its judge
-     sitting runs through the kit's own session path, and the retention-layer
-     verification row closes with it. The deferred row is last.
-  2. Owner rulings that unblock design work: OI-100 (held-rung CLARITY
-     re-attestation), the S11 plan's seven §6 questions, and the four
-     MEANING-ruled needs (SN-003, SN-008, SN-025, SN-043; the adjudicator
-     recommends restoring SN-025's exclusions before signing).
+  [handoff-2026-10-03-wave10-coordinator.md](handoff-2026-10-03-wave10-coordinator.md)
+  (with the wave-8 handoff it names for roles, tools and recipe). Approval acts
+  run to seq 28, and a return is fixed in its lane (S11 direction, the cycle in
+  that handoff). Order:
+  1. WI-788 half 1: research and a design note, then STOP for the owner. Its
+     spec carries the owner's direction and rulings on nine design risks.
+  2. Owner rulings that unblock design work: OI-100, the S11 plan's seven §6
+     questions, and the four MEANING-ruled needs (SN-003, SN-008, SN-025,
+     SN-043; the adjudicator recommends restoring SN-025's exclusions before
+     signing).
   - **WI-684:** re-sync `C:\Projects\FileBackup` (stamp `9b697cc`) as a
     scratch trial, after amending TC-036's inputs to add `RESYNC_PACK.md`.
-    **Not worked in the 2026-10-02 session:** the owner starts it on
-    2026-10-03 (US Central).
+    The owner performs it and rules OI-98.
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
   dispatcher claims nothing until a reviewed commit deletes it, so work is
