@@ -3812,10 +3812,24 @@ ruling_ref = "docs/log.d/2026-10-03-owner-rulings-oi100-oi102.md"
 
 [open_item.OI-103]
 title = "WI-788 lane-state design: six owner questions before the design note"
-status = "pending"
+status = "ruled"
 raised = "2026-10-04"
-one_line = """Six decisions before WI-788's design note: what the adjudication lock freezes, what happens at owner input or round exhaustion, whether a resolution needs a fresh review, one landing policy, LS3's tier-reduction threshold, and the lane-recovery rule. Each has a recommendation."""
-decision = """Raised 2026-10-04 by the coordinator. Codex Sol (gpt-6.1-sol, high effort, read-only, at b61f450f) reviewed the widened WI-788 (`docs/reviews/2026-10-04-wi788-widened/`) and rated it NOT-READY for design. Its fixes that need no ruling are WI-788's amendments B1 to B12. These six would otherwise force the note to guess:
+one_line = """RULED 2026-10-04. Q1 (a), complete exclusion, and nothing the tool runs writes to trunk except through a work item's merge. Q2: a sitting never waits holding the lock; owner-owed and unsettled items are minted and handled after the merge. Q3 (b): the adjudicator has the final call on reviewer requests. Q4 (a): squash, with lane tips in archive/lanes. Q5: a dial, planned items build a tier below their planner, default false. Q6 (b): keep today's agent-judged recovery. Written into WI-788."""
+decision = """RULED 2026-10-04 by the owner, verbatim: "On lane recovery, if the resume from agent's discretion is already there that should be fine too, either way it will be ambiguous. ... On OI-103: 1. Yes but with this design there should be nothing running on the trunk, everything should be routed through a WI now mechanically, stopping concurrency issues resulting from the tool running. Agreed the user might approve an item, but that generally not be done while the thread is running. 2. Why would a sitting hold the lock? I would still expect all that to happen after merge. 3. Yes the adjudicator get's the final call on if a reviewers request is respected or ignored. 4. lane tips kept in archive/lanes 5. Plan it as a config (Planned items build with lower tier than planner), defaulted to FALSE. 6. Answered above"
+
+The coordinator's reading:
+- Q1 (a), with a principle: nothing the tool runs writes to trunk directly. Every change reaches trunk through a work item's lane and its merge. Claims, mints, plan-id allocation and keep-warm or telemetry records each become lane-side, or part of the merge under the station authority, so the merge is the only tool writer to trunk. The owner's own approvals rarely happen while the loop runs. WI-788's design says, for each of today's trunk writers, how it moves.
+- Q2: a sitting never waits while holding the lock. Anything owed to the owner, and any rows still unsettled when rounds run out, are minted (each open item with its placeholder row) and handled after the merge, through those rows. S11's ruled exhaustion behaviour (3 returns, then land) stands.
+- Q3 (b): the adjudicator has the final call on whether a reviewer's request is respected or ignored, so no new independent review is drawn to endorse a resolution. S11 Q4's final review of the post-act tree still checks the adjudicator's own writes, and it does not reopen a dispute the adjudicator resolved.
+- Q4 (a): one squash commit per item on trunk, with the lane tip kept in archive/lanes, on both the loop and the hand path.
+- Q5: a configuration dial, "planned items build at a lower tier than their planner", default false. When it is on, an item whose plan came from a strong-tier planner builds at medium. It replaces LS3's scope threshold and B8's typed-scope requirement; the plan's identity and the planner's tier are still recorded so that the dial can be applied.
+- Q6 (b): keep today's recovery at the agent's discretion (the reconcile note, the leftover stash, the as-is partial commit). The usage harvest (U1) still applies.
+
+Record: docs/log.d/2026-10-04-owner-rulings-oi103.md.
+
+Original question follows.
+
+Raised 2026-10-04 by the coordinator. Codex Sol (gpt-6.1-sol, high effort, read-only, at b61f450f) reviewed the widened WI-788 (`docs/reviews/2026-10-04-wi788-widened/`) and rated it NOT-READY for design. Its fixes that need no ruling are WI-788's amendments B1 to B12. These six would otherwise force the note to guess:
 
 1. WHAT THE ADJUDICATION LOCK FREEZES. Locking the merge slot does not stop claims, intake CLI mints, plan-artifact id allocation or keep-warm records from committing to trunk, and any of them can stale a sitting or collide on an id.
 2. OWNER INPUT AND EXHAUSTION. A sitting may need the owner, or may run out of rounds, while it holds the lock.
@@ -3832,3 +3846,5 @@ options = """- Q1. (a) COMPLETE EXCLUSION: every writer affecting the sitting's 
 - Q6. (a) DISCARD EVERYTHING EXCEPT TOKEN USAGE: on recovery, harvest the usage into the ledger, then reset the worktree to its last commit. A builder that stops on purpose commits its evidence first, as the worker brief already says. (b) Keep today's model-judged reconcile, stash and as-is commit."""
 recommendation = """Q1 (a): partial exclusion needs a retake rule per writer, which is the complexity the lock exists to remove. Q2 (a): a person's delay must never hold the station, and the exhaustion rule is already ruled. Q3 (a): judgements stay independent; the adjudicator resolves a dispute, and an independent reviewer confirms the result. Q4 (a): one squash commit per item keeps trunk legible, and the archived tip keeps every lane commit recoverable. It is what the hand path already does, so only the loop changes. Q5 (a), with a small N and M the note proposes from the baseline data. Q6 (a): it replaces three recovery paths with one deterministic rule, loses at most one session's uncommitted work, and keeps the usage."""
 wi_refs = ["WI-788"]
+ruled_date = "2026-10-04"
+ruling_ref = "docs/log.d/2026-10-04-owner-rulings-oi103.md"

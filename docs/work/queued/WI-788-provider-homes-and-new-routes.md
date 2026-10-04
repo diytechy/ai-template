@@ -105,8 +105,24 @@ Two halves. The second is built only after the owner reviews the first.
      written as B12's four chapters, with the amend/preserve/retire matrix and the
      dependency graph. These sections sit outside this Done-when heading only
      because they accreted later; they bind it (B12);
-   - wait on OI-103 (Q1 to Q6). Each ruling is written into this spec, citing
-     OI-103, before the note is drafted.
+   - carry OI-103's rulings (2026-10-04):
+     - **nothing the tool runs writes to trunk except through a work item's merge,
+       under complete writer exclusion**, with each of today's trunk writers (claim,
+       intake mints, plan-id allocation, keep-warm and telemetry records) moved
+       lane-side or into the merge (Q1);
+     - **a sitting never waits while holding the lock**: owner-owed and unsettled items
+       are minted with placeholder rows and handled after the merge, and S11's
+       exhaustion rule stands (Q2);
+     - **the adjudicator's call on a reviewer's request is final**, with no endorsing
+       re-review; the post-act final review checks only the adjudicator's own writes
+       (Q3);
+     - **one landing policy:** a squash commit per item, with the lane tip in
+       `archive/lanes`, on both paths (Q4);
+     - **a dial, default false**: planned items build one tier below their planner.
+       It replaces LS3's scope threshold and B8's typed scope; plan identity and
+       planner tier are still recorded (Q5);
+     - **today's agent-judged recovery stays**, and the U1 usage harvest still applies
+       (Q6).
 2. **Build what the owner approves, as successor rows.** At the checkpoint the
    coordinator files the slice plan's rows on trunk, and WI-788 closes on the approved
    note. The rows together deliver:
