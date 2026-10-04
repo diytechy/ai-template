@@ -32,7 +32,9 @@ The change gives the owner's verdict its own key and makes an overrule actionabl
 - an overrule is coupled to work at the commit, as OI-102 Q3 coupled a ruled open
   item to its citing row: the commit that marks an entry overruled must, in the
   same commit, file or amend a work item that cites that entry. No history walk,
-  no marker convention.
+  no marker convention. A new row is not always needed (owner, 2026-10-04): a
+  decision scoped to a queued work item is overruled by amending that row's prose
+  to the new direction and citing the entry from it, with nothing minted.
 
 Who sets the key stays a convention (the owner, or an agent at the owner's stated
 direction, recorded in the note): git cannot tell the owner's commit from an
@@ -55,7 +57,8 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   again by the merge slot on each lane commit against its parent, unless the same
   commit files or amends a queued or active work item whose spec cites that entry
   (the citation form, e.g. `docs/decisions/<run>.toml#D-NNN`, is fixed by this
-  row's build).
+  row's build). Amending the existing queued row the decision is scoped to
+  satisfies it: an overrule never requires a new row to be minted.
 - The owner surface lists entries not yet seen under "Decisions to review" (high
   risk first, as today) and overruled entries under their own heading with the
   citing work item, so an overrule never disappears silently.
@@ -67,7 +70,8 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   whichever adjudication path is the one path when this row lands.
 - Tests: each value; an unknown value; the retired key; an overrule with no note;
   an overrule with no citing work item refused at commit and at the merge slot; an
-  overrule filed with its citing row passing; the migrator on a fixture record.
+  overrule filed with a new citing row passing; an overrule that amends the
+  existing queued row it is scoped to passing, with no row minted; the migrator on a fixture record.
 - The row's test bar: its affected modules' tests plus the smoke tier at `-n 2`.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit. A forced migration, flagged as
