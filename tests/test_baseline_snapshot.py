@@ -1775,6 +1775,27 @@ def test_a_verdict_outside_the_repository_is_refused(tmp_path):
     assert len(SNAP.read_acts(root)) == acts
 
 
+def test_a_relative_verdict_path_is_canonicalized_and_confined(tmp_path):
+    """Sol final review, MINOR 1 (WI-791): a RELATIVE verdict path is resolved
+    against the repository too. One climbing out of it is refused although the
+    file exists, leaving the ledger unchanged; one with a `..` inside the tree
+    is recorded in its canonical spelling, the one the merge slot can read."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
+    (tmp_path / "v.md").write_text("- [CLARITY] {} t -> same\n".format(sid), "utf-8")
+    acts = len(SNAP.read_acts(root))
+    with pytest.raises(SystemExit) as refused:
+        SNAP.copy_live(root, reattests={sid}, verdict="../v.md")
+    assert "not a file in the tree" in str(refused.value), refused.value
+    assert len(SNAP.read_acts(root)) == acts
+    verdict = root / "docs" / "reviews" / "v.md"
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text("- [CLARITY] {} t -> same\n".format(sid), "utf-8")
+    SNAP.copy_live(root, reattests={sid}, verdict="docs/reviews/../reviews/v.md")
+    assert SNAP.read_acts(root)[-1]["verdict"] == "docs/reviews/v.md"
+
+
 def test_a_malformed_ledger_refuses_the_act_before_the_record_moves(tmp_path):
     """The refusal comes before any copy or stamp: a person fixes the ledger
     and re-runs, and the record they fix is the record that stood."""

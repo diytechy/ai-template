@@ -198,7 +198,7 @@ import shutil
 import subprocess
 import sys
 import tomllib
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 # Sibling imports, the sanctioned idiom (see trace.py): run as a subprocess this
 # script's own dir is sys.path[0], and the guard covers an in-process import (a
@@ -1212,20 +1212,21 @@ def verdict_rel(root, verdict):
     """The verdict path as the act ledger records it: repo-relative, forward
     slashes, no `./` — the one spelling `git show <rev>:<path>` resolves at the
     merge slot (Sol review 1, WI-791: a Windows-spelt path named the file here
-    and was refused there). An absolute path under `root` is made relative;
-    one outside it is returned as given, for `_refuse_verdict` to refuse. None
-    for no verdict.
+    and was refused there). Every path, relative or absolute, is resolved
+    against `root`, so `..` segments are canonicalized (Sol final review): one
+    resolving inside the tree comes back repo-relative, and one resolving
+    outside it comes back ABSOLUTE, for `_refuse_verdict` to refuse. None for
+    no verdict.
 
     Implements: SR-207, LLR-245"""
     if not verdict:
         return None
     text = str(verdict).strip().replace("\\", "/")
-    if Path(text).is_absolute():
-        try:
-            text = Path(text).resolve().relative_to(Path(root).resolve()).as_posix()
-        except ValueError:
-            return text
-    return PurePosixPath(text).as_posix()
+    full = (Path(root) / text).resolve()
+    try:
+        return full.relative_to(Path(root).resolve()).as_posix()
+    except ValueError:
+        return full.as_posix()
 
 
 def _refuse_verdict(root, verdict, reattests):

@@ -863,7 +863,15 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
     assert why is None, why
     shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
     assert shown == [("DA", "DA-001"), ("SUR", "SUR-001")], values["rows"]
-    assert "it holds, mostly" in values["rows"] and "old stand-in" in values["rows"]
+    # Each row's labelled before AND after, so a renderer dropping either side
+    # of either tier fails here (Sol final review, MINOR 2).
+    lines = values["rows"].splitlines()
+    for rid, before, after in (
+        ("DA-001", "it holds", "it holds, mostly"),
+        ("SUR-001", "old stand-in", "new stand-in"),
+    ):
+        block = lines[lines.index("- {} {}".format(rid.split("-")[0], rid)) :][:4]
+        assert block[2:] == ["    - before: " + before, "    - after: " + after], block
     values, why = ab.amendment_values(repo, _am_row(Adjudicates="DA-001"))
     assert why is None, why
     shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
