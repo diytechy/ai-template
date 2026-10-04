@@ -148,7 +148,31 @@ What was found (record:
   - Dual plans plus an arbiter have no direct coding evidence. An arbiter must be
     grounded in executable or testable criteria.
 
+**The owner's evidence on the arbiter (2026-10-04):** "even before this the arbiter
+never was actually needed, the cross-critique always resulted in both drafters
+selecting the same plan at the end." The owner also recalls earlier notes on how the
+arbiter could judge the plan itself. The coordinator did not find them in this repo;
+they may live downstream. What this repo records:
+- one round, DP-001 (2026-07-16,
+  [verdict](../../archive/plans/DP-001-dual-plan-loop-wiring/verdict.md));
+- each cross-critique raised one finding;
+- both position-swapped arbiter runs selected the same plan (`plan-B-rev`), with
+  nothing ported.
+
+So the arbiter added no information there. The record does not capture the drafters
+choosing for themselves.
+
 Added to half 1 (the design note):
+- **Is the arbiter a standing step?** On the owner's evidence it may not be. Options
+  for the note to weigh:
+  - (a) after cross-critique and revision, each drafter selects; agreement adopts the
+    plan, and disagreement goes to the owner;
+  - (b) as (a), but disagreement goes to an arbiter;
+  - (c) one plan judged by an independent session, so that the arbiter's role
+    becomes judging a single plan against testable criteria, with the competing
+    pair kept for high-risk decisions.
+
+  Under risk 7, whichever is chosen is the one path, not a fallback.
 - **Plan kinds through the one entry point:** plan, plan-critique and arbitrate, with
   their families, independence (planners cross-family; the arbiter never a planner's
   session) and reset terms. `plan_runner`'s own route drawing stops being a bypass.
@@ -173,6 +197,11 @@ To uncover before the note recommends (the research left these open):
     reports).
 
   A planning step must name the metric it is expected to move.
+- **How often drafters converge:** count, across every recorded round (this repo's
+  DP-001, and downstream repos' rounds where their records are available), how
+  often both drafters would select the same revised plan and how often an arbiter
+  changed the outcome. This tests the owner's observation before the arbiter is
+  dropped or kept.
 - **The cost of the dual-plan round on a real decomposition:** sessions, tokens and
   wall time from its session logs. Re-read WI-199's and WI-209's records and any
   `docs/plans/DP-*` artifacts for evidence of what it produced.

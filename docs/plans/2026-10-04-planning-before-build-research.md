@@ -76,6 +76,21 @@ outcome quality, iterations and rework, and cost against accuracy.
     SWE-bench Verified, a
     [vendor blog](https://se-research.bytedance.com/blogs/trae-on-swe-bench-verified-71)).
 
+## The kit's own evidence on the arbiter (2026-10-04)
+
+The owner: "even before this the arbiter never was actually needed, the
+cross-critique always resulted in both drafters selecting the same plan at the end."
+
+This repo records one round, DP-001 (2026-07-16,
+[verdict](../archive/plans/DP-001-dual-plan-loop-wiring/verdict.md)):
+- each cross-critique raised one finding;
+- both position-swapped arbiter runs selected the same plan, with nothing ported.
+
+This fits the literature above: cross-family critique and revision does the useful
+work, and a second judgement over two converged plans adds cost without changing the
+outcome. WI-788 counts convergence across every available round before it decides
+whether the arbiter stays.
+
 ## Guidance as it stands
 
 - **No plan** when the diff fits in one sentence or a cheap test fully specifies the
