@@ -5,7 +5,7 @@
 # owner rules at the checkpoint; nothing here is built. Format:
 # project-trajectory/decisions.template.toml.
 
-high_risk = ["D-001", "D-002", "D-010", "D-016", "D-022", "D-027", "D-031", "D-032", "D-035"]
+high_risk = ["D-001", "D-002", "D-010", "D-016", "D-022", "D-027", "D-031", "D-032", "D-035", "D-036"]
 
 [decision.D-001]
 decided = "Commits made outside the one entry point (no session log) are attributed to a family by their Co-Authored-By trailer, read from the judged commit itself, for family exclusion (ch.2 section 3 step 2; README Q-10)."
@@ -257,4 +257,11 @@ decided = "Every family exclusion in ch.2 section 3 step 2's table, plan-critiqu
 alternative = "Keep the hard family exclusions and the hard family swap, which leaves plan-critique, author and the swap with no eligible draw under this repo's table; or make the owner's Anthropic-only build a dual path for the swap."
 reversal_cost = "Low: unbuilt; one ordering rule in S788-ask."
 why_not_escalated = "The owner set the table ('my trust for adjudication and building only lies with claude') and said a same-family draw is allowed but not preferred; the ranked-preference rule is the one rule the 2026-10-04 adjudication ruled for dispute 2. Flagged high risk because Q-6's swap, in this repo, becomes a fresh same-family session."
+review = ""
+
+[decision.D-036]
+decided = "A1's step 4 keeps today's WI-236 weighted rotation, applied per family: unequal weights set proportional shares, and equal weights fall to enable-list order, as today. The shipped template's equal weights therefore draw exactly as today for adopters. An exact 50/50 split between two families is not expressible; a proportional mix such as 2:1 is (Sol review 2 of the fold, MAJOR 2)."
+alternative = "Make weights literal shares, so equal weights alternate families; that changes every adopter's draws at re-sync (builds would alternate where both families are enabled) and would be a forced behaviour change."
+reversal_cost = "Low: one rule in S788-ask's step 4, unbuilt."
+why_not_escalated = "CLAUDE.md's 'edit conservatively' and 'flag anything that would force downstream repos to migrate' point to preserving adopters' draws; the owner's mix objective is met by unequal weights, and this repo's own table mostly has one family per kind. Flagged high risk so the owner can choose literal shares instead."
 review = ""

@@ -359,7 +359,9 @@ dial home.
      review and the family swap: prefer the eligible families other than the
      judged (or swapped-out) author's, ranked as D-031, when any remain;
   4. the family by its weight (the owner's answer to the composition question,
-     option (a): **weights set the family share**);
+     option (a): **weights set the family share**), by today's WI-236 weighted
+     rotation applied per family: unequal weights set proportional shares, and
+     equal weights fall to enable-list order, as they do today (D-036);
   5. the account within that family by pace (A2);
   6. a retained session continues until its reset terms are met; steps 4-5
      apply only when a session starts.
@@ -386,11 +388,11 @@ dial home.
     SR-154 amendment. Its Done-when gains a fixture each for: a kind with one
     eligible family (a fresh same-family session, logged, no decisions entry);
     a judging kind after a swap; the shipped template's all-families table
-    (today's selections unchanged); `plan-critique` of each drafter's plan in a
+    (equal weights draw as today, in enable-list order; unequal weights, e.g. 2:1, draw their proportional shares); `plan-critique` of each drafter's plan in a
     dual round; and a weight of 0 never drawn.
   - **S788-plan-kinds** routes `plan`, `plan-dual` and `plan-critique` through
     that table; **S788-single-plan**'s swap uses step 3; **S788-session-families**
-    keeps only the reset terms.
+    keeps the reset terms and retention (its lease wait included), not routing.
   - **Step 5 is S788-usage-pacing's.** Until it lands, the account within a
     family is drawn by today's rule (enable-list order); S788-usage-pacing
     replaces that rule, never adds beside it. So S788-ask lands from its needs
@@ -439,17 +441,20 @@ including several Claude subscriptions.
   `MiniPC-Deployer/stack/ai-usage/ai_usage_feeder.py` and NagLight's
   `internal/gauge/gauge.go`. Both endpoints are undocumented, so each is a route
   contract with `verified`, like the routes in ch.2 §5.
-- **The binding window** is the weekly limit that governs the route's model:
-  a model-scoped weekly limit where the provider reports one for it, else the
-  account's weekly window. Its length is the provider's reported duration
-  (codex `windowDurationMins`), else the window's declared kind (Claude's
-  7-day); its start is its reset time minus its length.
-- **The rule.** `elapsed = clamp((now - start) / length, 0, 1)`;
-  `pace = 100 x (1 - elapsed)`; `headroom = remaining percent - pace`. Within
+- **The applicable windows** are every limit the provider reports that
+  governs the route's model: the account's weekly window, a model-scoped weekly
+  window where one is reported for that model, and the 5-hour window. A
+  window's length is the provider's reported duration (codex
+  `windowDurationMins`), else its declared kind (Claude's 7-day); its start is
+  its reset time minus its length.
+- **The rule.** For each applicable weekly window,
+  `elapsed = clamp((now - start) / length, 0, 1)`, `pace = 100 x (1 - elapsed)`
+  and `headroom = remaining percent - pace`. An account's headroom is the
+  smallest over its applicable weekly windows (the most constraining). Within
   the family step 4 chose, the account with the largest headroom is drawn.
-- **Exhaustion.** An account whose binding weekly window or 5-hour window has
-  no remaining budget (remaining at or below 0) is on cooldown until that
-  window resets, so it is never drawn, whatever its headroom.
+- **Exhaustion.** An account with ANY applicable window at no remaining budget
+  (remaining at or below 0) is on cooldown until that window resets, so it is
+  never drawn, whatever its headroom.
 - **Freshness.** A reading is fresh when observed within the dial
   `[routing] usage_max_age_minutes` (shipped 30; the owner's gauges poll every
   10). An account with no fresh reading counts as exactly on pace (headroom
@@ -460,9 +465,10 @@ including several Claude subscriptions.
   the row drafts a new need for the owner's signature before its SR rows.
 - **The row:** S788-usage-pacing, needs S788-accounts and S788-ask; strong; review
   A+B; extra bar: fixture readings for both providers, an unreadable source, a
-  stale reading, two Claude accounts, a model-scoped weekly window, and an
+  stale reading, two Claude accounts, a model-scoped weekly window, an
   exhausted weekly window beside a low-headroom live one (the live one is
-  drawn); RESYNC yes.
+  drawn), and an exhausted account-wide window under a model-scoped window
+  with budget left (never drawn); RESYNC yes.
 
 ### A3. Q-5's disagreement page offers a third agent
 
