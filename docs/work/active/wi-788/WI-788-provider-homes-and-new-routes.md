@@ -1,6 +1,6 @@
 +++
 id = "WI-788"
-title = "Session families with reset terms, a glossary, per-route provider homes, and new routes"
+title = "Design the lane lifecycle: lane-state provider, labelled sessions, in-lane adjudication, planning and provider routes"
 workstream = "process"
 specref = "docs/agents.toml"
 sr_refs = ["SR-222", "SR-227", "SR-154", "SR-155"]
