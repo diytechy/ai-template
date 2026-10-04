@@ -45,7 +45,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
   dispatcher claims nothing until a reviewed commit deletes it, so work is
-  taken by a coordinator session, not the loop. The roles (owner, 2026-10-04): Claude Opus builds and plans at medium
+  taken by a coordinator session, not the loop. Owner direction 2026-10-04: a coordinator
+  session claims its whole batch of rows under ONE scoped unpause (a reviewed
+  deletion commit, the claims, then a byte-identical restore), not one per row;
+  the control ruling's pause deletion is not spent. The roles (owner, 2026-10-04): Claude Opus builds and plans at medium
   effort and the coordinator commits for it; GPT Terra (`gpt-5.6-terra`,
   medium) authors spine rows; Codex 6.1 (`gpt-6.1-sol`, high) reviews code
   through the CLI; and an independent Opus agent adjudicates and resolves

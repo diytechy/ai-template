@@ -63,6 +63,15 @@ as the resume map.
    the same commit.
 5. **Standing:** merge-to-main and push stay yours (`push = "human"`).
 
+## Owner directions after the session (2026-10-04)
+
+- **The pause stays; claims go in batches.** The tracked `docs/work/pause` gates
+  claims only (`integrate.py claim` and the dispatcher; in-lane sessions, acts,
+  landings and sweeps run under it). A coordinator session claims its whole batch
+  of rows (for example, the S788 rows it will build) under ONE scoped unpause: a
+  reviewed deletion commit, the claims, then a byte-identical restore. The
+  control ruling's owner-reviewed pause deletion is not spent.
+
 ## Decisions to review (high risk first)
 
 ### High risk
