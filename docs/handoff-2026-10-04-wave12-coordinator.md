@@ -40,7 +40,7 @@ as the resume map.
   to its 2026-09-04 declaration; each of the three claims was a scoped unpause.
 - **The full unfiltered suite** ran twice: on WI-790's lane tip `9c39bab2`
   (5030 passed, 17 skipped, 0 failed, 2140.8 s on a loaded box), and on trunk at
-  this session's end (@FULLSUITE@).
+  this session's end, `b0e7a6f2`: 5046 passed, 17 skipped, 0 failed, in 2015.2 s from a detached worktree with a fixed basetemp. That is about 3.5 times the ~9.5 min of 2026-10-03, with none of this session's own work running beside it; one box is one data point, so the cause is not claimed.
 - **The `Bash(codex exec *)` allow rule** in `.claude/settings.local.json` stays:
   the queue has not drained.
 

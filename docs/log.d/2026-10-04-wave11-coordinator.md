@@ -144,6 +144,9 @@ The resume map is
 which lists every delegated decision for review, high risk first.
 
 - **Approval acts:** seq 29 (WI-791) and 30 (WI-790), both taken in their lanes.
+- **The full unfiltered suite** on trunk at `b0e7a6f2` (the session close), from a
+  detached worktree with a fixed basetemp: 5046 passed, 17 skipped, 0 failed, in
+  2015.2 s (about 3.5 times 2026-10-03's 9.5 min, cause not claimed).
 - **Sol sessions:** 7 (one note review, two lane reviews, two final reviews, two
   narrow re-checks), with no rate limit reached.
 - **Kit findings, not filed:**
