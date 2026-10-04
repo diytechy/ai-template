@@ -190,10 +190,10 @@ why_not_escalated = "B12 asks for independently landable rows in one graph."
 review = ""
 
 [decision.D-027]
-decided = "Landing is one landing per lane, one ref advance by compare-and-swap; a single-item lane is one squash commit per item; how an act-taking lane and a spine batch land are put to the owner (README Q-8, a conflict between OI-101 Q2 and OI-103 Q4; README Q-11, batches), each with a recommendation, not settled (fix round, Sol BLOCKER 1 and MAJOR 4)."
-alternative = "Present the squash as a replay (the first version), or retire batching."
+decided = "Landing is one landing per lane, one ref advance by compare-and-swap; a single-item lane is one squash commit per item, including a lane that took an act (the owner answered README Q-8 on 2026-10-04: the text-then-act guard is enforced in the lane, so the landing commit is not held to it, amending OI-101 Q2's trunk scope); how a spine batch lands is put to the owner (README Q-11)."
+alternative = "Two commits in one landing for an act-taking lane (the note's first recommendation), or present the squash as a replay; retire batching."
 reversal_cost = "Medium once built: the landing's commit shape."
-why_not_escalated = "Escalated: one is a conflict between two owner rulings, the other a reading of one."
+why_not_escalated = "Escalated: Q-8 was a conflict between two owner rulings and the owner answered it; Q-11 is a reading of one and stays with the owner."
 review = ""
 
 [decision.D-028]

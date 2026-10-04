@@ -40,9 +40,9 @@ research record. Where a chapter and this page differ, this page wins.
   call is final), `JUDGE` (acts on a recorded scope), `MINT` (every item consumed),
   `MERGE_ACTION`; then the final review, regeneration and bar on the final tree;
   then one landing per lane, on both paths (one squash commit for a single-item
-  lane; the act-taking and batched cases are Q-8 and Q-11). A fourth sitting that
+  lane; an act-taking lane lands as one squash too, by the owner's Q-8 answer; the batched case is Q-11). A fourth sitting that
   owes a return ends `merge-partial` with a successor; nothing red lands.
-- **Spine text before act**, on lane and trunk. The adjudicator drafts, the
+- **Spine text before act**, enforced in the lane (a landing squash is not held to it, owner Q-8; a direct trunk commit is). The adjudicator drafts, the
   adjudication reviewer edits, the adjudicator's unchanged final pass is the act.
 - **Planning has two products.** A decomposition is selected by its drafters (no
   arbiter call recommended; a PAGE closes the parent `partial` and mints a
@@ -76,7 +76,7 @@ critical section, so an expired or cancelled holder cannot land.
 | Done-when 1: one route, one account; second account without duplicate rows | ch.2 §4 |
 | Done-when 1: OpenCode config for FreeLLMAPI, per route, out of the tree | ch.2 §5 |
 | Done-when 1: tested vs untested, never enabled by default; spine impact | ch.2 §5 (`verified`); [matrix](#the-amend--preserve--retire-matrix) |
-| OI-101 Q1, Q2 (final pass is the act, 3 rounds; risk 6 on lane and trunk) | ch.4 §7; Q-8 |
+| OI-101 Q1, Q2 (final pass is the act, 3 rounds; risk 6, its trunk scope amended for landings by the owner's Q-8 answer) | ch.4 §7; Q-8 |
 | OI-101 Q3, Q4 (OpenCode routes, free-model row; probe OpenCode, Google from docs) | ch.2 §1, §5 (no `opencode/*-free` row); gap below |
 | OI-101 Q5, Q6 (kit glossary; S11 §6 as ruled) | [glossary](#glossary-draft); ch.4, changes 4-6 |
 | OI-103 Q1, Q2 (no tool write to trunk but a merge; never wait) | ch.4 §2, §3, §4.3, §5 |
@@ -136,7 +136,8 @@ critical section, so an expired or cancelled holder cannot land.
 23. **LS4 "LOCK takes the lease and holds the merge slot"**: the leases, then the authority by one non-blocking try, nothing waited for under it; `out/integrate.lock` retires (ch.4 §2).
 24. **LS9's wording** in the rework brief, the reviewer brief (`[ADVICE]`) and `AGENTS.template.md`'s retry rule (ch.4 §9).
 25. **The coordinator's hand path to trunk**: a coordinator is an agent, so its trunk writes (filing, rulings records, status, log fragments) go through a station lane; only the owner's commits stay outside the tool. The pause file is Q-12 (ch.4 §2-§3).
-26. **Pending the owner, not settled here:** OI-101 Q2 against OI-103 Q4 for act-taking lanes (Q-8), and OI-103 Q4's "per item" for batched lanes (Q-11).
+26. **Pending the owner, not settled here:** OI-103 Q4's "per item" for batched lanes (Q-11).
+27. **OI-101 Q2's trunk scope** (owner, 2026-10-04, Q-8): the text-then-act rule is enforced in the lane (the hook, and the landing's re-check of each lane commit); a lane's landing is one squash commit, not held to it (ch.4 §7).
 
 ## Glossary draft
 
@@ -297,7 +298,7 @@ graph TD
 | planning | S788-plan-gate | A checkable plan gate | — | medium | A | — |
 | planning | S788-plan-kinds | Plan kinds through `ask`; drafter selection | ask, plan-gate | strong | A | — |
 | planning | S788-single-plan | Per-item planning, replan, tier dial | plan-kinds, lane-state-provider | strong | A | — |
-| adjudication | S788-text-then-act | Risk 6 on lane and trunk | — | medium | A+B | — |
+| adjudication | S788-text-then-act | Risk 6 in the lane (and on direct trunk commits) | — | medium | A+B | — |
 | adjudication | S788-station-authority | The authority, claims, cancellation | lane-state-provider, session-store | strong | A+B | — |
 | adjudication | S788-landing | One landing per lane; F1, F2; record check | station-authority, ask | strong | A+B | — |
 | adjudication | S788-sitting | `LOCK` to `MERGE_ACTION`, final evidence, exhaustion | landing, text-then-act, session-families, WI-791 | strong | A+B | — |
@@ -327,7 +328,7 @@ Ids are kept stable across the fix round; withdrawn ones say why.
 - **Q-5. Dual-plan selection, (a), (b) or (c)?** **Recommend (a):** drafters select, a mutual self-select becomes your open item, and the losing drafter's concession is recorded as a second independence exception. The evidence is suggestive, not conclusive: in 8 rounds the two arbiter runs always agreed and ported nothing, and the arbiter picked its own family's plan in at least 7 (DP-003 unverified). Whether arbitration ever changed a selection cannot be told, because no drafter was asked to choose. ch.3 §3.2, §4.4.
 - **Q-6. Per-item planning:** on declaration plus the second consecutive CHANGES-REQUESTED (with the swap), or also the first? **Recommend the second:** 13 of 34 first-CR lanes passed unaided. Re-measure after 20 lanes. ch.3 §4.7.
 - **Q-7. Idle and CLI mints, and the coordinator's writes, have no lane.** (a) A station lane mints its own carrier row and lands like any lane; (b) a station lane with no row; (c) drop idle mints. **Recommend (a):** every landing is then a work item's. ch.4 §12.
-- **Q-8. Two of your rulings collide for a lane that took an act.** OI-101 Q2: no commit carries spine text with a snapshot update, on lane and trunk. OI-103 Q4: one squash commit per item. A lane that amended text and then took the act cannot satisfy both with one commit. (a) **Two commits in one landing** (text, then act; one ref advance), which amends Q4 for act-taking lanes; (b) **the squash as a replay**, checked per archived lane commit, which amends Q2 on trunk. **Recommend (a):** the coupling rule then holds at every commit that changes trunk. Neither is settled until you rule. ch.4 §7.
+- **Q-8. Answered by the owner, 2026-10-04.** OI-101 Q2 (no commit carries spine text with a snapshot update) and OI-103 Q4 (one squash commit per item) collided for a lane that took an act. The owner: "Within the lane, yes the landing text and the approval should be guarded against, but once that happens in lane (which is guarded mechanically) that lane can merge straight into the trunk as a single commit. Yes that does override a previous decision, but it's because the mechanism to mitigate risk is now placed in lane and as such doesn't require that protection burden at merge". So the text-then-act rule is enforced IN THE LANE, at the pre-commit hook on every lane commit and again by the landing on each lane commit against its parent (so a `--no-verify` commit is still refused), and the lane then lands as ONE squash commit, which is not held to the rule. This amends OI-101 Q2's trunk scope for landing commits; OI-103 Q4 stands. Coordinator's reading, for the owner to confirm: any other commit made directly on trunk (the owner's own signing) still keeps text and act in separate commits, as Q2 ruled. ch.4 §7.
 - **Q-9. Retitle WI-788** ([Title](#title)); the rename is its own commit.
 - **Q-10. Attribute an unlogged commit by its `Co-Authored-By:` trailer?** It is evidence in the judged commit itself, can only add an exclusion, and no one is asked to write it, but it sits near your "no marker convention" rule. (a) Keep it; (b) count every unlogged commit as a person's. **Recommend (a)** until hand sittings run on `ask.py`. ch.2 §3 step 2.
 - **Q-11. Batched lanes under Q4.** The dispatcher batches spine rows into one lane sharing one re-attest window (`dispatch.py:25-38`); their items share one act and one tree and cannot be split per item. (a) A batch lands as one landing naming every item (Q4's "per item" read as "per lane" for batches, as the hand path already does: `eecd656d` closed nine WIs in one squash); (b) retire batching, so every lane holds one item and shared re-attestation is lost. **Recommend (a).** ch.4 §6.

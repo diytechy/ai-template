@@ -371,9 +371,9 @@ and keeps every check:
   commit's tree is the final attested tree, and it carries `Lane-Tip:`, every
   item's `WI:` and outcome. For a lane holding one item (every lane except a
   spine batch) that is OI-103 Q4's one squash commit per item.
-- **A lane that took an act** collides with risk 6 on trunk (§7, README Q-8):
-  under option (a) the landing is two commits in the one ref advance (text,
-  then act); under option (b) it is one. This is the owner's ruling to make.
+- **A lane that took an act** lands as one squash commit too (owner, 2026-10-04,
+  README Q-8): risk 6 is enforced on the lane's own commits (§7), so the landing
+  commit is not held to it.
 - **A spine batch** (one branch, several WIs sharing one re-attest window,
   `dispatch.py:25-38`) cannot be split per item: its items share one act and
   one tree, and per-WI outcomes already live in each spec's folder. It lands
@@ -459,36 +459,33 @@ separate: 3 inner rounds per sitting, and 3 returns per lane.
 > only on a later pass that changes no byte. Never approve text no other
 > session has read.
 
-**Risk 6, on lane and trunk (OI-101 Q2).** A commit that writes under
+**Risk 6 (OI-101 Q2; its trunk scope amended for landings, owner 2026-10-04, README Q-8).** A commit that writes under
 `docs/archive/last_approved/` must, against its first parent, change no spine
 cell except `Status`, and add or remove no row. Text is committed first; the
 act (the flips, `snapshot`, the ledger and the views) second.
 
-**Where it is checked.** One function over two trees, at the commit, in three
-places:
+**Where it is checked.** One function over two trees, at the commit, in two
+places (owner, 2026-10-04, README Q-8):
 - an ERROR step in the pre-commit hook;
 - each lane commit at the landing, as `_loop_trailer_refusal` already does
-  (`integrate.py:1289`), so a `--no-verify` commit is still caught;
-- each commit the landing itself writes to trunk, against its trunk parent.
+  (`integrate.py:1289`), so a `--no-verify` commit is still caught.
 
-**The collision on trunk (owner question, not settled here).** OI-101 Q2 says no
-commit changes spine text together with a snapshot update, on lane *and* trunk.
-OI-103 Q4 says one squash commit per item. A lane that amended spine text and
-then took the act has both changes in its range, so its one squash would carry
-both against its trunk parent. The two rulings cannot both hold for that lane.
-README Q-8 puts the options:
-- **(a) Two commits in one landing** (amends Q4 for act-taking lanes only). The
-  landing writes the text commit (the lane's tree at the parent of its first act
-  commit), then the act commit (the final attested tree), and advances trunk
-  once, by one compare-and-swap, to the second. Trunk's ref never points at the
-  first. Each is checked against its parent like any commit. The landing refuses
-  a lane whose range changes spine text after its first act (the sitting must
-  drop and retake that act, the existing back edge). Recommended: the coupling
-  rule then holds at every commit that changes trunk, which is the owner's
-  standing rule, and the lane still lands as one operation.
-- **(b) The squash as a replay** (amends Q2 on trunk). The landing writes one
-  commit; risk 6 is checked on each archived lane commit instead. The check no
-  longer runs at the commit that makes the trunk change.
+The landing's own squash commit is not checked: the guard has already held on
+every lane commit it squashes. Any other commit made directly on trunk (the
+owner's own signing) is checked at the hook like any commit (coordinator's
+reading, for the owner to confirm).
+
+**On trunk: answered by the owner (2026-10-04, README Q-8).** OI-101 Q2 said no
+commit changes spine text together with a snapshot update, on lane *and* trunk,
+and OI-103 Q4 says one squash commit per item, so a lane that amended text and
+then took the act could not satisfy both with one landing commit. The owner: "Within the lane, yes the landing text and the approval should be guarded against, but once that happens in lane (which is guarded mechanically) that lane can merge straight into the trunk as a single commit. Yes that does override a previous decision, but it's because the mechanism to mitigate risk is now placed in lane and as such doesn't require that protection burden at merge".
+The guard therefore lives in the lane, where the act is taken, and the lane lands
+as one squash commit. This amends OI-101 Q2's trunk scope for landing commits;
+OI-103 Q4 stands unamended. The options the note first put (two commits in one
+landing; the squash as a replay) are superseded. The landing still refuses a
+lane whose range changes spine text after its first act commit (the sitting
+drops and retakes that act, the existing back edge), because that lane's own
+commits would break the rule.
 
 **What retires:**
 - the executable allowance, `baseline_snapshot.py:851-853` (documented at
@@ -503,7 +500,7 @@ README Q-8 puts the options:
 
 **Consequences:**
 - The owner's held-rung approvals become two commits.
-- An act-taking lane's landing shape waits on README Q-8 (above).
+- An act-taking lane lands as one squash commit (README Q-8, answered).
 
 ## 8. Rulings this changes (LS8, owner-confirmed)
 
@@ -637,7 +634,7 @@ Each row's test bar is the commit bar plus the modules named. Each row's review
 bar is the README graph's "Review" column. Each row is landable on its own: its
 Done-when tests only what it and its `needs` provide.
 
-**S788-text-then-act:** risk 6 on lane and trunk.
+**S788-text-then-act:** risk 6 in the lane, re-checked per lane commit at the landing (the landing squash exempt, README Q-8).
 - **Scope:**
   - the one separation function, at the hook and per lane commit;
   - the §7 retirements.
@@ -674,7 +671,7 @@ Done-when tests only what it and its `needs` provide.
 
 **S788-landing:** the one landing.
 - **Scope:**
-  - one landing per lane by compare-and-swap, its shape per README Q-8 and Q-11,
+  - one landing per lane by compare-and-swap, its shape per README Q-11,
     and `archive/lanes`;
   - `Lane-Tip:` and the audit;
   - one record check, with the hand path on it;
@@ -686,8 +683,8 @@ Done-when tests only what it and its `needs` provide.
   - the gap's log fragment.
 - **Done-when:**
   - both paths yield one landing per lane whose final tree equals the attested
-    tree, and a single-item lane yields one commit per item (two under Q-8 (a)
-    when it took an act);
+    tree, and a single-item lane yields one squash commit per item, act or no act
+    (README Q-8, answered);
   - a trunk moved under the lane fails the swap, naming the foreign commit;
   - the tip is reachable from `archive/lanes`;
   - a refresh killed after `merge --no-commit` is recovered by the next one;
@@ -777,11 +774,8 @@ consolidation census and the release re-judge. Options:
 
 **Recommend (a):** it keeps your words, "through a WI", literally.
 
-**Q-4.2. OI-101 Q2 and OI-103 Q4 collide for a lane that took an act.** The
-options and what each amends are in §7 ("The collision on trunk"): (a) two
-commits in one landing, amending Q4 for such lanes; (b) the squash as a replay,
-amending Q2 on trunk. **Recommend (a).** Neither is settled until the owner
-rules.
+**Q-4.2 (README Q-8): answered by the owner, 2026-10-04.** The guard is enforced
+in the lane, and the lane lands as one squash commit; see §7.
 
 ## 13. Research record
 
