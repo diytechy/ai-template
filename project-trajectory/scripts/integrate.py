@@ -1301,7 +1301,7 @@ def _ruling_sync_refusal(root, branch):
     refused before it reaches trunk. Every lane, whoever runs the slot. A range
     git cannot read is a refusal, never a skip.
 
-    Implements: SR-148
+    Implements: SR-148, LLR-298
     """
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 

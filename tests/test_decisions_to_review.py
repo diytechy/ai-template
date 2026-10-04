@@ -147,3 +147,19 @@ def test_the_shipped_template_entry_carries_reviewed_false():
         decisions.reviewed_state(True) is True and decisions.reviewed_state(0) is False
     )
     assert decisions.reviewed_state("perhaps") is None
+
+
+def test_a_malformed_hoist_is_shown_as_a_finding_not_a_crash(tmp_path):
+    # Sol review 1, MAJOR 3: a session-authored record whose `high_risk` holds
+    # a non-string is reported by `record_findings`; the owner page still
+    # renders every entry and shows that finding.
+    folder = tmp_path / "docs/decisions"
+    folder.mkdir(parents=True)
+    (folder / "run.toml").write_text(
+        'high_risk = [["D-001"]]\n\n' + _entry("D-001"), encoding="utf-8"
+    )
+    shown, reviewed = decisions.review_queue((folder / "run.toml").read_text())
+    assert [e["id"] for e in shown] == ["D-001"] and reviewed == 0
+    section = _section(tmp_path)
+    assert "chose D-001" in section
+    assert "Format findings" in section and "high_risk" in section

@@ -264,7 +264,7 @@ def open_item_queue(work_rows, oi_rows):
     side are inert. A row that is not `queued` (drafted, deferred, claimed or
     closed) surfaces nothing: the decision reaches the owner through the queue.
 
-    Implements: SR-148
+    Implements: SR-148, LLR-299
     """
     pending = _pending_items(oi_rows)
     held = _held_rows(work_rows, pending)
@@ -281,7 +281,10 @@ def open_item_queue(work_rows, oi_rows):
 
 
 def _pending_items(oi_rows):
-    """`{OI id: row}` of every real (non-example) pending open item."""
+    """`{OI id: row}` of every real (non-example) pending open item.
+
+    Implements: SR-148, LLR-299
+    """
     pending = {}
     for row in oi_rows:
         oid = (row.get("OI-ID") or "").strip()
@@ -293,7 +296,10 @@ def _pending_items(oi_rows):
 
 def _held_rows(work_rows, pending):
     """`{WI id: [pending OI ids its needs cite]}` for every real queued row
-    citing at least one item in `pending`."""
+    citing at least one item in `pending`.
+
+    Implements: SR-148, LLR-299
+    """
     held = {}
     for row in work_rows:
         wid = (row.get("WI-ID") or "").strip()

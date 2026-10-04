@@ -212,3 +212,71 @@ def test_a_registry_specref_is_clocked_per_cited_item(tmp_path):
     _commit(root, "edit OI-5", env=_dated(1_700_002_000))
     (finding,) = ct.backlog_staleness_findings(root, wis)
     assert finding.startswith("WI-001: cites OI-5 amended after")
+
+
+# --- rework round 1 (Sol review 1, MAJOR 1, 2 and 4) --------------------------
+
+
+def _shallow_ruling(tmp_path):
+    """A ruling commit whose citing row's Done-when is untouched, at a shallow
+    boundary: the commit object names its parent, but git hides the ancestry."""
+    root = _base(tmp_path)
+    _items(root, OI_5="ruled", OI_6="pending")
+    sha = _commit(root, "rule OI-5 without the row")
+    parent = _git(root, "rev-parse", sha + "^1")
+    (root / ".git" / "shallow").write_text(sha + "\n", encoding="utf-8")
+    return root, sha, parent
+
+
+def test_a_shallow_boundary_is_judged_never_read_as_a_root_commit(tmp_path):
+    # MAJOR 1: `rev^1` does not resolve at a shallow boundary, yet the commit
+    # object carries a parent; reading that as "a root commit closes nothing"
+    # skipped the rule. The parent is read off the commit object instead.
+    root, sha, _parent = _shallow_ruling(tmp_path)
+    assert _git(root, "rev-parse", "--is-shallow-repository") == "true"
+    (line,) = ar.commit_ruling_sync_lines(root, sha)
+    assert "WI-001 cites OI-5" in line
+
+
+def test_a_parent_the_repository_cannot_read_is_refused_by_name(tmp_path):
+    # ...and where the parent object is genuinely absent (a depth-one clone),
+    # the commit is refused by name: never a skip, never a degraded pass.
+    root, sha, parent = _shallow_ruling(tmp_path)
+    loose = root / ".git" / "objects" / parent[:2] / parent[2:]
+    loose.chmod(0o644)  # git writes objects read-only
+    loose.unlink()
+    (line,) = ar.commit_ruling_sync_lines(root, sha)
+    assert parent[:10] in line and "cannot be read" in line and sha[:10] in line
+
+
+def test_the_csv_carrier_is_judged_like_the_toml_one(tmp_path):
+    # MAJOR 2: the registry is read through whichever carrier each tree uses.
+    root = _repo(tmp_path / "repo")
+    csv = root / "docs/requirements/open-items.csv"
+    csv.parent.mkdir(parents=True)
+    csv.write_text("OI-ID,Title,Status\nOI-5,t,pending\n", encoding="utf-8")
+    _spec(root, "WI-001", ["OI-5"], "- OI-5 is ruled.")
+    _commit(root, "base")
+    csv.write_text("OI-ID,Title,Status\nOI-5,t,ruled\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert "WI-001 cites OI-5" in line
+    sha = _commit(root, "rule on the CSV carrier")
+    (line,) = ar.commit_ruling_sync_lines(root, sha)
+    assert "WI-001 cites OI-5" in line
+
+
+def test_an_added_criterion_carrying_a_path_counts_as_an_update(tmp_path):
+    # MAJOR 4: the raw Done-when section is compared (A1); the claim-time
+    # evidence-stripping reading took the added path for completion evidence.
+    root = _base(tmp_path)
+    _items(root, OI_5="ruled", OI_6="pending")
+    _spec(
+        root,
+        "WI-001",
+        ["OI-5", "OI-6"],
+        "- OI-5 and OI-6 are ruled. — Use scripts/export.py as the canonical "
+        "export entry.",
+    )
+    _git(root, "add", "-A")
+    assert ar.staged_ruling_sync_lines(root) == []

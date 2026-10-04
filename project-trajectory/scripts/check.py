@@ -1940,7 +1940,7 @@ def _ruling_sync_refusal(root="."):
     the tree neither updates that row's Done-when nor closes or removes it, or
     None. Off git there is no commit to judge, and it answers None.
 
-    Implements: SR-148
+    Implements: SR-148, LLR-298
     """
     if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
         return None
@@ -1954,7 +1954,7 @@ def _ruling_sync_mode(args):
     """The `--ruling-sync` entry point, `_held_status_mode`'s shape: EXIT 1
     printing the refusal, or 0.
 
-    Implements: SR-148
+    Implements: SR-148, LLR-298
     """
     if not args.ruling_sync:
         return

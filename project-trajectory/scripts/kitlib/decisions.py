@@ -218,7 +218,11 @@ def review_queue(text):
     if not isinstance(entries, dict):
         return [], 0
     hoist = data.get("high_risk")
-    hoisted = set(hoist) if isinstance(hoist, list) else set()
+    # A malformed hoist is `record_findings`' to report; the queue still lists
+    # every entry, so the owner page shows the finding beside them.
+    hoisted = (
+        {h for h in hoist if isinstance(h, str)} if isinstance(hoist, list) else set()
+    )
     shown, reviewed = [], 0
     for entry_id, entry in entries.items():
         if _inert(entry_id) or not isinstance(entry, dict):

@@ -238,3 +238,37 @@ def test_a_needs_token_naming_no_open_item_is_reported(tmp_path):
     assert "WI-002: open-item predecessor 'OI-77' is not a minted open item" in (
         proc.stderr
     )
+
+
+def test_a_registry_specref_must_name_an_item_the_row_cites(tmp_path):
+    # Sol review 1, MAJOR 5 (LLR-299, A6): a placeholder citing pending OI-5
+    # whose specref anchors OI-6 is an ERROR, as is the CSV carrier's spelling.
+    _items(tmp_path, ("OI-5", "pending"), ("OI-6", "ruled"))
+    _spec(tmp_path, "WI-001", needs=["OI-5"], specref=OI + "#OI-6")
+    proc = _check(tmp_path)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "WI-001: its specref names OI-6, which its needs do not cite" in (
+        proc.stderr
+    )
+    _spec(tmp_path, "WI-001", needs=["OI-5"], specref=OI + "#OI-5")
+    assert _check(tmp_path).returncode == 0
+
+
+def test_the_csv_carriers_registry_specref_is_judged_too(tmp_path):
+    # Sol review 1, MAJOR 2: the state check reads the registry's stem.
+    path = tmp_path / "docs/requirements/open-items.csv"
+    path.parent.mkdir(parents=True)
+    path.write_text("OI-ID,Title,Status\nOI-5,t,ruled\n", encoding="utf-8")
+    _spec(
+        tmp_path,
+        "WI-001",
+        needs=["OI-5"],
+        specref="docs/requirements/open-items.csv#OI-5",
+    )
+    findings = ct.open_item_specref_findings(
+        tmp_path, ct.load_wis(ct.read_registry_rows(tmp_path / ct.WI_CSV))[0]
+    )
+    assert (
+        len(findings) == 1
+        and "every open item it cites (OI-5) is ruled" in (findings[0])
+    )

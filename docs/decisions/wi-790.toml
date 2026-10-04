@@ -4,7 +4,7 @@
 # project-trajectory/decisions.template.toml. The calls below are the ones no
 # spec section, amendment or OI-102 ruling settles.
 
-high_risk = ["D-001", "D-002", "D-005"]
+high_risk = ["D-001", "D-002", "D-005", "D-017"]
 
 [decision.D-001]
 decided = "The shipped open-items template's live example rows OI-1 and OI-2 are deleted rather than paired with shipped placeholder work items; the status template's example bullets now name the inert OI-000, check_docs S-3 ignores a -000 id, and id-watermark.template keeps OI = 2 (a mark never falls)."
@@ -31,10 +31,10 @@ review = ""
 reviewed = false
 
 [decision.D-004]
-decided = "'Updates the Done-when' is read mechanically as: the row's Done-when in the new tree is non-empty AND kitlib.done_when.changes reports a change from the parent's, so a tick or appended completion evidence alone does not satisfy it."
-alternative = "Any byte difference in the Done-when section."
+decided = "'Updates the Done-when' is read mechanically as: the row's Done-when section in the new tree is non-empty AND its raw text (outer blank lines trimmed) differs from the parent's. (Rework round 1 reversed the first reading, kitlib.done_when.changes, which strips appended evidence and so refused an added criterion that carried a path: Sol review 1, MAJOR 4.)"
+alternative = "The claim-time evidence-stripping comparison (kitlib.done_when.changes), which also refuses a tick-only edit."
 reversal_cost = "One predicate in acceptance_record._sync_gap."
-why_not_escalated = "A1 binds non-empty and the raw-text read; reusing the claim-time comparison the reviewer brief already uses keeps one meaning of 'changed', and whether the change carries the ruling stays the reviewer's judgement (A1)."
+why_not_escalated = "A1 binds the raw-text read and leaves whether the change carries the ruling to the reviewer; a tick-only edit now passes the mechanical rule, and the reviewer judges it."
 review = ""
 reviewed = false
 
@@ -123,5 +123,37 @@ decided = "gen_open_items.load_open_items is deleted: the queue projection repla
 alternative = "Keep the reader as an unused helper."
 reversal_cost = "Restore one function from git."
 why_not_escalated = "Dead code with no caller; the carrier's raise-on-unreadable rule it carried is kept by the projection's own read."
+review = ""
+reviewed = false
+
+[decision.D-016]
+decided = "An open row whose specref names an open-items anchor must name an item its needs cites; a mismatch (citing OI-5, anchored at OI-6) is an ERROR from open_item_specref_findings (rework round 1, Sol review 1 MAJOR 5; the coordinator's call, A6)."
+alternative = "Leave the anchor unchecked and narrow LLR-299's text instead."
+reversal_cost = "One branch in check_trajectory._registry_ref_findings."
+why_not_escalated = "The coordinator ruled it; A6 makes the reference row-specific, and a placeholder pointing at another decision's record misleads the staleness clock and the reader."
+review = ""
+reviewed = false
+
+[decision.D-017]
+decided = "The merge-slot form reads a commit's first parent off the commit object (git cat-file commit), not rev^1: no parent line is a true root commit and answers nothing; a parent the repository cannot read is refused by name, telling the operator to fetch it (Sol review 1, MAJOR 1)."
+alternative = "Keep rev^1 and treat an unresolvable parent as a root commit (the skip A1 forbids), or walk history to recover it."
+reversal_cost = "One function, acceptance_record.commit_ruling_sync_lines."
+why_not_escalated = "A1 states the rule never skips for missing history; refusing by name is the one path, with no degraded mode."
+review = ""
+reviewed = false
+
+[decision.D-018]
+decided = "The sync rule reads the open-items registry in each tree through spine_carrier's carrier resolution (TOML, else CSV), and the specref checks match the registry by its carrier-free stem, so a CSV-carrier adopter is judged like a TOML one (Sol review 1, MAJOR 2). intake's mint stays TOML-only, as before."
+alternative = "Judge the TOML carrier only and document the CSV gap."
+reversal_cost = "Two helpers: acceptance_record._registry_states and check_trajectory._registry_ref."
+why_not_escalated = "The CSV carrier is still supported for adopters, and a check that one carrier bypasses is a skipped check."
+review = ""
+reviewed = false
+
+[decision.D-019]
+decided = "review_queue ignores non-string members of a malformed high_risk list rather than raising, so the owner page renders every entry and shows record_findings' report of the malformation (Sol review 1, MAJOR 3)."
+alternative = "Validate the hoist in review_queue and drop the whole record, or let it raise."
+reversal_cost = "One comprehension in kitlib.decisions.review_queue."
+why_not_escalated = "The record is session-authored, record_findings already reports the defect, and a crashed owner page hides every other decision; the change is the smallest that keeps both visible."
 review = ""
 reviewed = false

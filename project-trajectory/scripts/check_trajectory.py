@@ -932,7 +932,7 @@ def uncited_open_item_findings(root, wi_rows):
     queue projection (`kitlib.spine.open_item_queue`) the owner surface and the
     status snapshot also read. Vacuous without an open-items registry.
 
-    Implements: SR-148
+    Implements: SR-148, LLR-299
     """
     path = Path(root) / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
@@ -946,15 +946,32 @@ def uncited_open_item_findings(root, wi_rows):
     ]
 
 
-def open_item_specref_findings(root, wis):
-    """An open row whose cited open items are ALL ruled must not keep the
-    open-items registry as its `specref` (WI-790): the registry was the
-    placeholder's spec of record only until the ruling, which writes the row's
-    real criteria and points it at a real spec. A state check — no diff, no
-    history. An item absent from the registry is not ruled (the dangling-edge
-    ERROR reports it). Vacuous without a registry.
+def _registry_ref(specref):
+    """`(names the open-items registry, its #anchor)` for a `specref`, under
+    either carrier's spelling (`.toml` or `.csv`): the registry is matched by
+    its carrier-free stem, the one name it has across a carrier change.
 
-    Implements: SR-148
+    Implements: SR-148, LLR-299
+    """
+    pathpart, _hash, anchor = specref.partition("#")
+    stem = spine_carrier.stem(OPEN_ITEMS_REL)
+    return spine_carrier.stem(pathpart.strip()) == stem, anchor.strip()
+
+
+def open_item_specref_findings(root, wis):
+    """The citation integrity of an open row whose `specref` names the
+    open-items registry (WI-790, A6), under either carrier's spelling:
+
+      * its `#OI-NNN` anchor must name an item its `needs` cites — a
+        placeholder's spec of record is ITS decision's record, never another's;
+      * once every item it cites is ruled it must not keep the registry at
+        all: the ruling writes the row's real criteria and points it at a real
+        spec. An item absent from the registry is not ruled (the dangling-edge
+        ERROR reports it).
+
+    A state check — no diff, no history. Vacuous without a registry.
+
+    Implements: SR-148, LLR-299
     """
     path = Path(root) / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
@@ -963,17 +980,37 @@ def open_item_specref_findings(root, wis):
         (r.get("OI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
         for r in spine_carrier.load(path, "OI-ID")
     }
-    return [
-        "{}: every open item it cites ({}) is ruled, but its specref still "
-        "names the open-items registry — the ruling owes the row its real "
-        "specref and criteria (WI-790)".format(
-            w["id"], ", ".join(w["oi_preds"]) or "none"
+    out = []
+    for w in wis:
+        named, anchor = _registry_ref(w["specref"])
+        if w["status"] in OPEN_STATUSES and named:
+            out.extend(_registry_ref_findings(w, anchor, states))
+    return out
+
+
+def _registry_ref_findings(w, anchor, states):
+    """The two citation-integrity findings for one open row whose `specref`
+    names the open-items registry.
+
+    Implements: SR-148, LLR-299
+    """
+    out = []
+    if anchor and anchor not in w["oi_preds"]:
+        out.append(
+            "{}: its specref names {}, which its needs do not cite — a "
+            "placeholder's specref names the item it waits on (WI-790)".format(
+                w["id"], anchor
+            )
         )
-        for w in wis
-        if w["status"] in OPEN_STATUSES
-        and w["specref"].split("#", 1)[0].strip() == OPEN_ITEMS_REL
-        and all(states.get(o, "pending") != "pending" for o in w["oi_preds"])
-    ]
+    if all(states.get(o, "pending") != "pending" for o in w["oi_preds"]):
+        out.append(
+            "{}: every open item it cites ({}) is ruled, but its specref still "
+            "names the open-items registry — the ruling owes the row its real "
+            "specref and criteria (WI-790)".format(
+                w["id"], ", ".join(w["oi_preds"]) or "none"
+            )
+        )
+    return out
 
 
 # --- the phase-anchor archetype + phase-drop detector (WI-093) -----------------
@@ -2434,11 +2471,11 @@ def _specref_staleness(root, w, wi_time, spec_time):
 
     Implements: SR-148
     """
-    pathpart, _hash, anchor = w["specref"].partition("#")
-    pathpart = pathpart.strip()
+    pathpart = w["specref"].partition("#")[0].strip()
     if not pathpart:
         return []
-    if pathpart == OPEN_ITEMS_REL:
+    named, anchor = _registry_ref(w["specref"])
+    if named:
         if OPEN_ITEMS_REL not in spec_time:
             spec_time[OPEN_ITEMS_REL] = _blame_row_times(root, OPEN_ITEMS_REL)
         times = spec_time[OPEN_ITEMS_REL] or {}
