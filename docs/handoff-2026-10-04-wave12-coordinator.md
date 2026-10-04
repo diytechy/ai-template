@@ -13,6 +13,16 @@ as the resume map.
   render at the bottom of [open-items.html](open-items.html) under "Decisions to
   review".
 
+## Update, later on 2026-10-04 (owner present)
+
+The owner ruled OI-104 in session: WI-788's note is approved with amendments
+A1-A4 (record `docs/log.d/2026-10-04-owner-rulings-oi104.md`), Q-4 moved to
+OI-105 (pending, held by WI-795). The fold passed four Codex 6.1 Sol rounds,
+WI-788 landed (`2e7cd53f`) and closed, and its twenty-one successor rows are
+filed as WI-797 to WI-817. The sweep minted WI-796 (re-judge TC-055). This
+session's record is `docs/log.d/2026-10-04-wave12-coordinator.md`. What
+follows below is the earlier state, kept for its corrections and tools.
+
 ## State at handoff (trunk `refactor_again`, nothing pushed)
 
 - **Landed this session** (squash, lane tips in `archive/lanes`):

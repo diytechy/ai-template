@@ -2,12 +2,26 @@
 id = "WI-794"
 title = "Owner checkpoint: WI-788's design note and successor plan"
 workstream = "process"
-specref = "docs/log.d/2026-10-04-owner-rulings-oi104.md"
+specref = ""
 needs = ["OI-104"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+OI-104's follow-through, done by hand by the coordinator on 2026-10-04.
+
+- WI-788's lane was refreshed onto trunk and landed as one squash commit carrying
+  the approved note with A1-A4 (`2e7cd53f`), its tip archived in `archive/lanes`
+  (`8642f1e8`), and WI-788 closed on that note. The note's amendments passed four
+  Codex 6.1 Sol rounds, SOUND at `486c126a`.
+- The intake sweep of that landing minted WI-796 (re-judge TC-055), so the
+  twenty-one S788-* successor rows were filed as WI-797 to WI-817, in the note's
+  graph order, each with its Done-when, test bar, review bar and RESYNC flag.
+- OI-105 stays pending and holds only the FreeLLMAPI row of S788-routes (WI-815),
+  through WI-795.
 
 ## Context
 
@@ -23,7 +37,7 @@ files the note's successor rows on trunk, lands WI-788's lane, and closes WI-788
 the approved note.
 
 OI-104 was ruled on 2026-10-04: approved with amendments A1-A4, folded into the
-note on lane `wi-788` (see [the ruling record](../../log.d/2026-10-04-owner-rulings-oi104.md)).
+note on lane `wi-788` (see [the ruling record](../../../log.d/2026-10-04-owner-rulings-oi104.md)).
 
 ## Done-when
 

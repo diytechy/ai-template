@@ -294,27 +294,27 @@ graph TD
 
 | Group | Row | Title | needs | Tier | Review | Extra test bar |
 |---|---|---|---|---|---|---|
-| contracts | S788-glossary | `GLOSSARY.md` and PROCESS.md wording | — | medium | A | `check_docs`, byte budget |
-| foundation | S788-accounts | Account tables, per-account homes | glossary | strong | A | scaffold bootstrap; claude login isolation check |
-| foundation | S788-lane-state-provider | The provider, representation only | glossary | strong | A+B | a fixture per crash shape (F3 probe) |
-| foundation | S788-session-store | Store, invocations, ledger, spool | accounts, lane-state-provider | strong | A+B | per-CLI kill fixtures; usage baselines |
-| foundation | S788-ask | One entry point, today's kinds, A1's per-kind table | session-store | strong | A+B | judged-scope tests; one live `ask.py` call (Q-3) |
-| foundation | S788-session-families | Families and reset terms | ask | strong | A | — |
-| planning | S788-plan-gate | A checkable plan gate | — | medium | A | — |
-| planning | S788-plan-kinds | Plan kinds through `ask`; drafter selection | ask, plan-gate | strong | A | — |
-| planning | S788-single-plan | Per-item planning, replan, tier dial | plan-kinds, lane-state-provider | strong | A | — |
-| adjudication | S788-text-then-act | Risk 6 in the lane (and on direct trunk commits) | — | medium | A+B | — |
-| adjudication | S788-station-authority | The authority, claims, cancellation | lane-state-provider, session-store | strong | A+B | — |
-| adjudication | S788-landing | One landing per lane; F1, F2; record check | station-authority, ask | strong | A+B | — |
-| adjudication | S788-sitting | `LOCK` to `MERGE_ACTION`, final evidence, exhaustion | landing, text-then-act, session-families, WI-791 | strong | A+B | — |
-| adjudication | S788-mint | `MINT`, consolidation, station lane | sitting, WI-790 | strong | A+B | — |
-| adjudication | S788-resolve-ls9 | `RESOLVE` and LS9 wording | sitting | medium | A | byte budget |
-| adjudication | S788-spine-authoring | The OI-101 Q1 flow | sitting, session-families, mint | strong | A+B | — |
-| planning, late | S788-dual-pickup | The dual pickup in a lane; the writer census | plan-kinds, lane-state-provider, mint, WI-790 | strong | A | the no-writer-outside-the-landing census |
-| routes | S788-usage-pacing | Weekly-pace account selection within a family (A2) | accounts, ask | strong | A+B | fixture readings for both providers, unreadable, stale, two Claude accounts, model-scoped window, exhausted weekly window |
-| routes | S788-routes | FreeLLMAPI, Grok, Gemini untested | accounts, ask | medium | A | one live call (Q-3; the FreeLLMAPI row waits on OI-105) |
-| consolidation | S788-retire-runtime-dual-paths | Dual paths needing no migration | lane-state-provider | medium | A | — |
-| consolidation | S788-retire-legacy-config-and-carriers | SN-028 window, non-TOML carriers | accounts | strong | A+B | scaffold bootstrap (forced migration) |
+| contracts | <a id="s788-glossary"></a>S788-glossary | `GLOSSARY.md` and PROCESS.md wording | — | medium | A | `check_docs`, byte budget |
+| foundation | <a id="s788-accounts"></a>S788-accounts | Account tables, per-account homes | glossary | strong | A | scaffold bootstrap; claude login isolation check |
+| foundation | <a id="s788-lane-state-provider"></a>S788-lane-state-provider | The provider, representation only | glossary | strong | A+B | a fixture per crash shape (F3 probe) |
+| foundation | <a id="s788-session-store"></a>S788-session-store | Store, invocations, ledger, spool | accounts, lane-state-provider | strong | A+B | per-CLI kill fixtures; usage baselines |
+| foundation | <a id="s788-ask"></a>S788-ask | One entry point, today's kinds, A1's per-kind table | session-store | strong | A+B | judged-scope tests; one live `ask.py` call (Q-3) |
+| foundation | <a id="s788-session-families"></a>S788-session-families | Families and reset terms | ask | strong | A | — |
+| planning | <a id="s788-plan-gate"></a>S788-plan-gate | A checkable plan gate | — | medium | A | — |
+| planning | <a id="s788-plan-kinds"></a>S788-plan-kinds | Plan kinds through `ask`; drafter selection | ask, plan-gate | strong | A | — |
+| planning | <a id="s788-single-plan"></a>S788-single-plan | Per-item planning, replan, tier dial | plan-kinds, lane-state-provider | strong | A | — |
+| adjudication | <a id="s788-text-then-act"></a>S788-text-then-act | Risk 6 in the lane (and on direct trunk commits) | — | medium | A+B | — |
+| adjudication | <a id="s788-station-authority"></a>S788-station-authority | The authority, claims, cancellation | lane-state-provider, session-store | strong | A+B | — |
+| adjudication | <a id="s788-landing"></a>S788-landing | One landing per lane; F1, F2; record check | station-authority, ask | strong | A+B | — |
+| adjudication | <a id="s788-sitting"></a>S788-sitting | `LOCK` to `MERGE_ACTION`, final evidence, exhaustion | landing, text-then-act, session-families, WI-791 | strong | A+B | — |
+| adjudication | <a id="s788-mint"></a>S788-mint | `MINT`, consolidation, station lane | sitting, WI-790 | strong | A+B | — |
+| adjudication | <a id="s788-resolve-ls9"></a>S788-resolve-ls9 | `RESOLVE` and LS9 wording | sitting | medium | A | byte budget |
+| adjudication | <a id="s788-spine-authoring"></a>S788-spine-authoring | The OI-101 Q1 flow | sitting, session-families, mint | strong | A+B | — |
+| planning, late | <a id="s788-dual-pickup"></a>S788-dual-pickup | The dual pickup in a lane; the writer census | plan-kinds, lane-state-provider, mint, WI-790 | strong | A | the no-writer-outside-the-landing census |
+| routes | <a id="s788-usage-pacing"></a>S788-usage-pacing | Weekly-pace account selection within a family (A2) | accounts, ask | strong | A+B | fixture readings for both providers, unreadable, stale, two Claude accounts, model-scoped window, exhausted weekly window |
+| routes | <a id="s788-routes"></a>S788-routes | FreeLLMAPI, Grok, Gemini untested | accounts, ask | medium | A | one live call (Q-3; the FreeLLMAPI row waits on OI-105) |
+| consolidation | <a id="s788-retire-runtime-dual-paths"></a>S788-retire-runtime-dual-paths | Dual paths needing no migration | lane-state-provider | medium | A | — |
+| consolidation | <a id="s788-retire-legacy-config-and-carriers"></a>S788-retire-legacy-config-and-carriers | SN-028 window, non-TOML carriers | accounts | strong | A+B | scaffold bootstrap (forced migration) |
 
 (`needs` omits the `S788-` prefix.) **Order notes.** S788-dual-pickup follows
 S788-mint, against B12's "planning, then adjudication", because its children
