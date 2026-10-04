@@ -210,6 +210,62 @@ This supersedes the second pass's warn-tier reading. The coordinator's reading:
    - The RESYNC entry does the same for adopters, with no transition reader kept
      (WI-788 risk 9).
 
+## Owner direction 2026-10-04: "Decisions to review" on the owner surface
+
+The owner asked whether a ledger of decisions made autonomously by an LLM was ever
+built. The answer is yes, but under-used and unsurfaced. The coordinator proposed
+putting its enforcement in WI-788 and its review surface here. The owner:
+
+> "Yes, but I'd want them to surface in the HTML at the bottom os "Decisions to review" or something similar, and the entry itself could just exclude them from the HTML if the contain something like "Reviewed"="True", or any other number of boolean representations."
+
+What exists (checked 2026-10-04):
+- **The ruling:** OI-74 and OI-75, ruled 2026-08-31. The dial is
+  `[attestation] decision_recording` (off / record / escalate-first); the shipped
+  template is off, and this repo records.
+- **The build:** WI-557 (2026-09-28; SR-225, LLR-282 to LLR-284, TC-292 to TC-294,
+  IF-255 and IF-256, `kitlib/decisions.py`). One TOML file per run at
+  `docs/decisions/<branch>.toml`. Each `[decision.D-NNN]` entry carries `decided`,
+  `alternative`, `reversal_cost`, `why_not_escalated` and a free-text `review` cell.
+- **How it is used:**
+  - Two real records exist: `build-wi-557.toml` (5 entries) and `wi-688.toml`
+    (1 entry). About 83 work items have landed since the ledger went live.
+  - Only the loop's merge slot (`integrate.py`, around :2803) refuses a close that
+    owes a record. The coordinator's hand path lands lanes by squash outside the slot,
+    so nothing demanded a record there.
+  - No owner surface shows the entries. The module says "a collator, if one is ever
+    built" and "nothing reads [the review cell]".
+
+Added to this row's design (point 9):
+
+9. **Decisions to review.**
+   - `open-items.html` gains a section at the bottom, "Decisions to review". It lists
+     every delegated-decision entry under `docs/decisions/` that is not marked
+     reviewed. The run's `high_risk` entries come first. Each entry shows its file,
+     id, `decided`, `alternative`, `reversal_cost` and `why_not_escalated`, and links
+     to the record. Entries numbered `-000` are inert and never shown.
+   - **A `reviewed` key per entry marks it reviewed** (owner: "Reviewed"="True", or
+     any boolean representation). Case-insensitive, these count as reviewed: a TOML
+     `true`, a non-zero number, and the strings `true`, `yes`, `y`, `1`, `reviewed`
+     and `done`.
+   - These count as **not reviewed**: an absent key, `false`, `0`, an empty string,
+     `no`, `n` and `false`.
+   - Any other value counts as not reviewed and is reported as a format finding, so a
+     typo never hides a decision.
+   - The free-text `review` cell stays as the owner's note. A note alone no longer
+     marks an entry reviewed: one key decides, so the old "any string means reviewed"
+     rule retires rather than running beside it.
+   - When nothing is left to review, the section says so and names how many entries
+     are reviewed.
+   - The status snapshot's open-items block gains one count line, "Decisions to
+     review: N", linking to the section.
+   - **The record format changes:** IF-255 and IF-256 (the `reviewed` key and its
+     reading), SR-225's acceptance and LLR-283 and TC-293 (format findings), the
+     shipped `decisions.template.toml` (its example entry carries `reviewed = false`),
+     `kitlib/decisions.py`'s doctrine ("nothing reads the cell" becomes "the owner
+     surface reads `reviewed`"), and IF-074 (the owner surface). Through in-lane
+     adjudication, with a RESYNC note. Adopters' existing entries read as not
+     reviewed until marked; no migration is forced.
+
 ## Amendments from the Sol review (2026-10-03)
 
 Codex Sol (gpt-6.1-sol, high effort, read-only, at `83abd4d2`) reviewed this
@@ -347,6 +403,18 @@ owner's, in OI-102.
   PROCESS.md, `docs/work/README.md` and the templates link to it.
 - Migration as in design 8. The status.md filing note is updated.
 - A RESYNC_PACK entry migrates adopters.
+- `open-items.html` ends with "Decisions to review", listing every entry not marked
+  reviewed, high-risk first, with its disclosure fields and a link to its record. The
+  status snapshot shows the count. Tests cover:
+  - an unreviewed entry (shown);
+  - each truthy form of `reviewed` (hidden);
+  - each falsy form, and an absent key (shown);
+  - an unrecognized value (shown, and a format finding);
+  - a `-000` entry (never shown);
+  - an all-reviewed state (the section says so).
+- The decisions-record rows (IF-255, IF-256, SR-225, LLR-283, TC-293), the shipped
+  template, and `kitlib/decisions.py`'s doctrine are amended for the `reviewed` key,
+  and the "any string in `review` means reviewed" rule is retired.
 - The commit bar passes.
 - The amendments A1 to A9 are built, with OI-102's rulings (2026-10-03): Q1 is the
   confirmation criterion, Q2 is the integrity notice, and Q3 is design 6's commit-time

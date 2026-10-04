@@ -422,4 +422,41 @@ each, and the design note follows these answers.
 9. **The RESYNC entry is the migration.** It moves the appropriate configs; no
    transition wrapper is kept.
 
+## Scope widened 2026-10-04 (owner): the delegated-decisions record on every path
+
+The owner asked whether a ledger of decisions made autonomously by an LLM was ever
+built, and agreed to put its enforcement here and its review surface in WI-790 ("Yes,
+...").
+
+What exists (checked 2026-10-04):
+- **The ruling:** OI-74 and OI-75, ruled 2026-08-31. The dial is
+  `[attestation] decision_recording` (off / record / escalate-first); the shipped
+  template is off, and this repo records.
+- **The build:** WI-557 (2026-09-28; SR-225, LLR-282 to LLR-284, TC-292 to TC-294,
+  IF-255 and IF-256, `kitlib/decisions.py`). One TOML file per run at
+  `docs/decisions/<branch>.toml`. Each `[decision.D-NNN]` entry carries `decided`,
+  `alternative`, `reversal_cost`, `why_not_escalated` and a free-text `review` cell.
+- **How it is used:**
+  - Two real records exist: `build-wi-557.toml` (5 entries) and `wi-688.toml`
+    (1 entry). About 83 work items have landed since the ledger went live.
+  - Only the loop's merge slot (`integrate.py`, around :2803) refuses a close that
+    owes a record. The coordinator's hand path lands lanes by squash outside the slot,
+    so nothing demanded a record there.
+  - No owner surface shows the entries. The module says "a collator, if one is ever
+    built" and "nothing reads [the review cell]".
+
+Added to half 1 (the design note), as part of risk 8 and the slice plan's slice 2:
+- **The one entry point hands every delegated session the record note**
+  (`kitlib.decisions.session_note`), whether a loop session or a coordinator's
+  sitting, so writing the record never depends on which path launched the session.
+- **Every landing checks the record**, through one function, whichever path lands the
+  lane: the loop's merge slot, or the coordinator's landing, which risk 8 moves onto
+  the same entry and landing code. This fixes the single point of failure: the check
+  lives where every landing passes, not in one of two paths (risk 7).
+- **Measure the gap first:** list the delegated lanes landed since 2026-09-28 that owe
+  a record under `decision_recording = "record"` and carry none. State whether any is
+  backfilled or accepted as history.
+- WI-790 builds the owner's "Decisions to review" section and the `reviewed` key.
+  This row only guarantees that the records exist.
+
 ## Deliverable
