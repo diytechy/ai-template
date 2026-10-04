@@ -400,8 +400,11 @@ dial home.
     replaces that rule, never adds beside it. So S788-ask lands from its needs
     alone.
 - **The shipped template** makes every family eligible at weight 1 for every
-  kind, with the cross-family preference: an adopter that trusts both families
-  gets today's behaviour.
+  kind, with the cross-family preference. That is a declared change for an
+  adopter that trusts both families (D-036): where both remain in the weighted
+  draw after preferences and availability, draws split evenly instead of always
+  taking the first in enable-list order; S788-ask's RESYNC entry says so and
+  how to keep a lead (unequal weights, or 0).
 - **This repo's values.** The owner, 2026-10-04: "currently my trust for
   adjudication and building only lies with claude. Codex for authoring and
   reviewing"; and plan to Claude, judge to Codex (agreed in session).
