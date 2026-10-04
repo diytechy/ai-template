@@ -166,4 +166,58 @@ Added to Done-when half 1 (the design note, owner checkpoint):
   today's builder-authors / adjudicator-approves split and the S11 in-lane plan.
 - The proposed defaults, each named as a change to a ruling where it is one.
 
+## Owner direction on the gaps (2026-10-03, second pass)
+
+1. **Retention defaults.** "This repo retention does not matter because the
+   adjudicator typically runs in the visual code or other development session
+   environment, but downstream adopters (resync note) should turn on retained
+   adjudication. Retained builders can likely stay off but the capability should be
+   built but defaults to always reset."
+   - So the shipped template defaults to retained adjudication, and the RESYNC_PACK
+     entry tells adopters.
+   - Builder retention is built, with "reset every call" as its shipped default.
+   - This repo's own dial may stay as it is.
+2. **Why only some adjudication kinds?** Checked: it is drift, not a decision.
+   `retain_for = ["disposition", "amendment", "red-tc"]` was written on 2026-08-30
+   (OI-69 filing, `232018f2`), when those were the adjudication kinds. The
+   `first-approval` brief came on 2026-09-01 (WI-572), `consolidate` on 2026-09-04,
+   and `rejudge` later. None was ever added. The design states the rule per brief
+   kind; any exclusion keeps a reason.
+3. **One labelled entry point** (owner, gaps 3 and 4): "Each LLM call should not have
+   to know it's family ... a single function that labels what is getting asked
+   (builder / reviewer / judgement / authoring / authoring review / perhaps multiple).
+   Then that function can do the reset determination, can lock the adjudicator (if
+   it's in use from another lane), and can route to other models depending on
+   availability and desired usage ratio of models."
+
+   Today these parts exist but are spread across modules:
+   - **The label:** `agent_loop` `pick_phase` (BUILD, REVIEW-A/B, CRITIQUE,
+     DESIGN-CHECK, ADJUDICATE).
+   - **Tier:** `agent_brief.phase_tier` plus the row's BuildTier pin.
+   - **Family exclusion:** `agent_loop` `route_intent`, keyed on the loop's memory of
+     the last implementer family.
+   - **Model choice:** `agent_route.select`: tier, heterogeneity, cooldown for
+     availability, per-phase weights in `docs/agents-enabled` for the usage ratio,
+     and prefer-map.
+   - **The prompt:** `agent_brief.compose_session_prompt` and
+     `agent_loop.session_body`.
+   - **Reset and lock:** `session_service.plan_keep` -> `session_keep.keep_for`, with
+     a per-route lease.
+   - **Launch and record:** `session_service.act`, `.record` and `.call`.
+   - **Composition:** `agent_loop` composes these steps itself (around
+     `agent_loop.py:2580-2850`).
+   - **Bypasses:** `plan_runner` calls the service with a fixed template; the
+     coordinator's hand path bypasses everything.
+
+   The design proposes the single labelled entry: `ask(kind, ...)` or similar, with
+   kinds such as build, review, judge, author and author-review. It owns the label to
+   tier, family-exclusion, availability and ratio routing, reset or continue, and
+   lock. A caller then never names a family, model or route.
+   - The family exclusion must come from the work being judged (for example the
+     lane's commit authorship or recorded session logs), not from loop memory: the
+     2026-10-03 WI-688 judge drew the builder's family because the build ran outside
+     the loop.
+   - It also states how the coordinator's hand sittings can call the same entry, so
+     the independent adjudicator stops being a bypass.
+
 ## Deliverable
