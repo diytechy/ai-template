@@ -300,6 +300,8 @@ The fix under risk 7; no interim guard.
 | **on demand at second consecutive CR**, with the family swap | 1 plan session on 42% of lanes, and no added round: the swapped family plans, then builds | share of lanes reaching a third consecutive CR (**21%**); rounds in CC-prefixed lanes | **adopt** |
 
 - **The ladder becomes:** CR → rework; CR CR → **replan + swap**; CR → tier-up;
+  (Amended, [README A1](README.md#the-owners-checkpoint-ruling-2026-10-04): the swap prefers
+  another eligible family; where one family alone may build, it draws a fresh session of it.)
   CR → page.
   - The replan is a `plan` call by the incoming family. Its clauses are the Done-when
     items plus the open findings, and the gate must pass before the build session.

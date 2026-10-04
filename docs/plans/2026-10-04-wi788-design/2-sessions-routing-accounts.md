@@ -110,7 +110,7 @@ family, model, route or account.
 1. **Label to tier.** The phase default (`agent_brief.phase_tier`), the
    BuildTier pin, `tier-up`, and OI-103 Q5's planned-build dial. The planner
    tier comes from chapter 3's plan record.
-2. **Exclusion from recorded authors** (risk 2, B10). (Amended, [README A1](README.md#the-owners-checkpoint-ruling-2026-10-04): the kind's eligible families come first; families are ranked only within that set, and a preference the declared table makes impossible is logged, not recorded for review.) Read the lane's committed
+2. **Exclusion from recorded authors** (risk 2, B10). (Amended, [README A1](README.md#the-owners-checkpoint-ruling-2026-10-04): the kind's eligible families come first; every family exclusion in the table below, `plan-critique`'s and `author`'s included, is a ranked preference within that set; and a preference the declared table makes impossible is logged, not recorded for review.) Read the lane's committed
    session logs whose `commits` range meets the call's **judged scope**, for every
    authoring kind: build, plan, author, author-review, and adjudicate where it
    wrote beyond its verdict. Each kind's judged scope and exclusions are exact:
@@ -556,7 +556,9 @@ each is its affected modules plus the smoke tier at `-n 2`.
 - **S788-ask: one labelled entry point carrying today's kinds.**
   - **Scope:**
     - `ask` and `ask.py`;
-    - today's phases moved on unchanged, except author-derived exclusion;
+    - today's phases moved on unchanged, except author-derived exclusion and
+      [README A1](README.md#the-owners-checkpoint-ruling-2026-10-04)'s per-kind
+      table, ordering rule and swap rule, which this row builds;
     - `commits` recorded for every kind;
     - the note handed by `ask`.
   - **Done-when:**

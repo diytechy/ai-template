@@ -298,7 +298,7 @@ graph TD
 | foundation | S788-accounts | Account tables, per-account homes | glossary | strong | A | scaffold bootstrap; claude login isolation check |
 | foundation | S788-lane-state-provider | The provider, representation only | glossary | strong | A+B | a fixture per crash shape (F3 probe) |
 | foundation | S788-session-store | Store, invocations, ledger, spool | accounts, lane-state-provider | strong | A+B | per-CLI kill fixtures; usage baselines |
-| foundation | S788-ask | One entry point, today's kinds | session-store | strong | A+B | judged-scope tests; one live `ask.py` call (Q-3) |
+| foundation | S788-ask | One entry point, today's kinds, A1's per-kind table | session-store | strong | A+B | judged-scope tests; one live `ask.py` call (Q-3) |
 | foundation | S788-session-families | Families and reset terms | ask | strong | A | — |
 | planning | S788-plan-gate | A checkable plan gate | — | medium | A | — |
 | planning | S788-plan-kinds | Plan kinds through `ask`; drafter selection | ask, plan-gate | strong | A | — |
@@ -311,7 +311,7 @@ graph TD
 | adjudication | S788-resolve-ls9 | `RESOLVE` and LS9 wording | sitting | medium | A | byte budget |
 | adjudication | S788-spine-authoring | The OI-101 Q1 flow | sitting, session-families, mint | strong | A+B | — |
 | planning, late | S788-dual-pickup | The dual pickup in a lane; the writer census | plan-kinds, lane-state-provider, mint, WI-790 | strong | A | the no-writer-outside-the-landing census |
-| routes | S788-usage-pacing | Weekly-pace account selection within a family (A2) | accounts, ask | strong | A+B | fixture readings for both providers, unreadable, stale, two Claude accounts |
+| routes | S788-usage-pacing | Weekly-pace account selection within a family (A2) | accounts, ask | strong | A+B | fixture readings for both providers, unreadable, stale, two Claude accounts, model-scoped window, exhausted weekly window |
 | routes | S788-routes | FreeLLMAPI, Grok, Gemini untested | accounts, ask | medium | A | one live call (Q-3; the FreeLLMAPI row waits on OI-105) |
 | consolidation | S788-retire-runtime-dual-paths | Dual paths needing no migration | lane-state-provider | medium | A | — |
 | consolidation | S788-retire-legacy-config-and-carriers | SN-028 window, non-TOML carriers | accounts | strong | A+B | scaffold bootstrap (forced migration) |
@@ -349,36 +349,67 @@ dial home.
     `buildtier` still pins `build`; escalation only goes up).
 - **One ordering rule** for every `ask` call:
   1. the kind's eligible families, rows at its tier (walking up);
-  2. hard exclusion of every session that authored the judged scope (ch.2 §3
-     step 2's table, unchanged);
-  3. for `review`, `judge`, `adjudicate`, `plan-critique` and the final review:
-     keep the eligible families other than the builder's, ranked as D-031, if
-     any remain;
+  2. hard exclusion of every **session** ch.2 §3 step 2's table names for the
+     kind. **Every family exclusion in that table becomes a ranked preference**
+     (dispute 2's one rule, extended from review, judge and adjudicate to
+     `plan-critique`'s "its drafter's family" and `author`'s "builder
+     families"), so no draw is ever empty: a fresh session of an eligible
+     family is always eligible;
+  3. for `review`, `judge`, `adjudicate`, `plan-critique`, `author`, the final
+     review and the family swap: prefer the eligible families other than the
+     judged (or swapped-out) author's, ranked as D-031, when any remain;
   4. the family by its weight (the owner's answer to the composition question,
      option (a): **weights set the family share**);
   5. the account within that family by pace (A2);
   6. a retained session continues until its reset terms are met; steps 4-5
      apply only when a session starts.
+- **The family swap** (ch.3 §4.7; Q-6's trial). On the second consecutive
+  CHANGES-REQUESTED the swap excludes the latest build author's session hard
+  and prefers another eligible family for the replan and the build, by step 3.
+  Where only one family may build and plan (this repo), the swap draws a fresh
+  session of that family, the preference unmet by declaration and logged; the
+  ladder (replan, then build, then tier-up, then page) is otherwise unchanged
+  (D-035).
 - **Unmet preferences.** One the declared table makes impossible (an
   Anthropic-only adjudicator of Anthropic-built work) is logged in the session
   log only: the table is the owner's standing decision. One the eligible set
   could have met but availability prevented (a cooldown, an outage) is logged
   and also becomes a "Decisions to review" entry.
-- **This amends** D-022, D-031 and ch.2 §3 steps 2 and 4; SR-154's "a different
-  model family wherever one is configured" becomes "configured for that kind"
-  (amended through adjudication in S788-session-families).
+- **This amends** D-022, D-031, ch.2 §3 steps 2 and 4 (its exclusion table
+  included) and ch.3 §4.7's swap; SR-154's "a different model family wherever
+  one is configured" becomes "configured for that kind", amended in S788-ask
+  with that row's other SR-154 amendment (exclusion from all authors).
+- **Where A1 is built.**
+  - **S788-ask** carries the per-kind table, steps 1-4 and 6, zero weight as
+    not eligible, the tier move (`agent_brief.DEFAULT_PHASE_TIER` retires into
+    the table), the ranked family preferences of step 2, the swap rule and the
+    SR-154 amendment. Its Done-when gains a fixture each for: a kind with one
+    eligible family (a fresh same-family session, logged, no decisions entry);
+    a judging kind after a swap; the shipped template's all-families table
+    (today's selections unchanged); `plan-critique` of each drafter's plan in a
+    dual round; and a weight of 0 never drawn.
+  - **S788-plan-kinds** routes `plan`, `plan-dual` and `plan-critique` through
+    that table; **S788-single-plan**'s swap uses step 3; **S788-session-families**
+    keeps only the reset terms.
+  - **Step 5 is S788-usage-pacing's.** Until it lands, the account within a
+    family is drawn by today's rule (enable-list order); S788-usage-pacing
+    replaces that rule, never adds beside it. So S788-ask lands from its needs
+    alone.
 - **The shipped template** makes every family eligible at weight 1 for every
   kind, with the cross-family preference: an adopter that trusts both families
   gets today's behaviour.
-- **This repo's values** (owner, 2026-10-04: "currently my trust for
+- **This repo's values.** The owner, 2026-10-04: "currently my trust for
   adjudication and building only lies with claude. Codex for authoring and
-  reviewing"; plan to Claude and judge to Codex agreed):
+  reviewing"; and plan to Claude, judge to Codex (agreed in session).
 
-  | kind | families | note |
+  | kind | families | source |
   |---|---|---|
-  | build, plan, adjudicate (with its `author` drafts) | ANTHROPIC | |
-  | review, judge, author-review, plan-critique, final review | OPENAI | Codex's authoring is the author-review edit of the adjudicator's draft (OI-101 Q1's flow) |
-  | plan-dual (a decomposition round's two drafters) | ANTHROPIC, OPENAI | a dual round needs two families (D-032) |
+  | build, plan, adjudicate | ANTHROPIC | the owner |
+  | review, judge | OPENAI | the owner |
+  | `author` (the adjudicator's drafts) | ANTHROPIC | coordinator's reading (D-033): OI-101 Q1 has the adjudicator draft |
+  | author-review | OPENAI | coordinator's reading (D-033) of "Codex for authoring": under OI-101 Q1's flow Codex's authoring is the author-review edit of the adjudicator's draft |
+  | plan-critique, final review | OPENAI | coordinator's reading (D-033): both are reviews |
+  | plan-dual (a decomposition round's two drafters) | ANTHROPIC, OPENAI | coordinator's reading (D-032): a dual round needs two families |
 
 - **Where strength is defined today**, for the glossary and S788-session-families:
   the row's `tier` in `docs/agents.toml`; the row's effort, separately
@@ -408,10 +439,20 @@ including several Claude subscriptions.
   `MiniPC-Deployer/stack/ai-usage/ai_usage_feeder.py` and NagLight's
   `internal/gauge/gauge.go`. Both endpoints are undocumented, so each is a route
   contract with `verified`, like the routes in ch.2 §5.
-- **The rule.** `pace = 100 x (1 - elapsed fraction of the weekly window)`;
-  `headroom = remaining percent - pace`. Within the family step 4 chose, the
-  account with the largest headroom is drawn. An exhausted 5-hour window is a
-  cooldown. An account with no fresh reading counts as exactly on pace (headroom
+- **The binding window** is the weekly limit that governs the route's model:
+  a model-scoped weekly limit where the provider reports one for it, else the
+  account's weekly window. Its length is the provider's reported duration
+  (codex `windowDurationMins`), else the window's declared kind (Claude's
+  7-day); its start is its reset time minus its length.
+- **The rule.** `elapsed = clamp((now - start) / length, 0, 1)`;
+  `pace = 100 x (1 - elapsed)`; `headroom = remaining percent - pace`. Within
+  the family step 4 chose, the account with the largest headroom is drawn.
+- **Exhaustion.** An account whose binding weekly window or 5-hour window has
+  no remaining budget (remaining at or below 0) is on cooldown until that
+  window resets, so it is never drawn, whatever its headroom.
+- **Freshness.** A reading is fresh when observed within the dial
+  `[routing] usage_max_age_minutes` (shipped 30; the owner's gauges poll every
+  10). An account with no fresh reading counts as exactly on pace (headroom
   0), logged.
 - **Scope.** Pacing chooses accounts within a family, never between families:
   the family share is the owner's weights (A1, option (a)).
@@ -419,7 +460,9 @@ including several Claude subscriptions.
   the row drafts a new need for the owner's signature before its SR rows.
 - **The row:** S788-usage-pacing, needs S788-accounts and S788-ask; strong; review
   A+B; extra bar: fixture readings for both providers, an unreadable source, a
-  stale reading and two Claude accounts; RESYNC yes.
+  stale reading, two Claude accounts, a model-scoped weekly window, and an
+  exhausted weekly window beside a low-headroom live one (the live one is
+  drawn); RESYNC yes.
 
 ### A3. Q-5's disagreement page offers a third agent
 

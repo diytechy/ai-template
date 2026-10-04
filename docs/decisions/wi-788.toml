@@ -5,7 +5,7 @@
 # owner rules at the checkpoint; nothing here is built. Format:
 # project-trajectory/decisions.template.toml.
 
-high_risk = ["D-001", "D-002", "D-010", "D-016", "D-022", "D-027", "D-031", "D-032"]
+high_risk = ["D-001", "D-002", "D-010", "D-016", "D-022", "D-027", "D-031", "D-032", "D-035"]
 
 [decision.D-001]
 decided = "Commits made outside the one entry point (no session log) are attributed to a family by their Co-Authored-By trailer, read from the judged commit itself, for family exclusion (ch.2 section 3 step 2; README Q-10)."
@@ -232,7 +232,7 @@ review = "Owner, 2026-10-04: amended by the per-kind table and ordering rule (RE
 reviewed = true
 
 [decision.D-032]
-decided = "In this repo's per-kind table (README A1), a decomposition round's two drafters route through a kind of their own, plan-dual, eligible to both ANTHROPIC and OPENAI, while every other plan kind is ANTHROPIC only (the owner agreed plan goes to Claude)."
+decided = "In this repo's per-kind table (README A1), a decomposition round's two drafters route through a kind of their own, plan-dual, eligible to both ANTHROPIC and OPENAI, while the other plan-drafting kinds (draft, repair, revise and select, and the swap's replan) are ANTHROPIC only (the owner agreed plan goes to Claude); plan-critique is a review and goes to OPENAI (D-033)."
 alternative = "Make plan ANTHROPIC-only for dual rounds too, so every dual round parks for want of a second family (change 18); or give plan a small OPENAI weight, so single plans would sometimes go to Codex."
 reversal_cost = "Low: one table entry in this repo's values; nothing is built."
 why_not_escalated = "The owner's 'plan to Claude' was given for planning in general; a dual round exists to compare two families' plans, so an Anthropic-only round is not a dual round. Flagged high risk so the owner sees it."
@@ -250,4 +250,11 @@ decided = "Weekly pacing (README A2) is its own successor row, S788-usage-pacing
 alternative = "Fold pacing into S788-accounts; or make an unread account ineligible."
 reversal_cost = "Low: an unbuilt row."
 why_not_escalated = "The owner agreed both points in session on 2026-10-04."
+review = ""
+
+[decision.D-035]
+decided = "Every family exclusion in ch.2 section 3 step 2's table, plan-critique's and author's included, becomes a ranked preference within the kind's eligible families (dispute 2's one rule, extended), and the family swap at the second consecutive CHANGES-REQUESTED follows the same rule: it excludes the latest build author's session hard and prefers another eligible family. Where only one family may build and plan (this repo), the swap draws a fresh session of that family (README A1; Sol review of the fold, BLOCKERs 1 and 2)."
+alternative = "Keep the hard family exclusions and the hard family swap, which leaves plan-critique, author and the swap with no eligible draw under this repo's table; or make the owner's Anthropic-only build a dual path for the swap."
+reversal_cost = "Low: unbuilt; one ordering rule in S788-ask."
+why_not_escalated = "The owner set the table ('my trust for adjudication and building only lies with claude') and said a same-family draw is allowed but not preferred; the ranked-preference rule is the one rule the 2026-10-04 adjudication ruled for dispute 2. Flagged high risk because Q-6's swap, in this repo, becomes a fresh same-family session."
 review = ""
