@@ -41,10 +41,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
   dispatcher claims nothing until a reviewed commit deletes it, so work is
-  taken by a coordinator session, not the loop. The roles (owner, 2026-10-03): Claude Opus builds at medium
-  effort and the coordinator commits for it, Codex Luna (`gpt-6-luna`)
-  reviews at high effort through the CLI, and an independent Opus agent
-  arbitrates, adjudicates and spot-checks. File new work as a row; an open item is filed together with the queued row
+  taken by a coordinator session, not the loop. The roles (owner, 2026-10-04): Claude Opus builds and plans at medium
+  effort and the coordinator commits for it; GPT Terra (`gpt-5.6-terra`,
+  medium) authors spine rows; Codex 6.1 (`gpt-6.1-sol`, high) reviews code
+  through the CLI; and an independent Opus agent adjudicates and resolves
+  disputes. File new work as a row; an open item is filed together with the queued row
   that cites it (OI-102). The reviewers' `codex exec` launch
   runs under a temporary `Bash(codex exec *)` allow rule in
   `.claude/settings.local.json` (owner, 2026-09-28): remove it when the

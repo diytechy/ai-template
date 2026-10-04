@@ -49,16 +49,30 @@ as the resume map.
    - Live probes are authorized for **OpenCode only**: FreeLLMAPI as a custom
      endpoint, `--session` resume.
    - CLI resume-by-id probes for claude and codex are local and cheap; run them.
-   - Then a Codex Sol 6.1 (high) review of the note, and fixes.
+   - Then a Codex 6.1 (`gpt-6.1-sol`, high) review of the note, and fixes.
    - **Then STOP at the checkpoint (the owner's ruling in the spec).** File one
      pending open item asking the owner to approve the note and its slice plan,
      holding WI-788, and do not file successor rows.
 
+## Roles (owner, 2026-10-04; these supersede the wave-8 and wave-10 roles)
+
+| Work | Who | How |
+|---|---|---|
+| Building and planning (code, tests, the WI-788 design note) | **Claude Opus** | the `kit-builder` agent, model opus, at medium effort; it leaves changes uncommitted, and the coordinator verifies and commits |
+| **Spine authoring** (drafting or amending SN, SR, LLR, TC and IF rows, and the spec text the rows carry) | **GPT Terra at medium** (`gpt-5.6-terra`, the only Terra id the codex CLI knows) | `codex exec -m gpt-5.6-terra -c model_reasoning_effort="medium" -c 'windows.sandbox="unelevated"' -s workspace-write -C <lane>`, briefed with the rows to write and the spine-authoring skill's question list |
+| **Code reviews** (every lane diff; the WI-788 note review) | **Codex 6.1** (`gpt-6.1-sol`) at high effort | `codex exec -m gpt-6.1-sol -c model_reasoning_effort="high"`, read-only, or `luna_review.sh` with the model switched; it replaces Luna as the lane reviewer |
+| Adjudication (judging spine text, disputes, acts) | an **independent Claude Opus** session | never the session that authored what it judges; Terra authors and Opus judges, so they are different families |
+
+Sol 6.1 capacity: on 2026-10-03 the ChatGPT-plan Codex limit was hit after about 14
+Sol sessions in 4.5 hours. Keep reviews to one per lane round, and wait out a
+limit rather than drop the review.
+
 ## Deltas since the wave-10 handoff
 
-- **The `codex` on PATH is 0.160.0.** `codex exec -m gpt-6.1-sol` or
-  `-m gpt-6-luna` works directly; the extension-binary workaround is no longer
-  needed. `luna_review.sh` still works.
+- **The `codex` on PATH is 0.160.0.** `codex exec -m gpt-6.1-sol` and
+  `-m gpt-5.6-terra` work directly; the extension-binary workaround is no longer
+  needed. `luna_review.sh` hardcodes `gpt-6-luna`, so pass the model by hand or
+  use `codex exec`.
 - **The native `claude` is 2.1.289.** The Opus rows are pinned to
   `claude-opus-5-5`.
 - **Claude Code subagents** use a 1-hour prompt cache (user setting
@@ -113,8 +127,14 @@ Authorization (the owner's, for this session only):
   spend the control ruling's pause deletion.
 - Live probes on OpenCode only (FreeLLMAPI as a custom endpoint; session resume).
   Local CLI resume-by-id probes for claude and codex are fine.
-- Codex reviews through the codex CLI (0.160 on PATH): Luna (gpt-6-luna, high)
-  for lane reviews, Sol (gpt-6.1-sol, high) for the WI-788 design-note review.
+- Roles (the owner's, 2026-10-04):
+  - building and planning: Claude Opus (the kit-builder agent, model opus,
+    medium);
+  - spine authoring: GPT Terra at medium (gpt-5.6-terra) through the codex CLI;
+  - code reviews: Codex 6.1 (gpt-6.1-sol, high) through the codex CLI (0.160
+    on PATH), for every lane diff and for the WI-788 design-note review;
+  - adjudication and disputes: an independent Claude Opus session that never
+    authored what it judges.
 
 Order: WI-791, then WI-790 (one lane at a time; both touch intake.py). Then
 WI-788 half 1, the design note, which may be drafted alongside the builds
@@ -127,13 +147,16 @@ Per work item, the cycle from the handoffs:
 1. Claim, with the lane at C:/Projects/ai-template.wt/wi-NNN.
 2. A kit-builder agent (model opus, medium) builds and leaves the change
    uncommitted; you verify and commit it.
-3. A Luna high review through luna_review.sh or codex exec.
-4. Rework, with the builder skeptical of findings: it acts only on verified
+3. Any spine rows the work needs are drafted or amended by Terra (medium) in
+   the lane, not by the builder.
+4. A Codex 6.1 (gpt-6.1-sol, high) review of the lane diff.
+5. Rework, with the builder skeptical of findings: it acts only on verified
    evidence that no setting or OS retry mitigates.
-5. An independent Opus adjudicator resolves builder-reviewer disputes; its call
+6. An independent Opus adjudicator resolves builder-reviewer disputes; its call
    is final.
-6. Spine rows go through the in-lane adjudication cycle (wave-10 handoff).
-7. Land with a squash, archive the tip to archive/lanes, run the intake sweep,
+7. Terra's spine rows go through the in-lane adjudication cycle (wave-10
+   handoff), judged by an independent Opus adjudicator.
+8. Land with a squash, archive the tip to archive/lanes, run the intake sweep,
    and close the redundant re-mint rows by citing the act.
 
 The commit bar on every commit:
