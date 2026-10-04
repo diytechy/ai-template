@@ -632,4 +632,77 @@ move onto.
 The row's title no longer describes its scope. The checkpoint may retitle it, and
 because a title edit renames the file, it is a deliberate commit of its own.
 
+## Owner rulings on LS8 and LS9, and the resume questions (2026-10-04)
+
+**LS8, confirmed.** The owner: "Yes my minting and approval refusal were to ensure
+there were not concurrency issues with the development branch, but with the
+adjudicator locked that will not occur."
+- R1's mint refusal and the merge slot's refusal of approval acts in a work lane
+  existed only to prevent concurrency hazards on the development branch.
+- Under LS4's lock they are amended to "only a lane in `ADJUDICATION` under the lock
+  mints or takes an act", not kept beside the lock.
+
+**LS9, refined.** The owner:
+
+> "A past failure should still be identified, but that doesn't mean it must be acted
+> on, it depends on the complexity of the work-around and the likelihood of
+> occurrence. For instance, a virus scanner may try to scan new test files and block
+> deletion / modification of test files. This shouldn't require the tooling to
+> change, it should just surface an open item to the user or similar noting what
+> caused an issue and the recommended action (in this case adding a test directory
+> to an ignored virus scanning path) is. ... the rework brief can still encourage the
+> builder of course, but the builder likewise can note it should only act on
+> verified evidence and on a claim that cannot be mitigated through a setting change
+> from the user or just from a simple retry of the action if it is due to OS
+> interactions."
+
+So the note's LS9 wording becomes:
+- **Identify every failure; act only when it pays.** A failure is always identified
+  and recorded. Whether the code changes depends on the work-around's complexity
+  against the failure's likelihood.
+- **The builder acts on a finding only when both hold:** it is verified by evidence,
+  and it cannot be mitigated by a setting the user changes, or by a simple retry
+  when the cause is an OS interaction (a file lock, a virus scanner holding a new
+  test file).
+- **An environment-caused failure changes no tooling.** It is surfaced to the owner
+  with its cause and the recommended action, for example "add the test directory to
+  the virus scanner's excluded paths".
+  - **Where that surfaces is for the note to settle:** an open item, which under
+    WI-790 needs a placeholder row, for example one confirming that the setting was
+    changed; or an entry in WI-790's "Decisions to review".
+  - **Coordinator's recommendation:** the decision entry for advice the owner may
+    simply take, and an open item only when work is blocked until the owner acts.
+- **The rework brief** still asks the builder to address findings, now on these
+  terms. The reviewer brief gains the reciprocal: a finding that a setting or a
+  retry mitigates is advice, not a defect.
+
+**LS10, resume (from the owner's frontier questions).** The note settles how a lane
+resumes, at two levels:
+- **State.** The provider reads the committed lane-state record and checks it against
+  the evidence.
+  - The record is written in the same commit as the evidence that admits the
+    transition, so an interruption cannot leave the two disagreeing.
+  - On resume the provider re-admits whatever transition the evidence already
+    supports.
+  - The note also decides what happens to uncommitted work found in the worktree:
+    keep it and resume the session in place, or reset to the last commit (today's
+    refresh resets).
+- **Session.** An interrupted session resumes through its CLI's own resume form,
+  using the session id recorded in the session log (`session-id`) and in the
+  retention store, instead of starting fresh.
+  - **Today:** session logs are committed on the lane (a `telemetry:` commit) and
+    reach trunk at the merge. Resumable ids live in one untracked store,
+    `out/adjudicator/`, under the primary checkout, which every lane worktree shares
+    (`session_keep.store_dir`).
+  - **To verify by probe:**
+    - whether each CLI resumes by id from a different working directory;
+    - codex keeps sessions in its home, so it is expected to resume from anywhere;
+    - Claude Code is believed to file conversations per project directory, so a
+      retained adjudicator that moves between lane worktrees may need a fixed
+      working directory, such as the primary checkout or a dedicated adjudicator
+      worktree;
+    - OpenCode resumes with `--session` from its own data directory.
+  - The coordinator's subagent resume (SendMessage) has no store and no log, and
+    risk 8 retires it.
+
 ## Deliverable
