@@ -2,8 +2,8 @@
 id = "WI-790"
 title = "Work items cite the open items they wait on; open items stop carrying wi_refs"
 workstream = "process"
-specref = "docs/requirements/interfaces.toml"
-sr_refs = ["SR-148"]
+specref = "docs/requirements/interfaces.toml#IF-073"
+sr_refs = ["SR-148", "SR-225", "SR-049", "SR-010"]
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"

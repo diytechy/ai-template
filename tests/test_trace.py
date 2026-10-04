@@ -1333,10 +1333,26 @@ def test_a_line_the_grammar_cannot_read_is_REPORTED_not_silently_dropped(tmp_pat
     assert trace.provenance_allow_parse_findings(clean) == []
 
 
+def _file_pending_oi1(scaffold):
+    """The open-item row the allow entries below name. The shipped template no
+    longer carries a live OI-1 (WI-790 made its examples inert), so the fixture
+    files its own pending row; OI-1 sits under the template's OI watermark of 2.
+    trace's integrity floor reads the row's existence only, so no queued
+    placeholder is needed for this check."""
+    registry = scaffold / "docs" / "requirements" / "open-items.toml"
+    text = registry.read_text(encoding="utf-8")
+    registry.write_text(
+        text
+        + '\n[open_item.OI-1]\ntitle = "the reviewed reason"\nstatus = "pending"\n',
+        encoding="utf-8",
+    )
+
+
 def test_an_unreadable_allow_line_reds_the_integrity_floor(scaffold):
     # Integrity-class like ARM 1's field rule, and for the same reason: the line
     # either parses or it does not, so there is no false positive to warn-first
     # about, and the always-on floor is the only pipe that runs at every gate.
+    _file_pending_oi1(scaffold)
     (scaffold / "docs" / "provenance-allow").write_text(
         "SR-001 Rationale added 2026-08-16 -- OI-1: a hyphen, not an em dash.\n",
         encoding="utf-8",
@@ -1355,8 +1371,9 @@ def test_an_unreadable_allow_line_reds_the_integrity_floor(scaffold):
 
 def test_an_unresolved_allow_entry_reds_the_integrity_floor(scaffold):
     # HARD AT BIRTH, on the always-on floor the pre-commit hook runs: a field
-    # with no false positives needs no warn-first program. The scaffold's own
-    # registry carries pending OI-1, so the repaired entry is green.
+    # with no false positives needs no warn-first program. The fixture files a
+    # pending OI-1, so the repaired entry is green.
+    _file_pending_oi1(scaffold)
     (scaffold / "docs" / "provenance-allow").write_text(
         "SR-001 Rationale added 2026-08-16 — owes an open-item row at the sitting.\n",
         encoding="utf-8",

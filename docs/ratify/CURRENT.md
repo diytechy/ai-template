@@ -654,7 +654,171 @@ _No chain on a rung the human-approval dial holds owes an act; every chain in th
 _Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 1 chain(s): SR-224</summary>
+<summary>Waiting for automated adjudication — 7 chain(s): SR-010, SR-049, SR-148, SR-174, SR-224, SR-225, SR-228</summary>
+
+## SR-010 — Scaffold runs green out of the box
+
+> **Requirement.** The delivered scaffold generator shall produce a scaffold whose harness runs green immediately after generation.
+
+> **Rationale.** Realizes SN-001 (a working process without hand-building tooling) and SN-007 (the suite bootstraps a real scaffold and exercises every script).
+
+
+### LLR LLR-010
+_approved — re-attestation owed_
+- **Detail**
+  - before: Writes the mapped kit files into --dest so the generated harness runs green out of the box.
+  - after: Writes the mapped kit files into --dest so the generated harness runs green out of the box. For a non-Python profile, file_stack_placeholder creates a pending-toolchain placeholder and queued citer; both id-watermark marks cover the allocation.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: MAPPING/main
+  - after: MAPPING/main/file_stack_placeholder
+
+### TC TC-010
+_approved — re-attestation owed_
+- **Method**
+  - before: Run the bootstrap suite; a fresh scaffold's harness runs green.
+  - after: Run the bootstrap suite; a fresh scaffold's harness runs green, including a node scaffold whose pending-toolchain placeholder has a queued citer and passes check_trajectory --strict.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_bootstrap.py
+  - after: tests/test_profile.py::test_the_scaffolded_oi3_is_filed_with_its_queued_placeholder; tests/test_bootstrap.py
+
+## SR-049 — Derived stage from artifact states
+
+> **Requirement.** The delivered harness shall derive the stage the project is currently at from the spine artifact states alone, caching it as a derived value — never accepting a hand-set one — with a post-attestation amendment dropping the derived stage exactly as a newly introduced draft does, and the pending-amendment count carried beside the draft count so the pending state never hides.
+
+> **Rationale.** SSOT applied to the gate itself: a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot. SN-029 is a parent because this row's shall is the only place in the SR layer stating that an amended requirement drops the derived stage exactly as a newly introduced one does — SR-139 states which tiers are held, SR-140 what an acceptance record contains, and SR-148 loop selection, none of them the drop clause.
+
+
+### LLR LLR-118
+_approved — re-attestation owed_
+- **Detail**
+  - before: The RENDERED half of the Modified/Draft attestation regime whose gate SR-049 derives. gen_open_items renders (a) every pending row of docs/requirements/open-items.toml as a decision brief and (b) every SR whose Status is Draft (approval owed) or Modified (re-attest owed) with its whole chain's per-cell before/after. Two contracts the emitted file carries: the attestation-baseline STAMP (a --since render must be reproducible by the freshness gate, or --check compares against a different history) and the check-the-baseline empty state (an auto-derived baseline sitting AFTER a pre-regime amendment renders no cells, which must never read as nothing-changed). The machine-local advisory region is masked before comparing. SCOPE and its deliberate narrowings: this module RENDERS and owns no second opinion — the attestation model is trace.reattest_model and the pending pointers are gen_trajectory.pending_block, both imported, so a disagreement with `trace.py --approve` means this view is the defect and the brief wins. NOT claimed: that the rendered page is legible or well-composed. verdict_reattest_block also renders the owner audit list of every act-ledger entry naming a verdict, newest first, or states None recorded.
+  - after: The rendered half of the attestation regime under SR-049. It renders only each pending open item cited by a queued work item as a decision brief beside its citers; a pending item without a queued citer is an integrity notice, not a card; and Decisions to review is last. It also renders spine rows requiring approval or re-attestation with their per-cell before/after, and the verdict re-attestation audit. The page is a projection, not a second decision reader.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: render/_attestation_cards/verdict_reattest_block/word_diff/mask_local
+  - after: render/_brief_cards/_brief_card/_uncited_notice/_attestation_cards/verdict_reattest_block/word_diff/mask_local
+
+### TC TC-123
+_approved — re-attestation owed_
+- **Method**
+  - before: Drive gen_open_items over temp repos: assert a pending registry row renders as a brief and a RULED row does not; that Drafted AND Modified spine rows both surface (approval owed vs re-attest owed) while an Approved row does not; that a section with no changed cells says what is true — no cell differs from the approved snapshot, the row's own Status asking for a human — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read (the machine-local mask retired with the dispatcher); that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; and that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction). It also drives verdict_reattest_block: every act-ledger entry naming a verdict is listed newest first with its re-attested rows and its verdict file, an entry naming none is left out, a ledger with no such entry reads None recorded, and the rendered page carries the list.
+  - after: Drive the open-item owner surface over temporary registries: a cited pending row renders as a brief and a ruled row does not; an uncited pending item renders as an integrity notice rather than a card; the projection agrees with the status snapshot; and the existing approval, re-attestation, escaping, diff, and verdict-audit cases hold.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_gen_open_items.py; tests/test_gen_open_items_render.py::test_a_verdict_reattestation_stays_listed_on_the_owner_surface; tests/test_gen_open_items_render.py::test_the_verdict_audit_list_is_newest_first
+  - after: tests/test_gen_open_items.py; tests/test_gen_open_items_render.py::test_a_verdict_reattestation_stays_listed_on_the_owner_surface; tests/test_gen_open_items_render.py::test_the_verdict_audit_list_is_newest_first; tests/test_open_item_queue.py
+
+## SR-148 — Autonomous loop work selection: what it derives from, and in what order
+
+> **Requirement.** The delivered loop content shall select the work an unattended run does next from the repository's tracked registries and git history alone, in this order: ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — with the eligible set and its order deterministic, an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item alone, human holds applied only from the declared approval level, nothing admitted past a human-held stop, no prose surface and no predefined track in the derivation, no hand-curated next-work or run-phase pointer surface shipped for any live instruction or executable surface to read, write, validate, generate or link, and the status surface a session reads generated and freshness-gated rather than hand-copied.
+
+> **Rationale.** Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. ONE SR PER (need, property): the loop's work-selection invariant — what the next work derives from, in what order, and that no hand-curated pointer surface participates in it — is stated here and nowhere else, so no second row can drift from it. An explicit three-way partition was rejected: the partition already existed textually and still produced duplicated acceptance. The no-pointer obligation is stated for a migrated repository as well as a fresh scaffold, and the migrated half is the one that matters most: a fresh scaffold never had the files to keep, while an upgraded repository can retain the retired authority files and still pass. Fan-out re-stamp: this row states one decision — what an unattended run's next work derives from and in what order — and its children are the successive stages of that one selection, not separable contracts; the width is the deliberate consolidation of three rows that stated the same invariant into one, so re-splitting to satisfy the bound would restore the duplication the consolidation removed.
+
+
+### LLR LLR-058
+- **Detail**
+  - before: Derives the dependency-ready frontier from the WI registry + dispatcher reservations (never prose), excludes terminally-closed/deferred/reserved/protected-/exclusive-conflicting WIs with reason codes, and exposes ready --explain / --format json and simulate --jobs N. The ready set contains exactly the WIs whose hard predecessors are done; a lane stopped early leaves the frontier through its terminal partial/ move, its spec no longer being queued/.
+  - after: Derives the dependency-ready frontier from the WI registry and dispatcher reservations, excludes terminally closed, deferred, reserved, protected, and exclusive-conflicting work with reason codes, and exposes ready --explain, --format json, and simulate --jobs N. The ready set contains exactly the work items whose hard work-item predecessors are done and whose OI-### edges name ruled items; a pending or unknown OI blocks the row and names the item. A lane stopped early leaves the frontier through its terminal partial move.
+
+### LLR LLR-288
+_approved — re-attestation owed_
+- **Detail**
+  - before: Load IF-073 gates into internal scheduler data. The shared readiness predicate refuses a queued gated row, including mutex candidacy, and evaluate reports it blocked with every gating id and title. A ruled gate releases the row without editing it.
+  - after: Read open-item states for OI tokens on each work row's needs edges. The shared readiness predicate blocks a row for every pending or unknown item, preserving its work-item waiting reasons when both kinds of edge are unmet; ruled items release readiness without editing the edge.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: _load/load_wis/hard_preds_satisfied
+  - after: _load/load_wis/hard_preds_satisfied/_open_item_holds/_held_disposition
+
+### LLR LLR-298 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-298
+- **SR-Refs**: SR-148
+- **Title**: Ruling-to-citer synchronization
+- **Module**: project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/check.py;project-trajectory/scripts/integrate.py
+- **CodeSymbol**: ruling_sync_lines/_sync_lines/_ruled_items/_citing_rows/_sync_gap/_tree_specs/staged_ruling_sync_lines/commit_ruling_sync_lines/_ruling_sync_refusal/_ruling_sync_mode
+- **Detail**: When a commit changes an open item from pending to ruled, compare its parent and resulting trees and refuse unless every parent-tree open work row citing that item changes its Done-when, closes, or is removed in that commit. The staged check and merge admission apply the same comparison to their respective trees.
+- **Rationale**: A ruling that silently releases a placeholder leaves its recorded completion condition stale; comparing the transition commit is the only point at which the two records can be kept synchronized.
+- **TestRefs**: TC-313
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### LLR LLR-299 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-299
+- **SR-Refs**: SR-148
+- **Title**: Pending open-item citation integrity
+- **Module**: project-trajectory/scripts/check_trajectory.py;project-trajectory/scripts/kitlib/spine.py
+- **CodeSymbol**: uncited_open_item_findings/open_item_specref_findings/open_item_queue/_pending_items/_held_rows
+- **Detail**: Report a pending open item without a queued work-item citer as an error. Require a queued placeholder's SpecRef to name its cited pending item and report the placeholder when every cited item has been ruled but its SpecRef remains the open-item registry.
+- **Rationale**: A pending owner decision must remain visible beside the work it holds, while a ruled item is no longer the specification the released work implements.
+- **TestRefs**: TC-314
+- **Status**: Drafted
+- **Component**: CMP-008
+- **Phase**: 6
+
+### TC TC-301
+- **Method**
+  - before: On a temporary spec registry, hold a queued row through a pending open item's wi_refs, verify the frontier and simulation omit it without stealing a mutex, then rule the item and verify readiness with the spec unchanged. Project ready and blocked rows apart in the frontier and status snapshot, with each gating id, title and owner-surface anchor. Check multiple gates, absent and example registries, and the worker brief's refusal.
+  - after: On a temporary work registry, hold a queued row through a needs open-item edge while the item is pending, verify the frontier, simulation, worker brief, and status projections name it as blocked without stealing a mutex, then rule the item and verify readiness with the spec unchanged. Project multiple items, absent and example registries, and mixed work-item and OI edges.
+
+### TC TC-313 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-313
+- **Verifies**: SR-148;LLR-298
+- **Level**: Integration
+- **Method**: Drive staged and committed ruling transitions over git repositories: an unchanged citer Done-when is refused, an updated one passes, removing the needs token does not discharge the parent-tree citation, closing or removing the row passes, a first commit is vacuous, and a no-verify lane commit is refused at merge admission.
+- **Tier**: Smoke
+- **Expected**: Every transition out of pending synchronizes its parent-tree citing rows in that commit.
+- **Automated**: Yes
+- **Evidence**: tests/test_ruling_sync.py::test_a_ruling_with_the_citing_rows_done_when_untouched_is_refused; tests/test_ruling_sync.py::test_the_same_ruling_with_the_done_when_updated_is_accepted; tests/test_ruling_sync.py::test_removing_the_token_in_the_ruling_commit_does_not_discharge_it; tests/test_ruling_sync.py::test_a_row_closed_in_the_ruling_commit_is_accepted; tests/test_ruling_sync.py::test_a_first_commit_has_nothing_to_close; tests/test_ruling_sync.py::test_a_no_verify_lane_commit_is_refused_at_the_merge_slot
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-314 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-314
+- **Verifies**: SR-148;LLR-299;IF-073;IF-054
+- **Level**: Integration
+- **Method**: Drive open-item and work-item registries: an uncited pending item errors even with no work rows; a queued placeholder citing a pending item passes and is blocked; a ruled placeholder cannot retain the open-item registry as its SpecRef; cited cards, uncited notices, and the status snapshot share one projection; and backlog staleness clocks a registry SpecRef per cited item.
+- **Tier**: Smoke
+- **Expected**: Pending items have queued visible citers, placeholders point at their pending item, and unrelated registry changes do not stale a cited placeholder.
+- **Automated**: Yes
+- **Evidence**: tests/test_open_item_readiness.py::test_an_uncited_pending_item_is_an_error_even_with_no_work_items; tests/test_open_item_readiness.py::test_a_ruled_items_row_may_not_keep_the_registry_as_its_specref; tests/test_open_item_readiness.py::test_a_placeholder_row_passes_every_check_and_is_blocked; tests/test_open_item_queue.py::test_an_uncited_pending_item_is_a_notice_not_a_card; tests/test_open_item_queue.py::test_the_status_snapshot_lists_the_same_projection; tests/test_ruling_sync.py::test_a_registry_specref_is_clocked_per_cited_item
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-289 — REMOVED since the snapshot
+_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
+
+### TC TC-302 — REMOVED since the snapshot
+_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
+
+## SR-174 — Work-item identity is allocated once and never re-issued
+
+> **Requirement.** The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued.
+
+> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion.
+
+
+### LLR LLR-153
+_approved — re-attestation owed_
+- **Detail**
+  - before: The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/ and docs/archive/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments, whose walk covers the SR, LLR, TC, SN, DA and SUR tiers -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SR SN-Refs and Boundary-Refs, LLR SR-Refs and TC Verifies per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers. flip_verified resolves the hold from the approval dial: held prints a recommendation and writes nothing; released requests the flip, but _apply_flips skips an already Approved row and refuses every other Status by name, so it writes nothing; an unreadable dial or stage reads as held. adjudication_action(human_held, verdict) returns flip when released, reattest when held with a CLARITY verdict, and recommend otherwise. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent.
+  - after: The trunk-side intake mints work-item identities from the watermark and complete work history, never from the live maximum. A handback disposition that surfaces an open item injects its id into the queued successor's needs, supplies the item's registry SpecRef, and leaves it blocked while pending. context_block renders pending open items cited by the row's kin and ignores historical wi_refs. The remaining mint, amendment, gap, dial, and idempotence behavior stays as the existing intake contract.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: intake_after_merge/_amendment_drafts/mint_gap_rows/parse_dispositions/next_wi_id/context_block/adjudication_action/flip_verified
+  - after: intake_after_merge/_amendment_drafts/mint_gap_rows/parse_dispositions/next_wi_id/context_block/_inject_open_item/_pending_oi_lines/adjudication_action/flip_verified
+
+### TC TC-147
+_approved — re-attestation owed_
+- **Method**
+  - before: Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): an approved SR amendment mints ONE adjudication row (id max+1, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; a held dial recommends and leaves the registries byte-identical; a released dial writes nothing, refusing by name a row not already Approved and skipping one that is; an unreadable dial or stage reads as held; adjudication_action returns flip released, reattest held with a CLARITY verdict, recommend otherwise; and an amended approved need, assumption or surrogate mints one amendment row.
+  - after: Run the intake suite against real git repositories: an approved amendment mints one adjudication row; a merged handback mints its disposition; an open-item handback mints a queued blocked successor citing the item through needs with the registry SpecRef; the context block renders pending OIs cited by kin and ignores wi_refs; disposition drafts, gap rows, dial arms, and re-runs obey the existing mint and idempotence contract.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_intake.py::test_an_amended_approved_need_mints_one_amendment_row; tests/test_intake.py::test_amended_approved_assumption_and_surrogate_mint_one_row; tests/test_intake.py
+  - after: tests/test_intake.py
 
 ## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
 
@@ -677,5 +841,67 @@ _No cell differs from the approved snapshot; this row owes because its own `Stat
 - **Verification**: Test
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one
+
+> **Requirement.** Where the declared decision-recording dial asks for a record, the delivered loop content shall judge a closing lane against that run's decisions record, refusing to integrate the lane when the record is absent, naming where it belongs, and reporting without refusing each entry of a present record that omits a required disclosure field or leaves one blank.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an approval it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the owner's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that looks green is green partly because nothing looked at what it chose. A prose instruction to list such calls was tried and measurably degraded within one session, the fields left out as soon as nothing read them, so the record carries required fields and the close that owes it refuses silence. The obligation is keyed to a dial because how much of the owner's reading a run may claim is the owner's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A value of the dial outside its alphabet is judged before the re… [503 more chars — read the registry row]
+
+
+### SR SR-225
+- **AcceptanceCriteria**
+  - before: With the dial off or undeclared, a lane is judged by nothing here and no record is read; with the dial at record or escalate-first, a lane whose work closed complete, cancelled or partial without its record at its run's path is refused, the refusal naming that path, and one carrying its record passes this check; in a present record, an entry that is not a table, an entry lacking what was decided, the alternative passed over, the reversal cost, why it was not escalated or the review cell, or carrying one that is not text, or leaving one of the first four blank, a hoist that is absent or not a list of entry ids, and a hoist naming an entry the record lacks, are each reported naming the entry, none refuses, and keys beyond the required ones are not judged; an entry numbered -000 is never judged; a value of the dial outside its three, compared trimmed and case-folded, is refused where the policy file is checked, and at the close it is refused as configuration before the record is read; a session handed a lane to build or to adjudicate under a recording dial is told the path its record belongs at, and a review session is not.
+  - after: With the dial off or undeclared, a lane is judged by nothing here and no record is read; with the dial at record or escalate-first, a lane whose work closed complete, cancelled or partial without its record at its run's path is refused, the refusal naming that path, and one carrying its record passes this check; in a present record, an entry that is not a table, an entry lacking what was decided, the alternative passed over, the reversal cost, why it was not escalated or the review cell, or carrying one that is not text, or leaving one of the first four blank, a reviewed value outside the declared vocabulary, a hoist that is absent or not a list of entry ids, and a hoist naming an entry the record lacks, are each reported naming the entry, none refuses, and keys beyond the required ones are not judged; an owner-facing surface lists entries not marked reviewed; an entry numbered -000 is never judged; a value of the dial outside its three, compared trimmed and case-folded, is refused where the policy file is checked, and at the close it is refused as configuration before the record is read; a session handed a lane to build or to adjudicate under a recording dial is told the path its record belongs at, and a review session is not.
+
+### LLR LLR-283
+_approved — re-attestation owed_
+- **Detail**
+  - before: A kitlib module importing nothing, whose functions read no file, git or environment. record_path(run) is DECISIONS_DIR/<run>.toml under docs/decisions, a / in the run's name becoming -. record_findings(text) parses the text as TOML, returning one finding when it does not parse, and otherwise one finding per defect: a decision key that is not a table, an entry of that table whose id is not D-<digits>, an entry that is not a table, a key of REQUIRED_KEYS (decided, alternative, reversal_cost, why_not_escalated, review) absent or not a string, one of the first four blank after trimming, a top-level high_risk that is absent or not a list of strings, and each hoisted id the decision table lacks; an id ending -000 is skipped wherever it appears, and keys beyond REQUIRED_KEYS are not judged. It does not raise. owed(mode, outcomes) is true for mode record or escalate-first with at least one outcome, whatever the outcome, a partial close included. session_note(mode, run) returns the empty string for off and otherwise the instruction naming record_path(run), the required keys, the hoist and the rule that the record is not an exit, with one further sentence under escalate-first preferring the exits over deciding.
+  - after: The pure decisions module defines record paths, required record fields, optional reviewed vocabulary, format findings, reviewed_state, review_queue, close obligation, and session note. reviewed_state accepts the declared true and false values or returns no state; review_queue returns entries not marked reviewed. record_findings reports malformed reviewed values without raising, alongside the existing record-shape findings.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: DECISIONS_DIR/MODES/REQUIRED_KEYS/record_path/record_findings/owed/session_note
+  - after: DECISIONS_DIR/MODES/REQUIRED_KEYS/REVIEWED_KEY/REVIEWED_TRUE/REVIEWED_FALSE/record_path/record_findings/reviewed_state/review_queue/owed/session_note/_decision_card/decisions_block/decisions_to_review
+- **Module**
+  - before: project-trajectory/scripts/kitlib/decisions.py
+  - after: project-trajectory/scripts/kitlib/decisions.py;project-trajectory/scripts/gen_open_items.py;project-trajectory/scripts/pending.py
+
+### TC TC-293
+_approved — re-attestation owed_
+- **Method**
+  - before: The kitlib.decisions call surface over record texts planted in memory, clause by clause. (a) SOUND: a record with two complete entries, one hoisted, and a record with no entries and an empty hoist, yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: nine hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none and carries the -000 example with every required key and an empty review. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key and the hoist under record, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record.
+  - after: Exercise the decisions call surface over record texts: required fields, hoists, reviewed true and false values, malformed reviewed values, and the review queue have the declared findings and projection; existing path, obligation, and session-note cases hold.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_decision_record.py::test_a_sound_record_yields_no_finding; tests/test_decision_record.py::test_a_record_with_no_entries_is_sound; tests/test_decision_record.py::test_each_missing_required_key_is_reported_by_entry; tests/test_decision_record.py::test_each_required_key_holding_non_text_is_reported; tests/test_decision_record.py::test_each_required_key_left_blank; tests/test_decision_record.py::test_a_non_table_entry_is_reported; tests/test_decision_record.py::test_a_decision_key_that_is_not_a_table_is_reported; tests/test_decision_record.py::test_a_malformed_hoist_is_reported; tests/test_decision_record.py::test_extra_keys_on_an_entry_are_not_judged; tests/test_decision_record.py::test_the_findings_never_raise; tests/test_decision_record.py::test_a_hoist_naming_an_absent_entry_is_reported; tests/test_decision_record.py::test_a_missing_hoist_is_reported; tests/test_decision_record.py::test_an_entry_id_outside_the_numbering_is_reported; tests/test_decision_record.py::test_an_unparseable_record_is_one_finding; tests/test_decision_record.py::test_a_000_entry_is_inert; tests/test_decision_record.py::test_the_shipped_template_is_sound_and_carries_the_example; tests/test_decision_record.py::test_the_record_path_is_one_file_per_run; tests/test_decision_record.py::test_which_closes_owe_a_record; tests/test_decision_record.py::test_the_session_note_names_the_path_only_under_a_recording_dial; tests/test_decision_record.py::test_a_build_session_is_handed_the_note_by_the_dial; tests/test_decision_record.py::test_an_adjudication_session_is_handed_the_note_too; tests/test_decision_record.py::test_a_review_session_is_not_handed_the_note
+  - after: tests/test_decision_record.py; tests/test_decisions_to_review.py
+
+## SR-228 — Held-rung CLARITY re-attestation
+
+> **Requirement.** Where the declared approval level holds a tier for a human, the delivered loop shall permit an independent adjudication to re-attest an approved amended row only when its verdict rules that amendment CLARITY.
+
+> **Rationale.** SN-029 delegates review on released tiers without skipping it, but an approved row whose wording is clarified on a held tier remains anchored to a signature the owner already gave. Treating that unchanged meaning as a new approval would strand every clarification with the owner; treating a meaning change the same way would carry a signature onto text the owner did not read. The verdict boundary keeps those alternatives separate: only the independent judgement that the signature still describes the row permits re-attestation, while a meaning change remains the owner's decision.
+
+
+### LLR LLR-153
+_approved — re-attestation owed_
+- **Detail**
+  - before: The mint invariant: a WI id is created only by a human trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/ and docs/archive/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Three triggers, serial by construction: (a) the approved/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments, whose walk covers the SR, LLR, TC, SN, DA and SUR tiers -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SR SN-Refs and Boundary-Refs, LLR SR-Refs and TC Verifies per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, pending OIs, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers. flip_verified resolves the hold from the approval dial: held prints a recommendation and writes nothing; released requests the flip, but _apply_flips skips an already Approved row and refuses every other Status by name, so it writes nothing; an unreadable dial or stage reads as held. adjudication_action(human_held, verdict) returns flip when released, reattest when held with a CLARITY verdict, and recommend otherwise. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent.
+  - after: The trunk-side intake mints work-item identities from the watermark and complete work history, never from the live maximum. A handback disposition that surfaces an open item injects its id into the queued successor's needs, supplies the item's registry SpecRef, and leaves it blocked while pending. context_block renders pending open items cited by the row's kin and ignores historical wi_refs. The remaining mint, amendment, gap, dial, and idempotence behavior stays as the existing intake contract.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: intake_after_merge/_amendment_drafts/mint_gap_rows/parse_dispositions/next_wi_id/context_block/adjudication_action/flip_verified
+  - after: intake_after_merge/_amendment_drafts/mint_gap_rows/parse_dispositions/next_wi_id/context_block/_inject_open_item/_pending_oi_lines/adjudication_action/flip_verified
+
+### TC TC-147
+_approved — re-attestation owed_
+- **Method**
+  - before: Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): an approved SR amendment mints ONE adjudication row (id max+1, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; a held dial recommends and leaves the registries byte-identical; a released dial writes nothing, refusing by name a row not already Approved and skipping one that is; an unreadable dial or stage reads as held; adjudication_action returns flip released, reattest held with a CLARITY verdict, recommend otherwise; and an amended approved need, assumption or surrogate mints one amendment row.
+  - after: Run the intake suite against real git repositories: an approved amendment mints one adjudication row; a merged handback mints its disposition; an open-item handback mints a queued blocked successor citing the item through needs with the registry SpecRef; the context block renders pending OIs cited by kin and ignores wi_refs; disposition drafts, gap rows, dial arms, and re-runs obey the existing mint and idempotence contract.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_intake.py::test_an_amended_approved_need_mints_one_amendment_row; tests/test_intake.py::test_amended_approved_assumption_and_surrogate_mint_one_row; tests/test_intake.py
+  - after: tests/test_intake.py
 
 </details>
