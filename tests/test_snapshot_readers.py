@@ -453,6 +453,45 @@ def test_a_held_rung_reattestation_of_a_DRAFTED_row_is_refused(scaffold):
     assert refusal and "SR-001" in refusal and "below approval" in refusal, refusal
 
 
+def test_a_held_rung_reattestation_its_verdict_does_not_rule_is_refused(scaffold):
+    """SR-228: a verdict that rules other rows and not this one is a
+    non-CLARITY verdict for it, so the held-rung act is refused by row."""
+    text = "- [CLARITY] SR-002 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
+    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
+    assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
+
+
+def test_a_held_rung_reattestation_whose_verdict_is_unreadable_is_refused(scaffold):
+    """SR-228: an act naming a verdict its own head does not carry has no
+    readable ruling, so the held-rung act is refused by row."""
+    text = "- [CLARITY] SR-001 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
+    base, _head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
+    run_git = _git(scaffold)
+    run_git("rm", "-q", _VERDICT)
+    head = _commit(run_git, "the named verdict leaves the head")
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
+    assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
+
+
+def test_a_held_rung_row_ruled_both_ways_reads_MEANING_and_is_refused(scaffold):
+    """LLR-278: a verdict tagging one row both CLARITY and MEANING rules it
+    MEANING, whichever tag comes first, so the held-rung act is refused."""
+    for order in (("CLARITY", "MEANING"), ("MEANING", "CLARITY")):
+        text = "".join("- [{}] SR-001 title -> ruled\n".format(w) for w in order)
+        assert AR.verdict_rulings(text) == {"SR-001": "MEANING"}, order
+    text = "- [MEANING] SR-001 a -> b\n- [CLARITY] SR-001 c -> d\n"
+    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
+    assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
+
+
 def test_the_scripts_under_test_are_the_scaffolds_copies(scaffold):
     """The scaffold runs its own copies of the kit's scripts; a stale copy would
     make every CLI assertion above test old code."""

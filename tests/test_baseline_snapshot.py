@@ -1725,7 +1725,7 @@ def test_a_reattesting_act_records_its_verdict_and_refuses_a_bad_one(tmp_path):
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
     with pytest.raises(SystemExit) as no_rows:
         SNAP.copy_live(root, approves={SR_REL: "x"}, verdict="docs/reviews/v.md")
-    assert "--verdict" in str(no_rows.value), no_rows.value
+    assert "names no re-attested row" in str(no_rows.value), no_rows.value
     with pytest.raises(SystemExit) as no_file:
         SNAP.copy_live(root, reattests={sid}, verdict="docs/reviews/v.md")
     assert "docs/reviews/v.md" in str(no_file.value), no_file.value
@@ -1757,6 +1757,22 @@ def test_a_verdict_path_is_recorded_repo_relative_with_forward_slashes(tmp_path)
         row["Title"] += " +"
         SNAP.copy_live(root, reattests={sid}, verdict=spelt)
         assert SNAP.read_acts(root)[-1]["verdict"] == "docs/reviews/v.md", spelt
+
+
+def test_a_verdict_outside_the_repository_is_refused(tmp_path):
+    """LLR-245: the act ledger records a verdict by its repository path, so a
+    verdict file outside the repository is refused although it exists, and
+    the ledger does not move."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
+    outside = tmp_path / "v.md"
+    outside.write_text("- [CLARITY] {} title -> same\n".format(sid), "utf-8")
+    acts = len(SNAP.read_acts(root))
+    with pytest.raises(SystemExit) as refused:
+        SNAP.copy_live(root, reattests={sid}, verdict=str(outside))
+    assert "not a file in the tree" in str(refused.value), refused.value
+    assert len(SNAP.read_acts(root)) == acts
 
 
 def test_a_malformed_ledger_refuses_the_act_before_the_record_moves(tmp_path):
