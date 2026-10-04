@@ -25,14 +25,18 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-04-wave11-coordinator.md](handoff-2026-10-04-wave11-coordinator.md).
-  It is an unattended build session: its order of work, the deltas since wave 10,
-  how assumptions are recorded (`docs/decisions/`), and the session prompt to
-  paste. The wave-8 and wave-10 handoffs it names still carry the roles, the
-  tools and the in-lane cycle. Approval acts run to seq 28.
-  1. The rows on the generated ready frontier, in the handoff's order. Every open
-     item that held them is ruled (OI-100 to OI-103, 2026-10-03/04). The
-     largest row stops at its design-note checkpoint for the owner.
+  [handoff-2026-10-04-wave12-coordinator.md](handoff-2026-10-04-wave12-coordinator.md).
+  The unattended wave-11 session built the ruled frontier as far as it goes: no
+  row can move now without the owner. The handoff lists every decision made on
+  the owner's behalf (high risk first; they also render under "Decisions to
+  review" at the bottom of [open-items.html](open-items.html)), the corrections
+  learned, and the session prompt to paste. Approval acts run to seq 30.
+  1. **OI-104, the owner's checkpoint on the largest row's design note.** The
+     note is on lane `wi-788` (worktree `C:/Projects/ai-template.wt/wi-788`,
+     `docs/plans/2026-10-04-wi788-design/README.md` first). Ruling it means
+     answering its questions Q-3 to Q-12 (two are collisions between the owner's
+     own rulings); the coordinator then files the successor rows and lands the
+     lane.
   2. Owner signatures still owed: the four MEANING-ruled needs (SN-003, SN-008,
      SN-025, SN-043; the adjudicator recommends restoring SN-025's exclusions
      before signing).
@@ -45,8 +49,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   effort and the coordinator commits for it; GPT Terra (`gpt-5.6-terra`,
   medium) authors spine rows; Codex 6.1 (`gpt-6.1-sol`, high) reviews code
   through the CLI; and an independent Opus agent adjudicates and resolves
-  disputes. File new work as a row; an open item is filed together with the queued row
-  that cites it (OI-102). The reviewers' `codex exec` launch
+  disputes. File new work as a row; an open item is filed together with the queued
+  placeholder row whose `needs` cites it, and the commit that rules it updates
+  that row's Done-when (OI-102). The reviewers' `codex exec` launch
   runs under a temporary `Bash(codex exec *)` allow rule in
   `.claude/settings.local.json` (owner, 2026-09-28): remove it when the
   queue drains. Recheck Git and the generated frontier before choosing
@@ -89,7 +94,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   ([plans/2026-08-22-interface-exception-dossier.md](plans/2026-08-22-interface-exception-dossier.md)),
   `OI-61` (c) deferred, and the wording round's two banked findings
   ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
-- **Unfiled follow-ups** (topics, no ids): the wave-9 log's session-close list (removed approved rows mint no adjudication; six batch-R row-text residues); the stage-ladder program's deferred
+- **Unfiled follow-ups** (topics, no ids): the wave-11 log's follow-ups (the claim
+  reads the working-tree pause; an in-lane act never meets the held-rung
+  re-attestation refusal; a refresh merge must carry a citer's update for a
+  trunk ruling); the wave-9 log's session-close list (removed approved rows mint no adjudication; six batch-R row-text residues); the stage-ladder program's deferred
   codex round; the SN-036 coverage record (re-derive — basis reads
   `uncovered=0`); the archived [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md)
   findings; the [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)

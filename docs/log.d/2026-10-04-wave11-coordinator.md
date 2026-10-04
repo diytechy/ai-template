@@ -103,3 +103,54 @@ landed by squash; the lane tip is in `archive/lanes`.
   `open_item_queue`; a refresh merge that brings in a trunk ruling of an item cited
   only by a lane-side row must itself carry the citer's update, or it is refused
   for good, and the lane workflow should say so.
+
+### WI-788 half 1: the design note reaches the owner's checkpoint
+
+Claimed on `wi-788` (`c3be7be0`) and drafted alongside the builds, as the order
+of work allowed (docs only).
+
+- **Drafting:** four Claude Opus planners wrote one chapter each (state, evidence
+  and recovery; sessions, routing and accounts; planning and tiering;
+  adjudication, mint and landing authority), and an Opus integrator wrote the
+  index: what the note decides, every binding input mapped to where it is
+  settled, 26 stated changes to existing rulings, the glossary draft, one
+  amend/preserve/retire matrix, one graph of twenty `S788-*` successor rows, and
+  the owner's questions.
+- **Probes** (authorized): claude 2.1.289 and codex 0.160.0 resume a session by id
+  from another directory; opencode 1.18.30 runs the turn and then hangs unless
+  given `--dir <session dir>`. FreeLLMAPI was probed only as an OpenCode custom
+  provider config; the end-to-end call waits on the owner's endpoint (Q-4).
+- **Findings from the record:** eight recorded dual-plan rounds (DP-001 here,
+  seven in the downstream gilbert repo), every one with the two arbiter runs
+  agreeing and nothing ported; 71% of 48 loop lanes failed their first review;
+  75 of 77 closes since 2026-09-28 carry no decisions record (accepted as
+  history, since a backfill would fabricate disclosures).
+- **Codex 6.1 Sol** rated `e3754af6` NOT YET READY (5 BLOCKER, 7 MAJOR, 3 MINOR).
+  The integrator confirmed 14, partly refuted one, and turned two into owner
+  questions (Q-8 and Q-11 are collisions between the owner's own rulings).
+- **An independent Opus adjudicator** ruled the three disputed points (all three
+  amended, applied verbatim) and checked the five blockers resolved.
+- **The checkpoint:** OI-104, with the queued placeholder WI-794 (filed after
+  WI-790 landed, the new way). The note stays on its lane; WI-788 stays claimed;
+  no successor row is filed. Its decisions record is
+  `docs/decisions/wi-788.toml` on the lane (31 entries).
+
+### Session close
+
+Stopped because no row on the frontier can move without the owner: WI-788 waits
+on OI-104, WI-684 on OI-98, WI-794 is OI-104's placeholder, and WI-625 is deferred.
+The resume map is
+[handoff-2026-10-04-wave12-coordinator.md](../handoff-2026-10-04-wave12-coordinator.md),
+which lists every delegated decision for review, high risk first.
+
+- **Approval acts:** seq 29 (WI-791) and 30 (WI-790), both taken in their lanes.
+- **Sol sessions:** 7 (one note review, two lane reviews, two final reviews, two
+  narrow re-checks), with no rate limit reached.
+- **Kit findings, not filed:**
+  - The claim reads the working tree's pause file, not HEAD's.
+  - An in-lane act never meets the merge slot's held-rung re-attestation refusal.
+  - A refresh merge that brings in a trunk ruling of an item cited only by a
+    lane-side row must itself carry the citer's update, or it is refused for good.
+  - IF-073's consumers and notes are slightly off, and LLR-198's detail does not
+    describe `open_item_queue`.
+  - No SR states the coupling between owner decisions and the rows citing them.
