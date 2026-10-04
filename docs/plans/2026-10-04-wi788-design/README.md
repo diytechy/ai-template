@@ -1,6 +1,6 @@
 # WI-788 design note (half 1): the owner's checkpoint
 
-The design note for [WI-788](../../work/active/wi-788/WI-788-provider-homes-and-new-routes.md),
+The design note for [WI-788](../../archive/work/complete/WI-788-provider-homes-and-new-routes.md),
 drafted 2026-10-04 on lane `wi-788` at base `c3be7be0`. **Nothing here is built.**
 The owner rules on it before any successor row is filed. Four chapters (B12):
 

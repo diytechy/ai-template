@@ -2,7 +2,7 @@ VERDICT: **NOT-READY**
 
 The widened scope is suitable for a design checkpoint, but its current instructions cannot all be satisfied together. The largest blockers concern state persistence, lock coverage, and evidence produced after refresh.
 
-References below: **W** = [WI-788](../../work/active/wi-788/WI-788-provider-homes-and-new-routes.md); **S** = `project-trajectory/scripts/`; **R/L/I** = `docs/requirements/{system-requirements,low-level-requirements,interfaces}.toml`; **T** = `docs/test/test-cases.toml`. Reviewed at `b61f450f`; no files modified.
+References below: **W** = [WI-788](../../archive/work/complete/WI-788-provider-homes-and-new-routes.md); **S** = `project-trajectory/scripts/`; **R/L/I** = `docs/requirements/{system-requirements,low-level-requirements,interfaces}.toml`; **T** = `docs/test/test-cases.toml`. Reviewed at `b61f450f`; no files modified.
 
 FINDINGS:
 

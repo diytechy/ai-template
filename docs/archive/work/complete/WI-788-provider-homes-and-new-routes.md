@@ -2,13 +2,40 @@
 id = "WI-788"
 title = "Design the lane lifecycle: lane-state provider, labelled sessions, in-lane adjudication, planning and provider routes"
 workstream = "process"
-specref = "docs/agents.toml"
+specref = ""
 sr_refs = ["SR-222", "SR-227", "SR-154", "SR-155"]
 needs = ["WI-787"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Half 1, the design note, built on lane `wi-788` and landed by squash; the lane tip
+is kept in `archive/lanes`. Half 2 is the successor rows, filed on trunk by the
+coordinator under WI-794.
+
+- **The note:** [docs/plans/2026-10-04-wi788-design/](../../../plans/2026-10-04-wi788-design/README.md),
+  four chapters (state, evidence and recovery; sessions, routing and accounts;
+  planning and tiering; adjudication, mint and landing authority), the
+  amend/preserve/retire matrix, and a graph of twenty-one successor rows.
+- **The owner's checkpoint:** OI-104, ruled 2026-10-04: approved with amendments.
+  The README's "The owner's checkpoint ruling" (A1 routing per kind, A2 weekly
+  pacing within a family, A3 a third-agent option on a dual-round disagreement,
+  A4 the station authority with its hold time named for iteration) overrides
+  the chapters. Q-4 moved to OI-105 (FreeLLMAPI provisioning, pending).
+- **Reviews:** the note by Codex 6.1 Sol (5 BLOCKER, 7 MAJOR, 3 MINOR, fixed) with
+  an independent Opus adjudication of three disputes
+  (`docs/reviews/2026-10-04-wi788-note/`); the owner's fold by Sol in four rounds,
+  SOUND at `486c126a` with two wording MINORs then fixed
+  (`docs/reviews/2026-10-04-wi788-ruling/`).
+- **Decisions record:** `docs/decisions/wi-788.toml`, D-001 to D-036; the seven
+  high-risk entries the owner ruled in session are marked reviewed; D-032, D-035
+  and D-036 are new high-risk entries for the owner.
+- **Retitled** at the owner's Q-9; the filename keeps its stem.
+- **RESYNC_PACK:** none for half 1 (a plan, its reviews and its decisions record;
+  nothing shipped). Each successor row carries its own.
 
 ## Context
 
@@ -177,7 +204,7 @@ selecting the same plan at the end." The owner also recalls earlier notes on how
 arbiter could judge the plan itself. The coordinator did not find them in this repo;
 they may live downstream. What this repo records:
 - one round, DP-001 (2026-07-16,
-  [verdict](../../../archive/plans/DP-001-dual-plan-loop-wiring/verdict.md));
+  [verdict](../../plans/DP-001-dual-plan-loop-wiring/verdict.md));
 - each cross-critique raised one finding;
 - both position-swapped arbiter runs selected the same plan (`plan-B-rev`), with
   nothing ported.
@@ -871,5 +898,3 @@ earlier text where they differ. The decisions only the owner can make are in OI-
   - **Dependencies:** WI-790 (open-item placeholders, the commit-time sync rule,
     "Decisions to review") and WI-791 (OI-100: need, assumption and surrogate
     routing; held-rung CLARITY acts) are contracts LS6 consumes, not redesigns.
-
-## Deliverable
