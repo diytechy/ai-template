@@ -3138,7 +3138,7 @@ code_symbol = """ruling_sync_lines/_sync_lines/_registry_states/_ruled_items/_ci
 detail = """When a commit takes an open item out of pending, by ruling it or by removing its row, compare that commit's parent tree with its resulting tree. Every work row open in the parent tree whose needs cite the item must, in the same commit, close by moving under the archive, be removed, or keep a non-empty Done-when section whose raw text differs from its parent text; otherwise the commit is refused, naming the row and the item. The citing set is the parent tree's, so removing the needs token discharges nothing. The open-items registry is read through either carrier, and a side that does not parse is refused rather than read as unchanged. The pre-commit hook's ruling-sync step applies the comparison to HEAD and the staged tree, the empty tree standing as the parent of a first commit; merge admission applies it to the lane's commits one at a time, against the first parent named in the commit object, so a no-verify commit is refused, a root commit closes nothing, and a parent the repository cannot read is refused by name."""
 rationale = "A ruling that silently releases a placeholder leaves its recorded completion condition stale; comparing the transition commit is the only point at which the two records can be kept synchronized."
 test_refs = "TC-313"
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
 
@@ -3150,6 +3150,6 @@ code_symbol = """uncited_open_item_findings/open_item_specref_findings/_registry
 detail = """Report as an error, whatever the gate and before the checker's no-work-items return, a pending open item that no queued work item cites in its needs, read from the one queue projection, open_item_queue, that also feeds the owner surface and the status snapshot; a citer that is not queued does not count. For each open work row whose SpecRef names the open-items registry under either carrier's spelling, report the row when the SpecRef carries an #OI anchor naming an item its needs do not cite, and when none of the items it cites is pending or absent from the registry, a row citing none included. Backlog staleness clocks such a SpecRef per item, each item the row cites and the item its anchor names, never by the registry file, so filing another item stales no row."""
 rationale = """A pending owner decision must remain visible beside the work it holds, while a ruled item is no longer the specification the released work implements. Clocking a registry SpecRef by the registry file would stale every placeholder whenever any decision is filed, so the clock reads the items the row cites."""
 test_refs = "TC-314"
-status = "Drafted"
+status = "Approved"
 component = "CMP-008"
 phase = 6
