@@ -424,3 +424,27 @@ def test_a_verdict_reattestation_stays_listed_on_the_owner_surface(tmp_path):
     repo(tmp_path, oi_rows=PENDING_OI)
     page = gi.render(tmp_path)
     assert "re-attested on an adjudicator" in page.lower(), page
+
+
+def test_the_verdict_audit_list_is_newest_first():
+    """LLR-118: the owner's audit list shows the newest verdict-naming act
+    first."""
+    gi = load_script("gen_open_items")
+    acts = [
+        {
+            "seq": 2,
+            "date": "2026-10-03",
+            "approved": [],
+            "reattested": ["SN-003"],
+            "verdict": "docs/reviews/a.md",
+        },
+        {
+            "seq": 5,
+            "date": "2026-10-04",
+            "approved": [],
+            "reattested": ["SN-009"],
+            "verdict": "docs/reviews/b.md",
+        },
+    ]
+    block = gi.verdict_reattest_block(acts)
+    assert block.index("act 5") < block.index("act 2"), block

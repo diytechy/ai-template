@@ -829,6 +829,62 @@ def test_a_held_rung_CLARITY_verdict_is_the_sessions_reattestation(tmp_path):
     assert "--verdict" not in values["aftermath"]
 
 
+_ASSUMPTION_TOML = (
+    "[assumption.DA-001]\n"
+    'effect_at = ["B-001"]\n'
+    'assumption = "{}"\n'
+    'holds_when = "always"\n'
+    'obstacle = "never"\n'
+    'status = "Approved"\n'
+    "\n[surrogate.SUR-001]\n"
+    'name = "the stand-in"\n'
+    'emulates = ["EXT-001"]\n'
+    'description = "{}"\n'
+    'status = "Approved"\n'
+)
+
+
+def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_scope(
+    tmp_path,
+):
+    """LLR-167: an assumption- or surrogate-scoped amendment row composes with
+    the drifted row's approved cells before and after, and only the rows its
+    Adjudicates scope names are rendered."""
+    repo = _spine_repo(tmp_path)
+    path = repo / "docs" / "requirements" / "assumptions.toml"
+    path.write_text(
+        _ASSUMPTION_TOML.format("it holds", "old stand-in"), encoding="utf-8"
+    )
+    baseline_snapshot.copy_live(repo, seed=True)
+    path.write_text(
+        _ASSUMPTION_TOML.format("it holds, mostly", "new stand-in"), encoding="utf-8"
+    )
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="DA-001;SUR-001"))
+    assert why is None, why
+    shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
+    assert shown == [("DA", "DA-001"), ("SUR", "SUR-001")], values["rows"]
+    assert "it holds, mostly" in values["rows"] and "old stand-in" in values["rows"]
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="DA-001"))
+    assert why is None, why
+    shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
+    assert shown == [("DA", "DA-001")], values["rows"]
+
+
+def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
+    """LLR-167: on a held rung the aftermath tells a CLARITY verdict to
+    re-attest naming its verdict, and a MEANING verdict to stop for the
+    owner, never the other way round."""
+    repo = _need_amendment_repo(tmp_path)
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SN-001"))
+    assert why is None, why
+    clarity, meaning = values["aftermath"].split("A MEANING verdict on them", 1)
+    assert "--verdict" in clarity, clarity
+    assert "the signature is the owner's" not in clarity, clarity
+    assert "the signature is the owner's" in meaning, meaning
+    assert "--verdict" not in meaning, meaning
+
+
 def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold():
     # OI-100 gap 0: followed literally, "a CLARITY verdict owes nothing further"
     # left the row drifted from its anchor for good. Gap 3 stays: one MEANING
