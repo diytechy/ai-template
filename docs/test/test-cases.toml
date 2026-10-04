@@ -1456,7 +1456,7 @@ phase = 4
 [test.TC-147]
 verifies = ["SR-174", "SR-228", "LLR-153", "IF-091"]
 level = "Integration"
-method = """Run the intake suite against real git repositories: an approved amendment mints one adjudication row; a merged handback mints its disposition; an open-item handback mints a queued blocked successor citing the item through needs with the registry SpecRef; the context block renders pending OIs cited by kin and ignores wi_refs; disposition drafts, gap rows, dial arms, and re-runs obey the existing mint and idempotence contract."""
+method = """Run the intake suite against real git repositories: an approved amendment mints one adjudication row; a merged handback mints its disposition; an open-item handback mints a queued blocked successor citing the item through needs and supplies the registry SpecRef when its draft has none; the context block renders pending OIs cited by kin and ignores wi_refs; disposition drafts, gap rows, dial arms, and re-runs obey the existing mint and idempotence contract."""
 tier = "Full"
 expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-153 detail contract"
 automated = "Yes"
@@ -2918,7 +2918,7 @@ method = """Exercise the decisions call surface over record texts: required fiel
 tier = "Smoke"
 expected = "Satisfies SR-225 AcceptanceCriteria: each shape, required-key and hoist defect is reported by entry, extra keys are not judged, the findings never raise, a -000 entry is never judged, every close owes a record under a recording dial, and a build or adjudication session is told its record's path while a review session is not"
 automated = "Yes"
-evidence = """tests/test_decision_record.py; tests/test_decisions_to_review.py"""
+evidence = """tests/test_decision_record.py; tests/test_decisions_to_review.py::test_a_malformed_hoist_is_shown_as_a_finding_not_a_crash; tests/test_decisions_to_review.py"""
 status = "Approved"
 phase = 6
 
@@ -3155,11 +3155,11 @@ phase = 6
 [test.TC-313]
 verifies = ["SR-148", "LLR-298"]
 level = "Integration"
-method = "Drive staged and committed ruling transitions over git repositories: an unchanged citer Done-when is refused, an updated one passes, removing the needs token does not discharge the parent-tree citation, closing or removing the row passes, a first commit is vacuous, and a no-verify lane commit is refused at merge admission."
+method = """Drive staged and committed ruling transitions over git repositories: an unchanged citer Done-when is refused, a raw-section update including one carrying a path passes, removing the needs token does not discharge the parent-tree citation, closing or removing the row passes, a root commit is vacuous, a shallow boundary is judged, an unreadable named parent is refused, the CSV carrier is judged like TOML, and a no-verify lane commit is refused at merge admission."""
 tier = "Smoke"
 expected = "Every transition out of pending synchronizes its parent-tree citing rows in that commit."
 automated = "Yes"
-evidence = "tests/test_ruling_sync.py::test_a_ruling_with_the_citing_rows_done_when_untouched_is_refused; tests/test_ruling_sync.py::test_the_same_ruling_with_the_done_when_updated_is_accepted; tests/test_ruling_sync.py::test_removing_the_token_in_the_ruling_commit_does_not_discharge_it; tests/test_ruling_sync.py::test_a_row_closed_in_the_ruling_commit_is_accepted; tests/test_ruling_sync.py::test_a_first_commit_has_nothing_to_close; tests/test_ruling_sync.py::test_a_no_verify_lane_commit_is_refused_at_the_merge_slot"
+evidence = """tests/test_ruling_sync.py::test_a_ruling_with_the_citing_rows_done_when_untouched_is_refused; tests/test_ruling_sync.py::test_the_same_ruling_with_the_done_when_updated_is_accepted; tests/test_ruling_sync.py::test_removing_the_token_in_the_ruling_commit_does_not_discharge_it; tests/test_ruling_sync.py::test_a_row_closed_in_the_ruling_commit_is_accepted; tests/test_ruling_sync.py::test_a_first_commit_has_nothing_to_close; tests/test_ruling_sync.py::test_a_no_verify_lane_commit_is_refused_at_the_merge_slot; tests/test_ruling_sync.py::test_a_shallow_boundary_is_judged_never_read_as_a_root_commit; tests/test_ruling_sync.py::test_a_parent_the_repository_cannot_read_is_refused_by_name; tests/test_ruling_sync.py::test_the_csv_carrier_is_judged_like_the_toml_one; tests/test_ruling_sync.py::test_an_added_criterion_carrying_a_path_counts_as_an_update"""
 status = "Drafted"
 phase = 6
 
@@ -3170,6 +3170,6 @@ method = "Drive open-item and work-item registries: an uncited pending item erro
 tier = "Smoke"
 expected = "Pending items have queued visible citers, placeholders point at their pending item, and unrelated registry changes do not stale a cited placeholder."
 automated = "Yes"
-evidence = "tests/test_open_item_readiness.py::test_an_uncited_pending_item_is_an_error_even_with_no_work_items; tests/test_open_item_readiness.py::test_a_ruled_items_row_may_not_keep_the_registry_as_its_specref; tests/test_open_item_readiness.py::test_a_placeholder_row_passes_every_check_and_is_blocked; tests/test_open_item_queue.py::test_an_uncited_pending_item_is_a_notice_not_a_card; tests/test_open_item_queue.py::test_the_status_snapshot_lists_the_same_projection; tests/test_ruling_sync.py::test_a_registry_specref_is_clocked_per_cited_item"
+evidence = """tests/test_open_item_readiness.py::test_an_uncited_pending_item_is_an_error_even_with_no_work_items; tests/test_open_item_readiness.py::test_a_ruled_items_row_may_not_keep_the_registry_as_its_specref; tests/test_open_item_readiness.py::test_a_placeholder_row_passes_every_check_and_is_blocked; tests/test_open_item_readiness.py::test_a_registry_specref_must_name_an_item_the_row_cites; tests/test_open_item_readiness.py::test_the_csv_carriers_registry_specref_is_judged_too; tests/test_open_item_queue.py::test_an_uncited_pending_item_is_a_notice_not_a_card; tests/test_open_item_queue.py::test_the_status_snapshot_lists_the_same_projection; tests/test_ruling_sync.py::test_a_registry_specref_is_clocked_per_cited_item"""
 status = "Drafted"
 phase = 6

@@ -716,7 +716,7 @@ status = "Drafted"
 owner = "scripts/traj_status"
 consumers = ["scripts/agent_common", "external:downstream adopter"]
 channel = "file"
-data = """docs/status.md — the block between the GENERATED STATUS markers: derived stage, spine counts, ready frontier, cited open items and their held rows, uncited items, Decisions-to-review count, and Blocked list"""
+data = """docs/status.md generated block: stage, spine counts, ready frontier, cited items and held rows, uncited items, review count, Blocked list"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -917,13 +917,13 @@ component = "CMP-008"
 owner = "docs/work/"
 consumers = ["scripts/schedule", "external:downstream adopter"]
 channel = "file"
-data = """status; needs edges to work items or OI-### items (a ~ prefix is soft); a pending OI blocks its citing row; placeholder minimum; absent safety class = unclassified"""
+data = """status; needs edges (WI-### or OI-###; ~ is soft); pending OI blocks its citer; absent safety class = unclassified"""
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
 coincident = """The format is what the adopter writes and every reader parses; a copy that reads as this format declares is the whole of what the seam delivers, and what the rows say is judged at their own tiers."""
-notes = """Published contract, not a single consumer: kit scripts walk the work registry and downstream adopters author it. A queued placeholder cites a pending OI through needs and names that registry row as its SpecRef; when the OI is ruled, its citer is synchronized in the same commit."""
+notes = """Published contract, not a single consumer: kit scripts walk the work registry and downstream adopters author it. An open row — draft, queued, active, deferred, or blocked — whose SpecRef names the open-items registry under either carrier errors when its #OI anchor is not one of its needs OI tokens, or when every cited item is non-pending; a missing item remains pending and the dangling-edge check reports it. A queued placeholder cites a pending OI through needs."""
 
 [interface.IF-055]
 owner = "scripts/schedule"
@@ -1034,7 +1034,7 @@ notes = """A pending item has at least one queued work-item citer. A ruling upda
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = """docs/open-items.html — cited pending decisions beside their queued rows, an uncited-item integrity notice, approval and re-attest chains, verdict-named re-attestation audit, pending owner actions, and Decisions to review last"""
+data = """docs/open-items.html — cited pending decisions, uncited-item notice, approval/re-attest chains, verdict audit, owner actions; Decisions to review last"""
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -2245,11 +2245,11 @@ rationale = """The merge slot, the loop and the dial reader each ask the record'
 owner = "scripts/kitlib/decisions"
 requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/agent_common"]
 channel = "call"
-data = """MODES; REQUIRED_KEYS; REVIEWED_KEY; REVIEWED_TRUE; REVIEWED_FALSE; record_path(run) -> path; record_findings(text) -> [finding]; reviewed_state(value) -> bool | None; review_queue(text) -> [entry]; owed(mode, outcomes) -> bool; session_note(mode, run) -> text"""
+data = """record_path; record_findings; reviewed_state; review_queue(text) -> (entries, reviewed_count); MODES, REQUIRED_KEYS, REVIEWED_*; owed; session_note"""
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader."""
+notes = """source — the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader. review_queue returns entry dictionaries with id, high_risk, fields, and raw reviewed value or None; it orders high-risk entries first then id, skips -000, and returns an empty list and zero for unparseable text."""
 
 [interface.IF-257]
 rationale = """A retired row's record is written by the retirement and read by three parties: the traceability check that reports a missing or moved record, the dashboard that lists the records with their deleting commits, and a session that meets a spent id and looks it up. Declaring the files' path and shape as one contract keeps the writer and every reader on one shape, and one file per id keeps the lookup a path rather than a search and the write conflict-free across parallel branches."""
