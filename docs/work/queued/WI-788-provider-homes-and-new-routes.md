@@ -459,4 +459,177 @@ Added to half 1 (the design note), as part of risk 8 and the slice plan's slice 
 - WI-790 builds the owner's "Decisions to review" section and the `reviewed` key.
   This row only guarantees that the records exist.
 
+## Scope widened 2026-10-04 (owner): one lane-state provider and the lane's states
+
+The owner, verbatim:
+
+> "Now the final -potentially largest- design shift I want you to make. Right now
+> there are multiple kit scripts interacting with each-other to coordinate a lane's
+> state. I would like to distill that into a single lane state provider, and at the
+> same time adjust how this state get's set through. If WI-788 is being scoped as a
+> complex design breakdown, perhaps this belongs there as well.
+>
+> What I want: A single method that sets the current state of a lane / work-tree,
+> with an Enum output list:
+>
+> 1. Planning (This can get skipped depending on the WI expectations): Single; Dual
+>    (Draft, Cross-critique, Arbitration)
+> 2. Build. Note: If detailed planning occurred and limited to one file or a few
+>    functions, drop down to a medium tier builder if plan developed by a strong tier.
+> 3. Review and rework. Important: This may have already been noted, but a builder
+>    should be just as skeptical of a reviewers feedback as a review is of the
+>    builder's work. Unless the project clearly specifies it, the builder should not
+>    overdesign for corner cases. It should be able to assume inputs from other
+>    functions / sources in the design system are constructed for validity, and if
+>    there is a chance of rare corner case, the cheapest action is usually a retry
+>    (like for example, to fetch a file read), rather than a complex guard that
+>    creates more complexity and more maintenance. Again, that note might have
+>    already been sufficiently emphasized.
+> 4. In lane-adjudication. Lock adjudicator and prevent other lanes from merging.
+>    Refresh the lane (Note this needs to happen before the adjudicator pulls in the
+>    respective info craft WI and OI because the watermark must be up-to-date, and we
+>    should not run tests on old checkouts.) Resolve any reviewer / builder
+>    disagreements. Perform judgements. Take hand-back items and mint OIs and
+>    decision entries (make sure prompting text here is adequate to encourage the
+>    adjudicator to consume items accordingly.) At this moment when WI minting is
+>    being considered consolidation is also being considered. Define merge action
+> 5. Merge (mechanical)
+> 6. Archive (mechanical)"
+
+**Where lane state lives today** (from the 2026-10-03 code walk behind
+`docs/iteration/wi-lifecycle.html`): it is spread across several carriers and modules
+that read one another.
+- **The spec's folder:** `queued/`, then `active/<branch>/`, then a terminal folder.
+  The claim moves it, and the builder or `handback.py` moves it on.
+- **Commit trailers:** `WI:`, `Blocked-WI:`/`BlockRef:`, `Review-Verdict:`,
+  `Bar-Green:` and `Loop-Session:`.
+- **Session logs** under `docs/iteration/`, and verdict files under `docs/reviews/`.
+- **Machine-local markers and locks:** `out/review-owed`, `out/integrate.lock` (the
+  merge slot) and `out/agent-loop.lock`.
+- **Worker exit codes**, which `dispatch._advance` interprets: done, decided, review
+  owed, park.
+- **The dispatcher's per-tick lane table**, with its park and resume.
+- **The scripts that coordinate it:**
+  - `dispatch.py` (admission, advance, closes);
+  - `lane.py` (spawn worker or refresh);
+  - `integrate.py` (claim, refresh, merge slot, unload);
+  - `agent_loop.py` (end state, review rounds, `resume_owed_round`);
+  - `handback.py` (closes);
+  - `intake.py` (the post-merge mint);
+  - `schedule.py` (readiness).
+
+**The state set** the provider owns is the owner's list, as one enum:
+- `PLANNING`: `SINGLE`, or `DUAL` with `DRAFT`, `CROSS_CRITIQUE` and `ARBITRATION`. It
+  is skippable per the row's expectations. `ARBITRATION` follows whichever arbiter
+  option the note picks.
+- `BUILD`.
+- `REVIEW_REWORK`.
+- `ADJUDICATION`: `LOCK`, `REFRESH`, `RESOLVE`, `JUDGE`, `MINT`, `MERGE_ACTION`.
+- `MERGE` (mechanical).
+- `ARCHIVE` (mechanical).
+
+Added to half 1 (the design note). Each item comes with a recommendation the owner
+rules on at the checkpoint:
+
+- **LS1, the one setter.** `set_lane_state(lane, State, evidence)`, or similar, is the
+  only way a lane's state changes. Every module above calls it instead of moving a
+  folder, writing a marker or reading another module's exit code.
+  - The kit derives its other states from committed evidence (`docs/stage`, review
+    owed; "the evidence decides, alone"). So the note settles whether the state is
+    stored or derived.
+  - **Coordinator's recommendation:** one committed lane-state record that only the
+    provider writes. Each transition is admitted only when its evidence is present
+    (for example `BUILD` to `REVIEW_REWORK` needs the `WI:` trailer, and `MERGE`
+    needs `Bar-Green` and the act). The record is never a second truth beside the
+    evidence, and the markers it replaces are retired, not kept beside it (risk 7).
+  - The note inventories every carrier above, and says for each whether it stays as
+    evidence, folds into the record, or retires.
+- **LS2, other states.** Parked (rate limit, review owed with no reviewer), handed back
+  or partial, and claimed exist today. The note says whether each is a state, a
+  substate, or an evidence condition the provider reports.
+- **LS3, the build tier.** If a strong-tier plan limits the build to one file or a few
+  functions, `BUILD` routes a medium-tier builder.
+  - This deliberately overrides the row's BuildTier pin and the coordinator's standing
+    rule against downgrading a declared route, for this case only. The owner directs
+    it.
+  - The trigger must be mechanical: the plan declares its scope (files and functions
+    touched), and the provider reads it.
+  - The escalation ladder (swap family, then tier up, then page) still applies after a
+    failed round.
+- **LS4, adjudication under one lock.** `LOCK` takes the adjudicator's lease and holds
+  the merge slot, so no other lane merges while this lane is adjudicated.
+  - `REFRESH` runs inside the lock and before the adjudicator reads any work-item or
+    open-item state: trunk is merged in, the views regenerated and the declared bar
+    run. The watermark is then current, and no test runs on a stale checkout.
+  - The cost: merges serialize for the length of a sitting. The lease wait from risk
+    5 (about 20 minutes) bounds other callers, and the note states the expected hold
+    time.
+- **LS5, resolve.** A builder may dispute a review finding with evidence. Disputes left
+  unresolved after rework go to the adjudicator in `RESOLVE`. This replaces the hand
+  path's separate arbiter for builder-reviewer disagreements.
+- **LS6, mint.** In `MINT` the adjudicator consumes every handback item and every
+  disposition. Each one becomes one of:
+  - an open item with its placeholder work item (WI-790);
+  - a decision entry (WI-790's "Decisions to review");
+  - a successor work item;
+  - a recorded no-action, with its reason.
+
+  Consolidation is weighed at the same moment, so a new row is checked against open
+  rows before it is minted (the consolidate brief folds in here). The brief makes
+  consumption checkable: a list of every item with its disposition, so an item left
+  undisposed is a refusal, not a silent drop. This is the "adequate prompting" the
+  owner asked for.
+- **LS7, merge action.** `MERGE_ACTION` is the adjudicator's declared outcome, for
+  example merge, merge partial, return for another round, or cancel. `MERGE` and
+  `ARCHIVE` carry it out mechanically. The note defines the set.
+- **LS8, rulings this changes.** Each is stated as a change:
+  - R1 (2026-08-01, "a work branch never mints a work-item id") and the merge slot's
+    mint refusal. Under LS4 a locked, refreshed lane mints at trunk's current
+    watermark. The proposed amendment: only a lane in `ADJUDICATION.MINT` under the
+    lock mints.
+  - The merge slot's refusal of an approval act from a work lane
+    (`integrate.py:1154`). Acts move into the lane under the lock, which the S11 plan
+    Q1 (ruled) already allows.
+  - The S11 plan's act-freshness rung ("admitted only if no other act reached trunk
+    since"). The lock replaces it.
+  - Intake's post-merge mint arms (amendment, first-approval, dispose, Done-when
+    changed, successors, rejudge). The note says which move into `MINT` and which
+    stay mechanical after the merge.
+  - The BuildTier pin, as LS3 overrides it.
+- **LS9, builder and reviewer stance** (the owner's note).
+  - What is already stated: `AGENTS.template.md` says "distrust certainty, yours or a
+    reviewer's: a finding is a claim" and "right-size the solution", and PROCESS.md
+    §3 owes a guard only at a trust boundary.
+  - Two places pull the other way:
+    - the rework brief says "REWORK FINDING (address this before anything else)"
+      (`agent_brief.py:312`), which asks for compliance;
+    - `AGENTS.template.md`'s "never retry past a failure whose cause you haven't
+      found" reads against "the cheapest action is usually a retry".
+  - The note proposes wording for each:
+    - the rework brief asks the builder to confirm or refute each finding with
+      evidence, and to record disputes for `RESOLVE`;
+    - the reviewer brief gains the reciprocal: do not demand guards for inputs the
+      design already constructs as valid;
+    - the retry rule distinguishes a known transient class, which is retried (for
+      example a file read failing on a Windows lock), from an unexplained failure,
+      which is not.
+
+**The slice plan changes:** the lane-state provider is the backbone the other slices
+move onto.
+1. The glossary and PROCESS.md wording (the states named once).
+2. The labelled entry point and the one session store.
+3. **The lane-state provider (LS1, LS2), with today's flow moved onto it unchanged in
+   behaviour.**
+4. Planning states through the entry point: the restored dual-plan pickup, LS3, and
+   any per-item planning step.
+5. **In-lane adjudication (LS4 to LS8):** lock, refresh, resolve, judge, mint with
+   consolidation, merge action.
+6. Provider routes and homes.
+7. The spine-authoring flow, the text-then-act commit split, and LS9's prompt
+   changes.
+8. The RESYNC entry.
+
+The row's title no longer describes its scope. The checkpoint may retitle it, and
+because a title edit renames the file, it is a deliberate commit of its own.
+
 ## Deliverable
