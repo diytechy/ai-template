@@ -1187,10 +1187,13 @@ def _approval_act_refusal(root, branch):
         message = f"cannot read the merge base of trunk {head[:10]} and {branch}, so the spine delta the approval-act rung reads is unknowable; nothing was merged:\n{ac._failure_tail(base)}"
         return message
     judge = acceptance_record.merge_approval_refusal
+    # `trunk=head`: the act lands under TRUNK's authority. This rung runs before
+    # the in-slot refresh, so the merge base can predate a hold trunk has since
+    # declared; the slot is held, so trunk does not move again before the merge.
     if not metas:
-        return judge(root, base.strip(), branch, [], False)
+        return judge(root, base.strip(), branch, [], False, trunk=head)
     actor = _adjudication_lane(root, branch, metas=metas)
-    return judge(root, base.strip(), branch, metas, actor)
+    return judge(root, base.strip(), branch, metas, actor, trunk=head)
 
 
 def _loop_claimed(root, branch):

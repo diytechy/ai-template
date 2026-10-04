@@ -1034,7 +1034,7 @@ notes = "built and consumed together; published contract, not a single consumer 
 owner = "scripts/gen_open_items"
 consumers = ["external:downstream adopter"]
 channel = "file"
-data = "docs/open-items.html — pending decisions, approval and re-attest chains, pending owner actions"
+data = "docs/open-items.html — pending decisions, approval and re-attest chains, verdict-named re-attestation audit, pending owner actions"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1272,7 +1272,7 @@ component = "CMP-008"
 owner = "scripts/acceptance_record"
 requestors = ["scripts/intake", "scripts/integrate"]
 channel = "call"
-data = "staged_spine_amendments and staged_drafted_rows records (intake) · the merge_approval_refusal text, the amendment re-attestation scope included (integrate) · SPINE_CSVS"
+data = "AMENDMENT_CSVS, staged_spine_amendments and staged_drafted_rows records (intake) · merge_approval_refusal(root, base, head, metas, adjudication, trunk) text including amendment scope and held-rung verdict and below-approval refusals read at trunk (integrate)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1603,7 +1603,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 owner = "scripts/baseline_snapshot"
 requestors = ["scripts/intake"]
 channel = "call"
-data = "copy_live, parse_approves, parse_reattests, act_summary, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
+data = "copy_live, parse_approves, parse_reattests, act_summary, tier_owing, load_all, rows_for, exists, stamp, is_drifted, unanchored_findings"
 version = "v1"
 status = "Drafted"
 
@@ -2049,7 +2049,7 @@ rationale = """Re-accepting a risk is re-attesting its row, and a re-attestation
 owner = "scripts/baseline_snapshot"
 consumers = ["scripts/acceptance_record"]
 channel = "file"
-data = "the act ledger acts.toml beside the snapshot copies: [[act]] seq (a positive integer, unique and increasing in file order), date (an ISO day), approved = [row ids], reattested = [row ids]"
+data = "the act ledger acts.toml beside the snapshot copies: [[act]] seq (a positive integer, unique and increasing in file order), date (an ISO day), approved = [row ids], reattested = [row ids], verdict (an optional non-empty in-tree verdict path)"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"

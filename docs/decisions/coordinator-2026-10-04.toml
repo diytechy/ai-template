@@ -12,3 +12,17 @@ alternative = "Draw a Codex Sol review of each pause-deletion commit before the 
 reversal_cost = "None: the pause is restored byte-identical in the commit after each claim, so nothing claims in the window but the authorized row."
 why_not_escalated = "The owner's session prompt authorizes exactly this sequence (delete, claim, restore) for WI-791, WI-790 and WI-788; the earlier scoped unpause (OI-99, 236038e8) took the same form."
 review = ""
+
+[decision.D-002]
+decided = "When the first pause-deletion commit was refused by the hook but integrate.py claim still claimed WI-791 (it reads the working tree's pause file, which the staged deletion had removed), the coordinator reset its own unpushed commits to 423ec57c, deleted the orphan wi-791 branch and redid deletion, claim and restore in the authorized order."
+alternative = "Keep the out-of-order claim and record it, or commit the deletion after the claim."
+reversal_cost = "None: the discarded claim commit (bd8e7619) is in the reflog; nothing was pushed."
+why_not_escalated = "The owner's authorization names the order (deletion commit, then claim, then restore); redoing local unpushed commits restores it exactly. The claim's working-tree read is reported as a kit finding."
+review = ""
+
+[decision.D-003]
+decided = "The WI-788 lane is kept open (claimed, its design note committed on the lane, not landed) at the owner checkpoint; the checkpoint item holds the row and the owner reads the note on lane wi-788."
+alternative = "Land the note on trunk and return the row to queued, or close WI-788 partial with a handback."
+reversal_cost = "Low: the lane lands as it stands once the owner approves, or is refreshed and amended."
+why_not_escalated = "The spec closes WI-788 on the APPROVED note (half 2: the coordinator files the slice rows and WI-788 closes); un-claiming is not one of the integrator's three outcomes, and a partial close would mint a successor the owner has not ruled."
+review = ""

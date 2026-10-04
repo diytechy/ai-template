@@ -1702,6 +1702,100 @@ def test_a_well_formed_act_ledger_parses_in_file_order():
     assert SNAP.acts_problems("") == [] and SNAP.parse_acts(None) == []
 
 
+def test_a_ledger_entry_may_name_the_verdict_that_ruled_it():
+    """OI-100 gap 2 (WI-791): an act may name the verdict file that ruled its
+    re-attested rows. The field is optional, so every entry written before it
+    still parses in its old shape; when present it is a non-empty path."""
+    named = _GOOD_ACT + 'verdict = "docs/reviews/v.md"\n'
+    assert SNAP.acts_problems(named) == []
+    (entry,) = SNAP.parse_acts(named)
+    assert entry["verdict"] == "docs/reviews/v.md"
+    assert "verdict" not in SNAP.parse_acts(_GOOD_ACT)[0]
+    for bad in ('verdict = ""\n', "verdict = 3\n"):
+        problems = SNAP.acts_problems(_GOOD_ACT + bad)
+        assert problems and "`verdict`" in problems[0], problems
+
+
+def test_a_reattesting_act_records_its_verdict_and_refuses_a_bad_one(tmp_path):
+    """`copy_live(..., verdict=)` writes the verdict into the act's ledger entry.
+    A verdict needs re-attested rows to rule, and must name a file in the tree:
+    a typo would otherwise land a ruling nobody can open in the record."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
+    with pytest.raises(SystemExit) as no_rows:
+        SNAP.copy_live(root, approves={SR_REL: "x"}, verdict="docs/reviews/v.md")
+    assert "names no re-attested row" in str(no_rows.value), no_rows.value
+    with pytest.raises(SystemExit) as no_file:
+        SNAP.copy_live(root, reattests={sid}, verdict="docs/reviews/v.md")
+    assert "docs/reviews/v.md" in str(no_file.value), no_file.value
+    verdict = root / "docs" / "reviews" / "v.md"
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text(
+        "- [CLARITY] {} title -> same\n\nVERDICT: CLARITY rows=1\n".format(sid),
+        encoding="utf-8",
+    )
+    proc = _snapshot_cli(root, "--reattests", sid, "--verdict", "docs/reviews/v.md")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "VERDICT: docs/reviews/v.md" in proc.stdout, proc.stdout
+    last = SNAP.read_acts(root)[-1]
+    assert last["reattested"] == [sid] and last["verdict"] == "docs/reviews/v.md"
+
+
+def test_a_verdict_path_is_recorded_repo_relative_with_forward_slashes(tmp_path):
+    """Sol review 1, MINOR 1 (WI-791): the merge slot reads the recorded verdict
+    with `git show <rev>:<path>`, which resolves only the repository's own
+    forward-slash spelling. A Windows-spelt or absolute path that names the file
+    is recorded in that spelling, so a valid CLARITY act is not refused."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    verdict = root / "docs" / "reviews" / "v.md"
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text("- [CLARITY] {} title -> same\n".format(sid), "utf-8")
+    for spelt in ("docs\\reviews\\v.md", str(verdict), "./docs/reviews/v.md"):
+        _rewrite(root, SR_REL, row["Title"], row["Title"] + " +")
+        row["Title"] += " +"
+        SNAP.copy_live(root, reattests={sid}, verdict=spelt)
+        assert SNAP.read_acts(root)[-1]["verdict"] == "docs/reviews/v.md", spelt
+
+
+def test_a_verdict_outside_the_repository_is_refused(tmp_path):
+    """LLR-245: the act ledger records a verdict by its repository path, so a
+    verdict file outside the repository is refused although it exists, and
+    the ledger does not move."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
+    outside = tmp_path / "v.md"
+    outside.write_text("- [CLARITY] {} title -> same\n".format(sid), "utf-8")
+    acts = len(SNAP.read_acts(root))
+    with pytest.raises(SystemExit) as refused:
+        SNAP.copy_live(root, reattests={sid}, verdict=str(outside))
+    assert "not a file in the tree" in str(refused.value), refused.value
+    assert len(SNAP.read_acts(root)) == acts
+
+
+def test_a_relative_verdict_path_is_canonicalized_and_confined(tmp_path):
+    """Sol final review, MINOR 1 (WI-791): a RELATIVE verdict path is resolved
+    against the repository too. One climbing out of it is refused although the
+    file exists, leaving the ledger unchanged; one with a `..` inside the tree
+    is recorded in its canonical spelling, the one the merge slot can read."""
+    root, _run_git = _git_tree(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (clarified)")
+    (tmp_path / "v.md").write_text("- [CLARITY] {} t -> same\n".format(sid), "utf-8")
+    acts = len(SNAP.read_acts(root))
+    with pytest.raises(SystemExit) as refused:
+        SNAP.copy_live(root, reattests={sid}, verdict="../v.md")
+    assert "not a file in the tree" in str(refused.value), refused.value
+    assert len(SNAP.read_acts(root)) == acts
+    verdict = root / "docs" / "reviews" / "v.md"
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text("- [CLARITY] {} t -> same\n".format(sid), "utf-8")
+    SNAP.copy_live(root, reattests={sid}, verdict="docs/reviews/../reviews/v.md")
+    assert SNAP.read_acts(root)[-1]["verdict"] == "docs/reviews/v.md"
+
+
 def test_a_malformed_ledger_refuses_the_act_before_the_record_moves(tmp_path):
     """The refusal comes before any copy or stamp: a person fixes the ledger
     and re-runs, and the record they fix is the record that stood."""
@@ -1868,7 +1962,8 @@ def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
     _rewrite(root, rel, 'status = "Drafted"', 'status = "Approved"')
     run_git("add", "-A")
     run_git("commit", "-m", "a lane approves the row")
-    refusal = _AR.merge_approval_refusal(root, drafted, _head(run_git), [], False)
+    head = _head(run_git)
+    refusal = _AR.merge_approval_refusal(root, drafted, head, [], False, trunk=head)
     assert refusal and rid in refusal and rel in refusal, refusal
     # ...and an approval with no copy behind it is the hole the rule reports.
     assert any(rel in f for f in SNAP.unanchored_findings(root))

@@ -6785,6 +6785,36 @@ configure: your codex sessions start recording occupancy, and compaction
 observations, on the next call. Session logs written before the re-sync keep
 their blank columns.
 
+### Amended needs reach the meaning-or-clarity adjudication; CLARITY re-attests on a held rung [since 2aad71a3]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The amendment walk (`acceptance_record.AMENDMENT_CSVS`, read
+by `staged_spine_amendments`) now covers the need tier and the assumption
+registry's assumptions and surrogates beside SR/LLR/TC. An approved row of
+those tiers whose approved text moves on merged trunk mints one `amendment`
+adjudication row, and the pre-commit amend-without-flip warn names it, where
+before it surfaced only on the owner's approval brief with no meaning
+judgement. The amendment brief renders those rows. Ruled decision 2's held arm
+gains one case (`intake.adjudication_action`, PROCESS.md §4): on a held rung an
+adjudicator session re-attests a row it rules CLARITY, naming its verdict
+(`intake.py snapshot --reattests <ROW-ID> --verdict <file>`). The act ledger
+entry carries an optional `verdict` field, the merge slot refuses a held-rung
+re-attestation whose verdict does not rule the row CLARITY, and
+`open-items.html` lists every verdict-carrying act for audit. A MEANING row
+and a first draft on a held rung stay the owner's. The brief now tells a
+CLARITY verdict to name its rows in `--reattests`, which coordinators already
+did.
+
+**What to do.** Re-sync `scripts/acceptance_record.py`,
+`scripts/baseline_snapshot.py`, `scripts/intake.py`,
+`scripts/adjudicate_brief.py`, `scripts/gen_open_items.py`,
+`prompts/adjudicate-amendment.template.md` and `PROCESS.md`, then regenerate
+`docs/open-items.html`. No migration: existing ledger entries keep their shape
+and still parse. If your dial holds the needs rung, expect your next merged
+need amendment to mint an adjudication row rather than wait silently on your
+brief.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,996 | 2026-09-28 | +4: WI-615 — the partial-search bullet, paid for by three de-duplications |
 | `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,450 | 2026-10-03 | WI-688 restamps the PROCESS.md row |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,451 | 2026-10-04 | WI-791 restamps the PROCESS.md row |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,7 +45,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 94,780 | 2026-10-03 | **+314** WI-688: the per-decomposition perspective record |
+| `project-trajectory/PROCESS.md` | 95,209 | 2026-10-04 | **+429** WI-791: the held-rung CLARITY re-attestation case |
 | `project-trajectory/PROCESS_OPTIONS.md` | 196,996 | 2026-10-02 | **+315** WI-657: rung-or-path sensor selection |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

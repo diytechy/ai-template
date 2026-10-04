@@ -456,7 +456,10 @@ def amendment_values(root, row):
     owner surface can never show three different diffs. Traced cells are
     deliberately excluded: §A5.1 rules them non-attesting, and a judge asked to
     rule "meaning or clarity" on a re-pointed `Module` cell is being asked a
-    question the ruling already answers.
+    question the ruling already answers. The need, assumption and surrogate
+    tiers, which that model does not hold, are read beside it from the same
+    recorded copy (`_unchained_amended_rows`; OI-100 gap 1, WI-791), so a row
+    the widened mint routes is briefed rather than held.
 
     NO SNAPSHOT IS A HOLD, AND IT SAYS WHY. A repo that has never signed has no
     accepted anchor at all, so "did this amendment change the meaning?" is not
@@ -507,6 +510,8 @@ def amendment_values(root, row):
     reg = tr.load_registries(root / "docs")
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
     lines, tiers = _amended_rows(model, scope)
+    more, more_tiers = _unchained_amended_rows(root, scope)
+    lines, tiers = lines + more, tiers | more_tiers
     if not lines:
         # One refusal for every way the SCOPED population empties, naming the
         # scope: a repo-wide "nothing to judge" beside it would be two answers
@@ -555,11 +560,45 @@ def _amended_rows(model, scope):
     return lines, {kind for kind, _rid in chains}
 
 
+# The amended tiers the requirement-chain model does not hold (OI-100 gap 1,
+# WI-791): the need tier and the assumption registry's two tiers, each
+# `(kind, registry, id column)`. The mint routes their amendments since WI-791,
+# so the brief must render them or every such row would refuse as "nothing in
+# scope" and hold for a human.
+_UNCHAINED_TIERS = (
+    ("SN", "docs/requirements/stakeholder-needs.toml", "SN-ID"),
+    ("DA", "docs/requirements/assumptions.toml", "DA-ID"),
+    ("SUR", "docs/requirements/assumptions.toml", "SUR-ID"),
+)
+
+
+def _unchained_amended_rows(root, scope):
+    """`(lines, tiers)` for the drifted need, assumption and surrogate rows IN
+    `scope`, each rendered like `_amended_rows`' blocks — the approved cells'
+    before/after against the recorded copy (`baseline_snapshot.tier_owing`).
+
+    Implements: SR-146, LLR-167"""
+    snapshot = baseline_snapshot.load_all(root)
+    lines, shown = [], set()
+    for kind, rel, id_col in _UNCHAINED_TIERS:
+        owing = baseline_snapshot.tier_owing(root, [(rel, id_col)], snapshot)
+        for rid, why, cells, _row in owing:
+            if rid not in scope or why != "DRIFTED":
+                continue
+            shown.add(kind)
+            lines.append("- {} {}".format(kind, rid))
+            for name, before, after in cells:
+                lines.append("  - {}".format(name))
+                lines.append("    - before: {}".format(before or "(empty)"))
+                lines.append("    - after: {}".format(after or "(empty)"))
+    return lines, shown
+
+
 def _amendment_baseline(root, tiers):
     """`{baseline}`: the snapshot as the accepted anchor, with the commit that
     last wrote the copy of EACH registry the listing shows — the provenance of
     the text actually under judgement, in spine order."""
-    rels = [rel for tier, rel in _REGISTRY_OF.items() if tier in tiers]
+    rels = list(dict.fromkeys(r for tier, r in _REGISTRY_OF.items() if tier in tiers))
     return (
         "{} — the approved text as a human last blessed it, each registry's copy "
         "as last written:\n{}\nThis is the text BEFORE the change below; it is "
@@ -603,6 +642,10 @@ _REGISTRY_OF = {
     "SR": "docs/requirements/system-requirements.toml",
     "LLR": "docs/requirements/low-level-requirements.toml",
     "TC": TC_REGISTRY,
+    # The amendment brief's unchained tiers (OI-100, WI-791). Only the
+    # amendment arm ever renders these kinds; a first-approval chain holds
+    # SR, LLR and TC rows alone.
+    **{kind: rel for kind, rel, _col in _UNCHAINED_TIERS},
 }
 
 
@@ -621,8 +664,13 @@ def _loop_approves(root, kind):
 
 
 def _aftermath(root, tiers):
-    """What a MEANING verdict owes NEXT, derived from the declared gate
-    authority for the tiers actually shown (owner ruling 2026-09-01).
+    """What each verdict owes NEXT, derived from the declared gate authority for
+    the tiers actually shown (owner ruling 2026-09-01) and from ruled decision
+    2's one home, `intake.adjudication_action`, as OI-100 amended it
+    (2026-10-03, WI-791): on a released rung the session re-attests what it
+    rules CLARITY and the MEANING rows it would bless; on a held rung it
+    re-attests a CLARITY row naming its verdict, and recommends a MEANING row
+    to the owner.
 
     THIS SLOT REPLACED A SENTENCE THAT HAD GONE FALSE. The template used to end
     "the flip, if one is owed, is the mechanical tool's act, not yours" — true
@@ -636,25 +684,46 @@ def _aftermath(root, tiers):
     the shape that produces a session confidently doing the owner's act. An
     unrecognised tier is reported as HELD, the same direction `human_holds`
     fails."""
+    import intake  # ruled decision 2's one home; deferred, a leaf read
+
     held, mine = [], []
     for tier in sorted(tiers):
         (mine if _loop_approves(root, tier) else held).append(tier)
     parts = []
     if mine:
-        parts.append(
-            "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared "
-            "gate authority has RELEASED, so a MEANING verdict on them is "
-            "re-attested BY YOU, in this session, in its own reviewed "
-            "commit.".format("/".join(mine))
-        )
+        parts.append(_RELEASED_AFTERMATH.format("/".join(mine)))
     if held:
+        arms = {v: intake.adjudication_action(True, v) for v in ("CLARITY", "MEANING")}
         parts.append(
-            "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared "
-            "gate authority still HOLDS for a human, so a MEANING verdict on "
-            "them stops at your verdict and the signature is the owner's — do "
-            "not re-anchor them.".format("/".join(held))
+            _HELD_AFTERMATH.format(
+                "/".join(held), _HELD_ARMS[arms["CLARITY"]], _HELD_ARMS[arms["MEANING"]]
+            )
         )
     return "\n\n".join(parts)
+
+
+# The aftermath's wording per dial arm. The ARM each verdict takes on a held
+# rung is `intake.adjudication_action`'s answer, read above, never restated.
+_RELEASED_AFTERMATH = (
+    "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
+    "authority has RELEASED, so a CLARITY verdict, and a MEANING verdict you "
+    "would bless, is re-attested BY YOU, in this session, in its own reviewed "
+    "commit: name each such row in `--reattests`."
+)
+_HELD_AFTERMATH = (
+    "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
+    "authority still HOLDS for a human. A CLARITY verdict on them {}. A MEANING "
+    "verdict on them {}."
+)
+_HELD_ARMS = {
+    "reattest": "is re-attested BY YOU as a judgement act, in its own reviewed "
+    "commit, naming the verdict that ruled it: `python scripts/intake.py "
+    "snapshot --reattests <ROW-ID>[,<ROW-ID>...] --verdict <your verdict "
+    "file>`; the act ledger records the verdict and the owner's surface lists "
+    "the act for audit",
+    "recommend": "stops at your verdict and the signature is the owner's — "
+    "recommend it to the owner and do not re-anchor it",
+}
 
 
 # --- the first-approval brief (owner ruling 2026-09-01) -----------------------

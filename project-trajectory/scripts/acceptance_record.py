@@ -66,8 +66,9 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     `staged_spine_amendments(root, base, head)` returns one record per
     approved-text spine row amended between the two trees WITHOUT its status
     moving — `{"registry", "id", "approved": {cell: (before, after)},
-    "traced": {...}}` — and `SPINE_CSVS` names the registries and id columns
-    that walk covers. Which two trees is a parameter, so the same call answers
+    "traced": {...}}` — and `AMENDMENT_CSVS` names the registries and id
+    columns that walk covers: the requirement, design and test tiers, the need
+    tier and the assumption registry's two tiers (OI-100, WI-791). Which two trees is a parameter, so the same call answers
     the index-against-HEAD question and the commit-against-commit one. It
     classifies and stops: which traced cells oblige an act is the caller's
     ruling, not this module's. A new row is not an amendment, a row whose
@@ -84,12 +85,17 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     snapshot delta, the opposite pole from its readers' silent degrade, because
     a refusal is where the conservative direction belongs. All four share
     `_spine_row_sides`, so no reader can be the only one that sees a row.
-    `merge_approval_refusal(root, base, head, metas, adjudication)` is the
-    merge slot's one call: a lane's delta through `lane_approval_refusal`, an
+    `merge_approval_refusal(root, base, head, metas, adjudication, *, trunk)`
+    is the merge slot's one call: a lane's delta through `lane_approval_refusal`, an
     adjudication's flips through its first-approval scope, and its
     re-attestations — read from the act ledger entries the delta added — through
     `reattest_scope_refusal`, which refuses by name every re-attested row
-    outside the `Adjudicates` scope of the amendment rows the lane claims.
+    outside the `Adjudicates` scope of the amendment rows the lane claims, and
+    `held_reattest_refusal`, which refuses by name every row re-attested on a
+    rung the dial at `trunk` (the commit the merge lands on) holds unless the
+    row is approved at the act and the act entry names a verdict file that
+    rules the row CLARITY (`verdict_rulings` reads its `- [CLARITY] <id>`
+    lines).
 Contract IF-129: the ONE cell-comparison basis.
     `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
     `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
@@ -147,11 +153,14 @@ except ImportError:  # pragma: no cover - in-process fallback
 _git = _kitgit.git_out
 
 
-# The three spine registries the staged amend-without-flip warn (WI-316) watches,
-# each with its id column. The SN tier is not listed HERE: that warn reports a
-# row whose APPROVED TEXT moved while its status stood still, and extending it
-# to needs is still its own decision rather than a side effect. The approval-act
-# readers below are a different question and DO cover SN — `APPROVAL_ACT_CSVS`.
+# The three spine registries the first-approval mint (`staged_drafted_rows`),
+# the test-first walk and the retired flip read, each with its id column. The
+# amend-without-flip warn (WI-316) and the amendment mint read this set until
+# WI-791; extending them to needs was "its own decision rather than a side
+# effect", and OI-100 (ruled 2026-10-03) made it — so they read the sibling
+# `AMENDMENT_CSVS` below, and this constant keeps its three tiers for the
+# readers whose scope did not move. The approval-act readers below are a
+# different question and DO cover SN — `APPROVAL_ACT_CSVS`.
 SPINE_CSVS = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
     ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
@@ -202,6 +211,23 @@ APPROVAL_ACT_CSVS = SPINE_CSVS + (
 # `SNAPSHOTTED == APPROVAL_ACT_CSVS + OUTSIDE_THE_APPROVAL_ACT`, pinned by
 # `tests/test_acceptance_record.py`. A new tier therefore cannot be added
 # without landing on one side or the other by a deliberate edit.
+# THE AMENDMENT WALK'S UNIVERSE (OI-100 gap 1, ruled 2026-10-03; WI-791): every
+# tier an approval act can bless. An amendment is text moving away from its
+# blessing, so the tiers whose text an act blesses are exactly the tiers whose
+# amendment owes a meaning-or-clarity judgement — the needs, the assumptions and
+# the surrogates among them, which the walk left out until WI-616's need edits
+# merged and minted nothing. An ALIAS, not a second literal, so the two sets
+# cannot drift apart; a SIBLING of `SPINE_CSVS`, not a widening of it, so that
+# constant's other readers keep their three tiers.
+#
+# THE PRE-COMMIT WARN'S SCOPE IS THIS SET TOO, decided in the same change: the
+# warn (`staged_spine_findings`) and the mint (`intake._routed_amendments`) read
+# one walk, `staged_spine_amendments`, so the author is warned at the commit
+# about exactly the rows the merge will route to an adjudicator. The hat arm
+# stays structurally silent on these tiers: none carries `Hat-Refs`.
+# Implements: SR-178, LLR-158
+AMENDMENT_CSVS = APPROVAL_ACT_CSVS
+
 OUTSIDE_THE_APPROVAL_ACT = (
     "docs/requirements/interfaces.toml",
     "docs/requirements/external.toml",
@@ -802,13 +828,18 @@ def adjudication_approval_refusal(scope, delta):
     )
 
 
-def merge_approval_refusal(root, base, head, metas, adjudication):
+def merge_approval_refusal(root, base, head, metas, adjudication, *, trunk):
     """Apply one derived approval delta to its actor's authorization rule: an
     adjudication's flips to its first-approval scope, and its re-attestations
-    to its amendment scope (`reattest_scope_refusal`)."""
+    to its amendment scope (`reattest_scope_refusal`) and, on a rung `trunk`'s
+    dial holds, to the CLARITY verdict the act names (`held_reattest_refusal`).
+    `trunk` is the commit the merge lands on: the authority the act lands under,
+    which the merge base is not once trunk has moved since the lane forked."""
     delta = approval_delta(root, base, head)
     if adjudication:
-        refusal = reattest_scope_refusal(root, base, head, metas, delta)
+        refusal = reattest_scope_refusal(
+            root, base, head, metas, delta
+        ) or held_reattest_refusal(root, trunk, base, head, delta)
         if refusal:
             return refusal
         scope = first_approval_scope(metas)
@@ -870,6 +901,12 @@ def reattested_between(root, base, head):
     ), None
 
 
+def _wrote_ledger(delta):
+    """Did the approval delta write the act ledger? A re-attestation moves no
+    cell, so the ledger entries are the only trace of one."""
+    return any(line.endswith("/" + SNAPSHOT_ACTS) for line in delta[1])
+
+
 def reattest_scope_refusal(root, base, head, metas, delta=None):
     """Refuse an adjudication's act re-attesting a row outside the `Adjudicates`
     scope of the amendment rows it claims — by name — or None.
@@ -882,8 +919,7 @@ def reattest_scope_refusal(root, base, head, metas, delta=None):
     re-attestation scope at all. Only read when the delta wrote the ledger.
 
     Implements: SR-178, LLR-278"""
-    snapshot_files = (delta or approval_delta(root, base, head))[1]
-    if not any(line.endswith("/" + SNAPSHOT_ACTS) for line in snapshot_files):
+    if not _wrote_ledger(delta or approval_delta(root, base, head)):
         return None
     ids, refusal = reattested_between(root, base, head)
     if refusal:
@@ -901,6 +937,139 @@ def reattest_scope_refusal(root, base, head, metas, delta=None):
             ";".join(sorted(scope)) or "none claimed",
             "\n".join("  {} re-attested OUTSIDE the scope".format(r) for r in outside),
         )
+    )
+
+
+# The two row tags of an amendment verdict, in the brief's own grammar
+# (`prompts/adjudicate-amendment.template.md`): `- [MEANING|CLARITY] <row-id> ...`.
+# Read with string methods: this module's import surface is pinned
+# (`tests/test_acceptance_record.py`), and one prefix test needs no `re`.
+_VERDICT_TAGS = {"- [MEANING]": "MEANING", "- [CLARITY]": "CLARITY"}
+
+
+def _ruled_row(line):
+    """`(word, row id)` for one verdict row line, else None."""
+    head = line.strip()
+    for tag, word in _VERDICT_TAGS.items():
+        rest = head[len(tag) :].split() if head.startswith(tag) else []
+        if rest:
+            return word, rest[0]
+    return None
+
+
+def verdict_rulings(text):
+    """`{row id: "MEANING" | "CLARITY"}` read off an amendment verdict's row
+    lines; a row ruled both ways reads MEANING, the brief's fail-toward-meaning
+    rule.
+
+    Implements: SR-178, LLR-278"""
+    out = {}
+    for word, rid in filter(None, map(_ruled_row, (text or "").splitlines())):
+        if out.get(rid) != "MEANING":
+            out[rid] = word
+    return out
+
+
+def _tier_of(rid):
+    """`(registry, id column)` of the amendment-walk tier row `rid` belongs to,
+    read off its prefix, or `(None, None)`."""
+    return next(
+        ((r, col) for r, col in AMENDMENT_CSVS if rid.startswith(col[:-2])),
+        (None, None),
+    )
+
+
+def _held_row(dial, rid):
+    """Does `dial` hold the rung row `rid`'s tier is approved into? A row of a
+    tier the amendment walk does not name is held, the direction every
+    authority read fails."""
+    rel, _col = _tier_of(rid)
+    rung = _kitauthority.rung_for(rel) if rel else None
+    return rung is None or _kitauthority.holds_under(dial, rung)
+
+
+def _below_approval(root, head, rid):
+    """Is row `rid` below approval, or absent, at `head`? Such a row carries no
+    signature for a CLARITY ruling to carry over (SR-228)."""
+    rel, col = _tier_of(rid)
+    row = _spine_rows_at(root, head + ":", rel, col).get(rid) if rel else None
+    return row is None or not _claims_approval(row)
+
+
+def _held_row_line(root, head, rid, act, rulings):
+    """The refusal line for one held-rung re-attested row, or None: a row below
+    approval at the act, an act naming no verdict, or a verdict that does not
+    rule the row CLARITY."""
+    if _below_approval(root, head, rid):
+        return (
+            "  {} is below approval (or absent) at the act, so it carries no "
+            "signature to re-attest".format(rid)
+        )
+    if not str(act.get("verdict") or "").strip():
+        return "  {} re-attested on a held rung, and act {} names no verdict".format(
+            rid, act.get("seq")
+        )
+    if rulings.get(rid) != "CLARITY":
+        return "  {} is not ruled CLARITY by {}".format(rid, act["verdict"])
+    return None
+
+
+def _held_act_lines(root, head, dial, act):
+    """The refusal lines for one act entry's held-rung re-attestations, the
+    named verdict read at `head` (`_held_row_line` judges each row)."""
+    held = sorted(str(r) for r in act.get("reattested") or [] if _held_row(dial, r))
+    if not held:
+        return []
+    verdict = str(act.get("verdict") or "").strip()
+    rulings = (
+        verdict_rulings(_git(root, ["show", "{}:{}".format(head, verdict)]))
+        if verdict
+        else {}
+    )
+    lines = (_held_row_line(root, head, rid, act, rulings) for rid in held)
+    return [line for line in lines if line]
+
+
+def held_reattest_refusal(root, trunk, base, head, delta=None):
+    """Refuse an adjudication's act re-attesting a row on a HELD rung unless
+    the act names the verdict that ruled the row CLARITY — or None.
+
+    OI-100 gap 2 (ruled 2026-10-03, WI-791) amends ruled decision 2's held arm
+    by one case: a CLARITY verdict approves no new text, it records that the
+    owner's signature still describes the row, so an independent adjudicator
+    session may re-attest it. The act names its verdict (`intake.py snapshot
+    --verdict`), so the act ledger records which ruling carried the signature
+    over and the owner's surface lists it for audit. A MEANING row stays the
+    owner's to sign, and a row below approval carries no signature to carry
+    over (SR-228). The dial is read at `trunk`, the commit the merge lands on:
+    the merge slot judges a branch before its in-slot refresh, so the merge base
+    can predate a hold trunk has since declared (Sol review 1, WI-791). Only
+    ledger entries this merge adds are judged, so the owner's own acts on trunk
+    never reach this rule. The judgement is the session's: this only records
+    and refuses.
+
+    Implements: SR-178, LLR-278"""
+    if not _wrote_ledger(delta or approval_delta(root, base, head)):
+        return None
+    before, after = _ledger_acts(root, base), _ledger_acts(root, head)
+    if before is None or after is None:
+        return None  # `reattest_scope_refusal` names the unreadable ledger
+    dial = _kitauthority.dial_at(root, trunk)
+    seen = {act.get("seq") for act in before if isinstance(act, dict)}
+    lines = []
+    for act in after:
+        if isinstance(act, dict) and act.get("seq") not in seen:
+            lines += _held_act_lines(root, head, dial, act)
+    if not lines:
+        return None
+    return (
+        "the adjudication's act re-attests rows on a rung the dial HOLDS for a "
+        "human without a verdict that rules them CLARITY; nothing was merged:\n"
+        "{}\nRemedy: on a held rung only a row the session ruled CLARITY is "
+        "its own to re-attest, and the act names that verdict (`intake.py "
+        "snapshot --reattests <ROW-ID> --verdict <verdict file>`). A MEANING "
+        "row is recommended to the owner, never re-attested by a "
+        "session.".format("\n".join(lines))
     )
 
 
@@ -1059,7 +1228,9 @@ def staged_spine_amendments(root, base="HEAD", head=None):
 
     THE TWO-TREE WALK IS `_spine_row_sides`, shared since WI-572 rather than
     inlined here, so this reader and the two approval-act readers above it
-    cannot disagree about which registries and rows the delta contains."""
+    cannot disagree about which registries and rows the delta contains. Its
+    universe is `AMENDMENT_CSVS` since WI-791 (OI-100 gap 1): the need,
+    assumption and surrogate tiers join the three spine tiers."""
     # Each row answers for its OWN cells (owner ruling 2026-08-17m): the
     # sanctioned amend path is flipping the AMENDED row itself in the same
     # commit — a Status that moved is exempted below. The retired chain
@@ -1070,28 +1241,36 @@ def staged_spine_amendments(root, base="HEAD", head=None):
 
     out = []
     for registry, id_col, head_rows, staged_rows, csv_path in _spine_row_sides(
-        root, base, head
+        root, base, head, AMENDMENT_CSVS
     ):
         if not head_rows or not staged_rows:
             continue  # first commit / newly added registry — nothing attested yet
         for rid, row in staged_rows.items():
-            head = head_rows.get(rid)
-            if not rid or rid.endswith("-000") or head is None:
-                continue
-            head_status = (head.get("Status") or "").strip().lower()
-            cur_status = (row.get("Status") or "").strip().lower()
-            # APPROVED-TEXT STATES, both sides, and the SAME one. Since D-9
-            # step 5 that is the single value `Approved`; before the fold it was
-            # `Verified` OR `Planned`, and requiring the SAME one on both sides
-            # is what kept a legitimate rung move from reading as an amendment.
-            # A status that MOVED between the two sides is still exempt,
-            # unchanged: that is a deliberate call this does not second-guess.
-            if head_status != cur_status or head_status not in _APPROVED_TEXT:
-                continue
-            changed = split_changed_cells(csv_path, id_col, head, row)
-            if changed["approved"] or changed["traced"]:
+            changed = _amended_cells(csv_path, id_col, rid, head_rows.get(rid), row)
+            if changed:
                 out.append(dict(changed, registry=registry, id=rid))
     return out
+
+
+def _amended_cells(csv_path, id_col, rid, head, row):
+    """One row's `split_changed_cells` when it is an AMENDMENT — present on
+    both sides, reading the same approved-text Status on both, with a cell
+    moved — else None. `staged_spine_amendments`' per-row judgement, extracted
+    unchanged at WI-791 to keep the walk under the complexity bar."""
+    if not rid or rid.endswith("-000") or head is None:
+        return None
+    head_status = (head.get("Status") or "").strip().lower()
+    cur_status = (row.get("Status") or "").strip().lower()
+    # APPROVED-TEXT STATES, both sides, and the SAME one. Since D-9
+    # step 5 that is the single value `Approved`; before the fold it was
+    # `Verified` OR `Planned`, and requiring the SAME one on both sides
+    # is what kept a legitimate rung move from reading as an amendment.
+    # A status that MOVED between the two sides is still exempt,
+    # unchanged: that is a deliberate call this does not second-guess.
+    if head_status != cur_status or head_status not in _APPROVED_TEXT:
+        return None
+    changed = split_changed_cells(csv_path, id_col, head, row)
+    return changed if changed["approved"] or changed["traced"] else None
 
 
 def staged_spine_findings(root):

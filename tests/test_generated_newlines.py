@@ -268,8 +268,10 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # all above this site. 1381 -> 1383 when WI-661 made the off-spine census
     # note name every copy trigger (two lines, above this site). 1383 -> 1392
     # when WI-651 made the open-items view list each registry's own copy stamp
-    # (the baseline paragraph became a list, above this site).
-    assert sites == [("gen_open_items.py", 1392)], sites
+    # (the baseline paragraph became a list, above this site). 1392 -> 1443
+    # when WI-791 (OI-100) added the verdict re-attestation audit list
+    # (`verdict_reattest_block`, `_ledger_entries`) above this site.
+    assert sites == [("gen_open_items.py", 1443)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

@@ -16,7 +16,9 @@ Four triggers, plus the drafts-not-mints arm:
 
   (a) **the approved-cell diff on the merged commit** — via
       `acceptance_record.staged_spine_amendments(root, before, after)` (the
-      WI-380 seam, consumed as-is). A record mints when it carries an approved
+      WI-380 seam, consumed as-is; its walk covers the need, assumption and
+      surrogate tiers beside the three spine tiers since OI-100, WI-791). A
+      record mints when it carries an approved
       change or a ROUTED traced change (`ROUTED_TRACED_CELLS`: `SN-Refs`,
       `Verifies`, and `SR-Refs` — the last ruled traced at WI-388); the other
       traced cells are silent by ruling. One `adjudication` row per merge,
@@ -764,11 +766,13 @@ def _amendment_context(records):
             )
     lines += [
         "",
-        "Outcomes (§A5.2): flip rows back to Approved where no scope moved",
-        "(per the declared approval level in docs/process.toml — "
-        "recommend-only while the tier is HUMAN-HELD, ruled decision",
-        "2), or draft the real scope-change / re-scope / cancellation rows in",
-        "a `## Dispositions` section of THIS spec — intake mints them at this",
+        "Outcomes (§A5.2): re-attest the rows ruled CLARITY (and, where the",
+        "dial releases the rung, the MEANING rows you would bless) by naming",
+        "them in the act's `--reattests`; on a HUMAN-HELD tier a CLARITY row",
+        "is re-attested naming its `--verdict` and a MEANING row is",
+        "recommended to the owner (ruled decision 2 as OI-100 amends it). Or",
+        "draft the real scope-change / re-scope / cancellation rows in a",
+        "`## Dispositions` section of THIS spec — intake mints them at this",
         "row's merge (drafts-not-mints, R1).",
     ]
     return "\n".join(lines)
@@ -2602,18 +2606,31 @@ def merged_outcomes(root, ids):
 # --- the session-hold arms (ruled decision 2, owner 2026-07-31; §A8) -----------
 
 
-def adjudication_action(human_held):
-    """May adjudication FLIP a spine row to `Approved`? Ruled decision 2, re-keyed
-    onto SN-029's ordinal: **recommend-only while the tier is HUMAN-HELD** — the
-    flip is a Status change that RECOVERS THE GATE, i.e. an approval, and a
-    human-held tier's approval is the human's act, so adjudication prepares
-    the brief ("these cells are traced-only, no scope moved, recommend
-    re-verify") and stops; **flip once the tier is loop-held**, where a recorded
-    LLM verdict already carries approval authority.
+def adjudication_action(human_held, verdict=""):
+    """What may an adjudication session do with a row it judged? Ruled decision
+    2, re-keyed onto SN-029's ordinal, and amended by OI-100 (ruled 2026-10-03,
+    WI-791) with ONE stated case:
+
+      * **loop-held tier -> `flip`**: a recorded LLM verdict already carries
+        approval authority, so the session performs the act — an approval, or
+        a re-attestation of a row it ruled CLARITY or ruled MEANING and would
+        bless.
+      * **human-held tier, CLARITY verdict -> `reattest`**: the one case. A
+        CLARITY verdict approves no new text; it records that the owner's
+        existing signature still describes the row. So the independent
+        session re-attests the row as a judgement act, naming its verdict in
+        the act (`intake.py snapshot --reattests <ROW-ID> --verdict <file>`):
+        the act ledger records it, the owner's surface lists it for audit, and
+        the merge slot refuses a held-rung re-attestation the named verdict
+        does not rule CLARITY (`acceptance_record.held_reattest_refusal`).
+      * **human-held tier otherwise -> `recommend`**: a MEANING verdict, or a
+        first draft (no verdict), is the owner's to sign. The session prepares
+        the brief and stops; it never approves a first draft on a held rung.
 
     Anything unreadable upstream resolves to human-held — `agent_common.
     human_holds` fails that way deliberately — so the failure direction is
-    `recommend`, never a machine approval. The kit DEFAULT holds every tier
+    the held arm (`recommend`, or for a CLARITY verdict the recorded and
+    audited `reattest`), never a machine approval. The kit DEFAULT holds every tier
     even though this repo holds none, which is why both arms are built and
     tested.
 
@@ -2624,7 +2641,9 @@ def adjudication_action(human_held):
     (recommend-and-stop vs. attempt-and-refuse); approval itself moves only
     through the human reviewed-commit path, with `intake.py snapshot` as the
     record's one mechanical door."""
-    return "recommend" if human_held else "flip"
+    if not human_held:
+        return "flip"
+    return "reattest" if verdict == "CLARITY" else "recommend"
 
 
 def flip_verified(root, ids):
@@ -3111,7 +3130,11 @@ def _cmd_snapshot(args):
     bless another row's unreviewed edit. The values are `;`-joined
     `REGISTRY=REF` pairs and comma-joined row ids
     (`baseline_snapshot.parse_approves`, `parse_reattests`). Traced-cell
-    refreshes (the common case) still need no flag at all.
+    refreshes (the common case) still need no flag at all. `--verdict <path>`
+    names the verdict file that ruled the re-attested rows, and the act ledger
+    records it: on a held rung a session re-attests only a row its verdict
+    rules CLARITY, and the merge slot refuses the act otherwise
+    (`acceptance_record.held_reattest_refusal`; OI-100, WI-791).
 
     IT COPIES OFF-SPINE APPROVAL CELLS AND DOES NOT MOVE THEM, which is the
     distinction OI-30 D3 makes and the reason this path needs no
@@ -3129,12 +3152,14 @@ def _cmd_snapshot(args):
     root = Path(args.root).resolve()
     approves = baseline_snapshot.parse_approves(getattr(args, "approves", None))
     reattests = baseline_snapshot.parse_reattests(getattr(args, "reattests", None))
+    verdict = baseline_snapshot.verdict_rel(root, getattr(args, "verdict", None))
     written = baseline_snapshot.copy_live(
-        root, seed=args.seed, approves=approves, reattests=reattests
+        root, seed=args.seed, approves=approves, reattests=reattests, verdict=verdict
     )
-    return _cli_result(
-        None, baseline_snapshot.act_summary(written, args.seed, approves, reattests)
+    summary = baseline_snapshot.act_summary(
+        written, args.seed, approves, reattests, verdict
     )
+    return _cli_result(None, summary)
 
 
 def main(argv=None):
@@ -3242,6 +3267,14 @@ def main(argv=None):
         "this act blesses without moving their Status. The refresh is refused "
         "while any row it would copy has drifted text neither flipped nor named "
         "here; the ids land in the snapshot's prose stamp",
+    )
+    snap.add_argument(
+        "--verdict",
+        default=None,
+        metavar="PATH",
+        help="the verdict file that ruled the --reattests rows, recorded in the "
+        "act ledger. Required at merge for a session's re-attestation on a held "
+        "rung, where the verdict must rule each row CLARITY (OI-100)",
     )
     snap.set_defaults(func=_cmd_snapshot)
     args = ap.parse_args(argv)

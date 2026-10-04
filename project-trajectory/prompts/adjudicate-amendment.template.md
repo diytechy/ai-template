@@ -25,8 +25,8 @@
                    invariant), which is what makes it an anchor that is provably
                    NOT the text under judgement. When no snapshot exists yet the
                    slot says so and the session is a FIRST-APPROVAL adjudication.
-       {aftermath} which branch of the MEANING aftermath this row is actually
-                   in — DERIVED from the declared gate authority
+       {aftermath} which branch of the CLARITY and MEANING aftermath this row
+                   is actually in — DERIVED from the declared gate authority
                    (`human_approval_through` in docs/process.toml) for the tiers
                    whose rows are shown, so the session is told whether the
                    re-attestation is its own act or the owner's rather than
@@ -84,12 +84,13 @@ Then exactly one machine line:
 
 `CLARITY` only when EVERY row you were shown is clarity. Commit that verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
 
-THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, the aftermath. A `CLARITY` verdict owes nothing further: the row's attestation stands and you stop.
+THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, the aftermath. Every row you judged still reads as approved text that drifted from its anchor until an act re-anchors it, so each verdict owes one:
 
-A `MEANING` verdict says the text a human blessed no longer imposes the obligation it imposed. The attestation it carries is now a false claim, and the row owes a fresh one:
+- A `CLARITY` row keeps its attestation: the owner's signature still describes it. Re-anchor it so the record stops drifting — name it in the act's `--reattests`. Where the rung is one the repo's declared gate authority has RELEASED, that is all. Where the dial still HOLDS the rung for a human, the re-attestation is still yours, as a judgement act that names the verdict that ruled it — add `--verdict <your verdict file>` — so the act ledger records it and the owner's surface lists it for audit. The merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
+- A `MEANING` row's attestation is now a false claim, and it owes a fresh one. Where the rung is RELEASED, the re-attestation is yours: name each row you would bless in `--reattests`. If a row's new text is NOT one you would bless, do not re-anchor it: draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge. Where the dial HOLDS the rung, stop at the verdict and recommend the row to the owner: the row surfaces on the owner's approval brief and the signature is theirs.
+- Never approve a first draft on a held rung. A held rung's `Drafted` row is the owner's alone.
 
-- If the rung is one the repo's declared gate authority has RELEASED to the loop, the re-attestation is YOURS and this session performs it. Take it in its own reviewed commit, separate from the verdict: leave each row's `Status` at `Approved` and re-anchor the record — `python scripts/intake.py snapshot --reattests <ROW-ID>[,<ROW-ID>...]` — naming exactly the rows you ruled on and would bless. Without that copy the record of what was blessed does not move, and the row reads as approved text that drifted from its own anchor. The copy is refused while any OTHER row in those registries carries drifted approved text, and naming a registry with `--approves` does not clear it: that row is another act's to judge, so do not add it to `--reattests` — stop and report the refusal. If a row's new text is NOT one you would bless, do not re-anchor it: draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge.
-- If the rung is one the dial still HOLDS for a human, stop at the verdict. The row surfaces on the owner's approval brief and the signature is theirs.
+Take the act in its own reviewed commit, separate from the verdict: leave each row's `Status` at `Approved` and run `python scripts/intake.py snapshot --reattests <ROW-ID>[,<ROW-ID>...]`, naming exactly the rows that are yours to re-anchor. Without that copy the record of what was blessed does not move. The copy is refused while any OTHER row in those registries carries drifted approved text, and naming a registry with `--approves` does not clear it: that row is another act's to judge, so do not add it to `--reattests` — stop and report the refusal. A MEANING row on a held rung refuses the copy the same way and holds the CLARITY rows that share its registry until the owner signs; leave them unanchored and say so in your report, so the coordinator puts them in the same sitting as the MEANING row.
 
 {aftermath}
 

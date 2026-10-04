@@ -406,13 +406,111 @@ def test_a_lane_flipping_a_STAKEHOLDER_NEED_is_refused_and_mints_nothing(tmp_pat
     )
 
     # The mint half: held rung, nothing minted. Then released, still nothing —
-    # the mint's universe is `SPINE_CSVS`, unchanged by this round.
+    # the first-approval mint's universe is `SPINE_CSVS`, unchanged by this
+    # round, and a moved Status is no amendment even though the amendment walk
+    # covers the need tier since WI-791.
     set_process_key(
         root2, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
     )
     minted, mint_refusal = intake.intake_after_merge(root2, before2, after2, {}, "b")
     assert mint_refusal is None, mint_refusal
     assert minted == []
+
+
+NEED_TOML = (
+    "[need.SN-001]\n"
+    'status = "Approved"\n'
+    'need = "{}"\n'
+    'why = "why"\n'
+    'priority = "M"\n'
+    'acceptance = "ac"\n'
+)
+
+ASSUMPTION_TOML = (
+    "[assumption.DA-001]\n"
+    'effect_at = ["B-001"]\n'
+    'assumption = "{}"\n'
+    'holds_when = "always"\n'
+    'obstacle = "never"\n'
+    'status = "Approved"\n'
+    "\n[surrogate.SUR-001]\n"
+    'name = "the stand-in"\n'
+    'emulates = ["EXT-001"]\n'
+    'description = "{}"\n'
+    'status = "Approved"\n'
+)
+
+
+def _write_toml(root, name, text):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / name).write_text(text, encoding="utf-8", newline="\n")
+
+
+def test_an_amended_approved_need_mints_one_amendment_row(tmp_path):
+    """OI-100 gap 1 (WI-791): an approved need's text moving on merged trunk
+    reaches the meaning-or-clarity adjudication, as one `amendment` row scoped
+    to the need. Until WI-791 the walk covered SR/LLR/TC only, so WI-616's need
+    edits merged and minted nothing — the need reached the owner's brief with
+    no meaning judgement. The dial does not filter this mint: a held rung's
+    amendment is still judged, and the verdict's aftermath is where the hold
+    decides who signs."""
+    root, before, after = amended_repo(
+        tmp_path,
+        lambda r: _write_toml(
+            r, "stakeholder-needs.toml", NEED_TOML.format("the AMENDED need")
+        ),
+        seed=lambda r: _write_toml(
+            r, "stakeholder-needs.toml", NEED_TOML.format("the need")
+        ),
+    )
+    set_process_key(
+        root, "attestation", "human_approval_through", kit_ladder.STAGE_NEEDS
+    )
+    minted, refusal = intake.intake_after_merge(root, before, after, {}, "wi-003")
+    assert refusal is None, refusal
+    assert len(minted) == 1, minted
+    wid, relpath = minted[0]
+    row = queued_rows(root)[wid]
+    assert row["Brief"] == "amendment"
+    assert row["Adjudicates"] == "SN-001"
+    assert row["SpecRef"] == "docs/requirements/stakeholder-needs.toml"
+    text = (root / relpath).read_text(encoding="utf-8")
+    assert "the need" in text and "the AMENDED need" in text
+    # A STATUS move is still exempt, on the need tier as on every other: the
+    # need withdrawn to Drafted is the first-approval question, not this one.
+    (tmp_path / "moved").mkdir()
+    root2, before2, after2 = amended_repo(
+        tmp_path / "moved",
+        lambda r: _write_toml(
+            r,
+            "stakeholder-needs.toml",
+            NEED_TOML.format("the need").replace("Approved", "Drafted"),
+        ),
+        seed=lambda r: _write_toml(
+            r, "stakeholder-needs.toml", NEED_TOML.format("the need")
+        ),
+    )
+    assert intake._amendment_drafts(root2, before2, after2) == []
+
+
+def test_amended_approved_assumption_and_surrogate_mint_one_row(tmp_path):
+    """The assumption registry's two tiers join the amendment walk with the need
+    tier (OI-100 gap 1): an approved assumption and an approved surrogate whose
+    statements move on one merge are one `amendment` row naming both."""
+    root, before, after = amended_repo(
+        tmp_path,
+        lambda r: _write_toml(
+            r, "assumptions.toml", ASSUMPTION_TOML.format("it holds, mostly", "new")
+        ),
+        seed=lambda r: _write_toml(
+            r, "assumptions.toml", ASSUMPTION_TOML.format("it holds", "old")
+        ),
+    )
+    drafts = intake._amendment_drafts(root, before, after)
+    assert len(drafts) == 1, drafts
+    assert drafts[0]["adjudicates"] == ["DA-001", "SUR-001"]
+    assert drafts[0]["brief"] == "amendment"
 
 
 def test_a_held_rung_mints_no_first_approval_row(tmp_path):
@@ -2319,6 +2417,12 @@ def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
 
     assert intake.adjudication_action(True) == "recommend"
     assert intake.adjudication_action(False) == "flip"
+    # OI-100 gap 2 (WI-791): the held arm's one stated case. A CLARITY verdict
+    # approves no new text, so the session re-attests it; a MEANING verdict and
+    # a first draft (no verdict) still stop at a recommendation to the owner.
+    assert intake.adjudication_action(True, "CLARITY") == "reattest"
+    assert intake.adjudication_action(True, "MEANING") == "recommend"
+    assert intake.adjudication_action(False, "CLARITY") == "flip"
 
     # The upstream comparison's own failure directions, driven at a MIDDLE dial.
     # THAT IS NOT A DETAIL: at `DevStg-Release` `human_holds` answers True before
