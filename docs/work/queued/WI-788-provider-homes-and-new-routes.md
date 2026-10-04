@@ -3,7 +3,7 @@ id = "WI-788"
 title = "Session families with reset terms, a glossary, per-route provider homes, and new routes"
 workstream = "process"
 specref = "docs/agents.toml"
-sr_refs = ["SR-222"]
+sr_refs = ["SR-222", "SR-227", "SR-154", "SR-155"]
 needs = ["WI-787"]
 buildtier = "strong"
 safety_class = "ordinary"
@@ -97,7 +97,12 @@ Two halves. The second is built only after the owner reviews the first.
    - put the glossary in a kit-shipped `project-trajectory/GLOSSARY.md`, linked from
      PROCESS.md (OI-101 Q5);
    - build on the S11 plan's §6 as ruled, not as open questions (OI-101 Q6).
-2. **Build what the owner approves.**
+   - end with a **slice plan**: the build divided into successor rows, each with its own
+     lane, Done-when, review and test bar, ordered by `needs` edges (see "Scope widened
+     2026-10-04").
+2. **Build what the owner approves, as successor rows.** At the checkpoint the
+   coordinator files the slice plan's rows on trunk, and WI-788 closes on the approved
+   note. The rows together deliver:
    - Route rows in `docs/agents.toml`, and in the shipped template where adopters need
      them.
    - The Google adapter, and any opencode provider handling.
@@ -108,6 +113,91 @@ Two halves. The second is built only after the owner reviews the first.
    - A RESYNC_PACK entry.
 
    Nothing forces an adopter to install a new CLI.
+
+## Scope widened 2026-10-04 (owner): plan kinds, the dual-plan regression, and a slice plan
+
+The owner asked whether the plan / dual-plan method had been removed, and what
+research says about planning before the build. The coordinator recommended designing
+the plan kinds inside this item, because they overlap the single labelled entry
+point, and building through successor slices. The owner: "That sounds fine, though
+it sounds like your preliminary research shapes it well, but if you think there is
+more to uncover feel free to salt that into the plan as you see appropriate."
+
+What was found (record:
+[plans/2026-10-04-planning-before-build-research.md](../../plans/2026-10-04-planning-before-build-research.md)):
+- **Dual-plan decomposition** (SN-024, SR-155) is an opt-in decomposition layer:
+  rival breakdowns of a goal, cross-critique, two swapped arbiter runs, then the
+  winner's rows are filed. It is not a per-item plan-before-build step. The builder
+  plans inside its own session.
+- **Its automatic start was lost, not ruled away.**
+  - WI-199 and WI-209 (2026-07-17) made the dispatcher run the round for a
+    `planmode = "dual"` row.
+  - The old dispatcher's deletion (`31ad569d`, concurrency-restructure Phase 5,
+    2026-07-29) took that start with it, and `dispatch.py` never re-implemented it.
+  - Today a dual row is claimed, refused at preflight
+    (`agent_loop.py:1317-1329`), parked and resumed in a loop: WI-209's "quiet park"
+    is back.
+  - No live row is marked dual. Under the no-fallback rule (risk 7), restoring the
+    pickup is the fix, and no interim guard is added.
+- **The preliminary research:**
+  - A plan helps on non-trivial, multi-file or ambiguous work.
+  - A bad plan is worse than none.
+  - Planning only on demand is far cheaper than planning every time.
+  - Same-model debate adds cost for little gain, and different families are what
+    help.
+  - Dual plans plus an arbiter have no direct coding evidence. An arbiter must be
+    grounded in executable or testable criteria.
+
+Added to half 1 (the design note):
+- **Plan kinds through the one entry point:** plan, plan-critique and arbitrate, with
+  their families, independence (planners cross-family; the arbiter never a planner's
+  session) and reset terms. `plan_runner`'s own route drawing stops being a bypass.
+- **Restore the dual-plan pickup:** the dispatcher admits a `planmode = "dual"` row
+  and runs the round instead of letting the worker refuse it (WI-209's behaviour on
+  today's dispatcher), with tests for admit, round, filed children and page.
+- **Decide whether a per-item planning step exists**, and when:
+  - never;
+  - by declaration (for example `planmode = "single"` or by BuildTier);
+  - on demand after a failed attempt (for example on the first REVIEW-A
+    CHANGES-REQUESTED, ahead of the existing swap, tier-up, page ladder).
+
+  State each option's cost.
+
+To uncover before the note recommends (the research left these open):
+- **This repo's own baseline**, measured from what is already recorded, before any
+  planning step is proposed:
+  - review rounds per row;
+  - CHANGES-REQUESTED rates by BuildTier;
+  - handback and partial-close rates;
+  - tokens per row (session logs' `gen_ai.usage.*`, review scoreboards, handback
+    reports).
+
+  A planning step must name the metric it is expected to move.
+- **The cost of the dual-plan round on a real decomposition:** sessions, tokens and
+  wall time from its session logs. Re-read WI-199's and WI-209's records and any
+  `docs/plans/DP-*` artifacts for evidence of what it produced.
+- **What the arbiter checks against:** whether the existing coverage pre-pass (a
+  script) can be extended so that the arbiter judges executable criteria, such as
+  Done-when coverage and the TC/SR coverage diff, rather than prose persuasiveness.
+- **Replanning:** whether a review's findings should reopen the plan rather than only
+  the build, against plan drift.
+- **Read the component's knowledge packs first:** `docs/knowledge/agent-routing`,
+  `docs/knowledge/effort-tiering` and `docs/knowledge/prompt-image-token-efficiency`
+  (CMP-008). They carry the routing, tier and token evidence already collected.
+- **Verify the research's weakest links** before relying on them: read the 2026
+  SWE-agent planning paper (arXiv 2604.12147) in full, not just its abstract, and
+  check the AdaCoder cost figures.
+
+The slice plan (half 1's last output; the note may reorder it, and slice 2 is the
+dependency the others share):
+1. The glossary and PROCESS.md wording (docs only; it settles the vocabulary).
+2. The labelled entry point and the one session store, carrying today's kinds.
+3. Plan kinds through the entry point: the restored dual-plan pickup, and any
+   per-item planning step the note recommends.
+4. Provider routes and homes: FreeLLMAPI and Grok through OpenCode, Google untested,
+   per-route homes.
+5. The spine-authoring flow and the lane-and-trunk text-then-act commit split.
+6. The RESYNC entry, which is the migration.
 
 ## Scope widened 2026-10-03 (owner): session families, reset terms, a glossary, and spine authoring
 
