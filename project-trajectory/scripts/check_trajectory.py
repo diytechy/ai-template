@@ -2469,7 +2469,7 @@ def _specref_staleness(root, w, wi_time, spec_time):
     clocked by its file. `spec_time` memoizes per path (and, for the registry,
     the row-time map under its own key).
 
-    Implements: SR-148
+    Implements: SR-148, LLR-299
     """
     pathpart = w["specref"].partition("#")[0].strip()
     if not pathpart:

@@ -272,3 +272,58 @@ def test_the_csv_carriers_registry_specref_is_judged_too(tmp_path):
         len(findings) == 1
         and "every open item it cites (OI-5) is ruled" in (findings[0])
     )
+
+
+def test_no_registry_leaves_every_open_item_edge_unmet(tmp_path):
+    # TC-301: with no open-items registry an open-item edge fails closed, the
+    # item reported unknown, and the row steals no mutex.
+    _spec(tmp_path, "WI-684", needs=["OI-98"], exclusive=["shared"])
+    _spec(tmp_path, "WI-688", exclusive=["shared"])
+    assert sched.load_oi_status(tmp_path) == {}
+    held = _records(tmp_path)["WI-684"]
+    assert held["disposition"] == "blocked"
+    assert held["reasons"] == ["blocked:open-item-unknown:OI-98"]
+    assert _frontier(tmp_path) == ["WI-688"]
+
+
+def test_an_example_open_item_is_never_a_real_one(tmp_path):
+    # TC-301: a `-000` example row is not an open item, so a row citing it is
+    # held as citing an unknown item, never released by the example's state.
+    _items(tmp_path, ("OI-000", "ruled"), ("OI-98", "ruled"))
+    _spec(tmp_path, "WI-684", needs=["OI-000"])
+    held = _records(tmp_path)["WI-684"]
+    assert held["disposition"] == "blocked"
+    assert held["reasons"] == ["blocked:open-item-unknown:OI-000"]
+
+
+def _specref_findings(root):
+    return ct.open_item_specref_findings(
+        root, ct.load_wis(ct.read_registry_rows(root / ct.WI_CSV))[0]
+    )
+
+
+def test_specref_integrity_judges_every_open_row(tmp_path):
+    # LLR-299: a deferred (or draft, active) row keeping the registry SpecRef
+    # after its items are ruled is reported as a queued one is.
+    _items(tmp_path, ("OI-5", "ruled"))
+    _spec(tmp_path, "WI-001", where="deferred", needs=["OI-5"], specref=OI + "#OI-5")
+    (finding,) = _specref_findings(tmp_path)
+    assert finding.startswith("WI-001: every open item it cites (OI-5) is ruled")
+
+
+def test_a_cited_item_missing_from_the_registry_is_not_ruled(tmp_path):
+    # LLR-299: an item absent from the registry is not ruled (the dangling-edge
+    # error reports it), so the row may keep its registry SpecRef.
+    _items(tmp_path, ("OI-5", "ruled"))
+    _spec(tmp_path, "WI-001", needs=["OI-5", "OI-404"], specref=OI + "#OI-5")
+    assert _specref_findings(tmp_path) == []
+
+
+def test_a_registry_specref_on_a_row_citing_no_item_is_reported(tmp_path):
+    # LLR-299: with no item cited, none is pending, so the registry SpecRef is
+    # reported, and its anchor names an item the row does not cite.
+    _items(tmp_path, ("OI-5", "pending"))
+    _spec(tmp_path, "WI-001", specref=OI + "#OI-5")
+    findings = _specref_findings(tmp_path)
+    assert any("names OI-5, which its needs do not cite" in f for f in findings)
+    assert any("every open item it cites (none) is ruled" in f for f in findings)

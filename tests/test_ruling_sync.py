@@ -280,3 +280,54 @@ def test_an_added_criterion_carrying_a_path_counts_as_an_update(tmp_path):
     )
     _git(root, "add", "-A")
     assert ar.staged_ruling_sync_lines(root) == []
+
+
+def test_removing_a_pending_items_row_takes_it_out_of_pending_too(tmp_path):
+    # LLR-298: the trigger is an item leaving `pending`, and deleting its
+    # pending row leaves it; each citing row's Done-when is owed the update.
+    root = _base(tmp_path)
+    _items(root, OI_6="pending")  # OI-5's pending row removed outright
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert line.startswith("WI-001 cites OI-5, which this commit takes out of pending")
+
+
+def test_the_merge_ladder_consults_the_ruling_sync_rung(tmp_path, monkeypatch):
+    # TC-313: merge admission itself refuses a lane's --no-verify ruling
+    # commit. The cheaper rungs ahead of this one are passed so the ladder
+    # reaches it on a minimal repository; the rung is the real one.
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-001")
+    _items(root, OI_5="ruled", OI_6="pending")
+    bad = _commit(root, "rule OI-5 without the row")
+    _git(root, "checkout", "-q", "main")
+    monkeypatch.setattr(
+        integrate, "branch_outcomes", lambda r, b: ({"WI-009": "merged"}, [])
+    )
+    for rung in (
+        "_close_record_refusal",
+        "_minted_id_refusal",
+        "_approval_act_refusal",
+        "_held_status_refusal",
+        "_loop_trailer_refusal",
+    ):
+        monkeypatch.setattr(integrate, rung, lambda *a, **k: None)
+    _outcomes, refusal = integrate._merge_refusal(root, "wi-001", ["WI-009"])
+    assert refusal is not None and bad[:10] in refusal
+    assert "WI-001 cites OI-5" in refusal
+
+
+def test_the_pre_commit_hook_runs_the_ruling_sync_step(tmp_path):
+    # TC-313: the staged check is in the pre-commit hook's failing set, and the
+    # step the hook names refuses a staged ruling that leaves its citer stale.
+    hook = (SCRIPTS.parent / "hooks" / "pre-commit").read_text(encoding="utf-8")
+    line = next(
+        ln for ln in hook.splitlines() if ln.startswith('"$PY"') and "--run-steps" in ln
+    )
+    assert "ruling-sync" in line.split("--run-steps", 1)[1].split()[0].split(",")
+    root = _base(tmp_path)
+    _items(root, OI_5="ruled", OI_6="pending")
+    _git(root, "add", "-A")
+    proc = run_py([SCRIPTS / "check.py", "--run-steps", "ruling-sync"], root)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "WI-001" in proc.stdout + proc.stderr

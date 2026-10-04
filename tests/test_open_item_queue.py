@@ -8,6 +8,8 @@ rows it holds; a pending item no queued row cites is named in an integrity
 notice instead, and the page then never claims the queue is empty.
 """
 
+import re
+
 from conftest import load_script
 
 gen = load_script("gen_open_items")
@@ -135,3 +137,14 @@ def test_the_projection_reads_the_queue_not_a_historical_pointer(tmp_path):
     _spec(tmp_path, "WI-001")
     queue = pending.open_item_queue(tmp_path)
     assert queue["cards"] == [] and queue["uncited"] == ["OI-5"]
+
+
+def test_decisions_to_review_is_the_pages_last_section(tmp_path):
+    # LLR-118: the owner surface's sections run in a fixed order, and
+    # Decisions to review is the last of them.
+    page = gen.render(tmp_path)
+    eyebrows = re.findall(
+        r'<section class="band"[^>]*><p class="eyebrow">([^<]+)</p>', page
+    )
+    assert [e.split(" · ", 1)[0] for e in eyebrows] == ["1", "2", "3", "4"]
+    assert eyebrows[-1] == "4 · Decisions to review"
