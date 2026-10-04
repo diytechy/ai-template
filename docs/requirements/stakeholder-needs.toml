@@ -232,7 +232,7 @@ tags = ["unattended", "loop"]
 need ="""**With no human curating what comes next**, a configured LLM agent implements toward the vision — fully autonomously where enabled — deriving its own next work from the repository's tracked state. (The launcher that starts it is SN-034's obligation; this need is the self-direction.)"""
 why = """Walk-away autonomy is the whole promise of the unattended layer: if a human must hand-maintain a next-step pointer, the loop is attended in practice and the pointer rots against the registry it paraphrases. Extends SN-006 (a *resumable* unattended run) into a *self-directing* one."""
 priority = "S"
-acceptance = """A plain launch derives what to do next from the tracked WI DAG plus Git alone; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated from that tracked state."""
+acceptance = """A plain launch derives what to do next from the tracked WI DAG plus Git — never from prose or a hand-maintained pointer, and never from predefined tracks; the ready frontier is ordered deterministically, so two readers of the same registry dispatch the same work; the status surface a human reads is generated from that tracked state, never hand-copied."""
 
 [need.SN-026]
 status = "Approved"

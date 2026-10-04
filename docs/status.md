@@ -37,14 +37,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      its ruling section first; it overrides the chapters). Claim each batch
      under one scoped unpause. WI-797 (the glossary), WI-803 (the plan gate)
      and WI-806 (text-then-act) need nothing and can start; WI-796 re-judges
-     TC-055 after the last landing. Three new high-risk decisions in
-     `docs/decisions/wi-788.toml` wait for the owner: D-032, D-035, D-036.
+     TC-055 after the last landing. The owner directed (2026-10-04) that this
+     campaign runs by coordinator session, not the unattended loop.
      OI-105 (the FreeLLMAPI endpoint and pinned models) waits for the owner's
      router; it holds only the FreeLLMAPI row of S788-routes.
-  2. Owner signatures still owed: the four MEANING-ruled needs (SN-003, SN-008,
-     SN-025, SN-043; the adjudicator recommends restoring SN-025's exclusions
-     before signing).
-  3. OI-98: the owner re-syncs `C:\Projects\FileBackup` (stamp `9b697cc`) as a
+  2. OI-98: the owner re-syncs `C:\Projects\FileBackup` (stamp `9b697cc`) as a
      scratch trial, after TC-036's inputs gain `RESYNC_PACK.md`, then rules it.
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
@@ -95,11 +92,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   branch is on origin; the queued wi508-partial-close row is the only
   sanctioned act on it (`OI-71`).
 - **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
-  entities · 4 crossings · 3 relationships, watermark-held); owner-owed, not
-  re-raised: `OI-49` (b)'s exception reads
-  ([plans/2026-08-22-interface-exception-dossier.md](plans/2026-08-22-interface-exception-dossier.md)),
-  `OI-61` (c) deferred, and the wording round's two banked findings
-  ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
+  entities · 4 crossings · 3 relationships, watermark-held); `OI-61` (c) stays deferred
+  on its condition (a demonstrated residual drift class), not owner-owed.
 - **Unfiled follow-ups** (topics, no ids): the wave-11 log's follow-ups (the claim
   reads the working-tree pause; an in-lane act never meets the held-rung
   re-attestation refusal; a refresh merge must carry a citer's update for a

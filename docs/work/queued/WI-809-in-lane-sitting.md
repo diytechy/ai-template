@@ -25,6 +25,9 @@ back to `active/<branch>/` (D-019). A fourth sitting that owes a return ends
 `merge-partial`, and nothing red lands (D-024). Held-rung CLARITY acts follow
 WI-791's contract (complete, so dropped from `needs`).
 
+Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
+`docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
+
 ## Done-when
 
 - A build lane's Drafted rows are approved in the lane.

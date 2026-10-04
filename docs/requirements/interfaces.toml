@@ -1672,7 +1672,6 @@ owner = "scripts/gen_arch_map"
 requestors = ["scripts/traj_parse"]
 channel = "call"
 data = "scan_inventory(src_roots) -> per-module records; kept where the module has at least one public function symbol"
-carried_by = "IF-131"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
