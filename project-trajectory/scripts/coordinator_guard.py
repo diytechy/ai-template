@@ -77,7 +77,7 @@ MAX_TAIL_BYTES = 8 * 1024 * 1024
 GUARD = "python project-trajectory/scripts/coordinator_guard.py"
 
 INSTRUCTION = (
-    "COORDINATOR CONTEXT GUARD: this session's context reached {pct}% of its "
+    "COORDINATOR CONTEXT GUARD: this session's context reached {pct:.1f}% of its "
     "declared window (threshold {threshold}%), and drain mode is latched. "
     "Work-item claims now refuse. Close out now, following the session-protocol "
     "skill's coordinator close-out: (1) start no new claims or lanes; (2) bring "
@@ -88,7 +88,7 @@ INSTRUCTION = (
     "The next session starts from the handoff when this one exits."
 )
 REMINDER = (
-    "COORDINATOR CONTEXT GUARD reminder: drain mode is latched ({pct}%). No new "
+    "COORDINATOR CONTEXT GUARD reminder: drain mode is latched ({pct:.1f}%). No new "
     "claims; finish the close-out and request the relaunch."
 )
 
@@ -241,7 +241,7 @@ def read_occupancy(transcript, window, tail_bytes=TAIL_BYTES, max_bytes=MAX_TAIL
         size *= 2
     if tokens is None:
         return Occupancy(None, None, note)
-    pct = round(100.0 * tokens / window, 1)
+    pct = 100.0 * tokens / window  # unrounded: admission compares this
     note = "window mismatch: usage exceeds the declared window" if pct > 100 else ""
     return Occupancy(tokens, pct, note)
 
@@ -413,7 +413,7 @@ def _ownership_refusal(lease, session_id):
 
 def _draining_refusal(lease, cfg):
     return (
-        "coordinator guard: drain mode is latched (since {}, at {}% of the "
+        "coordinator guard: drain mode is latched (since {}, at {:.1f}% of the "
         "declared window; threshold {}%). No new claims: close out, hand off "
         "and request the relaunch (the session-protocol skill's coordinator "
         "close-out)".format(
@@ -579,17 +579,17 @@ def session_prompt(handoff):
         return None
     under = fenced = False
     body = []
+    capturing = False
     for line in lines:
-        if line.startswith("#"):
-            under = "session prompt" in line.lower()
-            continue
-        if under and line.startswith("```"):
-            if fenced:
+        if line.startswith("```"):
+            if fenced and capturing:
                 return "\n".join(body).strip() or None
-            fenced = True
-            continue
-        if fenced:
-            body.append(line)
+            fenced, capturing = not fenced, under and not fenced
+        elif fenced:
+            if capturing:
+                body.append(line)  # a `#` line inside a fence is its text
+        elif line.startswith("#"):
+            under = "session prompt" in line.lower()
     return None
 
 
@@ -679,12 +679,14 @@ def session_end(root, payload, launch=None):
 
 
 def _launch_or_restore(root, directory, consumed, request, token, launch):
-    """Run the launch; on failure put the request back and report."""
+    """Write the prompt file and run the launch. Every failure from here to a
+    confirmed launch (the prompt write included) puts the request back,
+    removes the successor token and the prompt file, and reports."""
     prompt_file = Path(directory) / "relaunch-prompt.{}.txt".format(token)
-    prompt_file.write_text(
-        session_prompt(request["handoff"]), encoding="utf-8", newline="\n"
-    )
     try:
+        prompt_file.write_text(
+            session_prompt(request["handoff"]), encoding="utf-8", newline="\n"
+        )
         (launch or launch_detached)(Path(request["repo_root"]), prompt_file, token)
     except OSError as exc:
         with session_keep.dir_lock(lease_dir(root)) as directory:
@@ -693,6 +695,7 @@ def _launch_or_restore(root, directory, consumed, request, token, launch):
             lease["successor_token"] = None
             _save(directory, lease)
             record_event(directory, "launch-failed", reason=str(exc))
+        prompt_file.unlink(missing_ok=True)
         print(
             "coordinator guard: relaunch failed, request restored: {}".format(exc),
             file=sys.stderr,
@@ -720,32 +723,51 @@ def launch_command(repo_root, prompt_file, token, os_name=None):
     args = [str(repo_root), str(prompt_file), token]
     if os_name == "nt":
         launcher = repo_root / "scripts" / "coordinator-relaunch.cmd"
+        # No standard-handle redirection: the new console's own handles are
+        # the interactive successor's stdin, stdout and stderr.
         return (
             launcher,
             ["cmd", "/c", str(launcher)] + args,
             {"creationflags": _NEW_CONSOLE},
         )
     launcher = repo_root / "scripts" / "coordinator-relaunch.sh"
-    return launcher, ["sh", str(launcher)] + args, {"start_new_session": True}
+    # The POSIX launcher opens its own terminal; its own streams carry nothing.
+    quiet = {
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+        "start_new_session": True,
+    }
+    return launcher, ["sh", str(launcher)] + args, quiet
+
+
+# How long a started launcher is watched before its launch counts as
+# confirmed: a launcher that fails exits at once; one that works keeps running
+# (Windows: claude runs in it) or exits 0 having opened a terminal (POSIX).
+LAUNCH_GRACE_SECONDS = 5.0
 
 
 def launch_detached(
-    repo_root, prompt_file, token, popen=subprocess.Popen, os_name=None
+    repo_root,
+    prompt_file,
+    token,
+    popen=subprocess.Popen,
+    os_name=None,
+    grace=LAUNCH_GRACE_SECONDS,
 ):
-    """Start the launcher detached in `repo_root`. Raises OSError when it
-    cannot start (a missing launcher included)."""
+    """Start the launcher detached in `repo_root` and confirm it. Raises
+    OSError when it cannot start (a missing launcher included) or exits
+    non-zero within `grace` seconds; still running, or exited 0, confirms."""
     launcher, argv, extra = launch_command(repo_root, prompt_file, token, os_name)
     if not launcher.is_file():
         raise OSError("launcher not found: {}".format(launcher))
-    popen(
-        argv,
-        cwd=str(repo_root),
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        close_fds=True,
-        **extra,
-    )
+    process = popen(argv, cwd=str(repo_root), close_fds=True, **extra)
+    try:
+        code = process.wait(timeout=grace)
+    except subprocess.TimeoutExpired:
+        return
+    if code != 0:
+        raise OSError("launcher {} exited {}".format(launcher.name, code))
 
 
 def exec_claude(prompt_file, run=subprocess.call):

@@ -1,13 +1,17 @@
 """The coordinator context guard (WI-822): occupancy, the lease, the drain
 latch, the claim boundary, the hooks and the relaunch, all in-process.
 
-Every transcript here is built from the record shapes of a Claude Code
-2.1.285 transcript (`CLAUDE_CODE_VERSION`, stamped into each record the way a
-real one carries it): the assistant record and its `message.usage`, and the
-`parentUuid` chain. The compaction boundary's shape (`type: system`,
-`subtype: compact_boundary`) is not in Claude Code's documentation and was not
-seen in a local transcript; it is the shape the reader keys on, and a change
-to it makes the reader report unknown after a compaction, never 0%.
+The built transcripts use the record shapes of a Claude Code 2.1.285
+transcript (`CLAUDE_CODE_VERSION`, stamped into each record the way a real one
+carries it): the assistant record and its `message.usage`, and the
+`parentUuid` chain. The compaction case is also read from a RECORDED fixture,
+`fixtures/coordinator_guard/compaction-manual-2.1.289.jsonl`: a real two-turn
+Claude Code 2.1.289 session, a manual `/compact`, then one more turn,
+sanitized (neutral paths and identity; attachment text over 2,000 characters
+replaced by same-length filler) with every record shape, field and usage
+number otherwise kept. Its boundary is `type: system`, `subtype:
+compact_boundary`, `parentUuid: null`, and the messages it preserves are named
+by uuid in `compactMetadata.preservedMessages`, not written again after it.
 Subprocess routes (the CLI, a wrapper, the launchers, real git close-out) are
 in test_coordinator_guard_e2e.py.
 """
@@ -20,6 +24,9 @@ from pathlib import Path
 import pytest
 
 from conftest import ROOT, SCRIPTS, load_script
+
+RECORDED = Path(__file__).parent / "fixtures" / "coordinator_guard"
+REAL_COMPACTION = RECORDED / "compaction-manual-2.1.289.jsonl"
 
 guard = load_script("coordinator_guard")
 integ = load_script("integrate")
@@ -182,6 +189,53 @@ def test_after_compaction_only_usage_after_the_last_boundary_counts(tmp_path):
     assert guard.read_occupancy(str(t.path), WINDOW).tokens == 120
 
 
+def _recorded():
+    text = REAL_COMPACTION.read_text(encoding="utf-8")
+    return [json.loads(x) for x in text.splitlines()]
+
+
+def _recorded_prefix(tmp_path, upto):
+    """The recorded transcript's first `upto` records, as a file."""
+    lines = REAL_COMPACTION.read_text(encoding="utf-8").splitlines(keepends=True)
+    path = tmp_path / "prefix-{}.jsonl".format(upto)
+    path.write_text("".join(lines[:upto]), encoding="utf-8", newline="")
+    return path
+
+
+def test_the_recorded_compaction_fixture_is_claude_code_2_1_289():
+    records = _recorded()
+    assert {r["version"] for r in records if "version" in r} == {"2.1.289"}
+    (boundary,) = [r for r in records if r.get("subtype") == "compact_boundary"]
+    assert boundary["type"] == "system" and boundary["parentUuid"] is None
+    assert boundary["compactMetadata"]["trigger"] == "manual"
+
+
+def test_a_recorded_compaction_reads_the_reply_after_the_boundary():
+    reading = guard.read_occupancy(str(REAL_COMPACTION), 200_000)
+    assert reading.tokens == 10 + 30430 + 5723  # the post-compaction reply
+
+
+def test_a_recorded_compaction_never_reads_a_preserved_messages_old_usage(tmp_path):
+    """Until the first reply after the boundary, the messages the compaction
+    preserved (named by uuid, not rewritten) keep their pre-compaction usage;
+    the live branch stops at the boundary, so the reading is unknown rather
+    than that stale number."""
+    records = _recorded()
+    at = next(
+        i for i, r in enumerate(records) if r.get("subtype") == "compact_boundary"
+    )
+    reply = next(
+        i for i, r in enumerate(records) if i > at and r.get("type") == "assistant"
+    )
+    kept = set(records[at]["compactMetadata"]["preservedMessages"]["uuids"])
+    stale = [r for r in records if r.get("uuid") in kept and r["type"] == "assistant"]
+    assert stale[-1]["message"]["usage"]["cache_read_input_tokens"] == 35551
+    reading = guard.read_occupancy(str(_recorded_prefix(tmp_path, reply)), 200_000)
+    assert reading.pct is None and "compaction" in reading.note
+    before = guard.read_occupancy(str(_recorded_prefix(tmp_path, at)), 200_000)
+    assert before.tokens == 10 + 35551 + 242
+
+
 def test_after_a_resume_the_newest_usage_counts_whatever_session_wrote_it(tmp_path):
     t = Transcript(tmp_path / "r.jsonl", session="before-resume")
     t.user()
@@ -219,6 +273,18 @@ def test_no_valid_usage_reads_unknown_never_zero(tmp_path):
     assert reading.pct is None and reading.tokens is None and not reading.known
     assert guard.read_occupancy(None, WINDOW).pct is None
     assert guard.read_occupancy(str(tmp_path / "absent.jsonl"), WINDOW).pct is None
+
+
+def test_admission_compares_unrounded_occupancy(tmp_path):
+    root = make_root(tmp_path, pct=50, window=1_000_000)
+    t = Transcript(tmp_path / "edge.jsonl")
+    t.user()
+    t.reply(499_600)  # 49.96%: displays as 50.0, must not latch
+    assert guard.take(root, COORD, str(t.path)) is None
+    assert guard.claim_refusal(root, env=ENV) is None
+    assert guard.read_occupancy(str(t.path), 1_000_000).pct < 50
+    t.reply(500_000)
+    assert "drain mode is latched" in guard.claim_refusal(root, env=ENV)
 
 
 def test_a_mismatched_window_is_flagged_with_its_percent(tmp_path):
@@ -439,7 +505,7 @@ def _crossing(root, tx):
 
 
 def test_the_crossing_replys_claim_refuses_via_the_pre_tool_use_reading(
-    root, tx, monkeypatch
+    root, tx, monkeypatch, capsys
 ):
     _crossing(root, tx)
     out = guard.hook(
@@ -450,7 +516,9 @@ def test_the_crossing_replys_claim_refuses_via_the_pre_tool_use_reading(
         "permissionDecision" not in out["hookSpecificOutput"]
     )  # never a spelling rule
     monkeypatch.setenv(guard.SESSION_ENV, COORD)
+    capsys.readouterr()
     assert integ.claim(root, ["WI-001"], "wi-001") == 1
+    assert "coordinator guard: drain mode is latched" in capsys.readouterr().err
 
 
 def test_the_crossing_replys_claim_refuses_with_no_hook_run(
@@ -583,6 +651,19 @@ def test_the_session_prompt_is_the_fenced_block_under_its_heading(tmp_path):
     assert guard.session_prompt(path) is None
 
 
+def test_a_heading_inside_the_prompt_fence_is_prompt_text(tmp_path):
+    path = tmp_path / "h.md"
+    path.write_text(
+        "# Handoff\n\n```sh\n# Session prompt (a comment, not a heading)\n```\n\n"
+        "## Session prompt\n\n```text\n# Coordinator role\nRead docs/status.md.\n"
+        "## Order\nBuild first.\n```\n",
+        encoding="utf-8",
+    )
+    assert guard.session_prompt(path) == (
+        "# Coordinator role\nRead docs/status.md.\n## Order\nBuild first."
+    )
+
+
 def test_only_the_holder_requests_a_relaunch_naming_a_real_handoff(root, tx, tmp_path):
     held(root, tx)
     handoff = tmp_path / "h.md"
@@ -668,6 +749,71 @@ def test_a_failed_launch_restores_the_request(root, tx, tmp_path, capsys):
     )
 
 
+def _assert_restored(root):
+    directory = guard.lease_dir(root)
+    assert (directory / "relaunch.json").exists()
+    assert not list(directory.glob("relaunch.*.consumed"))
+    assert not list(directory.glob("relaunch-prompt.*.txt"))
+    assert guard._load(directory)["successor_token"] is None
+    assert events(root)[-1]["event"] == "launch-failed"
+
+
+def test_a_failed_prompt_write_restores_the_request(root, tx, tmp_path, monkeypatch):
+    _ready(root, tx, tmp_path)
+    real = Path.write_text
+
+    def disk_full(self, *a, **k):
+        if self.name.startswith("relaunch-prompt."):
+            raise OSError(28, "No space left on device")
+        return real(self, *a, **k)
+
+    monkeypatch.setattr(Path, "write_text", disk_full)
+    launch = Launches()
+    end = ev("SessionEnd", reason="logout")
+    assert guard.session_end(root, end, launch=launch) is False
+    monkeypatch.undo()
+    assert launch.calls == []
+    _assert_restored(root)
+
+
+class Process:
+    """A started launcher: `code` is its exit within the grace, or None
+    while it is still running."""
+
+    def __init__(self, code):
+        self.code = code
+
+    def wait(self, timeout=None):
+        if self.code is None:
+            raise guard.subprocess.TimeoutExpired("launcher", timeout)
+        return self.code
+
+
+def _real_launch(code):
+    def launch(repo_root, prompt_file, token):
+        guard.launch_detached(
+            repo_root,
+            prompt_file,
+            token,
+            popen=lambda argv, **kw: Process(code),
+            os_name="nt",
+            grace=0,
+        )
+
+    return launch
+
+
+def test_a_launcher_that_exits_non_zero_restores_the_request(root, tx, tmp_path):
+    _ready(root, tx, tmp_path)
+    (root / "scripts").mkdir()
+    (root / "scripts" / "coordinator-relaunch.cmd").write_text("", encoding="utf-8")
+    end = ev("SessionEnd", reason="logout")
+    assert guard.session_end(root, end, launch=_real_launch(42)) is False
+    _assert_restored(root)
+    assert guard.session_end(root, end, launch=_real_launch(None)) is True
+    assert events(root)[-1]["event"] == "launched"
+
+
 @pytest.mark.parametrize(
     "field, value",
     [
@@ -712,8 +858,9 @@ def test_the_launcher_runs_detached_in_the_repo_root(
         tmp_path,
         tmp_path / "p.txt",
         "tok",
-        popen=lambda argv, **kw: seen.append((argv, kw)),
+        popen=lambda argv, **kw: seen.append((argv, kw)) or Process(None),
         os_name=os_name,
+        grace=0,
     )
     ((argv, kw),) = seen
     assert argv[0] == shell and argv[-4:] == [
@@ -723,7 +870,24 @@ def test_the_launcher_runs_detached_in_the_repo_root(
         "tok",
     ]
     assert kw["cwd"] == str(tmp_path)
-    assert kw.get("creationflags") if os_name == "nt" else kw.get("start_new_session")
+    handles = {"stdin", "stdout", "stderr"}
+    if os_name == "nt":  # the new console's own handles stay the successor's
+        assert kw["creationflags"] and not handles & set(kw)
+    else:
+        assert kw["start_new_session"] and handles <= set(kw)
+    for code, launched in ((0, True), (42, False)):
+        try:
+            guard.launch_detached(
+                tmp_path,
+                tmp_path / "p.txt",
+                "t",
+                popen=lambda argv, **kw: Process(code),
+                os_name=os_name,
+                grace=0,
+            )
+            assert launched
+        except OSError as exc:
+            assert not launched and "exited 42" in str(exc)
     with pytest.raises(OSError):
         guard.launch_detached(
             tmp_path / "none", tmp_path / "p.txt", "t", popen=None, os_name=os_name
