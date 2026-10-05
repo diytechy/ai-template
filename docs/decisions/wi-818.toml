@@ -3,7 +3,7 @@
 # in the format this lane defines: no entry carries an `owner` key until the
 # owner sets one.
 
-high_risk = ["D-001", "D-004", "D-005"]
+high_risk = ["D-001", "D-004", "D-005", "D-014"]
 
 [decision.D-001]
 decided = "The overrule coupling runs inside the existing ruling sync: acceptance_record.ruling_sync_lines now returns the open-item lines plus overrule_sync_lines over the same diff, so the pre-commit hook's ruling-sync step and the merge slot's _ruling_sync_refusal judge it with no new step, rung or flag. check.py and integrate.py change in docstrings only."
@@ -69,7 +69,7 @@ why_not_escalated = "The spec changes the owner surface, not the snapshot; an ov
 review = ""
 
 [decision.D-010]
-decided = "One run-name alphabet serves the record path and the citation reader: the characters a run name cannot keep are '/' and what git refuses in any branch name (whitespace, control characters, ~ ^ : ? * [ and backslash). record_path maps each of those to '-' (for a branch name that is only its '/', so every existing record path is unchanged) and the citation pattern matches every other character, so owner+cleanup and owner@cleanup records are cited as written."
+decided = "One run-name alphabet serves the record path and the citation reader: the characters a run name cannot keep are exactly what git refuses in any branch name, one character at a time (the ASCII control characters, space and DEL, and ~ ^ : ? * [ and backslash), matched as an explicit ASCII class, plus the two delimiters a branch may carry, '/' and '#' (D-013). record_path maps each of those to '-' and the citation pattern matches every other character, so owner+cleanup, owner@cleanup and owner<U+00A0>cleanup records are cited as written. Against trunk's record_path, which mapped only '/', a branch name's path changes only where it carries '#'. (Corrected in round 4, Sol round 3 MAJOR 2: the round-3 build matched Python's Unicode whitespace class, which git does not refuse, so owner<U+00A0>cleanup and owner-cleanup collided on one path, and this entry's earlier claim that every existing record path is unchanged was false.)"
 alternative = "Normalize in record_path instead: map every character outside the word characters, '.' and '-' to '-', so owner+cleanup writes owner-cleanup.toml and the citation pattern keeps its round-2 class."
 reversal_cost = "Low: swap the substitution in record_path and the class in the citation pattern; the parametrized round-3 test pins both directions. A lane already carrying a record named with + or @ would need it renamed."
 why_not_escalated = "Sol's round-2 MAJOR 2 asks only that producer and reader share one alphabet; widening the reader keeps every record name a lane may already carry valid, where normalizing would move them, and it avoids two branches (owner+x, owner@x) colliding on one file."
@@ -87,4 +87,18 @@ decided = "To bring acceptance_record.py back under the module-size ratchet's 10
 alternative = "Move the whole ruling sync (WI-790's open-item arm and this lane's overrule arm) into a module of its own, which the acceptance record's boundary sentence does not cover; or re-stamp a 1051 baseline."
 reversal_cost = "Low: move the five functions and one class back and drop the aliases; the tests call the public staged and commit functions and do not change."
 why_not_escalated = "The ratchet's rule is decompose, never bump, and the coordinator named the overrule coupling and the git path reader as the candidates. Moving the whole ruling sync would change the module cell of LLR-298, an approved row outside this lane, so the move is kept to code this lane owns plus _show, which no approved row's code_symbol names. At 998 the module has 2 SLOC of headroom, so the next feature that grows it must decompose again; the whole-ruling-sync move is the larger cut left for that."
+review = ""
+
+[decision.D-013]
+decided = "The citation delimiter '#' joins the run-name alphabet's excluded set: record_path maps it to '-', and the citation pattern's path class cannot contain it, so the first '#' after docs/decisions/ ends the path and every citation has exactly one parse. A branch named owner.toml#D-002 writes docs/decisions/owner.toml-D-002.toml, and the token docs/decisions/owner.toml#D-002 only ever cites owner.toml's D-002."
+alternative = "Keep '#' in run names and anchor the citation reader differently: to the last .toml#D-<digits> in a token, or to a token boundary."
+reversal_cost = "Low: drop '#' from _RUN_EXCLUDED; a record written under the mapping for a branch carrying '#' would be renamed back. The alphabet test pins the set against git."
+why_not_escalated = "Sol round 3 MAJOR 1 asks that the producer and the reader leave one parse. With '#' both inside a path and the delimiter, a string such as docs/decisions/owner.toml#D-002.toml#D-002 is a well-formed citation of two different records, so any anchoring picks one reading and leaves the other forgeable; taking the delimiter out of the alphabet leaves one. The cost is a renamed record for a branch carrying '#', which no lane name in this kit produces (lanes are wi-NNN); the RESYNC_PACK entry tells an adopter so."
+review = ""
+
+[decision.D-014]
+decided = "A path list is decoded losslessly, and a path that is not UTF-8 is refused where it would be read. git_paths reads git's bytes and decodes UTF-8 with surrogateescape, so a byte that is not UTF-8 survives as a lone surrogate and the path round-trips to git's exact bytes. git_show, the one blob reader, raises UnreadableBlob for such a path before asking git, naming it with the byte written as a hex escape, and ruling_sync_lines' existing handler makes that a refusal line (its message reworded to name both causes). So a decisions record in the diff, an open spec read when an overrule is owed, and a citing row or the registry in the open-item arm are refused when their path is not UTF-8, while a non-UTF-8 path the syncs never read (a source file, say) is listed and left alone."
+alternative = "Decode strictly in git_paths and refuse, by an exception or by answering None, whenever any listed path is not UTF-8 (the build prompt's sketch)."
+reversal_cost = "Low: git_paths' decode and the guard at the head of git_show. Two tests pin the boundary: a non-UTF-8 record refused at the commit and the merge slot, and a non-UTF-8 unrelated path not refused."
+why_not_escalated = "Both shapes fail closed on Sol's probe. A strict listing would refuse every commit touching any non-UTF-8 path anywhere in a repository (a path git accepts), at the pre-commit hook and the merge slot, for a rule that only reads decisions records and work-item specs; the lossless listing refuses exactly the paths the syncs read, at the one blob reader they all share. The guard precedes the git call because a lone surrogate on a Windows command line reaches git as another path, which git answers as absent: the original defect. Known edge: a commit deleting or renaming a non-UTF-8 decisions record is refused too, since its parent side cannot be read; this rule refuses the commit that adds such a record, so one can only predate it, and reading it would need a second, stdin-fed blob reader. The shape also keeps acceptance_record.py at 998 SLOC, where a new exception and handler would pass the 1000 threshold."
 review = ""

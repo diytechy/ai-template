@@ -2052,10 +2052,10 @@ def ruling_sync_lines(root, base, head=None):
         )
     except _kitgit.UnreadableBlob as exc:
         return [
-            "{} is listed in its tree but its contents cannot be read (a partial "
-            "clone offline or a damaged object store), so whether this commit "
-            "rules an open item or overrules a decision is unknown; fetch it and "
-            "retry".format(exc)
+            "{} is listed in its tree but its contents cannot be read, so whether "
+            "this commit rules an open item or overrules a decision is unknown: "
+            "fetch it (a partial clone offline or a damaged object store), or "
+            "name it in UTF-8, and retry".format(exc)
         ]
 
 

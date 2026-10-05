@@ -7075,7 +7075,10 @@ cite it.
 The commit that sets an entry `"overruled"` must, in the same diff, file or
 amend a queued or active work item whose spec cites the entry as
 `docs/decisions/<run>.toml#D-NNN`, the record's path written exactly as it
-is named (a run named from a branch such as `owner+cleanup` keeps its `+`).
+is named (a run named from a branch such as `owner+cleanup` keeps its `+`; a
+branch's `/` and `#` become `-` in the record's name, so a citation splits
+only one way: a record of yours named from a branch carrying `#` is renamed,
+`#` to `-`, in the commit that takes this re-sync).
 Otherwise it is refused, by the existing
 `ruling-sync` pre-commit step and again by the merge slot on each lane commit
 against its first parent. There is no new step or rung, so your hook's
@@ -7083,9 +7086,11 @@ against its first parent. There is no new step or rung, so your hook's
 scoped to is enough; nothing has to be minted. The check fails closed: a
 commit whose tree carries a decisions record that does not parse as TOML is
 refused at the same two points, naming the record and the parse error. The
-check reads git's path lists NUL-delimited, so a record or a work item whose
-path has a non-ASCII character is judged under `core.quotePath` too; the
-open-item ruling sync gains the same fix for its citing rows.
+check reads git's path lists NUL-delimited and without loss, so a record or
+a work item whose path has a non-ASCII character is judged under
+`core.quotePath` too, and one whose path is not UTF-8 is refused by name when
+the check would read it (a path it never reads is left alone); the open-item
+ruling sync gains the same fix for its citing rows.
 
 The template entry drops `reviewed = false`, and the note handed to a
 delegated session now says to leave `owner` unset.

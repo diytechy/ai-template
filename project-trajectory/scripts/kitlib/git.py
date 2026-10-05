@@ -26,9 +26,11 @@ fail-direction to declare, and folding that choice in here would hide it.
 TWO READS FOR A TWO-TREE RULE (WI-818). A commit-time rule comparing a commit
 with its parent needs two answers `git_out` cannot give losslessly: the paths a
 listing prints, which a plain listing quotes and escapes under `core.quotePath`
-(`git_paths` reads them NUL-delimited), and a blob read that tells a path the
-tree does not list from one it lists but cannot read (`git_show`, raising
-`UnreadableBlob` for the second). Neither decides what that MEANS: the ruling
+and `git_out`'s replacing decoder turns into other paths (`git_paths` reads
+them NUL-delimited as bytes, decoded without loss), and a blob read that tells
+a path the tree does not list from one it lists but cannot read (`git_show`,
+raising `UnreadableBlob` for the second, and for a path that is not UTF-8,
+which it cannot hand back to git). Neither decides what that MEANS: the ruling
 sync and the overrule sync in `acceptance_record` refuse an unreadable blob.
 """
 
@@ -97,30 +99,49 @@ def git_paths(root, args):
     `ls-tree`) prints, read LOSSLESSLY: `-z` makes the listing NUL-delimited
     and unquoted, where a plain listing under `core.quotePath` (git's default)
     quotes and escapes any path with a non-ASCII byte, which then matches no
-    prefix and names no blob. None when git cannot answer. The ruling sync and
-    the overrule sync read every path list through it.
+    prefix and names no blob; and the bytes are decoded as UTF-8 with
+    `surrogateescape`, so a byte that is not UTF-8 is kept as a lone surrogate
+    (`path.encode("utf-8", "surrogateescape")` is git's exact path), never
+    replaced by U+FFFD, which would name another path. None when git cannot
+    answer. The ruling sync and the overrule sync read every path list
+    through it.
 
     Implements: SR-225, LLR-303
     """
-    out = git_out(root, [args[0], "-z"] + list(args[1:]))
+    out = git_bytes(root, [args[0], "-z"] + list(args[1:]))
     if out is None:
         return None
-    return [path for path in out.split("\0") if path]
+    return [path for path in out.decode("utf-8", "surrogateescape").split("\0") if path]
 
 
 class UnreadableBlob(Exception):
     """A path its tree lists whose blob git cannot read (a partial clone
-    offline, a damaged object store). The ruling sync refuses it by name:
-    a failed read is never an absent file (A1)."""
+    offline, a damaged object store), or whose name is not UTF-8 and so cannot
+    be handed back to git as an argument on every platform. The ruling sync
+    refuses it by name: a failed read is never an absent file (A1)."""
+
+
+def _shown(path):
+    """`path` printable on any UTF-8 stream: a byte that is not UTF-8 (a lone
+    surrogate from `git_paths`) shown as `\\xNN`.
+
+    Implements: SR-225, LLR-303
+    """
+    return path.encode("utf-8", "surrogateescape").decode("utf-8", "backslashreplace")
 
 
 def git_show(root, prefix, path):
     """The text of `prefix + path` (`prefix` a `git show` prefix: `"<rev>:"` or
     `":"` for the index), None when the tree does not list the path; raises
-    `UnreadableBlob` when it lists the path but its blob cannot be read.
+    `UnreadableBlob` when it lists the path but its blob cannot be read, and
+    for a path that is not UTF-8 before asking git at all: such a path cannot
+    be passed back to git losslessly (a Windows command line re-encodes it to
+    another path), so its answer could only be a wrong "absent".
 
     Implements: SR-148, SR-225, LLR-303
     """
+    if _shown(path) != path:
+        raise UnreadableBlob(_shown(path) + " (a path that is not UTF-8)")
     text = git_out(root, ["show", prefix + path])
     if text is not None:
         return text

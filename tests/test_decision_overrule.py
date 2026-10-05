@@ -14,6 +14,7 @@ The migrator rewrites `reviewed = true` to `owner = "confirmed"` and drops
 `reviewed = false`, keeping each note and every other line.
 """
 
+import string
 import subprocess
 import tomllib
 
@@ -281,7 +282,16 @@ def test_a_citing_spec_path_git_would_quote_discharges_the_overrule(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "run", ["owner+cleanup", "owner@cleanup", "owner-cleanup", "feat/x.y_z", "ré"]
+    "run",
+    [
+        "owner+cleanup",
+        "owner@cleanup",
+        "owner-cleanup",
+        "feat/x.y_z",
+        "ré",
+        "owner.toml#D-002",
+        "owner\u00a0cleanup",
+    ],
 )
 def test_the_citation_reads_every_run_name_the_record_path_writes(tmp_path, run):
     # One alphabet: whatever `record_path` keeps of a valid branch name, the
@@ -308,6 +318,99 @@ def test_the_citation_reader_takes_no_surrounding_prose():
     }
     assert decisions.citations("docs/decisions/a b.toml#D-1") == set()
     assert decisions.citations("docs/decisions/x/y.toml#D-1") == set()
+
+
+# --- Sol round 3: the run-name alphabet is git's, and paths read losslessly ----
+
+# What git refuses in ANY branch name, one character at a time (git-check-ref-
+# format(1): the ASCII control characters and space, DEL, and ~ ^ : ? * [ \).
+GIT_REFUSED = {chr(c) for c in range(0x21)} | set("\x7f~^:?*[\\")
+# The characters a branch may carry that a record's filename may not keep: the
+# path's separator and the citation's delimiter.
+RUN_DELIMITERS = {"/", "#"}
+NON_ASCII = ["\u0085", " ", " ", "　", "é"]
+
+
+def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
+    # Pinned against git itself for every ASCII punctuation mark, the space,
+    # DEL, three controls and whitespace Unicode adds (which git permits), so
+    # the set is git's, matched ASCII-only, and never a guess.
+    probed = list(string.punctuation) + [" ", "\x7f", "\x01", "\t", "\n"]
+    for ch in probed + NON_ASCII:
+        proc = subprocess.run(
+            ["git", "check-ref-format", "--branch", "a" + ch + "b"],
+            capture_output=True,
+        )
+        assert (proc.returncode != 0) == (ch in GIT_REFUSED), repr(ch)
+    for ch in [chr(c) for c in range(0x80)] + NON_ASCII:
+        mapped = decisions.record_path("a" + ch + "b") == "docs/decisions/a-b.toml"
+        assert mapped == (ch in GIT_REFUSED | RUN_DELIMITERS or ch == "-"), repr(ch)
+
+
+def test_a_run_name_carrying_the_citation_delimiter_has_one_citation(tmp_path):
+    # `owner.toml#D-002` is a valid branch. Its record never keeps the `#`, so
+    # a citation splits one way: the token naming the longer run's record
+    # cannot discharge an overrule in `owner.toml`.
+    rel = decisions.record_path("owner.toml#D-002")
+    assert "#" not in rel
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-077")
+    _record(root, "overruled", rel=decisions.record_path("owner"))
+    _spec(root, "WI-051", "Keep the flag, per `{}`.".format(rel + "#D-002"))
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert line.startswith("docs/decisions/owner.toml#D-002 is overruled")
+    bad = _commit(root, "overrule cited through the longer run's record")
+    assert len(ar.commit_ruling_sync_lines(root, bad)) == 1
+    _git(root, "checkout", "-q", "main")
+    assert integrate._ruling_sync_refusal(root, "wi-077") is not None
+
+
+def _index_only(root, raw, text):
+    """Stage `text` at the raw byte path `raw` through git's plumbing, so no
+    file of that name is needed on disk."""
+    sha = subprocess.run(
+        ["git", "-C", str(root), "hash-object", "-w", "--stdin"],
+        input=text.encode(),
+        capture_output=True,
+        check=True,
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "-C", str(root), "update-index", "--add", "-z", "--index-info"],
+        input=b"100644 " + sha + b"\t" + raw + b"\0",
+        capture_output=True,
+        check=True,
+    )
+
+
+def test_a_record_path_that_is_not_utf8_is_refused_never_read_as_absent(tmp_path):
+    # Git keeps a path's raw bytes. Read through a replacing decoder, the path
+    # `owner-\xff.toml` came back as another path that no tree lists, so the
+    # overrule escaped the sync. The listing is read losslessly, and a path
+    # the kit cannot hand back to git as text is refused by name.
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-076")
+    raw = b"docs/decisions/owner-\xff.toml"
+    _index_only(root, raw, "high_risk = []\n" + _entry("D-002", "overruled", "U"))
+    (listed,) = ar._git_paths(root, ["diff", "--cached", "--name-only"])
+    assert listed.encode("utf-8", "surrogateescape") == raw
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert "docs/decisions/owner-\\xff.toml" in line and "not UTF-8" in line
+    line.encode("utf-8")  # printable on a UTF-8 stream: no lone surrogate
+    _git(root, "commit", "-q", "--no-verify", "-m", "raw path overrule")
+    (line,) = ar.commit_ruling_sync_lines(root, _git(root, "rev-parse", "HEAD"))
+    assert "not UTF-8" in line
+    _git(root, "checkout", "-q", "main")
+    refusal = integrate._ruling_sync_refusal(root, "wi-076")
+    assert refusal is not None and "not UTF-8" in refusal
+
+
+def test_a_path_that_is_not_utf8_and_never_read_is_not_refused(tmp_path):
+    # The sync reads only the records and specs it judges: a non-UTF-8 path
+    # elsewhere in the diff is listed losslessly and left alone.
+    root = _base(tmp_path)
+    _index_only(root, b"src/caf\xe9.txt", "data\n")
+    assert ar.staged_ruling_sync_lines(root) == []
 
 
 FIXTURE = """\

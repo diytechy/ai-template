@@ -5,7 +5,7 @@
 # layer; the `[attestation] decision_recording` dial in docs/process.toml
 # decides whether a run owes one.
 #
-# ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`), so two
+# ONE FILE PER RUN, named by the lane's branch (a `/` or `#` becomes `-`), so two
 # lanes never write one file. A supervisor's sitting names its own file the
 # same way: one run, one file.
 #
