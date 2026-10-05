@@ -2138,7 +2138,7 @@ def _commit_parents(root, rev, question, first=False):
     root (A1). A true root commit is `([], [])`. The one parent reader of the
     two per-commit rules the merge slot walks a lane with.
 
-    Implements: SR-148, LLR-298
+    Implements: SR-148, SR-140, LLR-298, LLR-302
     """
     body = _git(root, ["cat-file", "commit", rev])
     if body is None:
@@ -2173,51 +2173,63 @@ TEXT_THEN_ACT_REMEDY = (
 )
 
 
-def _text_changes(root, base, head):
-    """`{(registry, row id, what)}` the diff `base` -> `head` (`head` None is
-    the index) makes in the approval-act tiers: `what` is a changed cell's name,
-    `Status` and the id excepted, or `added` / `removed` for a whole row. Keyed
-    on the registry constant, so the two sides of a carrier change still join.
+def _text_changes(root, bases, head):
+    """`{(registry, row id, what)}` the tree `head` (None: the index) writes in
+    the approval-act tiers as its OWN against `bases`, its parents: `what` is a
+    cell, `Status` and the id excepted, whose value differs from its value in
+    EVERY parent, or `added` / `removed` for a row whose presence differs from
+    every parent. Values are compared, never per-parent change labels, so a row
+    only one parent carried is judged by its cells. Keyed on the registry
+    constant, so the two sides of a carrier change still join.
 
     Implements: SR-140, LLR-302
     """
+    new_prefix = ":" if head is None else head + ":"
     out = set()
-    for _carrier, id_col, before, after, rel in _spine_row_sides(
-        root, base, head, APPROVAL_ACT_CSVS
-    ):
-        for rid in set(before) | set(after):
-            out |= {
-                (rel, rid, what)
-                for what in _row_text_moves(before.get(rid), after.get(rid), id_col)
-            }
+    for rel, id_col in APPROVAL_ACT_CSVS:
+        now = _spine_rows_at(root, new_prefix, rel, id_col)
+        sides = [_spine_rows_at(root, base + ":", rel, id_col) for base in bases]
+        for rid in set(now).union(*sides):
+            moves = _row_text_moves(rid, now, sides, id_col)
+            out |= {(rel, rid, what) for what in moves}
     return out
 
 
-def _row_text_moves(was, now, id_col):
-    """What one row's text did across two sides: `added` or `removed` for a
-    row on one side only, else each cell that differs, `Status` and the id
-    excepted.
+def _row_text_moves(rid, now, sides, id_col):
+    """What row `rid` of `now` holds that no side in `sides` holds: `added` or
+    `removed` when its presence differs from every side, else each cell whose
+    value differs from every side's (a side without the row holds no value).
 
     Implements: SR-140, LLR-302
     """
-    if was is None or now is None:
-        return ["removed" if now is None else "added"]
-    cells = (set(was) | set(now)) - {id_col, "Status"}
-    return [c for c in cells if (was.get(c) or "") != (now.get(c) or "")]
+    row = now.get(rid)
+    if all((rid in side) != (row is not None) for side in sides):
+        return ["added" if row is not None else "removed"]
+    if row is None:
+        return []
+    cells = set(row).union(*(side.get(rid, {}) for side in sides))
+    return [
+        c
+        for c in cells - {id_col, "Status"}
+        if all(
+            rid not in side or (side[rid].get(c) or "") != (row.get(c) or "")
+            for side in sides
+        )
+    ]
 
 
 def text_then_act_lines(root, bases, head=None):
     """One line naming each approval-act row the commit `head` (None: the
     index) changes as its OWN while it also writes the approval record, judged
-    against `bases`, its parents: a path or cell counts only when it differs
-    from EVERY base. So a merge is judged by what neither side carried, and a
-    lane's refresh merge bringing in trunk's text and act, made as two commits,
-    is not the lane's. `[]` when the commit writes no record, or changes only
-    `Status`. A diff git cannot read is a line, never a skip.
+    against `bases`, its parents: a record path or a cell counts only when it
+    differs from EVERY base. So a merge is judged by what neither side carried,
+    and a lane's refresh merge bringing in trunk's text and act, made as two
+    commits, is not the lane's. `[]` when the commit writes no record, or
+    changes only `Status`. A diff git cannot read is a line, never a skip.
 
     Implements: SR-140, LLR-302
     """
-    writes, changes = None, None
+    writes = None
     for base in bases:
         args = ["diff", "--name-only", "--no-renames"]
         args += ["--cached", base] if head is None else [base, head]
@@ -2229,11 +2241,8 @@ def text_then_act_lines(root, bases, head=None):
             ]
         paths = set(own.splitlines()) - {""}
         writes = paths if writes is None else writes & paths
-    for base in bases if writes else ():
-        own = _text_changes(root, base, head)
-        changes = own if changes is None else changes & own
     rows = {}
-    for rel, rid, what in sorted(changes or ()):
+    for rel, rid, what in sorted(_text_changes(root, bases, head) if writes else ()):
         rows.setdefault("{} {}".format(PurePosixPath(rel).stem, rid), []).append(what)
     if not rows:
         return []
@@ -2256,6 +2265,32 @@ def commit_text_then_act_lines(root, rev):
     return ["commit {}: {}".format(rev[:10], line) for line in lines]
 
 
+def _squash_lines(root, head, tip):
+    """The lines of every commit `head..tip` when the index IS the squash of
+    `tip` onto `head` for everything this rule reads, else None. The index's
+    approval-act registries and record must equal git's own merge of `tip`
+    into `head` (`git merge-tree`), so a `SQUASH_MSG` left behind by an
+    abandoned squash exempts no other commit; a merge git cannot compute, a
+    conflicted one included, exempts nothing.
+
+    Implements: SR-140, LLR-302
+    """
+    merged = _git(root, ["merge-tree", "--write-tree", head, tip])
+    tree = (merged or "").split("\n", 1)[0].strip()
+    paths = [c for rel, _ in APPROVAL_ACT_CSVS for c in _spine_carriers(rel)]
+    differ = tree and _git(
+        root, ["diff", "--cached", "--name-only", tree, "--", SNAPSHOT_DIR, *paths]
+    )
+    commits = _git(root, ["rev-list", "--reverse", head + ".." + tip])
+    if not tree or differ is None or differ.strip() or commits is None:
+        return None
+    return [
+        line
+        for rev in commits.split()
+        for line in commit_text_then_act_lines(root, rev)
+    ]
+
+
 def staged_text_then_act_lines(root, squashed=()):
     """`text_then_act_lines` for the commit being made: the index against HEAD,
     or against HEAD and MERGE_HEAD while a merge is in progress.
@@ -2264,11 +2299,12 @@ def staged_text_then_act_lines(root, squashed=()):
     Q-8): it carries a lane's text and act together, and is admitted because
     the rule held on every commit it squashes. The hook checks that rather than
     assuming it, since a hand landing never meets the merge slot: `squashed`
-    names the commits a `git merge --squash` in progress folds in, newest
-    first (the caller reads them off git's `SQUASH_MSG`, as this module reads
-    no file); each is judged against its parents, and the squash's own changes
-    are those differing from both HEAD and the squashed tip. Before the first
-    commit there is no text before the act, and nothing is judged.
+    names the commits git's `SQUASH_MSG` lists, newest first (the caller reads
+    the file, as this module reads no file). When the index's approval-act
+    registries and record equal git's merge of that tip into HEAD, each commit
+    HEAD..tip is judged and the index is not (`_squash_lines`); otherwise the
+    index is judged like any commit. Before the first commit there is no text
+    before the act, and nothing is judged.
 
     Implements: SR-140, LLR-302
     """
@@ -2276,8 +2312,7 @@ def staged_text_then_act_lines(root, squashed=()):
     if not head:
         return []
     merging = (_git(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]) or "").strip()
-    bases = [head] + ([merging] if merging else list(squashed[:1]))
-    lines = []
-    for rev in reversed(squashed):
-        lines += commit_text_then_act_lines(root, rev)
-    return lines + text_then_act_lines(root, bases)
+    squash = None if merging or not squashed else _squash_lines(root, head, squashed[0])
+    if squash is not None:
+        return squash
+    return text_then_act_lines(root, [head] + ([merging] if merging else []))
