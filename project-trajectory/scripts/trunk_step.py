@@ -79,7 +79,6 @@ Contract IF-155: the argv surface of the trunk step. `--root` (default the cwd)
 
 import argparse
 import configparser
-import posixpath
 import re
 import subprocess
 import sys
@@ -136,12 +135,6 @@ RESERVED_HEADINGS = ("## Sittings", "## Decisions log", "## Audit log")
 FRAGMENT_NAME_RE = re.compile(
     r"^(?:[A-Za-z][A-Za-z0-9]*-\d+|[A-Za-z0-9]+)-[A-Za-z0-9][A-Za-z0-9._-]*\.md$"
 )
-
-# Inline markdown link targets, and the "not a repo-relative path" exclusions.
-# Kept LOCAL on purpose: the dispatcher's mirror pair proved these edge cases,
-# and this step outlived that module (retired at Phase 5).
-MD_LINK_TARGET_RE = re.compile(r"(\]\()([^)\s]+)(\))")
-URL_SCHEME_RE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//)", re.I)
 
 
 # stdout of a git command under `root`, or None on ANY failure (no git binary,
@@ -287,36 +280,20 @@ def ordered_fragments(root, paths):
     return [(path, text) for _, _, path, text in keyed], []
 
 
-def rebased_link_target(target):
-    """The rewritten target for ONE inline link inside a fragment, or None to leave
-    it alone: the fragment is authored in `docs/log.d/` and lands in `docs/`.
-
-    Left alone, because each resolves independently of the holding directory: a
-    bare `#fragment`, any scheme-ish or protocol-relative URL, and a root-absolute
-    `/path`. Everything else is resolved against `docs/log.d` and re-relativised
-    against `docs`; a `#fragment` suffix and the link TEXT survive untouched."""
-    if target.startswith("#") or target.startswith("/"):
-        return None
-    if URL_SCHEME_RE.match(target):
-        return None
-    base, sep, frag = target.partition("#")
-    if not base:
-        return None
-    resolved = posixpath.normpath(posixpath.join(LOG_D, base))
-    new = posixpath.relpath(resolved, "docs")
-    return None if new == base else new + sep + frag
-
-
 def rebase_links(text):
     """`text` with every rebasable inline link target moved from log.d-relative to
     docs-relative. Text-in, text-out: the fragment is appended, never rewritten in
-    place, so there is no file to keep line-ending discipline over here."""
+    place, so there is no file to keep line-ending discipline over here.
 
-    def _sub(match):
-        new = rebased_link_target(match.group(2))
-        return match.group(0) if new is None else match.group(1) + new + match.group(3)
-
-    return MD_LINK_TARGET_RE.sub(_sub, text)
+    The fragment is authored in `docs/log.d/` and lands in `docs/`, which is a
+    MOVE of its content, so the per-link decision is the spec-move ritual's
+    outbound rebase (`spec_move.expected_rebase`): a bare `#fragment`, any
+    scheme-ish or protocol-relative URL and a root-absolute `/path` are left
+    alone; everything else is resolved against `docs/log.d` and re-relativised
+    against `docs`, the `#fragment` and the link TEXT untouched. ONE HOME since
+    WI-821: this module carried its own copy of that decision and of its link
+    pattern, kept when the dispatcher that first held them was retired."""
+    return _spec_move().expected_rebase(text, LOG_D, "docs")
 
 
 def _plan_artifacts():
@@ -330,6 +307,21 @@ def _plan_artifacts():
         sys.path.insert(0, str(_SCRIPTS))
         import plan_artifacts
     return plan_artifacts
+
+
+def _spec_move():
+    """The sibling module that owns the link rebase a landed fragment needs,
+    imported lazily for `_plan_artifacts`' reason and because it is a heavier
+    import than this step's own (it reaches the coordinator's helpers).
+
+    Implements: SR-170, LLR-137
+    """
+    try:
+        import spec_move
+    except ImportError:  # pragma: no cover - exercised via the sys.path fallback
+        sys.path.insert(0, str(_SCRIPTS))
+        import spec_move
+    return spec_move
 
 
 def compile_log(root, dry_run=False):
@@ -449,22 +441,6 @@ def _interface_reference(root):
     )
 
 
-def _interface_reference_cmd(root):
-    """Its own argv builder, for `_cli_reference_cmd`'s reason: this generator
-    scans SOURCE, so it needs the declared `[paths] src`."""
-    src = _pget(_profile(root), "paths", "src", "src")
-    return [
-        sys.executable,
-        str(_SCRIPTS / "gen_arch_map.py"),
-        "--root",
-        ".",
-        "--src",
-        src,
-        "--contracts-doc",
-        INTERFACE_REFERENCE_REL,
-    ]
-
-
 def _cli_reference(root):
     """The CLI reference applies only where the doc exists AND carries its
     marker pair — the same opt-in reading `_status_block` gives the status
@@ -478,20 +454,24 @@ def _cli_reference(root):
     )
 
 
-def _cli_reference_cmd(root):
-    """Its own argv builder rather than `_cmd`: this generator needs the
-    declared `[paths] src` (it scans SOURCE, not registries), and the profile
-    is only readable per-root."""
-    src = _pget(_profile(root), "paths", "src", "src")
-    return [
+def _source_doc_cmd(doc_flag, rel):
+    """The argv builder for a `gen_arch_map.py` reference doc, rather than
+    `_cmd`: this generator needs the declared `[paths] src` (it scans SOURCE,
+    not registries), and the profile is only readable per-root. The CLI and the
+    interface references differ only in the doc flag and path, so both steps
+    build their argv here (WI-821; they were two copies differing by one flag).
+
+    Implements: SR-170, LLR-124
+    """
+    return lambda root: [
         sys.executable,
         str(_SCRIPTS / "gen_arch_map.py"),
         "--root",
         ".",
         "--src",
-        src,
-        "--cli-doc",
-        CLI_REFERENCE_REL,
+        _pget(_profile(root), "paths", "src", "src"),
+        doc_flag,
+        rel,
     ]
 
 
@@ -583,14 +563,14 @@ REGEN_STEPS = (
     (
         "cli-reference",
         _cli_reference,
-        _cli_reference_cmd,
+        _source_doc_cmd("--cli-doc", CLI_REFERENCE_REL),
         "docs/cli-reference.md absent or carries no CLI REFERENCE markers",
         (CLI_REFERENCE_REL,),
     ),
     (
         "interface-reference",
         _interface_reference,
-        _interface_reference_cmd,
+        _source_doc_cmd("--contracts-doc", INTERFACE_REFERENCE_REL),
         "docs/interface-reference.md absent or carries no INTERFACE REFERENCE markers",
         (INTERFACE_REFERENCE_REL,),
     ),

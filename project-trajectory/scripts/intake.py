@@ -345,8 +345,9 @@ def _say(msg, err=False):
 
 
 def _clip(text, width):
-    text = " ".join(str(text).split())
-    return text if len(text) <= width else text[: width - 1] + "…"
+    """One line of at most `width` characters (`kitlib.spine.clip_line`); a
+    missing value reads as `None`, which is how a brief shows an absent cell."""
+    return _spine.clip_line(str(text), width)
 
 
 def next_wi_id(root):

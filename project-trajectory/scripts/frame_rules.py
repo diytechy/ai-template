@@ -55,13 +55,13 @@ Contract IF-180: the frame and need-tier rule surface `trace.py` imports. Rows
 """
 
 try:
-    from kitlib.spine import SYSTEM_VALUES, is_example, refs
+    from kitlib.spine import SYSTEM_VALUES, is_example, refs, seam_endpoints
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from kitlib.spine import SYSTEM_VALUES, is_example, refs
+    from kitlib.spine import SYSTEM_VALUES, is_example, refs, seam_endpoints
 
 # THE STAKEHOLDER ROW'S REQUIRED CELLS (SR-189), in the carrier's column names.
 # `Party` is deliberately absent: a stakeholder need not be an entity the frame
@@ -150,11 +150,12 @@ def sr_system_advisories(srs, bifs):
     return out
 
 
-def _entries(cell):
-    """A pointer cell's entries, stripped. The carrier joins a TOML list on
-    `;`, and the split is on `;` ALONE: a `source` target may hold a comma or a
-    space in its path, and an STK id holds none of the three."""
-    return [e.strip() for e in (cell or "").split(";") if e.strip()]
+# A pointer cell's entries, stripped. The carrier joins a TOML list on `;`, and
+# the split is on `;` ALONE: a `source` target may hold a comma or a space in its
+# path, and an STK id holds none of the three. That is the carrier's one list-cell
+# split, so it is bound from its home (`kitlib.spine.seam_endpoints`, WI-821)
+# under this module's local name rather than carried as a second body.
+_entries = seam_endpoints
 
 
 def _real_needs(sn_needs):

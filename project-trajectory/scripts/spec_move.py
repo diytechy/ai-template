@@ -297,6 +297,23 @@ def expected_relink(text, doc_dir, remap):
     )
 
 
+def expected_rebase(text, old_dir, new_dir):
+    """What `text`, moved from posix directory `old_dir` to `new_dir`, WOULD say
+    after the outbound rebase — the pure oracle of that half, the mirror of
+    `expected_relink`.
+
+    Text-in, text-out, so a caller that moves CONTENT rather than a file uses
+    the same per-link decision the ritual does: `trunk_step.rebase_links`
+    lands a `docs/log.d/` fragment in `docs/log.md` through it (WI-821; it was
+    a local copy of `_rebased_link_target` and `rewrite_text`).
+
+    Implements: SR-156, LLR-145
+    """
+    return rewrite_text(
+        text, lambda target: _rebased_link_target(target, old_dir, new_dir)
+    )
+
+
 def _place_moved_file(root, src_rel, dest_rel, new_text):
     """The move itself: `git mv` (staged, the caller's history keeps a rename)
     with a plain rename as the fallback for an untracked file or a non-repo

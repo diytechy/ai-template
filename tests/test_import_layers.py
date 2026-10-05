@@ -373,9 +373,16 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # judge's brief cannot restate the held arm OI-100 amended. Deferred so
     # composing a non-amendment brief pays nothing; intake imports no
     # adjudicate_brief, so no cycle or layer edge grew.
-    assert 14 <= deferred <= 31, (
+    # RE-STAMPED 31 -> 32 (2026-10-05, WI-821): trunk_step -> spec_move joins
+    # deferred. The fragment link rebase was a copy of the spec-move ritual's
+    # outbound decision; it now calls `spec_move.expected_rebase`, deferred
+    # like trunk_step's own `plan_artifacts` read because spec_move reaches
+    # agent_common's chain (about 60 ms) that no other trunk-step path needs.
+    # Both are CMP-008 and spec_move imports no trunk_step, so no cycle or
+    # layer edge grew. Reason in docs/decisions/wi-821.toml (D-007).
+    assert 14 <= deferred <= 32, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..31 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..32 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

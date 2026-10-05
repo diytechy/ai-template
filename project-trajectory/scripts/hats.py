@@ -91,7 +91,7 @@ from pathlib import Path
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 from kitlib.observation import write_atomic
-from kitlib.spine import toml_fields, toml_string
+from kitlib.spine import clip_line, toml_fields, toml_string
 
 # Sibling: the spine's registry CARRIER (the check_need_form.py idiom). The
 # `audit` subcommand reads the STAKEHOLDER-NEED tier, and that tier's vocabulary
@@ -580,9 +580,9 @@ _CELL = "%-3s"
 
 
 def _clip(text, width):
-    """One line of at most `width` characters, whitespace collapsed."""
-    text = " ".join(str(text or "").split())
-    return text if len(text) <= width else text[: width - 1] + "…"
+    """One line of at most `width` characters (`kitlib.spine.clip_line`); a
+    missing value reads as empty."""
+    return clip_line(str(text or ""), width)
 
 
 def _needs_path(root, rel=NEEDS_REL):

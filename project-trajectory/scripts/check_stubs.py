@@ -84,20 +84,15 @@ def _name_of(node):
     return None
 
 
-def _is_docstring(stmt):
-    return (
-        isinstance(stmt, ast.Expr)
-        and isinstance(stmt.value, ast.Constant)
-        and isinstance(stmt.value.value, str)
-    )
-
-
 def stub_kind(func):
     """Return the stub shape of a FunctionDef/AsyncFunctionDef as a short label
     (e.g. "pass", "...", "raise NotImplementedError", "return None",
     "docstring-only"), or None when the body does real work."""
     body = func.body
-    if body and _is_docstring(body[0]):
+    # The leading-docstring test is the stdlib's (`ast.get_docstring`), not a
+    # local predicate: this module and `check_dupes_census` each carried the
+    # same four-line copy of it until WI-821.
+    if ast.get_docstring(func, clean=False) is not None:
         body = body[1:]
     if not body:
         return "docstring-only"  # a docstring-only body returns None

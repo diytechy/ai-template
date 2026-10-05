@@ -230,14 +230,10 @@ def process_config(docs):
     return data if isinstance(data, dict) else {}
 
 
-def read_toml_text(text):
-    """`tomllib.loads(text)`, or None when it does not parse. The TEXT twin of
-    `read_toml` — `handback.read_report` has already extracted a `+++` block
-    and has no file left to hand over."""
-    try:
-        return tomllib.loads(text)
-    except tomllib.TOMLDecodeError:
-        return None
+# The TEXT twin of `read_toml` (a caller that already extracted a `+++` block
+# has no file left to hand over). ONE HOME since WI-821: `kitlib.config`, which
+# `kitlib.spine` and `kitlib.station` read too; bound here under its old name.
+read_toml_text = _kitconfig.read_toml_text
 
 
 def read_toml(path):

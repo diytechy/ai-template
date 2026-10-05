@@ -51,9 +51,9 @@ decision over strings and a dict, so it sits here with the vocabulary it
 describes. `handback` re-exports every former name.
 
 Stdlib only, and import-clean of the rest of `scripts/`, like every `kitlib`
-module. That is why the frontmatter read below calls `tomllib` directly instead
-of `agent_common.read_toml_text`: the four-line guard is the price of the
-package rule, and it is the same guard.
+module. The frontmatter read below parses through `kitlib.config.read_toml_text`,
+the package's one home for "TOML text, or None" (WI-821) — a sibling inside the
+package, so the rule costs no import edge out of it.
 
 Contracts: IF-093 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
@@ -76,8 +76,9 @@ from __future__ import annotations
 
 import enum
 import re
-import tomllib
 from types import MappingProxyType
+
+from . import config as _kitconfig
 
 __all__ = [
     "Outcome",
@@ -355,10 +356,7 @@ def read_toml_block(text):
     match = FRONT_RE.search(text or "")
     if match is None:
         return None
-    try:
-        data = tomllib.loads(match.group(1))
-    except tomllib.TOMLDecodeError:
-        return None
+    data = _kitconfig.read_toml_text(match.group(1))
     return data if isinstance(data, dict) else None
 
 

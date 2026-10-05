@@ -30,6 +30,7 @@ import tomllib
 from pathlib import Path
 
 __all__ = [
+    "plan_table_rows",
     "WI_COLUMNS",
     "SPEC_SCALARS",
     "SPEC_LISTS",
@@ -475,3 +476,49 @@ def shared_spec(ref_a, ref_b):
     if anchor_a and anchor_b:
         return ref_a.strip() if anchor_a == anchor_b else ""
     return file_a
+
+
+def _table_cells(line):
+    """A markdown table line's cells, stripped.
+
+    Implements: SR-166, LLR-181
+    """
+    return [c.strip() for c in line.strip().strip("|").split("|")]
+
+
+def _plan_header(cells):
+    """The lowercased header when `cells` carries a `Plan-WI` column, else None.
+
+    Implements: SR-166, LLR-181
+    """
+    header = [c.lower() for c in cells]
+    return header if "plan-wi" in header else None
+
+
+def plan_table_rows(text):
+    """The proposed work-item rows of a plan: the data rows of the FIRST
+    markdown table whose header carries a `Plan-WI` column, each a
+    `{lowercased header: cell}` dict, or `[]` when no such table exists.
+
+    A row with an empty `Plan-WI` cell and the `|---|` separator line are not
+    rows; a line with no `|` ends the table once it has yielded a row. ONE HOME
+    since WI-821: `plan_coverage.parse_plan` (the coverage pre-pass) and
+    `plan_artifacts.parse_plan_wis` (the filer) each walked the table with a
+    copy of this loop, and each now only picks the cells it needs from it.
+
+    Implements: SR-166, LLR-181
+    """
+    header, rows = None, []
+    for line in text.splitlines():
+        if "|" not in line:
+            if header is not None and rows:
+                break
+            continue
+        cells = _table_cells(line)
+        if header is None:
+            header = _plan_header(cells)
+            continue
+        row = dict(zip(header, cells))
+        if row.get("plan-wi") and not set("".join(cells)) <= set("-: "):
+            rows.append(row)
+    return rows

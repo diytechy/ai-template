@@ -103,7 +103,7 @@ from pathlib import Path
 from kitlib.config import utf8_console as _utf8_console
 from kitlib import done_when as _done_when
 from kitlib import spine as _kitspine
-from kitlib.registry import parse_spec_frontmatter
+from kitlib.registry import parse_spec_frontmatter, plan_table_rows
 
 # Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
@@ -153,45 +153,17 @@ def parse_goal(text, decl=CLAUSE_DECL_RE):
     return clauses
 
 
-def _cells(line):
-    """A markdown table line's cells, stripped.
-
-    Implements: SR-155, LLR-069
-    """
-    return [c.strip() for c in line.strip().strip("|").split("|")]
-
-
-def _plan_header(cells):
-    """The lowercased header when `cells` carries a `Plan-WI` column, else None.
-
-    Implements: SR-155, LLR-069
-    """
-    header = [c.lower() for c in cells]
-    return header if "plan-wi" in header else None
-
-
 def parse_plan(text):
     """The plan's proposed-WI rows from the first table whose header carries a
     `Plan-WI` column. Returns a list of dicts (id plus `ROW_KEYS` — cells raw,
     split done by the caller; an absent optional column reads as ""), or []
-    when no such table exists."""
-    header = None
-    rows = []
-    for line in text.splitlines():
-        if "|" not in line:
-            if header is not None and rows:
-                break  # table ended
-            continue
-        cells = _cells(line)
-        if header is None:
-            header = _plan_header(cells)
-            continue
-        row = dict(zip(header, cells))
-        if row.get("plan-wi") and not set("".join(cells)) <= set("-: "):
-            rows.append(
-                dict(id=row["plan-wi"], **{k: row.get(k, "") for k in ROW_KEYS})
-            )
-    return rows
+    when no such table exists. The table walk is `kitlib.registry`'s
+    (`plan_table_rows`, shared with the filer since WI-821); this picks the
+    cells the coverage pass reads."""
+    return [
+        dict(id=row["plan-wi"], **{k: row.get(k, "") for k in ROW_KEYS})
+        for row in plan_table_rows(text)
+    ]
 
 
 def parse_excludes(text):
