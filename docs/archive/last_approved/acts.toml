@@ -208,3 +208,9 @@ date = "2026-10-05"
 approved = ["LLR-302"]
 reattested = ["LLR-173", "LLR-245", "TC-173"]
 verdict = "docs/reviews/wi-806-text-then-act/006-ADJUDICATE-0d714f9.md"
+
+[[act]]
+seq = 35
+date = "2026-10-05"
+approved = []
+reattested = ["LLR-210", "TC-314"]
