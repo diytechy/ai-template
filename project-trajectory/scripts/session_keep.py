@@ -19,8 +19,18 @@ added, no store is written, and the launch is exactly a fresh session's.
 Stdlib only, Python 3.11+, Windows/POSIX. It imports `agent_common` (the
 policy-file reader and git); `session_service` imports it.
 
-Contracts: IF-247, IF-248 — the interface seams this module declares
+Contracts: IF-247, IF-248, IF-272, IF-273 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-272: `primary_out_dir(root)` returns the primary checkout's
+    `out/` directory: the parent of the git common directory when that
+    directory is named `.git`, else `root` itself (git unavailable, or not a
+    repository).
+
+Contract IF-273: `dir_lock(directory, wait=10.0)` is an exclusive-file
+    context manager: it creates `directory`, holds `directory/.lock` (created
+    exclusively; one older than two minutes is stale and taken over), yields
+    `directory`, and raises StoreBusy when the lock stays held past `wait`.
 
 Contract IF-247: the retained-session record, one JSON object per route at
     `out/adjudicator/<FAMILY>-<hash of the route id>.json` under the primary

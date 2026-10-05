@@ -37,6 +37,35 @@ subagent's call, `reason` on SessionEnd, `trigger` on PreCompact),
 security: a session that can edit files can remove a hook.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
+
+Contracts: IF-271, IF-274, IF-275 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-271: `claim_refusal(root, env=None)` returns None when a guarded
+    claim may proceed, and always while `[coordinator] context_guard_pct` is
+    0; otherwise it returns the refusal text, naming the reason. The caller's
+    session is read from `CLAUDE_CODE_SESSION_ID` in `env` (default the
+    process environment). The live dispatcher's claim does not call it.
+
+Contract IF-274: the hook's stdin is one JSON object carrying
+    `hook_event_name`, `session_id` and `transcript_path`, with `agent_id`,
+    `reason` and `trigger` where the event provides them. Stdin that does not
+    parse is reported on stderr and answered with nothing; the exit is 0.
+
+Contract IF-275: a hook response is one line of JSON on stdout,
+    `hookSpecificOutput` with `hookEventName` and `additionalContext`, printed
+    only when the guard has context to add; otherwise nothing is printed. The
+    hook never refuses a tool call and always exits 0.
+
+Runtime state (internal, no seam: only this module reads or writes it, and
+    every other reader goes through IF-271): `out/coordinator/` under the
+    primary checkout holds
+    `lease.json`, `events.jsonl` (one JSON event per line, appended),
+    `relaunch.json`, consumed and refused request files
+    (`relaunch.<token>.consumed`, `relaunch.<token>.refused`), prompt files
+    (`relaunch-prompt.<token>.txt`) and the directory lock `.lock`. Lease and
+    request records are whole-file atomic writes; a request is acquired by
+    renaming it; the directory lock serializes every read-modify-write.
 """
 
 import argparse
