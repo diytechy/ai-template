@@ -162,17 +162,25 @@ def reset_pct(cfg, family):
 # --- the store: one record per route, under a lock ---------------------------
 
 
-def store_dir(root):
-    """Where retained sessions are recorded: `out/adjudicator/` under the
-    PRIMARY checkout (the git common directory's parent), so a lane's
-    worktree, which comes and goes, shares one store with the others and with
-    the dispatcher. Per-clone runtime state, ignored with the rest of `out/`."""
+def primary_out_dir(root):
+    """The untracked `out/` directory of the PRIMARY checkout (the git common
+    directory's parent, else `root` itself), so a lane's worktree, which comes
+    and goes, shares one runtime store with the others and with the
+    dispatcher. The one home of that lookup: the adjudicator store and the
+    coordinator lease both live under it."""
     code, out = agent_common.git(
         root, "rev-parse", "--path-format=absolute", "--git-common-dir"
     )
     common = Path(out.strip()) if code == 0 and out.strip() else None
     base = common.parent if common is not None and common.name == ".git" else root
-    return Path(base) / "out" / "adjudicator"
+    return Path(base) / "out"
+
+
+def store_dir(root):
+    """Where retained sessions are recorded: `out/adjudicator/` under the
+    PRIMARY checkout (`primary_out_dir`). Per-clone runtime state, ignored
+    with the rest of `out/`."""
+    return primary_out_dir(root) / "adjudicator"
 
 
 class StoreBusy(Exception):
@@ -188,7 +196,16 @@ def store_lock(root, wait=10.0):
 
     Implements: SR-227, LLR-270
     """
-    directory = store_dir(root)
+    with dir_lock(store_dir(root), wait) as directory:
+        yield directory
+
+
+@contextmanager
+def dir_lock(directory, wait=10.0):
+    """Hold `directory/.lock` for one read-modify-write: the store lock's
+    mechanism, shared by every per-clone runtime store under `out/`. Creates
+    the directory; raises StoreBusy past `wait`."""
+    directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / ".lock"
     deadline = time.monotonic() + wait

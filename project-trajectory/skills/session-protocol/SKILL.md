@@ -165,6 +165,23 @@ cadence"). New behavior needs new tests
   during the migration window and says so on stderr — a WARN there means a lane
   merged on the fossil, not on its evidence.
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
+- **Coordinator close-out (the context guard, `[coordinator]` in
+  `docs/process.toml`).** When the guard says drain mode is latched, the
+  close-out is the same every time: (1) start no new claims or lanes (the
+  claim refuses anyway); (2) bring every in-flight row to a safe point:
+  land it, close it, or leave it committed on its lane and recorded in the
+  handoff; (3) write `docs/status.md`, a handoff whose `## Session prompt`
+  heading is followed by one fenced block the next session starts from, and a
+  log fragment; (4) request the relaunch,
+  `python project-trajectory/scripts/coordinator_guard.py request-relaunch --handoff <path>`,
+  then end the session: the relaunch runs at its exit, never at `/clear` or
+  `/resume`. The handoff also classifies each compaction the lease recorded
+  (`coordinator_guard.py status`) as a **missed threshold** (auto-compaction
+  before the latch), a **manual** compaction, or a compaction **during the
+  drain**. A coordinator session takes the lease with `coordinator_guard.py
+  take`; a crashed holder's lease is freed only by the owner's recorded
+  `release --reason`, and a latch only by the owner's recorded `clear` or the
+  relaunched successor's take.
 - WI ordering is derived from the registry by `schedule.py` (the DAG +
   `Priority` + gate class), not a hand-curated `docs/next-wi` — that pointer
   is retired (WI-180; process-options.md "Unattended operation"). When

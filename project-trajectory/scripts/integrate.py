@@ -164,6 +164,7 @@ from pathlib import Path
 
 import agent_common as ac
 import bookkeeping
+import coordinator_guard
 import score_reviews
 import spec_move
 from kitlib import authority as _kitauthority
@@ -795,7 +796,13 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     # sits outside every bookkeeping scope, so the claim commit never stages it
     # on a repo whose ignore rules predate out/ (WI-381's hazard, no longer
     # un-staged after the fact).
-    refusal = _claim_refusal(root, wi_ids, branch)
+    #
+    # The coordinator context guard (WI-822) runs first and binds every route
+    # to a claim but the live dispatcher's, which has its own protection: a
+    # wrapper, an import and the CLI all land here. Off (no read, no refusal)
+    # while `[coordinator] context_guard_pct` is 0.
+    guarded = None if dispatch_lock_held else coordinator_guard.claim_refusal(root)
+    refusal = guarded or _claim_refusal(root, wi_ids, branch)
     if refusal:
         return fail(refusal)
     _done_when_warning(root, wi_ids)
