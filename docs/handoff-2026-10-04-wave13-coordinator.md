@@ -64,6 +64,10 @@ This session (owner present) is recorded in
 
   A1's routing table is not built yet (WI-801), so these hand roles stand until
   it is.
+- **First: WI-822, the coordinator context guard** (owner, 2026-10-04). At 50%
+  context the session stops claiming, closes out, hands off, and relaunches at
+  session end. Build it before any other row, while this session's context is
+  low.
 - **Order.** Follow `needs`. Ready now:
   - WI-797, the glossary;
   - WI-803, the plan gate;
@@ -122,7 +126,8 @@ the wave-11 handoff for the in-lane cycle, the coordinator tools and the "never"
 list; the design note docs/plans/2026-10-04-wi788-design/README.md, its section
 "The owner's checkpoint ruling" first; your memory index.
 
-Build the lane-lifecycle program, WI-797 to WI-817, plus WI-818, WI-821 and
+Build WI-822 (the coordinator context guard) FIRST, while your context is low,
+then the lane-lifecycle program, WI-797 to WI-817, plus WI-818, WI-821 and
 WI-796, in `needs` order, by coordinator session (owner, 2026-10-04):
 - claim each batch of ready rows under ONE scoped unpause (deletion commit,
   check HEAD moved, claims, byte-identical restore);
