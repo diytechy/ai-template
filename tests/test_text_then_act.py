@@ -495,3 +495,45 @@ def test_a_refreshed_lanes_squash_is_admitted(tmp_path):
     assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
     proc = _step(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_refresh_merge_combining_two_text_commits_beside_trunks_act_passes(
+    tmp_path,
+):
+    # M15 (adjudication 003): a merge writes the record only when the record
+    # differs from EVERY parent. Lane and trunk each amend a different line of
+    # one multiline LLR cell, text alone; trunk then takes an act on the SR
+    # registry. Git combines the two amendments into a value neither parent
+    # carried, beside a record only trunk wrote: the refresh is its parents'
+    # work, not the lane's own mixed act.
+    llr = "docs/requirements/low-level-requirements.csv"
+
+    def detail(lines):
+        (root / llr).write_text(
+            'LLR-ID,Title,Detail,Status\nLLR-001,One,"{}",Drafted\n'.format(
+                "\n".join(lines)
+            ),
+            encoding="utf-8",
+        )
+
+    root = _base(tmp_path)
+    lines = ["line {}".format(n) for n in range(1, 10)]
+    detail(lines)
+    _commit(root, "the LLR text")
+    _git(root, "checkout", "-q", "-b", "wi-001")
+    detail(["lane"] + lines[1:])
+    _commit(root, "lane text only")
+    _git(root, "checkout", "-q", "main")
+    detail(lines[:-1] + ["trunk"])
+    _commit(root, "trunk text only")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two", "Approved"))
+    _act(root)
+    _commit(root, "trunk act on SR")
+    _git(root, "checkout", "-q", "wi-001")
+    _git(root, "merge", "-q", "--no-ff", "--no-edit", "main")
+    merged = (root / llr).read_text(encoding="utf-8")
+    assert "lane" in merged and "trunk" in merged  # neither parent's value
+    merge = _git(root, "rev-parse", "HEAD")
+    assert ar.commit_text_then_act_lines(root, merge) == []
+    _git(root, "checkout", "-q", "main")
+    assert integrate._text_then_act_refusal(root, "wi-001") is None
