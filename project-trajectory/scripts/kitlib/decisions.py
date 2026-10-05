@@ -36,8 +36,9 @@ An overrule is coupled to work at the COMMIT, the way a ruled open item is
 coupled to its citing row (OI-102 Q3): the commit that sets an entry
 `overruled` files or amends, in the same diff, a queued or active work item
 whose spec cites the entry as `docs/decisions/<run>.toml#D-NNN` (`citation`,
-`citations`, `newly_overruled`; the two-tree read is the ruling sync's, in
-`acceptance_record`). Amending the queued row the decision was scoped to is
+`citations`, `newly_overruled`, and the coupling itself, `overrule_sync_lines`,
+handed the two trees as readers; the git read is the ruling sync's, in
+`acceptance_record`, which asks it of the same diff). Amending the queued row the decision was scoped to is
 enough; nothing has to be minted. The coupling reads the `owner` key as
 written, and FAILS CLOSED: a record the commit's tree carries but cannot parse
 is refused, since an unreadable verdict is never "no overrule". Who sets the key stays a convention: git
@@ -92,11 +93,17 @@ Contract IF-256: the delegated-decisions record, as a CALL. `MODES` is the
     the token a work item cites an entry by and `citations(text)` every such
     token in a text; `newly_overruled(before, after)` the entries overruled in
     `after` and not in `before`, raising `ValueError` when `after` does not
-    parse; `migrate_text(text)` the record with the retired key rewritten
+    parse; `overrule_sync_lines(changed, before, after)` one refusal line per
+    entry a diff (`changed`, its paths) newly overrules with no queued or
+    active work item spec among `changed` citing it in its `after` text, and
+    one per changed record whose `after` text does not parse, `before(path)`
+    and `after(path)` reading the parent and resulting tree (None for an absent
+    path); `migrate_text(text)` the record with the retired key rewritten
     (complete top-level assignments only, the result re-parsed and refused
     unless only the verdict keys changed), and the ids it could not rewrite.
     Pure functions of
-    their arguments: no file, git or environment read.
+    their arguments: no file, git or environment read (the readers
+    `overrule_sync_lines` is handed are the caller's).
 """
 
 import re
@@ -370,6 +377,83 @@ def newly_overruled(before, after):
         raise ValueError("does not parse as TOML ({})".format(exc))
     was, _hoisted = _parsed(before)
     return sorted(_overruled_ids(now) - _overruled_ids(was), key=_id_number)
+
+
+# --- THE OVERRULE SYNC: an overrule files or amends its work (WI-818) --------
+# The owner's overrule of a delegated decision is coupled to work the way a
+# ruling is coupled to its citing row: one commit against its parent. The
+# trigger is the record's state (an entry overruled in the new tree and not in
+# the parent's); the act is a queued or active spec this same diff adds or
+# changes whose new text cites the entry. A citation in a row the diff leaves
+# untouched discharges nothing, and an archived row is not work to do. The two
+# trees arrive as readers, so this module still reads no git itself.
+_OPEN_WORK_DIRS = ("docs/work/queued/", "docs/work/active/")
+
+
+def _open_spec(path):
+    """Is `path` a queued or active work item spec (not the `-000` example)?
+
+    Implements: SR-225, LLR-303
+    """
+    name = path.rsplit("/", 1)[-1]
+    return (
+        path.startswith(_OPEN_WORK_DIRS)
+        and name.startswith("WI-")
+        and name.endswith(".md")
+        and not "-".join(name.split("-")[:2]).endswith("-000")
+    )
+
+
+def _owed_overrules(changed, before, after):
+    """`(owed citations, refusal lines)` over the diff's decisions records:
+    each entry the new tree overrules and the parent's does not, and one
+    refusal per record the new tree carries but cannot parse — FAIL CLOSED, as
+    the ruling sync refuses an unparseable open-items registry: an unreadable
+    verdict is never "no overrule". The parent side unparseable overrules
+    nothing, so the repair owes every overrule it shows.
+
+    Implements: SR-225, LLR-303
+    """
+    owed, refusals = [], []
+    for rel in changed:
+        if not (rel.startswith(DECISIONS_DIR + "/") and rel.endswith(".toml")):
+            continue
+        try:
+            ids = newly_overruled(before(rel), after(rel))
+        except ValueError as exc:
+            refusals.append(
+                "{} {}, so whether this commit overrules a decision is unknown: "
+                "the commit leaves the record parseable".format(rel, exc)
+            )
+            continue
+        owed += [citation(rel, eid) for eid in ids]
+    return owed, refusals
+
+
+def overrule_sync_lines(changed, before, after):
+    """One line per entry a diff overrules without filing or amending a queued
+    or active work item that cites it as `docs/decisions/<run>.toml#D-NNN`.
+    `changed` is the diff's repo-relative paths; `before(path)` and
+    `after(path)` read a path's text in the parent and the resulting tree, None
+    when that tree lacks it, and whatever they raise propagates. `[]` when no
+    record in the diff gains an overrule. A record the new tree carries but
+    cannot parse is a line, never a skip (`_owed_overrules`).
+
+    Implements: SR-225, LLR-303
+    """
+    owed, refusals = _owed_overrules(changed, before, after)
+    if not owed:
+        return refusals
+    cited = set()
+    for path in filter(_open_spec, changed):
+        cited |= citations(after(path))
+    return refusals + [
+        "{} is overruled by this commit, and no queued or active work item it "
+        "files or amends cites it: the overrule's commit files a work item, or "
+        "amends the queued one the decision was scoped to, citing {}".format(c, c)
+        for c in owed
+        if c not in cited
+    ]
 
 
 # A table header, the one shape `migrate_text` reads entry ids from (a quoted

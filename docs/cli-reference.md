@@ -517,6 +517,14 @@ Contracts (interfaces): IF-103
 | `--check` | convert in memory and verify the round-trip; write nothing |
 | `--if-shape` | rewrite an old-shape interfaces.toml in place (OI-67): owner / requestors\|consumers / channel / data; --check reports without writing |
 
+### `scripts/migrate_decisions`
+_Rewrite every delegated-decisions record off the retired `reviewed` key_
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: cwd) |
+| `--check` | report records owing the rewrite |
+
 ### `scripts/plan_briefs`
 _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
 
