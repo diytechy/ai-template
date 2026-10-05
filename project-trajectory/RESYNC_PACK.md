@@ -6952,6 +6952,29 @@ their exclusions in prose need an `Excludes:` line each before they are
 re-checked. If you wrap `plan_coverage.py` yourself, note that exactly one of
 `--goal` or `--item` is now required, and `--findings` is only valid with
 `--item`.
+### The coordinator context guard, shipped off [since eae1f486]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `process.toml` gains a `[coordinator]` section with two
+dials: `context_guard_pct` (shipped `0`, meaning off) and
+`context_window_tokens` (shipped `200000`). A new script,
+`scripts/coordinator_guard.py`, is the guard: with the threshold on, one
+Claude Code coordinator session holds a lease under `out/coordinator/`, its
+transcript is measured, and at the threshold drain mode latches and the
+work-item claim refuses. `scripts/integrate.py` imports it, and `claim` calls
+it on every route except the live dispatcher's. At `0` it reads nothing and
+refuses nothing, so claims behave exactly as before. `scripts/session_keep.py`
+gains two extracted helpers (`primary_out_dir`, `dir_lock`), with
+behaviour unchanged.
+
+**What to do.** Re-sync `scripts/coordinator_guard.py`, `scripts/integrate.py`
+and `scripts/session_keep.py`, and add the `[coordinator]` section to your
+`docs/process.toml` with `context_guard_pct = 0` and
+`context_window_tokens = 200000`, copied from the template, so your file
+declares the template's sections. Nothing else is needed: the hook
+registration and the relaunch launchers stay in the kit's own repository.
+Turning the guard on needs them, so leave the dial at `0`.
 
 ## 5. Promotion: when this pack stops being prose
 

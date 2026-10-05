@@ -1729,3 +1729,32 @@ verification = "Test"
 status = "Approved"
 phase = 6
 aspect = "process"
+
+
+[requirement.SR-229]
+title = "Coordinator context-drain admission"
+sn_refs = ["SN-027"]
+boundary_refs = ["B-09", "B-10"]
+hat_refs = ["INTEGRITY-RECOVERABILITY", "UNATTENDED-OPS"]
+requirement = "Where the declared coordinator context guard is enabled, the delivered work-item admission, on every route but the unattended dispatcher's own, shall admit a new claim only from the current coordinator lease holder while that holder's drain is not latched, the drain latching once the holder's context occupancy reaches the declared threshold and holding across compaction and resume until the owner records a clear or a release or a relaunched successor takes the lease."
+rationale = "A DERIVED requirement, and labelled so. SN-027 asks that a declared pause stop claiming and drain what is already in flight, and that recovery never double-assign work; it does not name the coordinating session's own context, so this obligation arrives through two lenses rather than through the need's text. The unattended-operations lens listens for a silent degrade: a coordinator whose context has crossed its declared limit keeps claiming after compaction has degraded the context it needs to close the work it already holds, and nothing pages anyone. The integrity lens listens for a recovery path written only for the unattended run when the same corruption is reachable attended, and for a claim nothing can reclaim once its holder is gone: a retained adjudicator session already drains on occupancy while the attended coordinator does not, and a second or missing holder leaves claim authority ambiguous, so one lease names the coordinator and only the owner's recorded release frees a lease whose holder has gone. A latched single-holder admission boundary was chosen over a one-time event observation because every claim must remain protected when an event is missed or the transcript later reports a lower reading. Fed back to the need: SN-027's acceptance could name the coordinating session's own capacity as a declared reason to stop claiming and drain; until it does, this row is derived and says so."
+acceptance_criteria = "With the guard off, admission proceeds without reading or writing guard state; with it on, the holder below the threshold may claim, while a claim with no lease held, a claim from another session or from a caller naming no session, and a claim from a holder at or above the threshold each refuse, naming the recovery action. The unattended dispatcher's own admission remains available without consulting this guard. Occupancy counts the newest valid post-compaction usage on the live branch, including cached input, and unknown usage is not zero. A latched drain survives a lower reading, compaction and resume, and ends only when the owner records a clear or a release, or a relaunched successor takes the lease."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+form = "interface"
+
+[requirement.SR-230]
+title = "Coordinator successor at session exit"
+sn_refs = ["SN-027"]
+boundary_refs = ["B-09", "B-10"]
+hat_refs = ["INTEGRITY-RECOVERABILITY"]
+requirement = "Where the declared coordinator context guard is enabled, when the coordinator lease holder that has requested a relaunch from its handoff ends its session in an exit state, the delivered coordination support shall start exactly one successor session from that handoff."
+rationale = "A DERIVED requirement, and labelled so. SN-027 asks that claiming drain what is already in flight and that a crash at any lifecycle boundary recover without double-assignment; it does not name a coordinating session handing over to its successor, so this obligation arrives through the integrity lens rather than through the need's text. That lens asks what the next reader finds when a holder is gone: a close-out that loses its handoff strands the next coordinator, and one that can launch twice creates competing claim authority. An atomic, owned request consumed once was chosen over treating every session-end event as a relaunch because clear and resume do not end the coordinator and a failed launch must remain recoverable. Fed back to the need: SN-027's acceptance could name an orderly handover of the coordinating role as part of a drain; until it does, this row is derived and says so."
+acceptance_criteria = "With the guard off, no exit launches anything. A request from the holder for an existing handoff launches once at an exit in the declared repository and starts from that handoff. Clear, resume, a non-holder, a subagent and a foreign request launch nothing; concurrent exit handling consumes one request once; and a launch that fails for any reason restores the request."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+form = "interface"

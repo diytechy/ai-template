@@ -302,6 +302,20 @@ _Retired-vocabulary check: keep the retired `G*` gate tags, and the retired_
 | `--strict` | promote findings from WARN to ERROR (exit 1). The harness wires this from the DevStg-Tests bar on, like check_trajectory. |
 | `--list-scope` | print the live/skip decision for every file considered, then the findings — so a scope argument is settled by running the tool |
 
+### `scripts/coordinator_guard`
+_The coordinator context guard: stop new lanes at a context threshold, close_
+Contracts (interfaces): IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280, IF-281
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: CLAUDE_PROJECT_DIR, else .) |
+| `--session` |  |
+| `--transcript` |  |
+| `--handoff` |  |
+| `--session` |  |
+| `--prompt-file` |  |
+| `--reason` |  |
+
 ### `scripts/derive_stage`
 _Derive the EFFECTIVE STAGE from artifact states and cache it to `docs/stage`._
 Contracts (interfaces): IF-050, IF-165

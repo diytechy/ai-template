@@ -1,0 +1,27 @@
+# docs/decisions/coordinator-2026-10-05.toml — the wave-15 coordinator's
+# DECISIONS RECORD for its calls on trunk and across lanes (2026-10-05). The
+# format and doctrine are project-trajectory/decisions.template.toml's. Lane
+# calls go in the lane's own docs/decisions/<branch>.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The coordinator wrote WI-822's four Contract paragraphs (IF-277 to IF-280) in coordinator_guard.py's header and the frame test's untied pin itself, rather than dispatching a kit-builder for about forty lines of header prose and one list edit."
+alternative = "Dispatch a kit-builder agent for the header and pin, then verify and commit as for any build."
+reversal_cost = "None: the paragraphs and the pin go through Sol round 3 and the in-lane adjudicator like any lane change."
+why_not_escalated = "The coordinator is the same family (Claude Opus) as the builder role, the reviewer (Codex Sol) and adjudicator stay independent of it, and the edit restates code the coordinator read line by line."
+review = ""
+
+[decision.D-002]
+decided = "WI-818 and WI-821 were built in parallel with the two lanes still in adjudication (WI-822, WI-806), from lanes fast-forwarded to trunk eae1f486, rather than after both landed as the handoff's order reads."
+alternative = "Hold both builds until WI-822 and WI-806 land."
+reversal_cost = "Low: each lane rebases onto trunk after the landings; a conflict in a shared file is resolved at its own rebase."
+why_not_escalated = "Both rows were already claimed under the wave-14 scoped unpause, the two adjudication lanes waited on Codex rounds, and the builders were told which files the other lanes touch; the landing order (WI-822, then WI-806) is unchanged."
+review = ""
+
+[decision.D-003]
+decided = "WI-822's lane was rebased onto trunk before its Sol round 3 rather than just before the act, and its smoke-ceiling note joins trunk's 2130 without a re-stamp (2123 collected at the rebase)."
+alternative = "Rebase only immediately before the act, after the adjudicator's re-judge."
+reversal_cost = "None: trunk does not move before WI-822 lands, so this rebase is the pre-act rebase; a later trunk move would need one more."
+why_not_escalated = "It clears the hold-by-rename error from the landed wi-803 branch, lets Sol and the adjudicator judge the tree that lands, and follows the wave-14 correction (rebase, never merge, once rows are committed)."
+review = ""

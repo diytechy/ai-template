@@ -19,8 +19,18 @@ added, no store is written, and the launch is exactly a fresh session's.
 Stdlib only, Python 3.11+, Windows/POSIX. It imports `agent_common` (the
 policy-file reader and git); `session_service` imports it.
 
-Contracts: IF-247, IF-248 — the interface seams this module declares
+Contracts: IF-247, IF-248, IF-272, IF-273 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-272: `primary_out_dir(root)` returns the primary checkout's
+    `out/` directory: the parent of the git common directory when that
+    directory is named `.git`, else `root` itself (git unavailable, or not a
+    repository).
+
+Contract IF-273: `dir_lock(directory, wait=10.0)` is an exclusive-file
+    context manager: it creates `directory`, holds `directory/.lock` (created
+    exclusively; one older than two minutes is stale and taken over), yields
+    `directory`, and raises StoreBusy when the lock stays held past `wait`.
 
 Contract IF-247: the retained-session record, one JSON object per route at
     `out/adjudicator/<FAMILY>-<hash of the route id>.json` under the primary
@@ -162,17 +172,25 @@ def reset_pct(cfg, family):
 # --- the store: one record per route, under a lock ---------------------------
 
 
-def store_dir(root):
-    """Where retained sessions are recorded: `out/adjudicator/` under the
-    PRIMARY checkout (the git common directory's parent), so a lane's
-    worktree, which comes and goes, shares one store with the others and with
-    the dispatcher. Per-clone runtime state, ignored with the rest of `out/`."""
+def primary_out_dir(root):
+    """The untracked `out/` directory of the PRIMARY checkout (the git common
+    directory's parent, else `root` itself), so a lane's worktree, which comes
+    and goes, shares one runtime store with the others and with the
+    dispatcher. The one home of that lookup: the adjudicator store and the
+    coordinator lease both live under it."""
     code, out = agent_common.git(
         root, "rev-parse", "--path-format=absolute", "--git-common-dir"
     )
     common = Path(out.strip()) if code == 0 and out.strip() else None
     base = common.parent if common is not None and common.name == ".git" else root
-    return Path(base) / "out" / "adjudicator"
+    return Path(base) / "out"
+
+
+def store_dir(root):
+    """Where retained sessions are recorded: `out/adjudicator/` under the
+    PRIMARY checkout (`primary_out_dir`). Per-clone runtime state, ignored
+    with the rest of `out/`."""
+    return primary_out_dir(root) / "adjudicator"
 
 
 class StoreBusy(Exception):
@@ -188,7 +206,16 @@ def store_lock(root, wait=10.0):
 
     Implements: SR-227, LLR-270
     """
-    directory = store_dir(root)
+    with dir_lock(store_dir(root), wait) as directory:
+        yield directory
+
+
+@contextmanager
+def dir_lock(directory, wait=10.0):
+    """Hold `directory/.lock` for one read-modify-write: the store lock's
+    mechanism, shared by every per-clone runtime store under `out/`. Creates
+    the directory; raises StoreBusy past `wait`."""
+    directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / ".lock"
     deadline = time.monotonic() + wait

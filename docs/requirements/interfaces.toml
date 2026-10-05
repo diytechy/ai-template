@@ -2410,3 +2410,111 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 rationale = "The generated legacy case header must use the registry vocabulary instead of copying it, so new observation cells stay paste-ready without a second schema."
+
+
+[interface.IF-271]
+owner = "scripts/coordinator_guard"
+requestors = ["scripts/integrate"]
+channel = "call"
+data = "claim_refusal(root, env=None) -> None | refusal text"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The integrator must ask one guard-owned admission question, so every non-dispatcher route receives the same lease and drain decision."
+
+[interface.IF-272]
+owner = "scripts/session_keep"
+requestors = ["scripts/coordinator_guard"]
+channel = "call"
+data = "primary_out_dir(root) -> Path"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Coordinator and retained-session state must resolve the same primary checkout, or a lane worktree can split their runtime state."
+
+[interface.IF-273]
+owner = "scripts/session_keep"
+requestors = ["scripts/coordinator_guard"]
+channel = "call"
+data = "dir_lock(directory, wait=10.0) -> context manager yielding Path; raises StoreBusy"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "One exclusive-file lock primitive keeps coordinator lease updates and other runtime-store updates from growing incompatible lock behavior."
+
+[interface.IF-274]
+owner = "scripts/coordinator_guard"
+requestors = ["external:agent CLI"]
+channel = "cli"
+data = "hook event JSON on stdin: hook_event_name, session_id, transcript_path, agent_id?, reason?, trigger?"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The guard can identify the lease holder and event only from the hook payload, so its accepted event vocabulary must have one declared surface."
+
+notes = """No tie-back: the hook invocation and response are Claude Code's own process protocol; the locked frame declares no crossing for this local tool exchange."""
+
+[interface.IF-275]
+owner = "scripts/coordinator_guard"
+consumers = ["external:agent CLI"]
+channel = "stdout"
+data = "printed hook response JSON: hookSpecificOutput.hookEventName and additionalContext"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The hook caller needs one response shape so a latch instruction reaches the coordinator without turning a hook response into a tool refusal."
+
+notes = """No tie-back: the hook invocation and response are Claude Code's own process protocol; the locked frame declares no crossing for this local tool exchange."""
+
+[interface.IF-277]
+owner = "external:agent CLI"
+consumers = ["scripts/coordinator_guard"]
+channel = "env"
+data = "CLAUDE_CODE_SESSION_ID: session id; CLAUDE_PROJECT_DIR: default repository root for guard processes"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The guard reads session identity and its default root through one declared agent-CLI environment surface, so claim and hook paths cannot disagree."
+notes = """No tie-back: the agent CLI's process environment reaches the local guard only; the locked frame declares no crossing for it."""
+
+[interface.IF-278]
+owner = "scripts/coordinator_guard"
+requestors = ["scripts/coordinator-relaunch.cmd", "scripts/coordinator-relaunch.sh"]
+channel = "env"
+data = "PT_COORDINATOR_TAKE: successor token supplied for SessionStart lease take"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+rationale = "Both platform launchers set one successor-token environment surface, so SessionStart takes exactly the token its holder issued."
+[interface.IF-279]
+owner = "scripts/coordinator_guard"
+consumers = ["scripts/coordinator-relaunch.cmd", "scripts/coordinator-relaunch.sh"]
+channel = "cli"
+data = "REPO_ROOT PROMPT_FILE TOKEN; POSIX reads PROMPT_FILE, Windows calls exec-claude --prompt-file"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+rationale = "The guard launches both platform helpers through one argument shape, so root, prompt and token remain aligned with their consumers."
+[interface.IF-280]
+owner = "scripts/coordinator_guard"
+requestors = ["external:agent CLI"]
+channel = "cli"
+data = "take | request-relaunch --handoff | release --reason | clear --reason | status"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Coordinator-facing operations need one declared argument surface, so recovery instructions and command invocation cannot drift."
+notes = """No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation."""
+
+[interface.IF-281]
+owner = "scripts/coordinator_guard"
+consumers = ["external:agent CLI"]
+channel = "exit-code"
+data = '0 success; 1 refusal, reason on stderr after "coordinator guard: "; 2 usage error; hook always 0'
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The agent CLI needs a separately declared result surface to distinguish success, refusal and usage error without conflating it with command arguments."
+notes = """No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."""

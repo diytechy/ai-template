@@ -291,3 +291,10 @@ context_reset_pct = 0            # e.g. 55
 retain_for = ["disposition", "amendment", "red-tc"]
 keepwarm_minutes = 0             # e.g. 50
 reset_on_same_artifact = false
+
+[coordinator]
+# The coordinator context guard (WI-822). The shipped template's [coordinator]
+# header carries the full reasoning. This repo's coordinator runs a 1M-context
+# model, and the owner set the latch at half of it (2026-10-04).
+context_guard_pct = 50
+context_window_tokens = 1000000

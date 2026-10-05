@@ -124,7 +124,11 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # (IF-243) and the merge-slot intake's recovery sweep (IF-244), each run by
     # the person operating the process by hand. The retirement records (IF-257)
     # joined them, as did the command that writes them (IF-258): the adopter's
-    # session runs it and looks a record up.
+    # session runs it and looks a record up. The coordinator context guard
+    # added four facing the agent CLI: its hook input (IF-274) and response
+    # (IF-275), the session environment it reads (IF-277) and its own command
+    # line, run from the coordinator's session (IF-280), and its exit code
+    # (IF-281).
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -143,5 +147,10 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-244",
         "IF-257",
         "IF-258",
+        "IF-274",
+        "IF-275",
+        "IF-277",
+        "IF-280",
+        "IF-281",
     ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

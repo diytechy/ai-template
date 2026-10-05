@@ -164,6 +164,7 @@ from pathlib import Path
 
 import agent_common as ac
 import bookkeeping
+import coordinator_guard
 import score_reviews
 import spec_move
 from kitlib import authority as _kitauthority
@@ -786,7 +787,7 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     and the next thing to bar it is a lane's §A2 refresh. Accepted for the
     window it buys, not because nothing is given up.
 
-    Implements: SR-156, LLR-140, LLR-151
+    Implements: SR-156, SR-229, LLR-140, LLR-151, LLR-300
     """
     wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     # The ladder runs BEFORE the lock: the lock protects the WRITES, and the
@@ -795,7 +796,13 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     # sits outside every bookkeeping scope, so the claim commit never stages it
     # on a repo whose ignore rules predate out/ (WI-381's hazard, no longer
     # un-staged after the fact).
-    refusal = _claim_refusal(root, wi_ids, branch)
+    #
+    # The coordinator context guard (WI-822) runs first and binds every route
+    # to a claim but the live dispatcher's, which has its own protection: a
+    # wrapper, an import and the CLI all land here. Off (no read, no refusal)
+    # while `[coordinator] context_guard_pct` is 0.
+    guarded = None if dispatch_lock_held else coordinator_guard.claim_refusal(root)
+    refusal = guarded or _claim_refusal(root, wi_ids, branch)
     if refusal:
         return fail(refusal)
     _done_when_warning(root, wi_ids)

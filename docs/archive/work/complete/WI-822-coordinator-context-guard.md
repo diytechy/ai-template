@@ -2,11 +2,15 @@
 id = "WI-822"
 title = "Coordinator context guard: at 50% context, stop new lanes, close out, hand off, relaunch at session end"
 workstream = "process"
-specref = "docs/specs/WI-822.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 9
 +++
+
+## Deliverable
+
+`coordinator_guard.py` is the coordinator context guard, shipped dormant (`[coordinator] context_guard_pct = 0` in the template; this repo's dial is 50). It reads the coordinator's context occupancy from the newest valid post-compaction usage in its transcript, holds one coordinator lease under the primary checkout (passed only to a relaunched successor or by the owner's recorded release), latches drain mode at the threshold, and refuses every guarded claim route (integrate's claim, CLI and wrapper; the live dispatcher's route is outside it, D-001) from a non-holder or after the latch. At the holder's true session end it relaunches a successor from the handoff's session prompt through the repo's launchers, restoring the request on any launch failure, under the store lock it already holds. The hook registration (`.claude/settings.json`) and the launchers (`scripts/coordinator-relaunch.{cmd,sh}`) stay this repo's until a live relaunch is verified (D-002). Rows: SR-229, SR-230, LLR-300, LLR-301, TC-315 to TC-318 approved and LLR-140, LLR-270 re-attested in the lane (act seq 33; verdicts 003 to 005 in `docs/reviews/wi-822-context-guard/`); IF-271 to IF-275 and IF-277 to IF-281 declared. Codex 6.1 Sol: four rounds, the last SOUND. Decisions: `docs/decisions/wi-822.toml`.
 
 ## Context
 
@@ -28,7 +32,7 @@ protection (`agent-resume`, `agent_loop.py`) is a separate path the owner is tes
 elsewhere.
 
 The design (what Claude Code provides, the five parts, and the scope) is the spec
-of record, [docs/specs/WI-822.md](../../../specs/WI-822.md).
+of record, [docs/specs/WI-822.md](../../specs/WI-822.2026-10-05.md).
 
 ## Done-when
 

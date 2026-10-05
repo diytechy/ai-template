@@ -404,3 +404,28 @@ keepwarm_minutes = 0             # e.g. 50
 # false: continuity across a worker round trip on the SAME item is the layer's
 # purpose; true restores the strict posture at the cost of that continuity.
 reset_on_same_artifact = false
+
+[coordinator]
+# COORDINATOR CONTEXT GUARD (opt-in, ships OFF). An interactive Claude Code
+# coordinator session that runs many lanes grows its context until compaction
+# degrades it. With the guard on, one coordinator session holds a lease (under
+# the primary checkout's untracked out/coordinator/); its own transcript is
+# measured on its tool, prompt and stop events, and the first reading at or
+# above the threshold LATCHES drain mode: the work-item claim refuses, and the
+# session is told to stop starting lanes, bring in-flight rows to a safe point,
+# write its handoff and request a relaunch, which runs at its session end. The
+# latch never clears on a lower reading; only the relaunched successor's lease
+# take or the owner's recorded clear clears it, and no lease ever passes
+# because time went by. Claude Code only; the procedure is the session-protocol
+# skill's.
+#
+# Percent of the context window at which drain mode latches. 0 = OFF: claims
+# behave exactly as without the guard, no lease is read or required, and its
+# hooks do nothing.
+context_guard_pct = 0            # e.g. 50
+# The coordinator model's context window, in tokens. Occupancy is the newest
+# assistant reply's input plus cache-read plus cache-creation tokens over this
+# number. Claude Code exposes no percentage of its own, so declare the window
+# of the model the coordinator runs (200000 is the standard window; a 1M-context
+# model declares 1000000).
+context_window_tokens = 200000

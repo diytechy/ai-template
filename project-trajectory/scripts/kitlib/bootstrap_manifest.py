@@ -663,6 +663,9 @@ MAPPING = [
     # record); the loop and the dual-plan runner import it as a sibling.
     ("scripts/session_service.py", "scripts/session_service.py"),
     ("scripts/session_keep.py", "scripts/session_keep.py"),
+    # The coordinator context guard (WI-822): integrate.claim imports it;
+    # dormant at the shipped `[coordinator] context_guard_pct = 0`.
+    ("scripts/coordinator_guard.py", "scripts/coordinator_guard.py"),
     # WI-545's behavior seams keep the session briefs and declared-policy
     # decisions behind the small coordinator facades that consume them.
     ("scripts/agent_brief.py", "scripts/agent_brief.py"),
