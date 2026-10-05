@@ -2179,7 +2179,7 @@ def _text_changes(root, base, head):
     `Status` and the id excepted, or `added` / `removed` for a whole row. Keyed
     on the registry constant, so the two sides of a carrier change still join.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     out = set()
     for _carrier, id_col, before, after, rel in _spine_row_sides(
@@ -2198,7 +2198,7 @@ def _row_text_moves(was, now, id_col):
     row on one side only, else each cell that differs, `Status` and the id
     excepted.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     if was is None or now is None:
         return ["removed" if now is None else "added"]
@@ -2215,7 +2215,7 @@ def text_then_act_lines(root, bases, head=None):
     is not the lane's. `[]` when the commit writes no record, or changes only
     `Status`. A diff git cannot read is a line, never a skip.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     writes, changes = None, None
     for base in bases:
@@ -2247,7 +2247,7 @@ def commit_text_then_act_lines(root, rev):
     commit has no text before it and answers `[]`; a parent the repository
     cannot read is refused by name.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     parents, unread = _commit_parents(root, rev, "it mixes text and the act")
     if unread or not parents:
@@ -2270,7 +2270,7 @@ def staged_text_then_act_lines(root, squashed=()):
     are those differing from both HEAD and the squashed tip. Before the first
     commit there is no text before the act, and nothing is judged.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     head = (_git(root, ["rev-parse", "--verify", "--quiet", "HEAD"]) or "").strip()
     if not head:
