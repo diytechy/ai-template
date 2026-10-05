@@ -137,6 +137,12 @@ two trees in both places. It decides only that mechanical condition: whether
 the change carries the ruling, and whether a row's other fields must move, is
 the reviewer's judgement.
 
+The same rule couples the owner's OVERRULE of a delegated decision to work
+(WI-818): a commit that sets a decisions-record entry `owner = "overruled"`
+must, in the same diff, file or amend a queued or active work item whose spec
+cites the entry (`overrule_sync_lines`, read by `ruling_sync_lines`, so both
+places ask it with no second step or rung).
+
 TEXT THEN ACT (WI-806; OI-101 Q2, amended for landings by the owner's README
 Q-8 answer) is the fourth: a commit that writes the approval record changes, as
 its own, no cell of an approval-act row but `Status` and adds or removes no row
@@ -152,6 +158,7 @@ from pathlib import PurePosixPath
 try:
     import spine_carrier
     from kitlib import authority as _kitauthority
+    from kitlib import decisions as _kitdecisions
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
@@ -162,6 +169,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
     from kitlib import authority as _kitauthority
+    from kitlib import decisions as _kitdecisions
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
@@ -2034,7 +2042,7 @@ def ruling_sync_lines(root, base, head=None):
     row's Done-when (non-empty afterwards, and its raw section changed) nor
     closes or removes the row. The registry is read through either carrier.
     `[]` when nothing leaves `pending`. A diff git cannot read is a line,
-    never a skip.
+    never a skip. The diff's overrules are judged too (`overrule_sync_lines`).
 
     Implements: SR-148, LLR-298
     """
@@ -2046,15 +2054,18 @@ def ruling_sync_lines(root, base, head=None):
             "cannot read the diff against {}, so whether it rules an open item "
             "is unknown".format(base)
         ]
-    if not set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(names.splitlines()):
-        return []
+    changed = names.splitlines()
     try:
-        return _judged_lines(root, base, head)
+        lines = []
+        if set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(changed):
+            lines = _judged_lines(root, base, head)
+        return lines + overrule_sync_lines(root, base, head, changed)
     except _UnreadableBlob as exc:
         return [
             "{} is listed in its tree but its contents cannot be read (a partial "
             "clone offline or a damaged object store), so whether this commit "
-            "rules an open item is unknown; fetch it and retry".format(exc)
+            "rules an open item or overrules a decision is unknown; fetch it and "
+            "retry".format(exc)
         ]
 
 
@@ -2099,6 +2110,62 @@ def _sync_lines(root, base, head, ruled):
                 )
             )
     return lines
+
+
+# --- THE OVERRULE SYNC: an overrule files or amends its work (WI-818) --------
+# The owner's overrule of a delegated decision is coupled to work the way a
+# ruling is coupled to its citing row: one commit against its parent. The
+# trigger is the record's state (an entry overruled in the new tree and not in
+# the parent's); the act is a queued or active spec this same diff adds or
+# changes whose new text cites the entry. A citation in a row the diff leaves
+# untouched discharges nothing, and an archived row is not work to do.
+_OPEN_WORK_DIRS = (WORK_DIR + "/queued/", WORK_DIR + "/active/")
+
+
+def _open_spec(path):
+    """Is `path` a queued or active work item spec (not the `-000` example)?
+
+    Implements: SR-225, LLR-303
+    """
+    name = path.rsplit("/", 1)[-1]
+    return (
+        path.startswith(_OPEN_WORK_DIRS)
+        and name.startswith("WI-")
+        and name.endswith(".md")
+        and not "-".join(name.split("-")[:2]).endswith("-000")
+    )
+
+
+def overrule_sync_lines(root, base, head, changed):
+    """One line per entry the diff `base` -> `head` (`head` None is the index)
+    overrules without filing or amending a queued or active work item that
+    cites it as `docs/decisions/<run>.toml#D-NNN`; `changed` is the diff's
+    paths. `[]` when no record in the diff gains an overrule. A side that does
+    not parse overrules nothing (`kitlib.decisions.newly_overruled`).
+
+    Implements: SR-225, LLR-303
+    """
+    new_prefix = ":" if head is None else head + ":"
+    owed = [
+        _kitdecisions.citation(rel, eid)
+        for rel in changed
+        if rel.startswith(_kitdecisions.DECISIONS_DIR + "/") and rel.endswith(".toml")
+        for eid in _kitdecisions.newly_overruled(
+            _show(root, base + ":", rel), _show(root, new_prefix, rel)
+        )
+    ]
+    if not owed:
+        return []
+    cited = set()
+    for path in filter(_open_spec, changed):
+        cited |= _kitdecisions.citations(_show(root, new_prefix, path))
+    return [
+        "{} is overruled by this commit, and no queued or active work item it "
+        "files or amends cites it: the overrule's commit files a work item, or "
+        "amends the queued one the decision was scoped to, citing {}".format(c, c)
+        for c in owed
+        if c not in cited
+    ]
 
 
 def staged_ruling_sync_lines(root):

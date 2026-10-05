@@ -327,29 +327,58 @@ def open_item_queue(root):
 
 
 def decisions_to_review(root):
-    """`(entries, findings, reviewed)` over every delegated-decisions record
-    under `docs/decisions/`: the entries not marked reviewed, each the
-    `kitlib.decisions.review_queue` dict plus its `file` (repo-relative), with
-    every record's high-risk entries first, then by file and id; each record's
-    format findings, prefixed by its file; and how many entries are marked
-    reviewed. `None` for `entries` when the directory is absent: a repo that
-    never records decisions has nothing to review, which is not the same claim
-    as having reviewed everything.
+    """`(entries, overruled, findings, confirmed)` over every delegated-decisions
+    record under `docs/decisions/`: the entries not yet seen and the entries
+    overruled, each the `kitlib.decisions.review_queue` dict plus its `file`
+    (repo-relative), every record's high-risk entries first, then by file and
+    id, an overruled entry also carrying `citing`, the `(WI id, state folder)`
+    of every work item whose spec cites it (`citing_rows`); each record's
+    format findings, prefixed by its file; and how many entries are confirmed.
+    `None` for `entries` when the directory is absent: a repo that never
+    records decisions has nothing to review, which is not the same claim as
+    having confirmed everything.
 
     Implements: SR-225, LLR-283
     """
     folder = Path(root) / DECISIONS_REL
     if not folder.is_dir():
-        return None, [], 0
-    entries, findings, reviewed = [], [], 0
+        return None, [], [], 0
+    entries, overruled, findings, confirmed = [], [], [], 0
     for path in sorted(folder.glob("*.toml")):
         rel = "{}/{}".format(DECISIONS_REL, path.name)
         text = path.read_text(encoding="utf-8")
-        shown, count = _kitdecisions.review_queue(text)
-        reviewed += count
-        entries += [dict(e, file=rel) for e in shown]
+        unseen, over, count = _kitdecisions.review_queue(text)
+        confirmed += count
+        entries += [dict(e, file=rel) for e in unseen]
+        overruled += [dict(e, file=rel) for e in over]
         findings += [
             "{}: {}".format(rel, f) for f in _kitdecisions.record_findings(text)
         ]
-    entries.sort(key=lambda e: (not e["high_risk"], e["file"]))
-    return entries, findings, reviewed
+    if overruled:
+        cited = citing_rows(root)
+        for e in overruled:
+            e["citing"] = cited.get(_kitdecisions.citation(e["file"], e["id"]), [])
+    for listed in (entries, overruled):
+        listed.sort(key=lambda e: (not e["high_risk"], e["file"]))
+    return entries, overruled, findings, confirmed
+
+
+def citing_rows(root):
+    """`{citation token: [(WI id, state folder), ...]}` over every work item
+    spec, open or archived: the state folder is the spec's directory under
+    `docs/work/` or `docs/archive/work/` (`queued`, `active`, `complete`...).
+    A `-000` example cites nothing.
+
+    Implements: SR-225, LLR-283
+    """
+    out = {}
+    for base in (Path(root) / WORK_REL, Path(root) / "docs/archive/work"):
+        for path in sorted(base.rglob("WI-*.md")) if base.is_dir() else ():
+            wid = "-".join(path.name.split("-")[:2])
+            if wid.endswith("-000"):
+                continue
+            state = path.relative_to(base).parts[0]
+            text = path.read_text(encoding="utf-8")
+            for token in sorted(_kitdecisions.citations(text)):
+                out.setdefault(token, []).append((wid, state))
+    return out
