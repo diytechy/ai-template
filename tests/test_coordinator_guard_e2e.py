@@ -194,9 +194,11 @@ def test_the_posix_launcher_runs_claude_in_the_root_with_the_prompt(tmp_path):
 
 @pytest.mark.skipif(os.name != "nt", reason="the .cmd launcher is Windows-only")
 def test_the_windows_launcher_runs_the_guards_claude_step_in_the_root(tmp_path):
-    work = tmp_path / "work"
+    work = tmp_path / "root with spaces"
     scripts = work / "project-trajectory" / "scripts"
     scripts.mkdir(parents=True)
+    (work / "scripts").mkdir()
+    shutil.copy(ROOT / "scripts" / "coordinator-relaunch.cmd", work / "scripts")
     record = tmp_path / "record.json"
     (scripts / "coordinator_guard.py").write_text(
         "import json, os, sys\njson.dump({{'cwd': os.getcwd(), 'argv': sys.argv[1:], "
@@ -205,11 +207,12 @@ def test_the_windows_launcher_runs_the_guards_claude_step_in_the_root(tmp_path):
         ),
         encoding="utf-8",
     )
-    launcher = _launcher(tmp_path, "coordinator-relaunch.cmd")
-    prompt = tmp_path / "prompt.txt"
+    prompt = work / "out" / "prompt.txt"
     env = _env(PATH=os.path.dirname(sys.executable) + os.pathsep + os.environ["PATH"])
+    # The exact command line the guard launches, from a root with spaces.
+    _, line, _ = guard.launch_command(work, prompt, "tok123", "nt")
     proc = subprocess.run(
-        ["cmd", "/c", str(launcher), str(work), str(prompt), "tok123"],
+        line,
         capture_output=True,
         encoding="utf-8",
         env=env,

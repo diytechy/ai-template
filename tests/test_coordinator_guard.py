@@ -841,6 +841,34 @@ def test_a_foreign_request_is_refused_and_reported(
     assert list(guard.lease_dir(root).glob("relaunch.*.refused"))
 
 
+def test_a_windows_root_with_spaces_keeps_every_part_quoted(tmp_path):
+    root = tmp_path / "root with spaces"
+    _, line, _ = guard.launch_command(root, root / "out" / "p.txt", "tok", "nt")
+    launcher = root / "scripts" / "coordinator-relaunch.cmd"
+    assert " " in str(launcher)
+    assert line == 'cmd /d /s /c ""{}" "{}" "{}" "tok""'.format(
+        launcher, root, root / "out" / "p.txt"
+    )
+
+
+def test_a_failed_token_save_restores_the_request(root, tx, tmp_path, monkeypatch):
+    _ready(root, tx, tmp_path)
+    real = guard._save
+
+    def disk_full(directory, lease):
+        if lease.get("successor_token"):
+            raise OSError(28, "No space left on device")
+        return real(directory, lease)
+
+    monkeypatch.setattr(guard, "_save", disk_full)
+    launch = Launches()
+    end = ev("SessionEnd", reason="logout")
+    assert guard.session_end(root, end, launch=launch) is False
+    monkeypatch.undo()
+    assert launch.calls == []
+    _assert_restored(root)
+
+
 @pytest.mark.parametrize(
     "os_name, shell, launcher",
     [
@@ -863,12 +891,18 @@ def test_the_launcher_runs_detached_in_the_repo_root(
         grace=0,
     )
     ((argv, kw),) = seen
-    assert argv[0] == shell and argv[-4:] == [
-        str(tmp_path / "scripts" / launcher),
-        str(tmp_path),
-        str(tmp_path / "p.txt"),
-        "tok",
-    ]
+    if os_name == "nt":
+        assert argv == 'cmd /d /s /c ""{}" "{}" "{}" "tok""'.format(
+            tmp_path / "scripts" / launcher, tmp_path, tmp_path / "p.txt"
+        )
+    else:
+        assert argv == [
+            shell,
+            str(tmp_path / "scripts" / launcher),
+            str(tmp_path),
+            str(tmp_path / "p.txt"),
+            "tok",
+        ]
     assert kw["cwd"] == str(tmp_path)
     handles = {"stdin", "stdout", "stderr"}
     if os_name == "nt":  # the new console's own handles stay the successor's
