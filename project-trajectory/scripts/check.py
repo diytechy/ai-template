@@ -1987,7 +1987,7 @@ def _text_then_act_refusal(root="."):
     (each `commit <id>` header line, newest first), since the two-tree module
     reads no file.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
         return None
@@ -2011,7 +2011,7 @@ def _text_then_act_mode(args):
     """The `--text-then-act` entry point, `_ruling_sync_mode`'s shape: EXIT 1
     printing the refusal, or 0.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     if not args.text_then_act:
         return

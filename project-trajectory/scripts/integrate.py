@@ -1336,7 +1336,7 @@ def _text_then_act_refusal(root, branch):
     whole; its landing commit is not held to the rule, because the rule has
     held on every commit it carries. Every lane, whoever runs the slot.
 
-    Implements: SR-140, LLR-178
+    Implements: SR-140, LLR-302
     """
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 
@@ -1357,7 +1357,7 @@ def _each_lane_commit(root, branch, reading, judge):
     string when git cannot list the range, which is never a skip. The one walk
     the per-commit rungs share.
 
-    Implements: SR-148, LLR-298
+    Implements: SR-148, SR-140, LLR-298, LLR-302
     """
     code, out = ac.git(
         root, "rev-list", "--reverse", "--topo-order", _head(root) + ".." + branch
