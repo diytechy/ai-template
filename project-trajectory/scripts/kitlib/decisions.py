@@ -15,7 +15,8 @@ be undone, still goes to the owner through the process's exits.
 ONE FILE PER RUN (`DECISIONS_DIR/<run>.toml`), named by the lane's branch, so
 two lanes never write one file and the directory is never a merge-conflict
 surface, the way the log's per-branch fragments are not. A branch name's `/`
-becomes `-`, so a run is always ONE file and never a directory.
+and `#` become `-`, so a run is always ONE file, never a directory, and its
+citation splits only one way.
 
 THE OWNER'S VERDICT IS ONE KEY, AND AN OVERRULE IS ACTED ON (WI-818). A
 decision is a direction already taken, so the owner does not approve it: the
@@ -63,8 +64,8 @@ Contracts: IF-255, IF-256 — the seams this module declares (process.md §8; ro
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-255: the delegated-decisions record, as a FILE. One TOML file per
-    delegated run at `docs/decisions/<run>.toml`, a `/` in the run's name
-    becoming `-`, committed on the lane's branch by the session that made the
+    delegated run at `docs/decisions/<run>.toml`, a `/` or `#` in the run's
+    name becoming `-`, committed on the lane's branch by the session that made the
     calls and read off that branch's tree by the merge slot. A top-level
     `high_risk` list of entry ids names the entries the writer judges deserve
     the owner's eyes first (empty when none). Each decision is a table
@@ -152,16 +153,22 @@ _RETIRED_FALSE = frozenset({"false", "no", "n", "0", ""})
 
 # THE RUN-NAME ALPHABET, one definition for the path's producer and the
 # citation's reader: the characters a run name can NOT keep in its record's
-# filename. They are `/` (a run is one file, never a directory) and what git
-# refuses in any branch name (whitespace, control characters, `~ ^ : ? * [ \`),
-# so every other character a valid branch carries (`+`, `@`, `.`, non-ASCII
-# letters) is kept by `record_path` and matched by the citation reader.
+# filename. They are exactly what git refuses in any branch name, one
+# character at a time (git-check-ref-format(1): the ASCII control characters,
+# space and DEL, and `~ ^ : ? * [ \`), plus the two delimiters a branch may
+# carry: `/` (a run is one file, never a directory) and `#` (the citation's
+# delimiter, so a citation splits only one way). An explicit ASCII class,
+# never `\s`: git permits Unicode whitespace (U+00A0), so `record_path` keeps
+# it. Every other character a valid branch carries (`+`, `@`, `.`, non-ASCII)
+# is kept by `record_path` and matched by the citation reader.
 # Implements: SR-225, LLR-283
-_RUN_EXCLUDED = r"/\s\\~^:?*\[\x00-\x1f\x7f"
+_RUN_EXCLUDED = r"/#\x00-\x20\x7f~^:?*\[\\"
 _NOT_RUN_CHAR_RE = re.compile("[" + _RUN_EXCLUDED + "]")
 
 # How a work item cites one entry: the record's repo-relative path, `#`, and
 # the entry id, a digit never following (so `#D-01` does not match `#D-012`).
+# The path's class excludes `#`, so the first `#` after `docs/decisions/` ends
+# the path: one parse, whatever the run's name.
 _CITATION_RE = re.compile(
     r"(docs/decisions/[^" + _RUN_EXCLUDED + r"]+?\.toml)#(D-\d+)(?!\d)"
 )
@@ -170,7 +177,7 @@ _CITATION_RE = re.compile(
 def record_path(run):
     """The repo-relative path of one run's record: `DECISIONS_DIR/<run>.toml`,
     each character of the run's name outside the run-name alphabet becoming
-    `-` — for a branch name, that is only its `/`.
+    `-` — for a branch name, only its `/` and `#`.
 
     Implements: SR-225, LLR-283
     """

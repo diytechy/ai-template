@@ -402,3 +402,35 @@ def _unreadable_citing_spec_blob_is_refused(tmp_path):
     _drop_blob(root, base, spec)
     (line,) = ar.staged_ruling_sync_lines(root)
     assert spec in line and "cannot be read" in line
+
+
+# --- Sol round 3, MAJOR 3: a citing row whose path is not UTF-8 ----------------
+
+
+def test_a_citing_row_whose_path_is_not_utf8_is_refused_never_skipped(tmp_path):
+    # The open-item arm lists the specs through the same lossless reader and
+    # reads them through the same blob reader: a citing row git names with a
+    # non-UTF-8 byte is refused by name, never dropped from the citing set.
+    root = _repo(tmp_path / "repo")
+    _items(root, OI_5="pending")
+    spec = _spec(root, "WI-001", ["OI-5"], "- OI-5 is ruled.")
+    text = spec.read_text(encoding="utf-8")
+    spec.unlink()
+    sha = subprocess.run(
+        ["git", "-C", str(root), "hash-object", "-w", "--stdin"],
+        input=text.encode(),
+        capture_output=True,
+        check=True,
+    ).stdout.strip()
+    subprocess.run(
+        ["git", "-C", str(root), "update-index", "--add", "-z", "--index-info"],
+        input=b"100644 " + sha + b"\tdocs/work/queued/WI-001-r\xe9.md\0",
+        capture_output=True,
+        check=True,
+    )
+    _git(root, "add", "--", OI)
+    _git(root, "commit", "-q", "--no-verify", "-m", "base")
+    _items(root, OI_5="ruled")
+    _git(root, "add", "--", OI)
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert "WI-001-r\\xe9.md" in line and "not UTF-8" in line
