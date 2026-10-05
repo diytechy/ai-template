@@ -2,11 +2,15 @@
 id = "WI-806"
 title = "Spine text before the act, enforced on every lane commit"
 workstream = "process"
-specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-text-then-act"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+A new `text-then-act` step refuses, at the pre-commit hook and again in the merge slot on each lane commit against its parents, any commit that writes the approval record while changing an approval-act row's text (a non-Status cell, or an added or removed row): spine text is committed before the act that blesses it. A merge counts only what neither parent carried; an unreadable parent or diff is refused by name; a root commit passes. A squash landing is exempt only when HEAD is an ancestor of the tip `SQUASH_MSG` names and the staged approval-act registries and record equal the tip's own (each squashed commit is then judged); otherwise it is judged plainly, with a hint to rebase the lane first. The independent adjudicator ACCEPTED the one residue (an abandoned squash's next commit carrying exactly the tip's bytes, a one-commit window) with no code change, and rejected Luna's IF-129 MAJOR (IF-129: nothing to amend; the retired phrase lived only in warning text the build changed) and first-parent MINOR (`docs/reviews/wi-806-text-then-act/dispute-1-ruling.md`). Rows: LLR-302 approved and LLR-173, LLR-245, TC-173 re-attested in the lane (act seq 34; verdicts 005 and 006); LLR-298's code_symbol follows the shared lane-commit walk. Codex 6.1 Sol: three rounds (a BLOCKER twice, fixed), Luna one. SN-029 (owner-held) is now untrue in one clause each of acceptance and why: filed as a pending open item with its placeholder row. Decisions: `docs/decisions/wi-806.toml`.
 
 ## Context
 

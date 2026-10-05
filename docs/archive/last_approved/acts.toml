@@ -201,3 +201,10 @@ seq = 33
 date = "2026-10-05"
 approved = ["LLR-300", "LLR-301", "SR-229", "SR-230", "TC-315", "TC-316", "TC-317", "TC-318"]
 reattested = ["LLR-140", "LLR-270"]
+
+[[act]]
+seq = 34
+date = "2026-10-05"
+approved = ["LLR-302"]
+reattested = ["LLR-173", "LLR-245", "TC-173"]
+verdict = "docs/reviews/wi-806-text-then-act/006-ADJUDICATE-0d714f9.md"

@@ -1,0 +1,61 @@
+# docs/decisions/wi-806.toml — WI-806's delegated decisions record (S788-text-then-act;
+# OI-101 Q2, its trunk scope amended for landings by the owner's README Q-8 answer,
+# 2026-10-04). Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-004"]
+
+[decision.D-001]
+decided = "The rule's universe is acceptance_record.APPROVAL_ACT_CSVS: SR, LLR, TC, SN and the assumptions registry's DA and SUR tiers. A commit writing docs/archive/last_approved/ that also changes an interface, frame or component row is not refused by this rule."
+alternative = "Walk every SNAPSHOTTED registry, the three off-spine ones (interfaces, external, components) included, since the copy blesses their text too."
+reversal_cost = "Widen one argument of _spine_row_sides in _text_changes plus the off-spine tiers' id columns; tests for an IF row beside the act."
+why_not_escalated = "The ruling says 'no spine cell except Status', and APPROVAL_ACT_CSVS is the kit's existing boundary for which tiers an approval act blesses (OUTSIDE_THE_APPROVAL_ACT records the off-spine three as OI-30 D3's, by ruling). Widening past the ruling's word is the owner's call; the gap is named here and in the report."
+review = ""
+
+[decision.D-002]
+decided = "Every cell counts, traced cells (Module, CodeSymbol, SN-Refs, ...) included: an act commit carrying a re-pointed traced cell is refused, and the re-point lands in the text commit before it."
+alternative = "Judge only the approved half of split_changed_cells, letting traced re-points ride the act as 'traced-cell refreshes stay cheap' did."
+reversal_cost = "Filter _text_changes through spine_cell_class; one line and one test."
+why_not_escalated = "Risk 6 reads 'change no spine cell except Status'. The cost is one extra commit when a re-point and an act coincide; the snapshot copies traced cells byte for byte, so they are text the act blesses."
+review = ""
+
+[decision.D-003]
+decided = "A merge commit (a lane's refresh, or a merge in progress at the hook) is judged by what NEITHER parent carried: a record path, cell or row counts only when it differs from every parent."
+alternative = "Judge every commit against its first parent only, as the ruling-sync rung does."
+reversal_cost = "Pass parents[:1] in commit_text_then_act_lines and drop MERGE_HEAD from the staged bases."
+why_not_escalated = "First-parent only would refuse every lane whose refresh merges in trunk's own text commit and act commit together, which the rule exists to require, so it would block the two-commit form it mandates. The held-status rung already judges a merge this way (merge_status_moves); an evil merge's own changes are still caught."
+review = ""
+
+[decision.D-004]
+decided = "The landing's squash is exempt at the hook by verification, not by trust. While git's own SQUASH_MSG names a squashed tip, the exemption holds only when HEAD is an ancestor of that tip (the lane was rebased onto trunk, as acts serialize and integrate's own trunk_is_ancestor already requires) AND the index's approval-act registries and record are byte-equal to the tip's own; then each commit HEAD..tip is judged against its parents, as the slot does, and the index is not. Otherwise the index is judged like any commit, and a refusal ends with a hint to rebase the lane onto trunk first. check.py reads SQUASH_MSG; acceptance_record takes the tip. Amended twice after Sol REVIEW-A: r1 (MAJOR) found the first build's intersection of the index's changes against HEAD and the tip let a SQUASH_MSG left by an abandoned squash exempt a different direct commit; r2 (BLOCKER) found the round-1 rule (equality to `git merge-tree --write-tree` of the tip into HEAD) admitted a squash that git combined, from a trunk and a lane each editing a different line of one multiline cell, into a THIRD cell value no judged commit carried. The merge-tree dependency (git 2.38+) is dropped, not kept beside this rule."
+alternative = "(a) No hook exemption, so a hand landing of an act-taking lane needs --no-verify; (b) exempt any commit while SQUASH_MSG exists; (c) also refuse a hand-typed commit whose spine and record are byte-identical to the lane tip's; (d) round 1's rule, equality to git's merge of the tip into HEAD, which needs git 2.38 and admits a combined third value; (e) require the landing to introduce no cell value beyond the two judged trees, a per-cell three-way comparison."
+reversal_cost = "Drop the squashed argument, `_squash_lines`, `SQUASH_REBASE_HINT` and the SQUASH_MSG read: about twenty lines and four tests."
+why_not_escalated = "Q-8 exempts the landing squash because the guard held on every lane commit, and a coordinator's hand landing never meets the merge slot, so only re-judging those commits makes that premise true there. Requiring a tip that contains HEAD makes the premise exact rather than approximate: the squash of a refreshed lane is its tip's tree for these files, so every staged spine and record byte is a judged commit's, a combined value included (the refresh carries it as its own judged commit). (e) would rebuild a merge check beside git's; a lane must be rebased before its act anyway, so it adds nothing. RESIDUE, left deliberately and narrowed: after an abandoned squash whose tip contains HEAD, a direct commit whose approval-act registries and record are byte-identical to that TIP's own is still exempt. Every byte of it was committed and judged in the lane, and the window is one commit: git deletes SQUASH_MSG at the next commit, and once trunk moves the tip no longer contains HEAD. Nothing at commit time tells it apart from the squash itself (git keeps no other squash state); option (c) would need a provenance record, which the owner's 'enforce at the commit, no marker convention' rule rules out. Any other spine text or record content beside it is judged plainly. High-risk for the owner's look because it keys hook behaviour on SQUASH_MSG; the residue is Sol's retained MAJOR, for the adjudicator."
+review = ""
+
+[decision.D-005]
+decided = "A root commit, and the staged tree before the first commit, are not judged: there is no earlier commit the text could have been read in."
+alternative = "Judge a root commit against the empty tree, refusing a first commit that both adds rows and seeds the record."
+reversal_cost = "Use _empty_tree as the base in two places."
+why_not_escalated = "The ruling-sync rule answers a root commit the same way; a first commit carrying a seeded record is a bootstrap shape the separation cannot improve."
+review = ""
+
+[decision.D-006]
+decided = "The amend-plus-flip allowance retires in code as well as in text: refresh_ledger no longer short-circuits a flipped row and _unattested_rows no longer subtracts flips. Behaviour is unchanged, because a flipped row's copy reads below approval and is never absorbed; a flip now only puts its registry in the act's scope. The refusal offers two ways forward (re-attest after the text commit, or revert)."
+alternative = "Edit only the docstrings and refusal text, leaving the redundant continue and subtraction."
+reversal_cost = "Restore two lines."
+why_not_escalated = "Context names the executable allowance as retiring; verified that it is already dead (the flip clause can only fire when the copy reads below approval, which the next clause skips anyway), so removing it changes no outcome and leaves no code claiming the retired doctrine."
+review = ""
+
+[decision.D-007]
+decided = "One home per shared stage: acceptance_record._commit_parents (the commit-object parent reader) and integrate._each_lane_commit (the per-lane-commit walk) are extracted and shared by the ruling-sync and text-then-act rules. Module sizes: check.py 1259 -> 1299 and integrate.py 1531 -> 1552 re-stamped with reasons; acceptance_record.py stays under the 1000-line threshold by moving the SQUASH_MSG parse to check.py."
+alternative = "Copy the ruling-sync walk and parent reader into the new rule, or put the rule in its own new module."
+reversal_cost = "Inline the two helpers back."
+why_not_escalated = "CLAUDE.md's consolidate rule. A new module would add layering and bootstrap census entries for about seventy lines that belong beside the mirror rule's two-tree reads."
+review = ""
+
+[decision.D-008]
+decided = "The merge-slot rung runs after the ruling sync and before the review-scope rung, so a lane failing both the ruling sync and this rule is named for the ruling sync first."
+alternative = "Run it beside the approval-act rung, ahead of held-status."
+reversal_cost = "Move one call in _merge_refusal."
+why_not_escalated = "Both are per-commit rules over the same walk; order only decides which refusal a lane failing two rules sees first."
+review = ""

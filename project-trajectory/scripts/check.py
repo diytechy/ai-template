@@ -299,6 +299,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "approval-immutable",
         "held-status",
         "ruling-sync",
+        "text-then-act",
         "assumption-gate",
         "crossing-allocation",
         "interface-allocation",
@@ -1233,6 +1234,18 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
+        # Text then act (WI-806, OI-101 Q2 amended by README Q-8): a commit that
+        # writes the approval record changes no spine cell but `Status` and
+        # adds or removes no row, for every committer; a squash of a rebased
+        # lane passes when each commit it squashes does. The slot asks it of
+        # each lane commit, so `--no-verify` lands nothing.
+        (
+            "text-then-act",
+            (),
+            [sys.executable, str(_SCRIPTS / "check.py"), "--text-then-act"],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
         # The assumption gate (SR-205, SR-206, SR-212): one step per question,
         # each at the rung it can first be answered at, from maturity at the
         # frame to evidence at release. Steps, never stage conjuncts, so the
@@ -1964,6 +1977,50 @@ def _ruling_sync_mode(args):
     sys.exit(1 if refusal else 0)
 
 
+_HEX = frozenset("0123456789abcdef")
+
+
+def _text_then_act_refusal(root="."):
+    """The `text-then-act` step's judgement over the staged tree, or None. Off
+    git there is no commit to judge. A `git merge --squash` in progress is
+    judged by the commits it folds in, read here off git's own `SQUASH_MSG`
+    (each `commit <id>` header line, newest first), since the two-tree module
+    reads no file.
+
+    Implements: SR-140, LLR-302
+    """
+    if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
+        return None
+    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+
+    rel = (_git_out(root, ["rev-parse", "--git-path", "SQUASH_MSG"]) or "").strip()
+    path = Path(root) / rel
+    text = path.read_text(encoding="utf-8") if rel and path.is_file() else ""
+    squashed = [
+        ln[7:]
+        for ln in text.splitlines()
+        if ln.startswith("commit ") and len(ln) >= 47 and set(ln[7:]) <= _HEX
+    ]
+    lines = acceptance_record.staged_text_then_act_lines(root, squashed)
+    if not lines:
+        return None
+    return "{}: {}".format("; ".join(lines), acceptance_record.TEXT_THEN_ACT_REMEDY)
+
+
+def _text_then_act_mode(args):
+    """The `--text-then-act` entry point, `_ruling_sync_mode`'s shape: EXIT 1
+    printing the refusal, or 0.
+
+    Implements: SR-140, LLR-302
+    """
+    if not args.text_then_act:
+        return
+    refusal = _text_then_act_refusal(".")
+    msg = refusal or "no staged commit mixes spine text with the approval act"
+    print("  {:5} text-then-act  {}".format("FAIL" if refusal else "ok", msg))
+    sys.exit(1 if refusal else 0)
+
+
 def _loop_trailer_mode(args):
     """The `--loop-trailer MSGFILE` entry point, the commit-msg hook's loop
     floor (SR-209): EXIT 1 naming the commit's subject when the loop marker is
@@ -2495,6 +2552,13 @@ def main():
         "each row citing it, or closing or removing the row",
     )
     ap.add_argument(
+        "--text-then-act",
+        action="store_true",
+        help="run ONLY the 'text-then-act' step's body and exit (WI-806): refuse "
+        "a staged tree that writes the approval record while changing a spine "
+        "cell other than Status, or adding or removing a row",
+    )
+    ap.add_argument(
         "--loop-trailer",
         metavar="MSGFILE",
         help="the commit-msg hook's loop floor (SR-209): under the loop marker, "
@@ -2530,6 +2594,7 @@ def main():
     _approval_immutable_mode(args)  # exits when --approval-immutable selects it
     _held_status_mode(args)  # exits when --held-status selects it
     _ruling_sync_mode(args)  # exits when --ruling-sync selects it
+    _text_then_act_mode(args)  # exits when --text-then-act selects it
     # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow
     # it, so `resolve_stage` and `_step_stage` both see only canonical rungs.
     args.stage = (

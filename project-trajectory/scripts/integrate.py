@@ -1312,19 +1312,64 @@ def _ruling_sync_refusal(root, branch):
     """
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 
+    found = _each_lane_commit(
+        root, branch, "rulings", acceptance_record.commit_ruling_sync_lines
+    )
+    if found is None or isinstance(found, str):
+        return found
+    sha, lines = found
+    return "{} commit {}: {}; nothing was merged".format(
+        branch, sha[:10], "; ".join(lines)
+    )
+
+
+def _text_then_act_refusal(root, branch):
+    """TEXT THEN ACT AT THE SLOT (WI-806; OI-101 Q2, amended by the owner's
+    README Q-8 answer): a refusal string, or None.
+
+    Every commit of the lane, oldest first, is judged against its parents by
+    the same function the pre-commit hook runs over the staged tree
+    (`acceptance_record.commit_text_then_act_lines`): a commit that writes the
+    approval record changes no spine cell but `Status` and adds or removes no
+    row. A merge is judged by what neither parent carried, so a refresh that
+    brings in trunk's own text and act is not the lane's. The lane then lands
+    whole; its landing commit is not held to the rule, because the rule has
+    held on every commit it carries. Every lane, whoever runs the slot.
+
+    Implements: SR-140, LLR-302
+    """
+    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
+
+    found = _each_lane_commit(
+        root, branch, "text and act", acceptance_record.commit_text_then_act_lines
+    )
+    if found is None or isinstance(found, str):
+        return found
+    _sha, lines = found
+    return "{}: {}: {}; nothing was merged".format(
+        branch, "; ".join(lines), acceptance_record.TEXT_THEN_ACT_REMEDY
+    )
+
+
+def _each_lane_commit(root, branch, reading, judge):
+    """The first lane commit, oldest first, that `judge(root, sha)` returns
+    lines for, as `(sha, lines)`; None when every commit passes; a refusal
+    string when git cannot list the range, which is never a skip. The one walk
+    the per-commit rungs share.
+
+    Implements: SR-148, SR-140, LLR-298, LLR-302
+    """
     code, out = ac.git(
         root, "rev-list", "--reverse", "--topo-order", _head(root) + ".." + branch
     )
     if code != 0:
-        return "cannot read {}'s commits to check their rulings; nothing was merged:\n{}".format(
-            branch, ac._failure_tail(out)
+        return "cannot read {}'s commits to check their {}; nothing was merged:\n{}".format(
+            branch, reading, ac._failure_tail(out)
         )
     for sha in out.split():
-        lines = acceptance_record.commit_ruling_sync_lines(root, sha)
+        lines = judge(root, sha)
         if lines:
-            return "{} commit {}: {}; nothing was merged".format(
-                branch, sha[:10], "; ".join(lines)
-            )
+            return sha, lines
     return None
 
 
@@ -2939,9 +2984,11 @@ def _merge_refusal(root, branch, wi_ids):
     refusal = _held_status_refusal(root, branch)  # SR-208
     if refusal:
         return outcomes, refusal
-    refusal = _loop_trailer_refusal(root, branch) or _ruling_sync_refusal(
-        root, branch
-    )  # SR-209, then the ruling sync (WI-790)
+    refusal = (
+        _loop_trailer_refusal(root, branch)
+        or _ruling_sync_refusal(root, branch)
+        or _text_then_act_refusal(root, branch)
+    )  # SR-209, then the ruling sync (WI-790), then text before act (WI-806)
     if refusal:
         return outcomes, refusal
     refusal = _review_scope_refusal(root, branch)  # S9

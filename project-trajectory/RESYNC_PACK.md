@@ -6976,6 +6976,46 @@ declares the template's sections. Nothing else is needed: the hook
 registration and the relaunch launchers stay in the kit's own repository.
 Turning the guard on needs them, so leave the dial at `0`.
 
+### Spine text before the approval act, in two commits [since 7db81c98]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A commit that writes under `docs/archive/last_approved/` may
+change no spine cell except `Status`, and may add or remove no row (the SN, SR,
+LLR and TC tiers and the assumptions registry's two). Spine text is committed
+first, on its own; the act (the `Status` flips, `intake.py snapshot`, its act
+ledger and the regenerated views) is a second commit. The flips and their copy
+still ride one commit. **Amend-plus-flip is no longer approval**: amending a
+row and approving it in the same commit is refused, and so is
+`intake.py snapshot --reattests` in the commit that carries the amendment.
+
+- A new pre-commit step, `text-then-act` (`check.py --text-then-act`), refuses
+  a mixed commit, a direct trunk commit included. A merge is judged by what
+  neither parent carried. A `git merge --squash` landing is let through only
+  when the tip named in `SQUASH_MSG` contains HEAD, its spine and record are
+  staged as that tip's own, and every commit it squashes passes; otherwise the
+  squash is judged plainly, so rebase an act-taking lane onto trunk first.
+- A new merge-slot rung judges each lane commit against its parents, so a
+  `--no-verify` commit is still refused before it lands. The lane's own
+  landing commit is not held to the rule.
+- The snapshot refresh's refusal no longer offers "flip the row in the same
+  tree", and the amend-without-flip warn now says to re-attest in the next
+  commit.
+
+**What to do.**
+
+1. Re-sync `scripts/acceptance_record.py`, `scripts/baseline_snapshot.py`,
+   `scripts/check.py`, `scripts/integrate.py`, `hooks/pre-commit` (its
+   `--run-steps` list gains `text-then-act`) and `PROCESS.md`. If your repo
+   keeps its own pre-commit hook, add `text-then-act` to its `--run-steps`
+   list.
+2. **Your held-rung approvals become two commits.** Where you used to amend a
+   row and flip it, or amend it and run `intake.py snapshot --reattests`, in
+   one signing commit, commit the amended text first (leave it `Drafted`, or
+   `Approved` for a re-attestation), then make the act its own commit. A lane
+   that already holds a mixed commit is refused at the merge slot: rewrite it
+   as two commits before it lands.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
