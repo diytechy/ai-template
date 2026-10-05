@@ -46,10 +46,13 @@ table in `docs/process.toml`); every other call starts a fresh session.
 
 ### independence
 
-A judgement never runs in a session that authored what it judges. The one
-exception is the [adjudicator](#adjudicator)'s final pass over its own spine
-draft after an [adjudication reviewer](#adjudication-reviewer) has edited it: it
-approves only if it changes nothing. Excluding a **session** is hard. Preferring
+A judgement never runs in a session that authored what it judges. There are
+two exceptions. First, the [adjudicator](#adjudicator)'s final pass over its own
+spine draft after an [adjudication reviewer](#adjudication-reviewer) has edited
+it: it approves only if it changes nothing. Second, in a decomposition round's
+selection (see [arbiter](#arbiter)), the losing drafter's concession: its vote
+for the rival plan, cast against its own interest, decides; a drafter's vote for
+its own plan carries no weight alone. Excluding a **session** is hard. Preferring
 another **family** (other than the judged author's, or the builders') is a
 ranked preference within the kind's eligible families: it is dropped only when
 the eligible families cannot meet it, so a fresh session of an eligible family
