@@ -6992,7 +6992,9 @@ row and approving it in the same commit is refused, and so is
 - A new pre-commit step, `text-then-act` (`check.py --text-then-act`), refuses
   a mixed commit, a direct trunk commit included. A merge is judged by what
   neither parent carried. A `git merge --squash` landing is let through only
-  when every commit it squashes passes, read off git's own `SQUASH_MSG`.
+  when its spine and record are git's own merge of the tip named in
+  `SQUASH_MSG` and every commit it squashes passes (`git merge-tree
+  --write-tree`, so git 2.38 or later; an older git judges the squash plainly).
 - A new merge-slot rung judges each lane commit against its parents, so a
   `--no-verify` commit is still refused before it lands. The lane's own
   landing commit is not held to the rule.

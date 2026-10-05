@@ -222,9 +222,14 @@ def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
     assert ar.commit_text_then_act_lines(root, merge) == []
     _git(root, "checkout", "-q", "main")
     assert integrate._text_then_act_refusal(root, "wi-001") is None
-    # A merge that writes text AND the record of its own is still refused.
+    # A merge that writes text AND the record of its own is still refused. A
+    # new trunk commit gives the lane something to merge, so this is a real
+    # merge in progress (MERGE_HEAD set), not a plain staged commit.
+    (root / "trunk.txt").write_text("trunk\n", encoding="utf-8")
+    _commit(root, "trunk moves on")
     _git(root, "checkout", "-q", "wi-001")
     _git(root, "merge", "-q", "--no-ff", "--no-commit", "-s", "ours", "main")
+    assert _git(root, "rev-parse", "-q", "--verify", "MERGE_HEAD")
     _rows(root, ("SR-001", "One evil", "Approved"), ("SR-002", "Two", "Drafted"))
     _act(root)
     _git(root, "add", "-A")
@@ -297,3 +302,105 @@ def test_no_refusal_text_offers_amend_plus_flip(tmp_path):
     (warn,) = ar.staged_spine_findings(root)
     assert "SR-001" in warn and "in this commit" not in warn
     assert "intake.py snapshot --reattests SR-001" in warn
+
+
+def test_a_commit_whose_parent_cannot_be_read_is_refused_by_name(tmp_path):
+    # A shallow clone holds the commit but not its parent: an unread parent is
+    # never read as a root (which would pass), it is named.
+    root = _base(tmp_path)
+    parent = _git(root, "rev-parse", "HEAD~1")
+    clone = tmp_path / "shallow"
+    _git(tmp_path, "clone", "-q", "--depth", "1", root.as_uri(), str(clone))
+    sha = _git(clone, "rev-parse", "HEAD")
+    (line,) = ar.commit_text_then_act_lines(clone, sha)
+    assert parent[:10] in line and "cannot be read" in line
+
+
+def test_a_diff_git_cannot_read_is_reported_not_skipped(tmp_path):
+    root = _base(tmp_path)
+    (line,) = ar.text_then_act_lines(root, ["0" * 40])
+    assert "0" * 40 in line and "unknown" in line
+
+
+def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
+    # Sol REVIEW-A BLOCKER: a row on the second parent alone reads "added"
+    # against the first and "Title" against the second; intersecting those
+    # labels hid a Title the merge itself wrote beside the record.
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-003")
+    _rows(
+        root,
+        ("SR-001", "One", "Approved"),
+        ("SR-002", "Two", "Drafted"),
+        ("SR-003", "Three", "Drafted"),
+    )
+    _commit(root, "lane adds SR-003")
+    _git(root, "checkout", "-q", "main")
+    (root / "trunk.txt").write_text("trunk\n", encoding="utf-8")
+    _commit(root, "trunk moves on")
+    _git(root, "merge", "-q", "--no-ff", "--no-commit", "wi-003")
+    _rows(
+        root,
+        ("SR-001", "One", "Approved"),
+        ("SR-002", "Two", "Drafted"),
+        ("SR-003", "Three edited", "Approved"),
+    )
+    _act(root)
+    _git(root, "add", "-A")
+    (line,) = ar.staged_text_then_act_lines(root)
+    assert "SR-003: Title" in line
+    _git(root, "commit", "-q", "--no-verify", "-m", "merge with its own text")
+    merge = _git(root, "rev-parse", "HEAD")
+    (line,) = ar.commit_text_then_act_lines(root, merge)
+    assert "SR-003: Title" in line
+    # The same merge carrying the lane's row unchanged, with only the flip and
+    # the copy, is the lane's text and an act: it passes.
+    _git(root, "reset", "-q", "--hard", "HEAD~1")
+    _git(root, "merge", "-q", "--no-ff", "--no-commit", "wi-003")
+    _rows(
+        root,
+        ("SR-001", "One", "Approved"),
+        ("SR-002", "Two", "Drafted"),
+        ("SR-003", "Three", "Approved"),
+    )
+    _act(root)
+    _git(root, "add", "-A")
+    assert ar.staged_text_then_act_lines(root) == []
+
+
+def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
+    # Sol REVIEW-A MAJOR: `git restore` abandons a squash but leaves git's
+    # SQUASH_MSG behind. The exemption holds only while the staged spine and
+    # record equal the squashed tip's merge with HEAD, so a different direct
+    # commit made afterwards is judged like any other.
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-002")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _commit(root, "the text")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _commit(root, "the act")
+    _git(root, "checkout", "-q", "main")
+    _git(root, "merge", "-q", "--squash", "wi-002")
+    _git(root, "restore", "--staged", ".")
+    _git(root, "restore", ".")
+    _git(root, "clean", "-q", "-fd")
+    assert (root / ".git" / "SQUASH_MSG").is_file()  # left behind
+    # The lane's own spine and record, retyped by hand, ARE its squash in
+    # content: every byte was committed and judged in the lane (D-004).
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _git(root, "add", "-A")
+    assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
+    # Any other spine text beside that record is not the lane's merge result,
+    # so the stale message exempts nothing and the commit is judged plainly.
+    llr = root / "docs/requirements/low-level-requirements.csv"
+    llr.write_text(
+        "LLR-ID,Title,Detail,Status\nLLR-001,New,the text,Drafted\n",
+        encoding="utf-8",
+    )
+    _git(root, "add", "-A")
+    (line,) = ar.staged_text_then_act_lines(root, _squashed(root))
+    assert "LLR-001: added" in line
+    proc = _step(root)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
