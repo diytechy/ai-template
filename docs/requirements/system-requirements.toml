@@ -1729,3 +1729,32 @@ verification = "Test"
 status = "Approved"
 phase = 6
 aspect = "process"
+
+
+[requirement.SR-229]
+title = "Coordinator context-drain admission"
+sn_refs = ["SN-027"]
+boundary_refs = ["B-09", "B-10"]
+hat_refs = ["INTEGRITY-RECOVERABILITY", "UNATTENDED-OPS"]
+requirement = "Where the declared coordinator context guard is enabled, the delivered work-item admission shall refuse a new claim from a session other than its live coordinator lease holder and after that holder's context occupancy reaches the declared threshold, retaining the drain state across compaction and resume until a successor takes the lease or the owner clears it."
+rationale = "SN-027 requires claiming to drain safely and recoverably. A coordinator whose context has crossed its declared limit can otherwise begin new work after compaction has degraded the context needed to close existing work, and a second or missing holder leaves claim authority ambiguous. A latched single-holder admission boundary was chosen over a one-time event observation because every claim must remain protected when an event is missed or the transcript later reports a lower reading."
+acceptance_criteria = "With the guard off, admission proceeds without guard state; with it on, a holder below the threshold may claim, while no lease, a different holder and a threshold-crossing holder each refuse with the recovery action named. Occupancy counts the newest valid post-compaction usage including cached input, and unknown usage is not zero. A latched drain survives a lower reading, compaction and resume, and clears only when the owner records a clear or the successor takes the lease."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+form = "cross-cutting"
+
+[requirement.SR-230]
+title = "Coordinator successor at session exit"
+sn_refs = ["SN-027"]
+boundary_refs = ["B-09", "B-10"]
+hat_refs = ["INTEGRITY-RECOVERABILITY"]
+requirement = "Where a coordinator lease holder has requested a relaunch and then ends in an exit state, the delivered coordination support shall start exactly one successor session from that holder's handoff."
+rationale = "SN-027 requires a recoverable lifecycle rather than a half-integrated stop. A close-out that loses its handoff strands the next coordinator, while one that can launch twice creates competing claim authority. An atomic owned request was chosen over treating every session-end event as a relaunch because clear and resume do not end the coordinator and a failed launch must remain recoverable."
+acceptance_criteria = "A request from the holder for an existing handoff launches once at an exit in the declared repository and starts from that handoff. Clear, resume, a non-holder, a subagent and a foreign request launch nothing; concurrent exit handling consumes one request once; and a failed launch restores the request."
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 6
+form = "cross-cutting"

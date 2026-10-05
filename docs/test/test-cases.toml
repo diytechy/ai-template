@@ -3173,3 +3173,48 @@ automated = "Yes"
 evidence = """tests/test_open_item_readiness.py::test_an_uncited_pending_item_is_an_error_even_with_no_work_items; tests/test_open_item_readiness.py::test_a_ruled_items_row_may_not_keep_the_registry_as_its_specref; tests/test_open_item_readiness.py::test_a_placeholder_row_passes_every_check_and_is_blocked; tests/test_open_item_readiness.py::test_a_registry_specref_must_name_an_item_the_row_cites; tests/test_open_item_readiness.py::test_the_csv_carriers_registry_specref_is_judged_too; tests/test_open_item_readiness.py::test_specref_integrity_judges_every_open_row; tests/test_open_item_readiness.py::test_a_cited_item_missing_from_the_registry_is_not_ruled; tests/test_open_item_readiness.py::test_a_registry_specref_on_a_row_citing_no_item_is_reported; tests/test_open_item_queue.py::test_an_uncited_pending_item_is_a_notice_not_a_card; tests/test_open_item_queue.py::test_the_status_snapshot_lists_the_same_projection; tests/test_ruling_sync.py::test_a_registry_specref_is_clocked_per_cited_item"""
 status = "Approved"
 phase = 6
+
+
+[test.TC-315]
+verifies = ["SR-229", "LLR-300"]
+level = "Unit"
+method = "Drive recorded transcript fixtures through the occupancy reader. Assert inclusive input counting, live-branch selection, the last compaction boundary, resume, malformed and partial records, unknown usage, mismatched windows, and bounded tail expansion."
+tier = "Smoke"
+expected = "The reader returns the newest valid post-boundary occupancy or unknown, never a false zero."
+automated = "Yes"
+evidence = "tests/test_coordinator_guard.py::test_occupancy_counts_input_cache_read_and_cache_creation;tests/test_coordinator_guard.py::test_a_branched_transcript_reads_the_live_branch;tests/test_coordinator_guard.py::test_after_compaction_only_usage_after_the_last_boundary_counts;tests/test_coordinator_guard.py::test_after_a_resume_the_newest_usage_counts_whatever_session_wrote_it;tests/test_coordinator_guard.py::test_malformed_and_partial_usage_is_skipped_to_the_newest_valid;tests/test_coordinator_guard.py::test_no_valid_usage_reads_unknown_never_zero;tests/test_coordinator_guard.py::test_a_mismatched_window_is_flagged_with_its_percent;tests/test_coordinator_guard.py::test_the_reader_reads_the_tail_and_widens_only_to_resolve"
+status = "Drafted"
+phase = 6
+
+[test.TC-316]
+verifies = ["SR-229", "LLR-300"]
+level = "Integration"
+method = "Drive holder, other-session and subagent hook payloads with controlled transcript readings and lease state. Assert a silent holder retains ownership, release and successor take transfer it, the latch survives compaction and resume, only owner clear or successor take clears it, reminders are bounded, and compaction telemetry is classified."
+tier = "Smoke"
+expected = "Exactly one coordinator owns admission and its drain state remains latched until the declared recovery action."
+automated = "Yes"
+evidence = "tests/test_coordinator_guard.py::test_a_subagent_and_another_sessions_hook_calls_are_no_ops;tests/test_coordinator_guard.py::test_a_silent_live_holder_keeps_the_lease_however_long_it_is_quiet;tests/test_coordinator_guard.py::test_the_owners_release_frees_the_lease_and_is_recorded;tests/test_coordinator_guard.py::test_the_relaunched_successor_takes_the_lease_at_session_start;tests/test_coordinator_guard.py::test_the_latch_holds_after_a_compaction_drops_the_reading;tests/test_coordinator_guard.py::test_the_latch_survives_a_resumed_session_and_is_restated;tests/test_coordinator_guard.py::test_only_the_owners_recorded_clear_or_the_successor_unlatches;tests/test_coordinator_guard.py::test_the_instruction_comes_once_at_the_latch_then_bounded_reminders;tests/test_coordinator_guard.py::test_pre_compact_records_trigger_occupancy_and_guard_state;tests/test_coordinator_guard.py::test_the_handoff_classifies_each_compaction"
+status = "Drafted"
+phase = 6
+
+[test.TC-317]
+verifies = ["SR-229", "LLR-300"]
+level = "Integration"
+method = "Drive the claim boundary through hook, direct import, CLI and wrapper routes at the crossing reading and with no prior hook call. Assert the live dispatcher and close-out operations remain available, the guard-off path is inert, and the end-to-end claim route refuses while draining."
+tier = "Smoke"
+expected = "Every guarded route to a new claim refuses after the threshold, without blocking close-out."
+automated = "Yes"
+evidence = "tests/test_coordinator_guard.py::test_off_means_off_claims_pass_and_hooks_do_nothing;tests/test_coordinator_guard.py::test_the_crossing_replys_claim_refuses_via_the_pre_tool_use_reading;tests/test_coordinator_guard.py::test_the_crossing_replys_claim_refuses_with_no_hook_run;tests/test_coordinator_guard.py::test_the_live_dispatchers_claim_route_is_untouched;tests/test_coordinator_guard.py::test_only_the_claim_consults_the_guard_so_close_out_passes;tests/test_coordinator_guard.py::test_a_draining_pre_tool_use_never_denies_a_close_out_command;tests/test_coordinator_guard_e2e.py::test_the_cli_claim_refuses_while_draining;tests/test_coordinator_guard_e2e.py::test_a_wrapper_importing_integrate_is_refused;tests/test_coordinator_guard_e2e.py::test_close_out_git_operations_pass_while_draining"
+status = "Drafted"
+phase = 6
+
+[test.TC-318]
+verifies = ["SR-230", "LLR-301"]
+level = "Integration"
+method = "Drive relaunch requests and session-end payloads with a stub launcher. Assert holder and handoff validation, clear and resume refusal, single atomic acquisition under concurrent exit handlers, failure restoration, foreign-request refusal, detached launch arguments, both platform launchers, and the dry run."
+tier = "Smoke"
+expected = "An owned request starts one successor only at a true exit and remains recoverable on launch failure."
+automated = "Yes"
+evidence = "tests/test_coordinator_guard.py::test_only_the_holder_requests_a_relaunch_naming_a_real_handoff;tests/test_coordinator_guard.py::test_clear_and_resume_never_launch;tests/test_coordinator_guard.py::test_an_exit_launches_once_in_the_declared_root_with_the_prompt;tests/test_coordinator_guard.py::test_a_non_holders_or_subagents_end_never_launches;tests/test_coordinator_guard.py::test_two_concurrent_end_handlers_launch_once;tests/test_coordinator_guard.py::test_a_failed_launch_restores_the_request;tests/test_coordinator_guard.py::test_a_foreign_request_is_refused_and_reported;tests/test_coordinator_guard.py::test_the_launcher_runs_detached_in_the_repo_root;tests/test_coordinator_guard.py::test_exec_claude_passes_the_prompt_as_one_argument;tests/test_coordinator_guard.py::test_end_to_end_dry_run;tests/test_coordinator_guard_e2e.py::test_the_posix_launcher_runs_claude_in_the_root_with_the_prompt;tests/test_coordinator_guard_e2e.py::test_the_windows_launcher_runs_the_guards_claude_step_in_the_root"
+status = "Drafted"
+phase = 6
