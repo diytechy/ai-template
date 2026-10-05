@@ -11,7 +11,10 @@ script is that rewrite, run once by a repository at its next resync:
 `reviewed = true` (or any word that read as reviewed) becomes
 `owner = "confirmed"` in the same place, a not-reviewed value is dropped, and
 every other line — each `review` note, every comment — is kept byte for byte
-(`kitlib.decisions.migrate_text`). A value outside the retired vocabulary is
+(`kitlib.decisions.migrate_text`). It rewrites complete top-level
+assignments only, never a string's contents, and re-parses the result: a
+record whose re-parse would differ in anything but the verdict keys is left
+untouched and named. A value outside the retired vocabulary is
 left where it is and named, because guessing the owner's verdict is the one
 thing a migration must not do.
 
