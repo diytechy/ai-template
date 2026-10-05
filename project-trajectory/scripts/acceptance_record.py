@@ -136,6 +136,14 @@ commit and its first parent (`commit_ruling_sync_lines`) — one function over
 two trees in both places. It decides only that mechanical condition: whether
 the change carries the ruling, and whether a row's other fields must move, is
 the reviewer's judgement.
+
+TEXT THEN ACT (WI-806; OI-101 Q2, amended for landings by the owner's README
+Q-8 answer) is the fourth: a commit that writes the approval record changes, as
+its own, no cell of an approval-act row but `Status` and adds or removes no row
+(`text_then_act_lines`), so amend-plus-flip is no longer approval. The hook
+asks it of the staged tree (`staged_text_then_act_lines`, a squash landing
+judged by the commits it folds in) and the merge slot of each lane commit
+(`commit_text_then_act_lines`); both share the ruling sync's parent reader.
 """
 
 import tomllib
@@ -1303,9 +1311,11 @@ def staged_spine_findings(root):
     return [
         "{}: approved cell(s) {} amended while Status stays put — a "
         "post-attestation amendment owes a fresh human read (process.md §7). "
-        "Since D-9 step 7 there is no marker to set: either re-attest it in "
-        "this commit and run `intake.py snapshot --reattests {}` in the same "
-        "commit, or the change rides as SNAPSHOT DRIFT until the next sitting — "
+        "Since D-9 step 7 there is no marker to set: either commit the amendment "
+        "on its own and re-attest it in the NEXT commit with `intake.py "
+        "snapshot --reattests {}` (text first, the act second: a commit that "
+        "writes the record changes no other spine cell), or the change rides "
+        "as SNAPSHOT DRIFT until the next sitting — "
         "visible on the re-attest brief and open-items.html, but not "
         "blessed".format(a["id"], ", ".join(sorted(a["approved"])), a["id"])
         for a in staged_spine_amendments(root)
@@ -2113,17 +2123,161 @@ def commit_ruling_sync_lines(root, rev):
 
     Implements: SR-148, LLR-298
     """
+    parents, unread = _commit_parents(root, rev, "it rules an open item", first=True)
+    if unread or not parents:
+        return unread
+    return ruling_sync_lines(root, parents[0], rev)
+
+
+def _commit_parents(root, rev, question, first=False):
+    """`(parents, lines)` for one commit, read off the commit object itself
+    (not `rev^1`, which a shallow boundary hides): its parents, or only the
+    first when `first`, with `[]` lines when each is readable. A commit git
+    cannot read, or a parent missing from the repository (a shallow clone, a
+    missing object), is one line naming it and `question`, never read as a
+    root (A1). A true root commit is `([], [])`. The one parent reader of the
+    two per-commit rules the merge slot walks a lane with.
+
+    Implements: SR-148, LLR-298
+    """
     body = _git(root, ["cat-file", "commit", rev])
     if body is None:
-        return ["cannot read commit {}, so it is unjudged".format(rev)]
+        return [], ["cannot read commit {}, so it is unjudged".format(rev)]
     head = body.split("\n\n", 1)[0].splitlines()
     parents = [line.split()[1] for line in head if line.startswith("parent ")]
-    if not parents:
+    parents = parents[:1] if first else parents
+    for parent in parents:
+        if _git(root, ["cat-file", "-e", parent + "^{commit}"]) is None:
+            return [], [
+                "commit {}'s parent {} cannot be read in this repository (a "
+                "shallow clone or a missing object), so whether {} is unknown; "
+                "fetch the parent and retry".format(rev[:10], parent[:10], question)
+            ]
+    return parents, []
+
+
+# --- TEXT THEN ACT: the spine text before the approval act (WI-806) ----------
+# OI-101 Q2 (risk 6), its trunk scope amended for landings by the owner's README
+# Q-8 answer, 2026-10-04: a commit that writes under `SNAPSHOT_DIR` changes, as
+# its own, no cell of an `APPROVAL_ACT_CSVS` row except `Status`, and adds or
+# removes no such row. The text is committed first; the act (the flips, the
+# copy, the ledger and the views) second, so every byte a copy blesses was
+# committed, and readable, before the commit that blesses it. Flips and their
+# copy stay ONE commit (SR-140): that is the act. One function over two trees,
+# asked by the pre-commit hook of the staged tree and by the merge slot of each
+# lane commit, so a `--no-verify` commit is still refused before it lands.
+TEXT_THEN_ACT_REMEDY = (
+    "commit the text on its own first, then take the act (the `Status` flips, "
+    "`intake.py snapshot` and the views it regenerates) as a second commit that "
+    "changes no other spine cell and adds or removes no row"
+)
+
+
+def _text_changes(root, base, head):
+    """`{(registry, row id, what)}` the diff `base` -> `head` (`head` None is
+    the index) makes in the approval-act tiers: `what` is a changed cell's name,
+    `Status` and the id excepted, or `added` / `removed` for a whole row. Keyed
+    on the registry constant, so the two sides of a carrier change still join.
+
+    Implements: SR-140, LLR-178
+    """
+    out = set()
+    for _carrier, id_col, before, after, rel in _spine_row_sides(
+        root, base, head, APPROVAL_ACT_CSVS
+    ):
+        for rid in set(before) | set(after):
+            out |= {
+                (rel, rid, what)
+                for what in _row_text_moves(before.get(rid), after.get(rid), id_col)
+            }
+    return out
+
+
+def _row_text_moves(was, now, id_col):
+    """What one row's text did across two sides: `added` or `removed` for a
+    row on one side only, else each cell that differs, `Status` and the id
+    excepted.
+
+    Implements: SR-140, LLR-178
+    """
+    if was is None or now is None:
+        return ["removed" if now is None else "added"]
+    cells = (set(was) | set(now)) - {id_col, "Status"}
+    return [c for c in cells if (was.get(c) or "") != (now.get(c) or "")]
+
+
+def text_then_act_lines(root, bases, head=None):
+    """One line naming each approval-act row the commit `head` (None: the
+    index) changes as its OWN while it also writes the approval record, judged
+    against `bases`, its parents: a path or cell counts only when it differs
+    from EVERY base. So a merge is judged by what neither side carried, and a
+    lane's refresh merge bringing in trunk's text and act, made as two commits,
+    is not the lane's. `[]` when the commit writes no record, or changes only
+    `Status`. A diff git cannot read is a line, never a skip.
+
+    Implements: SR-140, LLR-178
+    """
+    writes, changes = None, None
+    for base in bases:
+        args = ["diff", "--name-only", "--no-renames"]
+        args += ["--cached", base] if head is None else [base, head]
+        own = _git(root, args + ["--", SNAPSHOT_DIR])
+        if own is None:
+            return [
+                "cannot read the diff against {}, so whether it writes the "
+                "approval record is unknown".format(base)
+            ]
+        paths = set(own.splitlines()) - {""}
+        writes = paths if writes is None else writes & paths
+    for base in bases if writes else ():
+        own = _text_changes(root, base, head)
+        changes = own if changes is None else changes & own
+    rows = {}
+    for rel, rid, what in sorted(changes or ()):
+        rows.setdefault("{} {}".format(PurePosixPath(rel).stem, rid), []).append(what)
+    if not rows:
         return []
-    if _git(root, ["cat-file", "-e", parents[0] + "^{commit}"]) is None:
-        return [
-            "commit {}'s parent {} cannot be read in this repository (a shallow "
-            "clone or a missing object), so whether it rules an open item is "
-            "unknown; fetch the parent and retry".format(rev[:10], parents[0][:10])
-        ]
-    return ruling_sync_lines(root, parents[0], rev)
+    named = ("{}: {}".format(row, ", ".join(cells)) for row, cells in rows.items())
+    return ["{} in a commit that writes {}".format("; ".join(named), SNAPSHOT_DIR)]
+
+
+def commit_text_then_act_lines(root, rev):
+    """`text_then_act_lines` for one commit against EVERY parent, read off the
+    commit object (`_commit_parents`), each line naming the commit. A root
+    commit has no text before it and answers `[]`; a parent the repository
+    cannot read is refused by name.
+
+    Implements: SR-140, LLR-178
+    """
+    parents, unread = _commit_parents(root, rev, "it mixes text and the act")
+    if unread or not parents:
+        return unread
+    lines = text_then_act_lines(root, parents, rev)
+    return ["commit {}: {}".format(rev[:10], line) for line in lines]
+
+
+def staged_text_then_act_lines(root, squashed=()):
+    """`text_then_act_lines` for the commit being made: the index against HEAD,
+    or against HEAD and MERGE_HEAD while a merge is in progress.
+
+    A SQUASH LANDING is the one commit not held to the rule (owner, README
+    Q-8): it carries a lane's text and act together, and is admitted because
+    the rule held on every commit it squashes. The hook checks that rather than
+    assuming it, since a hand landing never meets the merge slot: `squashed`
+    names the commits a `git merge --squash` in progress folds in, newest
+    first (the caller reads them off git's `SQUASH_MSG`, as this module reads
+    no file); each is judged against its parents, and the squash's own changes
+    are those differing from both HEAD and the squashed tip. Before the first
+    commit there is no text before the act, and nothing is judged.
+
+    Implements: SR-140, LLR-178
+    """
+    head = (_git(root, ["rev-parse", "--verify", "--quiet", "HEAD"]) or "").strip()
+    if not head:
+        return []
+    merging = (_git(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]) or "").strip()
+    bases = [head] + ([merging] if merging else list(squashed[:1]))
+    lines = []
+    for rev in reversed(squashed):
+        lines += commit_text_then_act_lines(root, rev)
+    return lines + text_then_act_lines(root, bases)

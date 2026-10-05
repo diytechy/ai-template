@@ -257,8 +257,9 @@ def test_staged_spine_amend_without_flip_warns(tmp_path):
     assert "Requirement" in proc.stderr
     # THE MESSAGE MOVED AT D-9 STEP 7 and the assertion moves with it. It told
     # the author to set the `Modified` re-attest marker; that marker retired,
-    # so it now names the two real outcomes — re-attest in this commit, or the
-    # change rides as snapshot drift until the next sitting.
+    # so it now names the two real outcomes — re-attest in the next commit
+    # (WI-806: the text first, the act second), or the change rides as
+    # snapshot drift until the next sitting.
     assert "SNAPSHOT DRIFT" in proc.stderr
     # The re-copy names the row: a bare `intake.py snapshot` refuses a drifted
     # approved row that the act neither flips nor names with `--reattests`.
@@ -324,7 +325,9 @@ def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
     proc2 = run_traj(tmp_path, "--staged")
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
     assert "LLR-001" in proc2.stderr
-    assert "re-attest it in this commit" in proc2.stderr
+    # WI-806: the warn names the two commits, text first and the act second.
+    assert "re-attest it in the NEXT commit" in proc2.stderr
+    assert "re-attest it in this commit" not in proc2.stderr
     assert "intake.py snapshot --reattests LLR-001" in proc2.stderr
 
 

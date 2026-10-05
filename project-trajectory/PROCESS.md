@@ -487,8 +487,10 @@ cells and re-copies the record. The baseline those before/after diffs run agains
 `docs/archive/last_approved/`, written only by the approval act itself
 (`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
 file must always equal its live counterpart), scoped to the registries that act
-authorises. Amend and re-copy in the **same commit** (a `--staged`
-warn enforces it); a row's `Status` answers for its **own cells** — a child
+authorises. **Text first, the act second:** a commit writing the record
+changes no spine cell but `Status` and adds or removes no row (hook- and
+merge-slot-enforced; a lane's squash landing is exempt); amend-plus-flip is
+not approval. A row's `Status` answers for its **own cells** — a child
 (LLR/TC) amendment never touches its parent SR (owner ruling 2026-08-17). A
 child change surfaces through the snapshot-drift arm; chain-completeness is the
 derived `Founded` state's claim (D-9), never the signature's. **Sequence requirement-text work *into* an open window, not after it:**

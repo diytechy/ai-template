@@ -455,6 +455,15 @@ def _spine_lane(
             'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,,'
             "hat.MAINTAINER\n"
         )
+    if snapshot:
+        # Text first, the act second (WI-806): the amended text lands in its
+        # own commit, so the act commit changes no cell but `Status`.
+        (reg / "system-requirements.csv").write_text(
+            _SR_HEADER + _sr("Drafted", "the AMENDED text"),
+            encoding="utf-8",
+            newline="\n",
+        )
+        _commit(root, "WI-401: the text", when=T_CODE)
     (reg / "system-requirements.csv").write_text(rows, encoding="utf-8", newline="\n")
     if snapshot:
         snap = root / "docs" / "archive" / "last_approved" / "docs" / "requirements"

@@ -1,0 +1,299 @@
+"""Spine text before the act, enforced on every lane commit (WI-806; OI-101 Q2,
+amended for landings by the owner's README Q-8 answer, 2026-10-04).
+
+One function over two trees: a commit that writes under
+`docs/archive/last_approved/` may, against its parent, change no spine cell
+except `Status` and add or remove no row. The text is committed first and the
+act (the flips, the snapshot, the ledger and the views) second. The pre-commit
+hook asks it of the staged tree; the merge slot asks it of every lane commit,
+so a `--no-verify` commit is still refused. A merge, a lane's refresh merge
+included, is judged by what NEITHER parent carried, and a squash landing is
+admitted only when every commit it squashes passes.
+"""
+
+import subprocess
+
+from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
+
+ar = load_script("acceptance_record")
+integrate = load_script("integrate")
+snap = load_script("baseline_snapshot")
+
+SR = "docs/requirements/system-requirements.csv"
+COPY = "docs/archive/last_approved/" + SR
+HEADER = "SR-ID,Title,Requirement,Status\n"
+
+
+def _git(root, *args):
+    proc = subprocess.run(
+        ["git", "-C", str(root), *args], capture_output=True, encoding="utf-8"
+    )
+    assert proc.returncode == 0, proc.stderr
+    return proc.stdout.strip()
+
+
+def _repo(root):
+    root.mkdir(parents=True, exist_ok=True)
+    _git(root, "init", "-q", "-b", "main")
+    pin_autocrlf(root)
+    _git(root, "config", "user.email", "t@example.com")
+    _git(root, "config", "user.name", "t")
+    _git(root, "config", "commit.gpgsign", "false")
+    return root
+
+
+def _rows(root, *rows):
+    """The live SR registry: `(id, title, status)` per row."""
+    path = root / SR
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        HEADER + "".join("{},{},the text,{}\n".format(*r) for r in rows),
+        encoding="utf-8",
+    )
+
+
+def _act(root):
+    """The approval act's copy: the live registry, byte for byte."""
+    path = root / COPY
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes((root / SR).read_bytes())
+
+
+def _commit(root, msg):
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "--no-verify", "-m", msg)
+    return _git(root, "rev-parse", "HEAD")
+
+
+def _base(tmp_path):
+    """SR-001 approved and recorded; SR-002 drafted and recorded."""
+    root = _repo(tmp_path / "repo")
+    (root / "README.md").write_text("r\n", encoding="utf-8")
+    _commit(root, "first")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two", "Drafted"))
+    _act(root)
+    _commit(root, "the first signing")
+    return root
+
+
+def _squashed(root):
+    """The commits a squash in progress folds in, newest first, as the hook
+    step reads them off git's own `SQUASH_MSG`."""
+    text = (root / ".git" / "SQUASH_MSG").read_text(encoding="utf-8")
+    return [ln[7:] for ln in text.splitlines() if ln.startswith("commit ")]
+
+
+def _step(root):
+    return run_py([SCRIPTS / "check.py", "--run-steps", "text-then-act"], root)
+
+
+def test_a_mixed_commit_is_refused_at_pre_commit(tmp_path):
+    root = _base(tmp_path)
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _git(root, "add", "-A")
+    (line,) = ar.staged_text_then_act_lines(root)
+    assert "SR-002" in line and "Title" in line and "Status" not in line
+    proc = _step(root)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    out = proc.stdout + proc.stderr
+    assert "FAIL  text-then-act" in out and "SR-002" in out
+    assert "amend-plus-flip" not in out.lower()
+
+
+def test_the_two_commit_form_is_accepted(tmp_path):
+    root = _base(tmp_path)
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _git(root, "add", "-A")
+    assert ar.staged_text_then_act_lines(root) == []  # text alone, no act
+    _commit(root, "the text")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _git(root, "add", "-A")
+    assert ar.staged_text_then_act_lines(root) == []  # the act: flips and copy
+    proc = _step(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_row_added_or_removed_beside_the_act_is_refused(tmp_path):
+    root = _base(tmp_path)
+    _rows(
+        root,
+        ("SR-001", "One", "Approved"),
+        ("SR-002", "Two", "Approved"),
+        ("SR-003", "Three", "Approved"),
+    )
+    _act(root)
+    _git(root, "add", "-A")
+    (line,) = ar.staged_text_then_act_lines(root)
+    assert "SR-003" in line and "added" in line
+    _git(root, "reset", "-q", "--hard")
+    _rows(root, ("SR-001", "One", "Approved"))
+    _act(root)
+    _git(root, "add", "-A")
+    (line,) = ar.staged_text_then_act_lines(root)
+    assert "SR-002" in line and "removed" in line
+
+
+def test_a_traced_cell_beside_the_act_is_text_too(tmp_path):
+    # "No spine cell except Status": a re-pointed traced cell is committed
+    # before the act like any other text.
+    root = _base(tmp_path)
+    (root / SR).write_text(
+        "SR-ID,Title,Requirement,Status,SN-Refs\n"
+        "SR-001,One,the text,Approved,SN-001\n"
+        "SR-002,Two,the text,Drafted,\n",
+        encoding="utf-8",
+    )
+    _act(root)
+    _git(root, "add", "-A")
+    (line,) = ar.staged_text_then_act_lines(root)
+    assert "SR-001" in line and "SN-Refs" in line
+
+
+def test_a_commit_that_writes_no_record_is_never_judged(tmp_path):
+    root = _base(tmp_path)
+    _rows(root, ("SR-001", "One amended", "Approved"), ("SR-009", "New", "Drafted"))
+    _git(root, "add", "-A")
+    assert ar.staged_text_then_act_lines(root) == []
+
+
+def test_a_no_verify_lane_commit_is_refused_at_the_landing(tmp_path):
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-001")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    bad = _commit(root, "text and act together")  # --no-verify
+    _git(root, "checkout", "-q", "main")
+    refusal = integrate._text_then_act_refusal(root, "wi-001")
+    assert refusal is not None and bad[:10] in refusal
+    assert "SR-002" in refusal and "nothing was merged" in refusal
+    assert "amend-plus-flip" not in refusal.lower()
+    # The two-commit lane lands.
+    _git(root, "checkout", "-q", "-b", "wi-002")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _commit(root, "the text")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _commit(root, "the act")
+    _git(root, "checkout", "-q", "main")
+    assert integrate._text_then_act_refusal(root, "wi-002") is None
+
+
+def test_the_merge_ladder_consults_the_text_then_act_rung(tmp_path, monkeypatch):
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-001")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    bad = _commit(root, "text and act together")
+    _git(root, "checkout", "-q", "main")
+    monkeypatch.setattr(
+        integrate, "branch_outcomes", lambda r, b: ({"WI-009": "merged"}, [])
+    )
+    for rung in (
+        "_close_record_refusal",
+        "_minted_id_refusal",
+        "_approval_act_refusal",
+        "_held_status_refusal",
+        "_loop_trailer_refusal",
+        "_ruling_sync_refusal",
+    ):
+        monkeypatch.setattr(integrate, rung, lambda *a, **k: None)
+    _outcomes, refusal = integrate._merge_refusal(root, "wi-001", ["WI-009"])
+    assert refusal is not None and bad[:10] in refusal and "SR-002" in refusal
+
+
+def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
+    # Trunk took its text and its act in two commits; a lane that merges trunk
+    # in carries both in one first-parent diff, and that is not the lane's own.
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-001")
+    (root / "lane.txt").write_text("lane\n", encoding="utf-8")
+    _commit(root, "lane work")
+    _git(root, "checkout", "-q", "main")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _commit(root, "trunk text")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _commit(root, "trunk act")
+    _git(root, "checkout", "-q", "wi-001")
+    _git(root, "merge", "-q", "--no-ff", "--no-edit", "main")
+    merge = _git(root, "rev-parse", "HEAD")
+    assert ar.commit_text_then_act_lines(root, merge) == []
+    _git(root, "checkout", "-q", "main")
+    assert integrate._text_then_act_refusal(root, "wi-001") is None
+    # A merge that writes text AND the record of its own is still refused.
+    _git(root, "checkout", "-q", "wi-001")
+    _git(root, "merge", "-q", "--no-ff", "--no-commit", "-s", "ours", "main")
+    _rows(root, ("SR-001", "One evil", "Approved"), ("SR-002", "Two", "Drafted"))
+    _act(root)
+    _git(root, "add", "-A")
+    (line,) = ar.staged_text_then_act_lines(root)
+    assert "SR-001" in line
+
+
+def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
+    # The landing's own squash carries text and act together and is exempt
+    # because the rule held on every commit it squashes - which the hook
+    # checks rather than assumes, since a hand landing never meets the slot.
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-002")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _commit(root, "the text")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _commit(root, "the act")
+    _git(root, "checkout", "-q", "main")
+    _git(root, "merge", "-q", "--squash", "wi-002")
+    assert ar.staged_text_then_act_lines(root) != []  # judged as a plain commit
+    assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
+    proc = _step(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    _git(root, "commit", "-q", "--no-verify", "-m", "WI-002: land")
+    # A lane holding a --no-verify mixed commit cannot be squashed past the hook.
+    _git(root, "checkout", "-q", "-b", "wi-003")
+    _rows(root, ("SR-001", "One amended", "Approved"), ("SR-002", "Two", "Approved"))
+    _act(root)
+    bad = _commit(root, "text and act together")
+    _git(root, "checkout", "-q", "main")
+    _git(root, "merge", "-q", "--squash", "wi-003")
+    lines = ar.staged_text_then_act_lines(root, _squashed(root))
+    assert lines and bad[:10] in lines[0] and "SR-001" in lines[0]
+    proc = _step(root)
+    assert proc.returncode == 1 and bad[:10] in proc.stdout, proc.stdout + proc.stderr
+
+
+def test_a_first_commit_has_nothing_before_it(tmp_path):
+    root = _repo(tmp_path / "repo")
+    _rows(root, ("SR-001", "One", "Approved"))
+    _act(root)
+    _git(root, "add", "-A")
+    assert ar.staged_text_then_act_lines(root) == []
+    sha = _commit(root, "first")
+    assert ar.commit_text_then_act_lines(root, sha) == []
+
+
+def test_the_pre_commit_hook_runs_the_text_then_act_step():
+    hook = (SCRIPTS.parent / "hooks" / "pre-commit").read_text(encoding="utf-8")
+    line = next(
+        ln for ln in hook.splitlines() if ln.startswith('"$PY"') and "--run-steps" in ln
+    )
+    assert "text-then-act" in line.split("--run-steps", 1)[1].split()[0].split(",")
+
+
+def test_no_refusal_text_offers_amend_plus_flip(tmp_path):
+    blocked = [(SR, {"SR-001": {"Title": ("a", "b")}})]
+    for text in (
+        snap._refusal_text(blocked, {SR}),
+        snap._refusal_text(blocked, set()),
+        ar.TEXT_THEN_ACT_REMEDY,
+    ):
+        assert "amend-plus-flip" not in text.lower()
+        assert "same tree" not in text and "same commit" not in text
+    # The amend-without-flip warn names the two commits, not "in this commit".
+    root = _base(tmp_path)
+    _rows(root, ("SR-001", "One amended", "Approved"), ("SR-002", "Two", "Drafted"))
+    _git(root, "add", "-A")
+    (warn,) = ar.staged_spine_findings(root)
+    assert "SR-001" in warn and "in this commit" not in warn
+    assert "intake.py snapshot --reattests SR-001" in warn

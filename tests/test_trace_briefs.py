@@ -991,7 +991,7 @@ def test_offspine_census_names_the_interfaces_registry_after_an_IF_cell_changes(
     # amendments (arrives approved), test_a_DEAPPROVAL_cannot_authorise_an_
     # unrelated_approved_amendment (a de-approval authorises nothing),
     # test_an_explicit_APPROVES_ref_authorises_it_and_is_RECORDED (`--approves`)
-    # and test_an_AMEND_PLUS_FLIP_authorises_ITS_OWN_row_and_no_other
+    # and test_a_FLIP_authorises_ITS_OWN_row_and_no_other
     # (`--reattests` copies the live bytes).
     assert "a row in it moves into approval or arrives approved" in out
     assert "`--reattests` names one of its rows" in out
