@@ -62,3 +62,24 @@ reversal_cost = "Low: two needs entries and one note."
 why_not_escalated = "The first edge enforces an ordering the owner-approved note already states; the second only orders two rows that touch the same code, and changes neither row's scope."
 review = ""
 
+
+[decision.D-009]
+decided = "The wave-14 coordinator claimed its whole ready batch (WI-822, WI-797, WI-803, WI-806, WI-818, WI-821, WI-796) under one scoped unpause (d15f33f8 delete, seven claims, 8b1103b5 byte-identical restore), including rows built only after WI-822 lands; each such lane is refreshed from trunk before its build starts."
+alternative = "Claim WI-822 alone first, then open a second scoped unpause for the rest once the guard lands (and the claims then pass through the guard's lease)."
+reversal_cost = "Low: an unbuilt claimed row is returned by the integrator's abandon path, or simply built by the next session."
+why_not_escalated = "The owner's 2026-10-04 direction is one scoped unpause per batch of ready rows, and these were the generated ready frontier at the claim."
+review = ""
+
+[decision.D-010]
+decided = "The pause deletion and its restore each carry the regenerated docs/open-items.html, because the owner page renders the tracked pause ('Paused since 2026-09-04'); the hook's open-items step refused the deletion alone as stale."
+alternative = "None that keeps the hook green: the page is a generated view of the pause."
+reversal_cost = "None."
+why_not_escalated = "A generated view regenerated with its input; no judgement involved."
+review = ""
+
+[decision.D-011]
+decided = "WI-796's TC-055 re-judge repeats WI-777's recipe: six Codex Luna (gpt-6-luna, high) judges over the rendered matrix, compiled by an orchestrating Claude agent that does not judge, rather than Codex 6.1 Sol judges."
+alternative = "Sol (gpt-6.1-sol) judges, or an Anthropic judge."
+reversal_cost = "Low: the observation is re-judged by a new record if the owner prefers Sol."
+why_not_escalated = "The judges must be Codex family (A1: judge = OPENAI; the dashboard code is Claude-authored); Luna is the family's model the last re-judge used, and Sol's plan capacity (about 14 sessions per 4.5 h, 2026-10-03) is kept for the lane reviews."
+review = ""

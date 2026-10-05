@@ -11,7 +11,9 @@ language/tooling — but it **requires a git repository**: diffable registries,
 the append-only log, reviewed Status-change commits, and gate approval
 all presume git. That substrate was always assumed; it is named here so no
 one designs around its absence. Other docs reference this file by section rather than
-restating it. Links are authored for the scaffolded home (`docs/process.md`
+restating it. Its terms are defined once in [`glossary.md`](glossary.md),
+including a lane's lifecycle: its states, substates and conditions
+([lane state](glossary.md#lane-state)). Links are authored for the scaffolded home (`docs/process.md`
 beside `docs/process-options.md`); at the kit's own location some relative
 links don't resolve.
 

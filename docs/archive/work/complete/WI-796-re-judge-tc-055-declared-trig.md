@@ -3,12 +3,16 @@ id = "WI-796"
 title = "re-judge TC-055: declared trigger fired [sha256:463ba32184eb] at merge 2e7cd53"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"
 adjudicates = ["TC-055"]
 +++
+
+## Deliverable
+
+TC-055 was re-judged cross-family at 5fb0fc74, after WI-788's landing fired its CMP-009 trigger: **RECORDED pass** (`docs/test/observations/TC-055.2026-10-05T034207Z.toml`). Six independent Codex Luna (high) judges, one per width and theme, judged 284 native tiles over four tabs: four approved; two returned CHANGES-REQUESTED (T5 at 390 px light, T2 at 1680 px dark). An independent Claude Opus adjudicator refuted both against the render: no focused node paints the amber fallback the T5 finding cites, and the What view starts collapsed as LLR-099 requires. Verdicts: `docs/reviews/wi-796-re-judge-tc-055-declared-trig/001-REJUDGE-5fb0fc7.md` and `002-ADJUDICATE-5fb0fc7.md`. The rubric's binding notes on T2 and T5, the unshot Retired tab and the judges' scope lines are follow-up work (decisions record `docs/decisions/wi-796.toml`).
 
 ## Context
 

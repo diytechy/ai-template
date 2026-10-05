@@ -24,6 +24,8 @@ MAPPING = [
     ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
     ("PROCESS_OPTIONS.md", "docs/process-options.md"),
+    # The kit glossary: every working term defined once, linked from process.md.
+    ("GLOSSARY.md", "docs/glossary.md"),
     # The machine-readable derived STAGE — the rung the settled spine has
     # earned, its per-phase breakdown, and a fingerprint of the declared
     # derivation inputs that lets any reader tell a current record from a stale
