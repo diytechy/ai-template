@@ -259,6 +259,7 @@ try:
     from absolute_terms import absolute_summary
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
+        IF_CITE_MESSAGE,
         ac_advisories,
         allow_key,
         cite_advisories,
@@ -313,6 +314,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from absolute_terms import absolute_summary
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
+        IF_CITE_MESSAGE,
         ac_advisories,
         allow_key,
         cite_advisories,
@@ -1159,7 +1161,7 @@ def ruled_open_item_texts(root):
     path = Path(root) / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
         return None
-    ruled = _spine.open_items_at(spine_carrier.load(path, "OI-ID"), "ruled")
+    ruled = dict(_spine.open_items_at(spine_carrier.load(path, "OI-ID"), "ruled"))
     return {
         rid: "\n".join(str(v) for v in row.values() if isinstance(v, (str, int, float)))
         for rid, row in ruled.items()
@@ -2856,10 +2858,13 @@ def if_note_advisories(ifs, allow=()):
 
     THE SWEEP IS `trace_text.cite_advisories`, the one engine the spine and
     off-spine tiers share (WI-821): this was a near-copy of its loop, differing
-    only in its message's wording. Every IF reason cell is in its `REASON_CELLS`,
-    so the reason-cell reading is the same, and the exception list is read
-    token-scoped by the same `is_allowed`."""
-    return cite_advisories([(ifs, ("IF", "IF-ID", IF_REASON_CELLS))], allow)
+    only in its message's wording, which it passes as a value
+    (`trace_text.IF_CITE_MESSAGE`), so its output is the copy's to the byte. Every IF
+    reason cell is in its `REASON_CELLS`, so the reason-cell reading is the
+    same, and the exception list is read token-scoped by the same `is_allowed`."""
+    return cite_advisories(
+        [(ifs, ("IF", "IF-ID", IF_REASON_CELLS))], allow, IF_CITE_MESSAGE
+    )
 
 
 # `EXTERNAL_ENDPOINT_PREFIX` (the declared "deliberately outside this tree" marker

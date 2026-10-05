@@ -1547,9 +1547,10 @@ def test_the_open_items_status_filter_is_one_home():
         _oi(" OI-004 ", "PENDING"),
         _oi("OI-005", "deferred"),
     ]
-    assert list(KITSPINE.open_items_at(rows, "pending")) == ["OI-001", "OI-004"]
-    assert list(KITSPINE.open_items_at(rows, "ruled")) == ["OI-002"]
-    assert KITSPINE.open_items_at([], "pending") == {}
+    ids = [oid for oid, _ in KITSPINE.open_items_at(rows, "pending")]
+    assert ids == ["OI-001", "OI-004"]
+    assert [oid for oid, _ in KITSPINE.open_items_at(rows, "ruled")] == ["OI-002"]
+    assert KITSPINE.open_items_at([], "pending") == []
     assert not hasattr(KITSPINE, "_pending_items")
     # Both near-copy readers now call it: neither carries its own id filter.
     for mod, fn in ((CT, "approval_brief_findings"), (TRACE, "ruled_open_item_texts")):
@@ -1578,6 +1579,44 @@ def test_the_open_items_readers_answer_by_value(tmp_path):
     assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
     ruled = TRACE.ruled_open_item_texts(tmp_path)
     assert list(ruled) == ["OI-002"] and "B = 8 is ruled" in ruled["OI-002"]
+
+
+def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
+    """Two pending rows sharing an id are two rows to the shared stage: it
+    returns `(id, row)` pairs in row order, never a map that drops the first.
+    The brief lint read rows in sequence before WI-821 and still warns on the
+    first; the readers that want a by-id map build it, so the last row wins
+    there exactly as it did in their own loops."""
+    rows = [
+        _oi("OI-001", "pending", OneLine="first"),
+        _oi("OI-001", "pending", OneLine="second"),
+        _oi("OI-002", "ruled", OneLine="r1"),
+        _oi("OI-002", "ruled", OneLine="r2"),
+    ]
+    pairs = KITSPINE.open_items_at(rows, "pending")
+    assert [(oid, r["OneLine"]) for oid, r in pairs] == [
+        ("OI-001", "first"),
+        ("OI-001", "second"),
+    ]
+    queue = KITSPINE.open_item_queue(
+        [{"WI-ID": "WI-001", "Status": "queued", "Predecessors": "OI-001"}], rows
+    )
+    assert [(c[0]["OneLine"], c[1]) for c in queue["cards"]] == [("second", ["WI-001"])]
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "open-items.csv").write_text(
+        "OI-ID,Status,OneLine\n"
+        "OI-001,pending,Approve the [p]-[DevStg-Reqs] batch\n"
+        "OI-001,pending,Unrelated decision\n"
+        "OI-002,ruled,r1\n"
+        "OI-002,ruled,r2\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    briefs = CT.approval_brief_findings(tmp_path)
+    assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
+    ruled = TRACE.ruled_open_item_texts(tmp_path)
+    assert list(ruled) == ["OI-002"] and "r2" in ruled["OI-002"]
 
 
 def test_the_one_line_clip_is_one_home():
@@ -1633,10 +1672,30 @@ def test_the_if_citation_sweep_is_the_shared_engine():
         {"IF-ID": "IF-000", "Notes": "Minted 2026-08-15."},
     ]
     assert TRACE.if_note_advisories(ifs) == text.cite_advisories(
-        [(ifs, ("IF", "IF-ID", TRACE.IF_REASON_CELLS))]
+        [(ifs, ("IF", "IF-ID", TRACE.IF_REASON_CELLS))], (), TRACE.IF_CITE_MESSAGE
     )
     assert len(TRACE.if_note_advisories(ifs)) == 1
     assert set(TRACE.IF_REASON_CELLS) <= text.REASON_CELLS
+
+
+def test_the_if_citation_advisory_keeps_its_own_wording():
+    """The IF sweep runs on the shared engine but its sentence is the IF
+    copy's, verbatim: a seam, not the system, and a closing period. A filter
+    matching the former phrase must keep matching (WI-821, D-002)."""
+    ifs = [{"IF-ID": "IF-101", "Notes": "Minted 2026-08-15."}]
+    assert TRACE.if_note_advisories(ifs) == [
+        "IF IF-101 Notes carries a citation frame (edit-history stamp 'Minted 2026-08-15') "
+        "— a "
+        "living cell states the seam and its standing reason, never its own "
+        "history: drop the frame, KEEP the reason as prose that stands alone, "
+        "and move the account to the log (process.md §3; warn-only, never the "
+        "exit code)."
+    ]
+    # The spine and off-spine tiers keep the engine's own sentence, unchanged.
+    text = load_script("trace_text")
+    [spine] = text.cite_advisories([(ifs, ("SR", "IF-ID", ("Notes",)))])
+    assert spine.startswith("SR IF-101 Notes carries a citation frame (")
+    assert "states the system and its" in spine and spine.endswith("exit code)")
 
 
 def test_the_fragment_link_rebase_is_the_spec_moves():

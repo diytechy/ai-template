@@ -2885,7 +2885,7 @@ def approval_brief_findings(root):
         return []
     out = []
     pending = _kitspine.open_items_at(spine_carrier.load(path, "OI-ID"), "pending")
-    for oid, row in pending.items():
+    for oid, row in pending:
         body = " ".join(
             (row.get(k) or "")
             for k in ("OneLine", "Decision", "BlastRadius", "Options", "Recommendation")

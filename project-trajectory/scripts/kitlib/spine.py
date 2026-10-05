@@ -269,7 +269,7 @@ def open_item_queue(work_rows, oi_rows):
 
     Implements: SR-148, LLR-299
     """
-    pending = open_items_at(oi_rows, "pending")
+    pending = dict(open_items_at(oi_rows, "pending"))
     held = _held_rows(work_rows, pending)
     citers = {}
     for wid in sorted(held, key=_id_number):
@@ -284,8 +284,8 @@ def open_item_queue(work_rows, oi_rows):
 
 
 def open_items_at(oi_rows, status):
-    """`{OI id: row}` of every real (non-example) open item whose status is
-    `status` (lower case), in row order.
+    """`[(OI id, row)]` for every real (non-example) open item whose status is
+    `status` (lower case), in row order, a duplicated id once per row.
 
     THE SHARED STAGE of every open-items reader that filters by status (WI-821,
     the A->B->C / A->B->D shape PROCESS.md §3 names): the owner queue reads the
@@ -294,14 +294,19 @@ def open_items_at(oi_rows, status):
     had carried its own skip-and-filter loop. A row whose id is not `OI-###`
     shaped, or is the `-000` example, is never returned.
 
+    A SEQUENCE, not a map: the carrier keeps two rows sharing an id, and the
+    brief lint reads each of them, as its own loop did. A reader that wants a
+    by-id map builds it with `dict(...)`, so the last row wins there exactly as
+    it did in the owner queue's and the ruled-prose reader's own loops.
+
     Implements: SR-148, LLR-299
     """
-    out = {}
+    out = []
     for row in oi_rows:
         oid = (row.get("OI-ID") or "").strip()
         state = (row.get("Status") or "").strip().lower()
         if oid.startswith("OI-") and not is_example(oid) and state == status:
-            out[oid] = row
+            out.append((oid, row))
     return out
 
 
