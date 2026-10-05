@@ -188,3 +188,10 @@ seq = 31
 date = "2026-10-04"
 approved = []
 reattested = ["SN-003", "SN-008", "SN-009", "SN-025", "SN-043"]
+
+[[act]]
+seq = 32
+date = "2026-10-04"
+approved = []
+reattested = ["LLR-069", "TC-069"]
+verdict = "docs/reviews/wi-803-plan-gate/002-ADJUDICATE-2a64d0b.md"
