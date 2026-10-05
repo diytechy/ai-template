@@ -7075,10 +7075,13 @@ cite it.
 The commit that sets an entry `"overruled"` must, in the same diff, file or
 amend a queued or active work item whose spec cites the entry as
 `docs/decisions/<run>.toml#D-NNN`, the record's path written exactly as it
-is named (a run named from a branch such as `owner+cleanup` keeps its `+`; a
-branch's `/` and `#` become `-` in the record's name, so a citation splits
-only one way: a record of yours named from a branch carrying `#` is renamed,
-`#` to `-`, in the commit that takes this re-sync).
+is named (a run named from a branch such as `owner+cleanup` keeps its `+`;
+a branch's `/` becomes `-` in the record's name, and nothing else is
+rewritten). No record name carries `#`, so a citation splits only one way: a
+branch whose name carries `#` has no record, and under a recording dial its
+close is refused at the merge, as a close without its record is, until the
+branch is renamed. A record of yours already named with `#` cannot be cited
+until you rename it.
 Otherwise it is refused, by the existing
 `ruling-sync` pre-commit step and again by the merge slot on each lane commit
 against its first parent. There is no new step or rung, so your hook's
@@ -7100,8 +7103,8 @@ delegated session now says to leave `owner` unset.
 1. Re-sync `scripts/kitlib/decisions.py` (which now holds the overrule
    sync), `scripts/kitlib/git.py` (its two-tree path and blob reads),
    `scripts/acceptance_record.py`, `scripts/pending.py`,
-   `scripts/gen_open_items.py`, `scripts/check.py` and `scripts/integrate.py`
-   (docstrings only in the last two), the new
+   `scripts/gen_open_items.py`, `scripts/check.py` (docstring only) and
+   `scripts/integrate.py` (its decisions-record rung), the new
    `scripts/migrate_decisions.py` with `scripts/kitlib/bootstrap_manifest.py`
    (which ships it), `decisions.template.toml`,
    `PROCESS_OPTIONS.md` and the `session-protocol` skill.

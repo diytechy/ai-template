@@ -249,6 +249,40 @@ def test_an_overrule_beside_the_retired_key_still_owes_its_work(tmp_path):
     assert CITE in line
 
 
+def test_an_unparseable_record_beside_a_cited_overrule_is_still_refused(tmp_path):
+    # A parse refusal is never dropped because the same commit's owed
+    # overrules are all cited, and it comes before any missing-citer line.
+    root = _base(tmp_path)
+    _record(root, "overruled")
+    broken = root / "docs/decisions/wi-090.toml"
+    broken.write_text("high_risk = [\n", encoding="utf-8", newline="\n")
+    _spec(root, "WI-051", "Kept, per {}.".format(CITE))
+    _git(root, "add", "-A")
+    (parse,) = ar.staged_ruling_sync_lines(root)
+    assert parse.startswith("docs/decisions/wi-090.toml ") and "does not parse" in parse
+    _spec(root, "WI-051", "The export flag is dropped.")
+    _git(root, "add", "-A")
+    assert ar.staged_ruling_sync_lines(root) == [
+        parse,
+        "{} is overruled by this commit, and no queued or active work item it "
+        "files or amends cites it: the overrule's commit files a work item, or "
+        "amends the queued one the decision was scoped to, citing {}".format(
+            CITE, CITE
+        ),
+    ]
+
+
+def test_an_example_spec_does_not_discharge_an_overrule(tmp_path):
+    # The `-000` example is never a work item, so its citation acts on nothing.
+    root = _base(tmp_path)
+    _record(root, "overruled")
+    _spec(root, "WI-000", "Kept, per {}.".format(CITE), slug="example")
+    _git(root, "add", "-A")
+    assert "WI-000-example.md" in _specs(root)
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert line.startswith(CITE + " is overruled"), line
+
+
 @pytest.mark.parametrize("broken", [False, True])
 def test_a_record_path_git_would_quote_is_still_judged(tmp_path, broken):
     # core.quotePath (git's default) quotes and escapes a non-ASCII path in
@@ -289,7 +323,6 @@ def test_a_citing_spec_path_git_would_quote_discharges_the_overrule(tmp_path):
         "owner-cleanup",
         "feat/x.y_z",
         "ré",
-        "owner.toml#D-002",
         "owner\u00a0cleanup",
     ],
 )
@@ -325,16 +358,19 @@ def test_the_citation_reader_takes_no_surrounding_prose():
 # What git refuses in ANY branch name, one character at a time (git-check-ref-
 # format(1): the ASCII control characters and space, DEL, and ~ ^ : ? * [ \).
 GIT_REFUSED = {chr(c) for c in range(0x21)} | set("\x7f~^:?*[\\")
-# The characters a branch may carry that a record's filename may not keep: the
-# path's separator and the citation's delimiter.
-RUN_DELIMITERS = {"/", "#"}
+# The characters a branch may carry that a record's filename may not keep
+# (WI-818 dispute 1): the path's separator, which becomes `-` (a run is one
+# file), and the citation's delimiter, which no record name carries.
+SEPARATOR, DELIMITER = "/", "#"
 NON_ASCII = ["\u0085", " ", " ", "　", "é"]
 
 
 def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
     # Pinned against git itself for every ASCII punctuation mark, the space,
     # DEL, three controls and whitespace Unicode adds (which git permits), so
-    # the set is git's, matched ASCII-only, and never a guess.
+    # the set is git's, matched ASCII-only, and never a guess. Only `/` is
+    # rewritten; `#` and what git refuses raise, and every other character is
+    # kept, so no two names a record can carry share a file by rewriting.
     probed = list(string.punctuation) + [" ", "\x7f", "\x01", "\t", "\n"]
     for ch in probed + NON_ASCII:
         proc = subprocess.run(
@@ -343,27 +379,34 @@ def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
         )
         assert (proc.returncode != 0) == (ch in GIT_REFUSED), repr(ch)
     for ch in [chr(c) for c in range(0x80)] + NON_ASCII:
-        mapped = decisions.record_path("a" + ch + "b") == "docs/decisions/a-b.toml"
-        assert mapped == (ch in GIT_REFUSED | RUN_DELIMITERS or ch == "-"), repr(ch)
+        run = "a" + ch + "b"
+        if ch == SEPARATOR:
+            assert decisions.record_path(run) == "docs/decisions/a-b.toml"
+        elif ch in GIT_REFUSED | {DELIMITER}:
+            with pytest.raises(ValueError):
+                decisions.record_path(run)
+        else:
+            want = "docs/decisions/{}.toml".format(run)
+            assert decisions.record_path(run) == want, repr(ch)
 
 
-def test_a_run_name_carrying_the_citation_delimiter_has_one_citation(tmp_path):
-    # `owner.toml#D-002` is a valid branch. Its record never keeps the `#`, so
-    # a citation splits one way: the token naming the longer run's record
-    # cannot discharge an overrule in `owner.toml`.
-    rel = decisions.record_path("owner.toml#D-002")
-    assert "#" not in rel
+def test_a_run_name_carrying_the_citation_delimiter_has_no_record(tmp_path):
+    # `owner#cleanup` and `owner.toml#D-002` are valid branches. No record is
+    # named by either: `#` is refused, never folded into `owner-cleanup`'s file.
+    for run in ("owner#cleanup", "owner.toml#D-002"):
+        with pytest.raises(ValueError, match="'#'"):
+            decisions.record_path(run)
+    assert decisions.record_path("owner-cleanup") == "docs/decisions/owner-cleanup.toml"
+    # One parse: a spec citing `owner.toml#D-002` discharges that entry and
+    # no other record's D-002.
+    cite = decisions.record_path("owner") + "#D-002"
     root = _base(tmp_path)
-    _git(root, "checkout", "-q", "-b", "wi-077")
+    _record(root, "overruled")
     _record(root, "overruled", rel=decisions.record_path("owner"))
-    _spec(root, "WI-051", "Keep the flag, per `{}`.".format(rel + "#D-002"))
+    _spec(root, "WI-051", "Keep the flag, per `{}`.".format(cite))
     _git(root, "add", "-A")
     (line,) = ar.staged_ruling_sync_lines(root)
-    assert line.startswith("docs/decisions/owner.toml#D-002 is overruled")
-    bad = _commit(root, "overrule cited through the longer run's record")
-    assert len(ar.commit_ruling_sync_lines(root, bad)) == 1
-    _git(root, "checkout", "-q", "main")
-    assert integrate._ruling_sync_refusal(root, "wi-077") is not None
+    assert line.startswith(CITE + " is overruled"), line
 
 
 def _index_only(root, raw, text):
@@ -542,3 +585,75 @@ def test_the_migrator_cli_rewrites_the_records_and_check_reports_them(tmp_path):
     proc = run_py([SCRIPTS / "migrate_decisions.py", "--check"], tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert migrate.main(["--root", str(tmp_path), "--check"]) == 0
+
+
+# --- Dispute 1 ruling: the migrator clauses LLR-304 states and no test held ---
+
+OLD_HEAD = 'high_risk = []\n\n{}review = "r"\n'.format(ENTRY)
+
+
+def test_the_migrator_reads_a_numeric_retired_value():
+    assert decisions.migrate_text(OLD_HEAD + "reviewed = 1\n") == (
+        OLD_HEAD + 'owner = "confirmed"\n',
+        [],
+    )
+    assert decisions.migrate_text(OLD_HEAD + "reviewed = 0\n") == (OLD_HEAD, [])
+
+
+def test_the_migrator_reads_a_multiline_note_holding_a_lone_quote():
+    # The note's lone `"` must not end the multiline string, or the note's own
+    # `reviewed = true` line would read as a statement and be rewritten.
+    note = '"""a "quoted\nreviewed = true\n"""'
+    head = "high_risk = []\n\n{}review = {}\n".format(ENTRY, note)
+    new, left = decisions.migrate_text(head + "reviewed = true\n")
+    assert (new, left) == (head + 'owner = "confirmed"\n', [])
+    assert tomllib.loads(new)["decision"]["D-001"]["review"] == (
+        'a "quoted\nreviewed = true\n'
+    )
+
+
+def test_the_migrator_reads_past_a_comment_holding_a_quote_or_bracket():
+    text = OLD_HEAD + "# the owner's \"call [see\nreviewed = true\n"
+    new, left = decisions.migrate_text(text)
+    assert (new, left) == (
+        OLD_HEAD + '# the owner\'s "call [see\nowner = "confirmed"\n',
+        [],
+    )
+
+
+@pytest.mark.parametrize("line", ['"reviewed" = true', "'reviewed' = \"yes\""])
+def test_the_migrator_rewrites_a_quoted_retired_key(line):
+    new, left = decisions.migrate_text(OLD_HEAD + line + "\n")
+    assert (new, left) == (OLD_HEAD + 'owner = "confirmed"\n', [])
+
+
+def _records(tmp_path, **texts):
+    folder = tmp_path / "docs/decisions"
+    folder.mkdir(parents=True)
+    for name, text in texts.items():
+        (folder / (name + ".toml")).write_bytes(text.encode("utf-8"))
+    return folder
+
+
+def test_the_migrator_cli_keeps_a_records_line_endings(tmp_path):
+    old = (OLD_HEAD + "reviewed = true\n").replace("\n", "\r\n")
+    clean = (OLD_HEAD + 'owner = "confirmed"\n').replace("\n", "\r\n")
+    folder = _records(tmp_path, old=old, clean=clean)
+    assert migrate.main(["--root", str(tmp_path)]) == 0
+    assert (folder / "old.toml").read_bytes() == clean.encode("utf-8")
+    assert (folder / "clean.toml").read_bytes() == clean.encode("utf-8")
+
+
+def test_the_migrator_cli_names_what_it_leaves_and_fails_on_an_unparseable_record(
+    tmp_path, capsys
+):
+    folder = _records(tmp_path, odd=OLD_HEAD + 'reviewed = "maybe"\n')
+    assert migrate.main(["--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "odd.toml: D-001 keeps a `reviewed` value" in out, out
+    broken = "high_risk = [\nreviewed = true\n"
+    (folder / "broken.toml").write_bytes(broken.encode("utf-8"))
+    assert migrate.main(["--root", str(tmp_path)]) == 1
+    out = capsys.readouterr().out
+    assert "broken.toml: " in out and "left untouched" in out, out
+    assert (folder / "broken.toml").read_bytes() == broken.encode("utf-8")

@@ -2899,7 +2899,10 @@ def _decision_record_refusal(root, branch, outcomes):
     delegated run closes with its record; the refusal is a hold for a person to
     write it. A record that is there but malformed is reported and merges: the
     owner can read what it says, and a refusal over one field would strand
-    finished work for a reporting defect. Under `off` nothing is read.
+    finished work for a reporting defect. Under `off` nothing is read. A
+    branch name `record_path` refuses (`#`, or a character git refuses) is an
+    ABSENT record, refused when one is owed (WI-818 dispute 1): it is never
+    read as the file of the name it would fold into.
 
     THE CONFIGURATION IS JUDGED FIRST. The reader keeps the obligation for a
     value it does not recognize, so a typo in the dial would otherwise surface
@@ -2915,17 +2918,14 @@ def _decision_record_refusal(root, branch, outcomes):
     conflicts = ac.config_conflicts(docs)
     if conflicts:
         return "{}; nothing was merged".format(conflicts[0])
-    rel = kdecisions.record_path(branch)
-    code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
+    try:
+        rel = kdecisions.record_path(branch)
+        code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
+    except ValueError:  # a name no record can carry: an absent record
+        code = 1
     if code != 0:
-        if kdecisions.owed(mode, (outcomes or {}).values()):
-            return (
-                "{} closed without its decisions record ({}): [attestation] "
-                "decision_recording = {!r} makes the record owed at every "
-                "close, even with no entries - write it on the branch; nothing "
-                "was merged".format(branch, rel, mode)
-            )
-        return None
+        owed = kdecisions.owed(mode, (outcomes or {}).values())
+        return kdecisions.missing_record_refusal(mode, branch) if owed else None
     for finding in kdecisions.record_findings(text):
         print("integrate: decisions record {}: {}".format(rel, finding))
     return None

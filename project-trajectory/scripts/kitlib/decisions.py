@@ -13,10 +13,14 @@ made, never a route for work: a call the owner must make, or an act that cannot
 be undone, still goes to the owner through the process's exits.
 
 ONE FILE PER RUN (`DECISIONS_DIR/<run>.toml`), named by the lane's branch, so
-two lanes never write one file and the directory is never a merge-conflict
-surface, the way the log's per-branch fragments are not. A branch name's `/`
-and `#` become `-`, so a run is always ONE file, never a directory, and its
-citation splits only one way.
+the directory is never a merge-conflict surface, the way the log's per-branch
+fragments are not. A branch name's `/` becomes `-`, so a run is always ONE
+file, never a directory; nothing else is rewritten. A name carrying `#` (the
+citation's delimiter) or a character git refuses has NO record: `record_path`
+raises rather than fold it into another name's file, and the merge slot reads
+that as an absent record (WI-818 dispute 1). The residue is stated, not
+claimed away: `a/b` and `a-b`, and a branch name reused by a second lane,
+share one record.
 
 THE OWNER'S VERDICT IS ONE KEY, AND AN OVERRULE IS ACTED ON (WI-818). A
 decision is a direction already taken, so the owner does not approve it: the
@@ -64,11 +68,13 @@ Contracts: IF-255, IF-256 — the seams this module declares (process.md §8; ro
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-255: the delegated-decisions record, as a FILE. One TOML file per
-    delegated run at `docs/decisions/<run>.toml`, a `/` or `#` in the run's
-    name becoming `-`, committed on the lane's branch by the session that made the
-    calls and read off that branch's tree by the merge slot. A top-level
-    `high_risk` list of entry ids names the entries the writer judges deserve
-    the owner's eyes first (empty when none). Each decision is a table
+    delegated run at `docs/decisions/<run>.toml`, a `/` in the run's name
+    becoming `-` and no other character rewritten (a name carrying `#` or a
+    character git refuses has no record), committed on the lane's branch by the
+    session that made the calls and read off that branch's tree by the merge
+    slot. A top-level `high_risk` list of entry ids names the entries the
+    writer judges deserve the owner's eyes first (empty when none). Each
+    decision is a table
     `[decision.D-<digits>]` carrying `decided`, `alternative`, `reversal_cost`
     and `why_not_escalated` as non-blank text and `review` as text, empty until
     the owner writes a note in place, and may carry `owner`, the owner's
@@ -82,10 +88,15 @@ Contract IF-255: the delegated-decisions record, as a FILE. One TOML file per
 
 Contract IF-256: the delegated-decisions record, as a CALL. `MODES` is the
     dial's alphabet (`off`, `record`, `escalate-first`); `REQUIRED_KEYS` the
-    entry's required keys; `record_path(run)` the file's repo-relative path;
+    entry's required keys; `record_path(run)` the file's repo-relative path,
+    raising `ValueError` for a run name no record can carry (`#` or a
+    character git refuses);
     `record_findings(text)` one finding per defect IF-255 names, `[]` for a
     sound record, never raising; `owed(mode, outcomes)` whether a close under
     the dial `mode`, with at least one claimed row closed, owes a record;
+    `missing_record_refusal(mode, run)` the merge slot's refusal of such a
+    close with no record at its run's path, or with a run name no record
+    can carry;
     `session_note(mode, run)` the instruction a delegated session is handed,
     `""` under `off`; `owner_state(value)` `confirmed`, `overruled`, `""` for
     the absent key (not yet seen), or None for a value it does not recognize;
@@ -156,11 +167,14 @@ _RETIRED_FALSE = frozenset({"false", "no", "n", "0", ""})
 # filename. They are exactly what git refuses in any branch name, one
 # character at a time (git-check-ref-format(1): the ASCII control characters,
 # space and DEL, and `~ ^ : ? * [ \`), plus the two delimiters a branch may
-# carry: `/` (a run is one file, never a directory) and `#` (the citation's
-# delimiter, so a citation splits only one way). An explicit ASCII class,
-# never `\s`: git permits Unicode whitespace (U+00A0), so `record_path` keeps
-# it. Every other character a valid branch carries (`+`, `@`, `.`, non-ASCII)
-# is kept by `record_path` and matched by the citation reader.
+# carry: `/`, which `record_path` maps to `-` (a run is one file, never a
+# directory), and `#`, the citation's delimiter, which it REFUSES with the
+# rest (WI-818 dispute 1: folding `#` into `-` would hand a `#`-named branch
+# another branch's record), so no record name carries `#` and a citation
+# splits only one way. An explicit ASCII class, never `\s`: git permits
+# Unicode whitespace (U+00A0), so `record_path` keeps it. Every other
+# character a valid branch carries (`+`, `@`, `.`, non-ASCII) is kept by
+# `record_path` and matched by the citation reader.
 # Implements: SR-225, LLR-283
 _RUN_EXCLUDED = r"/#\x00-\x20\x7f~^:?*\[\\"
 _NOT_RUN_CHAR_RE = re.compile("[" + _RUN_EXCLUDED + "]")
@@ -176,12 +190,21 @@ _CITATION_RE = re.compile(
 
 def record_path(run):
     """The repo-relative path of one run's record: `DECISIONS_DIR/<run>.toml`,
-    each character of the run's name outside the run-name alphabet becoming
-    `-` — for a branch name, only its `/` and `#`.
+    the run's `/` becoming `-` and no other character rewritten. A run name
+    carrying any other character outside the run-name alphabet (`#`, or one
+    git refuses) has no record: ValueError, naming the run and each such
+    character, rather than a lossy rewrite into another name's file.
 
     Implements: SR-225, LLR-283
     """
-    return "{}/{}.toml".format(DECISIONS_DIR, _NOT_RUN_CHAR_RE.sub("-", str(run)))
+    name = str(run).replace("/", "-")
+    bad = sorted(set(_NOT_RUN_CHAR_RE.findall(name)))
+    if bad:
+        raise ValueError(
+            "run name {!r} carries {}, which no decisions record can be named "
+            "by: rename the branch".format(str(run), ", ".join(map(repr, bad)))
+        )
+    return "{}/{}.toml".format(DECISIONS_DIR, name)
 
 
 def _inert(entry_id):
@@ -708,6 +731,28 @@ def owed(mode, outcomes):
     Implements: SR-225, LLR-283
     """
     return str(mode) in MODES[1:] and bool(list(outcomes or ()))
+
+
+def missing_record_refusal(mode, run):
+    """The merge slot's refusal of a close that owes a record and has none at
+    its run's path, naming that path. A run name `record_path` refuses is an
+    absent record too (WI-818 dispute 1): the refusal names the run and the
+    reason, so the branch is renamed rather than handed another name's file.
+
+    Implements: SR-225, LLR-283
+    """
+    try:
+        rel = record_path(run)
+    except ValueError as exc:
+        return "{} closed with no decisions record: {}; nothing was merged".format(
+            run, exc
+        )
+    return (
+        "{} closed without its decisions record ({}): [attestation] "
+        "decision_recording = {!r} makes the record owed at every "
+        "close, even with no entries - write it on the branch; nothing "
+        "was merged".format(run, rel, mode)
+    )
 
 
 def session_note(mode, run):

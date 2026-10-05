@@ -208,3 +208,30 @@ def test_a_malformed_hoist_is_shown_as_a_finding_not_a_crash(tmp_path):
     band = _band(tmp_path)
     assert "chose D-001" in band
     assert "Format findings" in band and "high_risk" in band
+
+
+def test_overruled_entries_list_hoisted_first_then_by_id(tmp_path):
+    # File order D-003, D-001, D-002 with D-002 hoisted: listed D-002, D-001,
+    # D-003, as the not-yet-seen list is.
+    over = [
+        _entry(eid, '"overruled"', review="Undo {}.".format(eid))
+        for eid in ("D-003", "D-001", "D-002")
+    ]
+    _record(tmp_path, "run.toml", over, high_risk=["D-002"])
+    _unseen, overruled, _count = decisions.review_queue(_text(tmp_path))
+    assert [e["id"] for e in overruled] == ["D-002", "D-001", "D-003"]
+    band = _overruled(tmp_path)
+    order = [band.index("chose " + eid) for eid in ("D-002", "D-001", "D-003")]
+    assert order == sorted(order)
+
+
+def test_an_archived_citing_row_is_shown_with_its_state_folder(tmp_path):
+    _record(tmp_path, "run.toml", [_entry("D-001", '"overruled"', review="Undo.")])
+    spec = tmp_path / "docs/archive/work/complete/WI-008-undo.md"
+    spec.parent.mkdir(parents=True)
+    spec.write_text(
+        '+++\nid = "WI-008"\ntitle = "t"\n+++\n\n## Done-when\n\n'
+        "- Undid docs/decisions/run.toml#D-001.\n",
+        encoding="utf-8",
+    )
+    assert "WI-008 (complete)" in _overruled(tmp_path)

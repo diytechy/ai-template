@@ -303,6 +303,7 @@ def test_the_session_note_names_the_path_only_under_a_recording_dial():
     assert "escalate-first" not in note
     # WI-818: the owner's verdict key is named, the retired key is not.
     assert 'owner = "confirmed"' in note and "reviewed" not in note
+    assert "set no owner key" in note  # the session leaves the verdict unset
     ask_more = kd.session_note("escalate-first", "wi-1-x")
     assert "docs/decisions/wi-1-x.toml" in ask_more
     assert len(ask_more) > len(note), "escalate-first adds the prefer-the-exits rule"

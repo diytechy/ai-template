@@ -5,9 +5,11 @@
 # layer; the `[attestation] decision_recording` dial in docs/process.toml
 # decides whether a run owes one.
 #
-# ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`), so two
-# lanes never write one file. A supervisor's sitting names its own file the
-# same way: one run, one file.
+# ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`; nothing else
+# is rewritten). A branch name carrying `#` has no record and, under a recording
+# dial, is refused at the merge until it is renamed. Names that differ only by
+# `/` and `-` (`a/b` and `a-b`) share one file. A supervisor's sitting names its
+# own file the same way: one run, one file.
 #
 # THIS FILE IS THE EXAMPLE. An entry numbered -000 is never judged, so it may
 # stay here as a reference; a real record numbers its entries D-001, D-002, ...
