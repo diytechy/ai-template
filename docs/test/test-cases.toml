@@ -741,11 +741,11 @@ phase = 4
 [test.TC-069]
 verifies = ["SR-155", "LLR-069"]
 level = "Integration"
-method = "Run rival plan coverage, reference, graph, absent-registry, and malformed-input cases."
+method = "Run dual and single plan coverage, reference, graph, exclusion, SR/TC-diff, absent-registry, and malformed-input cases."
 tier = "Smoke"
-expected = """Clean plans emit pairwise coverage; findings exit 1; malformed inputs exit 2; absent registries note without failure."""
+expected = """A reasoned exclusion passes; an unexplained SINGLE Done-when or finding gap, undeclared or reasonless exclusion, or missing SR/TC coverage exits 1 by name; a missing Done-when exits 2; DUAL report bytes remain unchanged; absent registries note without failure."""
 automated = "Yes"
-evidence = "tests/test_plan_coverage.py"
+evidence = "tests/test_plan_coverage.py::test_single_plan_covering_or_excluding_every_clause_passes; tests/test_plan_coverage.py::test_single_plan_missing_a_done_when_item_exits_1_naming_it; tests/test_plan_coverage.py::test_an_exclusion_without_a_reason_is_a_finding; tests/test_plan_coverage.py::test_an_exclusion_of_an_undeclared_clause_is_a_finding; tests/test_plan_coverage.py::test_single_sr_tc_diff_names_an_uncovered_sr_and_an_unnamed_tc; tests/test_plan_coverage.py::test_single_tc_excluded_with_a_reason_passes; tests/test_plan_coverage.py::test_open_review_findings_are_clauses_on_a_replan; tests/test_plan_coverage.py::test_an_item_without_done_when_is_a_malformed_input; tests/test_plan_coverage.py::test_the_dual_report_is_byte_identical_to_the_pre_gate_report"
 status = "Approved"
 phase = 1
 
