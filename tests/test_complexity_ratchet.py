@@ -304,8 +304,10 @@ BASELINE = {
     # — entry DELETED per the improvement rule.
     ("rendering/traj_views.py", "arch_icicle"): 19,
     ("rendering/traj_views.py", "sw_containment"): 17,
-    ("plan_coverage.py", "check_plan"): 17,
-    ("plan_coverage.py", "main"): 12,
+    # plan_coverage.py check_plan (17) and main (12) DELETED per the improvement
+    # rule, WI-803: the plan gate split check_plan's Covers and Interfaces arms
+    # into `_covers_findings` / `_interfaces_findings` and main's input loading
+    # into `_load_gate` / `_check_one`, so both now measure under the limit.
     ("plan_round.py", "record"): 29,
     ("plan_runner.py", "dispatch"): 16,
     # WI-446: 30 -> 31. ONE new `except` arm — the hats roster (SN-036) that

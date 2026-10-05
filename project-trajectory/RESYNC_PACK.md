@@ -6889,6 +6889,37 @@ projection (`kitlib.spine.open_item_queue`, read through
    decisions-record entries read as not reviewed until you set `reviewed`; no
    record has to change shape.
 
+### The plan gate: `D#`/`F#` clauses, `Excludes:`, the SR/TC diff, the `Tier` column [since 97b5e041]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `plan_coverage.py` gains a SINGLE run beside the dual-plan
+one. `--item SPEC.md` reads one claimed item: its Done-when items are the
+clauses `D1…Dn`, in order (`kitlib.done_when.items`), and `--findings FILE`
+adds open review findings declared as `F1: <text>` lines on a replan. In a
+SINGLE run coverage is the gate: every clause is covered by a plan row's
+`Covers` cell or named on an `Excludes: <ref>[; <ref>] — <reason>` line, and
+an unexplained gap exits 1 naming the clause. The run also diffs the item's
+`sr_refs` and every TC verifying them: each SR must be cited by a row, and
+each such TC named in a row's `Covers` cell (to run or amend), or excluded with
+a reason. The planner grammar every run reads gains two things: the
+`Excludes:` line (an em dash, an en dash or a spaced hyphen before the reason;
+a line with no reason, or naming an undeclared clause, is a finding in both
+runs) and an optional `Tier` column in the `Plan-WI` table, carried for the
+consumer that applies it and not validated here. A dual run (`--goal`) is
+otherwise unchanged: its `C#` gaps stay report payload, never findings, and its
+output is byte-identical for a plan with no `Excludes:` line. The report shows
+`- excluded: <ref> - <reason>` lines and, in a SINGLE run, a
+`## SR/TC diff: <plan>` section.
+
+**What to do.** Re-sync `scripts/plan_coverage.py`. No migration for plans you
+already have: a dual plan with no `Excludes:` line reads exactly as before. A
+dual plan that happens to carry a line starting `Excludes:` is now checked, so
+give each such line a reason after a dash and name only declared clauses or
+`SR-###` ids. If you wrap `plan_coverage.py` yourself, note that exactly one of
+`--goal` or `--item` is now required, and `--findings` is only valid with
+`--item`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
