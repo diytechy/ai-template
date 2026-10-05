@@ -32,31 +32,51 @@ of record, [docs/specs/WI-822.md](../../specs/WI-822.md).
 
 ## Done-when
 
-- The occupancy reader computes the share from a transcript fixture's newest
-  assistant `usage`, including cache reads and cache creation, against the declared
-  window. A transcript with no usage yet reads as unknown, never as 0%, and is
-  reported.
-- Crossing the threshold injects the instruction once per crossing, plus bounded
-  reminders, keyed by `session_id`. It is tested below, at and above the threshold,
-  and across a fresh session.
-- Past the threshold, `PreToolUse` refuses `integrate.py claim` and
-  `git worktree add`, naming the reason. Other tool calls, landings and closes pass.
-  Tested both ways.
-- The relaunch request is written by the session as part of its handoff. The
-  `SessionEnd` hook launches the next session only when a request exists, then
-  consumes it. A request naming a missing handoff refuses and reports, launching
-  nothing. Tested with the launch command stubbed. The launcher template exists
-  for Windows and POSIX, and uses the handoff's own prompt.
-- `PreCompact` writes its marker, and the next handoff template reports a marker
-  found.
-- The threshold and window are declared values in the one dial home (no
-  hard-coded 50 or 1M in the script). Changing them needs no code change.
-- The hook registration is in a tracked `.claude/settings.json`, and an
-  end-to-end dry run is recorded in the row's report: a fixture transcript over
-  the threshold yields the instruction, a refused claim, and a launch command at
-  session end.
-- `session-protocol` (or the coordinator handoff template) tells a coordinator what
-  the instruction means, so the close-out is the same every time.
-- The row's test bar: its module tests plus the smoke tier. Review bar: A (one
-  cross-family REVIEW-A). RESYNC_PACK: none while it is this repo's tooling (say
-  so); an entry if it ships.
+- **Occupancy** is read from version-identified transcript fixtures: the newest
+  valid usage after the last compaction boundary on the live branch, counting
+  cache reads and creation. Fixtures cover a branched transcript, one after
+  compaction, one after a resume, malformed or partial usage, and a mismatched
+  window. No valid usage reads as unknown, never 0%.
+- **Coordinator identity:** only the lease holder's transcript is measured or
+  drained. A subagent's hook call and another session's hook call are no-ops,
+  each tested. A stale lease (heartbeat past its expiry) may be retaken, and the
+  steal is recorded.
+- **Drain latches:** above threshold, then compaction below it, then a claim is
+  still refused. The latch survives a resumed session, and clears only on the
+  successor's lease take or the owner's recorded clear. The instruction is
+  injected once at the latch, then bounded reminders, on tool, failed-tool,
+  prompt and stop events. Each case tested.
+- **The claim boundary:** `integrate.claim` refuses while draining, whatever the
+  caller: the CLI, a wrapper, or an import. Close-out passes while draining:
+  - landing, archive and sweep;
+  - the scoped-unpause restore;
+  - a verification `git worktree add --detach`, and worktree removal.
+
+  Each case tested.
+- **The relaunch:**
+  - It launches only on an exit reason, never `clear` or `resume`, and only from
+    the lease holder, and only for a request from that same session, for this
+    repo, naming an existing handoff.
+  - The request is acquired atomically: two concurrent handlers launch once.
+  - A failed launch restores the request. A stale or foreign request is refused
+    and reported.
+  - The launch runs in the declared repo root, with the handoff's prompt; the
+    Windows and POSIX launchers are both tested with the launch stubbed.
+- **Compaction:** `PreCompact` records the trigger, the occupancy and the guard
+  state, and the handoff template classifies a missed threshold, a manual
+  compaction and compaction during a drain.
+- **Dials:** the threshold, window and expiries are declared in
+  `docs/process.toml` and in the shipped template (template threshold 0 = off,
+  so the dogfood sync holds). Nothing is hard-coded.
+- **Registration and dry run:** hooks are registered in a tracked
+  `.claude/settings.json`. The row's report records an end-to-end dry run: a
+  fixture over threshold yields the latch, the instruction and a refused claim;
+  a stubbed exit then launches exactly once.
+- **Close-out wording:** `session-protocol` (or the coordinator handoff template)
+  tells a coordinator what the instruction means, so the close-out is the same
+  every time.
+- **Shipping:** whether the script and hook registration ship to adopters is
+  decided and recorded.
+- **Bars:** the test bar is its module tests plus the smoke tier. Review bar: A.
+  RESYNC_PACK: an entry for the template's new dial keys, plus the tooling if it
+  ships.

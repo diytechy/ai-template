@@ -103,6 +103,11 @@ This session (owner present) is recorded in
   backticks and apostrophes. Give anchored sections plain headings, and give
   every row its own anchor (rows sharing an unanchored spec raise a warning per
   pair).
+- **Never name a queued or active row's id in `status.md`'s hand text.**
+  `integrate.py claim` refuses a row whose id appears there (the WI-358 rung),
+  and this session's own status edits had named eight ready rows until Sol's
+  WI-822 scope review caught it. Describe rows by title; the generated block
+  lists ids.
 - **Closing a row.** Scrub its id from `status.md`'s hand text in the same commit
   (the forward-only rule). Move the spec with `spec_move.py`, which relinks
   inbound links.

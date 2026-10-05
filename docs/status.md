@@ -31,25 +31,22 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   items settled, the high-risk decisions confirmed); the 60 low-risk decisions
   render under "Decisions to review" at the bottom of
   [open-items.html](open-items.html). Approval acts run to seq 31.
-  0. **WI-822 first**: the coordinator context guard (at 50% context the session
-     stops claiming, closes out, hands off, and relaunches at session end).
-  1. **Build the S788-* successor rows, WI-797 to WI-817**, in their `needs`
-     order with the wave-11 cycle (the design note is
-     [plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
-     its ruling section first; it overrides the chapters). Claim each batch
-     under one scoped unpause. WI-797 (the glossary), WI-803 (the plan gate)
-     and WI-806 (text-then-act) need nothing and can start; WI-796 re-judges
-     TC-055 after the last landing, and WI-818 (the owner's verdict on a
-     decision: confirmed or overruled) is ready too. The owner directed
-     (2026-10-04) that this campaign runs by coordinator session, not the
-     unattended loop.
-     OI-105 (the FreeLLMAPI endpoint and pinned models) waits for the owner's
-     router; it holds only the FreeLLMAPI row of S788-routes.
-  2. **WI-821 burns down the duplicate-code census** (owner, 2026-10-04): one
-     home per shared stage, readers first, from
+  0. **The coordinator context guard first** (the row titled "Coordinator context
+     guard"): at 50% context the session stops claiming, closes out, hands off,
+     and relaunches at session end. Build it while the session's context is low.
+  1. **Build the S788-* successor rows** of the approved design note
+     ([plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
+     its ruling section first; it overrides the chapters), in their `needs`
+     order with the wave-11 cycle, claiming each batch under one scoped unpause.
+     The generated ready frontier below lists the rows that can start; the
+     handoff names them. The owner directed (2026-10-04) that this campaign
+     runs by coordinator session, not the unattended loop. OI-105 (the
+     FreeLLMAPI endpoint and pinned models) waits for the owner's router; it
+     holds only the FreeLLMAPI row of S788-routes.
+  2. **The duplicate-code burn-down** (owner, 2026-10-04): one home per shared
+     stage, readers first, from
      [plans/2026-09-28-duplicated-stage-detection.md](plans/2026-09-28-duplicated-stage-detection.md)
-     §7. It needs nothing and runs alongside the program; the bar vocabulary's
-     two tables went to WI-817.
+     §7. It needs nothing and runs alongside the program.
   3. OI-98: the owner re-syncs `C:\Projects\FileBackup` (stamp `9b697cc`) as a
      scratch trial, after TC-036's inputs gain `RESYNC_PACK.md`, then rules it.
 
