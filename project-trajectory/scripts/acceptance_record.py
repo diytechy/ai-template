@@ -2171,6 +2171,10 @@ TEXT_THEN_ACT_REMEDY = (
     "`intake.py snapshot` and the views it regenerates) as a second commit that "
     "changes no other spine cell and adds or removes no row"
 )
+SQUASH_REBASE_HINT = (
+    "a squash is exempt only of a lane tip that contains HEAD, its spine and "
+    "record staged as the tip's: rebase the lane onto trunk first"
+)
 
 
 def _text_changes(root, bases, head):
@@ -2267,28 +2271,22 @@ def commit_text_then_act_lines(root, rev):
 
 def _squash_lines(root, head, tip):
     """The lines of every commit `head..tip` when the index IS the squash of
-    `tip` onto `head` for everything this rule reads, else None. The index's
-    approval-act registries and record must equal git's own merge of `tip`
-    into `head` (`git merge-tree`), so a `SQUASH_MSG` left behind by an
-    abandoned squash exempts no other commit; a merge git cannot compute, a
-    conflicted one included, exempts nothing.
+    `tip` for everything this rule reads, else None: `tip` contains `head` (the
+    lane was rebased onto trunk, as acts serialize) and the index's
+    approval-act registries and record are byte-equal to the tip's own. So a
+    squash combining two judged cells into a third, and a `SQUASH_MSG` left
+    behind by an abandoned squash, exempt nothing unless the staged spine and
+    record are a judged commit's.
 
     Implements: SR-140, LLR-302
     """
-    merged = _git(root, ["merge-tree", "--write-tree", head, tip])
-    tree = (merged or "").split("\n", 1)[0].strip()
     paths = [c for rel, _ in APPROVAL_ACT_CSVS for c in _spine_carriers(rel)]
-    differ = tree and _git(
-        root, ["diff", "--cached", "--name-only", tree, "--", SNAPSHOT_DIR, *paths]
-    )
+    staged = ["diff", "--cached", "--name-only", tip, "--", SNAPSHOT_DIR, *paths]
     commits = _git(root, ["rev-list", "--reverse", head + ".." + tip])
-    if not tree or differ is None or differ.strip() or commits is None:
+    within = _git(root, ["merge-base", "--is-ancestor", head, tip]) == ""
+    if not within or _git(root, staged) != "" or commits is None:
         return None
-    return [
-        line
-        for rev in commits.split()
-        for line in commit_text_then_act_lines(root, rev)
-    ]
+    return sum((commit_text_then_act_lines(root, rev) for rev in commits.split()), [])
 
 
 def staged_text_then_act_lines(root, squashed=()):
@@ -2300,11 +2298,11 @@ def staged_text_then_act_lines(root, squashed=()):
     the rule held on every commit it squashes. The hook checks that rather than
     assuming it, since a hand landing never meets the merge slot: `squashed`
     names the commits git's `SQUASH_MSG` lists, newest first (the caller reads
-    the file, as this module reads no file). When the index's approval-act
-    registries and record equal git's merge of that tip into HEAD, each commit
-    HEAD..tip is judged and the index is not (`_squash_lines`); otherwise the
-    index is judged like any commit. Before the first commit there is no text
-    before the act, and nothing is judged.
+    the file, as this module reads no file). When that tip contains HEAD and
+    the index's approval-act registries and record are the tip's own, each
+    commit HEAD..tip is judged and the index is not (`_squash_lines`);
+    otherwise the index is judged like any commit, a refusal ending with
+    `SQUASH_REBASE_HINT`. Before the first commit nothing is judged.
 
     Implements: SR-140, LLR-302
     """
@@ -2315,4 +2313,6 @@ def staged_text_then_act_lines(root, squashed=()):
     squash = None if merging or not squashed else _squash_lines(root, head, squashed[0])
     if squash is not None:
         return squash
-    return text_then_act_lines(root, [head] + ([merging] if merging else []))
+    lines = text_then_act_lines(root, [head] + ([merging] if merging else []))
+    hint = [SQUASH_REBASE_HINT] if squashed and not merging else []
+    return lines and lines + hint

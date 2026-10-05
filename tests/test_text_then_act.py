@@ -8,7 +8,8 @@ act (the flips, the snapshot, the ledger and the views) second. The pre-commit
 hook asks it of the staged tree; the merge slot asks it of every lane commit,
 so a `--no-verify` commit is still refused. A merge, a lane's refresh merge
 included, is judged by what NEITHER parent carried, and a squash landing is
-admitted only when every commit it squashes passes.
+admitted only when the squashed lane tip contains HEAD, the staged spine and
+record are the tip's own, and every commit it squashes passes.
 """
 
 import subprocess
@@ -370,9 +371,9 @@ def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
 
 def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
     # Sol REVIEW-A MAJOR: `git restore` abandons a squash but leaves git's
-    # SQUASH_MSG behind. The exemption holds only while the staged spine and
-    # record equal the squashed tip's merge with HEAD, so a different direct
-    # commit made afterwards is judged like any other.
+    # SQUASH_MSG behind. The exemption holds only while the squashed tip
+    # contains HEAD and the staged spine and record are the tip's own, so a
+    # different direct commit made afterwards is judged like any other.
     root = _base(tmp_path)
     _git(root, "checkout", "-q", "-b", "wi-002")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
@@ -386,21 +387,111 @@ def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
     _git(root, "restore", ".")
     _git(root, "clean", "-q", "-fd")
     assert (root / ".git" / "SQUASH_MSG").is_file()  # left behind
-    # The lane's own spine and record, retyped by hand, ARE its squash in
-    # content: every byte was committed and judged in the lane (D-004).
+    # RESIDUE (D-004): the lane tip's own spine and record, retyped by hand,
+    # ARE its squash in content: every byte was committed and judged there.
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
     _act(root)
     _git(root, "add", "-A")
     assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
-    # Any other spine text beside that record is not the lane's merge result,
-    # so the stale message exempts nothing and the commit is judged plainly.
+    # Any other spine text beside that record is not the tip's, so the stale
+    # message exempts nothing and the commit is judged plainly.
     llr = root / "docs/requirements/low-level-requirements.csv"
     llr.write_text(
         "LLR-ID,Title,Detail,Status\nLLR-001,New,the text,Drafted\n",
         encoding="utf-8",
     )
     _git(root, "add", "-A")
-    (line,) = ar.staged_text_then_act_lines(root, _squashed(root))
-    assert "LLR-001: added" in line
+    line, hint = ar.staged_text_then_act_lines(root, _squashed(root))
+    assert "LLR-001: added" in line and hint == ar.SQUASH_REBASE_HINT
     proc = _step(root)
     assert proc.returncode == 1, proc.stdout + proc.stderr
+    # git deletes SQUASH_MSG at the next commit, so the residue's window is
+    # that one commit.
+    _git(root, "commit", "-q", "--no-verify", "-m", "a direct commit")
+    assert not (root / ".git" / "SQUASH_MSG").exists()
+
+
+def _requirement(root, lines):
+    """SR-001, approved, its Requirement one multiline cell of `lines`."""
+    path = root / SR
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cell = "\n".join(lines)
+    path.write_text(
+        HEADER + 'SR-001,One,"{}",Approved\n'.format(cell), encoding="utf-8"
+    )
+
+
+def _text_then_reattest(root, lines, what):
+    """The two-commit form: the amended cell, then its re-attesting copy."""
+    _requirement(root, lines)
+    _commit(root, what + " text")
+    _act(root)
+    return _commit(root, what + " act")
+
+
+def _combined_cell_lanes(tmp_path):
+    """Trunk and lane wi-004 each amend a different line of SR-001's one
+    multiline Requirement cell, each in the two-commit form; git merges the
+    two into a third value no judged commit carried."""
+    root = _repo(tmp_path / "repo")
+    lines = ["line {}".format(n) for n in range(1, 10)]
+    _requirement(root, lines)
+    _act(root)
+    _commit(root, "the first signing")
+    _git(root, "checkout", "-q", "-b", "wi-004")
+    _text_then_reattest(root, ["lane"] + lines[1:], "lane")
+    _git(root, "checkout", "-q", "main")
+    _text_then_reattest(root, lines[:-1] + ["trunk"], "trunk")
+    return root
+
+
+def test_a_squash_combining_two_judged_cells_into_a_third_is_refused(tmp_path):
+    # Sol REVIEW-A r2 BLOCKER: git cleanly squashes the lane into trunk as a
+    # Requirement value holding both edits, live and recorded alike, which no
+    # judged commit carried. A lane not containing HEAD gets no exemption.
+    root = _combined_cell_lanes(tmp_path)
+    _git(root, "merge", "-q", "--squash", "wi-004")
+    staged = _git(root, "show", ":" + SR)
+    assert "lane" in staged and "trunk" in staged  # the third value
+    lines = ar.staged_text_then_act_lines(root, _squashed(root))
+    assert lines and "SR-001: Requirement" in lines[0]
+    assert "rebase" in lines[-1]
+    proc = _step(root)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "SR-001" in proc.stdout and "rebase" in proc.stdout
+
+
+def test_a_squash_of_a_lane_not_containing_head_is_refused_with_the_rebase_hint(
+    tmp_path,
+):
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-002")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _commit(root, "the text")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _commit(root, "the act")
+    _git(root, "checkout", "-q", "main")
+    (root / "trunk.txt").write_text("trunk\n", encoding="utf-8")
+    _commit(root, "trunk moves on")
+    _git(root, "merge", "-q", "--squash", "wi-002")
+    lines = ar.staged_text_then_act_lines(root, _squashed(root))
+    assert lines and "SR-002" in lines[0]
+    assert "rebase the lane onto trunk" in lines[-1]
+    proc = _step(root)
+    assert proc.returncode == 1 and "rebase" in proc.stdout, proc.stdout
+
+
+def test_a_refreshed_lanes_squash_is_admitted(tmp_path):
+    # Rebased onto trunk, the lane's own commits carry the combined cell, each
+    # judged against its parent; its squash is exactly its tip for the spine
+    # and the record, so the landing is exempt.
+    root = _combined_cell_lanes(tmp_path)
+    _git(root, "checkout", "-q", "wi-004")
+    _git(root, "rebase", "-q", "main")
+    _git(root, "checkout", "-q", "main")
+    _git(root, "merge", "-q", "--squash", "wi-004")
+    assert ar.staged_text_then_act_lines(root) != []  # judged as a plain commit
+    assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
+    proc = _step(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
