@@ -2410,3 +2410,54 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 rationale = "The generated legacy case header must use the registry vocabulary instead of copying it, so new observation cells stay paste-ready without a second schema."
+
+
+[interface.IF-271]
+owner = "scripts/coordinator_guard"
+requestors = ["scripts/integrate"]
+channel = "call"
+data = "claim_refusal(root, env=None) -> None | refusal text"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The integrator must ask one guard-owned admission question, so every non-dispatcher route receives the same lease and drain decision."
+
+[interface.IF-272]
+owner = "scripts/session_keep"
+requestors = ["scripts/coordinator_guard"]
+channel = "call"
+data = "primary_out_dir(root) -> Path"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Coordinator and retained-session state must resolve the same primary checkout, or a lane worktree can split their runtime state."
+
+[interface.IF-273]
+owner = "scripts/session_keep"
+requestors = ["scripts/coordinator_guard"]
+channel = "call"
+data = "dir_lock(directory, wait=10.0) -> context manager yielding Path; raises StoreBusy"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "One exclusive-file lock primitive keeps coordinator lease updates and other runtime-store updates from growing incompatible lock behavior."
+
+[interface.IF-274]
+owner = "scripts/coordinator_guard"
+requestors = ["external:agent CLI"]
+channel = "bytes"
+data = "hook-event JSON on stdin: hook_event_name, session_id, transcript_path, agent_id?, reason?, trigger?"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The guard can identify the lease holder and event only from the hook payload, so its accepted event vocabulary must have one declared surface."
+
+[interface.IF-275]
+owner = "scripts/coordinator_guard"
+consumers = ["external:agent CLI"]
+channel = "stdout"
+data = "hook response JSON with hookSpecificOutput.hookEventName and optional additionalContext"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The hook caller needs one response shape so a latch instruction reaches the coordinator without turning a hook response into a tool refusal."
