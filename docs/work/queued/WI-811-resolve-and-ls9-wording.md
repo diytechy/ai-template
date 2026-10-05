@@ -4,7 +4,7 @@ title = "RESOLVE for disputed findings, and LS9's builder and reviewer wording"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-resolve-ls9"
 sr_refs = ["SR-154"]
-needs = ["WI-809"]
+needs = ["WI-809", "WI-805"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
@@ -26,6 +26,11 @@ family excludes every author.
 
 Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
 `docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
+
+Ordering (coordinator, 2026-10-04, from the pre-execution consolidation check): it
+needs WI-805 too, because the note's matrix amends SR-154 three times "in `needs`
+order" (WI-801, then WI-805, then this row) and the filed graph did not enforce
+the second step.
 
 ## Done-when
 

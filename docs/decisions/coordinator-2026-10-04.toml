@@ -55,3 +55,10 @@ reversal_cost = "Low: one row."
 why_not_escalated = "WI-794's own Context says the ruling writes its Done-when; the specref rule (WI-790 A6) leaves the log record as the real spec on trunk."
 review = ""
 
+[decision.D-008]
+decided = "From the pre-execution consolidation check (the kit's consolidation census run read-only, 2026-10-04), no queued rows are merged: every overlap is two rows editing the same modules in sequence, as the approved graph intends, not one work item wearing two ids. Two ordering edges are added instead: WI-811 needs WI-805 (the note's matrix amends SR-154 three times in needs order, and the filed graph did not enforce WI-805 before WI-811), and WI-808 needs WI-818 (both amend SR-225 and the decisions machinery; WI-818 lands first so the landing's record check reads the new verdict key). WI-821's CSV-read pair waits on WI-817, which may delete it."
+alternative = "Merge overlapping rows (for example WI-808 with WI-818), or leave the graph as filed and let refreshes resolve the textual conflicts."
+reversal_cost = "Low: two needs entries and one note."
+why_not_escalated = "The first edge enforces an ordering the owner-approved note already states; the second only orders two rows that touch the same code, and changes neither row's scope."
+review = ""
+

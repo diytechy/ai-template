@@ -4,7 +4,7 @@ title = "One landing per lane on both paths, with the tip archived and the recor
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-landing"
 sr_refs = ["SR-225"]
-needs = ["WI-807", "WI-801"]
+needs = ["WI-807", "WI-801", "WI-818"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
@@ -28,6 +28,12 @@ is A4's named iteration point.
 
 Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
 `docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
+
+Ordering (coordinator, 2026-10-04, from the pre-execution consolidation check): it
+needs WI-818 too. Both amend SR-225 and touch the decisions machinery
+(`kitlib/decisions.py`, `gen_open_items.py`, `pending.py`, `integrate.py`); WI-818
+is small and ready, so it lands first and this row's record check reads its
+`owner = confirmed | overruled` key, never the retired one.
 
 ## Done-when
 

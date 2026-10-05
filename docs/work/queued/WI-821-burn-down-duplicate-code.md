@@ -42,6 +42,11 @@ one changed flag hides a copy from an exact-body census):
 - `spec_move.rewrite_text` and `trunk_step.rebase_links`;
 - the four small M0 copies.
 
+**The CSV-read pair waits on WI-817.** `check_trajectory.read_rows` and
+`gen_release_checklist.load_csv` read CSV; WI-817 retires the non-TOML carriers
+(D6), which may remove one or both readers outright. Take that group after WI-817,
+or drop it if WI-817 removes it, rather than merging code about to be deleted.
+
 **Not in this row:** the bar vocabulary's two tables (`intake.normalize_bar`,
 `integrate._normalize_bar`) go to WI-817, which already retires their aliases. The
 WI-788 dual-path census (D1 to D18) is WI-799, WI-816 and WI-817's.
