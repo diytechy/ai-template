@@ -3,12 +3,16 @@ id = "WI-830"
 title = "adjudicate: LLR-283, LLR-284, SR-225, TC-293, TC-294, TC-313 - approved/routed cell(s) amended on merged trunk c0caea0..a8458c2 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-225"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-283", "LLR-284", "SR-225", "TC-293", "TC-294", "TC-313"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). The in-lane adjudicator ruled LLR-283, LLR-284, SR-225, TC-293, TC-294 and TC-313 MEANING and blessed them (verdict `docs/reviews/wi-818-owner-verdict/002-ADJUDICATE-be8633c.md`), re-attested at act seq 36 in the WI-818 lane. The low-level, system and test-case registries are byte-identical to their anchors under `docs/archive/last_approved/` at the landing.
 
 ## Context
 
