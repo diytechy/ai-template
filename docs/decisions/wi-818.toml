@@ -81,3 +81,10 @@ alternative = "Fix only the overrule sync's filter (decode git's quoted form the
 reversal_cost = "Low: the reader is one function and three call sites."
 why_not_escalated = "The build prompt directs the fix at the one shared reader, and names the open-item sync's use of it in scope as the same defect class. _spine_revs compares fixed ASCII registry paths, so quoting cannot hide one there; changing it is outside this row and is reported as a separate finding."
 review = ""
+
+[decision.D-012]
+decided = "To bring acceptance_record.py back under the module-size ratchet's 1000-SLOC threshold (1051 after this lane; WI-806 had left it at 999), the overrule sync moved to kitlib/decisions.py (_open_spec, _owed_overrules, overrule_sync_lines, now taking the diff's paths and two text readers, so the module still reads no git itself), and the ruling sync's two git reads moved to kitlib/git.py (git_paths, from _git_paths; git_show and UnreadableBlob, from _show and _UnreadableBlob). acceptance_record keeps one alias for each read and calls overrule_sync_lines from ruling_sync_lines with readers over the parent and resulting tree. Behaviour unchanged; it measures 998."
+alternative = "Move the whole ruling sync (WI-790's open-item arm and this lane's overrule arm) into a module of its own, which the acceptance record's boundary sentence does not cover; or re-stamp a 1051 baseline."
+reversal_cost = "Low: move the five functions and one class back and drop the aliases; the tests call the public staged and commit functions and do not change."
+why_not_escalated = "The ratchet's rule is decompose, never bump, and the coordinator named the overrule coupling and the git path reader as the candidates. Moving the whole ruling sync would change the module cell of LLR-298, an approved row outside this lane, so the move is kept to code this lane owns plus _show, which no approved row's code_symbol names. At 998 the module has 2 SLOC of headroom, so the next feature that grows it must decompose again; the whole-ruling-sync move is the larger cut left for that."
+review = ""

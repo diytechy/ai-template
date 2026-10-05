@@ -7092,9 +7092,11 @@ delegated session now says to leave `owner` unset.
 
 **What to do.**
 
-1. Re-sync `scripts/kitlib/decisions.py`, `scripts/acceptance_record.py`,
-   `scripts/pending.py`, `scripts/gen_open_items.py`, `scripts/check.py` and
-   `scripts/integrate.py` (docstrings only in the last two), the new
+1. Re-sync `scripts/kitlib/decisions.py` (which now holds the overrule
+   sync), `scripts/kitlib/git.py` (its two-tree path and blob reads),
+   `scripts/acceptance_record.py`, `scripts/pending.py`,
+   `scripts/gen_open_items.py`, `scripts/check.py` and `scripts/integrate.py`
+   (docstrings only in the last two), the new
    `scripts/migrate_decisions.py` with `scripts/kitlib/bootstrap_manifest.py`
    (which ships it), `decisions.template.toml`,
    `PROCESS_OPTIONS.md` and the `session-protocol` skill.

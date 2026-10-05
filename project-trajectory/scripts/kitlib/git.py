@@ -22,11 +22,19 @@ WHAT THIS MODULE DELIBERATELY DOES NOT DO: it never decides what an absent
 answer MEANS. `None` is "git had nothing to say"; whether that is benign (skip
 the enrichment) or fatal (a gate that requires history) is the caller's
 fail-direction to declare, and folding that choice in here would hide it.
+
+TWO READS FOR A TWO-TREE RULE (WI-818). A commit-time rule comparing a commit
+with its parent needs two answers `git_out` cannot give losslessly: the paths a
+listing prints, which a plain listing quotes and escapes under `core.quotePath`
+(`git_paths` reads them NUL-delimited), and a blob read that tells a path the
+tree does not list from one it lists but cannot read (`git_show`, raising
+`UnreadableBlob` for the second). Neither decides what that MEANS: the ruling
+sync and the overrule sync in `acceptance_record` refuse an unreadable blob.
 """
 
 import subprocess
 
-__all__ = ["git_bytes", "git_out"]
+__all__ = ["UnreadableBlob", "git_bytes", "git_out", "git_paths", "git_show"]
 
 
 def _git_stdout(root, args, **kwargs):
@@ -82,3 +90,44 @@ def git_bytes(root, args):
     before deciding whether any field may be decoded.
     """
     return _git_stdout(root, args)
+
+
+def git_paths(root, args):
+    """The paths a path-listing git subcommand (`args[0]`: `diff`, `ls-files`,
+    `ls-tree`) prints, read LOSSLESSLY: `-z` makes the listing NUL-delimited
+    and unquoted, where a plain listing under `core.quotePath` (git's default)
+    quotes and escapes any path with a non-ASCII byte, which then matches no
+    prefix and names no blob. None when git cannot answer. The ruling sync and
+    the overrule sync read every path list through it.
+
+    Implements: SR-225, LLR-303
+    """
+    out = git_out(root, [args[0], "-z"] + list(args[1:]))
+    if out is None:
+        return None
+    return [path for path in out.split("\0") if path]
+
+
+class UnreadableBlob(Exception):
+    """A path its tree lists whose blob git cannot read (a partial clone
+    offline, a damaged object store). The ruling sync refuses it by name:
+    a failed read is never an absent file (A1)."""
+
+
+def git_show(root, prefix, path):
+    """The text of `prefix + path` (`prefix` a `git show` prefix: `"<rev>:"` or
+    `":"` for the index), None when the tree does not list the path; raises
+    `UnreadableBlob` when it lists the path but its blob cannot be read.
+
+    Implements: SR-148, SR-225, LLR-303
+    """
+    text = git_out(root, ["show", prefix + path])
+    if text is not None:
+        return text
+    if prefix == ":":
+        listed = git_out(root, ["ls-files", "--", path])
+    else:
+        listed = git_out(root, ["ls-tree", "--name-only", prefix[:-1], "--", path])
+    if listed is None or listed.strip():
+        raise UnreadableBlob(prefix + path)
+    return None

@@ -140,8 +140,11 @@ the reviewer's judgement.
 The same rule couples the owner's OVERRULE of a delegated decision to work
 (WI-818): a commit that sets a decisions-record entry `owner = "overruled"`
 must, in the same diff, file or amend a queued or active work item whose spec
-cites the entry (`overrule_sync_lines`, read by `ruling_sync_lines`, so both
-places ask it with no second step or rung).
+cites the entry (`kitlib.decisions.overrule_sync_lines`, which owns the
+record's format and is handed the two trees as readers; `ruling_sync_lines`
+asks it of the same diff, so both places ask it with no second step or rung).
+The sync's two git reads, a NUL-delimited path list and a blob read that
+refuses a listed but unreadable blob, are `kitlib.git`'s.
 
 TEXT THEN ACT (WI-806; OI-101 Q2, amended for landings by the owner's README
 Q-8 answer) is the fourth: a commit that writes the approval record changes, as
@@ -1902,20 +1905,11 @@ ARCHIVE_WORK_DIR = "docs/archive/work"
 _PENDING = "pending"
 
 
-def _git_paths(root, args):
-    """The paths a path-listing git subcommand (`args[0]`: `diff`, `ls-files`,
-    `ls-tree`) prints, read LOSSLESSLY: `-z` makes the listing NUL-delimited
-    and unquoted, where a plain listing under `core.quotePath` (git's default)
-    quotes and escapes any path with a non-ASCII byte, which then matches no
-    prefix and names no blob. None when git cannot answer. The ruling sync and
-    the overrule sync read every path list through it.
-
-    Implements: SR-225, LLR-303
-    """
-    out = _git(root, [args[0], "-z"] + list(args[1:]))
-    if out is None:
-        return None
-    return [path for path in out.split("\0") if path]
+# The ruling sync's two git reads, homed in `kitlib.git` (WI-818): every
+# path list read NUL-delimited, and a blob read that refuses a listed path
+# whose blob cannot be read rather than reading it as absent.
+_git_paths = _kitgit.git_paths
+_show = _kitgit.git_show
 
 
 def _tree_specs(root, rev):
@@ -1938,31 +1932,6 @@ def _tree_specs(root, rev):
         if name.startswith("WI-") and name.endswith(".md") and not wid.endswith("-000"):
             specs[wid] = path
     return specs
-
-
-class _UnreadableBlob(Exception):
-    """A path its tree lists whose blob git cannot read (a partial clone
-    offline, a damaged object store). The ruling sync refuses it by name:
-    a failed read is never an absent file (A1)."""
-
-
-def _show(root, prefix, path):
-    """The text of `prefix + path` (`prefix` a `git show` prefix: `"<rev>:"` or
-    `":"` for the index), None when the tree does not list the path; raises
-    `_UnreadableBlob` when it lists the path but its blob cannot be read.
-
-    Implements: SR-148, LLR-298
-    """
-    text = _git(root, ["show", prefix + path])
-    if text is not None:
-        return text
-    if prefix == ":":
-        listed = _git(root, ["ls-files", "--", path])
-    else:
-        listed = _git(root, ["ls-tree", "--name-only", prefix[:-1], "--", path])
-    if listed is None or listed.strip():
-        raise _UnreadableBlob(prefix + path)
-    return None
 
 
 def _registry_states(root, prefix):
@@ -2058,7 +2027,8 @@ def ruling_sync_lines(root, base, head=None):
     row's Done-when (non-empty afterwards, and its raw section changed) nor
     closes or removes the row. The registry is read through either carrier.
     `[]` when nothing leaves `pending`. A diff git cannot read is a line,
-    never a skip. The diff's overrules are judged too (`overrule_sync_lines`).
+    never a skip. The diff's overrules are judged too
+    (`kitlib.decisions.overrule_sync_lines`, reading both trees through `_show`).
 
     Implements: SR-148, LLR-298
     """
@@ -2074,8 +2044,13 @@ def ruling_sync_lines(root, base, head=None):
         lines = []
         if set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(changed):
             lines = _judged_lines(root, base, head)
-        return lines + overrule_sync_lines(root, base, head, changed)
-    except _UnreadableBlob as exc:
+        new_prefix = ":" if head is None else head + ":"
+        return lines + _kitdecisions.overrule_sync_lines(
+            changed,
+            lambda rel: _show(root, base + ":", rel),
+            lambda rel: _show(root, new_prefix, rel),
+        )
+    except _kitgit.UnreadableBlob as exc:
         return [
             "{} is listed in its tree but its contents cannot be read (a partial "
             "clone offline or a damaged object store), so whether this commit "
@@ -2125,85 +2100,6 @@ def _sync_lines(root, base, head, ruled):
                 )
             )
     return lines
-
-
-# --- THE OVERRULE SYNC: an overrule files or amends its work (WI-818) --------
-# The owner's overrule of a delegated decision is coupled to work the way a
-# ruling is coupled to its citing row: one commit against its parent. The
-# trigger is the record's state (an entry overruled in the new tree and not in
-# the parent's); the act is a queued or active spec this same diff adds or
-# changes whose new text cites the entry. A citation in a row the diff leaves
-# untouched discharges nothing, and an archived row is not work to do.
-_OPEN_WORK_DIRS = (WORK_DIR + "/queued/", WORK_DIR + "/active/")
-
-
-def _open_spec(path):
-    """Is `path` a queued or active work item spec (not the `-000` example)?
-
-    Implements: SR-225, LLR-303
-    """
-    name = path.rsplit("/", 1)[-1]
-    return (
-        path.startswith(_OPEN_WORK_DIRS)
-        and name.startswith("WI-")
-        and name.endswith(".md")
-        and not "-".join(name.split("-")[:2]).endswith("-000")
-    )
-
-
-def _owed_overrules(root, base, new_prefix, changed):
-    """`(owed citations, refusal lines)` over the diff's decisions records:
-    each entry the new tree overrules and the parent's does not, and one
-    refusal per record the new tree carries but cannot parse — FAIL CLOSED, as
-    the ruling sync refuses an unparseable open-items registry: an unreadable
-    verdict is never "no overrule". The parent side unparseable overrules
-    nothing, so the repair owes every overrule it shows.
-
-    Implements: SR-225, LLR-303
-    """
-    owed, refusals = [], []
-    for rel in changed:
-        if not (
-            rel.startswith(_kitdecisions.DECISIONS_DIR + "/") and rel.endswith(".toml")
-        ):
-            continue
-        try:
-            ids = _kitdecisions.newly_overruled(
-                _show(root, base + ":", rel), _show(root, new_prefix, rel)
-            )
-        except ValueError as exc:
-            refusals.append(
-                "{} {}, so whether this commit overrules a decision is unknown: "
-                "the commit leaves the record parseable".format(rel, exc)
-            )
-            continue
-        owed += [_kitdecisions.citation(rel, eid) for eid in ids]
-    return owed, refusals
-
-
-def overrule_sync_lines(root, base, head, changed):
-    """One line per entry the diff `base` -> `head` (`head` None is the index)
-    overrules without filing or amending a queued or active work item that
-    cites it as `docs/decisions/<run>.toml#D-NNN`; `changed` is the diff's
-    paths. `[]` when no record in the diff gains an overrule. A record the new
-    tree carries but cannot parse is a line, never a skip (`_owed_overrules`).
-
-    Implements: SR-225, LLR-303
-    """
-    new_prefix = ":" if head is None else head + ":"
-    owed, refusals = _owed_overrules(root, base, new_prefix, changed)
-    if not owed:
-        return refusals
-    cited = set()
-    for path in filter(_open_spec, changed):
-        cited |= _kitdecisions.citations(_show(root, new_prefix, path))
-    return refusals + [
-        "{} is overruled by this commit, and no queued or active work item it "
-        "files or amends cites it: the overrule's commit files a work item, or "
-        "amends the queued one the decision was scoped to, citing {}".format(c, c)
-        for c in owed
-        if c not in cited
-    ]
 
 
 def staged_ruling_sync_lines(root):
