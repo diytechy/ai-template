@@ -121,11 +121,13 @@ def test_an_unrecognized_value_is_shown_and_is_a_format_finding(tmp_path, value)
 
 @pytest.mark.parametrize("owner", [None, '"confirmed"'])
 def test_the_retired_reviewed_key_is_a_finding_and_never_read(tmp_path, owner):
-    # `reviewed = true` with no owner reads as not yet seen; beside an owner
-    # key it is not read at all — the entry reads by `owner` alone.
+    # An entry still carrying `reviewed` reads as NOT YET SEEN whatever `owner`
+    # says (the spec's first Done-when bullet): the stale key keeps it in the
+    # queue until the migrator removes it.
     _record(tmp_path, "run.toml", [_entry("D-001", owner, extra="reviewed = true\n")])
-    shown = "chose D-001" in _section(tmp_path)
-    assert shown is (owner is None)
+    assert "chose D-001" in _section(tmp_path)
+    unseen, overruled, confirmed = decisions.review_queue(_text(tmp_path))
+    assert [e["id"] for e in unseen] == ["D-001"] and confirmed == 0
     (finding,) = decisions.record_findings(_text(tmp_path))
     assert finding.startswith("D-001: `reviewed` is retired")
 

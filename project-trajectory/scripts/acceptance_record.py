@@ -2136,30 +2136,53 @@ def _open_spec(path):
     )
 
 
+def _owed_overrules(root, base, new_prefix, changed):
+    """`(owed citations, refusal lines)` over the diff's decisions records:
+    each entry the new tree overrules and the parent's does not, and one
+    refusal per record the new tree carries but cannot parse — FAIL CLOSED, as
+    the ruling sync refuses an unparseable open-items registry: an unreadable
+    verdict is never "no overrule". The parent side unparseable overrules
+    nothing, so the repair owes every overrule it shows.
+
+    Implements: SR-225, LLR-303
+    """
+    owed, refusals = [], []
+    for rel in changed:
+        if not (
+            rel.startswith(_kitdecisions.DECISIONS_DIR + "/") and rel.endswith(".toml")
+        ):
+            continue
+        try:
+            ids = _kitdecisions.newly_overruled(
+                _show(root, base + ":", rel), _show(root, new_prefix, rel)
+            )
+        except ValueError as exc:
+            refusals.append(
+                "{} {}, so whether this commit overrules a decision is unknown: "
+                "the commit leaves the record parseable".format(rel, exc)
+            )
+            continue
+        owed += [_kitdecisions.citation(rel, eid) for eid in ids]
+    return owed, refusals
+
+
 def overrule_sync_lines(root, base, head, changed):
     """One line per entry the diff `base` -> `head` (`head` None is the index)
     overrules without filing or amending a queued or active work item that
     cites it as `docs/decisions/<run>.toml#D-NNN`; `changed` is the diff's
-    paths. `[]` when no record in the diff gains an overrule. A side that does
-    not parse overrules nothing (`kitlib.decisions.newly_overruled`).
+    paths. `[]` when no record in the diff gains an overrule. A record the new
+    tree carries but cannot parse is a line, never a skip (`_owed_overrules`).
 
     Implements: SR-225, LLR-303
     """
     new_prefix = ":" if head is None else head + ":"
-    owed = [
-        _kitdecisions.citation(rel, eid)
-        for rel in changed
-        if rel.startswith(_kitdecisions.DECISIONS_DIR + "/") and rel.endswith(".toml")
-        for eid in _kitdecisions.newly_overruled(
-            _show(root, base + ":", rel), _show(root, new_prefix, rel)
-        )
-    ]
+    owed, refusals = _owed_overrules(root, base, new_prefix, changed)
     if not owed:
-        return []
+        return refusals
     cited = set()
     for path in filter(_open_spec, changed):
         cited |= _kitdecisions.citations(_show(root, new_prefix, path))
-    return [
+    return refusals + [
         "{} is overruled by this commit, and no queued or active work item it "
         "files or amends cites it: the overrule's commit files a work item, or "
         "amends the queued one the decision was scoped to, citing {}".format(c, c)

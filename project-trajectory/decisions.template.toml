@@ -35,8 +35,10 @@
 #                                              it; amending the queued row the
 #                                              decision is scoped to is enough).
 #                      Any other value reads as not yet seen AND is a format
-#                      finding. The old `reviewed` key is retired: run
-#                      scripts/migrate_decisions.py to rewrite it.
+#                      finding. The old `reviewed` key is retired: an entry
+#                      still carrying it reads as not yet seen, whatever
+#                      `owner` says; run scripts/migrate_decisions.py to
+#                      rewrite it.
 # An entry may carry further keys of the writer's own; they are not judged.
 
 # The entries the writer judges deserve the owner's eyes first; empty when none.

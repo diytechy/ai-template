@@ -7064,7 +7064,8 @@ owner's verdict is a new key, `owner`, with two values: `"confirmed"` or
 `"overruled"`. An absent key means not yet seen, and the entry is listed under
 "Decisions to review" in `open-items.html`, high-risk first, as before. Any
 other `owner` value is a format finding and reads as not yet seen. So is a
-`reviewed` key wherever it remains: nothing reads it beside `owner`.
+`reviewed` key wherever it remains: an entry still carrying it reads as not
+yet seen, whatever its `owner` says.
 
 An overruled entry must state the direction instead in its `review` note; a
 blank note is a format finding. Overruled entries leave the review queue for
@@ -7077,7 +7078,9 @@ amend a queued or active work item whose spec cites the entry as
 `ruling-sync` pre-commit step and again by the merge slot on each lane commit
 against its first parent. There is no new step or rung, so your hook's
 `--run-steps` list does not change. Amending the queued row the decision was
-scoped to is enough; nothing has to be minted.
+scoped to is enough; nothing has to be minted. The check fails closed: a
+commit whose tree carries a decisions record that does not parse as TOML is
+refused at the same two points, naming the record and the parse error.
 
 The template entry drops `reviewed = false`, and the note handed to a
 delegated session now says to leave `owner` unset.
@@ -7095,7 +7098,10 @@ delegated session now says to leave `owner` unset.
    place, keeping the `review` note, and drops each `reviewed = false`. A
    value outside the old vocabulary (`true yes y 1 reviewed done` /
    `false no n 0 ""`) is left where it is and named: set that entry's `owner`
-   yourself, then delete the line.
+   yourself, then delete the line. It rewrites whole top-level assignments,
+   never text inside a string, and re-parses the result: a record it cannot
+   rewrite in place (the key inside an inline table, say) is left untouched
+   and named, for you to edit by hand.
 3. Regenerate `docs/open-items.html`.
 4. From now on, overrule an entry in the same commit that files or amends the
    work item citing it.
