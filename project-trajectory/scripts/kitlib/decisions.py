@@ -24,8 +24,9 @@ owner CONFIRMS it or OVERRULES it (owner, 2026-10-04). Each entry may carry
 SEEN. `owner_state` is the one reading, and any other value reads as not yet
 seen AND is a format finding, so a typo never hides a decision. The retired
 `reviewed` key (WI-790) is a format finding wherever it appears and is never
-read beside `owner`: the migrator (`migrate_text`, run by
-`migrate_decisions.py`) rewrites it, and no reader keeps a legacy path. An
+read: an entry still carrying it reads as not yet seen, whatever `owner` says.
+The migrator (`migrate_text`, run by `migrate_decisions.py`) rewrites it, and
+no reader keeps a legacy path. An
 overrule states the direction instead in the `review` note, so an overruled
 entry with a blank note is a finding. The generated owner surface lists every
 entry not yet seen under "Decisions to review" and every overruled entry
@@ -37,7 +38,9 @@ coupled to its citing row (OI-102 Q3): the commit that sets an entry
 whose spec cites the entry as `docs/decisions/<run>.toml#D-NNN` (`citation`,
 `citations`, `newly_overruled`; the two-tree read is the ruling sync's, in
 `acceptance_record`). Amending the queued row the decision was scoped to is
-enough; nothing has to be minted. Who sets the key stays a convention: git
+enough; nothing has to be minted. The coupling reads the `owner` key as
+written, and FAILS CLOSED: a record the commit's tree carries but cannot parse
+is refused, since an unreadable verdict is never "no overrule". Who sets the key stays a convention: git
 cannot tell the owner's commit from an agent's without a marker, which the
 owner has ruled out.
 
@@ -47,7 +50,8 @@ every call the run made. Every close owes one, a partial close included: a lane
 the machinery closed with no session present is refused too, and the refusal is
 a hold for a person to write the record. A malformed entry — a missing or blank
 disclosure field, a non-text value, a hoist naming an entry the record lacks —
-is REPORTED and never refused (`record_findings`): the record exists, the owner
+is REPORTED and never refused (`record_findings`; the one refusal is the
+overrule sync's unparseable record above): the record exists, the owner
 can read what is there, and refusing the merge over one field would strand
 finished work for a reporting defect. An entry numbered `-000` is the template's
 example and is never judged, so the template stays copy-ready.
@@ -69,7 +73,8 @@ Contract IF-255: the delegated-decisions record, as a FILE. One TOML file per
     verdict: `confirmed` or `overruled`, absent meaning not yet seen
     (`owner_state` reads it). An overruled entry's `review` note states the
     direction instead and is not blank. `reviewed` is retired: a format
-    finding wherever it appears, never read. A work item cites an entry as
+    finding wherever it appears, never read, and the entry carrying it reads
+    as not yet seen. A work item cites an entry as
     `docs/decisions/<run>.toml#D-<digits>`. Other keys are the writer's and
     are not judged; an entry id ending `-000` is inert.
 
@@ -86,8 +91,11 @@ Contract IF-256: the delegated-decisions record, as a CALL. `MODES` is the
     each high-risk first, and the count confirmed; `citation(rel, entry_id)`
     the token a work item cites an entry by and `citations(text)` every such
     token in a text; `newly_overruled(before, after)` the entries overruled in
-    `after` and not in `before`; `migrate_text(text)` the record with the
-    retired key rewritten, and the ids it could not rewrite. Pure functions of
+    `after` and not in `before`, raising `ValueError` when `after` does not
+    parse; `migrate_text(text)` the record with the retired key rewritten
+    (complete top-level assignments only, the result re-parsed and refused
+    unless only the verdict keys changed), and the ids it could not rewrite.
+    Pure functions of
     their arguments: no file, git or environment read.
 """
 
@@ -185,10 +193,9 @@ def _owner_findings(entry_id, entry):
         )
     if RETIRED_KEY in entry:
         out.append(
-            "{}: `{}` is retired and never read; the entry reads by `{}` alone "
-            "(migrate_decisions.py rewrites it)".format(
-                entry_id, RETIRED_KEY, OWNER_KEY
-            )
+            "{}: `{}` is retired and never read; the entry reads as not yet "
+            "seen, whatever `{}` says, until it is gone (migrate_decisions.py "
+            "rewrites it)".format(entry_id, RETIRED_KEY, OWNER_KEY)
         )
     if state == OVERRULED and not str(entry.get("review") or "").strip():
         out.append(
@@ -281,16 +288,17 @@ def review_queue(text):
     YET SEEN (an absent or unrecognized `owner`) and the entries OVERRULED,
     each `{"id", "high_risk", "fields", "owner"}` (`fields` the entry's table,
     `owner` the raw value), each list the record's `high_risk` entries first
-    and then id order; and how many entries are confirmed. A `-000` entry is
-    never listed or counted, and a text that does not parse lists nothing
-    (`record_findings` reports it). Never raises.
+    and then id order; and how many entries are confirmed. An entry still
+    carrying the retired key is not yet seen whatever its `owner` says. A
+    `-000` entry is never listed or counted, and a text that does not parse
+    lists nothing (`record_findings` reports it). Never raises.
 
     Implements: SR-225, LLR-283
     """
     entries, hoisted = _parsed(text)
     unseen, overruled, confirmed = [], [], 0
     for entry_id, entry in entries.items():
-        state = owner_state(entry.get(OWNER_KEY))
+        state = None if RETIRED_KEY in entry else owner_state(entry.get(OWNER_KEY))
         if state == CONFIRMED:
             confirmed += 1
             continue
@@ -323,8 +331,11 @@ def citations(text):
     return {citation(m.group(1), m.group(2)) for m in _CITATION_RE.finditer(text or "")}
 
 
-def _overruled_ids(text):
-    entries, _hoisted = _parsed(text)
+def _overruled_ids(entries):
+    """The ids whose `owner` key, as written, is `overruled`: the coupling
+    reads the key alone, so neither the retired key beside it nor a blank note
+    lets an overrule skip its work.
+    """
     return {
         eid for eid, e in entries.items() if owner_state(e.get(OWNER_KEY)) == OVERRULED
     }
@@ -332,20 +343,27 @@ def _overruled_ids(text):
 
 def newly_overruled(before, after):
     """The entry ids overruled in the record text `after` and not in `before`
-    (either None or "" for a record absent on that side), in id order. A side
-    that does not parse overrules nothing, so an overrule hidden behind a
-    syntax error is owed by the commit that makes it readable.
+    (either None or "" for a record absent on that side), in id order. FAILS
+    CLOSED: an `after` that does not parse raises `ValueError` naming the
+    parse error, since an unreadable verdict is never "no overrule". An
+    unparseable `before` overrules nothing, so the commit that makes the
+    record readable owes the work for every overrule it then shows.
 
     Implements: SR-225, LLR-283
     """
-    return sorted(_overruled_ids(after) - _overruled_ids(before), key=_id_number)
+    try:
+        now, _hoisted = _entries(tomllib.loads(after or ""))
+    except tomllib.TOMLDecodeError as exc:
+        raise ValueError("does not parse as TOML ({})".format(exc))
+    was, _hoisted = _parsed(before)
+    return sorted(_overruled_ids(now) - _overruled_ids(was), key=_id_number)
 
 
-# A table header, the one shape `migrate_text` reads entry ids from; any
-# other header ends the entry.
+# A table header, the one shape `migrate_text` reads entry ids from (a quoted
+# id included); any other header ends the entry.
 _TABLE_RE = re.compile(r"^\s*\[\s*decision\.([^\]\s]+)\s*\]")
 _HEADER_RE = re.compile(r"^\s*\[")
-_RETIRED_LINE_RE = re.compile(r"^(\s*)reviewed\s*=")
+_RETIRED_LINE_RE = re.compile(r"""^(\s*)(?:reviewed|"reviewed"|'reviewed')\s*=""")
 
 
 def _retired_verdict(value):
@@ -366,54 +384,165 @@ def _retired_verdict(value):
     return None
 
 
-def _migrated_line(entry, line):
-    """What one `reviewed = ...` line becomes: `owner = "confirmed"` for a
-    reviewed value, "" (dropped) for a not-reviewed one or beside an `owner`
-    key already set, and None (kept) for a value outside the retired
-    vocabulary.
+def _verdict_action(entry):
+    """What the migration does to one entry's retired key: `"drop"` beside an
+    `owner` key already set or for a not-reviewed value, `"confirm"` for a
+    reviewed value, `"keep"` for a value outside the retired vocabulary.
 
     Implements: SR-225, LLR-304
     """
     if OWNER_KEY in entry:
-        return ""
+        return "drop"
     verdict = _retired_verdict(entry.get(RETIRED_KEY))
     if verdict is None:
-        return None
-    if not verdict:
+        return "keep"
+    return "confirm" if verdict else "drop"
+
+
+def _string_end(text, i):
+    """The index just past the TOML string opening at `text[i]` — basic,
+    literal, or either multiline form (whose closing delimiter may follow up
+    to two quotes of its content). A basic string's backslash escapes the next
+    character; a literal string has no escapes.
+
+    Implements: SR-225, LLR-304
+    """
+    quote = text[i]
+    delim = quote * 3 if text.startswith(quote * 3, i) else quote
+    j = i + len(delim)
+    while j < len(text):
+        if quote == '"' and text[j] == "\\":
+            j += 2
+        elif text.startswith(delim, j):
+            j += len(delim)
+            extra = 0
+            while len(delim) == 3 and extra < 2 and text.startswith(quote, j):
+                j, extra = j + 1, extra + 1
+            return j
+        else:
+            j += 1
+    return j
+
+
+def _statements(text):
+    """The text cut into its TOP-LEVEL statements, as `(start, end)` spans:
+    each runs from a line start to just past the newline that ends it outside
+    every string, comment and bracket, so a multiline string or array is one
+    statement and nothing inside a string ever starts one.
+
+    Implements: SR-225, LLR-304
+    """
+    spans, start, depth, i = [], 0, 0, 0
+    while i < len(text):
+        ch = text[i]
+        if ch in "\"'":
+            i = _string_end(text, i)
+            continue
+        if ch == "#":
+            newline = text.find("\n", i)
+            i = len(text) if newline < 0 else newline
+            continue
+        depth += (ch in "[{") - (ch in "]}")
+        if ch == "\n" and depth <= 0:
+            spans.append((start, i + 1))
+            start, depth = i + 1, 0
+        i += 1
+    if start < len(text):
+        spans.append((start, len(text)))
+    return spans
+
+
+def _migrated_statement(statement, entry):
+    """What one top-level `reviewed = <value>` statement becomes, its whole
+    value span included: `owner = "confirmed"` (keeping its indent and line
+    ending), "" when dropped, or the statement itself when kept.
+
+    Implements: SR-225, LLR-304
+    """
+    action = _verdict_action(entry)
+    if action == "keep":
+        return statement
+    if action == "drop":
         return ""
-    ending = line[len(line.rstrip("\r\n")) :]
-    indent = _RETIRED_LINE_RE.match(line).group(1)
+    ending = statement[len(statement.rstrip("\r\n")) :]
+    indent = _RETIRED_LINE_RE.match(statement).group(1)
     return '{}{} = "{}"{}'.format(indent, OWNER_KEY, CONFIRMED, ending)
+
+
+def _expected_parse(data, entries):
+    """The parse a correct migration of `data` yields: each entry's retired
+    key dropped, or replaced by `owner = "confirmed"`, or kept, and nothing
+    else changed.
+
+    Implements: SR-225, LLR-304
+    """
+    if not entries:
+        return data
+    want = dict(data)
+    want["decision"] = dict(data["decision"])
+    for eid, entry in entries.items():
+        action = _verdict_action(entry) if RETIRED_KEY in entry else "keep"
+        if action == "keep":
+            continue
+        new = {k: v for k, v in entry.items() if k != RETIRED_KEY}
+        if action == "confirm":
+            new[OWNER_KEY] = CONFIRMED
+        want["decision"][eid] = new
+    return want
+
+
+def _checked(new_text, want):
+    """`new_text` when it re-parses to exactly `want`; else `ValueError`, so a
+    rewrite that touched anything but the verdict keys is never written.
+
+    Implements: SR-225, LLR-304
+    """
+    try:
+        got = tomllib.loads(new_text)
+    except tomllib.TOMLDecodeError as exc:
+        raise ValueError("the rewrite does not re-parse as TOML ({})".format(exc))
+    if got != want:
+        raise ValueError(
+            "the rewrite's re-parse differs from the record in more than the "
+            "verdict keys (a retired key the migrator cannot rewrite in place)"
+        )
+    return new_text
 
 
 def migrate_text(text):
     """`(new_text, left)`: one record with the retired key rewritten in place —
     `reviewed = true` (or any word that read as reviewed) becomes
-    `owner = "confirmed"`, a not-reviewed value is dropped, and every other
-    line, each `review` note and every comment included, is kept byte for
-    byte — and the ids whose value is outside the retired vocabulary, left as
-    they are (still a format finding). Idempotent. Raises `ValueError` for a
-    text that does not parse as TOML.
+    `owner = "confirmed"`, a not-reviewed value or one beside an `owner` key
+    is dropped — and the ids whose value is outside the retired vocabulary,
+    left as they are (still a format finding). It rewrites complete top-level
+    assignments only (`_statements`), never a string's contents, so every
+    other byte, each `review` note and every comment included, is kept; and it
+    re-parses the result, raising `ValueError` unless every other key and
+    value is unchanged. Idempotent. Raises `ValueError` for a text that does
+    not parse as TOML.
 
     Implements: SR-225, LLR-304
     """
     try:
-        entries, _hoisted = _entries(tomllib.loads(text))
+        data = tomllib.loads(text)
     except tomllib.TOMLDecodeError as exc:
         raise ValueError("the record does not parse as TOML ({})".format(exc))
-    out, left, current = [], [], None
-    for line in text.splitlines(keepends=True):
-        table = _TABLE_RE.match(line)
-        if table or _HEADER_RE.match(line):
-            current = table.group(1) if table else None
-        elif current in entries and _RETIRED_LINE_RE.match(line):
-            new = _migrated_line(entries[current], line)
-            if new is None:
-                left.append(current)
-            else:
-                line = new
-        out.append(line)
-    return "".join(out), left
+    entries, _hoisted = _entries(data)
+    out, current = [], None
+    for start, end in _statements(text):
+        statement = text[start:end]
+        if _HEADER_RE.match(statement):
+            table = _TABLE_RE.match(statement)
+            current = table.group(1).strip("\"'") if table else None
+        elif current in entries and _RETIRED_LINE_RE.match(statement):
+            statement = _migrated_statement(statement, entries[current])
+        out.append(statement)
+    left = [
+        eid
+        for eid, entry in entries.items()
+        if RETIRED_KEY in entry and _verdict_action(entry) == "keep"
+    ]
+    return _checked("".join(out), _expected_parse(data, entries)), left
 
 
 def _id_number(entry_id):

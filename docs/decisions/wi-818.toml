@@ -20,10 +20,10 @@ why_not_escalated = "The spec says the two values are the only recognized values
 review = ""
 
 [decision.D-003]
-decided = "A retired reviewed key beside an owner key is a format finding, and the entry reads by owner alone (owner = \"confirmed\" plus reviewed = true reads as confirmed). Without an owner key the entry reads as not yet seen, whatever reviewed says."
-alternative = "Read any entry still carrying reviewed as not yet seen, even when owner is set."
-reversal_cost = "One condition in review_queue and one test case."
-why_not_escalated = "The spec says the reader never reads reviewed beside owner; reading by owner alone is the literal form of that, and the finding still surfaces the stale key on the owner page."
+decided = "Any entry still carrying the retired reviewed key reads as not yet seen, whatever its owner key says (owner = \"confirmed\" plus reviewed = true is listed under Decisions to review, confirmed count 0), and the key is a format finding. The overrule coupling reads the owner key as written: owner = \"overruled\" beside reviewed still owes its citing work item at the commit."
+alternative = "Read such an entry by owner alone (the round-1 build: owner = \"confirmed\" plus reviewed reads as confirmed); or let the retired key also suppress the coupling, so the coupling and the surface read one way."
+reversal_cost = "One condition in review_queue and the parametrized test's confirmed case; one in _overruled_ids for the coupling."
+why_not_escalated = "Round 1 read the entry by owner alone, which the review showed contradicts the spec's first Done-when bullet: the retired key is a format finding AND reads as not yet seen. The coupling keeps the owner key as written because a stale key must never let an overrule skip its work (fail closed), the same reasoning as D-008's blank note."
 review = ""
 
 [decision.D-004]
@@ -34,10 +34,10 @@ why_not_escalated = "The spec's words are 'files or amends' in 'the same commit'
 review = ""
 
 [decision.D-005]
-decided = "A record side that does not parse as TOML overrules nothing: the commit is judged on the entries it can read, so an overrule hidden behind a syntax error is owed by the commit that makes the record readable (the parent then reads as overruling nothing)."
-alternative = "Refuse any commit whose decisions record does not parse on either side, as the ruling sync refuses an unparseable open-items registry."
-reversal_cost = "Low: return a refusal line from overrule_sync_lines when a side fails to parse; a lane carrying such a commit would then need its history rewritten to land."
-why_not_escalated = "The record's doctrine (SR-225) reports a malformed record rather than refusing it, so a refusal here would strand finished work for a reporting defect; and the coupling still fires on the commit that makes the overrule readable, so nothing escapes. Riskiest call because it differs from the ruling sync's fail-closed parse."
+decided = "The overrule sync fails CLOSED: a commit whose tree carries a decisions record (one the diff touches) that does not parse as TOML is refused, at the pre-commit ruling-sync step and per lane commit at the merge slot, naming the record and the parse error. A parent side that does not parse reads as overruling nothing, so the commit that repairs it owes the citing work for every overrule the repaired record shows."
+alternative = "Read an unparseable record as overruling nothing on either side (the round-1 build), so an overrule hidden behind a syntax error is owed by the commit that makes it readable; or refuse an unparseable parent side too, as the open-item ruling sync does."
+reversal_cost = "Low: newly_overruled raises on an unparseable after-side and _owed_overrules turns that into a refusal line; reversing is the two branches. A lane already carrying such a commit needs its history rewritten to land."
+why_not_escalated = "The round-1 fail-open reading let an overrule plus a syntax error pass both admission points, and a later repair that dropped the verdict passed too (Sol, round-1 MAJOR 1); the owner's standing rule forbids degenerate paths. Refusing only the new side, not the parent, mirrors the open-item sync's unreadable-is-not-unchanged rule without stranding the repair of a record broken before this rule: the repair is judged as overruling everything it shows, which is the strict reading."
 review = ""
 
 [decision.D-006]
@@ -48,8 +48,8 @@ why_not_escalated = "The section-order test pins 'Decisions to review' as the la
 review = ""
 
 [decision.D-007]
-decided = "The migrator is a new script, scripts/migrate_decisions.py, over a pure kitlib.decisions.migrate_text: each word of the old reviewed vocabulary that read as reviewed becomes owner = \"confirmed\" in the same place, a not-reviewed word is dropped, a reviewed line beside an existing owner key is dropped, and a value outside the old vocabulary is left in place and named (still a finding). --check reports without writing."
-alternative = "Rewrite only the literal true and false and leave every word form; or fold the migrator into an existing script such as migrate_carrier.py."
+decided = "The migrator is a new script, scripts/migrate_decisions.py, over a pure kitlib.decisions.migrate_text: each word of the old reviewed vocabulary that read as reviewed becomes owner = \"confirmed\" in the same place, a not-reviewed word is dropped, a reviewed key beside an existing owner key is dropped, and a value outside the old vocabulary is left in place and named (still a finding). It rewrites complete top-level assignments only, found by a scanner that tracks TOML string and bracket state, never a string's contents; it re-parses the result and refuses (ValueError, the record left untouched and named) unless only the verdict keys changed. --check reports without writing."
+alternative = "Rewrite only the literal true and false and leave every word form; scan physical lines (the round-1 build, which rewrote a reviewed line inside a multiline note and left a multiline value half-replaced); or fold the migrator into an existing script such as migrate_carrier.py."
 reversal_cost = "Low for the vocabulary (one helper); moving the CLI means one argparse block and the RESYNC_PACK pointer."
 why_not_escalated = "The spec names reviewed = true and reviewed = false; the old vocabulary's other words meant the same thing under WI-790, so carrying them is the same migration, and guessing an unrecognized value is left to a person. A dedicated script keeps migrate_carrier.py to its one job; it needs its own spine row, listed for the row author."
 review = ""

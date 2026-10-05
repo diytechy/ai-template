@@ -15,6 +15,9 @@ The migrator rewrites `reviewed = true` to `owner = "confirmed"` and drops
 """
 
 import subprocess
+import tomllib
+
+import pytest
 
 from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
 
@@ -197,6 +200,54 @@ def test_a_no_verify_overrule_is_refused_at_the_merge_slot(tmp_path):
     assert integrate._ruling_sync_refusal(root, "wi-071") is None
 
 
+def test_a_record_that_does_not_parse_is_refused_at_the_commit_and_the_merge_slot(
+    tmp_path,
+):
+    # Fail closed (owner rule: no degenerate path): an overrule behind a syntax
+    # error is unreadable, never "no overrule". Both admission points refuse,
+    # naming the record and the parse error, and a later commit that repairs
+    # the syntax while dropping the verdict does not launder the lane.
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-072")
+    _record(root, "overruled")
+    path = root / RECORD
+    path.write_text(path.read_text() + "broken = [\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert RECORD in line and "does not parse" in line
+    bad = _commit(root, "overrule behind a syntax error")  # --no-verify
+    _record(root)
+    _commit(root, "repair the syntax, drop the verdict")
+    _git(root, "checkout", "-q", "main")
+    refusal = integrate._ruling_sync_refusal(root, "wi-072")
+    assert refusal is not None and bad[:10] in refusal and RECORD in refusal
+
+
+def test_a_repair_of_an_unparseable_parent_owes_every_overrule_it_shows(tmp_path):
+    # The parent side unreadable reads as overruling nothing, so the commit
+    # that makes the record readable owes the work for each overrule in it.
+    root = _base(tmp_path)
+    path = root / RECORD
+    path.write_text(path.read_text() + "broken = [\n", encoding="utf-8")
+    _commit(root, "a record broken before this rule")
+    _record(root, "overruled")
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert CITE in line and "overruled" in line
+
+
+def test_an_overrule_beside_the_retired_key_still_owes_its_work(tmp_path):
+    # The surface reads such an entry as not yet seen, but the coupling reads
+    # the `owner` key as written: a stale key never lets an overrule skip it.
+    root = _base(tmp_path)
+    _record(root, "overruled")
+    path = root / RECORD
+    path.write_text(path.read_text() + "reviewed = true\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert CITE in line
+
+
 FIXTURE = """\
 # a record from before WI-818
 high_risk = ["D-002"]
@@ -241,6 +292,46 @@ def test_the_migrator_rewrites_the_retired_key_keeping_each_note():
     (finding,) = decisions.record_findings(text)
     assert finding.startswith("D-003: `reviewed` is retired")
     assert decisions.migrate_text(text) == (text, ["D-003"])  # idempotent
+
+
+ENTRY = '[decision.D-001]\ndecided = "d"\nalternative = "a"\nreversal_cost = "c"\n'
+ENTRY += 'why_not_escalated = "w"\n'
+
+
+def test_the_migrator_drops_a_retired_line_beside_an_existing_owner():
+    text = 'high_risk = []\n\n{}review = "Undo."\nowner = "overruled"\n'.format(ENTRY)
+    new, left = decisions.migrate_text(text + "reviewed = true\n")
+    assert (new, left) == (text, [])
+
+
+def test_the_migrator_never_rewrites_inside_a_multiline_note():
+    note = '"""\nThe old example was:\nreviewed = true\nKeep this note.\n"""'
+    head = "high_risk = []\n\n{}review = {}\n".format(ENTRY, note)
+    text = head + "reviewed = true\n"
+    new, left = decisions.migrate_text(text)
+    assert (new, left) == (head + 'owner = "confirmed"\n', [])
+    entry = tomllib.loads(new)["decision"]["D-001"]
+    assert entry["review"] == tomllib.loads(text)["decision"]["D-001"]["review"]
+    assert entry["owner"] == "confirmed" and "reviewed" not in entry
+
+
+def test_the_migrator_rewrites_a_multiline_string_verdict_whole():
+    for literal in ('"""\ntrue\n"""', "'''\nyes\n'''"):
+        text = 'high_risk = []\n\n{}review = "r"\nreviewed = {}\n# after\n'.format(
+            ENTRY, literal
+        )
+        new, left = decisions.migrate_text(text)
+        assert left == []
+        assert new.endswith('review = "r"\nowner = "confirmed"\n# after\n'), new
+        assert tomllib.loads(new)["decision"]["D-001"]["owner"] == "confirmed"
+
+
+def test_the_migrator_refuses_what_it_cannot_rewrite_in_place():
+    # An inline-table record carries the retired key where no top-level
+    # assignment can be rewritten: the re-parse would differ, so it refuses.
+    text = 'high_risk = []\ndecision = { D-001 = { decided = "d", reviewed = true } }\n'
+    with pytest.raises(ValueError, match="re-parse"):
+        decisions.migrate_text(text)
 
 
 def test_the_migrator_cli_rewrites_the_records_and_check_reports_them(tmp_path):
