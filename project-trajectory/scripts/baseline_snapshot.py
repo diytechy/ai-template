@@ -840,10 +840,13 @@ def refresh_ledger(root, snapshot=None):
     No flip can clear a removal (there is no row left to flip); naming the row
     in `--reattests` is how an act blesses it.
 
-    A FLIPPED ROW'S OWN AMENDMENT IS NEVER ABSORBED: amend-plus-flip is the
-    sanctioned shape of a re-approval (`test_the_amendment_seam_is_BLIND_to_an_
-    amend_plus_flip` explains why no diff-based seam can see it), so the flip is
-    recorded and the row leaves the absorbed set.
+    A FLIPPED ROW IS NEVER ABSORBED, and that is no allowance: its copy reads
+    below approval, so its text was never blessed and copying it re-blesses
+    nothing (the rule two paragraphs down). Amend-plus-flip is NOT approval
+    (WI-806, retiring it with OI-101 Q2): the text a flip blesses is committed
+    first, on its own, and the act that flips and copies it is a second commit
+    changing no other spine cell, which `acceptance_record.text_then_act_lines`
+    enforces at the hook and per lane commit at the merge slot.
 
     Rows the snapshot does not carry are not here at all — an approval with no
     copy is UNANCHORED, a louder finding `unanchored_findings` owns. Rows below
@@ -861,20 +864,31 @@ def refresh_ledger(root, snapshot=None):
         before_rows = rows_for(snapshot, rel, id_col)
         live_rows = _tier_rows(root, rel, id_col)
         entry["absorbed"].update(_removed_rows(before_rows, live_rows, id_col))
-        for row in live_rows:
-            rid = str(row.get(id_col) or "").strip()
-            before = before_rows.get(rid) if rid else None
-            if before is None:
-                continue
-            if _approval_transition(before, row):
-                entry["flips"].append(rid)
-                continue
-            if not _claims_approval(before):
-                continue
-            changed = check_trajectory.split_changed_cells(rel, id_col, before, row)
-            if changed["approved"]:
-                entry["absorbed"][rid] = changed["approved"]
+        _ledger_live_rows(entry, rel, id_col, before_rows, live_rows)
     return ledger
+
+
+def _ledger_live_rows(entry, rel, id_col, before_rows, live_rows):
+    """`refresh_ledger`'s walk of one tier's LIVE rows into its file's `entry`:
+    a row crossing into approval against its copy is a flip, and a row whose
+    copy claims approval and whose approved cells moved is absorbed. A row the
+    copy does not carry, or whose copy reads below approval (a flipped row's
+    included), is neither absorbed nor judged here. Split out so the ledger's
+    walk stays under the complexity bar (WI-806).
+
+    Implements: SR-207, LLR-245"""
+    for row in live_rows:
+        rid = str(row.get(id_col) or "").strip()
+        before = before_rows.get(rid) if rid else None
+        if before is None:
+            continue
+        if _approval_transition(before, row):
+            entry["flips"].append(rid)
+        if not _claims_approval(before):
+            continue
+        changed = check_trajectory.split_changed_cells(rel, id_col, before, row)
+        if changed["approved"]:
+            entry["absorbed"][rid] = changed["approved"]
 
 
 def refresh_refusal(root, approves=None, snapshot=None, *, seed=False, reattests=()):
@@ -898,9 +912,11 @@ def refresh_refusal(root, approves=None, snapshot=None, *, seed=False, reattests
          `CodeSymbol`, `TestRefs` or ref pointer re-point) and Drafted-row work
          stay exactly as cheap as they were — this is the common case, and the
          review verified the WI-482/WI-452 class of the same day was clean.
-      2. **Its own `Status` moved into approval.** Amend-plus-flip is approval:
-         a human moved THAT row's maturity cell in the reviewed commit the copy
-         rides. It blesses that row and no other.
+      2. **Its own `Status` moved into approval.** A human moved THAT row's
+         maturity cell in the reviewed commit the copy rides, over text an
+         earlier commit already carried (WI-806: text first, the act second;
+         amend-plus-flip is no longer approval). It blesses that row and no
+         other.
       3. **`--reattests <ROW-ID>` names it.** The escape for the shape the ladder
          genuinely has — an amendment to an Approved row that a sitting ruled
          without moving its Status (the D-9 ladder's own case, and what the
@@ -988,14 +1004,13 @@ def refresh_refusal(root, approves=None, snapshot=None, *, seed=False, reattests
 def _unattested_rows(ledger, reattests=frozenset()):
     """`[(registry rel, {row id: {cell: (before, after)}})]`, sorted by registry:
     for each registry, the absorbed rows (approved text drifted from the
-    recorded copy) minus the rows the act flips, minus the rows `reattests`
-    names. What is left is every row the copy would re-bless that nobody in
-    this act read, which is exactly what the act must not carry; a registry left
-    with none is dropped.
+    recorded copy) minus the rows `reattests` names. What is left is every row
+    the copy would re-bless that nobody in this act read, which is exactly what
+    the act must not carry; a registry left with none is dropped.
 
-    The flipped rows are subtracted although `refresh_ledger` already keeps
-    them out of `absorbed`, so the rule reads here as written, whatever the
-    ledger's bookkeeping does later.
+    A flipped row is never absorbed (its copy reads below approval), so no flip
+    is subtracted here: a flip clears no drift, it only puts its registry in
+    the act's scope (WI-806 retired amend-plus-flip as approval).
 
     Implements: SR-207, LLR-245"""
     out = []
@@ -1003,7 +1018,7 @@ def _unattested_rows(ledger, reattests=frozenset()):
         owed = {
             rid: cells
             for rid, cells in entry["absorbed"].items()
-            if rid not in entry["flips"] and rid not in reattests
+            if rid not in reattests
         }
         if owed:
             out.append((rel, owed))
@@ -1012,7 +1027,7 @@ def _unattested_rows(ledger, reattests=frozenset()):
 
 def _refusal_text(blocked, scope):
     """The refusal a caller reads: EVERY unattested row and its cells, what this
-    act writes, and the three ways forward.
+    act writes, and the two ways forward.
 
     UNCAPPED (SR-207). It used to print five rows per registry and a count of
     the rest, which hid the rows past the cap until the first five were dealt
@@ -1045,9 +1060,9 @@ def _refusal_text(blocked, scope):
     )
     lines.append(
         "A snapshot copy IS the approval record, so approved text reaches it only "
-        "through an act that names its row. Three ways forward: flip the row's "
-        "`Status` in the same tree (amend-plus-flip is approval); or, having read "
-        "its changed cells, re-run with `intake.py snapshot --reattests "
+        "through an act that names its row, taken in a commit after the one that "
+        "carried the text. Two ways forward: having read its changed cells, "
+        "re-run with `intake.py snapshot --reattests "
         "<ROW-ID>[,<ROW-ID>...]` naming EACH row above (the ids are recorded into "
         "the snapshot's README stamp and act ledger, and `--approves "
         "<registry>=<ref>` may ride "

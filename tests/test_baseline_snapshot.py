@@ -240,19 +240,21 @@ def test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
     assert (SNAP.snapshot_root(root) / SR_REL).read_bytes() == before
 
 
-def test_an_AMEND_PLUS_FLIP_authorises_ITS_OWN_row_and_no_other(tmp_path):
+def test_a_FLIP_authorises_ITS_OWN_row_and_no_other(tmp_path):
     """Approval is a human moving a maturity cell in a reviewed commit, and the
     copy rides it — for THE ROW THAT MOVED. Until SR-207 this test pinned the
     wider reading: one flip anywhere in a registry authorised every approved
     amendment in it, so approving one row silently blessed another row's
-    unreviewed edit. The flipped row's own amendment still rides its flip; an
-    amended row beside it refuses the act by name."""
+    unreviewed edit. The flipped row's text, drafted since its copy, rides its
+    flip (WI-806: that text is committed before the act, which the commit-time
+    rule enforces, not this refresh); an amended row beside it refuses the act
+    by name."""
     root = _seeded_with_a_drafted_sr(tmp_path)
     draft_id, draft = _first_row_at(root, "drafted")
     sid, row = _first_row_at(root, "approved", {draft_id})
     _rewrite(root, SR_REL, draft["Title"], draft["Title"] + " (amended, then approved)")
     _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
-    assert SNAP.refresh_refusal(root) == ""  # the flip carries its own amendment...
+    assert SNAP.refresh_refusal(root) == ""  # the flip carries its own text...
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended beside it)")
     refusal = SNAP.refresh_refusal(root)  # ...and nothing else's
     assert "REFUSED" in refusal and sid in refusal and draft_id not in refusal, refusal
@@ -512,8 +514,8 @@ def test_a_SCOPED_single_registry_approval_COMPLETES_over_unrelated_drift(tmp_pa
 
 def test_an_unrelated_drift_cannot_block_a_FLIP_authorised_act_either(tmp_path):
     """The same defect on the commoner path, which is why the ruling had to be
-    the general one: no `--approves` at all, just an amend-plus-flip in one
-    registry while another carries drift. The global gate refused this too.
+    the general one: no `--approves` at all, just a flip of a drafted, amended
+    row in one registry while another carries drift. The global gate refused this too.
 
     The amendment is the FLIPPED row's own since SR-207. This test used to amend
     a different approved SR beside the flip and pass, which pinned the removed
@@ -1854,8 +1856,10 @@ def test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip(tmp_path):
 
     `check_trajectory.staged_spine_amendments` — the function that MINTS an
     amendment adjudication — fires only when the row's status is unchanged
-    across the two trees. So an amendment that flips its row in the SAME commit
-    (the sanctioned path, and under D-9 the only path) is invisible to it. A
+    across the two trees. So an amendment that moves its row's status in the
+    SAME commit is invisible to it. (Amend-plus-flip is no longer approval,
+    WI-806: a commit that also writes the record is refused by the
+    text-then-act rule, but a status move with no act is still legal.) A
     baseline derived from that seam, or from the git walk that keyed off the
     flip, therefore cannot see the very change a sitting exists to judge. The
     snapshot is a baseline that is provably NOT the text under judgement,
