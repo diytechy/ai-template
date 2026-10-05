@@ -1236,8 +1236,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         ),
         # Text then act (WI-806, OI-101 Q2 amended by README Q-8): a commit that
         # writes the approval record changes no spine cell but `Status` and
-        # adds or removes no row, for every committer; a squash landing passes
-        # when each commit it squashes does. The merge slot asks the same of
+        # adds or removes no row, for every committer; a squash of a rebased
+        # lane passes when each commit it squashes does. The slot asks it of
         # each lane commit, so `--no-verify` lands nothing.
         (
             "text-then-act",
