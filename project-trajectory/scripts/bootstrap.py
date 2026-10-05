@@ -17,6 +17,7 @@ What it creates in the destination:
     GEMINI.md                                  <- GEMINI.stub.template.md (points to AGENTS.md)
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
+    docs/glossary.md                           <- GLOSSARY.md  (the terms, defined once)
     docs/stage                                 <- stage.template  (derived stage: not yet
                                                   derived — run scripts/derive_stage.py)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)

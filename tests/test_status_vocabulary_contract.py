@@ -69,6 +69,7 @@ RETIRED_STATUS_WORDS = EVER_STATUS_WORDS - frozenset(trace.STATUS_VALUES)
 INSTRUCTING_SURFACES = (
     KIT / "PROCESS.md",
     KIT / "PROCESS_OPTIONS.md",
+    KIT / "GLOSSARY.md",
     KIT / "INTERFACES.template.md",
     KIT / "EXAMPLE.md",
     KIT / "KICKOFF_PROMPT.md",
