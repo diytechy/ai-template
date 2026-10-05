@@ -1619,6 +1619,26 @@ def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
     assert list(ruled) == ["OI-002"] and "r2" in ruled["OI-002"]
 
 
+def test_the_brief_lint_reports_a_duplicate_row_in_either_position(tmp_path):
+    """Two pending rows sharing an id are both read by the brief lint: the
+    link-less approval row warns whether it comes first or second, so no
+    by-id map that keeps only one of them can hide it."""
+    approval = "Approve the [p]-[DevStg-Reqs] batch"
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    for first, second in (
+        ("Unrelated decision", approval),
+        (approval, "Unrelated decision"),
+    ):
+        (req / "open-items.csv").write_text(
+            f"OI-ID,Status,OneLine\nOI-001,pending,{first}\nOI-001,pending,{second}\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        briefs = CT.approval_brief_findings(tmp_path)
+        assert [b.split(":")[0] for b in briefs] == ["OI-001"], (first, briefs)
+
+
 def test_the_one_line_clip_is_one_home():
     clip = KITSPINE.clip_line
     assert clip("  a \n b  ", 10) == "a b"
