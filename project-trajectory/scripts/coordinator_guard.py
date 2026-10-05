@@ -160,6 +160,12 @@ REMINDER = (
 
 @dataclass(frozen=True)
 class GuardConfig:
+    """The declared `[coordinator]` dials: the drain threshold in percent (0 is
+    off) and the context window in tokens.
+
+    Implements: SR-229, LLR-300
+    """
+
     threshold: int = 0
     window: int = DEFAULT_WINDOW
 
@@ -176,7 +182,10 @@ def _int_dial(value, low, high):
 def guard_config(root):
     """The `[coordinator]` table as a GuardConfig. An absent table or a value
     outside its type or range reads as the default, so a malformed threshold
-    leaves the guard OFF and a malformed window keeps the standard one."""
+    leaves the guard OFF and a malformed window keeps the standard one.
+
+    Implements: SR-229, LLR-300
+    """
     table = agent_common.process_config(Path(root) / "docs").get(SECTION)
     table = table if isinstance(table, dict) else {}
     threshold = _int_dial(table.get("context_guard_pct"), 0, 100) or 0
@@ -190,7 +199,10 @@ def guard_config(root):
 @dataclass(frozen=True)
 class Occupancy:
     """One reading. `tokens` and `pct` are None when it is unknown; `note`
-    says why, or flags a window the reading does not fit."""
+    says why, or flags a window the reading does not fit.
+
+    Implements: SR-229, LLR-300
+    """
 
     tokens: int | None
     pct: float | None
@@ -286,7 +298,10 @@ def read_occupancy(transcript, window, tail_bytes=TAIL_BYTES, max_bytes=MAX_TAIL
     counting input, cache-read and cache-creation tokens. Reads the tail,
     doubling it until the walk resolves or `max_bytes` is reached. No valid
     usage reads as unknown, never 0%. A total above the window is reported as
-    a window mismatch, with its percent."""
+    a window mismatch, with its percent.
+
+    Implements: SR-229, LLR-300
+    """
     if not transcript:
         return Occupancy(None, None, "no transcript recorded")
     size = tail_bytes
@@ -312,7 +327,10 @@ def read_occupancy(transcript, window, tail_bytes=TAIL_BYTES, max_bytes=MAX_TAIL
 
 
 def lease_dir(root):
-    """`out/coordinator/` under the primary checkout."""
+    """`out/coordinator/` under the primary checkout.
+
+    Implements: SR-229, LLR-300
+    """
     return session_keep.primary_out_dir(root) / SECTION
 
 
@@ -343,7 +361,10 @@ def _now():
 
 def record_event(directory, kind, **fields):
     """Append one event to `events.jsonl`: every take, release, clear, latch,
-    compaction, refused request and launch is recorded there."""
+    compaction, refused request and launch is recorded there.
+
+    Implements: SR-229, LLR-300
+    """
     entry = {"at": _now(), "event": kind}
     entry.update(fields)
     with open(
@@ -358,7 +379,10 @@ def _holder_line(lease):
 
 def take(root, session_id, transcript=None):
     """The explicit take: record `session_id` as the coordinator when no
-    session holds the lease. Returns None, or the refusal."""
+    session holds the lease. Returns None, or the refusal.
+
+    Implements: SR-229, LLR-300
+    """
     if not session_id:
         return "no session id: run it from the session, or pass --session"
     with session_keep.dir_lock(lease_dir(root)) as directory:
@@ -394,7 +418,10 @@ def _install(directory, lease, session_id, transcript, root, how):
 
 
 def release(root, reason):
-    """The owner's release: frees the lease, recorded with `reason`."""
+    """The owner's release: frees the lease, recorded with `reason`.
+
+    Implements: SR-229, LLR-300
+    """
     if not reason:
         return "a release names its reason (--reason)"
     with session_keep.dir_lock(lease_dir(root)) as directory:
@@ -405,7 +432,10 @@ def release(root, reason):
 
 
 def clear(root, reason):
-    """The owner's clear: unlatches drain mode, recorded with `reason`."""
+    """The owner's clear: unlatches drain mode, recorded with `reason`.
+
+    Implements: SR-229, LLR-300
+    """
     if not reason:
         return "a clear names its reason (--reason)"
     with session_keep.dir_lock(lease_dir(root)) as directory:
@@ -424,7 +454,10 @@ def clear(root, reason):
 def latch_reading(directory, lease, cfg):
     """Read the holder's transcript and latch drain mode when the reading is
     at or above the threshold. Returns `(reading, latched_now)`; saves the
-    lease. The caller holds the lock."""
+    lease. The caller holds the lock.
+
+    Implements: SR-229, LLR-300
+    """
     reading = read_occupancy(lease.get("transcript"), cfg.window)
     lease["last_occupancy"] = dict(reading.as_dict(), at=_now())
     latched_now = False
@@ -442,7 +475,10 @@ def claim_refusal(root, env=None):
     live dispatcher's: None when the claim may proceed, else the refusal.
     Refuses when no lease is held, when the caller's session is not the
     holder, and when drain mode is latched, reading the holder's transcript
-    itself first so admission never depends on a hook having run."""
+    itself first so admission never depends on a hook having run.
+
+    Implements: SR-229, LLR-300
+    """
     cfg = guard_config(root)
     if not cfg.enabled:
         return None
@@ -509,7 +545,10 @@ def _same_path(a, b):
 def on_monitored(root, cfg, payload):
     """A tool, failed-tool, prompt or stop event: measure the holder's
     transcript, latch on a crossed threshold, and say so once at the latch,
-    then every REMINDER_EVERY-th event while latched."""
+    then every REMINDER_EVERY-th event while latched.
+
+    Implements: SR-229, LLR-300
+    """
     event = payload.get("hook_event_name")
     with session_keep.dir_lock(lease_dir(root)) as directory:
         lease = _load(directory)
@@ -539,7 +578,10 @@ def on_session_start(root, cfg, payload, env):
     """The successor's take: a session launched by the relaunch carries the
     lease's successor token in its environment and takes the lease, which
     clears the latch. The holder's own resumed start keeps the latch and is
-    told again."""
+    told again.
+
+    Implements: SR-229, LLR-300
+    """
     session_id = payload.get("session_id")
     token = env.get(TAKE_ENV)
     with session_keep.dir_lock(lease_dir(root)) as directory:
@@ -577,7 +619,10 @@ def on_session_start(root, cfg, payload, env):
 
 def on_pre_compact(root, cfg, payload):
     """Compaction telemetry: the trigger, the occupancy and the guard state,
-    recorded on the lease and in the event log. Never a recovery path."""
+    recorded on the lease and in the event log. Never a recovery path.
+
+    Implements: SR-229, LLR-300
+    """
     with session_keep.dir_lock(lease_dir(root)) as directory:
         lease = _load(directory)
         if not _is_holders_call(lease, payload):
@@ -602,7 +647,10 @@ def on_pre_compact(root, cfg, payload):
 
 def classify_compaction(entry, cfg):
     """The handoff's classification of one compaction: during a drain, a
-    manual compaction, or a missed threshold (auto-compaction before the latch)."""
+    manual compaction, or a missed threshold (auto-compaction before the latch).
+
+    Implements: SR-229, LLR-300
+    """
     if entry.get("draining"):
         return "during-drain"
     if entry.get("trigger") == "manual":
@@ -612,7 +660,10 @@ def classify_compaction(entry, cfg):
 
 def hook(payload, root, env=None, launch=None):
     """One hook call: the output dict to print, or None. A no-op when the
-    guard is off."""
+    guard is off.
+
+    Implements: SR-229, LLR-300
+    """
     cfg = guard_config(root)
     if not cfg.enabled or not isinstance(payload, dict):
         return None
@@ -634,7 +685,10 @@ def hook(payload, root, env=None, launch=None):
 
 def session_prompt(handoff):
     """The handoff's session prompt: the first fenced block under a
-    `Session prompt` heading, or None."""
+    `Session prompt` heading, or None.
+
+    Implements: SR-230, LLR-301
+    """
     try:
         lines = Path(handoff).read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError):
@@ -658,7 +712,10 @@ def session_prompt(handoff):
 def request_relaunch(root, handoff, session_id):
     """Write the relaunch request for the holder: its session id, the repo
     root, the handoff and the creation time, atomically. Returns None, or the
-    refusal."""
+    refusal.
+
+    Implements: SR-230, LLR-301
+    """
     handoff = Path(handoff).resolve()
     if not session_prompt(handoff):
         return "{} carries no session prompt (a fenced block under a 'Session prompt' heading)".format(
@@ -716,7 +773,12 @@ def _acquire(directory, token):
 
 def session_end(root, payload, launch=None):
     """At the holder's true exit, launch the successor for the holder's own
-    request, once. Returns True when it launched."""
+    request, once. Returns True when it launched. The store lock is held from
+    the acquisition to the launch's confirmation or restoration, so restoring
+    never waits on the lock (decision D-014).
+
+    Implements: SR-230, LLR-301
+    """
     if payload.get("reason") not in EXIT_REASONS or payload.get("agent_id"):
         return False
     session_id = payload.get("session_id")
@@ -735,20 +797,14 @@ def session_end(root, payload, launch=None):
             record_event(directory, "relaunch-refused", reason=problem)
             print("coordinator guard: relaunch refused: " + problem, file=sys.stderr)
             return False
-        try:
-            lease["successor_token"] = token
-            _save(directory, lease)
-        except Exception as exc:  # noqa: BLE001 - any failure restores
-            _restore(directory, consumed, None, exc)
-            return False
-    return _launch_or_restore(root, directory, consumed, request, token, launch)
+        return _launch_or_restore(directory, lease, consumed, request, token, launch)
 
 
 def _restore(directory, consumed, prompt_file, exc):
     """Undo an acquisition whose launch was not confirmed: the request goes
     back first (so it is never stranded), then the successor token is cleared
     and the prompt file removed, best effort, and the failure is reported.
-    The caller holds the lock."""
+    The caller holds the lock it acquired the request under."""
     os.replace(consumed, _request_path(directory))
     try:
         lease = _load(directory)
@@ -758,28 +814,29 @@ def _restore(directory, consumed, prompt_file, exc):
         record_event(directory, "launch-failed", reason=str(exc))
     except OSError as cleanup:
         print("coordinator guard: cleanup failed: {}".format(cleanup), file=sys.stderr)
-    if prompt_file is not None:
-        prompt_file.unlink(missing_ok=True)
+    prompt_file.unlink(missing_ok=True)
     print(
         "coordinator guard: relaunch failed, request restored: {}".format(exc),
         file=sys.stderr,
     )
 
 
-def _launch_or_restore(root, directory, consumed, request, token, launch):
-    """Write the prompt file and run the launch. Every failure, of any
-    exception type, from here to a confirmed launch (the prompt write
-    included) puts the request back,
-    removes the successor token and the prompt file, and reports."""
+def _launch_or_restore(directory, lease, consumed, request, token, launch):
+    """Save the successor token, write the prompt file and run the launch,
+    under the lock the request was acquired with. Every failure, of any
+    exception type, from the token save to a confirmed launch puts the
+    request back, removes the successor token and the prompt file, and
+    reports: one restoration route, which never reacquires the lock."""
     prompt_file = Path(directory) / "relaunch-prompt.{}.txt".format(token)
     try:
+        lease["successor_token"] = token
+        _save(directory, lease)
         prompt_file.write_text(
             session_prompt(request["handoff"]), encoding="utf-8", newline="\n"
         )
         (launch or launch_detached)(Path(request["repo_root"]), prompt_file, token)
     except Exception as exc:  # noqa: BLE001 - any failure before confirmation restores
-        with session_keep.dir_lock(lease_dir(root)) as directory:
-            _restore(directory, consumed, prompt_file, exc)
+        _restore(directory, consumed, prompt_file, exc)
         return False
     record_event(
         directory,
@@ -798,7 +855,10 @@ def launch_command(repo_root, prompt_file, token, os_name=None):
     """`(launcher, command, Popen keywords)` for this platform: the repo's
     `.cmd` on Windows (the command is one command line for cmd), its POSIX
     sibling elsewhere (an argv), run in `repo_root` with the prompt file and
-    the successor token."""
+    the successor token.
+
+    Implements: SR-230, LLR-301
+    """
     os_name = os.name if os_name is None else os_name
     repo_root = Path(repo_root)
     args = [str(repo_root), str(prompt_file), token]
@@ -842,7 +902,10 @@ def launch_detached(
 ):
     """Start the launcher detached in `repo_root` and confirm it. Raises
     OSError when it cannot start (a missing launcher included) or exits
-    non-zero within `grace` seconds; still running, or exited 0, confirms."""
+    non-zero within `grace` seconds; still running, or exited 0, confirms.
+
+    Implements: SR-230, LLR-301
+    """
     launcher, argv, extra = launch_command(repo_root, prompt_file, token, os_name)
     if not launcher.is_file():
         raise OSError("launcher not found: {}".format(launcher))
@@ -857,7 +920,10 @@ def launch_detached(
 
 def exec_claude(prompt_file, run=subprocess.call):
     """The Windows launcher's last step: run `claude` with the prompt as its
-    one argument (Python quotes it, which a `.cmd` cannot do safely)."""
+    one argument (Python quotes it, which a `.cmd` cannot do safely).
+
+    Implements: SR-230, LLR-301
+    """
     prompt = Path(prompt_file).read_text(encoding="utf-8")
     return run(["claude", prompt])
 
@@ -917,6 +983,11 @@ def _parser():
 
 
 def main(argv=None):
+    """The guard's command line: dispatch one operation and map a refusal to
+    exit 1 with its reason on stderr.
+
+    Implements: SR-230, LLR-301
+    """
     args = _parser().parse_args(argv)
     root = Path(args.root or os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     session = getattr(args, "session", None) or os.environ.get(SESSION_ENV)

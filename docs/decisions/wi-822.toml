@@ -93,3 +93,10 @@ alternative = "Keep a file seam by naming a consumer (the relaunch launchers, wh
 reversal_cost = "Low: one row and one header paragraph."
 why_not_escalated = "Sol's interface finding named the call surface and the shared runtime-store helpers (IF-271, IF-272, IF-273), not the guard's private files; a seam with no crossing declares nothing."
 review = ""
+
+[decision.D-014]
+decided = "session_end holds the store lock from the request's acquisition through the successor-token save, the prompt write, the launch and its confirmation, and restores under that same hold, so restoration never reacquires the lock (Sol round 3, MAJOR: a restoration that had to reacquire it raised StoreBusy when another handler held the lock past the ten-second wait, stranding a consumed request and a successor token). The token save joins the launch's try block, so every failure after acquisition takes the one restoration route. Cost: the lock is held for up to LAUNCH_GRACE_SECONDS (5 s) plus the launcher's start; every other guard entry point (a claim, a hook, the successor's SessionStart take) waits on it, and each waits up to ten seconds, so none is refused by the hold alone. The successor's SessionStart take on Windows, which can start inside the grace, is delayed until the hold ends rather than lost."
+alternative = "Make restoration lock-free: rename the consumed request back without the lock and leave the successor token to be cleared later; or retry the reacquire with a longer wait."
+reversal_cost = "Move the launch out of the with-block in session_end and give _restore its own lock again."
+why_not_escalated = "The coordinator asked for one restoration route and named holding the lock as a candidate. A lock-free restoration still needs the lock to clear the successor token (a lease read-modify-write), so it would split restoration into a locked and an unlocked half; a longer retry only moves the threshold at which the request strands. The hold fits inside the waits every other entry point already has (5 s grace against a 10 s wait, and a 120 s stale-lock takeover), and SessionEnd is a once-per-session event."
+review = ""

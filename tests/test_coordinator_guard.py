@@ -778,6 +778,50 @@ def _assert_restored(root):
     assert events(root)[-1]["event"] == "launch-failed"
 
 
+def test_a_failed_launch_restores_while_another_handler_wants_the_lock(
+    root, tx, tmp_path, monkeypatch
+):
+    # Sol round 3: restoration that has to reacquire the store lock strands
+    # the request when another handler holds it past the wait. The guard's own
+    # lock waits are shortened so the contention shows in a fraction of a
+    # second; the competitor waits the standard ten seconds.
+    _ready(root, tx, tmp_path)
+    real_lock = guard.session_keep.dir_lock
+    monkeypatch.setattr(
+        guard.session_keep, "dir_lock", lambda directory: real_lock(directory, 0.3)
+    )
+    locked, release = threading.Event(), threading.Event()
+
+    def competitor():
+        with real_lock(guard.lease_dir(root)):
+            locked.set()
+            release.wait(5)
+
+    thread = threading.Thread(target=competitor)
+    during_launch = []
+
+    def failing_launch(repo_root, prompt_file, token):
+        thread.start()
+        during_launch.append(locked.wait(1.0))
+        raise OSError("launcher failed while another handler wants the lock")
+
+    try:
+        result = guard.session_end(
+            root, ev("SessionEnd", reason="logout"), launch=failing_launch
+        )
+    finally:
+        release.set()
+        thread.join()
+    assert result is False
+    assert during_launch == [False]  # the lock is held across the launch
+    assert locked.is_set()  # the competitor got it once the handler finished
+    monkeypatch.undo()
+    _assert_restored(root)
+    launch = Launches()
+    assert guard.session_end(root, ev("SessionEnd", reason="logout"), launch=launch)
+    assert len(launch.calls) == 1
+
+
 def test_a_failed_prompt_write_restores_the_request(root, tx, tmp_path, monkeypatch):
     _ready(root, tx, tmp_path)
     real = Path.write_text

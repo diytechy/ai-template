@@ -787,7 +787,7 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     and the next thing to bar it is a lane's §A2 refresh. Accepted for the
     window it buys, not because nothing is given up.
 
-    Implements: SR-156, LLR-140, LLR-151
+    Implements: SR-156, SR-229, LLR-140, LLR-151, LLR-300
     """
     wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     # The ladder runs BEFORE the lock: the lock protects the WRITES, and the
