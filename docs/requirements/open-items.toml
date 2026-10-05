@@ -3947,3 +3947,19 @@ options = """- (a) SIGN the adjudicator's two replacement cells as written (and,
 - (b) Reword them yourself in the same sitting.
 - (c) Leave SN-029 as is (the untrue clause stays on the owner's row)."""
 recommendation = "(a), with the two older staleness fixes in the same sitting, so the need is true in one pass."
+
+[open_item.OI-107]
+title = "Decisions record identity: a run's record is named by a lossy, reusable branch name"
+status = "pending"
+raised = "2026-10-05"
+one_line = "Decide whether a delegated run's decisions record needs an identity of its own: today `a/b` and `a-b`, or two lanes reusing one branch name, write one docs/decisions/<run>.toml, and any fix moves record paths (a forced migration)."
+decision = """Filed by the wave-16 coordinator at WI-818's landing, from the independent adjudicator's separate finding F1 (docs/reviews/wi-818-owner-verdict/dispute-1-ruling.md, "Separate findings"). WI-818 made record_path refuse a run name carrying `#` or a character git refuses, so a citation parses one way and no new collision is added; it kept trunk's `/` -> `-` mapping, which already collides.
+
+WHAT HAPPENS TODAY. Two runs whose branch names differ only by `/` and `-`, or two lanes that reuse one branch name over time, share one record. The second run overwrites the first's entries, and the merge slot's "owes its record" rung is met by the other run's record once that record is on trunk.
+
+WHY IT IS YOURS. Every fix changes where records live (an injective encoding of the name, or a per-run identity such as the claim's id), which is a forced migration for every adopter with slash-named branches, and changes the citation form work items carry."""
+blast_radius = "The delegated-decisions record and its citations (SR-225's rows); adopters' docs/decisions/ paths under any fix. No code waits on it; the residue is stated in the template and the RESYNC entry."
+options = """- (a) INJECTIVE NAME: escape every rewritten character (and the escape character) so distinct branch names never share a file; slash-named records move once.
+- (b) RUN IDENTITY: name the record by the claimed work item (or another per-run id) rather than the branch; every record moves once and citations change form.
+- (c) ACCEPT THE RESIDUE: keep `/` -> `-` and the stated collision; refuse nothing more."""
+recommendation = "(b) if the claim's work-item id is available everywhere a record is written (it names the run without loss and cannot be reused); otherwise (a). Either rides one RESYNC migration entry."
