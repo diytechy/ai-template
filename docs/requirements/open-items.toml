@@ -3929,3 +3929,21 @@ options = """- (a) PROVISION: name the endpoint and the pinned ids, confirming a
 - (b) PROVISION WITHOUT ONE-MODEL CHAINS: no FreeLLMAPI row ships (the note's rule), and the template stays for a later router.
 - (c) DROP FREELLMAPI: the template and config are retired and no row is planned."""
 recommendation = "Keep pending until the router is running, then (a) if FreeLLMAPI can declare a one-model chain per pinned id, else (b)."
+
+[open_item.OI-106]
+title = "SN-029: two clauses untrue since text-before-act landed"
+status = "pending"
+raised = "2026-10-05"
+one_line = "Sign the two-clause amendment of SN-029 (owner-held): its acceptance calls amend-and-flip in one commit 'the sanctioned path', and its why argues from that path, but since WI-806 spine text is committed before the act that blesses it."
+decision = """Filed by the wave-15 coordinator at WI-806's landing (act seq 34), from the independent adjudicator's dispute ruling (docs/reviews/wi-806-text-then-act/dispute-1-ruling.md, section "SN-029"). SN-029 sits on the Needs rung, which the dial holds for the owner, so no session edits it.
+
+WHAT IS UNTRUE. acceptance: ", the one signal the sanctioned amend-and-flip path would otherwise hide" (amend-and-flip in one commit is now refused outside a verified squash landing). why: "is sound only while every amendment flips its row in the same commit — precisely the sanctioned path an amendment detector ignores — so the blessed way to amend an attested requirement is invisible to every consumer, and".
+
+THE PROPOSED TEXT (byte-exact full cells in the ruling): delete that acceptance clause; replace that why passage with "returns a commit that already carries the amended text, so its diff is empty on exactly the rows an amendment detector exists to catch: an amendment to an attested requirement is invisible to every consumer, and" (the argument LLR-173's approved rationale makes).
+
+ALSO STALE, same sitting, not WI-806's: acceptance's "a digest of that row's normative cells" predates the whole-file copy; why's "an SN has no Status cell" is untrue now that needs carry status."""
+blast_radius = "SN-029's text only; no code or other row waits on it. Until it is signed the need's acceptance names a path the hook now refuses, which a reader of the need would take as sanctioned."
+options = """- (a) SIGN the adjudicator's two replacement cells as written (and, optionally, the two older staleness fixes).
+- (b) Reword them yourself in the same sitting.
+- (c) Leave SN-029 as is (the untrue clause stays on the owner's row)."""
+recommendation = "(a), with the two older staleness fixes in the same sitting, so the need is true in one pass."
