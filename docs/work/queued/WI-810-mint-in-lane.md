@@ -4,7 +4,7 @@ title = "MINT in the lane: one allocator, the consumption list and station lanes
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-mint"
 sr_refs = ["SR-215", "SR-220"]
-needs = ["WI-809"]
+needs = ["WI-809", "WI-821"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
@@ -26,6 +26,10 @@ and dropped from `needs`.
 
 Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
 `docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
+
+Ordering (coordinator, 2026-10-04): it needs WI-821, which makes the consolidation
+census's commissioning signal section-aware and amends LLR-210 first; this row
+folds the census into the mint step on top of that rule.
 
 ## Done-when
 
