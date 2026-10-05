@@ -387,6 +387,14 @@ def test_a_non_holders_claim_refuses_naming_the_holder_and_the_release(root, tx)
     assert "unknown" in guard.claim_refusal(root, env={})
 
 
+def test_a_claim_names_its_caller_by_claude_code_session_id(root, tx):
+    # The literal key the agent CLI exports, never guard.SESSION_ENV, so a
+    # renamed constant fails here.
+    held(root, tx)
+    assert guard.claim_refusal(root, env={"CLAUDE_CODE_SESSION_ID": COORD}) is None
+    assert "unknown" in guard.claim_refusal(root, env={"CLAUDE_SESSION_ID": COORD})
+
+
 def test_with_no_lease_held_a_claim_refuses_naming_the_take(root):
     refusal = guard.claim_refusal(root, env=ENV)
     assert "no coordinator lease" in refusal and "coordinator_guard.py take" in refusal
@@ -431,6 +439,17 @@ def test_the_relaunched_successor_takes_the_lease_at_session_start(root, tx):
     assert [e["event"] for e in events(root)][-2:] == ["take-refused", "take-successor"]
 
 
+def test_the_successor_takes_the_lease_through_pt_coordinator_take(root, tx):
+    # The literal key both launchers export, never guard.TAKE_ENV.
+    lease = held(root, tx)
+    lease.update(successor_token="tok")
+    guard._save(guard.lease_dir(root), lease)
+    guard.hook(
+        ev("SessionStart", session=OTHER), root, env={"PT_COORDINATOR_TAKE": "tok"}
+    )
+    assert guard._load(guard.lease_dir(root))["holder"] == OTHER
+
+
 # --- the drain latch ---------------------------------------------------------------
 
 
@@ -442,6 +461,10 @@ def test_the_latch_holds_after_a_compaction_drops_the_reading(root, tx):
     tx.user()
     tx.reply(50)  # 5% after the compaction
     assert guard.read_occupancy(str(tx.path), WINDOW).pct == 5.0
+    assert "drain mode is latched" in guard.claim_refusal(root, env=ENV)
+    # The holder's hook re-reads every turn: the lower reading must not unlatch.
+    guard.hook(ev("PostToolUse", transcript=tx.path), root, env={})
+    assert guard._load(guard.lease_dir(root))["draining"] is True
     assert "drain mode is latched" in guard.claim_refusal(root, env=ENV)
 
 

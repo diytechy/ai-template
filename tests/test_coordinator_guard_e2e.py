@@ -138,7 +138,9 @@ def test_the_guard_cli_takes_requests_releases_and_clears(tmp_path):
     taken = _guard_cli(root, "take", "--transcript", str(tx.path))
     assert taken.returncode == 0, taken.stderr
     assert guard._load(directory)["holder"] == COORD
-    assert _guard_cli(root, "take", session=OTHER).returncode == 1
+    refused = _guard_cli(root, "take", session=OTHER)
+    assert refused.returncode == 1
+    assert refused.stderr.startswith("coordinator guard: ") and COORD in refused.stderr
     assert (
         _guard_cli(
             root, "request-relaunch", "--handoff", str(handoff), session=OTHER
@@ -159,6 +161,7 @@ def test_the_guard_cli_takes_requests_releases_and_clears(tmp_path):
     assert (
         status.returncode == 0 and json.loads(status.stdout)["lease"]["holder"] == COORD
     )
+    assert _guard_cli(root, "release").returncode == 2  # usage: no --reason
     released = _guard_cli(root, "release", "--reason", "handing over by hand")
     assert released.returncode == 0 and guard._load(directory) == {}
     reasons = [
