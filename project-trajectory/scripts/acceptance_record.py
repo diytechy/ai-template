@@ -1902,6 +1902,22 @@ ARCHIVE_WORK_DIR = "docs/archive/work"
 _PENDING = "pending"
 
 
+def _git_paths(root, args):
+    """The paths a path-listing git subcommand (`args[0]`: `diff`, `ls-files`,
+    `ls-tree`) prints, read LOSSLESSLY: `-z` makes the listing NUL-delimited
+    and unquoted, where a plain listing under `core.quotePath` (git's default)
+    quotes and escapes any path with a non-ASCII byte, which then matches no
+    prefix and names no blob. None when git cannot answer. The ruling sync and
+    the overrule sync read every path list through it.
+
+    Implements: SR-225, LLR-303
+    """
+    out = _git(root, [args[0], "-z"] + list(args[1:]))
+    if out is None:
+        return None
+    return [path for path in out.split("\0") if path]
+
+
 def _tree_specs(root, rev):
     """`{WI id: path}` of every spec in a tree (`rev` None is the index), or
     None when git cannot list it. A `-000` example is never a row.
@@ -1910,13 +1926,13 @@ def _tree_specs(root, rev):
     """
     roots = [WORK_DIR, ARCHIVE_WORK_DIR]
     if rev is None:
-        out = _git(root, ["ls-files", "--"] + roots)
+        paths = _git_paths(root, ["ls-files", "--"] + roots)
     else:
-        out = _git(root, ["ls-tree", "-r", "--name-only", rev, "--"] + roots)
-    if out is None:
+        paths = _git_paths(root, ["ls-tree", "-r", "--name-only", rev, "--"] + roots)
+    if paths is None:
         return None
     specs = {}
-    for path in out.splitlines():
+    for path in paths:
         name = path.rsplit("/", 1)[-1]
         wid = "-".join(name.split("-")[:2])
         if name.startswith("WI-") and name.endswith(".md") and not wid.endswith("-000"):
@@ -2048,13 +2064,12 @@ def ruling_sync_lines(root, base, head=None):
     """
     args = ["diff", "--name-only", "--no-renames"]
     args += ["--cached", base] if head is None else [base, head]
-    names = _git(root, args)
-    if names is None:
+    changed = _git_paths(root, args)
+    if changed is None:
         return [
             "cannot read the diff against {}, so whether it rules an open item "
             "is unknown".format(base)
         ]
-    changed = names.splitlines()
     try:
         lines = []
         if set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(changed):

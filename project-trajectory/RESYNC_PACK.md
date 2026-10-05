@@ -7074,13 +7074,18 @@ cite it.
 
 The commit that sets an entry `"overruled"` must, in the same diff, file or
 amend a queued or active work item whose spec cites the entry as
-`docs/decisions/<run>.toml#D-NNN`. Otherwise it is refused, by the existing
+`docs/decisions/<run>.toml#D-NNN`, the record's path written exactly as it
+is named (a run named from a branch such as `owner+cleanup` keeps its `+`).
+Otherwise it is refused, by the existing
 `ruling-sync` pre-commit step and again by the merge slot on each lane commit
 against its first parent. There is no new step or rung, so your hook's
 `--run-steps` list does not change. Amending the queued row the decision was
 scoped to is enough; nothing has to be minted. The check fails closed: a
 commit whose tree carries a decisions record that does not parse as TOML is
-refused at the same two points, naming the record and the parse error.
+refused at the same two points, naming the record and the parse error. The
+check reads git's path lists NUL-delimited, so a record or a work item whose
+path has a non-ASCII character is judged under `core.quotePath` too; the
+open-item ruling sync gains the same fix for its citing rows.
 
 The template entry drops `reviewed = false`, and the note handed to a
 delegated session now says to leave `owner` unset.
@@ -7095,7 +7100,8 @@ delegated session now says to leave `owner` unset.
    `PROCESS_OPTIONS.md` and the `session-protocol` skill.
 2. Run `python scripts/migrate_decisions.py` (add `--check` first if you want
    a dry run). It rewrites each `reviewed = true` to `owner = "confirmed"` in
-   place, keeping the `review` note, and drops each `reviewed = false`. A
+   place, keeping the `review` note and any trailing comment, and drops each
+   `reviewed = false` (a trailing comment stays on its own line). A
    value outside the old vocabulary (`true yes y 1 reviewed done` /
    `false no n 0 ""`) is left where it is and named: set that entry's `owner`
    yourself, then delete the line. It rewrites whole top-level assignments,

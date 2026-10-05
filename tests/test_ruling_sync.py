@@ -146,6 +146,27 @@ def test_a_row_closed_in_the_ruling_commit_is_accepted(tmp_path):
     assert "keeps no Done-when" in line
 
 
+def test_a_citing_row_whose_path_git_would_quote_is_still_judged(tmp_path):
+    # core.quotePath quotes a non-ASCII path in plain listings; the sync lists
+    # the diff and each tree NUL-delimited, so the row is found and judged at
+    # the commit and at the merge slot.
+    root = _repo(tmp_path / "repo")
+    _git(root, "config", "core.quotePath", "true")
+    _items(root, OI_5="pending")
+    path = _spec(root, "WI-001", ["OI-5"], "- OI-5 is ruled.")
+    path.rename(path.with_name("WI-001-ré.md"))
+    _commit(root, "base")
+    _git(root, "checkout", "-q", "-b", "wi-002")
+    _items(root, OI_5="ruled")
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert line.startswith("WI-001 cites OI-5")
+    bad = _commit(root, "ruling, row untouched")
+    _git(root, "checkout", "-q", "main")
+    refusal = integrate._ruling_sync_refusal(root, "wi-002")
+    assert refusal is not None and bad[:10] in refusal
+
+
 def test_a_first_commit_has_nothing_to_close(tmp_path):
     root = _repo(tmp_path / "repo")
     _items(root, OI_5="ruled")
