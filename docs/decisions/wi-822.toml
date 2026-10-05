@@ -1,0 +1,74 @@
+# docs/decisions/wi-822.toml — WI-822's delegated decisions record (the
+# coordinator context guard). Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-003"]
+
+[decision.D-001]
+decided = "The coordinator's call C2: the lease refusals (draining; held by another session; no lease held) apply to every claim route EXCEPT the live dispatcher's (`claim(..., dispatch_lock_held=True)`, the unattended loop, which has its own protection). integrate.claim calls coordinator_guard.claim_refusal first, under `if not dispatch_lock_held`."
+alternative = "Apply the guard to the dispatcher's claims too, or only to the CLI route."
+reversal_cost = "One condition in integrate.claim and its pinning tests."
+why_not_escalated = "The coordinator made the call in the build prompt. The guard protects an interactive Claude Code coordinator; the unattended loop is a separate path the owner is testing elsewhere, and its dispatcher holds the dispatch lock for its process lifetime. Risk: a hand claim made while the guard is on now needs the lease, so a claim from a plain terminal (no CLAUDE_CODE_SESSION_ID) refuses until the owner releases the lease or the dial is 0."
+review = ""
+
+[decision.D-002]
+decided = "The coordinator's call C7: the guard module ships (integrate.claim imports it; dormant at context_guard_pct = 0, the shipped template value). The hook registration (.claude/settings.json) and the relaunch launchers (scripts/coordinator-relaunch.cmd and .sh) are this repo's tooling and do not ship in this row; the builder's recommendation is reported and the coordinator records the decision."
+alternative = "Ship the hook registration as an inert example under agent-hooks/ and the launchers beside the module, or keep the module itself out of the shipped scripts."
+reversal_cost = "Add the two launchers and a settings example to bootstrap's MAPPING with a RESYNC entry; no adopter data migrates."
+why_not_escalated = "The coordinator made the call in the build prompt; the spec leaves shipping to the end of the row."
+review = ""
+
+[decision.D-003]
+decided = "The claim identifies its caller by the CLAUDE_CODE_SESSION_ID environment variable Claude Code 2.1.285 sets for a Bash tool's children. A claim whose caller names no session (a plain terminal, or a version that stops setting it) is refused as not the holder while the guard is on."
+alternative = "Have the PreToolUse hook record the last calling session for the claim to read, or deny the claim's Bash call in the hook."
+reversal_cost = "Replace one lookup in claim_refusal; the refusal ladder is unchanged."
+why_not_escalated = "The spec requires a non-holder's claim to refuse; the environment variable is the one carrier of the caller's identity that reaches a subprocess without a command-spelling rule (round 1's MAJOR). It is version-dependent, which the spec says to treat as a claim. A subagent's Bash shares its parent's session id (observed in this build), so a coordinator's own subagent can claim, which matches the coordinator's authority."
+review = ""
+
+[decision.D-004]
+decided = "An explicit take is a CLI (`coordinator_guard.py take`) run from the coordinator session: it records the session from CLAUDE_CODE_SESSION_ID and, when no --transcript is given, the holder's first hook call (not a subagent's) fills the transcript path in. A take of a free lease succeeds; a take of a lease held by another session refuses naming the release; a re-take by the holder changes nothing (it never unlatches)."
+alternative = "Take at SessionStart for any session started with an environment flag, or derive the transcript path from the projects directory's slug."
+reversal_cost = "One function and its CLI arm."
+why_not_escalated = "The spec names 'an explicit take' without its mechanism; the CLI keeps the take a deliberate act and adds no second SessionStart path."
+review = ""
+
+[decision.D-005]
+decided = "The successor is identified by a random token: SessionEnd writes it into the lease before launching, the launcher passes it to the new session as PT_COORDINATOR_TAKE, and that session's SessionStart hook takes the lease only when the token matches. A mismatched token is recorded as take-refused."
+alternative = "Take the lease at the first SessionStart after a launch, whatever session it is."
+reversal_cost = "The token field and one comparison."
+why_not_escalated = "The spec requires the lease to pass to exactly one successor; any other session starting in the repo at that moment must not take it."
+review = ""
+
+[decision.D-006]
+decided = "Exit reasons are an allow-list of the documented SessionEnd reasons other than clear and resume: logout, prompt_input_exit, other. An undocumented reason never launches."
+alternative = "A deny-list of clear and resume, launching on any other reason."
+reversal_cost = "One constant."
+why_not_escalated = "The spec says 'an exit reason, never clear or resume'; an allow-list fails closed on a future reason that is not an exit."
+review = ""
+
+[decision.D-007]
+decided = "Unknown occupancy never latches and never refuses on its own: the holder's claim proceeds when no valid usage is readable, and the reading is recorded as unknown with its reason. A reading above the declared window is flagged as a window mismatch and still latches (its percent is over any threshold)."
+alternative = "Refuse claims while occupancy is unknown."
+reversal_cost = "One condition in latch_reading."
+why_not_escalated = "Right after a compaction no usage exists until the next reply; refusing then would stop a coordinator at its lowest context. The spec requires unknown never to read as 0%, which holds: unknown is reported as unknown."
+review = ""
+
+[decision.D-008]
+decided = "The reminder interval is a constant (REMINDER_EVERY = 20 monitored events), not a dial; the reader reads a 256 KiB tail first and doubles to at most 8 MiB before reporting unknown."
+alternative = "Declare the interval and the tail sizes as [coordinator] dials."
+reversal_cost = "Two keys in both process.toml files and a RESYNC note."
+why_not_escalated = "The spec names exactly two dials (threshold and window) and says 'bounded reminders' without a number; more dials are more adopter surface for no stated need."
+review = ""
+
+[decision.D-009]
+decided = "The relaunch launchers run `claude` with the prompt as one argument: on Windows the .cmd calls `coordinator_guard.py exec-claude --prompt-file`, so Python quotes the multi-line prompt; the POSIX .sh opens Terminal (macOS) or x-terminal-emulator (elsewhere) and execs claude with the prompt file's text. The SessionEnd handler starts the launcher with a new console (Windows) or a new session (POSIX)."
+alternative = "Pass the prompt through cmd arguments, or start claude headless."
+reversal_cost = "Two small launcher files."
+why_not_escalated = "A .cmd cannot quote a multi-line prompt with quotes and percent signs safely, and an interactive coordinator needs a terminal. Risk, untested here: whether a process started from a SessionEnd hook survives Claude Code's exit on every platform (tests stub the launch; no real session was run)."
+review = ""
+
+[decision.D-010]
+decided = "The primary checkout's out/ lookup and the exclusive-file lock were extracted in place in session_keep (primary_out_dir, dir_lock) and reused rather than copied: store_dir and store_lock now call them, unchanged in behaviour."
+alternative = "Copy the git-common-dir lookup and the lock into the guard, or move them into kitlib."
+reversal_cost = "Inline the two helpers back into store_dir and store_lock."
+why_not_escalated = "The kit enforces one home per shared stage, and the coordinator named session_keep.store_dir as the lookup to follow."
+review = ""

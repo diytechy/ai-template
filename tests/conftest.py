@@ -122,6 +122,7 @@ SLOW_MODULES = frozenset(
         # concurrency-restructure Phase 5.)
         "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
         "test_integrate",  # local integrator: real git repos + a real check.py bar
+        "test_coordinator_guard_e2e",  # the guard via CLI, wrapper, launchers, real git (WI-822)
         # WI-521 slice 2 split test_integrate.py by behavior boundary (M-06).
         # The three new modules are the SAME heavy class as the module they came
         # out of — real git repos, real worktrees, the real bar in the e2e — so

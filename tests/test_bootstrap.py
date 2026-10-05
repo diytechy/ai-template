@@ -216,6 +216,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/session_adapters.py",
         "scripts/session_service.py",
         "scripts/session_keep.py",
+        "scripts/coordinator_guard.py",
         "scripts/agent_common.py",
         "scripts/agent_policy.py",
         "scripts/plan_runner.py",
