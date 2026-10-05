@@ -143,18 +143,31 @@ RETIRED_KEY = "reviewed"
 _RETIRED_TRUE = frozenset({"true", "yes", "y", "1", "reviewed", "done"})
 _RETIRED_FALSE = frozenset({"false", "no", "n", "0", ""})
 
+# THE RUN-NAME ALPHABET, one definition for the path's producer and the
+# citation's reader: the characters a run name can NOT keep in its record's
+# filename. They are `/` (a run is one file, never a directory) and what git
+# refuses in any branch name (whitespace, control characters, `~ ^ : ? * [ \`),
+# so every other character a valid branch carries (`+`, `@`, `.`, non-ASCII
+# letters) is kept by `record_path` and matched by the citation reader.
+# Implements: SR-225, LLR-283
+_RUN_EXCLUDED = r"/\s\\~^:?*\[\x00-\x1f\x7f"
+_NOT_RUN_CHAR_RE = re.compile("[" + _RUN_EXCLUDED + "]")
+
 # How a work item cites one entry: the record's repo-relative path, `#`, and
 # the entry id, a digit never following (so `#D-01` does not match `#D-012`).
-_CITATION_RE = re.compile(r"(docs/decisions/[\w.-]+?\.toml)#(D-\d+)(?!\d)")
+_CITATION_RE = re.compile(
+    r"(docs/decisions/[^" + _RUN_EXCLUDED + r"]+?\.toml)#(D-\d+)(?!\d)"
+)
 
 
 def record_path(run):
     """The repo-relative path of one run's record: `DECISIONS_DIR/<run>.toml`,
-    a `/` in the run's name becoming `-`.
+    each character of the run's name outside the run-name alphabet becoming
+    `-` — for a branch name, that is only its `/`.
 
     Implements: SR-225, LLR-283
     """
-    return "{}/{}.toml".format(DECISIONS_DIR, str(run).replace("/", "-"))
+    return "{}/{}.toml".format(DECISIONS_DIR, _NOT_RUN_CHAR_RE.sub("-", str(run)))
 
 
 def _inert(entry_id):
@@ -452,21 +465,45 @@ def _statements(text):
     return spans
 
 
+def _comment_start(statement):
+    """The index of a statement's trailing comment (its first `#` outside
+    every string), or None when it carries none.
+
+    Implements: SR-225, LLR-304
+    """
+    i = 0
+    while i < len(statement):
+        if statement[i] in "\"'":
+            i = _string_end(statement, i)
+        elif statement[i] == "#":
+            return i
+        else:
+            i += 1
+    return None
+
+
 def _migrated_statement(statement, entry):
     """What one top-level `reviewed = <value>` statement becomes, its whole
-    value span included: `owner = "confirmed"` (keeping its indent and line
-    ending), "" when dropped, or the statement itself when kept.
+    value span included: `owner = "confirmed"` (keeping its indent, its
+    trailing comment and the space before it, and its line ending); when
+    dropped, its trailing comment alone on the line, or "" with none; or the
+    statement itself when kept.
 
     Implements: SR-225, LLR-304
     """
     action = _verdict_action(entry)
     if action == "keep":
         return statement
-    if action == "drop":
-        return ""
-    ending = statement[len(statement.rstrip("\r\n")) :]
     indent = _RETIRED_LINE_RE.match(statement).group(1)
-    return '{}{} = "{}"{}'.format(indent, OWNER_KEY, CONFIRMED, ending)
+    ending = statement[len(statement.rstrip("\r\n")) :]
+    at = _comment_start(statement)
+    if at is None:
+        tail = ending
+    else:
+        tail = statement[len(statement[:at].rstrip()) :]
+    if action == "drop":
+        return "" if at is None else indent + tail.lstrip()
+    return '{}{} = "{}"{}'.format(indent, OWNER_KEY, CONFIRMED, tail)
 
 
 def _expected_parse(data, entries):
@@ -491,9 +528,29 @@ def _expected_parse(data, entries):
     return want
 
 
+def _same(a, b):
+    """Are two parsed TOML values the same value: equal tables (key order
+    aside), arrays and scalars of one type, with a NaN the same as a NaN
+    (TOML's `nan`, `+nan` and `-nan` are one value that Python's `==` never
+    finds equal to itself).
+
+    Implements: SR-225, LLR-304
+    """
+    if type(a) is not type(b):
+        return False
+    if isinstance(a, dict):
+        return a.keys() == b.keys() and all(_same(a[k], b[k]) for k in a)
+    if isinstance(a, list):
+        return len(a) == len(b) and all(map(_same, a, b))
+    if isinstance(a, float) and a != a:
+        return b != b
+    return a == b
+
+
 def _checked(new_text, want):
-    """`new_text` when it re-parses to exactly `want`; else `ValueError`, so a
-    rewrite that touched anything but the verdict keys is never written.
+    """`new_text` when it re-parses to exactly `want` (`_same`); else
+    `ValueError`, so a rewrite that touched anything but the verdict keys is
+    never written.
 
     Implements: SR-225, LLR-304
     """
@@ -501,7 +558,7 @@ def _checked(new_text, want):
         got = tomllib.loads(new_text)
     except tomllib.TOMLDecodeError as exc:
         raise ValueError("the rewrite does not re-parse as TOML ({})".format(exc))
-    if got != want:
+    if not _same(got, want):
         raise ValueError(
             "the rewrite's re-parse differs from the record in more than the "
             "verdict keys (a retired key the migrator cannot rewrite in place)"

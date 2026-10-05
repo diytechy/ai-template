@@ -46,8 +46,8 @@ def _entry(eid, owner=None, review=""):
     )
 
 
-def _record(root, d002_owner=None):
-    path = root / RECORD
+def _record(root, d002_owner=None, rel=None):
+    path = root / (rel or RECORD)
     path.parent.mkdir(parents=True, exist_ok=True)
     note = "Overruled: keep the flag." if d002_owner == "overruled" else ""
     path.write_text(
@@ -59,8 +59,8 @@ def _record(root, d002_owner=None):
     )
 
 
-def _spec(root, wid, prose, where="queued"):
-    path = root / "docs/work" / where / "{}-row.md".format(wid)
+def _spec(root, wid, prose, where="queued", slug="row"):
+    path = root / "docs/work" / where / "{}-{}.md".format(wid, slug)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         '+++\nid = "{}"\ntitle = "row"\nsafety_class = "ordinary"\n+++\n\n'
@@ -248,6 +248,68 @@ def test_an_overrule_beside_the_retired_key_still_owes_its_work(tmp_path):
     assert CITE in line
 
 
+@pytest.mark.parametrize("broken", [False, True])
+def test_a_record_path_git_would_quote_is_still_judged(tmp_path, broken):
+    # core.quotePath (git's default) quotes and escapes a non-ASCII path in
+    # plain `--name-only` output; the sync reads paths NUL-delimited, so such
+    # a record is judged like any other at the commit and at the merge slot.
+    rel = decisions.record_path("owner-é")
+    root = _base(tmp_path)
+    _git(root, "config", "core.quotePath", "true")
+    _git(root, "checkout", "-q", "-b", "wi-073")
+    _record(root, "overruled", rel=rel)
+    if broken:
+        path = root / rel
+        path.write_text(path.read_text(encoding="utf-8") + "broken = [\n", "utf-8")
+    _git(root, "add", "-A")
+    (line,) = ar.staged_ruling_sync_lines(root)
+    assert rel in line
+    assert ("does not parse" in line) if broken else (rel + "#D-002" in line)
+    bad = _commit(root, "overrule of a quoted record, no citing work")
+    _git(root, "checkout", "-q", "main")
+    refusal = integrate._ruling_sync_refusal(root, "wi-073")
+    assert refusal is not None and bad[:10] in refusal and rel in refusal
+
+
+def test_a_citing_spec_path_git_would_quote_discharges_the_overrule(tmp_path):
+    root = _base(tmp_path)
+    _git(root, "config", "core.quotePath", "true")
+    _record(root, "overruled")
+    _spec(root, "WI-052", "Keep the flag, per {}.".format(CITE), slug="ré")
+    _git(root, "add", "-A")
+    assert ar.staged_ruling_sync_lines(root) == []
+
+
+@pytest.mark.parametrize(
+    "run", ["owner+cleanup", "owner@cleanup", "owner-cleanup", "feat/x.y_z", "ré"]
+)
+def test_the_citation_reads_every_run_name_the_record_path_writes(tmp_path, run):
+    # One alphabet: whatever `record_path` keeps of a valid branch name, the
+    # citation reader matches, so the exact generated citation discharges.
+    rel = decisions.record_path(run)
+    cite = decisions.citation(rel, "D-002")
+    assert decisions.citations("Per `{}`, kept.".format(cite)) == {cite}
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-074")
+    _record(root, "overruled", rel=rel)
+    _spec(root, "WI-051", "Keep the flag, per {}.".format(cite))
+    _git(root, "add", "-A")
+    assert ar.staged_ruling_sync_lines(root) == []
+    _commit(root, "overrule with its citing work")
+    _git(root, "checkout", "-q", "main")
+    assert integrate._ruling_sync_refusal(root, "wi-074") is None
+
+
+def test_the_citation_reader_takes_no_surrounding_prose():
+    text = "(see docs/decisions/a+b.toml#D-002), [docs/decisions/c@d.toml#D-3]."
+    assert decisions.citations(text) == {
+        "docs/decisions/a+b.toml#D-002",
+        "docs/decisions/c@d.toml#D-3",
+    }
+    assert decisions.citations("docs/decisions/a b.toml#D-1") == set()
+    assert decisions.citations("docs/decisions/x/y.toml#D-1") == set()
+
+
 FIXTURE = """\
 # a record from before WI-818
 high_risk = ["D-002"]
@@ -332,6 +394,34 @@ def test_the_migrator_refuses_what_it_cannot_rewrite_in_place():
     text = 'high_risk = []\ndecision = { D-001 = { decided = "d", reviewed = true } }\n'
     with pytest.raises(ValueError, match="re-parse"):
         decisions.migrate_text(text)
+
+
+def test_the_migrator_keeps_a_trailing_comment_on_the_line_it_rewrites():
+    head = 'high_risk = []\n\n{}review = "r"\n'.format(ENTRY)
+    note = "# Owner confirmed after discussing the rollback"
+    new, left = decisions.migrate_text(head + "  reviewed = true  {}\r\n".format(note))
+    assert (new, left) == (head + '  owner = "confirmed"  {}\r\n'.format(note), [])
+    new, left = decisions.migrate_text(head + "reviewed = false # Waiting\n")
+    assert (new, left) == (head + "# Waiting\n", [])
+    new, _ = decisions.migrate_text(head + "reviewed = 'yes' # kept\n")
+    assert new == head + 'owner = "confirmed" # kept\n'
+    statement = 'reviewed = "a # b" # c\n'  # a `#` inside a string is no comment
+    assert decisions._comment_start(statement) == statement.rindex("#")
+    new, _ = decisions.migrate_text(head + 'reviewed = """\n# no\ntrue\n""" # kept\n')
+    assert (new, _) == (head + 'reviewed = """\n# no\ntrue\n""" # kept\n', ["D-001"])
+
+
+@pytest.mark.parametrize("nan", ["nan", "+nan", "-nan"])
+def test_the_migrator_accepts_a_record_carrying_nan(tmp_path, nan):
+    clean = 'high_risk = []\n\n{}review = "r"\nextra = {}\n'.format(ENTRY, nan)
+    assert decisions.record_findings(clean) == []
+    assert decisions.migrate_text(clean) == (clean, [])
+    old = clean + "reviewed = true\n"
+    assert decisions.migrate_text(old) == (clean + 'owner = "confirmed"\n', [])
+    folder = tmp_path / "docs/decisions"
+    folder.mkdir(parents=True)
+    (folder / "clean.toml").write_text(clean, encoding="utf-8")
+    assert migrate.main(["--root", str(tmp_path), "--check"]) == 0
 
 
 def test_the_migrator_cli_rewrites_the_records_and_check_reports_them(tmp_path):
