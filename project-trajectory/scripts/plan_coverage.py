@@ -131,7 +131,7 @@ INTRA_MODULE_RE = re.compile(
     r"intra-module|single-module|no (?:cross-module )?seam|no interface", re.I
 )
 # `Excludes: <refs> — <reason>`, optionally list-marked or bold.
-EXCLUDES_RE = re.compile(r"^\s*(?:[-*]\s+)?\**Excludes(?:\**\s*:|\s*:\**)\s*(.*)$")
+EXCLUDES_RE = re.compile(r"^\s*(?:[-*]\s+)?\**Excludes\**\s*:\**\s*(.*)$")
 EXCLUDES_SEP_RE = re.compile(r"\s*[—–]\s*|\s+-\s+|\s+-$")
 # The table columns a row carries besides its id; `tier` is optional.
 ROW_KEYS = ("title", "covers", "interfaces", "predecessors", "tier")

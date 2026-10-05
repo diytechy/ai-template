@@ -410,3 +410,15 @@ def test_an_item_sr_cannot_be_excluded_only_cited(tmp_path):
         "(an item SR cannot be excluded)"
     ) in proc.stdout
     assert "- SR-001: missing" in proc.stdout
+
+
+def test_a_bold_exclusion_label_is_an_exclusion(tmp_path):
+    """`**Excludes:** C# — why` reads like `Excludes:` (the closing marker is
+    consumed, not read as a ref)."""
+    plan = PLAN_A.replace("C2; SR-001", "C1") + (
+        "**Excludes:** C2; C3; C4 — deliberately deferred.\n"
+    )
+    names = write_inputs(tmp_path, plans=(plan,))
+    proc = run(tmp_path, names)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "- excluded: C2 - deliberately deferred." in proc.stdout
