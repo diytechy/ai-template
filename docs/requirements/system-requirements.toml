@@ -1741,7 +1741,7 @@ rationale = "A DERIVED requirement, and labelled so. SN-027 asks that a declared
 acceptance_criteria = "With the guard off, admission proceeds without reading or writing guard state; with it on, the holder below the threshold may claim, while a claim with no lease held, a claim from another session or from a caller naming no session, and a claim from a holder at or above the threshold each refuse, naming the recovery action. The unattended dispatcher's own admission remains available without consulting this guard. Occupancy counts the newest valid post-compaction usage on the live branch, including cached input, and unknown usage is not zero. A latched drain survives a lower reading, compaction and resume, and ends only when the owner records a clear or a release, or a relaunched successor takes the lease."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6
 form = "interface"
 
@@ -1755,6 +1755,6 @@ rationale = "A DERIVED requirement, and labelled so. SN-027 asks that claiming d
 acceptance_criteria = "With the guard off, no exit launches anything. A request from the holder for an existing handoff launches once at an exit in the declared repository and starts from that handoff. Clear, resume, a non-holder, a subagent and a foreign request launch nothing; concurrent exit handling consumes one request once; and a launch that fails for any reason restores the request."
 priority = "S"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 6
 form = "interface"
