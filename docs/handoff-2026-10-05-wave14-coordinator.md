@@ -31,8 +31,15 @@ lanes needed several more Codex rounds, and Codex was rate-limited until
     then merge trunk in) when you start it.
 - **Approval acts run to seq 32.** `docs/work/pause` is tracked and
   byte-identical to its 2026-09-04 declaration.
-- **The full unfiltered suite** ran at this session's end. Its result is in
-  the log fragment.
+- **The full unfiltered suite** at `78681d97` (detached worktree, fixed basetemp):
+  1 failed, 5061 passed and 17 skipped, in 613.8 s.
+  - The failure is environmental and passes in isolation (2 passed):
+    `test_conftest_isolation.py::test_a_module_importing_kitlib_collects_on_its_own`.
+  - It reads the child run's last line as its summary, but conftest's
+    "already inside another job object" notice printed after it; the child run
+    itself passed (4 passed).
+  - This is an unfiled follow-up: the test should find the summary line, not
+    take the last line.
 
 ## The two lanes in flight
 
@@ -91,8 +98,15 @@ Terra's round-3 row edits **uncommitted** in the worktree (also saved as
 
 ### WI-806, spine text before the act
 
-The lane is `C:/Projects/ai-template.wt/wi-806`, HEAD `78d90c70`, rebased onto
-`cde27048`.
+The lane is `C:/Projects/ai-template.wt/wi-806`, rebased onto `cde27048`. HEAD is
+`61f14843`: the builder's round 1, written after the reviews below. It fixes Sol's
+BLOCKER (cell values are judged against every parent) and both MINORs, narrows the
+MAJOR (the squash exemption now needs the staged tree to equal git's merge of the
+tip, git 2.38+), and adds the adjudicator's two tests and tag. The builder
+**disputes** one remaining case (a direct commit byte-identical to an abandoned
+squash's merge result stays exempt), recorded in D-004, for the adjudicator. Terra
+owes LLR-302's code_symbol (`_commit_parents`, `_squash_lines`) and its squash
+sentence (and TC-173's (f)). `acceptance_record.py` sits at exactly 1000 lines.
 
 - **Reviews at `78d90c70`:**
   - **Codex Sol (REVIEW-A):** one BLOCKER (intersecting change labels across
@@ -116,8 +130,7 @@ The lane is `C:/Projects/ai-template.wt/wi-806`, HEAD `78d90c70`, rebased onto
   pending open item with its placeholder row, using the adjudicator's
   recommended text (delete the clause; see verdict 001).
 - **Owed, in order:**
-  1. Commit the builder's pending work, if it finished after this handoff
-     (check `git status` in the lane).
+  1. (Done: the builder's round is committed at `61f14843`.)
   2. Terra applies the adjudicator's fixes and LLR-173's qualification (Sol
      MINOR).
   3. Sol round 2.

@@ -89,3 +89,11 @@ and neither has taken its act yet.
 
 The exact owed steps per lane and the corrections learned are in
 [the wave-14 handoff](../handoff-2026-10-05-wave14-coordinator.md).
+
+**Full unfiltered suite** at `78681d97`, from a detached worktree with a fixed
+basetemp: 1 failed, 5061 passed, 17 skipped, in 613.8 s. The failure,
+`test_conftest_isolation.py::test_a_module_importing_kitlib_collects_on_its_own`,
+is environmental and passes in isolation. Conftest's "already inside another job
+object" notice printed after the child run's summary line, and the test reads
+the last line as the summary. The child run itself passed. It is an unfiled
+follow-up.
