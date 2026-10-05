@@ -90,9 +90,83 @@ def test_a_wrapper_importing_integrate_is_refused(draining, tmp_path):
         [sys.executable, str(wrapper)],
         capture_output=True,
         encoding="utf-8",
-        env=_env(**{guard.SESSION_ENV: OTHER}),
+        env=_env(**{guard.SESSION_ENV: COORD}),
     )
-    assert proc.returncode == 1 and "held by session " + COORD in proc.stderr
+    assert proc.returncode == 1 and "drain mode is latched" in proc.stderr
+
+
+def test_a_lane_worktree_shares_the_primary_checkouts_lease(tmp_path):
+    root = make_root(tmp_path)
+    _git(root, "init", "-q", "-b", "main")
+    _git(root, "config", "user.email", "t@example.com")
+    _git(root, "config", "user.name", "t")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "base")
+    lane = tmp_path / "lane"
+    _git(root, "worktree", "add", "-q", "-b", "wi-001", str(lane))
+    assert guard.lease_dir(lane) == guard.lease_dir(root)
+    assert guard.lease_dir(root) == root.resolve() / "out" / "coordinator"
+    tx = Transcript(tmp_path / "coord.jsonl")
+    tx.user()
+    tx.reply(100)
+    assert guard.take(lane, COORD, str(tx.path)) is None  # taken from the lane
+    assert guard.claim_refusal(root, env={guard.SESSION_ENV: COORD}) is None
+    refusal = guard.claim_refusal(root, env={guard.SESSION_ENV: OTHER})
+    assert "held by session " + COORD in refusal
+
+
+def _guard_cli(root, *args, session=COORD):
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS / "coordinator_guard.py"), "--root", str(root)]
+        + list(args),
+        capture_output=True,
+        encoding="utf-8",
+        env=_env(**{guard.SESSION_ENV: session}),
+    )
+
+
+def test_the_guard_cli_takes_requests_releases_and_clears(tmp_path):
+    root = make_root(tmp_path)
+    directory = guard.lease_dir(root)
+    tx = Transcript(tmp_path / "coord.jsonl")
+    tx.user()
+    tx.reply(700)
+    handoff = tmp_path / "handoff.md"
+    handoff.write_text(
+        "# Handoff\n\n## Session prompt\n\n```text\nResume.\n```\n", encoding="utf-8"
+    )
+    taken = _guard_cli(root, "take", "--transcript", str(tx.path))
+    assert taken.returncode == 0, taken.stderr
+    assert guard._load(directory)["holder"] == COORD
+    assert _guard_cli(root, "take", session=OTHER).returncode == 1
+    assert (
+        _guard_cli(
+            root, "request-relaunch", "--handoff", str(handoff), session=OTHER
+        ).returncode
+        == 1
+    )
+    requested = _guard_cli(root, "request-relaunch", "--handoff", str(handoff))
+    assert requested.returncode == 0, requested.stderr
+    request = json.loads((directory / "relaunch.json").read_text("utf-8"))
+    assert request["session_id"] == COORD and request["handoff"] == str(
+        handoff.resolve()
+    )
+    guard.claim_refusal(root, env={guard.SESSION_ENV: COORD})  # latches at 70%
+    assert guard._load(directory)["draining"] is True
+    cleared = _guard_cli(root, "clear", "--reason", "window misdeclared")
+    assert cleared.returncode == 0 and guard._load(directory)["draining"] is False
+    status = _guard_cli(root, "status")
+    assert (
+        status.returncode == 0 and json.loads(status.stdout)["lease"]["holder"] == COORD
+    )
+    released = _guard_cli(root, "release", "--reason", "handing over by hand")
+    assert released.returncode == 0 and guard._load(directory) == {}
+    reasons = [
+        json.loads(x).get("reason")
+        for x in (directory / "events.jsonl").read_text("utf-8").splitlines()
+    ]
+    assert reasons[-2:] == ["window misdeclared", "handing over by hand"]
+    assert _guard_cli(root, "clear", "--reason", "x").returncode == 1  # nothing held
 
 
 def test_the_hook_cli_reads_stdin_and_prints_its_output(draining, tmp_path):
