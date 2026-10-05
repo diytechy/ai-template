@@ -23,3 +23,14 @@ with that provenance (`docs/decisions/wi-796.toml` D-001, high risk). Follow-ups
 for a new row: binding notes on rubric anchors T2 and T5 (and the dead SR-089
 cite), the rendered Retired tab missing from the shot matrix, and the judges'
 prompt given LLR-099's and LLR-105's scope lines.
+
+### WI-797: the kit glossary ships
+
+`project-trajectory/GLOSSARY.md` (kit-owned, scaffolds to `docs/glossary.md`)
+carries the note's glossary reconciled with A1, a strength entry, and Planned
+labels on unbuilt machinery; PROCESS.md links to it in one sentence, because it
+has no lane-lifecycle section to rename (`docs/decisions/wi-797.toml` D-001).
+Sol round 1: one MAJOR (the losing drafter's concession is a second
+independence exception, Q-5), confirmed and fixed; round 2 SOUND at
+`35ee2d87`. No spine rows changed, so no act. RESYNC re-anchored at the
+landing's parent.

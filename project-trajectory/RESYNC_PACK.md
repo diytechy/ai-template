@@ -6889,6 +6889,29 @@ projection (`kitlib.spine.open_item_queue`, read through
    decisions-record entries read as not reviewed until you set `reviewed`; no
    record has to change shape.
 
+### The kit glossary [since 75c73444]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The kit ships a glossary, `GLOSSARY.md`, scaffolded to
+`docs/glossary.md`: the working terms for lanes, sessions and adjudication,
+each defined once, with where a session's strength (tier and effort) is set
+today. One term names one concept: the adjudicator is one role, whether its
+session is retained or fresh and whether the loop or a person launched it. An
+entry marked *Planned* names designed machinery that is not built yet and says
+what runs in its place. `docs/process.md` gains one sentence linking to it,
+including the lane lifecycle (states, substates, conditions) under its "lane
+state" entry. No script behaviour changes.
+
+**What to do.**
+
+1. Copy `GLOSSARY.md` to `docs/glossary.md` (kit-owned: overwrite freely on
+   later re-syncs). Re-running `bootstrap.py --dest .` creates it, since the
+   file is new and bootstrap skips only existing files.
+2. Regenerate `docs/process.md` as §2.2 describes, so the new link lands.
+3. Take `scripts/bootstrap.py` and `scripts/kitlib/bootstrap_manifest.py`,
+   whose inventory now lists the glossary.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
