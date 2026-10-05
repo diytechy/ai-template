@@ -702,9 +702,35 @@ def session_end(root, payload, launch=None):
             record_event(directory, "relaunch-refused", reason=problem)
             print("coordinator guard: relaunch refused: " + problem, file=sys.stderr)
             return False
-        lease["successor_token"] = token
-        _save(directory, lease)
+        try:
+            lease["successor_token"] = token
+            _save(directory, lease)
+        except OSError as exc:
+            _restore(directory, consumed, None, exc)
+            return False
     return _launch_or_restore(root, directory, consumed, request, token, launch)
+
+
+def _restore(directory, consumed, prompt_file, exc):
+    """Undo an acquisition whose launch was not confirmed: the request goes
+    back first (so it is never stranded), then the successor token is cleared
+    and the prompt file removed, best effort, and the failure is reported.
+    The caller holds the lock."""
+    os.replace(consumed, _request_path(directory))
+    try:
+        lease = _load(directory)
+        if lease.get("successor_token"):
+            lease["successor_token"] = None
+            _save(directory, lease)
+        record_event(directory, "launch-failed", reason=str(exc))
+    except OSError as cleanup:
+        print("coordinator guard: cleanup failed: {}".format(cleanup), file=sys.stderr)
+    if prompt_file is not None:
+        prompt_file.unlink(missing_ok=True)
+    print(
+        "coordinator guard: relaunch failed, request restored: {}".format(exc),
+        file=sys.stderr,
+    )
 
 
 def _launch_or_restore(root, directory, consumed, request, token, launch):
@@ -719,16 +745,7 @@ def _launch_or_restore(root, directory, consumed, request, token, launch):
         (launch or launch_detached)(Path(request["repo_root"]), prompt_file, token)
     except OSError as exc:
         with session_keep.dir_lock(lease_dir(root)) as directory:
-            os.replace(consumed, _request_path(directory))
-            lease = _load(directory)
-            lease["successor_token"] = None
-            _save(directory, lease)
-            record_event(directory, "launch-failed", reason=str(exc))
-        prompt_file.unlink(missing_ok=True)
-        print(
-            "coordinator guard: relaunch failed, request restored: {}".format(exc),
-            file=sys.stderr,
-        )
+            _restore(directory, consumed, prompt_file, exc)
         return False
     record_event(
         directory,
@@ -744,19 +761,24 @@ _NEW_CONSOLE = 0x10 | 0x200  # CREATE_NEW_CONSOLE | CREATE_NEW_PROCESS_GROUP
 
 
 def launch_command(repo_root, prompt_file, token, os_name=None):
-    """`(launcher, argv, Popen keywords)` for this platform: the repo's
-    `.cmd` on Windows, its POSIX sibling elsewhere, run in `repo_root` with
-    the prompt file and the successor token."""
+    """`(launcher, command, Popen keywords)` for this platform: the repo's
+    `.cmd` on Windows (the command is one command line for cmd), its POSIX
+    sibling elsewhere (an argv), run in `repo_root` with the prompt file and
+    the successor token."""
     os_name = os.name if os_name is None else os_name
     repo_root = Path(repo_root)
     args = [str(repo_root), str(prompt_file), token]
     if os_name == "nt":
         launcher = repo_root / "scripts" / "coordinator-relaunch.cmd"
-        # No standard-handle redirection: the new console's own handles are
-        # the interactive successor's stdin, stdout and stderr.
+        # One command line, not an argv: `cmd /s /c "<line>"` strips exactly
+        # the outer quote pair and runs the rest, so a quoted launcher path and
+        # quoted arguments survive a root with spaces (a Windows path cannot
+        # contain a quote). No standard-handle redirection: the new console's
+        # own handles are the interactive successor's stdin, stdout and stderr.
+        line = " ".join('"{}"'.format(part) for part in [str(launcher)] + args)
         return (
             launcher,
-            ["cmd", "/c", str(launcher)] + args,
+            'cmd /d /s /c "{}"'.format(line),
             {"creationflags": _NEW_CONSOLE},
         )
     launcher = repo_root / "scripts" / "coordinator-relaunch.sh"
