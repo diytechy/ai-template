@@ -743,9 +743,9 @@ verifies = ["SR-155", "LLR-069"]
 level = "Integration"
 method = "Run dual and single plan coverage, reference, graph, exclusion, SR/TC-diff, absent-registry, and malformed-input cases."
 tier = "Smoke"
-expected = """A reasoned exclusion passes; an unexplained clause gap in either run (SINGLE Done-when or finding, DUAL goal clause), undeclared or reasonless exclusion, an item SR no row cites (even if excluded), or a verifying TC neither named nor excluded exits 1 by name; a missing Done-when exits 2; DUAL report bytes remain unchanged; absent registries note without failure."""
+expected = "A reasoned exclusion passes and clean plans emit per-plan and pairwise coverage; a bad reference or plan graph, an unexplained clause gap in either run (SINGLE Done-when or finding, DUAL goal clause), an undeclared or reasonless exclusion, an item SR no row cites (even if excluded), or a TC verifying an item SR that no row names nor excludes exits 1 by name; malformed input, a missing Done-when included, exits 2; DUAL report bytes remain unchanged; absent registries note without failure."
 automated = "Yes"
-evidence = "tests/test_plan_coverage.py::test_single_plan_covering_or_excluding_every_clause_passes; tests/test_plan_coverage.py::test_single_plan_missing_a_done_when_item_exits_1_naming_it; tests/test_plan_coverage.py::test_an_exclusion_without_a_reason_is_a_finding; tests/test_plan_coverage.py::test_an_exclusion_of_an_undeclared_clause_is_a_finding; tests/test_plan_coverage.py::test_single_sr_tc_diff_names_an_uncovered_sr_and_an_unnamed_tc; tests/test_plan_coverage.py::test_single_tc_excluded_with_a_reason_passes; tests/test_plan_coverage.py::test_open_review_findings_are_clauses_on_a_replan; tests/test_plan_coverage.py::test_an_item_without_done_when_is_a_malformed_input; tests/test_plan_coverage.py::test_dual_report_bytes_unchanged_and_unexplained_dual_gaps_fail; tests/test_plan_coverage.py::test_a_dual_gap_excluded_with_a_reason_passes; tests/test_plan_coverage.py::test_a_dual_gap_fails_naming_only_its_plan; tests/test_plan_coverage.py::test_an_item_sr_cannot_be_excluded_only_cited; tests/test_plan_coverage_step.py::test_an_unexcluded_gap_in_plan_a_alone_bounces_only_a"
+evidence = "tests/test_plan_coverage.py; tests/test_plan_coverage_step.py::test_an_unexcluded_gap_in_plan_a_alone_bounces_only_a"
 status = "Approved"
 phase = 1
 

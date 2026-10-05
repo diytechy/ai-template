@@ -482,7 +482,7 @@ notes = """Published contract, not a single consumer: 14+ kit scripts independen
 
 [interface.IF-161]
 owner = "docs/test/"
-consumers = ["scripts/acceptance_record", "scripts/adjudicate_brief", "scripts/agent_loop", "scripts/baseline_snapshot", "scripts/check_doc_refs", "scripts/check_flows", "scripts/check_trajectory", "scripts/gen_okf", "scripts/gen_release_checklist", "scripts/intake", "scripts/spine_rules", "scripts/trace", "scripts/traj_parse", "external:downstream adopter"]
+consumers = ["scripts/acceptance_record", "scripts/adjudicate_brief", "scripts/agent_loop", "scripts/baseline_snapshot", "scripts/check_doc_refs", "scripts/check_flows", "scripts/check_trajectory", "scripts/gen_okf", "scripts/gen_release_checklist", "scripts/intake", "scripts/plan_coverage", "scripts/spine_rules", "scripts/trace", "scripts/traj_parse", "external:downstream adopter"]
 channel = "file"
 data = "test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids are the table keys"
 version = "v1"
@@ -557,7 +557,7 @@ component = "CMP-008"
 owner = "scripts/plan_coverage"
 consumers = ["scripts/plan_coverage_step"]
 channel = "file"
-data = "the --out coverage report: coverage and exclusions, a SINGLE SR/TC diff, and a DUAL pairwise diff"
+data = "the --out coverage report: coverage and exclusions per plan, a SINGLE SR/TC diff, and a pairwise diff over two or more plans"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

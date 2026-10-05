@@ -230,13 +230,13 @@ FINDINGS = """# Open review findings
 """
 
 
-def write_single(tmp_path, plan=SINGLE_PLAN, item=ITEM, findings=None):
+def write_single(tmp_path, plan=SINGLE_PLAN, item=ITEM, findings=None, tcs=None):
     tmp_path.mkdir(parents=True, exist_ok=True)
     write_inputs(tmp_path, plans=(plan,))
     (tmp_path / "item.md").write_text(item, encoding="utf-8")
     tests = tmp_path / "docs" / "test"
     tests.mkdir(parents=True, exist_ok=True)
-    (tests / "test-cases.toml").write_text(TCS, encoding="utf-8")
+    (tests / "test-cases.toml").write_text(tcs or TCS, encoding="utf-8")
     extra = []
     if findings is not None:
         (tmp_path / "findings.md").write_text(findings, encoding="utf-8")
@@ -422,3 +422,24 @@ def test_a_bold_exclusion_label_is_an_exclusion(tmp_path):
     proc = run(tmp_path, names)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "- excluded: C2 - deliberately deferred." in proc.stdout
+
+
+def test_a_tc_verifying_only_a_non_item_sr_stays_out_of_the_single_diff(tmp_path):
+    """The SR/TC diff asks only for the TCs that verify one of the item's own
+    SRs; a TC on another SR is not this plan's to name or exclude."""
+    other = TCS + '\n[test.TC-003]\nverifies = ["SR-002"]\nstatus = "Approved"\n'
+    proc = write_single(tmp_path, tcs=other)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "TC-003" not in proc.stdout
+    assert "- TC-002 (verifies SR-001): cited" in proc.stdout
+
+
+def test_a_row_citing_nothing_is_a_finding(tmp_path):
+    """The commensurability contract: every row says what it covers."""
+    plan = PLAN_A_GATED.replace("| C2; SR-001 |", "| |").replace(
+        "Excludes: C3; C4", "Excludes: C2; C3; C4"
+    )
+    names = write_inputs(tmp_path, plans=(plan,))
+    proc = run(tmp_path, names)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "plan-A.md: P2 cites no clause/SR" in proc.stdout
