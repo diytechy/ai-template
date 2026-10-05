@@ -1,0 +1,19 @@
+# docs/decisions/wi-796.toml — the delegated-decisions record for lane wi-796
+# (the TC-055 re-judge), made by the wave-14 coordinator. Format and doctrine:
+# project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "TC-055 is recorded PASS although two of the six Codex Luna judges returned CHANGES-REQUESTED (T5 at 390 px light, T2 at 1680 px dark): an independent Claude Opus adjudicator refuted both (T5 was ruled from the HTML source and names an amber fallback no focused node paints, verified by a browser probe of every node in both themes; T2 reads a >3-item collapse rule onto the root tier that the rubric and LLR-099 do not state, and the view starts collapsed). The adjudicator's call on a disputed finding is final (OI-103 Q3)."
+alternative = "Record FAIL on the judges' compiled verdict and re-judge after a rubric fix, or run a fresh re-judge with the corrected rubric before recording anything."
+reversal_cost = "Low: a new observation record supersedes this one; the rubric fix row (filed with this landing) triggers a re-judge through TC-055's declared inputs anyway."
+why_not_escalated = "Findings are claims (owner, 2026-07-30), and the adjudicator's ruling on a disputed finding is final (OI-103 Q3); both refutations cite the render, not opinion."
+review = ""
+
+[decision.D-002]
+decided = "The adjudicator's follow-ups (binding notes on rubric anchors T2 and T5 with the dead SR-089 cite replaced; the unshot rendered Retired tab added to the shot matrix; the judges' prompt given LLR-099's and LLR-105's scope lines) are filed as one new row after this landing, not fixed in this lane."
+alternative = "Fix the rubric and matrix in this lane before recording."
+reversal_cost = "Low."
+why_not_escalated = "The rubric is a declared input of TC-055: changing it in the lane after the verdict would leave the record judging a rubric that no longer exists. A separate row changes it and its re-judge follows by trigger."
+review = ""
