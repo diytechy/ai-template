@@ -39,15 +39,27 @@ of record, [docs/specs/WI-822.md](../../specs/WI-822.md).
   window. No valid usage reads as unknown, never 0%.
 - **Coordinator identity:** only the lease holder's transcript is measured or
   drained. A subagent's hook call and another session's hook call are no-ops,
-  each tested. A stale lease (heartbeat past its expiry) may be retaken, and the
-  steal is recorded.
+  each tested.
+- **The lease transfers only at exit or by the owner:**
+  - a held lease is never taken because time passed: a silent but live holder
+    keeps it;
+  - the relaunched successor takes it at `SessionStart`;
+  - the owner's explicit release, which is recorded, frees it;
+  - a session that does not hold it has its claims refused, naming the holder
+    and the release command.
+
+  Each case tested.
 - **Drain latches:** above threshold, then compaction below it, then a claim is
   still refused. The latch survives a resumed session, and clears only on the
   successor's lease take or the owner's recorded clear. The instruction is
   injected once at the latch, then bounded reminders, on tool, failed-tool,
   prompt and stop events. Each case tested.
 - **The claim boundary:** `integrate.claim` refuses while draining, whatever the
-  caller: the CLI, a wrapper, or an import. Close-out passes while draining:
+  caller: the CLI, a wrapper, or an import. It reads the lease's transcript
+  itself and latches on a crossed threshold. A fixture covers the exact sequence
+  round 2 named: the last measured reply is below the threshold, the next reply
+  crosses it, and its first tool call is a claim. The claim is refused, both via
+  the `PreToolUse` measurement and with no hook run. Close-out passes while draining:
   - landing, archive and sweep;
   - the scoped-unpause restore;
   - a verification `git worktree add --detach`, and worktree removal.
@@ -58,14 +70,14 @@ of record, [docs/specs/WI-822.md](../../specs/WI-822.md).
     the lease holder, and only for a request from that same session, for this
     repo, naming an existing handoff.
   - The request is acquired atomically: two concurrent handlers launch once.
-  - A failed launch restores the request. A stale or foreign request is refused
-    and reported.
+  - A failed launch restores the request. A request from another session is
+    refused and reported.
   - The launch runs in the declared repo root, with the handoff's prompt; the
     Windows and POSIX launchers are both tested with the launch stubbed.
 - **Compaction:** `PreCompact` records the trigger, the occupancy and the guard
   state, and the handoff template classifies a missed threshold, a manual
   compaction and compaction during a drain.
-- **Dials:** the threshold, window and expiries are declared in
+- **Dials:** the threshold and the window are declared in
   `docs/process.toml` and in the shipped template (template threshold 0 = off,
   so the dogfood sync holds). Nothing is hard-coded.
 - **Registration and dry run:** hooks are registered in a tracked
