@@ -38,8 +38,8 @@ security: a session that can edit files can remove a hook.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280 — the
-interface seams this module declares (process.md §8; rows of record in
+Contracts: IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280, IF-281 —
+the interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
 Contract IF-271: `claim_refusal(root, env=None)` returns None when a guarded
@@ -86,9 +86,11 @@ Contract IF-279: the guard starts a launcher, detached, as
 Contract IF-280: the command line is `coordinator_guard.py [--root ROOT]`
     with one of `hook`, `status`, `take [--session S] [--transcript T]`,
     `release --reason R`, `clear --reason R` or
-    `request-relaunch --handoff H [--session S]`. It exits 0 on success and
-    1 on a refusal, whose reason goes to stderr after "coordinator guard: ";
-    a usage error exits 2; `hook` always exits 0.
+    `request-relaunch --handoff H [--session S]`.
+
+Contract IF-281: the command line's exit code is 0 on success and 1 on a
+    refusal, whose reason goes to stderr after "coordinator guard: "; a
+    usage error exits 2; `hook` always exits 0.
 
 Runtime state (internal, no seam: only this module reads or writes it, and
     every other reader goes through IF-271): `out/coordinator/` under the

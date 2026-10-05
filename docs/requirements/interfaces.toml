@@ -2501,9 +2501,20 @@ rationale = "The guard launches both platform helpers through one argument shape
 owner = "scripts/coordinator_guard"
 requestors = ["external:agent CLI"]
 channel = "cli"
-data = "take | request-relaunch --handoff | release --reason | clear --reason | status; 0 success, 1 refusal with coordinator guard: stderr, 2 usage"
+data = "take | request-relaunch --handoff | release --reason | clear --reason | status"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-rationale = "Coordinator-facing operations and refusal codes need one declared command surface, so recovery instructions and command behavior cannot drift."
+rationale = "Coordinator-facing operations need one declared argument surface, so recovery instructions and command invocation cannot drift."
 notes = """No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation."""
+
+[interface.IF-281]
+owner = "scripts/coordinator_guard"
+consumers = ["external:agent CLI"]
+channel = "exit-code"
+data = '0 success; 1 refusal, reason on stderr after "coordinator guard: "; 2 usage error; hook always 0'
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "The agent CLI needs a separately declared result surface to distinguish success, refusal and usage error without conflating it with command arguments."
+notes = """No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."""
