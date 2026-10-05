@@ -25,3 +25,17 @@ alternative = "Rebase only immediately before the act, after the adjudicator's r
 reversal_cost = "None: trunk does not move before WI-822 lands, so this rebase is the pre-act rebase; a later trunk move would need one more."
 why_not_escalated = "It clears the hold-by-rename error from the landed wi-803 branch, lets Sol and the adjudicator judge the tree that lands, and follows the wave-14 correction (rebase, never merge, once rows are committed)."
 review = ""
+
+[decision.D-004]
+decided = "WI-818's new rows, minted by Terra as LLR-300/301 and TC-315/316 from trunk's watermark, were renumbered in the lane to LLR-303/304 and TC-319/320, past the ids the unlanded WI-822 and WI-806 lanes held, and the code retagged from Terra's list."
+alternative = "Leave the ids and renumber at WI-818's rebase after the other lanes land."
+reversal_cost = "None: the rows were Drafted and unlanded; the renumber is one commit in the lane."
+why_not_escalated = "Ids are bookkeeping, not meaning; a collision at the later rebase would have been the same renumber made under a conflict."
+review = ""
+
+[decision.D-005]
+decided = "When Codex (Sol and Terra) hit its plan limit at about 05:20 with a 08:48 reset, the session waited and then handed off, rather than relax to a fresh independent Opus reviewer after two hours as the wave-11 'never' list allows."
+alternative = "Use an independent Opus reviewer for WI-818's Sol round 3 after 07:20 and record the same-family relaxation."
+reversal_cost = "None: no review was skipped; the next session runs Sol round 3."
+why_not_escalated = "Terra's row rounds gate both lanes too and have no relaxation, so a same-family review would not have let either lane land sooner; the owner then directed a close-out session."
+review = ""

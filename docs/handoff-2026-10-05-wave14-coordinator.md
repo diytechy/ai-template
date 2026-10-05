@@ -7,6 +7,9 @@ handoff's roles, tools and "never" list still hold, with the corrections below.
 This session's record is
 [log.d/2026-10-04-wave14-coordinator.md](log.d/2026-10-04-wave14-coordinator.md).
 
+> **Superseded as the resume map by
+> [handoff-2026-10-05-wave15-coordinator.md](handoff-2026-10-05-wave15-coordinator.md).**
+
 The session stopped at about 41% of its context, by the rule the guard it was
 building will enforce. It claimed nothing after its one batch: both remaining
 lanes needed several more Codex rounds, and Codex was rate-limited until
