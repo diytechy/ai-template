@@ -705,7 +705,7 @@ def session_end(root, payload, launch=None):
         try:
             lease["successor_token"] = token
             _save(directory, lease)
-        except OSError as exc:
+        except Exception as exc:  # noqa: BLE001 - any failure restores
             _restore(directory, consumed, None, exc)
             return False
     return _launch_or_restore(root, directory, consumed, request, token, launch)
@@ -734,8 +734,9 @@ def _restore(directory, consumed, prompt_file, exc):
 
 
 def _launch_or_restore(root, directory, consumed, request, token, launch):
-    """Write the prompt file and run the launch. Every failure from here to a
-    confirmed launch (the prompt write included) puts the request back,
+    """Write the prompt file and run the launch. Every failure, of any
+    exception type, from here to a confirmed launch (the prompt write
+    included) puts the request back,
     removes the successor token and the prompt file, and reports."""
     prompt_file = Path(directory) / "relaunch-prompt.{}.txt".format(token)
     try:
@@ -743,7 +744,7 @@ def _launch_or_restore(root, directory, consumed, request, token, launch):
             session_prompt(request["handoff"]), encoding="utf-8", newline="\n"
         )
         (launch or launch_detached)(Path(request["repo_root"]), prompt_file, token)
-    except OSError as exc:
+    except Exception as exc:  # noqa: BLE001 - any failure before confirmation restores
         with session_keep.dir_lock(lease_dir(root)) as directory:
             _restore(directory, consumed, prompt_file, exc)
         return False

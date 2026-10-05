@@ -404,6 +404,7 @@ def test_the_owners_release_frees_the_lease_and_is_recorded(root, tx):
     assert guard._load(guard.lease_dir(root)) == {}
     last = events(root)[-1]
     assert last["event"] == "release" and last["was"] == COORD
+    assert last["reason"] == "the session crashed before SessionEnd"
     assert guard.take(root, OTHER) is None
 
 
@@ -467,7 +468,8 @@ def test_only_the_owners_recorded_clear_or_the_successor_unlatches(root, tx):
     assert guard.clear(root, "") is not None
     assert guard.clear(root, "measured wrong window") is None
     assert guard._load(guard.lease_dir(root))["draining"] is False
-    assert events(root)[-1]["event"] == "clear"
+    last = events(root)[-1]
+    assert last["event"] == "clear" and last["reason"] == "measured wrong window"
 
 
 @pytest.mark.parametrize(
@@ -599,6 +601,13 @@ def test_pre_compact_records_trigger_occupancy_and_guard_state(root, tx):
     assert (entry["draining"], entry["relaunch_requested"]) == (False, False)
     assert entry["class"] == "missed-threshold"
     assert events(root)[-1]["event"] == "compaction"
+    handoff = tx.path.with_name("handoff.md")
+    handoff.write_text(HANDOFF, encoding="utf-8")
+    assert guard.request_relaunch(root, handoff, COORD) is None
+    guard.hook(ev("PreCompact", transcript=tx.path, trigger="manual"), root, env={})
+    entry = guard._load(guard.lease_dir(root))["compactions"][-1]
+    assert (entry["trigger"], entry["relaunch_requested"]) == ("manual", True)
+    assert entry["class"] == "manual"
 
 
 @pytest.mark.parametrize(
@@ -747,6 +756,17 @@ def test_a_failed_launch_restores_the_request(root, tx, tmp_path, capsys):
         guard.session_end(root, ev("SessionEnd", reason="logout"), launch=launch)
         is True
     )
+
+
+def test_a_launch_failing_with_any_error_restores_the_request(root, tx, tmp_path):
+    _ready(root, tx, tmp_path)
+
+    def broken(repo_root, prompt_file, token):
+        raise ValueError("not an OSError")
+
+    end = ev("SessionEnd", reason="logout")
+    assert guard.session_end(root, end, launch=broken) is False
+    _assert_restored(root)
 
 
 def _assert_restored(root):
