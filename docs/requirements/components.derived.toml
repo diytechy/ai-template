@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 281
+design_rows = 283
 seam_rows = 231
 requirements_placed = 116
 requirements_unplaced = 6
@@ -592,6 +592,8 @@ seam_boundary_refs = [
   "IF-226",
   "IF-240",
   "IF-254",
+  "IF-255",
+  "IF-256",
 ]
 
 [component_view.CMP-008]
@@ -726,6 +728,8 @@ llr_refs = [
   "LLR-299",
   "LLR-300",
   "LLR-301",
+  "LLR-303",
+  "LLR-304",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -764,11 +768,13 @@ modules = [
   "project-trajectory/scripts/kitlib/authority.py",
   "project-trajectory/scripts/kitlib/decisions.py",
   "project-trajectory/scripts/kitlib/done_when.py",
+  "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/provenance.py",
   "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/station.py",
   "project-trajectory/scripts/kitlib/verdict.py",
   "project-trajectory/scripts/lane.py",
+  "project-trajectory/scripts/migrate_decisions.py",
   "project-trajectory/scripts/observation_cadence.py",
   "project-trajectory/scripts/pending.py",
   "project-trajectory/scripts/plan_artifacts.py",
@@ -1166,6 +1172,8 @@ seam_boundary_refs = [
   "IF-200",
   "IF-228",
   "IF-254",
+  "IF-255",
+  "IF-256",
   "IF-257",
   "IF-264",
   "IF-270",

@@ -2231,24 +2231,24 @@ component = "CMP-009"
 [interface.IF-255]
 rationale = """A delegated run's record is a file the session that made the calls writes and the merge slot reads off the lane's branch, and the owner edits in place afterwards. Declaring the file's path and fields as one contract keeps the writer and the reader on one shape, so a record a session writes to its instructions is the record the slot looks for."""
 owner = "scripts/kitlib/decisions"
-consumers = ["scripts/integrate"]
+consumers = ['scripts/acceptance_record', 'scripts/integrate', 'scripts/pending']
 channel = "file"
-data = """docs/decisions/<run>.toml: high_risk (entry ids); [decision.D-<n>] decided, alternative, reversal_cost, why_not_escalated, review, reviewed (optional)"""
+data = 'docs/decisions/<run>.toml: high_risk (entry ids); [decision.D-<n>] decided, alternative, reversal_cost, why_not_escalated, review, owner (optional: confirmed | overruled; absent = not yet seen); a work item cites an entry as docs/decisions/<run>.toml#D-<n>'
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """The owner is the module that states the file's shape; the file arrives on the lane's branch and the merge slot reads it there. reviewed is optional and records whether an owner-facing review queue should retain an entry. An entry numbered -000 is the shipped example and is never judged."""
+notes = "The owner is the module that states the file's shape; the file arrives on the lane's branch and the merge slot reads it there. owner is the owner's verdict. reviewed is retired: it is a format finding, never read as a verdict, and an entry carrying it reads as not yet seen whatever owner value accompanies it; the migrator rewrites its recognized vocabulary. An overruled entry has a non-blank review note. An entry numbered -000 is the shipped example and is never judged."
 
 [interface.IF-256]
 rationale = """The merge slot, the loop and the dial reader each ask the record's questions - where a run's record belongs, what makes an entry malformed, whether a close owes one, what a session is told, and which words the dial takes - and answering them in three places is how a session gets told one path while the slot reads another. One imported module answers all of them."""
 owner = "scripts/kitlib/decisions"
-requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/agent_common"]
+requestors = ['scripts/acceptance_record', 'scripts/agent_common', 'scripts/agent_loop', 'scripts/gen_open_items', 'scripts/integrate', 'scripts/migrate_decisions', 'scripts/pending']
 channel = "call"
-data = """record_path; record_findings; reviewed_state; review_queue(text) -> (entries, reviewed_count); MODES, REQUIRED_KEYS, REVIEWED_*; owed; session_note"""
+data = "record_path (raises ValueError for a run name no record can carry: # or a character git refuses); record_findings; owner_state; review_queue(text) -> (unseen, overruled, confirmed_count); citation; citations; newly_overruled (raises ValueError for an unparseable after side); overrule_sync_lines(changed, before, after) -> refusal lines (before/after read a path's text in the parent and resulting tree, None when absent; what they raise propagates); migrate_text -> (text, left_ids) (raises ValueError for unparseable input or failed re-parse equivalence); MODES, REQUIRED_KEYS, OWNER_KEY, CONFIRMED, OVERRULED, OWNER_VALUES, RETIRED_KEY; owed; missing_record_refusal(mode, run) -> the merge slot refusal of an owed close with no record, or with a run name no record can carry; session_note"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """source — the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader. review_queue returns entry dictionaries with id, high_risk, fields, and raw reviewed value or None; it orders high-risk entries first then id, skips -000, and returns an empty list and zero for unparseable text."""
+notes = 'source — the module imports nothing and reads no file, git or environment, so every answer is a function of its arguments; the git read of a record and the policy-file read of the dial stay with the merge slot and the dial reader. review_queue returns entry dictionaries with id, high_risk, fields, and raw owner value; it orders high-risk entries first then id, skips -000, reads an entry carrying reviewed as unseen whatever owner it carries, and returns empty unseen and overruled lists with zero confirmed for unparseable text. newly_overruled fails closed when its resulting side does not parse. migrate_text raises ValueError for unparseable text or when a rewrite re-parses differently from the expected verdict-only change. record_path maps / to - and rewrites no other character; a run name carrying # or a character git refuses has no record, and record_path raises ValueError naming the run and character rather than folding it into another name.'
 
 [interface.IF-257]
 rationale = """A retired row's record is written by the retirement and read by three parties: the traceability check that reports a missing or moved record, the dashboard that lists the records with their deleting commits, and a session that meets a spent id and looks it up. Declaring the files' path and shape as one contract keeps the writer and every reader on one shape, and one file per id keeps the lookup a path rather than a search and the write conflict-free across parallel branches."""

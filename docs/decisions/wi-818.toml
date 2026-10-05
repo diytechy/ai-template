@@ -1,0 +1,111 @@
+# docs/decisions/wi-818.toml — WI-818's delegated decisions record (the owner's
+# verdict on a decision). Format: project-trajectory/decisions.template.toml,
+# in the format this lane defines: no entry carries an `owner` key until the
+# owner sets one.
+
+high_risk = ["D-001", "D-004", "D-005", "D-013", "D-014"]
+
+[decision.D-001]
+decided = "The overrule coupling runs inside the existing ruling sync: acceptance_record.ruling_sync_lines now returns the open-item lines plus overrule_sync_lines over the same diff, so the pre-commit hook's ruling-sync step and the merge slot's _ruling_sync_refusal judge it with no new step, rung or flag. check.py and integrate.py change in docstrings only."
+alternative = "A separate overrule-sync step in check.py's step list and a separate merge-slot rung in integrate.py, each calling its own staged/commit pair."
+reversal_cost = "Low: split overrule_sync_lines out of ruling_sync_lines and add a step and a rung; the tests call the same public functions and would move with them. Adopters would add the new step to their hook's --run-steps list."
+why_not_escalated = "The build prompt says to reuse the OI-102 Q3 commit-vs-parent shape and not invent a second mechanism; one function over two trees in both places is that shape. Folding also keeps the WI-806 and WI-822 landing conflicts in check.py and integrate.py to docstring lines."
+review = ""
+
+[decision.D-002]
+decided = "The owner vocabulary is exact and case-sensitive: only the strings \"confirmed\" and \"overruled\" are recognized; \"Confirmed\", a padded word, true or 1 are format findings and read as not yet seen."
+alternative = "Compare trimmed and case-folded, as WI-790's reviewed key did."
+reversal_cost = "One line in owner_state plus the parametrized test's cases."
+why_not_escalated = "The spec says the two values are the only recognized values; the migrator writes the exact word, and a closed exact vocabulary leaves no question of which spellings count."
+review = ""
+
+[decision.D-003]
+decided = "Any entry still carrying the retired reviewed key reads as not yet seen, whatever its owner key says (owner = \"confirmed\" plus reviewed = true is listed under Decisions to review, confirmed count 0), and the key is a format finding. The overrule coupling reads the owner key as written: owner = \"overruled\" beside reviewed still owes its citing work item at the commit."
+alternative = "Read such an entry by owner alone (the round-1 build: owner = \"confirmed\" plus reviewed reads as confirmed); or let the retired key also suppress the coupling, so the coupling and the surface read one way."
+reversal_cost = "One condition in review_queue and the parametrized test's confirmed case; one in _overruled_ids for the coupling."
+why_not_escalated = "Round 1 read the entry by owner alone, which the review showed contradicts the spec's first Done-when bullet: the retired key is a format finding AND reads as not yet seen. The coupling keeps the owner key as written because a stale key must never let an overrule skip its work (fail closed), the same reasoning as D-008's blank note."
+review = ""
+
+[decision.D-004]
+decided = "The citing work item must be a spec under docs/work/queued/ or docs/work/active/ that the SAME commit adds or changes, whose new text carries the token docs/decisions/<run>.toml#D-NNN (a digit never following the id). A row that already cited the entry and is left untouched, and an archived (terminal) row, do not satisfy the overrule."
+alternative = "Accept any open row whose spec cites the entry in the new tree, touched or not; or accept a citation from any spec, archived included."
+reversal_cost = "Low: widen the filter in overrule_sync_lines (read every open spec of the new tree instead of the diff's) and flip two test cases."
+why_not_escalated = "The spec's words are 'files or amends' in 'the same commit', which names the act, not a standing citation; an untouched earlier citation would let an overrule land with nothing changed to the new direction. The citation form was the build's to fix."
+review = ""
+
+[decision.D-005]
+decided = "The overrule sync fails CLOSED: a commit whose tree carries a decisions record (one the diff touches) that does not parse as TOML is refused, at the pre-commit ruling-sync step and per lane commit at the merge slot, naming the record and the parse error. A parent side that does not parse reads as overruling nothing, so the commit that repairs it owes the citing work for every overrule the repaired record shows."
+alternative = "Read an unparseable record as overruling nothing on either side (the round-1 build), so an overrule hidden behind a syntax error is owed by the commit that makes it readable; or refuse an unparseable parent side too, as the open-item ruling sync does."
+reversal_cost = "Low: newly_overruled raises on an unparseable after-side and _owed_overrules turns that into a refusal line; reversing is the two branches. A lane already carrying such a commit needs its history rewritten to land."
+why_not_escalated = "The round-1 fail-open reading let an overrule plus a syntax error pass both admission points, and a later repair that dropped the verdict passed too (Sol, round-1 MAJOR 1); the owner's standing rule forbids degenerate paths. Refusing only the new side, not the parent, mirrors the open-item sync's unreadable-is-not-unchanged rule without stranding the repair of a record broken before this rule: the repair is judged as overruling everything it shows, which is the strict reading."
+review = ""
+
+[decision.D-006]
+decided = "Overruled entries render inside section 4 of open-items.html under their own sub-heading 'Overruled - acted on by work', after the not-yet-seen cards, each with an 'Acted on by' field naming every citing work item and its state folder (open or archived), or 'no work item cites this entry'. They stay listed for good."
+alternative = "A fifth section after 'Decisions to review'; or drop an overruled entry from the page once its citing work item closes."
+reversal_cost = "Low: a render change in gen_open_items.decisions_block and the section-order test."
+why_not_escalated = "The section-order test pins 'Decisions to review' as the last section (LLR-118), and the spec asks only for 'their own heading'; keeping every overrule listed is the plain reading of 'never disappears silently'."
+review = ""
+
+[decision.D-007]
+decided = "The migrator is a new script, scripts/migrate_decisions.py, over a pure kitlib.decisions.migrate_text: each word of the old reviewed vocabulary that read as reviewed becomes owner = \"confirmed\" in the same place, a not-reviewed word is dropped, a reviewed key beside an existing owner key is dropped, and a value outside the old vocabulary is left in place and named (still a finding). It rewrites complete top-level assignments only, found by a scanner that tracks TOML string and bracket state, never a string's contents; a rewritten or dropped assignment keeps its trailing comment (a dropped one leaves the comment on its own line); it re-parses the result and refuses (ValueError, the record left untouched and named) unless only the verdict keys changed, comparing NaN as equal to NaN. --check reports without writing."
+alternative = "Rewrite only the literal true and false and leave every word form; scan physical lines (the round-1 build, which rewrote a reviewed line inside a multiline note and left a multiline value half-replaced); or fold the migrator into an existing script such as migrate_carrier.py."
+reversal_cost = "Low for the vocabulary (one helper); moving the CLI means one argparse block and the RESYNC_PACK pointer."
+why_not_escalated = "The spec names reviewed = true and reviewed = false; the old vocabulary's other words meant the same thing under WI-790, so carrying them is the same migration, and guessing an unrecognized value is left to a person. A dedicated script keeps migrate_carrier.py to its one job; it needs its own spine row, listed for the row author."
+review = ""
+
+[decision.D-008]
+decided = "An overruled entry with a blank review note is a format finding but still reads as overruled: it leaves the review queue for the overruled heading, and its commit is still held to the citing-row coupling."
+alternative = "Read an overrule with no note as not yet seen until the note is written."
+reversal_cost = "One condition in review_queue."
+why_not_escalated = "The spec makes the blank note a format finding and says nothing about how it reads; reading the key as written keeps the coupling on the commit that sets it, so a missing note never lets an overrule skip its work item."
+review = ""
+
+[decision.D-009]
+decided = "The status snapshot's 'Decisions to review' count is unchanged: it counts entries not yet seen only, not overruled ones."
+alternative = "Add an overruled count line to the snapshot."
+reversal_cost = "One line in traj_status._open_item_lines and a test."
+why_not_escalated = "The spec changes the owner surface, not the snapshot; an overrule is already coupled to a work item that the snapshot's queue shows."
+review = ""
+
+[decision.D-010]
+decided = "One run-name alphabet serves the record path and the citation reader: the characters a run name cannot keep are exactly what git refuses in any branch name, one character at a time (the ASCII control characters, space and DEL, and ~ ^ : ? * [ and backslash), matched as an explicit ASCII class, plus the two delimiters a branch may carry, '/' and '#' (D-013). record_path maps '/' to '-', exactly as on trunk, and raises ValueError for a run name carrying any other excluded character ('#' or one git refuses); no other character is rewritten. The citation pattern matches every character the alphabet keeps, so owner+cleanup, owner@cleanup and owner<U+00A0>cleanup records are cited as written. Against trunk's record_path, which mapped only '/', every path record_path returns is unchanged; a name carrying '#' now has no path. (Corrected in round 4, Sol round 3 MAJOR 2: the round-3 build matched Python's Unicode whitespace class, which git does not refuse, so owner<U+00A0>cleanup and owner-cleanup collided on one path. Corrected in round 5, dispute 1 ruling: round 4 mapped '#' to '-' as well, so owner#cleanup wrote owner-cleanup's file; it is refused instead.)"
+alternative = "Normalize in record_path instead: map every character outside the word characters, '.' and '-' to '-', so owner+cleanup writes owner-cleanup.toml and the citation pattern keeps its round-2 class."
+reversal_cost = "Low: swap the rewrite in record_path and the class in the citation pattern; the alphabet test pins all three outcomes (mapped, refused, kept) against git. A lane already carrying a record named with + or @ would need it renamed."
+why_not_escalated = "Sol's round-2 MAJOR 2 asks only that producer and reader share one alphabet; widening the reader keeps every record name a lane may already carry valid, where normalizing would move them, and it avoids two branches (owner+x, owner@x) colliding on one file."
+review = ""
+
+[decision.D-011]
+decided = "Every path list the ruling sync reads is read NUL-delimited (git's -z) through one reader, acceptance_record._git_paths: the diff's changed paths, which the open-item sync and the overrule sync share, and _tree_specs' listing of each tree's work-item specs, which predates this lane and is the open-item sync's. The spine scan's own changed-path read (_spine_revs) is left as it is."
+alternative = "Fix only the overrule sync's filter (decode git's quoted form there); or route every raw path listing in acceptance_record through the reader, _spine_revs included."
+reversal_cost = "Low: the reader is one function and three call sites."
+why_not_escalated = "The build prompt directs the fix at the one shared reader, and names the open-item sync's use of it in scope as the same defect class. _spine_revs compares fixed ASCII registry paths, so quoting cannot hide one there; changing it is outside this row and is reported as a separate finding."
+review = ""
+
+[decision.D-012]
+decided = "To bring acceptance_record.py back under the module-size ratchet's 1000-SLOC threshold (1051 after this lane; WI-806 had left it at 999), the overrule sync moved to kitlib/decisions.py (_open_spec, _owed_overrules, overrule_sync_lines, now taking the diff's paths and two text readers, so the module still reads no git itself), and the ruling sync's two git reads moved to kitlib/git.py (git_paths, from _git_paths; git_show and UnreadableBlob, from _show and _UnreadableBlob). acceptance_record keeps one alias for each read and calls overrule_sync_lines from ruling_sync_lines with readers over the parent and resulting tree. Behaviour unchanged; it measures 998."
+alternative = "Move the whole ruling sync (WI-790's open-item arm and this lane's overrule arm) into a module of its own, which the acceptance record's boundary sentence does not cover; or re-stamp a 1051 baseline."
+reversal_cost = "Low: move the five functions and one class back and drop the aliases; the tests call the public staged and commit functions and do not change."
+why_not_escalated = "The ratchet's rule is decompose, never bump, and the coordinator named the overrule coupling and the git path reader as the candidates. Moving the whole ruling sync would change the module cell of LLR-298, an approved row outside this lane, so the move is kept to code this lane owns plus _show, which no approved row's code_symbol names. At 998 the module has 2 SLOC of headroom, so the next feature that grows it must decompose again; the whole-ruling-sync move is the larger cut left for that."
+review = ""
+
+[decision.D-013]
+decided = "The citation delimiter '#' joins the run-name alphabet's excluded set, and record_path REFUSES it: a run name carrying '#' raises ValueError naming the run and the character, and the merge slot's decisions-record rung reads that as an absent record, refused when one is owed. The citation pattern's path class cannot contain '#', so the first '#' after docs/decisions/ ends the path, and since no record name carries '#' that one parse is also the right one. A branch named owner.toml#D-002 or owner#cleanup has no record, and the token docs/decisions/owner.toml#D-002 only ever cites owner.toml's D-002. (Corrected in round 5, dispute 1 ruling: round 4 mapped '#' to '-', so owner#cleanup silently wrote, and could be satisfied by, owner-cleanup's record.)"
+alternative = "Map '#' to '-' (the round-4 build, rejected by the dispute 1 ruling: a lossy rewrite of a git-valid character folds two branch names into one record); escape run names injectively, which moves every slash-named record; or keep '#' in run names and anchor the citation reader to the last .toml#D-<digits> in a token."
+reversal_cost = "Low: record_path's refusal and the rung's ValueError arm. A branch carrying '#' must be renamed before its lane can merge under a recording dial, and an adopter's record already named with '#' cannot be cited until it is renamed. The alphabet test pins the set against git."
+why_not_escalated = "Sol round 3 MAJOR 1 asks that the producer and the reader leave one parse, and the dispute 1 ruling (Sol round 4 MAJOR upheld) settles the shape: refuse '#' rather than map it, which fails closed, adds no degenerate path and moves no record of any adopter (every name without '#' keeps trunk's path). The refusal reaches only a branch a person named by hand, under a recording dial, at the merge slot: no lane name in this kit produces '#' (lanes are wi-<stem>, session tags are sanitized). It stays high-risk for the owner, as the ruling directs. The residue is stated, not fixed here: a/b and a-b, and a reused branch name, still share one record (the ruling's finding F1, the owner's call)."
+review = ""
+
+[decision.D-014]
+decided = "A path list is decoded losslessly, and a path that is not UTF-8 is refused where it would be read. git_paths reads git's bytes and decodes UTF-8 with surrogateescape, so a byte that is not UTF-8 survives as a lone surrogate and the path round-trips to git's exact bytes. git_show, the one blob reader, raises UnreadableBlob for such a path before asking git, naming it with the byte written as a hex escape, and ruling_sync_lines' existing handler makes that a refusal line (its message reworded to name both causes). So a decisions record in the diff, an open spec read when an overrule is owed, and a citing row or the registry in the open-item arm are refused when their path is not UTF-8, while a non-UTF-8 path the syncs never read (a source file, say) is listed and left alone."
+alternative = "Decode strictly in git_paths and refuse, by an exception or by answering None, whenever any listed path is not UTF-8 (the build prompt's sketch)."
+reversal_cost = "Low: git_paths' decode and the guard at the head of git_show. Two tests pin the boundary: a non-UTF-8 record refused at the commit and the merge slot, and a non-UTF-8 unrelated path not refused."
+why_not_escalated = "Both shapes fail closed on Sol's probe. A strict listing would refuse every commit touching any non-UTF-8 path anywhere in a repository (a path git accepts), at the pre-commit hook and the merge slot, for a rule that only reads decisions records and work-item specs; the lossless listing refuses exactly the paths the syncs read, at the one blob reader they all share. The guard precedes the git call because a lone surrogate on a Windows command line reaches git as another path, which git answers as absent: the original defect. Known edge: a commit deleting or renaming a non-UTF-8 decisions record is refused too, since its parent side cannot be read; this rule refuses the commit that adds such a record, so one can only predate it, and reading it would need a second, stdin-fed blob reader. The shape also keeps acceptance_record.py at 998 SLOC, where a new exception and handler would pass the 1000 threshold."
+review = ""
+
+[decision.D-015]
+decided = "The merge slot's absent-record refusal text moved from integrate._decision_record_refusal to a new pure function beside owed, kitlib.decisions.missing_record_refusal(mode, run), which also composes the refusal for a run name record_path refuses (naming the run and record_path's ValueError text, ending '; nothing was merged'). The rung keeps the read and the dial: it catches the ValueError around record_path and the git read, treats it as an absent record, and returns missing_record_refusal when owed() holds. The absent-record wording is byte-identical to before."
+alternative = "Keep both refusal texts in integrate.py, as the dispute 1 ruling sketches, and re-stamp integrate.py's module-size baseline up by about four SLOC."
+reversal_cost = "Low: inline the function back into the rung and drop it from IF-256's contract text and LLR-283's code_symbol."
+why_not_escalated = "integrate.py sat exactly on its module-size baseline (1554 SLOC) and the coordinator's rule is decompose, never bump. The refusal is a pure function of the dial and the run name, the module already owns owed() and the session note that announces the refusal, and the move takes integrate.py down to 1551 (re-stamped down). Behaviour is the ruling's: the branch and the exception's text are named and nothing is merged. The row author owes LLR-283 code_symbol and detail and IF-256 data the new function."
+review = ""

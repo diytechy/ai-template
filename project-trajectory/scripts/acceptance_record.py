@@ -137,6 +137,15 @@ two trees in both places. It decides only that mechanical condition: whether
 the change carries the ruling, and whether a row's other fields must move, is
 the reviewer's judgement.
 
+The same rule couples the owner's OVERRULE of a delegated decision to work
+(WI-818): a commit that sets a decisions-record entry `owner = "overruled"`
+must, in the same diff, file or amend a queued or active work item whose spec
+cites the entry (`kitlib.decisions.overrule_sync_lines`, which owns the
+record's format and is handed the two trees as readers; `ruling_sync_lines`
+asks it of the same diff, so both places ask it with no second step or rung).
+The sync's two git reads, a NUL-delimited path list and a blob read that
+refuses a listed but unreadable blob, are `kitlib.git`'s.
+
 TEXT THEN ACT (WI-806; OI-101 Q2, amended for landings by the owner's README
 Q-8 answer) is the fourth: a commit that writes the approval record changes, as
 its own, no cell of an approval-act row but `Status` and adds or removes no row
@@ -152,6 +161,7 @@ from pathlib import PurePosixPath
 try:
     import spine_carrier
     from kitlib import authority as _kitauthority
+    from kitlib import decisions as _kitdecisions
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
@@ -162,6 +172,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
     from kitlib import authority as _kitauthority
+    from kitlib import decisions as _kitdecisions
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
     from kitlib import spine as _kitspine
@@ -1894,6 +1905,13 @@ ARCHIVE_WORK_DIR = "docs/archive/work"
 _PENDING = "pending"
 
 
+# The ruling sync's two git reads, homed in `kitlib.git` (WI-818): every
+# path list read NUL-delimited, and a blob read that refuses a listed path
+# whose blob cannot be read rather than reading it as absent.
+_git_paths = _kitgit.git_paths
+_show = _kitgit.git_show
+
+
 def _tree_specs(root, rev):
     """`{WI id: path}` of every spec in a tree (`rev` None is the index), or
     None when git cannot list it. A `-000` example is never a row.
@@ -1902,43 +1920,18 @@ def _tree_specs(root, rev):
     """
     roots = [WORK_DIR, ARCHIVE_WORK_DIR]
     if rev is None:
-        out = _git(root, ["ls-files", "--"] + roots)
+        paths = _git_paths(root, ["ls-files", "--"] + roots)
     else:
-        out = _git(root, ["ls-tree", "-r", "--name-only", rev, "--"] + roots)
-    if out is None:
+        paths = _git_paths(root, ["ls-tree", "-r", "--name-only", rev, "--"] + roots)
+    if paths is None:
         return None
     specs = {}
-    for path in out.splitlines():
+    for path in paths:
         name = path.rsplit("/", 1)[-1]
         wid = "-".join(name.split("-")[:2])
         if name.startswith("WI-") and name.endswith(".md") and not wid.endswith("-000"):
             specs[wid] = path
     return specs
-
-
-class _UnreadableBlob(Exception):
-    """A path its tree lists whose blob git cannot read (a partial clone
-    offline, a damaged object store). The ruling sync refuses it by name:
-    a failed read is never an absent file (A1)."""
-
-
-def _show(root, prefix, path):
-    """The text of `prefix + path` (`prefix` a `git show` prefix: `"<rev>:"` or
-    `":"` for the index), None when the tree does not list the path; raises
-    `_UnreadableBlob` when it lists the path but its blob cannot be read.
-
-    Implements: SR-148, LLR-298
-    """
-    text = _git(root, ["show", prefix + path])
-    if text is not None:
-        return text
-    if prefix == ":":
-        listed = _git(root, ["ls-files", "--", path])
-    else:
-        listed = _git(root, ["ls-tree", "--name-only", prefix[:-1], "--", path])
-    if listed is None or listed.strip():
-        raise _UnreadableBlob(prefix + path)
-    return None
 
 
 def _registry_states(root, prefix):
@@ -2034,27 +2027,35 @@ def ruling_sync_lines(root, base, head=None):
     row's Done-when (non-empty afterwards, and its raw section changed) nor
     closes or removes the row. The registry is read through either carrier.
     `[]` when nothing leaves `pending`. A diff git cannot read is a line,
-    never a skip.
+    never a skip. The diff's overrules are judged too
+    (`kitlib.decisions.overrule_sync_lines`, reading both trees through `_show`).
 
     Implements: SR-148, LLR-298
     """
     args = ["diff", "--name-only", "--no-renames"]
     args += ["--cached", base] if head is None else [base, head]
-    names = _git(root, args)
-    if names is None:
+    changed = _git_paths(root, args)
+    if changed is None:
         return [
             "cannot read the diff against {}, so whether it rules an open item "
             "is unknown".format(base)
         ]
-    if not set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(names.splitlines()):
-        return []
     try:
-        return _judged_lines(root, base, head)
-    except _UnreadableBlob as exc:
+        lines = []
+        if set(_spine_carriers(OPEN_ITEMS_REGISTRY)) & set(changed):
+            lines = _judged_lines(root, base, head)
+        new_prefix = ":" if head is None else head + ":"
+        return lines + _kitdecisions.overrule_sync_lines(
+            changed,
+            lambda rel: _show(root, base + ":", rel),
+            lambda rel: _show(root, new_prefix, rel),
+        )
+    except _kitgit.UnreadableBlob as exc:
         return [
-            "{} is listed in its tree but its contents cannot be read (a partial "
-            "clone offline or a damaged object store), so whether this commit "
-            "rules an open item is unknown; fetch it and retry".format(exc)
+            "{} is listed in its tree but its contents cannot be read, so whether "
+            "this commit rules an open item or overrules a decision is unknown: "
+            "fetch it (a partial clone offline or a damaged object store), or "
+            "name it in UTF-8, and retry".format(exc)
         ]
 
 

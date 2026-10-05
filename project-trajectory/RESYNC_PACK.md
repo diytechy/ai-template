@@ -7052,6 +7052,75 @@ its IF sentence through it.
 2. If a script of your own imported one of the removed `trunk_step` names, call
    `trunk_step.rebase_links(text)` for a fragment, or
    `spec_move.expected_rebase(text, old_dir, new_dir)` for any other move.
+### The owner confirms or overrules a delegated decision; an overrule is acted on in its commit [since c0caea09]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**A FORCED MIGRATION.** Run `scripts/migrate_decisions.py` in the commit that
+takes this re-sync. No reader of the old key is kept.
+
+**What changed.** A delegated-decisions entry's `reviewed` key retires. The
+owner's verdict is a new key, `owner`, with two values: `"confirmed"` or
+`"overruled"`. An absent key means not yet seen, and the entry is listed under
+"Decisions to review" in `open-items.html`, high-risk first, as before. Any
+other `owner` value is a format finding and reads as not yet seen. So is a
+`reviewed` key wherever it remains: an entry still carrying it reads as not
+yet seen, whatever its `owner` says.
+
+An overruled entry must state the direction instead in its `review` note; a
+blank note is a format finding. Overruled entries leave the review queue for
+their own heading in the same section, each shown with the work items that
+cite it.
+
+The commit that sets an entry `"overruled"` must, in the same diff, file or
+amend a queued or active work item whose spec cites the entry as
+`docs/decisions/<run>.toml#D-NNN`, the record's path written exactly as it
+is named (a run named from a branch such as `owner+cleanup` keeps its `+`;
+a branch's `/` becomes `-` in the record's name, and nothing else is
+rewritten). No record name carries `#`, so a citation splits only one way: a
+branch whose name carries `#` has no record, and under a recording dial its
+close is refused at the merge, as a close without its record is, until the
+branch is renamed. A record of yours already named with `#` cannot be cited
+until you rename it.
+Otherwise it is refused, by the existing
+`ruling-sync` pre-commit step and again by the merge slot on each lane commit
+against its first parent. There is no new step or rung, so your hook's
+`--run-steps` list does not change. Amending the queued row the decision was
+scoped to is enough; nothing has to be minted. The check fails closed: a
+commit whose tree carries a decisions record that does not parse as TOML is
+refused at the same two points, naming the record and the parse error. The
+check reads git's path lists NUL-delimited and without loss, so a record or
+a work item whose path has a non-ASCII character is judged under
+`core.quotePath` too, and one whose path is not UTF-8 is refused by name when
+the check would read it (a path it never reads is left alone); the open-item
+ruling sync gains the same fix for its citing rows.
+
+The template entry drops `reviewed = false`, and the note handed to a
+delegated session now says to leave `owner` unset.
+
+**What to do.**
+
+1. Re-sync `scripts/kitlib/decisions.py` (which now holds the overrule
+   sync), `scripts/kitlib/git.py` (its two-tree path and blob reads),
+   `scripts/acceptance_record.py`, `scripts/pending.py`,
+   `scripts/gen_open_items.py`, `scripts/check.py` (docstring only) and
+   `scripts/integrate.py` (its decisions-record rung), the new
+   `scripts/migrate_decisions.py` with `scripts/kitlib/bootstrap_manifest.py`
+   (which ships it), `decisions.template.toml`,
+   `PROCESS_OPTIONS.md` and the `session-protocol` skill.
+2. Run `python scripts/migrate_decisions.py` (add `--check` first if you want
+   a dry run). It rewrites each `reviewed = true` to `owner = "confirmed"` in
+   place, keeping the `review` note and any trailing comment, and drops each
+   `reviewed = false` (a trailing comment stays on its own line). A
+   value outside the old vocabulary (`true yes y 1 reviewed done` /
+   `false no n 0 ""`) is left where it is and named: set that entry's `owner`
+   yourself, then delete the line. It rewrites whole top-level assignments,
+   never text inside a string, and re-parses the result: a record it cannot
+   rewrite in place (the key inside an inline table, say) is left untouched
+   and named, for you to edit by hand.
+3. Regenerate `docs/open-items.html`.
+4. From now on, overrule an entry in the same commit that files or amends the
+   work item citing it.
 
 ## 5. Promotion: when this pack stops being prose
 

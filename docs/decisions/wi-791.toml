@@ -23,7 +23,7 @@ alternative = "Leave the rule review-only (doctrine plus brief), or enforce it i
 reversal_cost = "Remove one call in merge_approval_refusal; the tests releasing the dial in test_snapshot_readers.py's TC-271 fixtures would then be unnecessary but harmless."
 why_not_escalated = "The spec requires the act ledger to show the verdict and says the script only records and refuses; the merge slot is the one place the actor (an adjudication lane) is known, and the owner's own trunk acts never reach it. Risk: a delegated attended session acting for the owner in an adjudication LANE on a held MEANING row would be refused; the owner's delegation path is the trunk sitting."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-004]
 decided = "The audit listing lives at the end of open-items.html section 2 (Approval & re-attestation), rendered by gen_open_items.verdict_reattest_block from the act ledger: every entry naming a verdict, newest first, with 'None recorded.' when empty. It lists every verdict-carrying act, not only held-rung ones."

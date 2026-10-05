@@ -12,7 +12,7 @@ alternative = "Ship two queued placeholder work items (WI-001, WI-002) in every 
 reversal_cost = "Low: restore the two rows from git and add two template work items plus their MAPPING rows."
 why_not_escalated = "A5 names both options; shipping fake queued work in every adopter's registry would put an example decision on a real queue, which is the worse of the two, and the change is reversible."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-002]
 decided = "Bootstrap files OI-3's placeholder WI-001 by running the format's single writer, wi_convert.write_spec_file, as a subprocess in the new repo (the way it already runs trace.py and gen_open_items.py there), and raises the WI watermark to 1."
@@ -20,7 +20,7 @@ alternative = "Have bootstrap write the five-key spec text itself (a second writ
 reversal_cost = "Low: one function in bootstrap.py."
 why_not_escalated = "A5 requires the pair; the subprocess keeps both standing contracts (the single spec writer and bootstrap's import rule) intact, and a failed write raises rather than leaving an uncited item."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-003]
 decided = "The ruling-sync trigger counts a pending row DELETED from the registry as leaving pending, the same as a status change."
@@ -28,7 +28,6 @@ alternative = "Trigger only on a status cell changing from pending to another va
 reversal_cost = "One comparison in acceptance_record._ruled_items."
 why_not_escalated = "A8 defines the trigger as the registry state leaving pending; a deleted pending item has left pending, and exempting deletion would be a way around the rule."
 review = ""
-reviewed = false
 
 [decision.D-004]
 decided = "'Updates the Done-when' is read mechanically as: the row's Done-when section in the new tree is non-empty AND its raw text (outer blank lines trimmed) differs from the parent's. (Rework round 1 reversed the first reading, kitlib.done_when.changes, which strips appended evidence and so refused an added criterion that carried a path: Sol review 1, MAJOR 4.)"
@@ -36,7 +35,6 @@ alternative = "The claim-time evidence-stripping comparison (kitlib.done_when.ch
 reversal_cost = "One predicate in acceptance_record._sync_gap."
 why_not_escalated = "A1 binds the raw-text read and leaves whether the change carries the ruling to the reviewer; a tick-only edit now passes the mechanical rule, and the reviewer judges it."
 review = ""
-reviewed = false
 
 [decision.D-005]
 decided = "The merge-slot ruling-sync rung judges every lane (a person's lane too), each commit against its first parent, oldest first, and is chained with the loop-trailer rung in one expression so _merge_refusal stays inside its complexity ceiling."
@@ -44,7 +42,7 @@ alternative = "Judge only loop lanes, as the held-status rung does, or give the 
 reversal_cost = "Low: one call site in integrate._merge_refusal."
 why_not_escalated = "OI-102 Q3 and the Done-when say 'every lane commit at the merge slot', with no dial; the rung is independent of loop provenance."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-006]
 decided = "The one queue projection lives in kitlib/spine.py (open_item_queue) over plain registry rows, with pending.open_item_queue as the views' committed-tree reader; check_trajectory calls the kitlib function directly."
@@ -52,7 +50,6 @@ alternative = "Home it in schedule.py beside readiness."
 reversal_cost = "Moderate: move one function and its three call sites."
 why_not_escalated = "check_trajectory cannot import schedule without a new import cycle (schedule reaches trace, trace reaches check_trajectory), which tests/test_import_layers.py forbids; kitlib is the one home every consumer can import."
 review = ""
-reviewed = false
 
 [decision.D-007]
 decided = "A `needs` token naming no open item reads blocked with reason blocked:open-item-unknown:<id> (still under the dangling-edge ERROR), not waiting."
@@ -60,7 +57,6 @@ alternative = "Keep such a row waiting."
 reversal_cost = "One reason-code branch in schedule._held_disposition."
 why_not_escalated = "The Done-when leaves no waiting state for open-item edges, and A7 keeps a missing item unsatisfied; the distinct code keeps the two cases readable."
 review = ""
-reviewed = false
 
 [decision.D-008]
 decided = "The Next-work card lists ready rows, then rows an open item holds (each naming the item, linked to its card), then waiting rows, under the existing cap."
@@ -68,7 +64,6 @@ alternative = "Ready, waiting, then blocked."
 reversal_cost = "One list order in traj_panels._next_work_html."
 why_not_escalated = "A blocked row's next act is the owner's ruling, which is more actionable than a work-item wait; the order is cosmetic and reversible."
 review = ""
-reviewed = false
 
 [decision.D-009]
 decided = "The reviewed key is compared trimmed and case-folded; a non-zero float is truthy; the string '0' is falsy beside the number 0; any other type (a list, a table, a date) is unrecognized and reported."
@@ -76,7 +71,6 @@ alternative = "Treat strings case-sensitively, or reject floats."
 reversal_cost = "One function, kitlib.decisions.reviewed_state."
 why_not_escalated = "The owner asked for 'any number of boolean representations'; the spec lists the sets and these are the natural edges of them, each read as not reviewed when in doubt."
 review = ""
-reviewed = false
 
 [decision.D-010]
 decided = "'Decisions to review' always renders as the last section of open-items.html, saying there is no record when docs/decisions/ is absent; the status snapshot's count line appears only when docs/decisions/ exists."
@@ -84,7 +78,6 @@ alternative = "Omit the section entirely when no records exist."
 reversal_cost = "One branch each in gen_open_items.decisions_block and traj_status._open_item_lines."
 why_not_escalated = "A stable page shape keeps the surface comparable across repos; an adopter with the dial off owes no records and should not get a count line about them."
 review = ""
-reviewed = false
 
 [decision.D-011]
 decided = "The status snapshot's open-items bullets name the rows each item holds ('_(holds WI-684)_') and add one 'Uncited' bullet naming any pending item no queued row cites; the Blocked list reads the projection's held map."
@@ -92,7 +85,6 @@ alternative = "Keep the bare one-liner bullets and drop uncited items silently."
 reversal_cost = "Text only, in traj_status."
 why_not_escalated = "The spec puts the snapshot's lists on the same projection as the page, and the page names uncited items (OI-102 Q2); silence in the snapshot would hide what the page warns about."
 review = ""
-reviewed = false
 
 [decision.D-012]
 decided = "The specref state check fails an open row whose specref names the open-items registry when every item it cites is ruled, including a row that cites no item at all."
@@ -100,7 +92,6 @@ alternative = "Fire only when the row cites at least one item."
 reversal_cost = "One condition in check_trajectory.open_item_specref_findings."
 why_not_escalated = "A registry specref is a placeholder's spec of record until a ruling; a row naming it with nothing pending has no reason to keep it, and no live row does."
 review = ""
-reviewed = false
 
 [decision.D-013]
 decided = "The ruling-sync pre-commit step answers ok outside a git checkout; inside one, an unreadable diff or tree is a refusal line, never a skip."
@@ -108,7 +99,6 @@ alternative = "Refuse outside a checkout too."
 reversal_cost = "One guard in check._ruling_sync_refusal."
 why_not_escalated = "Outside git there is no commit to judge, which the approval-immutable step treats the same way; A1's no-skip rule is about history, which this rule never reads beyond a parent."
 review = ""
-reviewed = false
 
 [decision.D-014]
 decided = "A staged merge in progress is judged index-against-HEAD like any commit, with no MERGE_HEAD special case."
@@ -116,7 +106,6 @@ alternative = "Judge a merge's own moves only, as merge_status_moves does for th
 reversal_cost = "Low: add a merge arm to staged_ruling_sync_lines."
 why_not_escalated = "A merged-in ruling arrives with the Done-when updates its own commit carried, so the merge result already differs at the citing row; the simpler single path was preferred over a second one."
 review = ""
-reviewed = false
 
 [decision.D-015]
 decided = "gen_open_items.load_open_items is deleted: the queue projection replaced its only caller, and the two tests that used it now read pending.open_item_queue."
@@ -124,7 +113,6 @@ alternative = "Keep the reader as an unused helper."
 reversal_cost = "Restore one function from git."
 why_not_escalated = "Dead code with no caller; the carrier's raise-on-unreadable rule it carried is kept by the projection's own read."
 review = ""
-reviewed = false
 
 [decision.D-016]
 decided = "An open row whose specref names an open-items anchor must name an item its needs cites; a mismatch (citing OI-5, anchored at OI-6) is an ERROR from open_item_specref_findings (rework round 1, Sol review 1 MAJOR 5; the coordinator's call, A6)."
@@ -132,7 +120,6 @@ alternative = "Leave the anchor unchecked and narrow LLR-299's text instead."
 reversal_cost = "One branch in check_trajectory._registry_ref_findings."
 why_not_escalated = "The coordinator ruled it; A6 makes the reference row-specific, and a placeholder pointing at another decision's record misleads the staleness clock and the reader."
 review = ""
-reviewed = false
 
 [decision.D-017]
 decided = "The merge-slot form reads a commit's first parent off the commit object (git cat-file commit), not rev^1: no parent line is a true root commit and answers nothing; a parent the repository cannot read is refused by name, telling the operator to fetch it (Sol review 1, MAJOR 1)."
@@ -140,7 +127,7 @@ alternative = "Keep rev^1 and treat an unresolvable parent as a root commit (the
 reversal_cost = "One function, acceptance_record.commit_ruling_sync_lines."
 why_not_escalated = "A1 states the rule never skips for missing history; refusing by name is the one path, with no degraded mode."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-018]
 decided = "The sync rule reads the open-items registry in each tree through spine_carrier's carrier resolution (TOML, else CSV), and the specref checks match the registry by its carrier-free stem, so a CSV-carrier adopter is judged like a TOML one (Sol review 1, MAJOR 2). intake's mint stays TOML-only, as before."
@@ -148,7 +135,6 @@ alternative = "Judge the TOML carrier only and document the CSV gap."
 reversal_cost = "Two helpers: acceptance_record._registry_states and check_trajectory._registry_ref."
 why_not_escalated = "The CSV carrier is still supported for adopters, and a check that one carrier bypasses is a skipped check."
 review = ""
-reviewed = false
 
 [decision.D-019]
 decided = "review_queue ignores non-string members of a malformed high_risk list rather than raising, so the owner page renders every entry and shows record_findings' report of the malformation (Sol review 1, MAJOR 3)."
@@ -156,4 +142,3 @@ alternative = "Validate the hoist in review_queue and drop the whole record, or 
 reversal_cost = "One comprehension in kitlib.decisions.review_queue."
 why_not_escalated = "The record is session-authored, record_findings already reports the defect, and a crashed owner page hides every other decision; the change is the smallest that keeps both visible."
 review = ""
-reviewed = false

@@ -5,9 +5,11 @@
 # layer; the `[attestation] decision_recording` dial in docs/process.toml
 # decides whether a run owes one.
 #
-# ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`), so two
-# lanes never write one file. A supervisor's sitting names its own file the
-# same way: one run, one file.
+# ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`; nothing else
+# is rewritten). A branch name carrying `#` has no record and, under a recording
+# dial, is refused at the merge until it is renamed. Names that differ only by
+# `/` and `-` (`a/b` and `a-b`) share one file. A supervisor's sitting names its
+# own file the same way: one run, one file.
 #
 # THIS FILE IS THE EXAMPLE. An entry numbered -000 is never judged, so it may
 # stay here as a reference; a real record numbers its entries D-001, D-002, ...
@@ -17,17 +19,26 @@
 #   alternative        the option passed over
 #   reversal_cost      what undoing it would cost
 #   why_not_escalated  why it did not go to the owner through the exits
-#   review             EMPTY until the owner writes a note. A note alone does
-#                      NOT mark the entry reviewed (that rule is retired).
-# AND ONE KEY THE OWNER SETS:
-#   reviewed           false until the owner has read the entry; the owner
-#                      marks it reviewed in place. true, a non-zero number, or
-#                      (any case) "true" "yes" "y" "1" "reviewed" "done" read as
-#                      reviewed; absent, false, 0, or "false" "no" "n" "0" ""
-#                      read as not reviewed; anything else reads as not reviewed
-#                      AND is reported as a format finding. Every entry not
-#                      marked reviewed is listed under "Decisions to review" at
-#                      the bottom of docs/open-items.html, high-risk first.
+#   review             EMPTY until the owner writes a note; an overrule
+#                      states the direction instead here.
+# AND ONE KEY THE OWNER SETS (the writer never does):
+#   owner              absent until the owner has read the entry: the entry
+#                      is NOT YET SEEN and is listed under "Decisions to
+#                      review" at the bottom of docs/open-items.html,
+#                      high-risk first. The owner then sets, in place,
+#                        owner = "confirmed"   the direction stands, or
+#                        owner = "overruled"   it does not; the `review` note
+#                                              says what instead, and the SAME
+#                                              commit files or amends a queued
+#                                              or active work item citing this
+#                                              entry as
+#                                              docs/decisions/<run>.toml#D-NNN
+#                                              (the commit is refused without
+#                                              it; amending the queued row the
+#                                              decision is scoped to is enough).
+#                      Any other value reads as not yet seen AND is a format
+#                      finding. The old `reviewed` key is retired: run
+#                      scripts/migrate_decisions.py to rewrite it.
 # An entry may carry further keys of the writer's own; they are not judged.
 
 # The entries the writer judges deserve the owner's eyes first; empty when none.
@@ -39,4 +50,3 @@ alternative = "The option passed over, stated so the owner could choose it inste
 reversal_cost = "What undoing it would cost: a commit, an amendment and re-approval, a migration."
 why_not_escalated = "Why this was the run's call and not the owner's: the routing rule it fell under."
 review = ""
-reviewed = false

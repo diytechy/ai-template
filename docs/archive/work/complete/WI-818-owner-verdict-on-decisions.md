@@ -2,12 +2,16 @@
 id = "WI-818"
 title = "The owner's verdict on a delegated decision: confirmed or overruled, and an overrule is acted on"
 workstream = "process"
-specref = "docs/requirements/system-requirements.toml#SR-225"
+specref = ""
 sr_refs = ["SR-225"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+A delegated-decisions entry's `reviewed` key retires for `owner = "confirmed" | "overruled"` (absent: not yet seen); `migrate_decisions.py` rewrites a record's statements in place, keeping comments, line endings and every unrelated byte, and refuses an unparseable record (a forced migration, migrated here). Overruled entries leave the review queue for their own heading in `open-items.html`, each with the work items that cite it. The ruling-sync step refuses, at the pre-commit hook and on each lane commit in the merge slot, a commit that newly overrules an entry unless the same diff files or amends a queued or active work item citing `docs/decisions/<run>.toml#D-NNN`; a record in the commit's tree that does not parse refuses, path lists are read NUL-delimited without loss, and a path that is not UTF-8 refuses where a sync reads it (D-014). A run name carrying `#` or a character git refuses has no record (`record_path` raises; the merge refuses it when a record is owed), so a citation parses one way; `/` still becomes `-`, and `a/b` and `a-b` sharing one file is a stated residue filed as an owner item. To stay under the 1000-SLOC threshold the overrule sync moved to `kitlib/decisions.py` and the path and blob readers to `kitlib/git.py` (D-012). Rows: LLR-303, LLR-304, TC-319 and TC-320 approved; SR-225, LLR-283, LLR-284, TC-293, TC-294 and TC-313 re-attested (act seq 36; verdicts 001 to 003 and `dispute-1-ruling.md`, which upheld Sol's round-4 MAJOR and accepted D-001, D-004, D-005 and D-014). Codex 6.1 Sol: five rounds, the last SOUND. Decisions: `docs/decisions/wi-818.toml`.
 
 ## Context
 

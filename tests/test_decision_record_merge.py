@@ -36,17 +36,18 @@ review = ""
 """
 
 
-def _lane(tmp_path, directory, record=None, dial=None):
+def _lane(tmp_path, directory, record=None, dial=None, rel=RECORD):
     """A claimed lane closed into `directory`, optionally carrying `record` at
-    its run's path, with the trunk declaring `dial` (None declares nothing)."""
+    `rel` (its run's path by default), with the trunk declaring `dial` (None
+    declares nothing)."""
     root = claim_repo(tmp_path)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     _git(root, "checkout", "-q", "wi-401")
     if record is not None:
-        path = root / RECORD
+        path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(record, encoding="utf-8", newline="\n")
-        _git(root, "add", RECORD)
+        _git(root, "add", rel)
     dest = root / "docs" / "archive" / "work" / directory
     dest.mkdir(parents=True, exist_ok=True)
     _git(
@@ -139,3 +140,18 @@ def test_a_padded_or_mixed_case_dial_reads_as_its_word(tmp_path, dial):
     assert refusal is None or (
         "decision_recording" not in refusal and RECORD not in refusal
     )
+
+
+def test_a_branch_name_no_record_can_carry_is_refused(tmp_path):
+    # WI-818 dispute 1: `#` is a valid branch character, and no record name
+    # carries it. The lane's tree holds `owner-cleanup.toml`, another run's
+    # record, which must not meet the rung: a name no record can carry is an
+    # absent record, refused when one is owed.
+    other = "docs/decisions/owner-cleanup.toml"
+    root = _lane(tmp_path, "complete", record=SOUND, dial="record", rel=other)
+    _git(root, "branch", "-m", "wi-401", "owner#cleanup")
+    outcomes = {"WI-401": "merged"}
+    refusal = integ._decision_record_refusal(root, "owner#cleanup", outcomes)
+    assert refusal is not None and "owner#cleanup" in refusal, refusal
+    assert "'#'" in refusal and "nothing was merged" in refusal
+    assert other not in refusal
