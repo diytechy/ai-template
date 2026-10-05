@@ -38,8 +38,9 @@ security: a session that can edit files can remove a hook.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-271, IF-274, IF-275 — the interface seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280 — the
+interface seams this module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml).
 
 Contract IF-271: `claim_refusal(root, env=None)` returns None when a guarded
     claim may proceed, and always while `[coordinator] context_guard_pct` is
@@ -56,6 +57,38 @@ Contract IF-275: a hook response is one line of JSON on stdout,
     `hookSpecificOutput` with `hookEventName` and `additionalContext`, printed
     only when the guard has context to add; otherwise nothing is printed. The
     hook never refuses a tool call and always exits 0.
+
+Contract IF-277: our reading of the agent CLI's process environment, stated
+    here because the CLI's documentation is not ours. A Bash child of a
+    Claude Code session sees that session's id in `CLAUDE_CODE_SESSION_ID`,
+    and a hook process sees the project root in `CLAUDE_PROJECT_DIR`. The
+    guard takes the caller's session from the first (an explicit `--session`
+    wins) and its default `--root` from the second (else `.`). An absent
+    session id is an unnamed caller, which a guarded claim refuses.
+
+Contract IF-278: `PT_COORDINATOR_TAKE` carries the successor token. A
+    launcher sets it for the session it starts; at that session's
+    `SessionStart` the guard takes the lease only when the token matches
+    the successor token the lease recorded at the relaunch. An absent token
+    takes nothing; a mismatched one takes nothing and is recorded as a
+    refused take.
+
+Contract IF-279: the guard starts a launcher, detached, as
+    `coordinator-relaunch.{cmd,sh} REPO_ROOT PROMPT_FILE TOKEN`: the
+    declared repo root, a prompt file holding the handoff's session prompt,
+    and the successor token. The POSIX launcher reads the prompt file
+    itself; the Windows launcher passes it back as
+    `coordinator_guard.py exec-claude --prompt-file PROMPT_FILE`, which runs
+    `claude` with the prompt as its one argument and exits with claude's
+    code. A launcher that exits non-zero within the grace period is a
+    failed launch, and the request is restored.
+
+Contract IF-280: the command line is `coordinator_guard.py [--root ROOT]`
+    with one of `hook`, `status`, `take [--session S] [--transcript T]`,
+    `release --reason R`, `clear --reason R` or
+    `request-relaunch --handoff H [--session S]`. It exits 0 on success and
+    1 on a refusal, whose reason goes to stderr after "coordinator guard: ";
+    a usage error exits 2; `hook` always exits 0.
 
 Runtime state (internal, no seam: only this module reads or writes it, and
     every other reader goes through IF-271): `out/coordinator/` under the
