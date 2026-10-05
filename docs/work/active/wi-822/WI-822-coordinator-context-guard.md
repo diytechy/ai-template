@@ -28,7 +28,7 @@ protection (`agent-resume`, `agent_loop.py`) is a separate path the owner is tes
 elsewhere.
 
 The design (what Claude Code provides, the five parts, and the scope) is the spec
-of record, [docs/specs/WI-822.md](../../specs/WI-822.md).
+of record, [docs/specs/WI-822.md](../../../specs/WI-822.md).
 
 ## Done-when
 
