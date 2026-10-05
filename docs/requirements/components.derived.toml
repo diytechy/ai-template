@@ -768,6 +768,7 @@ modules = [
   "project-trajectory/scripts/kitlib/authority.py",
   "project-trajectory/scripts/kitlib/decisions.py",
   "project-trajectory/scripts/kitlib/done_when.py",
+  "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/provenance.py",
   "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/station.py",
