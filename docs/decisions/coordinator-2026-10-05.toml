@@ -39,3 +39,10 @@ alternative = "Use an independent Opus reviewer for WI-818's Sol round 3 after 0
 reversal_cost = "None: no review was skipped; the next session runs Sol round 3."
 why_not_escalated = "Terra's row rounds gate both lanes too and have no relaxation, so a same-family review would not have let either lane land sooner; the owner then directed a close-out session."
 review = ""
+
+[decision.D-006]
+decided = "WI-821 landed before WI-818 (act seq 35 is WI-821's), reversing the wave-15 handoff's order. WI-821 was rebased onto trunk b27ef5d1 first, reviewed SOUND by Sol round 2, adjudicated in the lane and took its act, while WI-818's Sol round 3 opened three MAJORs that took a builder round, a row round and a fourth Sol round. WI-818 rebases onto this landing before its own act."
+alternative = "Hold WI-821's adjudication and act until WI-818 landed, as the handoff's order read."
+reversal_cost = "None for the result: acts serialize either way, and one lane rebases onto the other's landing. The cost moved is WI-818's extra rebase, which touches no file WI-821 changed except the shared registries, the RESYNC pack and the generated views."
+why_not_escalated = "The handoff's order was a sequencing note, not an owner ruling: the owner's direction is to close both lanes and start nothing new, and both still close. Landing the ready lane first shortens the time trunk carries two unlanded acts' worth of drift."
+review = ""

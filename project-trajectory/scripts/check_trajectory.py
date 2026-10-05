@@ -1581,9 +1581,8 @@ _TITLE_CLIP = 90
 
 
 def _clip_title(title):
-    """A title bounded for a one-line finding: whitespace collapsed, clipped."""
-    text = " ".join(str(title or "").split())
-    return text if len(text) <= _TITLE_CLIP else text[: _TITLE_CLIP - 1] + "…"
+    """A title bounded for a one-line finding (`kitlib.spine.clip_line`)."""
+    return _kitspine.clip_line(str(title or ""), _TITLE_CLIP)
 
 
 def queue_conflict_pairs(wis):
@@ -2885,12 +2884,8 @@ def approval_brief_findings(root):
     if spine_carrier.resolve(path) is None:
         return []
     out = []
-    for row in spine_carrier.load(path, "OI-ID"):
-        oid = (row.get("OI-ID") or "").strip()
-        if not oid.startswith("OI-") or oid.endswith("-000"):
-            continue
-        if (row.get("Status") or "").strip().lower() != "pending":
-            continue
+    pending = _kitspine.open_items_at(spine_carrier.load(path, "OI-ID"), "pending")
+    for oid, row in pending:
         body = " ".join(
             (row.get(k) or "")
             for k in ("OneLine", "Decision", "BlastRadius", "Options", "Recommendation")

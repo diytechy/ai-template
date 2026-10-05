@@ -63,7 +63,8 @@ Stdlib only, and import-clean of the rest of `scripts/`, like every module here.
 import csv
 import io
 import re
-import tomllib
+
+from . import config as _kitconfig
 
 __all__ = [
     "LLR_EXEMPT",
@@ -74,6 +75,8 @@ __all__ = [
     "csv_rows",
     "norm_module",
     "refs",
+    "clip_line",
+    "open_items_at",
     "registry_row_hint",
     "is_example",
     "is_drafted",
@@ -266,7 +269,7 @@ def open_item_queue(work_rows, oi_rows):
 
     Implements: SR-148, LLR-299
     """
-    pending = _pending_items(oi_rows)
+    pending = dict(open_items_at(oi_rows, "pending"))
     held = _held_rows(work_rows, pending)
     citers = {}
     for wid in sorted(held, key=_id_number):
@@ -280,18 +283,31 @@ def open_item_queue(work_rows, oi_rows):
     }
 
 
-def _pending_items(oi_rows):
-    """`{OI id: row}` of every real (non-example) pending open item.
+def open_items_at(oi_rows, status):
+    """`[(OI id, row)]` for every real (non-example) open item whose status is
+    `status` (lower case), in row order, a duplicated id once per row.
+
+    THE SHARED STAGE of every open-items reader that filters by status (WI-821,
+    the A->B->C / A->B->D shape PROCESS.md §3 names): the owner queue reads the
+    `pending` items here, `check_trajectory.approval_brief_findings` the
+    `pending` briefs and `trace.ruled_open_item_texts` the `ruled` prose. Each
+    had carried its own skip-and-filter loop. A row whose id is not `OI-###`
+    shaped, or is the `-000` example, is never returned.
+
+    A SEQUENCE, not a map: the carrier keeps two rows sharing an id, and the
+    brief lint reads each of them, as its own loop did. A reader that wants a
+    by-id map builds it with `dict(...)`, so the last row wins there exactly as
+    it did in the owner queue's and the ruled-prose reader's own loops.
 
     Implements: SR-148, LLR-299
     """
-    pending = {}
+    out = []
     for row in oi_rows:
         oid = (row.get("OI-ID") or "").strip()
         state = (row.get("Status") or "").strip().lower()
-        if oid.startswith("OI-") and not is_example(oid) and state == "pending":
-            pending[oid] = row
-    return pending
+        if oid.startswith("OI-") and not is_example(oid) and state == status:
+            out.append((oid, row))
+    return out
 
 
 def _held_rows(work_rows, pending):
@@ -369,7 +385,9 @@ def seam_endpoints(cell):
     An endpoint may legitimately contain a space (`external:downstream
     adopter`) or a comma, so `;` is the only separator — and a `Consumers` cell
     is a LIST in the carrier, joined on `;` by `spine_carrier.value_to_cell`,
-    so the same split reads it back."""
+    so the same split reads it back. It is the carrier's ONE list-cell split:
+    `frame_rules` reads a need's pointer cells (`stakeholder_refs`, `source`)
+    through it too, under its local name `_entries` (WI-821)."""
     return [e.strip() for e in (cell or "").split(";") if e.strip()]
 
 
@@ -424,6 +442,22 @@ def seam_far_side(row):
     if requestors:
         return True, requestors
     return False, seam_consumers(row)
+
+
+def clip_line(text, width):
+    """`text` as ONE line of at most `width` characters: whitespace collapsed,
+    and an over-long line cut to `width - 1` characters plus `…`.
+
+    THE SHARED STAGE of the kit's one-line clips (WI-821): `hats._clip`,
+    `intake._clip` and `check_trajectory._clip_title` each carried this body.
+    It takes text; what a missing cell reads as (`""` or `"None"`) stays each
+    caller's own choice, because the copies differed there and a brief's
+    `'None' -> 'x'` line is how an absent cell shows.
+
+    Implements: SR-157, LLR-197
+    """
+    text = " ".join(text.split())
+    return text if len(text) <= width else text[: width - 1] + "…"
 
 
 def is_example(rid):
@@ -558,7 +592,7 @@ def sn_all_ids(text, carrier=None):
 
     Implements: SR-189, LLR-215
     """
-    tables = _toml_tables(text)
+    tables = _kitconfig.read_toml_text(text)
     is_toml = carrier == ".toml" if carrier else bool(tables)
     if is_toml and tables is not None:
         text = "\n".join(
@@ -566,14 +600,6 @@ def sn_all_ids(text, carrier=None):
             for rid, cells in (tables.get("need") or {}).items()
         )
     return {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
-
-
-def _toml_tables(text):
-    """`text` parsed as TOML, or None when it does not parse."""
-    try:
-        return tomllib.loads(text)
-    except tomllib.TOMLDecodeError:
-        return None
 
 
 def sn_cited_ids(srs):

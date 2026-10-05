@@ -26,7 +26,7 @@ review-policy.template — retired one-word policy retained for migration refere
 registries/repos.template.csv — legacy optional registry retained for migration
 registries/work-items.template.csv — legacy WI carrier retained for migration
 prompts/CATALOG.md — generated kit-side prompt catalog
-scripts/check_dupes_census.py — meta-repo historical duplication census
+scripts/check_dupes_census.py — this repo's standing duplication census over the kit's own scripts tree, against this repo's baseline; kept kit-side as this repo's sensor only (decided WI-821)
 scripts/gen_arch_map.reference.ps1 — kit-side launcher reference
 scripts/gen_skills_index.py — meta-repo skills-index generator
 skills/INDEX.csv — generated kit-side skill catalog

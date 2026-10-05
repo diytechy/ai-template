@@ -26,10 +26,10 @@ Four effects, each a plain function the coordinator calls:
     append_log_summary(root, text)  -> the verdict block appended to docs/log.md
 
 The `Plan-WI` table it parses is `plan_coverage.py`'s commensurability
-contract: `| Plan-WI | Title | Covers | Interfaces | Predecessors |`. A small
-parser is duplicated here (never a sibling import — the kit's independently
-copy-able-script convention, F5); this one only needs id/title/predecessors, so
-it stays deliberately smaller than `plan_coverage.parse_plan`.
+contract: `| Plan-WI | Title | Covers | Interfaces | Predecessors |`. The table
+walk is the shared `kitlib.registry.plan_table_rows` (WI-821; it was a copy
+under the retired F5 convention), and this module picks only id, title and
+predecessors from its rows.
 
 Contracts: IF-061 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
@@ -73,6 +73,7 @@ import trace  # noqa: E402
 
 # The shipped shared-helper package: the spine ROW cell vocabulary (D-8/OI-16).
 from kitlib import spine as _kitspine  # noqa: E402
+from kitlib.registry import plan_table_rows  # noqa: E402
 
 WI_CSV = "docs/requirements/work-items.csv"
 # The modern header of record for a new work-item registry. Existing registries
@@ -142,34 +143,18 @@ def parse_plan_wis(text):
     markdown table whose header carries a `Plan-WI` column, or ``[]`` when no
     such table exists.
 
-    A small parser duplicated from `plan_coverage.parse_plan` per the kit's
-    copy-able-script convention (F5) — the filer only needs the id, the title,
-    and the plan-local predecessor edges, so it does not carry the Covers /
-    Interfaces cells."""
-    header = None
-    rows = []
-    for line in text.splitlines():
-        if "|" not in line:
-            if header is not None and rows:
-                break  # the table ended
-            continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if header is None:
-            if any(c.lower() == "plan-wi" for c in cells):
-                header = [c.lower() for c in cells]
-            continue
-        if set("".join(cells)) <= set("-: "):
-            continue  # the |---|---| separator line
-        row = dict(zip(header, cells))
-        if row.get("plan-wi"):
-            rows.append(
-                {
-                    "id": row.get("plan-wi", ""),
-                    "title": row.get("title", ""),
-                    "predecessors": row.get("predecessors", ""),
-                }
-            )
-    return rows
+    The table walk is `kitlib.registry.plan_table_rows`, the one the coverage
+    pass (`plan_coverage.parse_plan`) reads too; until WI-821 this was a copy
+    of that loop. The filer only needs the id, the title and the plan-local
+    predecessor edges, so it does not carry the Covers / Interfaces cells."""
+    return [
+        {
+            "id": row["plan-wi"],
+            "title": row.get("title", ""),
+            "predecessors": row.get("predecessors", ""),
+        }
+        for row in plan_table_rows(text)
+    ]
 
 
 def _existing_wi_nums(csv_path):

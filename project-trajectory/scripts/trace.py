@@ -259,8 +259,10 @@ try:
     from absolute_terms import absolute_summary
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
+        IF_CITE_MESSAGE,
         ac_advisories,
         allow_key,
+        cite_advisories,
         ears_advisories,
         form_findings,
         is_allowed,
@@ -312,11 +314,13 @@ except ImportError:  # pragma: no cover - in-process fallback
     from absolute_terms import absolute_summary
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
+        IF_CITE_MESSAGE,
         ac_advisories,
         allow_key,
+        cite_advisories,
         ears_advisories,
         form_findings,
-        is_allowed,
+        is_allowed,  # noqa: F401 - re-exported: the allow-key tests read it here
         is_drafted,
         is_example,
         module_endpoints,
@@ -325,7 +329,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         paraphrase_advisories,
         provenance_advisories,
         provenance_findings,
-        provenance_tokens,
+        provenance_tokens,  # noqa: F401 - re-exported: the provenance tests read it here
         refs,
         sn_artifact_advisories,
         sr_artifact_advisories,
@@ -1157,17 +1161,11 @@ def ruled_open_item_texts(root):
     path = Path(root) / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
         return None
-    out = {}
-    for row in spine_carrier.load(path, "OI-ID"):
-        rid = (row.get("OI-ID") or "").strip()
-        if not rid.startswith("OI-") or rid.endswith("-000"):
-            continue
-        if (row.get("Status") or "").strip().lower() != "ruled":
-            continue
-        out[rid] = "\n".join(
-            str(v) for v in row.values() if isinstance(v, (str, int, float))
-        )
-    return out
+    ruled = dict(_spine.open_items_at(spine_carrier.load(path, "OI-ID"), "ruled"))
+    return {
+        rid: "\n".join(str(v) for v in row.values() if isinstance(v, (str, int, float)))
+        for rid, row in ruled.items()
+    }
 
 
 def _ruling_names(text, space, value):
@@ -2856,31 +2854,17 @@ def if_note_advisories(ifs, allow=()):
     arm's other two rules (the connective and the 500-character ceiling) say
     "this cell is not the place to argue", and a `Notes` cell arguing is that
     cell working correctly. Folding the cells together would apply a rule to a
-    cell whose whole job it contradicts."""
-    out = []
-    for r in ifs:
-        iid = str(r.get("IF-ID") or "").strip()
-        if not iid or is_example(iid):
-            continue
-        for col in IF_REASON_CELLS:
-            # TOKEN-SCOPED, like every other reader of this list: an entry
-            # silences the token it names, never the cell around it.
-            cited = [
-                (k, t)
-                for k, t in provenance_tokens(r.get(col), reason=True)
-                if not is_allowed(allow, iid, col, t)
-            ]
-            if not cited:
-                continue
-            shown = ", ".join(dict.fromkeys(f"{k} {t!r}" for k, t in cited))
-            out.append(
-                f"IF {iid} {col} carries a citation frame ({shown}) — a living "
-                "cell states the seam and its standing reason, never its own "
-                "history: drop the frame, KEEP the reason as prose that stands "
-                "alone, and move the account to the log (process.md §3; "
-                "warn-only, never the exit code)."
-            )
-    return out
+    cell whose whole job it contradicts.
+
+    THE SWEEP IS `trace_text.cite_advisories`, the one engine the spine and
+    off-spine tiers share (WI-821): this was a near-copy of its loop, differing
+    only in its message's wording, which it passes as a value
+    (`trace_text.IF_CITE_MESSAGE`), so its output is the copy's to the byte. Every IF
+    reason cell is in its `REASON_CELLS`, so the reason-cell reading is the
+    same, and the exception list is read token-scoped by the same `is_allowed`."""
+    return cite_advisories(
+        [(ifs, ("IF", "IF-ID", IF_REASON_CELLS))], allow, IF_CITE_MESSAGE
+    )
 
 
 # `EXTERNAL_ENDPOINT_PREFIX` (the declared "deliberately outside this tree" marker

@@ -2,12 +2,16 @@
 id = "WI-821"
 title = "Burn down duplicate code (one home per shared stage) and make the consolidation census section-aware"
 workstream = "process"
-specref = "docs/plans/2026-09-28-duplicated-stage-detection.md"
+specref = ""
 sr_refs = ["SR-220"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+One home per shared stage, by the 0→A→B rule: the TOML read (`kitlib.config.read_toml_text`), the plan-table walk (`kitlib.registry.plan_table_rows`), the list-cell split (`kitlib.spine.seam_endpoints`), the leading-docstring test (`ast.get_docstring`), the open-items status filter (`kitlib.spine.open_items_at`, which keeps duplicate rows in carrier order), the citation-advisory sweep (`trace_text.cite_advisories`, the IF advisory keeping its own sentence), and the fragment link rebase through `spec_move`. Behaviour and every finding's wording are unchanged. The census falls from 5/5/52 to 2/2/32: the deliberate `human_approves` pair and the CSV-reader pair deferred to WI-817, stamped as the baseline (D-001, which the independent adjudicator ACCEPTED in `docs/reviews/wi-821-dupe-burn-down/dispute-1-ruling.md`). The consolidation census's commissioning signal reads specrefs as specs of record (`kitlib.registry.shared_spec`), so two sections of one plan no longer pair. Rows: LLR-210 detail and TC-314 method amended, ruled MEANING and re-attested in the lane (act seq 35; verdicts 001, returned, and 002); traced `code_symbol` and `evidence` cells follow the moves on eight LLR and eleven TC rows. Codex 6.1 Sol: two rounds (two MAJORs and a MINOR in round 1, one fixed, one to the adjudicator). Decisions: `docs/decisions/wi-821.toml`.
 
 ## Context
 

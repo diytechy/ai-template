@@ -745,8 +745,24 @@ def off_spine_advisories(cmps, exts, allow=()):
     return cite_advisories(zip((cmps, exts), OFF_SPINE_ADVISORY_COLS), allow)
 
 
-def cite_advisories(tiers, allow=()):
-    """The citation-frame sweep over `(rows, (label, id-key, cells))` pairs.
+# The citation-frame advisory's sentence, a `str.format` template over the
+# tier label, the row id, the cell and the shown tokens. The spine and off-spine
+# tiers read it; the IF sweep passes `IF_CITE_MESSAGE`.
+CITE_MESSAGE = (
+    "{label} {rid} {col} carries a citation frame ({shown}) — a living cell "
+    "states the system and its standing reason, never its own history: drop "
+    "the frame, KEEP the reason as prose that stands alone, and move the "
+    "account to the log (process.md §3; warn-only, never the exit code)"
+)
+# The IF tier's sentence, which `trace.if_note_advisories` passes: an IF row
+# states a seam, not the system, and its findings have always closed with a
+# period. Derived from the one sentence above so the two cannot drift apart.
+IF_CITE_MESSAGE = CITE_MESSAGE.replace("states the system", "states the seam") + "."
+
+
+def cite_advisories(tiers, allow=(), message=CITE_MESSAGE):
+    """The citation-frame sweep over `(rows, (label, id-key, cells))` pairs,
+    each finding worded by `message` (a `CITE_MESSAGE`-shaped template).
 
     The ONE engine every caller of this ruling shares — the spine tiers, the
     off-spine registries, and (through trace.py) the IF reason cells. Extracted
@@ -758,32 +774,30 @@ def cite_advisories(tiers, allow=()):
     for rows, (label, key, cols) in tiers:
         for r in rows or []:
             rid = str(r.get(key) or "").strip()
-            if not rid or is_example(rid):
-                continue
-            for col in cols:
-                cited = [
-                    (k, t)
-                    for k, t in provenance_tokens(
-                        r.get(col), reason=col in REASON_CELLS
-                    )
-                    if not is_allowed(allow, rid, col, t)
-                ]
-                if not cited:
-                    continue
-                # One entry per distinct token: a citation repeated inside one
-                # cell is one frame to strip, not two findings.
-                seen = dict.fromkeys("{} {!r}".format(k, t) for k, t in cited)
-                shown = ", ".join(seen)
-                out.append(
-                    "{} {} {} carries a citation frame ({}) — a living cell "
-                    "states the system and its standing reason, never its own "
-                    "history: drop the frame, KEEP the reason as prose that "
-                    "stands alone, and move the account to the log "
-                    "(process.md §3; warn-only, never the exit code)".format(
-                        label, rid, col, shown
-                    )
+            if rid and not is_example(rid):
+                out.extend(
+                    message.format(label=label, rid=rid, col=col, shown=shown)
+                    for col, shown in _cited_cells(r, rid, cols, allow)
                 )
     return out
+
+
+def _cited_cells(row, rid, cols, allow):
+    """`(cell, shown tokens)` for each of `cols` in `row` that carries a
+    citation frame the exception list does not silence, token by token.
+
+    Implements: SR-157, LLR-133
+    """
+    for col in cols:
+        cited = [
+            (k, t)
+            for k, t in provenance_tokens(row.get(col), reason=col in REASON_CELLS)
+            if not is_allowed(allow, rid, col, t)
+        ]
+        if cited:
+            # One entry per distinct token: a citation repeated inside one
+            # cell is one frame to strip, not two findings.
+            yield col, ", ".join(dict.fromkeys(f"{k} {t!r}" for k, t in cited))
 
 
 def _real(rows, key):

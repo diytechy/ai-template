@@ -1453,3 +1453,332 @@ def test_branch_length_ceiling_mirrors_wi_convert_slug_chars():
     ct = load_script("check_trajectory")
     wc = load_script("wi_convert")
     assert ct._SLUG_CHARS_MIRROR == wc.SLUG_CHARS
+
+
+# --- WI-821: the burn-down of the census's last groups and the named near-copies
+# Each shared stage below took ONE home and its former copies call it. The
+# identity assertions are the deletions' warrant; the value batteries pin what
+# the shared stage DOES, so a later edit to the home is checked by value rather
+# than by sameness (the `_sn_fields` lesson above).
+import ast  # noqa: E402
+import inspect  # noqa: E402
+
+import kitlib.ladder as KITLADDER  # noqa: E402
+import kitlib.registry as KITREGISTRY  # noqa: E402
+import kitlib.station as KITSTATION  # noqa: E402
+
+
+def test_the_toml_text_read_is_one_home():
+    for mod in (load_script("agent_policy"), AGENT_COMMON):
+        assert mod.read_toml_text is KITCONFIG.read_toml_text, mod.__name__
+    assert not hasattr(KITSPINE, "_toml_tables")
+    assert KITCONFIG.read_toml_text('a = 1\n[t]\nb = "x"\n') == {
+        "a": 1,
+        "t": {"b": "x"},
+    }
+    for bad in ("a =", "[t\n", "a = 1\na = 2\n"):
+        assert KITCONFIG.read_toml_text(bad) is None, bad
+    # The station's frontmatter read rides it: a malformed block is None, and a
+    # well-formed one parses.
+    assert KITSTATION.read_toml_block("+++\na =\n+++\n") is None
+    assert KITSTATION.read_toml_block("+++\na = 1\n+++\nbody") == {"a": 1}
+    # The needs scrape's TOML arm still reads the tables, and falls back to a
+    # text scrape when the text is not TOML.
+    toml_needs = '[need.SN-001]\nneed = "x"\n[need.SN-002]\nneed = "y"\n'
+    assert KITSPINE.sn_all_ids(toml_needs, ".toml") == {"SN-001", "SN-002"}
+    assert KITSPINE.sn_all_ids("SN-004 and SN-005 =", "") == {"SN-004", "SN-005"}
+
+
+def test_the_list_cell_split_is_one_home():
+    frame = load_script("frame_rules")
+    assert frame._entries is KITSPINE.seam_endpoints
+    split = KITSPINE.seam_endpoints
+    assert split(None) == [] and split("") == [] and split(" ; ") == []
+    # `;` ALONE: a comma or a space is part of an entry.
+    assert split("STK-001; STK-002") == ["STK-001", "STK-002"]
+    assert split("external:downstream adopter;a, b") == [
+        "external:downstream adopter",
+        "a, b",
+    ]
+
+
+DOCSTRING_CASES = '''
+def doc_only():
+    """d"""
+def doc_then_pass():
+    """d"""
+    pass
+def bytes_first():
+    b"not a docstring"
+def string_second():
+    pass
+    "late"
+'''
+
+
+def test_the_leading_docstring_test_is_the_stdlibs():
+    """`check_stubs` and `check_dupes_census` each carried the same four-line
+    docstring predicate. Both now read `ast.get_docstring`, so the copies are
+    gone and the two answer by value as before."""
+    stubs = load_script("check_stubs")
+    census = load_script("check_dupes_census")
+    assert not hasattr(stubs, "_is_docstring")
+    cases = {n.name: n for n in ast.parse(DOCSTRING_CASES).body}
+    assert stubs.stub_kind(cases["doc_only"]) == "docstring-only"
+    assert stubs.stub_kind(cases["doc_then_pass"]) == "pass"
+    # A bytes literal is not a docstring, so it is the body, not a strip.
+    assert stubs.stub_kind(cases["bytes_first"]) is None
+    assert len(census._stripped_body(cases["doc_then_pass"])) == 1
+    assert len(census._stripped_body(cases["bytes_first"])) == 1
+    # Only the LEADING string is a docstring.
+    assert len(census._stripped_body(cases["string_second"])) == 2
+
+
+def _oi(oid, status, **cells):
+    return {"OI-ID": oid, "Status": status, **cells}
+
+
+def test_the_open_items_status_filter_is_one_home():
+    rows = [
+        _oi("OI-001", "pending"),
+        _oi("OI-000", "pending"),  # the example row
+        _oi("OI-002", " Ruled "),
+        _oi("XX-003", "pending"),  # not an open-item id
+        _oi(" OI-004 ", "PENDING"),
+        _oi("OI-005", "deferred"),
+    ]
+    ids = [oid for oid, _ in KITSPINE.open_items_at(rows, "pending")]
+    assert ids == ["OI-001", "OI-004"]
+    assert [oid for oid, _ in KITSPINE.open_items_at(rows, "ruled")] == ["OI-002"]
+    assert KITSPINE.open_items_at([], "pending") == []
+    assert not hasattr(KITSPINE, "_pending_items")
+    # Both near-copy readers now call it: neither carries its own id filter.
+    for mod, fn in ((CT, "approval_brief_findings"), (TRACE, "ruled_open_item_texts")):
+        src = inspect.getsource(getattr(mod, fn))
+        assert "open_items_at" in src and 'endswith("-000")' not in src, fn
+
+
+def test_the_open_items_readers_answer_by_value(tmp_path):
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    brief = "Approve the [p]-[DevStg-Reqs] batch: a human approval"
+    (req / "open-items.toml").write_text(
+        "[open_item.OI-000]\n"
+        'status = "pending"\n'
+        'one_line = "{0}"\n'
+        "[open_item.OI-001]\n"
+        'status = "pending"\n'
+        'one_line = "{0}"\n'
+        "[open_item.OI-002]\n"
+        'status = "ruled"\n'
+        'one_line = "B = 8 is ruled"\n'.format(brief),
+        encoding="utf-8",
+        newline="\n",
+    )
+    briefs = CT.approval_brief_findings(tmp_path)
+    assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
+    ruled = TRACE.ruled_open_item_texts(tmp_path)
+    assert list(ruled) == ["OI-002"] and "B = 8 is ruled" in ruled["OI-002"]
+
+
+def test_the_open_items_stage_keeps_duplicate_rows_in_sequence(tmp_path):
+    """Two pending rows sharing an id are two rows to the shared stage: it
+    returns `(id, row)` pairs in row order, never a map that drops the first.
+    The brief lint read rows in sequence before WI-821 and still warns on the
+    first; the readers that want a by-id map build it, so the last row wins
+    there exactly as it did in their own loops."""
+    rows = [
+        _oi("OI-001", "pending", OneLine="first"),
+        _oi("OI-001", "pending", OneLine="second"),
+        _oi("OI-002", "ruled", OneLine="r1"),
+        _oi("OI-002", "ruled", OneLine="r2"),
+    ]
+    pairs = KITSPINE.open_items_at(rows, "pending")
+    assert [(oid, r["OneLine"]) for oid, r in pairs] == [
+        ("OI-001", "first"),
+        ("OI-001", "second"),
+    ]
+    queue = KITSPINE.open_item_queue(
+        [{"WI-ID": "WI-001", "Status": "queued", "Predecessors": "OI-001"}], rows
+    )
+    assert [(c[0]["OneLine"], c[1]) for c in queue["cards"]] == [("second", ["WI-001"])]
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "open-items.csv").write_text(
+        "OI-ID,Status,OneLine\n"
+        "OI-001,pending,Approve the [p]-[DevStg-Reqs] batch\n"
+        "OI-001,pending,Unrelated decision\n"
+        "OI-002,ruled,r1\n"
+        "OI-002,ruled,r2\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    briefs = CT.approval_brief_findings(tmp_path)
+    assert [b.split(":")[0] for b in briefs] == ["OI-001"], briefs
+    ruled = TRACE.ruled_open_item_texts(tmp_path)
+    assert list(ruled) == ["OI-002"] and "r2" in ruled["OI-002"]
+
+
+def test_the_brief_lint_reports_a_duplicate_row_in_either_position(tmp_path):
+    """Two pending rows sharing an id are both read by the brief lint: the
+    link-less approval row warns whether it comes first or second, so no
+    by-id map that keeps only one of them can hide it."""
+    approval = "Approve the [p]-[DevStg-Reqs] batch"
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    for first, second in (
+        ("Unrelated decision", approval),
+        (approval, "Unrelated decision"),
+    ):
+        (req / "open-items.csv").write_text(
+            f"OI-ID,Status,OneLine\nOI-001,pending,{first}\nOI-001,pending,{second}\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        briefs = CT.approval_brief_findings(tmp_path)
+        assert [b.split(":")[0] for b in briefs] == ["OI-001"], (first, briefs)
+
+
+def test_the_one_line_clip_is_one_home():
+    clip = KITSPINE.clip_line
+    assert clip("  a \n b  ", 10) == "a b"
+    assert clip("abcdef", 6) == "abcdef"
+    assert clip("abcdefg", 6) == "abcde…"
+    # Each caller keeps its own reading of a missing value: the copies differed
+    # there, and the shared stage takes text so neither had to move.
+    hats, intake = load_script("hats"), load_script("intake")
+    assert hats._clip(None, 10) == ""
+    assert intake._clip(None, 10) == "None"
+    assert CT._clip_title(None) == ""
+    assert CT._clip_title("x" * 200) == "x" * (CT._TITLE_CLIP - 1) + "…"
+    for mod, fn in ((hats, "_clip"), (intake, "_clip"), (CT, "_clip_title")):
+        assert "clip_line" in inspect.getsource(getattr(mod, fn)), fn
+
+
+PLAN = """\
+Intro | not a table header
+
+| Plan-WI | Title | Covers | Interfaces | Predecessors |
+|---|---|---|---|---|
+| P1 | First | SR-001 | IF-001 | |
+|  | (no id) | | | |
+| P2 | Second | SR-002 | | P1 |
+
+| Plan-WI | Title |
+|---|---|
+| P9 | a second table is not read |
+"""
+
+
+def test_the_plan_table_walk_is_one_home():
+    pc, pa = load_script("plan_coverage"), load_script("plan_artifacts")
+    rows = KITREGISTRY.plan_table_rows(PLAN)
+    assert [r["plan-wi"] for r in rows] == ["P1", "P2"]
+    assert rows[1]["predecessors"] == "P1"
+    assert KITREGISTRY.plan_table_rows("no table here") == []
+    full, filed = pc.parse_plan(PLAN), pa.parse_plan_wis(PLAN)
+    # The filer's rows are exactly the coverage rows' id/title/predecessors.
+    assert filed == [{k: r[k] for k in ("id", "title", "predecessors")} for r in full]
+    assert full[0]["covers"] == "SR-001" and full[0]["tier"] == ""
+    for mod, fn in ((pc, "parse_plan"), (pa, "parse_plan_wis")):
+        assert "plan_table_rows" in inspect.getsource(getattr(mod, fn)), fn
+    assert not hasattr(pc, "_cells") and not hasattr(pc, "_plan_header")
+
+
+def test_the_if_citation_sweep_is_the_shared_engine():
+    text = load_script("trace_text")
+    ifs = [
+        {"IF-ID": "IF-101", "Notes": "Minted 2026-08-15.", "Rationale": "plain"},
+        {"IF-ID": "IF-000", "Notes": "Minted 2026-08-15."},
+    ]
+    assert TRACE.if_note_advisories(ifs) == text.cite_advisories(
+        [(ifs, ("IF", "IF-ID", TRACE.IF_REASON_CELLS))], (), TRACE.IF_CITE_MESSAGE
+    )
+    assert len(TRACE.if_note_advisories(ifs)) == 1
+    assert set(TRACE.IF_REASON_CELLS) <= text.REASON_CELLS
+
+
+def test_the_if_citation_advisory_keeps_its_own_wording():
+    """The IF sweep runs on the shared engine but its sentence is the IF
+    copy's, verbatim: a seam, not the system, and a closing period. A filter
+    matching the former phrase must keep matching (WI-821, D-002)."""
+    ifs = [{"IF-ID": "IF-101", "Notes": "Minted 2026-08-15."}]
+    assert TRACE.if_note_advisories(ifs) == [
+        "IF IF-101 Notes carries a citation frame (edit-history stamp 'Minted 2026-08-15') "
+        "— a "
+        "living cell states the seam and its standing reason, never its own "
+        "history: drop the frame, KEEP the reason as prose that stands alone, "
+        "and move the account to the log (process.md §3; warn-only, never the "
+        "exit code)."
+    ]
+    # The spine and off-spine tiers keep the engine's own sentence, unchanged.
+    text = load_script("trace_text")
+    [spine] = text.cite_advisories([(ifs, ("SR", "IF-ID", ("Notes",)))])
+    assert spine.startswith("SR IF-101 Notes carries a citation frame (")
+    assert "states the system and its" in spine and spine.endswith("exit code)")
+
+
+def test_the_fragment_link_rebase_is_the_spec_moves():
+    ts, sm = load_script("trunk_step"), load_script("spec_move")
+    text = (
+        "[a](../plans/x.md) [b](#here) [c](https://e.org/p) [d](/abs.md) "
+        "[e](sibling.md#s) [f](../log.md)"
+    )
+    want = (
+        "[a](plans/x.md) [b](#here) [c](https://e.org/p) [d](/abs.md) "
+        "[e](log.d/sibling.md#s) [f](log.md)"
+    )
+    assert ts.rebase_links(text) == want
+    assert ts.rebase_links(text) == sm.expected_rebase(text, "docs/log.d", "docs")
+    assert not hasattr(ts, "rebased_link_target")
+
+
+def test_the_reference_doc_argv_differs_only_by_its_doc(tmp_path):
+    ts = load_script("trunk_step")
+    steps = {step[0]: step[2] for step in ts.REGEN_STEPS}
+    cli = steps["cli-reference"](tmp_path)
+    contracts = steps["interface-reference"](tmp_path)
+    assert cli[-2:] == ["--cli-doc", ts.CLI_REFERENCE_REL]
+    assert contracts[-2:] == ["--contracts-doc", ts.INTERFACE_REFERENCE_REL]
+    assert cli[:-2] == contracts[:-2]
+    assert cli[1].endswith("gen_arch_map.py") and cli[4:6] == ["--src", "src"]
+
+
+def test_the_two_held_status_predicates_agree_by_value(tmp_path):
+    """DUPLICATED POLICY, KEPT DELIBERATELY (the duplicated-stage research,
+    docs/plans/2026-09-28-duplicated-stage-detection.md §7 and its appendix's
+    M0 sample): `human_approves` states the WRITER-side contract and
+    `human_approves_spine` the READER-side one, two contracts that today share
+    one body. This file's rule licenses a second copy of a decision only with
+    a behavioural pin, so they are held equal BY VALUE over every registry
+    spelling at every dial. A deliberate divergence edits this pin."""
+    registries = [
+        "docs/requirements/system-requirements",
+        "docs/requirements/low-level-requirements.toml",
+        "docs/test/test-cases.csv",
+        "docs/requirements/stakeholder-needs",
+        "interfaces",
+        "external",
+        "components",
+        "assets",
+        "",
+        None,
+    ]
+    seen = set()
+    for dial in KITLADDER.STAGE_ORDER:
+        docs = tmp_path / dial / "docs"
+        docs.mkdir(parents=True)
+        (docs / "process.toml").write_text(
+            '[attestation]\nhuman_approval_through = "{}"\n'.format(dial),
+            encoding="utf-8",
+        )
+        for registry in registries:
+            writer = AGENT_COMMON.human_approves(docs, registry)
+            reader = AGENT_COMMON.human_approves_spine(docs, registry)
+            assert writer == reader, (dial, registry, writer, reader)
+            seen.add((registry, writer))
+    # Not vacuous: the dial moves the answer for a mapped registry, and an
+    # unmapped one stays held at every dial.
+    srs = "docs/requirements/system-requirements"
+    assert {(srs, True), (srs, False)} <= seen
+    assert ("assets", False) not in seen

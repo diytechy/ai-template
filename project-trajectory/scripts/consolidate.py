@@ -437,22 +437,40 @@ def prior_line(successor, absorbed, judged):
 
 
 def _commissioning_docs(row):
-    """What COMMISSIONED this row: its spec-of-record document (anchor stripped)
-    and every open-item id it hard-waits on.
+    """What COMMISSIONED this row: `(specref, open-item ids)` — its spec of
+    record as written, anchor and all, and every open-item id it hard-waits on.
 
     The second half is what `queue_conflict_findings`' shared-`SpecRef` signal
     cannot see. Two rows cut from one ruling routinely carry different specrefs
     — one points at the plan, one at the open-items registry — while the thing
-    that makes them one question is the OI id they both wait on."""
-    docs = set()
-    spec = _cell(row, "SpecRef").split("#", 1)[0].strip()
-    if spec:
-        docs.add(spec)
+    that makes them one question is the OI id they both wait on.
+
+    Implements: SR-220, LLR-210
+    """
+    ois = set()
     for token in _cell(row, "Predecessors").split(";"):
         token = token.strip().lstrip("~")
         if token.startswith("OI-"):
-            docs.add(token)
-    return docs
+            ois.add(token)
+    return _cell(row, "SpecRef").strip(), ois
+
+
+def _shared_commission(a, b):
+    """The commissioning sources two rows' `_commissioning_docs` share, sorted:
+    every open-item id both wait on, plus the spec they share.
+
+    THE SPEC HALF IS `kitlib.registry.shared_spec`, the one rule the validator's
+    shared-spec signal reads (WI-821): sections are specs, so two rows naming
+    two sections of one plan were commissioned by two specs, while rows naming
+    the same section, or one naming the whole file, share it. Until WI-821 this
+    signal stripped the anchor, so every row cut from one plan paired with every
+    other, even when each named its own section.
+
+    Implements: SR-220, LLR-210
+    """
+    (a_spec, a_ois), (b_spec, b_ois) = a, b
+    spec = kitregistry.shared_spec(a_spec, b_spec)
+    return sorted((a_ois & b_ois) | ({spec} if spec else set()))
 
 
 def spec_bodies(root):
@@ -565,7 +583,7 @@ def pair_findings(root, rows, bodies=None):
     for i, a_id in enumerate(ids):
         for b_id in ids[i + 1 :]:
             (a_docs, a_mods), (b_docs, b_mods) = facts[a_id], facts[b_id]
-            shared_docs = sorted(a_docs & b_docs)
+            shared_docs = _shared_commission(a_docs, b_docs)
             if shared_docs:
                 out.append(
                     (

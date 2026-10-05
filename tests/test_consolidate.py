@@ -179,6 +179,71 @@ def test_a_shared_open_item_edge_is_a_commissioning_signal(tmp_path):
     assert any("commissioned by the same OI-077" in f[2] for f in findings), findings
 
 
+def _commissioned(findings):
+    return [f for f in findings if "commissioned by the same" in f[2]]
+
+
+def test_two_sections_of_one_plan_are_two_commissioning_specs(tmp_path):
+    """WI-821: sections are specs. Rows cut from one plan that each name their
+    own section were commissioned by two specs, so they do not pair on this
+    signal — the anchor-blind reading clustered all twenty-two lane-lifecycle
+    rows of one design plan on it alone. The rule is the validator's
+    (`kitlib.registry.shared_spec`), not a second reading of it."""
+    rows = [
+        _row("WI-001", SpecRef="docs/plans/p.md#section-a"),
+        _row("WI-002", SpecRef="docs/plans/p.md#section-b"),
+    ]
+    repo = _repo(tmp_path, rows)
+    assert _commissioned(consolidate.pair_findings(repo, rows)) == []
+
+
+@pytest.mark.parametrize(
+    "first, second, shared",
+    [
+        # The same section is one spec.
+        ("docs/plans/p.md#section-a", "docs/plans/p.md#section-a", "p.md#section-a"),
+        # A whole-file reference covers every section, in either order.
+        ("docs/plans/p.md", "docs/plans/p.md#section-b", "docs/plans/p.md"),
+        ("docs/plans/p.md#section-b", "docs/plans/p.md", "docs/plans/p.md"),
+        ("docs/plans/p.md", "docs/plans/p.md", "docs/plans/p.md"),
+    ],
+)
+def test_one_section_or_a_whole_file_still_pairs_on_the_commissioning_signal(
+    tmp_path, first, second, shared
+):
+    rows = [_row("WI-001", SpecRef=first), _row("WI-002", SpecRef=second)]
+    repo = _repo(tmp_path, rows)
+    found = _commissioned(consolidate.pair_findings(repo, rows))
+    assert len(found) == 1 and found[0][2].endswith(shared), found
+
+
+def test_the_commissioning_spec_half_is_the_shared_spec_rule(tmp_path):
+    """One rule, not a second reading beside it: over every pairing shape the
+    signal's spec half answers exactly what `shared_spec` answers."""
+    from kitlib import registry as kitregistry
+
+    refs = ["", "docs/a.md", "docs/a.md#x", "docs/a.md#y", "docs/b.md#x"]
+    for a in refs:
+        for b in refs:
+            got = consolidate._shared_commission((a, set()), (b, set()))
+            want = kitregistry.shared_spec(a, b)
+            assert got == ([want] if want else []), (a, b, got)
+
+
+def test_the_open_item_edge_is_unchanged_by_section_awareness(tmp_path):
+    """Two sections of one plan do not pair on the spec half, and the OI id the
+    rows both wait on still pairs them — reported once, by its id."""
+    rows = [
+        _row("WI-001", SpecRef="docs/plans/p.md#a", Predecessors="OI-077"),
+        _row("WI-002", SpecRef="docs/plans/p.md#b", Predecessors="~OI-077"),
+    ]
+    repo = _repo(tmp_path, rows)
+    found = _commissioned(consolidate.pair_findings(repo, rows))
+    assert [f[2] for f in found] == [
+        "WI-001 and WI-002 were commissioned by the same OI-077"
+    ], found
+
+
 def test_the_module_signal_reads_both_the_llr_join_and_the_row_prose(tmp_path):
     """Both halves, because each is blind where the other sees: the LLR join is
     traceable but says nothing about a row citing no SR (most process rows), and

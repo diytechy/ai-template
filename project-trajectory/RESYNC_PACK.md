@@ -7016,6 +7016,43 @@ row and approving it in the same commit is refused, and so is
    that already holds a mixed commit is refused at the merge slot: rewrite it
    as two commits before it lands.
 
+### Shared stages in `kitlib`, and the fragment link rebase through `spec_move` [since b27ef5d1]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Copies of one stage across the kit scripts now call one home
+(the 0→A→B rule). Behaviour, including every finding's wording, is unchanged.
+New shared names: `kitlib.config.read_toml_text`
+(TOML text, or None; `agent_common.read_toml_text` is now this function),
+`kitlib.spine.open_items_at` (the real open items at one status, as
+`(id, row)` pairs in row order, a duplicated id once per row),
+`kitlib.spine.clip_line` (one line clipped to a width),
+`kitlib.registry.plan_table_rows` (the rows of a plan's `Plan-WI` table, which
+`plan_coverage.parse_plan` and `plan_artifacts.parse_plan_wis` both read), and
+`spec_move.expected_rebase` (what a moved text's relative links become).
+`trace_text.cite_advisories` takes an optional third argument, the finding's
+sentence as a template (default `trace_text.CITE_MESSAGE`); `trace.py` passes
+its IF sentence through it.
+`trunk_step.rebase_links` lands a `docs/log.d/` fragment through
+`spec_move.expected_rebase`, imported lazily, so `trunk_step.py` now needs
+`spec_move.py` beside it. Removed: `trunk_step.rebased_link_target`,
+`trunk_step.MD_LINK_TARGET_RE` and `trunk_step.URL_SCHEME_RE`.
+
+**What to do.**
+
+1. Overwrite the kit-owned scripts together (they import each other):
+   `scripts/kitlib/config.py`, `scripts/kitlib/spine.py`,
+   `scripts/kitlib/station.py`, `scripts/kitlib/registry.py`,
+   `scripts/agent_policy.py`, `scripts/check_stubs.py`,
+   `scripts/check_trajectory.py`, `scripts/frame_rules.py`, `scripts/hats.py`,
+   `scripts/intake.py`, `scripts/plan_artifacts.py`,
+   `scripts/plan_coverage.py`, `scripts/spec_move.py`, `scripts/trace.py`,
+   `scripts/trace_text.py`, `scripts/trunk_step.py` and
+   `scripts/consolidate.py`.
+2. If a script of your own imported one of the removed `trunk_step` names, call
+   `trunk_step.rebase_links(text)` for a fragment, or
+   `spec_move.expected_rebase(text, old_dir, new_dir)` for any other move.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

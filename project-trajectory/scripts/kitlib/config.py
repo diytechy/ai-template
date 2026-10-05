@@ -7,7 +7,9 @@ whose value is text, such as a declared start commit). They are the two halves
 of the SN-028 dual-read window — the same question asked of the legacy file
 and of the TOML that supersedes it — so a caller resolving a dial reaches for
 exactly one module. `assumption_gate_enabled` reads one more `[checks]` toggle,
-the one that ships off and so fails off rather than on.
+the one that ships off and so fails off rather than on. Under all of them sits
+`read_toml_text`, the one "TOML text, or None when it does not parse" step a
+caller holding text rather than a file reaches for (WI-821).
 
 THE BEHAVIOUR THAT HAD FIVE HOMES (census 2026-08-12, `repo-lock.md` §8.2;
 confirmed independently by the 2026-08-19 review, H-09). A declared-policy file
@@ -47,11 +49,29 @@ __all__ = [
     "process_check_text",
     "read_declared",
     "read_declared_lower",
+    "read_toml_text",
     "utf8_console",
     "step_paths",
     "RETIRED_STAGE_ALIASES",
     "step_threshold",
 ]
+
+
+def read_toml_text(text):
+    """`tomllib.loads(text)`, or None when it does not parse.
+
+    The TEXT step: for a caller that already holds the document (a `+++`
+    frontmatter block, a registry read as one string) and so has no file left
+    to hand a path reader. ONE HOME since WI-821: `agent_policy.read_toml_text`,
+    `kitlib.spine`'s needs-file reader and `kitlib.station.parse_frontmatter`
+    each carried this guard as a copy.
+
+    Implements: SR-166, LLR-181
+    """
+    try:
+        return tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return None
 
 
 def first_declared_line(path):

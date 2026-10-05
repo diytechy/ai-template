@@ -51,7 +51,6 @@ project-trajectory/scripts/check_perf.py	main	27	75
 project-trajectory/scripts/check_privacy.py	Scanner.scan_line	25	22
 project-trajectory/scripts/check_privacy.py	scan_diff_text	43	39
 project-trajectory/scripts/check_stubs.py	find_stubs	17	19
-project-trajectory/scripts/check_stubs.py	stub_kind	16	24
 project-trajectory/scripts/check_trajectory.py	cell_integrity_errors	24	23
 project-trajectory/scripts/check_trajectory.py	completion_reconciliation_findings	18	45
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
@@ -115,7 +114,6 @@ project-trajectory/scripts/kitlib/evidence.py	source_files	22	26	ABSORBED FROM T
 project-trajectory/scripts/migrate_carrier.py	convert	21	39
 project-trajectory/scripts/migrate_carrier.py	read_sn	23	24
 project-trajectory/scripts/migrate_carrier.py	rows_to_toml	20	29
-project-trajectory/scripts/plan_artifacts.py	parse_plan_wis	16	25
 project-trajectory/scripts/plan_briefs.py	_parent_need_ids	16	27	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (16) came with the redesign-prerequisites sitting (77612fb2, 2026-09-06): exact SN parents from explicit SR-Refs and the canonical SpecRef. Repair is owed on trunk.
 project-trajectory/scripts/plan_coverage.py	find_cycle	17	28
 project-trajectory/scripts/plan_round.py	_advance	18	18
@@ -159,7 +157,6 @@ project-trajectory/scripts/trace.py	render_console	35	136
 project-trajectory/scripts/trace.py	render_report	66	368	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 65 -> 66 with WI-637 (1be5ca08): a hat finding is counted with no roster (`hat_names or hat_dangling`), so a strict failure never stands without its summary line.
 project-trajectory/scripts/trace.py	schema_findings	29	28	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 25 -> 29 with WI-631 (8d25242f): a test case's Verifies is required unless it evidences assumptions instead (LLR-229), a nested conditional arm. Repair is owed on trunk.
 project-trajectory/scripts/trace.py	triangle_findings	16	28
-project-trajectory/scripts/trace_text.py	cite_advisories	21	29
 project-trajectory/scripts/trace_text.py	form_findings	36	62
 project-trajectory/scripts/trace_text.py	paraphrase_advisories	16	27
 project-trajectory/scripts/trace_text.py	provenance_findings	16	21

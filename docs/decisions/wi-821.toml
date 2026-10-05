@@ -1,0 +1,68 @@
+# docs/decisions/wi-821.toml — WI-821's delegated decisions record (the
+# duplicate-code burn-down and the section-aware commissioning signal).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-002"]
+
+[decision.D-001]
+decided = "docs/stack.ini [dupes-census] is stamped 2/2/32, the census reading after the burn-down (5/5/52 before it), naming its two residual groups: agent_policy.human_approves / human_approves_spine, kept as deliberate (D-009), and check_trajectory.read_rows / gen_release_checklist.load_csv, which are NOT deliberate but deferred: the spec orders that pair to wait on WI-817, which retires the non-TOML carriers and may delete one or both readers."
+alternative = "Keep the stamp at 0/0/0 and accept a standing census WARN (2/2/32 over a 0/0/0 baseline) on every run until WI-817 removes or merges the CSV pair and the deliberate pair is merged or allow-listed; or merge the two held-status predicates now to shrink the residual to the deferred pair."
+reversal_cost = "Three numbers and a comment block in docs/stack.ini."
+why_not_escalated = "Not settled by the builder: this goes to the independent adjudicator. The case against it: the Done-when asks for a census reading of '0/0/0, or the remaining deliberate groups only', and for docs/stack.ini [dupes-census] to be 're-stamped down by hand'; the baseline's own convention is downward-only. Measured against the committed stamp, 0/0/0 -> 2/2/32 is a raise, and the CSV pair is deferred rather than deliberate, so the reading is not 'the remaining deliberate groups only'. The case for it: the committed 0/0/0 was stale, below the 5/5/52 the census actually read before this row (the drift the research's section 7 found), so the burn-down itself moves the reading down 5/5/52 -> 2/2/32; a stamp below the reading WARNs on every run over two named, explained residuals, which is a warning nobody acts on. The census is warn-only either way (D-7), so the choice changes only whether that WARN stands until WI-817."
+review = ""
+
+[decision.D-002]
+decided = "trace.if_note_advisories is the shared trace_text.cite_advisories sweep over the IF reason cells, and its output is the former copy's to the byte ('states the seam and its standing reason', with its closing period): the engine takes the finding's sentence as a value (a str.format template, default trace_text.CITE_MESSAGE, unchanged for the spine and off-spine tiers), and the IF caller passes trace.IF_CITE_MESSAGE."
+alternative = "Let the IF advisory take the shared engine's sentence ('states the system', no closing period), a visible output change; or give the tier spec a noun field, which alone cannot restore the closing period."
+reversal_cost = "One keyword parameter on trace_text.cite_advisories and one module constant in trace.py."
+why_not_escalated = "The Done-when says behaviour is unchanged, so the former wording is kept rather than migrated: tests/test_rule_sync.py pins it verbatim (IF-101, 'Minted 2026-08-15.'). The sentence is data a caller passes, not a mode flag switching behaviour: the sweep (rows, cells, tokens, the token-scoped exception list) stays one loop. Recorded high-risk because it adds a parameter to a shared engine for one caller."
+review = ""
+
+[decision.D-003]
+decided = "The plan-table walk's home is kitlib.registry.plan_table_rows (a declared shared-kernel module), which plan_coverage.parse_plan and plan_artifacts.parse_plan_wis both call, each picking its own cells."
+alternative = "plan_artifacts imports plan_coverage.parse_plan directly."
+reversal_cost = "Move one function and its two helpers back into plan_coverage and import it from plan_artifacts."
+why_not_escalated = "plan_artifacts is CMP-008 and plan_coverage CMP-006, so a direct import is a new cross-component edge owing a new IF row and a Contract declaration in plan_coverage's header. An edge into a declared kernel module (docs/kernel-modules-allow) is exempt, and kitlib.registry is already the work registry's read home that plan_coverage imports."
+review = ""
+
+[decision.D-004]
+decided = "The leading-docstring test's one home is the stdlib's ast.get_docstring, read by check_stubs.stub_kind and check_dupes_census._stripped_body. check_complexity keeps its own _is_docstring, which _wrapped_def uses to drop every string statement in a body, not only the leading one."
+alternative = "Export one _is_docstring predicate from check_complexity (or check_stubs) and import it in the other two."
+reversal_cost = "One helper and two call sites."
+why_not_escalated = "ast.get_docstring answers exactly the copies' question for a function node (an Expr whose value is a str Constant, first in the body), so no kit predicate is needed for it. check_complexity's remaining use is a different question; changing it to the leading docstring would change a complexity score in the case where a decorator body carries a second string."
+review = ""
+
+[decision.D-005]
+decided = "frame_rules binds the shipped kitlib.spine.seam_endpoints under its local name _entries, and seam_endpoints' docstring now says it is the carrier's one list-cell split."
+alternative = "Rename seam_endpoints to a neutral name (list_entries) across its callers."
+reversal_cost = "A rename across three call sites and a RESYNC entry."
+why_not_escalated = "seam_endpoints is a shipped kitlib name RESYNC_PACK already documents; renaming it would force a downstream migration for no behaviour. Binding under a local name is the house pattern (plan_artifacts._split_tokens = kitlib.spine.refs)."
+review = ""
+
+[decision.D-006]
+decided = "The 'two _clips' are read as the one-line width clips (hats._clip and intake._clip, with check_trajectory._clip_title as a third copy); kitlib.spine.clip_line takes text, and each caller keeps its own reading of a missing value (hats and check_trajectory read None as empty, intake as 'None')."
+alternative = "Unify the None reading on one rule; or read 'two _clips' as the line-count clips in adjudicate_brief and agent_common."
+reversal_cost = "One function and three one-line callers."
+why_not_escalated = "The research's M2-j0.7 pair is the exact-body width clip. Unifying the None reading would change intake's briefs, where 'None' shows an absent cell. The line-count clips differ in their elision marker ('clipped at N lines' for the author, 'N more lines' for a prompt), so they are different outputs, not copies; left as they are."
+review = ""
+
+[decision.D-007]
+decided = "trunk_step.rebase_links lands a fragment through a new public spec_move.expected_rebase(text, old_dir, new_dir), the outbound half's pure oracle beside expected_relink, imported lazily."
+alternative = "Import spec_move at trunk_step's module scope, or move the link primitives from spec_move into trunk_step."
+reversal_cost = "One function in spec_move and the restored 40-line copy in trunk_step."
+why_not_escalated = "spec_move is the link-aware move ritual and owns the per-link decision; the copy in trunk_step was kept only because its first home, the dispatcher, was retired. A module-scope import roughly doubles trunk_step's import cost (about 60 ms, agent_common's chain) for every importer of it; the lazy import follows trunk_step's own _plan_artifacts idiom. Both modules are CMP-008, so no seam row is owed."
+review = ""
+
+[decision.D-008]
+decided = "check_dupes_census.py stays this repository's sensor only; it is not added to the bootstrap MAPPING, and its project-trajectory/mapping-source-exclusions reason now says so."
+alternative = "Map it into scaffolds with a RESYNC entry."
+reversal_cost = "One MAPPING row, a [step:] line in the template stack.ini and a RESYNC entry."
+why_not_escalated = "It measures project-trajectory/scripts/ against this repo's own baseline. In an adopter that tree is the copied kit, which the adopter does not edit, so the reading would measure the kit and not their code; pointing it at an adopter's sources is a new feature this row does not ask for."
+review = ""
+
+[decision.D-009]
+decided = "agent_policy.human_approves and human_approves_spine stay two functions, as the research judged, and gain a by-value pin in tests/test_rule_sync.py holding them equal over every registry spelling at every dial."
+alternative = "Make one call the other, or merge them into one predicate."
+reversal_cost = "One test, or a two-line merge."
+why_not_escalated = "The research judged the pair deliberate (two contracts, writer side and reader side, on one body), and the row keeps that unless the build finds otherwise. The build found no defect in it. test_rule_sync's rule licenses a second copy of a decision only with a behavioural pin, and none existed."
+review = ""

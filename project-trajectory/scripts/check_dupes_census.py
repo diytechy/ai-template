@@ -51,16 +51,11 @@ SECTION = "dupes-census"
 def _stripped_body(node):
     """A function's body with its docstring removed, if it has one — matching
     the WI-448 producing command's `B` lambda so this census reads the same
-    population it always has."""
-    body = node.body
-    if (
-        body
-        and isinstance(body[0], ast.Expr)
-        and isinstance(body[0].value, ast.Constant)
-        and isinstance(body[0].value.value, str)
-    ):
-        return body[1:]
-    return body
+    population it always has. The docstring test is the stdlib's, the one
+    `check_stubs.stub_kind` reads too (WI-821)."""
+    if ast.get_docstring(node, clean=False) is not None:
+        return node.body[1:]
+    return node.body
 
 
 def measure(scripts_dir):
