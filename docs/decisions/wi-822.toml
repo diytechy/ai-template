@@ -72,3 +72,17 @@ alternative = "Copy the git-common-dir lookup and the lock into the guard, or mo
 reversal_cost = "Inline the two helpers back into store_dir and store_lock."
 why_not_escalated = "The kit enforces one home per shared stage, and the coordinator named session_keep.store_dir as the lookup to follow."
 review = ""
+
+[decision.D-011]
+decided = "A detached launch counts as confirmed when the started launcher is still running after LAUNCH_GRACE_SECONDS (5 s) or has exited 0 within it; a non-zero exit within the grace, a missing launcher, or any failure from writing the prompt file to starting the process restores the request, removes the successor token and the prompt file, and is reported (Sol round 1, MAJOR 2). On Windows the launcher keeps the new console's own standard handles (no redirection); the POSIX launcher, which opens its own terminal, keeps its streams on the null device."
+alternative = "Treat process creation as the launch (the round-1 build), or wait for the successor's SessionStart take before releasing the request."
+reversal_cost = "One wait in launch_detached and its constant."
+why_not_escalated = "Sol reproduced both strandings. A launcher that fails (missing claude, bad root) exits at once; one that works keeps running on Windows (claude runs inside it) or exits 0 having opened a terminal on POSIX. Waiting for the successor's take cannot work from SessionEnd, whose session is ending; the take stays the final confirmation, and an untaken lease is the owner's recorded release."
+review = ""
+
+[decision.D-012]
+decided = "The recorded compaction fixture (tests/fixtures/coordinator_guard/compaction-manual-2.1.289.jsonl) is the coordinator's real Claude Code 2.1.289 transcript, sanitized: the scratchpad cwd becomes a neutral work/compact-probe directory, the user's home and name become 'user', the account email becomes user@example.com, and attachment strings over 2,000 characters (the system-prompt snapshots and listings) become same-length filler. Records are re-serialized compactly; shapes, fields, uuids and usage numbers are unchanged. The reader keeps stopping at the boundary: the preserved messages are named by uuid in compactMetadata.preservedMessages and are not rewritten after it, so until the first post-compaction reply the reading is unknown, never their stale pre-compaction usage."
+alternative = "Keep the attachment text verbatim (it carries this machine's prompt, memory index and account context), or follow preservedMessages into the pre-boundary records."
+reversal_cost = "Regenerate the fixture from the source transcript."
+why_not_escalated = "The coordinator asked for neutral paths and otherwise faithful shapes; the filler keeps each long line's length, which the tail reader's widening depends on. Following preservedMessages would read 35,803 tokens of pre-compaction usage as current."
+review = ""
