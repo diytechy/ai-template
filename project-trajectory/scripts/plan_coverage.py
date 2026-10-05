@@ -8,15 +8,17 @@ Two runs, one grammar:
     plans. Reviews merge mechanically; rival plans do not — so the
     reconciliation is select-and-port, and the selection needs an *external,
     computed* signal: what each plan covers, and what one covers that the other
-    misses. The clauses are the goal's `C#` lines; an uncovered clause is the
-    report's payload, never a finding.
+    misses. The clauses are the goal's `C#` lines; an uncovered clause is a
+    finding unless an `Excludes:` line names it with a reason.
   * SINGLE (`--item`): one plan for one claimed work item. The clauses are the
     item's Done-when items, `D1…Dn` in order (`kitlib.done_when.items`, the
     one reading of a Done-when — never re-parsed here), plus the open review
-    findings `F1…` a replan answers (`--findings`). Here coverage IS the gate:
-    every clause is covered by a row or excluded with a reason, and an
-    unexplained gap is a finding. The run also diffs the item's SRs and the
-    TCs that verify them against the rows (the SR/TC diff below).
+    findings `F1…` a replan answers (`--findings`). The run also diffs the
+    item's SRs and the TCs that verify them against the rows (the SR/TC diff
+    below).
+
+In both runs coverage IS the gate: every clause is covered by a row or
+excluded with a reason, and an unexplained gap is a finding.
 
 It never judges plan quality — solvability, honest coverage, and seam
 duplication are the rubric's job (docs/rubrics/, the plan-critic hat).
@@ -52,9 +54,9 @@ Findings (exit 1):
     - a duplicate `Plan-WI` id, an unknown `Predecessors` id, or a
       predecessor cycle;
     - an `Excludes:` line with no reason, or naming an undeclared clause;
-    - SINGLE only: a clause neither covered nor excluded; an item SR no row
-      cites and no line excludes; a TC verifying one of those SRs that no row
-      names and no line excludes.
+    - a clause neither covered by a row nor excluded with a reason;
+    - SINGLE only: an item SR no row cites (an item SR cannot be excluded);
+      a TC verifying one of those SRs that no row names and no line excludes.
 
 Malformed inputs (no clauses in the goal, no Done-when in the item, no
 findings in a findings file, no plan table) exit 2.
@@ -69,10 +71,10 @@ Contract IF-060: the exit alphabet the coverage step decides on. 0 clean, 1
     stdout name which plan is implicated; 2 says the inputs could not be read
     at all (no numbered clauses in the goal, no Done-when in the item, a
     missing file, no `Plan-WI` table in a plan) and the caller bounces the
-    plans rather than reading a stale report. In a DUAL run uncovered clauses
-    are never a finding, so a rival plan can be honestly incomplete and still
-    exit 0; in a SINGLE run an unexplained gap is a finding, so a plan
-    cannot narrow its item.
+    plans rather than reading a stale report. In either run an unexplained
+    clause gap is a finding, so a plan cannot narrow its goal or item
+    silently; a rival plan that is honestly incomplete says so with an
+    `Excludes:` line.
 Contract IF-152: the headless argv surface. Exactly one of `--goal GOAL.md`
     (DUAL) or `--item SPEC.md` (SINGLE) is required, and one or more plan
     paths are positional; `--findings FINDINGS.md` adds the `F#` clauses and
@@ -414,7 +416,7 @@ def check_excludes(name, excludes, clauses, ref_ids):
 
 
 def gap_findings(name, clauses, covered, excluded):
-    """SINGLE: each clause no row covers and no line excludes — the gate.
+    """Each clause no row covers and no line excludes — the gate.
 
     Implements: SR-155, LLR-069
     """
@@ -429,7 +431,9 @@ def gap_findings(name, clauses, covered, excluded):
 
 def spine_diff(rows, item_srs, tcs, excluded):
     """SINGLE: the item's SRs and the TCs verifying them, each with how the
-    plan answers it — `cited` by a row, `excluded`, or `missing`. Returns
+    plan answers it — `cited` by a row, `excluded`, or `missing`. An item SR
+    is only ever `cited` or `missing`: ch.3 §4.5 lets a TC be excluded with a
+    reason, never one of the item's own SRs. Returns
     `[(ref, verified SRs or [], state)]`, SRs first; `tcs` None means no TC
     registry, so only the SRs are diffed.
 
@@ -442,7 +446,7 @@ def spine_diff(rows, item_srs, tcs, excluded):
             "cited" if ref in named else ("excluded" if ref in excluded else "missing")
         )
 
-    diff = [(sr, [], state(sr)) for sr in item_srs]
+    diff = [(sr, [], "cited" if sr in named else "missing") for sr in item_srs]
     for tc, verifies in sorted((tcs or {}).items()):
         hit = [sr for sr in item_srs if sr in verifies]
         if hit:
@@ -467,7 +471,7 @@ def diff_findings(name, diff):
             )
         else:
             out.append(
-                "{}: the item's {} is cited by no row and not excluded".format(
+                "{}: the item's {} is cited by no row (an item SR cannot be excluded)".format(
                     name, ref
                 )
             )
@@ -640,9 +644,9 @@ def _check_one(path, gate):
     findings, covered = check_plan(path.name, rows, clauses, ref_ids, gate["if_ids"])
     more, excluded = check_excludes(path.name, parse_excludes(text), clauses, ref_ids)
     findings += more
+    findings += gap_findings(path.name, clauses, covered, excluded)
     diff = None
     if gate["item_srs"] is not None:
-        findings += gap_findings(path.name, clauses, covered, excluded)
         diff = spine_diff(rows, gate["item_srs"], gate["tcs"], excluded)
         findings += diff_findings(path.name, diff)
     return findings, (path.name, rows, covered, excluded, diff)

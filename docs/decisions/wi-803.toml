@@ -4,10 +4,10 @@
 high_risk = ["D-001"]
 
 [decision.D-001]
-decided = "Coverage is a finding in a SINGLE run only. A DUAL run's uncovered C# clauses stay report payload, as before; a DUAL plan's Excludes: lines are parsed and validated with the one grammar (a line with no reason or naming an undeclared clause is a finding) and shown in the report, but an unexcluded DUAL gap does not fail."
-alternative = "Make every unexcluded gap a finding in a DUAL run too, as ch.3 §4.5's 'Coverage is a finding' bullet can be read."
-reversal_cost = "One call: run gap_findings for DUAL plans in _check_one; the DUAL fixtures whose plans leave clauses uncovered (tests/test_plan_coverage.py, tests/test_plan_coverage_step.py) would then need Excludes: lines."
-why_not_escalated = "The row's Done-when binds 'existing DUAL fixtures stay byte-identical', and §4.5's SR/TC bullet says 'For DUAL: today's pairwise coverage diff, unchanged'; the existing green DUAL fixture leaves C3/C4 uncovered with a prose note, so failing DUAL gaps would break byte identity. Whether a rival plan's gap fails the selection is S788-plan-kinds' call (drafter selection under the gate), which can flip this one call."
+decided = "The Done-when line 'Existing DUAL fixtures stay byte-identical' binds the DUAL fixture inputs (the goal and plan constants in tests/test_plan_coverage.py and tests/test_plan_coverage_step.py, and the recorded planner outputs in tests/test_dual_plan_round.py, all left unedited) and the --out report they produce (IF-153, pinned byte for byte), not their exit status. An unexplained DUAL C# gap is a finding, so those fixtures now exit 1 with one FAIL line per gap; tests whose purpose is not gaps run on gated variants that add an Excludes: line."
+alternative = "Read the line as also freezing DUAL exit codes and stdout, which keeps DUAL gaps as report payload (this record's first reading, overturned)."
+reversal_cost = "One call: move gap_findings back inside the SINGLE branch of _check_one; the gated test variants and the planner prompt's Excludes: sentence would then be harmless but unnecessary."
+why_not_escalated = "Settled by the independent adjudicator's dispute-1 ruling, RULING (a) (docs/reviews/wi-803-plan-gate/dispute-1-ruling.md, under OI-103 Q3): ch.3 §4.5's coverage rule names both runs, and its only example is a DUAL round."
 review = ""
 
 [decision.D-002]

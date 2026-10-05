@@ -36,6 +36,13 @@ PLAN_B = """| Plan-WI | Title | Covers | Interfaces | Predecessors |
 | Q2 | Verdict writer | C3 | Proposed: nearest is IF-001, wrong direction - a new Provides row is needed | Q1 |
 """
 
+# WI-803 (dispute-1 ruling (a)): an unexplained DUAL gap fails the gate, so a
+# test whose purpose is not gaps runs on these gated variants; the originals
+# above stay byte-identical as the pre-gate fixtures.
+PLAN_A_GATED = PLAN_A + "\nExcludes: C3; C4 — out of scope for the pilot.\n"
+PLAN_B_GATED = PLAN_B + "\nExcludes: C2; C4 — another plan's scope.\n"
+GATED = (PLAN_A_GATED, PLAN_B_GATED)
+
 IFS = (
     "[interface.IF-001]\n"
     'owner = "scripts/a"\n'
@@ -72,7 +79,7 @@ def run(tmp_path, names, extra=()):
 
 
 def test_two_plans_green_with_coverage_diff(tmp_path):
-    names = write_inputs(tmp_path)
+    names = write_inputs(tmp_path, plans=GATED)
     proc = run(tmp_path, names)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     out = proc.stdout
@@ -84,7 +91,7 @@ def test_two_plans_green_with_coverage_diff(tmp_path):
 
 
 def test_out_writes_the_report_file(tmp_path):
-    names = write_inputs(tmp_path)
+    names = write_inputs(tmp_path, plans=GATED)
     proc = run(tmp_path, names, extra=["--out", tmp_path / "coverage.md"])
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (tmp_path / "coverage.md").read_text(encoding="utf-8")
@@ -149,7 +156,7 @@ def test_duplicate_plan_wi_id_fails(tmp_path):
 
 
 def test_absent_registries_degrade_to_notes_not_findings(tmp_path):
-    names = write_inputs(tmp_path, registries=False)
+    names = write_inputs(tmp_path, plans=GATED, registries=False)
     proc = run(tmp_path, names)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "no system-requirements.csv; SR refs unvalidated" in proc.stdout
@@ -171,7 +178,9 @@ def test_plan_without_table_is_a_malformed_input(tmp_path):
 
 
 def test_multi_covered_clause_is_reported_not_failed(tmp_path):
-    plan = PLAN_A.replace("C2; SR-001", "C1; C2")
+    plan = PLAN_A_GATED.replace("C2; SR-001", "C1; C2").replace(
+        "Excludes: C3; C4", "Excludes: C2; C3; C4"
+    )
     names = write_inputs(tmp_path, plans=(plan,))
     proc = run(tmp_path, names)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -286,7 +295,10 @@ def test_single_sr_tc_diff_names_an_uncovered_sr_and_an_unnamed_tc(tmp_path):
     proc = write_single(tmp_path, plan=plan)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     out = proc.stdout
-    assert "plan-A.md: the item's SR-001 is cited by no row and not excluded" in out
+    assert (
+        "plan-A.md: the item's SR-001 is cited by no row "
+        "(an item SR cannot be excluded)"
+    ) in out
     assert (
         "plan-A.md: TC-001 verifies SR-001 and is named by no row nor excluded"
     ) in out
@@ -344,15 +356,57 @@ Goal: goal.md - 4 clause(s): C1 C2 C3 C4
 """
 
 
-def test_the_dual_report_is_byte_identical_to_the_pre_gate_report(tmp_path):
-    """WI-803: the SINGLE gate leaves a DUAL run's bytes alone. The report was
-    captured from the pre-gate script over this fixture (and 12 more DUAL
-    fixtures diffed identical at the change); an uncovered C# is still payload,
-    never a finding."""
+DUAL_GAP_FAILS = (
+    "plan_coverage: FAIL - plan-A.md: C3 is neither covered by a row nor "
+    "excluded with a reason: 'the verdict file records ports.'\n"
+    "plan_coverage: FAIL - plan-A.md: C4 is neither covered by a row nor "
+    "excluded with a reason: 'budgets bound every session.'\n"
+    "plan_coverage: FAIL - plan-B.md: C2 is neither covered by a row nor "
+    "excluded with a reason: 'briefs are redacted by construction.'\n"
+    "plan_coverage: FAIL - plan-B.md: C4 is neither covered by a row nor "
+    "excluded with a reason: 'budgets bound every session.'\n"
+)
+
+
+def test_dual_report_bytes_unchanged_and_unexplained_dual_gaps_fail(tmp_path):
+    """WI-803, dispute-1 ruling (a): over the pre-gate DUAL fixture the
+    `--out` report is byte-identical to the one the pre-gate script wrote, and
+    each unexplained C# gap is now a finding. PLAN_A's prose "C3, C4 excluded"
+    note is not an `Excludes:` line, so it explains nothing."""
     names = write_inputs(tmp_path)
     proc = run(tmp_path, names, extra=["--out", tmp_path / "coverage.md"])
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
     assert (tmp_path / "coverage.md").read_bytes() == DUAL_REPORT.encode("utf-8")
-    assert proc.stdout.replace("\r\n", "\n") == (
-        DUAL_REPORT + "\nplan_coverage: OK - 2 plan(s), 4 clause(s), refs resolve.\n"
+    stdout = proc.stdout.replace("\r\n", "\n")
+    assert stdout == DUAL_REPORT + "\n" + DUAL_GAP_FAILS
+
+
+def test_a_dual_gap_excluded_with_a_reason_passes(tmp_path):
+    """The DP-001 case: a rival plan declares what it leaves out, with why."""
+    names = write_inputs(tmp_path, plans=GATED)
+    proc = run(tmp_path, names)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "- excluded: C3 - out of scope for the pilot." in proc.stdout
+
+
+def test_a_dual_gap_fails_naming_only_its_plan(tmp_path):
+    names = write_inputs(tmp_path, plans=(PLAN_A_GATED, PLAN_B))
+    proc = run(tmp_path, names)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    gaps = [ln for ln in proc.stdout.splitlines() if "is neither covered" in ln]
+    assert len(gaps) == 2, proc.stdout
+    assert all(ln.startswith("plan_coverage: FAIL - plan-B.md: ") for ln in gaps)
+
+
+def test_an_item_sr_cannot_be_excluded_only_cited(tmp_path):
+    """ch.3 §4.5: every item SR is cited by a row; only a TC may be excluded."""
+    plan = SINGLE_PLAN.replace("D1; SR-001; TC-001", "D1; TC-001") + (
+        "Excludes: SR-001 — deferred to another item.\n"
     )
+    proc = write_single(tmp_path, plan=plan)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert (
+        "plan-A.md: the item's SR-001 is cited by no row "
+        "(an item SR cannot be excluded)"
+    ) in proc.stdout
+    assert "- SR-001: missing" in proc.stdout
