@@ -13,6 +13,9 @@ as the resume map.
   render at the bottom of [open-items.html](open-items.html) under "Decisions to
   review".
 
+> **Superseded as the resume map by
+> [handoff-2026-10-04-wave13-coordinator.md](handoff-2026-10-04-wave13-coordinator.md).**
+
 ## Update, later on 2026-10-04 (owner present)
 
 The owner ruled OI-104 in session: WI-788's note is approved with amendments

@@ -36,3 +36,16 @@ Deferred open items: none
   medium row is catalog-only. `claude-sonnet-5-5` was probed live. `OPENAI-SOL`
   stays at medium in the router: the owner ran this session's hand reviews at high
   for depth.
+- **Later in the session.** The owner signed SN-003, SN-008, SN-025 (exclusions
+  restored) and SN-043 with SN-009 (act seq 31). The owner confirmed eleven
+  high-risk decisions and directed WI-818: a decision is confirmed or overruled,
+  never approved, and an overrule may amend the queued row the decision is
+  scoped to. The `thebpandey/lanes` evaluation
+  (`docs/plans/2026-10-04-lanes-evaluation.md`) was not adopted; two methods are
+  filed deferred: WI-819 (declared file ownership) and WI-820 (provider trust
+  and secrets). The owner ruled on WI-820: listing a route trusts it with standard
+  repo content, stated plainly; secrets get structure plus detection for every
+  route, plus an opt-in per-route `deny_reads`. The program runs by coordinator
+  session. The next resume map is `docs/handoff-2026-10-04-wave13-coordinator.md`.
+- **The full unfiltered suite** at `6613ddd0`: 5050 passed, 13 skipped, 0 failed, in
+  595.7 s (detached worktree, fixed basetemp).

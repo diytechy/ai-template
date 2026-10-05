@@ -41,14 +41,38 @@ row adds no trust level and no per-route exemption. What is left to decide:
   launch), deny reads where a CLI supports it (restriction, per CLI and not
   uniform), and scan session transcripts and commits for secret classes
   (detection after the fact). None can prove a model never saw a secret.
+- **Secrets: ANSWERED by the owner, 2026-10-04.** Option (b) for every listed
+  route: structure plus detection. "b, with a provisions for an a like method when
+  set in agents.toml", then, of the per-route forms offered: "Both 2 or 1 will work.
+  I lean toward #1." So:
+  - **every launch (structure):** a model is never launched in a worktree holding a
+    file of a known secret class (the `kitlib` secret-class vocabulary
+    `check_privacy` already uses); the launch is refused by name;
+  - **every session (detection):** session transcripts are scanned for the same
+    secret classes, and a hit is reported to the owner the way a commit-scan hit is;
+  - **per route, opt-in (#1):** a route row may set `deny_reads = [...]` (paths, e.g.
+    the home-folder CLI credential files), and its launch then passes them to its
+    CLI's own read-deny where that CLI supports one; a route whose CLI has no
+    read-deny refuses a non-empty `deny_reads` at preflight rather than silently
+    ignoring it. #2 (a per-route list of extra paths that must be absent before
+    launch) is acceptable to the owner too, if #1 proves impractical.
+  It is one launch path with declared values, never a second mode.
 
 It needs WI-815 (the routes row), and it is due before the first free or
 third-party route is enabled.
 
 ## Done-when
 
-- Settled at the time it is taken, against the two questions above, with the
-  owner's answer recorded. Any guard it adds applies to every listed route, with
-  no per-provider mode.
+- The shipped template, this repo's `docs/agents.toml` header and the
+  row-admission wording state that a listed route is trusted with the repository's
+  standard content, and that listing it accepts its provider's terms.
+- A launch in a worktree holding a file of a known secret class is refused, naming
+  the file and its class; tested per class, and for a clean worktree.
+- Session transcripts are scanned for the same classes, and a hit reaches the
+  owner's surface; tested on a fixture transcript.
+- A route's `deny_reads` reaches its CLI's read-deny where supported (tested per
+  supporting CLI), and a non-empty `deny_reads` on a CLI with none is refused at
+  preflight.
+- SR and LLR rows for the three behaviours pass adjudication.
 - Review bar: A. RESYNC_PACK: an entry if the template's wording or the launch
   changes.

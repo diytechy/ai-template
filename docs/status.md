@@ -25,23 +25,28 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-04-wave12-coordinator.md](handoff-2026-10-04-wave12-coordinator.md).
-  The unattended wave-11 session built the ruled frontier as far as it goes: no
-  row can move now without the owner. The handoff lists every decision made on
-  the owner's behalf (high risk first; they also render under "Decisions to
-  review" at the bottom of [open-items.html](open-items.html)), the corrections
-  learned, and the session prompt to paste. Approval acts run to seq 30.
+  [handoff-2026-10-04-wave13-coordinator.md](handoff-2026-10-04-wave13-coordinator.md):
+  the state, how the program runs, the corrections learned, and the session
+  prompt to paste. The owner's slate is clear (the needs are signed, the parked
+  items settled, the high-risk decisions confirmed); the 60 low-risk decisions
+  render under "Decisions to review" at the bottom of
+  [open-items.html](open-items.html). Approval acts run to seq 31.
   1. **Build the S788-* successor rows, WI-797 to WI-817**, in their `needs`
      order with the wave-11 cycle (the design note is
      [plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
      its ruling section first; it overrides the chapters). Claim each batch
      under one scoped unpause. WI-797 (the glossary), WI-803 (the plan gate)
      and WI-806 (text-then-act) need nothing and can start; WI-796 re-judges
-     TC-055 after the last landing. The owner directed (2026-10-04) that this
-     campaign runs by coordinator session, not the unattended loop.
+     TC-055 after the last landing, and WI-818 (the owner's verdict on a
+     decision: confirmed or overruled) is ready too. The owner directed
+     (2026-10-04) that this campaign runs by coordinator session, not the
+     unattended loop.
      OI-105 (the FreeLLMAPI endpoint and pinned models) waits for the owner's
      router; it holds only the FreeLLMAPI row of S788-routes.
-  2. OI-98: the owner re-syncs `C:\Projects\FileBackup` (stamp `9b697cc`) as a
+  2. Owner's choice, not blocking: whether to burn down the duplicate-code census
+     ([plans/2026-09-28-duplicated-stage-detection.md](plans/2026-09-28-duplicated-stage-detection.md)
+     §7: duplicate readers and near-copies, no row filed).
+  3. OI-98: the owner re-syncs `C:\Projects\FileBackup` (stamp `9b697cc`) as a
      scratch trial, after TC-036's inputs gain `RESYNC_PACK.md`, then rules it.
 
   `docs/work/pause` is still tracked (since 2026-09-04): the unattended
