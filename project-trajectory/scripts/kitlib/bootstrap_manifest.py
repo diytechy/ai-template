@@ -386,6 +386,10 @@ MAPPING = [
     # migration's evidence — an adopter that cannot run --check has to take the
     # conversion on faith, which is what SR-129's 140-cell lesson forbids.
     ("scripts/migrate_carrier.py", "scripts/migrate_carrier.py"),
+    # The decisions-record migrator (WI-818): every adopter with records runs
+    # it once at the resync that retires the `reviewed` key, since no reader
+    # of that key is kept. Imports `kitlib.decisions` alone.
+    ("scripts/migrate_decisions.py", "scripts/migrate_decisions.py", "SR-225"),
     ("scripts/spine_rules.py", "scripts/spine_rules.py"),
     # The STAGE axis's producer (WI-498 slice 1). Imports `spine_rules` for the
     # spine load and its rung predicates — so that the two axes can never

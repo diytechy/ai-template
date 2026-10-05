@@ -144,6 +144,13 @@ cadence"). New behavior needs new tests
   session that ends owing the owner a decision **declares it** in the fragment —
   `Deferred open items: OI-45` (or `… none — <why>`), checked at the commit bar
   by `gen_open_items.py --check` (process.md §5, OI-41 ARM 2).
+- **A delegated decisions record is the owner's to rule.** Write each entry
+  of `docs/decisions/<run>.toml` with `review` empty and no `owner` key. The
+  owner sets `owner = "confirmed"` or `"overruled"`; an overrule's commit
+  states the new direction in `review` and files or amends a queued or active
+  work item citing `docs/decisions/<run>.toml#D-NNN`, or the ruling-sync step
+  and the merge slot refuse it (process-options.md, "Delegated decisions
+  record").
 - **Section order inside the spec file is load-bearing.**
   `check_trajectory.parse_spec_deliverable` clips the body at `## Context`, so
   a `## Deliverable` placed *after* Context parses as EMPTY and the close reds

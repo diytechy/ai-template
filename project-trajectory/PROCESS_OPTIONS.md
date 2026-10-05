@@ -1250,10 +1250,10 @@ handed the owner's authority for a run. Governed by `docs/process.toml`
 in the format of `decisions.template.toml`: a top-level `high_risk` list naming
 the entries the owner should read first, then one `[decision.D-<n>]` table per
 call carrying `decided`, `alternative`, `reversal_cost`, `why_not_escalated`
-and `review = ""`. The owner reviews **in place**: any string in `review` marks
-the entry reviewed, with meaning the owner's own; nothing reads the cell, and
-the file is not immutable. The fields are required because a prose list of
-calls loses them as soon as nothing reads them.
+and `review = ""`. The owner rules **in place**: `owner = "confirmed"` or
+`"overruled"`; absent is not yet seen, listed on the owner surface's
+"Decisions to review". The fields are required because a prose list of calls
+loses them as soon as nothing reads them.
 
 **The record is not an exit.** It tells the owner about calls already made.
 Work still routes only through the process's exits — a successor work item, an
@@ -1285,8 +1285,10 @@ malformed entry is reported, never refused, and a dial value outside its three
 is refused as configuration before any record is read. The loop hands each
 build and adjudication session the path.
 
-**An overturned entry** is named in the owner's `review` note, and a work item
-is minted to undo or redo the call. The record never carries that work.
+**An overruled entry** states the direction instead in its `review` note,
+and the same commit files or amends a queued or active work item citing it as
+`docs/decisions/<run>.toml#D-NNN` — refused at the commit and the merge
+otherwise. The record never carries that work.
 
 ## Critique verification & the critique loop
 

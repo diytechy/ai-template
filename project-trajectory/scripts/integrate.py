@@ -1303,7 +1303,9 @@ def _ruling_sync_refusal(root, branch):
     by the same function the pre-commit hook runs over the staged tree
     (`acceptance_record.commit_ruling_sync_lines`): a commit that takes an open
     item out of `pending` must update the Done-when of each row open in its
-    parent that cites the item, or close or remove the row. The hook is opt-in
+    parent that cites the item, or close or remove the row; and a commit that
+    overrules a delegated decision must file or amend a queued or active row
+    citing it (WI-818). The hook is opt-in
     and `--no-verify` skips it; the slot is where a commit made either way is
     refused before it reaches trunk. Every lane, whoever runs the slot. A range
     git cannot read is a refusal, never a skip.

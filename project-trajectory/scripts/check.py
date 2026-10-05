@@ -1227,6 +1227,8 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # closes or removes the row. Staged tree against HEAD, at every bar and
         # for every committer; the merge slot asks the same question of each
         # lane commit against its first parent, so `--no-verify` lands nothing.
+        # The same step refuses a commit that overrules a delegated decision
+        # without filing or amending a work item citing it (WI-818).
         (
             "ruling-sync",
             (),
@@ -1951,7 +1953,9 @@ def _ruling_sync_refusal(root="."):
     """The `ruling-sync` step's judgement: the refusal for a staged tree that
     takes an open item out of `pending` while a row open at HEAD cites it and
     the tree neither updates that row's Done-when nor closes or removes it, or
-    None. Off git there is no commit to judge, and it answers None.
+    that overrules a delegated decision no queued or active row it files or
+    amends cites (WI-818), or None. Off git there is no commit to judge, and
+    it answers None.
 
     Implements: SR-148, LLR-298
     """
