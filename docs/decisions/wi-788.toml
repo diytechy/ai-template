@@ -13,7 +13,7 @@ alternative = "Count such commits as a person's commits (no family), or refuse t
 reversal_cost = "Small: one reader in the proposed ask exclusion step; nothing is built yet."
 why_not_escalated = "It is also raised to the owner as Q-10, because it sits close to the owner's no-marker-convention rule; the note justifies it as evidence inside the judged scope that can only add an exclusion, so a wrong or missing trailer fails toward today's behaviour."
 review = "Owner, 2026-10-04: Q-10 (a), as recommended."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-002]
 decided = "B2 is changed: MERGE is derived from trunk's tree (each spec the lane tip holds in a terminal folder sits at the same path on trunk), not from git ancestry, because the ruled squash landing (OI-103 Q4) takes the lane tip out of trunk's ancestry; the Lane-Tip trailer is the landing audit's link only, never a state input (ch.1 section 1, change 19)."
@@ -21,7 +21,7 @@ alternative = "Derive MERGE from the Lane-Tip trailer, or keep --no-ff merges so
 reversal_cost = "Low: a derivation rule in a proposed module; the squash ruling stands either way."
 why_not_escalated = "OI-103 Q4 (ruled) makes ancestry unavailable after a squash, so B2's wording cannot hold as written; the tree test needs no history walk."
 review = "Owner, 2026-10-04: 'D-002: Good'."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-003]
 decided = "No DONE state: ARCHIVE plus a closed flag (ch.1)."
@@ -78,7 +78,7 @@ alternative = "Ship 60, or ship retention off."
 reversal_cost = "One template value, but every adopter that re-syncs inherits it."
 why_not_escalated = "The owner's second pass directs retained adjudication for adopters; 55 is the retention plan of record's figure, below the reported ~60% degradation point."
 review = "Owner, 2026-10-04: 'D-012: Good', read by the coordinator as D-010 (the 55% value it had just raised) and flagged in session; the owner did not correct it."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-011]
 decided = "The rejudge brief moves to the [judge] family; all five adjudication briefs are retained, so retain_for retires (ch.2 section 2)."
@@ -121,7 +121,7 @@ alternative = "A long-held kernel lock; keep integrate.lock beside the authority
 reversal_cost = "Medium: the authority is the backbone of the adjudication slices."
 why_not_escalated = "OI-103 Q1 (complete exclusion) and B4 require one authority with stated mechanics; the hand path has no long-lived process to hold a kernel lock; two locks over one decision is risk 7's dual path."
 review = "Owner, 2026-10-04: 'Agreed may need more iteration, for now move forward with design' (README A4)."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-017]
 decided = "Spine-text rounds stay inside the sitting (the adjudicator drafts, the adjudication reviewer edits); a code finding goes back to the builder as a return (ch.4 section 7)."
@@ -164,7 +164,7 @@ alternative = "Exclude every author's family for every kind, which forbids the r
 reversal_cost = "Medium: the exclusion step of the unbuilt ask, and the act rung."
 why_not_escalated = "OI-101 Q1 and B10 are ruled; the table only makes them executable, and it is checked feasible for today's two-family pool."
 review = "Owner, 2026-10-04: amended by the per-kind table and ordering rule (README A1)."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-023]
 decided = "A dual-plan PAGE closes the parent partial and, at MINT, mints the open item and a successor decomposition row that carries the parent's round evidence and needs the open item; the owner's ruling becomes the successor's Done-when (adopt plan X, or re-run under the successor's own id) (ch.3 section 4.6, fix round, Sol BLOCKER 4)."
@@ -200,7 +200,7 @@ alternative = "Two commits in one landing for an act-taking lane (the note's fir
 reversal_cost = "Medium once built: the landing's commit shape."
 why_not_escalated = "Escalated: Q-8 was a conflict between two owner rulings and the owner answered it; Q-11 is a reading of one and stays with the owner."
 review = "Owner, 2026-10-04: Q-8 answered (reading confirmed) and Q-11 (a)."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-028]
 decided = "U1 attributes usage per invocation: each adapter declares call or thread scope; thread-scope rows are end minus a stored baseline; kill recovery counts only entries after a cursor stored at launch (ch.2 section 6, fix round, Sol MAJOR 6)."
@@ -229,7 +229,7 @@ alternative = "Keep hard family exclusion and stop the lane with an open item wh
 reversal_cost = "Medium: the exclusion step and the act rung of unbuilt code."
 why_not_escalated = "SR-154's approved text already degrades only to the documented same-family mode, and the adjudicator ruled that a ranked, recorded preference is one rule, not a risk-7 path; after a swap every byte still gets a cross-family read before the act. Not escalated, but it is owner-visible through the recorded entries."
 review = "Owner, 2026-10-04: amended by the per-kind table and ordering rule (README A1)."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-032]
 decided = "In this repo's per-kind table (README A1), a decomposition round's two drafters route through a kind of their own, plan-dual, eligible to both ANTHROPIC and OPENAI, while the other plan-drafting kinds (draft, repair, revise and select, and the swap's replan) are ANTHROPIC only (the owner agreed plan goes to Claude); plan-critique is a review and goes to OPENAI (D-033)."
@@ -237,7 +237,7 @@ alternative = "Make plan ANTHROPIC-only for dual rounds too, so every dual round
 reversal_cost = "Low: one table entry in this repo's values; nothing is built."
 why_not_escalated = "The owner's 'plan to Claude' was given for planning in general; a dual round exists to compare two families' plans, so an Anthropic-only round is not a dual round. Flagged high risk so the owner sees it."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-033]
 decided = "Kinds the owner did not name are assigned by role in this repo's values: the adjudicator's author drafts go with adjudicate (ANTHROPIC); plan-critique and the final review of the adjudicator's writes go with review (OPENAI)."
@@ -259,7 +259,7 @@ alternative = "Keep the hard family exclusions and the hard family swap, which l
 reversal_cost = "Low: unbuilt; one ordering rule in S788-ask."
 why_not_escalated = "The owner set the table ('my trust for adjudication and building only lies with claude') and said a same-family draw is allowed but not preferred; the ranked-preference rule is the one rule the 2026-10-04 adjudication ruled for dispute 2. Flagged high risk because Q-6's swap, in this repo, becomes a fresh same-family session."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-036]
 decided = "A1's step 4 makes family weights literal shares, as the owner ruled ('weights set the family share', option (a)): a deterministic weighted rotation over the eligible families, so equal weights split evenly and 2:1 draws two to one. This replaces WI-236's 'equal weights collapse to the first candidate' for family selection. An adopter with two families eligible for one kind at equal weights will see draws alternate after re-sync wherever both families remain in the weighted draw after preferences and availability (a judging kind's cross-family preference still picks the other family), which S788-ask's RESYNC_PACK entry states with the fix (unequal weights, or 0 to make a family ineligible). Revised after Sol review 3: the first version kept the first-candidate collapse, which re-decided the owner's ruling."
@@ -267,4 +267,4 @@ alternative = "Keep the first-candidate collapse for equal weights, so adopters 
 reversal_cost = "Low: one rule in S788-ask's step 4, unbuilt."
 why_not_escalated = "The owner ruled option (a) explicitly; this implements it literally. The adopter-visible change is flagged per CLAUDE.md in the RESYNC entry, as the owner accepted for Q-1's forced migration. High risk because adopters' draws change."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"

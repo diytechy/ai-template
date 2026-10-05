@@ -9,7 +9,7 @@ alternative = "Cite an approved SR under SN-006 or SN-029 (none states a record 
 reversal_cost = "An amendment of a Drafted row before its approval; after approval, an amendment and a re-approval."
 why_not_escalated = "The note granted SR-225 for exactly this case, and the row is Drafted: its approval stays the adjudicator's act, which is where the choice of parent gets judged."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-002]
 decided = "The mechanical close is the merge slot, per lane: a lane is a delegated run, and its record lives at docs/decisions/<branch>.toml. A supervising sitting's record is doctrine only; nothing enforces it."
@@ -17,7 +17,7 @@ alternative = "Treat a whole unattended run (the supervisor's sitting) as the un
 reversal_cost = "Moderate: the rung, the note and the doctrine would move to a new close point; the file format is unaffected."
 why_not_escalated = "The ruling names the handback report as the precedent, and that report is checked per lane at the merge slot; the lane is the only close the machinery owns."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-003]
 decided = "The dial's configuration check runs inside the record rung, before the record is read, rather than as its own rung in the merge ladder. (This entry first recorded a partial-close exemption; the coordinator's arbitration ruled it out, and a partial close now owes its record like any other.)"
@@ -25,7 +25,7 @@ alternative = "Add a separate configuration rung to _merge_refusal ahead of the 
 reversal_cost = "One function moved; the refusal text and the tests are unchanged."
 why_not_escalated = "A separate rung takes _merge_refusal past its complexity ceiling, and moving the whole-repo check earlier for every lane would reorder refusals the dial does not concern; inside the rung it runs only when the dial asks for a record."
 review = "Confirmed by the owner, 2026-10-04, in session."
-reviewed = true
+owner = "confirmed"
 
 [decision.D-004]
 decided = "The dial reads off when undeclared and record when declared with an unrecognized value, and the vocabulary refusal now uses the dial's own words for a named-mode dial."

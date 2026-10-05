@@ -43,9 +43,11 @@ WHAT IT RENDERS, in the order an owner needs it:
      derives (blocked rows, the spine pointers, the tracked pause), reused
      verbatim rather than recomputed.
   4. DECISIONS TO REVIEW — every delegated-decisions entry under
-     `docs/decisions/` not marked `reviewed` (`pending.decisions_to_review`),
-     the high-risk entries first, each with its disclosure fields and a link to
-     its record; when none is left, the count of entries marked reviewed.
+     `docs/decisions/` the owner has not yet seen (no `owner` verdict;
+     `pending.decisions_to_review`), the high-risk entries first, each with
+     its disclosure fields and a link to its record, or the count confirmed
+     when none is left; then every overruled entry under its own heading,
+     beside the work item citing it (WI-818).
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
 in `trace.reattest_model`, and the pending projection lives in
@@ -79,10 +81,11 @@ Contract IF-074: the generated owner decision surface at `docs/open-items.html` 
     closed by the audit list of every act-ledger entry that names a verdict
     (newest first, its rows and its verdict file; "None recorded." when there
     is none); the pending-owner-actions pointer projection; and, last,
-    "Decisions to review": every delegated-decisions entry not marked reviewed,
-    high-risk first, with its file, id, disclosure fields and a link to its
-    record, `-000` entries never shown, and the reviewed count when none is
-    left. It renders and owns no second
+    "Decisions to review": every delegated-decisions entry the owner has not
+    yet seen, high-risk first, with its file, id, disclosure fields and a link
+    to its record, `-000` entries never shown, and the confirmed count when
+    none is left, then every overruled entry under its own heading with the
+    work items citing it. It renders and owns no second
     opinion: the queue comes from `pending.open_item_queue`, the decisions from
     `pending.decisions_to_review`, the archaeology and cell comparison from
     `trace.reattest_model` and the pointers from `pending.pending_block`, so
@@ -1049,8 +1052,9 @@ _DECISION_FIELDS = (
 
 
 def _decision_card(entry):
-    """One delegated decision left to review: its record and id, a high-risk
-    pill when the run hoisted it, and its disclosure fields.
+    """One delegated decision: its record and id, a high-risk pill when the run
+    hoisted it, an unrecognized `owner` value shown as it stands, its
+    disclosure fields and, for an overruled entry, the work items citing it.
 
     Implements: SR-225, LLR-283
     """
@@ -1061,10 +1065,10 @@ def _decision_card(entry):
         if str(entry["fields"].get(key) or "").strip()
     )
     flag = '<span class="pill approve">high risk</span>' if entry["high_risk"] else ""
-    if entry["reviewed"] is not None:
-        flag += '<span class="pill">reviewed = {}</span>'.format(
-            esc(repr(entry["reviewed"]))
-        )
+    if entry["owner"] is not None and "citing" not in entry:
+        flag += '<span class="pill">owner = {}</span>'.format(esc(repr(entry["owner"])))
+    if "citing" in entry:
+        fields += _citing_field(entry["citing"])
     return (
         '<article class="card"><h3><span class="rid">{i}</span>{f}'
         '<a href="{h}"><code>{p}</code></a></h3>{b}</article>'.format(
@@ -1077,10 +1081,34 @@ def _decision_card(entry):
     )
 
 
-def decisions_block(entries, findings, reviewed):
-    """Section 4, "Decisions to review": every entry not marked reviewed, as
-    `pending.decisions_to_review` orders them (high-risk first), then each
-    record's format findings; when none is left, the count marked reviewed.
+def _citing_field(citing):
+    """The "Acted on by" field of an overruled entry: each citing work item
+    and its state folder, or a notice that no work item cites it.
+
+    Implements: SR-225, LLR-283
+    """
+    value = (
+        ", ".join("{} ({})".format(esc(w), esc(state)) for w, state in citing)
+        if citing
+        else "no work item cites this entry"
+    )
+    return (
+        '<div class="field"><span class="k">Acted on by</span>'
+        '<div class="v">{}</div></div>'.format(value)
+    )
+
+
+# The heading the overruled entries sit under, inside section 4: an overrule
+# leaves the to-review queue but never the page.
+OVERRULED_HEADING = '<p class="eyebrow">Overruled — acted on by work</p>'
+
+
+def decisions_block(entries, overruled, findings, confirmed):
+    """Section 4, "Decisions to review": every entry not yet seen, as
+    `pending.decisions_to_review` orders them (high-risk first), or the count
+    confirmed when none is left; then, under their own heading, every
+    overruled entry beside the work items citing it; then each record's
+    format findings.
 
     Implements: SR-225, LLR-283
     """
@@ -1092,13 +1120,16 @@ def decisions_block(entries, findings, reviewed):
     body = "".join(_decision_card(e) for e in entries)
     if not entries:
         body = (
-            '<p class="empty">Nothing left to review — {} entr{} marked '
-            "reviewed.</p>".format(reviewed, "y" if reviewed == 1 else "ies")
+            '<p class="empty">Nothing left to review — {} entr{} confirmed.</p>'.format(
+                confirmed, "y" if confirmed == 1 else "ies"
+            )
         )
+    if overruled:
+        body += OVERRULED_HEADING + "".join(_decision_card(e) for e in overruled)
     if findings:
         body += (
             '<p class="empty notice">Format findings (an unrecognized '
-            "<code>reviewed</code> value reads as not reviewed):</p>"
+            "<code>owner</code> value reads as not yet seen):</p>"
             '<ul class="pointers">{}</ul>'.format(
                 "".join("<li>{}</li>".format(esc(f)) for f in findings)
             )

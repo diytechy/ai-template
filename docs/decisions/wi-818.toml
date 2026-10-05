@@ -1,0 +1,69 @@
+# docs/decisions/wi-818.toml — WI-818's delegated decisions record (the owner's
+# verdict on a decision). Format: project-trajectory/decisions.template.toml,
+# in the format this lane defines: no entry carries an `owner` key until the
+# owner sets one.
+
+high_risk = ["D-001", "D-004", "D-005"]
+
+[decision.D-001]
+decided = "The overrule coupling runs inside the existing ruling sync: acceptance_record.ruling_sync_lines now returns the open-item lines plus overrule_sync_lines over the same diff, so the pre-commit hook's ruling-sync step and the merge slot's _ruling_sync_refusal judge it with no new step, rung or flag. check.py and integrate.py change in docstrings only."
+alternative = "A separate overrule-sync step in check.py's step list and a separate merge-slot rung in integrate.py, each calling its own staged/commit pair."
+reversal_cost = "Low: split overrule_sync_lines out of ruling_sync_lines and add a step and a rung; the tests call the same public functions and would move with them. Adopters would add the new step to their hook's --run-steps list."
+why_not_escalated = "The build prompt says to reuse the OI-102 Q3 commit-vs-parent shape and not invent a second mechanism; one function over two trees in both places is that shape. Folding also keeps the WI-806 and WI-822 landing conflicts in check.py and integrate.py to docstring lines."
+review = ""
+
+[decision.D-002]
+decided = "The owner vocabulary is exact and case-sensitive: only the strings \"confirmed\" and \"overruled\" are recognized; \"Confirmed\", a padded word, true or 1 are format findings and read as not yet seen."
+alternative = "Compare trimmed and case-folded, as WI-790's reviewed key did."
+reversal_cost = "One line in owner_state plus the parametrized test's cases."
+why_not_escalated = "The spec says the two values are the only recognized values; the migrator writes the exact word, and a closed exact vocabulary leaves no question of which spellings count."
+review = ""
+
+[decision.D-003]
+decided = "A retired reviewed key beside an owner key is a format finding, and the entry reads by owner alone (owner = \"confirmed\" plus reviewed = true reads as confirmed). Without an owner key the entry reads as not yet seen, whatever reviewed says."
+alternative = "Read any entry still carrying reviewed as not yet seen, even when owner is set."
+reversal_cost = "One condition in review_queue and one test case."
+why_not_escalated = "The spec says the reader never reads reviewed beside owner; reading by owner alone is the literal form of that, and the finding still surfaces the stale key on the owner page."
+review = ""
+
+[decision.D-004]
+decided = "The citing work item must be a spec under docs/work/queued/ or docs/work/active/ that the SAME commit adds or changes, whose new text carries the token docs/decisions/<run>.toml#D-NNN (a digit never following the id). A row that already cited the entry and is left untouched, and an archived (terminal) row, do not satisfy the overrule."
+alternative = "Accept any open row whose spec cites the entry in the new tree, touched or not; or accept a citation from any spec, archived included."
+reversal_cost = "Low: widen the filter in overrule_sync_lines (read every open spec of the new tree instead of the diff's) and flip two test cases."
+why_not_escalated = "The spec's words are 'files or amends' in 'the same commit', which names the act, not a standing citation; an untouched earlier citation would let an overrule land with nothing changed to the new direction. The citation form was the build's to fix."
+review = ""
+
+[decision.D-005]
+decided = "A record side that does not parse as TOML overrules nothing: the commit is judged on the entries it can read, so an overrule hidden behind a syntax error is owed by the commit that makes the record readable (the parent then reads as overruling nothing)."
+alternative = "Refuse any commit whose decisions record does not parse on either side, as the ruling sync refuses an unparseable open-items registry."
+reversal_cost = "Low: return a refusal line from overrule_sync_lines when a side fails to parse; a lane carrying such a commit would then need its history rewritten to land."
+why_not_escalated = "The record's doctrine (SR-225) reports a malformed record rather than refusing it, so a refusal here would strand finished work for a reporting defect; and the coupling still fires on the commit that makes the overrule readable, so nothing escapes. Riskiest call because it differs from the ruling sync's fail-closed parse."
+review = ""
+
+[decision.D-006]
+decided = "Overruled entries render inside section 4 of open-items.html under their own sub-heading 'Overruled - acted on by work', after the not-yet-seen cards, each with an 'Acted on by' field naming every citing work item and its state folder (open or archived), or 'no work item cites this entry'. They stay listed for good."
+alternative = "A fifth section after 'Decisions to review'; or drop an overruled entry from the page once its citing work item closes."
+reversal_cost = "Low: a render change in gen_open_items.decisions_block and the section-order test."
+why_not_escalated = "The section-order test pins 'Decisions to review' as the last section (LLR-118), and the spec asks only for 'their own heading'; keeping every overrule listed is the plain reading of 'never disappears silently'."
+review = ""
+
+[decision.D-007]
+decided = "The migrator is a new script, scripts/migrate_decisions.py, over a pure kitlib.decisions.migrate_text: each word of the old reviewed vocabulary that read as reviewed becomes owner = \"confirmed\" in the same place, a not-reviewed word is dropped, a reviewed line beside an existing owner key is dropped, and a value outside the old vocabulary is left in place and named (still a finding). --check reports without writing."
+alternative = "Rewrite only the literal true and false and leave every word form; or fold the migrator into an existing script such as migrate_carrier.py."
+reversal_cost = "Low for the vocabulary (one helper); moving the CLI means one argparse block and the RESYNC_PACK pointer."
+why_not_escalated = "The spec names reviewed = true and reviewed = false; the old vocabulary's other words meant the same thing under WI-790, so carrying them is the same migration, and guessing an unrecognized value is left to a person. A dedicated script keeps migrate_carrier.py to its one job; it needs its own spine row, listed for the row author."
+review = ""
+
+[decision.D-008]
+decided = "An overruled entry with a blank review note is a format finding but still reads as overruled: it leaves the review queue for the overruled heading, and its commit is still held to the citing-row coupling."
+alternative = "Read an overrule with no note as not yet seen until the note is written."
+reversal_cost = "One condition in review_queue."
+why_not_escalated = "The spec makes the blank note a format finding and says nothing about how it reads; reading the key as written keeps the coupling on the commit that sets it, so a missing note never lets an overrule skip its work item."
+review = ""
+
+[decision.D-009]
+decided = "The status snapshot's 'Decisions to review' count is unchanged: it counts entries not yet seen only, not overruled ones."
+alternative = "Add an overruled count line to the snapshot."
+reversal_cost = "One line in traj_status._open_item_lines and a test."
+why_not_escalated = "The spec changes the owner surface, not the snapshot; an overrule is already coupled to a work item that the snapshot's queue shows."
+review = ""
