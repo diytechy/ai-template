@@ -32,6 +32,10 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   carriers.
 - The RESYNC entry runs `migrate_legacy_config` and `migrate_carrier.py`.
 - A scaffold bootstrapped from an old-form fixture migrates and passes `check.py`.
+- The bar vocabulary has one home: `intake.normalize_bar` and
+  `integrate._normalize_bar` collapse into one shared function once the aliases
+  retire (D3), so no second table remains to drift (owner, 2026-10-04: the
+  duplicate-code burn-down, the rest of which is WI-821).
 - Each spine row the README matrix gives this row (SR-137 `requirement` and
   `acceptance_criteria`, SR-139 `acceptance_criteria`, LLR-155 `detail` and
   `code_symbol`, LLR-277 `detail`, IF-079 `data`, as listed in ch.1 §9.1) is amended

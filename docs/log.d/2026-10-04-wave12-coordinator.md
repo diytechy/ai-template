@@ -49,3 +49,6 @@ Deferred open items: none
   session. The next resume map is `docs/handoff-2026-10-04-wave13-coordinator.md`.
 - **The full unfiltered suite** at `6613ddd0`: 5050 passed, 13 skipped, 0 failed, in
   595.7 s (detached worktree, fixed basetemp).
+- **The duplicate-code burn-down is filed** at the owner's direction: WI-821 (the
+  census's duplicate readers and WI-624's named near-copies), with the two
+  bar-vocabulary tables added to WI-817, which already retires their aliases.

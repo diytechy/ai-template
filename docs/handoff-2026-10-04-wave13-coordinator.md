@@ -23,6 +23,10 @@ This session (owner present) is recorded in
   Also filed:
   - WI-796: re-judge TC-055, minted by the landing's sweep;
   - WI-818: the owner's verdict on a decision, `confirmed` or `overruled`;
+  - WI-821: the duplicate-code burn-down (the census's duplicate readers and the
+    named near-copies, from
+    [plans/2026-09-28-duplicated-stage-detection.md](plans/2026-09-28-duplicated-stage-detection.md)
+    §7); WI-817 also gained the bar-vocabulary merge;
   - WI-819 and WI-820, deferred, from the evaluation of `thebpandey/lanes`
     ([plans/2026-10-04-lanes-evaluation.md](plans/2026-10-04-lanes-evaluation.md)).
     WI-820 now carries the owner's rulings on provider trust and secrets.
@@ -65,6 +69,8 @@ This session (owner present) is recorded in
   - WI-803, the plan gate;
   - WI-806, text before act;
   - WI-818, the decisions verdict key;
+  - WI-821, the duplicate-code burn-down (take its two `trunk_step` items last if
+    WI-800 is in flight);
   - WI-796, a CRITIQUE re-judge of TC-055.
 
   The backbone runs WI-798, WI-799, WI-800, WI-801, then the station authority
@@ -105,12 +111,6 @@ This session (owner present) is recorded in
 ## Open for the owner (not blocking the program)
 
 - **Push** `refactor_again` and `archive/lanes`.
-- **The duplicate-code census.** Five exact-body groups (three are duplicate
-  readers), plus seven named near-duplicates such as the two open-items readers
-  and the two bar-vocabulary tables, are recorded in
-  [plans/2026-09-28-duplicated-stage-detection.md](plans/2026-09-28-duplicated-stage-detection.md)
-  §7 and await the owner's burn-down decision: no row is filed. WI-788's dual-path
-  census (D1 to D18) is separate and is filed (WI-799, WI-816, WI-817).
 - **OI-98, OI-105,** and the 60 low-risk decisions.
 
 ## Session prompt (paste to start the next session)
@@ -122,8 +122,8 @@ the wave-11 handoff for the in-lane cycle, the coordinator tools and the "never"
 list; the design note docs/plans/2026-10-04-wi788-design/README.md, its section
 "The owner's checkpoint ruling" first; your memory index.
 
-Build the lane-lifecycle program, WI-797 to WI-817, plus WI-818 and WI-796, in
-`needs` order, by coordinator session (owner, 2026-10-04):
+Build the lane-lifecycle program, WI-797 to WI-817, plus WI-818, WI-821 and
+WI-796, in `needs` order, by coordinator session (owner, 2026-10-04):
 - claim each batch of ready rows under ONE scoped unpause (deletion commit,
   check HEAD moved, claims, byte-identical restore);
 - per row, the wave-11 cycle: Opus builds (kit-builder, medium), Terra authors
