@@ -13,7 +13,7 @@ priority = 3
 
 Filed by hand by the coordinator on 2026-10-04 at the owner's direction ("Related to
 cleanup, you can file that / integrate that as you recommend"). WI-624's research
-([plans/2026-09-28-duplicated-stage-detection.md](../../plans/2026-09-28-duplicated-stage-detection.md)
+([plans/2026-09-28-duplicated-stage-detection.md](../../../plans/2026-09-28-duplicated-stage-detection.md)
 §7) and the standing census left duplicates "for the owner's burn-down decision";
 WI-545 closed with them unfiled. This row is that burn-down, by the 0→A→B rule
 (PROCESS.md §3): extract the shared stage once, never patch each copy.

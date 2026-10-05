@@ -2,11 +2,15 @@
 id = "WI-797"
 title = "Ship the kit glossary and align PROCESS.md's lane-lifecycle wording"
 workstream = "process"
-specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-glossary"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+`project-trajectory/GLOSSARY.md` ships the approved design note's glossary, reconciled with the checkpoint ruling A1 (eligible families per kind, family exclusions as ranked preferences, the `plan-dual` kind), with a strength entry naming where strength is defined today, both independence exceptions, and unbuilt machinery labelled Planned with what runs today. PROCESS.md links to it in one sentence (it has no lane-lifecycle section to rename: decisions D-001); it is kit-owned and scaffolds to `docs/glossary.md`. Codex 6.1 Sol: round 1 one MAJOR (the second independence exception, fixed), round 2 SOUND at 35ee2d87. Decisions: `docs/decisions/wi-797.toml`.
 
 ## Context
 

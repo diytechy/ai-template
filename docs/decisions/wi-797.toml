@@ -1,0 +1,46 @@
+# docs/decisions/wi-797.toml — WI-797's delegated decisions record (OI-100,
+# ruled 2026-10-03 option (a)). Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "PROCESS.md has no lane-lifecycle section today, so the lane-lifecycle wording is one sentence in its opening paragraph: its terms are defined once in glossary.md, including a lane's lifecycle (states, substates, conditions), linked to the 'lane state' entry. No state, substate or condition name is restated in PROCESS.md."
+alternative = "Write a new lane-lifecycle paragraph in PROCESS.md naming PLANNING..ARCHIVE, or add the link at section 4's 'worker lane' sentence."
+reversal_cost = "One sentence (+167 bytes) in PROCESS.md and the byte-budget-guard row."
+why_not_escalated = "Ch.1 section 9.1's row says 'the states are named once'; the README matrix gives this row only the state names. A new PROCESS.md paragraph would restate the glossary and describe machinery that is not built yet (the lane-state provider). The opening paragraph is where PROCESS.md already says how other docs reference it."
+review = ""
+
+[decision.D-002]
+decided = "GLOSSARY.md marks every term whose machinery a later S788 row builds with a visible 'Planned.' label and a 'Today:' line stating what runs in its place, without naming the S788 row ids. Planned: ask, kind, session family, the ranked form of independence, per-family reset terms, account, adjudication reviewer, the judge family, the drafter-selection arbiter, lane state, station authority, sitting, consumption list, merge action, the squash landing, the per-item implementation plan, the per-kind tier. Present: independence (hard session rule), reset terms (adjudicator only), adjudicator, reviewer, decision record, decomposition, strength. Term-to-row map: ask/kind/independence/strength's per-kind tier -> S788-ask; session family/reset terms/judge -> S788-session-families; account -> S788-accounts; adjudication reviewer -> S788-sitting and S788-spine-authoring; arbiter -> S788-plan-kinds; lane state -> S788-lane-state-provider; station authority -> S788-station-authority; landing -> S788-landing; sitting/merge action -> S788-sitting; consumption list -> S788-mint; implementation plan -> S788-single-plan."
+alternative = "Write 'planned (S788-...)' with the row id in the shipped text, as the build prompt's example suggests."
+reversal_cost = "Add the row ids to each Planned label; text only."
+why_not_escalated = "GLOSSARY.md ships to adopters (docs/glossary.md), and CLAUDE.md says a token the kit puts in an adopter's file must mean something in their repo; S788 ids, B10, D-031 and OI ids are this repo's records. The map above keeps the successor rows able to find their entries; each row flips its own entry when it lands."
+review = ""
+
+[decision.D-003]
+decided = "'Independent adjudicator' is not its own entry: the adjudicator entry says a retained adjudicator and an 'independent adjudicator' launched by the loop or a person's coordinating session are the same role, so the draft's separate 'independent adjudicator' entry (which tied the word to ask.py, not built) folds in. The shipped prompts' 'You are an INDEPENDENT adjudicator' is the adjective of the independence rule and stays."
+alternative = "Ship the draft's separate 'independent adjudicator' entry."
+reversal_cost = "Split one paragraph back into two entries."
+why_not_escalated = "The row's Done-when asks every term once and one term per concept; the draft entry itself says 'not a separate role'. Its ask.py mechanism is planned, so the separate entry would also claim machinery that does not exist."
+review = ""
+
+[decision.D-004]
+decided = "Reconciled with README A1: the kind list adds plan-dual (D-032) in the [plan and build] family; independence states session exclusion as hard and every family exclusion as a ranked preference within the kind's eligible families, unmet ones logged, availability-caused ones also listed for review; kind states eligible families (weight 0 or absent = not eligible) and weights as literal shares. The post-act final review sits in [adjudication review] (ch.2 section 2), not as its own kind. The arbiter entry adds A3's owner-chosen third agent."
+alternative = "Ship the draft text unchanged, or list 'final review' as a tenth kind."
+reversal_cost = "Text only."
+why_not_escalated = "A1 overrides every chapter and the draft where they differ; ch.2 section 2's family table names the final review under [adjudication review], and A1's 'final review' row reads as a use of that family, not a new kind."
+review = ""
+
+[decision.D-005]
+decided = "GLOSSARY.md is registered as kit-owned by one MAPPING row ('GLOSSARY.md' -> 'docs/glossary.md') in kitlib/bootstrap_manifest.py, a matching line in bootstrap.py's docstring inventory, a docs/declared-absences line (this repo reads the master in place, like process.md), a kit README row, and GLOSSARY.md joins tests/test_status_vocabulary_contract.py's INSTRUCTING_SURFACES (its root-doc classification test requires every kit-root .md to be classified)."
+alternative = "Ship GLOSSARY.md as an unscaffolded kit reference doc (like EXAMPLE.md), with PROCESS.md linking into the kit checkout."
+reversal_cost = "Drop the MAPPING row and the three mirror lines; adopters would keep a stale docs/glossary.md."
+why_not_escalated = "The row's Done-when calls it 'the kit-owned GLOSSARY.md' and PROCESS.md (scaffolded as docs/process.md) links to it, so the link must resolve in the adopter's docs/; the build prompt authorizes the manifest change as the smallest data change. No behaviour beyond copying one file changes."
+review = ""
+
+[decision.D-006]
+decided = "The strength entry lists where strength is set today in the kit's own terms: the row's tier in docs/agents.toml; the row's effort in env or cmd_template; DEFAULT_PHASE_TIER in agent_brief.py (AGENT_TIER_MAP overrides); each WI's buildtier; escalation (up only); a plan's per-block tier hint in docs/plan.md (advisory). README A1's 'this note's plan Tier column' maps to the PLAN template's tier hint, and the OI-103 Q5 dial is stated as planned ('a planning dial may set the tier per item'). The two value drifts A1 names (ANTHROPIC-OPUS-STRONG's effort, OPENAI-SOL's router effort) are this repo's values, not glossary text, and stay follow-ups."
+alternative = "Quote A1's list verbatim, naming the design note's Tier column and OI-103 Q5."
+reversal_cost = "Text only."
+why_not_escalated = "Same reason as D-002: the design note and OI-103 are not in an adopter's repo; the per-block hint is the kit-shipped place a plan carries a tier."
+review = ""
