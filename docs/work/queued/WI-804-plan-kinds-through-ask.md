@@ -34,8 +34,8 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
 - Agreement adopts; a mutual self-select PAGEs.
 - An interrupted round resumes from `state.json` without re-spending.
 - `prompts/dual-plan-arbiter.template.md` is retired, and
-  `dual-plan-planner.template.md` gains select mode, `Excludes:` and the `Tier`
-  column; `planner_pair`/`planner_fallback` are gone.
+  `dual-plan-planner.template.md` gains select mode and the `Tier` column (its
+  `Excludes:` line landed with WI-803); `planner_pair`/`planner_fallback` are gone.
 - Each spine row the README matrix gives this row (LLR-070/071/076, IF-058, IF-066
   amended; LLR-072 retired; SR-222 and LLR-269 for `_dp_session`, shared) is
   amended or retired and passes adjudication of that row, on whichever adjudication

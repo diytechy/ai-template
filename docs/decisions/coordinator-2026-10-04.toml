@@ -83,3 +83,17 @@ alternative = "Sol (gpt-6.1-sol) judges, or an Anthropic judge."
 reversal_cost = "Low: the observation is re-judged by a new record if the owner prefers Sol."
 why_not_escalated = "The judges must be Codex family (A1: judge = OPENAI; the dashboard code is Claude-authored); Luna is the family's model the last re-judge used, and Sol's plan capacity (about 14 sessions per 4.5 h, 2026-10-03) is kept for the lane reviews."
 review = ""
+
+[decision.D-012]
+decided = "To give WI-822 the version-identified compaction fixture its Done-when requires (Sol review 1, MAJOR 4: no real compaction had ever been recorded on this machine), the coordinator ran a local headless probe: a two-turn claude-haiku-4-5 session under Claude Code 2.1.289 in a scratch directory, a manual /compact, and one more turn. Cost: a few cents. The sanitized transcript becomes the fixture."
+alternative = "Keep the builder's synthetic boundary record and leave the Done-when item open for the owner, or wait for a real coordinator compaction."
+reversal_cost = "None: a scratch session, nothing in the repo but the sanitized fixture."
+why_not_escalated = "Local CLI probes of the same kind were authorized for WI-788 (claude and codex resume-by-id, 'local and cheap'); this one is smaller, and it settles a Done-when item that no synthetic shape can."
+review = ""
+
+[decision.D-013]
+decided = "WI-822's hook seams (IF-274, IF-275) name the existing external party 'external:agent CLI' rather than the new 'external:Claude Code' GPT Terra drafted: Claude Code is an agent CLI, and a new external party would change the locked, owner-held depth-0 frame (4 entities, 4 crossings). The coordinator made the one-token swap in the lane by a guarded replace; the in-lane adjudicator judges the rows as swapped."
+alternative = "Keep 'external:Claude Code' and stop WI-822 for the owner's signature of a frame change."
+reversal_cost = "Low: two cells, if the owner wants Claude Code named as its own external party."
+why_not_escalated = "The kit's interface vocabulary already has 'external:agent CLI' (four rows), and the frame is owner-locked; reusing the declared party changes nothing the owner signed."
+review = ""

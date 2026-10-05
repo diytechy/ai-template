@@ -4,7 +4,7 @@
 process-options.md "Dual-plan decomposition").
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). Where
-`plan_round.py` (IF-058) is the pure lifecycle and `plan_coverage.py` (IF-057)
+`plan_round.py` (IF-058) is the pure lifecycle and `plan_coverage.py` (IF-153)
 is the read-side coverage pre-pass, this module is the round's **effects**: it
 allocates the round's `docs/plans/DP-NNN-<slug>/` directory, writes each stage
 artifact (briefs, plans, revisions, critiques, coverage reports, verdict) as a

@@ -43,6 +43,15 @@ PLAN_B_BAD = PLAN_B_GOOD.replace(
     "| Q2 | Verdict writer | C3 |", "| Q2 | Verdict writer | C9 |"
 )
 
+# WI-803 (dispute-1 ruling (a)): an unexplained clause gap is a finding, so
+# the round paths run on gated variants that declare their gaps; the
+# originals above stay byte-identical.
+PLAN_A_GATED = PLAN_A + "\nExcludes: C3; C4 — out of scope for the pilot.\n"
+PLAN_B_GOOD_GATED = PLAN_B_GOOD + "\nExcludes: C2; C4 — another plan's scope.\n"
+PLAN_B_BAD_GATED = PLAN_B_GOOD_GATED.replace(
+    "| Q2 | Verdict writer | C3 |", "| Q2 | Verdict writer | C9 |"
+)
+
 IFS = (
     "IF-ID,Owner,Consumers,Channel,Data,Version,Status,Component,Notes\n"
     "IF-001,scripts/a,scripts/b,call,the call,v1,Approved,,\n"
@@ -55,9 +64,9 @@ def key_of(basename):
     return {"plan-A.md": "A", "plan-B.md": "B"}.get(basename)
 
 
-def write_case(tmp_path, plan_b, goal=GOAL, registries=True):
+def write_case(tmp_path, plan_b, goal=GOAL, registries=True, plan_a=PLAN_A_GATED):
     (tmp_path / "goal.md").write_text(goal, encoding="utf-8")
-    (tmp_path / "plan-A.md").write_text(PLAN_A, encoding="utf-8")
+    (tmp_path / "plan-A.md").write_text(plan_a, encoding="utf-8")
     (tmp_path / "plan-B.md").write_text(plan_b, encoding="utf-8")
     if registries:
         req = tmp_path / "docs" / "requirements"
@@ -86,7 +95,7 @@ def repair_names(state):
 
 # --- path 1: clean pass advances the round ------------------------------------
 def test_clean_pass_advances_the_round(tmp_path):
-    goal, plans = write_case(tmp_path, PLAN_B_GOOD)
+    goal, plans = write_case(tmp_path, PLAN_B_GOOD_GATED)
     state = pr.new_round("dp-clean")
     drive_to_coverage1(state)
 
@@ -105,7 +114,7 @@ def test_clean_pass_advances_the_round(tmp_path):
 
 # --- path 2: findings -> bounce -> repaired file -> clean re-run advances ------
 def test_findings_bounce_then_repair_then_clean_advances(tmp_path):
-    goal, plans = write_case(tmp_path, PLAN_B_BAD)
+    goal, plans = write_case(tmp_path, PLAN_B_BAD_GATED)
     state = pr.new_round("dp-bounce")
     drive_to_coverage1(state)
 
@@ -123,7 +132,7 @@ def test_findings_bounce_then_repair_then_clean_advances(tmp_path):
 
     pr.record(state, pr.STEP_REPAIR, plan="B", stage="coverage1", ok=True)
     # The author repairs the file, then coverage re-runs.
-    (tmp_path / "plan-B.md").write_text(PLAN_B_GOOD, encoding="utf-8")
+    (tmp_path / "plan-B.md").write_text(PLAN_B_GOOD_GATED, encoding="utf-8")
     assert pr.ready_steps(state) == [{"step": pr.STEP_COVERAGE, "stage": "coverage1"}]
 
     good = run(tmp_path, goal, plans)
@@ -137,7 +146,7 @@ def test_findings_bounce_then_repair_then_clean_advances(tmp_path):
 
 # --- path 3: findings -> repair -> findings again -> the round PAGEs -----------
 def test_findings_repeat_after_repair_pages(tmp_path):
-    goal, plans = write_case(tmp_path, PLAN_B_BAD)
+    goal, plans = write_case(tmp_path, PLAN_B_BAD_GATED)
     state = pr.new_round("dp-page")
     drive_to_coverage1(state)
 
@@ -180,7 +189,7 @@ def test_malformed_inputs_are_their_own_outcome_and_bounce_both(tmp_path):
 
 # --- implicated parsing: only the faulting plan is named ----------------------
 def test_implicated_parsing_names_only_the_faulting_plan(tmp_path):
-    goal, plans = write_case(tmp_path, PLAN_B_BAD)
+    goal, plans = write_case(tmp_path, PLAN_B_BAD_GATED)
     result = run(tmp_path, goal, plans)
     assert result["exit"] == 1
     assert result["implicated"] == ["B"]  # plan A is clean and never named
@@ -188,7 +197,7 @@ def test_implicated_parsing_names_only_the_faulting_plan(tmp_path):
 
 # --- the report payload is captured for the briefs, not printed ---------------
 def test_report_payload_is_captured(tmp_path, capsys):
-    goal, plans = write_case(tmp_path, PLAN_B_GOOD)
+    goal, plans = write_case(tmp_path, PLAN_B_GOOD_GATED)
     result = run(tmp_path, goal, plans)
     report = result["report"]
     assert "# Plan coverage report" in report
@@ -196,3 +205,20 @@ def test_report_payload_is_captured(tmp_path, capsys):
     assert "only plan-B.md: C3" in report
     # run_coverage returns the report; it never prints it.
     assert capsys.readouterr().out == ""
+
+
+# --- WI-803: an unexplained DUAL gap bounces only the plan that has it ---------
+def test_an_unexcluded_gap_in_plan_a_alone_bounces_only_a(tmp_path):
+    goal, plans = write_case(tmp_path, PLAN_B_GOOD_GATED, plan_a=PLAN_A)
+    state = pr.new_round("dp-gap")
+    drive_to_coverage1(state)
+
+    result = run(tmp_path, goal, plans)
+    assert result["exit"] == 1 and result["findings"] is True
+    assert result["implicated"] == ["A"]  # plan A's C3/C4 gaps, explained by prose only
+
+    disp = pr.record(
+        state, pr.STEP_COVERAGE, stage="coverage1", **step.to_record_kwargs(result)
+    )
+    assert disp == pr.DISP_CONTINUE
+    assert repair_names(state) == {"A"}

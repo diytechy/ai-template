@@ -1,0 +1,53 @@
+# docs/decisions/wi-803.toml — WI-803's delegated decisions record (the plan
+# gate, S788-plan-gate). Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "The Done-when line 'Existing DUAL fixtures stay byte-identical' binds the DUAL fixture inputs (the goal and plan constants in tests/test_plan_coverage.py and tests/test_plan_coverage_step.py, and the recorded planner outputs in tests/test_dual_plan_round.py, all left unedited) and the --out report they produce (IF-153, pinned byte for byte), not their exit status. An unexplained DUAL C# gap is a finding, so those fixtures now exit 1 with one FAIL line per gap; tests whose purpose is not gaps run on gated variants that add an Excludes: line."
+alternative = "Read the line as also freezing DUAL exit codes and stdout, which keeps DUAL gaps as report payload (this record's first reading, overturned)."
+reversal_cost = "One call: move gap_findings back inside the SINGLE branch of _check_one; the gated test variants and the planner prompt's Excludes: sentence would then be harmless but unnecessary."
+why_not_escalated = "Settled by the independent adjudicator's dispute-1 ruling, RULING (a) (docs/reviews/wi-803-plan-gate/dispute-1-ruling.md, under OI-103 Q3): ch.3 §4.5's coverage rule names both runs, and its only example is a DUAL round."
+review = ""
+
+[decision.D-002]
+decided = "Open review findings reach the gate as a --findings FILE declaring 'F1: <text>' lines, the same declaration grammar as a goal's C# lines (parse_goal with FINDING_DECL_RE). The caller that runs a replan (S788-single-plan) writes the file from the open findings."
+alternative = "Parse F# ids out of a review verdict file directly, or number the findings inside the gate."
+reversal_cost = "One loader (load_item's findings branch) and one flag; no data migrates."
+why_not_escalated = "The note fixes the clause ids (F1...) but not their carrier, and no review artifact in the kit numbers its findings today; reading verdict prose here would make this gate a second parser of review output. A declared file keeps the gate a pure reader and leaves the producer to the row that owns the replan."
+review = ""
+
+[decision.D-003]
+decided = "A SINGLE plan names a TC (to run or amend) by citing it in a row's Covers cell; TC-### is a citable, registry-validated ref only in a SINGLE run. In a DUAL run a TC-### in Covers stays 'unparseable ref (C# or SR-### expected)', as before."
+alternative = "A separate Tests column, or accepting TC-### in DUAL Covers cells too."
+reversal_cost = "Low: add 'TC' to the DUAL run's ref_ids map, or read one more column."
+why_not_escalated = "Covers is already the plan's 'what this row answers' cell; a new column would change the table contract every planner prompt carries. Keeping DUAL's grammar unchanged honours the byte-identity bullet for any DUAL input, not only the fixtures."
+review = ""
+
+[decision.D-004]
+decided = "The optional Tier column is parsed and carried on each row (parse_plan's 'tier' key) but not validated by the gate."
+alternative = "Validate each non-empty Tier cell against agent_route.TIER_ORDER (quick/medium/strong)."
+reversal_cost = "One finding arm plus an import or a kitlib home for the tier vocabulary."
+why_not_escalated = "The design says only that the column is allowed. The tier vocabulary's one home is agent_route.TIER_ORDER (CMP-008); importing it here adds an undeclared cross-component edge, and copying it makes a second home. The consumer that applies a child's tier (plan_artifacts, under S788-dual-pickup) reads the cell and is the place to refuse a bad one."
+review = ""
+
+[decision.D-005]
+decided = "Excludes: grammar: 'Excludes: <ref>[; <ref>] <sep> <reason>', optionally list-marked or bold, anywhere in the plan, where <sep> is an em dash, an en dash, or a hyphen with whitespace before it. Several refs on one line share the reason. A line with no reason excludes nothing and is a finding; a ref that does not resolve is a finding."
+alternative = "Em dash only, as the design writes it; or one ref per line."
+reversal_cost = "One regex (EXCLUDES_SEP_RE)."
+why_not_escalated = "Planner output from either family mixes the three dashes; accepting all three keeps the grammar mechanical without rejecting honest exclusions on punctuation. The design's form (em dash) is the documented one."
+review = ""
+
+[decision.D-006]
+decided = "The SR/TC diff's TC set is every TC whose verifies cell names one of the item's sr_refs, of any status, read from docs/test/test-cases.toml. An absent TC registry prints a note and leaves the TC diff empty (no finding); an item with no sr_refs has an empty diff."
+alternative = "Restrict to Approved TCs, or fail when the TC registry is absent."
+reversal_cost = "One filter in verifying_tcs, or one finding in _load_gate."
+why_not_escalated = "Today every live TC is Approved, so a status filter would change nothing here; the absent-registry rule is the one the SR and IF checks already follow (absent means unvalidated, never everything unknown, IF-060's note behaviour)."
+review = ""
+
+[decision.D-007]
+decided = "The argv surface grows by --item and --findings (one of --goal / --item required; --findings only with --item). That changes IF-152 and IF-153 (the report gains excluded lines and a SINGLE SR/TC diff section), which the README matrix does not list for this row."
+alternative = "A second script for the SINGLE gate."
+reversal_cost = "Low: the flags are additive and --goal runs are unchanged."
+why_not_escalated = "One home for the plan grammar and the coverage stage is the CLAUDE.md consolidation rule; a second script would re-implement the table, ref and cycle checks. The IF-152/IF-153 cell drift is reported to the coordinator for the spine author rather than decided here."
+review = ""

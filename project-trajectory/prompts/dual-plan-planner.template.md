@@ -69,8 +69,9 @@ Produce exactly one markdown table, one row per proposed WI:
   deliverable), or empty. No cycles. Do not add sequencing-habit edges.
 
 After the table, a `## Notes` section: for every goal clause you deliberately
-do **not** cover, one line declaring the exclusion and why (a declared
-non-goal, never silence). State any assumption that shaped the decomposition.
+do **not** cover, one line `Excludes: C# — <why>` (a declared non-goal, never
+silence; an unexplained gap fails the coverage gate). State any assumption
+that shaped the decomposition.
 The Notes must also state the stopping boundary: each retained child has an
 independent decision or verification purpose, and further splitting stops where
 it would add no independent value. Tiers required by the selected verification

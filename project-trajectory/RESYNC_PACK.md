@@ -6912,6 +6912,47 @@ state" entry. No script behaviour changes.
 3. Take `scripts/bootstrap.py` and `scripts/kitlib/bootstrap_manifest.py`,
    whose inventory now lists the glossary.
 
+### The plan gate: `D#`/`F#` clauses, `Excludes:`, the SR/TC diff, the `Tier` column [since 883b3edf]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `plan_coverage.py` gains a SINGLE run beside the dual-plan
+one. `--item SPEC.md` reads one claimed item: its Done-when items are the
+clauses `D1…Dn`, in order (`kitlib.done_when.items`), and `--findings FILE`
+adds open review findings declared as `F1: <text>` lines on a replan. In
+both runs coverage is now the gate: every clause (`C#` in a dual run, `D#` and
+`F#` in a single run) is covered by a plan row's `Covers` cell or named on an
+`Excludes: <ref>[; <ref>] — <reason>` line, and an unexplained gap exits 1
+naming the clause and its plan. A single run also diffs the item's `sr_refs`
+and every TC verifying them: each SR must be cited by a row (an item SR cannot
+be excluded), and each such TC named in a row's `Covers` cell (to run or
+amend), or excluded with a reason. The planner grammar every run reads gains two things: the
+`Excludes:` line (an em dash, an en dash or a spaced hyphen before the reason;
+a line with no reason, or naming an undeclared clause, is a finding in both
+runs) and an optional `Tier` column in the `Plan-WI` table, carried for the
+consumer that applies it and not validated here. The report shows
+`- excluded: <ref> - <reason>` lines and, in a SINGLE run, a
+`## SR/TC diff: <plan>` section.
+
+**This is a behaviour change for a dual run.** A dual plan that leaves a goal
+`C#` uncovered with no `Excludes:` line now exits 1, where it exited 0 before.
+The `--out` report bytes are unchanged for a plan with no `Excludes:` line;
+stdout gains one `plan_coverage: FAIL - <plan>: C# is neither covered by a row
+nor excluded with a reason: ...` line per gap. In a dual-plan round this sends
+the implicated plan to its one repair, then PAGEs the round if the gap
+persists. A free-form "excluded" note in a plan's prose no longer counts.
+
+**What to do.** Re-sync `scripts/plan_coverage.py`,
+`scripts/plan_coverage_step.py` (docstring only) and
+`prompts/dual-plan-planner.template.md`, whose Notes instruction now asks for
+one `Excludes: C# — <why>` line per uncovered clause. If you pass a planner
+override with `--prompt-map`, teach it the same `Excludes:` line, or its plans
+will fail the gate on every deliberate gap. Plans already on disk that declare
+their exclusions in prose need an `Excludes:` line each before they are
+re-checked. If you wrap `plan_coverage.py` yourself, note that exactly one of
+`--goal` or `--item` is now required, and `--findings` is only valid with
+`--item`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

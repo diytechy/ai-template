@@ -741,11 +741,11 @@ phase = 4
 [test.TC-069]
 verifies = ["SR-155", "LLR-069"]
 level = "Integration"
-method = "Run rival plan coverage, reference, graph, absent-registry, and malformed-input cases."
+method = "Run dual and single plan coverage, reference, graph, exclusion, SR/TC-diff, absent-registry, and malformed-input cases."
 tier = "Smoke"
-expected = """Clean plans emit pairwise coverage; findings exit 1; malformed inputs exit 2; absent registries note without failure."""
+expected = "A reasoned exclusion passes and clean plans emit per-plan and pairwise coverage; a bad reference or plan graph, an unexplained clause gap in either run (SINGLE Done-when or finding, DUAL goal clause), an undeclared or reasonless exclusion, an item SR no row cites (even if excluded), or a TC verifying an item SR that no row names nor excludes exits 1 by name; malformed input, a missing Done-when included, exits 2; DUAL report bytes remain unchanged; absent registries note without failure."
 automated = "Yes"
-evidence = "tests/test_plan_coverage.py"
+evidence = "tests/test_plan_coverage.py; tests/test_plan_coverage_step.py::test_an_unexcluded_gap_in_plan_a_alone_bounces_only_a"
 status = "Approved"
 phase = 1
 

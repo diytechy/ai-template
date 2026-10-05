@@ -7,9 +7,10 @@ decomposition").
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). This is the
 thin seam between two shipped, unchanged pieces:
 
-  * `plan_coverage.py` (IF-057, WI-190) — the mechanical commensurability
-    checker. Exit-code contract: `0` clean, `1` reference/structure findings,
-    `2` malformed inputs (no clauses / no plan table / missing file). Findings
+  * `plan_coverage.py` (IF-152, IF-060, IF-153; WI-190) — the mechanical commensurability
+    checker. Exit-code contract: `0` clean, `1` findings (reference/structure
+    findings and unexplained clause gaps), `2` malformed inputs (no clauses /
+    no plan table / missing file). Findings
     print as `plan_coverage: FAIL - <planfile>: ...` lines; the per-plan +
     pairwise report is printed and, with `--out`, written to a file.
 

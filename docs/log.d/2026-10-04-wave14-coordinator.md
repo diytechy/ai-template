@@ -34,3 +34,20 @@ Sol round 1: one MAJOR (the losing drafter's concession is a second
 independence exception, Q-5), confirmed and fixed; round 2 SOUND at
 `35ee2d87`. No spine rows changed, so no act. RESYNC re-anchored at the
 landing's parent.
+
+### WI-803: the plan gate (act seq 32)
+
+`plan_coverage.py` becomes a gate: a SINGLE run's clauses are the item's
+Done-when (`D#`) and open findings (`F#`), each covered or excluded with a
+reason; it also diffs the item's SRs (cite-only) and their TCs. Sol round 1
+raised two MAJORs: an excludable item SR (confirmed, fixed) and DUAL gaps kept
+as payload, which the builder disputed. An independent Opus adjudicator ruled
+(a): an unexplained DUAL gap fails too; the fixtures' report bytes are
+unchanged, only the exit code and the FAIL lines move. Sol round 2: one MINOR
+(a bold `Excludes:` label), fixed. GPT Terra amended LLR-069, TC-069, IF-060,
+IF-152, IF-153 and IF-242. The in-lane adjudicator returned LLR-069, TC-069
+and IF-153 with exact texts, added IF-161's consumer, found two untested
+behaviours (tests added, each red under its mutant), then re-attested LLR-069
+and TC-069 as MEANING, act seq 32, the verdict and the act in separate commits.
+WI-804's Done-when drops the `Excludes:` line it would have added. Smoke
+2054 passed (21.0 s vs 60 s).

@@ -510,13 +510,15 @@ _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
 | `--root` | repo root holding docs/requirements/ (default: .) |
 
 ### `scripts/plan_coverage`
-_Dual-plan coverage pre-pass: make rival WI decompositions mechanically_
+_The plan gate: make a plan's coverage of what it must deliver a checkable_
 Contracts (interfaces): IF-060, IF-152, IF-153
 
 | Option | Help |
 |---|---|
 | `plans` | plan file(s) |
-| `--goal` | the goal brief (C# clauses) |
+| `--goal` | DUAL: the goal brief (C# clauses) |
+| `--item` | SINGLE: the claimed item's spec (D# clauses) |
+| `--findings` | SINGLE replan: open findings (F# clauses) |
 | `--root` | repo root holding docs/requirements/ (default: .) |
 | `--out` | also write the report to this file |
 

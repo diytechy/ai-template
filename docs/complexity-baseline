@@ -118,9 +118,7 @@ project-trajectory/scripts/migrate_carrier.py	read_sn	23	24
 project-trajectory/scripts/migrate_carrier.py	rows_to_toml	20	29
 project-trajectory/scripts/plan_artifacts.py	parse_plan_wis	16	25
 project-trajectory/scripts/plan_briefs.py	_parent_need_ids	16	27	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row (16) came with the redesign-prerequisites sitting (77612fb2, 2026-09-06): exact SN parents from explicit SR-Refs and the canonical SpecRef. Repair is owed on trunk.
-project-trajectory/scripts/plan_coverage.py	check_plan	44	60
 project-trajectory/scripts/plan_coverage.py	find_cycle	17	28
-project-trajectory/scripts/plan_coverage.py	parse_plan	16	28
 project-trajectory/scripts/plan_round.py	_advance	18	18
 project-trajectory/scripts/plan_round.py	ready_steps	22	35
 project-trajectory/scripts/plan_round.py	record	61	90

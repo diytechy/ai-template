@@ -2,11 +2,15 @@
 id = "WI-803"
 title = "A checkable plan gate over Done-when, findings, SR and TC coverage"
 workstream = "process"
-specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-plan-gate"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+`plan_coverage.py` is a gate. A SINGLE run (`--item SPEC.md [--findings FILE]`) takes its clauses from the item's Done-when (`D#`, through `kitlib.done_when`) and open review findings (`F#`); every clause is covered by a row or named under `Excludes: <clause> — <reason>`, and an unexplained gap exits 1 naming it. The SINGLE run also diffs the item's SRs (each must be cited; an SR cannot be excluded) and the TCs that verify them (named or excluded with a reason). By the independent adjudicator's ruling on the builder-reviewer dispute (`docs/reviews/wi-803-plan-gate/dispute-1-ruling.md`), an unexplained DUAL goal-clause gap fails too; existing DUAL fixtures and their `--out` report bytes are unchanged, and the planner prompt teaches the `Excludes:` line. An optional `Tier` column is carried. LLR-069 and TC-069 were re-attested in the lane (act seq 32, MEANING, verdict `002-ADJUDICATE-2a64d0b.md`); IF-060, IF-152, IF-153, IF-161 and IF-242 were amended. Codex 6.1 Sol: round 1 two MAJOR and one MINOR, round 2 one MINOR, all fixed. Decisions: `docs/decisions/wi-803.toml`.
 
 ## Context
 
