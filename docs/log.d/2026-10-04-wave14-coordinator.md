@@ -51,3 +51,41 @@ behaviours (tests added, each red under its mutant), then re-attested LLR-069
 and TC-069 as MEANING, act seq 32, the verdict and the act in separate commits.
 WI-804's Done-when drops the `Excludes:` line it would have added. Smoke
 2054 passed (21.0 s vs 60 s).
+
+### In flight at the close: WI-822 and WI-806
+
+Both lanes were built and taken through review and in-lane adjudication rounds,
+and neither has taken its act yet.
+
+- **WI-822, the context guard.**
+  - Sol round 1 raised 6 MAJOR and 4 MINOR. Sol round 2 raised 2 MAJOR and 2
+    MINOR. All are fixed.
+  - A real Claude Code 2.1.289 compaction transcript came from a local Haiku
+    probe (coordinator D-012) and is the recorded fixture.
+  - GPT Terra drafted SR-229, SR-230, LLR-300, LLR-301 and TC-315 to TC-318, and
+    the interface seams IF-271 to IF-275.
+  - The coordinator removed IF-276, which consumed its own state, and kept
+    `external:agent CLI` rather than a new external party, which would have
+    changed the frame.
+  - The in-lane adjudicator returned all eight new rows with exact fixes, after 14
+    mutation probes; five mutants survived. The builder then added the tests that
+    kill them.
+  - Terra's round 3 applied the fixes and minted IF-277 to IF-280. It stopped at
+    the Codex plan limit (reset 2026-10-05 02:34), uncommitted.
+- **WI-806, spine text before the act.**
+  - Built, and rebased onto trunk after a merge refresh tripped registry
+    integrity.
+  - Sol REVIEW-A raised a BLOCKER and a MAJOR, now with the builder.
+  - Luna REVIEW-B raised a MAJOR, which the coordinator refuted with evidence, and
+    a MINOR, which is the builder's deliberate all-parents design. Both are for
+    the adjudicator to rule.
+  - The adjudicator returned all four rows with exact fixes.
+  - SN-029's acceptance and why cells become untrue at the landing, and are filed
+    for the owner then.
+- **WI-818 and WI-821** stay claimed with no lane cut.
+- **Why the session stopped:** at about 41% of its context, with both lanes
+  needing several Codex rounds and Codex out for 2.5 hours, it closed out by the
+  guard's own rule.
+
+The exact owed steps per lane and the corrections learned are in
+[the wave-14 handoff](../handoff-2026-10-05-wave14-coordinator.md).

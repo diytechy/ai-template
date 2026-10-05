@@ -25,15 +25,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-04-wave13-coordinator.md](handoff-2026-10-04-wave13-coordinator.md):
-  the state, how the program runs, the corrections learned, and the session
-  prompt to paste. The owner's slate is clear (the needs are signed, the parked
-  items settled, the high-risk decisions confirmed); the 60 low-risk decisions
-  render under "Decisions to review" at the bottom of
-  [open-items.html](open-items.html). Approval acts run to seq 31.
-  0. **The coordinator context guard first** (the row titled "Coordinator context
-     guard"): at 50% context the session stops claiming, closes out, hands off,
-     and relaunches at session end. Build it while the session's context is low.
+  [handoff-2026-10-05-wave14-coordinator.md](handoff-2026-10-05-wave14-coordinator.md):
+  the state, the two lanes in flight and their exact next steps, the corrections
+  learned, and the session prompt to paste. The 60 low-risk decisions from
+  earlier waves, and this session's, render under "Decisions to review" at the
+  bottom of [open-items.html](open-items.html). Approval acts run to seq 32.
+  0. **Finish the two claimed lanes first, the context guard before the other**
+     (the rows titled "Coordinator context guard" and "Spine text before the
+     act"): both are built and in their in-lane adjudication rounds; the handoff
+     lists what each still owes. The guard lands first. Each lane is rebased onto
+     trunk before its act, and the acts land one at a time.
   1. **Build the S788-* successor rows** of the approved design note
      ([plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
      its ruling section first; it overrides the chapters), in their `needs`

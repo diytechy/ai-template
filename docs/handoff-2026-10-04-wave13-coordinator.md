@@ -7,6 +7,9 @@ as the resume map. The wave-11 handoff
 still holds for the in-lane cycle, the coordinator tools and the "never" list,
 with the corrections below and in the wave-12 handoff.
 
+> **Superseded as the resume map by
+> [handoff-2026-10-05-wave14-coordinator.md](handoff-2026-10-05-wave14-coordinator.md).**
+
 This session (owner present) is recorded in
 [log.d/2026-10-04-wave12-coordinator.md](log.d/2026-10-04-wave12-coordinator.md) and
 [log.d/2026-10-04-owner-signs-needs-and-clears-slate.md](log.d/2026-10-04-owner-signs-needs-and-clears-slate.md).
