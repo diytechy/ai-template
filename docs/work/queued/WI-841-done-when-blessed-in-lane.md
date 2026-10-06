@@ -1,6 +1,6 @@
 +++
 id = "WI-841"
-title = "An in-lane Done-when change is blessed in the lane, in one combined adjudication sitting, before the lane builds on it or closes"
+title = "An in-lane Done-when change is blessed in the lane before the lane builds on it or closes"
 workstream = "process"
 sr_refs = ["SR-156", "SR-227"]
 specref = "docs/log.d/2026-10-06-wave17-coordinator.md"
