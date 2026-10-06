@@ -1,0 +1,20 @@
+# docs/decisions/coordinator-2026-10-06.toml — the wave-18 coordinator's
+# DECISIONS RECORD for its calls on trunk and across lanes (2026-10-06). The
+# format and doctrine are project-trajectory/decisions.template.toml's. Lane
+# calls go in the lane's own docs/decisions/<branch>.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-842 (a closing coordinator hands its lease back), filed at the session start from the owner's question, is claimed in this session's batch beside WI-838 to WI-840, under the same scoped unpause, rather than queued for a later session."
+alternative = "File WI-842 only and leave it queued; claim the four rows the handoff names."
+reversal_cost = "Low: an unbuilt claim is released back to the queue by one bookkeeping commit; a built lane is cancelled or left committed on its branch."
+why_not_escalated = "The owner asked that the stranded lease not need their attention in future cycles. The row is small (one guard verb, one skill step) and touches files the batch rows do not, so it builds beside them, and every later coordinator cycle benefits from it landing early."
+review = ""
+
+[decision.D-002]
+decided = "The coordinator ran the owner's recorded release of the wave-17 holder's stranded lease (8f6eee8f, idle since 18:10Z), with the reason naming the owner's direction, and then took the lease."
+alternative = "Wait for the owner to run the release themselves."
+reversal_cost = "None: the release and the take are recorded events in out/coordinator, and the stranded holder had closed out."
+why_not_escalated = "The owner directed it in this session when asked."
+review = ""
