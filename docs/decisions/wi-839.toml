@@ -1,0 +1,19 @@
+# docs/decisions/wi-839.toml — WI-839's delegated decisions record (whether
+# the doc-only correction owes a RESYNC_PACK entry).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "No RESYNC_PACK.md entry. The pack's own order of moves (§1.3 step 4) gives §3 entries the work a file copy cannot do: registry conversions, renamed or deleted scripts, config folds, state to reconcile. This change rewords one PROCESS_OPTIONS.md paragraph to state what integrate.py already does; it reaches an adopter through §2.2's regenerate class (docs/process-options.md is regenerated from the master on re-sync) and asks nothing of them. The other edited files (docs/concurrency-restructure.md and the this-repo byte-budget-guard skill row) do not ship."
+alternative = "Add a §3 entry anchored [since 2dcf7a40] saying the trunk-only wording now names the module-size ratchet exception."
+reversal_cost = "One short RESYNC_PACK.md entry anchored at this lane's base."
+why_not_escalated = "The build prompt delegated the call and named the rule to decide it by (the pack's own rule for doc-only changes); no behaviour, script, registry or dial changes, so no adopter migration exists for an entry to describe."
+review = ""
+
+[decision.D-002]
+decided = "D-001 is reversed by the coordinator after Codex Sol's round-1 MAJOR: RESYNC_PACK.md gains a short entry anchored [since 2dcf7a40], because the pack already records prose-only corrections of a false statement (its `backlink_coverage_min` entry, 'prose only, and it corrects a false statement'), and an adopter who applied the old wording as a rule needs to be told to drop it."
+alternative = "Keep D-001 (no entry) and dispute the finding with the adjudicator."
+reversal_cost = "Delete one RESYNC_PACK.md entry."
+why_not_escalated = "The finding was confirmed against the pack's own precedent before acting (findings are claims); the entry asks nothing of an adopter beyond overwriting a kit-owned file."
+review = ""

@@ -2866,8 +2866,13 @@ merge order (`trunk_step.py --compile-log`; no work branch ever hand-merges
 commit them, branch-local checks read them as-of-base, and the trunk
 regenerates after each merge (`trunk_step.py --regen`) — this deletes the
 largest cause of parallel merge conflicts outright. Stamps and ratchets are
-re-derived or re-stamped on the trunk, never hand-carried on work branches
-(§5.3). Review/critique artifacts use branch-scoped names
+re-derived or re-stamped on the trunk (§5.3), except the module-size ratchet
+(kind `linecounts`), data no command re-derives: the lane that changes a
+stamped module re-stamps it, with the reason, in that commit, and
+`integrate.py`'s `_HAND_STAMPED_GENERATED_KINDS` never settles a refresh
+conflict there by taking trunk's side (the refresh refuses; the lane resolves
+it). Every other declared generated artifact stays trunk-only.
+Review/critique artifacts use branch-scoped names
 (`docs/reviews/WI-<n>-<PHASE>.md`), not a serial counter (§5.4).
 
 **Pause (§5.6) — drain to a clean, merged stop.** One meaning: **pause =

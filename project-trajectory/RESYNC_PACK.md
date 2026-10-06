@@ -7175,6 +7175,21 @@ commands) and check it with `python scripts/coordinator_adjudicate.py signin
 `unknown` now has its retained adjudications refused, where before they ran
 in an empty home and failed.
 
+### A lane carries its module-size re-stamp: the docs now say so [since d69e04f3]
+
+*(Anchored at the preceding commit, per this section's convention.)*
+
+**Kit-owned file — overwrite it and move on:** `PROCESS_OPTIONS.md` (it
+regenerates your `docs/process-options.md`). **What changes for you:** prose
+only, and it corrects a false statement. The shared-surface rules said stamps
+and ratchets are "never hand-carried on work branches". The module-size
+ratchet (generated kind `linecounts`) never worked that way: no command
+re-derives it, so the lane that changes a stamped module re-stamps it, with the
+reason, in that commit, and a refresh conflict there is never settled by taking
+trunk's side. Every other declared generated artifact stays trunk-only. If a
+reviewer or a local rule of yours refused a lane's ratchet re-stamp on the old
+wording, drop that rule; nothing in the integrator changed.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

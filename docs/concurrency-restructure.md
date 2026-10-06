@@ -255,8 +255,8 @@ narrative the log is valued for. Hand-merging the log ends entirely.
 
 Work branches **never commit** generated artifacts (`PROJECT_STATE.html`,
 arch map, `status.md` generated block, `docs/stage`, `open-items.html`,
-`INDEX.csv`). The trunk regenerates them after each merge (same serial step
-as 5.1); freshness gates run on the trunk lane only. This deletes the single
+`INDEX.csv`; the one exception is §5.3's). The trunk regenerates them after
+each merge (same serial step as 5.1); freshness gates run on the trunk lane only. This deletes the single
 largest cause of train merge conflicts. Branch-local checks that *read*
 generated artifacts read them as-of-base, which is correct: the composed-tree
 check re-derives at the queue.
@@ -264,9 +264,10 @@ check re-derives at the queue.
 ### 5.3 Stamps and ratchets
 
 Whatever survives the audit's ratchet rulings is re-derived or re-stamped in
-the trunk step, never hand-carried on work branches (the module-size ratchet
-was re-stamped three times on one row across one train's life — that pattern
-ends here).
+the trunk step, with one exception: the module-size ratchet stays hand-stamped,
+and the lane that changes a stamped module carries its re-stamp. The rule and
+the integrator code that holds it are stated once, in
+[PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md#parallel-work--the-integration-seam-multi-lane-operation).
 
 ### 5.4 Review/critique artifacts
 

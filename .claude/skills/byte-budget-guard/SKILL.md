@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 95,649 | 2026-10-04 | **+149** WI-806: text first, the act second; amend-plus-flip is not approval |
-| `project-trajectory/PROCESS_OPTIONS.md` | 197,099 | 2026-10-05 | **+103** WI-818: the owner confirms or overrules a decision |
+| `project-trajectory/PROCESS_OPTIONS.md` | 197,446 | 2026-10-06 | **+347** WI-839: a lane carries its own module-size restamp |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in
