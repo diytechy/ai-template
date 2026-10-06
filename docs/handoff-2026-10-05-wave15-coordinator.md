@@ -7,6 +7,9 @@ handoff's roles, tools and "never" list still hold, with the corrections below.
 This session's record is
 [log.d/2026-10-05-wave15-coordinator.md](log.d/2026-10-05-wave15-coordinator.md).
 
+> **Superseded as the resume map by
+> [handoff-2026-10-05-wave16-coordinator.md](handoff-2026-10-05-wave16-coordinator.md).**
+
 **The owner's direction for the next session (2026-10-05): close out the two
 active lanes, WI-818 and WI-821, and start no new work item.**
 - No claim and no scoped unpause.

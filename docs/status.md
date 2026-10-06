@@ -25,12 +25,14 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-05-wave15-coordinator.md](handoff-2026-10-05-wave15-coordinator.md):
-  a CLOSE-OUT session (owner, 2026-10-05: close the two active lanes, start no
-  new work item), each lane's exact next steps, the corrections learned, and the
-  session prompt to paste. The 60 low-risk decisions from
-  earlier waves, and these sessions', render under "Decisions to review" at the
-  bottom of [open-items.html](open-items.html). Approval acts run to seq 36.
+  [handoff-2026-10-05-wave16-coordinator.md](handoff-2026-10-05-wave16-coordinator.md):
+  no lane is open, the corrections learned, and the session prompt to paste.
+  Delegated decisions take the owner's verdict as `owner = "confirmed"` or
+  `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
+  to review" in [open-items.html](open-items.html), and an overrule must change
+  open work citing it in the same commit.
+  Approval acts run to seq 36. The context guard is live: take the coordinator
+  lease (`coordinator_guard.py take`) before any claim.
   1. **Build the S788-* successor rows** of the approved design note
      ([plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
      its ruling section first; it overrides the chapters), in their `needs`
