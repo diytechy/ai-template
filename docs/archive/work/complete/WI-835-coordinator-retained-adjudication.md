@@ -2,12 +2,16 @@
 id = "WI-835"
 title = "The coordinator adjudicates through the retained session, the loop's keep operation, from a Claude Code session"
 workstream = "process"
-sr_refs = ["SR-227"]
-specref = "docs/reviews/wi-834-plan/002-sol-plan-review-r2.md"
+sr_refs = ["SR-227", "SR-231"]
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 9
 +++
+
+## Deliverable
+
+The coordinator adjudicates through one entry point, `coordinator_adjudicate.py adjudicate`, which runs only from a claimed lane worktree and goes through the loop's own keep operation and `out/adjudicator/` record, so one retained session judges a work item's whole review, rework and re-review chain. Both routes compose one request (`session_service.AdjudicationRequest`, `adjudication_keep`), whose governing template identity covers every retained class, so a class switch is not a rule change, while a template edit or an override still drains the session. A dedicated-home sign-in probe reads signed in, missing or unknown without creating the home or calling a model, and either route refuses a retained launch on missing or unknown before any lease, home or record exists, naming dev-setup (exit 7 on the coordinator route). The verdict path is reserved exclusively, with its parents created, and success is read only from a verdict the call wrote within its deadline. This repo's dial is at 55 with first approvals retained (D-007). The session-protocol skill and the coordinator recipe direct adjudication through the entry point; WI-801's `ask` absorbs it. The first live run (2026-10-06) ran this work item's five adjudications on one retained session and surfaced the review-directory and per-class-hash defects, both fixed in the lane. Rows: SR-231, LLR-305, LLR-306 and TC-321..TC-324 approved; SR-227, LLR-270 and TC-266 re-attested (acts 37 to 40; verdicts 001 to 005, with the follow-ups answered in-lane at the owner's ruling). Codex 6.1 Sol: five rounds. Decisions: `docs/decisions/wi-835.toml`.
 
 ## Context
 
