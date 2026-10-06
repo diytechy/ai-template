@@ -128,7 +128,9 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # added four facing the agent CLI: its hook input (IF-274) and response
     # (IF-275), the session environment it reads (IF-277) and its own command
     # line, run from the coordinator's session (IF-280), and its exit code
-    # (IF-281).
+    # (IF-281). The coordinator's adjudication entry point joined them, run
+    # from the coordinator's session too: its arguments (IF-283), exit codes
+    # (IF-284) and stdout readings (IF-285).
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -152,5 +154,8 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-277",
         "IF-280",
         "IF-281",
+        "IF-283",
+        "IF-284",
+        "IF-285",
     ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

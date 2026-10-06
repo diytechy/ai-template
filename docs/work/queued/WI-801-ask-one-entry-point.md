@@ -34,6 +34,8 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
 
 - Only `ask` launches or draws a route; the loop-memory family fields
   (`last_impl_family`, `last_build_family`) are deleted.
+- `ask` deletes WI-835's entry point and moves its callers and tests to the
+  adjudicate kind.
 - A WI-688-shaped test passes: a build run outside the loop excludes its family
   from the judge.
 - An `ask.py` call writes a log and carries the note; S9's reader covers CRITIQUE

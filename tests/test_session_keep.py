@@ -86,17 +86,23 @@ def _keep(tmp_path, cfg, family="ANTHROPIC", wi="WI-1", brief="disposition", **k
 # --- dial 0: the layer is inert (TC-266) ----------------------------------------
 
 
-def test_the_shipped_dial_is_off_in_both_policy_files_with_one_structure():
+def test_the_shipped_dial_is_off_and_this_repo_shares_its_structure():
+    """The template ships the dial off; this repo's VALUE may diverge (it is
+    on at 55 since WI-835, owner ruling (b)) while its keys stay the same."""
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text(encoding="utf-8"))
     kit = (ROOT / "project-trajectory" / "process.toml.template").read_text(
         encoding="utf-8"
     )
     template = tomllib.loads(kit)
-    assert live["adjudicator"]["context_reset_pct"] == 0
     assert template["adjudicator"]["context_reset_pct"] == 0
+    assert live["adjudicator"]["context_reset_pct"] == 55
     assert set(live["adjudicator"]) == set(template["adjudicator"])
-    assert keep.keep_config(ROOT) == keep.KeepConfig()
-    assert not keep.keep_config(ROOT).enabled
+    # And retains first approvals too (owner, 2026-10-05,
+    # docs/decisions/wi-835.toml#D-007); the template's list is unchanged.
+    assert keep.keep_config(ROOT) == keep.KeepConfig(
+        context_reset_pct=55,
+        retain_for=("disposition", "amendment", "red-tc", "first-approval"),
+    )
 
 
 def test_at_dial_zero_an_adjudication_launches_exactly_as_a_fresh_session(
@@ -169,7 +175,6 @@ PLAN = {
 def test_the_loop_retains_nothing_at_the_shipped_dial(tmp_path):
     al = load_script("agent_loop")
     assert al.adjudication_keep(_loop_ctx(tmp_path), PLAN, "WI-1") is None
-    assert al.adjudication_keep(_loop_ctx(ROOT), PLAN, "WI-1") is None
 
 
 # --- dial on: resume and occupancy per provider (TC-267) -----------------------
@@ -438,6 +443,7 @@ def test_the_runner_version_is_read_for_a_retained_launch(tmp_path, monkeypatch)
         return SimpleNamespace(returncode=0, stdout="2.1.266 (Claude Code)\n")
 
     monkeypatch.setattr(svc.subprocess, "run", fake_run)
+    monkeypatch.setattr(svc, "signin_status", lambda root, family: "signed-in")
     kept = svc.plan_keep(
         tmp_path,
         ON,
@@ -472,6 +478,9 @@ def test_the_loop_folds_the_adjudication_template_into_the_governing_inputs(
 ):
     al = load_script("agent_loop")
     monkeypatch.setattr(svc, "cli_version", lambda *a, **k: "")
+    monkeypatch.setattr(
+        al.session_service, "signin_status", lambda root, family: "signed-in"
+    )
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "process.toml").write_text(
         "[adjudicator]\ncontext_reset_pct = 50\n", encoding="utf-8"
@@ -704,7 +713,7 @@ def test_the_dispatcher_builds_its_warmer_from_the_routing_registry(tmp_path):
     warmer = svc.keep_warmer(tmp_path, ON)
     row = warmer.registry["ANTHROPIC-ROUTE"]
     assert row.cmd_template == "claude -p --model {model}"
-    assert svc._row_env(row)["CLAUDE_CODE_EFFORT_LEVEL"] == "high"
+    assert svc.route_env(row)["CLAUDE_CODE_EFFORT_LEVEL"] == "high"
 
 
 # --- round 3: lineage, shutdown, tombstone, the real dirty read -------------------

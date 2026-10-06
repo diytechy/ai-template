@@ -2587,32 +2587,33 @@ def resolve_idle_timeout(args):
     return idle if idle and idle > 0 else None
 
 
+SIGNIN_HOLD = "NEEDS-HUMAN — the retained adjudicator's CLI home is not signed in"
+
+
 def adjudication_keep(ctx, plan, wi):
     """The retained adjudicator session this launch resumes or mints, or
     None — which, at the shipped `[adjudicator] context_reset_pct = 0`, is
-    every launch. The governing inputs include the template this brief is
-    composed from: the operator's override text when one is loaded, else the
-    shipped file. The work-item registry is handed over for the clear-point
-    rule, and the lease outlives the session's own wall deadline.
+    every launch. The request is composed through the session service's
+    shared step (`AdjudicationRequest`, `adjudication_keep`), the one the
+    coordinator's entry point uses, with the operator's loaded overrides; the
+    governing inputs it derives include every retained class's template. It
+    raises SigninRefused when the dedicated home is not signed in.
 
     Implements: SR-227, LLR-270
     """
-    key = adjudicate_brief.BRIEF_PROMPTS.get(plan.get("brief") or "")
-    override = (ctx.prompt_templates or {}).get(key) if key else None
-    return session_service.plan_keep(
-        ctx.root,
-        session_service.session_keep.keep_config(ctx.root),
-        template=plan["tmpl"],
-        env=plan["session_env"],
-        role=plan["phase"],
-        brief=plan.get("brief") or "",
-        family=plan["route_family"] or "",
-        route_id=plan["route_id"] or "",
-        wi=wi or "",
-        rows=agent_common.load_wi_registry(ctx.root),
-        template_paths=[prompts.template_path(key)] if key and not override else [],
-        template_texts=[override] if override else [],
-        lease_seconds=(ctx.args.session_timeout or 7200) + 300,
+    return session_service.adjudication_keep(
+        session_service.AdjudicationRequest(
+            root=ctx.root,
+            role=plan["phase"],
+            brief=plan.get("brief") or "",
+            family=plan["route_family"] or "",
+            route_id=plan["route_id"] or "",
+            wi=wi or "",
+            template=plan["tmpl"],
+            env=plan["session_env"],
+            prompt_templates=ctx.prompt_templates,
+            deadline=ctx.args.session_timeout,
+        )
     )
 
 
@@ -2621,7 +2622,9 @@ def launch_session(ctx, plan, wi=None):
     `Outcome`: the service launches it, reads its result, and times it on its
     own clock, so a duration exists even when the session dies before
     emitting JSON (spawn failure, timeout, crash). The loop hands over only
-    the route's data and the console renderer.
+    the route's data and the console renderer. A retained adjudication whose
+    dedicated home is not signed in launches nothing: the run stops needing
+    a human (EXIT_NEEDS_HUMAN is returned in place of an Outcome).
 
     Implements: SR-222, LLR-269
     """
@@ -2633,6 +2636,11 @@ def launch_session(ctx, plan, wi=None):
         on_line = live.event
     else:
         on_line = echo_session_line
+    try:
+        kept = adjudication_keep(ctx, plan, wi)
+    except session_service.SigninRefused as refused:
+        stop_banner(ctx.status_path, SIGNIN_HOLD, str(refused))
+        return EXIT_NEEDS_HUMAN
     outcome = session_service.act(
         session_service.Call(
             root=ctx.root,
@@ -2648,7 +2656,7 @@ def launch_session(ctx, plan, wi=None):
             timeout=args.session_timeout,
             idle_timeout=resolve_idle_timeout(args),
             on_line=on_line,
-            keep=adjudication_keep(ctx, plan, wi),
+            keep=kept,
         )
     )
     if live is not None:
@@ -3327,6 +3335,8 @@ def run_iteration(ctx, i):
         )
     )
     launched = launch_session(ctx, plan, current_wi)
+    if isinstance(launched, int):
+        return launched
     code, output, timed_out = launched.code, launched.text, launched.timed_out
     wall_secs = launched.metrics["wall-secs"]
     data = parse_json_result(output)
@@ -3362,17 +3372,7 @@ def run_iteration(ctx, i):
         session=ctx.tag + session,
         label="{} {}".format(plan["phase"] or "—", outcome),
     )
-    print(
-        "session {}: outcome={} commits={} wall={}s{}".format(
-            session,
-            outcome,
-            commits or "—",
-            wall_secs,
-            " api={}s turns={}".format(meta["api-secs"], meta["turns"])
-            if meta["turns"] != ""
-            else "",
-        )
-    )
+    print(session_summary(session, outcome, commits, wall_secs, meta))
     r = session_bookkeeping(
         ctx, plan, outcome, code, commits, after, reset_hint, now, session, current_wi
     )
@@ -3382,6 +3382,21 @@ def run_iteration(ctx, i):
         return r
     judging = plan["is_review"] or plan["is_critique"]
     return after_session(ctx, i, outcome, reset_hint, bool(commits), judging=judging)
+
+
+def session_summary(session, outcome, commits, wall_secs, meta):
+    """The one console line closing a session: its outcome, commits and wall
+    time, with the API time and turns when the CLI reported them. Moved out of
+    run_iteration so the sign-in refusal's branch keeps it within budget."""
+    return "session {}: outcome={} commits={} wall={}s{}".format(
+        session,
+        outcome,
+        commits or "—",
+        wall_secs,
+        " api={}s turns={}".format(meta["api-secs"], meta["turns"])
+        if meta["turns"] != ""
+        else "",
+    )
 
 
 def _coordinator_lock(root):

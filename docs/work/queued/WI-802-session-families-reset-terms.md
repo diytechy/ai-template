@@ -17,8 +17,9 @@ Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design not
 families share one retention slot and one independence rule each: [plan and build],
 [adjudicate], [adjudication review], [review], [judge]. `[adjudicator]` becomes
 `[sessions.<family>]` with `context_reset_pct` (0 = every call). The template retains
-both adjudication families at 55 and this repo stays at 0 (D-010; README changes 1,
-2: S10 "reviewers never" narrowed, the template ships retention on). `rejudge` moves
+both adjudication families at 55 and this repo is at 55 since WI-835 (D-010;
+README changes 1, 2: S10 "reviewers never" narrowed, the template ships
+retention on). `rejudge` moves
 to [judge] and `retain_for` retires (D-011, change 22). Directory-bound runners
 (opencode, gemini) gain the term "the directory differs". Under README A1 this row
 keeps only the reset terms; routing by kind is WI-801's. A1 also names where

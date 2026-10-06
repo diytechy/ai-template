@@ -7122,6 +7122,59 @@ delegated session now says to leave `owner` unset.
 4. From now on, overrule an entry in the same commit that files or amends the
    work item citing it.
 
+### The coordinator's adjudication entry point, and a retained launch refused without its sign-in [since 681e3280]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new `scripts/coordinator_adjudicate.py` runs a
+coordinator's adjudication from an interactive session through the session
+service's keep operation and the same `out/adjudicator/` record as the loop's
+adjudications: `adjudicate --brief-file <brief> --brief <class> --wi <WI>
+--verdict <path> [--route <id>]` (the route defaults to
+`ANTHROPIC-OPUS-STRONG` and must be on `docs/agents-enabled`), writing the
+call's session log and printing the verdict. It runs only from a lane: its
+root must be a linked worktree on a branch holding a claim under
+`docs/work/active/<branch>/` (a primary-checkout run would commit its session
+log onto trunk), and the verdict path must not exist: the entry point
+creates its missing parent directories (a work item's first verdict names a
+review directory not yet made), then creates it empty and exclusively before
+launch, so two calls naming one
+path cannot share a verdict; a call that exits non-zero or times out, or
+leaves its reservation empty, fails whatever the verdict file holds. Both
+routes compose the adjudication request through one step,
+`session_service.AdjudicationRequest`
+with `adjudication_keep`, which now derives the governing template identity
+itself over every class the dial's `retain_for` names (each by its
+operator override text when one is loaded, else its shipped template;
+`adjudicate_brief.governing_templates`). Switching between retained brief
+classes therefore no longer drains a retained session; editing any retained
+class's template, or an override, still does. A session minted under the
+old per-class identity reads its governing inputs as changed once, and
+drains to its next clear point. A sign-in probe,
+`session_service.signin_status` (and `coordinator_adjudicate.py signin
+--family <F>`), reads a family's dedicated CLI home as `signed-in`, `missing`
+or `unknown` without creating it and without a model call (`claude auth
+status` under `CLAUDE_CONFIG_DIR`, `codex login status` under `CODEX_HOME`).
+On either route, a retained launch whose dedicated home does not read
+`signed-in` is refused before launch, naming dev-setup: the loop stops
+needing a human, and the entry point exits 7. Nothing signs in
+automatically and nothing falls back to a fresh session.
+
+Both are visible only once retention is enabled (`[adjudicator]
+context_reset_pct` above 0). At the shipped 0, no call is probed and every
+adjudication is a fresh session exactly as before. The entry point is
+temporary: the `ask` entry point replaces it.
+
+**What to do.** Re-sync `scripts/session_service.py`, `scripts/session_keep.py`,
+`scripts/adjudicate_brief.py`, `scripts/agent_loop.py`,
+`scripts/kitlib/bootstrap_manifest.py` and the new
+`scripts/coordinator_adjudicate.py`. If your dial is on, sign each family you
+retain into its dedicated home first (the earlier retention entry gives the
+commands) and check it with `python scripts/coordinator_adjudicate.py signin
+--family ANTHROPIC` (and `--family OPENAI`): a family that reads `missing` or
+`unknown` now has its retained adjudications refused, where before they ran
+in an empty home and failed.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

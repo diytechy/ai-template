@@ -69,6 +69,16 @@ always true.
   `*.ps1`/`*.cmd`/`*.bat` should appear.
 - **Claiming runs through the integrator** (`integrate.py claim`); merges are
   its serial fail-closed queue, and a pause is a tracked `docs/work/pause`.
+- **The coordinator adjudicates through `coordinator_adjudicate.py`, never a
+  subagent.** Compose the brief, then run `python
+  project-trajectory/scripts/coordinator_adjudicate.py adjudicate --brief-file
+  <brief> --brief <class> --wi <WI> --verdict <path>` from the lane's
+  worktree root (the primary checkout is refused), naming a verdict path not
+  yet written, backgrounded (a call outlasts the shell's 10-minute cap). It
+  rides the loop's keep operation and `out/adjudicator/` record, so successive
+  adjudications resume one retained session. Exit 7 means its CLI home is not signed in:
+  `... coordinator_adjudicate.py signin` reads it, and the owner signs in
+  through dev-setup. Never substitute a fresh subagent.
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
   only sanctioned stop is the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges

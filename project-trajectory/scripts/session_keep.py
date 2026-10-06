@@ -340,6 +340,20 @@ def store_save(root, record):
     _write_whole(path, json.dumps(record, sort_keys=True))
 
 
+def dedicated_home(root, family):
+    """`(variable, path)` of the dedicated CLI home for `family` under the
+    store's `home/`, WITHOUT creating it, or None for a family with no ruled
+    home variable: the one path rule, read by the launch and by the sign-in
+    probe, which must not leave an empty home behind.
+
+    Implements: SR-227, LLR-305
+    """
+    variable = HOME_VARIABLES.get((family or "").upper())
+    if not variable:
+        return None
+    return variable, store_dir(root) / "home" / (family or "").lower()
+
+
 def dedicated_home_env(root, family):
     """The dedicated CLI home for `family` while retention is on, created if
     absent: `{variable: path}` under the store's `home/`, or `{}` for a family
@@ -347,12 +361,12 @@ def dedicated_home_env(root, family):
 
     Implements: SR-227, LLR-270
     """
-    variable = HOME_VARIABLES.get((family or "").upper())
-    if not variable:
+    home = dedicated_home(root, family)
+    if home is None:
         return {}
-    home = store_dir(root) / "home" / (family or "").lower()
-    home.mkdir(parents=True, exist_ok=True)
-    return {variable: str(home)}
+    variable, path = home
+    path.mkdir(parents=True, exist_ok=True)
+    return {variable: str(path)}
 
 
 # --- the rules ------------------------------------------------------------------

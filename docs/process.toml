@@ -285,10 +285,14 @@ assumption_gate = false
 # Adjudicator session retention, shipped OFF (`context_reset_pct = 0`: every
 # adjudication a fresh session, no id minted, no resume flag, no store). The
 # shipped template's [adjudicator] header carries the full field reasoning.
-# Verifying the layer on this machine comes before the dial is turned, and
-# turning it is the owner's edit of this one number.
-context_reset_pct = 0            # e.g. 55
-retain_for = ["disposition", "amendment", "red-tc"]
+# This repo is ON at 55 since WI-835 (owner ruling (b), 2026-10-05), set after
+# the sign-in probe read this machine's dedicated ANTHROPIC home as signed in;
+# a retained launch whose dedicated home is not signed in is refused, naming
+# dev-setup.
+context_reset_pct = 55           # 0 = off
+# Owner, 2026-10-05 (docs/decisions/wi-835.toml#D-007): first approvals too,
+# so the coordinator's in-lane adjudications all use the retained session.
+retain_for = ["disposition", "amendment", "red-tc", "first-approval"]
 keepwarm_minutes = 0             # e.g. 50
 reset_on_same_artifact = false
 

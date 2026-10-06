@@ -1347,6 +1347,28 @@ _ASSEMBLERS = {
 ROUTED = tuple(sorted(_ASSEMBLERS))
 
 
+def governing_templates(classes, prompt_templates=None):
+    """`(template_paths, template_texts)`: the identity of the templates the
+    brief `classes` are composed from, as the retention layer's governing
+    input. Each class contributes the operator's override text when one is
+    wired under its prompt key (it wins, as in `compose`), else the shipped
+    template's path; a class with no template contributes nothing. Given the
+    whole retained set, every call of a retained class shares one identity,
+    so switching classes is not a change of rules.
+
+    Implements: SR-227, LLR-305
+    """
+    paths, texts = [], []
+    for brief in sorted(set(classes or ())):
+        key = BRIEF_PROMPTS.get(brief)
+        override = (prompt_templates or {}).get(key) if key else None
+        if override:
+            texts.append(override)
+        elif key:
+            paths.append(prompts.template_path(key))
+    return paths, texts
+
+
 def compose(root, row, verdict_path, prompt_templates=None):
     """`(prompt_text, None)` when this adjudication row's declared brief could
     be filled IN FULL, else `(None, reason)` — on which the caller HOLDS the

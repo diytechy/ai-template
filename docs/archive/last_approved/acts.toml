@@ -220,3 +220,29 @@ seq = 36
 date = "2026-10-05"
 approved = ["LLR-303", "LLR-304", "TC-319", "TC-320"]
 reattested = ["LLR-283", "LLR-284", "SR-225", "TC-293", "TC-294", "TC-313"]
+
+[[act]]
+seq = 37
+date = "2026-10-06"
+approved = []
+reattested = ["LLR-270", "TC-266"]
+verdict = "docs/reviews/wi-835-coordinator-retained-adjudication/002-ADJUDICATE-a10adc3.md"
+
+[[act]]
+seq = 38
+date = "2026-10-06"
+approved = []
+reattested = ["LLR-270", "SR-227"]
+verdict = "docs/reviews/wi-835-coordinator-retained-adjudication/003-ADJUDICATE-6ca0b05.md"
+
+[[act]]
+seq = 39
+date = "2026-10-06"
+approved = ["LLR-305", "TC-322", "TC-323", "TC-324"]
+reattested = []
+
+[[act]]
+seq = 40
+date = "2026-10-06"
+approved = ["LLR-306", "SR-231", "TC-321"]
+reattested = []

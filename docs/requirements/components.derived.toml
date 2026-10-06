@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 283
-seam_rows = 231
-requirements_placed = 116
+design_rows = 285
+seam_rows = 235
+requirements_placed = 117
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -631,6 +631,7 @@ sr_refs = [
   "SR-228",
   "SR-229",
   "SR-230",
+  "SR-231",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -730,6 +731,8 @@ llr_refs = [
   "LLR-301",
   "LLR-303",
   "LLR-304",
+  "LLR-305",
+  "LLR-306",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -757,6 +760,7 @@ modules = [
   "project-trajectory/scripts/check.py",
   "project-trajectory/scripts/check_trajectory.py",
   "project-trajectory/scripts/consolidate.py",
+  "project-trajectory/scripts/coordinator_adjudicate.py",
   "project-trajectory/scripts/coordinator_guard.py",
   "project-trajectory/scripts/dispatch.py",
   "project-trajectory/scripts/gen_open_items.py",
@@ -844,6 +848,7 @@ seam_internal_refs = [
   "IF-273",
   "IF-278",
   "IF-279",
+  "IF-282",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -953,6 +958,9 @@ seam_boundary_refs = [
   "IF-277",
   "IF-280",
   "IF-281",
+  "IF-283",
+  "IF-284",
+  "IF-285",
 ]
 
 [component_view.CMP-009]

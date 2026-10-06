@@ -1,0 +1,113 @@
+# docs/decisions/wi-835.toml — WI-835's delegated decisions record (the
+# coordinator's adjudication through the retained session, and the sign-in
+# refusal).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-002", "D-003"]
+
+[decision.D-001]
+decided = "The sign-in probe covers OPENAI as well as ANTHROPIC (coordinator decision): `codex login status` runs under CODEX_HOME set to the dedicated home. Probed on this box's codex-cli 0.160.1 (the spec named 0.160.0): a signed-out home writes `Not logged in` and exits 1, a signed-in one writes `Logged in using ChatGPT` and exits 0, both on stderr after any WARNING lines (an empty temporary home also printed a PATH-alias warning). The reader takes exit 0 with a `Logged in` line as signed-in, a non-zero exit with a `Not logged in` line as missing, and anything else (another wording, a missing subcommand, a failure, a timeout) as unknown, which refuses."
+alternative = "Probe ANTHROPIC only, as the spec's Done-when names only `claude auth status`, leaving the loop's retained OpenAI adjudications to launch into whatever their dedicated home holds."
+reversal_cost = "One row of session_service.SIGNIN_PROBES and its reader, and two parametrised test cases."
+why_not_escalated = "The coordinator decided it in the build prompt: the dial at 55 turns the dedicated home on for the loop's OpenAI adjudicator routes too, and without a probe such a route would launch into an empty home. The codex wording was probed on the installed CLI rather than guessed, and an answer the reader does not recognise is unknown, never signed in."
+review = ""
+
+[decision.D-002]
+decided = "The refusal sits in session_service.plan_keep, after the dial and class check and before keep_for, so both adjudication routes pass it and a refused call takes no lease, creates no home and writes no record. The keep-warm ping is not probed: it only resumes a session already minted under the home, and a ping that fails retires that session under the existing rule."
+alternative = "Refuse in session_service.act for any call whose keep carries a dedicated home, which also covers the keep-warm ping, but runs after keep_for has taken the lease and would route the refusal through keep_abandon, retiring a healthy session."
+reversal_cost = "Move one call (require_signin) and add a probe to take_warm_lease's caller."
+why_not_escalated = "The Done-when scopes the refusal to a launch 'whose keep needs the sign-in' on either route, and both adjudication routes reach the keep only through plan_keep. Probing before the lease is what makes the refusal touch nothing; keep-warm is off in this repo (keepwarm_minutes = 0). Recorded high-risk because it leaves the ping unprobed."
+review = ""
+
+[decision.D-003]
+decided = "With the probe reading this machine's dedicated ANTHROPIC home as signed in, docs/process.toml [adjudicator] context_reset_pct is set to 55 (owner ruling (b)), knowing the probe reads the dedicated OPENAI home as missing: from this commit, a loop adjudication of a retained class (disposition, amendment, red-tc, and first-approval since the owner's D-007 overrule) drawn on an OpenAI route is refused before launch and the run stops needing a human, until the owner signs in under out/adjudicator/home/openai."
+alternative = "Hold the dial at 0 until both families' homes are signed in; or narrow retention to ANTHROPIC routes, which no dial supports today."
+reversal_cost = "One number in docs/process.toml and the WI-802 line."
+why_not_escalated = "The build prompt orders the dial set once the ANTHROPIC probe reads signed in, and says the OpenAI result is expected to be missing and changes nothing. The refusal is the owner's no-fallback rule doing its job: the alternative to refusing is launching into an empty home. Recorded high-risk because it can stop an unattended run until the OpenAI sign-in is made."
+review = ""
+
+[decision.D-004]
+decided = "The shared request is session_service.AdjudicationRequest with adjudication_keep (the dial, the registry rows, the lease of the deadline plus 300 s), and the governing template identity is adjudicate_brief.governing_template, which owns BRIEF_PROMPTS and the override rule compose already applies. The loop's adjudication_keep builds the request from its plan; the entry point builds it from its arguments."
+alternative = "Put the whole composition, template identity included, in session_service, which would import adjudicate_brief and prompts into the launch layer; or keep it in agent_loop and have the entry point import the loop."
+reversal_cost = "Inline two small functions back into agent_loop.adjudication_keep."
+why_not_escalated = "The extraction is the Done-when's own instruction ('extracted once, and both routes use it'); placing each half beside the data it reads keeps session_service free of brief knowledge. A test pins the loop's request to the pre-extraction composition, written out."
+review = ""
+
+[decision.D-005]
+decided = "The entry point is a new shipped kit script, scripts/coordinator_adjudicate.py, with a bootstrap manifest row, two subcommands (`adjudicate`, `signin`) and exit codes 0 (valid verdict), 1 (missing or invalid verdict), 2 (an unusable route or brief file) and 7 (the sign-in refusal, agent_common.EXIT_NEEDS_HUMAN)."
+alternative = "A main() inside session_service; or a kit-side-only script listed in mapping-source-exclusions."
+reversal_cost = "Delete the module, its manifest row and its RESYNC entry (which WI-801 does anyway)."
+why_not_escalated = "The spec makes it temporary and names WI-801 as its remover, so its own module keeps the deletion a whole-file removal and keeps a command line out of the service. It ships because the session service, the loop and the keep layer it rides all ship; the session-protocol skill that directs this repo's coordinator to it does not."
+review = ""
+
+[decision.D-006]
+decided = "The entry point refuses a route that is not a row of docs/agents.toml or is not named on docs/agents-enabled, defaulting to ANTHROPIC-OPUS-STRONG; it does not draw a route."
+alternative = "Launch any registry row named, or draw one as the loop does."
+reversal_cost = "Drop the enable-list check in resolve_route."
+why_not_escalated = "The enable-list is the owner's consent to launch a route unattended with permissions skipped; honouring it costs one read. Drawing is WI-801's (`ask`)."
+review = ""
+
+[decision.D-007]
+decided = "A brief class outside [adjudicator] retain_for (first-approval, consolidate, rejudge) runs as a fresh session through the entry point, which prints `keep: none (the dial does not retain this call)`; retain_for is not widened."
+alternative = "Add first-approval to retain_for, since the coordinator's in-lane adjudications are amendment and first-approval."
+reversal_cost = "One list in docs/process.toml."
+why_not_escalated = "retain_for is a declared owner dial; WI-802 retires it in favour of per-family terms, so widening it here would be a policy change the spec does not ask for. Running unretained by declared policy is not a fallback: the keep never applied."
+owner = "overruled"
+review = "Owner, 2026-10-05: widen this repo's [adjudicator] retain_for to include first-approval, so the coordinator's in-lane first approvals use the retained session too (WI-835's purpose). WI-835's Done-when gains the line, citing docs/decisions/wi-835.toml#D-007."
+
+[decision.D-008]
+decided = "The entry point records through session_service.call: the session log is written under the root it runs in (the lane worktree when run from the lane root) and committed in its own telemetry commit, as the loop's sessions are; the log carries the work item through the call's attribution."
+alternative = "Write the log without committing it, leaving the coordinator to commit it."
+reversal_cost = "A flag on the record step, which the Done-when's one writer argues against."
+why_not_escalated = "The Done-when says the entry point writes the session log, and session_service.record is the one writer, which commits by design (WI-137: a log never rides the next work commit)."
+owner = "confirmed"
+review = ""
+
+[decision.D-009]
+decided = "TC-266's test now asserts the template's dial is 0 and this repo's is 55 with the same keys, and drops the assertion that the loop plans no keep in this repository; _row_env became session_service.route_env, its one test reference renamed."
+alternative = "Leave the test asserting this repo at 0, which the dial change makes false."
+reversal_cost = "Revert two test functions."
+why_not_escalated = "VALUES may diverge between the template and this repo's instance while structure must not (CLAUDE.md), so the test keeps the structure half and the template's off value. TC-266's method cell still says both files read 0; its amendment is listed for Terra."
+review = ""
+
+[decision.D-010]
+decided = "The coordinator recipe outside the repository (coordinator-tools/README.md) is not edited; only the session-protocol skill directs the coordinator to the entry point."
+alternative = "Edit the out-of-repo recipe in this lane."
+reversal_cost = "None: an edit the coordinator makes outside the repository."
+why_not_escalated = "The builder works only in the lane worktree; the recipe is the coordinator's file, outside version control here."
+review = ""
+
+[decision.D-011]
+decided = "The entry point refuses, with exit 2 and before anything launches or is written, a root that is not a lane: it must be the top of a linked worktree (git's worktree records through agent_common.worktree_records, whose first record is the primary checkout) on a branch whose committed tree still holds a claim under docs/work/active/<branch>/ (integrate.claimed_ids_on_branch, the integrator's own claim reader). A primary checkout, a detached HEAD, a branch with no claim and a directory outside any repository are each refused, naming why."
+alternative = "Refuse only the primary checkout (any linked worktree on any branch passes); or record the session log on trunk through a serialized, permitted trunk path."
+reversal_cost = "One function (lane_refusal) and its call in the entry point's input check."
+why_not_escalated = "The owner's direction (D-008, confirmed) is that the entry point runs from the lane, and Sol's review showed a primary-checkout run commits its telemetry onto trunk, which integrate.audit rejects. A lane is defined by its claim, so the check reads the claim rather than trusting any branch name; both readers already exist, so no second primitive is written. integrate.py and this module share CMP-008, so the import adds no cross-component seam."
+review = ""
+
+[decision.D-012]
+decided = "The entry point owns the verdict path the caller names exclusively: as its last check before launch it creates the path empty with O_CREAT|O_EXCL, so a path that exists, or that another call has already reserved, is refused (exit 2, 'name a fresh one'), and of two calls naming one absent path only the first launches. After the call, a non-zero exit or a timeout returns 1 without reading the file, and a reservation still empty (nothing written into it by this call's session) is a missing verdict (exit 1). A call refused before its launch (the sign-in refusal) removes its own still-empty reservation; a call that launched leaves the file, written or empty, for the coordinator to inspect."
+alternative = "Check only that the path does not exist (round 2, racy: a second call could write the verdict the first then reads); delete the reservation after every call; or write to an entry-point-chosen fresh path and report it."
+reversal_cost = "One function (reserve_verdict), one release on the pre-launch refusal, and one empty-file check in the report."
+why_not_escalated = "Sol's round-2 review reproduced the race and the coordinator directed exclusive ownership rather than another existence check, keeping the path the caller names (the brief already embeds it, so the entry point cannot relocate the verdict without recomposing the brief). Leaving a launched call's file keeps the evidence of what that session did or did not write; a pre-launch refusal launched nothing, so its empty reservation carries no evidence and is removed so a retry may name the same path."
+review = ""
+
+[decision.D-013]
+decided = "The sign-in probe reads only the documented answers: claude `auth status` is signed in only at exit 0 with output that is exactly one JSON object whose loggedIn is the boolean true, and missing only at exit 1 with loggedIn false; codex `login status` is read as a whole response: signed in only when, besides blank lines and codex's own PATH-alias warning (which 0.160.1 prints only for a home under the system temporary directory; a home under out/ gets none, probed), it is exactly one `Logged in using <method>` line at exit 0, and missing only when it is exactly `Not logged in` at exit 1. Everything else is unknown, which refuses, including a claude answer followed by any other text (a stderr warning included), a loggedIn of 1, and a codex answer beside a second answer or a fatal line (Sol round 2)."
+alternative = "Extract the JSON object from surrounding text (round 1), or ignore the exit code for claude."
+reversal_cost = "Two small readers and a table in session_service."
+why_not_escalated = "Sol's review showed the round-1 readers authorised undocumented answers; the coordinator directed the documented combinations only. A stray warning reading unknown refuses a launch that might have been fine, which is the safe direction under the no-fallback rule; the probe against this machine's signed-in ANTHROPIC home still reads signed-in."
+review = ""
+
+[decision.D-014]
+decided = "The governing template identity of a retained adjudication covers every class the dial's retain_for names, and it is derived inside the one shared step, session_service.adjudication_keep, from keep_config's retain_for through adjudicate_brief.governing_templates (each class by its operator override text when one is wired under its prompt key, else its shipped template path; a class with no template adds nothing). AdjudicationRequest no longer carries template_paths/template_texts: it carries the operator's prompt_templates overrides (None on the coordinator route), so neither caller composes the identity and a new caller cannot compose a per-class one."
+alternative = "Keep the request's template fields and have each caller pass the retained set to governing_template (two callers reading the dial); or fold the retained set into session_keep.governing_hash, which would need session_keep to import adjudicate_brief, an import cycle (adjudicate_brief reaches session_keep)."
+reversal_cost = "One request field, the identity line in adjudication_keep, and the reshaped governing_templates; the two callers each lose a line."
+why_not_escalated = "The owner confirmed the scope on 2026-10-06 (every retained class's template in the identity, an override still drains); the build prompt left the seam to the builder under deep-module-design. session_service gains a module-level import of adjudicate_brief, which creates no cycle (checked against tests/test_import_layers.py's graph) and adds no deferred import."
+review = ""
+
+[decision.D-015]
+decided = "reserve_verdict creates the verdict path's missing parent directories before its exclusive create. A parent that cannot be created (a path component that is a file, or a permission failure) is still refused with exit 2 as cannot be reserved, and an existing or concurrently reserved path still refuses as before. A call refused before launch removes its empty reservation but leaves any directories it created."
+alternative = "Leave the directory to the caller (the coordinator's mkdir -p workaround in the live run), or remove created directories on a pre-launch refusal."
+reversal_cost = "One mkdir call in reserve_verdict."
+why_not_escalated = "The build prompt directs the fix; an empty review directory left by a refused call is harmless and is the directory the retry names, so removing it would only add a cleanup branch."
+review = ""

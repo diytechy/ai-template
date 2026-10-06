@@ -303,6 +303,22 @@ _Retired-vocabulary check: keep the retired `G*` gate tags, and the retired_
 | `--strict` | promote findings from WARN to ERROR (exit 1). The harness wires this from the DevStg-Tests bar on, like check_trajectory. |
 | `--list-scope` | print the live/skip decision for every file considered, then the findings — so a scope argument is settled by running the tool |
 
+### `scripts/coordinator_adjudicate`
+_The coordinator's adjudication entry point: one retained session, the loop's._
+Contracts (interfaces): IF-283, IF-284, IF-285
+
+| Option | Help |
+|---|---|
+| `--root` |  |
+| `--brief-file` |  |
+| `--brief` |  |
+| `--wi` |  |
+| `--verdict` |  |
+| `--route` |  |
+| `--timeout` |  |
+| `--root` |  |
+| `--family` |  |
+
 ### `scripts/coordinator_guard`
 _The coordinator context guard: stop new lanes at a context threshold, close_
 Contracts (interfaces): IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280, IF-281

@@ -3003,9 +3003,9 @@ phase = 6
 [test.TC-266]
 verifies = ["SR-227", "LLR-270", "IF-248", "IF-065"]
 level = "Unit"
-method = "Read the shipped policy file and its template: both declare [adjudicator] with context_reset_pct = 0 and the same keys, and the configuration they yield is the off default. At dial 0, assert no retained session is planned for an adjudication and the runner's version is not read, its launch argv and environment equal a fresh session's (no session-id or resume flag, the ambient environment), no store is written, the loop's retention plan is None in a bare repository and in this one, and the dispatcher builds no keep-warm; a missing table or a non-numeric dial reads as off; with the dial on, only an adjudication of a retained class is kept."
+method = "Read the shipped policy file and its template: the template declares [adjudicator] with context_reset_pct = 0, this repository declares 55, and both declare the same keys. At dial 0, assert no retained session is planned for an adjudication and the runner's version is not read, its launch argv and environment equal a fresh session's (no session-id or resume flag, the ambient environment), no store is written, the loop's retention plan is None in a bare repository, and the dispatcher builds no keep-warm; a missing table or a non-numeric dial reads as off; with the dial on, only an adjudication of a retained class is kept."
 tier = "Smoke"
-expected = "Satisfies LLR-270 (parent SR-227) at the shipped dial: the retention layer is inert and every adjudication is a fresh session exactly as without it."
+expected = "Satisfies LLR-270 (parent SR-227): the shipped template is inert, this repository's enabled dial has the same shape, and an off dial makes every adjudication a fresh session exactly as without it."
 automated = "Yes"
 evidence = "tests/test_session_keep.py"
 status = "Approved"
@@ -3238,5 +3238,50 @@ tier = "Smoke"
 expected = "The retired verdict vocabulary migrates deterministically without inventing an owner verdict for an unrecognized value."
 automated = "Yes"
 evidence = 'tests/test_decision_overrule.py::test_the_migrator_rewrites_the_retired_key_keeping_each_note; tests/test_decision_overrule.py::test_the_migrator_cli_rewrites_the_records_and_check_reports_them; tests/test_decision_overrule.py::test_the_migrator_drops_a_retired_line_beside_an_existing_owner; tests/test_decision_overrule.py::test_the_migrator_never_rewrites_inside_a_multiline_note; tests/test_decision_overrule.py::test_the_migrator_rewrites_a_multiline_string_verdict_whole; tests/test_decision_overrule.py::test_the_migrator_refuses_what_it_cannot_rewrite_in_place; tests/test_decision_overrule.py::test_the_migrator_keeps_a_trailing_comment_on_the_line_it_rewrites; tests/test_decision_overrule.py::test_the_migrator_accepts_a_record_carrying_nan; tests/test_decision_overrule.py::test_the_migrator_reads_a_numeric_retired_value; tests/test_decision_overrule.py::test_the_migrator_reads_a_multiline_note_holding_a_lone_quote; tests/test_decision_overrule.py::test_the_migrator_reads_past_a_comment_holding_a_quote_or_bracket; tests/test_decision_overrule.py::test_the_migrator_rewrites_a_quoted_retired_key; tests/test_decision_overrule.py::test_the_migrator_cli_keeps_a_records_line_endings; tests/test_decision_overrule.py::test_the_migrator_cli_names_what_it_leaves_and_fails_on_an_unparseable_record'
+status = "Approved"
+phase = 6
+
+
+[test.TC-321]
+verifies = ["SR-227", "SR-231", "LLR-306", "IF-283", "IF-284", "IF-285"]
+level = "Unit"
+method = "Run test_a_second_coordinator_adjudication_resumes_the_first, test_the_coordinator_route_writes_one_session_log_per_call, test_a_session_at_the_dial_drains_and_retires_at_the_next_clear_point, test_an_unknown_route_or_one_off_the_enable_list_is_refused, test_a_missing_or_malformed_verdict_is_reported_and_fails, test_a_failed_call_reusing_a_verdict_path_does_not_return_success, test_a_nonzero_exit_or_a_timeout_fails_whatever_file_exists, test_an_undecodable_brief_is_refused_with_the_usage_exit, test_two_calls_naming_one_verdict_path_never_share_its_verdict, test_a_call_whose_session_writes_into_its_reservation_succeeds, test_a_call_refused_before_launch_releases_its_reservation, test_a_verdict_path_that_cannot_be_reserved_is_refused, test_a_verdict_path_under_a_missing_directory_is_reserved_and_launches, test_a_primary_checkout_root_is_refused_before_launch, test_a_worktree_whose_branch_holds_no_claim_is_refused, test_a_root_outside_any_repository_is_refused, and test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route. Assert a second coordinator-route adjudication resumes the session its first call recorded, and a session at the dial drains and retires at the next clear point. Assert IF-284 outcomes: 0 only for a valid verdict written by a successful in-deadline call; 1 for a failed or timed-out call or a missing or invalid verdict; 2 for a root that is not a claimed lane, an unusable route, a brief file that cannot be read or decoded, or a verdict path that exists or cannot be reserved; and 7 for a retained sign-in refusal. Assert IF-283's default route and the exclusive reservation, including missing-parent creation and release on the sign-in refusal."
+tier = "Smoke"
+expected = "Only a claimed lane worktree launches and writes one attributed session log per call; a second coordinator-route adjudication resumes the session its first call recorded; a session at the dial drains and retires at the next clear point; the default route is ANTHROPIC-OPUS-STRONG; and its call alone owns a newly reserved verdict path, creating missing parents. A retained sign-in refusal releases that reservation and exits 7. The observable IF-284 outcome is 0 only for that call's valid in-deadline verdict; 1 for failed, timed-out, missing or invalid verdict handling; or 2 for a root that is not a claimed lane, an unusable route, a brief file that cannot be read or decoded, or a verdict path that exists or cannot be reserved."
+automated = "Yes"
+evidence = "tests/test_coordinator_adjudicate.py::test_a_second_coordinator_adjudication_resumes_the_first;tests/test_coordinator_adjudicate.py::test_the_coordinator_route_writes_one_session_log_per_call;tests/test_coordinator_adjudicate.py::test_a_session_at_the_dial_drains_and_retires_at_the_next_clear_point;tests/test_coordinator_adjudicate.py::test_an_unknown_route_or_one_off_the_enable_list_is_refused;tests/test_coordinator_adjudicate.py::test_a_missing_or_malformed_verdict_is_reported_and_fails;tests/test_coordinator_adjudicate.py::test_a_failed_call_reusing_a_verdict_path_does_not_return_success;tests/test_coordinator_adjudicate.py::test_a_nonzero_exit_or_a_timeout_fails_whatever_file_exists;tests/test_coordinator_adjudicate.py::test_an_undecodable_brief_is_refused_with_the_usage_exit;tests/test_coordinator_adjudicate.py::test_two_calls_naming_one_verdict_path_never_share_its_verdict;tests/test_coordinator_adjudicate.py::test_a_call_whose_session_writes_into_its_reservation_succeeds;tests/test_coordinator_adjudicate.py::test_a_call_refused_before_launch_releases_its_reservation;tests/test_coordinator_adjudicate.py::test_a_verdict_path_that_cannot_be_reserved_is_refused;tests/test_coordinator_adjudicate.py::test_a_verdict_path_under_a_missing_directory_is_reserved_and_launches;tests/test_coordinator_adjudicate.py::test_a_primary_checkout_root_is_refused_before_launch;tests/test_coordinator_adjudicate.py::test_a_worktree_whose_branch_holds_no_claim_is_refused;tests/test_coordinator_adjudicate.py::test_a_root_outside_any_repository_is_refused;tests/test_coordinator_adjudicate.py::test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route"
+status = "Approved"
+phase = 6
+
+[test.TC-322]
+verifies = ["SR-227", "LLR-270", "LLR-305", "IF-282"]
+level = "Unit"
+method = "Run test_the_loop_composes_the_same_keep_request_as_before, test_switching_retained_classes_with_nothing_edited_keeps_the_session, test_editing_another_retained_class_template_drains_the_session, test_an_operator_override_still_drains_the_session, and test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_template. Assert the request handed to keep planning has the route, work item, environment, configuration and deadline-derived lease inputs, and a template identity for every retained class, each override text in place of its shipped path."
+tier = "Smoke"
+expected = "The loop hands keep planning the route, work item, environment, template, and deadline-derived lease inputs. Every retained class shares one template identity, so switching retained classes drains nothing, while an edited retained template or an operator override drains the session; a class without a template adds neither a path nor text."
+automated = "Yes"
+evidence = "tests/test_coordinator_adjudicate.py::test_the_loop_composes_the_same_keep_request_as_before;tests/test_coordinator_adjudicate.py::test_switching_retained_classes_with_nothing_edited_keeps_the_session;tests/test_coordinator_adjudicate.py::test_editing_another_retained_class_template_drains_the_session;tests/test_coordinator_adjudicate.py::test_an_operator_override_still_drains_the_session;tests/test_coordinator_adjudicate.py::test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_template"
+status = "Approved"
+phase = 6
+
+[test.TC-323]
+verifies = ["SR-227", "LLR-305", "IF-282"]
+level = "Unit"
+method = "Run test_the_probe_reports_signed_in_missing_or_unknown, test_a_probe_that_fails_or_times_out_reports_unknown, test_the_probe_resolves_the_home_without_creating_it, test_the_signin_command_prints_the_probe_result, and test_an_undocumented_probe_answer_is_unknown. Assert the two supported home probes classify only documented exit-and-output pairs as signed-in or missing; every other answer, failure or timeout is unknown after reading the whole response; an absent home runs nothing and is not created; and the command prints the reading."
+tier = "Smoke"
+expected = "The dedicated-home sign-in probe has the three declared readings without making a model call or creating an absent home."
+automated = "Yes"
+evidence = "tests/test_coordinator_adjudicate.py::test_the_probe_reports_signed_in_missing_or_unknown;tests/test_coordinator_adjudicate.py::test_a_probe_that_fails_or_times_out_reports_unknown;tests/test_coordinator_adjudicate.py::test_the_probe_resolves_the_home_without_creating_it;tests/test_coordinator_adjudicate.py::test_the_signin_command_prints_the_probe_result;tests/test_coordinator_adjudicate.py::test_an_undocumented_probe_answer_is_unknown"
+status = "Approved"
+phase = 6
+
+[test.TC-324]
+verifies = ["SR-227", "LLR-305", "IF-282"]
+level = "Unit"
+method = "Run test_the_coordinator_route_refuses_a_retained_launch_not_signed_in, test_the_loop_route_refuses_a_retained_launch_not_signed_in, test_an_unretained_call_is_never_probed, and test_a_family_with_no_dedicated_home_passes_require_signin_unprobed. For missing and unknown readings, assert either retained route starts no launch, names the setup action, and leaves no dedicated home or retention record; assert an off dial and a non-retained class do not probe and launch fresh; and assert a family with no dedicated home passes the sign-in rule without a probe."
+tier = "Smoke"
+expected = "Only a retained launch for a family with a dedicated home requires a readable sign-in; missing or unknown refuses before state changes or fallback, while a family without a dedicated home passes without a probe."
+automated = "Yes"
+evidence = "tests/test_coordinator_adjudicate.py::test_the_coordinator_route_refuses_a_retained_launch_not_signed_in;tests/test_coordinator_adjudicate.py::test_the_loop_route_refuses_a_retained_launch_not_signed_in;tests/test_coordinator_adjudicate.py::test_an_unretained_call_is_never_probed;tests/test_coordinator_adjudicate.py::test_a_family_with_no_dedicated_home_passes_require_signin_unprobed"
 status = "Approved"
 phase = 6

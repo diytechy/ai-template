@@ -2310,7 +2310,7 @@ rationale = """The retention rules and the store are read by the service before 
 owner = "scripts/session_keep"
 requestors = ["scripts/session_service"]
 channel = "call"
-data = "KeepConfig, keep_config, applies, keep_for -> Keep | None, keep_argv, keep_bookkeep, keep_abandon, keepwarm_due, take_warm_lease -> (Keep, reason)"
+data = "KeepConfig, keep_config, applies, dedicated_home -> (variable, path) | None, keep_for -> Keep | None, keep_argv, keep_bookkeep, keep_abandon, keepwarm_due, take_warm_lease -> (Keep, reason)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2518,3 +2518,49 @@ status = "Drafted"
 component = "CMP-008"
 rationale = "The agent CLI needs a separately declared result surface to distinguish success, refusal and usage error without conflating it with command arguments."
 notes = """No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."""
+
+
+[interface.IF-282]
+rationale = "The loop and coordinator need one request shape for the retention plan; if either assembled its own inputs, a retained session could be judged under a different template identity or lease. The sign-in reading belongs beside that plan because refusal must happen before it changes retained state."
+owner = "scripts/session_service"
+requestors = ["scripts/agent_loop", "scripts/coordinator_adjudicate"]
+channel = "call"
+data = "AdjudicationRequest(...); adjudication_keep(request) -> Keep | None; signin_status(root, family, run=None) -> signed-in | missing | unknown; SigninRefused"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - the request is planned but not launched here; a retained dedicated-home reading other than signed-in raises before a lease or home is created."
+
+[interface.IF-283]
+rationale = "The coordinator needs one declared argument surface for an adjudication it starts outside the loop, so the caller, parser and command contract agree on which inputs are admissible."
+owner = "scripts/coordinator_adjudicate"
+requestors = ["external:coordinator"]
+channel = "cli"
+data = "adjudicate --brief-file --brief --wi --verdict [--route --root --timeout]; signin [--family --root]"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation. source - adjudicate uses the enabled default route when none is given and signin creates no home."
+
+
+[interface.IF-284]
+rationale = "The coordinator needs a result surface distinct from command arguments and printed diagnostics, so it can distinguish a valid verdict, a failed call, a preflight refusal and a sign-in hold."
+owner = "scripts/coordinator_adjudicate"
+consumers = ["external:coordinator"]
+channel = "exit-code"
+data = "adjudicate: 0 valid | 1 failed call, missing or invalid verdict | 2 refused before launch | 7 sign-in refused; signin: 0"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
+
+[interface.IF-285]
+rationale = "The coordinator needs the command's human-readable operational reading separate from its arguments and exit code, so a person can see retention, refusal and verdict state without parsing a result number."
+owner = "scripts/coordinator_adjudicate"
+consumers = ["external:coordinator"]
+channel = "stdout"
+data = "keep line; exit line; verdict block and validity, or verdict missing; refused reason; signin [family]: signed-in | missing | unknown"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command output in its own repository session; the locked frame declares no outbound crossing for that output."

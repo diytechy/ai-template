@@ -25,11 +25,12 @@ recorded no usage at all.
     its rules and its store are `session_keep`'s.
 
 Stdlib only, Python 3.11+, Windows/POSIX. A coordinator-layer module: it
-imports its siblings `agent_common`, `agent_session` and `session_adapters`,
+imports its siblings `agent_common`, `agent_session` and `session_adapters`
+(and `adjudicate_brief` for the brief classes' template identity),
 and `agent_loop` and `plan_runner` import it.
 
-Contracts: IF-246 — the interface seam this module declares (process.md §8;
-row of record in docs/requirements/interfaces.toml).
+Contracts: IF-246, IF-282 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-246: the session service's call surface. `Call` is the data a role
     hands over: `root`, `role`, the route's command `template` with `model` and
@@ -55,10 +56,33 @@ Contract IF-246: the session service's call surface. `Call` is the data a role
     one turn where the runner can. `KeepWarmer`, built by `keep_warmer(root,
     cfg)` only when the dial and keep-warm are on, is the dispatcher's
     non-blocking keep-warm (see its docstring).
+
+Contract IF-282: the adjudication request and the sign-in probe, the surface
+    the loop's route and the coordinator's entry point share.
+    `AdjudicationRequest` carries `root`, the brief class `brief`, `family`,
+    `route_id`, the work item `wi`, the route's command `template` and launch
+    `env`, `role` (default ADJUDICATE), the operator's `prompt_templates`
+    overrides (None: the shipped templates), and the call's wall `deadline`
+    in seconds (None: 7200). `adjudication_keep(request)` returns the Keep the
+    adjudication launches under, or None where the `[adjudicator]` dial does
+    not cover it; its lease is the deadline plus 300 s, and its governing
+    template identity covers the templates of every class the dial retains,
+    so switching between retained classes does not drain the session. `signin_status(root,
+    family, run=None)` returns `signed-in`, `missing` or `unknown` for the
+    family's dedicated CLI home, resolved without being created, with no
+    model call: an absent home is missing; otherwise the family's status
+    command (`claude auth status`, `codex login status`) runs under it, and
+    only its documented answers read signed-in or missing: any other answer,
+    a failure or a timeout is unknown. A covered call whose
+    family has a dedicated home and does not read `signed-in` raises
+    `SigninRefused`, naming dev-setup, before any lease is taken or home
+    created; nothing signs in and nothing falls back to a fresh session.
 """
 
 import atexit
+import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -69,6 +93,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 try:
+    import adjudicate_brief
     import agent_common
     import agent_route
     import agent_session
@@ -76,6 +101,7 @@ try:
     import session_keep
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import adjudicate_brief
     import agent_common
     import agent_route
     import agent_session
@@ -428,24 +454,236 @@ def cli_version(template, env=None):
     return lines[0] if proc.returncode == 0 and lines else ""
 
 
-def plan_keep(root, cfg, *, template, env=None, role, brief, route_id, **kw):
+def plan_keep(root, cfg, *, template, env=None, role, brief, route_id, family, **kw):
     """The Keep an adjudication launches under, or None: `session_keep.keep_for`
     with the runner's version read first, and only when the keep operation
-    covers the call, so the off dial launches nothing extra.
+    covers the call, so the off dial launches nothing extra. A covered call
+    whose family runs under a dedicated CLI home is refused first, before any
+    lease or home exists, unless that home is signed in (`require_signin`).
 
     Implements: SR-227, LLR-270
     """
     if not session_keep.applies(cfg, role, brief, route_id):
         return None
+    require_signin(root, family)
     return session_keep.keep_for(
         root,
         cfg,
         role=role,
         brief=brief,
         route_id=route_id,
+        family=family,
         cli_version=cli_version(template, env),
         **kw,
     )
+
+
+# --- the adjudication request: one composition for every route -------------------
+
+
+@dataclass(frozen=True)
+class AdjudicationRequest:
+    """What an adjudication's keep is planned from, composed alike on the
+    loop's route and the coordinator's: the brief class, the family and route,
+    the work item, the operator's `prompt_templates` overrides (keyed by prompt
+    key; None or empty: the shipped templates), and the call's wall `deadline`
+    in seconds (None: the default session wall), which the lease outlives.
+    The governing template identity is not the caller's to compose: the keep
+    derives it from the dial's retained set (`adjudication_keep`).
+
+    Implements: SR-227, LLR-305
+    """
+
+    root: object
+    brief: str
+    family: str
+    route_id: str
+    wi: str
+    template: str
+    env: object = None
+    role: str = "ADJUDICATE"
+    prompt_templates: object = None
+    deadline: object = None
+
+
+# The session wall a request with no deadline is bounded by, and how long the
+# lease outlives the wall, so a call is never resumed under while it runs.
+DEFAULT_DEADLINE = 7200
+LEASE_MARGIN = 300
+
+
+def adjudication_keep(request):
+    """The Keep the request's adjudication launches under, or None: the
+    repository's `[adjudicator]` dial, the work-item registry for the clear
+    point, and a lease tied to the call's deadline, handed to `plan_keep`.
+    The governing template identity covers every class the dial retains
+    (`adjudicate_brief.governing_templates` over `retain_for`, under the
+    request's overrides), so a retained session judges every retained class
+    under one identity and drains only when a template, or an override,
+    changes. Raises SigninRefused as `plan_keep` does.
+
+    Implements: SR-227, LLR-305
+    """
+    cfg = session_keep.keep_config(request.root)
+    paths, texts = adjudicate_brief.governing_templates(
+        cfg.retain_for, request.prompt_templates
+    )
+    return plan_keep(
+        request.root,
+        cfg,
+        template=request.template,
+        env=request.env,
+        role=request.role,
+        brief=request.brief,
+        family=request.family,
+        route_id=request.route_id,
+        wi=request.wi,
+        rows=agent_common.load_wi_registry(request.root),
+        template_paths=paths,
+        template_texts=texts,
+        lease_seconds=(request.deadline or DEFAULT_DEADLINE) + LEASE_MARGIN,
+    )
+
+
+# --- the sign-in probe and the refusal -------------------------------------------
+
+SIGNED_IN = "signed-in"
+SIGNIN_MISSING = "missing"
+SIGNIN_UNKNOWN = "unknown"
+SIGNIN_TIMEOUT = 60
+
+
+class SigninRefused(Exception):
+    """A retained launch refused before it starts: its family's dedicated CLI
+    home is not signed in, or the probe could not tell.
+
+    Implements: SR-227, LLR-305
+    """
+
+
+def _claude_signin(code, text):
+    """`claude auth status` prints one JSON object: signed in is exit 0 with
+    `loggedIn` true, signed out is exit 1 with `loggedIn` false. Any other
+    combination, or output that is not that object alone, is unknown.
+    """
+    try:
+        state = json.loads(text.strip())
+    except ValueError:
+        return SIGNIN_UNKNOWN
+    logged = state.get("loggedIn") if isinstance(state, dict) else None
+    if not isinstance(logged, bool):  # 1 must not read as True
+        return SIGNIN_UNKNOWN
+    return _CLAUDE_READINGS.get((code, logged), SIGNIN_UNKNOWN)
+
+
+# The documented (exit code, `loggedIn`) pairs; every other pair is unknown.
+_CLAUDE_READINGS = {(0, True): SIGNED_IN, (1, False): SIGNIN_MISSING}
+
+
+def _codex_signin(code, text):
+    """`codex login status` (0.160.1) answers with exactly one line on
+    stderr: `Logged in using <method>` at exit 0, or `Not logged in` at exit
+    1. The whole response is read: besides blank lines, only codex's own
+    PATH-alias warning (printed for a home under the system temporary
+    directory) may precede it. Any other line, a second answer, or another
+    exit code is unknown.
+    """
+    lines = [
+        line.rstrip()
+        for line in text.splitlines()
+        if line.strip() and not line.startswith(_CODEX_WARNING)
+    ]
+    if len(lines) != 1:
+        return SIGNIN_UNKNOWN
+    if code == 0 and _CODEX_SIGNED_IN.fullmatch(lines[0]):
+        return SIGNED_IN
+    if code == 1 and lines[0] == "Not logged in":
+        return SIGNIN_MISSING
+    return SIGNIN_UNKNOWN
+
+
+# The one warning codex 0.160.1 prints ahead of its answer (observed under a
+# home in the system temporary directory), and its signed-in line.
+_CODEX_WARNING = "WARNING: proceeding, even though we could not create PATH aliases"
+_CODEX_SIGNED_IN = re.compile(r"Logged in using \S.*")
+
+
+# Each family's status command, which reads the home and calls no model, and
+# its reader. A family with a dedicated home and no row here probes unknown.
+# Implements: SR-227, LLR-305
+SIGNIN_PROBES = {
+    "ANTHROPIC": (("claude", "auth", "status"), _claude_signin),
+    "OPENAI": (("codex", "login", "status"), _codex_signin),
+}
+
+
+def _run_status(argv, env):
+    """Run a status command: `(exit code, stdout and stderr)`."""
+    exe = shutil.which(argv[0]) or argv[0]
+    proc = subprocess.run(
+        [exe, *argv[1:]],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=SIGNIN_TIMEOUT,
+        env=env,
+        stdin=subprocess.DEVNULL,
+    )
+    return proc.returncode, (proc.stdout or "") + "\n" + (proc.stderr or "")
+
+
+def signin_status(root, family, *, run=None):
+    """Whether `family`'s dedicated CLI home is signed in: `signed-in`,
+    `missing` or `unknown`. The home is resolved without being created; an
+    absent home is missing without running anything; otherwise the family's
+    status command runs under it (`run(argv, env)`, default a bounded
+    subprocess); only its documented exit-and-output pairs read signed-in or
+    missing, and any other answer, failure or timeout is unknown.
+
+    Implements: SR-227, LLR-305
+    """
+    home = session_keep.dedicated_home(root, family)
+    probe = SIGNIN_PROBES.get((family or "").upper())
+    if home is None or probe is None:
+        return SIGNIN_UNKNOWN
+    variable, path = home
+    if not path.is_dir():
+        return SIGNIN_MISSING
+    argv, read = probe
+    try:
+        code, text = (run or _run_status)(
+            list(argv), {**os.environ, variable: str(path)}
+        )
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return SIGNIN_UNKNOWN
+    return read(code, text or "")
+
+
+SIGNIN_REFUSAL = (
+    "keep [{family}]: refused before launch: the dedicated CLI home {home} "
+    "reads {status} to the sign-in probe. Sign in there through dev-setup; "
+    "nothing signs in automatically, and the call never falls back to a "
+    "fresh session or the default home."
+)
+
+
+def require_signin(root, family):
+    """Refuse (SigninRefused) a retained launch of `family` whose dedicated
+    home the probe does not read as signed in; a family with no dedicated
+    home has nothing to sign in to.
+
+    Implements: SR-227, LLR-305
+    """
+    family = (family or "").upper()
+    if family not in session_keep.HOME_VARIABLES:
+        return
+    status = signin_status(root, family)
+    if status != SIGNED_IN:
+        _variable, home = session_keep.dedicated_home(root, family)
+        raise SigninRefused(
+            SIGNIN_REFUSAL.format(family=family, home=home, status=status)
+        )
 
 
 class KeepWarmer:
@@ -545,7 +783,7 @@ class KeepWarmer:
             tier=row.tier,
             route_id=row.id,
             source_event="keep-warm",
-            env=_row_env(row),
+            env=route_env(row),
             timeout=KEEPWARM_TIMEOUT,
             keep=keep,
             one_turn=True,
@@ -604,8 +842,11 @@ def keep_warmer(root, cfg):
     return warmer
 
 
-def _row_env(row):
+def route_env(row):
     """A registry row's declared environment merged over the ambient one, or
-    None to inherit it exactly — the loop's own launch rule."""
+    None to inherit it exactly — the loop's own launch rule.
+
+    Implements: SR-227, LLR-305
+    """
     pairs = agent_route.parse_env(getattr(row, "env", "") or "")
     return {**os.environ, **pairs} if pairs else None

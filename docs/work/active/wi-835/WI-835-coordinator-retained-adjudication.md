@@ -58,7 +58,10 @@ repo stays at 0" changes to the value set here.
   - the brief class;
   - the family and route;
   - the work item;
-  - the governing template identity;
+  - the operator's template overrides, from which the keep operation derives
+    the governing template identity over every retained class, so a switch
+    between retained classes is not a rule change (owner-confirmed scope,
+    2026-10-06, after the first live run);
   - a lease duration tied to the call's deadline.
   The loop's composition of that request (`agent_loop.adjudication_keep`) is
   extracted once, and both routes use it. The entry point writes the session
@@ -83,6 +86,10 @@ repo stays at 0" changes to the value set here.
   - the loop's route composes the same request as before the extraction;
   - signed in, missing and unknown are each reported, and missing and unknown
     each refuse the launch.
+- This repo's `[adjudicator] retain_for` gains `first-approval`, so the
+  coordinator's in-lane first approvals use the retained session too (owner,
+  2026-10-05, overruling docs/decisions/wi-835.toml#D-007). The shipped
+  template's list is unchanged.
 - The sign-in is confirmed through the probe. Then this repo's
   `[adjudicator] context_reset_pct` is set to 55, and WI-802's "this repo
   stays at 0" line is amended in the same commit.
@@ -93,3 +100,28 @@ repo stays at 0" changes to the value set here.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit. The coordinator entry
   point and the sign-in refusal are visible once retention is enabled.
+
+## Adjudication follow-ups, answered in this lane
+
+The two adjudications of 2026-10-06, the entry point's first live run
+(`docs/reviews/wi-835-coordinator-retained-adjudication/001-` and
+`002-ADJUDICATE-a10adc3.md`), drafted their follow-ups as `## Dispositions`
+blocks. The owner ruled (2026-10-06) that they are answered here, not
+minted:
+
+- SR-227's acceptance outran its Requirement: its lane-only and in-deadline
+  verdict conditions moved to SR-231 (derived, dial-independent), and
+  LLR-305's ENTRY part became LLR-306 under it (`45f69a78`, `d91c8241`).
+- LLR-305 and TC-321..TC-324, returned: interface contracts referenced by id,
+  the `session_summary` sentence dropped, Expected cells closed over their
+  Methods, items 5 and 6 tested (`5ca5164d`, `45f69a78`, `731d8a76`).
+
+The live run's two code defects (the verdict directory, the per-class
+governing hash) were fixed in `5ca5164d`.
+
+The re-adjudication at 6ca0b05 drafted one more block, answered the same way:
+
+- The first-approval adjudication at 6ca0b05 (`004-ADJUDICATE-6ca0b05.md`)
+  approved LLR-305 and TC-322..TC-324 and returned SR-231 (acceptance
+  outran its Requirement), LLR-306 and TC-321 (SR-227's coordinator half
+  untraced; two lifecycle tests uncited), answered in `309470c0`.
