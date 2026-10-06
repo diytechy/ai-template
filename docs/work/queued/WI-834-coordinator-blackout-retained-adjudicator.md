@@ -1,9 +1,10 @@
 +++
 id = "WI-834"
-title = "Blackout pauses lanes on both routes; the coordinator's adjudicator is retained; run checks the workstation first"
+title = "Blackout pauses lanes on both routes; run checks the workstation first; the entry points are documented"
 workstream = "process"
 sr_refs = ["SR-227", "SR-229", "SR-230"]
 specref = "docs/reviews/wi-834-plan/001-sol-plan-review.md"
+needs = ["WI-835"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 9
@@ -12,14 +13,15 @@ priority = 9
 ## Context
 
 Owner direction 2026-10-05: the highest-priority row, so that other work items
-can run through the coordinator's in-lane build process. It stays one row by
-the owner's choice (2026-10-05), so its Done-when is grouped into three parts,
-each with its own tests:
-- part A, the coordinator's retained adjudication;
+can run through the coordinator's in-lane build process. Its part A, the
+coordinator's retained adjudication, was split out as WI-835 (owner,
+2026-10-05), which is built first by the coordinator in its Claude Code
+session. This row then runs through the build process WI-835 creates, with the
+coordinator watching and resolving what breaks. The remaining parts land as one
+lane, each with its own tests:
 - part B, the blackout pause;
-- part C, run's workstation check and the sign-in step.
-
-The parts land as one lane.
+- part C, run's workstation check and the sign-in step;
+- part D, the entry points and the README.
 
 **What the window is for (owner, 2026-10-05).** The window marks a high-usage
 range that is best avoided to save credits. The goal is to keep usage inside it
@@ -54,21 +56,9 @@ which an interactive session lacks:
 The owner resumes the coordinator after the window, so no relaunch happens
 across it.
 
-**Adjudicator gap.** The coordinator starts each adjudication as a fresh Claude
-Code subagent, which reloads the spine and the briefs from nothing every
-cycle. The retention layer that avoids this, the session service's keep
-operation (`session_keep`, SR-227, LLR-270, verified on this box at WI-541), is
-reachable only from the loop's route (`agent_loop.adjudication_keep`), and this
-repo's `[adjudicator] context_reset_pct` is 0. At the dial, a retained session
-drains and retires at the next clear point (`session_keep._before_launch`).
-
-**One path.** Under the owner's rule of 2026-10-03, the coordinator's
-adjudication goes through the same keep operation and the same
-`out/adjudicator/` record as the loop's. A Claude Code subagent resumed by
-message would be a second retention mechanism, outside the kit's keep
-planning, dedicated-home overlay and bookkeeping. Independence stands: the
-retained adjudicator never judges what its own session authored (Terra
-authors, Opus judges), and OI-69 (b1) keeps `reset_on_same_artifact = false`.
+**The retained adjudicator** is WI-835's: the coordinator adjudicates through
+the session service's keep operation, using the same `out/adjudicator/` record
+as the loop. This row adds what the window does to that session.
 
 **The window and retention (owner, 2026-10-05; overrules OI-69 (c2)).** No
 keep-warm ping fires inside the window. A retained session is not resumed
@@ -82,12 +72,8 @@ under the dedicated CLI home (OI-69 (e1)), which needs its own sign-in. The
 user is offered it in exactly one place: dev-setup, which run calls first. The
 loop's launcher (`agent-resume.*`) offers nothing. On any route, a launch that
 needs the sign-in and finds none is refused with a pointer to dev-setup; it
-never falls back to a fresh session.
-
-**Relation to S788.** WI-801 makes `ask` the only launcher for the loop and
-the coordinator alike. This row's coordinator entry point is temporary.
-WI-801 deletes it and moves its callers and tests to `ask`'s adjudicate kind.
-WI-802's "this repo stays at 0" changes to the value set here.
+never falls back to a fresh session. WI-835 builds the probe and the refusal,
+and this row offers the sign-in.
 
 **Review.** Sol (gpt-6.1-sol, high) reviewed this spec twice before building.
 In round 1 (specref) it found one BLOCKER and seven MAJOR; the owner accepted
@@ -116,39 +102,13 @@ against the code.
   verified before the user is handed the repository's tasks. That check
   includes the dedicated home's sign-in, offered with consent. The check is
   NOT on the agent-resume path.
-- (h) One row, not three.
+- (h) One row for parts B to D, not three. Part A was split out as WI-835 so
+  that it can be built first (owner, 2026-10-05).
+- (i) The dispatcher's claim is refused inside the window too (confirmed by
+  the owner, 2026-10-05).
+- (j) The repository's entry points are documented in the README (part D).
 
 ## Done-when
-
-### Part A: the coordinator's retained adjudication
-
-- The coordinator runs an adjudication through one entry point that composes
-  an adjudication request and calls the session service's keep operation. The
-  request carries:
-  - the brief class;
-  - the family and route;
-  - the work item;
-  - the governing template identity;
-  - a lease duration tied to the call's deadline.
-  The loop's composition of that request (`agent_loop.adjudication_keep`) is
-  extracted once, and both routes use it. The entry point writes the session
-  log, prints the verdict and uses the same `out/adjudicator/` record as the
-  loop.
-- No Claude Code subagent adjudicates. The `session-protocol` skill and the
-  coordinator recipe direct the coordinator to this entry point. WI-801's
-  Done-when gains the line deleting it and moving its callers and tests to
-  `ask`.
-- A launch whose keep needs the dedicated home's sign-in, and finds none, is
-  refused on either route, naming dev-setup.
-- Tests:
-  - a second adjudication on the coordinator route resumes the first one's
-    session;
-  - a session at `context_reset_pct` drains and retires at the next clear
-    point;
-  - a missing sign-in refuses the launch.
-- The sign-in is confirmed (`claude auth status` under the home). Then this
-  repo's `[adjudicator] context_reset_pct` is set to 55 (ruling (b)), and
-  WI-802's "this repo stays at 0" line is amended in the same commit.
 
 ### Part B: the blackout pause
 
@@ -179,8 +139,8 @@ against the code.
   inside the window is refused, naming the UTC end. The dispatcher stays
   exempt from the context guard, not from the window. This replaces the
   documented "the window gates sessions, never dispatch admission" (owner
-  direction 2026-09-04), as a consequence of ruling (a): a claim inside the
-  window would only sit idle, and it would break the pre-window proof above.
+  direction 2026-09-04), by ruling (i): a claim inside the window would only
+  sit idle, and it would break the pre-window proof above.
   The check runs before the context guard's dial check, so it applies with
   the guard off. Outside the window the guard's decision is unchanged.
   IF-271, SR-229 and LLR-300 are amended, since each states guard-off
@@ -199,7 +159,7 @@ against the code.
   `cmd_template` cells, never from a hand-kept list. Script wrappers are not
   inspected. Instead, a coordinator launch script that starts a model outside
   the session service calls a guard subcommand that exits nonzero inside the
-  window. A service-backed entry point, such as part A's, does not call it:
+  window. A service-backed entry point, such as WI-835's, does not call it:
   the service's admission decision governs it, so a wrap-up adjudication is
   not blocked before the service can admit it. The hook is supervision within that
   coverage, not inspection of arbitrary shell programs. IF-274 is amended
@@ -275,20 +235,17 @@ against the code.
   dev-setup seam: its invocation and its result. IF-157 and IF-158 are amended
   where the arguments or exit behaviour change.
 - dev-setup's check reports the dedicated home's sign-in as signed in,
-  missing or unknown, using `claude auth status` under that home with no model
-  call. It resolves the home without creating it. It reads the retention dial
+  missing or unknown, through WI-835's sign-in probe. It reads the retention dial
   and the home through the kit's own reader (`session_keep.keep_config`) when
   a Python runtime exists. Without one, it reports the sign-in as unknown, and
   the rest of the workstation report still runs.
-- On either route, "unknown" refuses the launch with the diagnostic, the same
-  as "missing", and never starts an automatic sign-in.
 - The consent step states what the sign-in command does: it sets the CLI's
   config-home variable for that one command only, so the sign-in lands in the
   adjudicator's own home, and the user's normal login and every other
   repository are left alone. Accepting runs the interactive sign-in. Denying
   leaves configuration and credentials unchanged.
 - The step appears only while retention is on. `agent-resume.*` gains no
-  check, and a launch with a missing sign-in is refused (part A).
+  check, and a launch with a missing sign-in is refused (WI-835).
 - Tests:
   - a bare run calls the operation once (the macOS delegation included), from
     the root, before the menu, and exits with the step when the runtime stays
@@ -296,17 +253,40 @@ against the code.
   - with no terminal, the operation offers nothing, and piped menu input
     survives;
   - the direct and list forms never call it and never pause;
-  - signed in, missing and unknown are each reported, unknown refuses a
-    launch, and a denial changes nothing.
+  - signed in, missing and unknown are each reported, and a denial changes
+    nothing.
+
+### Part D: the entry points and the README
+
+- dev-setup offers, with consent, to switch on the coordinator's Claude Code
+  hooks. The kit ships them inert (`.claude/settings.json.example`, by
+  `bootstrap`). Switching on puts them in place, merging with any hooks
+  already there. Denying changes nothing. dev-setup already wires the
+  pre-commit floor, which runs the repo's declared privacy and secrets checks.
+- This repo gains a `run` launcher as its actions menu (CLAUDE.md: an
+  actions-menu launcher is in scope here; a product launcher is not). It runs
+  part C's check first, then the menu.
+- The root README and the shipped kit's README name each entry point, what it
+  is for and what it checks:
+  - dev-setup: sets up the developer environment, including the pre-commit
+    floor (privacy and secrets, per the repo's declared config) and, opt-in,
+    the coordinator's Claude Code hooks;
+  - run: the same checks, then the menu of the repo's tasks;
+  - a Claude Code coordinator session, through those hooks;
+  - any other LLM session, guided by the skills and the agent guide;
+  - `agent-resume`, the unattended loop.
+- Tests: the hook opt-in puts the hooks in place, keeps any existing ones and
+  changes nothing on a denial; this repo's `run` shows its menu after the
+  check.
 
 ### The whole row
 
 - Spine rows:
   - SR-229, SR-230 and a new SR for the pause and the resume after the window,
     in capability voice with no concrete artifact (ruling R2);
-  - SR-227 and LLR-270 for the coordinator route and the lazy retirement;
+  - SR-227 and LLR-270 for the lazy retirement across a window;
   - LLR-300, LLR-301, IF-246, IF-271, IF-274 and IF-275, amended, plus an IF
-    for the window function and the entry point, and TCs for each site;
+    for the window function, and TCs for each site;
   - the run launcher's interface row (IF-048), amended;
   - IF-278's owner and token transfer rule, kept;
   - the affected runtime flow in `docs/runtime-flows.md`, updated in the same
@@ -327,6 +307,5 @@ against the code.
   - The window's changes are visible only once an adopter arms a window: a
     coordinator then closes down inside it, and a retained adjudicator retires
     across it.
-  - The coordinator entry point and the sign-in refusal are visible once
-    retention is enabled.
   - A bare run now runs dev-setup's check first.
+  - dev-setup now offers to switch on the coordinator's hooks.
