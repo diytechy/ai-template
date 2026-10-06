@@ -33,11 +33,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   open work citing it in the same commit.
   Approval acts run to seq 36. The context guard is live: take the coordinator
   lease (`coordinator_guard.py take`) before any claim.
-  0. **WI-835, then WI-834** (owner, 2026-10-05: the highest priority, so later
-     rows run through the same process). WI-835 makes the coordinator's
-     adjudicator one retained session, built by hand in a coordinator session.
-     WI-834 (the blackout pause, run's workstation check, the entry points in
-     the README) then runs through that process, with the coordinator watching.
+  0. **The retained coordinator adjudicator first, then the blackout row**
+     (owner, 2026-10-05: the highest priority, so later rows run through the
+     same process; both `P9` in the frontier below). The first makes the
+     coordinator's adjudicator one retained session, built by hand in a
+     coordinator session. The second (the blackout pause, run's workstation
+     check, the entry points in the README) then runs through that process,
+     with the coordinator watching.
   1. **Build the S788-* successor rows** of the approved design note
      ([plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
      its ruling section first; it overrides the chapters), in their `needs`
