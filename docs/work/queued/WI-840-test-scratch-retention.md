@@ -5,7 +5,7 @@ workstream = "tooling"
 specref = "docs/log.d/2026-10-06-wave17-coordinator.md"
 buildtier = "quick"
 safety_class = "ordinary"
-priority = 2
+priority = 9
 +++
 
 ## Context

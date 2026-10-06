@@ -7,7 +7,7 @@ specref = "docs/reviews/wi-834-plan/001-sol-plan-review.md"
 needs = ["WI-835"]
 buildtier = "medium"
 safety_class = "ordinary"
-priority = 9
+priority = 8
 +++
 
 ## Context

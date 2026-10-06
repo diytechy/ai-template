@@ -6,7 +6,7 @@ sr_refs = ["SR-227"]
 specref = "docs/log.d/2026-10-06-wave17-coordinator.md"
 buildtier = "medium"
 safety_class = "ordinary"
-priority = 3
+priority = 9
 +++
 
 ## Context

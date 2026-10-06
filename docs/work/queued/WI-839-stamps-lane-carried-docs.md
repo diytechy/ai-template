@@ -5,7 +5,7 @@ workstream = "process"
 specref = "docs/reviews/wi-835-coordinator-retained-adjudication/sol-review-r5-dispute.md"
 buildtier = "quick"
 safety_class = "ordinary"
-priority = 2
+priority = 9
 +++
 
 ## Context

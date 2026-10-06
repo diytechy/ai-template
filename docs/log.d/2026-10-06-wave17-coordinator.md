@@ -54,7 +54,7 @@ trunk. So the lane was rebased onto `681e3280`, and only the generated
 up to the commit before the close (`181ec900`, every hook step passing), and
 then the close.
 
-### Follow-ups (topics, unfiled)
+### Follow-ups (filed after the landing as WI-838, WI-839 and WI-840)
 
 - The first mint on a route writes no lease (`session_keep._hold` with no
   record), so two simultaneous first calls can both mint. This predates WI-835.
@@ -65,3 +65,17 @@ then the close.
   keeps a literal `--basetemp`. `tmp_path_retention_policy = failed` and one dated
   run root per session would bound them. 137 stale directories (6.6 GB) were
   deleted this session.
+
+### After the landing
+
+The sweep minted WI-836 (the re-mint) and WI-837 (the Done-when goalposts row).
+WI-836 was closed as already settled: the three registries are byte-identical to
+their anchors after acts 37 and 38. WI-837 was cancelled by the owner's review:
+both Done-when changes were the owner's own rulings and keep the work item's
+purpose. The owner then directed that an in-lane Done-when change be blessed by
+an adjudicator, not refused by a guard. That holds what consumes the Done-when
+(the next build dispatch and the close), never the test suite, and lets one
+combined sitting per checkpoint judge every pending in-lane judgement. Filed as
+WI-841, with the three follow-ups above as WI-838, WI-839 and WI-840. The owner
+put all four ahead of the blackout row (`P9`; WI-834 now `P8`) for the next
+session.
