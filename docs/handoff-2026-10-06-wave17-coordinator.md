@@ -1,5 +1,8 @@
 # Handoff 2026-10-06 (wave 17, coordinator): WI-835 landed; the adjudication batch is next
 
+It replaces [handoff-2026-10-05-wave16-coordinator.md](handoff-2026-10-05-wave16-coordinator.md)
+as the resume map.
+
 ## State (trunk `refactor_again`, nothing pushed)
 
 - **Landed: WI-835, the coordinator's retained adjudicator** (acts 37 to 40).
