@@ -89,10 +89,13 @@ the coordinator alike. This row's coordinator entry point is temporary.
 WI-801 deletes it and moves its callers and tests to `ask`'s adjudicate kind.
 WI-802's "this repo stays at 0" changes to the value set here.
 
-**Review.** Sol (gpt-6.1-sol, high) reviewed this spec before building
-(specref: NOT YET SOUND, one BLOCKER and seven MAJOR). The coordinator
-confirmed the load-bearing claims against the code; every fix below is
-accepted by the owner (2026-10-05).
+**Review.** Sol (gpt-6.1-sol, high) reviewed this spec twice before building.
+In round 1 (specref) it found one BLOCKER and seven MAJOR; the owner accepted
+every fix (2026-10-05). In round 2
+(`docs/reviews/wi-834-plan/002-sol-plan-review-r2.md`), 14 of the 20 round-1
+items were resolved and 6 partly, and it raised four MAJOR and three MINOR
+findings, all folded in. The coordinator confirmed each load-bearing claim
+against the code.
 
 **Owner rulings, 2026-10-05:**
 - (a) The window keeps usage to a minimum while every lane reaches a good pause
@@ -150,7 +153,8 @@ accepted by the owner (2026-10-05).
 ### Part B: the blackout pause
 
 - **One window function.** It answers both "is `t` inside a window?" and "when
-  did the most recent window end before `t`?". Admission, launch, the hooks and
+  did the most recent window end, at or before `t`?". The second is inclusive,
+  so a call exactly at an end sees that window. Admission, launch, the hooks and
   retirement all call it, and it is the only reader of `[policies] blackout`.
   - A window that wraps past midnight belongs to its start weekday, so a
     Friday-night window continues into Saturday and a Sunday-night window
@@ -163,14 +167,22 @@ accepted by the owner (2026-10-05).
   window for every caller. The loop handles the refusal by waiting and
   retrying (its existing `blackout_wait`). That also covers the loop's
   interactive route and recovery probes, which reach the service directly.
-  The one admitted launch is an adjudication of a work item whose row is
-  `active`. Claims are refused inside the window, so an active row is a lane
-  claimed before it. The rule is derived from the registry, with no
-  caller-selected flag. IF-246 is amended.
-- **Claim admission.** On every route but the live dispatcher's
-  (`dispatch_lock_held`), a claim inside the window is refused, naming the UTC
-  end. The check runs before the context guard's dial check, so it applies
-  with the guard off. Outside the window the guard's decision is unchanged.
+  The one admitted launch is a call whose role is `ADJUDICATE`, for a named
+  work item whose claim is `active` in the primary checkout's registry. A
+  lane's own checkout is not enough, because the close-first rule moves its
+  spec before the verdict. The call carries the work item itself, separately
+  from the keep, so the rule also holds with retention off. Claims are refused
+  inside the window on every route (below), so an active claim is a lane
+  claimed before it. The rule is derived from the role and the registry, with
+  no caller-selected flag. IF-246 is amended.
+- **Claim admission.** On every route, the live dispatcher's included, a claim
+  inside the window is refused, naming the UTC end. The dispatcher stays
+  exempt from the context guard, not from the window. This replaces the
+  documented "the window gates sessions, never dispatch admission" (owner
+  direction 2026-09-04), as a consequence of ruling (a): a claim inside the
+  window would only sit idle, and it would break the pre-window proof above.
+  The check runs before the context guard's dial check, so it applies with
+  the guard off. Outside the window the guard's decision is unchanged.
   IF-271, SR-229 and LLR-300 are amended, since each states guard-off
   admission as unconditional.
 - **The hooks.** While a window is armed, the guard's hooks run whether or not
@@ -185,8 +197,11 @@ accepted by the owner (2026-10-05).
     `||`, `;` and `|` chains.
   The CLI names come from the executables in `docs/agents.toml`'s
   `cmd_template` cells, never from a hand-kept list. Script wrappers are not
-  inspected. Instead, the coordinator's launch scripts call a guard subcommand
-  that exits nonzero inside the window. The hook is supervision within that
+  inspected. Instead, a coordinator launch script that starts a model outside
+  the session service calls a guard subcommand that exits nonzero inside the
+  window. A service-backed entry point, such as part A's, does not call it:
+  the service's admission decision governs it, so a wrap-up adjudication is
+  not blocked before the service can admit it. The hook is supervision within that
   coverage, not inspection of arbitrary shell programs. IF-274 is amended
   (`tool_name`, `tool_input`) and IF-275 (the denial response).
 - **The coordinator's close-down.** Inside the window, SessionStart and the
@@ -199,9 +214,11 @@ accepted by the owner (2026-10-05).
   SessionEnd inside the window, a pending request is cancelled and recorded
   as `blackout`; no successor starts. SR-230 and LLR-301 are amended. To
   resume, the owner reopens the same session, which still holds the lease, or
-  releases and takes the lease for a fresh one. The `session-protocol`
-  close-out recipe states both, and no longer says every close-out requests a
-  relaunch.
+  releases and takes the lease for a fresh one. If the context-threshold latch
+  is also set, reopening the same session needs the owner's recorded clear,
+  because only the blackout drain ends with the clock. The `session-protocol`
+  close-out recipe states these cases, and no longer says every close-out
+  requests a relaunch.
 - **The pause point.** It is the last finished step whose evidence is
   committed. A lane whose next step is a review, rework or any launch the
   window refuses stops there, and the handoff names that obligation; the
@@ -213,14 +230,25 @@ accepted by the owner (2026-10-05).
   call after a window, a session whose last use is before that window's end is
   retired with the reset reason `blackout`, overriding pending-chain
   continuity, and a new session is minted. A record without a last-use time
-  retires. OI-69 (c2) is overruled in the same commit.
+  retires. The keep-warm path applies the same retirement before it pings, so
+  no ping refreshes a stale session's last use. A wrap-up that finishes after
+  the window's end has a last use after it, so that session is resumed, as the
+  predicate states. OI-69 (c2) is overruled in the same commit.
 - Tests:
   - the window function's boundary fixtures: the end minute, a wrap across
     Friday to Saturday and across Sunday to Monday, a weekend, disabled, a
     changed value, and a missing last-use time;
   - on both routes, a lane claimed before the window starts no session inside
-    it except a wrap-up adjudication of an active row, and resumes after it
-    under a new session;
+    it except a wrap-up adjudication of an active claim, and resumes after it;
+  - a wrap-up that ends inside the window, exactly at its end, or after it,
+    each meeting the retirement predicate as stated, and a keep-warm tick that
+    comes first after the window and does not refresh a stale session;
+  - the dispatcher's claim is refused inside the window, and its context-guard
+    exemption is unchanged;
+  - a non-adjudication call, and an adjudication of a work item with no active
+    claim, are refused inside the window;
+  - the same session reopened with both drain causes still needs the owner's
+    clear;
   - a review-next lane pauses with the obligation in the handoff, and a
     wrap-up verdict that requires rework waits;
   - with the context guard off, the hooks deny each listed call form, the
@@ -229,14 +257,31 @@ accepted by the owner (2026-10-05).
 
 ### Part C: run checks the workstation first
 
-- A bare `run` (the double-click, no arguments) calls dev-setup's check before
-  the menu, in every shipped `run.*` launcher template. If anything is
-  missing, it offers dev-setup's consent-first install, item by item, then
-  shows the menu. `run <name>` and `run --list` (the agent surface) never
-  prompt.
+- dev-setup gains one operation for run: check, then offer. The operation:
+  - reports what is missing and returns a defined result;
+  - with an interactive terminal, offers the consent-first install item by
+    item;
+  - with no interactive terminal, offers nothing.
+  The standalone check keeps its contract: read-only, and always exit 0.
+- A bare `run` (the double-click, no arguments) calls that operation before
+  the menu, from the repository root, in every shipped `run.*` launcher
+  template. It runs once per run, so `run.command`'s delegation to `run.sh`
+  does not run it twice. If the runtime is still missing afterwards, `run`
+  exits with the step to take instead of showing the menu. The consent prompts
+  never consume input piped to the menu.
+- `run <name>` and `run --list` (the agent surface) never call the operation
+  or prompt, and on Windows they skip the launcher's closing `pause`.
+- IF-048, the capability listing, is unchanged. A new IF declares the run to
+  dev-setup seam: its invocation and its result. IF-157 and IF-158 are amended
+  where the arguments or exit behaviour change.
 - dev-setup's check reports the dedicated home's sign-in as signed in,
   missing or unknown, using `claude auth status` under that home with no model
-  call. The check resolves the home without creating it.
+  call. It resolves the home without creating it. It reads the retention dial
+  and the home through the kit's own reader (`session_keep.keep_config`) when
+  a Python runtime exists. Without one, it reports the sign-in as unknown, and
+  the rest of the workstation report still runs.
+- On either route, "unknown" refuses the launch with the diagnostic, the same
+  as "missing", and never starts an automatic sign-in.
 - The consent step states what the sign-in command does: it sets the CLI's
   config-home variable for that one command only, so the sign-in lands in the
   adjudicator's own home, and the user's normal login and every other
@@ -245,10 +290,14 @@ accepted by the owner (2026-10-05).
 - The step appears only while retention is on. `agent-resume.*` gains no
   check, and a launch with a missing sign-in is refused (part A).
 - Tests:
-  - a bare run calls the check before the menu;
-  - the direct and list forms never call it;
-  - signed in, missing and unknown are each reported, and a denial changes
-    nothing.
+  - a bare run calls the operation once (the macOS delegation included), from
+    the root, before the menu, and exits with the step when the runtime stays
+    missing;
+  - with no terminal, the operation offers nothing, and piped menu input
+    survives;
+  - the direct and list forms never call it and never pause;
+  - signed in, missing and unknown are each reported, unknown refuses a
+    launch, and a denial changes nothing.
 
 ### The whole row
 
@@ -262,6 +311,15 @@ accepted by the owner (2026-10-05).
   - IF-278's owner and token transfer rule, kept;
   - the affected runtime flow in `docs/runtime-flows.md`, updated in the same
     change.
+- Shipped documentation that promises otherwise is updated in the same change:
+  - `PROCESS_OPTIONS.md`'s blackout section: no new coordinator session,
+    claims refused on every route, the wrap-up adjudication exception, and the
+    start-weekday wrap;
+  - `process.toml.template`'s comments on `blackout` (the "never dispatch
+    admission" note and "weekends are never blacked out", narrowed to the
+    wrap rule), on `keepwarm_minutes` (no ping inside the window), and on
+    `context_guard_pct` (the hooks act on an armed window at 0);
+  - this repo's `docs/process.toml` comment on `blackout`, to match.
   Terra authors these rows, and each passes the in-lane adjudication.
 - The row's test bar: its affected modules' tests plus the smoke tier.
 - Review bar: A (one cross-family REVIEW-A).
