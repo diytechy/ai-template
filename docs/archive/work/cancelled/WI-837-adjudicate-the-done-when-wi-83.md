@@ -2,10 +2,14 @@
 id = "WI-837"
 title = "adjudicate the Done-when WI-835 changed in its own lane wi-835 - does the close still answer the row as claimed? (cancel / defer / draft a successor / surface an open item)"
 workstream = "process"
-specref = "docs/archive/work/complete/WI-835-coordinator-retained-adjudication.md"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 +++
+
+## Deliverable
+
+CANCELLED by the owner's review (2026-10-06): both Done-when changes WI-835 made in its own lane keep the work item's purpose, so no successor is drafted. The first change, the request carrying the operator's overrides so that the keep derives the identity over every retained class, clarifies how the same obligation is met; the owner confirmed it on 2026-10-06, after the first live run. The second change, this repo's `retain_for` gaining `first-approval`, is the owner's own overrule (`docs/decisions/wi-835.toml#D-007`, 2026-10-05) and serves WI-835's stated purpose. The owner ruled rather than an adjudicator because both changes were the owner's rulings, which outrank an adjudicator's reading of scope.
 
 ## Context
 
