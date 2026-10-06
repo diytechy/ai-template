@@ -3,11 +3,15 @@ id = "WI-842"
 title = "A closing coordinator hands its lease back, so the next session takes it without the owner's release"
 workstream = "process"
 sr_refs = ["SR-229"]
-specref = "docs/archive/specs/WI-822.2026-10-05.md"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 9
 +++
+
+## Deliverable
+
+The coordinator lease's holder hands it back as a recorded act, `coordinator_guard.py handback --handoff <path>`, the last step of every coordinator close-out that requests no relaunch (the session-protocol skill), so the next session's take succeeds without the owner's release. Only the holder may run it; a non-holder is refused whatever handoff it names and pointed at the owner's release, which stays for a holder that has gone. It names a handoff carrying a session prompt, frees the lease and its latch, and records a `handback` event. Only the holder's own pending relaunch request blocks it; a crashed previous holder's leftover request is left for session_end's existing refusal (D-002). Dial 0 reads and writes nothing. The holder and session-prompt checks are shared with request-relaunch. Rows: SR-229, LLR-300, TC-316 and TC-318 re-attested after a MEANING verdict (act seq 41, verdict 001); TC-317's evidence and IF-280's data (Drafted) follow. Codex 6.1 Sol: two rounds, the second SOUND (`b6c13a8d`). Decisions: `docs/decisions/wi-842.toml`.
 
 ## Context
 

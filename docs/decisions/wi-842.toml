@@ -1,0 +1,47 @@
+# docs/decisions/wi-842.toml — WI-842's delegated decisions record (the
+# closing coordinator's hand-back of its lease).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "The hand-back is gated by the dial like the hooks and the claim boundary: at `[coordinator] context_guard_pct = 0` hand_back returns None (exit 0) before reading the handoff or the lease and writes nothing, so the session-protocol close-out can run it unconditionally."
+alternative = "Run it whatever the dial, as take, release, clear and request-relaunch do today (none of them checks the dial), freeing a lease that a dial-0 repo never uses."
+reversal_cost = "One guard line in hand_back and one test."
+why_not_escalated = "The build prompt orders it ('Dial 0: every entry point returns before reading or writing') and the Done-when requires 'Dial 0 still writes nothing'. Noted as a finding: the existing take/release/clear/request-relaunch do not check the dial, so the module header's 'every entry point returns before reading or writing' is true of the hooks, the claim and now the hand-back, not of those four."
+review = ""
+
+[decision.D-002]
+decided = "A hand-back is refused while the holder's OWN relaunch request (relaunch.json naming the calling session) is pending, telling it to end the session so its relaunched successor takes the lease; the lease and the request are left unchanged. A request left by a previous holder (one that requested a relaunch and was then released by the owner) does not block the current holder's hand-back and is left in place, untouched: the existing session_end path already refuses it as foreign (moving it to `.refused` and recording `relaunch-refused`) at a later holder's exit, and a later holder's own request-relaunch replaces it. An unreadable request file does not block either. (Round 2: Codex Sol round-1 MAJOR, a previous holder's request stranded the current holder's lease.)"
+alternative = "(a) Let the hand-back free the lease whatever request is on file, which silently cancels the holder's own requested relaunch; (b) block on any request file (round 1), which strands the current holder's lease behind a crashed predecessor's request; (c) move a superseded request aside to `.refused` inside the hand-back, a second refusal path beside session_end's."
+reversal_cost = "One helper (_own_request_pending) and its check in hand_back, and two tests."
+why_not_escalated = "The spec makes the hand-back the close-out's last act 'unless it requested a relaunch', so the holder's own request and its hand-back are exclusive; the coordinator's round-2 direction scopes the block to the current holder's request and asks for one code path for superseded requests, which leaving it to session_end keeps. Recorded high-risk because it is a refusal the spec does not name and it leaves a stale request file until a later exit or request replaces it."
+review = ""
+
+[decision.D-003]
+decided = "The hand-back's event is `handback` with fields `session`, `handoff` (the resolved path) and `was_draining`; the lease is replaced by the empty record, exactly as the owner's release leaves it, so a latched drain ends with it and the next take installs an unlatched holder."
+alternative = "Keep a tombstone in the lease (the last holder and its handoff), or unlatch while keeping the lease held until the next take."
+reversal_cost = "The event fields and one assertion; a tombstone would change what take and claim_refusal read as free."
+why_not_escalated = "The Done-when says it 'frees the lease and records a handback event naming the handoff', and that the latch clears 'with the lease, as a successor's take does'; the empty record is the existing meaning of a free lease."
+review = ""
+
+[decision.D-004]
+decided = "The holder and session-prompt checks request_relaunch already made are extracted into two shared helpers (_not_holder, _promptless) that request_relaunch and hand_back both call; request_relaunch's refusal texts are unchanged, and the hand-back's non-holder refusal appends the owner's release command."
+alternative = "Copy the two checks into hand_back."
+reversal_cost = "Inline two helpers."
+why_not_escalated = "The build prompt orders reuse over duplication; behaviour of request_relaunch is unchanged and its tests pass."
+review = ""
+
+[decision.D-005]
+decided = "The hand-back is tagged `Implements: SR-229, LLR-300` (the lease row, whose module is coordinator_guard.py) and is to be listed in LLR-300's code_symbol; no new LLR is proposed, and the reserved LLR-311 is left unused."
+alternative = "A new LLR-311 for the hand-back, or tagging it to LLR-301 (the relaunch row that shares the handoff check)."
+reversal_cost = "Re-tag one function and move one code_symbol entry."
+why_not_escalated = "The hand-back is a lease transfer, which LLR-300 owns alongside take, release and clear; SR-229 is the requirement the spec cites."
+review = ""
+
+[decision.D-006]
+decided = "The skill's close-out names the hand-back as the end of every coordinator close-out, latched or not, that requests no relaunch, and the mirrors under .claude/skills and .agents/skills were refreshed by byte copy of the source, verified with gen_skills_index.py --check-agents, rather than by running bootstrap.py --sync against this repo."
+alternative = "Run bootstrap.py --dest . --sync, which also re-materializes every other per-agent skill subtree."
+reversal_cost = "None: the result is byte-identical to what --sync writes for this skill."
+why_not_escalated = "The drift gate checks byte identity to source, which the copy satisfies, and the narrower operation touches only the skill this WI edits while another lane (WI-840) edits the same skill."
+review = ""

@@ -192,13 +192,16 @@ cadence"). New behavior needs new tests
   log fragment; (4) request the relaunch,
   `python project-trajectory/scripts/coordinator_guard.py request-relaunch --handoff <path>`,
   then end the session: the relaunch runs at its exit, never at `/clear` or
-  `/resume`. The handoff also classifies each compaction the lease recorded
-  (`coordinator_guard.py status`) as a **missed threshold** (auto-compaction
-  before the latch), a **manual** compaction, or a compaction **during the
-  drain**. A coordinator session takes the lease with `coordinator_guard.py
+  `/resume`. Every coordinator close-out, latched or not, that requests no
+  relaunch ends instead by handing the lease back as its last act after the
+  handoff, `coordinator_guard.py handback --handoff <path>`, so the next
+  session's `take` succeeds. The handoff also classifies each compaction the
+  lease recorded (`coordinator_guard.py status`) as a **missed threshold**
+  (auto-compaction before the latch), a **manual** compaction, or a
+  compaction **during the drain**. A coordinator session takes the lease with `coordinator_guard.py
   take`; a crashed holder's lease is freed only by the owner's recorded
-  `release --reason`, and a latch only by the owner's recorded `clear` or the
-  relaunched successor's take.
+  `release --reason`, and a latch only by the owner's recorded `clear`, the
+  holder's hand-back or the relaunched successor's take.
 - WI ordering is derived from the registry by `schedule.py` (the DAG +
   `Priority` + gate class), not a hand-curated `docs/next-wi` — that pointer
   is retired (WI-180; process-options.md "Unattended operation"). When

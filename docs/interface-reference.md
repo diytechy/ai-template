@@ -393,7 +393,7 @@ _The coordinator context guard: stop new lanes at a context threshold, close_
 
 **IF-279** — the guard starts a launcher, detached, as `coordinator-relaunch.{cmd,sh} REPO_ROOT PROMPT_FILE TOKEN`: the declared repo root, a prompt file holding the handoff's session prompt, and the successor token. The POSIX launcher reads the prompt file itself; the Windows launcher passes it back as `coordinator_guard.py exec-claude --prompt-file PROMPT_FILE`, which runs `claude` with the prompt as its one argument and exits with claude's code. A launcher that exits non-zero within the grace period is a failed launch, and the request is restored.
 
-**IF-280** — the command line is `coordinator_guard.py [--root ROOT]` with one of `hook`, `status`, `take [--session S] [--transcript T]`, `release --reason R`, `clear --reason R` or `request-relaunch --handoff H [--session S]`.
+**IF-280** — the command line is `coordinator_guard.py [--root ROOT]` with one of `hook`, `status`, `take [--session S] [--transcript T]`, `release --reason R`, `clear --reason R`, `request-relaunch --handoff H [--session S]` or `handback --handoff H [--session S]`.
 
 **IF-281** — the command line's exit code is 0 on success and 1 on a refusal, whose reason goes to stderr after "coordinator guard: "; a usage error exits 2; `hook` always exits 0.
 

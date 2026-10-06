@@ -7190,6 +7190,25 @@ trunk's side. Every other declared generated artifact stays trunk-only. If a
 reviewer or a local rule of yours refused a lane's ratchet re-stamp on the old
 wording, drop that rule; nothing in the integrator changed.
 
+### A closing coordinator hands its lease back [since dc1d2851]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/coordinator_guard.py` gains `handback --handoff
+<path> [--session S]`: the current lease holder, at its close-out, frees the
+lease (a latched drain ends with it) and records a `handback` event naming
+its handoff, so the next coordinator session's `take` succeeds without the
+owner's `release`. Only the holder may run it; another caller is refused and
+told the owner releases. A handoff with no session prompt, or a pending
+relaunch request, is refused. The session-protocol skill's coordinator
+close-out now ends with the hand-back after writing the handoff, whenever it
+requests no relaunch. At `context_guard_pct = 0` the command reads and writes
+nothing.
+
+**What to do.** Re-sync `scripts/coordinator_guard.py` and the
+session-protocol skill (and its per-agent copies). With the dial at the
+shipped `0`, nothing else changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

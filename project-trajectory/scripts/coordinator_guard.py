@@ -8,14 +8,17 @@ lanes, and compaction then degrades it. This module is the whole guard:
 - **the occupancy reader** (`read_occupancy`): the newest valid assistant
   `usage` after the transcript's last compaction boundary, on the live branch,
   read from the transcript's TAIL only (transcripts reach tens of MB);
-- **the lease** (`take`, `release`, `clear`): one record naming the one
-  coordinator session, under the primary checkout's untracked
-  `out/coordinator/`. It passes in exactly two ways: to the relaunched
-  successor at its `SessionStart`, or by the owner's recorded release. Time
-  never transfers it;
+- **the lease** (`take`, `release`, `clear`, `hand_back`): one record naming
+  the one coordinator session, under the primary checkout's untracked
+  `out/coordinator/`. It passes in exactly three ways: to the relaunched
+  successor at its `SessionStart`, by the holder's recorded hand-back naming
+  the handoff it closed with (freeing it for the next session's take), or by
+  the owner's recorded release of a holder that has gone. Time never
+  transfers it;
 - **the drain latch** (`latch_reading`): the first reading at or above the
   declared threshold latches drain mode in the lease, and only the successor's
-  take or the owner's recorded clear unlatches it;
+  take, the holder's hand-back (which frees the lease with it) or the owner's
+  recorded clear or release unlatches it;
 - **the admission boundary** (`claim_refusal`): the work-item claim calls it on
   every route except the live dispatcher's;
 - **the hook entry point** (`hook`): one CLI dispatching on the event name the
@@ -85,8 +88,9 @@ Contract IF-279: the guard starts a launcher, detached, as
 
 Contract IF-280: the command line is `coordinator_guard.py [--root ROOT]`
     with one of `hook`, `status`, `take [--session S] [--transcript T]`,
-    `release --reason R`, `clear --reason R` or
-    `request-relaunch --handoff H [--session S]`.
+    `release --reason R`, `clear --reason R`,
+    `request-relaunch --handoff H [--session S]` or
+    `handback --handoff H [--session S]`.
 
 Contract IF-281: the command line's exit code is 0 on success and 1 on a
     refusal, whose reason goes to stderr after "coordinator guard: "; a
@@ -362,8 +366,8 @@ def _now():
 
 
 def record_event(directory, kind, **fields):
-    """Append one event to `events.jsonl`: every take, release, clear, latch,
-    compaction, refused request and launch is recorded there.
+    """Append one event to `events.jsonl`: every take, release, hand-back,
+    clear, latch, compaction, refused request and launch is recorded there.
 
     Implements: SR-229, LLR-300
     """
@@ -711,6 +715,24 @@ def session_prompt(handoff):
     return None
 
 
+def _promptless(handoff):
+    """The refusal of a handoff with no session prompt, or None."""
+    if session_prompt(handoff):
+        return None
+    return "{} carries no session prompt (a fenced block under a 'Session prompt' heading)".format(
+        handoff
+    )
+
+
+def _not_holder(lease, session_id, act):
+    """The refusal of a caller that is not the lease holder, or None."""
+    if session_id and lease.get("holder") == session_id:
+        return None
+    return "only the lease holder {} (holder: {}, caller: {})".format(
+        act, lease.get("holder"), session_id
+    )
+
+
 def request_relaunch(root, handoff, session_id):
     """Write the relaunch request for the holder: its session id, the repo
     root, the handoff and the creation time, atomically. Returns None, or the
@@ -719,16 +741,14 @@ def request_relaunch(root, handoff, session_id):
     Implements: SR-230, LLR-301
     """
     handoff = Path(handoff).resolve()
-    if not session_prompt(handoff):
-        return "{} carries no session prompt (a fenced block under a 'Session prompt' heading)".format(
-            handoff
-        )
+    refusal = _promptless(handoff)
+    if refusal:
+        return refusal
     with session_keep.dir_lock(lease_dir(root)) as directory:
         lease = _load(directory)
-        if not session_id or lease.get("holder") != session_id:
-            return "only the lease holder requests the relaunch (holder: {}, caller: {})".format(
-                lease.get("holder"), session_id
-            )
+        refusal = _not_holder(lease, session_id, "requests the relaunch")
+        if refusal:
+            return refusal
         request = {
             "session_id": session_id,
             "repo_root": lease.get("repo_root") or str(Path(root).resolve()),
@@ -737,6 +757,58 @@ def request_relaunch(root, handoff, session_id):
         }
         write_atomic(_request_path(directory), json.dumps(request, indent=2) + "\n")
         record_event(directory, "relaunch-requested", **request)
+    return None
+
+
+def _own_request_pending(directory, session_id):
+    """True when the relaunch request on file is `session_id`'s own; an
+    absent, unreadable or another session's request is not."""
+    try:
+        request = json.loads(_request_path(directory).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return isinstance(request, dict) and request.get("session_id") == session_id
+
+
+def hand_back(root, handoff, session_id):
+    """The holder's hand-back at its close-out: frees the lease, its latch
+    with it, recorded with the handoff it closed with, so the next session's
+    take succeeds. Refuses another caller first, whatever handoff it names
+    (the owner releases a holder that has gone), then a handoff with no
+    session prompt, then the holder's own pending relaunch request (its
+    successor takes the lease at its start). A previous holder's request
+    never blocks it: it is left for session_end's foreign-request refusal.
+    Returns None, or the refusal; with the guard off it returns before
+    reading or writing.
+
+    Implements: SR-229, LLR-300
+    """
+    if not guard_config(root).enabled:
+        return None
+    handoff = Path(handoff).resolve()
+    promptless = _promptless(handoff)  # read before the lock, reported after
+    with session_keep.dir_lock(lease_dir(root)) as directory:
+        lease = _load(directory)
+        refusal = _not_holder(lease, session_id, "hands the lease back")
+        if refusal:
+            return "{}; the owner releases a lease whose holder has gone: {}".format(
+                refusal, GUARD + ' release --reason "<why>"'
+            )
+        if promptless:
+            return promptless
+        if _own_request_pending(directory, session_id):
+            return (
+                "a relaunch is requested: end the session, and the relaunched "
+                "successor takes the lease at its start"
+            )
+        _save(directory, {})
+        record_event(
+            directory,
+            "handback",
+            session=session_id,
+            handoff=str(handoff),
+            was_draining=bool(lease.get("draining")),
+        )
     return None
 
 
@@ -979,6 +1051,9 @@ def _parser():
     p = sub.add_parser("request-relaunch", help="request the relaunch from a handoff")
     p.add_argument("--handoff", required=True)
     p.add_argument("--session", default=None)
+    p = sub.add_parser("handback", help="the holder hands the lease back at close-out")
+    p.add_argument("--handoff", required=True)
+    p.add_argument("--session", default=None)
     p = sub.add_parser("exec-claude", help=argparse.SUPPRESS)
     p.add_argument("--prompt-file", required=True)
     return parser
@@ -1000,6 +1075,7 @@ def main(argv=None):
         "release": lambda: release(root, args.reason),
         "clear": lambda: clear(root, args.reason),
         "request-relaunch": lambda: request_relaunch(root, args.handoff, session),
+        "handback": lambda: hand_back(root, args.handoff, session),
         "exec-claude": lambda: exec_claude(args.prompt_file),
     }
     result = actions[args.cmd]()

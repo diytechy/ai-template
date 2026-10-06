@@ -707,6 +707,94 @@ def test_only_the_holder_requests_a_relaunch_naming_a_real_handoff(root, tx, tmp
     assert set(request) == {"session_id", "repo_root", "handoff", "created"}
 
 
+# --- the holder's hand-back (WI-842) ---------------------------------------------
+
+
+def _handoff(tmp_path, text=HANDOFF):
+    path = tmp_path / "handoff.md"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_the_holders_hand_back_frees_the_lease_for_the_next_take(root, tx, tmp_path):
+    held(root, tx)
+    handoff = _handoff(tmp_path)
+    assert guard.hand_back(root, handoff, COORD) is None
+    assert guard._load(guard.lease_dir(root)) == {}
+    last = events(root)[-1]
+    assert last["event"] == "handback" and last["session"] == COORD
+    assert last["handoff"] == str(handoff.resolve())
+    assert guard.take(root, OTHER) is None
+
+
+def test_another_sessions_or_a_promptless_hand_back_is_refused(root, tx, tmp_path):
+    lease = held(root, tx)
+    handoff = _handoff(tmp_path)
+    bare = tmp_path / "bare.md"
+    bare.write_text("# Handoff\n\nNo prompt here.\n", encoding="utf-8")
+    for caller in (OTHER, None):
+        # a non-holder hears the owner's release whatever handoff it names
+        for named in (handoff, bare, tmp_path / "absent.md"):
+            refusal = guard.hand_back(root, named, caller)
+            assert "only the lease holder" in refusal
+            assert "coordinator_guard.py release" in refusal  # the owner releases
+    assert "no session prompt" in guard.hand_back(root, bare, COORD)
+    assert guard._load(guard.lease_dir(root)) == lease
+    assert [e["event"] for e in events(root)] == ["take"]
+
+
+def test_a_drained_holder_hands_back_and_the_next_take_is_unlatched(root, tx, tmp_path):
+    held(root, tx)
+    tx.reply(600)
+    guard.claim_refusal(root, env=ENV)
+    assert guard._load(guard.lease_dir(root))["draining"] is True
+    assert guard.hand_back(root, _handoff(tmp_path), COORD) is None
+    assert events(root)[-1]["was_draining"] is True
+    assert guard.take(root, OTHER) is None
+    assert guard._load(guard.lease_dir(root))["draining"] is False
+
+
+def test_a_hand_back_with_a_relaunch_requested_is_refused(root, tx, tmp_path):
+    handoff = _ready(root, tx, tmp_path)
+    assert "relaunch is requested" in guard.hand_back(root, handoff, COORD)
+    assert guard._load(guard.lease_dir(root))["holder"] == COORD
+
+
+def test_a_previous_holders_request_never_blocks_the_current_holders_hand_back(
+    root, tx, tmp_path
+):
+    # A requests the relaunch and crashes before SessionEnd; the owner
+    # releases A; B takes the lease and closes out without a relaunch.
+    handoff = _ready(root, tx, tmp_path)
+    assert guard.release(root, "the coordinator crashed before SessionEnd") is None
+    assert guard.take(root, OTHER) is None
+    assert guard.hand_back(root, handoff, OTHER) is None
+    assert guard._load(guard.lease_dir(root)) == {}
+    assert events(root)[-1]["event"] == "handback"
+    assert guard.take(root, COORD) is None  # the next coordinator needs no release
+    # A's superseded request is left for session_end's own refusal path.
+    request = json.loads((guard.lease_dir(root) / "relaunch.json").read_text("utf-8"))
+    assert request["session_id"] == COORD
+
+
+def test_with_the_guard_off_a_hand_back_reads_and_writes_nothing(tmp_path):
+    root = make_root(tmp_path, pct=0)
+    assert guard.hand_back(root, tmp_path / "absent.md", COORD) is None
+    assert not (root / "out").exists()
+
+
+def test_the_hand_back_command_line_maps_its_result_to_the_exit_code(
+    root, tx, tmp_path, capsys
+):
+    held(root, tx)
+    handoff = str(_handoff(tmp_path))
+    argv = ["--root", str(root), "handback", "--handoff", handoff]
+    assert guard.main(argv + ["--session", OTHER]) == 1
+    assert capsys.readouterr().err.startswith("coordinator guard: only the lease")
+    assert guard.main(argv + ["--session", COORD]) == 0
+    assert guard._load(guard.lease_dir(root)) == {}
+
+
 @pytest.mark.parametrize("reason", ["clear", "resume", "", None])
 def test_clear_and_resume_never_launch(root, tx, tmp_path, reason):
     _ready(root, tx, tmp_path)
