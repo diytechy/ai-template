@@ -7209,6 +7209,31 @@ nothing.
 session-protocol skill (and its per-agent copies). With the dial at the
 shipped `0`, nothing else changes.
 
+### A route's first retained mint takes the lease [since 8c941ab2]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/session_keep.py` took a route's lease only when the
+route already had a record, so two first adjudications starting together on
+one route both minted, and the second's bookkeeping replaced the first's
+record. A covered call on a route with no record now writes a lease-only
+record (`family`, `route_id` and `lease`, with no session yet) under the store
+lock before it launches. A second call meeting that lease waits and then runs
+unretained, as it does for a held session. The first call's bookkeeping
+completes the record. A launch that raises removes the lease-only record. A
+crashed first call's lease expires and is retired like any unreleased lease.
+A mint's bookkeeping lands only while the record still carries its own lease.
+A mint that finishes after another call took its expired lease over now lands
+on nothing ("store moved on"), whether that call is still running or has
+finished, instead of replacing that call's record.
+
+Nothing changes at the shipped `[adjudicator] context_reset_pct = 0`: no
+record is written.
+
+**What to do.** Re-sync `scripts/session_keep.py`. A tool of your own that
+reads `out/adjudicator/*.json` must accept a record with no `session_id` or
+`state` (a first call in flight). The store needs no migration.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

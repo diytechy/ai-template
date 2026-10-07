@@ -526,6 +526,102 @@ def test_an_adjudication_waits_out_a_keep_warm_lease_then_runs_unretained(
     assert "held by keep-warm:x" in capsys.readouterr().err
 
 
+# --- a route's first mint takes the lease (TC-329) --------------------------------
+
+
+def _first_calls(tmp_path, count=2):
+    """`count` first calls on one route, released together, each meeting
+    the store with no record; the keeps they got, in finishing order."""
+    gate, kept = threading.Barrier(count), []
+
+    def first():
+        gate.wait()
+        kept.append(_keep(tmp_path, ON, lease_wait=0))
+
+    threads = [threading.Thread(target=first) for _ in range(count)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(30)
+    return kept
+
+
+def test_two_concurrent_first_calls_mint_one_session_and_run_one_unretained(
+    tmp_path, capsys
+):
+    kept = _first_calls(tmp_path)
+    minting = [k for k in kept if k is not None]
+    assert len(kept) == 2 and len(minting) == 1  # one mints, one is refused
+    assert minting[0].session_id == ""
+    lease_only = _state(tmp_path)
+    assert lease_only["lease"]["holder"] == minting[0].holder
+    assert "session_id" not in lease_only and "state" not in lease_only
+    assert "runs unretained" in capsys.readouterr().err
+    seen = []
+    svc.act(_call(tmp_path, "ANTHROPIC", None, _launch(_claude_stream(10))))
+    svc.act(
+        _call(tmp_path, "ANTHROPIC", minting[0], _launch(_claude_stream(10), seen=seen))
+    )
+    record = _state(tmp_path)
+    minted = seen[0][seen[0].index("--session-id") + 1]
+    assert record["session_id"] == minted and record["generation"] == 1
+    assert record["state"] == "active" and "lease" not in record
+
+
+def test_a_crashed_first_calls_lease_expires_and_is_retired(tmp_path, monkeypatch):
+    crashed = _keep(tmp_path, ON, lease_seconds=5)  # minted, never bookkept
+    assert crashed is not None and crashed.session_id == ""
+    assert _keep(tmp_path, ON) is None  # its lease holds while it is live
+    later = keep.time.time() + 60
+    monkeypatch.setattr(keep.time, "time", lambda: later)  # the lease expired
+    nxt = _keep(tmp_path, ON)
+    assert nxt is not None and nxt.session_id == ""  # the next call mints
+    assert _state(tmp_path)["state"] == "retired"
+    assert _state(tmp_path)["reset_reason"] == "lease expired unreleased"
+    assert _state(tmp_path)["lease"]["holder"] == nxt.holder
+    # The overrunning first call finishing late lands on nothing of its own.
+    late = svc.act(_call(tmp_path, "ANTHROPIC", crashed, _launch(_claude_stream(10))))
+    assert late.metrics["reset-reason"] == "store moved on"
+    assert _state(tmp_path)["lease"]["holder"] == nxt.holder
+
+
+def test_a_late_first_mint_never_replaces_the_session_that_took_its_lease_over(
+    tmp_path, monkeypatch
+):
+    crashed = _keep(tmp_path, ON, lease_seconds=5)  # minted, never bookkept
+    later = keep.time.time() + 60
+    monkeypatch.setattr(keep.time, "time", lambda: later)  # the lease expired
+    svc.act(
+        _call(tmp_path, "ANTHROPIC", _keep(tmp_path, ON), _launch(_claude_stream(10)))
+    )
+    replacement = _state(tmp_path)
+    assert replacement["state"] == "active" and "lease" not in replacement
+    # The overrunning first call finishes after the replacement released.
+    late = svc.act(_call(tmp_path, "ANTHROPIC", crashed, _launch(_claude_stream(10))))
+    assert late.metrics["reset-reason"] == "store moved on"
+    assert _state(tmp_path) == replacement  # generation 1, its session kept
+
+
+def test_a_first_mint_that_raises_removes_its_lease_only_record(tmp_path):
+    kept = _keep(tmp_path, ON)
+    assert _state(tmp_path)["lease"]["holder"] == kept.holder
+
+    def broken(*a, **k):
+        raise RuntimeError("launch broke")
+
+    with pytest.raises(RuntimeError):
+        svc.act(_call(tmp_path, "ANTHROPIC", kept, broken))
+    assert _state(tmp_path) is None
+    assert not list(keep.store_dir(tmp_path).glob("*.json"))
+    assert not list(keep.store_dir(tmp_path).glob("*.retire"))
+    assert _keep(tmp_path, ON) is not None  # the route is free again
+
+
+def test_at_dial_zero_a_first_call_writes_no_lease(tmp_path):
+    assert _keep(tmp_path, keep.KeepConfig()) is None
+    assert not keep.store_dir(tmp_path).exists()
+
+
 # --- keep-warm (TC-268) -------------------------------------------------------------
 
 

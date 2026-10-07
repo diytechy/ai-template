@@ -3022,6 +3022,18 @@ evidence = "tests/test_session_keep.py"
 status = "Approved"
 phase = 6
 
+
+[test.TC-329]
+verifies = ["SR-227", "LLR-270", "IF-247"]
+level = "Unit"
+method = "With the dial on and no route record, release two first adjudications together. Assert exactly one takes a keep and mints while the other runs unretained with its reason; before launch the store contains only the minting call's family, route id and lease, and after bookkeeping it contains generation 1, the minted id and active state with the lease released. Assert a first call that never finishes holds the route until expiry, after which the next call retires that lease-only record as lease expired unreleased and mints under its own lease; the late first call records store moved on and leaves the new lease. Assert a first call whose lease expired, finishing after the call that took over minted, was bookkept and released its lease, records store moved on and leaves that generation-1 session unchanged. Assert a first mint whose launch raises removes its record and tombstone, allowing a later first call; at dial zero a first call writes no store."
+tier = "Smoke"
+expected = "Satisfies SR-227 and LLR-270 for a route's first call: no two first calls mint at once, a late mint never replaces the record of the call that took its lease over, running or finished, and abandonment or expiry leaves no live first-call lease."
+automated = "Yes"
+evidence = "tests/test_session_keep.py::test_two_concurrent_first_calls_mint_one_session_and_run_one_unretained;tests/test_session_keep.py::test_a_crashed_first_calls_lease_expires_and_is_retired;tests/test_session_keep.py::test_a_late_first_mint_never_replaces_the_session_that_took_its_lease_over;tests/test_session_keep.py::test_a_first_mint_that_raises_removes_its_lease_only_record;tests/test_session_keep.py::test_at_dial_zero_a_first_call_writes_no_lease"
+status = "Approved"
+phase = 6
+
 [test.TC-268]
 verifies = ["SR-227", "LLR-270", "IF-044", "IF-065"]
 level = "Unit"

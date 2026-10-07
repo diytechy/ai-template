@@ -1,0 +1,26 @@
+# docs/decisions/wi-838.toml — WI-838's delegated decisions record (a route's
+# first retained mint takes the lease).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "The lease-only record is the record with only `family`, `route_id` and `lease` keys (session_keep.is_lease_only): no `session_id`, no `state`, no generation. A record counts as live, a session to resume, only when its state is active or draining, so a lease-only record, or a bare one with its lease stripped, mints. The readers were fixed (_hold's live test, load_honoured's tombstone step), not the writer."
+alternative = "Write a full placeholder record at the mint (state retired or a new `minting` state, an empty session_id, generation 0), so every reader keeps seeing every key."
+reversal_cost = "One predicate and the shape written in session_keep._hold; no stored record outlives a call, so no migration."
+why_not_escalated = "The build prompt orders a lease-only record and readers fixed rather than the writer special-cased. A placeholder state would also show a session-less record as retired or as a new state in the record's state vocabulary (IF-247), which every state reader would have to learn."
+review = ""
+
+[decision.D-002]
+decided = "A mint's bookkeeping lands only while the route's record still carries that call's own lease (holder equal to the keep's, expired or not); any other holder, or no lease, or no record, returns \"store moved on\". Before WI-838 a mint refused only when another call held a live lease on a live (not retired) record. Round 1 of this work item widened that to a live lease on any record, which still let a late first mint replace a replacement that had completed and released its lease (Codex Sol's round-1 MAJOR, reproduced red). The own-lease rule closes both orderings: a first call overruns its lease, a second takes the expired lease over and mints, and the late first call never replaces that record, whether the second is still in flight or already bookkept."
+alternative = "Keep a liveness rule (refuse only while another call's lease is live), which lets the late first mint replace a completed replacement, generation 1 -> 2; or compare generations, which needs the keep to carry the record's state at the lease."
+reversal_cost = "One condition in session_keep._landing and two TC-329 tests."
+why_not_escalated = "The spec's gap is exactly 'the second bookkeeping replaces the first session's record', and LLR-270 promises that a record another session replaced is left alone. Every mint takes its own lease in keep_for before it launches, so the rule changes no normal path: the first mint, the remint over a retired record, the same-artifact retire and the drained-session remint all land on their own lease (the existing session_keep, session_service and coordinator_adjudicate tests pass unchanged). Recorded high-risk because it changes older behaviour at the edges: a mint whose record was deleted, made unreadable, or retaken by another call while it ran now records nothing, where before it wrote a fresh record. Such a session is simply not retained, and the next call mints."
+review = ""
+
+[decision.D-003]
+decided = "A first mint whose launch raises has its lease-only record removed (the tombstone drops the holder's lease and an empty lease-only record is deleted), rather than left as a bare record or retired. A crashed first call whose lease expires is retired like any unreleased lease and stays as a retired record with no session id."
+alternative = "Retire the abandoned lease-only record too, so both endings leave the same retired record."
+reversal_cost = "One branch in session_keep._apply_tombstone."
+why_not_escalated = "The Done-when says keep_abandon removes the record and that a crashed first call's lease is retired as an unreleased lease is today; this follows both as written."
+review = ""

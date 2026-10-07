@@ -45,7 +45,10 @@ Contract IF-247: the retained-session record, one JSON object per route at
     what it was last seen under. Codex records also keep `input_total` and
     `request_prompt` as comparison baselines, `compacted` and
     `compaction_source` (reported, inferred or empty). A fresh generation has
-    no prior compaction or comparison baseline.
+    no prior compaction or comparison baseline. A route's first covered call
+    writes a LEASE-ONLY record (`family`, `route_id` and `lease`, no session
+    yet) before it launches, so a second first call meets the lease; its
+    bookkeeping completes the record and its abandonment removes it.
     Every read-modify-write holds the store lock
     (`out/adjudicator/.lock`, created exclusively, stale after two minutes);
     a record is written whole through its own temporary file and a replace; a
@@ -320,15 +323,38 @@ def load_honoured(root, family, route_id):
     except (OSError, ValueError):
         return record
     if isinstance(record, dict) and isinstance(tomb, dict):
-        if tomb.get("session_id") and record.get("session_id") == tomb["session_id"]:
-            _retire(record, tomb.get("reason") or "session unusable")
-        if (record.get("lease") or {}).get("holder") == tomb.get("holder"):
-            record.pop("lease", None)
-        store_save(root, record)
+        record = _apply_tombstone(root, record, tomb)
     try:
         path.unlink()
     except OSError:
         pass
+    return record
+
+
+def is_lease_only(record):
+    """Whether `record` holds no session yet: only its identity and, while a
+    first call mints, that call's lease (see `_hold`).
+
+    Implements: SR-227, LLR-270
+    """
+    return isinstance(record, dict) and set(record) <= {"family", "route_id", "lease"}
+
+
+def _apply_tombstone(root, record, tomb):
+    """Retire the session `tomb` names and drop its holder's lease; a
+    lease-only record left with no lease is removed (a first mint that raised
+    stored nothing), else the record is saved. Returns what remains.
+
+    Implements: SR-227, LLR-270
+    """
+    if tomb.get("session_id") and record.get("session_id") == tomb["session_id"]:
+        _retire(record, tomb.get("reason") or "session unusable")
+    if (record.get("lease") or {}).get("holder") == tomb.get("holder"):
+        record.pop("lease", None)
+    if is_lease_only(record) and "lease" not in record:
+        store_remove(root, record)
+        return None
+    store_save(root, record)
     return record
 
 
@@ -338,6 +364,17 @@ def store_save(root, record):
     Callers hold `store_lock`."""
     path = _store_path(root, record["family"], record["route_id"])
     _write_whole(path, json.dumps(record, sort_keys=True))
+
+
+def store_remove(root, record):
+    """Remove a record's file. Callers hold `store_lock`.
+
+    Implements: SR-227, LLR-270
+    """
+    try:
+        _store_path(root, record["family"], record["route_id"]).unlink()
+    except OSError:
+        pass
 
 
 def dedicated_home(root, family):
@@ -590,7 +627,7 @@ def keep_for(
     the role is not ADJUDICATE, the brief is not a retained class, or no route
     is named. Otherwise, before the launch and under the store lock:
 
-      - a retired or absent record mints (`session_id` "");
+      - a retired, absent or lease-only record mints (`session_id` "");
       - with the same-artifact guard on, a session that already judged this
         work item retires, so the rejudgement is fresh;
       - a changed governing input or runner version drains an active session;
@@ -598,9 +635,11 @@ def keep_for(
         the work-item `rows`) and is otherwise resumed, so a review, rework,
         re-review round trip is never cut mid-way;
       - the call takes the route's lease for `lease_seconds`, so a keep-warm
-        ping cannot resume the same session while it runs. A lease another
-        call holds is waited on up to `lease_wait` seconds; past that the
-        adjudication runs unretained (None) and says why.
+        ping cannot resume the same session while it runs. On a route with no
+        record it writes a lease-only record (`is_lease_only`), so a second
+        first call cannot mint beside it. A lease another call holds is
+        waited on up to `lease_wait` seconds; past that the adjudication runs
+        unretained (None) and says why.
 
     Implements: SR-227, LLR-270
     """
@@ -642,16 +681,20 @@ def keep_for(
 
 def _hold(root, cfg, record, subject, rows, lease):
     """Apply the pre-launch rules, take the lease `(holder, until)`, and
-    build the Keep."""
+    build the Keep. A route with no record gets a lease-only one, so the
+    first mint holds the lease as every later call does."""
     family, route_id, wi, governing, version = subject
     holder, until = lease
-    live = record is not None and record.get("state") != STATE_RETIRED
+    # Live means a session to resume: a retired record, and a lease-only one
+    # (no session yet, no state), mint.
+    live = record is not None and record.get("state") in (STATE_ACTIVE, STATE_DRAINING)
     if live:
         _before_launch(cfg, record, wi, governing, version, rows)
         live = record.get("state") != STATE_RETIRED
-    if record is not None:
-        record["lease"] = {"holder": holder, "until": until}
-        store_save(root, record)
+    if record is None:
+        record = {"family": (family or "").upper(), "route_id": route_id or ""}
+    record["lease"] = {"holder": holder, "until": until}
+    store_save(root, record)
     return Keep(
         family=(family or "").upper(),
         route_id=route_id,
@@ -661,7 +704,7 @@ def _hold(root, cfg, record, subject, rows, lease):
         cfg=cfg,
         holder=holder,
         cli_version=version or "",
-        generation=(record or {}).get("generation", 0),
+        generation=record.get("generation", 0),
         home_env=dedicated_home_env(root, family),
     )
 
@@ -698,14 +741,18 @@ def _fresh_record(keep, session_id, prior, stamp):
 
 def _landing(current, keep, session_id, stamp):
     """The record this call's observation lands on, or None when the store
-    moved on to another session while the call ran (that one is left alone)."""
+    moved on to another session while the call ran (that one is left alone).
+    A mint lands only while the record still carries ITS OWN lease (taken in
+    `_hold`, expired or not): any other holder, or none, means another call
+    took the expired lease over, and that call's record (in flight or
+    completed) owns the route."""
     if keep.session_id:
         ours = (
             isinstance(current, dict) and current.get("session_id") == keep.session_id
         )
         return current if ours else None
-    live = isinstance(current, dict) and current.get("state") != STATE_RETIRED
-    if live and _lease_held(current, keep.holder, time.time()):
+    lease = current.get("lease") if isinstance(current, dict) else None
+    if not isinstance(lease, dict) or lease.get("holder") != keep.holder:
         return None
     prior = max(keep.generation, (current or {}).get("generation", 0))
     return _fresh_record(keep, session_id, prior, stamp)
@@ -806,7 +853,7 @@ def keep_abandon(root, keep, reason):
     lease. The retirement is GUARANTEED: a tombstone is written first, with no
     lock needed, and then applied at once if the store lock can be had; if it
     cannot, the next locked read of the record applies it. A mint that raised
-    stored nothing, so there is nothing to retire.
+    has no session to retire: its lease-only record is removed.
 
     Implements: SR-227, LLR-270
     """
