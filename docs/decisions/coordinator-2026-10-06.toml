@@ -3,7 +3,7 @@
 # format and doctrine are project-trajectory/decisions.template.toml's. Lane
 # calls go in the lane's own docs/decisions/<branch>.toml.
 
-high_risk = ["D-001", "D-009"]
+high_risk = ["D-001", "D-010", "D-012"]
 
 [decision.D-001]
 decided = "WI-842 (a closing coordinator hands its lease back), filed at the session start from the owner's question, is claimed in this session's batch beside WI-838 to WI-840, under the same scoped unpause, rather than queued for a later session."
@@ -66,4 +66,39 @@ decided = "WI-841 is left claimed and committed on its lane (wi-841 at 538bc9a3)
 alternative = "Continue past 50% and land WI-841 in this session."
 reversal_cost = "None: the next session resumes the lane from the handoff."
 why_not_escalated = "The context guard's threshold is the owner's dial (50); the guard stops new claims, and the session-protocol close-out brings in-flight rows to a safe point, which a committed lane is."
+review = ""
+
+[decision.D-010]
+decided = "At the owner's direction (2026-10-07), WI-841 was finished in this session past the 50% context guard (drain latched at 50.1%), with no new claim made; D-009's hand-off of WI-841 to the next session is superseded."
+alternative = "Hand WI-841 to a relaunched session, as D-009 recorded and the guard directs."
+reversal_cost = "None: no claim was taken past the latch."
+why_not_escalated = "The owner chose it when asked."
+review = ""
+
+[decision.D-011]
+decided = "From WI-841 on, the hand path's final review before a landing is a FRESH, full-lane Codex Sol review from the lane's trunk base to its tip (owner-confirmed 2026-10-07); narrow, round-delta reviews remain only for iteration. WI-841 took six full-lane gates; each found real cross-round defects the narrow rounds had missed."
+alternative = "Keep narrow, round-delta reviews to the end."
+reversal_cost = "One recipe paragraph."
+why_not_escalated = "The owner confirmed it in session."
+review = ""
+
+[decision.D-012]
+decided = "WI-841's traced-only evidence change to TC-326 and TC-327 (Terra round 21, 82e370d8) was re-anchored by a coordinator copy act, `intake.py snapshot --approves docs/test/test-cases.toml=82e370d8` (no --reattests, no verdict), because the amendment brief refuses a traced-only change and the landing's integrity step requires every snapshot the squash touches to equal its live file."
+alternative = "Have the lane revert the evidence edit, or seek an adjudicator act for cells that owe none."
+reversal_cost = "One snapshot copy; it blesses no routed text."
+why_not_escalated = "Traced cells are silent by ruling (they owe no act); the copy is the snapshot tool's sanctioned registry-copy path and blesses nothing."
+review = ""
+
+[decision.D-013]
+decided = "WI-841's squash landed first under the wrong message (the copy act's, from a reused message file); the coordinator amended only that unpushed tip commit's message to the landing message and regenerated the two HEAD-stamped views the amend's hook reported stale. The content is the squash the hook had passed."
+alternative = "Leave the wrong message and correct it in a follow-up commit's text."
+reversal_cost = "None; nothing was pushed."
+why_not_escalated = "A coordinator's own unpushed commit message; history would otherwise misdescribe the landing."
+review = ""
+
+[decision.D-014]
+decided = "Two rows were filed from this session's owner discussions: WI-846 (the adjudicator's dedicated home authenticates with the owner's long-lived token, the probe sees an unrefreshable home, an auth failure retires nothing; P9) and WI-847 (the loop's reviewer resumes within a lane, the merge-gating review stays fresh and full-lane; P5)."
+alternative = "Fold WI-846 into WI-834's sign-in step."
+reversal_cost = "Cancel or merge either row."
+why_not_escalated = "The owner chose the long-lived token and confirmed the review rule; the rows record the work, their priority is the owner's to change."
 review = ""

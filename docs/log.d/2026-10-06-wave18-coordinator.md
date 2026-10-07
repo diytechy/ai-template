@@ -72,3 +72,39 @@ round and two adjudication sittings owed.
 
 At trunk `76b1d212` (detached worktree, fixed basetemp under the session's
 dated root): 5291 passed, 17 skipped, 0 failed, in 711.0 s (11:50); the basetemp held 206 MB afterwards (WI-840's retention policy) and was deleted once recorded.
+
+### 2026-10-07 — WI-841 finished past the guard, at the owner's direction
+
+The owner directed that WI-841 close in this session rather than at a relaunch
+(coordinator D-010). Builder rounds 6 to 19 and Terra rounds 8 to 21 answered
+Sol and the adjudicator. At the owner's request the hand path's last gate became
+a fresh, full-lane review (D-011). Eleven such gates ran, and each but the last
+found real defects that crossed rounds:
+
+- a rejected or failed sitting still released the holds;
+- the readers parsed more loosely than the validator;
+- the loop recorded acceptance from syntax alone;
+- released-tier acts skipped acceptance;
+- coverage matched verdict kinds, not the rows judged (the owner ruled row
+  coverage in scope);
+- the build hold sat inside one return arm;
+- machine lines crossed line boundaries.
+
+The fixes ended each class rather than its instance:
+
+- one parser, per physical line;
+- an acceptance outcome recorded by the route that ran the call;
+- one accepted-verdict reader for every consumer;
+- row-tied act authority;
+- one carrier resolver;
+- one dispatch-point hold.
+
+The eleventh gate, `2874ff0a`, was SOUND. Landing needed a copy act
+re-anchoring TC-326/TC-327's traced-only evidence (D-012). The squash first
+landed under the wrong message and was amended before any push (D-013).
+Landed as `68e0ee87`, acts to seq 59; the re-mint WI-845 is closed.
+
+The adjudicator's dedicated home failed to refresh again after the owner's
+clean `/login`, so the headless refresh failure is reproducible, not a bad
+credential. The owner chose the long-lived token: WI-846. Filed: WI-847 (the
+loop's reviewer resumes within a lane, with a fresh full-lane merge gate).
