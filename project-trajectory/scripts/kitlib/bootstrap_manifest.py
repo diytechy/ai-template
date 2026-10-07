@@ -108,6 +108,16 @@ MAPPING = [
         "SR-215",
     ),
     (
+        "prompts/adjudicate-done-when.template.md",
+        "prompts/adjudicate-done-when.template.md",
+        "SR-156",
+    ),
+    (
+        "prompts/adjudicate-combined.template.md",
+        "prompts/adjudicate-combined.template.md",
+        "SR-156",
+    ),
+    (
         "prompts/dual-plan-planner.template.md",
         "prompts/dual-plan-planner.template.md",
         "SR-146",
@@ -334,6 +344,10 @@ MAPPING = [
     # `integrate.py` (the claim warning), `intake.py` (the merge-time flag) and
     # `agent_loop.py` (the reviewer's brief) import it, all three in this list.
     ("scripts/kitlib/done_when.py", "scripts/kitlib/done_when.py"),
+    # WI-841 round 2 added `sitting`: a combined lane-checkpoint sitting's
+    # scope tokens and verdict sections; `adjudicate_brief.py`,
+    # `acceptance_record.py` and `intake.py` import it, all three in this list.
+    ("scripts/kitlib/sitting.py", "scripts/kitlib/sitting.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each

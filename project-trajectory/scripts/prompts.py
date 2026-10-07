@@ -98,7 +98,7 @@ KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 PROMPTS = KIT / "prompts"
 
 # The kit prompts that are NOT dual-plan hats: the session-engine briefs, and
-# the six adjudicator briefs the mechanized loop routes. Key -> filename.
+# the eight adjudicator briefs the mechanized loop routes. Key -> filename.
 #
 # A key is also a `--prompt-map` phase key wherever the loop honours an
 # override. `WORKER` deliberately is NOT honoured there (`route_session`: "the
@@ -121,6 +121,11 @@ ADJUDICATE_RED_TC = "ADJUDICATE-RED-TC"
 # The CHECKPOINT RE-JUDGE brief (SR-215): an observation test case a merge or
 # release preparation found due, judged afresh and recorded.
 ADJUDICATE_REJUDGE = "ADJUDICATE-REJUDGE"
+# The DONE-WHEN brief (SR-156, WI-841): the amendment question applied to a
+# lane's own Done-when lines, and the COMBINED sitting that composes every
+# pending in-lane judgement of one lane checkpoint into one verdict.
+ADJUDICATE_DONE_WHEN = "ADJUDICATE-DONE-WHEN"
+ADJUDICATE_COMBINED = "ADJUDICATE-COMBINED"
 
 KIT_PROMPTS = {
     WORKER: "worker.template.md",
@@ -132,6 +137,8 @@ KIT_PROMPTS = {
     ADJUDICATE_CONSOLIDATE: "adjudicate-consolidate.template.md",
     ADJUDICATE_RED_TC: "adjudicate-red-tc.template.md",
     ADJUDICATE_REJUDGE: "adjudicate-rejudge.template.md",
+    ADJUDICATE_DONE_WHEN: "adjudicate-done-when.template.md",
+    ADJUDICATE_COMBINED: "adjudicate-combined.template.md",
 }
 
 # A single-brace `{name}` slot. Lower-case + underscore only, so a `{}` that is

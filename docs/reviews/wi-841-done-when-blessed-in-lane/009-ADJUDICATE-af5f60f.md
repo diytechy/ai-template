@@ -1,0 +1,8 @@
+# WI-841 first-approval adjudication at af5f60f
+
+Question: is each Drafted row ready to be APPROVED as it stands, or does it go back with findings?
+Chains read: SR-154, SR-156 (Approved), with LLR-262 Approved and re-attested (act 46). Row judged: TC-328.
+
+- [APPROVE] TC-328 -> at merge, LLR-262's Done-when arms: an uncovered readable change mints one brief-bearing done-when row; a CLARITY or BLESSED cover mints nothing; a SUCCESSOR cover mints its Done-when drafts (single-kind or the combined verdict's done-when section); an ambiguous or draftless SUCCESSOR part refuses; an unreadable claim refuses the mint; an absent claim mints nothing and says the check did not run -> answers adjudication 007's return. The Method's run list now names all nine Evidence tests, including `test_at_merge_a_blessed_cover_mints_nothing` and `test_at_merge_a_successor_verdict_with_no_draft_refuses`, so the run produces every outcome its Assert sentence requires. Each test asserts what the row says: one minted row carrying `brief = "done-when"`, an empty mint for both cover outcomes, the SUCCESSOR draft's title minted, "ambiguous" or "no ## Dispositions draft" refusals, "cannot be read" for the unreadable claim, and "did not run" on stderr for the absent one. Expected gives the ambiguous and draftless refusals to the SUCCESSOR part and the unreadable refusal to the claim, as LLR-262 does. The row states what it adds beyond TC-257, and the module runs at Smoke (`tests/test_done_when_blessing.py` is not in `SLOW_MODULES`) -> ready: the obligation is closed, and its evidence checks what it says
+
+OUTCOME: APPROVE rows=1

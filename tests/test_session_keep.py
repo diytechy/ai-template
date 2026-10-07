@@ -98,10 +98,18 @@ def test_the_shipped_dial_is_off_and_this_repo_shares_its_structure():
     assert live["adjudicator"]["context_reset_pct"] == 55
     assert set(live["adjudicator"]) == set(template["adjudicator"])
     # And retains first approvals too (owner, 2026-10-05,
-    # docs/decisions/wi-835.toml#D-007); the template's list is unchanged.
+    # docs/decisions/wi-835.toml#D-007), and since WI-841 the Done-when brief
+    # and the combined lane-checkpoint sitting; the template's list is unchanged.
     assert keep.keep_config(ROOT) == keep.KeepConfig(
         context_reset_pct=55,
-        retain_for=("disposition", "amendment", "red-tc", "first-approval"),
+        retain_for=(
+            "disposition",
+            "amendment",
+            "red-tc",
+            "first-approval",
+            "done-when",
+            "combined",
+        ),
     )
 
 

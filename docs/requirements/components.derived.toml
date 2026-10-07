@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 285
-seam_rows = 235
-requirements_placed = 117
+design_rows = 289
+seam_rows = 237
+requirements_placed = 118
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -241,6 +241,7 @@ modules = [
   "project-trajectory/scripts/kitlib/secret_classes.py",
   "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/stage.py",
+  "project-trajectory/scripts/kitlib/verdict.py",
   "project-trajectory/scripts/migrate_carrier.py",
   "project-trajectory/scripts/plan_coverage.py",
   "project-trajectory/scripts/record_observation.py",
@@ -280,6 +281,7 @@ seam_internal_refs = [
   "IF-145",
   "IF-150",
   "IF-165",
+  "IF-175",
   "IF-180",
   "IF-190",
   "IF-195",
@@ -369,7 +371,6 @@ seam_boundary_refs = [
   "IF-163",
   "IF-166",
   "IF-173",
-  "IF-175",
   "IF-176",
   "IF-177",
   "IF-178",
@@ -399,6 +400,8 @@ seam_boundary_refs = [
   "IF-269",
   "IF-270",
   "IF-271",
+  "IF-286",
+  "IF-287",
 ]
 
 [component_view.CMP-007]
@@ -576,6 +579,7 @@ seam_boundary_refs = [
   "IF-167",
   "IF-169",
   "IF-170",
+  "IF-175",
   "IF-189",
   "IF-190",
   "IF-194",
@@ -594,6 +598,7 @@ seam_boundary_refs = [
   "IF-254",
   "IF-255",
   "IF-256",
+  "IF-287",
 ]
 
 [component_view.CMP-008]
@@ -632,6 +637,7 @@ sr_refs = [
   "SR-229",
   "SR-230",
   "SR-231",
+  "SR-232",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -733,6 +739,10 @@ llr_refs = [
   "LLR-304",
   "LLR-305",
   "LLR-306",
+  "LLR-307",
+  "LLR-308",
+  "LLR-309",
+  "LLR-310",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -774,6 +784,7 @@ modules = [
   "project-trajectory/scripts/kitlib/done_when.py",
   "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/provenance.py",
+  "project-trajectory/scripts/kitlib/sitting.py",
   "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/station.py",
   "project-trajectory/scripts/kitlib/verdict.py",
@@ -849,6 +860,8 @@ seam_internal_refs = [
   "IF-278",
   "IF-279",
   "IF-282",
+  "IF-286",
+  "IF-287",
 ]
 seam_boundary_refs = [
   "IF-001",

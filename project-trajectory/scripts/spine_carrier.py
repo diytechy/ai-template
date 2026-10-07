@@ -1097,17 +1097,55 @@ def load_need_tier(path, id_col, keep_examples=True):
         return []
     if live.suffix != ".md":
         return load(live, id_col, keep_examples)
+    text = live.read_text(encoding="utf-8-sig", errors="replace")
+    return [
+        row
+        for row in _markdown_need_rows(text, id_col)
+        if keep_examples or not row["SN-ID"].endswith("-000")
+    ]
+
+
+def _markdown_need_rows(text, id_col):
+    """The legacy markdown needs file's `id_col` tier as rows under today's
+    column names: its needs for `SN-ID`, `[]` for the stakeholder tier that
+    carrier never had."""
     if id_col != "SN-ID":
         return []
     rows = []
-    for need in needs_from_markdown(
-        live.read_text(encoding="utf-8-sig", errors="replace")
-    ):
+    for need in needs_from_markdown(text):
         row = {"SN-ID": need["id"]}
         row.update({REGISTRY_COLUMN.get(k, k): v for k, v in need.items() if k != "id"})
-        if keep_examples or not row["SN-ID"].endswith("-000"):
-            rows.append(row)
+        rows.append(row)
     return rows
+
+
+# The id columns the needs file holds (SR-189): its registry's carriers are the
+# need carriers, every other tier's the row carriers.
+NEED_TIER_COLS = ("SN-ID", "STK-ID")
+
+
+def tier_carriers(rel_path, id_col):
+    """Every carrier path the registry holding `id_col`'s tier can appear
+    under, in preference order: the need carriers for the needs file's tiers,
+    the row carriers for every other tier. The ONE place a tier's carrier set
+    is chosen, so a reader of a registry at a revision never lists formats of
+    its own (WI-841 round 6).
+
+    Implements: SR-147, LLR-277"""
+    return carriers(rel_path, NEED_CARRIERS if id_col in NEED_TIER_COLS else CARRIERS)
+
+
+def tier_rows_from_text(text, id_col, carrier):
+    """`{id: row}` for one tier's registry TEXT under the carrier its file was
+    read from, for every carrier the kit supports (`.toml`, `.csv`, and the
+    needs file's legacy `.md`), or None when a TOML text does not parse. The
+    `-000` example rows are kept, as `rows_from_text` keeps them.
+
+    Implements: SR-147, LLR-277"""
+    if carrier != ".md":
+        return rows_from_text(text, id_col, carrier)
+    rows = _markdown_need_rows(text.lstrip("﻿"), id_col)
+    return {row[id_col]: row for row in rows}
 
 
 def folded(need):

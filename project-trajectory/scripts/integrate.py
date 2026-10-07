@@ -124,7 +124,10 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     worktree, the trunk step folded in, then the DECLARED bar on the composed
     tree — a missing or empty declaration, or any SKIP in it, refuses — and
     the verdict gate with git-derived freshness before the fast-forward-only
-    trunk advance. `audit` is the non-merge product-commit window check. The
+    trunk advance; a lane whose changed Done-when no verdict or owner ruling
+    binds is refused (WI-841). `done-when-hold` refuses a staged close of such
+    a lane (the pre-commit hook's step). `audit` is the non-merge
+    product-commit window check. The
     trunk only ever moves inside the slot, to a branch whose own bar passed on
     exactly the tree being advanced, and nothing here ever pushes. Every
     subcommand exits nonzero on refusal with the reason named; the caller
@@ -133,7 +136,8 @@ Contract IF-154: the argv surface, one required subcommand deep. `--root`
     (default the cwd) precedes the subcommand; `claim` requires `--wi` (one id,
     or several `;`-separated) and `--branch`; `refresh` requires `--branch` and
     takes `--tier` (default `all`, the full gate bar); `integrate` takes
-    `--tier` alone and drains every finished claimed branch there is; `audit`
+    `--tier` alone and drains every finished claimed branch there is;
+    `done-when-hold` takes nothing and judges the index; `audit`
     requires `--since`, the window's base revision. Nothing here accepts a
     remote, push or force option: the only repository it can move is `--root`.
 Contract IF-173: this module as the library its three siblings drive
@@ -2944,6 +2948,38 @@ def _close_record_refusal(root, branch, outcomes):
     )
 
 
+def _done_when_refusal(root, branch, wi_ids):
+    """WI-841 AT THE SLOT: a lane whose Done-when differs from the one trunk
+    holds under `active/<branch>/` (its claim) closes only when a verdict or
+    an owner ruling on the branch's tree binds the exact text it closes with
+    (`kitlib.done_when.lane_hold`, the one predicate every hold point asks). A
+    refusal string, or None.
+
+    Implements: SR-156, LLR-309
+    """
+    reason = kdone.lane_hold(root, branch, _head(root), branch, wi_ids)
+    return "{}; nothing was merged".format(reason) if reason else None
+
+
+def staged_done_when_refusal(root):
+    """WI-841 AT A HAND CLOSE: the commit being made moves a spec out of
+    `active/<branch>/` into a closed folder while its Done-when change no
+    verdict or ruling in the index binds. The claim copy is read at the lane's
+    integration base when the close is made on the lane's own branch, else at
+    HEAD (trunk's copy, the merge slot's reading). A refusal string, or None.
+
+    Implements: SR-156, LLR-309
+    """
+    current = ac.git(root, "branch", "--show-current")[1].strip()
+    reasons = []
+    for branch, wi_id in kdone.staged_closes(root):
+        base = ac.default_base(root) if branch == current else "HEAD"
+        reason = kdone.lane_hold(root, None, base, branch, [wi_id])
+        if reason:
+            reasons.append(reason)
+    return "\n".join(reasons) or None
+
+
 def _merge_refusal(root, branch, wi_ids):
     """The merge slot's refusal ladder: `(outcomes, refusal)` - the first reason
     this branch may not merge, or the outcomes the merge needs and None.
@@ -2974,7 +3010,9 @@ def _merge_refusal(root, branch, wi_ids):
         )
     # Sequential, not a tuple of calls: a tuple would EVALUATE every rung before
     # testing the first, which is exactly the cheapest-first ordering thrown away.
-    refusal = _close_record_refusal(root, branch, outcomes)  # SR-144, SR-225
+    refusal = _close_record_refusal(root, branch, outcomes) or _done_when_refusal(
+        root, branch, wi_ids
+    )  # SR-144, SR-225, then the Done-when's blessing (WI-841)
     if refusal:
         return outcomes, refusal
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
@@ -3306,6 +3344,11 @@ def main(argv=None):
         default="all",
         help="declared bar tier for an in-slot refresh (default: all - the full gate bar)",
     )
+    sub.add_parser(
+        "done-when-hold",
+        help="refuse a staged close whose changed Done-when no verdict or owner "
+        "ruling binds (WI-841; the pre-commit hook's done-when-blessed step)",
+    )
     p_audit = sub.add_parser("audit", help="RULING-6 window check")
     p_audit.add_argument("--since", required=True, help="the window's base revision")
     args = ap.parse_args(argv)
@@ -3318,6 +3361,9 @@ def main(argv=None):
         return fail(refusal) if refusal else 0
     if args.op == "integrate":
         return integrate(root, args.tier)
+    if args.op == "done-when-hold":
+        refusal = staged_done_when_refusal(root)
+        return fail(refusal) if refusal else 0
     return audit(root, args.since)
 
 

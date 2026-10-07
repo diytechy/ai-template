@@ -300,6 +300,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "held-status",
         "ruling-sync",
         "text-then-act",
+        "done-when-blessed",
         "assumption-gate",
         "crossing-allocation",
         "interface-allocation",
@@ -1245,6 +1246,19 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             "text-then-act",
             (),
             [sys.executable, str(_SCRIPTS / "check.py"), "--text-then-act"],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
+        # A hand close's Done-when blessing (WI-841): a commit that moves a
+        # spec out of `active/<branch>/` into a closed folder while its
+        # Done-when differs from the claimed one is refused unless a verdict or
+        # an owner ruling in the index binds the exact text. The commit that
+        # edits the Done-when is never refused; the merge slot asks the same
+        # question of the branch, and the loop of its next build dispatch.
+        (
+            "done-when-blessed",
+            (),
+            [sys.executable, str(_SCRIPTS / "integrate.py"), "done-when-hold"],
             _kitladder.STAGE_NEEDS,
             "process",
         ),

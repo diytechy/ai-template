@@ -40,17 +40,20 @@ Contract IF-283: the coordinator's adjudication command line, its arguments.
     (default ANTHROPIC), creating nothing.
 
 Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
-    verdict; 1 for a call that failed or timed out, or a missing (still
+    verdict; 1 for a call that failed, timed out or reported an error result
+    (`session_service.call_succeeded`), or a missing (still
     empty) or invalid verdict; 2, before anything launches, for a root that
     is not a lane, an unusable route, a brief file that cannot be read or
     decoded, or a PATH that exists or cannot be reserved; and 7 (needs a human) when the retained launch is refused
     because its dedicated CLI home is not signed in. `signin` exits 0.
 
 Contract IF-285: the command's stdout readings. `adjudicate` prints the
-    call's keep, its exit, and, for a call that exited 0 within its deadline,
-    the verdict file at PATH with its validity under the brief class's
-    grammar, or that the verdict is missing when the call left its
-    reservation empty. `signin` prints the sign-in probe's reading: `signed-in`,
+    call's keep, its exit, and, for a call that SUCCEEDED
+    (`session_service.call_succeeded`: exit 0, within its deadline, and no
+    error result the CLI reported), the verdict file at PATH with its
+    validity under the brief class's grammar, or that the verdict is missing
+    when the call left its reservation empty; any other call prints that it
+    failed and that its verdict is not read. `signin` prints the sign-in probe's reading: `signed-in`,
     `missing` or `unknown`.
 
 Run with Python 3.11+:  python scripts/coordinator_adjudicate.py adjudicate \\
@@ -170,12 +173,35 @@ def reserve_verdict(path):
     return None
 
 
-def _release(path):
-    """Remove this call's reservation when nothing was written into it: a
-    call refused before its launch leaves no file behind."""
+def bind_requested(path, brief, prompt):
+    """Bind what this sitting was asked beside its verdict, or say why not:
+    `kitlib.sitting.requested_path(path)` is created exclusively holding the
+    brief class and its requested kinds (a combined brief's, read off its one
+    `SITTING:` line; a single-kind brief's own class). A separate file, so the
+    adjudicator's rewrite of the verdict cannot change what the verdict is
+    judged against (WI-841 round 10). None when bound.
+
+    Implements: SR-232, LLR-310
+    """
+    try:
+        kinds = adjudicate_brief.bind_pending(path, brief, prompt, exclusive=True)
+    except OSError as exc:
+        return "the verdict binding for {} cannot be written: {}".format(path, exc)
+    if not kinds:
+        return "the combined brief names no requested kinds on a `SITTING:` line"
+    return None
+
+
+def _release(path, bound=True):
+    """Remove the files THIS call created and nothing else: its reservation
+    when nothing was written into it, and its binding only when `bound` (this
+    call wrote it). A reservation refused because a binding already existed
+    leaves that binding, which another call owns (WI-841 round 13)."""
     try:
         if os.path.getsize(path) == 0:
             os.remove(path)
+            if bound:
+                os.remove(adjudicate_brief.ksitting.requested_path(path))
     except OSError:
         pass
 
@@ -195,6 +221,10 @@ def _inputs(root, args):
             why = "the brief file cannot be read: {}".format(exc)
     if why is None:
         why = reserve_verdict(args.verdict)
+    if why is None:
+        why = bind_requested(args.verdict, args.brief, prompt)
+        if why:
+            _release(args.verdict, bound=False)
     return (None, None, why) if why else (row, prompt, None)
 
 
@@ -208,19 +238,21 @@ def _keep_line(kept):
     return "keep: minting a retained session"
 
 
-def _report(outcome, brief, verdict):
+def _report(outcome, brief, verdict, kinds=()):
     """Print the call's exit and the verdict; 0 for a valid verdict, else 1.
-    A call that exited non-zero or timed out has failed whatever file is at
-    the verdict path, which is then not read."""
+    A call that exited non-zero, timed out or reported an error result
+    (`session_service.call_succeeded`) has failed whatever file is at the
+    verdict path, which is then not read. A combined sitting's verdict is
+    judged against `kinds`, the kinds its composed brief requested."""
     print("adjudicate: exit {}{}".format(outcome.code, _timed(outcome)))
-    if outcome.code != 0 or outcome.timed_out:
+    if not session_service.call_succeeded(outcome):
         print("adjudicate: the call failed; its verdict is not read")
         return 1
     path = Path(verdict)
     if not path.is_file() or path.stat().st_size == 0:
         print("adjudicate: verdict missing: the call wrote nothing to {}".format(path))
         return 1
-    refusal = adjudicate_brief.verdict_refusal(brief, verdict)
+    refusal = adjudicate_brief.verdict_refusal(brief, verdict, kinds=kinds)
     if path.is_file():
         print("--- verdict {} ---".format(path))
         print(path.read_text(encoding="utf-8", errors="replace").rstrip())
@@ -279,7 +311,16 @@ def adjudicate(args):
             keep=kept,
         )
     )
-    return _report(outcome, args.brief, args.verdict)
+    kinds = adjudicate_brief.requested_for(args.brief, prompt)
+    code = _report(outcome, args.brief, args.verdict, kinds)
+    # The route that ran the call RECORDS its acceptance (WI-841 rounds 11,
+    # 12): `record_outcome` judges the verdict itself and takes the call's
+    # success, so a failed or timed-out call is recorded failed.
+    call_ok = session_service.call_succeeded(outcome)
+    adjudicate_brief.record_outcome(
+        root, args.verdict, args.brief, kinds, call_ok, args.wi
+    )
+    return code
 
 
 def signin(args):

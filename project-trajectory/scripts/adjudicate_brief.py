@@ -53,8 +53,10 @@ asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
-ALL SIX BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
-module's life. The two that were unrouted are worth keeping on record, because
+ALL EIGHT BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
+module's life. The newest two (WI-841) are `done-when`, a lane's own Done-when
+change judged in the lane, and `combined`, one lane-checkpoint sitting that
+composes the pending amendment, first-approval and done-when briefs. The two that were unrouted are worth keeping on record, because
 each says something about what "routed" costs:
 
   * `conflict` is RETIRED, not filled. It had a template and a verdict grammar
@@ -111,6 +113,14 @@ import consolidate as cons
 import prompts
 import rejudge
 import spine_carrier
+from kitlib import done_when as kdone
+from kitlib import sitting as ksitting
+
+# The Done-when brief and the combined lane-checkpoint sitting (WI-841).
+DONE_WHEN = "done-when"
+COMBINED = ksitting.SITTING
+# The kinds one combined sitting composes, in section order.
+COMBINABLE = ksitting.KINDS
 
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
@@ -120,6 +130,8 @@ BRIEF_PROMPTS = {
     "consolidate": prompts.ADJUDICATE_CONSOLIDATE,
     "red-tc": prompts.ADJUDICATE_RED_TC,
     rejudge.BRIEF: prompts.ADJUDICATE_REJUDGE,
+    DONE_WHEN: prompts.ADJUDICATE_DONE_WHEN,
+    COMBINED: prompts.ADJUDICATE_COMBINED,
 }
 
 # The per-close reports' home (`intake.REPORTS` / `handback.REPORTS`, restated
@@ -155,8 +167,11 @@ EVIDENCE_CLIP = 80
 # outside that pair, so reusing it would have parsed every adjudication verdict
 # as unreadable.
 VERDICT_GRAMMAR = {
-    "amendment": ("VERDICT", ("MEANING", "CLARITY"), ("rows",)),
-    "first-approval": ("OUTCOME", ("APPROVE", "RETURN"), ("rows",)),
+    # The kinds a combined sitting composes, and its own closing line, take
+    # their grammar from `kitlib.sitting.GRAMMAR`, the one home the Done-when
+    # holds validate a sitting with too (WI-841 round 9).
+    "amendment": ksitting.GRAMMAR["amendment"],
+    "first-approval": ksitting.GRAMMAR["first-approval"],
     "disposition": ("OUTCOME", ("COMPLETE", "PARTIAL", "CANCELLED"), ("successors",)),
     # The CONSOLIDATION grammar (restructure plan §1.2). Its first three
     # alternatives are the retired `conflict` grammar verbatim; the fourth is
@@ -185,6 +200,13 @@ VERDICT_GRAMMAR = {
     # and committed its record, naming the outcome, or the judgment is a
     # person's act and it recorded nothing (`result=-`).
     rejudge.BRIEF: ("OUTCOME", ("RECORDED", "NEEDS-JUDGEMENT"), ("result",)),
+    # The DONE-WHEN judgement (WI-841): its own keyword, so the line is found
+    # wherever it sits (a combined sitting's section included), and `digest=`
+    # binds the verdict to the exact text it judged (`kitlib.done_when`).
+    DONE_WHEN: ksitting.GRAMMAR[DONE_WHEN],
+    # The COMBINED sitting: one `## <kind>` section per composed kind, each
+    # judged by its own grammar, and this closing line naming them all.
+    COMBINED: ksitting.GRAMMAR[COMBINED],
 }
 
 
@@ -210,7 +232,7 @@ def adjudicates(row):
     }
 
 
-def verdict_refusal(brief, verdict_path):
+def verdict_refusal(brief, verdict_path, kinds=None):
     """Why this adjudication's verdict is not acceptable evidence, or None.
 
     THE SESSION'S OUTPUT IS THE VERDICT FILE, not its commit. A worker session
@@ -223,27 +245,103 @@ def verdict_refusal(brief, verdict_path):
     Checked in the order a reader would: is the file there, does it carry the
     line, is the label one of the declared alternatives, are the counters
     present. Every arm names what is wrong, because "the verdict is invalid" is
-    not something a human can act on at 3am."""
-    keyword, labels, counters = VERDICT_GRAMMAR.get(brief, (None, (), ()))
-    if keyword is None:
+    not something a human can act on at 3am.
+
+    A COMBINED verdict is judged against `kinds`, the kinds its sitting
+    requested (`requested_kinds` of the composed brief): without them it is
+    refused, since a verdict naming its own kinds could judge none."""
+    if brief not in VERDICT_GRAMMAR:
         return "unknown brief {!r} — no verdict grammar".format(brief)
     text = _read(verdict_path) if verdict_path else None
     if text is None:
         return "no verdict was written to {}".format(verdict_path or "(no path)")
-    matched = re.search(r"^\s*{}:\s*(\S+)(.*)$".format(keyword), text, re.M)
-    if matched is None:
-        return "{} carries no `{}:` machine line".format(verdict_path, keyword)
-    label, rest = matched.group(1).strip(), matched.group(2)
-    if label not in labels:
-        return "{} says `{}: {}` — not one of {}".format(
-            verdict_path, keyword, label, "|".join(labels)
-        )
-    missing = [c for c in counters if not re.search(r"\b{}\s*=\s*\S+".format(c), rest)]
-    if missing:
-        return "{} says `{}: {}` but omits {}".format(
-            verdict_path, keyword, label, ", ".join(missing)
-        )
-    return None
+    if brief in ksitting.GRAMMAR:
+        # The sitting's kinds and the sitting itself go through the ONE
+        # parser the Done-when holds consume (WI-841 round 10).
+        requested = kinds if brief == COMBINED else (brief,)
+        return ksitting.parse(text, brief, requested, verdict_path)[1]
+    return _line_refusal(brief, text, verdict_path)
+
+
+def _line_refusal(brief, text, verdict_path):
+    """Why `text` does not carry `brief`'s machine line, or None
+    (`kitlib.sitting.line_refusal` over this brief's grammar).
+
+    Implements: SR-146, LLR-167
+    """
+    return ksitting.line_refusal(VERDICT_GRAMMAR[brief], text, verdict_path)
+
+
+def requested_kinds(brief_text):
+    """The kinds a composed combined brief requested, read off the one
+    `SITTING:` line its wrapper template carries: what the verdict is then
+    judged against (`verdict_refusal(..., kinds=...)`).
+
+    Implements: SR-232, LLR-310
+    """
+    return ksitting.named_kinds(brief_text)
+
+
+def requested_for(brief, prompt):
+    """The kinds a call of `brief` requests: a combined brief's, read off its
+    composed `SITTING:` line; a single-kind brief's own class. What both
+    routes bind beside the verdict before the call (WI-841 round 17).
+
+    Implements: SR-232, LLR-310
+    """
+    return requested_kinds(prompt) if brief == COMBINED else (brief,)
+
+
+def bind_pending(verdict_path, brief, prompt, exclusive=False):
+    """Bind what this call was asked - its brief and requested kinds, outcome
+    `pending` - beside its verdict, through the one writer; the kinds, or ()
+    when a combined brief names none (no binding is then written). Both routes
+    call it before the call: the coordinator's entry point exclusively at
+    reservation, the loop at composition.
+
+    Implements: SR-232, LLR-310
+    """
+    kinds = requested_for(brief, prompt)
+    if kinds:
+        ksitting.write_binding(verdict_path, brief, kinds, "pending", exclusive)
+    return kinds
+
+
+def bound_kinds(verdict_path, brief):
+    """The kinds the binding beside `verdict_path` records this call
+    requested, read back for its outcome; `(brief,)` when none is bound.
+
+    Implements: SR-232, LLR-310
+    """
+    bound = ksitting.read_requested(_read(ksitting.requested_path(verdict_path)))
+    return bound[1] if bound else (brief,)
+
+
+def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
+    """THE one place a route DECIDES and records whether the adjudication it
+    ran was ACCEPTED or FAILED, in the verdict's binding, committed in its own
+    bookkeeping commit; returns `(outcome, why)`, `why` None when accepted.
+    ONE RULE for both routes (the coordinator's entry point and the loop):
+    accepted only when the CALL succeeded (`call_ok`: exit 0 within its
+    deadline, no reported error - `session_service.call_succeeded`) AND the
+    verdict validates against `kinds` (`verdict_refusal`, judged here, so no
+    route can skip it). A failed call is recorded failed without its verdict
+    being read. The loop's completion consumes this same decision, so a
+    failed call keeps its obligation (WI-841 rounds 11-15). `kinds` None reads
+    back the request bound beside the verdict (`bound_kinds`, round 17).
+
+    Implements: SR-232, LLR-310
+    """
+    kinds = bound_kinds(verdict_path, brief) if kinds is None else kinds
+    if call_ok:
+        why = verdict_refusal(brief, verdict_path, kinds=kinds)
+    else:
+        why = "the call failed (a non-zero exit, a timeout or a reported error)"
+    outcome = "failed" if why else "accepted"
+    ksitting.write_binding(verdict_path, brief, kinds, outcome)
+    binding = ksitting.requested_path(verdict_path)
+    ac.commit_telemetry(root, session, "verdict " + outcome, [binding])
+    return outcome, why
 
 
 def _clip(text, limit):
@@ -1332,6 +1430,190 @@ def _rejudge_case_text(root, tc, case):
     return "\n".join(chain + [text])
 
 
+# --- the Done-when brief and the combined sitting (WI-841) --------------------
+
+_ACTIVE = "docs/work/active"
+_ACTIVE_SPEC_RE = re.compile(r"^docs/work/active/([^/]+)/(WI-\d+)-[^/]*\.md$")
+
+
+def _subject_claim(root, wi_id):
+    """`(claimed text, anchor, branch)` for `wi_id`'s Done-when as claimed;
+    the text is None when no claim copy is readable, and the anchor then says
+    why.
+
+    In a lane (the spec still under `active/<branch>/` at HEAD) the claim copy
+    is read at the lane's integration base, the copy every hold point reads
+    (`agent_common.default_base`). After the merge (a closed spec: the
+    goalposts row a merge minted) it is the copy the claim commit added, the
+    newest commit that added the spec under `active/`.
+
+    Implements: SR-156, LLR-308
+    """
+    code, listing = ac.git(root, "ls-tree", "-r", "--name-only", "HEAD", _ACTIVE)
+    for path in listing.splitlines() if code == 0 else ():
+        matched = _ACTIVE_SPEC_RE.match(path)
+        if matched and matched.group(2) == wi_id:
+            base = ac.default_base(root) or ""
+            return _claim_at(root, base, matched.group(1), wi_id, "the lane's base")
+    code, added = ac.git(
+        root,
+        "log",
+        "-1",
+        "--diff-filter=A",
+        "--format=%H",
+        "--name-only",
+        "HEAD",
+        "--",
+        "{}/*/{}-*.md".format(_ACTIVE, wi_id),
+    )
+    lines = added.split() if code == 0 else []
+    matched = _ACTIVE_SPEC_RE.match(lines[-1]) if len(lines) >= 2 else None
+    if matched is None:
+        return None, "no claim of {} under {}/ is readable".format(wi_id, _ACTIVE), None
+    return _claim_at(root, lines[0], matched.group(1), wi_id, "the claim commit")
+
+
+def _claim_at(root, rev, branch, wi_id, what):
+    """`(claimed text or None, anchor, branch)` read at `rev`; an absent or an
+    unreadable claim (`kdone.claim_copy`) refuses, naming which."""
+    claimed, why = kdone.claim_copy(root, rev, branch, wi_id)
+    if claimed is None:
+        why = why or "no copy of it sits under docs/work/active/{}/".format(branch)
+        return (
+            None,
+            "{}'s claim at {} cannot be briefed: {}".format(wi_id, what, why),
+            None,
+        )
+    return claimed, "the claim copy at {} {}".format(what, rev[:10]), branch
+
+
+def done_when_values(root, row):
+    """`({subject, context, anchor, claimed, current, changes, digest}, None)` for the
+    one work item this row's `Adjudicates` cell names, whose Done-when differs
+    from the one it was claimed with, or `(None, reason)`.
+
+    Re-derived live from git (`red_tc_values`' rule): a change since blessed
+    away, or reverted, refuses rather than briefing a judge on a text that is
+    no longer the lane's. The digest is `kitlib.done_when.digest`, the one the
+    hold points compute, so the verdict line binds exactly the text shown.
+
+    Implements: SR-156, LLR-308
+    """
+    scope = sorted(adjudicates(row))
+    if len(scope) != 1:
+        return None, (
+            "a done-when row names exactly one work item in `Adjudicates`; this "
+            "one names {}".format(";".join(scope) or "none")
+        )
+    wi_id = scope[0]
+    claimed, anchor, branch = _subject_claim(root, wi_id)
+    if claimed is None:
+        return None, anchor
+    path, current, why = kdone.spec_at(root, "HEAD", branch, wi_id)
+    if current is None:
+        return None, "{}'s current spec cannot be briefed: {}".format(
+            wi_id, why or "no copy of it sits in the tree at HEAD"
+        )
+    found = kdone.changes(claimed, current)
+    if not found:
+        return None, (
+            "{}'s Done-when at HEAD is the claimed one (ticks and evidence "
+            "aside), so there is no change to judge".format(wi_id)
+        )
+    context = _spec_context(current)
+    if context is None:
+        return None, (
+            "{} at {} carries no `## Context`, so the purpose a Done-when "
+            "change is judged against is absent".format(wi_id, path)
+        )
+    return {
+        "subject": "{} — its spec at {}".format(wi_id, path),
+        "context": context,
+        "anchor": anchor,
+        "claimed": _item_lines(claimed),
+        "current": _item_lines(current),
+        "changes": "\n".join(kdone.describe(found)),
+        "digest": kdone.digest(wi_id, claimed, current),
+    }, None
+
+
+_HEADING_RE = re.compile(r"^#{1,2}\s")
+_CONTEXT_RE = re.compile(r"^##\s+Context\s*$")
+
+
+def _spec_context(text):
+    """The spec's `## Context` section, clipped at `CANDIDATE_CLIP` lines with
+    the cut stated, or None when it has none: the purpose a Done-when change
+    is judged against (round 2: a brief without it cannot tell a change that
+    keeps the purpose from one that drops part of it).
+
+    Implements: SR-156, LLR-308
+    """
+    lines, inside = [], False
+    for line in (text or "").splitlines():
+        if _HEADING_RE.match(line):
+            if inside:
+                break
+            inside = bool(_CONTEXT_RE.match(line))
+        elif inside:
+            lines.append(line)
+    body = "\n".join(lines).strip()
+    return _clip(body, CANDIDATE_CLIP) if body else None
+
+
+def _item_lines(text):
+    """A spec's Done-when items, normalized, one `- ` line each."""
+    return "\n".join("- " + item for item in kdone.items(text)) or "(no items)"
+
+
+def _sitting_scopes(row):
+    """`({kind: [ids]}, None)` from a combined row's `Adjudicates` tokens,
+    each `<kind>:<id>` with a composable kind, or `(None, reason)`.
+
+    Implements: SR-232, LLR-310
+    """
+    scopes, bad = ksitting.scopes(sorted(adjudicates(row)))
+    if bad:
+        return None, (
+            "combined scope token {!r} is not `<kind>:<id>` with a kind of {}".format(
+                bad[0], ", ".join(COMBINABLE)
+            )
+        )
+    if not scopes:
+        return None, (
+            "this combined sitting declares no `Adjudicates` scope, so the "
+            "judgements it composes are unknown"
+        )
+    return scopes, None
+
+
+def combined_values(root, row, verdict_path, prompt_templates=None):
+    """`({sections, kinds}, None)`: ONE sitting composing every pending in-lane
+    judgement its scope names, or `(None, reason)`.
+
+    A COMPOSITION, NOT A FORK. Each section is the kind's own brief, composed
+    by `compose` for a row scoped to that kind's ids, its verdict path naming
+    its `## <kind>` section of this sitting's one file, so each keeps its own
+    grammar, its own acts and its own refusals. ALL OR NOTHING: a section that
+    cannot be composed refuses the sitting, naming the kind (rule 2).
+
+    Implements: SR-232, LLR-310
+    """
+    scopes, reason = _sitting_scopes(row)
+    if scopes is None:
+        return None, reason
+    kinds = [kind for kind in COMBINABLE if kind in scopes]
+    sections = []
+    for kind in kinds:
+        sub = dict(row, Brief=kind, Adjudicates=";".join(scopes[kind]))
+        where = "the `## {}` section of {}".format(kind, verdict_path)
+        text, why = compose(root, sub, where, prompt_templates)
+        if text is None:
+            return None, "the {} section: {}".format(kind, why)
+        sections.append("=== SECTION `## {}` ===\n\n{}".format(kind, text))
+    return {"sections": "\n\n".join(sections), "kinds": ";".join(kinds)}, None
+
+
 # Each shipped brief's assembler, the producer of EVERY slot its template
 # declares. The key set equals `BRIEF_PROMPTS`' (the suite pins both
 # directions), so shipping a new brief means adding its assembler here, never
@@ -1343,8 +1625,19 @@ _ASSEMBLERS = {
     "disposition": disposition_values,
     "red-tc": red_tc_values,
     rejudge.BRIEF: rejudge_values,
+    DONE_WHEN: done_when_values,
+    # Composes the others, so it is handed the verdict path and the overrides
+    # each section's own brief is composed under (`_assemble`).
+    COMBINED: combined_values,
 }
 ROUTED = tuple(sorted(_ASSEMBLERS))
+
+
+def _assemble(brief, root, row, verdict_path, prompt_templates):
+    """The declared brief's assembler, called with what it reads."""
+    if brief == COMBINED:
+        return combined_values(root, row, verdict_path, prompt_templates)
+    return _ASSEMBLERS[brief](root, row)
 
 
 def governing_templates(classes, prompt_templates=None):
@@ -1390,7 +1683,7 @@ def compose(root, row, verdict_path, prompt_templates=None):
         return None, "unknown brief {!r} (expected one of {})".format(
             brief, ", ".join(sorted(BRIEF_PROMPTS))
         )
-    values, reason = _ASSEMBLERS[brief](root, row)
+    values, reason = _assemble(brief, root, row, verdict_path, prompt_templates)
     if values is None:
         return None, "the {} brief cannot be filled: {}".format(brief, reason)
     values["verdict"] = str(verdict_path)

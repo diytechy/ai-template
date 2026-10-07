@@ -164,6 +164,8 @@ try:
     from kitlib import decisions as _kitdecisions
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
+    from kitlib import sitting as _kitsitting
+    from kitlib import verdict as _kitverdict
     from kitlib import spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
@@ -175,6 +177,8 @@ except ImportError:  # pragma: no cover - in-process fallback
     from kitlib import decisions as _kitdecisions
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
+    from kitlib import sitting as _kitsitting
+    from kitlib import verdict as _kitverdict
     from kitlib import spine as _kitspine
 
 # `git -C <root> <args>` stdout on success, else None (git absent, not a repo,
@@ -275,12 +279,16 @@ SPINE_TABLE = spine_carrier.SPINE_TABLE
 SPINE_COLUMN = spine_carrier.SPINE_COLUMN
 _spine_stem = spine_carrier.stem
 _spine_carriers = spine_carrier.carriers
+# A TIER's carrier set and its text reader are `spine_carrier`'s, never listed
+# here: the needs file's tiers sit under the need carriers (its legacy `.md`
+# included), every other tier under the row carriers (WI-841 round 6).
+_tier_carriers = spine_carrier.tier_carriers
 
 
 def _spine_rows_at(root, rev_prefix, rel_path, id_col):
     """{id: row} of a spine registry on ONE side of the two-tree scan, read
-    through whichever carrier that side actually uses — TOML first, CSV as the
-    fallback. `rev_prefix` is a `git show` prefix: `"HEAD:"`,
+    through whichever carrier that side actually uses (`spine_carrier`'s tier
+    carriers, in preference order). `rev_prefix` is a `git show` prefix: `"HEAD:"`,
     `"abc123:"`, or `":"` for the index.
 
     Each side resolves independently, and that is the point rather than a
@@ -290,14 +298,15 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
     exempt from the amendment guard — it is checked by it, independently of the
     converter's own round-trip proof. A silent-no-op degrade (`{}`) is kept for
     a side that has neither carrier, which is the pre-registry history case."""
-    for cand in _spine_carriers(rel_path):
+    for cand in _tier_carriers(rel_path, id_col):
         text = _git(root, ["show", rev_prefix + cand])
         if text is None:
             continue
-        rows = spine_carrier.rows_from_text(text, id_col, "." + cand.rsplit(".", 1)[1])
+        suffix = "." + cand.rsplit(".", 1)[1]
+        rows = spine_carrier.tier_rows_from_text(text, id_col, suffix)
         if rows is None:
             continue  # unreadable is not empty — try the other carrier
-        return {rid: row for rid, row in rows.items() if not str(rid).endswith("-000")}
+        return {r: row for r, row in rows.items() if not str(r).endswith("-000")}
     return {}
 
 
@@ -599,7 +608,7 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
         root,
         base,
         head,
-        touches=sorted(c for p, _ in registries for c in _spine_carriers(p)),
+        touches=sorted(c for p, col in registries for c in _tier_carriers(p, col)),
     )
     if revs is None:
         return
@@ -610,7 +619,7 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
         # `system-requirements.toml` for a repo whose staged diff touched
         # `system-requirements.csv` names a file that does not exist — in a
         # record an adjudication row quotes back to a human.
-        touched = [c for c in _spine_carriers(csv_path) if c in staged_names]
+        touched = [c for c in _tier_carriers(csv_path, id_col) if c in staged_names]
         if not touched:
             continue
         before_rows = _spine_rows_at(root, old_rev, csv_path, id_col)
@@ -797,20 +806,35 @@ def approval_delta(root, base, head):
 
 
 def first_approval_scope(metas):
-    """The typed scope of claimed first-approval rows, or None for another kind."""
-    first = [meta for _name, meta in metas if meta.get("brief") == "first-approval"]
-    if not first:
+    """The typed scope of claimed first-approval rows (a combined sitting's
+    `first-approval:` tokens included), or None when none scopes one."""
+    scopes = [_kitsitting.brief_scope(meta, "first-approval") for _name, meta in metas]
+    scopes = [scope for scope in scopes if scope is not None]
+    if not scopes:
         return None
-    values = [meta.get("adjudicates") for meta in first]
-    if any(not isinstance(value, list) for value in values):
+    if any(scope is False for scope in scopes):
         return frozenset()
-    return frozenset(
-        str(rid).strip() for value in values for rid in value if str(rid).strip()
-    )
+    return frozenset(rid for scope in scopes for rid in scope)
 
 
-def adjudication_approval_refusal(scope, delta):
-    """Refuse a first-approval act that exceeds its recorded row scope."""
+def _registry_identity(path):
+    """The approval-act registry a carrier path belongs to (its tier's
+    canonical path, whichever of `spine_carrier.tier_carriers` names it), or
+    the path itself for a file of no approval-act tier.
+
+    Implements: SR-178, LLR-278"""
+    hits = (rel for rel, col in APPROVAL_ACT_CSVS if path in _tier_carriers(rel, col))
+    return next(hits, path)
+
+
+def adjudication_approval_refusal(scope, delta, reattested=frozenset()):
+    """Refuse a first-approval act that exceeds its recorded row scope. A
+    registry copy is WIDENED unless the act flipped a row there or re-attested
+    one (`reattested`, the registries `_reattested_registries` names), so the
+    sections of one combined sitting each keep their own act (WI-841). Both
+    sides compare REGISTRY IDENTITY (`_registry_identity`), so every carrier
+    path of an authorized registry is its act's own - the obsolete carrier's
+    copy a conversion deletes included."""
     acts, snapshot_files, refusal = delta
     if refusal:
         return refusal
@@ -826,8 +850,11 @@ def adjudication_approval_refusal(scope, delta):
         line.partition(" ")[2][len(SNAPSHOT_DIR) + 1 :] for line in snapshot_files
     }
     snapshot_registries = written - SNAPSHOT_OWN_FILES
-    widened = sorted(snapshot_registries - acted_registries)
-    missing = sorted(acted_registries - snapshot_registries)
+    ident = _registry_identity
+    authorized = {ident(r) for r in acted_registries | set(reattested)}
+    copied = {ident(r) for r in snapshot_registries}
+    widened = sorted(r for r in snapshot_registries if ident(r) not in authorized)
+    missing = sorted(r for r in acted_registries if ident(r) not in copied)
     if not outside and not widened and not missing:
         return None
     lines = [
@@ -870,31 +897,48 @@ def merge_approval_refusal(root, base, head, metas, adjudication, *, trunk):
     which the merge base is not once trunk has moved since the lane forked."""
     delta = approval_delta(root, base, head)
     if adjudication:
-        refusal = reattest_scope_refusal(
-            root, base, head, metas, delta
-        ) or held_reattest_refusal(root, trunk, base, head, delta)
+        refusal = reattest_scope_refusal(root, base, head, metas, delta) or (
+            held_reattest_refusal(root, trunk, base, head, delta)
+            # Every added act is tied to an ACCEPTED verdict, named or not (WI-841).
+            or _kitsitting.unaccepted_refusal(root, head, _added_acts(root, base, head))
+            or _kitsitting.uncovered_refusal(
+                root, base, head, _added_acts(root, base, head)
+            )
+        )
         if refusal:
             return refusal
         scope = first_approval_scope(metas)
         if scope is not None or delta[0]:
-            return adjudication_approval_refusal(scope or frozenset(), delta)
+            moved = _reattested_registries(root, base, head)
+            return adjudication_approval_refusal(scope or frozenset(), delta, moved)
         return delta[2]
     return lane_approval_refusal(root, base, head, delta)
 
 
+def _reattested_registries(root, base, head):
+    """The approval-act registries (by identity, the tier's canonical path)
+    holding a row the merge's acts re-attested, read once its scope was judged;
+    `adjudication_approval_refusal` admits every carrier path of each.
+
+    Implements: SR-178, LLR-278"""
+    ids = reattested_between(root, base, head)[0]
+    held = (
+        (r, _spine_rows_at(root, head + ":", r, col)) for r, col in APPROVAL_ACT_CSVS
+    )
+    return {r for r, rows in held if ids & set(rows)}
+
+
 def amendment_scope(metas):
     """The rows the claimed AMENDMENT adjudications ruled: the union of their
-    `Adjudicates` cells, empty when none is claimed. A first-approval row's
-    scope is its flips, not a re-attestation's.
+    `Adjudicates` cells and of a combined sitting's `amendment:` tokens, empty
+    when none is claimed. A first-approval row's scope is its flips, not a
+    re-attestation's.
 
     Implements: SR-178, LLR-278"""
     return frozenset(
-        str(rid).strip()
+        rid
         for _name, meta in metas
-        if meta.get("brief") == "amendment"
-        and isinstance(meta.get("adjudicates"), list)
-        for rid in meta["adjudicates"]
-        if str(rid).strip()
+        for rid in _kitsitting.brief_scope(meta, "amendment") or ()
     )
 
 
@@ -925,13 +969,8 @@ def reattested_between(root, base, head):
                 SNAPSHOT_DIR, SNAPSHOT_ACTS, base if before is None else head
             )
         )
-    seen = {act.get("seq") for act in before if isinstance(act, dict)}
-    return frozenset(
-        str(rid)
-        for act in after
-        if isinstance(act, dict) and act.get("seq") not in seen
-        for rid in act.get("reattested") or []
-    ), None
+    added = _added_acts(root, base, head)
+    return frozenset(str(r) for a in added for r in a.get("reattested") or []), None
 
 
 def _wrote_ledger(delta):
@@ -973,34 +1012,9 @@ def reattest_scope_refusal(root, base, head, metas, delta=None):
     )
 
 
-# The two row tags of an amendment verdict, in the brief's own grammar
-# (`prompts/adjudicate-amendment.template.md`): `- [MEANING|CLARITY] <row-id> ...`.
-# Read with string methods: this module's import surface is pinned
-# (`tests/test_acceptance_record.py`), and one prefix test needs no `re`.
-_VERDICT_TAGS = {"- [MEANING]": "MEANING", "- [CLARITY]": "CLARITY"}
-
-
-def _ruled_row(line):
-    """`(word, row id)` for one verdict row line, else None."""
-    head = line.strip()
-    for tag, word in _VERDICT_TAGS.items():
-        rest = head[len(tag) :].split() if head.startswith(tag) else []
-        if rest:
-            return word, rest[0]
-    return None
-
-
-def verdict_rulings(text):
-    """`{row id: "MEANING" | "CLARITY"}` read off an amendment verdict's row
-    lines; a row ruled both ways reads MEANING, the brief's fail-toward-meaning
-    rule.
-
-    Implements: SR-178, LLR-278"""
-    out = {}
-    for word, rid in filter(None, map(_ruled_row, (text or "").splitlines())):
-        if out.get(rid) != "MEANING":
-            out[rid] = word
-    return out
+# An amendment verdict's row rulings: the reader lives in `kitlib.verdict`
+# (WI-841 round 5); the name stays here for its callers.
+verdict_rulings = _kitverdict.verdict_rulings
 
 
 def _tier_of(rid):
@@ -1054,13 +1068,23 @@ def _held_act_lines(root, head, dial, act):
     if not held:
         return []
     verdict = str(act.get("verdict") or "").strip()
-    rulings = (
-        verdict_rulings(_git(root, ["show", "{}:{}".format(head, verdict)]))
-        if verdict
-        else {}
-    )
+    # Only an ACCEPTED, valid verdict's amendment section counts (WI-841).
+    found = (_kitsitting.accepted_at(root, head, verdict) or {}).get("amendment")
+    rulings = found[3] if found else {}
     lines = (_held_row_line(root, head, rid, act, rulings) for rid in held)
     return [line for line in lines if line]
+
+
+def _added_acts(root, base, head):
+    """The act-ledger entries `head` adds over `base`, `[]` when either side
+    does not parse (`reattest_scope_refusal` names that).
+
+    Implements: SR-178, LLR-278"""
+    before, after = _ledger_acts(root, base), _ledger_acts(root, head)
+    if before is None or after is None:
+        return []
+    seen = {a.get("seq") for a in before if isinstance(a, dict)}
+    return [a for a in after if isinstance(a, dict) and a.get("seq") not in seen]
 
 
 def held_reattest_refusal(root, trunk, base, head, delta=None):
@@ -1084,15 +1108,10 @@ def held_reattest_refusal(root, trunk, base, head, delta=None):
     Implements: SR-178, LLR-278"""
     if not _wrote_ledger(delta or approval_delta(root, base, head)):
         return None
-    before, after = _ledger_acts(root, base), _ledger_acts(root, head)
-    if before is None or after is None:
-        return None  # `reattest_scope_refusal` names the unreadable ledger
     dial = _kitauthority.dial_at(root, trunk)
-    seen = {act.get("seq") for act in before if isinstance(act, dict)}
     lines = []
-    for act in after:
-        if isinstance(act, dict) and act.get("seq") not in seen:
-            lines += _held_act_lines(root, head, dial, act)
+    for act in _added_acts(root, base, head):
+        lines += _held_act_lines(root, head, dial, act)
     if not lines:
         return None
     return (
@@ -2281,7 +2300,7 @@ def _squash_lines(root, head, tip):
 
     Implements: SR-140, LLR-302
     """
-    paths = [c for rel, _ in APPROVAL_ACT_CSVS for c in _spine_carriers(rel)]
+    paths = [c for rel, col in APPROVAL_ACT_CSVS for c in _tier_carriers(rel, col)]
     staged = ["diff", "--cached", "--name-only", tip, "--", SNAPSHOT_DIR, *paths]
     commits = _git(root, ["rev-list", "--reverse", head + ".." + tip])
     within = _git(root, ["merge-base", "--is-ancestor", head, tip]) == ""

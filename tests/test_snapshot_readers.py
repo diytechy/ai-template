@@ -24,6 +24,7 @@ from conftest import (
 
 SNAP = load_script("baseline_snapshot")
 AR = load_script("acceptance_record")
+from kitlib import sitting as SITTING_MOD  # noqa: E402  (scripts/ is on the path)
 
 NEEDS_REL = "docs/requirements/stakeholder-needs.toml"
 SR_REL = "docs/requirements/system-requirements.toml"
@@ -311,11 +312,58 @@ def _release(root):
 _VERDICT = "docs/reviews/v.md"
 
 
-def _amendment_act(root, reattests, held=False, verdict=None):
+# A valid machine line per sitting kind, for the adjudication verdict a lane's
+# act is tied to (WI-841 round 14).
+_KIND_LINES = {
+    "amendment": "VERDICT: CLARITY rows=1",
+    "first-approval": "OUTCOME: APPROVE rows=1",
+}
+
+
+def _bind_branch(
+    root, rows, outcome="accepted", name="000-ADJUDICATE-x.md", returned=()
+):
+    """Write the adjudication verdict, and its binding recording `outcome`,
+    that a route leaves in the lane before the act it authorises. `rows` maps
+    each kind to the rows its section JUDGES - an amendment section rules them
+    CLARITY, a first-approval section APPROVE - since every row an added act
+    flips or re-attests must be judged so by an accepted verdict in the branch
+    (round 16). One kind is a single-kind verdict; several, one sitting."""
+    kinds = tuple(k for k in ("amendment", "first-approval") if k in rows)
+    tag = {"amendment": "CLARITY", "first-approval": "APPROVE"}
+
+    def part(kind):
+        # A row in `returned` is ruled RETURN in the first-approval section.
+        lines = "".join(
+            "- [{}] {} -> judged -> judged -> same\n".format(
+                "RETURN" if rid in returned else tag[kind], rid
+            )
+            for rid in rows[kind]
+        )
+        return "{}\n{}\n".format(lines, _KIND_LINES[kind])
+
+    if len(kinds) == 1:
+        brief, text = kinds[0], part(kinds[0])
+    else:
+        brief = "combined"
+        text = "".join("## {}\n\n{}\n".format(k, part(k)) for k in kinds)
+        text += "SITTING: JUDGED kinds={}\n".format(";".join(kinds))
+    rel = "docs/reviews/lane/" + name
+    (root / rel).parent.mkdir(parents=True, exist_ok=True)
+    (root / rel).write_text(text, encoding="utf-8")
+    binding = SITTING_MOD.render_requested(brief, kinds, outcome)
+    (root / SITTING_MOD.requested_path(rel)).write_text(binding, encoding="utf-8")
+
+
+def _amendment_act(
+    root, reattests, held=False, verdict=None, binding=None, judged=None
+):
     """Amend two approved rows, commit that as the merge base, then take the
     act re-attesting `reattests` as the head; returns (base, head). `held`
     keeps the scaffold's dial; `verdict`, when given, is the verdict file's
-    text, committed with the act and named by it."""
+    text, committed with the act and named by it, beside its `binding` - by
+    default the one the route that ran the call records for an accepted
+    single-kind amendment verdict (WI-841 round 11)."""
     run_git = _git(root)
     if not held:
         _release(root)
@@ -330,6 +378,15 @@ def _amendment_act(root, reattests, held=False, verdict=None):
     if verdict is not None:
         (root / _VERDICT).parent.mkdir(parents=True, exist_ok=True)
         (root / _VERDICT).write_text(verdict, encoding="utf-8")
+        if binding is None:
+            binding = SITTING_MOD.render_requested(
+                "amendment", ("amendment",), "accepted"
+            )
+        (root / SITTING_MOD.requested_path(_VERDICT)).write_text(
+            binding, encoding="utf-8"
+        )
+    if verdict is None:
+        _bind_branch(root, {"amendment": sorted(judged or reattests)})
     SNAP.copy_live(
         root,
         reattests=frozenset(reattests),
@@ -410,6 +467,7 @@ def test_a_held_rung_is_read_from_trunk_not_from_the_merge_base(scaffold):
     _rewrite(scaffold, SR_REL, '"row one"', '"row one, amended"')
     base = _commit(run_git, "the amendment")
     run_git("checkout", "-q", "-b", "lane")
+    _bind_branch(scaffold, {"amendment": ["SR-001"]})
     SNAP.copy_live(scaffold, reattests=frozenset({"SR-001"}))
     head = _commit(run_git, "the lane's re-attesting act, no verdict")
     run_git("checkout", "-q", trunk_branch)
@@ -603,10 +661,11 @@ def test_each_tiers_missing_cell_is_named(label, cell):
         assert spine.missing_cell_findings(tiers) == []
 
 
-def _mixed_act(root, approve_scope, amend_scope):
+def _mixed_act(root, approve_scope, amend_scope, metas=None):
     """Batch B's shape (act seq 4 of this repository's ledger): one act that
     carries a Drafted row into approval AND re-attests an amended approved
-    row, claimed by a first-approval row and an amendment row together."""
+    row, claimed by a first-approval row and an amendment row together, or by
+    the claiming rows `metas` names (a combined sitting's one row)."""
     run_git = _git(root)
     _release(root)
     _append(root, SR_REL, _SR.format(rid="SR-001", title="row one"))
@@ -624,9 +683,10 @@ def _mixed_act(root, approve_scope, amend_scope):
     _rewrite(
         root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Approved"\nphase = 1'
     )
+    _bind_branch(root, {"amendment": ["SR-001"], "first-approval": ["SR-002"]})
     SNAP.copy_live(root, approves={SR_REL: "WI-681"}, reattests={"SR-001"})
     head = _commit(run_git, "the one act: approve SR-002, re-attest SR-001")
-    metas = [
+    metas = metas or [
         ("WI-680.md", {"brief": "amendment", "adjudicates": amend_scope}),
         ("WI-681.md", {"brief": "first-approval", "adjudicates": approve_scope}),
     ]
@@ -642,3 +702,494 @@ def test_a_mixed_approval_and_reattestation_act_merges(scaffold):
 def test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused(scaffold):
     refusal = _mixed_act(scaffold, ["SR-002"], ["SR-009"])
     assert refusal and "SR-001 re-attested OUTSIDE" in refusal, refusal
+
+
+def _combined(tokens):
+    return [("WI-682.md", {"brief": "combined", "adjudicates": tokens})]
+
+
+def test_a_combined_sittings_sections_each_take_their_own_act(scaffold):
+    """WI-841 round 2, MAJOR 2: one combined sitting judged a first approval
+    and an amendment; the one act approving SR-002 and re-attesting SR-001 is
+    inside the scope each section's `<kind>:<id>` tokens give it."""
+    tokens = ["first-approval:SR-002", "amendment:SR-001", "done-when:WI-682"]
+    assert _mixed_act(scaffold, [], [], metas=_combined(tokens)) is None
+
+
+def test_a_combined_sittings_act_outside_its_kinds_tokens_is_refused(scaffold):
+    """The tokens bind per kind: SR-001 named for first approval does not
+    authorise its re-attestation."""
+    tokens = ["first-approval:SR-002", "first-approval:SR-001"]
+    refusal = _mixed_act(scaffold, [], [], metas=_combined(tokens))
+    assert refusal and "SR-001 re-attested OUTSIDE" in refusal, refusal
+
+
+def _split_act(root, approve, copy_needs=None, sr_rel=SR_REL, append=None):
+    """WI-841 round 3 (Sol r2): a combined sitting whose two sections act in
+    DIFFERENT registries. SR-001 is approved and amended (the amendment
+    section re-attests it, copying the SR registry); SN-001 is Drafted in the
+    needs registry (the first-approval section approves it when `approve`,
+    copying the needs registry, or returns it). `copy_needs` forces the needs
+    copy without a flip, the WIDENED case. `sr_rel` and `append` put the SR
+    registry on another carrier (round 5: the legacy CSV). Returns
+    (base, head)."""
+    run_git = _git(root)
+    _release(root)
+    (append or _append)(root, sr_rel, _SR.format(rid="SR-001", title="row one"))
+    seeded = _SPLIT_NEED.format('"Drafted"').replace("now sees", "sees")
+    _append(root, NEEDS_REL, seeded)
+    SNAP.copy_live(root, seed=True)
+    _commit(run_git, "seed")
+    _rewrite(root, sr_rel, '"row one"', '"row one, amended"')
+    # The drafted need's text moves too, so its copy differs from the seed's.
+    _rewrite(root, NEEDS_REL, "The owner sees", "The owner now sees")
+    base = _commit(run_git, "the amendment and the drafted need")
+    if approve:
+        _rewrite(
+            root,
+            NEEDS_REL,
+            _SPLIT_NEED.format('"Drafted"'),
+            _SPLIT_NEED.format('"Approved"'),
+        )
+    approves = {NEEDS_REL: "WI-682"} if approve or copy_needs else None
+    # The first-approval section APPROVES SN-091 when the act flips it, and
+    # RETURNS it otherwise (the all-return case, Sol final8 MINOR).
+    _bind_branch(
+        root,
+        {"amendment": ["SR-001"], "first-approval": ["SN-091"]},
+        returned=() if approve else ("SN-091",),
+    )
+    SNAP.copy_live(root, approves=approves, reattests={"SR-001"})
+    return base, _commit(run_git, "the one act of the sitting")
+
+
+# A need of its own, so the act flips exactly it (the scaffold ships others).
+_SPLIT_NEED = (
+    _NEED.replace("SN-001", "SN-091")
+    .replace("The owner sees", "The owner now sees")
+    .replace('"Approved"', "{}")
+)
+_SPLIT = ["amendment:SR-001", "first-approval:SN-091", "done-when:WI-682"]
+
+
+def test_a_combined_act_in_two_registries_merges(scaffold):
+    """The re-attested SR registry's copy is the amendment section's act, not
+    a widening of the first-approval section's."""
+    base, head = _split_act(scaffold, approve=True)
+    assert (
+        AR.merge_approval_refusal(
+            scaffold, base, head, _combined(_SPLIT), True, trunk=head
+        )
+        is None
+    )
+
+
+def test_a_combined_act_whose_first_approval_returned_everything_merges(scaffold):
+    """The first-approval section returned its row and flipped nothing; the
+    amendment section's re-attestation alone is accepted, as it is for an
+    amendment-only sitting (the control)."""
+    base, head = _split_act(scaffold, approve=False)
+    lane_verdict = "docs/reviews/lane/000-ADJUDICATE-x.md"
+    parsed = SITTING_MOD.accepted_at(scaffold, head, lane_verdict)
+    assert parsed["first-approval"][3] == {"SN-091": "RETURN"}, parsed
+    added = [
+        a
+        for a in AR._ledger_acts(scaffold, head)
+        if a.get("seq") not in {x.get("seq") for x in AR._ledger_acts(scaffold, base)}
+    ]
+    assert [(a["approved"], a["reattested"]) for a in added] == [([], ["SR-001"])]
+    assert (
+        AR.merge_approval_refusal(
+            scaffold, base, head, _combined(_SPLIT), True, trunk=head
+        )
+        is None
+    )
+    amendment_only = _combined(["amendment:SR-001"])
+    assert (
+        AR.merge_approval_refusal(
+            scaffold, base, head, amendment_only, True, trunk=head
+        )
+        is None
+    )
+
+
+def test_a_combined_act_copying_a_registry_neither_section_moved_is_widened(
+    scaffold,
+):
+    """The union is of what each section legitimately moves: a needs copy with
+    no approved need and no re-attested need is still WIDENED."""
+    base, head = _split_act(scaffold, approve=False, copy_needs=True)
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _combined(_SPLIT), True, trunk=head
+    )
+    assert refusal and "WIDENED" in refusal and NEEDS_REL in refusal, refusal
+
+
+SR_CSV_REL = "docs/requirements/system-requirements.csv"
+_SR_CSV_COLS = [
+    "SR-ID",
+    "Title",
+    "Requirement",
+    "Rationale",
+    "AcceptanceCriteria",
+    "Priority",
+    "Verification",
+    "Status",
+    "Phase",
+]
+
+
+def _csv_sr_carrier(root):
+    """Put the SR registry on the legacy CSV carrier (a supported one); return
+    the appender that writes `_SR`-shaped rows into it."""
+    import csv
+
+    (root / SR_REL).unlink()
+    with (root / SR_CSV_REL).open("w", newline="", encoding="utf-8") as fh:
+        csv.DictWriter(fh, fieldnames=_SR_CSV_COLS, quoting=csv.QUOTE_ALL).writeheader()
+
+    def append(root_, rel, text):
+        rows = AR.spine_carrier.rows_from_text(text, "SR-ID", ".toml")
+        with (root_ / rel).open("a", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(fh, fieldnames=_SR_CSV_COLS, quoting=csv.QUOTE_ALL)
+            writer.writerows(rows.values())
+
+    return append
+
+
+def test_a_combined_act_on_a_csv_carrier_authorizes_the_copy_it_writes(scaffold):
+    """WI-841 round 5 (Sol r3): the re-attested registry is named by the
+    carrier the row actually sits in, so the CSV copy the act writes is the
+    one it is authorized for, not the canonical TOML path."""
+    append = _csv_sr_carrier(scaffold)
+    base, head = _split_act(scaffold, True, sr_rel=SR_CSV_REL, append=append)
+    # Named by registry identity (round 7): the CSV copy is that registry's.
+    assert AR._reattested_registries(scaffold, base, head) == {SR_REL}
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _combined(_SPLIT), True, trunk=head
+    )
+    assert refusal is None, refusal
+
+
+def test_a_combined_act_on_a_markdown_needs_carrier_authorizes_its_copy(scaffold):
+    """WI-841 round 6 (Sol r4): the needs file on its supported legacy
+    markdown carrier. A combined act re-attesting SN-001 (drifted, approved)
+    and approving SR-001 (Drafted) writes the markdown copy, which is the one
+    its re-attestation is authorized for, resolved through the kit's one
+    tier-carrier reader rather than a format list of this module's own."""
+    root = scaffold
+    run_git = _git(root)
+    _release(root)
+    (root / NEEDS_REL).unlink()
+    md = root / "docs" / "requirements" / "stakeholder-needs.md"
+    md.write_text(_MD_NEEDS, encoding="utf-8")
+    _append(
+        root,
+        SR_REL,
+        _SR.format(rid="SR-001", title="row one").replace('"Approved"', '"Drafted"'),
+    )
+    SNAP.copy_live(root, seed=True)
+    _commit(run_git, "seed")
+    md.write_text(
+        _MD_NEEDS.replace("sees a moved need", "sees every moved need"),
+        encoding="utf-8",
+    )
+    base = _commit(run_git, "the need drifts")
+    _rewrite(
+        root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Approved"\nphase = 1'
+    )
+    _bind_branch(root, {"amendment": ["SN-001"], "first-approval": ["SR-001"]})
+    SNAP.copy_live(root, approves={SR_REL: "WI-683"}, reattests={"SN-001"})
+    head = _commit(run_git, "the one act of the sitting")
+    md_rel = "docs/requirements/stakeholder-needs.md"
+    assert AR._reattested_registries(root, base, head) == {NEEDS_REL}
+    assert AR._registry_identity(md_rel) == NEEDS_REL
+    tokens = ["amendment:SN-001", "first-approval:SR-001", "done-when:WI-683"]
+    refusal = AR.merge_approval_refusal(
+        root, base, head, _combined(tokens), True, trunk=head
+    )
+    assert refusal is None, refusal
+
+
+_TOML_NEEDS = (
+    "\n[need.SN-001]\n"
+    'status = "Approved"\n'
+    'need = "The owner sees every moved need."\n'
+    'why = "Unseen is unblessed."\n'
+    'priority = "M"\n'
+    'acceptance = "Shown before and after."\n'
+)
+_TOML_DRAFT_NEED = (
+    "\n[need.SN-002]\n"
+    'status = "Drafted"\n'
+    'need = "The owner sees a second need."\n'
+    'why = "A second need."\n'
+    'priority = "M"\n'
+    'acceptance = "Shown."\n'
+)
+
+
+def _converted_needs(root, extra="", amend=True):
+    """WI-841 round 7 (Sol r5): seed the needs file on its legacy markdown
+    carrier, then commit its conversion to TOML (SN-001's text amended unless
+    not `amend`, plus `extra` rows) as the merge base. Returns (run_git, base)."""
+    run_git = _git(root)
+    _release(root)
+    (root / NEEDS_REL).unlink()
+    md = root / "docs" / "requirements" / "stakeholder-needs.md"
+    md.write_text(_MD_NEEDS, encoding="utf-8")
+    _append(
+        root,
+        SR_REL,
+        _SR.format(rid="SR-002", title="row two").replace('"Approved"', '"Drafted"'),
+    )
+    SNAP.copy_live(root, seed=True)
+    _commit(run_git, "seed, the needs on markdown")
+    md.unlink()
+    (root / NEEDS_REL).write_text(
+        (root / NEEDS_REL).read_text(encoding="utf-8")
+        if (root / NEEDS_REL).is_file()
+        else "",
+        encoding="utf-8",
+    )
+    need = _TOML_NEEDS if amend else _TOML_NEEDS.replace("every moved", "a moved")
+    _append(root, NEEDS_REL, need + extra)
+    return run_git, _commit(run_git, "convert the needs to TOML, SN-001 amended")
+
+
+def test_a_combined_act_across_a_needs_carrier_conversion_merges(scaffold):
+    """Sol r5's sequence: the act re-attests SN-001 and approves SR-002; the
+    snapshot writer writes the TOML needs copy and deletes the obsolete
+    markdown one. The registry is authorized by IDENTITY, so both of its
+    carrier paths are its own act, not a widening."""
+    run_git, base = _converted_needs(scaffold)
+    _rewrite(
+        scaffold,
+        SR_REL,
+        'status = "Drafted"\nphase = 1',
+        'status = "Approved"\nphase = 1',
+    )
+    _bind_branch(scaffold, {"amendment": ["SN-001"], "first-approval": ["SR-002"]})
+    SNAP.copy_live(scaffold, approves={SR_REL: "WI-684"}, reattests={"SN-001"})
+    head = _commit(run_git, "the one act")
+    tokens = ["amendment:SN-001", "first-approval:SR-002", "done-when:WI-684"]
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _combined(tokens), True, trunk=head
+    )
+    assert refusal is None, refusal
+
+
+def test_a_plain_flip_across_a_needs_carrier_conversion_merges(scaffold):
+    """The same conversion under a plain first approval of a need: the flip's
+    registry is the needs file, whose obsolete markdown copy the act deletes."""
+    run_git, base = _converted_needs(scaffold, extra=_TOML_DRAFT_NEED)
+    _rewrite(
+        scaffold,
+        NEEDS_REL,
+        'status = "Drafted"\nneed = "The owner sees a second need."',
+        'status = "Approved"\nneed = "The owner sees a second need."',
+    )
+    _bind_branch(scaffold, {"amendment": ["SN-001"], "first-approval": ["SN-002"]})
+    SNAP.copy_live(scaffold, approves={NEEDS_REL: "WI-685"}, reattests={"SN-001"})
+    head = _commit(run_git, "the one act")
+    metas = [
+        ("WI-685.md", {"brief": "first-approval", "adjudicates": ["SN-002"]}),
+        ("WI-686.md", {"brief": "amendment", "adjudicates": ["SN-001"]}),
+    ]
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head)
+    assert refusal is None, refusal
+
+
+def test_an_unauthorized_registrys_obsolete_copy_is_still_widened(scaffold):
+    """Identity authorizes a registry's own carriers only: an act approving
+    SR-002 alone, after a pure (text-preserving) conversion of the needs file,
+    that also copies the needs file (writing its TOML copy, deleting the
+    markdown one) copies a registry it neither flipped nor re-attested in:
+    WIDENED, on both of that registry's carrier paths."""
+    run_git, base = _converted_needs(scaffold, amend=False)
+    _rewrite(
+        scaffold,
+        SR_REL,
+        'status = "Drafted"\nphase = 1',
+        'status = "Approved"\nphase = 1',
+    )
+    # `--approves` naming the needs file copies it (TOML written, the obsolete
+    # markdown deleted) although no need was flipped or re-attested.
+    _bind_branch(scaffold, {"first-approval": ["SR-002"]})
+    SNAP.copy_live(scaffold, approves={SR_REL: "WI-687", NEEDS_REL: "WI-687"})
+    head = _commit(run_git, "the act, a first approval alone")
+    metas = [("WI-687.md", {"brief": "first-approval", "adjudicates": ["SR-002"]})]
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head)
+    assert refusal and "WIDENED to docs/requirements/stakeholder-needs" in refusal, (
+        refusal
+    )
+
+
+def test_a_rejected_bound_sitting_cannot_carry_a_held_rung_reattestation(scaffold):
+    """WI-841 round 11 (Sol final3 MAJOR 1): a bound, accepted
+    `amendment;done-when` sitting whose done-when section has no machine line
+    is not a valid verdict, so its amendment section's CLARITY ruling carries
+    no held-rung re-attestation: the integrator refuses the act."""
+    text = (
+        "## amendment\n- [CLARITY] SR-001 title -> same obligation\n"
+        "VERDICT: CLARITY rows=1\n\n## done-when\nno machine line\n"
+        "SITTING: JUDGED kinds=amendment;done-when\n"
+    )
+    binding = SITTING_MOD.render_requested(
+        "combined", ("amendment", "done-when"), "accepted"
+    )
+    base, head = _amendment_act(
+        scaffold, {"SR-001"}, held=True, verdict=text, binding=binding
+    )
+    metas = _combined(["amendment:SR-001", "done-when:WI-900"])
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head)
+    assert refusal and "SR-001" in refusal, refusal
+
+
+_REJECTED_SITTING = (
+    "## amendment\n- [CLARITY] SR-001 title -> same obligation\n"
+    "VERDICT: CLARITY rows=1\n\n## done-when\nno machine line\n"
+    "SITTING: JUDGED kinds=amendment;done-when\n"
+)
+
+
+def test_a_released_tier_act_naming_an_unaccepted_verdict_is_refused(scaffold):
+    """WI-841 round 12 (Sol final4 MAJOR 2): on a RELEASED rung, a
+    re-attestation naming a verdict its route recorded FAILED (a rejected
+    sitting) is refused like a held one: every act a merge adds that names a
+    verdict must name an accepted one."""
+    binding = SITTING_MOD.render_requested(
+        "combined", ("amendment", "done-when"), "failed"
+    )
+    base, head = _amendment_act(
+        scaffold, {"SR-001"}, verdict=_REJECTED_SITTING, binding=binding
+    )
+    metas = _combined(["amendment:SR-001", "done-when:WI-900"])
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head)
+    assert refusal and "ACCEPTED" in refusal and _VERDICT in refusal, refusal
+
+
+def _rejected_mixed_act(root, name_verdict):
+    """One act on a released rung that approves SR-002 and re-attests SR-001,
+    taken after a combined `amendment;first-approval` sitting its route
+    recorded FAILED. `name_verdict` passes `--verdict` (the named path) or
+    omits it (the unnamed path, round 14). Returns (base, head)."""
+    run_git = _git(root)
+    _release(root)
+    _append(root, SR_REL, _SR.format(rid="SR-001", title="row one"))
+    drafted = _SR.format(rid="SR-002", title="row two").replace(
+        '"Approved"', '"Drafted"'
+    )
+    _append(root, SR_REL, drafted)
+    SNAP.copy_live(root, seed=True)
+    _commit(run_git, "seed")
+    _rewrite(root, SR_REL, '"row one"', '"row one, amended"')
+    base = _commit(run_git, "the amendment, SR-002 drafted")
+    # SR-002 itself, never the scaffold's SR-000 example (Sol final6 MINOR).
+    _rewrite(root, SR_REL, drafted, drafted.replace('"Drafted"', '"Approved"'))
+    (root / _VERDICT).parent.mkdir(parents=True, exist_ok=True)
+    (root / _VERDICT).write_text(_REJECTED_SITTING, encoding="utf-8")
+    failed = SITTING_MOD.render_requested(
+        "combined", ("amendment", "first-approval"), "failed"
+    )
+    (root / SITTING_MOD.requested_path(_VERDICT)).write_text(failed, encoding="utf-8")
+    SNAP.copy_live(
+        root,
+        approves={SR_REL: "WI-901"},
+        reattests=frozenset({"SR-001"}),
+        verdict=_VERDICT if name_verdict else None,
+    )
+    head = _commit(run_git, "one act: approve SR-002, re-attest SR-001")
+    (act,) = [
+        a
+        for a in AR._ledger_acts(root, head)
+        if a.get("seq") not in {x.get("seq") for x in AR._ledger_acts(root, base)}
+    ]
+    assert act["approved"] == ["SR-002"] and act["reattested"] == ["SR-001"], act
+    return base, head
+
+
+def test_a_first_approval_in_an_act_naming_an_unaccepted_verdict_is_refused(
+    scaffold,
+):
+    """An act may name a verdict only beside a re-attestation (the snapshot
+    tool refuses `--verdict` without `--reattests`), so Sol's case is one act
+    approving SR-002 and re-attesting SR-001 on a released rung, naming a
+    rejected sitting its route recorded FAILED. The whole act is refused, its
+    first approval with it."""
+    base, head = _rejected_mixed_act(scaffold, name_verdict=True)
+    metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head)
+    assert refusal and "ACCEPTED" in refusal and _VERDICT in refusal, refusal
+
+
+def test_an_act_omitting_its_verdict_is_still_tied_to_an_accepted_one(scaffold):
+    """Sol final6 MAJOR: the same act with `--verdict` OMITTED. Its authority
+    is the adjudication the lane claims, so it must be covered by an ACCEPTED
+    verdict of each kind it takes among the bindings the branch carries; the
+    only binding here records FAILED, so the act is refused."""
+    base, head = _rejected_mixed_act(scaffold, name_verdict=False)
+    metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head)
+    assert refusal and "ACCEPTED" in refusal, refusal
+
+
+def test_an_accepted_sitting_over_other_rows_does_not_authorize_this_act(scaffold):
+    """Sol final7 MAJOR 1 (owner: an act's authority comes from the
+    judgement of ITS rows): a failed sitting's act approves SR-002 and
+    re-attests SR-001 without naming a verdict; a second, ACCEPTED sitting
+    judged SR-003 and SR-004 in the same kinds. Kind coverage would pass it;
+    row coverage refuses it, naming each unjudged row and its kind."""
+    base, head = _rejected_mixed_act(scaffold, name_verdict=False)
+    _bind_branch(
+        scaffold,
+        {"amendment": ["SR-003"], "first-approval": ["SR-004"]},
+        name="001-ADJUDICATE-y.md",
+    )
+    head = _commit(_git(scaffold), "an accepted sitting over other rows")
+    metas = _combined(["first-approval:SR-002", "amendment:SR-001"])
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head)
+    assert refusal and "SR-001 (amendment)" in refusal, refusal
+    assert "SR-002 (first-approval)" in refusal, refusal
+
+
+def test_a_single_kind_verdict_over_other_rows_does_not_authorize(scaffold):
+    """An accepted amendment verdict of the right kind that judged SR-002
+    does not authorize re-attesting SR-001."""
+    base, head = _amendment_act(scaffold, {"SR-001"}, judged=["SR-002"])
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
+    assert refusal and "SR-001 (amendment)" in refusal, refusal
+
+
+def test_a_named_verdict_must_judge_the_rows_it_reattests(scaffold):
+    """A named `--verdict` that is accepted but rules a different row does
+    not carry the re-attestation of SR-001."""
+    text = "- [CLARITY] SR-002 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
+    base, head = _amendment_act(scaffold, {"SR-001"}, verdict=text)
+    refusal = AR.merge_approval_refusal(
+        scaffold, base, head, _AMENDMENT, True, trunk=head
+    )
+    assert refusal and "SR-001" in refusal and _VERDICT in refusal, refusal
+
+
+def test_a_single_kind_first_approval_of_its_judged_row_merges(scaffold):
+    """The ordinary happy path: a first-approval verdict APPROVES SR-002 and
+    the act flips exactly it."""
+    run_git = _git(scaffold)
+    _release(scaffold)
+    drafted = _SR.format(rid="SR-002", title="row two").replace(
+        '"Approved"', '"Drafted"'
+    )
+    _append(scaffold, SR_REL, drafted)
+    SNAP.copy_live(scaffold, seed=True)
+    base = _commit(run_git, "seed, SR-002 drafted")
+    _rewrite(scaffold, SR_REL, drafted, drafted.replace('"Drafted"', '"Approved"'))
+    _bind_branch(scaffold, {"first-approval": ["SR-002"]})
+    SNAP.copy_live(scaffold, approves={SR_REL: "WI-902"})
+    head = _commit(run_git, "the first approval of SR-002")
+    metas = [("WI-902.md", {"brief": "first-approval", "adjudicates": ["SR-002"]})]
+    assert (
+        AR.merge_approval_refusal(scaffold, base, head, metas, True, trunk=head) is None
+    )

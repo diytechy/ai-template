@@ -451,7 +451,10 @@ copy that anchors it — is an adjudicator's, taken on the serial trunk side, ne
 worker lane that authored the rows** (a lane authors `Drafted` rows and amends
 text; its merge is REFUSED if it approves, and the adjudication minted at that
 merge reads the whole chain and approves — [process-options.md "Who performs the
-approval act"](process-options.md#who-performs-the-approval-act)); no un-run
+approval act"](process-options.md#who-performs-the-approval-act)); a lane's
+edit to its own Done-when holds its next build and its close (never the edit
+or the tests) until an adjudicator's verdict or the owner's ruling binds that
+exact text; no un-run
 greens; the
 harness is still the bar (LLM judgment never waives a red check); approved
 owner decisions are never re-decided by an agent. A coordinator can loop fresh

@@ -1,0 +1,208 @@
+# docs/decisions/wi-841.toml — WI-841's delegated decisions record (the
+# in-lane Done-when blessing and the combined lane-checkpoint sitting).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002", "D-004", "D-006"]
+
+[decision.D-001]
+decided = "An owner ruling counts as the in-lane blessing when a docs/decisions/*.toml entry the owner has set `owner = \"confirmed\"` or `owner = \"overruled\"` carries the key `done_when = \"<digest>\"`, the digest of the exact Done-when text (kitlib.done_when.digest; every hold message prints it). An entry the owner has not seen, or one still carrying the retired `reviewed` key, does not count."
+alternative = "Count a ruling by its citation alone (a work item citing docs/decisions/<run>.toml#D-NNN, as D-007 was cited at WI-835), with no digest; or a new dedicated ruling file."
+reversal_cost = "One reader (kitlib.done_when._rulings / _ruling) and its test."
+why_not_escalated = "The build prompt asked for a citing form bound to the text by a digest. The decisions template already allows extra writer keys, so no format change is needed, and the owner's own key (`owner`) is what makes it a ruling: who writes the digest key is a convention, as who sets `owner` already is."
+review = ""
+
+[decision.D-002]
+decided = "The hold points are (a) the loop's next BUILD dispatch, asked from worker_endstate before a build or rework session (a review session is never held, and an adjudication row is never held), returning EXIT_NEEDS_HUMAN with label HELD; (b) the merge slot, a rung in _merge_refusal after the close records; (c) a hand close, a new pre-commit step `done-when-blessed` running `integrate.py done-when-hold` on a staged commit that moves a spec out of docs/work/active/<branch>/ into complete/partial/cancelled. The claimed text is read at the lane's integration base in the lane (worker base / agent_common.default_base), at trunk HEAD in the merge slot, and for a hand close at default_base when committed on the lane's own branch, else at HEAD."
+alternative = "Hold in route_session or run_iteration (both over the complexity budget, 37 and 15), or hold every session including reviews; or read the claimed text at the claim commit everywhere."
+reversal_cost = "Three call sites, each one line into kitlib.done_when.lane_hold, plus one check.py step tuple."
+why_not_escalated = "The spec names the two consumers (next build dispatch, close and merge); the build prompt names these code points. Recorded high-risk because a hand close committed on trunk after a squash of the lane reads trunk's (already edited) copy as the claim and so passes: that path relies on the lane-side close commit having been judged by the same hook, and on intake's safety net."
+review = ""
+
+[decision.D-003]
+decided = "The bound text is the current Done-when items with each item that only ticks or evidences a claim-time item read as that claim-time item; the digest is sha256 over the work item id and those items, 16 hex. Evidence appended to an item the lane ADDED does move the digest, so ticking an added item with appended evidence after a verdict holds the lane again (a bare `[x]` tick does not, the item reader strips it)."
+alternative = "Store the judged text itself with the verdict and compare evidence-tolerantly against it, or strip evidence absolutely (which would hide a narrowing such as `Tests pass - only `linux``)."
+reversal_cost = "One function (bound_items) and its tests."
+why_not_escalated = "The spec binds the verdict to the exact text; tolerance is kept exactly where the merge-time comparison already had it (relative to the claimed items), with no new reading of evidence."
+review = ""
+
+[decision.D-004]
+decided = "Every Done-when verdict outcome covers the text it names: CLARITY, BLESSED and SUCCESSOR all release the hold. A SUCCESSOR verdict drafts the unblessed scope in a `## Dispositions` section of the verdict file, and the merge-time intake mints those drafts (a SUCCESSOR verdict without a draft refuses the mint); the lane's text stands, never reversed."
+alternative = "Let SUCCESSOR keep the lane held until the owner rules; or have the coordinator file the successor by hand."
+reversal_cost = "Drop SUCCESSOR from kitlib.done_when.OUTCOMES' covering set and remove intake._successor_drafts."
+why_not_escalated = "The spec: a moved scope the adjudicator would not bless is drafted as a successor, never a reversal. A lane never mints (R1), so the merge mints, as it already does for an adjudication row's Dispositions. Recorded high-risk because a lane whose scope was narrowed can then close on the narrowed text, with the dropped scope carried only by the minted successor; any verdict file under docs/reviews/ is read, so like every adjudication verdict it is trusted as written by its session."
+review = ""
+
+[decision.D-005]
+decided = "The combined class is named `combined`. Its row's `Adjudicates` cell holds `<kind>:<id>` tokens (kinds amendment, first-approval, done-when); each section is composed by `compose` itself for the row scoped to that kind's ids, with the section's verdict path written as `the ## <kind> section of <file>`, in the fixed order amendment, first-approval, done-when; any section that cannot compose refuses the sitting. Its verdict is one file with one `## <kind>` heading per kind, each carrying its own kind's machine line, closed by `SITTING: JUDGED kinds=<kinds>`; the parser checks the headings match the named kinds and each section passes its own grammar. The Done-when grammar uses its own keyword `DONE-WHEN:` so its line is found inside a combined file."
+alternative = "A combined template that restates each kind's questions (a fork), or per-kind scope cells."
+reversal_cost = "The combined template, combined_values / _sitting_scopes / _sitting_refusal, and two table rows."
+why_not_escalated = "The build prompt asks for a composition of the existing composers and parsers, not a fork; the token form keeps the scope a typed cell rather than prose."
+review = ""
+
+[decision.D-006]
+decided = "tests/test_adjudicate_brief.py's producer assertion (every routed brief is declared by a mint source) now exempts `combined` and asserts instead that every kind it composes is declared. The merge-time goalposts row now declares the `done-when` brief and `Adjudicates = <the closed WI>`, so `done-when` has a mint producer, and its brief composes after the merge too (the claim copy read at the newest commit that added the spec under active/)."
+alternative = "Have intake mint a combined row when one merge raises several kinds; or keep the goalposts row brief-less and exempt `done-when` too."
+reversal_cost = "One test line; the goalposts draft's two keys."
+why_not_escalated = "A combined sitting is by design held in the lane before the merge, so no merge mints one. Recorded high-risk because it relaxes a pinned guard, narrowly and with the reason in the test."
+review = ""
+
+[decision.D-007]
+decided = "This repo's [adjudicator] retain_for gains `done-when` and `combined`; the shipped template's default list and session_keep.KeepConfig's default are unchanged (an adopter widens its own dial; the RESYNC entry says how)."
+alternative = "Widen the shipped default and session_keep's default too."
+reversal_cost = "One list in docs/process.toml and one test tuple."
+why_not_escalated = "VALUES may diverge between the template and this repo; widening the shipped default changes adopters' behaviour on the day they turn retention on, and session_keep.py is another lane's file (WI-838) this wave."
+review = ""
+
+[decision.D-008]
+decided = "The module-size ratchet in tests/test_module_size_ratchet.py is bumped for agent_loop.py (+6), check.py (+8), intake.py (+25) and integrate.py (+22), each with its reason, rather than decomposed in this lane."
+alternative = "Move the new readers into a new module or into kitlib to keep the four modules at their baselines."
+reversal_cost = "A follow-up extraction and a down-stamp."
+why_not_escalated = "Each growth is the one call site or arm the spec names in that module; the shared rule already lives in kitlib.done_when, and further extraction would add pass-through layers."
+review = ""
+
+[decision.D-009]
+decided = "PROCESS.md states the in-lane blessing once, in the \"Fixed points at every level\" paragraph beside the approval act being the adjudicator's, since PROCESS.md carried no Done-when rule of its own (the S13 rule lived only in SR-156's rows and the RESYNC pack)."
+alternative = "PROCESS_OPTIONS.md (WI-839 is editing it this wave) or a new section."
+reversal_cost = "One sentence (+176 bytes since round 2) and the byte-budget row."
+why_not_escalated = "The build prompt asks for one statement where the rule lives; that paragraph is where the kit states which acts are the adjudicator's and which are the lane's."
+review = ""
+
+[decision.D-010]
+decided = "Round 2 (Sol MAJOR 2, 3, 5): a combined sitting's grammar has one home, a new shipped module kitlib/sitting.py (SITTING, KINDS, scopes for the `<kind>:<id>` tokens, sections for the `## <kind>` verdict headings, own_section, and brief_scope, the one reader both act scopes in acceptance_record go through). adjudicate_brief, acceptance_record and intake all import it; acceptance_record.first_approval_scope and amendment_scope now read a combined row's tokens for their own kind, so each section's act is scoped as a single-kind row's would be."
+alternative = "Keep the grammar in acceptance_record (it then crossed the module-size ratchet's 1,000-line monolith threshold at 1,018) or in adjudicate_brief (acceptance_record is a leaf and must not import it)."
+reversal_cost = "Fold one small kitlib module back into its three readers."
+why_not_escalated = "The coordinator directed the act scopes to read the tokens through the same readers rather than a parallel path; kitlib is the kit's declared home for a rule several scripts read (D-8), and a new module there ships with the package the scaffold already copies whole."
+review = ""
+
+[decision.D-011]
+decided = "Round 2 (Sol MAJOR 5): a combined verdict is judged against the kinds its sitting REQUESTED, passed as verdict_refusal(..., kinds=...); with none given it is refused. The coordinator entry point reads the requested kinds off the composed brief's one `SITTING:` line (adjudicate_brief.requested_kinds). The loop passes none, so a combined verdict on the loop route is refused as owed; the loop never draws a combined sitting (no merge mints one). AMENDED round 17 (Sol final8 MAJOR 1): the loop route no longer passes none - it binds the composed request beside the verdict at composition (adjudicate_brief.bind_pending, the writer the entry point uses at reservation) and records the call against those bound kinds (bound_kinds), so a combined sitting the loop draws is judged against what it requested, on the same terms as the coordinator's."
+alternative = "Carry the requested kinds on a new CLI flag of coordinator_adjudicate, or thread the row into the loop's verdict check."
+reversal_cost = "One keyword argument and one reader of the brief text."
+why_not_escalated = "The sitting's request is fixed when its brief is composed, and the brief file is what the entry point already holds; failing closed on the loop route keeps a route that never sits a combined sitting from validating one vacuously."
+review = ""
+
+[decision.D-012]
+decided = "Round 2 (Sol MAJOR 4): the done-when brief carries the spec's own `## Context` section, clipped at 120 lines with the cut stated, and a spec without one refuses (rule 2: the purpose the template asks the judge to weigh would be a hole)."
+alternative = "Render the whole spec, or compose without a Context and say so."
+reversal_cost = "One slot and one reader (_spec_context)."
+why_not_escalated = "The template already asks the judge to weigh the change against the purpose the Context states; the clip is the one the consolidation brief uses for a candidate spec."
+review = ""
+
+[decision.D-013]
+decided = "Round 2 (Sol MAJOR 3): a covering SUCCESSOR verdict mints only the drafts of its own Done-when part: the whole file for a single-kind verdict, its one `## done-when` section in a combined one. No such section, more than one, a DONE-WHEN line under another kind's heading, or more than one `## Dispositions` inside the section refuses the mint by name. tests/test_module_size_ratchet.py gains a reviewed +13 for intake.py."
+alternative = "Mint every Dispositions draft the combined verdict carries."
+reversal_cost = "One reader in intake and kitlib.sitting.own_section."
+why_not_escalated = "A first-approval RETURN draft is that section's own act, not the Done-when's successor; an ambiguous file is refused rather than guessed, as parse_dispositions already refuses a malformed block."
+review = ""
+
+[decision.D-014]
+decided = "Round 3 (Sol r2 MAJOR 1): an adjudication's approval act may copy a registry in which it flipped a row OR re-attested one. merge_approval_refusal hands adjudication_approval_refusal the registries holding the rows the merge's act-ledger entries re-attested (_reattested_registries, read after reattest_scope_refusal has judged those rows against the amendment scope), and only a copy outside both is WIDENED. This also covers two single-kind rows (an amendment row and a first-approval row) acting in different registries, which had the same defect."
+alternative = "Exempt a combined row from the widening check, or count every registry its amendment tokens name."
+reversal_cost = "One helper (_reattested_registries) and one argument."
+why_not_escalated = "The coordinator directed the union of what each section legitimately moves, read through the same readers; the re-attested rows are already the judged set, so the union adds no unjudged copy. acceptance_record.py stays under the 1,000-line ratchet threshold (999 counted lines), with no bump."
+review = ""
+
+[decision.D-015]
+decided = "Round 4 (the adjudicator's LLR-307 return): kitlib.done_when.claim_copy tells the claim copy apart from its two absences. ABSENT (the revision reads and holds no spec of the row under docs/work/active/<branch>/) is a row never claimed through that lane - a hand-cut lane, or an attended run on a row it did not claim - and stays RELEASED: there is no claimed Done-when, so nothing to bless; the merge-time mint keeps its stderr line saying the check did not run. UNREADABLE (no revision given, the revision cannot be read, or the listed copy cannot be) HOLDS at every hold point (build dispatch, hand close, merge ladder), each naming why through kitlib.done_when.unreadable_reason, and REFUSES the merge-time mint. The done-when brief refuses both, naming which. tests/test_module_size_ratchet.py takes a reviewed +2 for intake.py."
+alternative = "Hold on an absent claim too (every unclaimed or hand-cut run would then hold for a blessing no adjudication can give, since there is no claimed text to judge), or keep reading both as 'owes nothing' (an unreadable claim then fails open at every hold point)."
+reversal_cost = "One reader (claim_copy) and its three callers (lane_hold, intake._done_when_drafts, adjudicate_brief._claim_at)."
+why_not_escalated = "The coordinator, relaying the adjudicator's return, directed holding the unreadable case and naming the legitimate absent one; the absent case is the one intake already reported as 'the check did not run' (a hand-cut lane, never claimed on trunk)."
+review = ""
+
+[decision.D-016]
+decided = "Round 5 (Sol r3 MAJOR): carrier resolution has one home, acceptance_record._carrier_rows_at, returning the carrier file a side actually reads with its rows; _spine_rows_at is its rows, and _reattested_registries names each re-attested row's registry by that carrier (a legacy system-requirements.csv, not the canonical .toml path), so the copy a re-attestation writes is the one it is authorized for. To keep acceptance_record.py under the 1,000-line ratchet threshold (it reached 1,002), the amendment verdict's row reader (verdict_rulings and its tag table) moved to kitlib.verdict; acceptance_record keeps `verdict_rulings` as an alias for its callers and the LLR-278 cell."
+alternative = "Map the re-attested registry onto the flip side's touched-carrier rule (it reads staged names, which a re-attestation does not change), or bump the ratchet."
+reversal_cost = "Inline one resolver back into _spine_rows_at, and move one 20-line reader back."
+why_not_escalated = "The coordinator directed one resolver resolving the carrier as the reader does, and decomposition into kitlib rather than a bump; the flip side already reports the carrier that changed, which for a flip is the same file this resolver reads."
+review = ""
+
+[decision.D-017]
+decided = "Round 6 (Sol r4 MAJOR): a tier's carrier set and its text reader now have one home, spine_carrier: tier_carriers(rel, id_col) picks the need carriers (.toml, legacy .md) for the needs file's tiers and the row carriers (.toml, legacy .csv) for every other, and tier_rows_from_text reads any of them (load_need_tier's markdown branch now shares _markdown_need_rows). acceptance_record lists no carrier itself: _carrier_rows_at, the two-tree walk's touched set and the squash check read every approval-act tier through those two. A combined act re-attesting a need on the markdown carrier is authorized for the .md copy it writes. tests/test_intake.py's write_sn moved from stakeholder-needs.csv, a carrier the need tier does not have, to .toml."
+alternative = "Add .md to acceptance_record's own carrier list (the third per-format patch), or resolve through spine_carrier.resolve, which reads the working tree, not a revision."
+reversal_cost = "Two functions in spine_carrier and four call sites in acceptance_record."
+why_not_escalated = "The coordinator directed fixing the class through the kit's one carrier-aware reader; spine_carrier is that reader, and it gains a text-level entry because acceptance_record reads only revisions (its pinned import surface forbids the working tree)."
+review = ""
+
+[decision.D-018]
+decided = "Round 7 (Sol r5 MAJOR): a first-approval act's snapshot copies are authorized by REGISTRY IDENTITY: acceptance_record._registry_identity maps any carrier path to its approval-act tier's canonical path through spine_carrier.tier_carriers, and adjudication_approval_refusal compares identities on both sides (WIDENED and WITHOUT ITS ANCHOR), so every carrier path of an authorized registry is its own act, the obsolete carrier's deleted copy included; a registry the act neither flipped nor re-attested in is still WIDENED on any of its paths. _reattested_registries now returns identities, and _carrier_rows_at folded back into _spine_rows_at (the carrier path is no longer needed). The gap is PRE-EXISTING: trunk 0ce475f7 refuses the same conversion under a plain approval flip of the needs file (WIDENED to stakeholder-needs.md)."
+alternative = "Drop deleted copies from the inspected delta (a deleted copy of an unauthorized registry would then pass), or authorize the act's written carrier only."
+reversal_cost = "One identity function and four comparisons."
+why_not_escalated = "The coordinator directed authorization by registry identity through the one resolver, keeping the unauthorized-copy guard; acceptance_record.py stays under the 1,000-line threshold (999 counted lines)."
+review = ""
+
+[decision.D-019]
+decided = "Round 7 addendum (adjudication 005, LLR-307): both sides of a Done-when comparison are read in one shape, kitlib.done_when._copy_at: found (path, text, None); ABSENT (None, None, None) when the revision reads and holds no copy; UNREADABLE (None, None, why) when the listing or the copy cannot be read, never read as absent. claim_copy and spec_at both delegate to it. The one legitimate ABSENT case is the claim's (a row never claimed through this lane), which releases. A claimed row whose current copy is unreadable, or which has NO current copy in the lane (neither under active/<branch>/ nor in a closed folder: its claimed Done-when is gone, which no close accounts for), holds, naming why. A lane that deletes its Done-when section owes a blessing (every claimed item reads as changed). docs/stack.ini's smoke membership budget is re-stamped 2320 -> 2420, because tests/test_done_when_blessing.py (48 git-repo cases) stays in the smoke tier: approved TC-326 cites it at Smoke, so re-tiering it would make that row untrue."
+alternative = "Treat a missing current copy as an empty Done-when (a blessable digest of nothing), or re-tier the test module to the slow tier."
+reversal_cost = "One reader shape and one hold helper; one stamp."
+why_not_escalated = "The coordinator relayed the adjudicator's finding and directed one shape for both sides; a lane losing its spec without a close is refused at merge anyway (it lands in no state folder), so holding it earlier names the cause sooner."
+review = ""
+
+[decision.D-020]
+decided = "Round 9 (Sol final gate, two MAJORs): a combined sitting's verdict grammar and its ONE validator live in kitlib.sitting (GRAMMAR, line_refusal, named_kinds, sitting_refusal, kind_part); adjudicate_brief's VERDICT_GRAMMAR entries for the sitting's kinds and its verdict check delegate there, and kitlib.done_when accepts a DONE-WHEN line only from a file kind_part finds valid (a single-kind Done-when verdict, or a combined sitting that passes the validator against the kinds it names, its line read from its own `## done-when` section). A section heading is any kind-form `## <lower-case-token>`, so an unrequested section refuses the sitting. Consequence: a sitting whose done-when section is missing, repeated, or whose DONE-WHEN line sits under another heading is now INVALID and covers nothing, so the merge's safety net mints the goalposts row rather than refusing the mint as ambiguous; only repeated Dispositions inside a valid done-when section still refuse."
+alternative = "Validate the sitting only at the coordinator's entry point (a rejected sitting's line then still blessed at the holds), or keep refusing the mint for those three shapes by reading invalid files."
+reversal_cost = "One validator module section and two delegations; the reader in done_when."
+why_not_escalated = "SR-232 requires an invalid section to refuse the whole sitting with no other kind acting, and requires extra sections to refuse; reading an invalid file to refuse rather than mint would be a second path through a rejected verdict. Recorded because approved LLR-262's ambiguous-part clause narrows (listed for Terra)."
+review = ""
+
+[decision.D-021]
+decided = "Round 10 (Sol final2, one class - parse, don't validate): kitlib.sitting.parse(text, brief, kinds) is the ONE parser of a verdict file into {kind: (label, fields)}: a single-kind verdict has no kind-form section and exactly one complete machine line; a combined sitting names exactly the requested kinds in its one SITTING line, holds exactly one section per requested kind and none other, and each section holds exactly one complete own-kind line and no other kind's line. adjudicate_brief.verdict_refusal (for the sitting's kinds and the sitting) and kitlib.done_when._verdicts both consume it; the Done-when line is the parse's. The requested kinds are BOUND in a separate file beside the verdict, `<verdict>.requested` (`brief = <class>`, `kinds = <a;b>`), which coordinator_adjudicate creates exclusively at reservation (after reserve_verdict, before launch; a pre-launch refusal removes both) and commits after the call in its own telemetry commit. The covering reader parses each verdict against its binding; with none, a file with no kind-form section is a single-kind Done-when verdict and a combined one covers nothing."
+alternative = "Write the requested kinds INTO the reserved verdict file (lost when the adjudicator rewrites the file), encode them in the verdict's file name, or read them from the composed brief recorded in the session log (not in the tree the holds read)."
+reversal_cost = "One parser module section, the binding file and its two writers (reserve, commit)."
+why_not_escalated = "The coordinator directed one parser for both consumers and a binding that survives the adjudicator rewriting the verdict; a separate file does, and failing closed (unbound combined covers nothing) keeps a missing binding from releasing a hold. Recorded high-risk-adjacent: the binding is trusted as written, like the verdict beside it."
+review = ""
+
+[decision.D-022]
+decided = "Round 11 (Sol final3, three MAJORs of one class): acceptance is a RECORDED fact. The verdict's binding (`<verdict>.requested`) records `outcome = pending|accepted|failed`; kitlib.sitting.write_binding is its one writer (exclusive at reservation, pending) and adjudicate_brief.record_outcome is the one place a route records accepted (its own validation passed) or failed (a failed, timed-out or refused call, or an invalid verdict) and commits the binding. Both routes call it: coordinator_adjudicate after the call (from _report's result), and the loop's adjudication_bookkeeping after verdict_refusal. Every consumer reads verdicts through one reader, kitlib.sitting.accepted / accepted_at, which returns a parsed verdict only for an accepted, bound, valid file and None otherwise, never raising for a brief class it does not cover: the Done-when covering reader (and so dispatch, hand close, merge and the merge-time mint) and acceptance_record's held-rung re-attestation rung. LEGACY (no binding): a Done-when verdict covers nothing - DONE-WHEN verdicts are new in WI-841 and this lane's own Done-when is unchanged, so no legacy blessing exists to keep; a held-rung re-attestation naming an unbound verdict is refused at merge. Existing approvals stay readable: the rung judges only act-ledger entries a merge ADDS, so acts already on trunk (including those naming this lane's unbound verdicts 001-010) are never re-read; an in-flight act in an adopter repo naming a pre-upgrade unbound amendment verdict must be re-sat through a recording route (RESYNC says so)."
+alternative = "Accept an unbound single-kind verdict as legacy when its text parses (keeps in-flight adopter acts mergeable, but reintroduces acceptance by inference), or record acceptance only on the coordinator route."
+reversal_cost = "The outcome field, one writer, one reader and four call sites."
+why_not_escalated = "The coordinator directed acceptance as a recorded fact written only by the route that ran the call, one reader for every consumer, and a stated legacy rule; failing closed on unbound verdicts follows the owner's no-fallback rule. Recorded because it can refuse an in-flight adopter act at upgrade."
+review = ""
+
+[decision.D-023]
+decided = "Round 12 (Sol final4) widens D-022's reach in two ways. (1) ONE acceptance rule for both routes: adjudicate_brief.record_outcome takes the CALL's success as an input (coordinator: exit 0 and not timed out; loop: exit 0 and classify_outcome neither ERROR nor TIMEOUT) and judges the verdict itself (verdict_refusal against the bound kinds), recording accepted only when both hold - so neither route can record a failed call's verdict accepted. (2) At merge, EVERY act the merge adds that names a verdict - a re-attestation on a held or a released rung, and so any first approval taken in the same act (the snapshot tool lets an act name a verdict only beside a re-attestation) - must name a verdict kitlib.sitting.accepted_at reads as accepted (kitlib.sitting.unaccepted_refusal, after the held-rung rung so its specific refusals read first). D-022's legacy rule therefore now applies to released-tier acts too: an added act naming an unbound verdict is refused. Acts already on trunk stay readable - only ledger entries a merge adds are judged (acceptance_record._added_acts, now also behind reattested_between) - and an act naming no verdict is judged by the existing rules alone."
+alternative = "Check acceptance only on held rungs (Sol's bypass), or require every adjudication act to name a verdict (would refuse released-tier acts that legitimately name none today)."
+reversal_cost = "One argument on record_outcome and its two callers; one kitlib refusal and its rung."
+why_not_escalated = "The coordinator directed one rule for both routes and acceptance for every act naming a verdict, with D-022's legacy rule applied to acts merging from now on and existing acts readable; acceptance_record.py stays under the threshold (993 counted lines) by consolidating its added-act readers."
+review = ""
+
+[decision.D-024]
+decided = "Round 13 (Sol final5): a call's success has ONE derivation both routes share, session_service.call_succeeded(outcome): exit 0, no timeout, and no error result the CLI reported (`is_error` in its JSON result) - the real failure signals, never the displayed outcome (classify_outcome's COMMITTED can mask an error behind a commit) nor a commit's presence. Both routes hold the same session_service.Outcome: the coordinator passes its call's result; the loop's run_iteration records it on the session's plan (plan['call_ok']) for adjudication_bookkeeping, keeping session_bookkeeping's signature. The coordinator's _report uses the same test, so its narration matches what it records. record_outcome judges the verdict only when the call succeeded (`call_ok and verdict_refusal(...)`), so a failed call is recorded failed without its verdict being read (LLR-306's narration). A reservation refused because a binding already existed removes only this call's empty reservation (`_release(path, bound=False)`), never a binding another call owns."
+alternative = "Derive success separately in each route from code/timeout (Sol's bypass via is_error), or pass call_ok as a new session_bookkeeping argument (grows agent_loop past its ratchet for no gain)."
+reversal_cost = "One function in session_service and its two callers; one plan key; one release flag."
+why_not_escalated = "The coordinator directed one derivation from the real failure signals shared by both routes, ownership-aware cleanup, and a failed call recorded without reading its verdict; each is the smallest change that makes the stated rule true."
+review = ""
+
+[decision.D-025]
+decided = "Round 14 (Sol final6 MAJOR): close the unnamed path by DERIVING each act's authority, not by requiring `--verdict`. At merge, every act an adjudication lane adds is tied to its adjudication's ACCEPTED verdict whether or not it names one: each kind the added acts take (a flip needs `first-approval`, a re-attestation `amendment`) must be covered by a verdict kitlib.sitting.accepted_at reads as accepted among the bindings the branch itself changed under docs/reviews (kitlib.sitting.branch_verdicts), a combined sitting covering each kind it requested (kitlib.sitting.uncovered_refusal, after the named-verdict check). A lane whose only verdict for a kind is failed, pending, invalid or unbound has no authority for that kind's act. A named verdict must still itself be accepted (D-023). Legacy: an adjudication lane carrying no binding (a pre-upgrade in-flight lane) is refused at merge and re-sat through a recording route, extending D-022's legacy rule to every adjudication act; acts already on trunk are never re-read."
+alternative = "Refuse any adjudication act that omits `--verdict` (the snapshot tool forbids `--verdict` without `--reattests`, so every first-approval-only act would need that tool, the act command in three brief templates and the composed act slot changed, an adopter-facing CLI change), or read the verdict path off the claimed row (the row carries none; the loop and the coordinator each choose it per call)."
+reversal_cost = "One kitlib refusal and its rung; the test fixtures' branch bindings."
+why_not_escalated = "The coordinator asked for the rule that leaves no unnamed path; deriving from the lane's own recorded bindings covers named and unnamed acts alike with no change to the act CLI or the templates, and the bindings are what both routes already commit in the lane."
+review = ""
+
+[decision.D-026]
+decided = "Round 15 (Sol final7 MAJOR 2): adjudicate_brief.record_outcome now RETURNS its decision, `(outcome, why)`, and the loop's adjudication_bookkeeping sets its completion obligation (`adjudication_owed`) from that same decision rather than a second verdict check: a failed call (call_ok false) keeps its obligation, is recorded failed, and its verdict is never read, so the worker cannot finish DONE and the re-sit is not lost. A missing root or verdict path is owed without recording. Sol final7 MAJOR 1 (row-tied coverage) was NOT built: by the coordinators' standing rule a further crafted-input finding goes to the independent adjudicator as a named dispute, whose ruling sets the fix or files it as a follow-up."
+alternative = "Keep two decisions (record from call success and validation; clear the obligation from validation alone), which let a failed call finish DONE."
+reversal_cost = "One return value and the bookkeeping that consumes it."
+why_not_escalated = "The coordinator directed one decision consumed in both places; the row-tied coverage change was explicitly withdrawn from this round."
+review = ""
+
+[decision.D-027]
+decided = "Round 16 (owner ruling: an act's authority comes from the judgement of ITS rows; Sol final7 MAJOR 1). SUPERSEDES D-025's kind-only coverage. At merge, every ROW an added adjudication act flips must be ruled APPROVE in a first-approval part, and every row it re-attests ruled MEANING or CLARITY in an amendment part, of an ACCEPTED verdict among the bindings the branch carries (single-kind or combined; kitlib.sitting.uncovered_refusal over judged_rows), whether or not the act names a verdict; an accepted verdict over other rows authorizes nothing, and each unjudged row is named with its kind. A NAMED `--verdict` must be accepted AND judge each row the act re-attests (kitlib.sitting.unaccepted_refusal / _named_line). The held-rung CLARITY-only rule stays acceptance_record's, now reading the accepted part's parsed rows. The per-row rulings come from the ONE row reader, kitlib.verdict.row_rulings (generalised from verdict_rulings to each sitting kind's tags and fail-toward rule: MEANING over CLARITY, RETURN over APPROVE), exposed by kitlib.sitting.accepted as each part's fourth element; no second row parser. D-022's legacy rule and D-025's upgrade effect stand (an adjudication lane with no accepted, row-judging binding is refused at merge)."
+alternative = "Keep kind coverage (an accepted sitting over other rows authorizes this act - Sol's bypass), or require every act to name a verdict (the act CLI forbids `--verdict` without `--reattests`)."
+reversal_cost = "The row-coverage refusal, the named-verdict row check and the generalised row reader; the fixtures' judged rows."
+why_not_escalated = "The owner ruled the scope; the coordinator directed row coverage through the existing parse with no second row parser, and the D-025 supersession recorded here."
+review = ""
+
+[decision.D-028]
+decided = "Round 18 (Sol final9 MAJOR): the Done-when hold moves to the ONE point a session is actually selected for dispatch. run_iteration now calls agent_loop.routed_session, which runs route_session and then, for a routed session that builds (neither a review, a critique nor an adjudication brief - the worker assignment, a build or a rework), asks build_hold and exits with its banner before anything launches. worker_endstate holds nothing of its own any more (its building arm is restored to its pre-WI-841 shape), so no early-return arm before routing (the dirty-tree deferral after a completed WI trailer, or a resumed lane's first iteration over a Blocked-WI trailer) can bypass the hold. route_session (complexity 37) and run_iteration (15) are not grown: the hold rides the routing call's existing int-return arm."
+alternative = "Keep the hold in worker_endstate and add it to each early-return arm (two hold sites, and any future arm would need it too), or put it inside route_session (complexity 37, over budget, and its hold banner names adjudication rows)."
+reversal_cost = "One wrapper function and its call; worker_endstate's three restored lines."
+why_not_escalated = "The coordinator directed one hold at the point a BUILD or rework is selected, after routing decides, removing the hold from worker_endstate if redundant; the wrapper is the smallest change that keeps run_iteration within budget."
+review = ""
+
+[decision.D-029]
+decided = "Round 19 (Sol final10 MAJOR): the one parser reads machine lines strictly one PHYSICAL line at a time (kitlib.sitting._keyword_lines: a line whose first token is `KEYWORD:`, split into tokens; no regex spans a newline). Every such line counts, complete or not - a bare keyword, a label carried onto the next line, a label outside the enum or a missing `field=value` token makes the verdict invalid (_machine_lines / _machine_line / _incomplete). A single-kind verdict carries exactly one complete line of its kind and none of another sitting keyword; a combined sitting carries exactly one SITTING line and one complete line per requested kind across the WHOLE file (a keyword line outside every section included) and none of an unrequested kind (_keyword_count_refusal), checked after each section's own line so section-located messages stay. named_kinds and own_section use the same per-line reader. The MINOR: coordinator_adjudicate's Contract IF-285 (and IF-284) paragraphs now state the full success condition, session_service.call_succeeded."
+alternative = "Patch the regex so its whitespace class no longer spans a newline, and keep counting only matched lines (a bare keyword line would still go uncounted)."
+reversal_cost = "Four small functions in kitlib.sitting replacing two regexes."
+why_not_escalated = "The coordinator directed strict per-physical-line parsing in the one parser every reader uses, counting every keyword line complete or not."
+review = ""

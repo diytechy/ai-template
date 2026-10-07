@@ -142,16 +142,17 @@ def write_sr(root, requirement="the original text", status="Approved"):
     )
 
 
-SN_HEADER = "SN-ID,Need,Why,Acceptance,Status\n"
-
-
 def write_sn(root, status="Drafted"):
     """The need tier's own carrier row — the tier `APPROVAL_ACT_CSVS` added at
-    WI-572 REVIEW-A round 028, and the one the human-approval dial holds."""
+    WI-572 REVIEW-A round 028, and the one the human-approval dial holds.
+    Written under a carrier the need tier HAS (`.toml`; its legacy one is
+    `.md`): a `stakeholder-needs.csv` was read only while the approval-act
+    reader wrongly gave the needs file the row carriers (WI-841 round 6)."""
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
-    (req / "stakeholder-needs.csv").write_text(
-        SN_HEADER + 'SN-001,"the need","why","ac",{}\n'.format(status),
+    (req / "stakeholder-needs.toml").write_text(
+        '[need.SN-001]\nstatus = "{}"\nneed = "the need"\nwhy = "why"\n'
+        'priority = "M"\nacceptance = "ac"\n'.format(status),
         encoding="utf-8",
         newline="\n",
     )

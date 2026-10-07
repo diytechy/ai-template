@@ -132,6 +132,8 @@ prompts/adjudicate-disposition.template.md — see the `prompts/` line above (ki
 prompts/adjudicate-red-tc.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-red-tc.template.md).
 prompts/adjudicate-consolidate.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-consolidate.template.md). The fifth routed adjudication brief, SHIPPED by WI-583.
 prompts/adjudicate-rejudge.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-rejudge.template.md). The sixth routed adjudication brief, the checkpoint re-judge of an observation test case.
+prompts/adjudicate-done-when.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-done-when.template.md). The Done-when brief: a lane's own Done-when change, judged in the lane (WI-841).
+prompts/adjudicate-combined.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-combined.template.md). The combined lane-checkpoint sitting composing every pending in-lane judgement (WI-841).
 prompts/dual-plan-planner.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-planner.template.md).
 prompts/dual-plan-critic.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-critic.template.md).
 prompts/dual-plan-arbiter.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-arbiter.template.md).

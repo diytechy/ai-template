@@ -7234,6 +7234,104 @@ record is written.
 reads `out/adjudicator/*.json` must accept a record with no `session_id` or
 `state` (a first call in flight). The store needs no migration.
 
+### A lane's own Done-when change is blessed in the lane, and one combined sitting per checkpoint [since 0ce475f7]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A lane may still edit its own Done-when (that commit is
+never refused, and nothing gates the test suite), but while the lane's
+Done-when differs from the claimed one (ticks and trailing evidence aside) and
+no verdict or owner ruling binds that exact text, the lane is HELD at three
+points that consume it: the loop's next build dispatch, asked once routing
+has selected a build or rework session (the worker exits 7, `HELD`), the merge slot (a new rung after the close records), and a hand
+close (a new pre-commit step, `done-when-blessed`, running `python
+scripts/integrate.py done-when-hold` on a commit that moves a spec out of
+`docs/work/active/<branch>/` into a closed folder under `docs/archive/work/`
+or `docs/work/`). One predicate,
+`scripts/kitlib/done_when.py` (`blessing_owed`, `lane_hold`), answers all
+three. A blessing is either a verdict line `DONE-WHEN: CLARITY|BLESSED|SUCCESSOR
+changes=N digest=<d>` under `docs/reviews/`, or a `docs/decisions/*.toml`
+entry the owner has set `confirmed` or `overruled` that carries `done_when =
+"<d>"`; the digest binds the exact text, so a text changed afterwards is held
+again (the hold message prints the digest to cite). Two new adjudication
+brief classes ship with their templates: `done-when` (the amendment question
+applied to the Done-when lines, shown beside the spec's own `## Context`; a
+spec without one refuses) and `combined` (one sitting composing the pending
+amendment, first-approval and done-when judgements of one lane checkpoint, its
+`Adjudicates` cell holding `<kind>:<id>` tokens, its verdict one `## <kind>`
+section per kind plus `SITTING: JUDGED kinds=...`, judged against exactly the
+kinds the sitting requested). The merge's act scopes read a combined row's
+tokens per kind, so each section's approval or re-attestation act is scoped as
+a single-kind row's would be; a registry copy the act's re-attestation writes is
+no longer refused as WIDENED beside approval flips in another registry
+(on any supported carrier: a legacy CSV registry's or a markdown needs
+file's copy is authorized as that file; every approval-act tier is read through
+`spine_carrier`'s tier readers, so a `stakeholder-needs.csv`, never a supported
+needs carrier, is no longer read as one). Snapshot copies are authorized by
+registry identity, so an act across a carrier conversion (the obsolete carrier's
+copy deleted beside the new one written) merges, while a registry the act did
+not move is still refused on any of its carrier paths. The lane's current spec
+is read like its claim: an unreadable revision, or a claimed row with no copy of
+its spec left in the lane, holds the lane naming why. A Done-when line blesses only
+from a valid verdict: a combined sitting with any invalid or unrequested section
+blesses nothing. A verdict is parsed one physical line at a time (exactly one complete
+machine line per kind; a bare keyword, or a label carried onto the next line,
+makes it invalid)
+against the requested kinds the coordinator's entry point binds beside it at
+reservation, in `<verdict>.requested`; a combined verdict with no such binding
+blesses nothing. The binding also RECORDS the call's outcome
+(`pending`, then `accepted` or `failed`), written only by the route that ran the
+call (the coordinator's entry point, and the loop after validating its
+session's verdict); every reader - the Done-when holds, the merge-time mint and
+the merge's held-rung re-attestation rung - uses only an accepted, bound, valid
+verdict. An in-flight act naming a pre-upgrade verdict with no binding is
+refused at merge: re-sit that adjudication through the loop or the entry
+point. Both routes record a verdict accepted only when the call itself
+succeeded (exit 0, no timeout, no error result the CLI reported:
+`session_service.call_succeeded`) and the verdict validates; a failed call is
+recorded failed without its verdict being read, and every act a merge
+adds that names a verdict - held or released, a first approval in the same act
+included - must name an accepted one. An act's authority is the judgement of its own rows,
+named or not: every row an adjudication lane's act flips must be ruled APPROVE,
+and every row it re-attests ruled MEANING or CLARITY, by an accepted verdict
+among the bindings that lane committed (a named `--verdict` must itself judge
+the rows it re-attests), so an adjudication lane with no binding (an
+in-flight lane from before the upgrade) is refused at merge and re-sat. A claim
+copy that cannot be read (as opposed to a row with no claim under the lane's
+`active/<branch>/`, which stays released) holds the lane at each point, naming
+why, and refuses the merge-time mint. At merge,
+intake mints the goalposts row only for an uncovered close, and it now
+declares the `done-when` brief; a covering `SUCCESSOR` verdict's own `##
+Dispositions` drafts (in a combined verdict, its `## done-when` section's) are
+minted instead, and an ambiguous one refuses the mint.
+
+The Done-when holds stay inert until a lane edits its Done-when: an unchanged
+or only-ticked Done-when holds nothing. The verdict acceptance rules below are
+NOT inert: from the upgrade, every approval act an adjudication lane adds must
+be tied to an accepted verdict of its kind that the lane's route recorded, so an
+adjudication lane in flight across the upgrade (its verdicts carry no binding)
+is refused at merge, whatever its Done-when, and must be re-sat through the
+loop or the entry point.
+
+**What to do.** Re-sync EVERY shipped file this change touched (complete
+against the kit diff of this entry's range): the scripts
+`scripts/acceptance_record.py`, `scripts/adjudicate_brief.py`,
+`scripts/agent_loop.py`, `scripts/check.py`, `scripts/coordinator_adjudicate.py`,
+`scripts/intake.py`, `scripts/integrate.py`, `scripts/prompts.py`,
+`scripts/session_service.py` (its `call_succeeded` is what the coordinator's
+entry point and the loop now call; an un-synced copy fails with
+AttributeError) and `scripts/spine_carrier.py`; the `scripts/kitlib/` modules
+`bootstrap_manifest.py`, `done_when.py`, `verdict.py` and the new `sitting.py`
+(the package is copied whole); the prompt templates' `prompts/README.md`
+and the two new templates `prompts/adjudicate-done-when.template.md` and
+`prompts/adjudicate-combined.template.md`; and `docs/process.md`
+(regenerate it from the kit's `PROCESS.md`, which gains one sentence). If your dial retains
+adjudications and you want these classes retained too, add `"done-when"` and
+`"combined"` to `[adjudicator] retain_for` (the shipped default is unchanged).
+A lane that edits its Done-when now needs that edit blessed before its next
+build or its close: sit the `done-when` brief (or `combined`), or record the
+owner's ruling with the printed digest.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

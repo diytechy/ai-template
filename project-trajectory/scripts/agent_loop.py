@@ -197,7 +197,9 @@ except ImportError:  # pragma: no cover - in-process fallback
 from kitlib import verdict as kverdict
 
 # A lane's Done-when as comparable items (S13): the reviewer's brief is told
-# when the lane's own diff moved the checklist it maps coverage against.
+# when the lane's own diff moved the checklist it maps coverage against, and
+# the next build dispatch is held while no verdict blesses the move (WI-841).
+from kitlib import done_when as kdone
 
 # The loop's provenance vocabulary (SR-209): the marker `main` sets once per
 # run, and the trailer line every session it starts is told to write.
@@ -384,6 +386,9 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
         body, why = adjudicate_brief.compose(root, row, verdict_path, templates)
         if body is None:
             return None, None, why, ""
+        # Bind the composed request beside the verdict, as the coordinator's
+        # entry point does at reservation (WI-841 round 17).
+        adjudicate_brief.bind_pending(verdict_path, brief, body)
         return body + decision_record_note(root, worker), verdict_path, None, brief
     return (
         worker_prompt(
@@ -907,6 +912,43 @@ def worker_endstate(
     if substantive_working_tree_dirty(root):
         return None  # committed evidence only — a dirty tree (owner-only exempt) is not done
     return _done_endstate(worker, managed, rp_int, rounds)
+
+
+def routed_session(ctx, i, current_wi, session, resume_reconcile, now):
+    """`route_session`, then the Done-when hold at the ONE point a session is
+    actually selected for dispatch (WI-841 round 18): once routing has chosen
+    a session that builds - neither a review, a critique nor an adjudication
+    brief, so the worker assignment (a build or a rework) - `build_hold` is
+    asked, and a held lane exits with its banner before anything launches. No
+    early-return arm before routing can skip it, and `worker_endstate` holds
+    nothing of its own.
+
+    Implements: SR-156, LLR-309
+    """
+    plan = route_session(ctx, i, current_wi, session, resume_reconcile, now)
+    builds = not isinstance(plan, int) and not (
+        plan["is_review"] or plan["is_critique"] or plan["brief"]
+    )
+    end = build_hold(ctx.root, ctx.worker) if builds and ctx.worker else None
+    return worker_exit_banner(ctx.worker, end) if end else plan
+
+
+def build_hold(root, worker):
+    """`(EXIT_NEEDS_HUMAN, "HELD", reason)` when the lane's next build session
+    would build on a Done-when that differs from the claimed one with no
+    verdict or owner ruling binding its exact text, else None. Asked of the
+    lane's committed HEAD against the claim copy at its integration base,
+    through the one predicate the close and merge points ask
+    (`kitlib.done_when.lane_hold`). An adjudication row is never held: it is
+    the sitting that blesses, and R3 keeps it from owing one itself.
+
+    Implements: SR-156, LLR-309
+    """
+    rows = worker.get("rows") or {}
+    ids = [w for w in worker["assigned"] if not adjudicating(rows.get(w) or {})]
+    branch = git(root, "branch", "--show-current")[1].strip()
+    reason = kdone.lane_hold(root, "HEAD", worker["base"], branch, ids)
+    return (EXIT_NEEDS_HUMAN, "HELD", reason) if reason else None
 
 
 def _done_endstate(worker, managed, rp_int, rounds):
@@ -1781,7 +1823,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     }
 
 
-def adjudication_bookkeeping(plan, worker, st, managed, route_id, now):
+def adjudication_bookkeeping(plan, worker, st, managed, route_id, now, root=None):
     """Record whether an ADJUDICATE session actually RULED. A no-op for every
     other session (the guard is here rather than at the call site so
     `session_bookkeeping` gains no branch for it).
@@ -1795,10 +1837,23 @@ def adjudication_bookkeeping(plan, worker, st, managed, route_id, now):
     nothing else is evidence that a judgement happened.
 
     Cleared on success, so a re-run that DOES rule can complete: this is a
-    per-session judgement, not a latch."""
+    per-session judgement, not a latch.
+
+    The loop is a route that runs adjudications, so it RECORDS each verdict's
+    acceptance beside it through the one writer both routes call
+    (`adjudicate_brief.record_outcome`, WI-841 round 11), and the obligation
+    this clears is that SAME decision (round 15): a failed call stays owed and
+    its verdict is not read."""
     if not plan.get("brief"):
         return
-    owed = adjudicate_brief.verdict_refusal(plan["brief"], plan["verdict_path"])
+    brief, verdict = plan["brief"], plan.get("verdict_path")
+    # ONE decision, recorded and consumed here: completion is owed exactly
+    # when the route records the verdict failed (WI-841 round 15).
+    owed = "no verdict path to record" if root is None or not verdict else None
+    if owed is None:
+        # kinds None: read back the request bound at composition.
+        record = (root, verdict, brief, None, plan.get("call_ok"), brief)
+        _outcome, owed = adjudicate_brief.record_outcome(*record)
     worker["adjudication_owed"] = owed or ""
     if not owed:
         return
@@ -2393,7 +2448,9 @@ def session_bookkeeping(
     # The ADJUDICATE validation arm, unconditional (see the function): an
     # adjudication row gets its brief on BOTH routing paths, so it owes its
     # verdict on both — unlike everything below, which is managed-only.
-    adjudication_bookkeeping(plan, ctx.worker, st, ctx.managed, plan["route_id"], now)
+    adjudication_bookkeeping(
+        plan, ctx.worker, st, ctx.managed, plan["route_id"], now, ctx.root
+    )
     # --- managed routing / reviewer dispatch bookkeeping (S8) -------------
     # All of this is gated on managed mode; the legacy path never enters it.
     if not ctx.managed:
@@ -3317,7 +3374,7 @@ def run_iteration(ctx, i):
     session = "{:03d}".format(next_session_number(ctx.iter_dir, worker["train"]))
     stamp = time.strftime("%Y%m%d-%H%M%S")
     now = time.time()
-    plan = route_session(ctx, i, current_wi, session, resume_reconcile, now)
+    plan = routed_session(ctx, i, current_wi, session, resume_reconcile, now)
     if isinstance(plan, int):
         return plan
     # Route recovery may commit its own probe telemetry; only work produced by
@@ -3373,6 +3430,9 @@ def run_iteration(ctx, i):
         label="{} {}".format(plan["phase"] or "—", outcome),
     )
     print(session_summary(session, outcome, commits, wall_secs, meta))
+    # Whether the call itself succeeded, from its real failure signals
+    # (`session_service.call_succeeded`, shared with the coordinator's route).
+    plan["call_ok"] = session_service.call_succeeded(launched)
     r = session_bookkeeping(
         ctx, plan, outcome, code, commits, after, reset_hint, now, session, current_wi
     )

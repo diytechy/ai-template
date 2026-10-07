@@ -154,6 +154,20 @@ class Outcome:
     metrics: dict
 
 
+def call_succeeded(outcome):
+    """Did the call itself succeed? From its real failure signals, never its
+    displayed outcome or a commit's presence: exit 0, no timeout, and no
+    error result the CLI reported (`is_error` in its JSON result). The ONE
+    derivation both adjudication routes hand `adjudicate_brief.record_outcome`
+    (WI-841 round 13): the loop's and the coordinator's calls are both an
+    `Outcome`.
+
+    Implements: SR-232, LLR-310
+    """
+    data = agent_session.parse_json_result(outcome.text or "")
+    return outcome.code == 0 and not outcome.timed_out and not data.get("is_error")
+
+
 def _now():
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 

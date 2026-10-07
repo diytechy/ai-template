@@ -142,6 +142,9 @@ from .station import (
 )
 
 __all__ = [
+    "verdict_rulings",
+    "row_rulings",
+    "ROW_RULINGS",
     "RECORD_PREFIXES",
     "REVIEW_PHASES",
     "TRAILER_LABEL",
@@ -1294,3 +1297,53 @@ def branch_trailers(root, branch, base):
             continue  # the words rode onto a tree they do not describe
         by_tree.setdefault(tree, []).append((word, rounds))
     return by_tree
+
+
+# --- an AMENDMENT verdict's row rulings ----------------------------------------
+#
+# The two row tags of an amendment verdict, in the brief's own grammar
+# (`prompts/adjudicate-amendment.template.md`): `- [MEANING|CLARITY] <row-id> ...`.
+# Moved here from `acceptance_record` (WI-841 round 5), which keeps the name as
+# an alias and stays under the module-size ratchet's threshold: a pure reader of
+# a verdict's text, beside this module's other verdict readers.
+# Each sitting kind's row tags, and the ruling that wins when a row is tagged
+# both ways (its brief's fail-toward rule): the ONE row reader of a verdict.
+ROW_RULINGS = {
+    "amendment": ({"- [MEANING]": "MEANING", "- [CLARITY]": "CLARITY"}, "MEANING"),
+    "first-approval": ({"- [APPROVE]": "APPROVE", "- [RETURN]": "RETURN"}, "RETURN"),
+}
+
+
+def _ruled_row(line, tags):
+    """`(word, row id)` for one verdict row line, else None."""
+    head = line.strip()
+    for tag, word in tags.items():
+        rest = head[len(tag) :].split() if head.startswith(tag) else []
+        if rest:
+            return word, rest[0]
+    return None
+
+
+def row_rulings(text, kind):
+    """`{row id: ruling}` read off a `kind` verdict part's row lines (an
+    amendment's MEANING/CLARITY, a first approval's APPROVE/RETURN); a row
+    ruled both ways reads the kind's fail-toward ruling; `{}` for a kind with
+    no row lines.
+
+    Implements: SR-232, LLR-310"""
+    tags, wins = ROW_RULINGS.get(kind, ({}, None))
+    out = {}
+    for line in (text or "").splitlines():
+        ruled = _ruled_row(line, tags)
+        if ruled and out.get(ruled[1]) != wins:
+            out[ruled[1]] = ruled[0]
+    return out
+
+
+def verdict_rulings(text):
+    """`{row id: "MEANING" | "CLARITY"}` read off an amendment verdict's row
+    lines; a row ruled both ways reads MEANING, the brief's fail-toward-meaning
+    rule.
+
+    Implements: SR-178, LLR-278"""
+    return row_rulings(text, "amendment")

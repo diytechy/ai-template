@@ -154,11 +154,13 @@ except ImportError:  # pragma: no cover - in-process fallback
 # one — the parse rule has exactly one home either way.
 try:
     from kitlib import done_when as kdone
+    from kitlib import sitting as ksitting
     from kitlib import stage as kitstage
     from kitlib import spine as _spine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import done_when as kdone
+    from kitlib import sitting as ksitting
     from kitlib import stage as kitstage
     from kitlib import spine as _spine
 
@@ -1177,19 +1179,32 @@ def _close_drafts(root, outcomes):
     return drafts
 
 
-def _done_when_drafts(root, before, outcomes, branch):
-    """Trigger (e), S13: one adjudication per claimed row whose lane changed its
-    OWN Done-when between claim and merge, ticks and trailing evidence aside.
+def _done_when_drafts(root, before, after, outcomes, branch):
+    """Trigger (e), S13: `(drafts, refusal)` - one adjudication per claimed row
+    whose lane changed its OWN Done-when between claim and merge, ticks and
+    trailing evidence aside, that no in-lane verdict or owner ruling blesses.
 
     A reviewer maps each Done-when item to its covering test, so an item the
     builder rewords is the checklist its own reviewer reads - moved by the party
     it judges. The precedent is trigger (a): amended approved spine text mints
     an adjudication at the merge that landed it. AT CLAIM is the spec as trunk
     held it under `active/<branch>/` just before this merge (what the claim
-    wrote); AT MERGE is the closed spec on the merged trunk. Brief-less, like
-    the spot-check: no report exists and no template is shipped for it, and a
-    row must not declare a brief the kit cannot assemble. An adjudication row's
-    own lane is skipped (R3: no recursion).
+    wrote); AT MERGE is the closed spec on the merged trunk. An adjudication
+    row's own lane is skipped (R3: no recursion).
+
+    THE SAFETY NET (WI-841). The change is blessed IN THE LANE, before the
+    lane builds on it or closes (`kitlib.done_when`, the predicate the hold
+    points ask), so a merge through the slot already carries a verdict or an
+    owner ruling binding the closed text, read here off the merged tree at
+    `after`. Such a close mints nothing, except that a SUCCESSOR verdict's own
+    `## Dispositions` drafts are minted here, since a lane never mints. Only an
+    UNCOVERED close (a merge outside the slot) mints the goalposts row, and it
+    now declares the `done-when` brief, so the loop and the coordinator can
+    compose it.
+
+    AN UNREADABLE CLAIM REFUSES THE MINT (`kdone.claim_copy`): whether the lane
+    moved its Done-when is unknown, and minting nothing would read as "it did
+    not" (WI-841 round 4). An ABSENT one is the case below.
 
     NEVER SILENT WHEN IT WAS ASKED TO LOOK. With a claim branch named, a closed
     row whose claim is not under `active/<branch>/` at `before` gets one stderr
@@ -1201,11 +1216,13 @@ def _done_when_drafts(root, before, outcomes, branch):
     Implements: SR-156, LLR-262
     """
     drafts = []
-    for wi_id in sorted(outcomes or {}):
+    for wi_id in sorted(outcomes or {}) if branch else ():
         found = _closed_spec(root, wi_id, dirs=("complete", "partial", "cancelled"))
-        if found is None or _is_adjudication(found[1]) or not branch:
+        if found is None or _is_adjudication(found[1]):
             continue
-        claimed = kdone.claimed_text(root, before, branch, wi_id)
+        claimed, why = kdone.claim_copy(root, before, branch, wi_id)
+        if why:
+            return [], "{}; nothing minted".format(kdone.unreadable_reason(wi_id, why))
         if claimed is None:
             _say(
                 "{}: the Done-when check did not run - no claim of it under "
@@ -1214,38 +1231,100 @@ def _done_when_drafts(root, before, outcomes, branch):
                 err=True,
             )
             continue
-        relpath = found[0]
         try:
-            closed = (Path(root) / relpath).read_text(encoding="utf-8")
+            closed = (Path(root) / found[0]).read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        changed = kdone.changes(claimed, closed)
-        if not changed:
-            continue
-        drafts.append(
-            {
-                "title": (
-                    "adjudicate the Done-when {} changed in its own lane {} - "
-                    "does the close still answer the row as claimed? ({})".format(
-                        wi_id, branch, _DISPOSITION_OUTCOMES
-                    )
-                ),
-                "kind": "adjudication",
-                "workstream": "process",
-                "buildtier": "medium",
-                "specref": relpath,
-                "context": (
-                    "`{spec}` closed with a Done-when that differs from the one "
-                    "it was claimed with (ticks and trailing evidence already "
-                    "set aside). A reviewer maps coverage against that list, so "
-                    "a change made by the lane it judges is the goalposts "
-                    "moving:\n\n{lines}\n\nJudge whether each change only "
-                    "clarifies or moves the scope. A moved scope is a successor "
-                    "row, never a reversal - the merge stands."
-                ).format(spec=relpath, lines="\n".join(kdone.describe(changed))),
-            }
+        blessing = kdone.blessing(root, after, wi_id, claimed, closed)
+        more, refusal = _done_when_draft(root, after, wi_id, branch, found[0], blessing)
+        if refusal:
+            return [], refusal
+        drafts += more
+    return drafts, None
+
+
+def _done_when_draft(root, after, wi_id, branch, relpath, blessing):
+    """`(drafts, refusal)` for one closed row's Done-when `blessing`
+    (`kitlib.done_when.blessing`): none for an unchanged one or one a verdict
+    or ruling blesses, a SUCCESSOR verdict's own drafts, else the goalposts row.
+
+    Implements: SR-156, LLR-262
+    """
+    if blessing is None:
+        return [], None
+    _digest, changed, cover = blessing
+    if cover is not None:
+        return _successor_drafts(root, after, cover)
+    return [
+        {
+            "title": (
+                "adjudicate the Done-when {} changed in its own lane {} - "
+                "does the close still answer the row as claimed? ({})".format(
+                    wi_id, branch, _DISPOSITION_OUTCOMES
+                )
+            ),
+            "kind": "adjudication",
+            "brief": "done-when",
+            "adjudicates": [wi_id],
+            "workstream": "process",
+            "buildtier": "medium",
+            "specref": relpath,
+            "context": (
+                "`{spec}` closed with a Done-when that differs from the one "
+                "it was claimed with (ticks and trailing evidence already "
+                "set aside), and no in-lane verdict or owner ruling blesses "
+                "the closed text. A reviewer maps coverage against that list, "
+                "so a change made by the lane it judges is the goalposts "
+                "moving:\n\n{lines}\n\nJudge whether each change only "
+                "clarifies or moves the scope. A moved scope is a successor "
+                "row, never a reversal - the merge stands."
+            ).format(spec=relpath, lines="\n".join(kdone.describe(changed))),
+        }
+    ], None
+
+
+def _successor_drafts(root, after, cover):
+    """The drafts a covering SUCCESSOR verdict carries in its OWN
+    `## Dispositions` section, read at `after`; none for any other blessing. In
+    a combined verdict that is the `## done-when` section's, never another
+    section's (a first-approval RETURN draft is that section's act). A
+    SUCCESSOR verdict with no draft, or an ambiguous one, is a refusal, never a
+    skip: the scope it would not bless is carried forward only by its successor.
+
+    Implements: SR-156, LLR-262
+    """
+    outcome, path = cover
+    if outcome != "SUCCESSOR":
+        return [], None
+    code, text = ac.git(root, "show", "{}:{}".format(after, path))
+    own, refusal = _done_when_verdict_section(text if code == 0 else "", path)
+    drafts, refusal = ([], refusal) if refusal else parse_dispositions(own, path)
+    if refusal or drafts:
+        return drafts, refusal
+    return [], (
+        "{}: a SUCCESSOR Done-when verdict carries no ## Dispositions draft - "
+        "the scope it would not bless has no successor; nothing minted".format(path)
+    )
+
+
+_DISPOSITIONS_RE = re.compile(r"^## Dispositions\s*$", re.M)
+
+
+def _done_when_verdict_section(text, path):
+    """`(text, None)`: the Done-when judgement's own part of a verdict
+    (`kitlib.sitting.own_section`), or `(None, refusal)` when that is ambiguous
+    or holds more than one `## Dispositions` section.
+
+    Implements: SR-156, LLR-262
+    """
+    body = ksitting.own_section(text, "done-when", kdone.VERDICT_KEYWORD)
+    if body is None or len(_DISPOSITIONS_RE.findall(body)) > 1:
+        return None, (
+            "{}: the SUCCESSOR verdict's own drafts are ambiguous (its "
+            "`## done-when` section must be the one place its Done-when line "
+            "and its single ## Dispositions section sit); nothing minted".format(path)
         )
-    return drafts
+    return body, None
 
 
 def _merged_ids(outcomes):
@@ -2409,7 +2488,10 @@ def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
     drafts = _amendment_drafts(root, before, after)
     drafts += _first_approval_drafts(root, before, after)
     drafts += _close_drafts(root, outcomes)
-    drafts += _done_when_drafts(root, before, outcomes, branch)
+    goalposts, refusal = _done_when_drafts(root, before, after, outcomes, branch)
+    if refusal:
+        return [], refusal
+    drafts += goalposts
     disposition, refusal = _disposition_drafts(root, outcomes)
     if refusal:
         return [], refusal

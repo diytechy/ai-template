@@ -1,0 +1,18 @@
+# WI-841 amendment adjudication at 9c22f9c
+
+Question: did each amendment change the requirement's MEANING, or only its CLARITY?
+Judged on the before/after cells only, against the anchor copied at de1b1cde.
+
+- [MEANING] LLR-277 Detail -> load_need_tier is the one need-tier row loader, and baseline_snapshot._tier_rows reads every NEED_TIERS tier through it -> two new obligations: tier_carriers picks the supported carriers for every tier (need carriers for SN-ID and STK-ID, row carriers otherwise), and tier_rows_from_text reads a tier from TOML, CSV or the legacy markdown needs carrier. The sentence inserted before "baseline_snapshot._tier_rows reads every NEED_TIERS tier through it" also moves that "it" onto tier_rows_from_text -> two functions and their contracts entered the obligation, which an implementation correct under the old text need not have. The old text named one route for _tier_rows (load_need_tier); the new text reads most naturally as naming another
+- [MEANING] LLR-262 Detail -> at merge intake evaluates each claimed non-adjudication row whose closed Done-when changed; nothing is said about a missing or unreadable claim -> an unreadable claim refuses the merge-time mint, naming why, while the merge itself stands; an absent claim mints nothing, and intake writes one stderr line saying the Done-when check did not run; a readable changed claim goes through the existing arms unchanged -> two new arms (a refusal and a stated skip), each with its channel. An intake that was correct under the old text, and that minted or stayed silent on a missing or unreadable claim, fails the new text
+- [MEANING] LLR-278 Detail -> a snapshot is WIDENED only when the act neither flipped nor re-attested a row "in that registry" -> a row in the carrier file that the kit's one tier-carrier reader supplies for that registry (TOML, legacy CSV, or legacy markdown needs) -> the registry is now identified by its resolved carrier, and all three formats are required. An implementation keyed on the TOML path met a literal reading of the old text. It fails the new one for a CSV- or markdown-carried registry, refusing as WIDENED a copy the act did move
+
+All three rows are MEANING, and the tier's rung is RELEASED, so the blessing is the adjudicator's to give:
+
+- LLR-262: I would bless it. The restatement answers adjudication 003's return: the actor, the channel and the effect on the merge are each stated. It matches `intake.py`'s `kdone.claim_copy` arm, which refuses with the unreadable reason and writes the "did not run" line to stderr.
+- LLR-278: I would bless it. It is closed and readable, and it names `spine_carrier.tier_carriers` as the one resolver.
+- LLR-277: I would NOT bless it as written. After the insertion, the nearest antecedent of "baseline_snapshot._tier_rows reads every NEED_TIERS tier through it" is tier_rows_from_text, or the "legacy markdown needs carrier" just before it. The code (`baseline_snapshot._tier_rows`) reads the need tiers through `load_need_tier` and every other tier through `load`. Read literally, the new text tells a builder to rewire the snapshot comparison through the text reader, which the old text did not. This is the same defect adjudication 003 returned in LLR-262: the cell no longer reads as one obligation. The correction is drafted under `## Dispositions` in `docs/work/active/wi-841/WI-841-done-when-blessed-in-lane.md`.
+
+Because LLR-277 stays drifted in `docs/requirements/low-level-requirements.toml`, the snapshot copy for that registry is refused. LLR-262 and LLR-278 are therefore left unanchored, to be re-attested together with LLR-277 once its text is restated.
+
+VERDICT: MEANING rows=3
