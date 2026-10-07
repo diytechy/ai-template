@@ -108,3 +108,5 @@ The adjudicator's dedicated home failed to refresh again after the owner's
 clean `/login`, so the headless refresh failure is reproducible, not a bad
 credential. The owner chose the long-lived token: WI-846. Filed: WI-847 (the
 loop's reviewer resumes within a lane, with a fresh full-lane merge gate).
+
+Full unfiltered suite at the final trunk tip `1f610bb7`: 5397 passed, 13 skipped, 0 failed, in 674.5 s.

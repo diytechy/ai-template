@@ -43,7 +43,7 @@ session's record is
 - **Acts** run to seq 59. Watermark: SR 232, LLR 310, IF 287, TC 329, WI 847.
   `docs/work/pause` is tracked and unchanged.
 - **Full suite:** at `76b1d212`, 5291 passed, 17 skipped, 0 failed, in 711 s.
-  At the final trunk tip: FULLSUITE_RESULT.
+  At the final trunk tip: 5397 passed, 13 skipped, 0 failed, in 674.5 s at `1f610bb7` (detached worktree, fixed basetemp; 274 MB left, deleted once recorded).
 
 ## Next (owner's scope to choose)
 
