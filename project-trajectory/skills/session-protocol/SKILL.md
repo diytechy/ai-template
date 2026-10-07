@@ -126,6 +126,14 @@ cadence"). New behavior needs new tests
 (`tests/`); update `test_bootstrap.py` file lists and `README.md` kit-contents /
 `bootstrap.py` `MAPPING` when the scaffold surface changes.
 
+**A session's scratch has one dated root** (WI-840). Every review and
+full-suite run passes `--basetemp`, and every reproduction file goes, under
+`review-tmp/<date>-<session>/` (`review-tmp` beside the lane worktrees is the
+one scratch root the review sandbox may write). Reuse one name per kind of run
+across rounds, never a fresh name per round: pytest empties a literal
+`--basetemp` only when that name runs again. Delete the dated root once the
+session's results are recorded.
+
 ## 4. Record the work
 
 - Close the WI by MOVING its spec file to the terminal directory its outcome

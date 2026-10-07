@@ -2,11 +2,15 @@
 id = "WI-840"
 title = "Test and review scratch no longer accumulates: passing tests' temp dirs are removed, and runs share a dated root"
 workstream = "tooling"
-specref = "docs/log.d/2026-10-06-wave17-coordinator.md"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 9
 +++
+
+## Deliverable
+
+`pytest.ini` declares `tmp_path_retention_policy = failed`: a test whose call phase passes has its `tmp_path` removed as it finishes, even under a literal `--basetemp` (factory directories and, on Windows, git's read-only object files still stay until the next same-name run; D-003). One full run on the lane left 193 MB where wave 16 recorded about 4 GB per run; the smoke tier fell from 29 MB to 2.5 MB, and on a quiet box it ran in 37.0 s and 38.3 s against the 60 s budget (`docs/reviews/wi-840-test-scratch-retention/measurement.md`). The session-protocol skill directs each session's review and full-suite runs to one dated root, `review-tmp/<date>-<session>/`, deleted once the session's results are recorded. Neither file ships, so no RESYNC_PACK entry (D-002). Codex 6.1 Sol: two rounds, the second SOUND (`6451b972`). Decisions: `docs/decisions/wi-840.toml`.
 
 ## Context
 

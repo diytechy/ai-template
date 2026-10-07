@@ -1,0 +1,34 @@
+# docs/decisions/wi-840.toml — WI-840's delegated decisions record (test and
+# review scratch retention: pytest.ini's retention policy and the
+# session-protocol skill's one dated scratch root).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Only this repo's root pytest.ini declares tmp_path_retention_policy = failed. The shipped project-trajectory/pytest.ini, which bootstrap copies into an adopter, is unchanged."
+alternative = "Declare the policy in the shipped pytest.ini too, so every adopter's passing tests also drop their tmp_path directories."
+reversal_cost = "One ini line in the shipped file plus a RESYNC_PACK entry for adopters."
+why_not_escalated = "The spec's Done-when names the meta-repo's own runs (review and full-suite scratch filling this box's disk), and CLAUDE.md asks for the smallest change that fixes the problem without forcing downstream repos to change. Changing an adopter's test-retention default is a separate, downstream-visible choice for its own work item."
+review = ""
+
+[decision.D-002]
+decided = "No RESYNC_PACK entry. Neither changed file reaches an adopter: the root pytest.ini is this meta-repo's own (its header says the shipped one is a separate file), and the session-protocol skill is `scope: this-repo`, which bootstrap never materializes downstream (bootstrap.py's kit-scope filter). RESYNC_PACK section 3 lists changes an adopter carries forward across a kit range, so there is nothing for an adopter to apply."
+alternative = "Add an entry anchored [since 6b1e85c0] as the build prompt suggested, on the premise that the skill ships."
+reversal_cost = "One RESYNC_PACK section 3 entry, added later if the coordinator reads the skill as shipped."
+why_not_escalated = "The build prompt asked the builder to decide by reading RESYNC_PACK's own rule. The skill's scope field and bootstrap's filter answer it."
+review = ""
+
+[decision.D-003]
+decided = "No workaround for the directories the policy cannot remove on Windows. pytest's per-test removal is rmtree(ignore_errors=True), which cannot delete Git's read-only object files there, so a passing test that built a Git repository leaves its .git/objects behind (smoke tier on this box: 91 of about 1,012 per-test directories survive, 2.5 MB of the old 29 MB). Directories from tmp_path_factory (module- and session-scoped fixtures) are not per-test, and pytest leaves them under a literal --basetemp until the next run with the same name. The dated root the skill now prescribes, deleted at session end, covers both."
+alternative = "A conftest hook or an onerror handler that clears read-only bits and removes the leftovers, or an explicit removal of factory directories at session end."
+reversal_cost = "A small conftest addition, if a later item wants it."
+why_not_escalated = "The coordinator's prompt told the builder to report, not work around, any place the option does not apply. The leftovers are small, and the Done-when's dated-root deletion already reclaims them."
+review = ""
+
+[decision.D-004]
+decided = "The skill rule is one new paragraph at the end of section 3 (End green), not in the Coordinator close-out bullet, which WI-842 edits in parallel. It reads 'reuse one name per kind of run across rounds' under the dated root, and says the root is deleted once the session's results are recorded."
+alternative = "Put the rule in the close-out bullet of section 4, next to the other end-of-session steps."
+reversal_cost = "Move one paragraph."
+why_not_escalated = "This is about where text goes in a this-repo skill. The build prompt keeps this lane out of the close-out bullet."
+review = ""
