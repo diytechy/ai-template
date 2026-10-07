@@ -3,7 +3,7 @@
 # format and doctrine are project-trajectory/decisions.template.toml's. Lane
 # calls go in the lane's own docs/decisions/<branch>.toml.
 
-high_risk = []
+high_risk = ["D-001", "D-009"]
 
 [decision.D-001]
 decided = "WI-842 (a closing coordinator hands its lease back), filed at the session start from the owner's question, is claimed in this session's batch beside WI-838 to WI-840, under the same scoped unpause, rather than queued for a later session."
@@ -17,4 +17,53 @@ decided = "The coordinator ran the owner's recorded release of the wave-17 holde
 alternative = "Wait for the owner to run the release themselves."
 reversal_cost = "None: the release and the take are recorded events in out/coordinator, and the stranded holder had closed out."
 why_not_escalated = "The owner directed it in this session when asked."
+review = ""
+
+[decision.D-003]
+decided = "Lanes with no act (WI-839, WI-840) landed as soon as Sol read them SOUND, and WI-842 and WI-838 landed as their acts were taken, rather than holding every landing until WI-841 (the handoff's 'WI-841 first') had landed. WI-841 was built first; it then took four more review rounds and every other lane rebased past it."
+alternative = "Land WI-841 first, holding the four smaller lanes' landings behind it."
+reversal_cost = "None for the result: each lane rebased onto the landings before it, and WI-841 rebased onto all four."
+why_not_escalated = "The handoff's order was a build order, not an owner ruling; acts still landed one at a time, and holding SOUND lanes would only have lengthened the time trunk carried their drift."
+review = ""
+
+[decision.D-004]
+decided = "The coordinator repaired the coordinator-handoff chain on trunk (dc1d2851): the wave-17 handoff now links the wave-16 handoff it replaced, which the full suite's orphan test had caught failing on seven handoffs."
+alternative = "File a row for it, or add the handoffs to docs/orphans-allow."
+reversal_cost = "One line."
+why_not_escalated = "A broken link in the coordinator's own handoff, restoring the convention every earlier handoff followed."
+review = ""
+
+[decision.D-005]
+decided = "WI-840's 'before' full-run leftover figure cites wave 16's recorded ~4 GB per full-run basetemp on this box rather than a fresh full run with the old policy; the 'after' figure (193 MB) was measured on the lane, and Sol accepted the evidence (round 2 SOUND)."
+alternative = "Run the full suite twice more (old policy, new policy) for a same-day pair."
+reversal_cost = "One full run (~14 min, ~4 GB of disk) if the owner wants the pair."
+why_not_escalated = "The disk sat at 18-20 GB free and the earlier figure is a recorded measurement on the same box."
+review = ""
+
+[decision.D-006]
+decided = "While Codex was at its plan limit (20:09 to 23:02), WI-841's adjudications ran ahead of Sol's narrow round 3, accepting that a later Sol finding could force a re-sit (it did: the CSV-carrier MAJOR changed LLR-278 and LLR-262 again)."
+alternative = "Wait for the Codex reset before any adjudication."
+reversal_cost = "One extra amendment sitting."
+why_not_escalated = "The adjudicator is Claude, not Codex; idling the lane for three hours would have cost more than a re-sit."
+review = ""
+
+[decision.D-007]
+decided = "At the owner's direction the coordinator removed the adjudicator home's stale `.oauth_refresh.lock` (no adjudicator call or lease was live) and retried once; the retry failed the same way and the owner re-signed the home in, after which calls succeeded."
+alternative = "Leave the lock for the owner's re-sign-in only."
+reversal_cost = "None: the CLI recreates the lock on its next refresh."
+why_not_escalated = "The owner chose it when asked."
+review = ""
+
+[decision.D-008]
+decided = "WI-834 (the blackout row) was not claimed this session: Codex's plan limit and WI-841's extra review and adjudication rounds took the session to its context budget, and WI-834's adjudications are to use WI-841's combined sitting, which had to land first."
+alternative = "Claim WI-834 under a second scoped unpause and leave it mid-build on its lane."
+reversal_cost = "None: it stays queued at P8 for the next session."
+why_not_escalated = "The handoff scoped WI-834 'if context allows'."
+review = ""
+
+[decision.D-009]
+decided = "WI-841 is left claimed and committed on its lane (wi-841 at 538bc9a3) at the 50% context stop, with Sol round 4's MAJOR (the markdown needs carrier) and two MINORs, a builder round, a Terra round, a Sol round and two adjudication sittings owed, rather than pushed through to landing past the guard."
+alternative = "Continue past 50% and land WI-841 in this session."
+reversal_cost = "None: the next session resumes the lane from the handoff."
+why_not_escalated = "The context guard's threshold is the owner's dial (50); the guard stops new claims, and the session-protocol close-out brings in-flight rows to a safe point, which a committed lane is."
 review = ""
