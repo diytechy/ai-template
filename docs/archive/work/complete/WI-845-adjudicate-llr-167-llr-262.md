@@ -3,12 +3,16 @@ id = "WI-845"
 title = "adjudicate: LLR-167, LLR-262, LLR-277, LLR-278, LLR-305, LLR-306, SR-156, TC-257, TC-278 - approved/routed cell(s) amended on merged trunk 0ce475f..68e0ee8 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-156"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-167", "LLR-262", "LLR-277", "LLR-278", "LLR-305", "LLR-306", "SR-156", "TC-257", "TC-278"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-841's in-lane adjudicator, through the retained session, ruled every amended row it names and re-attested it in the lane's acts (verdicts `docs/reviews/wi-841-done-when-blessed-in-lane/001-` to `019-ADJUDICATE-*.md`), and the traced-only evidence change was re-anchored by a copy act. The system, low-level, test-case and needs registries are byte-identical to their anchors under `docs/archive/last_approved/` at the landing.
 
 ## Context
 
