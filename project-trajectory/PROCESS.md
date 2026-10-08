@@ -436,9 +436,9 @@ outside the kit's required path.
 
 Advance only when criteria pass. **Who accepts an advance is the repo's
 declared gate authority** — the `[attestation] human_approval_through` dial
-in `docs/process.toml`, an ordinal `0`–`4` counting how many spine tiers stay
-**human-held** from the top (`4`, the shipped default: every tier's gate pauses
-for a human; `3` releases the TC tier, … `0` holds nothing). A held tier's gate
+in `docs/process.toml`, a `DevStg-*` rung: every rung **at or below** it is
+**human-held** (the shipped default, `DevStg-Release`, holds them all;
+`DevStg-Below` holds none — "The approval dial is a rung" below). A held tier's gate
 waits for a per-gate human approval; a released tier's closes on an independent
 fresh-context LLM reviewer's recorded verdict. The words `attended` /
 `single-approve` / `autonomous` are `--gate-policy` **presets** that *translate*

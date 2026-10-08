@@ -7332,6 +7332,18 @@ A lane that edits its Done-when now needs that edit blessed before its next
 build or its close: sit the `done-when` brief (or `combined`), or record the
 owner's ruling with the printed digest.
 
+### §4's gate-authority sentence describes the dial as a rung [since 14ad9077]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**Kit-owned file — regenerate and move on:** `docs/process.md`, from the kit's
+`PROCESS.md`. **What changes for you:** prose only, and it corrects a false
+statement. §4's opening still described `human_approval_through` as an ordinal
+`0`–`4` counting held tiers from the top, a shape retired when the dial became
+a `DevStg-*` rung (the later paragraph "The approval dial is a rung" already
+said so). The sentence now states the rung form and the shipped default,
+`DevStg-Release`. Nothing reads the sentence, and no setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
