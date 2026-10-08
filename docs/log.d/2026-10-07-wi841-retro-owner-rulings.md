@@ -112,3 +112,6 @@ lease handed back. Its calls on the owner's behalf are in
 [`../decisions/coordinator-2026-10-07.toml`](../decisions/coordinator-2026-10-07.toml)
 (D-003 high risk), and the next session starts from
 [`../handoff-2026-10-07-wi841-retro-coordinator.md`](../handoff-2026-10-07-wi841-retro-coordinator.md).
+
+Full unfiltered suite at `e806682a` (detached worktree, fixed basetemp): 5397
+passed, 13 skipped, 0 failed, in 1777.4 s on a box loaded by other sessions.

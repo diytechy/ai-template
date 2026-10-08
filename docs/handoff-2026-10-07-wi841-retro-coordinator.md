@@ -39,6 +39,9 @@ handoffs hold state only. This session's record is
   | `fdf4e809` | WI-855 minted |
 
 - **Acts** still run to seq 59. Watermark: OI 111, WI 855.
+- **Full suite** at `e806682a` (detached worktree, fixed basetemp under
+  `review-tmp/2026-10-07-wi841-retro/`): 5397 passed, 13 skipped, 0 failed, in
+  1777.4 s on the loaded box; the 269 MB basetemp was deleted once recorded.
 
 ## Next
 
