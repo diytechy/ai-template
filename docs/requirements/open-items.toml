@@ -4010,10 +4010,12 @@ ruled_date = "2026-10-07"
 
 [open_item.OI-110]
 title = "WI-846: whether the dial naming the adjudicator's token file is tracked"
-status = "pending"
+status = "ruled"
 raised = "2026-10-07"
-one_line = "Decide where the dial that names the adjudicator home's long-lived token file lives: a tracked file would commit the owner's personal path into the repository."
-decision = """OWNER, 2026-10-07: \"Option b is cleanest, but how is the path housed today since it has already been documented?\" ANSWER: no tracked file holds it. The path is recorded only in the coordinator's local agent memory, outside the repository (the wave-18 handoff: the coordinator holds the file's path in local memory only and never reads the file). WI-846 has not been built, so nothing reads a dial yet. Option (b) moves the path into an environment variable the launcher reads, and that memory note becomes the place the owner's own setup is described, not a dial.
+one_line = "RULED 2026-10-08 (b): the launcher reads the token file's path from a declared environment variable that dev-setup tells the owner to set; nothing about the path is tracked. Written into WI-846."
+decision = """RULED 2026-10-08 by the owner, verbatim: \"Confirm OI-110 option b\"
+
+OWNER, 2026-10-07: \"Option b is cleanest, but how is the path housed today since it has already been documented?\" ANSWER: no tracked file holds it. The path is recorded only in the coordinator's local agent memory, outside the repository (the wave-18 handoff: the coordinator holds the file's path in local memory only and never reads the file). WI-846 has not been built, so nothing reads a dial yet. Option (b) moves the path into an environment variable the launcher reads, and that memory note becomes the place the owner's own setup is described, not a dial.
 
 Filed from the WI-841 retrospective's queue reconciliation (PROPOSAL.md §8.3 Q4). WI-846 reads the owner's long-lived token at launch "from a declared location outside the repository (a dial naming the file; never its value)". The spec does not say where that dial lives. The repository's dials (docs/process.toml) are tracked, so a path dial there commits the owner's personal path, and an adopter's copy would carry it too.
 
@@ -4023,6 +4025,7 @@ options = """- (a) UNTRACKED LOCAL DIAL: an untracked, gitignored local file (or
 - (b) ENVIRONMENT VARIABLE: the launcher reads the path from a declared environment variable; dev-setup tells the owner to set it.
 - (c) TRACKED DIAL: docs/process.toml names the path. Simplest, but the owner's personal path is committed and ships in adopters' copies."""
 recommendation = "(b), the owner's stated preference: the launcher reads the token file's path from a declared environment variable that dev-setup tells the owner to set; nothing about the path is tracked, and an adopter declares its own. Pending only the owner's confirmation."
+ruled_date = "2026-10-08"
 
 [open_item.OI-111]
 title = "WI-811: the final-review family rule against the confirmed reviewer relaxation"

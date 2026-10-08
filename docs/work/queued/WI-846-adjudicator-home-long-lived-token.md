@@ -4,7 +4,6 @@ title = "The adjudicator's dedicated Claude home authenticates with a long-lived
 workstream = "process"
 sr_refs = ["SR-227"]
 specref = "docs/log.d/2026-10-06-wave18-coordinator.md"
-needs = ["OI-110"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 9
@@ -32,16 +31,19 @@ and must never read the file's contents into a log, prompt or commit.
 ## Done-when
 
 - A retained Claude launch on either route authenticates the dedicated home
-  with the owner's long-lived token. The token is read at launch from a
-  declared location outside the repository (a dial naming the file; never its
-  value) and passed to the CLI the way it documents for headless use. It is
-  never written to a log, prompt, record or commit. A missing or unreadable
-  token file is refused before launch, naming dev-setup; nothing falls back to
-  OAuth.
-- The sign-in probe reports `signed-in` only when the configured token is
-  present and readable (no model call), and dev-setup offers the one-time
-  `claude setup-token` step. This is shared with WI-834's sign-in step (part
-  C); whichever builds first owns it, and the other cites it.
+  with the owner's long-lived token. The token is read at launch from a file
+  outside the repository whose path a declared environment variable names
+  (OI-110 ruled (b), 2026-10-08: nothing about the path is tracked, and an
+  adopter sets its own), and passed to the CLI the way it documents for
+  headless use. It is never written to a log, prompt, record or commit. An
+  unset variable or a missing or unreadable token file is refused before
+  launch, naming dev-setup; nothing falls back to OAuth.
+- The sign-in probe reports `signed-in` only when the variable is set and
+  the token file it names is present and readable (no model call); unset
+  reads as not signed in. dev-setup offers the one-time `claude setup-token`
+  step and tells the owner to set the variable. This is shared with WI-834's
+  sign-in step (part C); whichever builds first owns it, and the other cites
+  it.
 - An authentication failure on a launched call records the call failed and
   leaves the retained session's record as it was; it never retires the
   session as unusable.
