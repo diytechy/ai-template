@@ -2,7 +2,7 @@
 id = "WI-862"
 title = "adjudicate: LLR-158, LLR-167, LLR-181, LLR-278, LLR-310, TC-218, TC-278 - approved/routed cell(s) amended on merged trunk 1412d96..ceab00c (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
