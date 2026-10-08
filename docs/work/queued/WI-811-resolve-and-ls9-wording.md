@@ -4,7 +4,7 @@ title = "RESOLVE for disputed findings, and LS9's builder and reviewer wording"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-resolve-ls9"
 sr_refs = ["SR-154"]
-needs = ["WI-809", "WI-805", "OI-111"]
+needs = ["WI-809", "WI-805", "OI-111", "WI-860"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
@@ -53,6 +53,13 @@ the second step.
   case where the preference yields (OI-111 ruled 2026-10-07 (a)).
 - The row's test bar: its affected modules' tests (verdict, brief) plus the smoke
   tier at `-n 2`, plus the byte budget (`AGENTS.template.md`).
+- Absorbed from WI-861 (owner, 2026-10-08, the review-threat-model ruling's rule 2): the coordinator's
+  adjudication entry point carries the same dispute class, so a coordinator lane's contested finding is
+  ruled by the independent adjudicator through the retained session, never a subagent; a finding the
+  builder or coordinator contests, and any finding class reaching its third review round, goes to the
+  dispute sitting before another build round; the ruling's path is recorded in the lane's decisions
+  record, and a dismissed finding is not re-raised to the builder. A dismissal may cite the review threat
+  model (WI-860's PROCESS.md §6 paragraph) as its reason; a high-risk finding is escalated to the owner.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit; the shipped briefs and
   `AGENTS.template.md` wording change.

@@ -2,17 +2,21 @@
 id = "WI-861"
 title = "The adjudicator rules on a contested or repeated review finding"
 workstream = "process"
-specref = "docs/log.d/2026-10-08-owner-ruling-review-threat-model.md"
+specref = ""
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 8
 needs = ["WI-860"]
 +++
 
+## Deliverable
+
+CANCELLED, folded into WI-811 (owner, 2026-10-08): WI-811, filed 2026-10-04 from WI-788's approved design note, already carries the dispute resolution this row asked for (the builder disputes a finding, the adjudicator rules uphold, dismiss or advice, and its call is final). WI-811's Done-when gains this row's new parts: the coordinator entry point's dispute class, the third-round trigger, the recorded and not re-raised dismissal, the threat model as a dismissal reason and the owner escalation, with a `needs` edge on WI-860.
+
 ## Context
 
 Filed by hand by the coordinator on 2026-10-08 from the owner's ruling
-([log.d/2026-10-08-owner-ruling-review-threat-model.md](../../log.d/2026-10-08-owner-ruling-review-threat-model.md)),
+([log.d/2026-10-08-owner-ruling-review-threat-model.md](../../../log.d/2026-10-08-owner-ruling-review-threat-model.md)),
 rule 2: it is the adjudicator's job to make the call on a contested or
 repeated finding, not the coordinator's by sending every finding back to the
 builder; its call is final (OI-103 Q3) and a high-risk finding goes to the
