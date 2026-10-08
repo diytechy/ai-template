@@ -1,0 +1,34 @@
+# docs/decisions/coordinator-2026-10-07.toml — the 2026-10-07 coordinator
+# session's delegated decisions (the WI-841 retrospective, its rulings, the
+# filing of WI-848 to WI-854 and the consolidation mint).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-003"]
+
+[decision.D-001]
+decided = "WI-848 to WI-854 were filed with priority 8 for WI-848 (the coordinator-cycle skill, so it lands before the blackout row, priority 8, as the queue reconciliation recommends) and priority 5 for the other six."
+alternative = "File all seven at the blackout row's priority or above, or leave every one at the hand-filed default of 3 (WI-841's)."
+reversal_cost = "One frontmatter cell per row."
+why_not_escalated = "The owner directed the filing and the reconciliation's order; priority is the owner's to change and moves nothing else."
+review = ""
+
+[decision.D-002]
+decided = "WI-827's and WI-832's specrefs point at the dispute rulings their open items came from (docs/reviews/wi-806-text-then-act/dispute-1-ruling.md, docs/reviews/wi-818-owner-verdict/dispute-1-ruling.md) once OI-106 and OI-107 were ruled, since R-E refuses an empty specref on an open row."
+alternative = "Point them at the 2026-10-07 rulings log fragment, which compiles into docs/log.md and is deleted, so the link would break."
+reversal_cost = "One frontmatter cell per row."
+why_not_escalated = "The registry rule moves a ruled row's specref off the open-items registry to a real spec; the dispute rulings are the stable documents the rows' text comes from."
+review = ""
+
+[decision.D-003]
+decided = "With the context guard latched at the lease take (57.5% against the 50% threshold), the session minted the consolidation census row (WI-855) on trunk before closing out, but claimed nothing and ran no sitting. The lease is handed back rather than a relaunch requested, since the owner is attended and starts the next session."
+alternative = "Close out without minting, leaving the next session to mint; or ask the owner to clear the latch and run the sitting in this session (as D-010 of 2026-10-06 did for WI-841)."
+reversal_cost = "Cancel WI-855 in a reviewed commit; a later census mints over the queue as it then stands."
+why_not_escalated = "Minting is a census write, not a claim, and the guard refuses only claims; it records the queue exactly as the owner asked it judged, with the seven new rows in it. Recorded high-risk because it acts under a latched guard."
+review = ""
+
+[decision.D-004]
+decided = "The retrospective's material was archived in docs/plans/2026-10-07-wi841-retro/ (the live planning surface) rather than docs/archive/plans/, with the drafting history kept as three diffs and the review records' links re-pointed at the copied drafts."
+alternative = "docs/archive/plans/ at once; or copy each draft version as files, which carried four links that resolve only once a skill is installed."
+reversal_cost = "A move once the rows are filed and landed (the archive README's convention), with one link in docs/plans/README.md and the log fragment."
+why_not_escalated = "The archive holds spent history; this plan still had rows to file. check_docs validates links in both places, so diffs were the only way to keep the history verbatim."
+review = ""

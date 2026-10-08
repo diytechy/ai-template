@@ -103,3 +103,12 @@ At the owner's direction the retrospective's rows were then filed as WI-848 to
 WI-854 (P1 to P7, with P8 folded into WI-852). The queued rows that waited on
 their ids were updated to cite them, and one consolidation sitting was run
 with them in the queue.
+
+The session took the coordinator lease only after the design work, and the
+context guard latched at the take (57.5% of the declared window, threshold
+50%). So it claimed nothing. It minted the consolidation census row WI-855
+over 29 queued rows, the seven new ones included, and closed out with the
+lease handed back. Its calls on the owner's behalf are in
+[`../decisions/coordinator-2026-10-07.toml`](../decisions/coordinator-2026-10-07.toml)
+(D-003 high risk), and the next session starts from
+[`../handoff-2026-10-07-wi841-retro-coordinator.md`](../handoff-2026-10-07-wi841-retro-coordinator.md).
