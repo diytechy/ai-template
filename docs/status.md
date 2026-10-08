@@ -25,9 +25,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-07-wi841-retro-coordinator.md](handoff-2026-10-07-wi841-retro-coordinator.md):
-  no lane is open; the consolidation sitting comes first, then the next rows,
-  the corrections, and the session prompt to paste.
+  [handoff-2026-10-08-coordinator.md](handoff-2026-10-08-coordinator.md):
+  two lanes are open mid-cycle (the long-lived token and the approval act in
+  the authoring lane); each lane's tip, review trail and owed spine
+  reconciliation are there, with the session prompt to paste.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
@@ -35,13 +36,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   Approval acts run to seq 59 on trunk. The context guard is live: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
-  0. **The long-lived-token row first, with the approval-act-in-lane row
-     beside it.** The consolidation sitting ordered the queue with hard
-     `needs` edges and absorbed nothing: the token row (OI-110 ruled (b),
-     2026-10-08: the token file's path comes from an environment variable)
-     now heads both the coordinator-cycle skill row and the blackout row, and
-     the account-homes row waits on the blackout row. Claim each batch under
-     one scoped unpause. Then the coordinator-cycle skill row, then the
+  0. **Finish the two open lanes, then the coordinator-cycle skill row.**
+     The long-lived-token lane and the approval-act lane are claimed and
+     committed mid-cycle: each owes its narrow review, then the checkpoint
+     (Terra reconciles the whole spine set, one combined sitting), a fresh
+     full-lane review and the landing. The token lane lands first: the
+     coordinator-cycle skill row and the blackout row both wait on it, and the
+     account-homes row waits on the blackout row. Then the skill row, then the
      blackout row (the retrospective's queue reconciliation,
      [plans/2026-10-07-wi841-retro/](plans/2026-10-07-wi841-retro/README.md) §8).
      Review rule (owner, 2026-10-07): narrow rounds while a lane iterates,
