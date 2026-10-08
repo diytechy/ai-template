@@ -7,6 +7,7 @@ specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
+needs = ["WI-860"]
 +++
 
 ## Context

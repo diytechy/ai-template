@@ -3,7 +3,7 @@ id = "WI-848"
 title = "The coordinator's procedure is one skill, and spine-authoring states the three ways a spine grows"
 workstream = "process"
 specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
-needs = ["WI-846"]
+needs = ["WI-846", "WI-860", "WI-852", "WI-853"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 8
@@ -57,6 +57,12 @@ row after WI-849 or in one batch with it.
   `claude setup-token` step as the remedy for a home that is not signed in.
   The draft's 'pending WI-846; the owner runs `/login` at expiry' line does
   not land, and no recipe makes an interactive sign-in the procedure.
+- The coordinator-cycle review steps carry the 2026-10-08 ruling (`docs/log.d/2026-10-08-owner-ruling-review-threat-model.md`):
+  rule 1 by a link to PROCESS.md §6's review threat model, and rules 2 and 3
+  as the procedure that holds until WI-811 lands (the coordinator applies
+  rule 1 to each review, records each dismissal in the lane's decisions
+  record, and sends a contested or third-round finding to the adjudicator).
+  (WI-864's sitting, `docs/reviews/wi-864-adjudicate-review-response-overlap/001-ADJUDICATE-89298d9.md`.)
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit for the kit skill
   `spine-authoring`; `coordinator-cycle` is this-repo and ships to no adopter.

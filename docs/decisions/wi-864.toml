@@ -1,0 +1,28 @@
+# docs/decisions/wi-864.toml — the review-response consolidation sitting's
+# delegated decisions (coordinator, 2026-10-08).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "The sitting's cluster was chosen by hand (WI-805, WI-811, WI-847, WI-848, WI-852, WI-853, WI-854, WI-860) and minted as a consolidate row on trunk, rather than derived by the whole-queue census, at the owner's direction to sit the review-response rows."
+alternative = "Run `intake.py consolidate`, whose census over 31 rows would re-judge WI-855's 29 rows and leave out WI-860."
+reversal_cost = "One census sitting over the whole queue."
+why_not_escalated = "The owner asked for this cluster; a census-derived row would have asked a wider question than the owner's and missed the threat-model row, which touches no code."
+review = "Owner, in the coordinator session of 2026-10-08: \"Those decisions are fine.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"
+
+[decision.D-002]
+decided = "The verdict's hand findings were enacted by the coordinator in the lane: WI-852 needs WI-860 and WI-853 needs WI-852 (rows with no `needs` line, which the mechanical close cannot edge, WI-856), and the verdict's Done-when bullet written verbatim into WI-848."
+alternative = "Land WI-856 first, so the machinery writes the edges."
+reversal_cost = "Two one-line edits and one bullet."
+why_not_escalated = "The verdict asks the coordinator for exactly these edits and words the bullet itself."
+review = "Owner, in the coordinator session of 2026-10-08: \"Those decisions are fine.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"
+
+[decision.D-003]
+decided = "The mechanical close wrote only the last of the verdict's three edges on WI-848 (WI-860): `handback._enact_plan` computes each planned write from the on-disk text before any write, so two edges on one waiter keep only the last. The coordinator added the two lost edges (WI-852, WI-853) by hand in the same commit as D-002, and files the defect as its own row."
+alternative = "Re-run the close after fixing the defect in this lane."
+reversal_cost = "None to the queue; the defect row fixes the close."
+why_not_escalated = "The verdict's typed block names all three edges; writing them is enacting it, not judging it. The fix is kit code and belongs in its own row."
+review = ""

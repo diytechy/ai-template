@@ -2,7 +2,7 @@
 id = "WI-864"
 title = "adjudicate review-response overlap [af015cc7e32a]: WI-805;WI-811;WI-847;WI-848;WI-852;WI-853;WI-854;WI-860"
 workstream = "process"
-specref = "docs/log.d/2026-10-08-owner-ruling-review-threat-model.md"
+specref = ""
 buildtier = "strong"
 priority = 9
 safety_class = "adjudication"
@@ -10,6 +10,10 @@ brief = "consolidate"
 adjudicates = ["WI-805", "WI-811", "WI-847", "WI-848", "WI-852", "WI-853", "WI-854", "WI-860"]
 digests = "af015cc7e32a|a4596ff3f7d5"
 +++
+
+## Deliverable
+
+Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this row's own merge (drafts-not-mints), the mint replaces the superseded row's inbound hard edges, and any human-owed answer becomes a `pending` open item the successor depends on. The verdict artifact is under `docs/reviews/`.
 
 ## Context
 
@@ -45,3 +49,10 @@ The mechanical pre-filter's hints for this cluster (a hint, not a finding; two r
 > WI-852 and WI-854 were commissioned by the same docs/plans/2026-10-07-wi841-retro/PROPOSAL.md
 > WI-853 and WI-854 are both open and share one spec of record (docs/plans/2026-10-07-wi841-retro/PROPOSAL.md)
 > WI-853 and WI-854 were commissioned by the same docs/plans/2026-10-07-wi841-retro/PROPOSAL.md
+
+## Consolidation
+
+```toml
+outcome = "queue-with-edge"
+edges = ["WI-848 needs WI-852", "WI-848 needs WI-853", "WI-848 needs WI-860"]
+```
