@@ -18,3 +18,34 @@ alternative = "Claim WI-848 with WI-849 as the prompt's default scope named, bui
 reversal_cost = "None to undo: the claims follow the queue's needs edges and the generated frontier."
 why_not_escalated = "WI-855's verdict 003 added WI-848 needs WI-846, so WI-848 is not claimable first; the owner released WI-846 by ruling OI-110 (b) this session, and it heads the frontier at P9. WI-849 stays in the batch as the prompt named."
 review = ""
+
+# --- the second 2026-10-08 coordinator session (resumed from
+# docs/handoff-2026-10-08-coordinator.md) ---
+
+[decision.D-003]
+decided = "WI-849 landed before WI-846, reversing the handoff's order, because WI-849 reached its SOUND fresh full-lane review first while WI-846 still owed its checkpoint sitting and gate; WI-846 was rebased onto the landing."
+alternative = "Hold WI-849's landing until WI-846 landed, as the handoff's 'wi-846 lands first' said."
+reversal_cost = "None to undo: lanes with acts land one at a time either way, and each order costs the other lane one rebase."
+why_not_escalated = "The handoff's only stated reason was that WI-848 and WI-834 wait on WI-846; neither waits on the landing order of the two lanes, and WI-851 waits on WI-849."
+review = ""
+
+[decision.D-004]
+decided = "The owner's review-threat-model ruling was recorded as docs/log.d/2026-10-08-owner-ruling-review-threat-model.md and filed as two rows (WI-860 states the threat model in PROCESS.md §6; WI-861 adds the adjudicator's dispute brief class), with the coordinator's wording that content agents write into the repository stays in scope while a compromised or contrived host is out."
+alternative = "One row carrying both the doc rule and the dispute class, or leaving agent-written content's standing unstated."
+reversal_cost = "Merging or re-wording two queued rows before either is claimed."
+why_not_escalated = "The owner asked how to document it; two rows follow the WI-841 retrospective's lesson against several deliverables in one row, and the in-scope line keeps WI-849-class findings (malformed agent-written frontmatter) real. The wording is the owner's to confirm."
+review = ""
+
+[decision.D-005]
+decided = "Before WI-846 landed, the coordinator set AGENT_CLAUDE_TOKEN_FILE to the owner's token-file path for WI-846's own adjudication sittings run from its lane, whose code requires the token; the file itself was never read by the coordinator."
+alternative = "Ask the owner to set the variable, or wait for WI-846 to land before its own sitting."
+reversal_cost = "None: the variable lived only in the one launching shell."
+why_not_escalated = "The lane's own entry point refuses without it (exit 7), the owner recorded the path for exactly this wiring, and the sitting became the token path's first live run."
+review = ""
+
+[decision.D-006]
+decided = "WI-849's first combined sitting failed before launch on the dedicated home's OAuth refresh; its empty, untracked verdict reservation (001) was removed and the sitting re-run as verdict 002 after the owner signed the home in again. WI-862, the sweep's re-mint, was closed as already settled citing verdict 002."
+alternative = "Re-use verdict number 001, or hold a second sitting for WI-862."
+reversal_cost = "None to undo; the failed call's telemetry and its .requested binding stay committed."
+why_not_escalated = "The failure was the environment WI-846 exists to fix; the re-mint close follows the owner-agreed re-mint-trap rule (S11 plan §4.2)."
+review = ""
