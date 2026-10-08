@@ -9,6 +9,10 @@ brief = "amendment"
 adjudicates = ["LLR-158", "LLR-167", "LLR-181", "LLR-278", "LLR-310", "TC-218", "TC-278"]
 +++
 
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-849's in-lane adjudicator, through the retained session, ruled every amended row it names MEANING and re-attested it in the lane's own act (verdict `docs/reviews/wi-849-approval-act-in-lane/002-ADJUDICATE-e648cd9.md`). The low-level and test-case registries are byte-identical to their anchors under `docs/archive/last_approved/` at the landing.
+
 ## Context
 
 Derived from `staged_spine_amendments` on the merged commit (§A5.2).
