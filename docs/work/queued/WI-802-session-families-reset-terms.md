@@ -36,6 +36,10 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
 - Each family's reset terms are pinned by tests, including the opencode directory
   term and the no-`used` rule (a route reporting no `used` resets every call).
 - A spawn failure before the runner starts leaves the session active.
+- The [review] family carries WI-847's within-lane retention dial into
+  `[sessions.review]` (shipped off; the merge-gating review is always fresh)
+  rather than pinning [review] fixed in code, and WI-847's tests stay green
+  (WI-855's consolidation verdict, finding 4).
 - The retained adjudication reviewer, builder retention at every call, `rejudge`
   under [judge] and the 1200 s lease wait are in place.
 - Each spine row the README matrix gives this row (SR-227, LLR-270,

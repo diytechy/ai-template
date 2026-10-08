@@ -2,14 +2,18 @@
 id = "WI-855"
 title = "adjudicate queue overlap [20424540cd76]: WI-798;WI-799;WI-800;WI-801;WI-802;WI-804;WI-805;WI-807;WI-808;WI-809;WI-810;WI-811;WI-813;WI-816;WI-817;WI-827;WI-828;WI-832;WI-833;WI-834;WI-846;WI-847;WI-848;WI-849;WI-850;WI-851;WI-852;WI-853;WI-854"
 workstream = "process"
-specref = "docs/work/README.md"
+specref = ""
 buildtier = "strong"
 priority = 9
 safety_class = "adjudication"
 brief = "consolidate"
 adjudicates = ["WI-798", "WI-799", "WI-800", "WI-801", "WI-802", "WI-804", "WI-805", "WI-807", "WI-808", "WI-809", "WI-810", "WI-811", "WI-813", "WI-816", "WI-817", "WI-827", "WI-828", "WI-832", "WI-833", "WI-834", "WI-846", "WI-847", "WI-848", "WI-849", "WI-850", "WI-851", "WI-852", "WI-853", "WI-854"]
-digests = "20424540cd76|1237285c1cff"
+digests = "83a94fde0f88|1237285c1cff"
 +++
+
+## Deliverable
+
+Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this row's own merge (drafts-not-mints), the mint replaces the superseded row's inbound hard edges, and any human-owed answer becomes a `pending` open item the successor depends on. The verdict artifact is under `docs/reviews/`.
 
 ## Context
 
@@ -331,3 +335,35 @@ The mechanical pre-filter selected them; it has concluded NOTHING. Each line bel
 > WI-853 and WI-854 were commissioned by the same docs/plans/2026-10-07-wi841-retro/PROPOSAL.md
 
 This row's `Adjudicates` cell fixes the population — judge those rows and no others. Its `Digests` cell is `20424540cd76|1237285c1cff`: the queue state and the spine state this question was asked against, so the census never asks it twice and a verdict that has gone stale is detectable rather than assumed fresh.
+
+## Consolidation
+
+Judged by an independent adjudicator; the verdict, with each finding, is
+`docs/reviews/wi-855-adjudicate-queue-overlap-2042/001-ADJUDICATE-2d74139.md`.
+No contradiction, no answered scope, no consolidation: six unordered
+collisions get a hard edge. WI-833's two edges (on WI-828 and WI-832) are
+recorded in the verdict for the coordinator, because WI-833 carries no `needs`
+line the close can extend. A re-sitting
+(`docs/reviews/wi-855-adjudicate-queue-overlap-2042/002-ADJUDICATE-e12a19e.md`,
+which supersedes 001 for the close) added a seventh edge, WI-798 needs WI-834,
+because WI-798 retires the per-family home that WI-846 authenticates and WI-834
+checks, and it gives WI-798 a Done-when bullet to carry both across.
+A third sitting
+(`docs/reviews/wi-855-adjudicate-queue-overlap-2042/003-ADJUDICATE-75ca1b9.md`)
+re-stamped the queue digest to `83a94fde0f88` after OI-110 (b) released WI-846:
+the seven edges stand, and it records one hand edge for the coordinator, WI-848
+needs WI-846 (WI-848 carries no `needs` line), with a Done-when bullet so the
+coordinator-cycle recipes carry WI-846's token sign-in.
+
+```toml
+outcome = "queue-with-edge"
+edges = [
+  "WI-834 needs WI-846",
+  "WI-847 needs WI-834",
+  "WI-800 needs WI-847",
+  "WI-851 needs WI-849",
+  "WI-808 needs WI-832",
+  "WI-801 needs WI-852",
+  "WI-798 needs WI-834",
+]
+```

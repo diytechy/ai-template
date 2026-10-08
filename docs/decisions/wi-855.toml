@@ -1,0 +1,35 @@
+# docs/decisions/wi-855.toml — the WI-855 consolidation sitting's delegated
+# decisions (the coordinator's handling of the review finding and the stale
+# digest, and its hand enactment of what the verdicts could not enact
+# mechanically).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-003", "D-004", "D-002"]
+
+[decision.D-001]
+decided = "WI-833 gains needs = [\"WI-828\", \"WI-832\"] by hand, as the first verdict's finding 8 directs; the mechanical close could not write it because WI-833 had no needs line for consolidate.edged_text to extend. WI-848 gains needs = [\"WI-846\"] by hand for the same reason, as the third verdict directs."
+alternative = "Leave both rows unordered until a row teaches edged_text to insert a needs line, or edit them on trunk after the landing."
+reversal_cost = "One frontmatter line per row."
+why_not_escalated = "The independent adjudicator ruled the edges and named the coordinator to write them; the adjudicator's call is final (OI-103 Q3). Landing them with the verdicts keeps the enactment in one squash."
+review = ""
+
+[decision.D-002]
+decided = "The verdicts' Done-when text is added to the queued rows: WI-802 gains the [review] family's retention-dial bullet (the first verdict's finding 4, worded by the coordinator from it), and WI-798 and WI-848 gain the bullets the third verdict's done_when block gives, byte-for-byte, wrapped to the spec's width."
+alternative = "Leave the rows as filed and rely on each builder reading the verdicts; or reopen design ch.2 §2's 'review: every call, fixed' with the owner before touching WI-802."
+reversal_cost = "One Done-when bullet per row; if WI-802's is overruled, WI-802 instead retires WI-847's dial and WI-847's tests change with it."
+why_not_escalated = "The adjudicator found each obligation necessary to keep a landed row's work from being silently deleted by a later one, and none reverses an owner ruling. Recorded high-risk because WI-802's bullet narrows an owner-approved design chapter's literal text and was worded by the coordinator rather than quoted."
+review = ""
+
+[decision.D-003]
+decided = "After the fresh full-lane Sol review found a missed edge (WI-798 against WI-846 and WI-834), the coordinator discarded its own two lane commits (the mechanical close and the hand enactment, ca2fada4 and ac8e07a7, archived as extra parents), rewound the lane to before the close, and sent the finding to a second independent sitting instead of writing the edge itself. That sitting ruled WI-798 needs WI-834, amended the typed block to seven edges, and gave WI-798 a migration bullet."
+alternative = "Add the edge by hand as Sol proposed (the coordinator choosing the direction); or land the six-edge verdict and file the finding for the next census."
+reversal_cost = "Low: the discarded commits are reachable in archive/lanes; the outcome is seven needs lines and one bullet."
+why_not_escalated = "Which way the order runs is a queue judgement, and judgements stay independent of the coordinator; the entry point refuses a sitting on a closed row, so the rewind was the only way to re-sit under WI-855. Recorded high-risk because it rewrites lane history after a review."
+review = ""
+
+[decision.D-004]
+decided = "When the close refused the amended block because the queue digest had moved (the owner's OI-110 ruling dropped WI-846's needs on trunk after the mint), the coordinator did not re-stamp the Digests cell itself. A third, narrow independent sitting judged whether WI-846 becoming claimable changed the outcome, found that it did not (adding only WI-848 needs WI-846 by hand), and re-stamped the cell to the live 83a94fde0f88|1237285c1cff itself."
+alternative = "Cancel WI-855 and let the census re-mint a full 29-row sitting over the moved queue; or re-stamp the cell by hand."
+reversal_cost = "Revert seven needs lines and cancel the enactment; a later census re-asks the question over the queue as it then stands."
+why_not_escalated = "Re-stamping by hand would green a staleness guard with no judgement behind it; a full re-mint would re-ask 29 rows over a one-row change. The narrow sitting puts a judgement over the current queue behind the re-stamp. Recorded high-risk because a guard's recorded input was changed in the lane."
+review = ""

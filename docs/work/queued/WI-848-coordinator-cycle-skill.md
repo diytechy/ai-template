@@ -3,6 +3,7 @@ id = "WI-848"
 title = "The coordinator's procedure is one skill, and spine-authoring states the three ways a spine grows"
 workstream = "process"
 specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
+needs = ["WI-846"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 8
@@ -50,6 +51,12 @@ row after WI-849 or in one batch with it.
   no cycle, recipe or "corrections learned" section of its own.
 - The skills-index, skills-sync and materialization tests pass, plus the smoke
   tier.
+- The coordinator-cycle recipes carry WI-846's sign-in as landed: the
+  adjudication recipe's sign-in step names the long-lived token read through
+  the environment variable OI-110 (b) declares, and dev-setup's one-time
+  `claude setup-token` step as the remedy for a home that is not signed in.
+  The draft's 'pending WI-846; the owner runs `/login` at expiry' line does
+  not land, and no recipe makes an interactive sign-in the procedure.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit for the kit skill
   `spine-authoring`; `coordinator-cycle` is this-repo and ships to no adopter.

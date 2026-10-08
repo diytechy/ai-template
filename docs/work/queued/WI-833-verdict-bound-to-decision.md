@@ -3,6 +3,7 @@ id = "WI-833"
 title = "An owner's verdict stays bound to the decision text it judged"
 workstream = "process"
 sr_refs = ["SR-225"]
+needs = ["WI-828", "WI-832"]
 specref = "docs/reviews/wi-818-owner-verdict/dispute-1-ruling.md"
 buildtier = "medium"
 safety_class = "ordinary"

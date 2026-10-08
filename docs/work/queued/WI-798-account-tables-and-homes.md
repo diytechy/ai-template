@@ -4,7 +4,7 @@ title = "Account tables and per-account homes for every CLI route"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-accounts"
 sr_refs = ["SR-222"]
-needs = ["WI-797"]
+needs = ["WI-797", "WI-834"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
@@ -43,6 +43,19 @@ login-isolation check passes.
   `docs/agents-enabled` are amended to match.
 - The row's test bar: its affected modules' tests plus the smoke tier at `-n 2`,
   plus a scaffold bootstrap and the claude login-isolation check.
+- The per-family home's authentication moves to the account home and is not
+  retired with it (WI-846, WI-834). This repo's dedicated Claude home becomes
+  a declared account. A retained Claude launch under that account still reads
+  the owner's long-lived token at launch through the environment variable
+  OI-110 (b) declares: nothing about the path is tracked, and the token is
+  never written to a log, prompt, record or commit. An unset variable, or a
+  missing or unreadable token file, is still refused before launch, naming
+  dev-setup, and an authentication failure still retires no session. The
+  sign-in probe and dev-setup's check and `claude setup-token` offer report on
+  that account's home. The adjudicator that ran signed in before this row runs
+  signed in after it. WI-846's and WI-834's tests stay green, re-pointed at
+  the account home rather than deleted, and the RESYNC entry states the
+  migration.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit, migrating route config to
   account tables (risk 9: the RESYNC entry is the migration).
