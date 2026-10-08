@@ -499,6 +499,11 @@ re-scoped to match, and README changes 4 and 14 are annotated as superseded.
 Q2 to Q5 are filed as OI-108 to OI-111, each cited in the `needs` of the row
 that waits on it (WI-801; WI-800 and WI-807; WI-846; WI-811).
 
+**Later, 2026-10-07:** OI-108, OI-109 and OI-111 ruled (with OI-106 and OI-107
+from the earlier queue), each written into its citing rows. OI-110 waits only
+on the owner's confirmation of (b). The §8.2 edits that need no P-row id are
+applied in the same commit.
+
 
 1. **One authoring model for in-lane spine text.** Today's coordinator
    practice, which the P1 draft records: Terra authors the whole set and an

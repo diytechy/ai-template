@@ -44,8 +44,13 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
 - Each spine row the README matrix gives this row (SR-222 and LLR-269, shared with
   WI-801 and WI-804; SR-227, LLR-270, TC-266/267/268/303, IF-247/248, IF-081/155,
   shared with WI-802; LLR-137 shared with WI-807; LLR-246 shared with WI-807 and
-  WI-810; a new LLR for the ledger) is amended or added and passes adjudication of
-  that row, on whichever adjudication path is the one path when this row lands.
+  WI-810; a new LLR for the ledger with a TC verifying each arm it states) is
+  amended or added and passes adjudication of that row, on whichever adjudication
+  path is the one path when this row lands.
+- OI-109 ruled 2026-10-07 (a): under the station authority, the lane-side trunk
+  step produces the tree that lands, so the verdict rollup it writes is trunk's.
+  The rollup step stays in the one trunk step; a lane outside the authority never
+  commits a rollup.
 - The row's test bar: its affected modules' tests plus the smoke tier at `-n 2`,
   plus per-CLI kill fixtures and usage baselines.
 - Review bar: A+B (REVIEW-A plus an independent REVIEW-B).

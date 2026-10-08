@@ -1,4 +1,4 @@
-Deferred open items: OI-108, OI-109, OI-110, OI-111
+Deferred open items: OI-110 — pending only the owner's confirmation of option (b)
 
 ## 2026-10-07 — Owner rulings from the WI-841 retrospective
 
@@ -79,3 +79,22 @@ Rows for the next coordinator session to file, each with its own lane:
 - the adjudication briefs compose `spine-authoring`'s tier questions at
   render time;
 - the verdict rollup reads the coordinator's review files.
+
+Later the same day the owner ruled five open items. Each ruling is written
+into the rows that cite it, in the registry's verbatim form:
+- **OI-106 (a):** SN-029's two cells as the adjudicator gave them, plus the two
+  older staleness fixes (WI-827, landed on trunk by the owner's act).
+- **OI-107 (b):** a decisions record is named by its work item; a decision tied
+  to no work item takes the next number above the highest such decision. A
+  decision watermark is the deferred cleaner option (WI-832).
+- **OI-108:** no second relaxation. The coordinator's relaxation is the kit's
+  one alternative-agent rule, the reviewer ladder that ends same-family and
+  records it, in whatever form later rows give it (WI-801, cited by WI-811).
+- **OI-109 (a):** under the station authority, the rollup the lane-side trunk
+  step writes is trunk's (WI-800, WI-807).
+- **OI-111 (a):** the final reviewer's family is a preference, never an
+  author's session, yielding only by the alternative-agent rule (WI-811).
+
+OI-110 stays pending. The owner prefers (b), an environment variable naming
+the token file, and asked how the path is held today: it is in no tracked
+file, only in the coordinator's local agent memory outside the repository.

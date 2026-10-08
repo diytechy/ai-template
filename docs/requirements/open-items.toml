@@ -3932,10 +3932,12 @@ recommendation = "Keep pending until the router is running, then (a) if FreeLLMA
 
 [open_item.OI-106]
 title = "SN-029: two clauses untrue since text-before-act landed"
-status = "pending"
+status = "ruled"
 raised = "2026-10-05"
-one_line = "Sign the two-clause amendment of SN-029 (owner-held): its acceptance calls amend-and-flip in one commit 'the sanctioned path', and its why argues from that path, but since WI-806 spine text is committed before the act that blesses it."
-decision = """Filed by the wave-15 coordinator at WI-806's landing (act seq 34), from the independent adjudicator's dispute ruling (docs/reviews/wi-806-text-then-act/dispute-1-ruling.md, section "SN-029"). SN-029 sits on the Needs rung, which the dial holds for the owner, so no session edits it.
+one_line = "RULED 2026-10-07 (a): SN-029's two cells are amended as the adjudicator's dispute ruling gives them, with the two older staleness fixes in the same sitting. Written into WI-827."
+decision = """RULED 2026-10-07 by the owner, verbatim: \"Agree with recommendation.\"
+
+Filed by the wave-15 coordinator at WI-806's landing (act seq 34), from the independent adjudicator's dispute ruling (docs/reviews/wi-806-text-then-act/dispute-1-ruling.md, section "SN-029"). SN-029 sits on the Needs rung, which the dial holds for the owner, so no session edits it.
 
 WHAT IS UNTRUE. acceptance: ", the one signal the sanctioned amend-and-flip path would otherwise hide" (amend-and-flip in one commit is now refused outside a verified squash landing). why: "is sound only while every amendment flips its row in the same commit — precisely the sanctioned path an amendment detector ignores — so the blessed way to amend an attested requirement is invisible to every consumer, and".
 
@@ -3947,13 +3949,16 @@ options = """- (a) SIGN the adjudicator's two replacement cells as written (and,
 - (b) Reword them yourself in the same sitting.
 - (c) Leave SN-029 as is (the untrue clause stays on the owner's row)."""
 recommendation = "(a), with the two older staleness fixes in the same sitting, so the need is true in one pass."
+ruled_date = "2026-10-07"
 
 [open_item.OI-107]
 title = "Decisions record identity: a run's record is named by a lossy, reusable branch name"
-status = "pending"
+status = "ruled"
 raised = "2026-10-05"
-one_line = "Decide whether a delegated run's decisions record needs an identity of its own: today `a/b` and `a-b`, or two lanes reusing one branch name, write one docs/decisions/<run>.toml, and any fix moves record paths (a forced migration)."
-decision = """Filed by the wave-16 coordinator at WI-818's landing, from the independent adjudicator's separate finding F1 (docs/reviews/wi-818-owner-verdict/dispute-1-ruling.md, "Separate findings"). WI-818 made record_path refuse a run name carrying `#` or a character git refuses, so a citation parses one way and no new collision is added; it kept trunk's `/` -> `-` mapping, which already collides.
+one_line = "RULED 2026-10-07 (b), with a decision watermark as the deferred cleaner option: a record is named by the work item it records; a decision tied to no work item takes the next number above the highest non-work-item decision (trunk is serial). Written into WI-832."
+decision = """RULED 2026-10-07 by the owner, verbatim: \"A cleaner approach would be a decision watermark, albeit painful.  Maybe that's a deferred option, and for now option B, if not in lane / not related to work maybe it just takes the highest non_WI decision number (since it would be on trunk anyways)\"
+
+Filed by the wave-16 coordinator at WI-818's landing, from the independent adjudicator's separate finding F1 (docs/reviews/wi-818-owner-verdict/dispute-1-ruling.md, "Separate findings"). WI-818 made record_path refuse a run name carrying `#` or a character git refuses, so a citation parses one way and no new collision is added; it kept trunk's `/` -> `-` mapping, which already collides.
 
 WHAT HAPPENS TODAY. Two runs whose branch names differ only by `/` and `-`, or two lanes that reuse one branch name over time, share one record. The second run overwrites the first's entries, and the merge slot's "owes its record" rung is met by the other run's record once that record is on trunk.
 
@@ -3963,13 +3968,16 @@ options = """- (a) INJECTIVE NAME: escape every rewritten character (and the esc
 - (b) RUN IDENTITY: name the record by the claimed work item (or another per-run id) rather than the branch; every record moves once and citations change form.
 - (c) ACCEPT THE RESIDUE: keep `/` -> `-` and the stated collision; refuse nothing more."""
 recommendation = "(b) if the claim's work-item id is available everywhere a record is written (it names the run without loss and cannot be reused); otherwise (a). Either rides one RESYNC migration entry."
+ruled_date = "2026-10-07"
 
 [open_item.OI-108]
 title = "The two-hour reviewer relaxation under the per-kind routing table"
-status = "pending"
+status = "ruled"
 raised = "2026-10-07"
-one_line = "Decide how the confirmed two-hour relaxation (a fresh independent Opus reviewer when Codex has been unavailable past two hours, recorded) is drawn once WI-801's `ask` is the only launch path and its review kinds are OPENAI-only."
-decision = """Filed from the WI-841 retrospective's queue reconciliation (docs/plans/2026-10-07-wi841-retro/PROPOSAL.md §8.3 Q2). The owner confirmed the relaxation on 2026-10-07 (docs/log.d/2026-10-07-wi841-retro-owner-rulings.md, ruling 7). Today it lives only in the coordinator's procedure: never self-review; wait out a Codex limit; past two hours unavailable, a fresh independent Opus reviewer reviews, and the same-family relaxation is recorded.
+one_line = "RULED 2026-10-07: no second relaxation. The coordinator's relaxation is the kit's one alternative-agent rule (the reviewer ladder ends same-family and records it), whatever form later rows give that rule. Written into WI-801; WI-811 cites it."
+decision = """RULED 2026-10-07 by the owner, verbatim: \"Well, the relaxation should be the same used in the kit for alternative agents, maybe that is impacted by future work items.\"
+
+Filed from the WI-841 retrospective's queue reconciliation (docs/plans/2026-10-07-wi841-retro/PROPOSAL.md §8.3 Q2). The owner confirmed the relaxation on 2026-10-07 (docs/log.d/2026-10-07-wi841-retro-owner-rulings.md, ruling 7). Today it lives only in the coordinator's procedure: never self-review; wait out a Codex limit; past two hours unavailable, a fresh independent Opus reviewer reviews, and the same-family relaxation is recorded.
 
 WHAT CHANGES AT WI-801. `ask` becomes the one way to launch a model call, for the loop and the coordinator alike. This repo's per-kind values make review, judge, author-review, plan-critique and final review OPENAI-only, and under README A1 (docs/plans/2026-10-04-wi788-design/README.md) a family absent or at 0 is not eligible. So once WI-801 lands, no route can draw the relaxation reviewer. The rule would survive only as prose nothing can execute.
 
@@ -3979,13 +3987,16 @@ options = """- (a) DECLARED RELAXATION: `ask` takes a per-kind relaxation entry 
 - (b) HUMAN STOP: past the window `ask` refuses and pages the owner; no session draws the fallback. The relaxation is withdrawn for the routed path.
 - (c) PROCEDURE ONLY: keep the relaxation as coordinator procedure outside `ask`. This contradicts WI-801's one-launch-path rule."""
 recommendation = "(a). It keeps the confirmed rule executable, independent (author-excluded, fresh) and audited, and it is the only option consistent with `ask` being the one launch path."
+ruled_date = "2026-10-07"
 
 [open_item.OI-109]
 title = "The verdict rollup when the trunk step runs lane-side under the station authority"
-status = "pending"
+status = "ruled"
 raised = "2026-10-07"
-one_line = "Decide whether the verdict rollup, which the owner ruled stays generated on trunk and is never committed by a lane, may be generated by the trunk step WI-800 and WI-807 move lane-side under the station authority."
-decision = """Filed from the WI-841 retrospective's queue reconciliation (PROPOSAL.md §8.3 Q3). Ruling 8 of 2026-10-07 (docs/log.d/2026-10-07-wi841-retro-owner-rulings.md): the verdict rollup (`docs/reviews/rollup/`, written by `gen_verdict_rollup.py --trunk-step`) stays generated on trunk, and a lane never commits it. `trunk_step.py` states why: the rollup regenerates on the trunk after the merge that brought the round files in, so a lane never commits one.
+one_line = "RULED 2026-10-07 (a): under the station authority the lane-side trunk step produces the tree that lands, so the rollup it writes is trunk's. Written into WI-800 and WI-807."
+decision = """RULED 2026-10-07 by the owner, verbatim: \"Option a\"
+
+Filed from the WI-841 retrospective's queue reconciliation (PROPOSAL.md §8.3 Q3). Ruling 8 of 2026-10-07 (docs/log.d/2026-10-07-wi841-retro-owner-rulings.md): the verdict rollup (`docs/reviews/rollup/`, written by `gen_verdict_rollup.py --trunk-step`) stays generated on trunk, and a lane never commits it. `trunk_step.py` states why: the rollup regenerates on the trunk after the merge that brought the round files in, so a lane never commits one.
 
 WHAT CHANGES. The WI-788 design amends LLR-137 so that `trunk_step` runs lane-side under the station authority (README matrix; ch.4). WI-800 and WI-807 share that amendment. The trunk step includes the rollup step, so as designed the rollup would be generated inside a lane run.
 
@@ -3995,29 +4006,35 @@ options = """- (a) THE LANDING TREE IS TRUNK: under the authority, the lane-side
 - (b) THE ROLLUP STAYS TRUNK-ONLY: the lane-side trunk step skips the rollup step; a post-landing trunk step (or the next one) writes it.
 - (c) RETIRE THE COMMITTED ROLLUP: render the rollup on demand (a view, like the approval brief) and commit none."""
 recommendation = "(a). Under the authority the landing tree is exactly what trunk becomes, and it keeps one trunk step instead of a split one. Choose (b) only if a lane-side run can ever land a tree the authority did not attest."
+ruled_date = "2026-10-07"
 
 [open_item.OI-110]
 title = "WI-846: whether the dial naming the adjudicator's token file is tracked"
 status = "pending"
 raised = "2026-10-07"
 one_line = "Decide where the dial that names the adjudicator home's long-lived token file lives: a tracked file would commit the owner's personal path into the repository."
-decision = """Filed from the WI-841 retrospective's queue reconciliation (PROPOSAL.md §8.3 Q4). WI-846 reads the owner's long-lived token at launch "from a declared location outside the repository (a dial naming the file; never its value)". The spec does not say where that dial lives. The repository's dials (docs/process.toml) are tracked, so a path dial there commits the owner's personal path, and an adopter's copy would carry it too.
+decision = """OWNER, 2026-10-07: \"Option b is cleanest, but how is the path housed today since it has already been documented?\" ANSWER: no tracked file holds it. The path is recorded only in the coordinator's local agent memory, outside the repository (the wave-18 handoff: the coordinator holds the file's path in local memory only and never reads the file). WI-846 has not been built, so nothing reads a dial yet. Option (b) moves the path into an environment variable the launcher reads, and that memory note becomes the place the owner's own setup is described, not a dial.
+
+Filed from the WI-841 retrospective's queue reconciliation (PROPOSAL.md §8.3 Q4). WI-846 reads the owner's long-lived token at launch "from a declared location outside the repository (a dial naming the file; never its value)". The spec does not say where that dial lives. The repository's dials (docs/process.toml) are tracked, so a path dial there commits the owner's personal path, and an adopter's copy would carry it too.
 
 WHAT TO RULE. Where the dial lives, and what the probe reports when it is unset."""
 blast_radius = "WI-846's launch, its sign-in probe and dev-setup's one-time `claude setup-token` step; WI-834's shared sign-in step (part C), which cites whichever builds first. The token's value is never at stake: every option keeps it out of the repository."
 options = """- (a) UNTRACKED LOCAL DIAL: an untracked, gitignored local file (or a user-level config outside the repo) names the token path; the tracked config names only that file's location. Unset reads as not signed in.
 - (b) ENVIRONMENT VARIABLE: the launcher reads the path from a declared environment variable; dev-setup tells the owner to set it.
 - (c) TRACKED DIAL: docs/process.toml names the path. Simplest, but the owner's personal path is committed and ships in adopters' copies."""
-recommendation = "(a), or (b) if the launchers already carry an environment contract: both keep personal paths out of the tracked tree, and both let an adopter declare its own."
+recommendation = "(b), the owner's stated preference: the launcher reads the token file's path from a declared environment variable that dev-setup tells the owner to set; nothing about the path is tracked, and an adopter declares its own. Pending only the owner's confirmation."
 
 [open_item.OI-111]
 title = "WI-811: the final-review family rule against the confirmed reviewer relaxation"
-status = "pending"
+status = "ruled"
 raised = "2026-10-07"
-one_line = "Decide whether WI-811's 'the final-review family excludes every author' is a hard exclusion or a ranked preference, since a hard rule would forbid the confirmed two-hour Opus relaxation."
-decision = """Filed from the WI-841 retrospective's queue reconciliation (PROPOSAL.md §8.3 Q5). WI-811 (S788-resolve-ls9) states that the final-review family excludes every author. Read as a hard exclusion, it forbids ruling 7 of 2026-10-07: after two hours unavailable, a fresh independent Opus reviewer may review, recorded as a same-family relaxation. In this repo the authors include Opus builders. The WI-788 design's A1 already turns family exclusions into ranked preferences (README A1 step 3), and ch.4 states the final reviewer is "never a session that authored ... its family differs ... where the pool allows"."""
+one_line = "RULED 2026-10-07 (a): the final review is never an author's session, and a family other than every author's is preferred; the alternative-agent rule (OI-108) is where the preference yields. Written into WI-811."
+decision = """RULED 2026-10-07 by the owner, verbatim: \"Option a\"
+
+Filed from the WI-841 retrospective's queue reconciliation (PROPOSAL.md §8.3 Q5). WI-811 (S788-resolve-ls9) states that the final-review family excludes every author. Read as a hard exclusion, it forbids ruling 7 of 2026-10-07: after two hours unavailable, a fresh independent Opus reviewer may review, recorded as a same-family relaxation. In this repo the authors include Opus builders. The WI-788 design's A1 already turns family exclusions into ranked preferences (README A1 step 3), and ch.4 states the final reviewer is "never a session that authored ... its family differs ... where the pool allows"."""
 blast_radius = "WI-811's Done-when wording and the routing rule it states; it interacts with OI-108's shape for the relaxation. No code waits on it before WI-811."
 options = """- (a) RANKED PREFERENCE: "never a session that authored any range; a family other than every author's is preferred (A1 step 3)". The relaxation (OI-108) is the recorded case where the preference yields.
 - (b) HARD EXCLUSION: keep the wording; the relaxation never applies to the final review, which then waits for Codex or a human.
 - (c) HARD EXCLUSION WITH A STATED EXCEPTION: keep the rule and name the relaxation as its one exception."""
 recommendation = "(a). It matches A1 and the design's own chapter 4 wording, keeps session independence absolute, and leaves the relaxation's shape to OI-108."
+ruled_date = "2026-10-07"

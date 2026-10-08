@@ -44,9 +44,13 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   gone; the pre-commit hook's advisory check refuses an owner commit while a holder
   has the authority.
 - Each spine row the README matrix gives this row (SR-170, LLR-151, a new authority
-  row; LLR-137 shared with WI-800; LLR-246 shared with WI-800 and WI-810) is amended
-  or added and passes adjudication of that row, on whichever adjudication path is
-  the one path when this row lands.
+  row with a TC verifying each arm it states; LLR-137 shared with WI-800; LLR-246
+  shared with WI-800 and WI-810) is amended or added and passes adjudication of
+  that row, on whichever adjudication path is the one path when this row lands.
+- OI-109 ruled 2026-10-07 (a): under the station authority, the lane-side trunk
+  step produces the tree that lands, so the verdict rollup it writes is trunk's.
+  The rollup step stays in the one trunk step; a lane outside the authority never
+  commits a rollup.
 - The row's test bar: its affected modules' tests (integrate, dispatch, session)
   plus the smoke tier at `-n 2`; no extra bar is named.
 - Review bar: A+B (REVIEW-A plus an independent REVIEW-B).

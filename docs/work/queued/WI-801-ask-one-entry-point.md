@@ -55,10 +55,19 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
 - One live `ask.py` call has run (Q-3).
 - Each spine row the README matrix gives this row (SR-154's first amendment:
   exclusion from all authors and "configured for that kind"; SR-222 and LLR-269,
-  shared; LLR-044, LLR-081, TC-046, TC-084, IF-246; a new LLR and IF for `ask`) is
-  amended or added and passes adjudication of that row, on whichever adjudication
-  path is the one path when this row lands. The `session-protocol` skill and the S11
-  hand recipe direct the coordinator to `ask.py`.
+  shared; LLR-044, LLR-081, TC-046, TC-084, IF-246; a new LLR and IF for `ask`
+  with a TC verifying each arm it states) is amended or added and passes
+  adjudication of that row, on whichever adjudication path is the one path when
+  this row lands. The `session-protocol` skill and the coordinator's procedure
+  skill (`coordinator-cycle` once it lands) direct the coordinator to `ask.py`.
+- OI-108 ruled 2026-10-07: when a kind's preferred families are unavailable,
+  `ask` applies the kit's one alternative-agent rule for every kind, the
+  coordinator's included: the reviewer ladder that ends same-family and records
+  the relaxation (process-options, the degraded-availability rule: fresh context
+  is the invariant, family diversity best-effort). No second, coordinator-only
+  relaxation is added. The coordinator's two-hour wait is that rule's trigger on
+  the hand path today, and moves into the rule or is retired as this row settles
+  it.
 - The row's test bar: its affected modules' tests plus the smoke tier at `-n 2`,
   plus judged-scope tests and the one live `ask.py` call.
 - Review bar: A+B (REVIEW-A plus an independent REVIEW-B).

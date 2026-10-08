@@ -21,8 +21,11 @@ cleared when every finding is dismissed or marked advice (README change 12,
 RULING-7). Any `uphold` returns the lane; `advice` goes to MINT. LS9's refined
 wording lands in the rework brief, the reviewer brief (`[ADVICE]`, which
 `kitlib/verdict.py` learns) and `AGENTS.template.md`'s retry rule (change 24). This
-row carries SR-154's third amendment: the resolution is final and the final-review
-family excludes every author.
+row carries SR-154's third amendment: the resolution is final, and the final
+review is never a session that authored any range, and a family other than every
+author's is preferred (README A1 step 3); the kit's alternative-agent rule
+(OI-108) is the recorded case where the preference yields (OI-111 ruled
+2026-10-07 (a)).
 
 Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
 `docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
@@ -42,6 +45,10 @@ the second step.
 - Each spine row the README matrix gives this row (SR-154's final-resolution
   amendment, third in `needs` order; a new dispute-resolution row) is amended or
   added and passes in-lane adjudication.
+- SR-154's third amendment states that the final review is never a session that
+  authored any range, and a family other than every author's is preferred
+  (README A1 step 3); the kit's alternative-agent rule (OI-108) is the recorded
+  case where the preference yields (OI-111 ruled 2026-10-07 (a)).
 - The row's test bar: its affected modules' tests (verdict, brief) plus the smoke
   tier at `-n 2`, plus the byte budget (`AGENTS.template.md`).
 - Review bar: A (one cross-family REVIEW-A).

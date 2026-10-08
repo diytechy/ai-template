@@ -3,6 +3,7 @@ id = "WI-798"
 title = "Account tables and per-account homes for every CLI route"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-accounts"
+sr_refs = ["SR-222"]
 needs = ["WI-797"]
 buildtier = "strong"
 safety_class = "ordinary"
@@ -36,9 +37,9 @@ login-isolation check passes.
   Windows show two logins (ch.2 §5). Until it passes, a claude account other than
   the ambient login stays unverified (D-029).
 - Each spine row the README matrix gives this row (LLR-266/267/268, TC-262..265,
-  IF-045, IF-162, IF-245, shared with WI-815; a new LLR for accounts) is amended or
-  added and passes adjudication of that row, on whichever adjudication path is the
-  one path when this row lands. `docs/agents.toml`, `agents.template.toml` and
+  IF-045, IF-162, IF-245, shared with WI-815; a new LLR for accounts with a TC
+  verifying each arm it states) is amended or added and passes adjudication of
+  that row, on whichever adjudication path is the one path when this row lands. `docs/agents.toml`, `agents.template.toml` and
   `docs/agents-enabled` are amended to match.
 - The row's test bar: its affected modules' tests plus the smoke tier at `-n 2`,
   plus a scaffold bootstrap and the claude login-isolation check.

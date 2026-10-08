@@ -26,8 +26,11 @@ might.
 ## Done-when
 
 - A commit that is a merge in progress (MERGE_HEAD present) is judged at the hook
-  on every commit HEAD..MERGE_HEAD against its parents, as the squash landing's
-  squashed commits are, reusing the one text-then-act function.
+  on every commit HEAD..MERGE_HEAD against its parents by the hook's one
+  lane-commit walk, the walk the squash landing already uses, with text-then-act
+  as its first rider, so later per-commit checks ride the same walk.
+- LLR-302's detail and a TC are amended to state the walk, authored with the code
+  and judged at the lane's checkpoint.
 - Tests: a hand merge of a side branch with a mixed commit is refused at the hook;
   a hand merge of a clean side branch passes; the refresh-merge cases stay green.
 - Review bar: A (one cross-family REVIEW-A).

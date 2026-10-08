@@ -30,6 +30,10 @@ hit the Codex plan limit twice.
   (claim base to tip), never a resumed one.
 - Tests: two iteration rounds resume one session; the merge-gating round mints
   fresh and covers the claim base to the tip; dial off changes nothing.
-- SR-227's rows state it and pass adjudication on the one adjudication path.
+- The narrow round's reading scope (the round's delta) is a render of
+  `prompts/reviewer.template.md` through `prompts.py`, the same render the
+  coordinator's reviews use.
+- SR-227 amended to cover the review class, or a new SR; its rows state it and
+  pass adjudication on the one adjudication path.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit.

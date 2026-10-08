@@ -48,6 +48,11 @@ and must never read the file's contents into a log, prompt or commit.
 - Tests: the token path is read, the token is never logged (a canary value
   absent from every log and record), a missing token refuses, and an
   auth-failure call keeps the session.
-- SR-227's rows state it and pass adjudication on the one adjudication path.
+- SR-227's approved clause "retire it at once when a call on it fails" is
+  amended to exclude an authentication failure, and its rows pass in-lane
+  adjudication.
+- The sign-in guidance in the coordinator's procedure skill (`session-protocol`
+  today, `coordinator-cycle` once it lands) describes the token step, not an
+  interactive sign-in.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit.

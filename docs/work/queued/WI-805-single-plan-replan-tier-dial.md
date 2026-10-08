@@ -28,6 +28,8 @@ replan (change 17). The accepted plan is re-shown in every rework brief.
 ## Done-when
 
 - A single row builds only after a gated, critiqued plan.
+- The replan's gate runs `plan_coverage.py --item <spec> --findings <review>`, and
+  the build is refused until every `F#` is covered or excluded with a reason.
 - CR CR yields one replan by the swapped (or, under A1, fresh same-family) session,
   and a third CR tiers up.
 - Dial on: a strong-planned row builds medium with a recorded `tier-reason`; dial

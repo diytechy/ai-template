@@ -176,9 +176,10 @@ against the code.
   resume, the owner reopens the same session, which still holds the lease, or
   releases and takes the lease for a fresh one. If the context-threshold latch
   is also set, reopening the same session needs the owner's recorded clear,
-  because only the blackout drain ends with the clock. The `session-protocol`
-  close-out recipe states these cases, and no longer says every close-out
-  requests a relaunch.
+  because only the blackout drain ends with the clock. The skill that holds
+  the coordinator close-out recipe (`coordinator-cycle` once it lands;
+  `session-protocol` until then) states these cases, and no longer says every
+  close-out requests a relaunch.
 - **The pause point.** It is the last finished step whose evidence is
   committed. A lane whose next step is a review, rework or any launch the
   window refuses stops there, and the handoff names that obligation; the
@@ -234,18 +235,23 @@ against the code.
 - IF-048, the capability listing, is unchanged. A new IF declares the run to
   dev-setup seam: its invocation and its result. IF-157 and IF-158 are amended
   where the arguments or exit behaviour change.
+- The sign-in step authenticates the dedicated home with the owner's
+  long-lived token, per WI-846. It is shared with WI-846's sign-in step:
+  whichever builds first owns it, and the other cites it.
 - dev-setup's check reports the dedicated home's sign-in as signed in,
-  missing or unknown, through WI-835's sign-in probe. It reads the retention dial
+  missing or unknown, through WI-835's sign-in probe (signed in only when the
+  configured token is present and readable, WI-846). It reads the retention dial
   and the home through the kit's own reader (`session_keep.keep_config`) when
   a Python runtime exists. Without one, it reports the sign-in as unknown, and
   the rest of the workstation report still runs.
-- The consent step states what the sign-in command does: it sets the CLI's
-  config-home variable for that one command only, so the sign-in lands in the
-  adjudicator's own home, and the user's normal login and every other
-  repository are left alone. Accepting runs the interactive sign-in. Denying
-  leaves configuration and credentials unchanged.
+- The consent step states what the one-time `claude setup-token` step does: it
+  mints the long-lived token, which the owner keeps in a file at the declared
+  location outside the repository, and the user's normal login and every other
+  repository are left alone. Denying leaves configuration and credentials
+  unchanged.
 - The step appears only while retention is on. `agent-resume.*` gains no
-  check, and a launch with a missing sign-in is refused (WI-835).
+  check, and a launch with a missing or unreadable token is refused (WI-835,
+  WI-846).
 - Tests:
   - a bare run calls the operation once (the macOS delegation included), from
     the root, before the menu, and exits with the step when the runtime stays
@@ -300,7 +306,9 @@ against the code.
     wrap rule), on `keepwarm_minutes` (no ping inside the window), and on
     `context_guard_pct` (the hooks act on an armed window at 0);
   - this repo's `docs/process.toml` comment on `blackout`, to match.
-  Terra authors these rows, and each passes the in-lane adjudication.
+  These rows are authored as one connected change set and judged in one
+  combined sitting at the lane's checkpoint (the in-lane mode on released
+  rungs).
 - The row's test bar: its affected modules' tests plus the smoke tier.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit.

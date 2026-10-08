@@ -3,6 +3,7 @@ id = "WI-799"
 title = "Lane-state provider that derives each lane's state from evidence, representation only"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-lane-state-provider"
+sr_refs = ["SR-156", "SR-144"]
 needs = ["WI-797"]
 buildtier = "strong"
 safety_class = "ordinary"
