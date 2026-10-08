@@ -11,7 +11,7 @@ priority = 8
 ## Context
 
 Filed by hand by the coordinator on 2026-10-08 from the owner's ruling
-([log.d/2026-10-08-owner-ruling-review-threat-model.md](../../log.d/2026-10-08-owner-ruling-review-threat-model.md)).
+([log.d/2026-10-08-owner-ruling-review-threat-model.md](../../../log.d/2026-10-08-owner-ruling-review-threat-model.md)).
 WI-846's lane drew six Codex Sol rounds; the later ones chased reproductions
 that need a fake runner binary or a cwd-dependent shim. The kit already says
 "the threat model is bugs and fail-open, not malice" for forge mode
