@@ -11,3 +11,10 @@ alternative = "Claim WI-855, WI-848 and WI-849 together under one scoped unpause
 reversal_cost = "None to undo: two deletion/restore pairs instead of one, each byte-identical."
 why_not_escalated = "WI-849 is in the sitting's population and the sitting's open question is whether it folds into WI-808; a claimed row cannot be absorbed by the landing's sweep, so claiming it first would pre-empt the verdict. Each batch still runs under one unpause, as the owner directed."
 review = ""
+
+[decision.D-002]
+decided = "The second batch is WI-846 (the long-lived token) and WI-849 (the approval act in the lane), claimed under one scoped unpause, with WI-848 claimed after WI-846 lands, rather than the session prompt's default of WI-848 with WI-849."
+alternative = "Claim WI-848 with WI-849 as the prompt's default scope named, building WI-848 against WI-846's unlanded text."
+reversal_cost = "None to undo: the claims follow the queue's needs edges and the generated frontier."
+why_not_escalated = "WI-855's verdict 003 added WI-848 needs WI-846, so WI-848 is not claimable first; the owner released WI-846 by ruling OI-110 (b) this session, and it heads the frontier at P9. WI-849 stays in the batch as the prompt named."
+review = ""
