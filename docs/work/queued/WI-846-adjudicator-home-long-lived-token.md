@@ -4,6 +4,7 @@ title = "The adjudicator's dedicated Claude home authenticates with a long-lived
 workstream = "process"
 sr_refs = ["SR-227"]
 specref = "docs/log.d/2026-10-06-wave18-coordinator.md"
+needs = ["OI-110"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 9

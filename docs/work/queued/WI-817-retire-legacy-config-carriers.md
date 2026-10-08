@@ -18,7 +18,10 @@ Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design not
 copies, with `config_conflicts`), D2 (approval-dial spellings, keeping
 `dial_from_config`), D3 (`gates =` and retired bar aliases), D4 (raw `[stack] test`),
 D5 (`weak`/`quick`, `Provider`/`Family`, `--provider`) and D6 (CSV/markdown carriers
-and `agents.csv`). `migrate_carrier.py` stays as the one-shot converter. **This
+and `agents.csv`). `migrate_carrier.py` stays as the one-shot converter. D6 also
+retires the carrier consumers WI-841 added after this row was filed: snapshot
+copies authorized by registry identity through `spine_carrier` for TOML, CSV,
+markdown and a carrier conversion (`spine_carrier.tier_carriers`). **This
 forces migration:** adopters still on one-word config or CSV/markdown carriers must
 run the migrators at their next resync; the owner accepted that (README Q-1, "Yes
 forced migration"). It needs WI-798 because both edit IF-045 and `agent_route`.

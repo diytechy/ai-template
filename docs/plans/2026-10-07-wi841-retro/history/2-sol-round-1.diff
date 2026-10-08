@@ -1,0 +1,725 @@
+diff -ruN '--exclude=SKILL.orig.md' drafts-pre-sol/coordinator-cycle/SKILL.md drafts-pre-r2/coordinator-cycle/SKILL.md
+--- drafts-pre-sol/coordinator-cycle/SKILL.md	2026-10-07 17:25:58.829631300 -0500
++++ drafts-pre-r2/coordinator-cycle/SKILL.md	2026-10-07 20:08:48.402874300 -0500
+@@ -1,6 +1,6 @@
+ ---
+ name: coordinator-cycle
+-description: Use when running this template repo as the coordinator — settling a row's scope before it is claimed, cutting a lane, dispatching the builder, the spine author and the cross-family reviewer, adjudicating in the lane, and landing. It is the one per-lane procedure from filing to landing, so a session follows this file instead of a chain of handoffs.
++description: Use when coordinating work in this template repo, from scope critique at filing or minting through lane claims, code iteration, spine checkpoints, independent review and landing.
+ stacks: [any]
+ domains: [any]
+ phases: [dev, gate]
+@@ -10,23 +10,21 @@
+ 
+ # Coordinator cycle (this template repo)
+ 
+-You are the **coordinator**. You claim rows, cut lanes, dispatch the builder,
+-the spine author and the reviewer, verify and commit their work, adjudicate
+-through the entry point, and land. This file is the **procedure**; the
+-current handoff is the **state** (what landed, what is open, what the owner
+-owes). Exact commands, landing steps and environment traps are in
++Use this file as the **procedure** and the current handoff as **state**
++(what landed, what is open, what the owner owes). Read `CLAUDE.md` and
++`docs/status.md` first. Exact commands, landing steps and environment traps are in
+ [references/recipes.md](references/recipes.md). Read it before your first
+ claim and when a step below points there.
+ 
+ Read beside it:
+-- `session-protocol`: the commit bar (§3), the records (§4), the coordinator
+-  close-out (§4) and the commit style (§5).
+-- `spine-authoring`: "In a lane — one change set, authored and judged whole".
+-
+-**When a session learns a correction, it edits this skill or its recipes in the
+-close-out commit, not the handoff.** A correction kept only in a handoff
+-reaches the next session only if that session follows the chain back. That
+-chain grew to twelve files before this skill replaced it.
++
++- [session-protocol](../session-protocol/SKILL.md): commit bar (§3), records
++  and coordinator close-out (§4), commit style (§5).
++- [spine-authoring](../spine-authoring/SKILL.md): "In a lane — one change set,
++  authored and judged whole".
++
++Record procedural corrections in this skill or its recipes at close-out.
++Why: corrections in handoffs force every successor to reconstruct the chain.
+ 
+ ## Roles
+ 
+@@ -34,19 +32,18 @@
+ |---|---|---|
+ | Build | the `kit-builder` agent (Claude Opus, medium) | one per round; leaves its change uncommitted |
+ | Spine author | GPT Terra (`gpt-5.6-terra`, medium) | **one retained session per lane**, resumed each turn |
+-| Code review | Codex 6.1 Sol (`gpt-6.1-sol`, high) | **fresh per review**; it must not remember what it approved |
++| Code review and scope critique | Codex 6.1 Sol (`gpt-6.1-sol`, high) | **fresh per review** |
+ | Adjudication | a retained Claude Opus home, via `coordinator_adjudicate.py` from the lane | the entry point retains it; never a subagent |
+ 
+-No role judges what it authored: Terra authors and Opus judges, Opus builds
+-and Sol reviews. The adjudicator's ruling on a dispute is final.
++Keep judgement independent: Terra authors and Opus judges, Opus builds and
++Sol reviews. Treat the adjudicator's ruling on a dispute as final.
+ 
+ ## 1. Before the claim: settle scope and trust where the row is born
+ 
+-Scope is decided when a row comes into being: filed by hand, or minted from a
+-lane as a successor, a disposition or a split. It is never decided by a guard
+-on a row that already exists. Before such a row can be claimed, one fresh Sol
+-session runs the kit's `prompts/critique.template.md` over its spec and
+-answers two more questions:
++Settle scope when filing a row or minting a successor, disposition or split;
++do not add a lane-size tripwire to an existing row. Before the claim, use one
++fresh Sol session with `project-trajectory/prompts/critique.template.md`
++and the spec, adding these questions (recipe §1):
+ 
+ - **Name each independently landable deliverable, and which lands first.** If
+   the owner keeps several together on purpose, record that in the spec so no
+@@ -59,16 +56,13 @@
+   - **Ruling:** what each consumer does with an absent, unreadable, failed or
+     malformed input, and what the authority binds to.
+ 
+-  The owner confirms or overrules the Ruling like any decision. PROCESS.md §3
+-  "When a guard is owed" is the rule; this section applies it.
+-
+-  Why: WI-841's verdict files gained authority without a stated boundary, and
+-  eight fresh reviews found eight routes around it. The ruling that closed
+-  them (an act's authority comes from the judgement of its own rows) was a
+-  design decision made at gate 7.
+-
+-The spec also names the change set's **anchor**, the approved row the spine
+-change hangs from (`spine-authoring`, "In a lane").
++  Route the Ruling to the owner for confirmation or overrule (§5). Apply
++  `project-trajectory/PROCESS.md` §3, "When a guard is owed".
++  Why: an unstated trust boundary produces separate fixes in every consumer.
++
++Name the change set's **anchor** in the spec: the approved SN or SR it hangs
++from. Label any derived SR with its lens (`spine-authoring` §2(c)). File splits
++and preparatory rows on trunk before claiming them.
+ 
+ ## 2. Claim
+ 
+@@ -78,18 +72,21 @@
+ 
+ ## 3. The lane: intent, iterate, checkpoint
+ 
+-The lane runs in three phases. Code and spine are not worked in alternation:
+-the code settles first, then the spine is written and judged as one set.
+-Alternating them made every code fix re-open its rows. At WI-841 that meant
+-19 sittings, with two LLRs re-attested about eight times each.
++Run intent, iterate and checkpoint. Draft the connected spine set once,
++iterate code, then reconcile and judge the set against settled code.
++Why: alternating code fixes and row re-attestations buys a sitting per fix.
++
++Omit spine authoring and sittings when no new rows, row-text amendments or
++Done-when change are owed; traced-only updates owe no sitting.
+ 
+ ### Intent: once, at the start
+ 
+ 1. The builder builds the first round. You verify, regenerate and commit.
+-2. Terra authors the **whole change set in one turn**, as `Drafted` rows, from
+-   the anchor down: every new and amended row, plus the arms map
+-   (`spine-authoring`, "In a lane"). There is no sitting yet. The rows give the
+-   reviewers the obligations the code is meant to meet.
++2. Dispatch Terra once to author the **whole change set**, from the anchor
++   down, plus the arms map (`spine-authoring`, "In a lane"). Keep new spine
++   rows `Drafted` and existing statuses unchanged; interface rows have no
++   approval status. Verify and commit the set without a sitting yet. These
++   rows give reviewers the obligations the code is meant to meet.
+ 
+ ### Iterate: code only
+ 
+@@ -100,21 +97,22 @@
+ 2. **A narrow Sol review** of the round's delta. The brief asks Sol two things
+    besides the findings, which are the kit reviewer template's two clauses:
+    - name the failure classes this change admits, and hunt those first;
+-   - for each fix that adds a check, say why the defect cannot be made
+-     unrepresentable instead.
+-   Tell Sol that the rows are stale by design until the checkpoint, so it
+-   judges the code only.
++   - for a remedy adding a compensating guard, say why the defect cannot be
++     made unrepresentable instead (the template exempts genuine trust-boundary
++     validation and MINOR wording findings).
++   Keep the spec and Drafted intent as the code's obligations. Tell Sol that
++   row wording is deferred to the checkpoint; send proposed wording changes
++   to the spine change list. Use the prompt overrides in recipe §1.
+ 3. **The sweep table, before any fix.** The builder's first output for a
+    review is a table with one line per finding:
+ 
+    | Finding | Class | Every site of the class (with the grep that found them) | The one owning boundary that ends the class |
+    |---|---|---|---|
+ 
+-   Check the table before dispatching the fix: a class with one site and no
+-   grep is a table that has not been swept. The table goes into the next
+-   review's brief, and that review tries one site the table does not list.
+-   Why: WI-841 fixed the carrier check for TOML, then CSV, then markdown, then
+-   a conversion: four rounds for one class.
++   Check the search evidence before dispatching the fix, even for a class
++   with one site. Carry the table into the next review; ask Sol to try an
++   unlisted site per class, or report that the search found none.
++   Why: an instance fix leaves sibling sites for the next reviewer to find.
+ 4. **Findings are claims.** The builder confirms or refutes each one on the
+    real code path before changing anything. It acts only on verified evidence
+    that no setting or OS retry mitigates.
+@@ -124,41 +122,51 @@
+    preparatory row on trunk, land it as its own lane, and rebase this lane onto
+    it. The §1 Consumers list usually predicts this before the build starts.
+ 6. **Trace fields only.** The builder keeps `Implements:`, the LLR module and
+-   symbols, and the TC evidence current on each commit, so
+-   `check_trajectory --strict` stays green. It appends every row change it
+-   would make to the lane's spine change list. Terra and the adjudicator do not
+-   run in this phase.
++   symbols, and the TC evidence current on each commit. Check structural
++   integrity and trajectory (recipe §1); append proposed row-text changes to
++   the lane's spine change list. Defer spine authoring and sittings to the
++   checkpoint, subject to the Done-when hold below.
+ 7. **A dispute goes to the adjudicator.** A third round of crafted-input
+    findings is a named dispute, not another blind build round.
+ 
++If the lane changes its Done-when, obtain a verdict bound to that exact text
++or an owner ruling before dispatching another build or closing the row.
++Use an early checkpoint if necessary; the ordinary cadence does not release
++this hold (`project-trajectory/PROCESS.md` §4).
++
+ ### Checkpoint: when a narrow round has no BLOCKER or MAJOR
+ 
+ 1. **Terra, resumed, reconciles the whole set** against the settled code: the
+-   accumulated spine change list plus the arms map.
++   accumulated spine change list plus the arms map. Verify, regenerate and
++   commit the reconciled text before composing the sitting.
+ 2. **The closure check passes** before the sitting (`spine-authoring`, "In a
+    lane": parents, the arms, TC-to-LLR-and-SR, interface citations, the strict
+    integrity checks).
+ 3. **One combined sitting** (`--brief combined`) judges every amendment, first
+-   approval and Done-when change together, top-down. Returns go back by kind:
++   approval and Done-when change together, top-down (recipe §1). Carry retired
++   rows into scope explicitly. A parent's return carries its children; have
++   the verdict distinguish children returned only for their chain. Route returns:
+    - spine text goes to Terra;
+    - code goes to the builder;
+    - a byte-exact one-assertion fix you may apply yourself, openly and
+      recorded.
+    A follow-up answered in the lane moves out of `## Dispositions` to another
+-   heading. Re-sit only what came back.
++   heading. Re-sit returned rows and any affected chain or newly changed rows.
+ 4. **The fresh, full-lane Sol gate**, from the lane's trunk base to its tip,
+    reviews code and rows together. If it finds code defects, go back to
+-   iterate, and hold one more checkpoint before landing. Expect two or three
+-   checkpoints per lane.
++   iterate, and hold one more checkpoint before landing. Let findings determine
++   the number of checkpoints.
+ 
+ Before the final gate, restore the trunk-only generated views on the lane
+ (recipes §3). The module-size stamp is the exception: the lane carries it.
+ 
+ ## 4. Land
+ 
+-1. Rebase onto trunk. Never merge-refresh a lane that has committed spine rows.
+-2. Take the act as the lane's last commit: Status flips and the snapshot only,
+-   with the verdicts committed first.
++1. Rebase onto current trunk before the final act. Use recipes §3–§4; if the
++   rebase changes code or authored rows, repeat the affected checkpoint and
++   fresh full-lane gate.
++2. Keep the adjudicator's act as the lane's last **spine** commit: Status flips
++   and the snapshot only, with verdicts committed first. Telemetry may follow.
+ 3. Squash, regenerate, close the row, archive the tips, sweep, and close the
+    re-mint citing the act.
+ 
+@@ -167,28 +175,35 @@
+ 
+ ## 5. Decisions and the owner
+ 
+-Record every call made on the owner's behalf in
++Record calls not already settled by the spec or a ruled item in
+ `docs/decisions/<branch>.toml` (`coordinator-<date>.toml` for calls on trunk),
+ with the riskiest in `high_risk`. Ask the owner to **confirm or overrule**,
+ never to approve. A decision only the owner can make, and that blocks a row,
+ becomes a pending open item cited by the row's `needs`; then move to the next
+-row. Stop for an owner signature on a new need or a frame external crossing.
++row. Stop that row for an owner signature on a new need, a frame external
++crossing or an explicit owner checkpoint. Leave held signatures and open-item
++rulings to the owner, along with push and merge to main.
+ 
+ ## 6. Close-out
+ 
+-Follow `session-protocol` §4, "Coordinator close-out". Add each correction this
+-session learned to this skill or its recipes (see the top of this file). The
+-handoff links the one it replaces and holds state only: what landed, what is
+-open, what the owner owes, and the session prompt.
++Follow [session-protocol §4](../session-protocol/SKILL.md), "Coordinator close-out",
++including the lease handback or relaunch. Record procedural corrections here
++or in the recipes. The handoff links the one it replaces and holds state only:
++what landed, what is open, what the owner owes, and the session prompt.
+ 
+ ## Never
+ 
++These are the irreversible or owner-reserved acts. One line each, because each
++has already been ruled.
++
+ - Push or merge to main. Push is the owner's.
+ - Rule an open item, or sign a held rung or any act reserved to the owner.
+ - Leave `docs/work/pause` deleted.
+-- Read `OWNER_SCRATCHPAD.md`, or the adjudicator's token file. Keep only the
++- Read `OWNER_SCRATCHPAD.md` or the adjudicator's token file. Keep only the
+   token file's path.
+-- Self-review, or adjudicate through a subagent.
++- Self-review, or adjudicate through a subagent. If Codex is rate-limited,
++  wait for its reset. Past two hours unavailable, use a fresh independent Opus
++  reviewer and record the same-family relaxation in the decisions record.
+ - Skip a hook, or add a fallback, degenerate or legacy path. Fix the single
+   point of failure instead.
+ - Change `~/.claude` settings, or install software the handoff does not name.
+diff -ruN '--exclude=SKILL.orig.md' drafts-pre-sol/coordinator-cycle/references/recipes.md drafts-pre-r2/coordinator-cycle/references/recipes.md
+--- drafts-pre-sol/coordinator-cycle/references/recipes.md	2026-10-07 17:25:58.828631400 -0500
++++ drafts-pre-r2/coordinator-cycle/references/recipes.md	2026-10-07 20:08:48.402874300 -0500
+@@ -6,6 +6,16 @@
+ and the coordinator tools in `C:/Projects/ai-template.wt/coordinator-tools/`
+ (untracked; its README documents only part of it).
+ 
++Use **Git Bash** for the commands below. Run kit commands from the checkout
++being operated on: trunk for claims/landings, the lane for authoring and
++adjudication. Substitute placeholders, and set these in each shell:
++
++```bash
++PY=C:/Projects/ai-template/.venv/Scripts/python.exe
++TOOLS=C:/Projects/ai-template.wt/coordinator-tools
++SCRIPTS=project-trajectory/scripts
++```
++
+ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
+ 5 Spine-cell edits · 6 Commits and hooks · 7 Environment and limits ·
+ 8 Re-judge recipes
+@@ -16,59 +26,101 @@
+   lane path and the build prompt. If the type is not listed, use
+   `general-purpose` with `model: "opus"` and have it read
+   `.claude/agents/kit-builder.md`.
++  Override that file's old scratch recipe with the dated root in §7. Grant
++  trace-cell upkeep only during iteration; require the spine change list,
++  the sweep table before fixes and the stop-and-file rule for consolidation
++  outside the spec's surface in every build brief.
+ - **Terra, first turn:**
+-  `bash coordinator-tools/terra_author.sh <lane> <prompt> <out> [effort]`.
+-  - Fill the brief from `terra-spine-prompt.template.md`.
++  `bash "$TOOLS/terra_author.sh" <lane> <prompt> <out> [effort]`.
++  - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
++    the intent or checkpoint instructions from the skill. Its default brief
++    does not request a whole subtree or arms map.
+   - The script runs `codex exec -m gpt-5.6-terra` at medium with the
+-    unelevated sandbox, workspace-write, `--add-dir review-tmp` and
++    unelevated sandbox, workspace-write,
++    `--add-dir C:/Projects/ai-template.wt/review-tmp` and
+     `--skip-git-repo-check`. It exits 3 if HEAD moved.
+   - Note the `session id:` line in its log.
+ - **Terra, resumed.** Run this from the lane directory; `resume` takes no `-s`
+   or `-C`:
+   `codex exec resume <session id> -m gpt-5.6-terra -c model_reasoning_effort="medium" -c 'windows.sandbox="unelevated"' -c 'sandbox_mode="workspace-write"' -c 'sandbox_workspace_write.writable_roots=["C:/Projects/ai-template.wt/review-tmp"]' --skip-git-repo-check -o <out> - < <prompt>`
+-  Keep the quoting exactly as shown. Resuming saves Codex capacity.
+-- **Sol:** `bash coordinator-tools/sol_review.sh <lane> <prompt> <out> [effort=high]`.
+-  - Fill the brief with `mkprompt.py` from `sol-review-prompt.template.md`
++  Keep the quoting exactly as shown.
++- **Sol:** `bash "$TOOLS/sol_review.sh" <lane> <prompt> <out> [effort]`
++  (default high).
++  - Fill `"$TOOLS/sol-review-prompt.template.md"` with
++    `"$PY" "$TOOLS/mkprompt.py" <template> <out> KEY=VALUE ...`
+     (slots WI, SHA, BASE, LANE, SPEC, NOTES, TESTS; an unfilled slot is
+     refused).
++  - Override its old `-n 2` and flat scratch path with `-n 0` and the dated
++    root in §7. For narrow rounds, override "The requirement text itself"
++    with the iterate-phase scope in the skill; retain the spec and Drafted
++    intent as code obligations. At the full-lane gate, judge code and rows,
++    allowing adjudicator Status flips backed by their verdicts and acts.
++    Omit builder self-assessments from NOTES; carry findings and sweep evidence.
++  - Add the kit reviewer template's failure-class and antidote questions,
++    plus the prior sweep table and an unlisted-site probe per class. The local
++    template lacks them. Rendering through `prompts.py` and wiring
++    `plan_coverage.py --findings` are follow-up work, not live gates.
+   - Exit 3 means the reviewer changed the lane; inspect before trusting.
+-  - Read-only sandboxes cannot run Python, which is why the script uses
+-    workspace-write.
++  - The local read-only sandbox probe could not run Python; the launcher
++    therefore uses workspace-write and checks HEAD/status afterwards.
+   - Start each codex call as its own background command. One started in a
+     detached subshell sends no notification.
++- **Scope critique:** fill `project-trajectory/prompts/critique.template.md`
++  with a written scope rubric, the spec/reading recipe and anchor intent in `{brief}`, and
++  the assigned record path in `{verdict}`. Include the skill's two scope/trust
++  questions. This template expects a rubric and artifact recipe; a bare spec
++  is insufficient. Use a fresh Sol session and record the answer before claim.
++- **Closure checks,** from the lane root:
++  `"$PY" "$SCRIPTS/trace.py" --strict-integrity` and
++  `"$PY" "$SCRIPTS/check_trajectory.py" --strict`.
++  These operate on the whole repo; neither accepts a row-set filter. Check
++  the set's parents, TC links, interface citations and arms map separately.
+ - **Adjudication,** from the lane root:
+-  1. Compose the brief: `compose_lane.py WI-NNN <brief> "<ids>" "<srs>" <verdict> <out>`.
++  1. Compose the brief:
++     `"$PY" "$TOOLS/compose_lane.py" WI-NNN <brief> "<ids>" "<srs>" <verdict> <out>`.
+      The classes are `amendment`, `first-approval`, `done-when`, `combined`,
+      `disposition`, `consolidate`, `red-tc` and `rejudge`.
++     For `combined`, `<ids>` is **kind-prefixed**, for example
++     `"amendment:LLR-123;first-approval:SR-234;first-approval:LLR-345;first-approval:TC-456;done-when:WI-NNN"`.
++     Include only kinds actually owed (`amendment`, `first-approval`,
++     `done-when`); `<srs>` is the semicolon-joined SR scope. Single-kind briefs
++     use bare ids. An empty section refuses the entire composition. Include
++     affected chain rows in the appropriate scope and supply the arms map
++     as an additional input; the composer does not generate it.
+   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.
+-  3. Check sign-in: `.venv/Scripts/python.exe project-trajectory/scripts/coordinator_adjudicate.py signin`.
++  3. Check sign-in: `"$PY" "$SCRIPTS/coordinator_adjudicate.py" signin`.
++     Read `signed-in`, `missing` or `unknown`; `signin` itself always exits 0.
++     Leave the verdict path absent: `adjudicate` reserves it exclusively.
+   4. Run in the background, because a call can outlast the 10-minute tool cap:
+-     `C:/Projects/ai-template/.venv/Scripts/python.exe -u project-trajectory/scripts/coordinator_adjudicate.py adjudicate --brief-file <brief> --brief <class> --wi WI-NNN --verdict <path>`
++     `"$PY" -u "$SCRIPTS/coordinator_adjudicate.py" adjudicate --brief-file <brief> --brief <class> --wi WI-NNN --verdict <path>`
+   5. Read the exit code:
+-     - 0: a valid verdict;
++     - 0: a valid verdict (returns can still require rework);
+      - 1: the call failed or the verdict is bad;
+      - 2: refused before launch (for example, run from the primary checkout);
+      - 7: the home is not signed in.
+-  6. After each call, read `out/adjudicator/*.json` (`state`, `pct`,
+-     `reset_reason`).
++  6. After each call, read `C:/Projects/ai-template/out/adjudicator/*.json`
++     (`state`, `pct`, `reset_reason`); the store is under the primary checkout.
+   7. The adjudicator commits its verdict and its act. The entry point commits
+      the telemetry.
+-  - Until WI-846 lands, the home's OAuth refresh fails when headless, and the
+-    owner runs `/login` at each expiry.
+-- **Preview what a merge would mint:** `preview_mint.py <before> [<after>]`.
++  - Check the current handoff for sign-in state. Wave 18 reports headless OAuth
++    refresh failures pending WI-846; the owner runs `/login` at expiry.
++- **Preview spine mints,** from the lane root:
++  `"$PY" "$TOOLS/preview_mint.py" <before> [<after>]`.
++  `<before>` is the lane/trunk merge base; `<after>` defaults to HEAD. This
++  previews amendments and first approvals only, not every sweep outcome.
+ 
+ ## 2. Claiming
+ 
+-1. `coordinator_guard.py take --transcript <path>`. If a stale holder blocks it,
+-   the owner releases it.
++1. `"$PY" "$SCRIPTS/coordinator_guard.py" take --transcript <path>`.
++   If a stale holder blocks it, the owner releases it.
+ 2. Commit the deletion of `docs/work/pause`, carrying the regenerated
+    `docs/open-items.html`. It counts as reviewed when it passes the commit bar
+    and cites the owner's authorization.
+ 3. Confirm HEAD moved. `claim` reads the **working-tree** pause.
+-4. Run `integrate.py claim` for each row. Branch names are single-segment
+-   (`wi-NNN`).
++4. Run `"$PY" "$SCRIPTS/integrate.py" claim --wi WI-NNN --branch wi-NNN`
++   for each row. Branch names are single-segment.
+ 5. Restore the pause byte-identical in the next commit, again with the
+-   regenerated `open-items.html`.
++   regenerated `docs/open-items.html`, even if a claim failed.
+ 
+ The pause gates claims only; acts, landings and sweeps run under it. `claim`
+ refuses a row whose id appears in `status.md`'s hand text, so describe rows
+@@ -79,72 +131,96 @@
+ ## 3. Landing
+ 
+ - **Restore trunk-only views before the final gate.** These are
+-  `PROJECT_STATE.html`, the generated part of `status.md`, `docs/stage`,
+-  `open-items.html`, `components.derived.toml`, `cli-reference.md` and
+-  `interface-reference.md`. While iterating, the hook makes the lane regenerate
+-  them on each commit; restoring them keeps the final range to authored work.
++  `PROJECT_STATE.html`, the generated part of `docs/status.md`, `docs/stage`,
++  `docs/open-items.html`, `docs/requirements/components.derived.toml`,
++  `docs/cli-reference.md` and `docs/interface-reference.md`. Preserve authored
++  status text. The hand path regenerates views during iteration; restoring
++  them keeps the final range to authored work. Normal claimed work branches
++  skip these freshness gates in `check.py`; this is a hand-path convention,
++  not a requirement imposed by every lane commit's hook. Keep the lane's
++  module-size stamp (`linecounts` in `tests/test_module_size_ratchet.py`).
+ - **Rebase, even when trunk moved only by the pause restore.** Text-then-act
+   exempts a squash only of a tip that contains HEAD. Conflicts: §4.
+ - **Complexity on the merged tree:**
+-  - Run `check_complexity --mode enforce`.
++  - Run `"$PY" "$SCRIPTS/check_complexity.py" --mode enforce`.
+   - A module pushed past 1000 SLOC is decomposed, never bumped.
+   - A baseline row that went down is deleted alone from the tab-separated
+     `docs/complexity-baseline`. Never run a full `--restamp`.
+-- **The act:**
++- **The adjudicator's act** (last spine commit; session telemetry may follow):
+   1. Stash the act files.
+   2. Commit the verdicts.
+   3. Pop the stash.
+   4. Commit the act: Status flips and the snapshot only.
+ 
+-  Name CLARITY rows and retired rows in `--reattests`. Sit an amendment and
++  Name CLARITY rows and retired rows in `--reattests`. For held-rung CLARITY
++  re-attests, pass `--verdict <path>` naming the ruling. Sit an amendment and
+   the first approvals of the same registries as one act:
+-  `--approves "<reg>=WI-A+WI-B;..." --reattests ...` (`;` splits, so never put
+-  one in a ref). A traced-only change owes no sitting. If the squash touches
+-  its snapshot, re-anchor it with `intake.py snapshot --approves <registry>=<ref>`.
+-- **Squash,** one per lane. If the lane recorded an owner overrule in
++  `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<reg>=WI-A+WI-B;..." --reattests <comma-joined-ids>`
++  (`;` splits, so never put one in a ref). A traced-only change owes no sitting.
++  If the squash touches
++  its snapshot, re-anchor it with
++  `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`.
++- **Squash** on trunk with `git merge --squash <lane>`, one per lane.
++  If the lane recorded an owner overrule in
+   `docs/decisions`, land two commits: the squash up to the commit before the
+   close, then the close. Ruling-sync needs an open item citing the overrule.
+-- **Regenerate** with `trunk_step.py --regen`. By hand, the traps are:
+-  - pass `--src project-trajectory/scripts` to both `gen_arch_map` forms (a
++- **Regenerate** with `"$PY" "$SCRIPTS/trunk_step.py" --regen`. By hand, the traps are:
++  - pass `--src project-trajectory/scripts` to both `gen_arch_map.py` forms (a
+     bare `--contracts-doc` wipes the interface reference);
+   - regenerate `docs/ratify/CURRENT.md` with
+-    `trace.py --approve modified --out docs/ratify/CURRENT.md`.
++    `"$PY" "$SCRIPTS/trace.py" --approve modified --out docs/ratify/CURRENT.md`.
+ - **Close the row:**
+   - `## Deliverable` comes before `## Context`, because the parser clips
+     everything after Context;
+   - `specref = ""`;
+-  - `spec_move.py <src> docs/archive/work/complete/<name>.md`, never
++  - `"$PY" "$SCRIPTS/spec_move.py" <src> docs/archive/work/complete/<name>.md`, never
+     `--archive`;
+   - scrub the id from `status.md`'s hand text in the same commit;
+-  - keep a hand-filed slug to 37 characters or fewer.
++  - keep hand-filed slugs to the handoff's 37-character ceiling; the kit's
++    spec writer uses a 30-character title prefix (`wi_convert.SLUG_CHARS`).
+ - **RESYNC:** anchor the entry at the landing's parent, never at a lane-only
+   sha. Fold a fix round's entry into its parent entry, and flag forced
+   migrations.
+ - **Archive the tips** to `archive/lanes`, adding the pre-rebase tip the
+   verdicts cite (and any discarded act) as extra parents.
+-- **Sweep:** `intake.py sweep --merged "WI-a;WI-b" --branch <lane> --before <trunk before> --after <landing>`.
++  Read the old tip and archive tree with
++  `git rev-parse archive/lanes "archive/lanes^{tree}"`. Create the archive
++  commit with `git commit-tree <archive-tree> -p <old-archive-tip> -p <rebased-tip> -p <pre-rebase-tip> -F <archive-message>`;
++  add a `-p <discarded-act>` for each discarded act. Record its output id,
++  then run `git update-ref refs/heads/archive/lanes <new-archive-commit> <old-archive-tip>`.
++  Verify the parents with `git show -s --format=%P archive/lanes` before
++  treating the lane as archived.
++- **Sweep:** `"$PY" "$SCRIPTS/intake.py" sweep --merged "WI-a;WI-b" --branch <lane> --before <trunk before> --after <landing>`.
+   `--merged` names every row the landing closed, or other rows' Dispositions
+   are skipped silently. The sweep mints first, so allocate ids only after it.
+ - **The re-mint:** close it citing the act once `cmp` shows the registries
+   equal their anchors. Two minted rows are real work and stay open: an
+   observation re-judge whose trigger fired, and a goalposts row.
++- **Never commit `docs/reviews/rollup/` on a lane.** `trunk_step.py --regen`
++  writes it on trunk at the landing, from the round files the lane brought in.
+ - **Messages:** write each to a file and use `git commit -F <file>`. Never
+   reuse a message file across a lane act and a trunk landing.
+ 
+ ## 4. Rebasing
+ 
+-In a rebase, "ours" is trunk.
++In a rebase, "ours" is the tree already replayed onto trunk; "theirs" is the
++lane commit being replayed.
+ 
+ | File | Take |
+ |---|---|
+ | Generated views | `git checkout --ours`, continue, regenerate once at the end |
+-| Registries | the union of both sides' rows (`toml_merge3.py <branch> <registries...>`), never `--ours`; cross-check a clean line-merge by comparing parsed tables |
+-| `docs/id-watermark` | `--ours`, then `trace.py --bump-ids` |
++| Registries | resolve per table using this replay's base/ours/theirs (`git show :1:<path>`, `:2:<path>`, `:3:<path>`); keep independent changes from both sides and judge same-row conflicts; never take the whole file `--ours` |
++| `docs/id-watermark` | `--ours`, then `"$PY" "$SCRIPTS/trace.py" --bump-ids`; preserve any higher mark for retired lane ids |
+ | RESYNC_PACK | both sides' entries, trunk's first |
+ | Byte-budget skill rows | each side's own row |
+ | `stack.ini`, size-ratchet notes | both sides' notes |
+ | Smoke-ceiling restamp | trunk's note plus the lane's count; restamp only past the ceiling |
+ 
++- **At a trunk squash,** use `"$PY" "$TOOLS/toml_merge3.py" <branch> <registries...>`
++  for registry conflicts; compare parsed tables even after a clean line-merge.
++  It merges merge-base/HEAD/branch, not a rebase replay's three stages. It
++  refuses a per-table conflict, but can already have written other files:
++  inspect its output before staging.
+ - Never merge-refresh a lane with committed spine rows after trunk took an
+   act: registry-integrity refuses the snapshot copies.
+ - Deleting a landed lane's branch raises hold-by-rename errors in other
+@@ -158,7 +234,7 @@
+   dashes; normalize before any snapshot.
+ - Re-read every whole cell a splice touches. Spliced sentences have come back
+   without a verb.
+-- `apply_patch` fails on long one-line cells. Use a guarded Python replace:
++- If `apply_patch` cannot match a long one-line cell, use a guarded Python replace:
+   - read and write with `newline=""`;
+   - assert each old value occurs once;
+   - check with `tomllib` that list cells stay lists.
+@@ -174,20 +250,20 @@
+   "No tie-back" reason.
+ - A row split leaves `Implements:` tags on the old id; retag them in a
+   coordinator commit.
+-- Sandboxed Codex cannot run shallow-clone tests or `git worktree add`, and
+-  hits Windows locks at `-n 2`. Ask for `-n 0` and run the decisive tests
+-  yourself.
++- The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
++  and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
++  decisive tests outside that sandbox before treating them as code defects.
+ 
+ ## 6. Commits and hooks
+ 
+ - Run the smoke tier on every commit, docs-only ones included.
+ - A commit sometimes exits 1 with every hook step passing. Read the hook
+   output and retry with `-F`; never skip the hook.
+-- `approval-fresh` refuses spine-text changes while `docs/ratify/CURRENT.md` is
+-  stale. Regenerate it, and read what it lists, before an act.
+-- `interface-reference` refuses edits to a declared header or contract;
+-  regenerate it.
+-- `skills-sync` drift: run `bootstrap.py --dest . --sync`.
++- On trunk (or `check.py --trunk-lane`), `approval-fresh` refuses a stale
++  `docs/ratify/CURRENT.md`. Regenerate it and read what it lists before an act.
++- Where freshness is gated, `interface-reference` refuses a stale view after
++  a declared header or contract changes; regenerate it.
++- `skills-sync` drift: run `"$PY" "$SCRIPTS/bootstrap.py" --dest . --sync`.
+ - `git add -A <paths>` aborts entirely if one path is missing. `2>/dev/null`
+   hides that, and `staged-divergence` then fails. `components.derived.toml`
+   lives under `docs/requirements/`.
+@@ -196,17 +272,18 @@
+ 
+ ## 7. Environment and limits
+ 
+-- **Codex plan limit:** about 20 sessions in 2.5 hours. A resumed Terra turn
+-  costs less than a fresh session, so plan narrow rounds. At the limit, wait
+-  for the reset; the rollout's error names the reset time.
+-- Set `MSYS_NO_PATHCONV=1`; Git Bash rewrites leading-slash arguments.
+-- **Scratch:** one dated root, `review-tmp/<date>-<session>/`, with one literal
++- **Codex usage limit:** wait for the reset the CLI error names. Retain Terra
++  and keep review rounds narrow; observed session counts are not a quota.
++- Set `export MSYS_NO_PATHCONV=1`; Git Bash rewrites leading-slash arguments.
++- **Scratch:** one dated root, `C:/Projects/ai-template.wt/review-tmp/<date>-<session>/`, with one literal
+   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
+   the root once results are recorded.
+-- **Full suite:** about 4 GB of basetemp. Check `(Get-PSDrive C).Free` first,
++- **Full suite:** past runs used about 4 GB of basetemp. Check `(Get-PSDrive C).Free`
++  in PowerShell first,
+   run from a detached worktree in the background, and delete the basetemp
+   after recording.
+-- The guard's relaunch has not run live. Supervise its first use.
++- Wave 18 carries no live guard-relaunch verification. Check the current
++  handoff and supervise the first unverified use.
+ 
+ ## 8. Re-judge recipes
+ 
+diff -ruN '--exclude=SKILL.orig.md' drafts-pre-sol/spine-authoring/SKILL.md drafts-pre-r2/spine-authoring/SKILL.md
+--- drafts-pre-sol/spine-authoring/SKILL.md	2026-10-07 17:25:58.826630900 -0500
++++ drafts-pre-r2/spine-authoring/SKILL.md	2026-10-07 20:08:48.398876700 -0500
+@@ -96,47 +96,26 @@
+ assesses relevance and adequacy. Optional prose objective anchors explain
+ purpose without adding a registry tier, approval stage or completion percentage.
+ 
+-## In a lane — one change set, authored and judged whole
++## Three ways a spine grows
+ 
+-§1–§3 step a spine that grows from its needs. Each tier is approved before the
+-next is derived from it, because its judgement is the next tier's input. A
+-lane's spine work is a different shape: a found defect or a new scope that
+-hangs from rows already approved. Its whole subtree can be authored in one
+-pass and judged in one sitting, but only if the set is **closed**. An open set
+-converges one missing link per sitting: a child is returned for want of a
+-parent, then a TC for an arm its LLR states.
+-
+-- **Name the anchor first.** This is the approved need or requirement the change
+-  hangs from. If no approved row demands the change, the anchor is a derived
+-  SR (§2(c)). Label it with its lens at the start, not when a child is
+-  returned for want of a parent.
+-- **Author the subtree in one pass.** Include every new and amended row from
+-  the anchor down: the SR, its LLRs, TCs and interface rows, and each
+-  approved row whose text the change makes untrue. Put each tier's questions
+-  below to its rows as you write them.
+-- **Map the arms.** For each LLR, list what it states (each outcome, refusal
+-  and exemption) and the TC clause that verifies each. A TC covering only
+-  some of its LLR's arms is the commonest return, and no lexical check sees
+-  it.
+-- **Close the edges before the sitting.**
+-  - Each row's parent is in the set or already approved.
+-  - Each TC names its LLR and that LLR's SR.
+-  - Each interface row the change adds or alters has a citing TC.
+-  - `scripts/trace.py --strict-integrity` and
+-    `scripts/check_trajectory.py --strict` pass.
+-- **Write the set against settled code.** A row written while the code still
+-  moves is re-judged each time the code does. While the code iterates, keep
+-  only the trace fields current on each commit (`Implements:`, the LLR's
+-  module and symbols, the TC `Evidence`) and list the row changes the code
+-  implies. Write those changes once review has stopped moving the code. This
+-  is the lane-level case of `docs/process.md` §4's "sequence requirement-text
+-  work *into* an open window".
+-- **Judge it in one sitting, top-down.** One combined adjudication (the
+-  `combined` brief) takes the set's amendments, first approvals and any
+-  Done-when change together. Read parents before children. A returned parent
+-  carries its children with it: name in the verdict which children are
+-  returned only for their chain, so they are rewritten with the parent, not
+-  on their own.
++§1–§3 are written for the first breakdown from the vision. A lane's spine
++work has a different shape, and the dial (`human_approval_through`,
++`docs/process.md` §4) splits it in two. Know which one you are in before
++you write a row.
++
++| Mode | What it is | How it is judged |
++|---|---|---|
++| **From the vision** | The first breakdown | Tier by tier: approve each tier before deriving the next, because its judgement is the next tier's input (§1–§3) |
++| **In a lane, released rungs** | A found defect or a new scope below the dial | One change set, authored whole and judged in one sitting |
++| **In a lane, a held rung** | The change reaches a tier the dial holds for a human | The set splits at the dial: the held part waits for the owner |
++
++**In every mode, a child is approved only after its parent.** An SR waits for
++its SN, an LLR for its SR, and a TC for every row it verifies. An approved
++child under a `Drafted` parent claims a chain nobody has blessed.
++
++In a lane, read [references/in-lane.md](references/in-lane.md) before you
++author or judge: how a lane's change set is closed and judged in one sitting,
++and how it splits at a held rung.
+ 
+ ## 1. At SN intake — answer these before the need is approved
+ 
+diff -ruN '--exclude=SKILL.orig.md' drafts-pre-sol/spine-authoring/references/in-lane.md drafts-pre-r2/spine-authoring/references/in-lane.md
+--- drafts-pre-sol/spine-authoring/references/in-lane.md	1969-12-31 18:00:00.000000000 -0600
++++ drafts-pre-r2/spine-authoring/references/in-lane.md	2026-10-07 20:08:48.400874600 -0500
+@@ -0,0 +1,59 @@
++# Spine authoring in a lane
++
++The two lane modes of the `spine-authoring` skill ([../SKILL.md](../SKILL.md),
++"Three ways a spine grows"). Read this before authoring or judging a lane's
++spine change. The tier questions in the skill's §1–§3 still apply to every
++row you write.
++
++## In a lane, released rungs: one change set, authored and judged whole
++
++An open set converges one missing link per sitting: a child is returned for
++want of a parent, then a TC for an arm its LLR states. A closed set is judged
++once.
++
++- **Name the anchor first.** This is the approved need or requirement the
++  change hangs from. If no approved row demands the change, add a derived SR
++  (the skill's §2(c)) under the anchor, labelled with its lens from the start rather than
++  when a child is returned for want of a parent.
++- **Author the subtree in one pass.** Include every new and amended row from
++  the anchor down (SRs, LLRs, TCs and interface rows) and each approved row
++  whose text the change makes untrue. New rows stay `Drafted`; interface rows
++  carry no approval status. Put the skill's tier questions (§1–§3) to its rows as you
++  write them.
++- **Map the arms.** For each LLR, list what it states (each outcome, refusal
++  and exemption) and the TC clause that verifies each. A TC covering only
++  some of its LLR's arms is the commonest return, and no lexical check sees
++  it.
++- **Write the set against settled code.** A row written while the code still
++  moves is re-judged each time the code does. While the code iterates, keep
++  only the trace fields current on each commit (`Implements:`, the LLR's
++  module and symbols, the TC `Evidence`) and list the row changes the code
++  implies. Write those changes once review has stopped moving the code. This
++  is the lane-level case of `docs/process.md` §4's "sequence requirement-text
++  work *into* an open window". A Done-when edit is the exception: it holds the
++  lane's next build until its exact text is blessed, so judge it when it is
++  made.
++- **Close the edges before the sitting.**
++  - Each row's parent is in the set or already approved.
++  - Each TC names its LLR and that LLR's SR.
++  - Each interface row the change adds or alters has a citing TC.
++  - `scripts/trace.py --strict-integrity` and
++    `scripts/check_trajectory.py --strict` pass. They check the whole repo,
++    and neither proves arm coverage; the arms map does.
++- **Judge it in one sitting, top-down.** One combined adjudication (the
++  `combined` brief) takes the set's amendments, first approvals and any
++  Done-when change together. Read parents before children. A returned parent
++  carries its children with it: name in the verdict which children are
++  returned only for their chain, so they are rewritten with the parent, not
++  on their own.
++
++## In a lane, a held rung: split the set at the dial
++
++- **Author the held rows like the rest of the set,** but leave them `Drafted`.
++  They reach the owner through the approval brief, never through the lane's
++  sitting.
++- **Re-attest only what is clarity.** On a held rung the sitting may carry an
++  approved row's amendment over only when it rules the change CLARITY, and
++  says so in the verdict. A MEANING change stays the owner's.
++- **Released children of a held row wait.** They are judged with the lane but
++  approved only once their held parent is, by the rule above.

@@ -1,4 +1,4 @@
-Deferred open items: none — each ruling below is recorded here, and the work it needs is listed as rows for the next coordinator session to file, not as open items.
+Deferred open items: OI-108, OI-109, OI-110, OI-111
 
 ## 2026-10-07 — Owner rulings from the WI-841 retrospective
 
@@ -11,8 +11,9 @@ why it took as long as it did. Two causes were found:
   It writes its own prompts, runs no plan, critique or findings gate, and its
   procedure lives in a chain of handoffs.
 
-The working proposal and the skill drafts are kept outside the repo, under
-`C:/Projects/ai-template-plans/wi-841-retro/`. The owner ruled:
+The working proposal, the skill drafts and their reviews are in
+[`../plans/2026-10-07-wi841-retro/`](../plans/2026-10-07-wi841-retro/README.md).
+The owner ruled:
 
 1. **Spine editing stays in the lane.** The fix is the order inside it: rows
    are drafted once, the code iterates, and the rows are reconciled and judged
@@ -45,6 +46,18 @@ The working proposal and the skill drafts are kept outside the repo, under
 8. **The verdict rollup stays generated on trunk.** A lane never commits it.
 9. **The coordinator's procedure moves into one this-repo skill,**
    `coordinator-cycle`. Handoffs go back to holding state only.
+10. **One authoring model for spine text.** Terra, or another declared author
+    role, does the first authoring pass, and the adjudicator passes judgement.
+    The adjudicator never drafts the text it judges. This re-scopes WI-812,
+    which followed the design's "the adjudicator drafts" (OI-101 Q1's drafting
+    half; README changes 4 and 14, now annotated as superseded).
+
+Four further questions surfaced by the queue reconciliation are filed as open
+items, each cited by the row that waits on it:
+- OI-108, the two-hour relaxation under `ask`'s per-kind routing (WI-801);
+- OI-109, the rollup when the trunk step runs lane-side (WI-800, WI-807);
+- OI-110, where the token-file dial lives (WI-846);
+- OI-111, WI-811's final-review family rule.
 
 Already landed: `bec70dc5` corrects PROCESS.md §4's description of the dial,
 which still called it a 0–4 ordinal, to the `DevStg-*` rung it has been since

@@ -25,6 +25,14 @@ measured against this repository's past consolidations, with the ground truth,
 each method's recall and noise, and a recommendation. It adopts nothing; its
 producing script sits beside it.
 
+Also open for owner ruling:
+[`2026-10-07-wi841-retro/`](2026-10-07-wi841-retro/README.md)
+— the WI-841 retrospective: why the lane took as long as it did. It holds the
+proposal (rows P1–P8 and the guards on spine approval), its reconciliation
+with the queue (§8, with five owner questions), and the reviewed drafts of the
+`coordinator-cycle` and `spine-authoring` skill changes. The owner's rulings
+from it are in the 2026-10-07 log fragment.
+
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
 document the pending review sitting runs from; the 2026-08-15 plan set

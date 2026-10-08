@@ -25,8 +25,9 @@ given:
   judge sees it;
 - the judges' prompt does not carry LLR-099's and LLR-105's scope lines.
 
-The rubric is a declared input of TC-055, so this change fires its trigger and the
-next merge checkpoint mints the re-judge, judged on the corrected rubric.
+The rubric is a declared input of TC-055, but its open re-judge row (WI-831)
+suppresses a second mint while it is open. So WI-831 judges on the corrected
+rubric: run it after this row lands.
 
 ## Done-when
 

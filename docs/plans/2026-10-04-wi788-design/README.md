@@ -115,7 +115,7 @@ critical section, so an expired or cancelled holder cannot land.
 1. **S10 "reviewers never"**: narrowed; the adjudication reviewer is retained (ch.2 §2).
 2. **OI-69 "the dial is the owner's act"**: the template ships retention on (owner's second pass); this repo's dial stays the owner's (ch.2 §2).
 3. **OI-69 (e1)**: per-family homes become per-account homes, retained or not (ch.2 §4).
-4. **S11 §4.6**: the "fresh cross-family review of the act" becomes the retained adjudication reviewer (ch.2 §2); "the adjudicator edits no cell" yields, for spine text only, to "the adjudicator drafts" (ch.4 §7).
+4. **S11 §4.6**: the "fresh cross-family review of the act" becomes the retained adjudication reviewer (ch.2 §2); "the adjudicator edits no cell" yields, for spine text only, to "the adjudicator drafts" (ch.4 §7). **Superseded 2026-10-07** (owner ruling 10, `docs/log.d/2026-10-07-wi841-retro-owner-rulings.md`): an author drafts the spine text and the adjudicator judges; see WI-812.
 5. **S11 §4.1's freshness rung**: replaced by the authority once every writer is covered (ch.4 §2, §8).
 6. **S11 §4.2, §4.7, step 9, the post-merge mint**: a drift reading; ADJUDICATE ranges widen to MINT writes, resolutions and `author` ranges; a squash; the mint before the merge (ch.4 §8).
 7. **R1 and the slot's mint and act refusals**: "only a lane in `ADJUDICATION`, under the authority, mints or acts" (ch.4 §8; LS8 confirmed).
@@ -125,7 +125,7 @@ critical section, so an expired or cancelled holder cannot land.
 11. **RULING-6's audit**: a landing commit whose tree equals its `Lane-Tip`'s attested tree (ch.4 §6).
 12. **RULING-7's verdict gate**: a CHANGES-REQUESTED is cleared by a recorded resolution (ch.4 §4.1).
 13. **"Amend-plus-flip is approval"**: retired everywhere, with PROCESS.md:488 and "re-attest it in this commit" (ch.4 §7).
-14. **The amendment brief's "a judge never amends the row it judges"**: draft, commit alone, approve only on a later unchanged pass (ch.4 §7).
+14. **The amendment brief's "a judge never amends the row it judges"**: draft, commit alone, approve only on a later unchanged pass (ch.4 §7). **Superseded 2026-10-07** (owner ruling 10, `docs/log.d/2026-10-07-wi841-retro-owner-rulings.md`): an author drafts the spine text and the adjudicator judges; see WI-812.
 15. **The independence rule's exceptions**: B10's non-mutating final pass (ch.4 §7) and, under Q-5 (a), the losing drafter's concession (ch.3 §4.4).
 16. **The BuildTier pin and "never downgrade a declared route"**: one sanctioned exception, the Q5 dial (ch.3 §4.8).
 17. **LLR-081's ladder**: the swap carries a replan (ch.3 §4.7).
@@ -309,7 +309,7 @@ graph TD
 | adjudication | <a id="s788-sitting"></a>S788-sitting | `LOCK` to `MERGE_ACTION`, final evidence, exhaustion | landing, text-then-act, session-families, WI-791 | strong | A+B | — |
 | adjudication | <a id="s788-mint"></a>S788-mint | `MINT`, consolidation, station lane | sitting, WI-790 | strong | A+B | — |
 | adjudication | <a id="s788-resolve-ls9"></a>S788-resolve-ls9 | `RESOLVE` and LS9 wording | sitting | medium | A | byte budget |
-| adjudication | <a id="s788-spine-authoring"></a>S788-spine-authoring | The OI-101 Q1 flow | sitting, session-families, mint | strong | A+B | — |
+| adjudication | <a id="s788-spine-authoring"></a>S788-spine-authoring | The OI-101 Q1 flow, re-scoped 2026-10-07: an author drafts, the adjudicator judges | sitting, session-families, mint | strong | A+B | — |
 | planning, late | <a id="s788-dual-pickup"></a>S788-dual-pickup | The dual pickup in a lane; the writer census | plan-kinds, lane-state-provider, mint, WI-790 | strong | A | the no-writer-outside-the-landing census |
 | routes | <a id="s788-usage-pacing"></a>S788-usage-pacing | Weekly-pace account selection within a family (A2) | accounts, ask | strong | A+B | fixture readings for both providers, unreadable, stale, two Claude accounts, model-scoped window, exhausted weekly window |
 | routes | <a id="s788-routes"></a>S788-routes | FreeLLMAPI, Grok, Gemini untested | accounts, ask | medium | A | one live call (Q-3; the FreeLLMAPI row waits on OI-105) |
