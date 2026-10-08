@@ -4,7 +4,7 @@ title = "RESOLVE for disputed findings, and LS9's builder and reviewer wording"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-resolve-ls9"
 sr_refs = ["SR-154"]
-needs = ["WI-809", "WI-805", "OI-111", "WI-860"]
+needs = ["WI-809", "OI-111", "WI-860", "WI-865"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
@@ -30,8 +30,8 @@ author's is preferred (README A1 step 3); the kit's alternative-agent rule
 Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
 `docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
 
-Ordering (coordinator, 2026-10-04, from the pre-execution consolidation check): it
-needs WI-805 too, because the note's matrix amends SR-154 three times "in `needs`
+Ordering (coordinator, 2026-10-04, from the pre-execution consolidation check; the WI-805 edge was DROPPED by the owner on 2026-10-08, see Done-when): it
+needed WI-805 too, because the note's matrix amends SR-154 three times "in `needs`
 order" (WI-801, then WI-805, then this row) and the filed graph did not enforce
 the second step.
 
@@ -53,13 +53,13 @@ the second step.
   case where the preference yields (OI-111 ruled 2026-10-07 (a)).
 - The row's test bar: its affected modules' tests (verdict, brief) plus the smoke
   tier at `-n 2`, plus the byte budget (`AGENTS.template.md`).
-- Absorbed from WI-861 (owner, 2026-10-08, the review-threat-model ruling's rule 2): the coordinator's
-  adjudication entry point carries the same dispute class, so a coordinator lane's contested finding is
-  ruled by the independent adjudicator through the retained session, never a subagent; a finding the
-  builder or coordinator contests, and any finding class reaching its third review round, goes to the
-  dispute sitting before another build round; the ruling's path is recorded in the lane's decisions
-  record, and a dismissed finding is not re-raised to the builder. A dismissal may cite the review threat
-  model (WI-860's PROCESS.md §6 paragraph) as its reason; a high-risk finding is escalated to the owner.
+- The loop's dispute sitting reuses the brief class and verdict grammar WI-865 builds for the
+  coordinator's entry point (owner, 2026-10-08: the coordinator path split out of this row so it
+  does not wait behind WI-809); no second copy of the class.
+- Of WI-811 and WI-805, whichever lands second states in its rows that, in the loop, the third-round
+  dispute sitting comes before WI-805's tier-up build, and the tier-up build answers only upheld
+  findings (the LLR-081 amendment the two rows share; WI-864's sitting, MINOR). The owner dropped this
+  row's `needs` on WI-805 on 2026-10-08: it ordered SR-154's text amendments only, not behaviour.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit; the shipped briefs and
   `AGENTS.template.md` wording change.

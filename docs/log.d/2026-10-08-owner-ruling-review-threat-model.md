@@ -30,7 +30,7 @@ The ruling, as recorded:
    not the coordinator by sending every finding back to the builder. Its
    call is final (OI-103 Q3). A high-risk finding goes to the owner.
 3. **Until the kit carries both** (WI-860 states the threat model in
-   PROCESS.md; WI-811, which absorbed WI-861 the same day, gives the adjudicator its dispute class), the
+   PROCESS.md; WI-865, split out of WI-811 the same day, gives the coordinator's entry point its dispute class, and WI-811 the loop's), the
    coordinator states the out-of-scope class in every reviewer prompt,
    applies rule 1 itself, and records each dismissal in the lane's
    `docs/decisions/<branch>.toml` for the owner to confirm or overrule.

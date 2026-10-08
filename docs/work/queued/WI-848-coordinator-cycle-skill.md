@@ -59,7 +59,7 @@ row after WI-849 or in one batch with it.
   not land, and no recipe makes an interactive sign-in the procedure.
 - The coordinator-cycle review steps carry the 2026-10-08 ruling (`docs/log.d/2026-10-08-owner-ruling-review-threat-model.md`):
   rule 1 by a link to PROCESS.md §6's review threat model, and rules 2 and 3
-  as the procedure that holds until WI-811 lands (the coordinator applies
+  as the procedure that holds until WI-865 lands (split from WI-811 by the owner, 2026-10-08) (the coordinator applies
   rule 1 to each review, records each dismissal in the lane's decisions
   record, and sends a contested or third-round finding to the adjudicator).
   (WI-864's sitting, `docs/reviews/wi-864-adjudicate-review-response-overlap/001-ADJUDICATE-89298d9.md`.)
