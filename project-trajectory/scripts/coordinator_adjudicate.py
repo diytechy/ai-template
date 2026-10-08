@@ -36,8 +36,11 @@ Contract IF-283: the coordinator's adjudication command line, its arguments.
     `docs/agents.toml` named on `docs/agents-enabled`, as an ADJUDICATE call
     of brief class CLASS for WI-N, retained where the `[adjudicator]` dial
     covers it, and writes and commits the call's session log.
-    `signin [--family F] [--root DIR]` reads family F's dedicated home
-    (default ANTHROPIC), creating nothing.
+    `signin [--family F] [--root DIR]` prints the sign-in probe's reading
+    for family F (default ANTHROPIC), creating nothing and making no model
+    call; for ANTHROPIC the reading is whether the long-lived token file the
+    `AGENT_CLAUDE_TOKEN_FILE` environment variable names can be read, never
+    the token or its path.
 
 Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     verdict; 1 for a call that failed, timed out or reported an error result
@@ -279,11 +282,8 @@ def adjudicate(args):
     request = session_service.AdjudicationRequest(
         root=root,
         brief=args.brief,
-        family=row.family,
-        route_id=row.id,
+        route=row,
         wi=args.wi,
-        template=row.cmd_template,
-        env=env,
         deadline=args.timeout,
     )
     try:
@@ -324,7 +324,8 @@ def adjudicate(args):
 
 
 def signin(args):
-    """Print the sign-in probe's reading of a family's dedicated home.
+    """Print the sign-in probe's reading of a family's dedicated home (for
+    Claude, whether its long-lived token file can be read; never the token).
 
     Implements: SR-231, LLR-306
     """
@@ -350,7 +351,11 @@ def _parser():
     run.add_argument("--route", default=DEFAULT_ROUTE)
     run.add_argument("--timeout", type=int, default=session_service.DEFAULT_DEADLINE)
     run.set_defaults(handler=adjudicate)
-    probe = sub.add_parser("signin", help="read a dedicated home's sign-in")
+    probe = sub.add_parser(
+        "signin",
+        help="read a dedicated home's sign-in; Claude's is its long-lived token, "
+        "read from the file the AGENT_CLAUDE_TOKEN_FILE env var names",
+    )
     probe.add_argument("--root", default=".")
     probe.add_argument("--family", default="ANTHROPIC")
     probe.set_defaults(handler=signin)

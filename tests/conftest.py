@@ -1045,6 +1045,37 @@ def _no_loop_marker_leaks():
         os.environ[LOOP_SESSION_ENV] = inherited
 
 
+@pytest.fixture(autouse=True)
+def _no_owner_token_file(monkeypatch):
+    """WI-846: no test reads the owner's real long-lived token. The variable
+    naming its file, and the variable the Claude CLI reads a token from, are
+    removed from every test's environment; a test that needs a token writes a
+    canary file of its own."""
+    monkeypatch.delenv("AGENT_CLAUDE_TOKEN_FILE", raising=False)
+    monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
+
+
+@pytest.fixture
+def retained_runners(tmp_path_factory, monkeypatch):
+    """WI-846: a retained launch is refused unless its runner resolves on the
+    launch `PATH`. This puts do-nothing `claude`, `codex` and `opencode`
+    runners first on the ambient `PATH`, so a test with an injected launch
+    prepares without a real CLI installed (each `--version` prints nothing).
+    Returns the directory."""
+    directory = tmp_path_factory.mktemp("runners")
+    for name in ("claude", "codex", "opencode"):
+        if os.name == "nt":
+            (directory / (name + ".cmd")).write_text(
+                "@echo off\r\nexit /b 0\r\n", encoding="ascii"
+            )
+        else:
+            shim = directory / name
+            shim.write_text("#!/bin/sh\nexit 0\n", encoding="ascii")
+            shim.chmod(0o755)
+    monkeypatch.setenv("PATH", str(directory) + os.pathsep + os.environ["PATH"])
+    return directory
+
+
 def wi_registry_header(columns=10):
     """The first `columns` work-item registry columns, as a fresh list."""
     return list(WI_REGISTRY_COLUMNS[:columns])

@@ -76,9 +76,20 @@ always true.
   worktree root (the primary checkout is refused), naming a verdict path not
   yet written, backgrounded (a call outlasts the shell's 10-minute cap). It
   rides the loop's keep operation and `out/adjudicator/` record, so successive
-  adjudications resume one retained session. Exit 7 means its CLI home is not signed in:
-  `... coordinator_adjudicate.py signin` reads it, and the owner signs in
-  through dev-setup. Never substitute a fresh subagent.
+  adjudications resume one retained session. Its Claude home authenticates
+  with the owner's long-lived token, read at each launch from the file the
+  `AGENT_CLAUDE_TOKEN_FILE` environment variable names; the token is never
+  read into a brief, log or commit. It is the launch's one environment
+  credential: an ambient `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` or
+  cloud-provider switch is left out, and a route declaring one (or `--bare`)
+  is refused. Each retained launch runs the one registry row its caller
+  selected. Settings-file credentials (`apiKeyHelper`, a
+  settings `env` block, a managed gateway) are not checked: keep them out of
+  this repo; store-lock contention is WI-858's.
+  Exit 7 means that token is unset or unreadable, or the route conflicts:
+  `... coordinator_adjudicate.py signin` reads the token, and the remedy is
+  dev-setup's one-time `claude setup-token` step and that variable, never an
+  interactive sign-in. Never substitute a fresh subagent.
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
   only sanctioned stop is the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges

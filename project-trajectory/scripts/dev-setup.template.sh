@@ -180,6 +180,21 @@ if [ "$TIER" = "full" ]; then
   report "IDE (VS Code 'code')" "$(have code && echo 1 || echo 0)" "install an editor; run again with --full to add extensions"
 fi
 
+# The retained adjudicator's long-lived token (WI-846). With [adjudicator]
+# retention on, a retained Claude launch reads its token from the file the
+# AGENT_CLAUDE_TOKEN_FILE environment variable names, and is refused before
+# launch without one. Only a repo that turns retention on needs it, so it is a
+# note, never counted missing. dev-setup never reads, stores or prints the token.
+token_ready() {
+  f="${AGENT_CLAUDE_TOKEN_FILE:-}"
+  [ -n "$f" ] && [ -f "$f" ] && [ -r "$f" ] && [ -s "$f" ]
+}
+if token_ready; then
+  say "  [ok]      retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)"
+else
+  say "  [note]    retained adjudicator token not set — needed only with [adjudicator] retention on: run 'claude setup-token' once, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+fi
+
 say
 if [ -d .venv ]; then
   say "Product toolchain: .venv present (run scripts/setup.sh to refresh)."
@@ -208,6 +223,22 @@ if [ "$TIER" = "full" ]; then
   else
     say "  - IDE: headless/non-interactive; skipped (opt-in, --full only)."
   fi
+fi
+
+# The one-time long-lived token step (WI-846), consented. `claude setup-token`
+# prints the token once; the person keeps it in a file outside the repository
+# and points AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
+if ! token_ready && have claude && interactive; then
+  printf "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N] "
+  read -r ans
+  case "$ans" in
+    [Yy]*)
+      claude setup-token || say "  [warn] claude setup-token did not finish; rerun it when ready."
+      say "  Keep the printed token in a file outside this repository, then set"
+      say "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. in your shell profile)."
+      ;;
+    *) say "  - skipped the token step (needed only with adjudicator retention on)" ;;
+  esac
 fi
 
 # Wire the agent-neutral pre-commit process floor (core.hooksPath) — universal,

@@ -787,6 +787,25 @@ def reported_error(stream):
     return _result_event(stream).get("is_error") is True
 
 
+# The error class claude (2.1.289) tags its synthetic assistant event with when
+# the API refuses the credential (HTTP 401 or 403). Other failures carry other
+# classes: the OAuth-refresh failure of 2026-10-06 was tagged `server_error`.
+AUTH_FAILED = "authentication_failed"
+
+
+def auth_failed(stream):
+    """Whether the runner says its credential was refused: an `assistant`
+    event whose `error` is claude's `authentication_failed`. Such a call
+    failed, but says nothing about the retained session it ran in.
+
+    Implements: SR-227, LLR-270
+    """
+    return any(
+        event.get("type") == "assistant" and event.get("error") == AUTH_FAILED
+        for event, _ in json_events(stream)
+    )
+
+
 def _is_step_finish(event):
     return event.get("type") == "step_finish"
 

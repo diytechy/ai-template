@@ -2663,11 +2663,8 @@ def adjudication_keep(ctx, plan, wi):
             root=ctx.root,
             role=plan["phase"],
             brief=plan.get("brief") or "",
-            family=plan["route_family"] or "",
-            route_id=plan["route_id"] or "",
+            route=ctx.registry.get(plan["route_id"]),
             wi=wi or "",
-            template=plan["tmpl"],
-            env=plan["session_env"],
             prompt_templates=ctx.prompt_templates,
             deadline=ctx.args.session_timeout,
         )

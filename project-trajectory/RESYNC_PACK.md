@@ -7438,6 +7438,65 @@ and a backed approval the act ledger records with no live flip (taking a
 live-approved row's anchoring copy), which the old rung refused as a copy with
 no act. No setting changes.
 
+### The retained Claude home authenticates with a long-lived token [since fa8517a7]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** With `[adjudicator] context_reset_pct` above 0, a retained
+Claude adjudication (on the loop's route, the coordinator's, or a keep-warm
+ping) no longer relies on an interactive sign-in of its dedicated home, whose
+OAuth refresh failed headless. It reads the long-lived token `claude
+setup-token` mints, at each launch, from the file the new
+`AGENT_CLAUDE_TOKEN_FILE` environment variable names, and passes it to the CLI
+as `CLAUDE_CODE_OAUTH_TOKEN`. Nothing about the path is tracked, and the token
+is never written to a log, record or commit. The sign-in probe reads the Claude
+home as `signed-in` only when that file is present, readable and not empty;
+it no longer runs `claude auth status`. An unset variable, or a missing,
+unreadable or empty file, refuses the launch before any lease or home exists,
+naming dev-setup; nothing falls back to OAuth. A call the CLI fails with
+`authentication_failed` is recorded failed but no longer retires the retained
+session: only its lease is released, under the store lock. Store-lock
+contention is not handled by this change (WI-858). Every other failure still
+retires it. The token is the launch's one environment credential: an ambient
+`ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` or `CLAUDE_CODE_USE_BEDROCK`,
+`_VERTEX` or `_FOUNDRY` is left out of a retained Claude launch, and a route
+that declares one, or a `--bare` template, is refused before launch. The
+token's exact value is redacted from the call's live lines and captured
+stream before any log, record or result sees it (verbatim occurrences; a
+re-encoded one only the launched process itself could write). Every retained
+launch, keep-warm pings included, is prepared by one step from the registry
+row its caller selected, and that one row is what is probed for its version,
+launched and accounted (family, template, model and declared variables
+together); the version probe runs the one executable the launch runs,
+resolved once on that row's own `PATH`, and never receives the token (a
+runner not found on that `PATH` is refused before launch, naming it);
+keep-warm never warms a session of another family than its row; on Windows a competing name is
+matched in any letter case, and a declared one is refused whatever its
+value. Settings-file credentials (`apiKeyHelper`, a settings `env` block, a
+managed gateway) are not covered.
+dev-setup reports the token and offers the one-time `claude setup-token`
+step. Nothing changes at the shipped `context_reset_pct = 0`.
+
+**What to do.** Re-sync `scripts/session_service.py`, `scripts/session_keep.py`,
+`scripts/session_adapters.py` and `scripts/coordinator_adjudicate.py`. Merge
+the token report and the consented `claude setup-token` offer from
+`scripts/dev-setup.template.{sh,ps1}` into your own `scripts/dev-setup.*`.
+If your adjudicator retention is on, run `claude setup-token` once, keep the
+token in a file outside the repository, and set `AGENT_CLAUDE_TOKEN_FILE` to
+that file's path in the environment the loop and the coordinator run in;
+until then a retained Claude adjudication is refused (exit 7, NEEDS-HUMAN).
+A retained route whose `env` sets one of those competing variables, or whose
+template carries `--bare`, is now refused: remove it from the route row. So
+is a retained route whose runner is not on its launch `PATH` (the route's
+declared `PATH`, else the ambient one): install it there or declare a `PATH`
+that holds it. A
+caller of your own that builds `session_service.AdjudicationRequest` now
+passes the selected registry row as `route=` in place of `family`,
+`route_id`, `template` and `env`, and one that calls
+`session_service.cli_version` passes the prepared launch
+(`prepare_launch`) in place of a template and an environment.
+The store needs no migration.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

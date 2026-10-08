@@ -140,6 +140,18 @@ try {
     $hooksPath = (git config --get core.hooksPath 2>$null)
     Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") `
         "run -Install, or: git config core.hooksPath .githooks"
+    # The retained adjudicator's long-lived token (WI-846): this repo's
+    # [adjudicator] retention is on, and a retained Claude launch reads its token
+    # from the file AGENT_CLAUDE_TOKEN_FILE names, refused before launch without
+    # one. Never read here.
+    function TokenReady {
+        $f = $env:AGENT_CLAUDE_TOKEN_FILE
+        if (-not $f) { return $false }
+        $item = Get-Item -LiteralPath $f -ErrorAction SilentlyContinue
+        return ($null -ne $item) -and (-not $item.PSIsContainer) -and ($item.Length -gt 0)
+    }
+    Report "retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)" (TokenReady) `
+        "run -Install for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
 
     # Ambient-interpreter debris warning (WI-175 / WI-105). $py above prefers the
     # venv; a bare `python -m pytest` resolves via PATH, which may be a DIFFERENT
@@ -278,6 +290,18 @@ try {
     Write-Host "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
     Offer-Cli "claude" "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
     Offer-Cli "codex" "@openai/codex" "sign in with: codex login"
+    # The one-time long-lived token step (WI-846), consented: `claude
+    # setup-token` prints the token once; nothing here reads, stores or prints it.
+    if ((-not (TokenReady)) -and (Have "claude")) {
+        $ans = Read-Host "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N]"
+        if ($ans -match '^[Yy]') {
+            & claude setup-token
+            Write-Host "  Keep the printed token in a file outside this repository, then set"
+            Write-Host "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. setx AGENT_CLAUDE_TOKEN_FILE <path>)."
+        } else {
+            Write-Host "  Skipped the token step; a retained adjudication is refused until it is done."
+        }
+    }
     if ((-not (Have "claude")) -or (-not (Have "codex"))) {
         Write-Host ""
         Write-Host "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"

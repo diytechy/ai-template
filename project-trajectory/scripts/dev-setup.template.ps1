@@ -126,6 +126,22 @@ if ($tier -eq "full") {
     Report "IDE (VS Code 'code')" (Have "code") "install an editor; run again with -Full to add extensions"
 }
 
+# The retained adjudicator's long-lived token (WI-846). With [adjudicator]
+# retention on, a retained Claude launch reads its token from the file the
+# AGENT_CLAUDE_TOKEN_FILE environment variable names, and is refused before
+# launch without one. Only a repo that turns retention on needs it, so it is a
+# note, never counted missing. dev-setup never reads, stores or prints the token.
+function TokenReady {
+    $f = $env:AGENT_CLAUDE_TOKEN_FILE
+    if (-not $f) { return $false }
+    $item = Get-Item -LiteralPath $f -ErrorAction SilentlyContinue
+    return ($null -ne $item) -and (-not $item.PSIsContainer) -and ($item.Length -gt 0)
+}
+if (TokenReady) { Write-Host "  [ok]      retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)" }
+else {
+    Write-Host "  [note]    retained adjudicator token not set - needed only with [adjudicator] retention on: run 'claude setup-token' once, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+}
+
 Write-Host ""
 if (Test-Path ".venv") { Write-Host "Product toolchain: .venv present (run scripts/setup.ps1 to refresh)." }
 else { Write-Host "Product toolchain: run scripts/setup.ps1 to create .venv + install test tools." }
@@ -148,6 +164,18 @@ foreach ($r in $selected) {
 if ($tier -eq "full") {
     if (Interactive) { MaybeInstall "IDE" $IdeInstall }
     else { Write-Host "  - IDE: headless/non-interactive; skipped (opt-in, -Full only)." }
+}
+
+# The one-time long-lived token step (WI-846), consented. `claude setup-token`
+# prints the token once; the person keeps it in a file outside the repository
+# and points AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
+if (-not (TokenReady) -and (Have "claude") -and (Interactive)) {
+    $ans = Read-Host "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N]"
+    if ($ans -match '^[Yy]') {
+        & claude setup-token
+        Write-Host "  Keep the printed token in a file outside this repository, then set"
+        Write-Host "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. setx AGENT_CLAUDE_TOKEN_FILE <path>)."
+    } else { Write-Host "  - skipped the token step (needed only with adjudicator retention on)" }
 }
 
 # Wire the agent-neutral pre-commit process floor (core.hooksPath) — universal,

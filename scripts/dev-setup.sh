@@ -174,6 +174,14 @@ report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } &&
 # scripts/dashboard-shots/README.md + the render-dashboard-critique skill.
 report "dashboard shots (optional, meta-only)" "$( [ -d scripts/dashboard-shots/node_modules/playwright ] && echo 1 || echo 0)" "cd scripts/dashboard-shots && npm ci && npx playwright install chromium (pinned; dev-only)"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
+# The retained adjudicator's long-lived token (WI-846): this repo's [adjudicator]
+# retention is on, and a retained Claude launch reads its token from the file
+# AGENT_CLAUDE_TOKEN_FILE names, refused before launch without one. Never read here.
+token_ready() {
+  f="${AGENT_CLAUDE_TOKEN_FILE:-}"
+  [ -n "$f" ] && [ -f "$f" ] && [ -r "$f" ] && [ -s "$f" ]
+}
+report "retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)" "$(token_ready && echo 1 || echo 0)" "run --install for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
 
 # Ambient-interpreter debris warning (WI-175 / WI-105). The report above describes
 # ./.venv (PY prefers it), but a bare `python -m pytest` resolves via PATH — which
@@ -303,6 +311,20 @@ echo
 echo "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
 offer_cli claude "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
 offer_cli codex "@openai/codex" "sign in with: codex login"
+# The one-time long-lived token step (WI-846), consented: `claude setup-token`
+# prints the token once; nothing here reads, stores or prints it.
+if ! token_ready && have claude; then
+  printf "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N] "
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      claude setup-token || echo "  [warn] claude setup-token did not finish; rerun it when ready."
+      echo "  Keep the printed token in a file outside this repository, then set"
+      echo "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. in your shell profile)."
+      ;;
+    *) echo "  Skipped the token step; a retained adjudication is refused until it is done." ;;
+  esac
+fi
 if ! have claude || ! have codex; then
   echo
   echo "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"

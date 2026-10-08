@@ -1,0 +1,75 @@
+# docs/decisions/wi-846.toml — the WI-846 lane's delegated decisions (the
+# adjudicator home's long-lived token).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002", "D-001"]
+
+[decision.D-001]
+decided = "Competing credentials (Sol round 1, MAJOR 1): for a token family the launch environment is composed, not overlaid. The ambient higher-precedence credential sources the environment can carry (the cloud-provider switches, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_API_KEY) are dropped and CLAUDE_CODE_OAUTH_TOKEN added; a route that declares one of them, or whose template carries --bare, is refused before launch. Settings-file sources (apiKeyHelper, settings env blocks, a managed gateway sign-in) are not handled, and the bound is stated in the IF-282 contract and the session-protocol text; apiKeySource from the init event is not recorded."
+alternative = "Refuse any launch whose ambient environment carries a competing credential; or read the init event's apiKeySource after launch and fail the call when it is not the token; or leave the overlay as built."
+reversal_cost = "One composition helper and its tuple; a later row can add the post-launch apiKeySource check."
+why_not_escalated = "Composing the credential set makes the ambient case unrepresentable, which is the owner's rule (fix the single point of failure, no fallback). A route's own declared competitor is a contradiction to refuse, not to strip silently. The settings-file residue has no pre-launch remedy short of dropping project settings the kit relies on. Recorded high-risk because a settings-file credential can still outrank the token silently."
+review = ""
+
+[decision.D-002]
+decided = "Echoed token (Sol round 1, MAJOR 2): the captured stream and the live line echo are redacted by the token's exact value at the one call boundary (session_service.act), before final text, usage, metrics, the raw run-log and the record read it. The launched CLI's own transcript in the dedicated home and the model's tool subprocesses (which inherit the environment, and the route skips permission prompts) are left outside this row: neither CLAUDE_CODE_SUBPROCESS_ENV_SCRUB nor the undocumented file-descriptor transport is used, and the bound is stated in the IF-282 contract."
+alternative = "Set CLAUDE_CODE_SUBPROCESS_ENV_SCRUB for the retained launch (its interaction with the route's permission mode is unverified); or pass the token by file descriptor (undocumented, POSIX-only in Python); or file an open item before landing."
+reversal_cost = "One redaction helper; a later row can add either transport once verified."
+why_not_escalated = "Exact-value redaction is genuine trust-boundary validation: the child can print what it holds. The residue is no wider than before this row, when the same model in the same home could read the OAuth credential file. Recorded high-risk because the token sits in an environment a permission-skipping model can read."
+review = ""
+
+[decision.D-003]
+decided = "Lock contention (Sol round 1, MAJOR 3): release-only paths (an authentication failure's lease release and the keep-warm skip) write a lockless release marker first, the tombstone protocol in a release-only mode, applied at once when the lock frees within a second, else by the next locked read before any expired-lease retirement. The same class on keep_bookkeep's ordinary path predates this row and is filed as WI-858 rather than built here."
+alternative = "Catch StoreBusy and retry; or widen this row to make keep_bookkeep durable too."
+reversal_cost = "The marker's release-only mode and its reader; WI-858 builds the ordinary path on it."
+why_not_escalated = "A marker that never waits on the lock makes the contention failure unrepresentable for a release; a retry only narrows it. keep_bookkeep's fix carries the call's observation and reset decision, a wider store-protocol change than this row's surface, and the cycle stops a round on a consolidation outside the spec."
+review = ""
+
+[decision.D-004]
+decided = "Sol round 2's MAJOR 1 (a JSON-escaped or line-split token slips past the exact-value redaction) is answered by a stated bound in the IF-282 contract, not a further redaction pass: the redaction removes verbatim occurrences; no standard encoder (Python json.dumps, Node JSON.stringify) escapes the token's ASCII characters, and a split needs the child to disclose a value it already holds, which D-002 records it can do anywhere."
+alternative = "Redact the decoded event before every decoded-consumer sink as well; or send the disagreement to the adjudicator as a named dispute before building."
+reversal_cost = "A decoded-sink redaction pass can be added later; it would not close base64, reversal or splitting either."
+why_not_escalated = "The builder's evidence shows the forms are adversarial only, and the adversary is the process D-002 already cedes the token to; the contract then states exactly what the guard covers. If the fresh full-lane review re-raises the finding, it becomes a named dispute for the adjudicator."
+review = ""
+
+[decision.D-005]
+decided = "D-003 is superseded by the owner's ruling of 2026-10-08, verbatim 'Move it to WI-858': WI-846 drops the lockless release marker (its release-only mode, the shared marker view and the clock-first ordering exist only for it) and releases an authentication failure's lease under the store lock, as before round 2; store-lock contention on every path is WI-858's. The three Codex Sol rounds' contention findings are WI-858's test list. Round 1 MAJOR 3: the store lock held across an authentication-failure call made StoreBusy escape and left the lease, and once it expired the next call retired the session 'lease expired unreleased' and minted afresh. Round 2 MAJOR 4: a release-only marker published under contention made due_routes skip the record, so keep-warm never applied it. Round 2 MAJOR 5: a locked reader that read the marker before a release was published retired the expired lease anyway. Round 3 MAJOR 2: a reader holding an older marker unlinked a newer release published while it held the lock, without applying it, and the current session was retired."
+alternative = "Keep the marker in WI-846 and give release markers distinct identities consumed by identity (another build and review round); or send the class to the adjudicator as a named dispute."
+reversal_cost = "The removed marker code is reachable in the lane's history (5493eccd, ea3fa3f7) and in archive/lanes once the lane lands."
+why_not_escalated = "The owner ruled it directly when asked; this entry records what the coordinator did under that ruling and keeps the findings WI-858 must answer."
+review = ""
+
+[decision.D-006]
+decided = "Codex Sol round 4's three MAJOR findings (the route snapshot split between selection, preparation, keep-warm and the version probe) were sent back to the builder as a precise design (prepare_launch takes the selected row and never rereads the registry), not to the adjudicator as a named dispute, although it is the third round on the launch-preparation class."
+alternative = "Name a dispute for an independent adjudicator, as the cycle asks at a third round of crafted-input findings."
+reversal_cost = "One more build round; if round 5 draws the class again, it goes to the adjudicator."
+why_not_escalated = "Nothing is in dispute: builder and reviewer agree on the principle (one selected snapshot), and round 4 implemented round 3's direction the wrong way round to avoid touching agent_loop. The coordinator entry point also has no dispute brief class (a gap for the handoff). Recorded so the owner can overrule the deviation."
+review = ""
+
+[decision.D-007]
+decided = "Codex Sol round 5's two MAJORs (the version probe resolving its executable from the ambient PATH, and the probe receiving and persisting the credential) were sent back to the builder as a precise construction (Prepared carries the one resolved executable; the probe runs with the credential withheld), not to an adjudicator, although D-006 said a repeat of the class would go to one."
+alternative = "Name a dispute for an independent adjudicator, as D-006 recorded."
+reversal_cost = "One adjudicator sitting and possibly one more build round."
+why_not_escalated = "Nothing is in dispute: Sol named the exact invariant (one executable resolution shared by probe and launch) and the builder has not contested it; the coordinator entry point still has no dispute brief class. The second finding is a round-5 regression, not the class."
+review = ""
+
+[decision.D-008]
+decided = "A retained launch whose runner does not resolve on the composed launch PATH is refused at preparation, before any lease or record, with the same SigninRefused the competing-credential and --bare refusals raise, naming the runner and whether the PATH searched is the route's declared one or the ambient one; Prepared.executable is then always an absolute path, and neither the probe nor the launch has an empty-executable branch. Tests prepare with do-nothing runners first on PATH (the shared retained_runners fixture), never by bypassing the resolution. Surfaced, not built: the family-level sign-in status probe (a status command such as codex login status) still resolves its runner over the ambient PATH; it takes no route row, and a follow-up could have require_signin take the Prepared launch."
+alternative = "Leave Prepared.executable empty for an unresolved runner: the probe runs nothing and the launch keeps the template's bare name (the round-6 first build), where Windows CreateProcess searches the parent's path."
+reversal_cost = "The refusal in _resolve_executable and the test fixture; the empty branch would return in the probe and the argv substitution."
+why_not_escalated = "The owner's standing rule settles it: fix the single point of failure, never add a fallback or degenerate path. The bare-name launch was exactly the split Sol round 5's MAJOR 1 named, and test convenience is not a reason to keep it."
+review = ""
+
+[decision.D-009]
+decided = "Codex Sol round 6's MAJOR 1 (a fake runner that reads the token file and prints it as its version) and MAJOR 2 (the ambient environment changed between planning and launch; a cwd-dependent version shim) were dismissed as out of scope under the owner's 2026-10-08 review-threat-model ruling, with no code built for them; MAJOR 3 (the unsubstituted `{model}` executable, a regression of supported behaviour) was fixed. MINOR 2 (D-007's escalation) is answered by the same ruling: the adjudicator's dispute class is filed as WI-861."
+alternative = "Build the single prepared launch context (environment and cwd carried once) and parse the stored version, as the coordinator proposed before the ruling."
+reversal_cost = "One build round adding the shared context and a version parser."
+why_not_escalated = "The owner ruled the class directly (docs/log.d/2026-10-08-owner-ruling-review-threat-model.md): both reproductions need a compromised or contrived host."
+review = ""
+
+[decision.D-010]
+decided = "Answering the checkpoint adjudicator's draft 2 (001-ADJUDICATE-6553682), keep_abandon's tombstone protocol, the second-holder lock exclusion and the no-leftover-file assertions were RESTORED to LLR-270 and TC-267, rather than moved into rows WI-858 owns; only new store-lock contention work is stated as WI-858's."
+alternative = "Move the tombstone protocol and its assertions into rows WI-858 files, as the draft also allowed."
+reversal_cost = "A row-text move when WI-858 is built."
+why_not_escalated = "The protocol predates WI-846 and is built and tested; WI-858 is queued and authors no rows yet, so moving it would leave built behaviour unspecified until then. D-005's owner ruling moves contention work, not the existing guarantee's text."
+review = ""

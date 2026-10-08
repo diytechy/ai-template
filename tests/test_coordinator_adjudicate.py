@@ -27,6 +27,10 @@ from conftest import ROOT, load_script
 
 cli = load_script("coordinator_adjudicate")
 svc = cli.session_service
+
+
+# Every retained launch here prepares with a resolvable runner (WI-846).
+pytestmark = pytest.mark.usefixtures("retained_runners")
 keep = svc.session_keep
 
 ROUTE = "ANTHROPIC-OPUS-STRONG"
@@ -126,10 +130,16 @@ def _inputs(tmp_path, dial=50):
 
 
 @pytest.fixture
-def launched(monkeypatch):
+def launched(monkeypatch, tmp_path):
     """The launch and the telemetry commit replaced: each launch writes a
-    valid amendment verdict and returns the queued stream (10% by default)."""
+    valid amendment verdict and returns the queued stream (10% by default).
+    The retained Claude home's long-lived token is a canary file outside the
+    repository (WI-846; tests/test_adjudicator_token.py tests it)."""
     seen = {"argv": [], "env": [], "streams": []}
+    token = tmp_path / "token" / "claude-token"
+    token.parent.mkdir()
+    token.write_text("canary-token", encoding="utf-8")
+    monkeypatch.setenv(svc.TOKEN_VARIABLES["ANTHROPIC"][0], str(token))
 
     def run(argv, root, timeout, **kw):
         seen["argv"].append(list(argv))
@@ -270,11 +280,27 @@ def test_a_missing_or_malformed_verdict_is_reported_and_fails(
 # --- the loop's route composes the same request (TC-322) -------------------------
 
 
+# The row the loop selected for PLAN's route (the loop's own registry).
+LOOP_ROW = SimpleNamespace(
+    id="ANTHROPIC-ROUTE",
+    family="ANTHROPIC",
+    model="claude-opus-5-5",
+    tier="strong",
+    cmd_template=TEMPLATE,
+    env="X=1",
+)
+
+
 def _loop_ctx(root, templates=None, timeout=60):
+    """A loop context whose registry, the snapshot the loop selects from,
+    holds the repository's rows (when the root has them) and LOOP_ROW."""
+    agents = Path(root) / "docs" / "agents.toml"
+    registry = cli.agent_route.load_registry(agents)[0] if agents.exists() else {}
     return SimpleNamespace(
         root=root,
         prompt_templates=templates or {},
         args=SimpleNamespace(session_timeout=timeout),
+        registry={**registry, LOOP_ROW.id: LOOP_ROW},
     )
 
 
@@ -311,12 +337,9 @@ def test_the_loop_composes_the_same_keep_request_as_before(
     shipped = ["ADJUDICATE-AMENDMENT", "ADJUDICATE-DISPOSITION", "ADJUDICATE-RED-TC"]
     assert seen == [
         {
-            "template": TEMPLATE,
-            "env": {"X": "1"},
+            "route": LOOP_ROW,  # the row the loop selected, carried whole
             "role": "ADJUDICATE",
             "brief": "disposition",
-            "family": "ANTHROPIC",
-            "route_id": "ANTHROPIC-ROUTE",
             "wi": "WI-7",
             "rows": {},
             "template_paths": [
@@ -357,15 +380,6 @@ def _home(root, family):
 @pytest.mark.parametrize(
     "family,code,text,expected",
     [
-        ("ANTHROPIC", 0, '{"loggedIn": true, "authMethod": "claude.ai"}', "signed-in"),
-        (
-            "ANTHROPIC",
-            1,
-            '{\n  "loggedIn": false,\n  "authMethod": "none"\n}',
-            "missing",
-        ),
-        ("ANTHROPIC", 0, "not json at all", "unknown"),
-        ("ANTHROPIC", 0, '{"authMethod": "none"}', "unknown"),
         ("OPENAI", 0, "Logged in using ChatGPT\n", "signed-in"),
         (
             "OPENAI",
@@ -389,9 +403,7 @@ def test_the_probe_reports_signed_in_missing_or_unknown(
 
     assert svc.signin_status(tmp_path, family, run=run) == expected
     argv, env = seen[0]
-    assert argv[:2] == (
-        ["claude", "auth"] if family == "ANTHROPIC" else ["codex", "login"]
-    )
+    assert argv[:2] == ["codex", "login"]  # Claude's home reads its token file
     assert argv[-1] == "status"
     variable = keep.HOME_VARIABLES[family]
     assert env[variable] == str(home)
@@ -399,12 +411,12 @@ def test_the_probe_reports_signed_in_missing_or_unknown(
 
 @pytest.mark.parametrize("error", [OSError, TimeoutError, ValueError])
 def test_a_probe_that_fails_or_times_out_reports_unknown(tmp_path, error):
-    _home(tmp_path, "ANTHROPIC")
+    _home(tmp_path, "OPENAI")
 
     def run(argv, env):
         raise error("boom")
 
-    assert svc.signin_status(tmp_path, "ANTHROPIC", run=run) == "unknown"
+    assert svc.signin_status(tmp_path, "OPENAI", run=run) == "unknown"
 
 
 def test_the_probe_resolves_the_home_without_creating_it(tmp_path):
@@ -502,12 +514,6 @@ def test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route():
         ("OPENAI", 0, "Logged in using ChatGPT\nLogged in using ChatGPT"),
         ("OPENAI", 0, "  Logged in using ChatGPT"),
         ("OPENAI", 0, "WARNING: other\nLogged in using ChatGPT"),
-        ("ANTHROPIC", 2, '{"loggedIn": true}\nfatal: status unavailable'),
-        ("ANTHROPIC", 1, '{"loggedIn": true}'),
-        ("ANTHROPIC", 0, '{"loggedIn": true}\nfatal: status unavailable'),
-        ("ANTHROPIC", 0, '{"loggedIn": 1}'),
-        ("ANTHROPIC", 0, '{"loggedIn": [true]}'),
-        ("ANTHROPIC", 0, '{"loggedIn": false}'),
     ],
 )
 def test_an_undocumented_probe_answer_is_unknown(tmp_path, family, code, text):

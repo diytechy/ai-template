@@ -156,6 +156,16 @@ def _validate_prompt_transport(argv, stdin_input, env=None, platform=None):
         raise ValueError(error)
 
 
+def substitute(token, model, prompt):
+    """One command-template token with `{model}` and `{prompt}` substituted:
+    the one substitution a template's tokens take, for the launch argv
+    (`build_argv`) and for the runner a launch resolves before it runs.
+
+    Implements: SR-146, LLR-163
+    """
+    return token.replace("{model}", model).replace("{prompt}", prompt)
+
+
 def build_argv(template, model, prompt):
     """Build the session argv from a CmdTemplate and decide how the prompt is
     delivered. Returns `(argv, stdin_input)`:
@@ -179,7 +189,7 @@ def build_argv(template, model, prompt):
     for tok in split_cmd(template):
         if "{prompt}" in tok:
             saw_prompt = True
-        argv.append(tok.replace("{model}", model).replace("{prompt}", prompt))
+        argv.append(substitute(tok, model, prompt))
     stdin_input = None if saw_prompt else prompt
     _validate_prompt_transport(argv, stdin_input)
     return argv, stdin_input

@@ -23,6 +23,10 @@ keep = load_script("session_keep")
 adapters = load_script("session_adapters")
 common = load_script("agent_common")
 
+
+# Every retained launch here prepares with a resolvable runner (WI-846).
+pytestmark = pytest.mark.usefixtures("retained_runners")
+
 GOLDEN = Path(__file__).parent / "golden" / "sessions"
 TEMPLATES = {
     "ANTHROPIC": "claude -p --model {model} --output-format stream-json --verbose",
@@ -35,6 +39,17 @@ STREAMS = {
     "OPENCODE": "opencode-run-json.jsonl",
 }
 ON = keep.KeepConfig(context_reset_pct=50, keepwarm_minutes=50)
+
+
+@pytest.fixture(autouse=True)
+def _claude_token(monkeypatch, tmp_path):
+    """A canary long-lived token for the retained Claude home (WI-846), so a
+    planned keep or a keep-warm ping launches; tests/test_adjudicator_token.py
+    tests the token itself."""
+    token = tmp_path / "token" / "claude-token"
+    token.parent.mkdir()
+    token.write_text("canary-token", encoding="utf-8")
+    monkeypatch.setenv(svc.TOKEN_VARIABLES["ANTHROPIC"][0], str(token))
 
 
 def _fixture(name):
@@ -69,8 +84,41 @@ def _call(tmp_path, family, kept, runner, role="ADJUDICATE"):
     )
 
 
+ROUTE_ROWS = "".join(
+    '[agent.{f}-ROUTE]\nfamily = "{f}"\nmodel = "m"\nversion = "1"\n'
+    'tier = "strong"\ncmd_template = "{t}"\nenv = ""\nnotes = "test row"\n\n'.format(
+        f=family, t=template
+    )
+    for family, template in TEMPLATES.items()
+)
+
+
+def _route(tmp_path, family="ANTHROPIC", route_id=None):
+    """The registry row a test's caller SELECTED: read once from the test's
+    registry (`ROUTE_ROWS`, written here unless the test wrote its own)."""
+    registry = Path(tmp_path) / "docs" / "agents.toml"
+    if not registry.exists():
+        registry.parent.mkdir(parents=True, exist_ok=True)
+        registry.write_text(ROUTE_ROWS, encoding="utf-8")
+    rows = svc.agent_route.load_registry(registry)[0]
+    return rows.get(route_id or family + "-ROUTE")
+
+
+def _prepared(tmp_path, family="ANTHROPIC", route_id=None):
+    """The validated launch every retained Keep carries (WI-846): one helper,
+    so a test builds its Keeps the way the session service does, from the
+    selected row."""
+    return svc.prepare_launch(tmp_path, _route(tmp_path, family, route_id))
+
+
+def _warm_prepare(tmp_path):
+    """`take_warm_lease`'s `prepare` for a test's ANTHROPIC route."""
+    return lambda route_id: (_prepared(tmp_path, route_id=route_id), "")
+
+
 def _keep(tmp_path, cfg, family="ANTHROPIC", wi="WI-1", brief="disposition", **kw):
     kw.setdefault("lease_wait", 0)
+    kw.setdefault("prepared", _prepared(tmp_path, family))
     return keep.keep_for(
         tmp_path,
         cfg,
@@ -121,11 +169,9 @@ def test_at_dial_zero_an_adjudication_launches_exactly_as_a_fresh_session(
     kept = svc.plan_keep(
         tmp_path,
         keep.KeepConfig(),
-        template=TEMPLATES["ANTHROPIC"],
+        route=_route(tmp_path),
         role="ADJUDICATE",
         brief="disposition",
-        family="ANTHROPIC",
-        route_id="ANTHROPIC-ROUTE",
         wi="WI-1",
     )
     assert kept is None and ran == []  # nothing minted, no version read
@@ -165,8 +211,13 @@ def test_the_dispatcher_keeps_nothing_warm_at_dial_zero(tmp_path):
 def _loop_ctx(root):
     from types import SimpleNamespace
 
+    _route(root)  # the registry the loop selects from
+    registry = svc.agent_route.load_registry(Path(root) / "docs" / "agents.toml")[0]
     return SimpleNamespace(
-        root=root, prompt_templates={}, args=SimpleNamespace(session_timeout=60)
+        root=root,
+        prompt_templates={},
+        args=SimpleNamespace(session_timeout=60),
+        registry=registry,
     )
 
 
@@ -450,20 +501,19 @@ def test_the_runner_version_is_read_for_a_retained_launch(tmp_path, monkeypatch)
         calls.append(argv)
         return SimpleNamespace(returncode=0, stdout="2.1.266 (Claude Code)\n")
 
+    _prepared(tmp_path)  # the route's registry row
     monkeypatch.setattr(svc.subprocess, "run", fake_run)
     monkeypatch.setattr(svc, "signin_status", lambda root, family: "signed-in")
     kept = svc.plan_keep(
         tmp_path,
         ON,
-        template=TEMPLATES["ANTHROPIC"],
+        route=_route(tmp_path),
         role="ADJUDICATE",
         brief="disposition",
-        family="ANTHROPIC",
-        route_id="ANTHROPIC-ROUTE",
         wi="WI-1",
         lease_wait=0,
     )
-    assert calls and calls[0][-1] == "--version"
+    assert any(argv[-1] == "--version" for argv in calls)
     assert kept.cli_version == "2.1.266 (Claude Code)"
 
 
@@ -489,7 +539,7 @@ def test_the_loop_folds_the_adjudication_template_into_the_governing_inputs(
     monkeypatch.setattr(
         al.session_service, "signin_status", lambda root, family: "signed-in"
     )
-    (tmp_path / "docs").mkdir()
+    _prepared(tmp_path)  # the route's registry row
     (tmp_path / "docs" / "process.toml").write_text(
         "[adjudicator]\ncontext_reset_pct = 50\n", encoding="utf-8"
     )
@@ -527,7 +577,12 @@ def test_an_adjudication_waits_out_a_keep_warm_lease_then_runs_unretained(
 ):
     _adjudicate(tmp_path, ON, _claude_stream(10))
     ping, reason = keep.take_warm_lease(
-        tmp_path, ON, now=10**10, work_pending=True, holder="keep-warm:x"
+        tmp_path,
+        ON,
+        now=10**10,
+        work_pending=True,
+        holder="keep-warm:x",
+        prepare=_warm_prepare(tmp_path),
     )
     assert ping is not None and reason is None
     assert _keep(tmp_path, ON, lease_wait=0) is None  # never races the ping
@@ -557,6 +612,7 @@ def _first_calls(tmp_path, count=2):
 def test_two_concurrent_first_calls_mint_one_session_and_run_one_unretained(
     tmp_path, capsys
 ):
+    _route(tmp_path)  # the registry exists before the two calls race
     kept = _first_calls(tmp_path)
     minting = [k for k in kept if k is not None]
     assert len(kept) == 2 and len(minting) == 1  # one mints, one is refused
@@ -678,7 +734,12 @@ def test_keep_warm_skips_a_session_an_adjudication_holds(tmp_path):
     _adjudicate(tmp_path, ON, _claude_stream(10))
     assert _keep(tmp_path, ON) is not None  # an adjudication takes the lease
     ping, reason = keep.take_warm_lease(
-        tmp_path, ON, now=10**10, work_pending=True, holder="keep-warm:x"
+        tmp_path,
+        ON,
+        now=10**10,
+        work_pending=True,
+        holder="keep-warm:x",
+        prepare=_warm_prepare(tmp_path),
     )
     assert ping is None and reason.startswith("the session is leased to adjudicate:")
 
@@ -972,7 +1033,12 @@ def test_take_warm_lease_reads_one_clock_per_decision(tmp_path, monkeypatch):
     _lease_to_other(tmp_path, start + 0.5)
     _split_clock(monkeypatch, start)
     ping, reason = keep.take_warm_lease(
-        tmp_path, ON, now=10**10, work_pending=True, holder="keep-warm:x"
+        tmp_path,
+        ON,
+        now=10**10,
+        work_pending=True,
+        holder="keep-warm:x",
+        prepare=_warm_prepare(tmp_path),
     )
     assert ping is None  # the session is never leased to the ping
     assert _state(tmp_path)["lease"]["holder"] != "keep-warm:x"

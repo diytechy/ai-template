@@ -59,20 +59,32 @@ Contract IF-248: the keep call surface the session service composes.
     role, brief, route_id)` says whether the operation covers a call;
     `keep_for(root, cfg, role=, brief=, family=, route_id=, wi=, rows=,
     cli_version=, template_paths=, template_texts=, lease_seconds=,
-    lease_wait=)` returns the `Keep` an adjudication resumes or mints, holding
-    the route's lease, or None when the layer does not apply or the lease stays
-    held past `lease_wait`; `keep_argv(adapter, argv, keep)` is the resume or
-    mint argv; `keep_bookkeep(root, keep, minted, outcome)` folds a finished
-    call in, applies the reset rules, releases the lease and returns the
-    `session-gen` and `reset-reason` columns and, with a codex observation
-    supplied as `compaction=`, `compacted` and `compaction-source`;
-    `keep_abandon(root, keep,
-    reason)` retires the session of a launch that raised, through a tombstone
+    lease_wait=, prepared=)` returns the `Keep` an adjudication resumes or
+    mints, holding the route's lease, or None when the layer does not apply or
+    the lease stays held past `lease_wait`. Every `Keep` carries its
+    `prepared` launch (the session service's `prepare_launch`), a REQUIRED
+    field, so no retained launch can be built unvalidated; `keep_argv(adapter, argv, keep)` is the resume or
+    mint argv; `keep_bookkeep(root, keep, minted, outcome, reported_error=,
+    *, compaction=, auth_failed=)` folds a finished call in, applies the reset
+    rules, releases the lease and returns the `session-gen` and `reset-reason`
+    columns and, with a codex observation supplied as `compaction=`,
+    `compacted` and `compaction-source`; with `auth_failed` (the runner
+    refused the credential) it changes nothing but releasing the call's lease
+    (`keep_release`) and returns the session's generation (blank for a mint)
+    and an empty `reset-reason`. `keep_abandon(root, keep, reason)` retires
+    the session of a launch that raised, through a tombstone
     (`<record>.retire`, written whole without the lock) that every locked read
-    applies first (`load_honoured`) when the lock cannot be had at once;
-    `take_warm_lease(root,
-    cfg, now=, work_pending=, holder=)` returns `(keep, reason)` for the next
-    due keep-warm ping, `reason` naming why a due ping cannot run now.
+    applies first (`load_honoured`) when the lock cannot be had at once.
+    `keep_release(root, keep)` releases the call's lease UNDER the store lock
+    and leaves its session's record as it was (a first mint's lease-only
+    record is removed); store-lock contention is not handled here (WI-858).
+    `take_warm_lease(root, cfg, now=, work_pending=, holder=, prepare=)`
+    returns `(keep, reason)` for the next due keep-warm ping, `reason` naming
+    why a due ping cannot run now; `prepare(route_id)` returns `(prepared,
+    reason)` and is asked under the lock before any lease is taken, so a
+    refused ping holds nothing; a prepared row whose family differs from the
+    record's session is refused there too (`_prepare_warm`), and a warmed
+    Keep takes the prepared row's family and home.
 """
 
 import hashlib
@@ -349,13 +361,39 @@ def _apply_tombstone(root, record, tomb):
     """
     if tomb.get("session_id") and record.get("session_id") == tomb["session_id"]:
         _retire(record, tomb.get("reason") or "session unusable")
-    if (record.get("lease") or {}).get("holder") == tomb.get("holder"):
+    return _drop_lease(root, record, tomb.get("holder"))
+
+
+def _drop_lease(root, record, holder):
+    """Drop `holder`'s lease from `record`, then save it; a lease-only record
+    left with no lease is removed instead (a first mint stored nothing).
+    Returns what remains. Callers hold `store_lock`.
+
+    Implements: SR-227, LLR-270
+    """
+    if (record.get("lease") or {}).get("holder") == holder:
         record.pop("lease", None)
     if is_lease_only(record) and "lease" not in record:
         store_remove(root, record)
         return None
     store_save(root, record)
     return record
+
+
+def keep_release(root, keep):
+    """Release the call's lease under the store lock and leave its session's
+    record as it was: the end of a call whose failure says nothing about the
+    session (the runner refused its credential). A first mint's lease-only
+    record is removed, so the next call mints. Store-lock contention is not
+    handled here (WI-858): it raises StoreBusy as the ordinary bookkeeping
+    does.
+
+    Implements: SR-227, LLR-270
+    """
+    with store_lock(root):
+        record = load_honoured(root, keep.family, keep.route_id)
+        if record is not None:
+            _drop_lease(root, record, keep.holder)
 
 
 def store_save(root, record):
@@ -525,7 +563,10 @@ def is_clear_point(rows, judged, current):
 class Keep:
     """One call's hold on a retained session: which route, the session it
     resumes (an empty `session_id` mints), what it judges, the lease it
-    holds, and the dedicated home its launch runs under."""
+    holds, the dedicated home its launch runs under, and its `prepared`
+    launch: the session service's validated environment and credential
+    (`session_service.prepare_launch`), REQUIRED, so no retained launch can be
+    built without that validation; never stored, logged or shown in a repr."""
 
     family: str
     route_id: str
@@ -533,6 +574,7 @@ class Keep:
     wi: str
     governing: str
     cfg: KeepConfig
+    prepared: object = field(repr=False)
     holder: str = ""
     cli_version: str = ""
     generation: int = 0
@@ -620,8 +662,10 @@ def keep_for(
     template_texts=(),
     lease_seconds=7500,
     lease_wait=120.0,
+    prepared,
 ):
-    """The retained session an adjudication resumes or mints, or None.
+    """The retained session an adjudication resumes or mints, or None. The
+    Keep carries `prepared`, the call's validated launch.
 
     None, touching nothing, when the layer does not apply: the dial is off,
     the role is not ADJUDICATE, the brief is not a retained class, or no route
@@ -665,6 +709,7 @@ def keep_for(
                         (family, route_id, wi, governing, cli_version),
                         rows,
                         (holder, clock + lease_seconds),
+                        prepared,
                     )
         except StoreBusy:
             busy = "the store lock"
@@ -679,7 +724,7 @@ def keep_for(
         time.sleep(1.0)
 
 
-def _hold(root, cfg, record, subject, rows, lease):
+def _hold(root, cfg, record, subject, rows, lease, prepared):
     """Apply the pre-launch rules, take the lease `(holder, until)`, and
     build the Keep. A route with no record gets a lease-only one, so the
     first mint holds the lease as every later call does."""
@@ -702,6 +747,7 @@ def _hold(root, cfg, record, subject, rows, lease):
         wi=wi or "",
         governing=governing,
         cfg=cfg,
+        prepared=prepared,
         holder=holder,
         cli_version=version or "",
         generation=record.get("generation", 0),
@@ -763,16 +809,29 @@ def _unusable(outcome, reported_error):
 
 
 def keep_bookkeep(
-    root, keep, minted, outcome, reported_error=False, *, compaction=None
+    root,
+    keep,
+    minted,
+    outcome,
+    reported_error=False,
+    *,
+    compaction=None,
+    auth_failed=False,
 ):
     """Fold one retained call into its record, under the store lock, and
     decide its reset: an unusable session (a non-zero exit, a timeout, an
     error the runner reported) retires at once; one whose occupancy reached
     the dial drains. Releases the lease. Returns the call's `session-gen` and
-    `reset-reason` columns.
+    `reset-reason` columns. A call whose credential the runner refused
+    (`auth_failed`) failed, but not its session: only its lease is released
+    (`keep_release`), and the record stays as it was.
 
     Implements: SR-227, LLR-270
     """
+    if auth_failed:
+        keep_release(root, keep)
+        generation = keep.generation if keep.session_id else ""
+        return {"session-gen": generation, "reset-reason": ""}
     m = outcome.metrics
     with store_lock(root):
         current = load_honoured(root, keep.family, keep.route_id)
@@ -868,6 +927,44 @@ def keep_abandon(root, keep, reason):
 # --- keep-warm --------------------------------------------------------------------
 
 
+def _prepare_warm(prepare, route_id, record):
+    """`(prepared, reason)` for a due record's ping: the route's prepared
+    launch, refused when `prepare` refuses it or when the prepared row names
+    another family than the record's session, which is then never warmed
+    (one family's session never runs under another family's home).
+
+    Implements: SR-227, LLR-270
+    """
+    prepared, refused = prepare(route_id)
+    if not refused and prepared.family != record.get("family"):
+        refused = "route {} now names family {}; its {} session is not warmed".format(
+            route_id, prepared.family, record.get("family")
+        )
+    return prepared, refused
+
+
+def _warm_keep(root, cfg, record, holder, prepared):
+    """The Keep a keep-warm ping launches under: the leased record's session,
+    under the prepared row's family and home (`_prepare_warm` has matched
+    them).
+
+    Implements: SR-227, LLR-270
+    """
+    return Keep(
+        family=prepared.family,
+        route_id=record.get("route_id") or "",
+        session_id=record.get("session_id") or "",
+        wi="",
+        governing=record.get("governing_hash") or "",
+        cfg=cfg,
+        prepared=prepared,
+        holder=holder,
+        cli_version=record.get("cli_version") or "",
+        generation=record.get("generation", 0),
+        home_env=dedicated_home_env(root, prepared.family),
+    )
+
+
 def keepwarm_due(record, cfg, now, work_pending):
     """Whether a keep-warm ping is due: the dial and `keepwarm_minutes` are
     on, the session is ANTHROPIC's (the only family whose prompt cache lives
@@ -907,14 +1004,16 @@ def due_routes(root, cfg, now, work_pending):
 
 
 def take_warm_lease(
-    root, cfg, *, now, work_pending, holder, routes=None, lease_seconds=600
+    root, cfg, *, now, work_pending, holder, prepare, routes=None, lease_seconds=600
 ):
     """`(keep, reason)` for the next due keep-warm ping. `keep` holds the
     route's lease, so no adjudication resumes the session while the ping
     runs; `reason` names why a due ping cannot run now (the lease or the lock
-    is held). `(None, None)` when nothing is due. With `routes`, only those
-    route ids are considered (a route the registry no longer lists is never
-    pinged).
+    is held, or `prepare(route_id)`, which returns `(prepared, reason)` and
+    is asked under the lock BEFORE any lease is taken, refused the launch:
+    nothing is then held, so nothing needs releasing). `(None, None)` when
+    nothing is due. With `routes`, only those route ids are considered (a
+    route the registry no longer lists is never pinged).
 
     Implements: SR-227, LLR-270
     """
@@ -937,23 +1036,12 @@ def take_warm_lease(
                 busy = _lease_held(record, holder, clock)
                 if busy:
                     return None, "the session is leased to {}".format(busy)
+                prepared, refused = _prepare_warm(prepare, route_id, record)
+                if refused:
+                    return None, refused
                 record["lease"] = {"holder": holder, "until": clock + lease_seconds}
                 store_save(root, record)
-                return (
-                    Keep(
-                        family="ANTHROPIC",
-                        route_id=route_id,
-                        session_id=record.get("session_id") or "",
-                        wi="",
-                        governing=record.get("governing_hash") or "",
-                        cfg=cfg,
-                        holder=holder,
-                        cli_version=record.get("cli_version") or "",
-                        generation=record.get("generation", 0),
-                        home_env=dedicated_home_env(root, "ANTHROPIC"),
-                    ),
-                    None,
-                )
+                return _warm_keep(root, cfg, record, holder, prepared), None
     except StoreBusy:
         return None, "the store lock is held"
     return None, None
