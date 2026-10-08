@@ -2,7 +2,7 @@
 id = "WI-864"
 title = "adjudicate review-response overlap [af015cc7e32a]: WI-805;WI-811;WI-847;WI-848;WI-852;WI-853;WI-854;WI-860"
 workstream = "process"
-specref = ""
+specref = "docs/log.d/2026-10-08-owner-ruling-review-threat-model.md"
 buildtier = "strong"
 priority = 9
 safety_class = "adjudication"
