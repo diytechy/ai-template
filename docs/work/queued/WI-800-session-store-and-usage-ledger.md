@@ -4,7 +4,7 @@ title = "One session store with durable invocations, the usage ledger and the sp
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-session-store"
 sr_refs = ["SR-222", "SR-227"]
-needs = ["WI-798", "WI-799", "OI-109"]
+needs = ["WI-798", "WI-799", "OI-109", "WI-851"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
@@ -47,6 +47,8 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   WI-810; a new LLR for the ledger with a TC verifying each arm it states) is
   amended or added and passes adjudication of that row, on whichever adjudication
   path is the one path when this row lands.
+- Its LLR-246 amendment follows WI-851's state rule; it adds no per-writer
+  held-status arm.
 - OI-109 ruled 2026-10-07 (a): under the station authority, the lane-side trunk
   step produces the tree that lands, so the verdict rollup it writes is trunk's.
   The rollup step stays in the one trunk step; a lane outside the authority never

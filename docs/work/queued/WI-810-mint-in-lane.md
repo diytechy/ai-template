@@ -4,7 +4,7 @@ title = "MINT in the lane: one allocator, the consumption list and station lanes
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-mint"
 sr_refs = ["SR-215", "SR-220"]
-needs = ["WI-809", "WI-821"]
+needs = ["WI-809", "WI-821", "WI-851", "WI-852"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
@@ -38,6 +38,8 @@ folds the census into the mint step on top of that rule.
 - A settled amendment is never minted.
 - A merge re-judge is minted in the lane.
 - An exhausted lane's upheld findings become its successor's Done-when.
+- A minted successor passes the scope critique (ruling 2's two questions,
+  rendered by WI-852) before it can be claimed.
 - A coordinator's filing lands through a station lane.
 - Sequential sittings never collide on an id.
 - `adjudicate-consolidate` folds into the MINT brief.
@@ -46,6 +48,8 @@ folds the census into the mint step on top of that rule.
   shared with WI-800 and WI-807; a new consumption-completeness row; LLR-265,
   TC-261 and IF-244 retired with `sweep`) is amended, added or retired and passes
   in-lane adjudication.
+- Its LLR-246 amendment follows WI-851's state rule; it adds no per-writer
+  held-status arm.
 - The row's test bar: its affected modules' tests (intake, consolidate) plus the
   smoke tier at `-n 2`; no extra bar is named.
 - Review bar: A+B (REVIEW-A plus an independent REVIEW-B).

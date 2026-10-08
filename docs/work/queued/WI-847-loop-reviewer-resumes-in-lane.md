@@ -4,6 +4,7 @@ title = "The loop's reviewer resumes within a lane's iteration, and the merge-ga
 workstream = "process"
 sr_refs = ["SR-227"]
 specref = "docs/log.d/2026-10-06-wave18-coordinator.md"
+needs = ["WI-852"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5

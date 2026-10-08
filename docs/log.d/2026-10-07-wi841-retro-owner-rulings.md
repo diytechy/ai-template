@@ -98,3 +98,8 @@ into the rows that cite it, in the registry's verbatim form:
 OI-110 stays pending. The owner prefers (b), an environment variable naming
 the token file, and asked how the path is held today: it is in no tracked
 file, only in the coordinator's local agent memory outside the repository.
+
+At the owner's direction the retrospective's rows were then filed as WI-848 to
+WI-854 (P1 to P7, with P8 folded into WI-852). The queued rows that waited on
+their ids were updated to cite them, and one consolidation sitting was run
+with them in the queue.

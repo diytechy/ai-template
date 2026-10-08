@@ -4,7 +4,7 @@ title = "The station authority, lane-side claims and cancellation"
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-station-authority"
 sr_refs = ["SR-170"]
-needs = ["WI-799", "WI-800", "OI-109"]
+needs = ["WI-799", "WI-800", "OI-109", "WI-851"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
@@ -47,6 +47,8 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   row with a TC verifying each arm it states; LLR-137 shared with WI-800; LLR-246
   shared with WI-800 and WI-810) is amended or added and passes adjudication of
   that row, on whichever adjudication path is the one path when this row lands.
+- Its LLR-246 amendment follows WI-851's state rule; it adds no per-writer
+  held-status arm.
 - OI-109 ruled 2026-10-07 (a): under the station authority, the lane-side trunk
   step produces the tree that lands, so the verdict rollup it writes is trunk's.
   The rollup step stays in the one trunk step; a lane outside the authority never

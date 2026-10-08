@@ -36,6 +36,9 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   (`last_impl_family`, `last_build_family`) are deleted.
 - `ask` deletes WI-835's entry point and moves its callers and tests to the
   adjudicate kind.
+- The coordinator's briefs reach `ask` as WI-852's rendered prompt files; this
+  row deletes `coordinator_adjudicate.py` and adds no other coordinator
+  launcher.
 - A WI-688-shaped test passes: a build run outside the loop excludes its family
   from the judge.
 - An `ask.py` call writes a log and carries the note; S9's reader covers CRITIQUE

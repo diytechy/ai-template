@@ -4,7 +4,7 @@ title = "One landing per lane on both paths, with the tip archived and the recor
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-landing"
 sr_refs = ["SR-225"]
-needs = ["WI-807", "WI-801", "WI-818"]
+needs = ["WI-807", "WI-801", "WI-818", "WI-849", "WI-851"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
@@ -48,6 +48,10 @@ is small and ready, so it lands first and this row's record check reads its
   finished by the next tick.
 - A close that owes a record and has none is refused on either path.
 - The gap's log fragment records the range and the count.
+- The landing runs the shared lane-commit walk (WI-828) on both paths, so
+  text-then-act and WI-851's held-rung state check judge every lane commit; a
+  coordinator lane carrying acts lands through WI-849's verdict-backed
+  approval-act rung.
 - Each spine row the README matrix gives this row (SR-225; LLR-140 `--no-ff`;
   LLR-284, TC-294, IF-080, IF-154, IF-186; IF-173 shared with WI-799) is amended and
   passes adjudication of that row, on whichever adjudication path is the one path

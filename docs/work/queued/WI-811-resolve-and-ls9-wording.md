@@ -40,6 +40,8 @@ the second step.
 - A fully dismissed CHANGES-REQUESTED lands with no re-review.
 - An `uphold` returns the lane.
 - `[ADVICE]` is not counted in `findings=N`.
+- A finding the builder disputed and the adjudicator resolved counts as
+  covered for WI-853's findings gate, citing the resolution.
 - The rework brief, `prompts/reviewer.template.md` and `AGENTS.template.md:172-176`
   carry ch.4 §9's wording.
 - Each spine row the README matrix gives this row (SR-154's final-resolution

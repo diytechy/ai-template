@@ -450,6 +450,21 @@ direction the queue was already heading, and several P-rows overlap it.
 | P7 tier questions in briefs | **File**, before WI-812 | Same templates |
 | P8 rollup reads coordinator reviews | **Fold into P5** | Once coordinator reviews are written as kit round files, the generator sees them. WI-816 retires the legacy hand-rollup window, so slot landings for coordinator lanes need P5 first |
 
+**Filed, 2026-10-07** (owner direction), in the shape the table gives:
+
+| Row | Filed as |
+|---|---|
+| P1 | WI-848 |
+| P2 | WI-849 |
+| P3 | WI-850 |
+| P4 | WI-851 |
+| P5 (with P8 folded in) | WI-852 |
+| P6 | WI-853 |
+| P7 | WI-854 |
+
+The edits that needed these ids are applied in the same commit. A consolidation
+sitting follows with them in the queue.
+
 ### 8.2 Queued rows that need an edit
 
 **Applied in this commit:** `docs/status.md` (the PROCESS.md dial follow-up,
