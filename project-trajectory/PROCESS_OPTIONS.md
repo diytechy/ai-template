@@ -437,43 +437,55 @@ harness is the bar everywhere; a red check is a red check.
 *Referenced from PROCESS.md §4.* The dial above says **which rungs** a human
 still accepts. It never said **who acts** on the rungs it releases, and for a
 single-lane repo the question does not arise — the session that authors a row
-is the only session there is. It arises the moment work runs in parallel lanes,
-and the owner ruled it (2026-09-01):
+is the only session there is. It arises the moment work runs in parallel lanes.
+The owner ruled it (2026-09-01) and widened where the act may be taken (ruling 6,
+2026-10-07, superseding the earlier trunk-side clause):
 
 > The approval act on a spine row — the `Status` flip `Drafted` → `Approved`
 > (and on to `Founded`), and the `docs/archive/last_approved/` copy that anchors
-> it — belongs to an **adjudicator**, performed on the **serial trunk side**,
-> never to the worker lane that authored the row.
+> it — belongs to an **independent adjudicator**, never to the session that
+> authored the row. It may be taken **in the authoring lane or on trunk**.
 
-Two reasons, and both are properties of the lane rather than of the model
+Two reasons, and both are properties of the session rather than of the model
 driving it:
 
 - **Context.** Approving a row means reading its whole chain — the parent
   requirement, the sibling decomposition rows, the tests that claim to cover
-  it — and deciding the row belongs where it sits. One work item does not hold
-  that chain; it holds its own scope, which is the point of scoping it.
-- **Concurrency.** Two lanes touching the spine conflict at merge, and the
-  approval snapshot must not move across a workstream — a lane that re-anchors
-  the record seals whatever text happened to be live in *its* tree. A
-  trunk-side act, taken while nothing else claims, cannot do either.
+  it — and deciding the row belongs where it sits. The authoring session holds
+  its own scope; the adjudicator's brief carries the chain.
+- **Independence.** The writer does not judge its own writes. An act is admitted
+  only when an accepted verdict judged that act's rows, and the snapshot copies
+  only the registries those rows sit in, so an act cannot seal text nobody
+  judged. **Independence is established by route, and that is its honest
+  bound:** a verdict's binding (`<verdict>.requested`) records `accepted` only
+  when the adjudication route writes it, after running the adjudication as its
+  own separate session; the merge reads that record and nothing else. A
+  hand-written valid verdict beside a hand-written binding recording `accepted`
+  clears the rung, and no session identity is compared. Binding a verdict to
+  its judging session, and refusing one from the session that authored the
+  rows, is not built yet.
 
 **The division of labour, in full:**
 
-| | A worker lane | An adjudication |
+| | The authoring session | An independent adjudicator |
 |---|---|---|
 | Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
 | Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
-| Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). A flip in the lane's delta refuses the merge. | Yes, on the rungs the dial releases, in its own reviewed commit. |
+| Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its accepted verdict over exactly those rows, in the authoring lane or on trunk. |
 | Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
 | Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; on a released rung a *meaning* verdict is followed by its own re-attestation in the same session, on a held rung the row goes to the owner. |
-| Concurrency | Runs beside other lanes; may not hold the spine. | Runs alone, so two acts cannot overlap. |
+| Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. |
 
 **How it is held.** Three mechanisms, none of them a new detector:
 
-1. The merge slot REFUSES a worker branch whose spine delta flips a `Status`
-   into `Approved`/`Founded`, mints a row already claiming one, or writes the
-   snapshot directory. It reads the same two-tree spine diff the amendment
-   trigger already reads, so a row cannot be invisible to both.
+1. The merge slot REFUSES a branch whose spine delta flips a `Status` into
+   `Approved`/`Founded`, mints a row already claiming one, records one
+   approved in its act ledger, or re-attests one, unless every such act is backed by an accepted verdict among the branch's
+   bindings that judged that act's own rows; it names each unbacked act and
+   why. The copies must match the acts: each flip carries its registry's copy,
+   and a copy of a registry no act moved is refused (WIDENED). It reads
+   the same two-tree spine diff the amendment trigger already reads, so a row
+   cannot be invisible to both.
 
    **"Spine" here is SN/SR/LLR/TC — all four tiers**, needs included: a need is
    a spine row, and `DevStg-Reqs` is the rung the human-approval dial most often
@@ -498,9 +510,9 @@ driving it:
    lane's merge would hand its adjudicator every unapproved row in the tree, and
    the snapshot would move across workstreams the concurrency reason above says
    it must not.
-3. An adjudication row is not `ordinary`, so the coordinator already runs it as
-   an exclusive lane. The concurrency guarantee is a property the machinery had
-   before this ruling; the ruling is what points the act at it.
+3. An adjudication row is not `ordinary`, so the coordinator runs it as an
+   exclusive lane, and its `Adjudicates` cell bounds every act of any lane
+   that claims it besides.
 
 **What this is not.** It is not a change to the dial or to which rungs are
 human-held — a held rung still surfaces to the owner exactly as before, and the

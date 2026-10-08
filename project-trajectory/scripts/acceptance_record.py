@@ -80,14 +80,17 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     amendment reader exempts, over the WIDER `APPROVAL_ACT_CSVS` universe that
     adds the SN tier — and `staged_drafted_rows` returns the rows a lane
     added, amended, or moved into `Drafted`. `lane_approval_refusal(root, base, head)`
-    is the judgement over the first: the text refusing a work branch that
-    performs the approval act, or None. It fails CLOSED on an unreadable
+    words the refusal of a delta writing the approval record with no act a
+    verdict could back, or None. It fails CLOSED on an unreadable
     snapshot delta, the opposite pole from its readers' silent degrade, because
     a refusal is where the conservative direction belongs. All four share
     `_spine_row_sides`, so no reader can be the only one that sees a row.
-    `merge_approval_refusal(root, base, head, metas, adjudication, *, trunk)`
-    is the merge slot's one call: a lane's delta through `lane_approval_refusal`, an
-    adjudication's flips through its first-approval scope, and its
+    `merge_approval_refusal(root, base, head, metas, *, trunk)`
+    is the merge slot's one call: every lane's acts through
+    `backed_act_refusal` - each backed by an accepted verdict over its own rows
+    (owner ruling 6, 2026-10-07) - a record written with no act through
+    `lane_approval_refusal`, and, when any claimed row in `metas` records a
+    scope, the flips through its first-approval scope besides, and its
     re-attestations — read from the act ledger entries the delta added — through
     `reattest_scope_refusal`, which refuses by name every re-attested row
     outside the `Adjudicates` scope of the amendment rows the lane claims, and
@@ -713,10 +716,11 @@ def staged_approval_acts(root, base="HEAD", head=None):
     a need is the worst case of this act rather than an exempt one (round 028).
     The three OFF-SPINE registries stay out; see `OUTSIDE_THE_APPROVAL_ACT`.
 
-    Owner ruling 2026-09-01 (WI-572): the act this reports is the ADJUDICATOR's,
-    performed on the serial trunk side. `approval_delta` directly below reads it
-    ONCE for `merge_approval_refusal`, which applies either the ordinary-lane ban
-    or the adjudication row's recorded scope at `integrate._approval_act_refusal`
+    Owner ruling 6, 2026-10-07 (WI-849): the act this reports is an independent
+    adjudicator's, in the authoring lane or on trunk. `approval_delta` directly
+    below reads it ONCE for `merge_approval_refusal`, which requires every act
+    backed by an accepted verdict over its own rows, and an adjudication row's
+    recorded scope besides, at `integrate._approval_act_refusal`
     — this reader does not itself cross the `IF-091` seam, and the seam does not
     declare that it does.
 
@@ -807,14 +811,11 @@ def approval_delta(root, base, head):
 
 def first_approval_scope(metas):
     """The typed scope of claimed first-approval rows (a combined sitting's
-    `first-approval:` tokens included), or None when none scopes one."""
+    `first-approval:` tokens included), read through `kitlib.sitting`'s one
+    claimed-row reader, or None when none scopes one."""
     scopes = [_kitsitting.brief_scope(meta, "first-approval") for _name, meta in metas]
     scopes = [scope for scope in scopes if scope is not None]
-    if not scopes:
-        return None
-    if any(scope is False for scope in scopes):
-        return frozenset()
-    return frozenset(rid for scope in scopes for rid in scope)
+    return frozenset(r for s in scopes for r in s) if scopes else None
 
 
 def _registry_identity(path):
@@ -827,105 +828,189 @@ def _registry_identity(path):
     return next(hits, path)
 
 
-def adjudication_approval_refusal(scope, delta, reattested=frozenset()):
-    """Refuse a first-approval act that exceeds its recorded row scope. A
-    registry copy is WIDENED unless the act flipped a row there or re-attested
-    one (`reattested`, the registries `_reattested_registries` names), so the
-    sections of one combined sitting each keep their own act (WI-841). Both
-    sides compare REGISTRY IDENTITY (`_registry_identity`), so every carrier
-    path of an authorized registry is its act's own - the obsolete carrier's
-    copy a conversion deletes included."""
-    acts, snapshot_files, refusal = delta
+def _registries_holding(root, head, ids):
+    """`{row id: approval-act registry}` for each of `ids` some approval-act
+    registry holds at `head`; an id none holds is absent.
+
+    Implements: SR-178, LLR-278"""
+    found = {}
+    for rel, col in APPROVAL_ACT_CSVS if ids else ():
+        for rid in set(ids) & set(_spine_rows_at(root, head + ":", rel, col)):
+            found.setdefault(rid, rel)
+    return found
+
+
+def lane_acted_set(root, base, head, delta):
+    """THE ONE DERIVATION OF A LANE'S ACTED SET (WI-849, Sol r3): `(acted,
+    refusal)`, `acted` being `{"approve": {row id: registry}, "reattest": {row
+    id: registry}}` - every row the lane approved or re-attested, with the
+    registry that holds it. Approvals are the delta's live Status transitions
+    (a flip or a row born approved) AND the `approved` rows of the act-ledger
+    entries the branch added (`_added_acts`), which name rows the snapshot
+    writer carried into approval with no live flip - a row live-approved at
+    the base whose recorded copy still read below it. Re-attestations are the
+    ledger's (`reattested_between`). The scope check, the backing check and
+    the copy authorization all take this one set, so an act seen by one is
+    seen by all; "no act" is both kinds empty. An unreadable delta or ledger
+    is the refusal, never an empty set.
+
+    Implements: SR-178, LLR-278"""
+    acts, _files, refusal = delta
+    reattested, added = frozenset(), []
+    if not refusal and _wrote_ledger(delta):  # an unwritten ledger added nothing
+        reattested, refusal = reattested_between(root, base, head)
+        added = _added_acts(root, base, head)
     if refusal:
-        return refusal
-    if not scope:
-        return (
-            "first-approval adjudication declares an EMPTY `Adjudicates` scope; "
-            "the merge cannot know which rows its approval act may reach; nothing "
-            "was merged"
-        )
-    outside = [act for act in acts if act["id"] not in scope]
-    acted_registries = {act["registry"] for act in acts}
+        return {"approve": {}, "reattest": {}}, refusal
+    approve = {act["id"]: act["registry"] for act in acts}
+    ledger = {str(r) for a in added for r in a.get("approved") or []} - set(approve)
+    held = _registries_holding(root, head, ledger | reattested)
+    approve.update({rid: held.get(rid) for rid in ledger})
+    return {"approve": approve, "reattest": {r: held.get(r) for r in reattested}}, None
+
+
+def _copy_lines(acted, snapshot_files):
+    """THE COPY AUTHORIZATION over the acted set (`lane_acted_set`): a refusal
+    line for each registry copy no acted row authorizes (WIDENED) and each
+    approved row's registry with no copy (WITHOUT ITS ANCHOR), `[]` when the
+    copies match the acts. The record's own files (`SNAPSHOT_OWN_FILES`) are
+    not registries. Both sides compare REGISTRY IDENTITY (`_registry_identity`).
+
+    Implements: SR-178, LLR-278"""
     written = {
         line.partition(" ")[2][len(SNAPSHOT_DIR) + 1 :] for line in snapshot_files
     }
-    snapshot_registries = written - SNAPSHOT_OWN_FILES
     ident = _registry_identity
-    authorized = {ident(r) for r in acted_registries | set(reattested)}
-    copied = {ident(r) for r in snapshot_registries}
-    widened = sorted(r for r in snapshot_registries if ident(r) not in authorized)
-    missing = sorted(r for r in acted_registries if ident(r) not in copied)
-    if not outside and not widened and not missing:
-        return None
-    lines = [
-        "  {} is OUTSIDE `Adjudicates` scope ({})".format(
-            act["id"], ";".join(sorted(scope))
-        )
-        for act in outside
-    ]
-    lines += [
+    held = [reg for kind in acted.values() for reg in kind.values() if reg]
+    authorized = {ident(r) for r in held}
+    copied = {ident(r) for r in written - SNAPSHOT_OWN_FILES}
+    widened = sorted(
+        r for r in written - SNAPSHOT_OWN_FILES if ident(r) not in authorized
+    )
+    approved = acted["approve"].values()
+    missing = sorted({r for r in approved if r and ident(r) not in copied})
+    return [
         "  snapshot WIDENED to {} without an approved row".format(r) for r in widened
-    ]
-    lines += [
-        "  {} was approved WITHOUT its anchoring snapshot".format(r) for r in missing
-    ]
+    ] + ["  {} was approved WITHOUT its anchoring snapshot".format(r) for r in missing]
+
+
+def adjudication_approval_refusal(scope, acted, delta):
+    """Judge the ACTED SET (`lane_acted_set`), never a scope on its own
+    (WI-849, Sol r2, r3): every approved row - a live flip or a ledger-only
+    approval alike - lies in `scope` (an empty scope is OUTSIDE's EMPTY
+    wording; `scope` None means the lane records none, so only its copies are
+    judged), and every registry copy belongs to an acted registry. A lane with
+    no act and no copy meets nothing here. A registry copy is WIDENED unless
+    the set holds a row there, approved or re-attested, so the sections of one
+    combined sitting each keep their own act (WI-841); an approved row's
+    registry with no copy is WITHOUT ITS ANCHOR (`_copy_lines`). Both sides
+    compare REGISTRY IDENTITY (`_registry_identity`), so every carrier path of
+    an authorized registry is its act's own - the obsolete carrier's copy a
+    conversion deletes included."""
+    _acts, snapshot_files, refusal = delta
+    if refusal:
+        return refusal
+    approved = acted["approve"]
+    outside = sorted(r for r in approved if scope is not None and r not in scope)
+    copies = _copy_lines(acted, snapshot_files)
+    if not outside and not copies:
+        return None
+    where = "`Adjudicates` scope ({})".format(";".join(sorted(scope or ())))
+    where = where if scope else "an EMPTY `Adjudicates` scope"
+    lines = ["  {} is OUTSIDE {}".format(rid, where) for rid in outside] + copies
     # THE REMEDY, PER ARM. The three lines above say what the delta did; a
     # session reading only those learns it is stopped and not what to do — and
     # the WIDENED arm in particular is reached by following the brief exactly
     # (its `--approves` is fixed before the verdict, so a batch that returns a
     # registry's rows in full still names it). Each arm's repair is stated
-    # where the stop is read.
+    # where the stop is read; a lane recording no scope is told of no
+    # `Adjudicates` row.
+    head = "the approval act's copies do not match its acts: the merge admits"
+    if scope is not None:
+        head = "first-approval adjudication exceeds the approval act recorded on its `Adjudicates` row: the merge admits only scoped flips and"
     return (
-        "first-approval adjudication exceeds the approval act recorded on its "
-        "`Adjudicates` row: the merge admits only scoped flips and exactly their "
-        "registry snapshots; nothing was merged:\n{}\nRemedy — WIDENED: "
-        "`--approves` named a registry this act flipped nothing in (its rows "
-        "were all RETURNED); drop that token and re-take the snapshot, so the "
-        "copy blesses only text this act approved. WITHOUT ITS ANCHOR: the flip "
-        "landed with no copy behind it; add that registry to `--approves`. "
-        "OUTSIDE SCOPE: the row is another adjudication's; restore its `Status` "
-        "byte-exact.".format("\n".join(lines))
+        "{} exactly their registry snapshots; nothing was merged:\n{}\nRemedy — "
+        "WIDENED: `--approves` named a registry this act flipped nothing in (its "
+        "rows were all RETURNED); drop that token and re-take the snapshot, so "
+        "the copy blesses only text this act approved. WITHOUT ITS ANCHOR: the "
+        "flip landed with no copy behind it; add that registry to `--approves`."
+        "{}".format(
+            head,
+            "\n".join(lines),
+            " OUTSIDE SCOPE: the row is another adjudication's; restore its "
+            "`Status` byte-exact."
+            if outside
+            else "",
+        )
     )
 
 
-def merge_approval_refusal(root, base, head, metas, adjudication, *, trunk):
-    """Apply one derived approval delta to its actor's authorization rule: an
-    adjudication's flips to its first-approval scope, and its re-attestations
-    to its amendment scope (`reattest_scope_refusal`) and, on a rung `trunk`'s
-    dial holds, to the CLARITY verdict the act names (`held_reattest_refusal`).
+def merge_approval_refusal(root, base, head, metas, *, trunk):
+    """Apply one derived approval delta to THE ONE ACTOR RULE (owner ruling 6,
+    2026-10-07; WI-849): a lane's acts are admitted when every act is backed
+    by an accepted verdict judging that act's own rows (`backed_act_refusal`),
+    in whatever lane it is taken, and the snapshot copies exactly the
+    registries those acts moved. A lane any of whose claimed rows records a
+    scope (`kitlib.sitting.bounds_acts`: an adjudication-kind row, or a row
+    scoping a first approval or an amendment) is bounded besides, whatever
+    else it claims: its flips by the first-approval scope, its re-attestations
+    by the amendment scope (`reattest_scope_refusal`). The bound is read off
+    `metas`, never off a caller's flag, so a mixed lane keeps its adjudication
+    row's scope (Sol r1 MAJOR 1); unreadable claims never reach here, the
+    merge slot refuses them. Any lane's re-attestations on a rung `trunk`'s
+    dial holds need the CLARITY verdict the act names (`held_reattest_refusal`).
     `trunk` is the commit the merge lands on: the authority the act lands under,
-    which the merge base is not once trunk has moved since the lane forked."""
-    delta = approval_delta(root, base, head)
-    if adjudication:
-        refusal = reattest_scope_refusal(root, base, head, metas, delta) or (
-            held_reattest_refusal(root, trunk, base, head, delta)
-            # Every added act is tied to an ACCEPTED verdict, named or not (WI-841).
-            or _kitsitting.unaccepted_refusal(root, head, _added_acts(root, base, head))
-            or _kitsitting.uncovered_refusal(
-                root, base, head, _added_acts(root, base, head)
-            )
-        )
-        if refusal:
-            return refusal
-        scope = first_approval_scope(metas)
-        if scope is not None or delta[0]:
-            moved = _reattested_registries(root, base, head)
-            return adjudication_approval_refusal(scope or frozenset(), delta, moved)
-        return delta[2]
-    return lane_approval_refusal(root, base, head, delta)
-
-
-def _reattested_registries(root, base, head):
-    """The approval-act registries (by identity, the tier's canonical path)
-    holding a row the merge's acts re-attested, read once its scope was judged;
-    `adjudication_approval_refusal` admits every carrier path of each.
+    which the merge base is not once trunk has moved since the lane forked.
+    The scope, backing and copy checks all judge ONE acted set
+    (`lane_acted_set`: the ledger's approvals and re-attestations and the live
+    transitions), so an act recorded only in the ledger is judged by each.
 
     Implements: SR-178, LLR-278"""
-    ids = reattested_between(root, base, head)[0]
-    held = (
-        (r, _spine_rows_at(root, head + ":", r, col)) for r, col in APPROVAL_ACT_CSVS
-    )
-    return {r for r, rows in held if ids & set(rows)}
+    delta = approval_delta(root, base, head)
+    acted, refusal = lane_acted_set(root, base, head, delta)
+    if refusal:
+        return refusal
+    scope = None
+    if any(_kitsitting.bounds_acts(meta) for _name, meta in metas):
+        scope = first_approval_scope(metas) or frozenset()
+        refusal = _kitsitting.malformed_refusal(metas)
+        refusal = refusal or reattest_scope_refusal(acted, metas)
+    elif not any(acted.values()):
+        return lane_approval_refusal(root, base, head, delta)
+    added = _added_acts(root, base, head)
+    refusal = refusal or held_reattest_refusal(root, trunk, base, head, delta)
+    refusal = refusal or _kitsitting.unaccepted_refusal(root, head, added)
+    refusal = refusal or backed_act_refusal(root, base, head, acted, delta)
+    return refusal or adjudication_approval_refusal(scope, acted, delta)
+
+
+def backed_act_refusal(root, base, head, acted, delta):
+    """THE ACTOR TEST at the merge slot (owner ruling 6, 2026-10-07; WI-849):
+    why a lane's approval acts may not merge, or None. Every act must be backed
+    by an ACCEPTED verdict among the bindings the branch carries that judged
+    that act's own rows: each row it flips or mints approved ruled APPROVE in a
+    first-approval part, each row it re-attests ruled MEANING or CLARITY in an
+    amendment part. It replaces "is every claimed spec of the adjudication
+    kind?" as the test of who may act: the act is an independent
+    adjudicator's, taken in the authoring lane or on trunk.
+
+    The acts are the lane's one acted set (`lane_acted_set`): the act-ledger
+    entries the branch added AND the delta's own flips, so a flip that wrote no
+    ledger entry and a ledger approval no flip shows are judged alike. The judgement
+    is WI-841's one reader (`kitlib.sitting.uncovered_refusal` over
+    `accepted_at`), so a missing, failed, invalid or other-rows verdict refuses
+    alike, worded with the acts by `lane_approval_refusal`. Independence rests
+    on that reader: an outcome is recorded accepted only by
+    `adjudicate_brief.record_outcome`, which a route calls after it ran the
+    adjudication as its own call; no record names the session that authored a
+    row, so the merge cannot compare the two sessions itself.
+
+    Implements: SR-178, LLR-158"""
+    acts = [
+        {"approved": sorted(acted["approve"]), "reattested": sorted(acted["reattest"])}
+    ]
+    reason = _kitsitting.uncovered_refusal(root, base, head, acts)
+    return reason and lane_approval_refusal(root, base, head, delta, reason)
 
 
 def amendment_scope(metas):
@@ -979,25 +1064,20 @@ def _wrote_ledger(delta):
     return any(line.endswith("/" + SNAPSHOT_ACTS) for line in delta[1])
 
 
-def reattest_scope_refusal(root, base, head, metas, delta=None):
+def reattest_scope_refusal(acted, metas):
     """Refuse an adjudication's act re-attesting a row outside the `Adjudicates`
     scope of the amendment rows it claims — by name — or None.
 
     A re-attestation moves no cell, so the flips the first-approval arm
-    judges cannot show it; the act ledger names the rows each act re-attested,
-    and the entries the merge adds are the acts this branch took. An amendment
+    judges cannot show it; the acted set (`lane_acted_set`) carries the rows
+    the act-ledger entries this branch added re-attested. An amendment
     row's scope is the rows its verdict ruled, so re-anchoring any other row
     re-blesses text nobody judged. A lane claiming no amendment row has no
-    re-attestation scope at all. Only read when the delta wrote the ledger.
+    re-attestation scope at all.
 
     Implements: SR-178, LLR-278"""
-    if not _wrote_ledger(delta or approval_delta(root, base, head)):
-        return None
-    ids, refusal = reattested_between(root, base, head)
-    if refusal:
-        return refusal
     scope = amendment_scope(metas)
-    outside = sorted(ids - scope)
+    outside = sorted(set(acted["reattest"]) - scope)
     if not outside:
         return None
     return (
@@ -1125,23 +1205,26 @@ def held_reattest_refusal(root, trunk, base, head, delta=None):
     )
 
 
-def lane_approval_refusal(root, base, head, delta=None):
-    """Why a WORK BRANCH's delta may not merge because it performs an APPROVAL
-    ACT — the refusal text, or None when it performs none.
+def lane_approval_refusal(root, base, head, delta=None, reason=None):
+    """Why a lane's delta may not merge because it performs an APPROVAL ACT no
+    verdict was asked to back - the refusal text, or None when it performs no
+    act and writes no record. The merge slot words both refusals here: a record
+    written with no act behind it, and acts `backed_act_refusal` found unbacked,
+    its `reason` appended.
 
-    THE ACT IS THE ADJUDICATOR'S, ON TRUNK (owner ruling 2026-09-01). A worker
-    lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS cell text on any such
-    row, including approved ones. In those four spine registries
-    (`APPROVAL_ACT_CSVS`) it does not flip a `Status` into `Approved`/`Founded`
-    or mint a row already claiming one; it does not write `SNAPSHOT_DIR`. The
-    off-spine three (`OUTSIDE_THE_APPROVAL_ACT`) stay outside this rung — their
-    approval cells are OI-30 D3's. Two reasons, both the owner's. CONTEXT:
-    approving a row means reading its whole chain — the parent SR, the sibling
-    LLRs, the tests — which one work item does not hold. CONCURRENCY: two lanes
-    touching the spine conflict at merge and the snapshot must not move across
-    a workstream, whereas a serial trunk-side act cannot conflict.
+    THE ACT IS AN INDEPENDENT ADJUDICATOR'S, IN THE AUTHORING LANE OR ON TRUNK
+    (owner ruling 6, 2026-10-07, superseding the trunk-side clause of the
+    2026-09-01 ruling). A lane AUTHORS `Drafted` SN/SR/LLR/TC rows and AMENDS
+    cell text on any such row, including approved ones; its acts - a `Status`
+    flipped into `Approved`/`Founded`, a row minted already claiming one, a
+    re-attestation - merge only when `backed_act_refusal` finds each backed by
+    an accepted verdict that judged its own rows. A copy under `SNAPSHOT_DIR`
+    with no flip and no re-attestation behind it is an act no verdict can
+    back, and this is its refusal. The off-spine three
+    (`OUTSIDE_THE_APPROVAL_ACT`) stay outside this rung - their approval cells
+    are OI-30 D3's.
 
-    HERE RATHER THAN IN THE MERGE SLOT, on `LLR-178`'s separation — the writer
+    HERE RATHER THAN IN THE MERGE SLOT, on `LLR-178`'s separation - the writer
     must not also be the judge of its own writes, and by the same token the
     coordinator that merges is not the reader that decides what a spine delta
     did. `integrate._approval_act_refusal` supplies the merge base and the rung's
@@ -1152,21 +1235,19 @@ def lane_approval_refusal(root, base, head, delta=None):
     the lane may make both, and the amendment adjudication the intake mints at
     this same merge is what judges the second. THE HONEST BOUND is
     `integrate._minted_id_refusal`'s: this defeats the accident and a lane that
-    drifts, not a lane that means to — a branch could still write a flip through
+    drifts, not a lane that means to - a branch could still write a flip through
     some file nothing here reads.
 
     Fails closed on an unreadable snapshot delta: an unread diff is not an
     empty one. `staged_approval_acts`' own degrade is the opposite direction
-    (silence outside a git checkout) and is deliberate — it is a READER, and the
+    (silence outside a git checkout) and is deliberate - it is a READER, and the
     refusal that consumes it is where the fail-closed posture belongs.
 
     Implements: SR-178, LLR-158
     """
     acts, snapshot_files, refusal = delta or approval_delta(root, base, head)
-    if refusal:
+    if refusal or not (acts or snapshot_files):
         return refusal
-    if not acts and not snapshot_files:
-        return None
     lines = [
         "  {} {} in {}".format(
             act["id"],
@@ -1176,23 +1257,19 @@ def lane_approval_refusal(root, base, head, delta=None):
             act["registry"],
         )
         for act in acts
-    ]
-    lines += ["  {}".format(name) for name in snapshot_files]
+    ] + ["  {}".format(name) for name in snapshot_files]
     return (
-        "{} performs an APPROVAL ACT in its own delta - and the approval act is "
-        "the ADJUDICATOR's, on the serial trunk side, never a work lane's (owner "
-        "ruling 2026-09-01; PROCESS.md §4). A lane AUTHORS `Drafted` "
-        "SN/SR/LLR/TC rows and assumption and surrogate rows, and AMENDS their "
-        "cell text; in those registries it does not "
-        "flip a `Status` into `Approved`/`Founded` or mint a row already "
-        "claiming one, and it does not write {}/. Approving means reading the "
-        "row's whole chain, which one "
-        "work item does not hold, and a trunk-side act cannot conflict with a "
-        "second lane the way this one can. Leave the rows `Drafted`: the "
-        "first-approval adjudication minted at this merge is what reads the "
-        "chain, flips and takes the snapshot, on trunk. Nothing was "
-        "merged:\n{}".format(head, SNAPSHOT_DIR, "\n".join(lines))
-    )
+        "{} performs an APPROVAL ACT no accepted verdict backs. The act is an "
+        "independent adjudicator's, never the session's that authored the rows, "
+        "in the authoring lane or on trunk (owner ruling 6, 2026-10-07; "
+        "PROCESS.md §4): that session leaves SN/SR/LLR/TC, assumption and "
+        "surrogate rows `Drafted` and does not write {}/. Leave the rows "
+        "`Drafted` for the first-approval adjudication minted at this merge, "
+        "or back each act with an adjudicator's accepted verdict over its rows. "
+        "Nothing was merged:\n{}\n{}".format(
+            head, SNAPSHOT_DIR, "\n".join(lines), reason or ""
+        )
+    ).rstrip()
 
 
 def staged_drafted_rows(root, base="HEAD", head=None):

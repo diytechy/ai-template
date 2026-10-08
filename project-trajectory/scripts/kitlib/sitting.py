@@ -19,8 +19,12 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     `({kind: [ids]}, [malformed tokens])` for `<kind>:<id>` tokens;
     `sections(text)` returns `[(kind, section text)]` in file order for a
     verdict's `## <kind>` headings, `[]` for a single-kind verdict;
-    `brief_scope(meta, kind)` is the row ids a claimed row's frontmatter scopes
-    to an act of `kind`, a combined row's tokens included; `own_section(text,
+    `claim_scope(meta)` is the ONE reader of a claimed row's brief and scope,
+    `(brief, {kind: [ids]}, [malformed tokens])`, normalized by
+    `declared_brief`/`scope_tokens` exactly as the adjudication route reads
+    them; `brief_scope(meta, kind)` is its ids for one kind, `bounds_acts(meta)`
+    whether the row bounds its lane's acts, and `malformed_refusal(metas)` the
+    merge's refusal of a malformed combined scope; `own_section(text,
     kind, keyword)` is one kind's own part of a verdict, or None when that is
     ambiguous; `GRAMMAR` holds the machine line of each kind it composes
     and its own `SITTING:` line; `parse(text, brief, kinds)` is the ONE
@@ -37,6 +41,7 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
 import re
 
 from .git import git_out
+from .registry import adjudicates_tokens
 from .verdict import row_rulings
 
 __all__ = [
@@ -47,7 +52,12 @@ __all__ = [
     "scopes",
     "sections",
     "own_section",
+    "declared_brief",
+    "scope_tokens",
+    "claim_scope",
     "brief_scope",
+    "bounds_acts",
+    "malformed_refusal",
     "line_refusal",
     "named_kinds",
     "sitting_refusal",
@@ -120,23 +130,93 @@ def own_section(text, kind, keyword):
     return own[0] if len(own) == 1 and not stray else None
 
 
-def brief_scope(meta, kind):
-    """The row ids a claimed row's frontmatter scopes to an act of `kind`: its
-    whole `adjudicates` list for a row of that brief (False when the cell is
-    not a list), its `kind:` tokens for a combined sitting, None when it scopes
-    nothing to `kind`. The one reader both act scopes go through, so a combined
-    sitting's sections each keep their own act (`acceptance_record`).
+def declared_brief(value):
+    """A claimed row's brief cell as the adjudication route reads it: stripped
+    and lower-cased, `""` when it declares none. The one normalization the
+    route's composition and the merge's admission share (WI-849, Sol r2).
 
     Implements: SR-232, LLR-310
     """
-    brief, cell = meta.get("brief"), meta.get("adjudicates")
-    if brief == kind:
-        if not isinstance(cell, list):
-            return False
-        return [str(rid).strip() for rid in cell if str(rid).strip()]
-    if brief != SITTING or not isinstance(cell, list):
-        return None
-    return scopes(cell)[0].get(kind)
+    return str(value or "").strip().lower()
+
+
+def scope_tokens(cell):
+    """The tokens of a registry row's PARSED `Adjudicates` cell - the column's
+    `;`-joined string `kitlib.registry.adjudicates_tokens` produced - each
+    stripped, empties dropped. A raw frontmatter value is never read here: it
+    is parsed by `adjudicates_tokens` alone (WI-849, Sol r3).
+
+    Implements: SR-232, LLR-310
+    """
+    return [t.strip() for t in str(cell or "").split(";") if t.strip()]
+
+
+def claim_scope(meta):
+    """THE ONE READER of a claimed row's brief and scope (WI-849, Sol r2):
+    `(brief, {kind: [ids]}, [malformed tokens])` from its frontmatter, read
+    with the route's normalization; its tokens are
+    `kitlib.registry.adjudicates_tokens`', the parser the route's row loader
+    uses, so a value it refuses raises here too (Sol r3). A combined sitting
+    splits its `<kind>:<id>` tokens and RETURNS the malformed ones, which the
+    route refuses to compose and the merge refuses (`malformed_refusal`); any
+    other brief scopes its whole token list to itself; no brief scopes nothing.
+
+    Implements: SR-232, LLR-310
+    """
+    brief = declared_brief(meta.get("brief"))
+    tokens = adjudicates_tokens(meta, meta.get("id") or "a claimed row")
+    if brief == SITTING:
+        return (brief, *scopes(tokens))
+    return brief, ({brief: tokens} if brief else {}), []
+
+
+def brief_scope(meta, kind):
+    """The row ids a claimed row's frontmatter scopes to an act of `kind` -
+    its whole scope for a row of that brief, its `kind:` tokens for a combined
+    sitting - or None when it scopes nothing to `kind` (`claim_scope`).
+
+    Implements: SR-232, LLR-310
+    """
+    return claim_scope(meta)[1].get(kind)
+
+
+def bounds_acts(meta):
+    """Does this claimed row's frontmatter RECORD a scope that bounds its
+    lane's approval acts: an adjudication-kind row (its scope may be empty,
+    which bounds every act out), a row scoping a first approval or an
+    amendment, or a combined row with a malformed token? The merge slot asks
+    it of every claimed row, so one such row bounds the whole lane (WI-849).
+
+    Implements: SR-232, LLR-310
+    """
+    _brief, found, bad = claim_scope(meta)
+    kind = declared_brief(meta.get("safety_class"))
+    return (
+        kind == "adjudication"
+        or bool(bad)
+        or any(k in found for k in ("first-approval", "amendment"))
+    )
+
+
+def malformed_refusal(metas):
+    """Why a lane's claim cannot be judged, or None: a claimed combined row's
+    scope holds a token that is not `<kind>:<id>` with a composable kind. The
+    route refuses to compose such a row, so the merge refuses it too rather
+    than drop the token and read the lane as unbounded.
+
+    Implements: SR-232, LLR-310
+    """
+    for name, meta in metas:
+        bad = claim_scope(meta)[2]
+        if bad:
+            return (
+                "the claimed row {} scopes {}, not `<kind>:<id>` with a kind of "
+                "{}; the merge cannot know which rows its acts may reach; nothing "
+                "was merged".format(
+                    name, ", ".join(repr(b) for b in bad), ", ".join(KINDS)
+                )
+            )
+    return None
 
 
 # --- the sitting's verdict grammar and its ONE parser (WI-841 rounds 9, 10) ---

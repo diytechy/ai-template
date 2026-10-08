@@ -447,10 +447,10 @@ mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
 **Fixed points at every level:** the owner's final read is the human's; **the
 approval act — a spine row's `Status` flip and the `docs/archive/last_approved/`
-copy that anchors it — is an adjudicator's, taken on the serial trunk side, never by the
-worker lane that authored the rows** (a lane authors `Drafted` rows and amends
-text; its merge is REFUSED if it approves, and the adjudication minted at that
-merge reads the whole chain and approves — [process-options.md "Who performs the
+copy that anchors it — is an independent adjudicator's, never the session's that
+authored the rows, taken in the authoring lane or on trunk** (a lane authors
+`Drafted` rows and amends text; its merge is REFUSED for any act no accepted
+verdict judging that act's own rows backs — [process-options.md "Who performs the
 approval act"](process-options.md#who-performs-the-approval-act)); a lane's
 edit to its own Done-when holds its next build and its close (never the edit
 or the tests) until an adjudicator's verdict or the owner's ruling binds that

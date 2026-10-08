@@ -197,6 +197,24 @@ def _rev(root, ref):
     return _git(root, "rev-parse", ref).strip()
 
 
+def refused(root, branch, bar):
+    """Drive the merge slot on `branch` and return its refusal, having
+    asserted that NOTHING MERGED: trunk's HEAD is the commit it was before the
+    call, and the branch tip is not its ancestor. `HEAD != branch` alone
+    proves nothing, since a successful `--no-ff` merge leaves it true as well
+    (WI-849, Sol r1 MINOR 3)."""
+    before = _rev(root, "HEAD")
+    refusal = integ.integrate_one(root, branch, bar)
+    assert refusal is not None, "the slot admitted {}".format(branch)
+    assert _rev(root, "HEAD") == before, "trunk moved: {}".format(refusal)
+    ancestor = subprocess.run(
+        ["git", "-C", str(root), "merge-base", "--is-ancestor", branch, "HEAD"],
+        capture_output=True,
+    )
+    assert ancestor.returncode == 1, "the branch reached trunk: {}".format(refusal)
+    return refusal
+
+
 def _branches(root):
     return _git(root, "branch", "--format=%(refname:short)").split()
 

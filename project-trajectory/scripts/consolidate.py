@@ -1093,21 +1093,12 @@ _COUNTER_RE = re.compile(r"\b(needs|absorbs)\s*=\s*(\S+)")
 
 
 def scope_of(meta):
-    """A closing row's `Adjudicates` cluster as a set, from spec frontmatter.
-
-    Tolerant of both spellings the format produces — `wi_convert` writes the
-    COLUMN `;`-joined and `parse_spec` reads the frontmatter key back as a TOML
-    list — because this reader is handed whichever the caller happens to hold,
-    and a scope silently read as empty is the widening the cell exists to
-    prevent."""
-    value = meta.get("adjudicates") if hasattr(meta, "get") else None
-    items = value if isinstance(value, (list, tuple)) else [value]
-    return {
-        token.strip()
-        for item in items
-        for token in str(item or "").split(";")
-        if token.strip()
-    }
+    """A closing row's `Adjudicates` cluster as a set, from spec frontmatter,
+    through the one parser of the raw value (`kitlib.registry.
+    adjudicates_tokens`, WI-849): the route's and the merge's reading. A value
+    it refuses raises ValueError naming the row, never a scope read as empty -
+    the widening the cell exists to prevent."""
+    return set(kitregistry.adjudicates_tokens(meta, meta.get("id") or "the row"))
 
 
 def parse_machine_line(text):

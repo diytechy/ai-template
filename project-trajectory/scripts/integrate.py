@@ -61,9 +61,9 @@ Four operations here; the two lane closes that are NOT a merge (`hand_back`,
              collision two lanes could produce is unrepresentable), REFUSES a
              branch whose spine delta performs an APPROVAL ACT - a `Status`
              flipped into `Approved`/`Founded`, a row born claiming one, or a
-             write under docs/archive/last_approved/ (owner ruling 2026-09-01,
-             see `_approval_act_refusal` - a lane authors `Drafted` rows, the
-             adjudicator approves them on trunk after reading the whole chain),
+             write under docs/archive/last_approved/ - that no accepted verdict
+             of an independent adjudicator's, judging that act's own rows,
+             backs (owner ruling 6, 2026-10-07, see `_approval_act_refusal`),
              requires the policy verdicts the outcome
              owes (RULING-7 keyed off §A3, not off the claim), checks
              the ancestor relation and VERIFIES the `Bar-Green:` attestation
@@ -174,6 +174,7 @@ import spec_move
 from kitlib import authority as _kitauthority
 from kitlib import decisions as kdecisions
 from kitlib import provenance as _kitprovenance
+from kitlib import registry as kregistry
 from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
 from kitlib.station import (
@@ -243,12 +244,15 @@ def fail(msg):
 
 
 def _spec_frontmatter(path):
-    """The TOML frontmatter dict of a spec file (between +++ lines)."""
+    """The TOML frontmatter dict of a spec file (between +++ lines); a scope cell
+    the route's one parser refuses is unreadable frontmatter, by file (WI-849)."""
     text = path.read_text(encoding="utf-8")
     m = re.match(r"\+\+\+\n(.*?)\n\+\+\+", text, re.S)
     if not m:
         raise ValueError("{}: no +++ frontmatter".format(path))
-    return tomllib.loads(m.group(1))
+    meta = tomllib.loads(m.group(1))
+    kregistry.adjudicates_tokens(meta, path.name)
+    return meta
 
 
 def _queued_spec(root, wi_id):
@@ -1138,24 +1142,34 @@ def _minted_id_refusal(root, branch, claimed):
 
 
 def _claimed_spec_frontmatters(root, branch):
-    """The claimed `(filename, metadata)` pairs, or None if any is unreadable."""
-    home = root / ACTIVE / branch
-    try:
-        claimed = _claimed_specs(root, branch)
-        return [(name, _spec_frontmatter(home / name)) for _wid, name in claimed]
-    except (OSError, ValueError):
-        return None
+    """`(metas, refusal)`: the claimed `(filename, metadata)` pairs and None,
+    or None and the refusal naming the first claimed spec whose frontmatter
+    cannot be read. UNREADABLE IS NEVER EMPTY (WI-849, Sol r1 MAJOR 1): the
+    claim records the authority a lane acts under, so a reader that answered
+    `None` let a caller's `if not metas` read it as "nothing claimed" and drop
+    that authority's bounds. Each caller now chooses its own direction out of
+    an explicit refusal: the approval rung and the early close refuse; the bar
+    and the review gate fail toward more checking.
+
+    Implements: SR-156, LLR-140"""
+    home, metas = root / ACTIVE / branch, []
+    for _wid, name in _claimed_specs(root, branch):
+        try:
+            metas.append((name, _spec_frontmatter(home / name)))
+        except (OSError, ValueError) as exc:
+            return None, f"unreadable claimed frontmatter in {name} ({exc})"
+    return metas, None
 
 
 def _adjudication_lane(root, branch, metas=None):
     """Does EVERY claimed spec on `branch` declare the `adjudication` kind?
 
-    `_lane_bar_directives`' `skip` test, asked on its own because the approval
-    rung needs the answer BEFORE the bar question exists. Both callers use
-    `_claimed_spec_frontmatters`, so actor identity has one reader. UNREADABLE
-    FRONTMATTER ANSWERS FALSE: there it runs the bar; here it makes the branch a
-    work lane whose approval act refuses. Both fail toward more checking."""
-    metas = _claimed_spec_frontmatters(root, branch) if metas is None else metas
+    `_lane_bar_directives`' `skip` test and the review gate's: whether the lane
+    runs a bar and owes a round. The approval rung does not ask it (WI-849: any
+    claimed row recording a scope bounds the lane's acts, read off the metas by
+    `acceptance_record.merge_approval_refusal`). UNREADABLE FRONTMATTER ANSWERS
+    FALSE, which runs the bar and owes the round: more checking."""
+    metas = _claimed_spec_frontmatters(root, branch)[0] if metas is None else metas
     return bool(metas) and all(
         str(meta.get("safety_class") or "").strip().lower() == "adjudication"
         for _name, meta in metas
@@ -1163,34 +1177,38 @@ def _adjudication_lane(root, branch, metas=None):
 
 
 def _approval_act_refusal(root, branch):
-    """THE APPROVAL ACT IS NOT A LANE'S (owner ruling 2026-09-01): the merge
-    slot's approval refusal - a refusal string, or None.
+    """THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, IN THE AUTHORING LANE
+    OR ON TRUNK (owner ruling 6, 2026-10-07, superseding the trunk-side clause
+    of the 2026-09-01 ruling): the merge slot's approval refusal - a refusal
+    string, or None.
 
-    A WORK BRANCH AUTHORS `Drafted` SPINE ROWS AND AMENDS CELL TEXT; it never
-    performs the approval act. The act is the `Status` flip into
-    `Approved`/`Founded` - or a row that arrives already claiming one - together
-    with the `docs/archive/last_approved/` copy that anchors it, and it belongs
-    to a trunk-side ADJUDICATION session for two reasons the owner gave. CONTEXT:
-    approving a row means reading its whole chain (the parent SR, the sibling
-    LLRs, the tests), and one work item does not hold that chain. CONCURRENCY:
-    two lanes touching the spine conflict at merge, and the snapshot must not
-    move across a workstream, whereas a serial trunk-side act cannot conflict.
+    A LANE AUTHORS `Drafted` SPINE ROWS AND AMENDS CELL TEXT. The act is the
+    `Status` flip into `Approved`/`Founded` - or a row that arrives already
+    claiming one, or a re-attestation - together with the
+    `docs/archive/last_approved/` copy that anchors it. The rung admits a lane's
+    acts when EVERY act is backed by an accepted verdict judging that act's own
+    rows (`acceptance_record.backed_act_refusal`, over WI-841's one
+    accepted-verdict reader), and refuses an act without one, naming it and the
+    reason. That replaces "is every claimed spec of the `adjudication` kind?"
+    as the actor test (WI-849). A lane with no act merges as it always did.
 
     THE JUDGEMENT ITSELF IS NOT HERE, and that is `LLR-178`'s separation, not
-    tidiness: `acceptance_record.lane_approval_refusal` reads the delta and
+    tidiness: `acceptance_record.merge_approval_refusal` reads the delta and
     words the refusal, beside the two-tree walk and the snapshot-mirror rules it
     shares its material with. What stays in the merge slot is the RUNG — the
     merge base this branch is judged against, and the placement in the ladder.
 
-    An adjudication is the permitted actor, not unbounded authority. A claimed
-    first-approval row's `Adjudicates` cell bounds its flips, and the snapshot
-    may cover exactly the registries those flips changed. The delta is derived
-    once here and handed to either judgement, so actor classification can no
-    longer bypass the material being authorised.
+    An adjudication lane is one case of the rule, not unbounded authority: a
+    claimed first-approval row's `Adjudicates` cell bounds its flips besides,
+    and the snapshot may cover exactly the registries those flips changed. The
+    delta is derived once and handed to the one judgement, so the lane's kind
+    can never bypass the material being authorised.
     """
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 
-    metas = _claimed_spec_frontmatters(root, branch)
+    metas, refusal = _claimed_spec_frontmatters(root, branch)
+    if refusal:
+        return f"{branch}: {refusal}, so the scope bounding the lane's approval acts is unknowable; nothing was merged"
     head = _head(root)
     code, base = ac.git(root, "merge-base", head, branch)
     if code != 0 or not base.strip():
@@ -1201,10 +1219,7 @@ def _approval_act_refusal(root, branch):
     # `trunk=head`: the act lands under TRUNK's authority. This rung runs before
     # the in-slot refresh, so the merge base can predate a hold trunk has since
     # declared; the slot is held, so trunk does not move again before the merge.
-    if not metas:
-        return judge(root, base.strip(), branch, [], False, trunk=head)
-    actor = _adjudication_lane(root, branch, metas=metas)
-    return judge(root, base.strip(), branch, metas, actor, trunk=head)
+    return judge(root, base.strip(), branch, metas, trunk=head)
 
 
 def _loop_claimed(root, branch):
@@ -1598,7 +1613,7 @@ def _verdict_gate(root, branch, outcomes):
     merged = [wi for wi in sorted(outcomes) if outcomes[wi] == Outcome.MERGED]
     if not merged:
         return None
-    specs = _claimed_spec_frontmatters(root, branch)
+    specs = _claimed_spec_frontmatters(root, branch)[0]  # unreadable: owed
     owed, why_not = _verdict_owed(root, branch, specs)
     if not owed:
         print("integrate: no review verdict owed ({})".format(why_not))
@@ -2044,8 +2059,8 @@ def _lane_bar_directives(root, branch):
     Implements: SR-174, LLR-154
     """
     kinds, bars = [], []
-    metas = _claimed_spec_frontmatters(root, branch)
-    if metas is None:
+    metas, unreadable = _claimed_spec_frontmatters(root, branch)
+    if unreadable:
         return False, None, None  # unreadable: run the bar, fail toward it
     for name, meta in metas:
         kinds.append(str(meta.get("safety_class") or "").strip().lower())
@@ -3018,7 +3033,7 @@ def _merge_refusal(root, branch, wi_ids):
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
     if refusal:
         return outcomes, refusal
-    refusal = _approval_act_refusal(root, branch)  # owner ruling 2026-09-01
+    refusal = _approval_act_refusal(root, branch)  # owner ruling 6, 2026-10-07
     if refusal:
         return outcomes, refusal
     refusal = _held_status_refusal(root, branch)  # SR-208

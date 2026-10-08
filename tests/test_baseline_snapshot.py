@@ -1967,7 +1967,7 @@ def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
     run_git("add", "-A")
     run_git("commit", "-m", "a lane approves the row")
     head = _head(run_git)
-    refusal = _AR.merge_approval_refusal(root, drafted, head, [], False, trunk=head)
+    refusal = _AR.merge_approval_refusal(root, drafted, head, [], trunk=head)
     assert refusal and rid in refusal and rel in refusal, refusal
     # ...and an approval with no copy behind it is the hole the rule reports.
     assert any(rel in f for f in SNAP.unanchored_findings(root))

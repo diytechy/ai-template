@@ -373,9 +373,10 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
 
 # --- WI-572: the APPROVAL ACT half of the same walk ---------------------------
 #
-# Owner ruling 2026-09-01: the `Status` flip into `Approved`/`Founded` and the
-# `docs/archive/last_approved/` copy that anchors it are the ADJUDICATOR's, on
-# the serial trunk side; a worker lane authors `Drafted` rows and amends text.
+# Owner rulings 2026-09-01 and 6 (2026-10-07): the `Status` flip into
+# `Approved`/`Founded` and the `docs/archive/last_approved/` copy that anchors it
+# are an independent adjudicator's (PROCESS.md §4); the authoring session writes
+# `Drafted` rows and amends text.
 # `staged_spine_amendments` above EXEMPTS a row whose Status moved ("a
 # deliberate call this does not second-guess"); `staged_approval_acts` reports
 # exactly that exempted set, off the same two-tree walk, so the pair covers the
@@ -497,7 +498,8 @@ def test_the_lane_refusal_names_every_act_and_the_snapshot_write(tmp_path):
         "wrote docs/archive/last_approved/docs/requirements/system-requirements.csv"
         in refusal
     )
-    assert "the approval act is the ADJUDICATOR's" in refusal
+    # The rule it names is owner ruling 6 (2026-10-07, WI-849).
+    assert "The act is an independent adjudicator's" in refusal
     assert "Leave the rows `Drafted`" in refusal  # the remedy, not just the verdict
     # The green half of the same fixture: the AUTHORING commit is admitted.
     assert ar.lane_approval_refusal(tmp_path, "HEAD~2", "HEAD~1") is None

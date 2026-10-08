@@ -1,0 +1,26 @@
+# docs/decisions/wi-849.toml — the WI-849 lane's delegated decisions (the
+# approval act in the authoring lane).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "The coordinator wrote WI-849's Done-when amendment to the owner's 2026-10-08 ruling ('Split it out'): the rung establishes the verdict's independence by its route, the docs state the hand-written-binding bound, and the authoring-session refusal moves to WI-857. The next build round is dispatched on the owner's ruling, which cites the change; the exact Done-when text is judged with the lane's spine set in the checkpoint's combined sitting."
+alternative = "Hold every further build round until a done-when sitting has judged the exact text, before the checkpoint."
+reversal_cost = "One Done-when edit; if the sitting returns the text, the round's code is re-checked against the returned wording."
+why_not_escalated = "The owner chose the split directly; the coordinator's text restates the option the owner picked. Recorded high-risk because the coordinator, not a verdict, wrote the Done-when text a later build rests on until the checkpoint."
+review = ""
+
+[decision.D-002]
+decided = "Unreadable claimed frontmatter is refused at the approval rung even on a lane that carries no approval act, and at the partial close, rather than refused only when the lane has acts. The claimed-spec reader returns (metas, refusal), so unreadable is never read as 'nothing claimed'."
+alternative = "Refuse unreadable frontmatter only when the lane carries an act or a snapshot write, leaving act-free lanes to the other rungs."
+reversal_cost = "One condition in _approval_act_refusal; the RESYNC entry names the change."
+why_not_escalated = "Sol's round-1 MAJOR showed the class is a reader whose failure reads as less authority; fail-closed at the one reader ends it, and a lane whose own claimed spec does not parse has no business merging anyway."
+review = ""
+
+[decision.D-003]
+decided = "The claimed row's scope cell (`adjudicates`) has one accepted shape: absent, or a TOML list of strings, each one non-empty token with no `;` (stripped). A bare `;`-joined string, a table, a non-string element and an empty or `;`-bearing element are refused, never coerced, by the one parser (kitlib.registry.adjudicates_tokens) both the route's row loader and the merge's claim reader call. The merge family's frontmatter reader (integrate._spec_frontmatter) parses the cell there, so a malformed cell is unreadable frontmatter named by file at the claim, the approval rung, dispatch's exclusivity read and the close. Round 3's acceptance of a `;`-joined string is withdrawn."
+alternative = "Accept a single `;`-joined string as well, split identically on both paths; or validate only at the approval rung, leaving the claim and the close to read the cell as they do."
+reversal_cost = "One branch in adjudicates_tokens to accept a string, and its RESYNC sentence; the agreement test gains one accepted case."
+why_not_escalated = "Every writer the kit ships (intake's mints, wi_convert) writes the list, and no spec in this repo carries another shape, so refusing a shape nobody writes costs no adopter work while each accepted spelling is a second reading two paths must keep equal. Sol r3 asked for one parser; the narrowest one is the one shape the writers produce."
+review = ""

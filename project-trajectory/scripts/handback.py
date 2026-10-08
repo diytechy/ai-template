@@ -299,28 +299,30 @@ def _span(root, branch):
     )
 
 
-def _no_recursion_refusal(root, branch, specs):
+def _no_recursion_refusal(root, branch):
     """THE NO-RECURSION INVARIANT (WI-388, ruling R3): a DISPOSITION row — the
     adjudication kind — may never itself close early. Enforced HERE, at the
     machinery that would perform the act, not by prose: the refusal stops the
     run for a human, because a disposition that cannot dispose is the one
     state the outcome model cannot express. Read off the TRUNK's claimed copy
-    (the same one-home read the slot uses); an unreadable frontmatter falls
-    through — the close path's own read fails on it by name."""
-    for _wi_id, name in specs:
-        try:
-            meta = integrate._spec_frontmatter(root / integrate.ACTIVE / branch / name)
-        except (OSError, ValueError):
-            continue
+    through the slot's one reader (`integrate._claimed_spec_frontmatters`). An
+    UNREADABLE claim is refused by name (WI-849): nothing later in the partial
+    close re-reads it - the move rebases links and the commit is --no-verify -
+    so skipping it would close an adjudication row early.
+
+    Implements: SR-144, LLR-161"""
+    metas, refusal = integrate._claimed_spec_frontmatters(root, branch)
+    for name, meta in metas or ():
         if (meta.get("safety_class") or "").strip().lower() == "adjudication":
-            return (
+            refusal = (
                 "{} claims the adjudication row {} - a disposition row never "
                 "closes early (ruling R3, no recursion: its outcomes are {}). "
                 "The run stops for a human to read the lane".format(
                     branch, name, DISPOSITION_OUTCOMES
                 )
             )
-    return None
+            break
+    return refusal
 
 
 def _restore(wt, written, refusal):
@@ -466,7 +468,7 @@ def close_partial(root, branch, reason, fields=None):
     if not specs:
         return None, "trunk holds no claimed specs for {}".format(branch)
     wt, err = _lane(root, branch)
-    err = err or _no_recursion_refusal(root, branch, specs)
+    err = err or _no_recursion_refusal(root, branch)
     if err:
         return None, "cannot close {}: {}".format(branch, err)
     refusal = _existing_report_refusal(wt, branch, specs)

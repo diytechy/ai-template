@@ -99,15 +99,15 @@ Advancing is not a `docs/stage` bump. The acceptor **marks a batch of
 artifacts approved in a reviewed commit** — that commit *is* the sign-off, and
 the derived rung follows from it.
 
-**WHO the acceptor is** (owner ruling 2026-09-01; PROCESS.md §4). On a rung the
-dial still holds, the owner. On a rung it has released, an **adjudication
-session, on the serial trunk side** — never the worker lane that authored the
-rows: approving means reading the row's whole chain, which one work item does
-not hold, and a lane that re-anchors the record seals whatever text was live in
-its own tree. A lane authors `Drafted` rows and amends cell text; its merge is
-REFUSED if its delta flips an **SN/SR/LLR/TC** `Status` or writes
-`docs/archive/last_approved/`, and the first-approval adjudication minted at
-that merge approves what it authored. Everything below is therefore the
+**WHO the acceptor is** (owner rulings 2026-09-01 and 2026-10-07; PROCESS.md
+§4). On a rung the dial still holds, the owner. On a rung it has released, an
+**independent adjudicator** — never the session that authored the rows — in the
+authoring lane or on trunk: approving means reading the row's whole chain, and
+the writer does not judge its own writes. A lane authors `Drafted` rows and
+amends cell text; its merge is REFUSED if its delta flips an **SN/SR/LLR/TC**
+`Status` or writes `docs/archive/last_approved/` with no accepted verdict
+judging that act's own rows behind it, and otherwise the first-approval
+adjudication minted at that merge approves what it authored. Everything below is therefore the
 ACCEPTOR's procedure, not an author's:
 
 - **Into `DevStg-Reqs`** — a draft requirement is approved: `Status` **`Drafted`

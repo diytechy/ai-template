@@ -7344,6 +7344,100 @@ a `DevStg-*` rung (the later paragraph "The approval dial is a rung" already
 said so). The sentence now states the rung form and the shipped default,
 `DevStg-Release`. Nothing reads the sentence, and no setting changes.
 
+### The approval act may be taken in the authoring lane, by an independent adjudicator [since 1412d967]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**Kit-owned files — overwrite:** `scripts/acceptance_record.py`,
+`scripts/integrate.py`, `scripts/handback.py`, `scripts/kitlib/sitting.py`,
+`scripts/kitlib/registry.py`, `scripts/adjudicate_brief.py`, `scripts/intake.py`, `scripts/consolidate.py`,
+`docs/process.md` §4's
+"Fixed points" sentence, `docs/process-options.md` "Who performs the approval
+act" (its division-of-labour table and the independence bound), the
+`spine-authoring` and `gate-advance` skills (re-sync their materialized copies),
+`prompts/worker.template.md`'s approval-act paragraph, the
+`adjudicate-first-approval` and `adjudicate-amendment` prompt templates, and the
+regenerated `prompts/CATALOG.md`.
+
+**What changes for you.** The merge slot's approval-act rung used to admit a
+lane's acts only when every claimed spec was of the `adjudication` kind, and
+refused any `Status` flip, born-approved row or snapshot write from any other
+lane. It now admits a lane's acts when EVERY act — each row it flips, mints
+approved or re-attests — is backed by an accepted verdict among the branch's
+bindings (`docs/reviews/**/*.requested` recording `outcome = accepted`) that
+judged that act's own rows. An act without one is refused, naming the act and
+the reason; a snapshot write with no act behind it is still refused outright.
+The verdict's independence is established by its route, which alone writes
+`accepted` after running the adjudication as its own session; a hand-written
+binding clears the rung, and the docs say so (binding a verdict to its judging
+session is a later kit change). Any claimed row that records a scope — an
+`adjudication`-kind row, or one scoping a first approval or an amendment —
+still bounds the lane's acts by that scope, whatever else the lane claims. A
+claimed spec whose frontmatter cannot be read is refused by name, at the merge
+slot and at the partial close, instead of being read as "nothing claimed".
+
+**What is newly refused.** Merged lanes are never re-judged: the rung reads
+only a branch's own delta, at its own merge. A claimed row's brief and scope
+are now read as the adjudication route reads them (the brief stripped and
+lower-cased; the scope from a TOML list of strings, one token each,
+stripped, through the one parser the route's row loader uses), and the scope,
+the backing and the copy checks judge one acted set: every row the delta
+flips or mints approved, and every row the act-ledger entries the branch added
+name `approved` or `reattested`. Among lanes still pending:
+
+- **Ordinary lanes** (no claimed row records a scope) meet every refusal they
+  met before, except that a backed act is now admitted. The full list:
+  unreadable claimed frontmatter; an unreadable merge base; an unreadable
+  snapshot delta; a snapshot write with no flip, born-approved row,
+  ledger-recorded approval or re-attestation behind it; an act ledger that does not parse at the merge base
+  or the head; a re-attestation on a rung the dial holds without the CLARITY
+  verdict its act names; a ledger entry naming a verdict that is not accepted
+  or does not judge the rows it re-attests; an act no accepted verdict among the
+  branch's bindings judged; a copy of a registry no act moved (WIDENED); a flip
+  whose registry has no copy (WITHOUT ITS ANCHOR). The last two no longer name
+  an `Adjudicates` row on such a lane.
+- **Adjudication lanes**, and any lane a claimed row bounds:
+  - a delta that flips a row into `Approved`/`Founded`, or mints one already
+    approved, inside its `Adjudicates` scope and with its anchoring snapshot,
+    when no act-ledger entry the branch added names that row under `approved`
+    AND no route-accepted verdict among the branch's bindings rules it APPROVE
+    — a snapshot copied by hand, a flip committed without `intake.py snapshot`,
+    or a ledger that does not parse at the merge base or the head. A real
+    `intake.py snapshot` act lists every row it flipped, and those were already
+    required to be covered. Re-sit such a lane through the loop or the
+    coordinator's entry point, which records the binding;
+  - a registry copy with no act behind it on a lane whose claimed rows record
+    no first-approval scope (an amendment-only lane copying a registry it
+    re-attested nothing in): WIDENED, where it used to merge unjudged;
+  - a claimed combined row whose scope holds a token that is not
+    `<kind>:<id>` with a composable kind, refused by name whether or not the
+    lane acts, as the route refuses to compose it;
+  - an approval the act ledger records for a row outside the first-approval
+    scope with no live flip behind it (a row live-approved at the merge base
+    whose recorded copy still read below approval): OUTSIDE scope, where it
+    used to merge because only live flips were judged.
+- **Any lane whose claimed spec has unreadable frontmatter:** refused at the
+  approval rung, acts or none, and its partial close is refused rather than
+  closing a row whose kind nobody can read. Repair the claimed spec on trunk.
+  A scope cell (`adjudicates`) in any shape but a TOML list of strings, one
+  non-empty token each with no `;` — a bare string, a table, a non-string
+  element — is now unreadable frontmatter: refused by name at the claim, the
+  approval rung and the close, and reported and skipped by the registry loader
+  like any malformed spec. The kit's writers only ever write the list; grep
+  your `docs/work/` for `adjudicates = ` not followed by `[` before you sync.
+- **Message order only:** an adjudication flip that is both outside its scope
+  and unbacked now reports the missing verdict first, where it reported OUTSIDE
+  scope.
+
+**Newly admitted:** a lane that claims an ordinary row beside an adjudication
+row, for acts that are backed and inside the adjudication row's scope (the old
+rung refused all its acts); a lane with no act whose claimed row declares an
+empty first-approval scope (the old rung refused it EMPTY); acts under a
+brief spelled with other case or spacing (the old rung read it as no scope);
+and a backed approval the act ledger records with no live flip (taking a
+live-approved row's anchoring copy), which the old rung refused as a copy with
+no act. No setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

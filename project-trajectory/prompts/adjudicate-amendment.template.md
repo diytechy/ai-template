@@ -39,9 +39,9 @@
      written, false since OI-45 ruled (b) retired that tool (intake._apply_flips
      writes NOTHING, permanently). A MEANING verdict on a loop-held rung then
      ended at a brief nobody was owed, which contradicts the loop-held doctrine
-     itself. The owner's 2026-09-01 ruling settles who acts: the approval act —
-     and re-attestation IS one — belongs to the adjudicator, on the serial trunk
-     side, never to the lane that authored the text.
+     itself. Who acts is settled once, in PROCESS.md §4 and process-options
+     "Who performs the approval act": the approval act — and re-attestation IS
+     one — is the adjudicator's, never the authoring session's.
 
      WHAT IS DELIBERATELY ABSENT: the amending session's own notes, its commit
      message, docs/log.md, and any self-assessment. WI-418 measured what

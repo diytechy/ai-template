@@ -493,6 +493,24 @@ def test_a_disposition_rows_own_handback_is_refused_structurally(tmp_path):
     assert not (root / "docs" / "work" / "queued" / "WI-401-widget.md").exists()
 
 
+def test_an_unreadable_claim_is_never_closed_early(tmp_path):
+    # WI-849 (Sol r1 MAJOR 1's class): the no-recursion read once SKIPPED a
+    # claimed spec it could not read, and nothing later in the partial close
+    # re-reads it (the move rebases links; the commit is --no-verify), so an
+    # adjudication row whose frontmatter broke would close early. Unreadable
+    # authority is refused by the one claimed-spec reader, by name.
+    root = claimed_repo(tmp_path)
+    spec = root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
+    spec.write_text("not frontmatter\n", encoding="utf-8", newline="\n")
+    _commit(root, "fixture: the claim's frontmatter is unreadable", when=T_CODE)
+    lane(root)
+
+    ids, refusal = hb.close_partial(root, "wi-401", "worker exit 7")
+    assert ids is None
+    assert "WI-401-widget.md" in refusal and "unreadable" in refusal
+    assert spec.is_file()  # the claim did not move
+
+
 # --- the mechanical adjudication close (OI-70/OI-73, Done-when 1) --------------
 
 _DRAFTED_DISPOSITIONS = """

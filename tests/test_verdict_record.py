@@ -1303,7 +1303,7 @@ def test_the_scheduler_and_the_gate_read_one_spec_copy(tmp_path):
     assert al.dispositions_drafted(root, "WI-401") == ["spine"]
     _git(root, "checkout", "-q", "main")
     owed, _why = integ._verdict_owed(
-        root, "wi-401", integ._claimed_spec_frontmatters(root, "wi-401")
+        root, "wi-401", integ._claimed_spec_frontmatters(root, "wi-401")[0]
     )
     assert owed is True, "the gate must read the same copy the scheduler read"
 

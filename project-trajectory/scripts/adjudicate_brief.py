@@ -211,8 +211,13 @@ VERDICT_GRAMMAR = {
 
 
 def declared_brief(row):
-    """The row's declared `Brief` cell, normalized; `""` when it declares none."""
-    return (row.get("Brief") or "").strip().lower()
+    """The row's declared `Brief` cell, normalized; `""` when it declares none.
+    The normalization is `kitlib.sitting.declared_brief`'s, which the merge
+    reads a claimed row's frontmatter through, so composition and admission
+    cannot read one claim two ways (WI-849).
+
+    Implements: SR-146, LLR-167"""
+    return ksitting.declared_brief(row.get("Brief"))
 
 
 def adjudicates(row):
@@ -224,12 +229,11 @@ def adjudicates(row):
     assembler that re-derives its population live needs both or it re-derives a
     wider question than the mint asked (WI-572 REVIEW-A). Reading it from the
     mint's title or `## Context` prose instead is the WI-417 fold — prose
-    carrying control flow — which is why it is a `wi_convert` column."""
-    return {
-        part.strip()
-        for part in (row.get("Adjudicates") or "").split(";")
-        if part.strip()
-    }
+    carrying control flow — which is why it is a `wi_convert` column. Its
+    tokens are `kitlib.sitting.scope_tokens`', the merge's own reading.
+
+    Implements: SR-146, LLR-167"""
+    return set(ksitting.scope_tokens(row.get("Adjudicates")))
 
 
 def verdict_refusal(brief, verdict_path, kinds=None):
@@ -944,10 +948,12 @@ def first_approval_values(root, row):
     """`({chain, baseline, registries}, None)` for the spine rows a lane
     authored `Drafted` and did not approve, or `(None, reason)`.
 
-    THE APPROVAL ACT IS THE ADJUDICATOR'S, on the serial trunk side: a work
-    lane's merge is refused if it flips a `Status` or writes the approval
-    record (`integrate._approval_act_refusal`), so these rows are waiting on a
-    session like the one this brief composes. Two reasons the owner gave.
+    THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, in the authoring lane or
+    on trunk (owner ruling 6, 2026-10-07): a lane's merge is refused if it
+    flips a `Status` or writes the approval record with no accepted verdict
+    judging those rows behind it (`integrate._approval_act_refusal`), so rows
+    a lane left `Drafted` are waiting on a session like the one this brief
+    composes. Two reasons the owner gave.
     CONTEXT: approving means holding the row's WHOLE chain, which one work item
     does not — so `{chain}` is the whole chain, not the changed cells.
     CONCURRENCY: an adjudication lane runs alone, so the act cannot race a

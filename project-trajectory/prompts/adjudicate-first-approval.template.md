@@ -1,18 +1,10 @@
 <!-- DISPATCHER NOTES (stripped before the prompt is sent)
 
-     APPROVE OR RETURN? (owner ruling 2026-09-01; PROCESS.md §4.) Sent to an
-     ADJUDICATE-phase session when a merged lane left spine rows `Drafted` — text
-     that is authored and waiting on an approval nobody has given. The approval
-     act is THIS session's, on the serial trunk side: a work lane's merge is
-     refused if it flips a `Status` or writes the approval snapshot, so nothing
-     is approved until a session like this one approves it.
-
-     WHY THE ADJUDICATOR AND NOT THE AUTHORING LANE. Two reasons, both the
-     owner's. CONTEXT: approving a row means holding its whole chain — the
-     parent SR, the sibling LLRs, the tests that claim to cover it — which one
-     work item does not. CONCURRENCY: two lanes touching the spine conflict at
-     merge and the snapshot must not move across a workstream, whereas an
-     adjudication runs alone (dispatch._branch_exclusive) and cannot conflict.
+     APPROVE OR RETURN? Sent to an ADJUDICATE-phase session when spine rows
+     sit `Drafted` — text that is authored and waiting on an approval nobody has
+     given. The approval act is THIS session's: who takes it, where, and why the
+     authoring session never does is stated once, in PROCESS.md §4 and
+     process-options "Who performs the approval act". Not restated here.
 
      Slots (single-brace, strict fill — a missing one refuses):
        {chain}     the rows awaiting a first approval, each rendered with its
@@ -59,7 +51,7 @@ You are an INDEPENDENT adjudicator launched by the unattended coordinator, weari
 
 A row marked `[AWAITING FIRST APPROVAL - HELD FOR THE OWNER, NOT YOURS TO FLIP]` is shown because it is part of a chain you must read — never because it is yours. Its rung is one the dial still holds for a human. Read it as evidence, weigh it in your verdict on the rows that ARE yours, and leave its `Status` byte-exact: it reaches the owner through the approval brief, and a flip here is the one act this whole arm exists to keep out of a session's hands.
 
-A row marked `[AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY]` is also shown for the chain and is also not yours — for a different reason, and the difference matters. Nothing is pending on a human for it: it was handed to a DIFFERENT adjudication by a different merge, which will rule on it as you rule on yours. Read it as evidence and leave its `Status` byte-exact. Two acts flipping the same row is exactly the concurrency the owner moved this act to the serial trunk side to prevent.
+A row marked `[AWAITING FIRST APPROVAL - OUTSIDE THIS ACT'S SCOPE, ANOTHER ADJUDICATION'S ROW; SHOWN AS CHAIN EVIDENCE ONLY]` is also shown for the chain and is also not yours — for a different reason, and the difference matters. Nothing is pending on a human for it: it was handed to a DIFFERENT adjudication by a different merge, which will rule on it as you rule on yours. Read it as evidence and leave its `Status` byte-exact. Your act may reach only the rows this sitting's `Adjudicates` scope names; the merge refuses a flip outside that scope by name, and the row's own adjudication will judge it.
 
 THE QUESTION, and it is the only one you answer:
 

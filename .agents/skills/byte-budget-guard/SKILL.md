@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,996 | 2026-09-28 | +4: WI-615 — the partial-search bullet, paid for by three de-duplications |
 | `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,464 | 2026-10-07 | Restamps the PROCESS.md row |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,454 | 2026-10-08 | Restamps the PROCESS.md row |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,8 +45,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 95,817 | 2026-10-07 | **−8**: §4's gate-authority sentence states the dial as a rung |
-| `project-trajectory/PROCESS_OPTIONS.md` | 197,446 | 2026-10-06 | **+347** WI-839: a lane carries its own module-size restamp |
+| `project-trajectory/PROCESS.md` | 95,806 | 2026-10-08 | **−11** WI-849: §4's approval act may be taken in the lane |
+| `project-trajectory/PROCESS_OPTIONS.md` | 198,420 | 2026-10-08 | **+974** WI-849: the in-lane act and its honest bound |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

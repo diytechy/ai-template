@@ -28,9 +28,10 @@ Four triggers, plus the drafts-not-mints arm:
   (a2) **the `Drafted` rows the same merged commit hands over** — via
       `acceptance_record.staged_drafted_rows`, the other side of (a)'s coin
       (owner ruling 2026-09-01). A work lane AUTHORS `Drafted` spine rows and
-      never approves them — `integrate._approval_act_refusal` refuses a merge
-      that tries — so every merge that adds or amends one leaves rows waiting on
-      an approval nobody has given. One `first-approval` adjudication row per
+      approves none itself — `integrate._approval_act_refusal` refuses an act
+      no independent adjudicator's accepted verdict backs (owner ruling 6,
+      2026-10-07) — so every merge that adds or amends one and leaves it
+      `Drafted` leaves rows waiting on an approval nobody has given. One `first-approval` adjudication row per
       merge lists them; its session reads each row's whole chain and either
       approves (the flip plus its anchoring snapshot, in one reviewed commit) or
       returns with findings through `## Dispositions`. Rows on a rung the dial
@@ -1729,7 +1730,7 @@ def _disposition_draft(root, draft, meta, wi_id, relpath):
         "Drafted by {} (its ## Dispositions section) and minted at its merge - "
         "drafts-not-mints, ruling R1/R3.".format(wi_id)
     ) + ("\n\n" + draft["scope"] if draft.get("scope") else "")
-    if (meta.get("brief") or "").strip().lower() == consolidate.BRIEF:
+    if ksitting.declared_brief(meta.get("brief")) == consolidate.BRIEF:
         # THE ONE FLAG that tells the mint this successor ABSORBS rather than
         # continues, read off the judging row's declared brief. It decides two
         # things at once: whether the absorbed Done-when blocks are quoted, and

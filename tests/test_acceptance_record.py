@@ -336,4 +336,8 @@ def test_the_snapshot_files_that_mirror_no_registry_widen_no_approval():
         ],
         None,
     )
-    assert acceptance_record.adjudication_approval_refusal({"SR-001"}, delta) is None
+    acted = {"approve": {"SR-001": sr}, "reattest": {}}
+    assert (
+        acceptance_record.adjudication_approval_refusal({"SR-001"}, acted, delta)
+        is None
+    )

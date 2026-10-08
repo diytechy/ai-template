@@ -36,6 +36,7 @@ __all__ = [
     "SPEC_LISTS",
     "LIST_TOLERANT_SCALARS",
     "scalar_cell",
+    "adjudicates_tokens",
     "SPEC_STATUS_DIRS",
     "SPEC_FENCE",
     "SPEC_DELIVERABLE",
@@ -396,12 +397,36 @@ def scalar_cell(key, value):
     return str(value)
 
 
+def adjudicates_tokens(data, where):
+    """THE ONE PARSER of a spec's raw `adjudicates` frontmatter value (WI-849,
+    Sol r3): its row tokens, `[]` when the key is absent, or a ValueError
+    naming `where`. The registry's spec-row parser (the adjudication route's
+    input) and `kitlib.sitting.claim_scope` (the merge's) both read the value
+    here and nowhere else, so the two cannot read one cell two ways.
+
+    One shape is accepted: a TOML list of strings, each one token - stripped,
+    non-empty, carrying no `;` (the column's own join). A bare string, a table,
+    a non-string element and an empty or `;`-bearing element are refused,
+    never coerced: a coerced scope is a scope nobody declared.
+
+    Implements: SR-166, LLR-181"""
+    value = data.get("adjudicates", [])
+    if isinstance(value, list) and all(
+        isinstance(t, str) and t.strip() and ";" not in t for t in value
+    ):
+        return [t.strip() for t in value]
+    raise ValueError(
+        "{}: `adjudicates` is {!r}, not a TOML list of strings each naming one "
+        "token (non-empty, no `;`)".format(where, value)
+    )
+
+
 def parse_spec_row(text, relpath):
     """`(row, order)` for one spec file — a 19-key row shaped exactly like the
     CSV's. Raises ValueError NAMING the file on any malformation: invalid TOML, a
     missing or non-string `id`, an id the filename disagrees with, a directory
-    that is not a status, or a body that is not the single `## Deliverable`
-    section this format owns."""
+    that is not a status, a scope cell `adjudicates_tokens` refuses, or a body
+    that is not the single `## Deliverable` section this format owns."""
     data, body = parse_spec_frontmatter(text, relpath)
     row = dict.fromkeys(WI_COLUMNS, "")
     row["WI-ID"] = parse_spec_id(relpath, data)
@@ -411,7 +436,9 @@ def parse_spec_row(text, relpath):
         if key in data:
             row[column] = scalar_cell(key, data[key])
     for column, key in SPEC_LISTS:
-        if key in data:
+        if key == "adjudicates":
+            row[column] = ";".join(adjudicates_tokens(data, relpath))
+        elif key in data:
             row[column] = ";".join(str(v) for v in data[key])
     order = data.get("order")
     return row, order if isinstance(order, int) else None
