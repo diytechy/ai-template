@@ -1,0 +1,13 @@
+# docs/decisions/coordinator-2026-10-08.toml — the 2026-10-08 coordinator
+# session's delegated decisions (the consolidation sitting WI-855, then the
+# coordinator-cycle skill row and its companions).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-855 (the consolidation sitting) was claimed alone under its own scoped unpause, and WI-848 with WI-849 are claimed as a second batch under a second scoped unpause after the sitting lands, rather than all three under one."
+alternative = "Claim WI-855, WI-848 and WI-849 together under one scoped unpause, as the session prompt's 'claim each batch under ONE scoped unpause' would allow for a single batch."
+reversal_cost = "None to undo: two deletion/restore pairs instead of one, each byte-identical."
+why_not_escalated = "WI-849 is in the sitting's population and the sitting's open question is whether it folds into WI-808; a claimed row cannot be absorbed by the landing's sweep, so claiming it first would pre-empt the verdict. Each batch still runs under one unpause, as the owner directed."
+review = ""
