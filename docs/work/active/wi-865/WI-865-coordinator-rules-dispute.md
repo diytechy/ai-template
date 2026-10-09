@@ -11,7 +11,7 @@ needs = ["WI-860"]
 
 ## Context
 
-Filed by hand by the coordinator on 2026-10-08 at the owner's direction, splitting the coordinator path out of WI-811 (which absorbed it from the cancelled WI-861 the same day). The owner's ruling ([log.d/2026-10-08-owner-ruling-review-threat-model.md](../../log.d/2026-10-08-owner-ruling-review-threat-model.md)), rule 2: it is the adjudicator's job to make the call on a contested or repeated finding, not the coordinator's by sending every finding back to the builder; its call is final (OI-103 Q3), and a high-risk finding goes to the owner. WI-811 keeps the loop's RESOLVE, a step inside the in-lane sitting WI-809 builds, so it waits behind WI-809; this coordinator path needs neither WI-809 nor WI-805 and should not wait for them. WI-846's lane recorded the gap twice (docs/decisions/wi-846.toml D-006, D-007).
+Filed by hand by the coordinator on 2026-10-08 at the owner's direction, splitting the coordinator path out of WI-811 (which absorbed it from the cancelled WI-861 the same day). The owner's ruling ([log.d/2026-10-08-owner-ruling-review-threat-model.md](../../../log.d/2026-10-08-owner-ruling-review-threat-model.md)), rule 2: it is the adjudicator's job to make the call on a contested or repeated finding, not the coordinator's by sending every finding back to the builder; its call is final (OI-103 Q3), and a high-risk finding goes to the owner. WI-811 keeps the loop's RESOLVE, a step inside the in-lane sitting WI-809 builds, so it waits behind WI-809; this coordinator path needs neither WI-809 nor WI-805 and should not wait for them. WI-846's lane recorded the gap twice (docs/decisions/wi-846.toml D-006, D-007).
 
 ## Done-when
 
