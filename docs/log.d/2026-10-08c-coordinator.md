@@ -44,3 +44,5 @@ should be approved through the in-lane first-approval sitting.
 
 **Bar.** Every landing's smoke tier passed but over the 60 s wall budget
 (60.8 s, 65.2 s, 69.0 s); not re-stamped (coordinator-2026-10-08c.toml D-002).
+
+**Full suite** at `b7f38228` (detached worktree, fixed basetemp under `review-tmp/2026-10-08-coordinator-c/`): **5467 passed, 17 skipped, 0 failed** in 741 s. The basetemp was deleted once recorded.

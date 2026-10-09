@@ -39,6 +39,7 @@ in-lane cycle, the roles and the "never" list until WI-848 (the
     coordinator leans (b).
 - **Acts** run to seq 73 on the wi-852 lane (71-73), 70 on trunk.
   `docs/work/pause` is tracked and unchanged.
+- **Full suite** at `b7f38228` (detached worktree, fixed basetemp under `review-tmp/2026-10-08-coordinator-c/`): **5467 passed, 17 skipped, 0 failed** in 741 s. The basetemp was deleted once recorded.
 - **The smoke membership cap** is re-stamped to exactly 2438 on the wi-852 lane
   at the owner's choice (D-004), with no headroom; it lands with WI-852.
 
