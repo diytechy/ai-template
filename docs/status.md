@@ -25,10 +25,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-08b-coordinator.md](handoff-2026-10-08b-coordinator.md):
-  two lanes are open mid-cycle (the review threat model and the consolidation
-  close's edges); each lane's tip, its owed re-sit and the session prompt to
-  paste are there.
+  [handoff-2026-10-08c-coordinator.md](handoff-2026-10-08c-coordinator.md):
+  one lane is open mid-cycle (the attended review render, WI-852), its owed
+  steps, and the session prompt to paste are there.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
@@ -38,20 +37,22 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
   Every adjudication sitting now authenticates with the owner's long-lived token:
   set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
-  0. **Finish the two open lanes, then the review-response rows in order.**
-     The threat-model lane owes its third first-approval re-sit; the close-edges
-     lane owes one test-case re-attestation. Each then takes one fresh,
-     full-lane Codex Sol review (at medium, owner 2026-10-08) and lands. Then
-     the order the review-response consolidation sitting ruled: the
-     coordinator's dispute class and the kit-brief render (both wait on the
-     threat model), then the findings gate, then the coordinator-cycle skill,
-     then the blackout row. Review rule (owner, 2026-10-07): narrow rounds
-     while a lane iterates, then one fresh, full-lane review as the last gate.
-     Review threat model (owner, 2026-10-08,
-     [log.d/2026-10-08-owner-ruling-review-threat-model.md](log.d/2026-10-08-owner-ruling-review-threat-model.md)):
-     a finding that needs a compromised or contrived host is dismissed in one
-     recorded line and never answered with code; contested or third-round
-     findings go to the adjudicator.
+  0. **Land WI-852, then bring the smoke tier back under budget (WI-869, owner
+     2026-10-08), then the review-response rows in order.** WI-852's dispute
+     sitting ruled its last two review findings FIX; their fixes are a patch in
+     the lane's notes folder (a seam choice first), then the rows' amendment
+     sitting, one fresh,
+     full-lane Codex Sol review (at medium) and the landing. Then WI-869, then
+     the gate's strict verdict reading (WI-870), then the findings gate
+     (WI-853), the coordinator-cycle skill (WI-848, which also moves the dispute
+     route out of the session-protocol skill) and the blackout row (WI-834).
+     Review rule (owner, 2026-10-07): narrow rounds while a lane iterates, then
+     one fresh, full-lane review as the last gate. Review threat model (owner,
+     2026-10-08, PROCESS.md §6): a finding that needs a compromised or
+     contrived host is dismissed in one recorded line; a contested or
+     third-round finding goes to the coordinator's `dispute` sitting
+     (`coordinator_adjudicate.py adjudicate --brief dispute`), whose ruling is
+     final.
   1. **Build the S788-* successor rows** of the approved design note
      ([plans/2026-10-04-wi788-design/README.md](plans/2026-10-04-wi788-design/README.md),
      its ruling section first; it overrides the chapters), in their `needs`
