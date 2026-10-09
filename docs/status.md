@@ -36,8 +36,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
   Every adjudication sitting now authenticates with the owner's long-lived token:
   set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
-  0. **Bring the smoke tier back under budget (WI-869, owner 2026-10-08), then
-     the review-response rows in order:** the gate's strict verdict reading
+  0. **Bring the smoke tier back under budget (owner 2026-10-08; its row is in
+     work, see the handoff), then the review-response rows in order:** the gate's strict verdict reading
      (WI-870), then the findings gate
      (WI-853), the coordinator-cycle skill (WI-848, which also moves the dispute
      route out of the session-protocol skill) and the blackout row (WI-834).
