@@ -1,0 +1,26 @@
+# docs/decisions/coordinator-2026-10-09-leg01.toml — the overnight loop's first
+# headless leg (2026-10-09); delegated decisions made on trunk (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-870's in-lane adjudication sitting ran BEFORE its first Sol review, so one fresh full-lane Sol review can be both the first review and the last gate when it is SOUND; WI-853's sitting is held until WI-870 has landed and WI-853 has rebased, because two lanes taking acts on one base collide on act seq."
+alternative = "Run Sol before the sitting (the wave-11 order), which costs a second Codex round whenever the sitting changes nothing."
+reversal_cost = "Low: a later Sol finding that changes code may owe a re-sitting of the rows it touches."
+why_not_escalated = "Codex capacity is the overnight queue's binding constraint; the last-gate rule (a fresh full-lane review after every change) is kept either way."
+review = ""
+
+[decision.D-002]
+decided = "status.md's resume list now names the four review-response rows by subject, not by id, because integrate.py claim refuses an id named in status.md's hand-authored prose; the handoff's queue table carries the ids."
+alternative = "Move the whole list into the handoff."
+reversal_cost = "Trivial."
+why_not_escalated = "Mechanical; the guard's own refusal message prescribes it."
+review = ""
+
+[decision.D-003]
+decided = "The leg closed out at 14% occupancy, with both lanes committed and unlanded, because Codex reported its usage limit (reset 06:13) during both lanes' first Sol reviews; the handoff carries Resume-not-before 06:18."
+alternative = "Build the next queue row with Claude while Codex is limited."
+reversal_cost = "None: the lanes are committed and resume where they stopped."
+why_not_escalated = "The leg's prompt directs exactly this on a Codex limit; every further row also needs Terra and Sol."
+review = ""
