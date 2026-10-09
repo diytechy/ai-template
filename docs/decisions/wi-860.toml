@@ -1,0 +1,12 @@
+# docs/decisions/wi-860.toml — the review threat model's delegated decisions
+# (coordinator, 2026-10-08, third session).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The second re-sit's one-clause return (verdict 003: the test did not assert the delegated-decisions half of the recording clause) was answered by the coordinator adding the one phrase the adjudicator's draft named to the test's asserted list, rather than by dispatching a kit-builder; the coordinator checked the test fails with the clause removed from §6. Terra then aligned TC-332's Method and Expected."
+alternative = "Dispatch a kit-builder (Claude Opus, medium) for the one-string edit, as the roles direct for code."
+reversal_cost = "None: one tuple entry in a test, whose text the verdict dictated."
+why_not_escalated = "The adjudicator's draft fixed the change exactly; a builder dispatch would only re-type it. The builder role and the coordinator are the same model family, so independence from the judge is unchanged."
+review = ""

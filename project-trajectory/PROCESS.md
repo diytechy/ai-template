@@ -1002,6 +1002,18 @@ flowchart TD
   their own claims; that class needs the independent reviewer.)
 - **Low/mechanical** (rename, doc tweak, config): just run the harness.
 
+**Review threat model.** A review hunts defects in a normal working
+environment: the content agents write into the repository (the gates exist to
+check it), supported configurations, and regressions of supported behavior.
+A finding whose reproduction needs the host itself compromised or contrived (a
+fake or hostile binary, a shim whose output depends on the working directory,
+the environment or `PATH` changed by another process mid-call, a tampered OS
+or tool) is out of scope: it is dismissed in one recorded line by whoever
+rules the finding, in the response to the review verdict (and in the
+delegated-decisions record too, when the run keeps one), and never answered
+with code. Forge mode's "bugs and fail-open, not malice"
+(process-options.md "Parallel work") is the same bound.
+
 Keep `status.md` short so a reviewer can orient cheaply — the *whole file* is
 the working surface (§5); the full history lives in `log.md` and need not be
 re-read each pass.

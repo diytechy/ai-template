@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 289
+design_rows = 290
 seam_rows = 237
-requirements_placed = 118
+requirements_placed = 119
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -638,6 +638,7 @@ sr_refs = [
   "SR-230",
   "SR-231",
   "SR-232",
+  "SR-233",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -743,6 +744,7 @@ llr_refs = [
   "LLR-308",
   "LLR-309",
   "LLR-310",
+  "LLR-311",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -756,7 +758,9 @@ hat_refs = [
   "UNATTENDED-OPS",
 ]
 modules = [
+  "project-trajectory/PROCESS.md",
   "project-trajectory/hooks/commit-msg",
+  "project-trajectory/prompts/reviewer.template.md",
   "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/adjudicate_brief.py",
   "project-trajectory/scripts/agent_brief.py",

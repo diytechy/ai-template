@@ -7497,6 +7497,21 @@ passes the selected registry row as `route=` in place of `family`,
 (`prepare_launch`) in place of a template and an environment.
 The store needs no migration.
 
+### A review's scope excludes defects that need a compromised host [since e926ab04]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**Kit-owned files — overwrite:** `docs/process.md`, from the kit's
+`PROCESS.md` (§6 gains the "Review threat model" paragraph),
+`prompts/reviewer.template.md` (one sentence pointing the reviewer at that
+paragraph), and the regenerated `prompts/CATALOG.md`. **What changes for
+you:** prose only. A review now has a stated scope bound: a finding whose
+reproduction needs the host itself compromised or contrived is dismissed in
+one recorded line and never answered with code. Whoever rules the finding
+records that line in the response to the review verdict, and in the
+delegated-decisions record too when the run keeps one. If you override the reviewer
+brief with your own file, add the same pointer to it. No setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

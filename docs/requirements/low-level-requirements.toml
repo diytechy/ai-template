@@ -3288,3 +3288,15 @@ test_refs = "TC-327; TC-331"
 status = "Approved"
 component = "CMP-008"
 phase = 6
+
+[design.LLR-311]
+sr_refs = ["SR-233"]
+title = "Review threat-model definition and reviewer reference"
+module = "project-trajectory/PROCESS.md;project-trajectory/prompts/reviewer.template.md"
+code_symbol = "Review threat model;REVIEWER"
+detail = "The §6 bold-lead paragraph `Review threat model` defines the review scope: normal-environment defects include repository content agents write, supported configurations, and regressions of supported behavior; compromised or contrived host reproductions are ruled out, with the ruling party recording the dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response. The enumerated set of delivered briefs that judge a review finding, whose only member today is the reviewer brief, each cite that bold lead and do not copy its boundary examples."
+rationale = "The process document is the stable home for the scope, while the brief must direct each reviewer to that home. Repeating the examples in the brief would create a second definition that can drift from the process rule."
+test_refs = "TC-332"
+status = "Approved"
+component = "CMP-008"
+phase = 6

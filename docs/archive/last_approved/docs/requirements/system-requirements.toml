@@ -1786,3 +1786,18 @@ verification = "Test"
 status = "Approved"
 phase = 6
 form = "interface"
+
+[requirement.SR-233]
+title = "Review threat model"
+sn_refs = ["SN-006"]
+boundary_refs = ["B-09", "B-10"]
+hat_refs = ["UNATTENDED-OPS"]
+requirement = "The delivered review process shall limit findings to defects reachable in a normal working environment."
+rationale = "A DERIVED requirement, and labelled so. SN-006 requires an unattended run to report failures clearly and to continue until it must surface to a human; it does not say which hostile host conditions a review must treat as an actionable defect. The unattended-operations lens listens for an unbounded retry: treating a reproduction that depends on a compromised or contrived host as actionable can extend review indefinitely and can demand code that compensates for a host whose integrity the process cannot establish. A stated boundary was chosen over relying on each reviewer to infer it, because an inferred boundary varies by session and cannot stop repeated rework. Fed back to the need: SN-006's acceptance could identify the normal working environment in which a review finding is actionable; until it does, this row is derived and says so."
+acceptance_criteria = "The review scope includes repository content agents write, supported configurations, and regressions of supported behavior; one authoritative definition excludes a finding whose reproduction requires a compromised or contrived host; the party that rules an out-of-scope finding records its dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response; and the enumerated set of delivered briefs that judge a review finding, whose only member today is the reviewer brief, each cite that definition without restating its boundary examples."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+aspect = "process"
+form = "cross-cutting"

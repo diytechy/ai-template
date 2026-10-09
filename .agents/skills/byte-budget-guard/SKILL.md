@@ -45,7 +45,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 95,806 | 2026-10-08 | **−11** WI-849: §4's approval act may be taken in the lane |
+| `project-trajectory/PROCESS.md` | 96,595 | 2026-10-08 | **+137** WI-860: §6 names who records a dismissal, and where |
 | `project-trajectory/PROCESS_OPTIONS.md` | 198,420 | 2026-10-08 | **+974** WI-849: the in-lane act and its honest bound |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

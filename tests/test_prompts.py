@@ -155,6 +155,50 @@ def test_the_reviewer_and_worker_briefs_link_the_guard_rule_and_restate_nothing(
         assert "a file on disk, the network" not in text, key
 
 
+# The shipped briefs that judge a review finding; a brief that starts judging
+# findings, such as WI-865's dispute brief, joins this set.
+FINDING_JUDGING_BRIEFS = (pr.REVIEWER,)
+
+
+def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing():
+    # The review threat model has one home, PROCESS.md §6: a finding whose
+    # reproduction needs a compromised or contrived host is dismissed, never
+    # answered with code. The reviewer brief points at it by its bold-lead
+    # name; no shipped brief copies its example list, which is what would
+    # drift from the home.
+    process = (KIT / "PROCESS.md").read_text(encoding="utf-8")
+    lead = "**Review threat model.**"
+    assert process.count(lead) == 1
+    start = process.index(lead)
+    end = process.find("\n\n", start)
+    paragraph = " ".join(process[start : end if end != -1 else None].split())
+    for clause in (
+        "the content agents write into the repository",
+        "supported configurations",
+        "regressions of supported behavior",
+        "the host itself compromised or contrived",
+        "is out of scope",
+        "dismissed in one recorded line",
+        "by whoever rules the finding",
+        "in the response to the review verdict",
+        "delegated-decisions record too, when the run keeps one",
+        "never answered with code",
+    ):
+        assert clause in paragraph, clause
+    for key in FINDING_JUDGING_BRIEFS:
+        assert '§6 "Review threat model"' in pr.load(key), key
+    examples = (
+        "fake or hostile binary",
+        "depends on the working directory",
+        "changed by another process mid-call",
+        "a tampered OS or tool",
+    )
+    for key in sorted(pr.KIT_PROMPTS):
+        brief = " ".join(pr.load(key).split())
+        for example in examples:
+            assert example not in brief, (key, example)
+
+
 def test_the_fan_out_rule_has_one_home_and_no_brief_or_skill_restates_it():
     # PROCESS.md §6 keeps both delegation kinds, names tiers, and forbids
     # fan-out from the judging sessions. A copy in a prompt or a shipped skill
