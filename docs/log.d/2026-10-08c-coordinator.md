@@ -39,8 +39,11 @@ per-line reader refuses duplicated fields).
 
 **Owner directions (2026-10-08).** Codex runs through the `codex` CLI; the owner
 switched accounts when the plan limit hit. Smoke membership re-stamped to 2438;
-fix the smoke tier right after WI-852. Asked, not yet ruled: whether IF rows
-should be approved through the in-lane first-approval sitting.
+fix the smoke tier right after WI-852. Interfaces: filed as OI-112
+(with placeholder WI-871) at the owner's direction; an SR is a transform
+definition and its interfaces carry the measurable inputs and outputs, and the IF
+checks are light today. One retained adjudicator session across work items is
+fine for now.
 
 **Bar.** Every landing's smoke tier passed but over the 60 s wall budget
 (60.8 s, 65.2 s, 69.0 s); not re-stamped (coordinator-2026-10-08c.toml D-002).

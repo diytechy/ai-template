@@ -85,24 +85,50 @@ in-lane cycle, the roles and the "never" list until WI-848 (the
 
 - **Push** `refactor_again` and `archive/lanes`. Remove the archived worktrees
   `wi-860`, `wi-865` and `wi-866` (and the earlier list) when convenient.
-- **Interface approval (asked, not ruled):** all 237 IF rows are Drafted.
-  Approval is a "human act" per `INTERFACES.template.md` that has never been
-  taken, and the sittings cannot approve an IF row. Recommendation: route new
-  and amended IF rows through the in-lane first-approval sitting with their TC.
-  Say whether to file a row.
-- **The retained adjudicator session** `b8cf33a7…` judged every work item this
-  session (WI-860, 866, 852, 865). It authored none of them, so independence
-  holds; say whether one session across work items is intended.
-- **Decisions to confirm or overrule, high risk first:**
-  - `coordinator-2026-10-08c.toml` D-003 (parallel lanes, ids and act
-    ordering), then D-001 and D-002 (the smoke budget not re-stamped on trunk);
-  - `wi-866.toml` D-002 (the act-renumbering repair commit), D-001;
-  - `wi-865.toml` D-001 (`dispute` joins `retain_for`; the retained session
-    drains once), D-002;
-  - `wi-860.toml` D-001;
-  - on the wi-852 lane: `wi-852.toml` D-003 (SR-235 split from SR-154), D-002
-    (coordinator rounds gain no gate authority), D-005, D-001;
-  - the earlier handoffs' lists.
+- **Interfaces: rule OI-112** (filed at your direction, with its placeholder
+  WI-871): how far IF rows join the adjudicated spine, from routing them through
+  the first-approval sitting up to every SR as a transform over its declared
+  input and output interfaces. Recommendation: a design note sizing the heavy
+  option first, with the light one as its first slice.
+- **The retained adjudicator session** judging several work items: you said it
+  is fine for now (2026-10-08), and you may revisit it.
+- **Decisions to confirm or overrule** (each also renders under "Decisions to
+  review" in [open-items.html](open-items.html#decisions-to-review), except
+  WI-852's, which reach trunk when it lands). High risk first:
+  - `wi-866.toml` **D-002 (high):** after the rebase onto WI-860, git applied two
+    act commits cleanly with a duplicate seq; a repair commit on the branch
+    renumbered them 66 and 67. Two archived intermediate lane commits keep the
+    duplicate; the squash does not. I did not bypass the hook to rewrite them.
+  - `wi-865.toml` **D-001 (high):** `dispute` joins this repo's `retain_for`, so
+    dispute sittings share the work item's retained adjudicator; changing the
+    list drains the live retained session once.
+  - `coordinator-2026-10-08c.toml` **D-003 (high):** WI-865 and WI-852 were
+    built and authored in parallel; WI-865's Terra was given WI-852's ids as a
+    floor, and WI-852's sitting was held until WI-865 landed, so the acts
+    numbered without a repair.
+  - `coordinator-2026-10-08c.toml` D-002: the smoke tier ran 60.8-69 s against
+    60 s on every landing; I did not re-stamp the wall budget (now WI-869).
+  - `coordinator-2026-10-08c.toml` D-001: WI-865's spec renamed to a stem under
+    the 37-character ceiling before its claim.
+  - `wi-866.toml` D-001: I fixed the review's MINOR (TC-254's mint-clause
+    window) as row text, at the cost of a fourth sitting, instead of disputing
+    it.
+  - `wi-865.toml` D-002: the dispute route is written in the session-protocol
+    skill until WI-848 moves it to the coordinator-cycle skill.
+  - `wi-860.toml` D-001: I added the one test phrase the adjudicator's draft
+    named myself, instead of dispatching a builder.
+  - On the wi-852 lane (`wi-852.toml`):
+    - **D-003 (high):** SR-154 restored to its anchor, and the attended
+      record-or-refuse obligation given its own row, SR-235, instead of either
+      fix the adjudicator offered.
+    - **D-002 (high):** a coordinator round file is read by the rollup but
+      gains no merge authority; the gate is unchanged (render-only).
+    - D-005: the dispute sitting ruled both third-round findings FIX,
+      overruling my dismissal of one.
+    - D-004: the smoke membership cap re-stamped to 2438. Your own choice, so
+      it is recorded as confirmed.
+    - D-001: the rendered review brief carries no builder's report.
+  - The earlier handoffs' lists.
 - **Rule** OI-98 and OI-105, still pending.
 
 ## Session prompt (paste to start the next session)

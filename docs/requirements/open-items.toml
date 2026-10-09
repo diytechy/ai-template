@@ -4041,3 +4041,19 @@ options = """- (a) RANKED PREFERENCE: "never a session that authored any range; 
 - (c) HARD EXCLUSION WITH A STATED EXCEPTION: keep the rule and name the relaxation as its one exception."""
 recommendation = "(a). It matches A1 and the design's own chapter 4 wording, keeps session independence absolute, and leaves the relaxation's shape to OI-108."
 ruled_date = "2026-10-07"
+
+[open_item.OI-112]
+title = "Interfaces as the spine's measurable inputs and outputs: approval and checks for IF rows"
+status = "pending"
+raised = "2026-10-08"
+one_line = "Decide how far interface rows join the adjudicated spine: from routing new and amended IF rows through the in-lane first-approval sitting, up to stating every SR as a transform whose inputs and outputs are its declared interfaces, with checks to match."
+decision = """Raised by the owner on 2026-10-08, after the coordinator reported that none of the repository's 237 IF rows has ever been approved. The owner's words: "Technically, all SRs should be built up over interfaces, the SR would be transform definition, the interfaces are on the measureable input / output, but right now the IF checks are quite light." Filed as an open item because it may be heavy.
+
+WHAT IS TRUE TODAY. PROCESS.md §8 keeps `IF-###` rows "separate from the spine": an interface hangs off the SN -> SR -> LLR -> TC chain through its owner module and the TC whose `Verifies` cites it, and states no requirement id. `INTERFACES.template.md` gives each row a `Status` of `Drafted` or `Approved` and makes the flip "a human act in a reviewed commit"; it has never been taken here, so every row is `Drafted`. The coordinator's adjudication route knows only the chain tiers (SR, LLR and TC, plus SN and the assumption tiers for amendments), so no sitting can approve an IF row; the adjudicator reads a seam's contract only indirectly, while judging the TC that verifies it. The checks that exist are structural (trace.py's interface findings: owner, channel, the `Data` cell's form, a declared contract in the owner module, a cross-component import needing a seam).
+
+WHAT IS MISSING. Nothing independent judges an interface's text as a claim, nothing ties an SR's obligation to the interfaces it consumes and produces, and the status column carries no information."""
+blast_radius = "Method-level: PROCESS.md §3/§4/§8, the IF template and registry schema, trace.py's checks, the adjudication briefs and route, and every adopter's interfaces registry. The heavy option would touch all 124 SRs and 237 IF rows here and force downstream repos to migrate. Nothing in flight waits on it; its queued placeholder WI-871 reads blocked."
+options = """- (a) LIGHT: route new and amended IF rows through the in-lane first-approval sitting together with the TC that verifies them, and make the status flip the sitting's act, like the chain tiers. No change to what an SR says.
+- (b) HEAVY: an SR is a transform definition over declared interfaces. Each SR names the IF rows that carry its measurable inputs and outputs; IF rows become adjudicated spine content (Data schema, channel and version judged as claims); the adjudicator's UPWARD/DOWNWARD questions extend to the IF tier; trace.py checks that every SR's inputs and outputs resolve to approved seams. Needs a design note and a migration plan for this repo and adopters.
+- (c) Keep the human act and accept the status column as unused, or drop `Status` from IF rows."""
+recommendation = "A design pass first: a short note that sizes (b) against this repo's 124 SRs and 237 IF rows and the adopter migration, with (a) as its first slice, since (a) is useful on its own and is a prerequisite of (b). Rule the note before building either."
