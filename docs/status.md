@@ -25,9 +25,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-09-coordinator.md](handoff-2026-10-09-coordinator.md):
-  no lane is open; the next rows in order and the session prompt to paste are
-  there.
+  [handoff-2026-10-09b-overnight-coordinator.md](handoff-2026-10-09b-overnight-coordinator.md):
+  no lane is open; the 20-row overnight queue, how the unattended legs run,
+  and the session prompt are there.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change

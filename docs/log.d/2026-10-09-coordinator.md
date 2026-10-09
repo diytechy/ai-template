@@ -1,7 +1,9 @@
 ## 2026-10-08/09 (fourth session) — Coordinator: WI-852 and WI-869 landed; WI-874 filed
 
 Resumed from [handoff-2026-10-08c-coordinator.md](../handoff-2026-10-08c-coordinator.md).
-The next resume map is [handoff-2026-10-09-coordinator.md](../handoff-2026-10-09-coordinator.md).
+The next resume map is [handoff-2026-10-09-coordinator.md](../handoff-2026-10-09-coordinator.md),
+then, after the consolidation round below,
+[handoff-2026-10-09b-overnight-coordinator.md](../handoff-2026-10-09b-overnight-coordinator.md).
 
 **Landed.**
 - **WI-852**, the attended review render (`f7e492bf`; acts 71-74). Steps this
@@ -53,3 +55,18 @@ check. `docs/README.md` now links both, and the test passes (3 passed).
 - `wi-869.toml` D-001 to D-003.
 
 All await the owner's confirm or overrule.
+
+**The consolidation round** (owner, 2026-10-09). The census minted WI-875
+over 30 queued rows. It was claimed under one scoped unpause (`e0ae10da`,
+restored byte-identical in `6fe2f8b9`) and judged by an independent
+adjudicator through the entry point. Outcome: queue-with-edge, five edges
+(WI-858 needs WI-847, WI-800 needs WI-858, WI-809 needs WI-857, WI-810 needs
+WI-856, WI-811 needs WI-853), nothing absorbed. The mechanical close wrote all
+five. Sol's full-lane review `3f40ab16` was SOUND. Landed as `5f5f7762`;
+decision `wi-875.toml` D-001.
+
+**The overnight queue** (owner: about four times the last handoff's scope)
+is 20 rows, plus four stretch rows. It runs as unattended headless legs
+through `coordinator-tools/overnight_legs.py`. Probed this session: a
+headless leg kills its background tasks at exit, so legs work in the
+foreground; the shell tool's foreground cap is raised through `--settings`.
