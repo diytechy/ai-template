@@ -37,10 +37,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
   Every adjudication sitting now authenticates with the owner's long-lived token:
   set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
-  0. **The review-response rows, in order:** the gate's strict verdict reading
-     (WI-870), then the findings gate
-     (WI-853), the coordinator-cycle skill (WI-848, which also moves the dispute
-     route out of the session-protocol skill) and the blackout row (WI-834).
+  0. **The review-response rows, in order:** the gate's strict verdict reading,
+     then the findings gate, the coordinator-cycle skill (which also moves the
+     dispute route out of the session-protocol skill) and the blackout row; the
+     handoff's queue table names their ids.
      Review rule (owner, 2026-10-07): narrow rounds while a lane iterates, then
      one fresh, full-lane review as the last gate. Review threat model (owner,
      2026-10-08, PROCESS.md §6): a finding that needs a compromised or
