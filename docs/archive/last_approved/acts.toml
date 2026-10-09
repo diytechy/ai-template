@@ -462,3 +462,23 @@ seq = 76
 date = "2026-10-09"
 approved = []
 reattested = ["LLR-046", "LLR-207", "LLR-310", "LLR-313", "TC-083", "TC-327"]
+
+[[act]]
+seq = 77
+date = "2026-10-09"
+approved = []
+reattested = ["LLR-069", "TC-069"]
+verdict = "docs/reviews/wi-853-findings-gate-in-rework/001-ADJUDICATE-0b94f3c.md"
+
+[[act]]
+seq = 78
+date = "2026-10-09"
+approved = []
+reattested = ["LLR-069", "TC-069"]
+verdict = "docs/reviews/wi-853-findings-gate-in-rework/004-ADJUDICATE-1ccd09d.md"
+
+[[act]]
+seq = 79
+date = "2026-10-09"
+approved = ["SR-236"]
+reattested = []

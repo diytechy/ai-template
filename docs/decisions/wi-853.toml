@@ -1,0 +1,47 @@
+# docs/decisions/wi-853.toml — every review finding is a clause the rework plan
+# covers before the fix (overnight leg 01, 2026-10-09); delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The coordinator's half lands in the session-protocol skill §2 (where the coordinator's rework and dispute procedure lives today), because the coordinator-cycle skill the spec names does not exist until WI-848, which is queued next and moves the prose. The executable refusal is plan_coverage.py's own exit status (it now reads a review verdict as --findings); no separate dispatch hook is added, since the coordinator dispatches builders by hand."
+alternative = "Hold WI-853 until WI-848 creates the coordinator-cycle skill, or add a new dispatch wrapper script."
+reversal_cost = "Low: one skill bullet moves in WI-848."
+why_not_escalated = "The queue's order (owner's) puts WI-853 before WI-848, and WI-848's spec already moves the coordinator procedure; a wrapper script would be a second entry point for one exit status."
+review = ""
+
+[decision.D-002]
+decided = "IF-046's requestors cell gains scripts/plan_coverage, because plan_coverage now imports score_reviews.parse_verdict across components (CMP-006 to CMP-008) and check_trajectory --strict refuses an undeclared seam. The row stays Drafted."
+alternative = "Duplicate the verdict finding-line parse inside plan_coverage."
+reversal_cost = "Low: one list cell."
+why_not_escalated = "One parser is the owner's standing rule; declaring the seam it now crosses is mechanical."
+review = ""
+
+[decision.D-003]
+decided = "A dispute ruling counts as covering a finding only when the plan's exclusion cites an accepted dispute verdict that rules that finding DISMISS; a FIX or ESCALATE ruling, an unaccepted outcome, another finding's id or a missing file refuses."
+alternative = "Count any cited dispute verdict as covering the finding."
+reversal_cost = "Low: one predicate."
+why_not_escalated = "Only a dismissal resolves a finding without a fix; a FIX ruling still owes the fix the gate exists to plan."
+review = ""
+
+[decision.D-004]
+decided = "On the rebase onto WI-870's landing, IF-046's `data` cell (edited by both lanes) was merged by meaning: this lane's split (parse_verdict yields typed verdict findings; only the scoring results are advisory) plus WI-870's clause that the verdict word and count come only from the shared strict review-line reader, and the kitlib/verdict note, which this lane had dropped as stale but which still holds (the verdict leaf takes the parser as an argument and imports nothing from scoring)."
+alternative = "Take either lane's cell whole, dropping the other lane's clause."
+reversal_cost = "Trivial: one Drafted cell."
+why_not_escalated = "Both clauses are true of the merged code; IF rows stay Drafted and are not adjudicated (OI-112)."
+review = ""
+
+[decision.D-005]
+decided = "WI-853 lands on the fresh full-lane review at 9cbf1a59 without a further Sol round: that review's one finding (two same-id dispute rounds in one lane refuse a valid cited dismissal) was ruled DISMISS not-worth-cost by the dispute sitting 006, whose ruling is final, and nothing in the lane's code changed after the reviewed tip (only the dispute's findings file and verdict were added)."
+alternative = "Run one more fresh full-lane Sol review over the two added review records."
+reversal_cost = "Low: a later review of the landed squash costs one Codex session."
+why_not_escalated = "The last-gate rule asks for a fresh full-lane review after every change; the reviewed tip's code is the landed code, and the only open finding has a final ruling. Codex capacity is the night's binding constraint."
+review = ""
+
+[decision.D-006]
+decided = "The dismissed finding's class fix (record the findings file a dispute sitting read in the sitting's binding, so the coverage gate reads exactly that file) is filed as a follow-up row after the landing's sweep, per the dispute ruling; until it lands, a lane's dispute findings should use ids unique within the lane, or the plan excludes the finding with an uncited reason."
+alternative = "Build the binding in this lane (route (a) of the dispute), touching the SR-232/LLR-310 and SR-234/LLR-315 chains."
+reversal_cost = "None: the follow-up row is queued work."
+why_not_escalated = "The adjudicator's ruling is final and names this route."
+review = ""

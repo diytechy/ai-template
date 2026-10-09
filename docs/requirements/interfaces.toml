@@ -802,9 +802,9 @@ status = "Drafted"
 
 [interface.IF-046]
 owner = "scripts/score_reviews"
-requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/gen_verdict_rollup", "scripts/kitlib/verdict"]
+requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/gen_verdict_rollup", "scripts/kitlib/verdict", "scripts/plan_coverage"]
 channel = "call"
-data = "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round, latest_phase_verdicts; parse_verdict obtains a verdict word and declared count only from the shared strict review-line reader and returns neither when that reader refuses; every result advisory. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
+data = "parse_verdict: typed verdict findings, with a verdict word and declared count taken only from the shared strict review-line reader, neither returned when that reader refuses; substance, merge_verdict, fired_tripwires, record_round and latest_phase_verdicts: advisory review-scoring data. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
 version = "v1"
 status = "Drafted"
 
@@ -2579,7 +2579,7 @@ notes = "source - this seam reads version-control trees and review or decision r
 [interface.IF-287]
 rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
 owner = "scripts/kitlib/sitting"
-requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews"]
+requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage"]
 channel = "call"
 data = "claim_scope(meta) -> (brief, {kind: [ids]}, [malformed]); bounds_acts(meta); malformed_refusal(metas); review_line(text) -> ((APPROVE|CHANGES-REQUESTED, findings), refusal)"
 version = "v1"
@@ -2589,7 +2589,7 @@ notes = "source - consumes no declared seam; pure functions."
 
 [interface.IF-290]
 owner = "scripts/kitlib/dispute"
-requestors = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief", "scripts/plan_coverage"]
 channel = "call"
 data = "read_findings(text, where); request_line(ids); requested_ids(brief_text); parse(text, requested, where)"
 version = "v1"

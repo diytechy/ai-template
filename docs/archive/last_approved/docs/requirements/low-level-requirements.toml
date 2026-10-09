@@ -665,11 +665,11 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-069]
-sr_refs = ["SR-155"]
+sr_refs = ["SR-155", "SR-236"]
 title = "Plan coverage gate"
 module = "project-trajectory/scripts/plan_coverage.py"
-code_symbol = "parse_goal/parse_plan/check_plan/find_cycle/format_report/parse_excludes/verifying_tcs/ref_problem/_covers_findings/_interfaces_findings/check_excludes/gap_findings/spine_diff/diff_findings/_plan_section/_malformed/_read/_declared/load_item/_parse_args/_check_one/_load_gate"
-detail = "Uses one plan-table grammar for dual goal and single item runs. Resolves clause, SR, TC and interface references; validates dependencies and reasoned exclusions; emits coverage and pairwise differences. Either run treats an unexplained clause gap as a finding; a single run also treats an uncited item SR, or a TC verifying one that no row names nor excludes, as findings (an item SR cannot be excluded). Findings (these gaps, and bad references, plan graphs or exclusions) exit 1, malformed input (including an item with no Done-when items) exits 2, and an absent registry notes without failing."
+code_symbol = "parse_goal/finding_clauses/parse_plan/check_plan/find_cycle/format_report/parse_excludes/verifying_tcs/ref_problem/_covers_findings/_interfaces_findings/check_excludes/ruling_problem/_finding_key/_ruled_texts/_correspondence_problem/resolution_findings/gap_findings/spine_diff/diff_findings/_plan_section/_malformed/_read/_declared/load_item/_parse_args/_check_one/_load_gate"
+detail = "Uses one plan-table grammar for dual goal and single item runs. Resolves clause, SR, TC and interface references; validates dependencies and reasoned exclusions; emits coverage and pairwise differences. A findings input either declares F# clauses or supplies a review verdict whose finding lines become ordered F1..Fn clauses through finding_clauses; mixing the forms is malformed. An F# exclusion that cites a dispute verdict resolves the excluded F# only when the cited accepted DISMISS rules it and the findings file beside that verdict records the ruled finding with that F#'s text; otherwise it is a finding. An exclusion without a verdict remains reasoned. Either run treats an unexplained clause gap as a finding; a single run also treats an uncited item SR, or a TC verifying one that no row names nor excludes, as findings (an item SR cannot be excluded). Findings (these gaps, and bad references, plan graphs or exclusions) exit 1, malformed input (including an item with no Done-when items) exits 2, and an absent registry notes without failing."
 test_refs = "(see TC-069)"
 status = "Approved"
 component = "CMP-006"

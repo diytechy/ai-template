@@ -7650,6 +7650,39 @@ line. `PROCESS.md`'s review block now carries that machine line in place of the
 `Verdict:` header, so a reviewer following it writes one verdict line; if your
 own docs or prompts copied the old header, change them the same way.
 
+### A review's findings are clauses the rework plan must cover before the fix [since 0b550da9]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/plan_coverage.py --findings` now also reads a review
+verdict: its finding lines (`- [SEVERITY] <anchor> -> ...`) become the clauses
+F1..Fn in the order written, through one step, `finding_clauses`, that the
+attended rework round uses (the loop's replan is to call it once WI-805 wires
+it; nothing in the loop calls it yet). A findings file declaring
+`F1: <text>` lines reads as before; one mixing both shapes is malformed (exit
+2). An `F#` exclusion whose reason cites a dispute verdict
+(`.../NNN-ADJUDICATE-<sha7>.md`, optionally `#<the sitting's finding id>`) must
+cite an accepted dispute verdict ruling that finding `DISMISS`, and the ruled
+finding must be that `F#` finding: every dispute findings file beside the
+verdict whose ids are the ones its call requested must record the ruled
+finding as the review wrote it (list marker, `[SEVERITY]` tag, whitespace and
+typographic quotes, dashes and arrows aside). A `FIX` or `ESCALATE` ruling, an
+unaccepted call, a ruling of another finding (by id, or by text: another
+finding or another round's finding under the same id), no findings file beside
+the verdict, or a missing file is a finding (exit 1). Keep each dispute's
+findings file in the lane's review directory beside its verdict. The session-protocol skill states the attended
+round: the builder's plan covers or excludes every `F#`, and the fix is
+dispatched only when `plan_coverage.py --item <spec> --findings <round file>
+<plan>` exits 0.
+
+**Kit-owned files — overwrite:** `scripts/plan_coverage.py` and
+`skills/session-protocol/SKILL.md`.
+
+**What to do.** Nothing needs migrating: an existing `F#` findings file and
+every plan that passed before still pass, unless an `F#` exclusion's reason
+names an `ADJUDICATE` verdict path that does not dismiss that
+very finding.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -94,7 +94,8 @@ always true.
   another build round.** When the builder or the coordinator contests a
   review finding, or a finding class reaches its third review round, the
   adjudicator rules it, not the coordinator by sending it back to the builder.
-  Write the findings file (its shape: `scripts/kitlib/dispute.py`), compose
+  Write the findings file beside the verdict, in `docs/reviews/<lane>/` (its
+  shape: `scripts/kitlib/dispute.py`), compose
   the `dispute` brief over it (a row whose `Brief` is `dispute` and whose
   `Adjudicates` names that file, through `adjudicate_brief.compose`), and run
   the call above with `--brief dispute`. Each finding comes back FIX, DISMISS
@@ -113,6 +114,18 @@ always true.
   scratch path the brief names, and `review_brief.py file --review <it> --sha
   <tip> --scope <scope>` validates it and writes the lane's round file
   (`docs/reviews/<lane>/NNN-REVIEW-A-<sha7>.md`), which the rollup reads.
+- **A review's findings are clauses the rework plan covers before the fix is
+  dispatched.** The builder's first answer to a round file is a plan: a
+  `Plan-WI` table whose rows cite each finding's `F#` (F1..Fn in the order
+  written), with columns for its class, every site of the class with the
+  search that found it, and the one owning boundary. Run `python
+  project-trajectory/scripts/plan_coverage.py --item <spec> --findings <round
+  file> <plan>` and dispatch the fix only on exit 0: every `F#` covered by a
+  row or excluded with a reason. A finding a dispute sitting dismissed is
+  excluded citing that verdict, `Excludes: F2 — dismissed:
+  docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`; the gate
+  refuses a cite that is not an accepted DISMISS of it, or whose findings
+  file beside it records another finding under that id.
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
   only sanctioned stop is the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges

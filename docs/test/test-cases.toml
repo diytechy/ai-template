@@ -739,13 +739,13 @@ status = "Approved"
 phase = 4
 
 [test.TC-069]
-verifies = ["SR-155", "LLR-069"]
+verifies = ["SR-155", "SR-236", "LLR-069"]
 level = "Integration"
-method = "Run dual and single plan coverage, reference, graph, exclusion, SR/TC-diff, absent-registry, and malformed-input cases."
+method = "Run dual and single plan coverage, reference, graph, exclusion, review-verdict finding, dispute-ruling, SR/TC-diff, absent-registry, and malformed-input cases."
 tier = "Smoke"
-expected = "A reasoned exclusion passes and clean plans emit per-plan and pairwise coverage; a bad reference or plan graph, an unexplained clause gap in either run (SINGLE Done-when or finding, DUAL goal clause), an undeclared or reasonless exclusion, an item SR no row cites (even if excluded), or a TC verifying an item SR that no row names nor excludes exits 1 by name; malformed input, a missing Done-when included, exits 2; DUAL report bytes remain unchanged; absent registries note without failure."
+expected = "A review verdict yields ordered F# clauses; a covered or reasoned-excluded finding passes; an uncovered finding, bad reference or plan graph, unexplained clause gap in either run (SINGLE Done-when or finding, DUAL goal clause), undeclared or reasonless exclusion, an F# exclusion citing a FIX, ESCALATE, non-accepted, mismatched, missing, unrelated, another-round same-numbered, or unshown dispute finding, an item SR no row cites (even if excluded), or a TC verifying an item SR that no row names nor excludes exits 1 by name. A mixed declared/verdict findings file, malformed input, or a missing Done-when exits 2; DUAL report bytes remain unchanged; absent registries note without failure."
 automated = "Yes"
-evidence = "tests/test_plan_coverage.py; tests/test_plan_coverage_step.py::test_an_unexcluded_gap_in_plan_a_alone_bounces_only_a"
+evidence = "tests/test_plan_coverage.py::test_the_shared_step_turns_a_real_verdict_into_F_clauses; tests/test_plan_coverage.py::test_a_findings_file_mixing_both_shapes_is_malformed; tests/test_plan_coverage.py::test_an_uncovered_review_finding_refuses_the_dispatch; tests/test_plan_coverage.py::test_covered_or_excluded_review_findings_pass; tests/test_plan_coverage.py::test_a_dismissed_dispute_citing_its_ruling_passes; tests/test_plan_coverage.py::test_a_dispute_ruling_cited_by_its_own_id_passes; tests/test_plan_coverage.py::test_a_dismissal_of_an_unrelated_finding_refuses; tests/test_plan_coverage.py::test_a_dismissal_from_another_round_under_the_same_id_refuses; tests/test_plan_coverage.py::test_a_dismissal_whose_finding_cannot_be_shown_refuses; tests/test_plan_coverage.py::test_a_ruling_of_the_same_finding_passes_through_typographic_drift; tests/test_plan_coverage.py::test_a_cited_ruling_that_does_not_dismiss_refuses; tests/test_plan_coverage.py::test_a_real_dispute_verdict_ruling_FIX_refuses_its_exclusion; tests/test_plan_coverage_step.py::test_an_unexcluded_gap_in_plan_a_alone_bounces_only_a"
 status = "Approved"
 phase = 1
 

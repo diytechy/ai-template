@@ -32,7 +32,9 @@ The commensurability contract it parses:
 
   - the goal brief declares numbered clauses — lines like `C1: <text>`
     (optionally list-marked or bold); a findings file declares `F1: <text>`
-    the same way;
+    the same way, or is a review verdict whose finding lines become F1..Fn in
+    order (`finding_clauses`, the one step the coordinator's attended rework
+    round uses and WI-805's loop replan is to call — WI-853);
   - each plan holds one markdown table with a `Plan-WI` header column:
     `| Plan-WI | Title | Covers | Interfaces | Predecessors |`, plus an
     optional `Tier` column (carried for the consumer that applies it, never
@@ -54,12 +56,20 @@ Findings (exit 1):
     - a duplicate `Plan-WI` id, an unknown `Predecessors` id, or a
       predecessor cycle;
     - an `Excludes:` line with no reason, or naming an undeclared clause;
+    - an `F#` exclusion whose reason cites a dispute verdict
+      (`.../NNN-ADJUDICATE-<sha>.md`, optionally `#<the sitting's id>`) that
+      is not an accepted dispute verdict ruling that finding DISMISS — only a
+      dismissal resolves a finding; a FIX is covered by a row — or whose
+      ruled finding is not shown to be that `F#` finding: every dispute
+      findings file beside the verdict requesting the ids its call requested
+      must record the ruled finding as the review wrote it (no such file, or
+      one recording another finding, refuses);
     - a clause neither covered by a row nor excluded with a reason;
     - SINGLE only: an item SR no row cites (an item SR cannot be excluded);
       a TC verifying one of those SRs that no row names and no line excludes.
 
 Malformed inputs (no clauses in the goal, no Done-when in the item, no
-findings in a findings file, no plan table) exit 2.
+findings in a findings file or one mixing both shapes, no plan table) exit 2.
 
 Contracts: IF-060, IF-152, IF-153 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
@@ -101,7 +111,9 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from kitlib import dispute as _dispute
 from kitlib import done_when as _done_when
+from kitlib import sitting as _sitting
 from kitlib import spine as _kitspine
 from kitlib.registry import parse_spec_frontmatter, plan_table_rows
 
@@ -115,6 +127,8 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
+# Sibling: the one reader of a review verdict's finding lines (IF-046).
+import score_reviews  # noqa: E402  (path set above; the script-sibling idiom)
 
 
 _CLAUSE_DECL = r"^\s*(?:[-*]\s+)?\**({}\d+)\**\s*[:.]\s*(\S.*)$"
@@ -133,6 +147,26 @@ INTRA_MODULE_RE = re.compile(
 # `Excludes: <refs> — <reason>`, optionally list-marked or bold.
 EXCLUDES_RE = re.compile(r"^\s*(?:[-*]\s+)?\**Excludes\**\s*:\**\s*(.*)$")
 EXCLUDES_SEP_RE = re.compile(r"\s*[—–]\s*|\s+-\s+|\s+-$")
+# A dispute verdict an F# exclusion cites as its resolution: the recorded
+# `NNN-ADJUDICATE-<sha>.md` path, optionally `#<the sitting's finding id>`.
+RULING_CITE_RE = re.compile(
+    r"(?P<path>[\w./\-]*ADJUDICATE-[0-9a-f]+\.md)(?:#(?P<id>[A-Za-z][\w.-]*))?"
+)
+# What a hand copy of a finding may change without changing the finding
+# (`_finding_key`): its leading list marker and `[SEVERITY]` tag, and the
+# typographic forms of quotes, dashes and the finding line's arrow.
+_COMPARE_RE = re.compile(r"^\s*(?:[-*]\s+)?(?:\[[A-Za-z]+\]\s*)?")
+_TYPOGRAPHIC = str.maketrans(
+    {
+        "‘": "'",
+        "’": "'",
+        "“": '"',
+        "”": '"',
+        "–": "-",
+        "—": "-",
+        "→": "->",
+    }
+)
 # The table columns a row carries besides its id; `tier` is optional.
 ROW_KEYS = ("title", "covers", "interfaces", "predecessors", "tier")
 
@@ -151,6 +185,33 @@ def parse_goal(text, decl=CLAUSE_DECL_RE):
             raise ValueError("goal brief declares {} twice".format(cid))
         clauses[cid] = m.group(2).strip()
     return clauses
+
+
+def finding_clauses(text):
+    """THE SHARED STEP (WI-853): a findings file's `F#` clauses, ordered
+    {id: text}. A review verdict's finding lines (`- [SEVERITY] <anchor> ->
+    ...`, read by `score_reviews.parse_verdict`, their one reader) become F1..Fn
+    in the order written, each carrying the finding as written; a file that
+    already declares `F1: <text>` lines is read as declared. The coordinator's
+    attended rework round uses it today, through `--findings`; it is the step
+    WI-805's loop replan is to call, not yet wired. A file mixing the two shapes is malformed (ValueError): which
+    finding is F1 would depend on the shape read.
+
+    Implements: SR-236, LLR-069
+    """
+    declared = parse_goal(text, FINDING_DECL_RE)
+    lines = score_reviews.parse_verdict(text).findings
+    if declared and lines:
+        raise ValueError(
+            "the findings file carries both declared F# lines and review "
+            "finding lines; give one shape"
+        )
+    if declared:
+        return declared
+    return {
+        "F{}".format(n): "[{}] {}".format(f.severity, f.raw.split("]", 1)[1].strip())
+        for n, f in enumerate(lines, 1)
+    }
 
 
 def parse_plan(text):
@@ -401,6 +462,111 @@ def gap_findings(name, clauses, covered, excluded):
     ]
 
 
+def _finding_key(text):
+    """A finding's text as compared across copies: no leading list marker or
+    `[SEVERITY]` tag, typographic quotes, dashes and arrows as ASCII, and
+    whitespace runs as one space - what a hand copy of the reviewer's line
+    may change without changing the finding.
+
+    Implements: SR-236, LLR-069
+    """
+    text = _COMPARE_RE.sub("", text.translate(_TYPOGRAPHIC))
+    return " ".join(text.split())
+
+
+def _ruled_texts(verdict, ids, rid):
+    """The text of the finding `rid` in every dispute findings file
+    (`kitlib.dispute.read_findings`) beside `verdict` whose ids, in order,
+    are the `ids` its call requested: the files that sitting can have ruled.
+
+    Implements: SR-236, LLR-069
+    """
+    texts = []
+    for path in sorted(verdict.parent.glob("*.toml")):
+        found, _why = _dispute.read_findings(
+            path.read_text(encoding="utf-8", errors="replace"), path.name
+        )
+        if found and tuple(f["id"] for f in found["findings"]) == tuple(ids):
+            texts += [f["finding"] for f in found["findings"] if f["id"] == rid]
+    return texts
+
+
+def _correspondence_problem(path, verdict, ids, rid, fid, text):
+    """Why the finding `rid` the verdict at `path` ruled is not shown to be
+    this review's `fid` (whose clause text is `text`), or None. The repo
+    records no link from a verdict to the findings file its sitting read, so
+    every candidate beside it (`_ruled_texts`) must record that finding as
+    `fid`'s text (`_finding_key`); none, or one that differs, refuses.
+
+    Implements: SR-236, LLR-069
+    """
+    texts = _ruled_texts(verdict, ids, rid)
+    if not texts:
+        return (
+            "cites {}, beside which no findings file requesting {} records "
+            "the finding {} it ruled".format(path, ";".join(ids), rid)
+        )
+    want = _finding_key(text)
+    if any(_finding_key(t) != want for t in texts):
+        return "cites {}, whose finding {} is not this review's {}".format(
+            path, rid, fid
+        )
+    return None
+
+
+def ruling_problem(root, cite, fid, text):
+    """Why the dispute verdict `cite` names does not resolve the finding `fid`
+    (clause text `text`), or None when it does. `cite` is a `RULING_CITE_RE`
+    match: the verdict's path under `root` and, optionally, the sitting's own
+    id for the finding (default `fid`). It resolves only as a recorded,
+    ACCEPTED dispute verdict (its binding beside it) whose ruling of that id is
+    DISMISS - a FIX ruling is work a row covers, and an ESCALATE ruling is the
+    owner's to decide - AND whose ruled finding is `fid` itself, as the
+    findings file beside the verdict records it (`_correspondence_problem`):
+    a dismissal of another finding, or of another round's finding under the
+    same id, resolves nothing.
+
+    Implements: SR-236, LLR-069
+    """
+    path, rid = cite.group("path"), cite.group("id") or fid
+    verdict = Path(root) / path
+    binding = Path(_sitting.requested_path(verdict))
+    if not verdict.is_file() or not binding.is_file():
+        return "cites {}, which does not exist with its binding".format(path)
+    bound = _sitting.read_requested(binding.read_text(encoding="utf-8"))
+    if bound is None or bound[0] != _dispute.BRIEF:
+        return "cites {}, which is not a dispute verdict".format(path)
+    if bound[2] != "accepted":
+        return "cites {}, whose call has outcome {}".format(path, bound[2])
+    rulings, why = _dispute.parse(verdict.read_text(encoding="utf-8"), bound[1], path)
+    if why:
+        return "cites a refused verdict: {}".format(why)
+    if rid not in rulings:
+        return "cites {}, which does not rule {}".format(path, rid)
+    if rulings[rid][0] != "DISMISS":
+        return "cites {}, which rules {} {}; only a DISMISS resolves a finding".format(
+            path, rid, rulings[rid][0]
+        )
+    return _correspondence_problem(path, verdict, bound[1], rid, fid, text)
+
+
+def resolution_findings(name, excluded, root, clauses):
+    """Each `F#` exclusion whose reason cites a dispute verdict that does not
+    resolve it (`ruling_problem`, judged against the clause's text in
+    `clauses`). An exclusion citing no verdict is a plain reasoned exclusion
+    and is left as one.
+
+    Implements: SR-236, LLR-069
+    """
+    out = []
+    for fid, reason in excluded.items():
+        cite = RULING_CITE_RE.search(reason) if fid.startswith("F") else None
+        problem = cite and ruling_problem(root, cite, fid, clauses[fid])
+        if problem:
+            out.append("{}: Excludes: {} {}".format(name, fid, problem))
+    return out
+
+
 def spine_diff(rows, item_srs, tcs, excluded):
     """SINGLE: the item's SRs and the TCs verifying them, each with how the
     plan answers it — `cited` by a row, `excluded`, or `missing`. An item SR
@@ -536,14 +702,14 @@ def _read(path):
     return path.read_text(encoding="utf-8")
 
 
-def _declared(path, decl, what):
-    """The clauses `path` declares by `decl`; a malformed run when it declares
-    none or one twice.
+def _declared(path, read, what):
+    """The clauses `read` takes from `path`'s text; a malformed run when it
+    finds none, one twice, or (findings) both shapes.
 
     Implements: SR-155, LLR-069
     """
     try:
-        clauses = parse_goal(_read(path), decl)
+        clauses = read(_read(path))
     except ValueError as e:
         _malformed(e)
     if not clauses:
@@ -573,7 +739,11 @@ def load_item(item_path, findings_path):
         )
     if findings_path:
         clauses.update(
-            _declared(findings_path, FINDING_DECL_RE, "findings (lines like 'F1: ...')")
+            _declared(
+                findings_path,
+                finding_clauses,
+                "findings (review finding lines, or lines like 'F1: ...')",
+            )
         )
     return clauses, list(meta.get("sr_refs") or [])
 
@@ -616,6 +786,7 @@ def _check_one(path, gate):
     findings, covered = check_plan(path.name, rows, clauses, ref_ids, gate["if_ids"])
     more, excluded = check_excludes(path.name, parse_excludes(text), clauses, ref_ids)
     findings += more
+    findings += resolution_findings(path.name, excluded, gate["root"], clauses)
     findings += gap_findings(path.name, clauses, covered, excluded)
     diff = None
     if gate["item_srs"] is not None:
@@ -632,6 +803,7 @@ def _load_gate(args):
     root = Path(args.root)
     req = root / "docs" / "requirements"
     gate = {
+        "root": root,
         "if_ids": spine_ids(req / "interfaces.toml", "IF-ID"),
         "ref_ids": {"SR": spine_ids(req / "system-requirements.toml", "SR-ID")},
         "item_srs": None,
@@ -641,7 +813,7 @@ def _load_gate(args):
         gate["label"] = Path(args.goal).name
         gate["clauses"] = _declared(
             Path(args.goal),
-            CLAUSE_DECL_RE,
+            parse_goal,
             "clauses (lines like 'C1: ...' make plans commensurable)",
         )
         return gate

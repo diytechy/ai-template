@@ -1,0 +1,11 @@
+range = "0b550da9..49d5a9a6"
+
+[[finding]]
+id = "SR155"
+held_by = "coordinator"
+finding = '''
+docs/requirements/system-requirements.toml:726 — SR-155 does not cover the shipped rework-dispatch rule. Its requirement and acceptance concern work marked for contested planning, rival decompositions and SELECT/PAGE outcomes. An ordinary reviewed build requiring rework falls outside that condition, although the new skill requires coverage before dispatch. Re-attesting LLR-069 and TC-069 leaves the new obligation without a covering SR; PROCESS.md's requirement-gap route requires the parent obligation to be authored and judged.
+'''
+position = '''
+Contested only on authority, not on substance. The spec's Done-when (filed by hand from the WI-841 retrospective) names the rows to amend as "SR-155's chain: LLR-069 and its TC", so the lane kept SR-155 as the parent and amended only LLR-069 and TC-069; the in-lane amendment sitting (001, act 77) judged those two rows MEANING and blessed them, but its question was the rows' meaning, not their parentage. The spine author (Terra) raised the same doubt in-lane before the review. The coordinator agrees SR-155's text is about rounds of rival decompositions for work marked as contested planning, and states no gate between a review's findings and a rework dispatch for ordinary reviewed work. The coordinator asks for a ruling on the route: FIX (the lane authors the missing parent obligation, either by amending SR-155 or, the coordinator's preference since SR-155's rationale argues it is one capability with one outcome class, by a new Drafted SR that LLR-069 and TC-069 also cite, judged first-approval in this lane's next combined sitting), or DISMISS (the spec's named parent stands and the gap, if any, is the owner's to file), or ESCALATE.
+'''

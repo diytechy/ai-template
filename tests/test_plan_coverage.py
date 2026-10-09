@@ -7,7 +7,9 @@ rationale-less Proposed seams, cycles), and the honest degradation when a
 registry is absent.
 """
 
-from conftest import SCRIPTS, run_py
+from pathlib import Path
+
+from conftest import ROOT, SCRIPTS, run_py
 
 SCRIPT = SCRIPTS / "plan_coverage.py"
 
@@ -443,3 +445,226 @@ def test_a_row_citing_nothing_is_a_finding(tmp_path):
     proc = run(tmp_path, names)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "plan-A.md: P2 cites no clause/SR" in proc.stdout
+
+
+# --- WI-853: a review verdict's findings are the F# clauses a rework plan must
+# cover before the fix is dispatched. One shared step (`finding_clauses`) turns
+# the verdict's finding lines into those clauses, for the coordinator's attended
+# rework round (and, once WI-805 wires it, the loop's replan); a finding an
+# adjudicator dismissed in a dispute sitting counts when the plan cites that
+# ruling and the findings file beside it shows the ruled finding is this one.
+
+REVIEW = """- [MAJOR] scripts/launch.py:10 -> the launcher ignores the session budget -> enforce it -> @owner
+- [MINOR] docs/brief.md:3 -> stale wording -> reword it -> @owner
+VERDICT: CHANGES-REQUESTED findings=2
+"""
+
+REWORK_PLAN = SINGLE_PLAN.replace("D1; SR-001; TC-001", "D1; F1; SR-001; TC-001")
+DISPUTE_VERDICT = "docs/reviews/wi-001/003-ADJUDICATE-abc1234.md"
+
+
+# Each REVIEW finding exactly as the reviewer wrote it, as a dispute sitting's
+# findings file records it.
+LAUNCHER = REVIEW.splitlines()[0]
+WORDING = REVIEW.splitlines()[1]
+
+
+def findings_toml(findings, name="002-DISPUTE-findings.toml"):
+    """`(name, text)` of a dispute findings file ruling `findings`, an ordered
+    {id: the finding as the reviewer wrote it}."""
+    tables = "".join(
+        '\n[[finding]]\nid = "{}"\nheld_by = "builder"\n'
+        "finding = '''\n{}\n'''\nposition = '''\nContested.\n'''\n".format(fid, text)
+        for fid, text in findings.items()
+    )
+    return name, 'range = "aaaaaaa..bbbbbbb"\n' + tables
+
+
+def write_dispute(root, ruling, outcome="accepted", kinds="F2", findings=()):
+    """A recorded dispute verdict and its binding, as the coordinator's
+    adjudication entry point leaves them, beside the findings files
+    (`findings_toml`) the sitting ruled."""
+    verdict = root / DISPUTE_VERDICT
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text("Judged.\n\n{}\n".format(ruling), encoding="utf-8")
+    Path(str(verdict) + ".requested").write_text(
+        "brief = dispute\nkinds = {}\noutcome = {}\n".format(kinds, outcome),
+        encoding="utf-8",
+    )
+    for name, text in findings:
+        (verdict.parent / name).write_text(text, encoding="utf-8")
+
+
+def test_the_shared_step_turns_a_real_verdict_into_F_clauses():
+    """A real REVIEW-A verdict's finding lines become F1..Fn, in order, each
+    carrying the finding as written."""
+    import plan_coverage
+
+    text = (ROOT / "docs" / "reviews" / "054-REVIEW-A.md").read_text(encoding="utf-8")
+    clauses = plan_coverage.finding_clauses(text)
+    assert list(clauses) == ["F1", "F2", "F3", "F4"]
+    assert clauses["F1"].startswith("[MAJOR] docs/next-wi:23 -> selects WI-110")
+    assert clauses["F4"].startswith("[MINOR] docs/status.md:46 -> adds a 12-line")
+    assert plan_coverage.finding_clauses(FINDINGS) == {
+        "F1": "the launcher ignores the session budget."
+    }
+
+
+def test_a_findings_file_mixing_both_shapes_is_malformed(tmp_path):
+    proc = write_single(tmp_path, plan=REWORK_PLAN, findings=FINDINGS + REVIEW)
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "both" in proc.stdout
+
+
+def test_an_uncovered_review_finding_refuses_the_dispatch(tmp_path):
+    proc = write_single(tmp_path, plan=REWORK_PLAN, findings=REVIEW)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert (
+        "plan-A.md: F2 is neither covered by a row nor excluded with a reason: "
+        "'[MINOR] docs/brief.md:3 -> stale wording -> reword it -> @owner'"
+    ) in proc.stdout
+    assert "F1 is neither" not in proc.stdout
+
+
+def test_covered_or_excluded_review_findings_pass(tmp_path):
+    covered = REWORK_PLAN.replace("D2; TC-002", "D2; F2; TC-002")
+    proc = write_single(tmp_path, plan=covered, findings=REVIEW)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    excluded = REWORK_PLAN + "Excludes: F2 — the wording is WI-999's rewrite.\n"
+    proc = write_single(tmp_path / "x", plan=excluded, findings=REVIEW)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "- excluded: F2 - the wording is WI-999's rewrite." in proc.stdout
+
+
+def test_a_dismissed_dispute_citing_its_ruling_passes(tmp_path):
+    write_dispute(
+        tmp_path,
+        "RULING: F2 DISMISS refuted the wording matches",
+        findings=[findings_toml({"F2": WORDING})],
+    )
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed by {}\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_dispute_ruling_cited_by_its_own_id_passes(tmp_path):
+    """A dispute sitting may name the finding by its own id: `<verdict>#<id>`."""
+    write_dispute(
+        tmp_path,
+        "RULING: B DISMISS out-of-scope contrived",
+        kinds="B",
+        findings=[findings_toml({"B": WORDING})],
+    )
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}#B\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_ruling_of_the_same_finding_passes_through_typographic_drift(tmp_path):
+    """The sitting's copy of the finding may differ from the review only in
+    list marker, severity tag, whitespace and typographic quotes, dashes and
+    arrows (a hand copy); it is still the same finding."""
+    drifted = "[MINOR]  docs/brief.md:3 → stale\n  wording → reword it → @owner"
+    write_dispute(
+        tmp_path,
+        "RULING: A FIX the budget\nRULING: B DISMISS refuted the wording matches",
+        kinds="A;B",
+        findings=[findings_toml({"A": LAUNCHER, "B": drifted})],
+    )
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}#B\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_dismissal_of_an_unrelated_finding_refuses(tmp_path):
+    """REVIEW-A WI-853 round 1 (Sol): F1 concerns the launcher budget, F2 the
+    wording; the sitting dismissed only F1. Citing that ruling by its id to
+    exclude F2 must not resolve F2."""
+    write_dispute(
+        tmp_path,
+        "RULING: F1 DISMISS refuted the budget is enforced\n"
+        "RULING: F2 FIX the wording is stale",
+        kinds="F1;F2",
+        findings=[findings_toml({"F1": LAUNCHER, "F2": WORDING})],
+    )
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}#F1\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "F1 is not this review's F2" in proc.stdout, proc.stdout
+
+
+def test_a_dismissal_from_another_round_under_the_same_id_refuses(tmp_path):
+    """A sitting that dismissed round 1's F2 does not resolve round 2's
+    different F2, cited with or without the fragment."""
+    round_one = "- [MINOR] docs/other.md:9 -> an old typo -> fix it -> @owner"
+    for cite in ("", "#F2"):
+        root = tmp_path / ("x" + cite[1:])
+        write_dispute(
+            root,
+            "RULING: F2 DISMISS not-worth-cost a typo",
+            findings=[findings_toml({"F2": round_one})],
+        )
+        plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}{}\n".format(
+            DISPUTE_VERDICT, cite
+        )
+        proc = write_single(root, plan=plan, findings=REVIEW)
+        assert proc.returncode == 1, (cite, proc.stdout + proc.stderr)
+        assert "F2 is not this review's F2" in proc.stdout, proc.stdout
+
+
+def test_a_dismissal_whose_finding_cannot_be_shown_refuses(tmp_path):
+    """No findings file beside the verdict, or two beside it that request the
+    same ids but record different findings: correspondence is not shown."""
+    write_dispute(tmp_path / "none", "RULING: F2 DISMISS refuted no")
+    write_dispute(
+        tmp_path / "two",
+        "RULING: F2 DISMISS refuted no",
+        findings=[
+            findings_toml({"F2": WORDING}),
+            findings_toml({"F2": LAUNCHER}, name="004-DISPUTE-findings.toml"),
+        ],
+    )
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(DISPUTE_VERDICT)
+    for case, says in (("none", "no findings file"), ("two", "is not this")):
+        proc = write_single(tmp_path / case, plan=plan, findings=REVIEW)
+        assert proc.returncode == 1, (case, proc.stdout + proc.stderr)
+        assert says in proc.stdout, (case, proc.stdout)
+
+
+def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
+    """A FIX or ESCALATE ruling, an unaccepted call, a ruling of another
+    finding and a missing verdict each refuse the exclusion that cites them."""
+    cases = (
+        ("RULING: F2 FIX the wording is wrong", "accepted", "F2", "rules F2 FIX"),
+        ("RULING: F2 ESCALATE high risk", "accepted", "F2", "rules F2 ESCALATE"),
+        ("RULING: F2 DISMISS refuted no", "pending", "F2", "outcome pending"),
+        ("RULING: F1 DISMISS refuted no", "accepted", "F1", "does not rule F2"),
+    )
+    for n, (ruling, outcome, kinds, says) in enumerate(cases):
+        root = tmp_path / str(n)
+        root.mkdir()
+        write_dispute(root, ruling, outcome, kinds)
+        plan = REWORK_PLAN + "Excludes: F2 — dismissed by {}\n".format(DISPUTE_VERDICT)
+        proc = write_single(root, plan=plan, findings=REVIEW)
+        assert proc.returncode == 1, (says, proc.stdout + proc.stderr)
+        assert says in proc.stdout, (says, proc.stdout)
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed by {}\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path / "absent", plan=plan, findings=REVIEW)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "does not exist" in proc.stdout
+
+
+def test_a_real_dispute_verdict_ruling_FIX_refuses_its_exclusion(tmp_path):
+    """WI-852's recorded dispute verdict ruled A FIX: citing it to exclude a
+    finding refuses, read through the real verdict and binding."""
+    src = ROOT / "docs" / "reviews" / "wi-852-coordinator-renders-kit-briefs"
+    rel = "docs/reviews/wi-852/006-ADJUDICATE-cb444fd.md"
+    dest = tmp_path / rel
+    dest.parent.mkdir(parents=True)
+    for suffix in ("", ".requested"):
+        name = "006-ADJUDICATE-cb444fd.md" + suffix
+        Path(str(dest) + suffix).write_bytes((src / name).read_bytes())
+    plan = REWORK_PLAN + "Excludes: F2 — see {}#A\n".format(rel)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "rules A FIX" in proc.stdout

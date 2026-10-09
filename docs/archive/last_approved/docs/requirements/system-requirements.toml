@@ -1831,3 +1831,16 @@ status = "Approved"
 phase = 6
 delivered_with = ["SR-154", "SR-184"]
 form = "interface"
+
+[requirement.SR-236]
+title = "Rework plans cover reviewed findings"
+sn_refs = ["SN-024"]
+boundary_refs = ["B-09", "B-10"]
+hat_refs = ["UNATTENDED-OPS"]
+requirement = "When a reviewed change requires rework, the delivered review workflow shall dispatch that rework only after its plan covers, or excludes with a reason, every finding of the review it answers as a clause in the order written; an exclusion based on a dispute ruling resolves a finding only when an accepted dismissal ruled that same finding."
+rationale = "A DERIVED requirement, and labelled so. SN-024 requires an independent critical eye to drive rework, but does not say how a rework plan preserves every finding that eye raised. The unattended-operations lens listens for a green because nothing looked: dispatching from a plan that omits, renumbers or substitutes a finding lets the change appear answered while the reviewer's concern received no response. Treating every reasoned exclusion as a resolution was rejected because a disputed finding remains open unless its accepted dismissal decided that very finding; keeping each finding as an ordered clause makes the plan and review commensurable. Fed back to the need: SN-024's acceptance could state that rework answers every review finding."
+acceptance_criteria = "A review verdict or a declared F# findings input produces one ordered clause per finding; dispatch is refused while any clause is neither covered nor reasoned-excluded. An exclusion citing a dispute ruling passes only when its accepted dismissal records the same finding; a dismissal of another finding, another round's same-numbered finding, a finding that cannot be shown, or a non-dismissal ruling is refused."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 4

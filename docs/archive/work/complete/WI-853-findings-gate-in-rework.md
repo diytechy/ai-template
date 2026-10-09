@@ -2,13 +2,17 @@
 id = "WI-853"
 title = "Every review finding is a clause the rework plan must cover before the fix is dispatched"
 workstream = "process"
-sr_refs = ["SR-155"]
-specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
+sr_refs = ["SR-155", "SR-236"]
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 needs = ["WI-852"]
 +++
+
+## Deliverable
+
+`plan_coverage.py --findings` now also reads a review verdict: through one shared step, `finding_clauses`, its finding lines become the clauses F1..Fn in the order written (a declared `F#` file reads as before; mixing the two shapes is malformed). The coordinator's attended rework round runs the gate over the builder's plan and dispatches the fix only on exit 0 (the session-protocol skill, which WI-848 moves into the coordinator-cycle skill); WI-805's loop replan is to call the same step. An `F#` exclusion citing a dispute verdict resolves the finding only when an accepted DISMISS ruled that same finding, shown by the findings file kept beside the verdict recording the excluded finding's text; a FIX or ESCALATE ruling, an unaccepted call, another finding or a missing file is a finding. Known limit (dispute 006, DISMISS not-worth-cost): two dispute rounds in one lane reusing finding ids refuse a valid dismissal (fail-closed); the class fix, binding the findings file into the sitting's binding, is filed as a follow-up row. Rows: SR-236 (derived; the dispute sitting 003 ruled SR-155 does not state the gate) drafted and approved (verdict 004, act 79); LLR-069 and TC-069 amended, judged MEANING and re-attested twice (verdict 001, act 77; verdict 004, act 78); IF-046 merged by meaning with WI-870's text (D-004); IF-287 and IF-290 gain `plan_coverage` as a requestor. Codex 6.1 Sol (medium): two fresh full-lane reviews; the second's one finding was dismissed by the final dispute ruling (`docs/reviews/wi-853-findings-gate-in-rework/sol-review-full.md`, D-005). Decisions: `docs/decisions/wi-853.toml` (D-001 to D-006).
 
 ## Context
 
