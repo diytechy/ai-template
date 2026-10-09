@@ -1,0 +1,20 @@
+# docs/decisions/coordinator-2026-10-08d.toml — the fourth 2026-10-08
+# coordinator session's calls on trunk (resumed from
+# handoff-2026-10-08c-coordinator.md).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "WI-852 landed while the smoke tier still ran over its 60 s budget on trunk (61.5 s; 2436 passed, 2 skipped, check_smoke_budget --mode enforce failing), as on every landing of the two previous sessions. Nothing was re-stamped or re-tiered to green it; the next row claimed is the one the owner named to fix it (WI-869)."
+alternative = "Hold WI-852 until the smoke tier is back under budget."
+reversal_cost = "Low: the landing is one squash commit; the tier's fix is the next lane either way."
+why_not_escalated = "The owner directed (2026-10-08) that the smoke tier be fixed right after WI-852 lands, which presumes the landing goes ahead over budget; CLAUDE.md forbids moving the budget to fit the box, so the breach is reported, not sanctioned."
+review = ""
+
+[decision.D-002]
+decided = "To claim WI-869 the coordinator reworded status.md's hand-authored step 0 so it names the smoke-tier row by its subject, not its id, in its own trunk commit, because the integrator refuses a claim of an id named in status.md prose (a closed id there reds the forward-only rule). After the pause was restored, the unclaimed-commit lane branch was moved up to trunk's tip before its worktree was added, so the lane's base carries the restored pause."
+alternative = "Cut the lane at the claim commit, whose tree has no pause, and let the landing's rebase carry the restore."
+reversal_cost = "None: one prose line, and a branch with no commits of its own."
+why_not_escalated = "Both follow the integrator's own refusal text and the wave-17 lesson that a lane should contain trunk's head before its landing."
+review = ""
