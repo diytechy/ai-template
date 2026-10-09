@@ -25,19 +25,19 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-08c-coordinator.md](handoff-2026-10-08c-coordinator.md):
-  the next rows in order and the session prompt to paste are there.
+  [handoff-2026-10-09-coordinator.md](handoff-2026-10-09-coordinator.md):
+  no lane is open; the next rows in order and the session prompt to paste are
+  there.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 63 on trunk. The context guard is live: take the coordinator
+  Approval acts run to seq 75 on trunk. The context guard is live: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
   Every adjudication sitting now authenticates with the owner's long-lived token:
   set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
-  0. **Bring the smoke tier back under budget (owner 2026-10-08; its row is in
-     work, see the handoff), then the review-response rows in order:** the gate's strict verdict reading
+  0. **The review-response rows, in order:** the gate's strict verdict reading
      (WI-870), then the findings gate
      (WI-853), the coordinator-cycle skill (WI-848, which also moves the dispute
      route out of the session-protocol skill) and the blackout row (WI-834).
