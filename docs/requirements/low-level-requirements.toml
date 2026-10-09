@@ -2228,6 +2228,18 @@ status = "Approved"
 component = "CMP-008"
 phase = 5
 
+[design.LLR-312]
+sr_refs = ["SR-220"]
+title = "Consolidation close preserves every effect owed to a work-item specification"
+module = "project-trajectory/scripts/handback.py"
+code_symbol = "close_adjudication/_archive_one_adjudication_row/_consolidation_close/_enact_plan/_apply_plan"
+detail = "The consolidation close resolves and validates every affected queued specification before its first write. It plans one ordered sequence of rewrites for each affected specification, so every blocker named for one waiter is recorded in that waiter's needs. When it applies a sequence, each rewrite starts from the specification as it then stands, so an inbound link redirected by an earlier move survives a later move and the close re-reads its adjudication specification before composing its terminal text."
+rationale = "A close that derives each rewrite from the original file can discard an earlier effect for the same target, while a later precomputed write can restore a stale link an earlier move already redirected. Planning first preserves the refusal boundary, and composing at application time preserves both effects without treating either as the source of truth."
+test_refs = "TC-254"
+status = "Approved"
+component = "CMP-008"
+phase = 5
+
 [design.LLR-211]
 sr_refs = ["SR-187"]
 title = "The crossing's system cell: schema, carrier and template"

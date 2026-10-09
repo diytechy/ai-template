@@ -1,0 +1,19 @@
+# docs/decisions/wi-866.toml — the consolidation close keeps every edge;
+# delegated decisions (coordinator, 2026-10-08, third session).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "The fresh full-lane review's one MINOR (TC-254's new mint clause placed the hand claim \"between the close and the merge\", while its test claims after the merge and before the successor mint) was confirmed by reading the test and fixed as row text by Terra, at the cost of a fourth narrow TC-254 sitting (verdict 004, blessed), rather than dismissed or sent to the adjudicator as not worth its cost."
+alternative = "Send the finding to the adjudicator as a dispute (not worth a re-sit), or land with the imprecise window."
+reversal_cost = "None: one clause of one TC cell, adjudicated."
+why_not_escalated = "The finding is real and in scope (agent-written row text); fixing it cost about as much as disputing it, and the row now says what its test drives."
+review = ""
+
+[decision.D-002]
+decided = "Rebasing the lane onto WI-860's landing put trunk's act 64 under the lane's three acts: the LLR-312 approval conflicted and was renumbered 65 by hand, but the two TC-254 re-attestations applied cleanly as 65 and 66, duplicating 65. A repair commit on the branch renumbers them 66 and 67 (and restores a blank line the RESYNC union dropped). The two intermediate lane commits keep the duplicate seq; the squash carries only the repaired ledger. A replay that amended each commit was refused by the pre-commit hook (a detached HEAD mid-rebase runs trunk-mode freshness checks), and the hook was not bypassed."
+alternative = "Rewrite the two commits with plumbing (no hook), or bypass the hook with --no-verify on the amends, so every lane commit carries a unique seq."
+reversal_cost = "Low: the intermediate states exist only in the archived lane tips; trunk sees one squash with seqs 64-67 unique and ordered."
+why_not_escalated = "Act numbering is bookkeeping the acts serialize by; no act's content, rows or verdict changed. Bypassing a hook is not the coordinator's call."
+review = ""

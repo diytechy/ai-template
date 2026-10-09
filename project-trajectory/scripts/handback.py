@@ -595,7 +595,9 @@ def _consolidation_close(root, wt, branch, src_rel, text, drafts, meta):
 
     ALL-OR-NOTHING: every refusal is read before the first write
     (`close_refusal` over the trunk registry), so a half-enacted verdict is not
-    a state this can reach."""
+    a state this can reach.
+
+    Implements: SR-220, LLR-312"""
     record, refusal = consolidate.parse_verdict(text, src_rel)
     if record is None:
         # No `## Consolidation` section: not this arm's case. Every other
@@ -719,42 +721,68 @@ def _queued_spec(wt, wi_id):
 
 
 def _enact_plan(wt, record):
-    """`([(kind, ...)], None)` - every write this verdict owes, resolved and
-    validated - or `([], refusal)` naming the first target that cannot be
-    written. NOTHING is written here.
+    """`([(kind, path, rel, steps, dest, wid)], None)` - every write this
+    verdict owes, resolved and validated - or `([], refusal)` naming the first
+    target that cannot be written. NOTHING is written here.
 
     The same preflight-then-act shape `consolidate._archive_plan` uses on the
     absorbed rows, for the same reason and bought by the same class of defect.
-    Order is preserved so the apply half is a straight walk."""
-    plan = []
-    for waiter, blocker in record["edges"]:
-        path, rel = _queued_spec(wt, waiter)
-        if path is None:
-            return [], (
-                "cannot add the {} -> {} edge: {} is not a queued spec on this "
-                "lane; nothing written".format(waiter, blocker, waiter)
-            )
-        text = path.read_text(encoding="utf-8")
-        edged = consolidate.edged_text(text, blocker)
-        if edged is None:
-            return [], (
-                "cannot add the {} -> {} edge: {} carries no readable `needs` "
-                "line; nothing written".format(waiter, blocker, rel)
-            )
-        plan.append(("edge", path, rel, edged, waiter, blocker))
-    for wid in record["returns"]:
-        path, rel = _queued_spec(wt, wid)
-        if path is None:
-            return [], (
-                "cannot return {} to draft: it is not a queued spec on this "
-                "lane; nothing written".format(wid)
-            )
-        new_text = consolidate.returned_text(
-            path.read_text(encoding="utf-8"), record["finding"]
+    Order is preserved (first appearance) so the apply half is a straight walk.
+
+    ONE WRITE PER PATH (WI-866). A path appears in the plan ONCE, carrying
+    every rewrite owed to it as an ordered list of `steps` (text -> text, or
+    None for a target that cannot be rewritten), and each step is validated
+    here on top of the steps already planned for that file. Computing each
+    write from the pre-write disk text instead lost all but the last of
+    several edges on one waiter (docs/decisions/wi-864.toml D-003). A path
+    that is returned is a `return`, its edges (were any composed) riding the
+    move. The apply half re-composes the steps over the file as it then
+    stands, because an earlier `spec_move.move_spec` in the same walk relinks
+    inbound links in every markdown file - a planned TEXT would undo that.
+
+    Implements: SR-220, LLR-312"""
+    planned = {}  # path -> [rel, text so far, steps, dest or None, wid]
+    targets = [
+        (waiter, lambda t, b=blocker: consolidate.edged_text(t, b), None, blocker)
+        for waiter, blocker in record["edges"]
+    ] + [
+        (
+            wid,
+            lambda t: consolidate.returned_text(t, record["finding"]),
+            "draft",
+            None,
         )
-        dest = "{}/draft/{}".format(integrate.WORK, path.name)
-        plan.append(("return", path, rel, new_text, dest, wid))
-    return plan, None
+        for wid in record["returns"]
+    ]
+    for wid, step, state, blocker in targets:
+        path, rel = _queued_spec(wt, wid)
+        what = (
+            "add the {} -> {} edge".format(wid, blocker)
+            if state is None
+            else "return {} to draft".format(wid)
+        )
+        if path is None:
+            return [], (
+                "cannot {}: {} is not a queued spec on this lane; nothing "
+                "written".format(what, wid)
+            )
+        entry = planned.setdefault(
+            path, [rel, path.read_text(encoding="utf-8"), [], None, wid]
+        )
+        entry[1] = step(entry[1])
+        if entry[1] is None:
+            return [], (
+                "cannot {}: {} carries no readable `needs` line; nothing "
+                "written".format(what, rel)
+            )
+        entry[2].append(step)
+        if state is not None:
+            entry[3] = "{}/{}/{}".format(integrate.WORK, state, path.name)
+            entry[4] = wid
+    return [
+        ("edge" if dest is None else "return", path, rel, steps, dest, wid)
+        for path, (rel, _text, steps, dest, wid) in planned.items()
+    ], None
 
 
 def _apply_plan(wt, plan):
@@ -766,12 +794,20 @@ def _apply_plan(wt, plan):
     `git reset -- docs/work` returns both the worktree and the index to the
     lane's own HEAD, which is exactly the state the close started from: nothing
     else has written under `docs/work` by this point, because the absorbed rows
-    are archived at the MINT and this row's own spec moves after."""
-    for entry in plan:
-        kind = entry[0]
-        if kind == "edge":
-            _kind, path, rel, edged, waiter, blocker = entry
-            path.write_text(edged, encoding="utf-8", newline="\n")
+    are archived at the MINT and this row's own spec moves after.
+
+    Each entry's steps are composed over its file AS IT NOW STANDS, so a link
+    an earlier move in this walk redirected inside it survives (WI-866).
+
+    Implements: SR-220, LLR-312"""
+    for kind, path, rel, steps, dest, wid in plan:
+        text = path.read_text(encoding="utf-8")
+        for step in steps:
+            text = text and step(text)  # a None stays None, refused below
+        if not text:
+            refusal = "{} no longer carries a readable `needs` line".format(rel)
+        elif kind == "edge":
+            path.write_text(text, encoding="utf-8", newline="\n")
             code, out = ac.git(wt, "add", "--", rel)
             refusal = (
                 None
@@ -779,10 +815,8 @@ def _apply_plan(wt, plan):
                 else "cannot stage {}:\n{}".format(rel, ac._failure_tail(out))
             )
         else:
-            _kind, _path, rel, new_text, dest, wid = entry
-            _touched, refusal = spec_move.move_spec(wt, rel, dest, new_text=new_text)
-            if refusal:
-                refusal = "cannot return {} to draft: {}".format(wid, refusal)
+            _touched, why = spec_move.move_spec(wt, rel, dest, new_text=text)
+            refusal = why and "cannot return {} to draft: {}".format(wid, why)
         if refusal:
             _restore_lane_work(wt)
             return (
@@ -807,6 +841,8 @@ def _archive_one_adjudication_row(root, wt, branch, name):
     commit on the end: everything a single row can be judged on — is it this
     close's business, does its disposition parse, does it owe a successor —
     is one question about one file, and it is asked here.
+
+    Implements: SR-220, LLR-312
     """
     import intake  # a sibling reader; deferred so a non-adjudicating run pays nothing
 
@@ -848,6 +884,10 @@ def _archive_one_adjudication_row(root, wt, branch, name):
     )
     if crefusal:
         return False, "cannot close {}: {}".format(name, crefusal)
+    # RE-READ, not the text read above (WI-866): a return-to-draft's move
+    # relinks inbound links in every markdown file, this spec included, and a
+    # close text composed from the pre-arm read would write the stale link back.
+    text = (wt / src_rel).read_text(encoding="utf-8")
     new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE)
     dest_rel = "{}/complete/{}".format(integrate.WORK, name)
     _touched, refusal = spec_move.move_spec(wt, src_rel, dest_rel, new_text=new_text)
@@ -881,6 +921,8 @@ def close_adjudication(root, branch):
     The caller invokes this ONLY on a worker's EXIT_DONE, where the verdict is
     already recorded (`agent_loop.worker_endstate` gates DONE on it), so the
     verdict's existence is the caller's precondition, not re-proven here.
+
+    Implements: SR-220, LLR-312
     """
     specs = integrate._claimed_specs(root, branch)
     if not specs:

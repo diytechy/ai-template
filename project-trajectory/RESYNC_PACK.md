@@ -7512,6 +7512,25 @@ records that line in the response to the review verdict, and in the
 delegated-decisions record too when the run keeps one. If you override the reviewer
 brief with your own file, add the same pointer to it. No setting changes.
 
+### A consolidation close keeps every edge and every redirected link [since c5e82208]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/handback.py`'s mechanical consolidation close
+computed each planned write from the target's text on disk before any write,
+so a `queue-with-edge` verdict naming several edges on one waiter wrote only
+the last blocker into its `needs`. The plan now holds one entry per file,
+composing every rewrite owed to it, and still writes nothing when any target
+refuses. The writes are re-composed over each file as it stands when written,
+so a link that an earlier return-to-draft move redirected inside a later
+target (a second returned row, or the adjudication spec itself) is no longer
+put back to its stale path.
+
+**What to do.** Re-sync `scripts/handback.py`. A queued row of yours that a
+past consolidation close edged more than once may be missing all but one of
+its blockers: compare its `needs` with the verdict's `edges` and add any that
+are missing. Nothing needs migrating.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

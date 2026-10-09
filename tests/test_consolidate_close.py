@@ -367,6 +367,30 @@ def test_queue_with_edge_writes_the_hard_needs_edge(tmp_path):
     assert rows["WI-402"]["Status"] == "queued"  # queued, not absorbed
 
 
+def test_several_edges_on_one_waiter_all_land_in_its_needs(tmp_path):
+    """WI-866 (docs/decisions/wi-864.toml D-003): a verdict naming several
+    edges on ONE waiter used to keep only the last, because each planned write
+    was computed from the waiter's pre-write text. Every blocker must land."""
+    root = cluster_repo(tmp_path)
+    minted, _ = intake.mint_consolidation(root, busy=False)
+    judge_id = minted[0][0]
+    branch = judge_id.lower()
+    assert integ.claim(root, judge_id, branch) == 0
+    _record_verdict(
+        root,
+        branch,
+        '\n## Consolidation\n\n```toml\noutcome = "queue-with-edge"\n'
+        'edges = ["WI-402 needs WI-401", "WI-402 needs WI-403"]\n```\n',
+    )
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert refusal is None, refusal
+    assert ids == [judge_id]
+    _merge(root, branch)
+    spec = sorted((root / "docs" / "work" / "queued").glob("WI-402-*.md"))[0]
+    text = spec.read_text(encoding="utf-8")
+    assert 'needs = ["WI-401", "WI-403"]' in text
+
+
 def test_return_to_draft_moves_the_row_back_with_the_finding_quoted(tmp_path):
     root = cluster_repo(tmp_path)
     minted, _ = intake.mint_consolidation(root, busy=False)
@@ -389,6 +413,40 @@ def test_return_to_draft_moves_the_row_back_with_the_finding_quoted(tmp_path):
     text = spec.read_text(encoding="utf-8")
     assert "> WI-403 re-proposes what WI-390 already refuted." in text
     assert "The WI-403 context." in text  # its own scope survives the return
+
+
+def test_a_link_one_close_move_redirects_survives_the_later_writes(tmp_path):
+    """WI-866's sweep: a return's move relinks inbound links in EVERY markdown
+    file, so a later write composed from the pre-move text put the stale link
+    back - in the second returned row and in the adjudication spec itself."""
+    root = cluster_repo(tmp_path)
+    w403 = root / "docs" / "work" / "queued" / "WI-403-wi-403.md"
+    w403.write_text(
+        w403.read_text(encoding="utf-8") + "\nSee [the tests](WI-402-wi-402.md).\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "WI-403 links WI-402")
+    minted, _ = intake.mint_consolidation(root, busy=False)
+    judge_id = minted[0][0]
+    branch = judge_id.lower()
+    assert integ.claim(root, judge_id, branch) == 0
+    _record_verdict(
+        root,
+        branch,
+        "\nJudged [WI-402](../../queued/WI-402-wi-402.md).\n"
+        '\n## Consolidation\n\n```toml\noutcome = "return-to-draft"\n'
+        'returns = ["WI-402", "WI-403"]\n'
+        'finding = "Both re-propose refuted scope."\n```\n',
+    )
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert refusal is None, refusal
+    _merge(root, branch)
+    work = root / "docs" / "work"
+    returned = (work / "draft" / "WI-403-wi-403.md").read_text(encoding="utf-8")
+    assert "[the tests](WI-402-wi-402.md)" in returned
+    closed = sorted((work / "complete").glob(judge_id + "-*.md"))[0]
+    assert "[WI-402](../draft/WI-402-wi-402.md)" in closed.read_text(encoding="utf-8")
 
 
 # --- the transaction invariants, driven end to end (review rounds 1-2) --------
