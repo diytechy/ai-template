@@ -2,12 +2,16 @@
 id = "WI-873"
 title = "adjudicate: TC-325, TC-326, TC-327, TC-328 - approved/routed cell(s) amended on merged trunk 50570fa..82f2866 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["TC-325", "TC-326", "TC-327", "TC-328"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-869's in-lane adjudicator, through the retained session, ruled the tier amendments of TC-325, TC-326, TC-327 and TC-328 MEANING and blessed them (verdict 001 under `docs/reviews/wi-869-smoke-tier-under-budget/`), and re-attested them in the lane (act 75). The test-case registry is byte-identical to its anchor in `docs/archive/last_approved/` at `c570097e`.
 
 ## Context
 
