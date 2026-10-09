@@ -1,0 +1,27 @@
+# docs/decisions/wi-869.toml — the smoke tier back under its wall-clock and
+# membership budgets; delegated decisions (coordinator, 2026-10-08/09, fourth
+# session).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "The fix re-tiers three modules into SLOW_MODULES (test_done_when_blessing, test_text_then_act, test_dispute: 224.6 s of the tier's 515.8 s summed per-test time) and keeps test_decision_overrule and test_ruling_sync in the smoke tier although both are heavy, because moving test_decision_overrule would leave migrate_decisions with no smoke pin and the two moves would make TC-313, TC-319 and TC-320 untrue. Measured cause: membership (ten of the eleven heaviest modules joined after the 2026-09-27 re-tier), not the workstation (spawn costs unchanged inside the job object; the 50% CPU cap is worth about 2 to 10 s). The 60 s budget is unchanged; max-tests is re-stamped 2438 -> 2395 (2302 collected plus about 4%)."
+alternative = "Make the costly fixtures cheaper instead (the per-call git spawn in session_keep.primary_out_dir drives the heavy in-process modules), or move all five heavy modules."
+reversal_cost = "Low: a SLOW_MODULES line per module and one stamp; the spawn fix is filed as its own row."
+why_not_escalated = "The spec names re-tiering with every script family keeping an in-process pin as the preferred fix and forbids moving the budget; the spawn fix changes product code beyond this row's scope."
+review = ""
+
+[decision.D-002]
+decided = "TC-325 to TC-328's tier cells move from Smoke to Full, through the in-lane amendment sitting, because their evidence now lies wholly in the slow tier. TC-334 stays Smoke: part of its evidence (tests/test_coordinator_adjudicate.py) still runs per commit, and the evidence-join rule holds."
+alternative = "Mark TC-334 Full too, since most of its evidence (tests/test_dispute.py) moved."
+reversal_cost = "Low: one cell and a sitting."
+why_not_escalated = "The kit's own rule for the cell (an approved Smoke case has evidence in the smoke tier) still holds for TC-334; changing a cell the check does not require is outside the smallest change."
+review = ""
+
+[decision.D-003]
+decided = "The builder's separate finding, that session_keep.primary_out_dir spawns `git rev-parse --git-common-dir` on every store access (about 1,260 spawns in test_session_keep alone), is not fixed in this lane; the coordinator files it as its own row on trunk."
+alternative = "Cache the resolved path inside this lane, which would make the remaining heavy in-process modules cheap."
+reversal_cost = "None: the row is queued work."
+why_not_escalated = "It changes product behaviour (where the store resolves), which needs its own requirement trace and review; this row's Done-when is met without it."
+review = ""

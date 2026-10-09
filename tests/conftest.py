@@ -395,6 +395,21 @@ SLOW_MODULES = frozenset(
         "test_decision_record_merge",  # claims and closes a lane in a real git repo per case
         "test_retire",  # the retirement command, the log fold and trace.py over real git repos
         "test_retire_dashboard",  # the generator over git repos, a shallow clone included
+        # WI-869 (the 60 s budget stands): the tier had regrown to 61.7-71.3 s
+        # quiet at -n auto on this box. Ranked with `python -m pytest -q -n auto
+        # -m smoke --durations=0` (setup+call+teardown per module, the mean of
+        # three quiet runs, 515.8 s per-test in all). The three below build a
+        # real git repository, or real lanes, per case, the class this set is
+        # drawn on, and were 43% of that total. Every script family they
+        # exercise keeps a smoke pin elsewhere: kitlib.done_when in
+        # test_done_when, session_keep in test_session_keep, acceptance_record
+        # in test_acceptance_record, adjudicate_brief in test_approval_level
+        # and test_consolidate, integrate in test_kitlib_station and
+        # test_generated_set. Nothing is deleted: all three run at slice/phase
+        # close and in CI.
+        "test_done_when_blessing",  # 82 tests, 142.4 s: tmp git repos and lane worktrees per case, one pytest subprocess
+        "test_text_then_act",  # 20 tests, 71.3 s: a tmp git repo per case driven through integrate and check.py
+        "test_dispute",  # 34 tests, 10.9 s: `git init` and commits per case for the dispute brief
     }
 )
 
