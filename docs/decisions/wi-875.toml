@@ -1,0 +1,12 @@
+# docs/decisions/wi-875.toml — the consolidation census over 30 queued rows
+# (owner-requested round, 2026-10-09); delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The census's row was claimed and judged at once, under one scoped unpause, at the owner's request for a consolidation round, although WI-855 had judged 26 of the same rows on 2026-10-08; the census's own guard allows it because the queue digest moved (WI-852 and WI-869 landed; WI-856 to WI-859 were filed). The adjudicator judged only what changed and added five edges, absorbing nothing."
+alternative = "Skip the round as recently judged."
+reversal_cost = "Low: five needs edges, each removable by a trunk commit."
+why_not_escalated = "The owner asked for the round; the census guard and the adjudicator's scope kept it from re-litigating WI-855."
+review = ""

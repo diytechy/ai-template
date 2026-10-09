@@ -2,7 +2,7 @@
 id = "WI-875"
 title = "adjudicate queue overlap [42148aa80898]: WI-798;WI-799;WI-800;WI-801;WI-802;WI-804;WI-805;WI-807;WI-808;WI-809;WI-810;WI-811;WI-813;WI-816;WI-817;WI-827;WI-828;WI-832;WI-833;WI-834;WI-847;WI-848;WI-850;WI-851;WI-853;WI-854;WI-856;WI-857;WI-858;WI-859"
 workstream = "process"
-specref = "docs/work/README.md"
+specref = ""
 buildtier = "strong"
 priority = 9
 safety_class = "adjudication"
@@ -10,6 +10,10 @@ brief = "consolidate"
 adjudicates = ["WI-798", "WI-799", "WI-800", "WI-801", "WI-802", "WI-804", "WI-805", "WI-807", "WI-808", "WI-809", "WI-810", "WI-811", "WI-813", "WI-816", "WI-817", "WI-827", "WI-828", "WI-832", "WI-833", "WI-834", "WI-847", "WI-848", "WI-850", "WI-851", "WI-853", "WI-854", "WI-856", "WI-857", "WI-858", "WI-859"]
 digests = "42148aa80898|2868eb7d03d5"
 +++
+
+## Deliverable
+
+Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this row's own merge (drafts-not-mints), the mint replaces the superseded row's inbound hard edges, and any human-owed answer becomes a `pending` open item the successor depends on. The verdict artifact is under `docs/reviews/`.
 
 ## Context
 
@@ -299,3 +303,17 @@ The mechanical pre-filter selected them; it has concluded NOTHING. Each line bel
 > WI-858 and WI-859 were commissioned by the same docs/work/README.md
 
 This row's `Adjudicates` cell fixes the population — judge those rows and no others. Its `Digests` cell is `42148aa80898|2868eb7d03d5`: the queue state and the spine state this question was asked against, so the census never asks it twice and a verdict that has gone stale is detectable rather than assumed fresh.
+
+## Consolidation
+
+Judged by an independent adjudicator; the verdict, with each finding, is
+`docs/reviews/wi-875-adjudicate-queue-overlap-4214/001-ADJUDICATE-6fe2f8b.md`.
+No contradiction, no answered scope, no consolidation. WI-855's judgement of
+the 26 rows it sat on stands. The four new rows and the orderings the
+released prerequisites have made claimable together give five unordered
+collisions, each with a hard edge.
+
+```toml
+outcome = "queue-with-edge"
+edges = ["WI-858 needs WI-847", "WI-800 needs WI-858", "WI-809 needs WI-857", "WI-810 needs WI-856", "WI-811 needs WI-853"]
+```
