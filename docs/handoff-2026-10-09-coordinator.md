@@ -40,7 +40,9 @@ in-lane cycle, the roles and the "never" list until WI-848 (the
 - **Acts** run to seq 75. `docs/work/pause` is tracked and unchanged: one
   scoped unpause (`b58714c9`) claimed WI-869, and `295687c7` restored the
   pause byte-identical.
-- **Full suite:** see the log fragment (run at this handoff's commit).
+- **Full suite** at `a68d3177`: 1 failed, 5495 passed, 13 skipped, in 880.9 s.
+  The failure was WI-852's two new rubrics, which nothing linked to (the
+  orphan check). It is fixed in the close-out commit.
 
 ## Next
 
@@ -61,6 +63,9 @@ Claim each batch under ONE scoped unpause.
   pre-commit hook runs the non-strict form, so R-F (a closed row's SpecRef)
   slipped through WI-852's squash. A closed spec takes `specref = ""` and a
   `## Deliverable` section; the hook does refuse a missing Deliverable (R-A).
+- **A new doc needs an inbound link.** The orphan check runs only in the full
+  suite, not in the smoke tier, so a lane that adds a doc should run
+  `check_docs.py --strict-orphans` (the test's arguments) before it lands.
 - **The integrator refuses to claim an id named in status.md's prose.**
   Reword the line by its subject, in its own trunk commit, before the claim.
 - **A sweep's re-mint takes the next WI id.** File hand rows after the sweep,

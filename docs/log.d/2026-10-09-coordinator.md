@@ -39,9 +39,13 @@ access.
 61.5 s, over budget. At the WI-869 landing: 2300 passed, 2 skipped in 33.6 s;
 enforce 40.9 s, within 60 s.
 
-**Full suite.** Recorded below once run (a detached worktree at this
-fragment's commit, fixed basetemp under
-`review-tmp/2026-10-08-coordinator-d/`).
+**Full suite** at `a68d3177` (a detached worktree, fixed basetemp under
+`review-tmp/2026-10-08-coordinator-d/`, deleted once recorded): **1 failed,
+5495 passed, 13 skipped** in 880.9 s. The failure,
+`test_check_docs.py::test_meta_repo_has_zero_unexplained_orphans`, was real:
+WI-852's two new rubrics (`docs/rubrics/kit-change-review.md` and
+`scope-critique.md`) had no inbound link. The smoke tier does not run that
+check. `docs/README.md` now links both, and the test passes (3 passed).
 
 **Decisions.**
 - `coordinator-2026-10-08d.toml` D-001 and D-002;

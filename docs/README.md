@@ -60,3 +60,7 @@ first judgement ([PROCESS.md](../project-trajectory/PROCESS.md#observation-judge
 [resync-inspection](rubrics/resync-inspection.md) (TC-036),
 [sampled-new-reader](rubrics/sampled-new-reader.md) (TC-279) and
 [dashboard-usability](rubrics/dashboard-usability.md) (TC-055).
+The attended review and critique briefs (`review_brief.py`, WI-852) take this
+repository's rubrics by name:
+[kit-change-review](rubrics/kit-change-review.md) for a lane review and
+[scope-critique](rubrics/scope-critique.md) for a row's scope where it is born.
