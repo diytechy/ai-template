@@ -291,10 +291,12 @@ assumption_gate = false
 # dev-setup.
 context_reset_pct = 55           # 0 = off
 # Owner, 2026-10-05 (docs/decisions/wi-835.toml#D-007): first approvals too,
-# so the coordinator's in-lane adjudications all use the retained session; and
-# since WI-841 the Done-when brief and the combined lane-checkpoint sitting.
+# so the coordinator's in-lane adjudications all use the retained session;
+# since WI-841 the Done-when brief and the combined lane-checkpoint sitting; and
+# since WI-865 the dispute sitting that rules a contested review finding.
 retain_for = [
     "disposition", "amendment", "red-tc", "first-approval", "done-when", "combined",
+    "dispute",
 ]
 keepwarm_minutes = 0             # e.g. 50
 reset_on_same_artifact = false

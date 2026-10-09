@@ -447,12 +447,13 @@ def test_no_mint_can_declare_a_brief_the_kit_does_not_ship():
     assert declared, "no brief declarations found — guard vacuous"
     assert declared <= set(ab.BRIEF_PROMPTS), sorted(declared - set(ab.BRIEF_PROMPTS))
     # Every brief the kit can actually serve must be declared somewhere, or the
-    # routed briefs would have no producer of rows at all. The ONE exception is
-    # the combined lane-checkpoint sitting (WI-841): it composes the in-lane
-    # judgements a lane owes before it merges, so no merge mints it; its
-    # producer is the coordinator's in-lane sitting, and every kind it
-    # composes is itself declared here.
-    assert set(ab.ROUTED) - {ab.COMBINED} <= declared
+    # routed briefs would have no producer of rows at all. The TWO exceptions
+    # are in-lane sittings no merge mints: the combined lane-checkpoint sitting
+    # (WI-841), which composes the in-lane judgements a lane owes before it
+    # merges, every kind of which is itself declared here; and the dispute
+    # sitting (WI-865), which rules a review finding the lane contests. The
+    # coordinator's in-lane cycle produces both.
+    assert set(ab.ROUTED) - {ab.COMBINED, ab.DISPUTE} <= declared
     assert set(ab.COMBINABLE) <= declared
 
 

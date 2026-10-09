@@ -180,7 +180,8 @@ def bind_requested(path, brief, prompt):
     """Bind what this sitting was asked beside its verdict, or say why not:
     `kitlib.sitting.requested_path(path)` is created exclusively holding the
     brief class and its requested kinds (a combined brief's, read off its one
-    `SITTING:` line; a single-kind brief's own class). A separate file, so the
+    `SITTING:` line; a dispute brief's finding ids, off its `DISPUTE:` line;
+    a single-kind brief's own class). A separate file, so the
     adjudicator's rewrite of the verdict cannot change what the verdict is
     judged against (WI-841 round 10). None when bound.
 
@@ -191,7 +192,11 @@ def bind_requested(path, brief, prompt):
     except OSError as exc:
         return "the verdict binding for {} cannot be written: {}".format(path, exc)
     if not kinds:
-        return "the combined brief names no requested kinds on a `SITTING:` line"
+        return (
+            "the {} brief names nothing to judge (a combined brief's kinds on a "
+            "`SITTING:` line, a dispute brief's findings on a `DISPUTE:` "
+            "line)".format(brief)
+        )
     return None
 
 

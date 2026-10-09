@@ -1,0 +1,20 @@
+# docs/decisions/wi-865.toml — the coordinator's adjudication entry point rules
+# a contested or repeated review finding; delegated decisions (coordinator,
+# 2026-10-08, third session).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "`dispute` joins this repo's `[adjudicator] retain_for` list (docs/process.toml), so a dispute sitting runs on the work item's retained adjudicator session like the coordinator's other in-lane adjudications (wi-835.toml D-007); the shipped template's default list is unchanged. Changing the list changes the retained session's governing hash, so the live retained session drains once at the first call after landing."
+alternative = "Leave `dispute` out of retain_for, so each dispute sitting runs in a fresh session with no memory of the lane's chain."
+reversal_cost = "Low: one list entry in docs/process.toml and its pin in tests/test_session_keep.py."
+why_not_escalated = "It follows the owner's earlier ruling that the coordinator's in-lane adjudications share the retained session; the one-time drain is expected behaviour, not a defect."
+review = ""
+
+[decision.D-002]
+decided = "The interim route (a contested or third-round finding goes to the dispute sitting; the ruling is recorded in the review response and, when the run keeps one, the decisions record; a dismissed finding is not re-raised) is stated in the session-protocol skill, the nearest existing home, since the coordinator-cycle skill (WI-848) has not landed; WI-848 moves it."
+alternative = "Hold the route's documentation until WI-848 lands."
+reversal_cost = "None: one bullet that WI-848 relocates."
+why_not_escalated = "The spec's Done-when names WI-848 conditionally ('if landed'); a route with no stated home would be unused."
+review = ""

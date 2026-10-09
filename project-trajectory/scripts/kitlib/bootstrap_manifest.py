@@ -118,6 +118,11 @@ MAPPING = [
         "SR-156",
     ),
     (
+        "prompts/adjudicate-dispute.template.md",
+        "prompts/adjudicate-dispute.template.md",
+        "SR-146",
+    ),
+    (
         "prompts/dual-plan-planner.template.md",
         "prompts/dual-plan-planner.template.md",
         "SR-146",
@@ -348,6 +353,9 @@ MAPPING = [
     # scope tokens and verdict sections; `adjudicate_brief.py`,
     # `acceptance_record.py` and `intake.py` import it, all three in this list.
     ("scripts/kitlib/sitting.py", "scripts/kitlib/sitting.py"),
+    # WI-865 added `dispute`: a contested review finding's findings file and
+    # verdict grammar; `adjudicate_brief.py`, in this list, imports it.
+    ("scripts/kitlib/dispute.py", "scripts/kitlib/dispute.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each

@@ -7531,6 +7531,34 @@ past consolidation close edged more than once may be missing all but one of
 its blockers: compare its `needs` with the verdict's `edges` and add any that
 are missing. Nothing needs migrating.
 
+### The adjudicator rules a contested or repeated review finding [since 7d7dd6f1]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new brief class, `dispute`, joins the adjudication briefs:
+`prompts/adjudicate-dispute.template.md`, composed by
+`scripts/adjudicate_brief.py` over a findings file and accepted by
+`scripts/coordinator_adjudicate.py adjudicate --brief dispute`. The findings
+file's shape and the verdict grammar live in the new
+`scripts/kitlib/dispute.py`: each finding as the reviewer wrote it, the
+builder's or coordinator's position on it, and the lane range it concerns; the
+verdict rules each finding `FIX`, `DISMISS` with a reason class
+(`out-of-scope`, `refuted` or `not-worth-cost`) and a reason, or `ESCALATE` to
+the owner, one `RULING:` line per finding. A missing, duplicated or malformed
+ruling refuses the verdict. The brief links the review scope bound (process.md
+§6 "Review threat model") rather than restating it. The session-protocol skill
+states when the coordinator sends a finding there: when the builder or the
+coordinator contests it, or a finding class reaches its third review round.
+
+**What to do.** Re-sync `prompts/adjudicate-dispute.template.md`,
+`prompts/README.md`, `prompts/CATALOG.md`, `scripts/kitlib/dispute.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `scripts/adjudicate_brief.py`,
+`scripts/coordinator_adjudicate.py` and `scripts/prompts.py`. Nothing needs
+migrating. If your `[adjudicator]` retention is on and you want dispute
+sittings to resume the retained session, add `"dispute"` to `retain_for` in
+`docs/process.toml`; the retained session drains once when that list changes,
+because its governing inputs include every retained class's template.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

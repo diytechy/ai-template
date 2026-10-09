@@ -2586,3 +2586,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = "source - consumes no declared seam; pure functions."
+
+[interface.IF-290]
+owner = "scripts/kitlib/dispute"
+requestors = ["scripts/adjudicate_brief"]
+channel = "call"
+data = "read_findings(text, where); request_line(ids); requested_ids(brief_text); parse(text, requested, where)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+rationale = "Brief composition needs one owner for the findings and verdict grammars, so it cannot render a request that validation reads differently."
+notes = "source - pure text parsers; the owner does not read a file or launch a process."

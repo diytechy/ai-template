@@ -53,10 +53,12 @@ asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
-ALL EIGHT BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
-module's life. The newest two (WI-841) are `done-when`, a lane's own Done-when
+ALL NINE BRIEFS ARE NOW ROUTED (`ROUTED`), which they were not for most of this
+module's life. Two came with WI-841: `done-when`, a lane's own Done-when
 change judged in the lane, and `combined`, one lane-checkpoint sitting that
-composes the pending amendment, first-approval and done-when briefs. The two that were unrouted are worth keeping on record, because
+composes the pending amendment, first-approval and done-when briefs. The
+newest (WI-865) is `dispute`: a review finding the lane contests, or one at
+its third round, ruled by the adjudicator. The two that were unrouted are worth keeping on record, because
 each says something about what "routed" costs:
 
   * `conflict` is RETIRED, not filled. It had a template and a verdict grammar
@@ -107,12 +109,14 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import agent_brief
 import agent_common as ac
 import baseline_snapshot
 import consolidate as cons
 import prompts
 import rejudge
 import spine_carrier
+from kitlib import dispute as kdispute
 from kitlib import done_when as kdone
 from kitlib import sitting as ksitting
 
@@ -121,6 +125,9 @@ DONE_WHEN = "done-when"
 COMBINED = ksitting.SITTING
 # The kinds one combined sitting composes, in section order.
 COMBINABLE = ksitting.KINDS
+# The contested or repeated review finding (WI-865); its grammar is
+# `kitlib.dispute`'s.
+DISPUTE = kdispute.BRIEF
 
 # The declared `Brief` cell -> the prompt key its session is composed from.
 BRIEF_PROMPTS = {
@@ -132,6 +139,7 @@ BRIEF_PROMPTS = {
     rejudge.BRIEF: prompts.ADJUDICATE_REJUDGE,
     DONE_WHEN: prompts.ADJUDICATE_DONE_WHEN,
     COMBINED: prompts.ADJUDICATE_COMBINED,
+    DISPUTE: prompts.ADJUDICATE_DISPUTE,
 }
 
 # The per-close reports' home (`intake.REPORTS` / `handback.REPORTS`, restated
@@ -207,6 +215,8 @@ VERDICT_GRAMMAR = {
     # The COMBINED sitting: one `## <kind>` section per composed kind, each
     # judged by its own grammar, and this closing line naming them all.
     COMBINED: ksitting.GRAMMAR[COMBINED],
+    # Not here: the DISPUTE verdict, one `RULING:` line per requested finding
+    # rather than one closing line, parsed by `kitlib.dispute.parse`.
 }
 
 
@@ -253,12 +263,16 @@ def verdict_refusal(brief, verdict_path, kinds=None):
 
     A COMBINED verdict is judged against `kinds`, the kinds its sitting
     requested (`requested_kinds` of the composed brief): without them it is
-    refused, since a verdict naming its own kinds could judge none."""
-    if brief not in VERDICT_GRAMMAR:
+    refused, since a verdict naming its own kinds could judge none. A DISPUTE
+    verdict is judged the same way against the finding ids its brief
+    requested (`kitlib.dispute.parse`)."""
+    if brief not in VERDICT_GRAMMAR and brief != DISPUTE:
         return "unknown brief {!r} — no verdict grammar".format(brief)
     text = _read(verdict_path) if verdict_path else None
     if text is None:
         return "no verdict was written to {}".format(verdict_path or "(no path)")
+    if brief == DISPUTE:
+        return kdispute.parse(text, kinds or (), verdict_path)[1]
     if brief in ksitting.GRAMMAR:
         # The sitting's kinds and the sitting itself go through the ONE
         # parser the Done-when holds consume (WI-841 round 10).
@@ -288,11 +302,15 @@ def requested_kinds(brief_text):
 
 def requested_for(brief, prompt):
     """The kinds a call of `brief` requests: a combined brief's, read off its
-    composed `SITTING:` line; a single-kind brief's own class. What both
-    routes bind beside the verdict before the call (WI-841 round 17).
+    composed `SITTING:` line; a dispute's finding ids, read off its composed
+    `DISPUTE:` line (`kitlib.dispute.requested_ids`); a single-kind brief's
+    own class. What both routes bind beside the verdict before the call
+    (WI-841 round 17).
 
     Implements: SR-232, LLR-310
     """
+    if brief == DISPUTE:
+        return kdispute.requested_ids(prompt)
     return requested_kinds(prompt) if brief == COMBINED else (brief,)
 
 
@@ -1620,6 +1638,61 @@ def combined_values(root, row, verdict_path, prompt_templates=None):
     return {"sections": "\n\n".join(sections), "kinds": ";".join(kinds)}, None
 
 
+# --- the dispute brief (WI-865) ------------------------------------------------
+
+
+def dispute_values(root, row):
+    """`({range, commits, request, findings, process_doc}, None)` for the one
+    findings file this row's `Adjudicates` cell names, or `(None, reason)`.
+
+    The file is the coordinator's (shape: `kitlib.dispute`), and every value
+    but the commit facts is a CLAIM the template labels as under judgement:
+    the finding as the reviewer wrote it, and the position on it. The range
+    it declares is re-derived from git (`_commit_facts`), so a range git
+    cannot resolve refuses rather than briefing a judge on nothing.
+
+    Implements: SR-234, LLR-315
+    """
+    scope = sorted(adjudicates(row))
+    if len(scope) != 1:
+        return None, (
+            "a dispute row names exactly one findings file in `Adjudicates`; "
+            "this one names {}".format(";".join(scope) or "none")
+        )
+    text = _read(Path(root) / scope[0])
+    if text is None:
+        return None, "the findings file {} cannot be read".format(scope[0])
+    found, why = kdispute.read_findings(text, scope[0])
+    if found is None:
+        return None, why
+    span = found["range"]
+    if not _RANGE_RE.match(span):
+        return None, "the findings file's `range` {!r} is not <base>..<head>".format(
+            span
+        )
+    commits = _commit_facts(root, span)
+    if commits is None:
+        return None, "git cannot resolve the range {} to any commit".format(span)
+    ids = [f["id"] for f in found["findings"]]
+    return {
+        "range": span,
+        "commits": commits,
+        "request": kdispute.request_line(ids),
+        "findings": "\n".join(_render_finding(f) for f in found["findings"]),
+        "process_doc": agent_brief.process_doc_path(root),
+    }, None
+
+
+def _render_finding(finding):
+    """One finding's block: its id and who holds the position, then the two
+    texts verbatim between labelled delimiters."""
+    return (
+        "=== FINDING {id} (the position is held by the {held_by}) ===\n"
+        "--- as the reviewer wrote it ---\n{finding}\n"
+        "--- the {held_by}'s position on it ---\n{position}\n".format(**finding)
+    )
+
+
 # Each shipped brief's assembler, the producer of EVERY slot its template
 # declares. The key set equals `BRIEF_PROMPTS`' (the suite pins both
 # directions), so shipping a new brief means adding its assembler here, never
@@ -1635,6 +1708,7 @@ _ASSEMBLERS = {
     # Composes the others, so it is handed the verdict path and the overrides
     # each section's own brief is composed under (`_assemble`).
     COMBINED: combined_values,
+    DISPUTE: dispute_values,
 }
 ROUTED = tuple(sorted(_ASSEMBLERS))
 

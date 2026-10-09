@@ -3304,11 +3304,35 @@ phase = 6
 [design.LLR-311]
 sr_refs = ["SR-233"]
 title = "Review threat-model definition and reviewer reference"
-module = "project-trajectory/PROCESS.md;project-trajectory/prompts/reviewer.template.md"
-code_symbol = "Review threat model;REVIEWER"
-detail = "The §6 bold-lead paragraph `Review threat model` defines the review scope: normal-environment defects include repository content agents write, supported configurations, and regressions of supported behavior; compromised or contrived host reproductions are ruled out, with the ruling party recording the dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response. The enumerated set of delivered briefs that judge a review finding, whose only member today is the reviewer brief, each cite that bold lead and do not copy its boundary examples."
+module = "project-trajectory/PROCESS.md;project-trajectory/prompts/reviewer.template.md;project-trajectory/prompts/adjudicate-dispute.template.md"
+code_symbol = "Review threat model;REVIEWER;ADJUDICATE-DISPUTE"
+detail = "The §6 bold-lead paragraph `Review threat model` defines the review scope: normal-environment defects include repository content agents write, supported configurations, and regressions of supported behavior; compromised or contrived host reproductions are ruled out, with the ruling party recording the dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response. The enumerated set of delivered briefs that judge a review finding each cite that bold lead and do not copy its boundary examples."
 rationale = "The process document is the stable home for the scope, while the brief must direct each reviewer to that home. Repeating the examples in the brief would create a second definition that can drift from the process rule."
 test_refs = "TC-332"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-314]
+sr_refs = ["SR-234"]
+title = "Dispute findings and verdict grammar is parsed once"
+module = "project-trajectory/scripts/kitlib/dispute.py"
+code_symbol = "BRIEF/RULINGS/DISMISS_REASONS/HELD_BY/read_findings/request_line/requested_ids/parse"
+detail = "kitlib.dispute accepts one TOML findings file with only a non-empty `range` and a non-empty `[[finding]]` list. Each finding has exactly a unique letter-led id, held_by `builder` or `coordinator`, and non-empty finding and position text, which the reader keeps verbatim apart from every leading and trailing newline character; spaces and interior lines are kept. request_line writes the composed request, and requested_ids reads its first DISPUTE findings line. parse reads RULING lines one physical line at a time and accepts only one FIX, DISMISS, or ESCALATE ruling with a reason for every requested id; DISMISS additionally takes only out-of-scope, refuted, or not-worth-cost and a reason. Missing, duplicate, unrequested, malformed, or incomplete content refuses; no value is defaulted."
+rationale = "Both adjudication routes need one grammar for the coordinator's findings input and the adjudicator's verdict. A single parser prevents a composed brief, entry point, and later loop sitting from accepting different finding sets or verdict meanings."
+test_refs = "TC-334"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-315]
+sr_refs = ["SR-234"]
+title = "Dispute brief assembly carries bounded findings to the adjudicator"
+module = "project-trajectory/scripts/adjudicate_brief.py"
+code_symbol = "DISPUTE/BRIEF_PROMPTS/dispute_values/_render_finding"
+detail = "dispute_values accepts exactly one findings-file reference from an adjudication row, reads it through kitlib.dispute, and refuses an unreadable or malformed file. It accepts only a hexadecimal base..head range that git resolves, derives that range's commit and name-status facts, and fills the dispute template's range, commits, request, findings, and process-document values. _render_finding preserves each finding and held position between labelled delimiters. BRIEF_PROMPTS routes the dispute class to its shipped template, so the existing strict fill refuses a partial brief."
+rationale = "The adjudicator needs the reviewer wording and the contested position as subjects to judge, while the range facts and review-scope link must be independently derived. Refusing an incomplete assembly avoids sending a judge a brief that appears complete but has lost a finding or its scope."
+test_refs = "TC-334"
 status = "Approved"
 component = "CMP-008"
 phase = 6

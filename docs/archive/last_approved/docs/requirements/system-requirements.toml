@@ -1794,10 +1794,25 @@ boundary_refs = ["B-09", "B-10"]
 hat_refs = ["UNATTENDED-OPS"]
 requirement = "The delivered review process shall limit findings to defects reachable in a normal working environment."
 rationale = "A DERIVED requirement, and labelled so. SN-006 requires an unattended run to report failures clearly and to continue until it must surface to a human; it does not say which hostile host conditions a review must treat as an actionable defect. The unattended-operations lens listens for an unbounded retry: treating a reproduction that depends on a compromised or contrived host as actionable can extend review indefinitely and can demand code that compensates for a host whose integrity the process cannot establish. A stated boundary was chosen over relying on each reviewer to infer it, because an inferred boundary varies by session and cannot stop repeated rework. Fed back to the need: SN-006's acceptance could identify the normal working environment in which a review finding is actionable; until it does, this row is derived and says so."
-acceptance_criteria = "The review scope includes repository content agents write, supported configurations, and regressions of supported behavior; one authoritative definition excludes a finding whose reproduction requires a compromised or contrived host; the party that rules an out-of-scope finding records its dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response; and the enumerated set of delivered briefs that judge a review finding, whose only member today is the reviewer brief, each cite that definition without restating its boundary examples."
+acceptance_criteria = "The review scope includes repository content agents write, supported configurations, and regressions of supported behavior; one authoritative definition excludes a finding whose reproduction requires a compromised or contrived host; the party that rules an out-of-scope finding records its dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response; and the enumerated set of delivered briefs that judge a review finding each cite that definition without restating its boundary examples."
 priority = "S"
 verification = "Test"
 status = "Approved"
 phase = 6
 aspect = "process"
 form = "cross-cutting"
+
+[requirement.SR-234]
+title = "Contested or repeated review findings receive a bounded adjudication"
+sn_refs = ["SN-006"]
+boundary_refs = ["B-09", "B-10"]
+hat_refs = ["UNATTENDED-OPS"]
+requirement = "Where a review finding is contested by the builder or coordinator, or recurs for a third review round, the delivered adjudication content shall preserve each requested finding, the position held on it and its relevant change scope, and accept only a verdict that rules every requested finding exactly once as a fix, a reasoned dismissal in a declared class, or an escalation to the owner."
+rationale = "A DERIVED requirement, and labelled so. SN-006 asks an unattended run to report failures clearly and surface to a human when it cannot proceed, but it does not state who ends a contested or repeated review finding. The unattended-operations lens listens for an unbounded review loop in which the coordinator sends the same finding back to the builder without a bounded, attributable decision. A complete adjudication was chosen so an independent call can settle each requested finding without silently adding, dropping or defaulting one. Fed back to the need: SN-006's acceptance could state that contested review findings receive a bounded ruling; until it does, this row is derived and says so."
+acceptance_criteria = "A composed adjudication carries exactly the requested findings, each finding and held position verbatim, change-range facts, and a link to the review scope; malformed findings input refuses composition without a partial sitting. A verdict refuses when a requested finding is unruled or ruled twice, an unrequested finding is ruled, a ruling is outside the declared set, a dismissal lacks its declared reason class, or a ruling lacks its reason. An accepted dispute verdict authorizes no approval act."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+aspect = "process"
+form = "interface"

@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 291
-seam_rows = 237
-requirements_placed = 119
+design_rows = 293
+seam_rows = 238
+requirements_placed = 120
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -402,6 +402,7 @@ seam_boundary_refs = [
   "IF-271",
   "IF-286",
   "IF-287",
+  "IF-290",
 ]
 
 [component_view.CMP-007]
@@ -639,6 +640,7 @@ sr_refs = [
   "SR-231",
   "SR-232",
   "SR-233",
+  "SR-234",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -746,6 +748,8 @@ llr_refs = [
   "LLR-310",
   "LLR-311",
   "LLR-312",
+  "LLR-314",
+  "LLR-315",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -761,6 +765,7 @@ hat_refs = [
 modules = [
   "project-trajectory/PROCESS.md",
   "project-trajectory/hooks/commit-msg",
+  "project-trajectory/prompts/adjudicate-dispute.template.md",
   "project-trajectory/prompts/reviewer.template.md",
   "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/adjudicate_brief.py",
@@ -786,6 +791,7 @@ modules = [
   "project-trajectory/scripts/integrate.py",
   "project-trajectory/scripts/kitlib/authority.py",
   "project-trajectory/scripts/kitlib/decisions.py",
+  "project-trajectory/scripts/kitlib/dispute.py",
   "project-trajectory/scripts/kitlib/done_when.py",
   "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/provenance.py",
@@ -867,6 +873,7 @@ seam_internal_refs = [
   "IF-282",
   "IF-286",
   "IF-287",
+  "IF-290",
 ]
 seam_boundary_refs = [
   "IF-001",

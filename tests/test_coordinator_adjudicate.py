@@ -803,3 +803,63 @@ def test_a_family_with_no_dedicated_home_passes_require_signin_unprobed(
     assert "OPENCODE" not in keep.HOME_VARIABLES
     assert svc.require_signin(tmp_path, "OPENCODE") is None
     assert calls == []
+
+
+# --- WI-865: the dispute class through the entry point ----------------------------
+
+DISPUTE_BRIEF = "Rule each finding.\n\nDISPUTE: findings=F1;R2\n\n=== FINDING F1 ===\n"
+
+
+def _dispute_call(tmp_path, monkeypatch, verdict_text):
+    root = _repo(tmp_path)
+    _signed_in(monkeypatch)
+    (root / "brief.md").write_text(DISPUTE_BRIEF, encoding="utf-8")
+
+    def run(argv, root_, timeout, **kw):
+        VERDICT["path"].write_text(verdict_text, encoding="utf-8")
+        return 0, _claude_stream(10), False
+
+    monkeypatch.setattr(svc, "run_session", run)
+    return root, _adjudicate(root, brief="dispute")
+
+
+def test_the_entry_point_accepts_the_dispute_class():
+    args = cli._parser().parse_args(
+        ["adjudicate", "--brief-file", "b", "--brief", "dispute", "--wi", "WI-1"]
+        + ["--verdict", "v"]
+    )
+    assert args.brief == "dispute"
+
+
+def test_a_dispute_verdict_ruling_every_finding_is_valid_and_bound(
+    tmp_path, monkeypatch, launched, capsys
+):
+    text = "RULING: F1 FIX real\nRULING: R2 DISMISS refuted it does not hold\n"
+    _root, code = _dispute_call(tmp_path, monkeypatch, text)
+    assert code == 0
+    assert "verdict valid" in capsys.readouterr().out
+    binding = Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
+    assert "brief = dispute" in binding and "kinds = F1;R2" in binding
+    assert "outcome = accepted" in binding
+
+
+def test_a_dispute_verdict_leaving_a_finding_unruled_fails(
+    tmp_path, monkeypatch, launched, capsys
+):
+    _root, code = _dispute_call(tmp_path, monkeypatch, "RULING: F1 FIX real\n")
+    assert code == 1
+    out = capsys.readouterr().out
+    assert "unruled" in out and "R2" in out
+    binding = Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
+    assert "outcome = failed" in binding
+
+
+def test_a_dispute_brief_naming_no_findings_is_refused_before_launch(
+    tmp_path, monkeypatch, launched, capsys
+):
+    root = _repo(tmp_path)
+    _signed_in(monkeypatch)
+    (root / "brief.md").write_text("Rule each finding.\n", encoding="utf-8")
+    assert _adjudicate(root, brief="dispute") == 2
+    assert launched["argv"] == []
+    assert "DISPUTE:" in capsys.readouterr().out

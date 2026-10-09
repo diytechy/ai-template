@@ -20,6 +20,7 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | `adjudicate-rejudge.template.md` | an observation test case a merge or release preparation found due for re-judging | yes |
 | `adjudicate-done-when.template.md` | a lane's Done-when that differs from the one it was claimed with | yes |
 | `adjudicate-combined.template.md` | one lane checkpoint's pending in-lane judgements, one section per kind | yes |
+| `adjudicate-dispute.template.md` | a review finding the lane contests, or one at its third round, ruled by the adjudicator | yes |
 
 The worker assignment is deliberately **not** overridable: the assignment is the
 whole scope of that session, and an env var that can replace it is a way to

@@ -155,9 +155,9 @@ def test_the_reviewer_and_worker_briefs_link_the_guard_rule_and_restate_nothing(
         assert "a file on disk, the network" not in text, key
 
 
-# The shipped briefs that judge a review finding; a brief that starts judging
-# findings, such as WI-865's dispute brief, joins this set.
-FINDING_JUDGING_BRIEFS = (pr.REVIEWER,)
+# The shipped briefs that judge a review finding: the reviewer's, and the
+# adjudicator's dispute brief that rules a contested one (WI-865).
+FINDING_JUDGING_BRIEFS = (pr.REVIEWER, pr.ADJUDICATE_DISPUTE)
 
 
 def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing():

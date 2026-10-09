@@ -90,6 +90,18 @@ always true.
   `... coordinator_adjudicate.py signin` reads the token, and the remedy is
   dev-setup's one-time `claude setup-token` step and that variable, never an
   interactive sign-in. Never substitute a fresh subagent.
+- **A contested or repeated review finding goes to a dispute sitting before
+  another build round.** When the builder or the coordinator contests a
+  review finding, or a finding class reaches its third review round, the
+  adjudicator rules it, not the coordinator by sending it back to the builder.
+  Write the findings file (its shape: `scripts/kitlib/dispute.py`), compose
+  the `dispute` brief over it (a row whose `Brief` is `dispute` and whose
+  `Adjudicates` names that file, through `adjudicate_brief.compose`), and run
+  the call above with `--brief dispute`. Each finding comes back FIX, DISMISS
+  with a reason class, or ESCALATE to the owner; the ruling is final. Record
+  each ruling in the response to the review and, when the run keeps one, in
+  the lane's `docs/decisions/<branch>.toml`, as PROCESS.md §6 "Review threat
+  model" says; a dismissed finding is never re-raised to the builder.
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
   only sanctioned stop is the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges
