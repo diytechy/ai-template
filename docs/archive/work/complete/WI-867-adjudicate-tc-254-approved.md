@@ -2,12 +2,16 @@
 id = "WI-867"
 title = "adjudicate: TC-254 - approved/routed cell(s) amended on merged trunk c5e8220..68b9b26 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/test/test-cases.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["TC-254"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-866's in-lane adjudicator, through the retained session, ruled TC-254's amendment MEANING and blessed it twice (verdicts 003 and 004 under `docs/reviews/wi-866-consolidation-close-keeps-every-edge/`), and re-attested it in the lane (acts 66 and 67). The system, low-level and test-case registries are byte-identical to their anchors in `docs/archive/last_approved/` at `25a16513`.
 
 ## Context
 
