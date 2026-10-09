@@ -7683,6 +7683,30 @@ every plan that passed before still pass, unless an `F#` exclusion's reason
 names an `ADJUDICATE` verdict path that does not dismiss that
 very finding.
 
+### spine-authoring states the three ways a spine grows [since 61fc3665]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**Kit-owned files — overwrite:** `skills/spine-authoring/SKILL.md`, the new
+`skills/spine-authoring/references/in-lane.md`, every per-agent copy of that
+skill (`bootstrap.py --sync` refreshes them), and
+`prompts/adjudicate-dispute.template.md` (its dispatcher note only, which is
+stripped before the prompt is sent). **What changes for you:** prose only.
+The skill gains "Three ways a spine grows": from the vision, tier by tier; in
+a lane on released rungs, one closed change set authored whole and judged in
+one sitting; in a lane touching a held rung, the set split at the
+`human_approval_through` dial. In every mode a child is approved only after
+its parent. `references/in-lane.md` carries the lane modes: name the anchor,
+author the subtree in one pass, map each LLR's arms to the TC clauses that
+verify them, keep only trace fields current while code changes, close the
+edges before the sitting, and judge the set top-down. Its description gains
+a lane clause, so an agent loads it for a lane's spine change too; §1 to §6
+are unchanged. Re-sync `scripts/bootstrap.py` too: its delivery census
+(`delivery_inventory`) now excludes every file of a `scope: this-repo`
+skill, not only its `SKILL.md`, so a reference file beside such a skill is
+no longer reported missing from MAPPING. No setting or registry changes;
+nothing needs migrating.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

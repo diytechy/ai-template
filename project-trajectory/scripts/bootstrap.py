@@ -1895,10 +1895,13 @@ def delivery_inventory():
         if spec.get("hooks_src"):
             conditional.append((spec["hooks_src"], spec["hooks_dst"]))
     for skill_md in sorted((KIT / "skills").glob("*/SKILL.md")):
-        rel = skill_md.relative_to(KIT).as_posix()
         fm = parse_skill_frontmatter(skill_md.read_text(encoding="utf-8"))
         if (fm.get("scope") or "kit").strip() != "kit":
-            exclusions[rel] = "scope: this-repo skill; never materialized downstream"
+            # The unit is the skill's whole directory (IF-035), not its
+            # SKILL.md: a reference file beside it stays home with it.
+            unit = skill_copies(skill_md.parent, skill_md.parent.name, AGENTS["claude"])
+            reason = "scope: this-repo skill; never materialized downstream"
+            exclusions.update((f.relative_to(KIT).as_posix(), reason) for f, _ in unit)
             continue
         for spec in AGENTS.values():
             conditional.extend(

@@ -2,12 +2,16 @@
 id = "WI-848"
 title = "The coordinator's procedure is one skill, and spine-authoring states the three ways a spine grows"
 workstream = "process"
-specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
+specref = ""
 needs = ["WI-846", "WI-860", "WI-852", "WI-853"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 8
 +++
+
+## Deliverable
+
+The coordinator's procedure is one this-repo skill, `project-trajectory/skills/coordinator-cycle/` with `references/recipes.md`, landed from the reviewed draft and materialized to `.claude/skills/` and `.agents/skills/`, listed in the skills README and `INDEX.csv`. It is reconciled with every row landed since 2026-10-07: WI-846's long-lived-token sign-in (no interactive sign-in in any recipe), WI-849's in-lane approval acts, WI-852's rendered briefs, WI-853's findings-coverage gate before a rework dispatch, WI-860's review threat model by link to PROCESS.md §6, WI-865's dispute sitting as the procedure (the coordinator neutral), WI-870's one VERDICT line, and the handoffs' durable corrections; it states the two 2026-10-08 lessons (parallel lanes with latched adjudication; coordinator neutrality). The coordinator-only bullets left the session-protocol skill for it, with a pointer. The kit skill `spine-authoring` gains "Three ways a spine grows" (the mode table and the parent-first rule) and `references/in-lane.md`; its §1 to §6 are unchanged. `bootstrap.delivery_inventory` now excludes a this-repo skill's whole directory from the delivery census (its references were a gate-class finding); the module-size ratchet moved 1492 -> 1493 with its reason. RESYNC_PACK entry `[since 61fc3665]`. Codex 6.1 Sol (medium): the fresh full-lane review at `993deeee` raised one finding (land coordinator lanes through the integrator), ruled DISMISS refuted by the dispute sitting 002 (the landing switch is WI-808's); `docs/reviews/wi-848-coordinator-cycle-skill/sol-review-full.md`, filed round `docs/reviews/wi-848/001-REVIEW-A-993deee.md`. Decisions: `docs/decisions/wi-848.toml` (D-001 to D-010). The next coordinator handoff points at the skill for procedure.
 
 ## Context
 

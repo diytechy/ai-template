@@ -184,6 +184,7 @@ posture — lives in [`EXTERNAL_SKILLS.md`](../EXTERNAL_SKILLS.md).
 |---|---|---|
 | `byte-budget-guard` | this-repo | Check `AGENTS.template.md` / `PROCESS.md` sizes against their budgets before and after an edit. |
 | `session-protocol` | this-repo | Run a WI/thread session by this repo's conventions: read plan → execute → gates → session log → commit style. |
+| `coordinator-cycle` | this-repo | The coordinator's one procedure here: scope critique where a row is born, claims, the in-lane intent → iterate → checkpoint cycle, review, disputes and landing. |
 | `registry-hygiene` | kit | Run `trace.py`/`check.py` with the right flags; read orphan/schema findings and fix them. |
 | `downstream-resync` | kit | Walk `ADOPTING.md` §6 to upgrade an adopted repo to kit HEAD. |
 | `gate-advance` | kit | Move DevStg-Reqs→DevStg-Tests→DevStg-Impl honestly — including `Attest` usage and attested-vs-mechanized reporting. |
@@ -198,8 +199,9 @@ set. Read `INDEX.csv` rather than duplicating that evolving inventory here.
 **Split rationale.** `registry-hygiene`, `downstream-resync`, and `gate-advance`
 are **`kit`-scope**: every adopted repo runs the same registries, gates, and
 re-sync path, so they help any downstream project and ship + materialize. The
-`byte-budget-guard` and `session-protocol` are **`this-repo`-scope**: the specific
-byte budgets and the IMPROVEMENT_PLAN WI/thread session ritual are *this*
+`byte-budget-guard`, `session-protocol` and `coordinator-cycle` are
+**`this-repo`-scope**: the specific byte budgets, the IMPROVEMENT_PLAN
+WI/thread session ritual and the coordinator's procedure are *this*
 template's own maintenance attributes, meaningless in an adopted product repo —
 so they are dogfooded into this repo's `.claude/skills/` and kept as reference
 sources here, but **not** materialized by a downstream scaffold.

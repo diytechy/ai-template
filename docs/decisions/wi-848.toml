@@ -1,0 +1,76 @@
+# docs/decisions/wi-848.toml — the coordinator's procedure becomes one
+# this-repo skill (coordinator-cycle), and spine-authoring states the three ways
+# a spine grows; delegated decisions (kit-builder, 2026-10-09).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-003"]
+
+[decision.D-001]
+decided = "spine-authoring keeps its landed WI-849 wording where the reviewed draft predates it: the 'Authoring is not approving' preamble (the act is an independent adjudicator's, taken in the authoring lane or on trunk) and the §6 cell-hygiene line ('the adjudication (the preamble above ...)'), so only the description's lane clause, the 'Three ways a spine grows' section and references/in-lane.md land from the draft. in-lane.md's held CLARITY line keeps today's mechanism (an independent sitting rules CLARITY in its verdict and the act names that file in --verdict) and names no WI-851: WI-851 has not landed and owns that line's change in its own Done-when, and a kit skill that ships to adopters must not cite this repo's row ids."
+alternative = "Land the draft's preamble verbatim (the pre-WI-849 'on the serial trunk side' wording), or add a 'WI-851 will change this' note to in-lane.md."
+reversal_cost = "Low: prose in one kit skill and its two per-agent copies, plus the RESYNC entry."
+why_not_escalated = "The spec's Done-when says the preamble follows WI-849 and the held line follows WI-851 only if it has landed; reverting landed doctrine to a stale draft would contradict the merge slot WI-849 changed."
+review = ""
+
+[decision.D-002]
+decided = "The coordinator-cycle review steps state WI-865's dispute sitting as the procedure (a contested or third-round finding goes to `coordinator_adjudicate.py adjudicate --brief dispute`, the ruling is final and recorded in the lane's decisions record, the coordinator routes the builder's position and does not argue), with rule 1 linked to PROCESS.md §6, rather than the ruling's interim rules 2 and 3 ('until the kit carries both')."
+alternative = "Carry the interim wording the Done-when quotes ('the procedure that holds until WI-865 lands')."
+reversal_cost = "Low: one step of the skill and one recipe."
+why_not_escalated = "WI-865 and WI-860 have landed, which ends the interim by the ruling's own terms; the build prompt directs this."
+review = ""
+
+[decision.D-003]
+decided = "Four coordinator-only bullets leave session-protocol §2 for coordinator-cycle (adjudication through coordinator_adjudicate.py and its token sign-in, the dispute route, rendered review and critique briefs, and the rework coverage gate), replaced by a one-line pointer. The coordinator close-out stays in session-protocol §4, because coordinator_guard.py's drain and relaunch messages name that section; coordinator-cycle §6 links it. session-protocol is scope this-repo, so no adopter loses a rule."
+alternative = "Leave the bullets in session-protocol and have coordinator-cycle link them, or move the close-out too and change coordinator_guard.py's messages."
+reversal_cost = "Low: restore the removed bullets from git; no code reads them."
+why_not_escalated = "The spec makes coordinator-cycle the coordinator's one home; moving the close-out would touch shipped code outside the spec's surface (WI-834 names its future home)."
+review = ""
+
+[decision.D-004]
+decided = "The Roles table and the Sol recipe give Codex 6.1 Sol at medium effort (sol_review.sh defaults to medium), where the draft said high."
+alternative = "Keep the draft's high."
+reversal_cost = "None: one table cell and one recipe default."
+why_not_escalated = "Every coordinator handoff since 2026-10-08c runs Sol at medium and the launcher's default is medium; the skill records the practice, not a new policy."
+review = ""
+
+[decision.D-005]
+decided = "The complexity-baseline recipe keeps the draft's 'never a full --restamp' (it rewrites every row's line count and writes any row that grew) and folds in the leg-01 lesson as 'lower or delete the moved row alone, in the lane commit that moved it, because the hook refuses a stale row', instead of the handoff's 'run --restamp in the lane commit'."
+alternative = "Adopt the handoff's --restamp wording."
+reversal_cost = "None: one recipe bullet."
+why_not_escalated = "check_complexity.write_baseline shows a restamp rewrites every over-threshold row and would silently bump a grown one; the two lessons agree once the restamp's reach is stated."
+review = ""
+
+[decision.D-006]
+decided = "coordinator-cycle is materialized by creating empty `.claude/skills/coordinator-cycle/` and `.agents/skills/coordinator-cycle/` directories and running `bootstrap.py --dest . --sync`, which refreshes only skills a per-agent directory already carries."
+alternative = "Copy the files by hand, or extend --sync to add new this-repo skills."
+reversal_cost = "None."
+why_not_escalated = "--sync is the spec's named route and its 'subset stays a subset' rule is deliberate; the copies are byte-checked by --check-agents either way."
+review = ""
+
+[decision.D-007]
+decided = "The shipped `prompts/adjudicate-dispute.template.md` dispatcher note, which named the session-protocol skill as the coordinator's dispute route, now names the coordinator-cycle skill; the note is stripped before the prompt is sent, and the RESYNC entry lists the file."
+alternative = "Leave the stale pointer."
+reversal_cost = "None: one comment line."
+why_not_escalated = "Moving the route without the pointer would leave a dangling reference; the change is outside the sent prompt."
+review = ""
+
+[decision.D-008]
+decided = "Only durable procedure from the handoffs written since the draft is folded in. Left in the handoffs: dated incident narrative, the workstation's core count, the observation that one retained adjudicator judged two work items, the overnight prompt's 'not SOUND after two more full-lane rounds' stop rule, and the 'a hand landing runs none of the merge slot's rungs' fact (state that WI-808 and WI-828 change). Folded in from the 2026-10-09 leg-01 decision D-001: when the first build needs no narrow round, the checkpoint sits first and one fresh full-lane review is both the first review and the gate."
+alternative = "Fold every 'corrections learned' line into the recipes."
+reversal_cost = "Low: add the lines later."
+why_not_escalated = "The build prompt draws the line at durable procedure versus dated incident narrative; these are state or one-session policy."
+review = ""
+
+[decision.D-009]
+decided = "`bootstrap.delivery_inventory` now excludes every file of a `scope: this-repo` skill (the skill's whole directory, as `skill_copies` enumerates it, IF-035), not only its SKILL.md. Landing `coordinator-cycle/references/recipes.md` otherwise made SR-163's census report it as a gate-class missing-file finding (tests/test_mapping_purpose.py, red before the fix). LLR-275 already says a this-repo skill is excluded, so no row text changes. The module-size ratchet takes a reviewed +1 (1492 -> 1493); the function stays at cognitive 15."
+alternative = "Add a per-file row for recipes.md to project-trajectory/mapping-source-exclusions, or fold the recipes into SKILL.md."
+reversal_cost = "Low: five lines in one function and one ratchet number."
+why_not_escalated = "The spec requires the reference file; the defect is the census treating a this-repo skill as its SKILL.md alone, which would recur for every future this-repo reference file, so the fix belongs at the one owning boundary rather than as an instance exclusion."
+review = ""
+
+[decision.D-010]
+decided = "WI-848 lands on the fresh full-lane review at 993deeee (CHANGES-REQUESTED, one finding) without a further Sol round: the one finding (land coordinator lanes through integrate.py integrate) was ruled DISMISS refuted by the dispute sitting 002, whose ruling is final (the landing switch is WI-808's), and nothing but the dispute's findings file, its verdict and the filed review round was added after the reviewed tip."
+alternative = "Run one more fresh full-lane Sol review over the added review records."
+reversal_cost = "Low: a later review of the landed squash costs one Codex session."
+why_not_escalated = "The reviewed tip's content is the landed content and its only finding has a final ruling; Codex capacity is the night's binding constraint (the same call as wi-853.toml D-005)."
+review = ""

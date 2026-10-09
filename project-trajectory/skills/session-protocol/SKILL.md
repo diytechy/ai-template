@@ -69,63 +69,8 @@ always true.
   `*.ps1`/`*.cmd`/`*.bat` should appear.
 - **Claiming runs through the integrator** (`integrate.py claim`); merges are
   its serial fail-closed queue, and a pause is a tracked `docs/work/pause`.
-- **The coordinator adjudicates through `coordinator_adjudicate.py`, never a
-  subagent.** Compose the brief, then run `python
-  project-trajectory/scripts/coordinator_adjudicate.py adjudicate --brief-file
-  <brief> --brief <class> --wi <WI> --verdict <path>` from the lane's
-  worktree root (the primary checkout is refused), naming a verdict path not
-  yet written, backgrounded (a call outlasts the shell's 10-minute cap). It
-  rides the loop's keep operation and `out/adjudicator/` record, so successive
-  adjudications resume one retained session. Its Claude home authenticates
-  with the owner's long-lived token, read at each launch from the file the
-  `AGENT_CLAUDE_TOKEN_FILE` environment variable names; the token is never
-  read into a brief, log or commit. It is the launch's one environment
-  credential: an ambient `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` or
-  cloud-provider switch is left out, and a route declaring one (or `--bare`)
-  is refused. Each retained launch runs the one registry row its caller
-  selected. Settings-file credentials (`apiKeyHelper`, a
-  settings `env` block, a managed gateway) are not checked: keep them out of
-  this repo; store-lock contention is WI-858's.
-  Exit 7 means that token is unset or unreadable, or the route conflicts:
-  `... coordinator_adjudicate.py signin` reads the token, and the remedy is
-  dev-setup's one-time `claude setup-token` step and that variable, never an
-  interactive sign-in. Never substitute a fresh subagent.
-- **A contested or repeated review finding goes to a dispute sitting before
-  another build round.** When the builder or the coordinator contests a
-  review finding, or a finding class reaches its third review round, the
-  adjudicator rules it, not the coordinator by sending it back to the builder.
-  Write the findings file beside the verdict, in `docs/reviews/<lane>/` (its
-  shape: `scripts/kitlib/dispute.py`), compose
-  the `dispute` brief over it (a row whose `Brief` is `dispute` and whose
-  `Adjudicates` names that file, through `adjudicate_brief.compose`), and run
-  the call above with `--brief dispute`. Each finding comes back FIX, DISMISS
-  with a reason class, or ESCALATE to the owner; the ruling is final. Record
-  each ruling in the response to the review and, when the run keeps one, in
-  the lane's `docs/decisions/<branch>.toml`, as PROCESS.md §6 "Review threat
-  model" says; a dismissed finding is never re-raised to the builder.
-- **The coordinator renders its review and critique briefs; it never writes
-  one by hand.** `python project-trajectory/scripts/review_brief.py review
-  --wi <WI> --base <sha> --sha <tip> --scope narrow|full --tests <files>
-  --scratch <dir> --out <brief>` fills the kit's reviewer template with the
-  lane's facts: a narrow round adds `--findings <the round file it answers>`,
-  and `--rubric docs/rubrics/kit-change-review.md` adds this repo's checks.
-  `critique --wi <WI> --rubric docs/rubrics/scope-critique.md` renders the
-  scope critique where a row is born. The reviewer writes its verdict to the
-  scratch path the brief names, and `review_brief.py file --review <it> --sha
-  <tip> --scope <scope>` validates it and writes the lane's round file
-  (`docs/reviews/<lane>/NNN-REVIEW-A-<sha7>.md`), which the rollup reads.
-- **A review's findings are clauses the rework plan covers before the fix is
-  dispatched.** The builder's first answer to a round file is a plan: a
-  `Plan-WI` table whose rows cite each finding's `F#` (F1..Fn in the order
-  written), with columns for its class, every site of the class with the
-  search that found it, and the one owning boundary. Run `python
-  project-trajectory/scripts/plan_coverage.py --item <spec> --findings <round
-  file> <plan>` and dispatch the fix only on exit 0: every `F#` covered by a
-  row or excluded with a reason. A finding a dispute sitting dismissed is
-  excluded citing that verdict, `Excludes: F2 — dismissed:
-  docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`; the gate
-  refuses a cite that is not an accepted DISMISS of it, or whose findings
-  file beside it records another finding under that id.
+- **The coordinator's procedure has one home, the `coordinator-cycle` skill**
+  (adjudication, rendered review briefs, the rework coverage gate, disputes).
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
   only sanctioned stop is the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges

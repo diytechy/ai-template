@@ -7,7 +7,7 @@
      back to the builder; its call is final, and a high-risk finding goes to
      the owner. The findings file's shape and the verdict grammar have one
      home, scripts/kitlib/dispute.py; the coordinator's route is the
-     session-protocol skill's.
+     coordinator-cycle skill's (this repository's).
 
      Slots (single-brace, strict fill — a missing one refuses):
        {range}     the lane range the findings concern, as the findings file

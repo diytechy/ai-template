@@ -1,6 +1,6 @@
 ---
 name: spine-authoring
-description: Use when breaking down or developing the SN → SR → LLR → TC spine — the adjudicator's question list per tier: what a need must carry before it is approved, what belongs at SR versus LLR versus the trace tier, when an obligation is a labelled derived requirement, and which instruments catch a distorted breakdown.
+description: Use when breaking down or developing the SN → SR → LLR → TC spine — the adjudicator's question list per tier: what a need must carry before it is approved, what belongs at SR versus LLR versus the trace tier, when an obligation is a labelled derived requirement, and which instruments catch a distorted breakdown. Also use when authoring or judging a lane's spine change for a found defect or new scope.
 stacks: [python, node, powershell, go, rust, any]
 domains: [any]
 phases: [dev, gate]
@@ -96,6 +96,25 @@ Use the ordinary scoped change/review record for the following decisions:
 Syntax checks prove reference integrity and preservation; independent judgment
 assesses relevance and adequacy. Optional prose objective anchors explain
 purpose without adding a registry tier, approval stage or completion percentage.
+
+## Three ways a spine grows
+
+Choose the mode before writing. The `human_approval_through` dial in
+`docs/process.toml` holds rungs at or below it for the owner (`docs/process.md`
+§4).
+
+| Mode | What it is | How it is judged |
+|---|---|---|
+| **From the vision** | The first breakdown | Tier by tier: approve each tier before deriving the next (§1–§3) |
+| **In a lane, released rungs** | A defect or new scope whose changed rows are all on released rungs | One change set, authored whole and judged in one sitting |
+| **In a lane, a held rung** | The change touches a held rung | Split at the dial: held first drafts and MEANING changes wait for the owner; the sitting may re-attest only held amendments ruled CLARITY in its verdict |
+
+**In every mode, a child is approved only after its parent.** An SR waits for
+its SN, an LLR for its SR, and a TC for every row it verifies. An approved
+child under a `Drafted` parent claims a chain nobody has blessed.
+
+Before authoring or judging a lane's change, read
+[references/in-lane.md](references/in-lane.md) for closure and held-rung rules.
 
 ## 1. At SN intake — answer these before the need is approved
 
