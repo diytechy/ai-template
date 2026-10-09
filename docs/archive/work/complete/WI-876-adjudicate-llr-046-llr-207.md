@@ -2,12 +2,16 @@
 id = "WI-876"
 title = "adjudicate: LLR-046, LLR-207, LLR-310, LLR-313, TC-083, TC-327 - approved/routed cell(s) amended on merged trunk f9c7a91..03db0ea (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-046", "LLR-207", "LLR-310", "LLR-313", "TC-083", "TC-327"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-870's in-lane adjudicator, through the retained session, ruled the amendments of LLR-046, LLR-207, LLR-310, LLR-313, TC-083 and TC-327 MEANING and blessed them (verdict 001 under `docs/reviews/wi-870-gate-verdict-parser-strict/`), and re-attested them in act 76. The low-level-requirement and test-case registries are byte-identical to their anchors under `docs/archive/last_approved/` at the landing `03db0ead`.
 
 ## Context
 
