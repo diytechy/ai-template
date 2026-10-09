@@ -2,6 +2,7 @@
 (score_reviews.py, WI-059). Every scored component is in [0,1]; severity hygiene
 and the tripwires are GATES, never scores; length never scores positively."""
 
+import pytest
 from conftest import SCRIPTS, load_script, run_py
 
 score = load_script("score_reviews")
@@ -47,6 +48,36 @@ def test_parse_verdict_reads_machine_line_and_findings():
     f = v.findings[0]
     assert f.severity == "MAJOR" and f.path == "src/a.py" and f.line == 12
     assert f.change == "persist it"  # the change clause
+
+
+_MAJOR = "- [MAJOR] src/a.py:1 -> x -> y\n"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        # A label outside the enum that only starts like one.
+        "VERDICT: APPROVED findings=0\n",
+        # A count that is not a whole number.
+        "VERDICT: APPROVE findings=0.5\n",
+        # Two VERDICT lines: the later APPROVE must not win.
+        _MAJOR + "VERDICT: CHANGES-REQUESTED findings=1\nVERDICT: APPROVE findings=0\n",
+        # A NEEDS-HUMAN line is a VERDICT line, not prose to skip.
+        "VERDICT: NEEDS-HUMAN findings=0\nVERDICT: APPROVE findings=0\n",
+        # A duplicated field is ambiguous, whichever copy a reader keeps.
+        "VERDICT: APPROVE findings=7 findings=0\n",
+    ],
+)
+def test_the_gate_reads_a_malformed_verdict_line_as_no_verdict(text):
+    """WI-870: the merge gate reads a round's VERDICT line through the one
+    strict per-line reader the filing boundary uses, so each of these rounds
+    is unreadable, and the gate's fail-closed map holds no verdict for the
+    phase, never an APPROVE."""
+    v = score.parse_verdict(text)
+    assert v.verdict is None and v.declared_n is None
+    word = score.effective_verdict(v.verdict, v.findings)
+    latest, _flipped = score.latest_phase_verdicts([("REVIEW-A", 1, word)], 1)
+    assert latest == {"REVIEW-A": ""}
 
 
 def test_anchored_precision_penalizes_unresolved_anchor(tmp_path):

@@ -2,11 +2,15 @@
 id = "WI-870"
 title = "The merge gate reads a review round's VERDICT line strictly, as filing does"
 workstream = "process"
-specref = "project-trajectory/scripts/score_reviews.py"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 6
 +++
+
+## Deliverable
+
+A review round's `VERDICT:` line has one strict reader, `kitlib.sitting.review_line`, built on the shared per-line reader; the merge gate (`score_reviews.parse_verdict`, which the gate, the loop's routing and `gen_verdict_rollup.py` call) and the attended filing boundary (`review_brief.py file`) both go through it. A round with no VERDICT line or more than one (compared in any case), a label outside the enum, a missing, repeated or non-integer `findings=`, or anything else on the line has no verdict, which the gate reads fail-closed. The shared per-line reader refuses a duplicated field. PROCESS.md's review block teaches the one machine line (D-001). Migration: every adjudication verdict reads as before; 87 committed review files now read as no verdict and are listed with their before and after readings in [log.d/2026-10-09-wi-870-verdict-migration.md](../../../log.d/2026-10-09-wi-870-verdict-migration.md), none rewritten (D-002); the affected rollups are regenerated at the landing. Rows: LLR-046, LLR-207, LLR-310, LLR-313, TC-083 and TC-327 amended by Terra, judged MEANING and re-attested (verdict 001, act 76); IF-046 and IF-287 amended. Codex 6.1 Sol (medium): the first full-lane review found the inventory missing; the fresh full-lane review at `ef1307ad` is SOUND (`docs/reviews/wi-870-gate-verdict-parser-strict/sol-review-full.md`). Decisions: `docs/decisions/wi-870.toml` (D-001 to D-003).
 
 ## Context
 

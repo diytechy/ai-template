@@ -16,9 +16,9 @@ identity). This is the human's reading of the same evidence.
 | 12 | REVIEW-A | `86e0c9c` | CHANGES-REQUESTED | 2 | `012-REVIEW-A-86e0c9c-relaxed.md` |
 | 15 | REVIEW-A | `a3c9480` | CHANGES-REQUESTED | 5 | `015-REVIEW-A-a3c9480-relaxed.md` |
 | 19 | REVIEW-A | `6b8354b` | CHANGES-REQUESTED | 1 | `019-REVIEW-A-6b8354b.md` |
-| 22 | REVIEW-A | `6684422` | CHANGES-REQUESTED | 2 | `022-REVIEW-A-6684422.md` |
+| 22 | REVIEW-A | `6684422` | (unparseable) | 2 | `022-REVIEW-A-6684422.md` |
 | 25 | REVIEW-A | `6f12243` | CHANGES-REQUESTED | 3 | `025-REVIEW-A-6f12243.md` |
 | 30 | REVIEW-A | `7880b99` | CHANGES-REQUESTED | 4 | `030-REVIEW-A-7880b99-relaxed.md` |
 | 33 | REVIEW-A | `34758fa` | CHANGES-REQUESTED | 4 | `033-REVIEW-A-34758fa-relaxed.md` |
-| 36 | REVIEW-A | `eb4ee91` | CHANGES-REQUESTED | 1 | `036-REVIEW-A-eb4ee91.md` |
+| 36 | REVIEW-A | `eb4ee91` | (unparseable) | 1 | `036-REVIEW-A-eb4ee91.md` |
 | 39 | REVIEW-A | `92c7a72` | APPROVE | 0 | `039-REVIEW-A-92c7a72.md` |

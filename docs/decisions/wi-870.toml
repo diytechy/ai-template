@@ -1,0 +1,26 @@
+# docs/decisions/wi-870.toml — the merge gate reads a review round's VERDICT
+# line strictly (overnight leg 01, 2026-10-09); delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "PROCESS.md's review block now teaches the one machine line `VERDICT: APPROVE|CHANGES-REQUESTED findings=<N>` in place of its free `Verdict: APPROVE | CHANGES-REQUESTED` header. The WI-852 dispute ruling made the VERDICT keyword count case-insensitive, so a round that followed the old block AND wrote the reviewer brief's machine line carried two verdict lines; filing has refused it since WI-852 and the gate now reads it as no verdict. One taught format removes the conflict at its source."
+alternative = "Count only an exact-case `VERDICT:` line (reversing the WI-852 dispute ruling's case-fold), or leave PROCESS.md teaching a header the gate now refuses."
+reversal_cost = "Low: one line in PROCESS.md and one RESYNC sentence."
+why_not_escalated = "The spec's Done-when requires that more than one VERDICT line makes the round unreadable; keeping a taught format that produces two lines would make the kit's own instructions fail its gate. The case-fold was ruled by an adjudicator and is not reopened."
+review = ""
+
+[decision.D-002]
+decided = "87 committed review files under docs/reviews/ now read as unparseable (a `Verdict:` header beside the machine line, trailing tokens, or several VERDICT lines in multi-round logs). None is rewritten; each is listed with its before and after reading in this lane's log fragment docs/log.d/2026-10-09-wi-870-verdict-migration.md for the owner, and the four affected verdict rollups are regenerated at the landing (they now show those rounds as unparseable). Every adjudication verdict reads exactly as before."
+alternative = "Rewrite the historical round files to the strict form, or keep a lax legacy reader for closed lanes."
+reversal_cost = "Low: the files are untouched; only generated rollups change."
+why_not_escalated = "The spec says files that no longer read are listed for the owner rather than rewritten, and the gate reads only open lanes' rounds; a legacy reader would be the fallback path the owner's standing rule forbids."
+review = ""
+
+[decision.D-003]
+decided = "The spec's premise that the filing boundary already used kitlib.sitting's per-line reader was wrong (it had its own canonical-form regex in review_brief). The builder moved that check into kitlib.sitting as `review_line`, built on the shared per-line reader, and both filing and the gate now call it; the filing boundary accepts and refuses the same lines, with two refusal messages reworded."
+alternative = "Keep review_brief's regex as the one reader and have the gate import it from there."
+reversal_cost = "Medium: one function moves back between two modules."
+why_not_escalated = "The spec asks for one parser shared with the per-line reader; kitlib.sitting is the shared reader's home (WI-841's one verdict parser)."
+review = ""

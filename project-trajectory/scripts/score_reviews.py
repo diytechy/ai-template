@@ -69,16 +69,13 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from kitlib.sitting import review_line
 from kitlib.verdict import declared_phases, effective_verdict
 
 # The finding line: "- [SEVERITY] <anchor> -> issue -> change [-> @owner]".
 # Arrows may be "->" or the unicode arrow; we split on either.
 FINDING_RE = re.compile(r"^\s*-\s*\[(?P<sev>[A-Za-z]+)\]\s*(?P<body>.+)$")
 ARROW_RE = re.compile(r"\s*(?:->|→)\s*")
-VERDICT_RE = re.compile(
-    r"^\s*VERDICT:\s*(?P<verdict>APPROVE|CHANGES-REQUESTED)\s*(?:findings\s*=\s*(?P<n>\d+))?",
-    re.I,
-)
 MODEL_RE = re.compile(r"^\s*Model:\s*(?P<model>.+?)\s*$", re.I)
 # An anchor of the shape file:line or file:line:col, or a bare path, or sym:...
 ANCHOR_RE = re.compile(r"^(?P<path>[\w./\-]+?)(?::(?P<line>\d+))?(?::\d+)?$")
@@ -162,40 +159,51 @@ def _parse_anchor(token):
     return m.group("path"), line
 
 
+def _finding(ln):
+    """The `Finding` one verdict-block line carries, or None when it is not a
+    finding line.
+
+    Implements: SR-154, LLR-046
+    """
+    mf = FINDING_RE.match(ln)
+    if not mf:
+        return None
+    parts = ARROW_RE.split(mf.group("body").strip())
+    anchor_tok = parts[0].strip() if parts else ""
+    path, line = _parse_anchor(anchor_tok)
+    return Finding(
+        severity=mf.group("sev").upper(),
+        anchor=anchor_tok,
+        path=path,
+        line=line,
+        issue=parts[1].strip() if len(parts) > 1 else "",
+        change=parts[2].strip() if len(parts) > 2 else "",
+        raw=ln.strip(),
+    )
+
+
 def parse_verdict(text, model=None):
     """Parse one verdict block into a Verdict. `model` overrides the Model: header
-    (the coordinator knows which registry id it launched)."""
+    (the coordinator knows which registry id it launched).
+
+    The verdict word and declared count are `kitlib.sitting.review_line`'s, the
+    one strict reader the attended filing boundary uses too (WI-870): a round
+    whose VERDICT line that reader refuses (a label outside the enum, a missing,
+    repeated or non-integer count, anything else on the line, or a second
+    VERDICT line in any case) has NO verdict, which the gate reads fail-closed.
+    """
     findings = []
-    verdict, declared_n = None, None
+    machine, _refusal = review_line(text)
+    verdict, declared_n = machine or (None, None)
     hdr_model = None
     for ln in text.splitlines():
-        mv = VERDICT_RE.match(ln)
-        if mv:
-            verdict = mv.group("verdict").upper()
-            declared_n = int(mv.group("n")) if mv.group("n") is not None else None
-            continue
         mm = MODEL_RE.match(ln)
         if mm and hdr_model is None:
             hdr_model = mm.group("model")
             continue
-        mf = FINDING_RE.match(ln)
-        if mf:
-            parts = ARROW_RE.split(mf.group("body").strip())
-            anchor_tok = parts[0].strip() if parts else ""
-            path, line = _parse_anchor(anchor_tok)
-            issue = parts[1].strip() if len(parts) > 1 else ""
-            change = parts[2].strip() if len(parts) > 2 else ""
-            findings.append(
-                Finding(
-                    severity=mf.group("sev").upper(),
-                    anchor=anchor_tok,
-                    path=path,
-                    line=line,
-                    issue=issue,
-                    change=change,
-                    raw=ln.strip(),
-                )
-            )
+        finding = _finding(ln)
+        if finding:
+            findings.append(finding)
     return Verdict(
         model=model or hdr_model,
         verdict=verdict,

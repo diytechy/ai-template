@@ -804,7 +804,7 @@ status = "Drafted"
 owner = "scripts/score_reviews"
 requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/gen_verdict_rollup", "scripts/kitlib/verdict"]
 channel = "call"
-data = "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round, latest_phase_verdicts; every result advisory. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
+data = "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round, latest_phase_verdicts; parse_verdict obtains a verdict word and declared count only from the shared strict review-line reader and returns neither when that reader refuses; every result advisory. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
 version = "v1"
 status = "Drafted"
 
@@ -2577,11 +2577,11 @@ component = "CMP-008"
 notes = "source - this seam reads version-control trees and review or decision records; callers decide the transition they hold."
 
 [interface.IF-287]
-rationale = "Combined brief composition, verdict checking, merge-time disposition and approval acts need one interpretation of kind-scoped tokens and sections; separate parsers could let one judgement act outside its requested scope."
+rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
 owner = "scripts/kitlib/sitting"
-requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake"]
+requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews"]
 channel = "call"
-data = "claim_scope(meta) -> (brief, {kind: [ids]}, [malformed]); bounds_acts(meta); malformed_refusal(metas)"
+data = "claim_scope(meta) -> (brief, {kind: [ids]}, [malformed]); bounds_acts(meta); malformed_refusal(metas); review_line(text) -> ((APPROVE|CHANGES-REQUESTED, findings), refusal)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

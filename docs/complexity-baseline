@@ -5,14 +5,14 @@
 project-trajectory/scripts/adjudicate_brief.py	_amended_rows	17	19	RE-KEYED 2026-09-27 (WI-657): WI-646 (26c086dd) split the row selection out of `amendment_values` (20 -> 3, below the threshold) when it scoped the amendment brief to its own rows; 17 here, net -3 across the pair. Not a bump.
 project-trajectory/scripts/agent_brief.py	critique_brief	31	49
 project-trajectory/scripts/agent_brief.py	critique_control	18	20
-project-trajectory/scripts/agent_brief.py	worker_prompt	16	70	2026-10-03, WI-746 (9dbb5103): pending-open-item guard joins scheduler disposition and formats gates before assigning a worker; keeping the refusal at the assignment boundary prevents a held WI reaching the worker.
+project-trajectory/scripts/agent_brief.py	worker_prompt	16	72	2026-10-03, WI-746 (9dbb5103): pending-open-item guard joins scheduler disposition and formats gates before assigning a worker; keeping the refusal at the assignment boundary prevents a held WI reaching the worker.
 project-trajectory/scripts/agent_common.py	latest_trailer_evidence	17	14
 project-trajectory/scripts/agent_common.py	preflight	33	104
 project-trajectory/scripts/agent_common.py	regenerate_index	16	43
 project-trajectory/scripts/agent_loop.py	RoutingState.route_intent	21	24
 project-trajectory/scripts/agent_loop.py	build_worker_assignment	28	66
 project-trajectory/scripts/agent_loop.py	map_preflight	41	70
-project-trajectory/scripts/agent_loop.py	route_session	37	145	deliberate re-stamp at arming, reason recorded: 35 -> 37 came with the stall-guard row (C4 pre-dispatch probe + C5 relaxed reviewer rung, landed 2026-08-30 while this sensor was report-only; measured 35 at trunk 8ac501de, 37 after); the ratchet holds at 37 and the decomposition is owed to the decomposition debt owner, not paid by raising this number again
+project-trajectory/scripts/agent_loop.py	route_session	37	146	deliberate re-stamp at arming, reason recorded: 35 -> 37 came with the stall-guard row (C4 pre-dispatch probe + C5 relaxed reviewer rung, landed 2026-08-30 while this sensor was report-only; measured 35 at trunk 8ac501de, 37 after); the ratchet holds at 37 and the decomposition is owed to the decomposition debt owner, not paid by raising this number again
 project-trajectory/scripts/agent_loop.py	seconds_until_reset	18	30
 project-trajectory/scripts/agent_route.py	_rows_from_csv	17	34
 project-trajectory/scripts/agent_route.py	escalate	16	72
@@ -24,13 +24,13 @@ project-trajectory/scripts/assumption_rules.py	_classify	16	24	2026-10-03, WI-72
 project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	20	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/baseline_snapshot.py	unanchored_findings	21	39
 project-trajectory/scripts/bookkeeping.py	_restore	20	35	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): this new row came with WI-612 (c429dd0c) at 22 and fell to 20 with WI-647 (9da560b6): undoing an install path by path, where a dirty in-scope path that no longer matches what the install wrote is somebody else's edit. Repair is owed on trunk.
-project-trajectory/scripts/bootstrap.py	append_stack_checklist	26	39
+project-trajectory/scripts/bootstrap.py	append_stack_checklist	26	40
 project-trajectory/scripts/bootstrap.py	copy_kit_files	17	31
 project-trajectory/scripts/bootstrap.py	main	16	41
 project-trajectory/scripts/bootstrap.py	migrate_legacy_config	17	48
 project-trajectory/scripts/bootstrap.py	strip_markers	28	36
 project-trajectory/scripts/bootstrap.py	sync_agent_skills	49	41
-project-trajectory/scripts/check.py	main	40	200
+project-trajectory/scripts/check.py	main	40	220
 project-trajectory/scripts/check.py	staged_divergence	32	84
 project-trajectory/scripts/check_doc_refs.py	main	22	93	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 22 with WI-656 (07d552a0): the unbound-symbol count joins the untraced tally and its summary clause, one conditional in the format arguments. Repair is owed on trunk: the tail belongs in a helper.
 project-trajectory/scripts/check_doc_refs.py	registry_findings	18	26
@@ -54,7 +54,7 @@ project-trajectory/scripts/check_trajectory.py	cell_integrity_errors	24	23
 project-trajectory/scripts/check_trajectory.py	completion_reconciliation_findings	18	45
 project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
 project-trajectory/scripts/check_trajectory.py	load_wis	16	35	sloc column re-measured 34 -> 35 at dc3c9e68 (informational; the ratchet compares cognitive, which 8fa0f0f3 pushed to 17 and dc3c9e68 repaired back to 16)
-project-trajectory/scripts/check_trajectory.py	main	45	151
+project-trajectory/scripts/check_trajectory.py	main	45	157
 project-trajectory/scripts/check_trajectory.py	queue_conflict_pairs	18	38	RE-STAMPED DOWN 21 -> 18 (WI-657): landed with WI-656 (07d552a0) and was never recorded; it replaces the WI-583 re-key reason.
 project-trajectory/scripts/check_trajectory.py	staged_findings	20	30
 project-trajectory/scripts/check_trajectory.py	status_forward_only_findings	16	25
@@ -71,7 +71,7 @@ project-trajectory/scripts/dispatch.py	_admission	24	31
 project-trajectory/scripts/dispatch.py	_advance	18	28	RE-STAMPED DOWN 20 -> 18 (WI-657): landed with the redesign-baseline repair sitting (22b21b06, 2026-09-06) and was never recorded; it replaces the absorbed 16 -> 20 reason, which described the WI-552 close.
 project-trajectory/scripts/dispatch.py	_claim_lanes	24	41
 project-trajectory/scripts/dispatch.py	_poll	21	34	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 21 with the redesign-baseline repair sitting (22b21b06, 2026-09-06): the `preserved` verb a code-restart drain reports. Repair is owed on trunk.
-project-trajectory/scripts/dispatch.py	run	21	44	RE-STAMPED DOWNWARD 25 -> 21 (SLOC 52 -> 43) 2026-09-04: the tick's pause arm moved OUT of `run` — under §5.6 a pause forbids the CLAIM and nothing else, so the banner-and-return block at the top of the loop became one read handed to `_admit` (`_paused_exit` owns the run's end). Recorded down in the same commit, per this file's rule. Reason in docs/log.d/2026-09-04-finished-lane-round-and-pause-resume.md
+project-trajectory/scripts/dispatch.py	run	21	48	RE-STAMPED DOWNWARD 25 -> 21 (SLOC 52 -> 43) 2026-09-04: the tick's pause arm moved OUT of `run` — under §5.6 a pause forbids the CLAIM and nothing else, so the banner-and-return block at the top of the loop became one read handed to `_admit` (`_paused_exit` owns the run's end). Recorded down in the same commit, per this file's rule. Reason in docs/log.d/2026-09-04-finished-lane-round-and-pause-resume.md
 project-trajectory/scripts/gen_arch_map.py	_contract_bodies	32	55
 project-trajectory/scripts/gen_arch_map.py	_seam_edges	18	15
 project-trajectory/scripts/gen_arch_map.py	build_contract_reference	24	53
@@ -98,9 +98,9 @@ project-trajectory/scripts/gen_open_items.py	fragment_declarations	16	23
 project-trajectory/scripts/gen_open_items.py	md_block	17	28
 project-trajectory/scripts/gen_skills_index.py	check_agent_sync	22	30
 project-trajectory/scripts/gen_skills_index.py	collect_skills	24	27
-project-trajectory/scripts/gen_skills_index.py	main	16	84
-project-trajectory/scripts/gen_trajectory.py	build_html	27	117
-project-trajectory/scripts/gen_trajectory.py	main	16	71
+project-trajectory/scripts/gen_skills_index.py	main	16	85
+project-trajectory/scripts/gen_trajectory.py	build_html	27	123
+project-trajectory/scripts/gen_trajectory.py	main	16	74
 project-trajectory/scripts/hats.py	_audit_lines	20	89
 project-trajectory/scripts/hats.py	parse_condition	19	47
 project-trajectory/scripts/intake.py	_close_drafts	19	73
@@ -119,7 +119,7 @@ project-trajectory/scripts/plan_round.py	_advance	18	18
 project-trajectory/scripts/plan_round.py	ready_steps	22	35
 project-trajectory/scripts/plan_round.py	record	61	90
 project-trajectory/scripts/plan_runner.py	run_dual_plan_round	95	311
-project-trajectory/scripts/rejudge.py	due_cases	16	30	ABSORBED FROM TRUNK at the WI-657 integration (2026-09-27), not introduced by it: this new row came with WI-638 (f7885a49), which landed while the ratchet was red. SR-215's checkpoint decides each observation case's due-ness from four independent conditions (no result, expired, inputs moved, link exclusion) over one snapshot. Repair is owed on trunk: the conditions are a table of predicates.
+project-trajectory/scripts/rejudge.py	due_cases	16	32	ABSORBED FROM TRUNK at the WI-657 integration (2026-09-27), not introduced by it: this new row came with WI-638 (f7885a49), which landed while the ratchet was red. SR-215's checkpoint decides each observation case's due-ness from four independent conditions (no result, expired, inputs moved, link exclusion) over one snapshot. Repair is owed on trunk: the conditions are a table of predicates.
 project-trajectory/scripts/rendering/traj_graph.py	_dag_ranks	22	22	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_graph.py	_detour_d	23	44	-10 (33 -> 23) 2026-10-03, WI-758: the lane-separation router's helpers take the detour's obstacle and gap logic; re-stamped downward.
 project-trajectory/scripts/rendering/traj_graph.py	_lane_candidates	18	21	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
@@ -134,7 +134,6 @@ project-trajectory/scripts/schedule.py	hard_path_lengths	20	32
 project-trajectory/scripts/schedule.py	kind_of	16	17
 project-trajectory/scripts/score_reviews.py	corroboration	16	21
 project-trajectory/scripts/score_reviews.py	main	26	95
-project-trajectory/scripts/score_reviews.py	parse_verdict	21	39
 project-trajectory/scripts/spine_carrier.py	needs_from_markdown	32	30
 project-trajectory/scripts/spine_rules.py	spine_stage	19	45	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 17 -> 19 with WI-633 (6ee918f5): the stakeholder, assumption and surrogate tiers each hold a rung (SR-204), two `or` operands in the existing needs and boundary tests. The predicates are already siblings; the growth is the two operands.
 project-trajectory/scripts/trace.py	_cell_diff_lines	18	26	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
@@ -149,11 +148,11 @@ project-trajectory/scripts/trace.py	if_carriage_advisories	25	48
 project-trajectory/scripts/trace.py	if_endpoint_class_advisories	34	42
 project-trajectory/scripts/trace.py	integrity_findings	17	17
 project-trajectory/scripts/trace.py	interface_findings	30	58
-project-trajectory/scripts/trace.py	main	20	196	RE-STAMPED DOWN 23 -> 20 (WI-657): WI-633 (6ee918f5) routed two approval-scope branches to `_approval_body`; never recorded.
+project-trajectory/scripts/trace.py	main	20	205	RE-STAMPED DOWN 23 -> 20 (WI-657): WI-633 (6ee918f5) routed two approval-scope branches to `_approval_body`; never recorded.
 project-trajectory/scripts/trace.py	mermaid_graph	31	45
 project-trajectory/scripts/trace.py	reattest_model	34	119
-project-trajectory/scripts/trace.py	render_console	35	136
-project-trajectory/scripts/trace.py	render_report	66	368	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 65 -> 66 with WI-637 (1be5ca08): a hat finding is counted with no roster (`hat_names or hat_dangling`), so a strict failure never stands without its summary line.
+project-trajectory/scripts/trace.py	render_console	35	138
+project-trajectory/scripts/trace.py	render_report	66	369	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 65 -> 66 with WI-637 (1be5ca08): a hat finding is counted with no roster (`hat_names or hat_dangling`), so a strict failure never stands without its summary line.
 project-trajectory/scripts/trace.py	schema_findings	29	28	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 25 -> 29 with WI-631 (8d25242f): a test case's Verifies is required unless it evidences assumptions instead (LLR-229), a nested conditional arm. Repair is owed on trunk.
 project-trajectory/scripts/trace.py	triangle_findings	16	28
 project-trajectory/scripts/trace_text.py	form_findings	36	62
@@ -170,7 +169,7 @@ project-trajectory/scripts/trajectory_arch.py	contract_body_findings	22	40
 project-trajectory/scripts/trajectory_arch.py	if_tc_allow_hygiene_findings	27	54
 project-trajectory/scripts/trajectory_arch.py	interface_findings	37	89
 project-trajectory/scripts/wi_convert.py	parse_spec	19	35
-tests/test_bootstrap.py	test_every_sibling_imported_module_is_shipped_by_mapping	33	50
+tests/test_bootstrap.py	test_every_sibling_imported_module_is_shipped_by_mapping	33	52
 tests/test_dependency_ledger.py	undeclared_imports	19	21
 tests/test_gen_cases.py	_example_status_cells	24	15
 tests/test_generated_newlines.py	text_write_calls	30	28

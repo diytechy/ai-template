@@ -11,4 +11,4 @@ identity). This is the human's reading of the same evidence.
 
 | # | phase | reviewed | verdict | findings | file |
 |---|---|---|---|---|---|
-| 11 | REVIEW-A | `6f27419` | APPROVE | 0 | `011-REVIEW-A-6f27419.md` |
+| 11 | REVIEW-A | `6f27419` | (unparseable) | 0 | `011-REVIEW-A-6f27419.md` |

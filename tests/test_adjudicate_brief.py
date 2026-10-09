@@ -1647,10 +1647,13 @@ def test_a_well_formed_typed_line_is_accepted_for_every_brief(tmp_path, brief, l
         ("the lane did fine, I think", "no `OUTCOME:` machine line"),
         ("OUTCOME: LOOKS-OK successors=1", "not one of"),
         ("OUTCOME: PARTIAL", "omits successors"),
+        # WI-870: the shared per-line reader refuses a duplicated field for
+        # every consumer, rather than keeping whichever copy came last.
+        ("OUTCOME: PARTIAL successors=7 successors=0", "more than once"),
     ],
 )
 def test_an_unusable_verdict_is_refused_and_says_which_way(tmp_path, line, expect):
-    """Four ways to fail, four distinct reasons. "The verdict is invalid" is not
+    """Five ways to fail, five distinct reasons. "The verdict is invalid" is not
     something a human can act on at 3am, so each arm names what is wrong."""
     path = tmp_path / "v.md"
     if line is not None:

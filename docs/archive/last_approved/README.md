@@ -97,3 +97,4 @@ Each line below is a human's citation of the act that authorised a refresh absor
 - 2026-10-08 — refresh under approval. Copied: low-level-requirements.toml (re-attested: LLR-313); test-cases.toml (re-attested: TC-333). Registries not named by this act keep their prior snapshot bytes.
 - 2026-10-08 — refresh under approval. Copied: low-level-requirements.toml (re-attested: LLR-313); test-cases.toml (re-attested: TC-333). Registries not named by this act keep their prior snapshot bytes.
 - 2026-10-09 — refresh under approval. Copied: test-cases.toml (re-attested: TC-325, TC-326, TC-327, TC-328). Registries not named by this act keep their prior snapshot bytes.
+- 2026-10-09 — refresh under approval. Copied: low-level-requirements.toml (re-attested: LLR-046, LLR-207, LLR-310, LLR-313); test-cases.toml (re-attested: TC-083, TC-327). Registries not named by this act keep their prior snapshot bytes.

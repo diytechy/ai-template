@@ -925,7 +925,7 @@ race under concurrency):
 
 ```
 ### <HAT or REVIEWER> — <Gate> — Round <r> — <YYYY-MM-DD>
-Verdict: APPROVE | CHANGES-REQUESTED
+VERDICT: APPROVE|CHANGES-REQUESTED findings=<N>
 Findings:
 - [BLOCKER|MAJOR|MINOR] <ID or area> → <issue> → <suggested change> → @<owner>
 ```

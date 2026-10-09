@@ -7605,6 +7605,51 @@ bound to. `prompts/CATALOG.md` is regenerated.
 or `{head}` renders as before. `review_brief.py` renders the shipped template only. No
 setting changes, and nothing needs migrating.
 
+### The merge gate reads a review round's VERDICT line as strictly as filing does [since f9c7a91b]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A review round's `VERDICT:` line now has one reader,
+`review_line` in `scripts/kitlib/sitting.py`. Both the attended filing boundary
+(`scripts/review_brief.py file`) and the merge gate's round reader
+(`scripts/score_reviews.py`'s `parse_verdict`, which the gate, the loop's
+routing and `gen_verdict_rollup.py` all call) go through it. A round is
+unreadable, and the gate reads it as no verdict (fail closed, never APPROVE),
+when:
+- it carries no line whose keyword, compared in any case, is `VERDICT`, or
+  more than one;
+- the label is not `APPROVE` or `CHANGES-REQUESTED`;
+- `findings=` is missing, repeated, or not a whole number;
+- anything else is on the line, so it is not exactly
+  `VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<digits>`.
+
+Before, the gate matched a line prefix in any case and let the last line win,
+so `VERDICT: APPROVED findings=0` and a CHANGES-REQUESTED line followed by an
+APPROVE line both read as APPROVE.
+
+The shared per-line reader of the adjudication verdicts (`VERDICT:`,
+`OUTCOME:`, `DONE-WHEN:` and `SITTING:` machine lines) now also refuses a
+declared field named twice on one line, such as `successors=7 successors=0`,
+rather than keeping the last copy.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/sitting.py`,
+`scripts/score_reviews.py` and `scripts/review_brief.py`.
+
+**What to do.** Nothing needs migrating for lanes still open, as long as their
+reviewers wrote the reviewer brief's one machine line. Two kinds of committed
+round file read as unparseable from now on:
+- a round in the `process.md` review block format, whose `Verdict: APPROVE`
+  header line stands beside the `VERDICT:` machine line;
+- a round whose machine line carries trailing words.
+
+The gate reads only an open lane's rounds, so a closed lane's history is
+unaffected. Its regenerated verdict rollup does show such a round as
+`(unparseable)`. Do not rewrite a committed review record to restore the old
+reading. Make sure a reviewer you brief by hand writes exactly the one machine
+line. `PROCESS.md`'s review block now carries that machine line in place of the
+`Verdict:` header, so a reviewer following it writes one verdict line; if your
+own docs or prompts copied the old header, change them the same way.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

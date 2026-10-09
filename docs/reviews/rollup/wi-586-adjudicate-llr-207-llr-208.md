@@ -15,5 +15,5 @@ identity). This is the human's reading of the same evidence.
 | 4 | REVIEW-A | `3c7764c` | CHANGES-REQUESTED | 3 | `004-REVIEW-A-3c7764c.md` |
 | 6 | REVIEW-A | `aeefcb2` | CHANGES-REQUESTED | 1 | `006-REVIEW-A-aeefcb2.md` |
 | 8 | REVIEW-A | `082b9e1` | CHANGES-REQUESTED | 3 | `008-REVIEW-A-082b9e1.md` |
-| 10 | REVIEW-A | `397d4b1` | CHANGES-REQUESTED | 1 | `010-REVIEW-A-397d4b1.md` |
+| 10 | REVIEW-A | `397d4b1` | (unparseable) | 1 | `010-REVIEW-A-397d4b1.md` |
 | 12 | REVIEW-A | `51fb3e8` | APPROVE | 1 | `012-REVIEW-A-51fb3e8.md` |

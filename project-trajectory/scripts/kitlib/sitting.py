@@ -34,8 +34,12 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     holds both consume; `requested_path`/`render_requested`/`read_requested`
     are the binding of a sitting's requested kinds beside its verdict;
     `write_binding` is its one writer and `accepted`/`accepted_at` the one
-    reader every consumer of a verdict goes through (round 11). Pure functions
-    over text, except `write_binding` (one file) and `accepted_at` (git reads).
+    reader every consumer of a verdict goes through (round 11); every machine
+    line naming a declared field twice is refused (WI-870). `review_line(text)`
+    is the ONE reader of a review round's `VERDICT:` line, which the attended
+    filing boundary and the merge gate's round reader both consume. Pure
+    functions over text, except `write_binding` (one file) and `accepted_at`
+    (git reads).
 """
 
 import re
@@ -59,6 +63,8 @@ __all__ = [
     "bounds_acts",
     "malformed_refusal",
     "line_refusal",
+    "REVIEW",
+    "review_line",
     "named_kinds",
     "sitting_refusal",
     "parse",
@@ -305,19 +311,27 @@ def _keyword_lines(text, keyword):
 
 
 def _machine_line(tokens, fields):
-    """`(label, {field: value})` for one keyword line's tokens: its first
-    token, and each `field=value` token naming a declared field."""
-    pairs = (t.partition("=") for t in tokens[1:])
+    """`(label, {field: value}, [repeated fields])` for one keyword line's
+    tokens: its first token, each `field=value` token naming a declared field,
+    and every declared field named by more than one token (WI-870: a repeated
+    field is ambiguous, so no copy of it is read)."""
+    pairs = [t.partition("=") for t in tokens[1:]]
+    named = [k for k, sep, _v in pairs if sep]
     values = {k: v for k, sep, v in pairs if sep and v and k in fields}
-    return (tokens[0] if tokens else ""), values
+    repeated = [f for f in fields if named.count(f) > 1]
+    return (tokens[0] if tokens else ""), values, repeated
 
 
-def _incomplete(grammar, label, values, where):
+def _incomplete(grammar, label, values, repeated, where):
     """Why one parsed keyword line is not complete, or None."""
     keyword, labels, fields = grammar
     if label not in labels:
         return "{} says `{}: {}` - its label is not one of {}".format(
             where, keyword, label or "(nothing)", "|".join(labels)
+        )
+    if repeated:
+        return "{} says `{}: {}` with {} more than once".format(
+            where, keyword, label, ", ".join(repeated)
         )
     missing = [f for f in fields if f not in values]
     if missing:
@@ -330,14 +344,66 @@ def _incomplete(grammar, label, values, where):
 def _machine_lines(grammar, text, where):
     """`([(label, {field: value})], refusal)`: every `grammar` keyword line in
     `text` parsed from its own physical line, and why ANY of them is not
-    complete (no line at all, a bare keyword, a label outside the enum, or a
-    missing `field=value` token), or None."""
+    complete (no line at all, a bare keyword, a label outside the enum, a
+    declared field named twice, or a missing `field=value` token), or None."""
     keyword, _labels, fields = grammar
-    out = [_machine_line(tokens, fields) for tokens in _keyword_lines(text, keyword)]
-    if not out:
-        return out, "{} carries no `{}:` machine line".format(where, keyword)
-    refusals = (_incomplete(grammar, label, values, where) for label, values in out)
-    return out, next((r for r in refusals if r), None)
+    parsed = [_machine_line(t, fields) for t in _keyword_lines(text, keyword)]
+    if not parsed:
+        return [], "{} carries no `{}:` machine line".format(where, keyword)
+    refusals = (_incomplete(grammar, *line, where) for line in parsed)
+    return [line[:2] for line in parsed], next((r for r in refusals if r), None)
+
+
+# A review round's verdict line (WI-870): keyword, labels, fields. Not a sitting
+# kind, so it is not in `GRAMMAR`; its count is a whole number in ASCII digits.
+REVIEW = ("VERDICT", ("APPROVE", "CHANGES-REQUESTED"), ("findings",))
+_DIGITS = re.compile(r"[0-9]+")
+_REVIEW_FORM = "{}: <{}> {}=<digits>".format(
+    REVIEW[0], "|".join(REVIEW[1]), REVIEW[2][0]
+)
+
+
+def _folded_lines(text, keyword):
+    """Every physical line of `text` whose keyword, compared case-insensitively
+    and stripped, is `keyword`, each stripped."""
+    want = keyword.casefold()
+    return [
+        line.strip()
+        for line in (text or "").splitlines()
+        if line.partition(":")[1] and line.partition(":")[0].strip().casefold() == want
+    ]
+
+
+def review_line(text, where="it"):
+    """THE ONE READER of a review round's verdict line (WI-870): `((label,
+    count), None)`, or `(None, refusal)`. Exactly one physical line of `text`
+    may name the `VERDICT` keyword, in any case; it is read by the shared
+    per-line reader (a label of the enum, `findings` present and named once),
+    and must then be exactly `VERDICT: <label> findings=<digits>`, with nothing
+    else on it. The attended filing boundary refuses to file what this
+    refuses, and the merge gate reads it as no verdict.
+
+    Implements: SR-232, LLR-310
+    """
+    keyword = REVIEW[0]
+    lines = _folded_lines(text, keyword)
+    if len(lines) != 1:
+        return None, (
+            "{} carries {} {} lines, not exactly one".format(where, len(lines), keyword)
+            if lines
+            else "{} carries no {} line".format(where, keyword)
+        )
+    found, refusal = _machine_lines(REVIEW, lines[0], where)
+    if found and refusal:
+        return None, refusal
+    label, fields = found[0] if found else ("", {})
+    count = fields.get(REVIEW[2][0], "")
+    canonical = "{}: {} {}={}".format(keyword, label, REVIEW[2][0], count)
+    if lines[0] != canonical or not _DIGITS.fullmatch(count):
+        return None, "{} carries the {} line `{}`, which is not exactly `{}`".format(
+            where, keyword, lines[0], _REVIEW_FORM
+        )
+    return (label, int(count)), None
 
 
 def _one_line(kind, body, where):

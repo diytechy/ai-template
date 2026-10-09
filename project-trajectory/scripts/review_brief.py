@@ -103,22 +103,13 @@ import agent_brief  # noqa: E402  (path set above; the script-sibling idiom)
 import agent_common  # noqa: E402
 import prompts  # noqa: E402
 import score_reviews  # noqa: E402
+from kitlib import sitting as ksitting  # noqa: E402
 from kitlib import verdict as kverdict  # noqa: E402
 from kitlib.config import utf8_console  # noqa: E402
 
 SCOPES = ("narrow", "full")
 PHASES = ("REVIEW-A", "REVIEW-B")
 REVIEWS = "docs/reviews"
-# The review verdict's machine line, declared once: keyword, labels, fields.
-REVIEW_GRAMMAR = ("VERDICT", ("APPROVE", "CHANGES-REQUESTED"), ("findings",))
-# Its one canonical form, built from that declaration, and matched whole.
-_VERDICT_LINE_RE = re.compile(
-    r"{}: (?P<label>{}) {}=(?P<count>[0-9]+)".format(
-        REVIEW_GRAMMAR[0],
-        "|".join(re.escape(label) for label in REVIEW_GRAMMAR[1]),
-        REVIEW_GRAMMAR[2][0],
-    )
-)
 _ORDINAL_RE = re.compile(r"^(\d+)-")
 
 
@@ -370,7 +361,9 @@ def review_refusal(text, sha):
     lines = [ln for ln in text.splitlines() if ln.strip()]
     if not lines or lines[0].strip() != "Reviewed: " + sha:
         return "its first line is not `Reviewed: {}`".format(sha)
-    machine, why = _machine_line(text)
+    # The one reader of a review's VERDICT line, which the merge gate's round
+    # reader uses too (WI-870): what it refuses is never filed.
+    machine, why = ksitting.review_line(text)
     if why:
         return why
     label, count = machine
@@ -382,32 +375,6 @@ def review_refusal(text, sha):
     if label == "CHANGES-REQUESTED" and not found:
         return "it requests changes but names no finding"
     return None
-
-
-def _machine_line(text):
-    """`((label, count), None)` for the review's one VERDICT line, or
-    `(None, refusal)`. ONE whole-grammar check (the WI-852 dispute ruling):
-    every physical line whose keyword, compared case-insensitively, is
-    `VERDICT` counts, exactly one may exist, and it must be exactly the
-    canonical form `VERDICT: <label> findings=<digits>` with nothing else on
-    it. A second line in any case, an extra or repeated token, a spaced field
-    or a count that is not a whole number all refuse here."""
-    keyword = REVIEW_GRAMMAR[0].casefold()
-    lines = [
-        ln.strip()
-        for ln in text.splitlines()
-        if ln.partition(":")[1] and ln.partition(":")[0].strip().casefold() == keyword
-    ]
-    if not lines:
-        return None, "it carries no VERDICT line"
-    if len(lines) > 1:
-        return None, "it carries {} VERDICT lines, not exactly one".format(len(lines))
-    matched = _VERDICT_LINE_RE.fullmatch(lines[0])
-    if not matched:
-        return None, "its VERDICT line `{}` is not exactly `{}`".format(
-            lines[0], "VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<digits>"
-        )
-    return (matched.group("label"), int(matched.group("count"))), None
 
 
 def round_path(root, lane, phase, sha, scope):

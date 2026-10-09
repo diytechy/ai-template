@@ -206,11 +206,12 @@ def test_a_filed_coordinator_review_appears_in_the_rollup(tmp_path):
     narrow = rb.file_review(tmp_path, "wi-900", approve, SHA, "narrow")
     assert narrow.name == "002-REVIEW-A-abcdef0-narrow.md"
     # Refused before the rollup is rendered, and nothing is filed: a review
-    # whose one VERDICT line is not exactly the canonical form, or which names
+    # whose one VERDICT line repeats a field (the shared per-line reader's own
+    # refusal, WI-870) or is not exactly the canonical form, or which names
     # the keyword on a second line in any case; and a lane the round reader
     # cannot read as a review scope (a `/` would nest a directory deeper).
     bad_lines = (
-        ("VERDICT: APPROVE findings=7 findings=0", "is not exactly"),
+        ("VERDICT: APPROVE findings=7 findings=0", "more than once"),
         ("VERDICT: APPROVE findings=0 CHANGES-REQUESTED", "is not exactly"),
         ("VERDICT: APPROVE findings=0 findings = 7", "is not exactly"),
         ("VERDICT: APPROVE findings=0\nverdict: CHANGES-REQUESTED findings=0", "2 VER"),
@@ -242,7 +243,7 @@ def test_a_filed_coordinator_review_appears_in_the_rollup(tmp_path):
     [
         (REVIEW.format(sha=BASE), "Reviewed"),
         (REVIEW.format(sha=SHA).replace("findings=2", "findings=3"), "findings=3"),
-        (REVIEW.format(sha=SHA).replace("findings=2", ""), "is not exactly"),
+        (REVIEW.format(sha=SHA).replace("findings=2", ""), "omits findings"),
         (REVIEW.format(sha=SHA) + "VERDICT: APPROVE findings=0\n", "exactly one"),
         ("Reviewed: {}\n\nlooks fine\n".format(SHA), "no VERDICT line"),
         # Every VERDICT-labelled line is read whole, not by a prefix match: a
