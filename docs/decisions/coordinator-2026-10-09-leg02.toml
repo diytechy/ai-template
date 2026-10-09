@@ -1,0 +1,48 @@
+# docs/decisions/coordinator-2026-10-09-leg02.toml — the overnight loop's second
+# headless leg (2026-10-09); delegated decisions made on trunk (coordinator).
+# Lane decisions are in wi-870.toml, wi-853.toml, wi-848.toml and wi-834.toml.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-002"]
+
+[decision.D-001]
+decided = "Two lanes (WI-853 and WI-848) landed on a fresh full-lane Sol review whose ONLY finding was then dismissed by a final dispute ruling (WI-853's dispute 006, DISMISS not-worth-cost; WI-848's dispute 002, DISMISS refuted), without a further Sol round; only the dispute records were added after the reviewed tip. Recorded per lane as wi-853.toml D-005 and wi-848.toml D-010."
+alternative = "Run one more fresh full-lane Sol review after each dispute, so the last gate reads SOUND."
+reversal_cost = "Low: a review of either landed squash costs one Codex session; a finding would become a follow-up row."
+why_not_escalated = "The dispute ruling is final (PROCESS.md §6), so a further round could not re-raise the dismissed finding, and the reviewed content is the landed content; Codex was the night's binding constraint (it hit its limit later in this leg). The owner may prefer the strict reading of 'SOUND as the last gate', hence high risk."
+review = ""
+
+[decision.D-002]
+decided = "WI-853's first full-lane finding (SR-155 does not state the rework-dispatch gate) went to a dispute sitting even though the spec names SR-155's chain; the ruling (FIX) made the lane draft SR-236 as a new derived parent, approved in-lane by the adjudicator under the declared dial (act 79)."
+alternative = "Treat the spec's named chain as settling parentage and dismiss the finding without a sitting."
+reversal_cost = "Medium: retiring SR-236 would re-parent LLR-069's findings half and its TC."
+why_not_escalated = "The spine author and the reviewer independently raised it; the adjudicator's ruling is final and the SR rung is released (human_approval_through = DevStg-Boundary)."
+review = ""
+
+[decision.D-003]
+decided = "WI-834 was claimed without a fresh coordinator-cycle §1 scope critique: its spec already carries two Sol plan reviews (2026-10-05) and the owner's ruling (h) keeps parts B to D as one row."
+alternative = "Run the §1 scope critique (one more Sol session) before the claim."
+reversal_cost = "Low: the lane is open and can still be split."
+why_not_escalated = "The critique's two questions (landable deliverables; file authority) are answered by the spec's rulings and plan reviews; Codex capacity was short."
+review = ""
+
+[decision.D-004]
+decided = "WI-834's existing approved TCs (TC-266, TC-267, TC-329, TC-315 to TC-318, TC-322), LLR-300's shell-reading detail, IF-275's unreadable-line denial, and review 001's spine findings F2, F4 and F5 are left to the lane's checkpoint reconciliation (coordinator-cycle §3), not forced through further Terra turns before the first code review."
+alternative = "Keep resuming Terra until every cell is authored before any review."
+reversal_cost = "None: the checkpoint is the cycle's home for row reconciliation."
+why_not_escalated = "This is the skill's own order (intent once, iterate on code, reconcile at the checkpoint)."
+review = ""
+
+[decision.D-005]
+decided = "In WI-834's lane the coordinator applied trace fields itself: the provisional `SR-229, LLR-300` tags on the four new-LLR modules retagged to LLR-316 to LLR-319; LLR-317/LLR-319 code_symbol slips fixed; on_blackout added to LLR-301's code_symbol; LLR-300 module and code_symbol gain kitlib/shell_line; TC-336/TC-339 evidence name the new tests; IF-292's channel set to `cli` (from Terra's `process`, outside the closed set)."
+alternative = "Send each back to Terra."
+reversal_cost = "Trivial: trace cells, judged with the set at the checkpoint."
+why_not_escalated = "coordinator-cycle §3 step 8 keeps trace fields current on each commit; none changes requirement text."
+review = ""
+
+[decision.D-006]
+decided = "This leg's close-out handoff carries no 'corrections learned' section of its own (WI-848's Done-when and the coordinator-cycle skill §6); the leg prompt's 'Corrections' section is present but only points at the two bullets folded into the skill's recipes §5."
+alternative = "Keep a corrections section in the handoff, as the leg prompt's template lists."
+reversal_cost = "Trivial."
+why_not_escalated = "Both instructions are met: the section exists and points at the procedure's one home."
+review = ""

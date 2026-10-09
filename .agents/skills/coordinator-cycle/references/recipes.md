@@ -320,6 +320,14 @@ lane commit being replayed.
   coordinator commit.
 - Terra has dropped an existing `code_symbol` entry as "nonexistent". Grep
   every symbol it removes before committing.
+- On a large change set (WI-834: about 30 cells) one Terra turn applies three
+  to five cells, then ends saying the rest "did not apply". Resume the same
+  session per batch, naming the remaining cells, one cell per script; match a
+  long cell on its `key = ` line inside the row's table block. Verify the
+  change-list path in the prompt before launching: a stale path wastes a turn.
+- An IF row's `channel` is a closed set (`kitlib.spine.IF_CHANNELS`); a value
+  outside it passes the commit hook and reddens the smoke tier
+  (`test_seam_resolution`). An invocation with an exit code is `cli`.
 - The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
   and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
   decisive tests outside that sandbox before treating them as code defects.
