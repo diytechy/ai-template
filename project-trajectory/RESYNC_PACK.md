@@ -7559,6 +7559,52 @@ sittings to resume the retained session, add `"dispute"` to `retain_for` in
 `docs/process.toml`; the retained session drains once when that list changes,
 because its governing inputs include every retained class's template.
 
+### An attended launcher renders its review and critique briefs from the kit templates [since 15d3673b]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new `scripts/review_brief.py` renders, and never launches.
+`review` fills `prompts/reviewer.template.md` through `prompts.py`'s strict
+fill with one round's facts: the work item and its spec, the range, NARROW
+(the commits since the last reviewed one, naming the round file whose findings
+it answers) or FULL-LANE (claim base to tip), the tests the reviewer runs in
+its scratch area, and an optional repository review rubric. `critique` fills
+`prompts/critique.template.md` over a work item's spec with a rubric you name.
+`file` validates a reviewer's verdict (first line `Reviewed: <sha>`, exactly
+one line whose keyword in any case is `VERDICT`, in exactly the form
+`VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<digits>` with a count that
+matches its finding lines, a CHANGES-REQUESTED that names a finding) and
+writes it as the lane's next round file
+`docs/reviews/<lane>/NNN-REVIEW-X-<sha7>[-narrow].md`, which
+`gen_verdict_rollup.py` reads. An unfilled slot, a malformed verdict, or a lane
+the round reader cannot read as a review scope or that names the rollup's own
+directory in any letter case (`Rollup` is that directory on a case-folding
+filesystem) is refused and nothing is written. The rollup directory's one
+declaration moves into `scripts/kitlib/verdict.py` (`ROLLUP_DIR`).
+
+`prompts/reviewer.template.md` gains two slots and two clauses:
+- `{round_facts}`, at its end;
+- `{head}`, the end of the reading scope `git diff {trunk}...{head}`;
+- the reviewer may be launched by an attended launcher;
+- where the round facts say the launcher records the verdict, the reviewer
+  writes it and commits nothing.
+
+`scripts/agent_brief.py` fills `{round_facts}` empty and `{head}` with `HEAD`,
+so the loop's brief reads the same range and ends where it did. An attended
+render fills `{head}` with the reviewed commit, the same value its verdict is
+bound to. `prompts/CATALOG.md` is regenerated.
+
+**Kit-owned files — overwrite:** `scripts/review_brief.py` (new),
+`scripts/agent_brief.py`, `scripts/bootstrap.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `scripts/kitlib/verdict.py`,
+`scripts/gen_verdict_rollup.py`, `prompts/reviewer.template.md`,
+`prompts/README.md` and the regenerated `prompts/CATALOG.md`.
+
+**What to do.** If you override the reviewer brief with your own file through
+`--prompt-map`, nothing changes for the loop: a file without `{round_facts}`
+or `{head}` renders as before. `review_brief.py` renders the shipped template only. No
+setting changes, and nothing needs migrating.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

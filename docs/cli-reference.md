@@ -619,6 +619,32 @@ Contracts (interfaces): IF-257, IF-258
 | `--replace` | with --seed: regenerate a census that has not yet landed |
 | `--root` | repo root (default: .) |
 
+### `scripts/review_brief`
+_review_brief.py — an attended launcher's review and critique briefs, rendered_
+Contracts (interfaces): IF-288, IF-289
+
+| Option | Help |
+|---|---|
+| `--wi` | the work item under review |
+| `--base` | the range's base commit |
+| `--sha` | the reviewed commit (the lane tip) |
+| `--scope` |  |
+| `--tests` | tests the reviewer runs |
+| `--scratch` | the reviewer's writable area |
+| `--findings` | narrow: the round file this range answers |
+| `--rubric` | a repository review rubric to judge too |
+| `--python` | the interpreter to run |
+| `--out` | where to write the brief |
+| `--wi` | the work item whose scope is judged |
+| `--rubric` | the scope rubric, repo-relative |
+| `--scratch` | the critic's writable area |
+| `--out` | where to write the brief |
+| `--review` | the reviewer's verdict file |
+| `--sha` | the reviewed commit |
+| `--scope` |  |
+| `--phase` |  |
+| `--root` | the lane worktree (default: cwd) |
+
 ### `scripts/run_menu`
 _The run capability menu — one launcher that presents every major capability._
 Contracts (interfaces): IF-048, IF-157, IF-158

@@ -491,11 +491,20 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
     either. An override file without the slot still renders unchanged —
     `str.replace` on an absent needle is a no-op.
 
+    WI-852 adds `{round_facts}`, which only an attended launcher fills
+    (`review_brief.render_review`): the loop renders it empty, so the brief
+    it sends ends where it always did. It also adds `{head}`, the reading
+    scope's end, which the loop renders `HEAD` as before and an attended
+    render fills with the reviewed commit.
+
     Implements: SR-154, LLR-045
     """
     base = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
-    text = base.replace("{verdict}", str(verdict_path)).replace(
-        "{wis}", reviewed_rows_block(worker)
+    text = (
+        base.replace("{verdict}", str(verdict_path))
+        .replace("{wis}", reviewed_rows_block(worker))
+        .replace("{round_facts}", "")
+        .replace("{head}", "HEAD")
     )
     if root is not None:
         text = text.replace("{process_doc}", process_doc_path(root))

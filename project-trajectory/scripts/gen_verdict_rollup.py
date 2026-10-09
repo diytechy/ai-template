@@ -48,7 +48,7 @@ import score_reviews  # noqa: E402  (path set above; the script-sibling idiom)
 from kitlib import verdict as kverdict  # noqa: E402
 
 REVIEWS = "docs/reviews"
-ROLLUP_DIR = REVIEWS + "/rollup"
+ROLLUP_DIR = kverdict.ROLLUP_DIR
 
 # The pre-train FLAT layout's scope name — `round_file` answers `""` for it, and
 # a filename cannot be empty.

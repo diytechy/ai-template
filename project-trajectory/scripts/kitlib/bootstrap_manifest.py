@@ -695,6 +695,9 @@ MAPPING = [
     # The coordinator context guard (WI-822): integrate.claim imports it;
     # dormant at the shipped `[coordinator] context_guard_pct = 0`.
     ("scripts/coordinator_guard.py", "scripts/coordinator_guard.py"),
+    # An attended launcher's review and critique briefs, rendered from the
+    # kit templates, and its review filed as a round file (WI-852).
+    ("scripts/review_brief.py", "scripts/review_brief.py"),
     # WI-545's behavior seams keep the session briefs and declared-policy
     # decisions behind the small coordinator facades that consume them.
     ("scripts/agent_brief.py", "scripts/agent_brief.py"),

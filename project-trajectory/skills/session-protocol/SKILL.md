@@ -102,6 +102,17 @@ always true.
   each ruling in the response to the review and, when the run keeps one, in
   the lane's `docs/decisions/<branch>.toml`, as PROCESS.md §6 "Review threat
   model" says; a dismissed finding is never re-raised to the builder.
+- **The coordinator renders its review and critique briefs; it never writes
+  one by hand.** `python project-trajectory/scripts/review_brief.py review
+  --wi <WI> --base <sha> --sha <tip> --scope narrow|full --tests <files>
+  --scratch <dir> --out <brief>` fills the kit's reviewer template with the
+  lane's facts: a narrow round adds `--findings <the round file it answers>`,
+  and `--rubric docs/rubrics/kit-change-review.md` adds this repo's checks.
+  `critique --wi <WI> --rubric docs/rubrics/scope-critique.md` renders the
+  scope critique where a row is born. The reviewer writes its verdict to the
+  scratch path the brief names, and `review_brief.py file --review <it> --sha
+  <tip> --scope <scope>` validates it and writes the lane's round file
+  (`docs/reviews/<lane>/NNN-REVIEW-A-<sha7>.md`), which the rollup reads.
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
   only sanctioned stop is the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges

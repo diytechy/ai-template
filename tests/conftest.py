@@ -361,6 +361,10 @@ SLOW_MODULES = frozenset(
         # test_check_need_form_rules, test_verdict_rollup_render,
         # test_gen_trajectory_splice). Nothing is deleted or weakened: all of
         # them run at slice/phase close and in CI.
+        # WI-852: review_brief.py's command line on a real git repository
+        # (a repository per case, git spawned for every read); its in-process
+        # render and refusal cases stay in smoke in test_review_brief.py.
+        "test_review_brief_git",
         "test_verdict_record",  # 1369 s: 56 cases, each on a real git repo (the merge gate's evidence walk)
         "test_consolidate_close",  # 1016 s: the census close end-to-end on real repos and lanes
         "test_gen_open_items",  # 332 s: gen_open_items.py subprocesses over git-committed scaffolds

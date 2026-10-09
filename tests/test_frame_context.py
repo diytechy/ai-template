@@ -130,7 +130,9 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # line, run from the coordinator's session (IF-280), and its exit code
     # (IF-281). The coordinator's adjudication entry point joined them, run
     # from the coordinator's session too: its arguments (IF-283), exit codes
-    # (IF-284) and stdout readings (IF-285).
+    # (IF-284) and stdout readings (IF-285). The attended review render joined
+    # them, run from the coordinator's session as well: its arguments (IF-288)
+    # and exit codes (IF-289).
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -157,5 +159,7 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-283",
         "IF-284",
         "IF-285",
+        "IF-288",
+        "IF-289",
     ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

@@ -121,6 +121,7 @@ What it creates in the destination:
     scripts/session_keep.py                    (the keep operation's rules and store: adjudicator retention)
     scripts/coordinator_adjudicate.py          (the coordinator's adjudication through the retained session)
     scripts/coordinator_guard.py               (the coordinator context guard; off at context_guard_pct = 0)
+    scripts/review_brief.py                    (an attended launcher's review/critique briefs and round files)
     .githooks/pre-commit                       <- hooks/pre-commit  (opt-in process floor)
     .githooks/commit-msg                       <- hooks/commit-msg  (message privacy scan + loop provenance floor)
     .githooks/pre-push                         <- hooks/pre-push  (privacy-review backstop)

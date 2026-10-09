@@ -8,8 +8,8 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | File | Sent to | Overridable via `--prompt-map` |
 |---|---|---|
 | `worker.template.md` | the BUILD session of a claimed work item | **no** — see below |
-| `reviewer.template.md` | REVIEW-A / REVIEW-B | yes (per phase key) |
-| `critique.template.md` | CRITIQUE | yes (`CRITIQUE`) |
+| `reviewer.template.md` | REVIEW-A / REVIEW-B, and an attended launcher's review rounds (`scripts/review_brief.py`) | yes (per phase key) |
+| `critique.template.md` | CRITIQUE, and an attended launcher's scope critique (`scripts/review_brief.py`) | yes (`CRITIQUE`) |
 | `dual-plan-planner.template.md` | the two planner hats | yes (`DUALPLAN-PLANNER`) |
 | `dual-plan-critic.template.md` | the critic hat | yes (`DUALPLAN-CRITIC`) |
 | `dual-plan-arbiter.template.md` | the arbiter hat | yes (`DUALPLAN-ARBITER`) |

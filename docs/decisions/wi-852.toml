@@ -1,0 +1,58 @@
+# docs/decisions/wi-852.toml — the coordinator renders its review and critique
+# briefs from the kit's templates; delegated decisions (coordinator,
+# 2026-10-08, third session).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-003", "D-002"]
+
+[decision.D-001]
+decided = "The rendered review brief carries no builder's report: the coordinator-tools brief's NOTES slot (builder's report and earlier reviews) is dropped, and earlier reviews travel only as a narrow round's findings file, labelled a claim under judgement. The builder's mapping of every other coordinator-tools item to a kit template clause, a rubric or a fill value stands."
+alternative = "Keep a notes fill value carrying the builder's report, as the coordinator's hand briefs did."
+reversal_cost = "Low: one fill value in review_brief.py and one template sentence."
+why_not_escalated = "The kit's own prompts README (rule 3), the reviewer template and the agent-routing pack already forbid putting the judged party's self-assessment in a judge's brief; the hand briefs broke that rule."
+review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"
+
+[decision.D-002]
+decided = "A coordinator round file filed through the new render is read by the verdict rollup but gains no merge authority: the verdict gate still counts a round only when a committed session log declares its review phase, and filing writes no session log. WI-852 stays render-only and leaves the gate unchanged."
+alternative = "Let the gate count an attended round file (for example from a filing record), giving the coordinator's hand reviews merge authority."
+reversal_cost = "Medium: a gate change, with anti-forgery questions of its own, is a separate row."
+why_not_escalated = "The spec says render only and names WI-801 as the launcher's owner; widening what the gate trusts is a design decision for the owner, surfaced here rather than taken."
+review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"
+
+[decision.D-003]
+decided = "After the re-sit returned SR-154 a second time (the coordinator's own steer had widened SR-154's trigger to attended submissions, which bound the attended path to registry routing, consent and cross-family selection it does not do), SR-154 was restored byte-for-byte to its anchor and a new SR-235 states only the attended record-or-refuse obligation; LLR-313's filing half and TC-333 trace to it."
+alternative = "One of the adjudicator's two offered fixes: state the two triggers' obligations separately inside SR-154 (two decisions in one row), or move the clause into SR-146 (a row about prompts as reviewable files)."
+reversal_cost = "Low to medium: one Drafted SR and two parent cells; either alternative remains open if the sitting prefers it."
+why_not_escalated = "The spine-authoring rule is one decision per row, and neither existing row's subject is recording an attended verdict; a new row keeps SR-154 and SR-146 exactly as approved."
+review = ""
+
+[decision.D-004]
+decided = "The smoke tier's membership cap (docs/stack.ini [smoke-budget] max-tests) is re-stamped 2420 -> 2438 on this lane, the exact count the lane collects, after its git-backed tests moved to the slow tier; TC-333's three moved evidence paths are updated by hand (traced-only, no sitting)."
+alternative = "Keep one or two in-process pins in smoke and move the rest to the slow tier, or hold WI-852 and re-measure the tier first."
+reversal_cost = "Low: one stamp line; the tier is re-measured by the row the owner directed next."
+why_not_escalated = "Escalated: the owner chose the re-stamp to 2438 in the coordinator session of 2026-10-08, and directed that the smoke tier be brought back under budget right after WI-852 lands."
+review = "Owner, in the coordinator session of 2026-10-08: chose \"Re-stamp to 2438\". Recorded by the coordinator at the owner's word."
+owner = "confirmed"
+
+[decision.D-005]
+decided = "The third fresh full-lane review's two findings went to a dispute sitting (the malformed-verdict class had reached its third round), through the dispute class WI-865 landed; the adjudicator ruled both FIX (verdict 006): A, replace the filing boundary's token checks with one whole-grammar check; B, refuse a lane whose scope is the rollup generator's own directory. The coordinator had argued B out of scope as contrived; the adjudicator ruled it an unusual input on a supported path, not a contrived host, with silent loss of an accepted record as the outcome. The ruling is final (OI-103 Q3)."
+alternative = "Patch finding A's instances a fourth time and dismiss B, without a sitting."
+reversal_cost = "None: both fixes are small and inside the function the lane already changes."
+why_not_escalated = "The owner's 2026-10-08 ruling sends a third-round finding to the adjudicator, whose call is final; neither finding is high risk."
+review = ""
+
+[decision.D-006]
+decided = "Fix B's refusal reads the rollup directory from kitlib.verdict, which now holds its one declaration (ROLLUP_DIR beside the docs/reviews/ name grammar it already owns); gen_verdict_rollup binds its local ROLLUP_DIR to it. review_brief imports no sibling of another component, so no new interface seam is declared."
+alternative = "Keep the ruling's literal wording: review_brief imports gen_verdict_rollup (CMP-009) and a new IF row, with a TC evidencing it and a Contracts line, declares that seam."
+reversal_cost = "Low: one constant's home and one import; the IF-row alternative remains open."
+why_not_escalated = "The ruling's intent is one source for the directory, which either route keeps; kitlib.verdict already owns the docs/reviews/ layout both modules read, so a new cross-component seam for a single constant adds a contract without adding a capability."
+review = ""
+
+[decision.D-007]
+decided = "The fourth full-lane review's one finding (a branch named `Rollup` files a review that the rollup generator, comparing paths case-insensitively on Windows, then prunes) was confirmed and fixed in the lane without a dispute sitting: it is dispute finding B's own class on a supported platform, which the sitting already ruled FIX. Filing now refuses any lane whose round directory matches the rollup directory case-insensitively on every platform, since a directory filed on a case-sensitive filesystem collides once checked out on a case-insensitive one. The rows' text (the rollup generator's own directory) already states this and was not amended."
+alternative = "Send it to a second dispute sitting as finding B's next round, or make the refusal case-insensitive only on Windows."
+reversal_cost = "Low: one comparison and two test cases."
+why_not_escalated = "The finding is not contested and the sitting's ruling on its class is final; a Windows-only comparison would leave the cross-platform checkout collision open."
+review = ""

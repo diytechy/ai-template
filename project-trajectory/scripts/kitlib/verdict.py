@@ -105,7 +105,8 @@ Contract IF-175: the verdict record, as functions two independent readers call
     `format_trailer` / `parse_trailer` the `Review-Verdict:` machine half;
     `round_file` / `session_log` the two name grammars `docs/reviews/` and
     `docs/iteration/`
-    carry; `branch_paths` / `log_history` / `review_logs` / `logged_rounds` /
+    carry, and `ROLLUP_DIR` the one directory under `docs/reviews/` that is no
+    review scope; `branch_paths` / `log_history` / `review_logs` / `logged_rounds` /
     `round_entries`
     the round evidence a branch holds, restricted to rounds a logged reviewer
     session produced and COMMITTED, read as it committed them, and to the tree
@@ -239,6 +240,8 @@ _COMMITS_HEADER_RE = re.compile(r"^# commits:[ \t]*(.*)$", re.M)
 _RANGE_RE = re.compile(r"^([0-9a-f]{7,64})\.\.([0-9a-f]{7,64})$")
 
 _REVIEWS = "docs/reviews"
+# The rollup generator owns this directory and prunes what it did not write.
+ROLLUP_DIR = _REVIEWS + "/rollup"
 _ITERATION = "docs/iteration"
 
 

@@ -3336,3 +3336,15 @@ test_refs = "TC-334"
 status = "Approved"
 component = "CMP-008"
 phase = 6
+
+[design.LLR-313]
+sr_refs = ["SR-146", "SR-235"]
+title = "Attended review and critique briefs and review records"
+module = "project-trajectory/scripts/review_brief.py"
+code_symbol = "Round/spec_path/round_facts/render_review/render_critique/review_refusal/round_path/file_review/lane_commits"
+detail = "Round accepts only a full-lane review with no prior findings or a narrow review that names the prior findings file, and requires its test list. render_review strictly fills the shipped reviewer template with the work-item specification, lane range, test command, scratch location, optional review rubric and verdict destination; render_critique strictly fills the shipped critique template with the work-item specification and named rubric. Both refuse a missing specification, unreadable or empty named input, or unfilled template slot before a brief is written. review_refusal accepts only a verdict bound to the reviewed full commit with exactly one line whose keyword, in any case, is VERDICT, in exactly the canonical form `VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<digits>`, whose count matches its finding lines and whose changes request names a finding. round_path chooses the next ordinal lane round filename, file_review writes only an accepted verdict as that round record when the round reader reads its lane path back as that lane's scope and the record's directory is not the rollup generator's own, and lane_commits resolves commits on a branch and requires the base to be an ancestor of the reviewed commit."
+rationale = "An attended reviewer needs the same reviewed instructions and durable verdict carrier as an unattended review without inheriting its scheduler. Strict rendering and boundary validation prevent a reviewer from receiving incomplete instructions or an unrelated verdict from becoming review history."
+test_refs = "TC-333"
+status = "Approved"
+component = "CMP-008"
+phase = 6

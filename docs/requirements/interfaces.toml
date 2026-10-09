@@ -2597,3 +2597,25 @@ status = "Drafted"
 component = "CMP-008"
 rationale = "Brief composition needs one owner for the findings and verdict grammars, so it cannot render a request that validation reads differently."
 notes = "source - pure text parsers; the owner does not read a file or launch a process."
+
+[interface.IF-288]
+rationale = "An attended coordinator needs one declared command-input surface for rendering a review or critique and filing a review, so the caller and parser agree on the admissible lane, specification, rubric, revision and output inputs."
+owner = "scripts/review_brief"
+requestors = ["external:coordinator"]
+channel = "cli"
+data = "review / critique / file subcommands; see Contract IF-288."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation."
+
+[interface.IF-289]
+rationale = "An attended coordinator needs a command-result surface distinct from its arguments and brief output, so it can distinguish a rendered or filed result from a preflight refusal without inferring state from the filesystem."
+owner = "scripts/review_brief"
+consumers = ["external:coordinator"]
+channel = "exit-code"
+data = "0 brief written or review filed | 2 refused; a refusal writes no requested brief or review record."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
