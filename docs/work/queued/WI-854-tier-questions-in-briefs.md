@@ -24,6 +24,16 @@ the way the combined brief composes the per-kind briefs.
 
 It lands before WI-812, which edits the same two templates.
 
+Scope settled before the claim (coordinator, 2026-10-09 leg 03, after a
+Sol scope critique). The two deliverables, extracting the tier questions to
+one shipped home with the skill reading it, and composing that home into the
+briefs in place of their short method, land together in one lane: either
+alone leaves two homes for the judging questions, which is the defect. The
+home gains no authority over a hold, an act or a gate: it is instructional
+text the brief renderer composes, the adjudicator's verdict stays the gate's
+one authority, and an absent or unreadable home refuses the render (no
+fallback, as the Done-when says), so no `## Trust` section is owed.
+
 Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
 `docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
 
