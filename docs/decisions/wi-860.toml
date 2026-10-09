@@ -9,4 +9,5 @@ decided = "The second re-sit's one-clause return (verdict 003: the test did not 
 alternative = "Dispatch a kit-builder (Claude Opus, medium) for the one-string edit, as the roles direct for code."
 reversal_cost = "None: one tuple entry in a test, whose text the verdict dictated."
 why_not_escalated = "The adjudicator's draft fixed the change exactly; a builder dispatch would only re-type it. The builder role and the coordinator are the same model family, so independence from the judge is unchanged."
-review = ""
+review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"

@@ -10,18 +10,21 @@ decided = "WI-865's hand-filed spec was renamed from a 41-character stem to `WI-
 alternative = "Claim under the long stem and accept the warning."
 reversal_cost = "None: a rename of a queued spec with no inbound links."
 why_not_escalated = "The check names the fix; the rename changes no content."
-review = ""
+review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"
 
 [decision.D-002]
 decided = "The smoke tier passed on every landing this session but over its 60 s budget (60.8 s, 65.2 s and 69.0 s on trunk; 91.7 s and 88.7 s in the previous session), so check_smoke_budget --mode enforce failed each time. The budget was not re-stamped and no module was re-tiered; the breach is reported to the owner as the workstation-caused overrun the previous session traced to the job-object change (WI-859)."
 alternative = "Re-stamp the budget with the reason in the log, or re-tier a heavy module into conftest.SLOW_MODULES, so the commit bar passes."
 reversal_cost = "Low: either fix is one commit once the owner chooses."
 why_not_escalated = "CLAUDE.md says the budget is not moved to fit one box, and the previous handoff left the call with the owner; the bar's result is reported, not sanctioned."
-review = ""
+review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"
 
 [decision.D-003]
 decided = "Both claimed lanes (WI-865, WI-852) were built in parallel and their spine rows authored in parallel, with WI-865's Terra told the ids WI-852's had taken (LLR-313, IF-288, IF-289, TC-333) so it allocated above them, and WI-852's third sitting held until WI-865 had landed and WI-852 had rebased, so the two lanes' approval acts numbered 68-70 and 71-72 without a repair. The earlier wi-866 rebase, before this ordering was applied, needed an act-renumbering repair (wi-866.toml D-002)."
 alternative = "Build and author one lane at a time, as the 'acts serialize' rule is usually read."
 reversal_cost = "None now; the ordering left trunk with unique, ordered acts and ids."
 why_not_escalated = "It is lane scheduling within the batch the owner named; acts landed one lane at a time as the rule requires."
-review = ""
+review = "Owner, in the coordinator session of 2026-10-08: \"agreed building in parallel is normal, but that's why adjudication is a latched event, so watermarks get pulled up as each lane starts to land.\" Recorded by the coordinator at the owner's word; the lesson is added to WI-848."
+owner = "confirmed"

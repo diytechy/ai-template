@@ -9,7 +9,8 @@ decided = "The fresh full-lane review's one MINOR (TC-254's new mint clause plac
 alternative = "Send the finding to the adjudicator as a dispute (not worth a re-sit), or land with the imprecise window."
 reversal_cost = "None: one clause of one TC cell, adjudicated."
 why_not_escalated = "The finding is real and in scope (agent-written row text); fixing it cost about as much as disputing it, and the row now says what its test drives."
-review = ""
+review = "Owner, in the coordinator session of 2026-10-08: \"You can mark the other decisions as acknowledged / confirmed.\" Recorded by the coordinator at the owner's word."
+owner = "confirmed"
 
 [decision.D-002]
 decided = "Rebasing the lane onto WI-860's landing put trunk's act 64 under the lane's three acts: the LLR-312 approval conflicted and was renumbered 65 by hand, but the two TC-254 re-attestations applied cleanly as 65 and 66, duplicating 65. A repair commit on the branch renumbers them 66 and 67 (and restores a blank line the RESYNC union dropped). The two intermediate lane commits keep the duplicate seq; the squash carries only the repaired ledger. A replay that amended each commit was refused by the pre-commit hook (a detached HEAD mid-rebase runs trunk-mode freshness checks), and the hook was not bypassed."

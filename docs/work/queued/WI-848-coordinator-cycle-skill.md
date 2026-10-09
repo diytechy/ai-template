@@ -63,6 +63,18 @@ row after WI-849 or in one batch with it.
   rule 1 to each review, records each dismissal in the lane's decisions
   record, and sends a contested or third-round finding to the adjudicator).
   (WI-864's sitting, `docs/reviews/wi-864-adjudicate-review-response-overlap/001-ADJUDICATE-89298d9.md`.)
+- The coordinator-cycle skill states two lessons from the third 2026-10-08
+  session (owner, 2026-10-08):
+  - parallel lanes are normal and adjudication is a latched event: sit a
+    lane's acts only after the lanes ahead of it have landed and it has
+    rebased, so the acts and the id watermark pull up as each lane lands (a
+    lane that took acts on an older base gets duplicate act seqs on rebase,
+    and git applies the later act commits cleanly);
+  - the coordinator stays neutral in a dispute sitting: a finding that needs
+    a compromised or contrived host is dismissed in one recorded line, and
+    any other contested finding is routed with the builder's position, not
+    argued by the coordinator, which routes the sitting and records its
+    ruling.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit for the kit skill
   `spine-authoring`; `coordinator-cycle` is this-repo and ships to no adopter.
