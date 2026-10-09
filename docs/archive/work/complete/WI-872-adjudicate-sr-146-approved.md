@@ -3,12 +3,16 @@ id = "WI-872"
 title = "adjudicate: SR-146 - approved/routed cell(s) amended on merged trunk 15d3673..f7e492b (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-146"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["SR-146"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-852's in-lane adjudicator, through the retained session, ruled SR-146's amendment MEANING and blessed it (verdicts 001 to 003 under `docs/reviews/wi-852-coordinator-renders-kit-briefs/`), and re-attested it in the lane (act 71). The system, low-level and test-case registries are byte-identical to their anchors in `docs/archive/last_approved/` at `bbe148ea`.
 
 ## Context
 
