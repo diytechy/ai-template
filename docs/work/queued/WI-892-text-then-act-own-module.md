@@ -1,0 +1,45 @@
++++
+id = "WI-892"
+title = "The text-then-act judgement moves out of acceptance_record.py into its own module, unchanged"
+workstream = "process"
+sr_refs = ["SR-140"]
+specref = "project-trajectory/scripts/acceptance_record.py"
+buildtier = "quick"
+safety_class = "ordinary"
+priority = 3
++++
+
+## Context
+
+Filed by the coordinator on 2026-10-10 from WI-828's first build round (see
+OI-113). `project-trajectory/scripts/acceptance_record.py` sits at 999 of the
+size ratchet's 1000 SLOC, so any growth of its text-then-act section reads
+as a new monolith. WI-828's round grew it to 1023 and stopped. The section
+`# --- TEXT THEN ACT` (`TEXT_THEN_ACT_REMEDY`, `SQUASH_REBASE_HINT`,
+`text_then_act_lines`, `commit_text_then_act_lines`, `_squash_lines`,
+`staged_text_then_act_lines` and their private helpers) is a separate
+judgement that shares only the parent reader with the ruling sync.
+
+This is a structural move (`project-trajectory/PROCESS.md` §3, "A structural
+move is its own commit"): it changes no behaviour, so the unchanged tests
+review it.
+
+Anchor: SR-140, through LLR-302 (whose module and code_symbol cells move
+with the code).
+
+Landing order: one deliverable. It lands before WI-893, whatever OI-113 rules.
+
+## Done-when
+
+- The text-then-act section lives in its own module under
+  `project-trajectory/scripts/`; `acceptance_record.py` keeps the shared
+  parent reader it needs or both import it from one home (no duplicate).
+- Every caller (`check.py`, `integrate.py`, the tests) imports the new home;
+  no re-export shim is left behind.
+- The existing text-then-act and acceptance-record tests pass unchanged
+  (beyond import lines), and the module-size baseline records both modules.
+- LLR-302's module and code_symbol cells and the Implements tags follow the
+  move (traced cells only; no row text changes, so no sitting is owed).
+- Review bar: A (one cross-family REVIEW-A).
+- RESYNC_PACK: an entry anchored at a trunk commit (an adopter who imports
+  the moved names updates the import).

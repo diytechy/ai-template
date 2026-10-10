@@ -102,3 +102,10 @@ alternative = "Run a fourth fresh critique round, or send the third-round findin
 reversal_cost = "Low: a critique can be re-run on the queued spec before its claim."
 why_not_escalated = "No finding was contested, so a dispute sitting has nothing to rule; the answers document contracts the code already holds and change no row's scope."
 review = ""
+
+[decision.D-015]
+decided = "WI-828 stops after its first build round and closes partial, with OI-113 filed for the owner and two rows: WI-892 (the text-then-act section of acceptance_record.py moves to its own module, behaviour unchanged; lands first) and WI-893 (WI-828's successor, needs OI-113 and WI-892). The builder showed the walk as WI-828's Trust row binds it (every commit HEAD..MERGE_HEAD) refuses every station refresh, because trunk's squash landings carry text and act in one commit by design, and that skipping trunk's own commits needs a trunk identity nothing declares. Choosing that input changes the binding the owner confirms and adds an adopter-facing setting, so it is the owner's. The round-1 diff is kept outside the repository (C:/Projects/ai-template.wt/wi-828-round1-parked.patch) and the lane is closed with no code."
+alternative = "Rule a trunk identity as the coordinator and build on (OI-113 option a), or keep WI-828 claimed and idle until the ruling (banned: a lane that stops for the owner closes partial, OI-70)."
+reversal_cost = "Low: WI-893 carries WI-828's spec forward; the parked diff re-applies once WI-892 has made room."
+why_not_escalated = "Escalated: OI-113 is the escalation, on the owner surface with its options and a recommendation."
+review = ""
