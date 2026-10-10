@@ -95,3 +95,10 @@ alternative = "Run a fourth fresh critique round, or send the third-round findin
 reversal_cost = "Low: a critique can be re-run on the queued spec before its claim."
 why_not_escalated = "No finding was contested; each was accepted and answered in the spec. A dispute sitting rules contested findings, and a fourth round on accepted MINOR answers buys little."
 review = ""
+
+[decision.D-014]
+decided = "The scope critiques of WI-828 and WI-831 were answered at their third round without a fourth, as D-013 did. Each round raised the same class (S2: a Trust section, then a ruling per consumer, then each carrier's failed-write shapes), every finding was accepted, and each answer states existing code behaviour, verified by reading the code, rather than changing scope: SQUASH_MSG is written directly, and every truncation fails toward judging more; observation readers are ruled apart (parsed-record omission versus raw-file integrity failure); the verdict binding's in-place rewrite reads as not accepted in every cut shape. Recipe §1 already asks for the whole failure contract in the first brief; these briefs carried that question, so the cost was the critic widening the census each round, not the brief."
+alternative = "Run a fourth fresh critique round, or send the third-round findings to a dispute sitting."
+reversal_cost = "Low: a critique can be re-run on the queued spec before its claim."
+why_not_escalated = "No finding was contested, so a dispute sitting has nothing to rule; the answers document contracts the code already holds and change no row's scope."
+review = ""

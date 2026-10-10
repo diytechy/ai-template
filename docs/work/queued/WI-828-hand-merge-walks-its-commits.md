@@ -44,7 +44,18 @@ model output reaches them.
   the one malformed shape.
 - `SQUASH_MSG`: `git merge --squash` writes `.git/SQUASH_MSG` with one
   `commit <40-hex>` header per folded commit, newest first; the squash
-  commit removes it, and `git stash` (its reset) deletes it.
+  commit removes it, and `git stash` (its reset) deletes it. Git writes it
+  directly, not through its lock file, so it is not whole-or-absent: a
+  `git merge --squash` killed mid-write can leave it empty or cut short. A
+  squash that fails before writing leaves no file. Git is a local
+  subprocess, so a network timeout or a structured error cannot occur; a
+  failed call exits non-zero and leaves one of the shapes above. Each
+  shape binds to the `check.py` ruling below, and each fails toward
+  judging more: an empty file, or one whose first header is cut, yields no
+  folded commits, so the index is judged like any commit; a file cut after
+  its first header still names the tip, and the walk is derived from git
+  history `HEAD..tip`, never from the listed commits, so a shortened list
+  changes nothing judged.
 
 **Consumers and rulings** (found by grep for `MERGE_HEAD` and `SQUASH_MSG`
 under `project-trajectory/scripts/`):

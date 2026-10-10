@@ -38,21 +38,33 @@ and adopts each unchanged. Paths are under `project-trajectory/scripts/`.
   raises, and the temporary file is removed, so no partial record is ever
   under a readable name. A failed, timed-out or errored judgment call
   records nothing.
-- **Consumers and rulings** (LLR-234, unchanged). Every reader goes through
-  `kitlib/observation.py`: `read_files` skips dot-named and unreadable files
-  (no record), and `read_records` leaves out a file that does not parse or is
-  misnamed (no record). So for every consumer below, absent, unreadable,
-  partial and malformed all mean "no record".
-  - `rejudge.py` (what is due): with no record newer than the trigger, the
-    case stays due, so a failed write never reads as a judgment made.
-  - `record_observation.py` `evidence_inputs` (the file-read half of
-    `assumption_rules.observation_evidence_findings`): reads the record files
-    and parsed records once for the observation rules.
-  - `trace.py`, `assumption_rules.py` and `check_assumption_gate.py` (policy
-    readers): a readable record that fails the policy is a trace-integrity
-    finding. TC-055 declares no assumption references, so no risk-acceptance
-    reader gains authority from this result.
-  - `baseline_snapshot.py` reads record names only, for risk comparison.
+- **Consumers and rulings** (LLR-234 and LLR-236, unchanged). The two
+  read paths differ, so absent or unreadable inputs and readable malformed
+  inputs are ruled apart. `kitlib/observation.py` `read_files` skips an
+  absent directory, a dot-named file and a file it cannot read (OSError):
+  those are no record, and nothing reports them. `read_records` parses what
+  `read_files` returned and leaves out a file that does not parse or is
+  misnamed.
+  - `rejudge.py` reads parsed records only (`read_records`): an absent,
+    unreadable, partial, malformed or misnamed file is no record, so with no
+    record newer than the trigger the case stays due. A failed write never
+    reads as a judgment made.
+  - `record_observation.py` `evidence_inputs` reads both: the raw files
+    (`read_files`) and the parsed records, handing both on unchanged.
+  - `assumption_rules.py` `observation_record_findings` (inside
+    `observation_evidence_findings`) judges the raw files: a readable file
+    that is not a whole record (partial, malformed, misnamed) or that its case
+    does not allow is a failure naming the file.
+  - `trace.py` joins those failures to its always-on integrity floor, so a
+    readable bad record fails `trace.py --strict-integrity` and the commit
+    hook where it lands.
+  - `check_assumption_gate.py` runs `observation_evidence_findings` over
+    `evidence_inputs` (framed): it meets the same raw-file failures, and its
+    accepted-risk policy reads parsed records only. TC-055 declares no
+    assumption references, so no risk-acceptance result moves on this row's
+    record.
+  - `baseline_snapshot.py` reads record names only, for risk comparison; a
+    bad file's name is still a name and grants nothing.
 - **Binds to:** the case id, the observation instant, its expiry, the
   judged-input digest and the commit carrying the record. An older valid
   record standing is not evidence this row's judgment happened; only a record
@@ -76,18 +88,39 @@ and adopts each unchanged. Paths are under `project-trajectory/scripts/`.
 
 **3. The verdict's binding** `<verdict>.requested` (`kitlib/sitting.py`
 `requested_path`).
-- **Producer:** `coordinator_adjudicate.py` `bind_requested` creates it
-  exclusively before the call, holding the brief class, the requested kinds
-  and `outcome = pending`. A failed create refuses the sitting before
-  launch. `adjudicate_brief.py` `record_outcome` rewrites it once with
-  `accepted` or `failed` and commits it in its own bookkeeping commit. A call
-  that wrote nothing removes the binding it created (`_release`).
+- **Producers:** two routes, one writer (`kitlib/sitting.py`
+  `write_binding`), each through `adjudicate_brief.py`:
+  - the coordinator's entry point, `coordinator_adjudicate.py`
+    `bind_requested` -> `bind_pending`, creates it exclusively before the call
+    (`pending`); a failed create refuses the sitting before launch (exit 2);
+  - the unattended loop, `agent_loop.py`, through the same `bind_pending`.
+  Both record the outcome through `adjudicate_brief.py` `record_outcome`,
+  which rewrites the binding once (`accepted` or `failed`) and commits it in
+  a bookkeeping commit (`agent_common.py` `commit_telemetry`). A call that
+  wrote no verdict removes the binding it created (`_release`).
+- **Failed-write shapes.** `write_binding` overwrites in place, so an
+  interrupted write can leave the binding empty or cut short:
+  - a binding with no `brief` or `kinds` line: `read_requested` rejects it,
+    `bound_kinds` falls back to the brief's own single kind, and
+    `kitlib/sitting.py` `accepted` reads no binding, so the verdict is not
+    accepted;
+  - a cut `outcome` line reads as something other than `accepted`, and a
+    missing one reads `pending`; neither is accepted.
+  Every shape therefore reads "not accepted", and the obligation stays owed.
+  A rewrite that raises surfaces as the route's error. The coordinator's
+  entry point exits non-zero; the loop keeps the obligation. A failed
+  bookkeeping commit is best-effort by design (`commit_telemetry`): it
+  leaves the rewritten binding uncommitted in the lane's tree, where the
+  coordinator commits it before any landing (a dirty tree is refused there).
+  Nothing reads an uncommitted binding as landed evidence.
 - **Consumers and rulings** (unchanged): `adjudicate_brief.py` `bound_kinds`
-  reads back what was requested; a binding that is absent or unreadable, or
-  that `read_requested` rejects (no `brief` or `kinds`), reads as the
-  brief's own single kind. `plan_coverage.py` accepts a dispute dismissal
-  only when the binding reads `accepted`; a rejudge row cites none. No
-  reader treats `pending` or `failed` as completion.
+  and `record_outcome` (above); `kitlib/sitting.py` `accepted`, the one reader
+  every verdict consumer goes through, which grants a blessing only to an
+  `accepted` binding; `plan_coverage.py`, which accepts a dispute dismissal
+  only when the binding reads `accepted` and its brief is `dispute`. A rejudge
+  binding grants no act and releases no hold: no reader takes an act or a
+  hold release from a `rejudge` binding, and the row closes on the committed
+  verdict and the record it names.
 - **Binds to:** the verdict path beside it, so the adjudicator's rewrite of
   the verdict cannot change what the verdict is judged against.
 
