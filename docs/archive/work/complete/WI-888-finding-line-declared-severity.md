@@ -3,11 +3,15 @@ id = "WI-888"
 title = "A review's finding line is one whose bracket names a declared severity, not any bracketed word"
 workstream = "process"
 sr_refs = ["SR-154"]
-specref = "project-trajectory/scripts/score_reviews.py"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+Landed 2026-10-10. A review's finding line is one whose bracket names a declared severity: `score_reviews.SEVERITIES` (BLOCKER, MAJOR and `kitlib.verdict.MINOR`) is the one home, `FINDING_RE` is built from it (case-insensitive as before), and a test composes the template grammar from the tuple and pins it in the reviewer and critique templates and PROCESS.md. Any other bracketed word at a bullet's start is prose. Every reader reads findings through `parse_verdict` alone (recorded at the tip; unusable-file handling unchanged). Red-first tests on the trimmed WI-880 round-004 verdict through review_brief, plan_coverage and score_reviews. Spine: LLR-046, LLR-069, LLR-313, TC-069, TC-083 and TC-333 amended (sitting 001, act re-attested), IF-046 and IF-047 updated. Fresh full-lane gate 002 APPROVE.
 
 ## Context
 

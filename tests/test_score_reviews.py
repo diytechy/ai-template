@@ -2,6 +2,8 @@
 (score_reviews.py, WI-059). Every scored component is in [0,1]; severity hygiene
 and the tripwires are GATES, never scores; length never scores positively."""
 
+from pathlib import Path
+
 import pytest
 from conftest import SCRIPTS, load_script, run_py
 
@@ -367,3 +369,33 @@ def test_merged_routing_verdict_promotes_a_minor_only_round_and_says_so():
         "CHANGES-REQUESTED"
     )
     assert said == []
+
+
+# --- WI-888: a finding line is one whose bracket names a declared severity -----
+
+# The WI-880 round-004 shape, as a reviewer wrote it: a `- [run] lines:` coverage
+# bullet beside three findings and `findings=3`. The open grammar read the
+# bullet as a finding of severity RUN, so every reader counted four.
+COVERAGE_REVIEW = (
+    Path(__file__).parent / "fixtures" / "review_with_coverage_bullet.md"
+).read_text(encoding="utf-8")
+
+
+def test_a_bracketed_word_that_is_not_a_severity_is_prose():
+    v = score.parse_verdict(COVERAGE_REVIEW)
+    assert [f.severity for f in v.findings] == ["MAJOR", "MAJOR", "MINOR"]
+    assert v.declared_n == 3
+    # Scored as the three findings it declares: no count-gaming tripwire, and
+    # every one carries its change clause.
+    assert score.fired_tripwires([v]) == []
+    assert score.actionability(v) == 1.0
+    # A critique's `- [TC-HARDEN]` proposal stays what it always was: not a
+    # finding (the critique grammar's `findings=N` does not count it).
+    assert not any("TC-HARDEN" in f.raw for f in v.findings)
+
+
+def test_every_declared_severity_reads_as_a_finding():
+    for sev in score.SEVERITIES:
+        for word in (sev, sev.lower()):
+            found = score.parse_verdict("- [{}] src/a.py:1 -> x -> y".format(word))
+            assert [f.severity for f in found.findings] == [sev]

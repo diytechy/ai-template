@@ -802,17 +802,17 @@ status = "Drafted"
 
 [interface.IF-046]
 owner = "scripts/score_reviews"
-requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/gen_verdict_rollup", "scripts/kitlib/verdict", "scripts/plan_coverage"]
+requestors = ["scripts/agent_loop", "scripts/dispatch", "scripts/integrate", "scripts/gen_verdict_rollup", "scripts/kitlib/verdict", "scripts/plan_coverage", "scripts/review_brief"]
 channel = "call"
-data = "parse_verdict: typed verdict findings, with a verdict word and declared count taken only from the shared strict review-line reader, neither returned when that reader refuses; substance, merge_verdict, fired_tripwires, record_round and latest_phase_verdicts: advisory review-scoring data. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
+data = "parse_verdict: typed verdict findings, where a finding is a bullet whose bracket names one of the module's declared SEVERITIES (BLOCKER, MAJOR, MINOR), without regard to case; its verdict word and declared count are taken only from the shared strict review-line reader, neither returned when that reader refuses. substance, merge_verdict, fired_tripwires, record_round and latest_phase_verdicts: advisory review-scoring data. kitlib/verdict does not import this module - it takes the parse function as an ARGUMENT, so the verdict leaf keeps no edge back into scoring; the row names it because the seam is exercised on its behalf by whichever reader supplies the function."
 version = "v1"
 status = "Drafted"
 
 [interface.IF-047]
 owner = "docs/reviews/"
-consumers = ["scripts/score_reviews", "scripts/check_trajectory", "scripts/integrate", "scripts/kitlib/verdict", "scripts/gen_verdict_rollup"]
+consumers = ["scripts/score_reviews", "scripts/check_trajectory", "scripts/integrate", "scripts/kitlib/verdict", "scripts/gen_verdict_rollup", "scripts/plan_coverage", "scripts/review_brief"]
 channel = "file"
-data = "VERDICT: APPROVE | CHANGES-REQUESTED findings=N"
+data = "VERDICT: APPROVE | CHANGES-REQUESTED findings=N; finding is - [BLOCKER|MAJOR|MINOR] <text>, case-insensitive; another bracketed bullet is prose."
 version = "v1"
 status = "Drafted"
 notes = """Low fan-out, and the set is still closed and nameable: check_trajectory (_latest_critique_verdict), score_reviews (this row, read_scoreboard/record_round), kitlib/verdict (the round-file NAME grammar and the git-shown blob, on behalf of the merge gate and the loop's review-owed derivation), gen_verdict_rollup (the same files, rendered for a human) and integrate (through kitlib/verdict, plus the legacy hand-authored rollup for the length of its migration window). agent_loop calls score_reviews.record_round rather than reading a review file itself. The directory's content grammar is the VERDICT: line; its NAME grammar - ordinal, phase and reviewed sha - is load-bearing too, and kitlib/verdict is its one home."""

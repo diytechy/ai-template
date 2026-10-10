@@ -111,6 +111,19 @@ def test_the_three_engine_briefs_load_and_carry_their_load_bearing_clauses():
     assert "{brief}" in critique and "{verdict}" in critique
 
 
+def test_the_briefs_finding_grammar_names_the_parsers_severities():
+    # WI-888: the severities a brief tells its reviewer to write are the set
+    # the one finding parser reads, so the two cannot drift: the grammar is
+    # composed here from `score_reviews.SEVERITIES`, never retyped. The two
+    # briefs whose verdicts that parser reads carry it, and so does the method's
+    # own statement of the review block.
+    severities = load_script("score_reviews").SEVERITIES
+    grammar = "- [{}] ".format("|".join(severities))
+    for key in (pr.REVIEWER, pr.CRITIQUE):
+        assert grammar in pr.load(key), key
+    assert grammar in (KIT / "PROCESS.md").read_text(encoding="utf-8")
+
+
 def test_the_reviewer_brief_carries_the_construction_first_clause():
     # WI-567: the finding contract requires, for any remedy that ADDS a check,
     # guard, warn, or invariant, one clause naming why the defect cannot be made

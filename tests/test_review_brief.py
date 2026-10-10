@@ -18,6 +18,8 @@ The command line's git reads and its success exit codes are driven on a real
 git repository in test_review_brief_git.py, which is slow-tier (it spawns git).
 """
 
+from pathlib import Path
+
 import pytest
 from conftest import ROOT, load_script
 
@@ -280,6 +282,20 @@ def test_a_filed_coordinator_review_appears_in_the_rollup(tmp_path):
     assert path.name == "wi-900.md"
     assert "| 1 | REVIEW-A | `abcdef0` | CHANGES-REQUESTED | 2 |" in text
     assert "| 2 | REVIEW-A | `abcdef0` | APPROVE | 0 |" in text
+
+
+def test_a_bracketed_word_that_is_not_a_severity_never_refuses_a_filing(tmp_path):
+    # WI-888 (the WI-880 round-004 refusal): a `- [run] lines:` coverage bullet
+    # beside three findings is a findings=3 review, filed as written.
+    text = (
+        (Path(__file__).parent / "fixtures" / "review_with_coverage_bullet.md")
+        .read_text(encoding="utf-8")
+        .format(sha=SHA)
+    )
+    path = rb.file_review(tmp_path, "wi-900", text, SHA, "full")
+    assert path.read_text(encoding="utf-8") == text
+    [(_path, rolled)] = rollup.targets(tmp_path)
+    assert "| 1 | REVIEW-A | `abcdef0` | CHANGES-REQUESTED | 3 |" in rolled
 
 
 @pytest.mark.parametrize(

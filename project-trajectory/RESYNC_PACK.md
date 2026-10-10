@@ -7941,6 +7941,31 @@ hooks --example .claude/settings.json.example --enable` run on a Python 3.11+
 interpreter (the hooks are bound to the interpreter that runs it). A machine
 that has not opted in runs no guard hooks. No registry or setting changes.
 
+### A review's finding line names a declared severity [since caafdb0e]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/score_reviews.py` declares the finding severities
+once, as `SEVERITIES` (`BLOCKER`, `MAJOR`, `MINOR`), and its `parse_verdict`
+counts a line as a finding only when its bracket names one of them, in any
+case. Before, any bracketed word at a bullet's start counted, so a reviewer's
+coverage bullet such as `- [run] lines: ...` read as a finding of severity
+`RUN`. That made `review_brief.py file` refuse a `findings=3` review as
+carrying 4, and made `plan_coverage.py --findings` number every later finding
+one off. Any other bracketed word is now prose, in every reader that goes
+through `parse_verdict`: the filing check, the coverage gate's F1..Fn, the
+loop's routing and scoring, the merge gate and the verdict rollup. A critique's
+`- [TC-HARDEN] ...` proposal was never a finding and still is not.
+
+**Kit-owned files — overwrite:** `scripts/score_reviews.py`.
+
+**What to do.** Nothing needs migrating, and no setting or registry changes.
+If your own reviewer or critique prompts (an operator `--prompt-map` override)
+state a finding grammar, it should name the same three severities: a line
+bracketed with any other word is no longer counted. A committed round whose
+`findings=N` was written to match a bracketed non-severity line now reads one
+finding short; do not rewrite the record.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

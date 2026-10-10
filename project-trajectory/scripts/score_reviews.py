@@ -70,11 +70,25 @@ from pathlib import Path
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 from kitlib.sitting import review_line
-from kitlib.verdict import declared_phases, effective_verdict
+from kitlib.verdict import MINOR, declared_phases, effective_verdict
+
+# The declared severities, in the order the briefs state them: the ONE home of
+# the finding grammar's bracket. The reviewer and critique templates write
+# `- [BLOCKER|MAJOR|MINOR] ...` (a template cannot import this, so
+# tests/test_prompts.py composes that text from this tuple and pins it), and
+# FINDING_RE below is built from it. WI-888: the bracket used to accept any
+# word, so a reviewer's `- [run] lines: ...` coverage bullet parsed as a finding
+# of severity RUN and every reader counted one too many. Any other bracketed
+# word at a bullet's start (`[run]`, a critique's `[TC-HARDEN]` proposal) is
+# prose.
+SEVERITIES = ("BLOCKER", "MAJOR", MINOR)
 
 # The finding line: "- [SEVERITY] <anchor> -> issue -> change [-> @owner]".
+# The severity is matched without regard to case, as it always was.
 # Arrows may be "->" or the unicode arrow; we split on either.
-FINDING_RE = re.compile(r"^\s*-\s*\[(?P<sev>[A-Za-z]+)\]\s*(?P<body>.+)$")
+FINDING_RE = re.compile(
+    r"^\s*-\s*\[(?P<sev>(?i:{}))\]\s*(?P<body>.+)$".format("|".join(SEVERITIES))
+)
 ARROW_RE = re.compile(r"\s*(?:->|→)\s*")
 MODEL_RE = re.compile(r"^\s*Model:\s*(?P<model>.+?)\s*$", re.I)
 # An anchor of the shape file:line or file:line:col, or a bare path, or sym:...
@@ -161,7 +175,7 @@ def _parse_anchor(token):
 
 def _finding(ln):
     """The `Finding` one verdict-block line carries, or None when it is not a
-    finding line.
+    finding line: one whose bracket names a declared severity (`SEVERITIES`).
 
     Implements: SR-154, LLR-046
     """

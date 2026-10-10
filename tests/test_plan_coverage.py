@@ -510,6 +510,20 @@ def test_the_shared_step_turns_a_real_verdict_into_F_clauses():
     }
 
 
+def test_a_bracketed_word_that_is_not_a_severity_never_shifts_the_F_ids():
+    """WI-888: a reviewer's `- [run] lines:` coverage bullet is prose, so the
+    three findings after it are F1..F3, not F2..F4."""
+    import plan_coverage
+
+    text = (
+        Path(__file__).parent / "fixtures" / "review_with_coverage_bullet.md"
+    ).read_text(encoding="utf-8")
+    clauses = plan_coverage.finding_clauses(text)
+    assert list(clauses) == ["F1", "F2", "F3"]
+    assert clauses["F1"].startswith("[MAJOR] project-trajectory/scripts/run_menu.py")
+    assert clauses["F3"].startswith("[MINOR] docs/requirements/system-requirements")
+
+
 def test_a_findings_file_mixing_both_shapes_is_malformed(tmp_path):
     proc = write_single(tmp_path, plan=REWORK_PLAN, findings=FINDINGS + REVIEW)
     assert proc.returncode == 2, proc.stdout + proc.stderr

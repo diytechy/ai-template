@@ -95,7 +95,14 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # Restore ~15% headroom for ordinary growth, as the earlier stamps prescribe.
 # Measurement and reason travel in the coordinator handoff; no generated
 # artifact is retained by this fix round.
-MAX_BYTES = 3_480_000
+# 3,480,000 -> 4,000,000, WI-888's landing (2026-10-10). The staged landing
+# measured 3,480,778 bytes, 778 over. Trunk's dashboard grew steadily from
+# 3,026,786 (acc1e195, 2026-10-02) through 3,241,276 (10-05), 3,330,905
+# (10-07), 3,400,742 (10-08) and 3,467,901 (c509aeef, 10-10): about 50 KB a
+# day of new rows, closed rows' Deliverables and amended spine cells, with no
+# step that would mark a rendering change. Restamped to ~15% headroom, as the
+# earlier stamps prescribe; the reason is in the 2026-10-10 coordinator log.
+MAX_BYTES = 4_000_000
 
 
 def test_dashboard_stays_within_its_size_budget():
