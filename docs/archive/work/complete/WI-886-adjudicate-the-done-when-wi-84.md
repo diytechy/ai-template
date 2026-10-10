@@ -2,12 +2,16 @@
 id = "WI-886"
 title = "adjudicate the Done-when WI-847 changed in its own lane wi-847 - does the close still answer the row as claimed? (cancel / defer / draft a successor / surface an open item)"
 workstream = "process"
-specref = "docs/archive/work/complete/WI-847-loop-reviewer-resumes-in-lane.md"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "done-when"
 adjudicates = ["WI-847"]
 +++
+
+## Deliverable
+
+Adjudicated 2026-10-10 in sitting 001 (`docs/reviews/wi-886/001-ADJUDICATE-dc07129.md`): every one of the nine changes between WI-847's claimed and closed Done-when moved the scope, and each move is blessed (`DONE-WHEN: BLESSED changes=9`). The dropped retention, gate-binding, test and SR-227 obligations are carried by the queued successors WI-884 (narrow-round wiring and the fresh full-lane gate) and WI-887 (REVIEW retention and the configurable final reviewer), filed under the owner's split (D-008) and the coordinator's (D-012); the added render, refusal, test and LLR-045/TC-082 obligations are the work WI-847 landed and its own sittings judged. No successor draft was owed. WI-847's merge stands.
 
 ## Context
 
