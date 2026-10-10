@@ -26,6 +26,28 @@ SR-146's text needs no change.
 The gap is the catalogue's coverage: its template rows no longer name every
 source of a launched brief's static instruction text.
 
+Landing order (scope critique, 2026-10-10): one deliverable, the catalogue
+contract for the composed home, either way; its evidence lands with it.
+
+## Trust
+
+Applies only if the lane chooses to list the composed home: its content
+then takes part in a freshness gate (`project-trajectory/PROCESS.md` §3,
+"When a guard is owed"). The exclusion option adds no gate authority.
+
+- **Producer:** `project-trajectory/scripts/gen_prompt_catalog.py`, which
+  writes `project-trajectory/prompts/CATALOG.md` whole. A failed write or
+  an unreadable source exits non-zero and leaves the previous catalogue,
+  which the check then reads as stale.
+- **Consumers** (found by grep): `project-trajectory/scripts/check.py` (the
+  freshness gate, through `gen_prompt_catalog.py --check`, and the
+  prompt-sha join), `project-trajectory/scripts/agent_loop.py` (the
+  prompt-sha join), and `docs/stack.ini` (declares the generated output).
+- **Ruling:** an absent or unreadable composed home fails generation and
+  the check: it is never listed as skipped or digested as empty. The
+  catalogue row binds to the home's exact bytes by digest; any edit is
+  stale until regenerated.
+
 ## Done-when
 
 - Either the catalogue lists the composed home by digest, freshness-gated

@@ -25,6 +25,10 @@ build changed on 2026-10-08, and WI-859's job-object notice dates from the
 same change. Every idle or wall kill in the live loop therefore holds the
 coordinator for about a minute. Surfaced, not tooled around (owner rule).
 
+Landing order (scope critique, 2026-10-10): one deliverable, one lane. The
+kill helper's change, its grandchild-death tests and the RESYNC entry land
+together; the entry follows the script change it describes.
+
 ## Done-when
 
 - A deadline kill ends the direct child at once and the tree without
@@ -33,7 +37,10 @@ coordinator for about a minute. Surfaced, not tooled around (owner rule).
   H-2) stands.
 - The idle-deadline test passes on this workstation within its bound, with
   no bound raised. A test pins a grandchild's death on Windows and POSIX.
-- The other `taskkill` call sites in the kit are checked for the same
-  latency and either fixed here or shown to be off the hot path.
+- The audit of the kit's other `taskkill` sites is done at filing
+  (scope critique, 2026-10-10): `agent_session._kill_tree` is the kit's only
+  `taskkill` call, reached from the idle/wall deadline and the stdin-feed
+  failure paths of `run_session`. The lane re-greps at its tip and records
+  the result; a new site found there is fixed here, at the one kill helper.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit (a shipped script changes).

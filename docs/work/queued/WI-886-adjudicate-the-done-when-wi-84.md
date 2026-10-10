@@ -24,3 +24,13 @@ adjudicates = ["WI-847"]
 - added since claim: 'The rows the change makes untrue or incomplete (LLR-045, TC-082) state it and pass adjudication on the one adjudication path.'
 
 Judge whether each change only clarifies or moves the scope. A moved scope is a successor row, never a reversal - the merge stands.
+
+Landing order (scope critique, 2026-10-10): one deliverable, the recorded comparison; any successor it drafts is filed on trunk and claimed on its own.
+
+## Trust
+
+The sitting's verdict file can authorize successor minting and bless the closed Done-when text (`project-trajectory/PROCESS.md` §3, "When a guard is owed"):
+
+- **Producer:** the independent adjudicator's retained session, launched by `project-trajectory/scripts/coordinator_adjudicate.py adjudicate --brief done-when`, which reserves the verdict path exclusively before launch. A failed call, a timeout or a structured error exits non-zero and leaves no accepted verdict; a partial or malformed verdict is refused by the entry point's verdict check and not committed as a judgement.
+- **Consumers** (found by grep): `project-trajectory/scripts/coordinator_adjudicate.py` and `project-trajectory/scripts/kitlib/sitting.py` (accept or refuse the verdict), `project-trajectory/scripts/kitlib/done_when.py` and `project-trajectory/scripts/adjudicate_brief.py` (the digest-bound blessing of the judged text), `project-trajectory/scripts/intake.py` (mints the drafts in `## Dispositions`), and `project-trajectory/scripts/agent_loop.py` and `project-trajectory/scripts/integrate.py` (read the row's state).
+- **Ruling:** an absent, unreadable, failed or malformed verdict blesses nothing and mints nothing; WI-886 stays open. A blessing binds to the exact closed Done-when text by its digest; a changed text is unblessed. Only drafts in an accepted verdict's `## Dispositions` are minted. WI-847's completed merge stands whatever the ruling.

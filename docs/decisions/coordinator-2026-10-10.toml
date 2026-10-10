@@ -81,3 +81,10 @@ alternative = "Fold step 1 into WI-884 and close WI-847 without landing, so no f
 reversal_cost = "Low: one unused public function and its tests, removable if WI-884 renders differently."
 why_not_escalated = "It follows from the owner's split ruling (D-008), which named step 1 as this row's; the owner can overrule toward the fold."
 review = ""
+
+[decision.D-012]
+decided = "WI-884's scope critique (2026-10-10, S1) found four independently landable parts. Split in two: WI-884 keeps the narrow-round wiring and the fresh, full-lane gate binding with its three hazards (SR-154's chain), which lands first; WI-887 takes REVIEW retention in the store and the configurable persisted final reviewer (SR-227's chain), needing WI-884. WI-858's store-keying need moves from WI-884 to WI-887. WI-881, WI-882 and WI-886 gained a recorded landing order, and WI-882 and WI-886 a Trust section, answering their critiques."
+alternative = "Keep WI-884 whole and record its internal landing order, or split it four ways as the critique listed."
+reversal_cost = "Low: two queued rows and one needs line; nothing is built."
+why_not_escalated = "The owner's split (D-008) and requirement (the configurable final reviewer) are both kept; this only sequences them. The 21-hour WI-841 lane is the case for smaller lanes, and the gate contract must exist before a persisted reviewer can be held to it."
+review = ""
