@@ -37,7 +37,7 @@ design:
 4. The gating round runs either unretained, or on the persisted final
    reviewer under its own scope, per the configuration.
 5. REVIEW session logs record whether the session was minted fresh or
-   resumed, and the reviewed range.
+   resumed, and the reviewed range. (Committed: see Done-when.)
 
 WI-800 replaces the session store. If it lands first, the scope keying
 moves into its store, as WI-858's rule does (decision D-010).
@@ -66,10 +66,14 @@ persisted final reviewer:
   Ruling: an absent, unreadable or malformed record, or one naming another
   family, route or scope, is no record, so the call mints a fresh session.
   A malformed dial reads as off. No review is ever resumed on doubt.
-- **The merge-gating review's verdict file** keeps WI-884's producer,
-  consumers and ruling. In persisted mode the gate additionally requires
-  the verdict to come from the final reviewer's own scope, never an
-  iteration reviewer's; any other verdict does not clear the gate.
+- **The merge-gating review's verdict file** keeps WI-884's filing and
+  failure contract, its consumers, its claim-base-to-tip binding and its
+  rejection rules, with one mode-dependent change to "a session minted for
+  that review". In fresh mode (the default) that requirement is unchanged.
+  In persisted mode the gate instead accepts a session resumed from the
+  persisted final reviewer's own scope, and still never an iteration
+  reviewer's session or scope. Every consumer WI-884 lists applies this
+  same ruling; none keeps the fresh-only rule in persisted mode.
 
 ## Done-when
 
@@ -79,6 +83,9 @@ persisted final reviewer:
 - The final reviewer is configurable, fresh or persisted independent, with
   fresh as the default. Either way it reviews the full lane, claim base to
   tip, and never resumes an iteration reviewer's session.
+- Each REVIEW session log records whether the session was minted fresh or
+  resumed, its scope, and the reviewed range (base and tip), so the gate
+  and a reader can tell a final-scope session from an iteration one.
 - Tests: two iteration rounds resume one session; a second lane on the same
   route does not resume it; the gating round in fresh mode mints fresh; in
   persisted mode it resumes only the final reviewer's scope; a resumed

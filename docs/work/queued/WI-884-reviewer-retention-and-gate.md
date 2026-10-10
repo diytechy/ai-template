@@ -72,7 +72,28 @@ overrule):
   base to its tip. A narrow round's verdict, an absent, unreadable or
   partial round file, one the filing check would refuse, or one lacking any
   of those facts does not clear the gate. The merge holds, with no fallback
-  to an older verdict or the legacy window.
+  to an older verdict or the legacy window. Per consumer:
+  - `integrate.py` holds the merge and names the missing fact.
+  - `agent_loop.py` and `dispatch.py` treat the full-lane review as still
+    owed and schedule it. Their unchanged-rework page fires only for a
+    qualifying full-scope verdict already at the tree, never for a narrow
+    APPROVE or an invalid file.
+  - `kitlib/verdict.py` reports an unreadable, partial or refusable round
+    file as invalid evidence, never as a verdict of either kind.
+  - `score_reviews.py` leaves invalid evidence out of its scores and
+    reports it.
+  A narrow verdict steers iteration (another round, or rework) and never
+  carries gate authority.
+
+The **claim base** is the second fact the gate binds to. Its carrier
+already exists: the claim commit `integrate.claim` writes on trunk before it
+cuts the branch (subject `claim: <ids> -> active/<branch> (bookkeeping)`),
+read by `agent_common.claim_base` (`project-trajectory/scripts/agent_common.py`).
+It is git history, so a failed claim leaves no claim commit and no branch.
+The gate reads the claim base through `claim_base` alone and reads no
+merge-base. When the claim commit is absent (a manual or pre-claim lane) or
+its history is unreadable, the gate holds. A trunk refresh leaves the claim
+commit an ancestor of the lane, so the binding survives it.
 
 ## Done-when
 

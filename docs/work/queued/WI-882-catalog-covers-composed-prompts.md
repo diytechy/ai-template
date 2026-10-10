@@ -36,17 +36,25 @@ then takes part in a freshness gate (`project-trajectory/PROCESS.md` §3,
 "When a guard is owed"). The exclusion option adds no gate authority.
 
 - **Producer:** `project-trajectory/scripts/gen_prompt_catalog.py`, which
-  writes `project-trajectory/prompts/CATALOG.md` whole. A failed write or
-  an unreadable source exits non-zero and leaves the previous catalogue,
-  which the check then reads as stale.
-- **Consumers** (found by grep): `project-trajectory/scripts/check.py` (the
-  freshness gate, through `gen_prompt_catalog.py --check`, and the
-  prompt-sha join), `project-trajectory/scripts/agent_loop.py` (the
-  prompt-sha join), and `docs/stack.ini` (declares the generated output).
-- **Ruling:** an absent or unreadable composed home fails generation and
-  the check: it is never listed as skipped or digested as empty. The
-  catalogue row binds to the home's exact bytes by digest; any edit is
-  stale until regenerated.
+  rewrites `project-trajectory/prompts/CATALOG.md` in place (an open for
+  write, not a replace). An unreadable source exits non-zero before the
+  write and leaves the previous catalogue; a write that fails part-way can
+  leave a truncated one. Either way the check then reads it as stale.
+- **Consumers** (found by grep): `project-trajectory/scripts/check.py` is
+  the one executing reader: its freshness step runs
+  `gen_prompt_catalog.py --check`. A human operator also reads the
+  catalogue to join a session log's `prompt-sha` back to its template.
+  `project-trajectory/scripts/agent_loop.py` only writes that log's
+  template path and `prompt-sha`; it never reads the catalogue.
+  `docs/stack.ini` only declares the catalogue as a generated output.
+- **Ruling**, by input:
+  - *The composed home* (a source): absent or unreadable fails generation
+    and the freshness check. It is never listed as skipped or digested as
+    empty. Its row binds to the home's exact bytes by digest, so any edit
+    is stale until regenerated.
+  - *The catalogue* (the generated file): absent, unreadable or malformed
+    fails the freshness check in `check.py`, which blocks the commit. The
+    operator's join is a reading aid and gates nothing.
 
 ## Done-when
 
