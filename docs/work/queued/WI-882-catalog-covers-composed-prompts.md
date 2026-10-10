@@ -50,8 +50,10 @@ then takes part in a freshness gate (`project-trajectory/PROCESS.md` §3,
 - **Ruling**, by input:
   - *The composed home* (a source): absent or unreadable fails generation
     and the freshness check. It is never listed as skipped or digested as
-    empty. Its row binds to the home's exact bytes by digest, so any edit
-    is stale until regenerated.
+    empty. Its row binds to the home's normalized text by digest, with
+    the catalogue's existing normalization (line endings folded, trailing
+    newline dropped), so a change to that text is stale until regenerated
+    and a line-ending difference is not.
   - *The catalogue* (the generated file): absent, unreadable or malformed
     fails the freshness check in `check.py`, which blocks the commit. The
     operator's join is a reading aid and gates nothing.

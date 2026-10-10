@@ -84,8 +84,10 @@ persisted final reviewer:
   fresh as the default. Either way it reviews the full lane, claim base to
   tip, and never resumes an iteration reviewer's session.
 - Each REVIEW session log records whether the session was minted fresh or
-  resumed, its scope, and the reviewed range (base and tip), so the gate
-  and a reader can tell a final-scope session from an iteration one.
+  resumed, its scope, and the reviewed range (base and tip). The log is an
+  audit record: no gate or scheduler reads it, so it carries no authority.
+  The gate's evidence that a verdict came from the final reviewer's scope
+  is the verdict file itself, under WI-884's filing contract.
 - Tests: two iteration rounds resume one session; a second lane on the same
   route does not resume it; the gating round in fresh mode mints fresh; in
   persisted mode it resumes only the final reviewer's scope; a resumed

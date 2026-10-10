@@ -82,6 +82,9 @@ overrule):
     file as invalid evidence, never as a verdict of either kind.
   - `score_reviews.py` leaves invalid evidence out of its scores and
     reports it.
+  - `project-trajectory/scripts/gen_verdict_rollup.py` (the human-facing
+    rollup) skips an unreadable round file and shows an unparseable one
+    without a verdict. The rollup has no merge authority.
   A narrow verdict steers iteration (another round, or rework) and never
   carries gate authority.
 

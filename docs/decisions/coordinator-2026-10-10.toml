@@ -88,3 +88,10 @@ alternative = "Keep WI-884 whole and record its internal landing order, or split
 reversal_cost = "Low: two queued rows and one needs line; nothing is built."
 why_not_escalated = "The owner's split (D-008) and requirement (the configurable final reviewer) are both kept; this only sequences them. The 21-hour WI-841 lane is the case for smaller lanes, and the gate contract must exist before a persisted reviewer can be held to it."
 review = ""
+
+[decision.D-013]
+decided = "The scope critiques of WI-882, WI-884 and WI-887 were answered at their third round without a fourth: WI-884's and WI-882's last findings were MINOR (a non-authoritative reader omitted; the catalogue digest's normalization), and WI-887's MAJOR (the REVIEW session log as an unstated authority carrier) was answered by taking the authority away, so the log is an audit record no gate reads. Each answer is a text edit to the spec on trunk."
+alternative = "Run a fourth fresh critique round, or send the third-round findings to a dispute sitting."
+reversal_cost = "Low: a critique can be re-run on the queued spec before its claim."
+why_not_escalated = "No finding was contested; each was accepted and answered in the spec. A dispute sitting rules contested findings, and a fourth round on accepted MINOR answers buys little."
+review = ""
