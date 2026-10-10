@@ -25,17 +25,20 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-10-coordinator.md](handoff-2026-10-10-coordinator.md):
-  one lane (the floor-resolved interpreter at every kit entry point) waits on
-  its branch with three spine returns to answer, and the remaining queue and
-  the session prompt are there. The coordinator's procedure now lives in the `coordinator-cycle`
+  [handoff-2026-10-10b-coordinator.md](handoff-2026-10-10b-coordinator.md):
+  two lanes wait on their branches (the session tree kill, with a returned
+  SR and two dispositions to answer; the prompt catalogue's composed home,
+  at its spine intent), and the remaining queue and the session prompt are
+  there. The coordinator's procedure now lives in the `coordinator-cycle`
   skill, and how the unattended legs run is in
   [handoff-2026-10-09b-overnight-coordinator.md](handoff-2026-10-09b-overnight-coordinator.md).
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 92 on trunk. The context guard is live: take the coordinator
+  Approval acts run to seq 97 on trunk. The context guard's hooks are machine-local
+  (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
+  workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
   Every adjudication sitting now authenticates with the owner's long-lived token:
