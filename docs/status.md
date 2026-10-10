@@ -25,23 +25,23 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-09c-coordinator.md](handoff-2026-10-09c-coordinator.md):
-  the blackout row has landed; two lanes claimed by the stopped overnight
-  leg 03 wait on their branches, and the remaining queue and the session
-  prompt are there. The coordinator's procedure now lives in the `coordinator-cycle`
+  [handoff-2026-10-10-coordinator.md](handoff-2026-10-10-coordinator.md):
+  one lane (the floor-resolved interpreter at every kit entry point) waits on
+  its branch with three spine returns to answer, and the remaining queue and
+  the session prompt are there. The coordinator's procedure now lives in the `coordinator-cycle`
   skill, and how the unattended legs run is in
   [handoff-2026-10-09b-overnight-coordinator.md](handoff-2026-10-09b-overnight-coordinator.md).
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 90 on trunk. The context guard is live: take the coordinator
+  Approval acts run to seq 92 on trunk. The context guard is live: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
   Every adjudication sitting now authenticates with the owner's long-lived token:
   set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
-  0. **The two leg-03 lanes first** (claimed, on their branches; the handoff
-     names their state), then the handoff's queue table in order.
+  0. **The lane in flight first** (claimed, on its branch; the handoff names
+     its returns), then the handoff's queue table in order.
      Review rule (owner, 2026-10-07): narrow rounds while a lane iterates, then
      one fresh, full-lane review as the last gate. Review threat model (owner,
      2026-10-08, PROCESS.md §6): a finding that needs a compromised or

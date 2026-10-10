@@ -274,7 +274,7 @@ lane commit being replayed.
 | Generated views | `git checkout --ours`, continue, regenerate once at the end |
 | Registries | resolve per table using this replay's base/ours/theirs (`git show :1:<path>`, `:2:<path>`, `:3:<path>`); keep independent changes from both sides and judge same-row conflicts; never take the whole file `--ours` |
 | `docs/id-watermark` | `--ours`, then `"$PY" "$SCRIPTS/trace.py" --bump-ids`; preserve any higher mark for retired lane ids |
-| RESYNC_PACK | both sides' entries, trunk's first |
+| RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces |
 | Byte-budget skill rows | each side's own row |
 | `stack.ini`, size-ratchet notes | both sides' notes |
 | Smoke-ceiling restamp | trunk's note plus the lane's count; restamp only past the ceiling |
@@ -292,6 +292,11 @@ lane commit being replayed.
   lane's ids as a floor, or renumber in the later lane before committing.
 - Acts collide too: check `acts.toml` after every rebase for duplicate act
   seqs (the skill's §4 latches sittings to avoid them).
+- A registry cell's line can carry leading whitespace (` detail = "...`):
+  match a cell on its `key = ` line after stripping, or a guarded replace
+  edits the next row's cell. Chain a merge script to its `git add` with
+  `&&`: a failed guard followed by `;` stages the conflict markers, and
+  `rebase --continue` commits them.
 - Validate a union of appended TOML rows per cell: the result equals ours
   plus theirs-minus-base, read from the three index stages. A line union has
   dropped shared tail cells; restore any missing cell from trunk's stage.
@@ -337,7 +342,10 @@ lane commit being replayed.
 
 ## 6. Commits and hooks
 
-- Run the smoke tier on every commit, docs-only ones included.
+- Run the smoke tier on every commit, docs-only ones included. The commit
+  hook does not run it: run `python -m pytest -q -n auto -m smoke` and
+  `python scripts/check_smoke_budget.py --mode enforce` yourself, before a
+  landing commit rather than after it.
 - A commit sometimes exits 1 with every hook step passing. Read the hook
   output and retry with `-F`; never skip the hook.
 - On trunk (or `check.py --trunk-lane`), `approval-fresh` refuses a stale
