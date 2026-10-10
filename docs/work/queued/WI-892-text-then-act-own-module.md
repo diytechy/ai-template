@@ -1,6 +1,6 @@
 +++
 id = "WI-892"
-title = "The text-then-act judgement moves out of acceptance_record.py into its own module, unchanged"
+title = "The lane-commit walk and its text-then-act rider move to their own module, shared and unchanged"
 workstream = "process"
 sr_refs = ["SR-140"]
 specref = "project-trajectory/scripts/acceptance_record.py"
@@ -27,13 +27,27 @@ review it.
 Anchor: SR-140, through LLR-302 (whose module and code_symbol cells move
 with the code).
 
-Landing order: one deliverable. It lands before WI-893, whatever OI-113 rules.
+The same row makes the lane-commit walk shared, still without changing
+behaviour: WI-828's round 1 showed the shape (one walk, `HEAD..tip` with each
+commit judged against its own parents, carrying a tuple of riders with
+text-then-act first), and WI-833, WI-850 and WI-851 each add a rider to that
+one walk. Today the merge slot walks lane commits in `integrate.py`
+`_each_lane_commit` and the hook's squash path walks them in
+`acceptance_record.py` `_squash_lines`; after this row both read one walk.
+The hand-merge path is not built here: that is WI-893, after OI-113.
+
+Landing order: one deliverable, the module and its one walk. It lands before
+WI-893 (whatever OI-113 rules) and before WI-833, WI-850 and WI-851.
 
 ## Done-when
 
 - The text-then-act section lives in its own module under
   `project-trajectory/scripts/`; `acceptance_record.py` keeps the shared
   parent reader it needs or both import it from one home (no duplicate).
+- One lane-commit walk with a rider tuple (text-then-act its first rider)
+  serves both the hook's squash path and the merge slot's per-lane-commit
+  check; the ruling-sync judge rides the same walk in the merge slot. Each
+  path's refusals, their wording and their order are unchanged.
 - Every caller (`check.py`, `integrate.py`, the tests) imports the new home;
   no re-export shim is left behind.
 - The existing text-then-act and acceptance-record tests pass unchanged

@@ -3,7 +3,7 @@ id = "WI-833"
 title = "An owner's verdict stays bound to the decision text it judged"
 workstream = "process"
 sr_refs = ["SR-225"]
-needs = ["WI-828", "WI-832"]
+needs = ["WI-892", "WI-832"]
 specref = "docs/reviews/wi-818-owner-verdict/dispute-1-ruling.md"
 buildtier = "medium"
 safety_class = "ordinary"
@@ -11,6 +11,10 @@ priority = 3
 +++
 
 ## Context
+
+Re-homed 2026-10-10 (D-015): the shared lane-commit walk this row rides
+moved from WI-828 (closed partial) to WI-892; the hand-merge path stays with
+WI-893 behind OI-113.
 
 Filed by hand by the wave-16 coordinator on 2026-10-05 from the independent
 adjudicator's separate finding F2 at WI-818

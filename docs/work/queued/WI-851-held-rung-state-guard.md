@@ -4,13 +4,17 @@ title = "Held-rung spine rows are protected by state: the registry, the snapshot
 workstream = "process"
 sr_refs = ["SR-208", "SR-178"]
 specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
-needs = ["WI-828", "WI-849"]
+needs = ["WI-892", "WI-849"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 +++
 
 ## Context
+
+Re-homed 2026-10-10 (D-015): the shared lane-commit walk this row rides
+moved from WI-828 (closed partial) to WI-892; the hand-merge path stays with
+WI-893 behind OI-113.
 
 Filed by hand on 2026-10-07 from the WI-841 retrospective (proposal §7.1,
 row P4), carrying the owner's ruling 5 of 2026-10-07
