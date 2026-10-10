@@ -75,7 +75,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
   add the skill's two scope and trust questions, and send it to a fresh Sol
-  session. Record the answer before the claim.
+  session. Record the answer before the claim. Ask in the same brief for a ruling per
+  consumer and for every carrier's failure contract (producer, write route,
+  failed-write shape): asked piecemeal, they cost WI-882, WI-884 and WI-887
+  three rounds each (2026-10-10).
 - **Coverage plan (rework):** from the lane root,
   `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> --findings <round file> <plan>`.
   Dispatch the fix only on exit 0. A finding a dispute sitting dismissed is
@@ -138,7 +141,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `project-trajectory/scripts/kitlib/dispute.py` declares: `range =
      "<base>..<head>"`, then one `[[finding]]` table per finding with exactly
      `id`, `held_by` (`builder` or `coordinator`), `finding` (the reviewer's
-     text verbatim) and `position` (the holder's position verbatim). Keep the
+     text verbatim) and `position` (the holder's position verbatim). Never
+     name a finding `G` plus a digit: `check_vocab` reads it as a retired gate
+     tag wherever the id is quoted in an authored file (a decisions record),
+     and the smoke tier goes red. Keep the
      file after the sitting: the coverage gate reads it.
   2. Compose: `"$PY" "$TOOLS/compose_lane.py" WI-NNN dispute "<findings path>" "" <verdict> <brief>`
      (a row whose `Brief` is `dispute` and whose `Adjudicates` names the
@@ -213,7 +219,11 @@ commit of its own, move it to trunk's tip
   If the squash touches
   its snapshot, re-anchor it with
   `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`.
-- **Squash** on trunk with `git merge --squash <lane>`, one per lane. Cite
+- **Squash** on trunk with `git merge --squash <lane>`, one per lane. Never
+  `git stash` between the squash and its commit: the stash's reset deletes
+  `.git/SQUASH_MSG`, and `text-then-act` then refuses the landing as an
+  unsquashed act. Recover by `git reset --hard HEAD` and redoing the squash,
+  never by forging the file. Cite
   the lane's SOUND full-lane review in the command's description: the
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
   If the lane recorded an owner overrule in
@@ -307,7 +317,9 @@ lane commit being replayed.
 ## 5. Spine-cell edits (brief Terra with these)
 
 - Write UTF-8 only, with LF line endings. Terra has left CRLF and cp1252
-  dashes; normalize before any snapshot.
+  dashes; normalize before any snapshot. On 2026-10-10 every Terra turn
+  rewrote whole registries CRLF: count `` in each touched file and
+  normalize before every commit.
 - Re-read every whole cell a splice touches. Spliced sentences have come back
   without a verb.
 - If `apply_patch` cannot match a long one-line cell, use a guarded Python replace:
@@ -342,7 +354,9 @@ lane commit being replayed.
 
 ## 6. Commits and hooks
 
-- Run the smoke tier on every commit, docs-only ones included. The commit
+- Run the smoke tier on every commit, docs-only ones included. Read the
+  summary line for `failed` before committing; a chain gated only on the
+  command's exit code inside `$(...)` committed a red tier (2026-10-10). The commit
   hook does not run it: run `python -m pytest -q -n auto -m smoke` and
   `python scripts/check_smoke_budget.py --mode enforce` yourself, before a
   landing commit rather than after it.
@@ -377,6 +391,11 @@ lane commit being replayed.
   notification. A headless leg (`claude -p`, the overnight launcher
   `"$TOOLS/overnight_legs.py"`) kills its background tasks when it exits, so
   it runs everything in the foreground under the raised shell cap.
+  Launch each background call as its own command: in `A=… && (x) & (y) &`
+  only the first subshell sees `A`.
+- The agent harness sets `NoDefaultCurrentDirectoryInExePath=1`, so a Windows
+  probe run inside it never sees the command processor's working-directory
+  lookup; unset it when that lookup is the subject (dispute 005, WI-880).
 - Set `export MSYS_NO_PATHCONV=1`; Git Bash rewrites leading-slash arguments.
 - **Scratch:** one dated root, `C:/Projects/ai-template.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
