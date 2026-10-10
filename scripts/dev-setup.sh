@@ -28,7 +28,8 @@
 #              reversible). Then OFFERS the agent CLIs (claude, codex) — each
 #              its own [y/N] (WI-112): most users want the agentic workflow, but
 #              both are deferrable for someone driving sessions with their own
-#              tools or an IDE extension.
+#              tools or an IDE extension. Last it offers the coordinator
+#              hooks' machine-local opt-in (WI-880).
 #
 # Windows contributors: use scripts/dev-setup.ps1.
 set -eu
@@ -224,6 +225,39 @@ case "$SIGNIN" in
   missing) echo "  [missing] retained adjudicator sign-in  — run --install (or a bare run) for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file" ;;
   *) echo "  [unknown] retained adjudicator sign-in  — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" ;;
 esac
+# The coordinator's Claude Code hooks (WI-880, owner ruling 2026-10-10): this
+# repository commits none. The guard's machine-local opt-in merges the hook
+# groups of the inert .claude/settings.json.example into
+# .claude/settings.local.json, each bound to the interpreter that runs it; a
+# machine that has not opted in runs no guard hooks. Read through the guard's
+# own report when a runtime exists.
+HOOKS_EXAMPLE=.claude/settings.json.example
+HOOKS="none"
+if [ -n "$PY" ] && [ -f "$HOOKS_EXAMPLE" ]; then
+  HOOKS=$("$PY" project-trajectory/scripts/coordinator_guard.py --root . hooks --example "$HOOKS_EXAMPLE" 2>/dev/null) || HOOKS="none"
+fi
+case "$HOOKS" in
+  on) echo "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" ;;
+  off) echo "  [note]    coordinator Claude Code hooks are off — the machine-local opt-in, offered by --install and a bare run" ;;
+esac
+# Switching them on, consented: the opt-in runs on this script's runtime, the
+# floor-resolved interpreter its hooks are then bound to.
+offer_hooks() {
+  [ "$HOOKS" = "off" ] || return 0
+  printf "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N] "
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      if "$PY" project-trajectory/scripts/coordinator_guard.py --root . hooks --example "$HOOKS_EXAMPLE" --enable >/dev/null; then
+        echo "  Switched on the coordinator hooks in .claude/settings.local.json."
+      else
+        echo "  [warn] the opt-in could not write .claude/settings.local.json; the hooks stay off."
+      fi
+      ;;
+    *) echo "  Skipped the coordinator hooks; nothing was changed." ;;
+  esac
+}
+
 # The one-time long-lived token step (WI-846's), consented; shown only while
 # retention is on and the token is missing. Nothing here reads the token.
 offer_signin() {
@@ -280,6 +314,7 @@ if [ "$MODE" = "run" ]; then
     offer_cli claude "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
     offer_cli codex "@openai/codex" "sign in with: codex login"
     offer_signin
+    offer_hooks
   else
     echo "No interactive terminal: nothing is offered (run sh scripts/dev-setup.sh --install at a terminal)."
   fi
@@ -392,6 +427,7 @@ echo "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
 offer_cli claude "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
 offer_cli codex "@openai/codex" "sign in with: codex login"
 offer_signin
+offer_hooks
 if ! have claude || ! have codex; then
   echo
   echo "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"

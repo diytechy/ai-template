@@ -27,7 +27,10 @@
 #             reversible). Then OFFERS the agent CLIs (claude, codex) — each
 #             its own [y/N] (WI-112): most users want the agentic workflow, but
 #             both are deferrable for someone driving sessions with their own
-#             tools or an IDE extension.
+#             tools or an IDE extension. With no 3.11+ runtime it first offers
+#             one (uv or winget, when present) and searches again, as
+#             dev-setup.sh --install does (WI-880); last it offers the
+#             coordinator hooks' machine-local opt-in.
 #
 # Linux/macOS contributors: use scripts/dev-setup.sh.
 param([switch]$Check, [switch]$Install, [switch]$ForRun, [string]$Python = "")
@@ -99,21 +102,27 @@ try {
     # resolves one too.
     $PyCandidates = @(@("py"), @("python"), @("python3"), @("py", "-3.13"), @("py", "-3.12"), @("py", "-3.11"))
     $PyChecked = ".venv\Scripts\python.exe, " + (($PyCandidates | ForEach-Object { $_ -join " " }) -join ", ")
+    # The runtime search: the supported venv, else the first candidate that
+    # passes the floor. A function so -Install can search again after a
+    # consented runtime install, as dev-setup.sh's discover_py does (WI-880).
+    function Find-Runtime {
+        $script:py = $null
+        $script:pyArgs = @()
+        if ($venvSupported) { $script:py = $venvPython; return }
+        foreach ($cand in $PyCandidates) {
+            if (HavePython @cand) {
+                $script:py = $cand[0]
+                $script:pyArgs = @($cand | Select-Object -Skip 1)
+                return
+            }
+        }
+    }
     if ($ForRun) {
         # A bare run's check (WI-834): only the interpreter run.cmd handed in,
         # the one its menu runs on, so no search here can vouch for another.
         if ($Python -and (HavePython $Python)) { $py = $Python }
     }
-    elseif ($venvSupported) { $py = $venvPython }
-    else {
-        foreach ($cand in $PyCandidates) {
-            if (HavePython @cand) {
-                $py = $cand[0]
-                $pyArgs = @($cand | Select-Object -Skip 1)
-                break
-            }
-        }
-    }
+    else { Find-Runtime }
     function HasModule($mod) {
         if (-not $py) { return $false }
         & $py @pyArgs -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('$mod') else 1)" 2>$null
@@ -185,6 +194,37 @@ try {
         "missing" { Write-Host "  [missing] retained adjudicator sign-in  — run -Install (or a bare run) for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file" }
         default { Write-Host "  [unknown] retained adjudicator sign-in  — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" }
     }
+    # The coordinator's Claude Code hooks (WI-880, owner ruling 2026-10-10):
+    # this repository commits none. The guard's machine-local opt-in merges the
+    # hook groups of the inert .claude/settings.json.example into
+    # .claude/settings.local.json, each bound to the interpreter that runs it;
+    # a machine that has not opted in runs no guard hooks. Read through the
+    # guard's own report when a runtime exists.
+    $hooksExample = ".claude/settings.json.example"
+    $hooks = "none"
+    if ($py -and (Test-Path $hooksExample)) {
+        try {
+            $hooks = ((& $py @pyArgs -X utf8 project-trajectory/scripts/coordinator_guard.py --root . hooks --example $hooksExample 2>$null) | Out-String).Trim()
+        } catch { $hooks = "none" }
+    }
+    switch ($hooks) {
+        "on" { Write-Host "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" }
+        "off" { Write-Host "  [note]    coordinator Claude Code hooks are off - the machine-local opt-in, offered by -Install and a bare run" }
+    }
+    # Switching them on, consented: the opt-in runs on this script's runtime,
+    # the floor-resolved interpreter its hooks are then bound to.
+    function Offer-Hooks {
+        if ($hooks -ne "off") { return }
+        $a = Read-Host "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N]"
+        if ($a -match '^[Yy]') {
+            & $py @pyArgs -X utf8 project-trajectory/scripts/coordinator_guard.py --root . hooks --example $hooksExample --enable | Out-Null
+            if ($LASTEXITCODE -eq 0) { Write-Host "  Switched on the coordinator hooks in .claude/settings.local.json." }
+            else { Write-Host "  [warn] the opt-in could not write .claude/settings.local.json; the hooks stay off." }
+        } else {
+            Write-Host "  Skipped the coordinator hooks; nothing was changed."
+        }
+    }
+
     # The one-time long-lived token step (WI-846's), consented; shown only while
     # retention is on and the token is missing. Nothing here reads the token.
     function Offer-Signin {
@@ -282,6 +322,7 @@ try {
             Offer-Cli "claude" "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
             Offer-Cli "codex" "@openai/codex" "sign in with: codex login"
             Offer-Signin
+            Offer-Hooks
         } else {
             Write-Host "No interactive console: nothing is offered (run scripts\dev-setup.ps1 -Install at a console)."
         }
@@ -306,7 +347,16 @@ try {
 
     # --- -Install: consent-first venv + dev tools ----------------------------
     if (-not $py) {
-        Write-Error "Python 3.11+ not found on PATH; install a supported interpreter first."
+        # dev-setup.sh --install's offer (WI-880): the runtime, through a
+        # provisioner already on this machine, then the search again.
+        Offer-Python
+        Find-Runtime
+    }
+    if (-not $py) {
+        Write-Host ""
+        Write-Host "Python 3.11+ not found on PATH; install a supported interpreter first."
+        Write-Host "  install Python 3.11+ - e.g. winget install Python.Python.3.13, uv python install 3.13, or the python.org Windows installer"
+        Write-Host "  (a newly installed interpreter may need a new console, or its directory on PATH)"
         exit 1
     }
     # WI-274a: a sub-3.11 OR broken .venv gets a CONSENTED recreate at the floor,
@@ -385,6 +435,7 @@ try {
     Offer-Cli "claude" "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
     Offer-Cli "codex" "@openai/codex" "sign in with: codex login"
     Offer-Signin
+    Offer-Hooks
     if ((-not (Have "claude")) -or (-not (Have "codex"))) {
         Write-Host ""
         Write-Host "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"

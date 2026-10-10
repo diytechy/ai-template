@@ -7880,6 +7880,67 @@ One process now answers each root as it first found it: if your own tooling
 turns a plain directory into a repository (or moves a worktree) and then reads
 the store from the same process, start a new process after the change.
 
+### The git hooks and the run menu's lines run on the floor-resolved interpreter [since 8d75bc6c]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**Kit-owned files — overwrite:** `hooks/pre-commit`, `hooks/commit-msg` and
+`hooks/pre-push` (re-copy each into `.githooks/`), `hooks/kit-python.sh`
+(new: copy it to `.githooks/kit-python.sh`; the three hooks source it and
+refuse without it), `scripts/kitlib/bootstrap_manifest.py` and
+`scripts/run_menu.py`. **Merge by hand** (you may have filled them):
+`scripts/dev-setup.sh`, from `dev-setup.template.sh` (a comment only), and
+`docs/stack.ini`, from `stack.ini.template` (a comment in the `[run]` block
+only).
+
+**What changes for you.** Two things.
+
+1. **Every git hook resolves one Python 3.11+ interpreter, or refuses.**
+   `pre-commit`, `commit-msg` and `pre-push` all source one probe,
+   `.githooks/kit-python.sh`, which runs `.venv/bin/python`,
+   `.venv/Scripts/python.exe`, then the same list as dev-setup's own runtime
+   search (`PY_CANDIDATES` = `python3 python`) and takes the first that is
+   3.11+, by its own path; every step runs on it. An older Python first on
+   PATH is no longer picked (the steps used to die on `import tomllib`).
+   **Migration, flagged:** with no 3.11+ found, each hook now FAILS (the
+   commit, or the push) and names dev-setup's install (`sh
+   scripts/dev-setup.sh --baseline`, Windows `scripts\dev-setup.cmd
+   -Baseline`) as the fix. They used to skip and pass (exit 0) when no Python
+   ran at all, privacy off: the pre-commit process checks, the commit-msg
+   message scan and the pre-push secrets floor. A machine without Python
+   3.11+ can no longer commit or push through the hooks until it installs
+   one. If your layout installs differently, export `KIT_DEV_SETUP_INSTALL`
+   (the step text) from a wrapper hook, as `KIT_SCRIPTS_DIR` is. If you
+   widened your dev-setup's search, widen the `for cand in` list in
+   `kit-python.sh` to the same set. A wrapper hook that `exec`s the shipped
+   hook from another directory needs `kit-python.sh` beside the shipped hook,
+   since each hook sources it from its own directory.
+2. **A `[run]` line's `python` is exactly the menu's own interpreter.**
+   `run_menu.py` runs each declared line with a directory first on PATH whose
+   `python` is the interpreter the `run.*` launcher resolved against the
+   floor (your `.venv` when it has one), not an older one first on PATH. On
+   Windows that directory is the interpreter's own; on POSIX it is a
+   per-launch temporary directory holding `python` and `python3` shims that
+   exec the interpreter by its exact path (a system `/usr/bin/python3` may
+   sit beside a different `/usr/bin/python`). A Windows interpreter's
+   directory holds no `python3`, so on Windows only a bare `python` is
+   exact: a line meant to run there declares `python`. On Windows the
+   command processor also looks in a line's working directory before PATH,
+   so a `python.exe` in the repository root, or in a directory the line
+   changes into, runs instead of the menu's interpreter; keep interpreters
+   out of those directories. A line that relied on a different `python` or
+   `python3` from PATH should name that interpreter's path instead.
+
+**Migrate (applies if you relied on committed coordinator hooks):** the kit's
+own repository no longer commits the coordinator guard's hook groups in its
+`.claude/settings.json` (owner ruling 2026-10-10); they come only from the
+machine-local opt-in. If you copied the guard's groups into your committed
+`.claude/settings.json`, remove them there and run the opt-in once per
+machine: dev-setup's offer, or `python scripts/coordinator_guard.py --root .
+hooks --example .claude/settings.json.example --enable` run on a Python 3.11+
+interpreter (the hooks are bound to the interpreter that runs it). A machine
+that has not opted in runs no guard hooks. No registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

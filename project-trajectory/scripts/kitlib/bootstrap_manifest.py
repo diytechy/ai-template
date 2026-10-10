@@ -732,6 +732,9 @@ MAPPING = [
     ("hooks/pre-commit", ".githooks/pre-commit"),
     ("hooks/commit-msg", ".githooks/commit-msg"),
     ("hooks/pre-push", ".githooks/pre-push"),
+    # The one interpreter probe the three hooks source (WI-880), shipped
+    # beside them so a hook and its probe travel together.
+    ("hooks/kit-python.sh", ".githooks/kit-python.sh"),
     # The declared product toolchain (Thread 30, process.md §7): the single home
     # for the format/lint/test commands, src/tests paths, tiers, and coverage
     # threshold. check.py/CI/hook/setup.* read it. Copied UNCONDITIONALLY (unlike

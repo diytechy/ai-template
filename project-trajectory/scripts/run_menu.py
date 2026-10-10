@@ -18,6 +18,8 @@ exactly one place instead of being duplicated across the platform launchers.
 One `<name> = <command>` line per capability (in declaration order), plus an
 optional `<name>.desc = <one line>`. Each command is a full **shell line** — a
 multi-step capability keeps its steps in a project script and names it here once.
+A line runs with a directory first on PATH whose `python` is the menu's own
+interpreter, the one the launcher resolved (WI-880; see `launch`).
 
 Usage (what the launchers invoke as `run_menu.py "$@"`):
     run_menu.py            no args  -> a numbered interactive menu (pick one)
@@ -87,6 +89,7 @@ import os
 import shlex
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
@@ -204,10 +207,60 @@ def launch(command, extra):
     launcher forwarded, the old `exec $RUN_CMD "$@"`) are DATA values, each quoted
     per-platform (`_quote_extra`) so the shell can't re-split a value on
     whitespace or a metacharacter. shell=True is intentional for the recipe — see
-    the module docstring."""
+    the module docstring.
+
+    A recipe's `python` is the interpreter the menu runs on, the one its
+    launcher resolved against the 3.11 floor, never an older one that happens
+    to come first on PATH (WI-880): the line runs with a directory first on
+    PATH whose `python` is exactly this interpreter (`_interpreter_dir`). The
+    resolution stays the launcher's; this only hands it on.
+
+    Implements: SR-046, LLR-047"""
     full = command if not extra else command + " " + _quote_extra(extra)
     print("Running: {}".format(full), flush=True)
-    return subprocess.run(full, shell=True).returncode
+    with tempfile.TemporaryDirectory(prefix="run-menu-") as scratch:
+        env = dict(os.environ)
+        env["PATH"] = _interpreter_dir(scratch) + os.pathsep + env.get("PATH", "")
+        return subprocess.run(full, shell=True, env=env).returncode
+
+
+def _interpreter_dir(scratch):
+    """A directory whose `python` is exactly this interpreter. On Windows that
+    is the interpreter's own directory: `sys.executable` is that directory's
+    `python.exe` (an install's or a virtual environment's). It holds no
+    `python3`, so on Windows only a bare `python` is exact: a shim there
+    would be a batch file, which re-parses its arguments (the data-argument
+    contract above), and a copied executable loses its home. The command
+    processor also searches the line's working directory before PATH, so a
+    `python.exe` there (the repository root, or a directory the line `cd`s
+    into) still wins on Windows; that route is left to the line, since
+    closing it would change how every bare command resolves. On POSIX the
+    interpreter's directory may hold another `python` (a system
+    /usr/bin/python3 beside a different /usr/bin/python, or none), so the line
+    gets `scratch`, holding shims that run `sys.executable` by its own path.
+
+    Implements: SR-046, LLR-047"""
+    if os.name == "nt":
+        return os.path.dirname(sys.executable)
+    write_interpreter_shims(scratch, sys.executable)
+    return str(scratch)
+
+
+def write_interpreter_shims(directory, executable):
+    """Write `python` and `python3` into `directory`, each a two-line sh
+    script that execs `executable` by its exact path with the line's
+    arguments. A shim, not a symlink: the interpreter reached through a
+    symlink in another directory takes that directory as its home and no
+    longer finds a virtual environment's configuration (`pyvenv.cfg` beside
+    the executable), so the line would lose the environment's packages; the
+    exec'd path is the interpreter itself.
+
+    Implements: SR-046, LLR-047"""
+    body = '#!/bin/sh\nexec {} "$@"\n'.format(shlex.quote(executable))
+    for name in ("python", "python3"):
+        shim = Path(directory) / name
+        shim.write_text(body, encoding="utf-8", newline="\n")
+        shim.chmod(0o755)
 
 
 def direct(capabilities, name, extra):

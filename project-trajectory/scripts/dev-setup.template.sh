@@ -171,9 +171,9 @@ say "Developer workstation (process.md §7). Product deps are scripts/setup.sh."
 say
 
 # --- Detect + report (every tier does this first) ----------------------------
-# PY_CANDIDATES: the interpreters searched, in order. Keep run.sh's list the
-# same (after its .venv entries), so a check that finds a runtime means run
-# resolves one too.
+# PY_CANDIDATES: the interpreters searched, in order. Keep run.sh's list and
+# the git pre-commit hook's the same (after their .venv entries), so a check
+# that finds a runtime means run and the hook resolve one too.
 PY_CANDIDATES="python3 python"
 # PYBIN: the interpreter the kit's own readers below run on; RUNTIME=1 when
 # there is one. For a bare run (--for-run) it is the interpreter the launcher

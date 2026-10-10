@@ -815,6 +815,39 @@ def _active_cov_datafile():
     return str(Path(datafile).resolve()) if datafile else None
 
 
+def sub_floor_interpreter():
+    """A real installed Python below the 3.11 floor, or None (most CI hosts
+    have none). The older-first PATH the floor-resolution tests build is made
+    of real interpreters only, never a version-spoofing fake (WI-834 round 016
+    F2, WI-880)."""
+    names = ["python3.8", "python3.9", "python3.10"]
+    names += [r"C:\Python3{}\python.exe".format(n) for n in (8, 9, 10)]
+    floor = "import sys; sys.exit(0 if sys.version_info < (3, 11) else 1)"
+    for name in names:
+        found = shutil.which(name) or (name if os.path.isfile(name) else None)
+        if found and subprocess.run([found, "-c", floor]).returncode == 0:
+            return found
+    return None
+
+
+_PYTHON_NAMES = ("python", "python3", "py", "python.exe", "python3.exe", "py.exe")
+
+
+def older_only_path(older, *first):
+    """A PATH on which `older` (a sub-floor interpreter) is the only Python:
+    the `first` directories, then `older`'s own, then every directory of this
+    PATH that holds no interpreter name a resolver probes (so the shell, git
+    and the system tools stay reachable). What a resolver finds on it is
+    either a floor-passing interpreter the test placed itself, or nothing."""
+    dirs = [str(d) for d in first] + [os.path.dirname(older)]
+    for entry in os.environ.get("PATH", "").split(os.pathsep):
+        if entry and not any(
+            os.path.exists(os.path.join(entry, n)) for n in _PYTHON_NAMES
+        ):
+            dirs.append(entry)
+    return os.pathsep.join(dirs)
+
+
 def augment_env(env):
     """Add subprocess-coverage wiring to `env` (a dict) when pytest-cov is
     measuring the parent (see `_active_cov_datafile`); a no-op otherwise.

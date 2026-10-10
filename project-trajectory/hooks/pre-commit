@@ -37,18 +37,15 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # Identity is no longer pinned by a repo file — the author-identity check is now
 # the privacy-layer step 3a below (Python, via check_privacy.py --author), run
 # only when docs/privacy-check is `true`. See process-options.md "Commit
-# identity & privacy". Recorded trade: unlike the old pure-shell pin, a
-# Python-less machine no longer enforces it — deliberate, since that pin moved to
-# the user's own git config and what remains is a privacy check like the rest.
+# identity & privacy". Since WI-880 a machine with no Python 3.11+ cannot
+# commit through this hook at all (the interpreter step below refuses), so the
+# check holds wherever the hook runs.
 
-# Fail-closed guard for the skips below (M-42): a declared privacy policy must
-# never be skipped silently. The skip-when-tooling-is-missing posture is right
-# for the PROCESS checks (a Python-less box still commits), but it would also
-# skip the secrets/privacy scans — so when docs/privacy-check reads `true`,
-# parse it in pure sh (the pre-push hook's pattern) and REFUSE the skip. The
-# trade, recorded: a privacy-checked repo cannot commit without a working
-# Python 3; that is the same stance pre-push already takes at the boundary
-# that matters most, moved up to where the leak would first land in history.
+# Fail-closed guard for the skip below (M-42): a declared privacy policy must
+# never be skipped silently. The one skip left is a missing kit scripts dir
+# (a missing interpreter refuses outright, WI-880), and it would also skip the
+# secrets/privacy scans — so when docs/privacy-check reads `true`, parse it in
+# pure sh (the pre-push hook's pattern) and REFUSE the skip.
 #   SN-028 re-key: the policy's home is now docs/process.toml, and THIS parse
 # is the reason every value there is written one `key = value` per line — a
 # first-line parse cannot read a TOML file, but a KEYED match can.
@@ -120,33 +117,11 @@ privacy_declared_true() {
 
 if mixed_config_refusal "pre-commit"; then exit 1; fi
 
-# Find a Python 3 interpreter. Prefer the project venv (setup.sh creates ./.venv
-# with the toolchain), so tool-backed steps like format actually RUN instead of
-# SKIP-on-missing-tool; fall back to a PATH python. Probe by *running* the
-# candidate, not just finding it: on Windows, `python3` often resolves to the
-# Microsoft Store app-execution alias, which exists on PATH but exits nonzero when
-# Python isn't installed through it — existence alone would wedge every commit.
-PY=""
-for venvpy in "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/.venv/Scripts/python.exe"; do
-  if [ -x "$venvpy" ] && "$venvpy" -c "" >/dev/null 2>&1; then PY="$venvpy"; break; fi
-done
-if [ -z "$PY" ]; then
-  for cand in python3 python; do
-    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
-      PY="$cand"; break
-    fi
-  done
-fi
-if [ -z "$PY" ]; then
-  if privacy_declared_true; then
-    echo "pre-commit: docs/privacy-check is true but Python 3 is unavailable —" >&2
-    echo "  the secrets/privacy scans cannot run, so refusing to skip them." >&2
-    echo "  FAILING CLOSED: install Python 3 (or run setup.sh) to commit." >&2
-    exit 1
-  fi
-  echo "pre-commit: Python 3 not found on PATH; skipping process checks." >&2
-  exit 0
-fi
+# The ONE interpreter every step below runs on, resolved once, here, by the
+# probe all three kit hooks share (hooks/kit-python.sh, shipped beside this
+# hook; WI-880). With no Python 3.11+ it refuses, naming dev-setup's install.
+. "$(dirname "$0")/kit-python.sh"
+kit_python pre-commit commit || exit 1
 
 # Locate the scripts directory. Default layout is scripts/ (what bootstrap
 # scaffolds). A repo whose harness lives elsewhere sets KIT_SCRIPTS_DIR (relative

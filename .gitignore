@@ -8,6 +8,11 @@ __pycache__/
 coverage.json
 .ruff_cache/
 
+# Claude Code's machine-local settings: dev-setup's coordinator-hooks opt-in
+# writes them with this machine's interpreter path, so they stay out of git
+# (the scaffold's gitignore.template line, WI-880).
+.claude/settings.local.json
+
 # Generated reports (downstream repos generate these into docs/test/)
 docs/test/report.md
 docs/test/report.html

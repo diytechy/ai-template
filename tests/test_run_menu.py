@@ -7,12 +7,20 @@ these also cover Windows/POSIX quoting.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 
 import pytest
 
-from conftest import SCRIPTS, augment_env
+from conftest import (
+    SCRIPTS,
+    augment_env,
+    load_script,
+    older_only_path,
+    skip_without_env_gates,
+    sub_floor_interpreter,
+)
 
 # A capability that records its argv (to prove shell tokenization + passthrough).
 ECHO_ARGS = (
@@ -196,3 +204,100 @@ def test_trailing_arg_shell_expansion_is_neutralized_on_posix(repo):
     assert proc.returncode == 0, proc.stderr
     args = (repo / "args.txt").read_text(encoding="utf-8").splitlines()
     assert args == ["served", "$HOME", "`id`", "$(echo hi)"]
+
+
+def test_a_capabilitys_python_is_the_menus_own_interpreter(tmp_path):
+    """WI-880: a declared line's `python` runs on the interpreter the menu
+    runs on, the one its launcher floor-resolved, not whichever is first on
+    PATH. Real interpreters only: a real Python below the 3.11 floor is the
+    only one on PATH, and the line still reports the menu's own."""
+    older = sub_floor_interpreter()
+    if older is None:
+        pytest.skip("no Python below 3.11 is installed on this host")
+    _write_stack(
+        tmp_path,
+        "who = python -c \"import sys; print('CHILD-UNDER', sys.executable)\"\n",
+    )
+    env = augment_env(dict(os.environ, PATH=older_only_path(older)))
+    env.pop("VIRTUAL_ENV", None)
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPTS / "run_menu.py"), "who"],
+        cwd=str(tmp_path),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        stdin=subprocess.DEVNULL,
+        env=env,
+        timeout=60,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    (line,) = [x for x in proc.stdout.splitlines() if x.startswith("CHILD-UNDER ")]
+    ran_on = line[len("CHILD-UNDER ") :]
+    assert os.path.samefile(ran_on, sys.executable), (ran_on, sys.executable)
+
+
+def test_a_capabilitys_python_is_exact_where_its_directory_holds_another(tmp_path):
+    """WI-880 round 2, POSIX: the menu runs on an interpreter whose own
+    directory's `python` is another program (a system install's /usr/bin
+    beside a different `python`), and a line's `python` is still the menu's
+    own. Built here as a directory holding the menu's interpreter under
+    another name next to a `python` that must never run."""
+    if os.name == "nt":
+        pytest.skip("POSIX: on Windows the interpreter's directory is exact")
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    kitpy = bindir / "kitpy"
+    kitpy.symlink_to(sys.executable)
+    wrong = bindir / "python"
+    wrong.write_text("#!/bin/sh\necho WRONG-PYTHON\nexit 3\n", encoding="utf-8")
+    wrong.chmod(0o755)
+    _write_stack(
+        tmp_path,
+        "who = python -c \"import sys; print('CHILD-UNDER', sys.executable)\"\n",
+    )
+    proc = subprocess.run(
+        [str(kitpy), str(SCRIPTS / "run_menu.py"), "who"],
+        cwd=str(tmp_path),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        stdin=subprocess.DEVNULL,
+        env=augment_env(dict(os.environ)),
+        timeout=60,
+    )
+    assert "WRONG-PYTHON" not in proc.stdout, proc.stdout + proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    (line,) = [x for x in proc.stdout.splitlines() if x.startswith("CHILD-UNDER ")]
+    assert line[len("CHILD-UNDER ") :] == str(kitpy), line
+
+
+@pytest.mark.parametrize("name", ["python", "python3"])
+def test_the_posix_shim_runs_exactly_the_interpreter_it_names(tmp_path, name):
+    """WI-880 round 2, the POSIX construction's invariant, driven through sh on
+    any platform: the shim the menu puts first on a line's PATH runs exactly
+    the interpreter it names, by that path, so a virtual environment stays
+    itself (a symlink in another directory would lose the environment's
+    configuration, which is why the menu writes a shim instead)."""
+    skip_without_env_gates("posix-shell")
+    venv = tmp_path / "venv"
+    subprocess.run(
+        [sys.executable, "-m", "venv", "--without-pip", str(venv)],
+        check=True,
+        capture_output=True,
+    )
+    exe = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    shims = tmp_path / "shims"
+    shims.mkdir()
+    run_menu = load_script("run_menu")
+    run_menu.write_interpreter_shims(shims, str(exe))
+    probe = "import sys; print(sys.executable); print(sys.prefix)"
+    proc = subprocess.run(
+        [shutil.which("sh"), str(shims / name), "-c", probe],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    executable, prefix = proc.stdout.splitlines()
+    assert os.path.samefile(executable, exe), (executable, exe)
+    assert os.path.samefile(prefix, venv), (prefix, venv)

@@ -14,7 +14,14 @@ import shutil
 import subprocess
 
 import pytest
-from conftest import augment_env, env_gate_skipif, pin_autocrlf, set_process_key
+from conftest import (
+    augment_env,
+    env_gate_skipif,
+    older_only_path,
+    pin_autocrlf,
+    set_process_key,
+    sub_floor_interpreter,
+)
 
 HOOK = ".githooks/pre-push"
 ZERO = "0" * 40
@@ -366,3 +373,32 @@ def test_bootstrap_copies_pre_push_hook(scaffold):
     hook = scaffold / HOOK
     assert hook.exists(), "bootstrap must copy the pre-push hook to .githooks/"
     assert hook.read_text(encoding="utf-8").startswith("#!/bin/sh")
+
+
+@pytest.fixture
+def older():
+    """A real installed Python below the 3.11 floor (skips where none is)."""
+    found = sub_floor_interpreter()
+    if found is None:
+        pytest.skip("no Python below 3.11 is installed on this host")
+    return found
+
+
+def test_pre_push_never_runs_on_an_older_python(repo, older):
+    """WI-880, real interpreters only: with a real Python below the 3.11 floor
+    the only one on PATH, the pre-push hook neither scans the outgoing range on
+    it nor skips the scan: it refuses the push and names dev-setup's install."""
+    root, base, head = repo
+    env = dict(os.environ, PATH=older_only_path(older))
+    env.pop("VIRTUAL_ENV", None)
+    proc = subprocess.run(
+        [shutil.which("sh"), HOOK, "origin", "https://example.invalid/repo.git"],
+        cwd=str(root),
+        input=push_line(head, base),
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "Traceback" not in proc.stderr, proc.stderr
+    assert "dev-setup" in proc.stderr and "3.11" in proc.stderr, proc.stderr

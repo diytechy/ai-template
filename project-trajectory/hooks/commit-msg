@@ -26,16 +26,16 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # Phase 5: no llm/train/* branch exists to guard, and the integrator's verdict
 # gate binds a review to its exact commit by git-derived freshness instead.)
 
-# Fail-closed guard for the skips below (M-42, same as pre-commit): a repo that
+# Fail-closed guard for the skip below (M-42, same as pre-commit): a repo that
 # declared docs/privacy-check `true` must never have its message scan skipped
 # silently — parse the policy in pure sh (the pre-push pattern) and refuse.
-# The trade, recorded: a privacy-checked repo cannot commit without a working
-# Python 3 + findable scripts dir; a non-privacy repo keeps the free skip.
+# The one skip left is a missing kit scripts dir (a missing interpreter
+# refuses outright, WI-880); a non-privacy repo keeps that skip.
 # SN-028 re-key: docs/process.toml's keyed match first, legacy file second.
-# BYTE-IDENTICAL to pre-commit's copy — the same F5 duplication the two hooks
-# already share for every probe, and here it is load-bearing: two hooks that
-# disagreed about whether privacy is on would gate one boundary and not the
-# other. The asymmetry (broad "declared", narrow "off", fail closed in
+# BYTE-IDENTICAL to pre-commit's copy — an F5 duplication the two hooks keep
+# on purpose (their interpreter probe, by contrast, is one shared file), and
+# load-bearing: two hooks that disagreed about whether privacy is on would
+# gate one boundary and not the other. The asymmetry (broad "declared", narrow "off", fail closed in
 # between) and the mixed-config refusal are documented in full at
 # hooks/pre-commit. POSIX ERE only.
 _ptoml_body() {
@@ -101,29 +101,11 @@ loop_marked() {
   [ -n "${KIT_LOOP_SESSION:-}" ]
 }
 
-# Find a Python 3 interpreter (same probe as pre-commit: run it, don't just find
-# it — Windows' Store alias resolves on PATH but exits nonzero). No Python =
-# skip, consistent with pre-commit's process-check posture.
-PY=""
-for cand in python3 python; do
-  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "" >/dev/null 2>&1; then
-    PY="$cand"; break
-  fi
-done
-if [ -z "$PY" ]; then
-  if privacy_declared_true; then
-    echo "commit-msg: docs/privacy-check is true but Python 3 is unavailable —" >&2
-    echo "  the message scan cannot run, so refusing to skip it. FAILING CLOSED." >&2
-    exit 1
-  fi
-  if loop_marked; then
-    echo "commit-msg: a loop commit, but Python 3 is unavailable — its" >&2
-    echo "  provenance trailer cannot be checked. FAILING CLOSED." >&2
-    exit 1
-  fi
-  echo "commit-msg: Python 3 not found on PATH; skipping message scan." >&2
-  exit 0
-fi
+# The ONE interpreter every step below runs on, resolved once, here, by the
+# probe all three kit hooks share (hooks/kit-python.sh, shipped beside this
+# hook; WI-880). With no Python 3.11+ it refuses, naming dev-setup's install.
+. "$(dirname "$0")/kit-python.sh"
+kit_python commit-msg commit || exit 1
 
 # Locate the kit scripts dir honoring KIT_SCRIPTS_DIR (env / delegating wrapper)
 # before the default scripts/ | Scripts/ — the harness-elsewhere layout WI-1.42

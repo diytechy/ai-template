@@ -1,0 +1,31 @@
+# docs/decisions/wi-880.toml — WI-880's lane: delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-003"]
+
+[decision.D-001]
+decided = "Round 2 widened the row past its four listed sites to the shipped commit-msg and pre-push hooks, which still picked Python by 'it runs', not the 3.11 floor: same class, same boundary, and the row's title covers every kit entry point. All three hooks now source one probe (hooks/kit-python.sh), so a hook without Python 3.11+ refuses commits and pushes where commit-msg and pre-push used to skip; the RESYNC entry flags that migration. Round 2 also closed round 1's POSIX residual in the [run] fix with exec shims."
+alternative = "Land the four listed sites only and file the other two hooks as a follow-up row."
+reversal_cost = "Medium: a shipped hook file, three hooks' behaviour and the adopters' migration note."
+why_not_escalated = "Leaving them would ship LLR-021's one-probe statement untrue and leave the class open at two hooks of the same directory; coordinator-cycle §3 ends a class at its owning boundary."
+review = ""
+
+[decision.D-002]
+decided = "Sitting 001's first return (SR-032's Windows install clause binds the shipped dev-setup templates to behaviour only this repository's own Windows developer setup has) is answered by scoping: the clause, LLR-326 and TC-350 name this repository's own developer setup, and the shipped templates keep the adopter-configured runtime install. The spec's Done-when names only this repository's dev-setup -Install as the site."
+alternative = "Make the shipped dev-setup templates (.ps1 and .sh) detect an available provisioner (uv, winget) and search again after the install, so the clause holds for the delivered artifact class."
+reversal_cost = "Low: the alternative is a later row that widens the shipped templates; nothing here would be undone."
+why_not_escalated = "The alternative changes shipped behaviour every adopter inherits (an unprompted provisioner choice in place of their configured install) beyond the spec's named site; CLAUDE.md 'Edit conservatively'."
+review = ""
+
+[decision.D-003]
+decided = "Sitting 001's third return (a [run] line's bare python3 is not the menu interpreter on Windows) is answered by narrowing, not by code: LLR-047 and SR-046's new clause state that bare python is exact on every platform and python3 only on POSIX, where a Windows interpreter's directory has no python3. The RESYNC entry and run_menu's docstring say a line meant for Windows declares python. TC-047 drives python3 on POSIX, the platforms the narrowed claim covers."
+alternative = "Make python3 exact on Windows with a per-launch directory holding a python3 shim."
+reversal_cost = "Medium: a later row could add a Windows mechanism and widen the claim back; the narrowed text would then be amended."
+why_not_escalated = "Every Windows mechanism found is worse than the gap: a batch-file shim (python3.cmd) re-parses %* after cmd has consumed the caret escapes, reopening the WI-227 data-argument contract for a quoted value holding a metacharacter (probed 2026-10-10 on this box: through a python3.cmd shim the trailing value a\"&echo INJECTED ran the echo; the direct call kept it one argument), and a copied or linked python3.exe outside the interpreter's directory loses its home (the DLL and a venv's pyvenv.cfg beside it). Correction (sitting 002, 2026-10-10): Windows' official Python install manager does provide a python3 on PATH, so a Windows-run line declaring python3 reaches that manager's default rather than the menu interpreter; the narrowing stands and SR-046 states the platform split outright."
+
+[decision.D-004]
+decided = "Gate round 004's three findings were triaged: finding 1 (Windows' current-directory lookup ahead of PATH) was contested and sent to dispute sitting 005, which ruled its one finding FIX by narrowing SR-046, LLR-047, the RESYNC sentence and run_menu's docstring, not by setting NoDefaultCurrentDirectoryInExePath; the coordinator wrote the two documentation clauses itself, GPT Terra the rows. TC-047 states the boundary in its text and gains no test pinning the exception: a test asserting that a working-directory python.exe wins would pin a platform quirk the kit does not want, and the dispute made the test optional. Finding 2 (the workstation opt-in) is the landing's own step. Finding 3 (SR-020's stale module sentence) went to Terra. The reviewer's coverage line '- [run] lines:' was backticked so the round could be filed (score_reviews.FINDING_RE read it as a finding; filed as WI-888)."
+alternative = "Mechanize the boundary in TC-047 with a Windows test that unsets the variable and shows the working-directory interpreter running."
+reversal_cost = "Low: a test can be added later without changing any row's meaning."
+why_not_escalated = "The dispute ruling is final on that finding and leaves the test to the lane; the rest is triage within the review rule."
+review = ""

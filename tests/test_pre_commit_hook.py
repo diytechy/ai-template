@@ -10,16 +10,21 @@ import json
 import os
 import shutil
 import subprocess
+import sys
+
+import pytest
 
 from conftest import (
     KIT,
     LLRS,
     make_minimal_project,
+    older_only_path,
     pin_autocrlf,
     process_key,
     run_py,
     set_process_key,
     skip_without_env_gates,
+    sub_floor_interpreter,
     write_wi_registry,
 )
 from kitlib import stage as kitstage
@@ -341,30 +346,75 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
     assert "cannot find" in bad.stderr.lower(), bad.stderr
 
 
-def test_hook_skips_clearly_when_no_working_python3(scaffold):
+def test_hook_refuses_clearly_when_no_working_python3(scaffold):
     # SN-013 / SR-019: python3 may resolve on PATH yet exit nonzero (the Windows
     # Store app-execution alias). The hook probes by *running* a candidate, so it
-    # must skip-or-report clearly, never crash. Shadow python3/python with fakes
-    # that exit nonzero and confirm the hook exits 0 with a clear message.
+    # never crashes; and with no interpreter passing the 3.11 floor it refuses
+    # the commit, naming dev-setup's install (WI-880 Trust ruling: the checks
+    # are never skipped). Shadow python3/python with fakes that exit nonzero.
     skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
     pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
-    fakebin = scaffold / "fakebin"
-    fakebin.mkdir()
-    for name in ("python3", "python"):
-        cand = fakebin / name
-        cand.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
-        cand.chmod(0o755)
-    # Prepend the fakes so they shadow any real interpreter; keep the rest of PATH
-    # so sh/git/coreutils stay available.
-    env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ.get("PATH", ""))
+    env = _shadow_python(scaffold)
     proc = subprocess.run(
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True, env=env
     )
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "dev-setup" in proc.stderr and "3.11" in proc.stderr, proc.stderr
+
+
+def _older_first(scaffold):
+    """The hook's environment with a real Python below the 3.11 floor as the
+    only interpreter on PATH (skips where none is installed)."""
+    older = sub_floor_interpreter()
+    if older is None:
+        pytest.skip("no Python below 3.11 is installed on this host")
+    skip_without_env_gates("posix-shell", "git")
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
+    env = dict(os.environ, PATH=older_only_path(older))
+    env.pop("VIRTUAL_ENV", None)
+    return env
+
+
+def test_hook_never_runs_the_checks_on_an_older_python(scaffold):
+    """WI-880, real interpreters only: with a real Python below the 3.11
+    floor the only one on PATH, the hook neither runs the checks on it (no
+    traceback from a kit script) nor skips them: it refuses the commit and
+    names dev-setup's install as the fix."""
+    env = _older_first(scaffold)
+    proc = subprocess.run(
+        [shutil.which("sh"), HOOK],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "Traceback" not in proc.stderr, proc.stderr
+    assert "dev-setup" in proc.stderr and "3.11" in proc.stderr, proc.stderr
+
+
+def test_hook_runs_on_the_project_venv_over_an_older_python(scaffold):
+    """The other direction: a real 3.11+ virtual environment in the project
+    beside the same older-only PATH is the interpreter the checks run on."""
+    env = _older_first(scaffold)
+    subprocess.run(
+        [sys.executable, "-m", "venv", "--without-pip", str(scaffold / ".venv")],
+        check=True,
+        capture_output=True,
+    )
+    proc = subprocess.run(
+        [shutil.which("sh"), HOOK],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        env=env,
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "not found" in proc.stderr.lower(), proc.stderr
 
 
 def _shadow_python(scaffold):
@@ -398,9 +448,9 @@ def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     assert "refusing to skip" in proc.stderr.lower(), proc.stderr
 
 
-def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
-    # M-42, commit-msg twin: the message scan of a privacy-checked repo must
-    # fail closed rather than skip when no working python is found.
+def test_commit_msg_hook_fails_closed_when_no_python(scaffold):
+    # M-42, commit-msg twin: the message scan must fail closed rather than
+    # skip when no working python is found (WI-880: whatever the privacy dial).
     skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
@@ -418,15 +468,49 @@ def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
             env=env,
         )
 
-    # Privacy off (scaffold default): the skip stays free.
-    ok = run_msg_hook()
-    assert ok.returncode == 0, ok.stdout + ok.stderr
-    assert "not found" in ok.stderr.lower(), ok.stderr
+    # Privacy off (scaffold default): no free skip since WI-880 either; the
+    # hook refuses and names dev-setup's install.
+    refused = run_msg_hook()
+    assert refused.returncode != 0, refused.stdout + refused.stderr
+    assert "dev-setup" in refused.stderr and "3.11" in refused.stderr, refused.stderr
     # Privacy declared true: fail closed with the named reason.
     set_process_key(scaffold, "policies", "privacy_check", True)
     blocked = run_msg_hook()
     assert blocked.returncode != 0, "privacy-true + no python must FAIL CLOSED"
     assert "refusing to skip" in blocked.stderr.lower(), blocked.stderr
+
+
+def test_commit_msg_hook_never_runs_on_an_older_python(scaffold):
+    """WI-880, real interpreters only: with a real Python below the 3.11 floor
+    the only one on PATH, the commit-msg hook neither runs its scans on it nor
+    skips them: it refuses the commit and names dev-setup's install."""
+    env = _older_first(scaffold)
+    (scaffold / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
+    proc = subprocess.run(
+        [shutil.which("sh"), ".githooks/commit-msg", "MSG.txt"],
+        cwd=str(scaffold),
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "Traceback" not in proc.stderr, proc.stderr
+    assert "dev-setup" in proc.stderr and "3.11" in proc.stderr, proc.stderr
+
+
+HOOKS = ("pre-commit", "commit-msg", "pre-push")
+
+
+def test_every_hook_reads_the_one_interpreter_probe(scaffold):
+    """WI-880: the three shipped git hooks resolve kit Python through ONE
+    probe, the shared file shipped beside them, and none carries a candidate
+    loop of its own (the copy that drifts). The scaffold ships the file."""
+    for name in HOOKS:
+        text = (KIT / "hooks" / name).read_text(encoding="utf-8")
+        assert "for cand in" not in text, name
+        assert 'kit-python.sh"' in text and "kit_python " + name in text, name
+    shipped = scaffold / ".githooks" / "kit-python.sh"
+    assert shipped.read_bytes() == (KIT / "hooks" / "kit-python.sh").read_bytes()
 
 
 def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
@@ -580,7 +664,9 @@ def test_commit_msg_hook_holds_a_loop_commit_to_its_provenance_trailer(scaffold)
     git("config", "user.email", "someone@example.com")
     hooks = scaffold / "msg-hooks"
     hooks.mkdir()
-    shutil.copy2(scaffold / ".githooks" / "commit-msg", hooks / "commit-msg")
+    # The hook and the one interpreter probe it sources travel together (WI-880).
+    for name in ("commit-msg", "kit-python.sh"):
+        shutil.copy2(scaffold / ".githooks" / name, hooks / name)
     git("config", "core.hooksPath", "msg-hooks")
     marked = dict(os.environ, KIT_LOOP_SESSION=session)
     person = {k: v for k, v in os.environ.items() if k != "KIT_LOOP_SESSION"}

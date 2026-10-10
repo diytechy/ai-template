@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 301
+design_rows = 302
 seam_rows = 243
 requirements_placed = 123
 requirements_unplaced = 6
@@ -485,6 +485,7 @@ hat_refs = [
 ]
 modules = [
   "project-trajectory/ci/check.yml",
+  "project-trajectory/hooks/kit-python.sh",
   "project-trajectory/hooks/pre-commit",
   "project-trajectory/hooks/pre-push",
   "project-trajectory/scripts/acceptance_record.py",
@@ -1109,6 +1110,7 @@ llr_refs = [
   "LLR-320",
   "LLR-321",
   "LLR-322",
+  "LLR-326",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -1160,6 +1162,8 @@ modules = [
   "project-trajectory/scripts/traj_display.py",
   "project-trajectory/scripts/traj_parse.py",
   "project-trajectory/scripts/traj_status.py",
+  "scripts/dev-setup.ps1",
+  "scripts/dev-setup.sh",
 ]
 seam_internal_refs = [
   "IF-039",

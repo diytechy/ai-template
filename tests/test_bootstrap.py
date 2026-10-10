@@ -184,6 +184,7 @@ def test_scaffold_contains_expected_files(scaffold):
         ".githooks/pre-commit",
         ".githooks/commit-msg",
         ".githooks/pre-push",
+        ".githooks/kit-python.sh",
         ".github/workflows/check.yml",
         "src/.gitkeep",
         "tests/.gitkeep",

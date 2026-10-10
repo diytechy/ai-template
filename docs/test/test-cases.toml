@@ -221,11 +221,11 @@ phase = 1
 [test.TC-021]
 verifies = ["SR-019", "SR-020", "LLR-021"]
 level = "Integration"
-method = """Run the hook suites' python-probe cases; a missing/aliased python3 reports clearly without crashing."""
+method = "Drive pre-commit, commit-msg and pre-push with non-runnable python3/python stand-ins and, where installed, a real pre-3.11 interpreter as the only interpreter on PATH; drive pre-commit again with a real 3.11+ project virtual environment beside that PATH. Inspect the three shipped hooks and a fresh scaffold for their one shared probe, then compare that probe's post-virtual-environment candidate list with developer setup's runtime search."
 tier = "Full"
-expected = "Satisfies SR-019 and SR-020 AcceptanceCriteria via the LLR-021 interpreter-probe detail contract"
+expected = "Each hook refuses without a traceback, names the developer-setup install step and the 3.11 floor, and runs neither its checks on an older interpreter nor a skipped floor; pre-commit runs green on the project virtual environment. The hooks source the one shipped probe rather than a candidate loop of their own, and its post-virtual-environment candidates equal developer setup's runtime search."
 automated = "Yes"
-evidence = "tests/test_pre_commit_hook.py;tests/test_pre_push_hook.py"
+evidence = "tests/test_pre_commit_hook.py::test_hook_refuses_clearly_when_no_working_python3; tests/test_pre_commit_hook.py::test_hook_never_runs_the_checks_on_an_older_python; tests/test_pre_commit_hook.py::test_hook_runs_on_the_project_venv_over_an_older_python; tests/test_pre_commit_hook.py::test_commit_msg_hook_fails_closed_when_no_python; tests/test_pre_commit_hook.py::test_commit_msg_hook_never_runs_on_an_older_python; tests/test_pre_commit_hook.py::test_every_hook_reads_the_one_interpreter_probe; tests/test_pre_push_hook.py::test_pre_push_never_runs_on_an_older_python; tests/test_run_devsetup.py::test_each_run_launcher_searches_what_its_dev_setup_searches[kit-python.sh:hooks]"
 status = "Approved"
 phase = 1
 
@@ -502,11 +502,11 @@ phase = 1
 [test.TC-047]
 verifies = ["SR-046", "LLR-047"]
 level = "Integration"
-method = """Run the run-menu suite: --list prints name<TAB>desc for each declared capability in declaration order (an empty desc renders as a trailing tab); run_menu.py <name> runs the command and returns its exit code (a nonzero passes through); the no-arg menu launches a capability from piped stdin and returns without hanging on closed stdin; an unknown name exits 2 and an absent or empty [run] section prints guidance and exits 1; a name.desc row renders in the menu; and the scaffold ships scripts/run_menu.py plus run.* launchers that delegate to it with no RUN_CMD."""
+method = "Run the run-menu suite: --list prints name<TAB>desc for each declared capability in declaration order (an empty desc renders as a trailing tab); run_menu.py <name> runs the command and returns its exit code (a nonzero passes through); the no-arg menu launches a capability from piped stdin and returns without hanging on closed stdin; an unknown name exits 2 and an absent or empty [run] section prints guidance and exits 1; a name.desc row renders in the menu; and the scaffold ships scripts/run_menu.py plus run.* launchers that delegate to it with no RUN_CMD. With a real pre-3.11 interpreter first on PATH, run a declared bare-python capability on every platform; on POSIX also put another python beside the menu interpreter and drive the written bare-python and bare-python3 shims."
 tier = "Full"
-expected = "Satisfies SR-046 AcceptanceCriteria"
+expected = "Satisfies SR-046 AcceptanceCriteria. A declared bare-python capability runs on the menu interpreter rather than the first PATH interpreter when its Windows working directory contains no python.exe; a python.exe in that directory precedes PATH on Windows and is outside this case. On POSIX, bare-python and bare-python3 remain exact even where the menu interpreter's directory has another python, and each shim preserves the named virtual environment."
 automated = "Yes"
-evidence = "tests/test_run_menu.py"
+evidence = "tests/test_run_menu.py::test_list_is_stable_name_tab_desc; tests/test_run_menu.py::test_direct_launch_runs_command_and_passes_args; tests/test_run_menu.py::test_direct_launch_passes_exit_code; tests/test_run_menu.py::test_unknown_name_exits_2; tests/test_run_menu.py::test_menu_launches_from_piped_stdin; tests/test_run_menu.py::test_menu_does_not_hang_on_closed_stdin; tests/test_run_menu.py::test_absent_run_section_prints_guidance_and_exits_1; tests/test_run_menu.py::test_a_capabilitys_python_is_the_menus_own_interpreter; tests/test_run_menu.py::test_a_capabilitys_python_is_exact_where_its_directory_holds_another; tests/test_run_menu.py::test_the_posix_shim_runs_exactly_the_interpreter_it_names[python]; tests/test_run_menu.py::test_the_posix_shim_runs_exactly_the_interpreter_it_names[python3]; tests/test_bootstrap.py::test_run_launchers_delegate_to_run_menu"
 status = "Approved"
 phase = 1
 
@@ -3510,10 +3510,21 @@ phase = 6
 [test.TC-345]
 verifies = ["SR-032", "LLR-322"]
 level = "Integration"
-method = "Decline and accept the interactive coordinator-hook offer with existing settings, and run the hook command against examples with and without guard hooks. Run an installed hook with a real Python below the floor first on PATH, where one is installed, and check the scaffold's git ignore list."
+method = "Decline and accept the interactive coordinator-hook offer with existing settings, and run the hook command against examples with and without guard hooks. Run an installed hook with a real Python below the floor first on PATH, where one is installed, and check the scaffold's git ignore list. Inspect this repository's committed settings and its inert example, then run this repository's developer-setup readiness report on both supported families."
 tier = "Smoke"
-expected = "Consent enables the coordinator hooks in the machine-local settings, bound to the opt-in's interpreter, replacing only the guard's own commands defined by the shipped example's command shape, so a user command sharing a group with a guard command, including one that names the guard file, keeps its place and its group's matcher, and an older bare-python guard command is replaced by the bound one; a re-run changes nothing; an installed hook still denies with an older Python first on PATH; the machine-local file is git-ignored; denial changes no configuration or credential; and an example without guard hooks changes nothing."
+expected = "Consent enables the coordinator hooks in the machine-local settings, bound to the opt-in's interpreter, replacing only the guard's own commands defined by the shipped example's command shape, so a user command sharing a group with a guard command, including one that names the guard file, keeps its place and its group's matcher, and an older bare-python guard command is replaced by the bound one; a re-run changes nothing; an installed hook still denies with an older Python first on PATH; the machine-local file is git-ignored; denial changes no configuration or credential; and an example without guard hooks changes nothing. This repository's committed settings contain no guard group, its inert example carries every served guard group at the repository guard path, and its readiness report names the opt-in as on or off with the offer location."
 automated = "Yes"
-evidence = "tests/test_run_devsetup.py::test_a_denial_changes_no_configuration_or_credential; tests/test_run_devsetup.py::test_the_hooks_command_reports_and_switches_on; tests/test_blackout_window.py::test_the_hook_opt_in_merges_and_keeps_existing_hooks; tests/test_blackout_window.py::test_the_hook_opt_in_with_no_guard_hooks_changes_nothing; tests/test_run_devsetup.py::test_an_installed_hook_denies_with_an_older_python_first; tests/test_run_devsetup.py::test_a_scaffold_keeps_the_machine_local_settings_out_of_git"
+evidence = "tests/test_run_devsetup.py::test_a_denial_changes_no_configuration_or_credential; tests/test_run_devsetup.py::test_the_hooks_command_reports_and_switches_on; tests/test_blackout_window.py::test_the_hook_opt_in_merges_and_keeps_existing_hooks; tests/test_blackout_window.py::test_the_hook_opt_in_with_no_guard_hooks_changes_nothing; tests/test_run_devsetup.py::test_an_installed_hook_denies_with_an_older_python_first; tests/test_run_devsetup.py::test_a_scaffold_keeps_the_machine_local_settings_out_of_git; tests/test_coordinator_guard.py::test_the_guard_hooks_are_this_repos_opt_in_not_its_tracked_settings; tests/test_run_devsetup.py::test_this_repos_readiness_report_names_the_hooks_opt_in"
+status = "Approved"
+phase = 6
+
+[test.TC-350]
+verifies = ["SR-032", "LLR-326"]
+level = "Integration"
+method = "At a Windows console with a real pre-3.11 interpreter as the only runtime, run this repository's developer-setup install operation once declining its runtime offer and once accepting a present provisioner."
+tier = "Full"
+expected = "A decline runs no provisioner; acceptance runs the declared provisioner; and both paths search again then exit 1 with the installation step while no 3.11+ interpreter is found."
+automated = "Yes"
+evidence = "tests/test_run_devsetup.py::test_at_a_windows_console_install_offers_the_missing_runtime"
 status = "Approved"
 phase = 6

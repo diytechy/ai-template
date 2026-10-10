@@ -1114,8 +1114,17 @@ def test_exec_claude_passes_the_prompt_as_one_argument(tmp_path):
 # --- registration and the dry run -------------------------------------------------------
 
 
-def test_the_hooks_are_registered_in_the_tracked_project_settings():
-    settings = json.loads((ROOT / ".claude" / "settings.json").read_text("utf-8"))
+def test_the_guard_hooks_are_this_repos_opt_in_not_its_tracked_settings():
+    """Owner ruling 2026-10-10 (WI-880): the committed project settings carry
+    no guard hook, so a machine runs the guard only after the machine-local
+    opt-in; the inert example that opt-in reads registers the guard on every
+    event it serves, at this repository's own script path."""
+    from kitlib import guard_hooks
+
+    tracked = json.loads((ROOT / ".claude" / "settings.json").read_text("utf-8"))
+    assert guard_hooks.guard_groups(tracked) == {}
+    example = ROOT / ".claude" / "settings.json.example"
+    found = guard_hooks.guard_groups(json.loads(example.read_text("utf-8")))
     wanted = {
         "PreToolUse",
         "PostToolUse",
@@ -1126,9 +1135,9 @@ def test_the_hooks_are_registered_in_the_tracked_project_settings():
         "SessionEnd",
         "PreCompact",
     }
-    assert set(settings["hooks"]) == wanted
+    assert set(found) == wanted
     for name in wanted:
-        (group,) = settings["hooks"][name]
+        (group,) = found[name]
         (entry,) = group["hooks"]
         assert entry["type"] == "command"
         assert entry["command"].endswith(

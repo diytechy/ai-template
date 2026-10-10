@@ -3,11 +3,36 @@ id = "WI-880"
 title = "Every kit entry point runs kit Python on a floor-resolved interpreter, not a bare python"
 workstream = "process"
 sr_refs = ["SR-046", "SR-032"]
-specref = "project-trajectory/scripts/run.template.cmd"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+Landed 2026-10-10. Every kit entry point runs kit Python on one
+floor-resolved interpreter:
+
+- The three shipped git hooks (pre-commit, and, widened by D-001, commit-msg
+  and pre-push) source one probe, `hooks/kit-python.sh`: the venv candidates,
+  then dev-setup's runtime search, taking the first that reports 3.11+; with
+  none they refuse, naming dev-setup's install, and never run or skip a
+  check on an older interpreter.
+- `run_menu.launch` prepends a directory whose bare `python` is the menu's
+  interpreter (Windows: its own directory; POSIX: per-launch exec shims that
+  make `python3` exact too). On Windows a `python.exe` in a line's working
+  directory still runs first, a stated exception (dispute 005, D-003, D-004).
+- This repository's committed `.claude/settings.json` carries no guard hook
+  group (owner ruling D-004 in `coordinator-2026-10-10.toml`); the inert
+  example carries them, and this workstation opted in at the landing.
+- This repository's `scripts/dev-setup.ps1 -Install` offers the runtime
+  through uv or winget, consent-first, and searches again (D-002 scopes the
+  clause to this repository's own setup).
+- Spine: SR-019, SR-020, SR-032, SR-046, LLR-021, LLR-047, LLR-322, TC-021,
+  TC-047 and TC-345 amended; LLR-326 and TC-350 new. Sittings 001, 002, 003
+  and 006 (acts 93 to 96); dispute 005; fresh full-lane gates 004
+  (CHANGES-REQUESTED) and 007 (APPROVE).
 
 ## Context
 

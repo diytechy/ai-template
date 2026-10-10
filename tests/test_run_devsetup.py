@@ -22,7 +22,16 @@ from pathlib import Path
 
 import pytest
 
-from conftest import KIT, ROOT, SCRIPTS, load_script, run_py, skip_without_env_gates
+from conftest import (
+    KIT,
+    ROOT,
+    SCRIPTS,
+    load_script,
+    older_only_path,
+    run_py,
+    skip_without_env_gates,
+    sub_floor_interpreter,
+)
 
 WINDOWS = os.name == "nt"
 STACK = "[run]\nhello = echo menu-ran\nhello.desc = say it\n"
@@ -267,6 +276,10 @@ SEARCH_PAIRS = [
     (ROOT / "scripts" / "coordinator-relaunch.sh", ROOT / "scripts" / "dev-setup.sh"),
     (SCRIPTS / "run.template.cmd", SCRIPTS / "dev-setup.template.ps1"),
     (SCRIPTS / "run.template.sh", SCRIPTS / "dev-setup.template.sh"),
+    # The shipped git hooks run kit Python on one floor-resolved interpreter
+    # too, through the one probe they all source (WI-880); git runs them
+    # through sh on every platform.
+    (KIT / "hooks" / "kit-python.sh", SCRIPTS / "dev-setup.template.sh"),
 ]
 
 
@@ -313,19 +326,6 @@ def test_each_run_launcher_searches_what_its_dev_setup_searches(launcher, devset
     assert ours == theirs, (launcher.name, ours, devsetup.name, theirs)
 
 
-def _sub_floor_interpreter():
-    """A real installed Python below the 3.11 floor, or None (most CI hosts
-    have none)."""
-    names = ["python3.8", "python3.9", "python3.10"]
-    names += [r"C:\Python3{}\python.exe".format(n) for n in (8, 9, 10)]
-    floor = "import sys; sys.exit(0 if sys.version_info < (3, 11) else 1)"
-    for name in names:
-        found = shutil.which(name) or (name if os.path.isfile(name) else None)
-        if found and subprocess.run([found, "-c", floor]).returncode == 0:
-            return found
-    return None
-
-
 def test_an_installed_hook_denies_with_an_older_python_first(scaffold_root, tmp_path):
     """Real interpreters only (round 016 F2): the hook the real opt-in
     installs, run as Claude Code runs it (its command line through a shell)
@@ -334,7 +334,7 @@ def test_an_installed_hook_denies_with_an_older_python_first(scaffold_root, tmp_
     inside the window it arms (judged by the guard's own window reader, the
     window being weekday-only), it denies a new subagent; outside it, it
     prints no decision. Skipped where no such Python exists."""
-    older = _sub_floor_interpreter()
+    older = sub_floor_interpreter()
     if older is None:
         pytest.skip("no Python below 3.11 is installed on this host")
     shell = _sh()
@@ -1065,6 +1065,70 @@ def test_at_a_windows_console_the_missing_runtime_is_offered_consent_first(
         assert "[missing] runtime" in out and "then run again" in out, out
         assert marker.exists() == installed, out
         assert (skipped in out) != installed, out
+
+
+@pytest.mark.skipif(not WINDOWS, reason="a real Windows console")
+def test_at_a_windows_console_install_offers_the_missing_runtime(tmp_path):
+    """WI-880: this repository's `dev-setup.ps1 -Install` offers a missing
+    runtime where `dev-setup.sh --install` does, consent-first through the
+    provisioner it declares, then searches again. Real interpreters only: a
+    real Python below the floor is the only one on PATH. A decline runs
+    nothing, an accept runs the provisioner, and with still no 3.11+ found
+    either way ends with the step (exit 1)."""
+    older = sub_floor_interpreter()
+    if older is None:
+        pytest.skip("no Python below 3.11 is installed on this host")
+    root = tmp_path / "repo"
+    (root / "scripts").mkdir(parents=True)
+    shutil.copyfile(
+        ROOT / "scripts" / "dev-setup.ps1", root / "scripts" / "dev-setup.ps1"
+    )
+    marker = tmp_path / "runtime-installed"
+    fakebin = tmp_path / "provisioner"
+    fakebin.mkdir()
+    (fakebin / "uv.cmd").write_text(
+        '@echo off\r\necho %* > "{}"\r\n'.format(marker), encoding="utf-8"
+    )
+    path = older_only_path(older, fakebin)
+    script = root / "scripts" / "dev-setup.ps1"
+    for answer, installed in (("n", False), ("y", True)):
+        code, out = _at_a_console(
+            script, ["-Install"], answer + "\r" + "n\r" * 20, path, tmp_path
+        )
+        assert code == 1, out
+        assert "[missing] runtime" in out, out
+        assert marker.exists() == installed, out
+        assert ("Skipped - install Python 3.11+" in out) != installed, out
+        assert "Python 3.11+ not found" in out, out
+
+
+@pytest.mark.parametrize("family", ["sh", "ps1"])
+def test_this_repos_readiness_report_names_the_hooks_opt_in(family):
+    """WI-880 (owner ruling 2026-10-10): this repository commits no guard
+    hooks, so a machine runs them only after the machine-local opt-in, and
+    dev-setup's readiness report says which state this machine is in."""
+    if family == "sh":
+        argv = [_sh(), "scripts/dev-setup.sh", "--check"]
+    elif WINDOWS:
+        argv = [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass"]
+        argv += ["-File", "scripts/dev-setup.ps1", "-Check"]
+    else:
+        pytest.skip("the PowerShell dev-setup on Windows")
+    proc = subprocess.run(
+        argv,
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        input="",
+        env=_devsetup_env(),
+        timeout=180,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    lines = [
+        x for x in proc.stdout.splitlines() if "coordinator Claude Code hooks" in x
+    ]
+    assert len(lines) == 1, proc.stdout
+    assert "[ok]" in lines[0] or "opt-in" in lines[0], lines[0]
 
 
 def _with_fake_claude(tmp_path):

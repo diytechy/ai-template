@@ -1,0 +1,11 @@
+range = "1b49235761c394b1cba5efbf2614a91f6f13266e..fd55051ad277229fd2de5afc0b80111c612961c0"
+
+[[finding]]
+id = "G1"
+held_by = "coordinator"
+finding = '''
+- [MAJOR] project-trajectory/scripts/run_menu.py:223 -> [K1] Prepending the interpreter directory does not make bare python exact on Windows when cmd's current-directory lookup is enabled: the shipped launch() on 3.11 ran a declared cd /d C:\Python38 && python probe on real Python 3.8 and returned 0; SR-046/LLR-047 promise exact handoff on every supported platform, and TC-047 misses this lookup route -> Make the Windows launch boundary exclude current-directory executable lookup (for example, set NoDefaultCurrentDirectoryInExePath in its child environment) so the existing PATH construction owns resolution, and extend TC-047 with this real-interpreter scenario while preserving the parent acceptance; this removes the alternate lookup path rather than adding a compensating guard, as the antidote skill's "smallest change that makes this fix unnecessary" asks -> @Software-Engineer
+'''
+position = '''
+Contested by the coordinator. The scenario needs the declared [run] line itself to change directory into another interpreter's directory (or the repository root, where the launchers start every line, to hold a python.exe). The line's author then chose that interpreter as surely as by naming its path, and the lane's RESYNC entry already tells a line that relies on a different python to name that interpreter's path. The proposed remedy, NoDefaultCurrentDirectoryInExePath in the child environment, governs every bare command in every declared line, not only python: an adopter's line that runs a bare tool from its current directory (for example cd tools && mytool) stops resolving on Windows. That is a shipped behaviour change every adopter inherits, for a case only a line's own cd can create. The coordinator's position is DISMISS (out-of-scope or not-worth-cost). If the adjudicator instead holds that SR-046's 'on every supported platform' must be read to cover a line's own current directory, the coordinator would rather narrow LLR-047 and SR-046 to state that the current directory a line chooses is its own (no code change) than set the variable for every command.
+'''

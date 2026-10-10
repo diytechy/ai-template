@@ -234,7 +234,8 @@ lanes = 2
 # `<name>.desc = <one line>`; each command is a full SHELL line, so a multi-step
 # capability lives in a project script named here once. An absent/empty [run]
 # section degrades to guidance + exit 1 (a pure library deletes the run.*
-# launchers). Uncomment and edit:
+# launchers). A line's `python` is the interpreter the launcher resolved (the
+# menu puts a directory whose `python` is it first on PATH). Uncomment and edit:
 # [run]
 # serve = docker compose up -d && python -m webbrowser http://localhost:8080
 # serve.desc = start the app and open its page
