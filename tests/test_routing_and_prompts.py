@@ -240,3 +240,65 @@ def test_a_template_edit_moves_its_digest_and_so_the_catalogue():
     # out CRLF on Windows and LF on POSIX is the same prompt, and a telemetry
     # field that said otherwise would report a change on every clone.
     assert prompts.digest("Do the thing.\r\n") == before
+
+
+# --- WI-882: the composed question home is a catalogued source ------------------
+# The first-approval and amendment briefs compose `prompts/spine-questions.md`
+# into their `{questions}` slot at render time, so that home is a source of a
+# launched brief's static instruction text exactly as a template is. These
+# drive the real generator over a real copy of the shipped prompts directory;
+# only the two module paths are pointed at the copy, never the live tree.
+
+HOME_NAME = "spine-questions.md"
+
+
+@pytest.fixture
+def prompts_copy(tmp_path, monkeypatch):
+    import shutil
+
+    dest = tmp_path / "prompts"
+    shutil.copytree(catalog.prompts.PROMPTS, dest)
+    monkeypatch.setattr(catalog.prompts, "PROMPTS", dest)
+    monkeypatch.setattr(catalog, "CATALOG", dest / "CATALOG.md")
+    assert catalog.main([]) == 0
+    assert catalog.main(["--check"]) == 0
+    return dest
+
+
+def test_an_edit_to_the_composed_question_home_stales_the_catalogue(prompts_copy):
+    home = prompts_copy / HOME_NAME
+    home.write_text(
+        home.read_text(encoding="utf-8") + "\n- a question the catalogue missed\n",
+        encoding="utf-8",
+    )
+    assert catalog.main(["--check"]) == 1, "a composed-home edit must stale it"
+    assert catalog.main([]) == 0
+    assert catalog.main(["--check"]) == 0
+
+
+def test_a_line_ending_difference_in_the_home_is_not_an_edit(prompts_copy):
+    home = prompts_copy / HOME_NAME
+    text = home.read_text(encoding="utf-8").replace("\r\n", "\n")
+    home.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    assert catalog.main(["--check"]) == 0
+
+
+@pytest.mark.parametrize("defect", ["absent", "undecodable", "empty"])
+def test_an_unreadable_home_fails_generation_and_the_check(
+    prompts_copy, defect, capsys
+):
+    # Never listed as skipped, never digested as empty: the catalogue cannot
+    # name the source of a brief it cannot read.
+    home = prompts_copy / HOME_NAME
+    if defect == "absent":
+        home.unlink()
+    elif defect == "undecodable":
+        home.write_bytes(b"## heading\n\xff\xfe not utf-8\n")
+    else:
+        home.write_text("<!-- notes only -->\n", encoding="utf-8")
+    written = (prompts_copy / "CATALOG.md").read_bytes()
+    capsys.readouterr()
+    assert catalog.main(["--check"]) == 1
+    assert catalog.main([]) == 1
+    assert HOME_NAME in capsys.readouterr().err
+    assert (prompts_copy / "CATALOG.md").read_bytes() == written

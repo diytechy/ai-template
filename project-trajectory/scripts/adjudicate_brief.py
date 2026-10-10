@@ -559,8 +559,10 @@ def _spine_excerpt(root, ids):
 #: The ONE home of the questions an adjudicator puts to a spine row, per tier,
 #: shipped beside the prompt templates and resolved script-relatively as they
 #: are, so a brief composes them in a repo with no skills installed. The
-#: spine-authoring skill points here and holds no copy.
-QUESTIONS_HOME = prompts.PROMPTS / "spine-questions.md"
+#: spine-authoring skill points here and holds no copy. Its filename is
+#: declared once in `prompts.KIT_FRAGMENTS`, which the prompt catalogue
+#: digests, so an edit to the home stales that catalogue (WI-882).
+QUESTIONS_HOME = prompts.PROMPTS / prompts.SPINE_QUESTIONS
 # The line under each section heading naming the tiers it serves; `*` is every
 # tier.
 _TIERS_LINE = re.compile(r"<!-- tiers: ([A-Z* ]+) -->")

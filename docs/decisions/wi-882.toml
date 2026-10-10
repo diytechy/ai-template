@@ -1,0 +1,11 @@
+# docs/decisions/wi-882.toml — WI-882's lane: delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The catalogue lists the composed home by digest (the Done-when's first option), not an exclusion record: prompts.KIT_FRAGMENTS declares each composed fragment and its slot once, fragment_rows() digests its normalized text, and gen_prompt_catalog --check goes red on an edit. Reason: a launched brief's static instruction text then has one catalogued source per part, so an operator joining a session's prompt-sha back to its text finds every file that fed it, and an edit to the tier questions cannot pass the commit unnoticed. An exclusion line would document the gap rather than close it."
+alternative = "Record in the catalogue's rows (IF-098) that composed fragments are excluded, as IF-100 does for the dual-plan hats, adding no gate authority."
+reversal_cost = "Low: drop the Composed fragments table and KIT_FRAGMENTS' catalogue use; adjudicate_brief keeps reading the filename from one place either way."
+why_not_escalated = "The spec offers both options and asks the lane to choose and record its reason; the Trust section already rules the listed option's failure behaviour."
+review = ""

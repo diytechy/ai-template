@@ -131,7 +131,9 @@ rather than editing the shipped one. The one exception is the worker assignment,
 which has no override — a repo that must change it forks the template and
 records the fork, so the divergence is visible at the next re-sync.
 
-`python scripts/prompts.py list` prints the catalogue (key, file, digest, slots)
-and `python scripts/prompts.py check` exits nonzero if any shipped template
-cannot be loaded — the same rung `agent_loop`'s preflight runs before iteration
-one.
+`python scripts/prompts.py list` prints the catalogue's template rows (key,
+file, digest, slots) and `python scripts/prompts.py check` exits nonzero if any
+shipped template cannot be loaded — the same rung `agent_loop`'s preflight runs
+before iteration one. `CATALOG.md` also lists, by digest, each composed fragment
+a brief reads at render time (`spine-questions.md`), so an edit to one stales
+the catalogue like a template edit does.

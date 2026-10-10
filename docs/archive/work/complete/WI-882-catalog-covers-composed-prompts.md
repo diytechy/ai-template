@@ -3,12 +3,16 @@ id = "WI-882"
 title = "The prompt catalogue covers composed prompt text, or records that it excludes it"
 workstream = "process"
 sr_refs = ["SR-146"]
-specref = "project-trajectory/prompts/CATALOG.md"
+specref = ""
 needs = ["WI-854"]
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Landed 2026-10-10, option (a) (decision D-001). The prompt catalogue lists each composed fragment by digest in a Composed fragments table, freshness-gated like the templates: `prompts.KIT_FRAGMENTS` is the one home of the fragment filename and its slot (`adjudicate_brief` reads it), `fragment_rows()` digests the normalized text, and an absent, unreadable or empty fragment raises before any write, so `gen_prompt_catalog --check` goes red and the previous catalogue stands. Red-first tests: an edit to `spine-questions.md` stales the catalogue, a CRLF copy stays fresh, an unreadable home fails generation and the check, and the wired check step reds end to end. Spine: LLR-162, LLR-164 and TC-192 amended (sitting 001, act re-attested); IF-097, IF-098 and IF-113 updated. Fresh full-lane gate 002 (one MINOR, the IF cell cap, answered) and narrow round 003 APPROVE.
 
 ## Context
 

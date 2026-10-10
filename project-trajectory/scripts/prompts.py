@@ -55,13 +55,18 @@ Contract IF-097: the prompt LOADER. `KIT_PROMPTS` is the declared key-to-file ma
     instead of a first-session crash. `digest(text)` fingerprints over
     normalized line endings, so a CRLF checkout is not a change. Resolution is
     script-relative (`KIT/prompts/`), so an unrelated caller root still finds the
-    shipped template.
+    shipped template. `KIT_FRAGMENTS` maps each composed-fragment filename to
+    its filled slot, and `SPINE_QUESTIONS` names the question home.
 Contract IF-098: the generated prompt catalogue's row source. `catalog_rows()`
     returns `(key, file, slots, digest)` for every shipped prompt whose file is
-    present, sorted by key, and the catalogue reads nothing else — so the
-    document cannot disagree with the loader about what ships or with what
+    present, sorted by key, and the catalogue reads nothing but it and
+    `fragment_rows()` — so the document cannot disagree with the loader about what ships or with what
     slots. A key whose file is absent is omitted from the rows and reported by
-    `preflight`, not rendered as a blank entry.
+    `preflight`, not rendered as a blank entry. `fragment_rows()` returns
+    `(file, slot, digest)` for every composed fragment in `KIT_FRAGMENTS` (a
+    file a brief composes into a slot at render time), digested over the same
+    normalized text; a fragment that is absent, unreadable or empty after its
+    notes raises `PromptError` rather than being omitted or digested as empty.
 Contract IF-099: the session engine's side of the loader. `WORKER`, `REVIEWER` and
     `CRITIQUE` are resolved by CALL, never at import, so a missing shipped
     template is a named `PromptError` the coordinator's preflight reports rather
@@ -78,7 +83,8 @@ Contract IF-113: the adjudicator's side of the loader. The four `ADJUDICATE-*`
     keys resolve through `load`, an operator `--prompt-map` override under the
     same key winning, and fill through `fill`; a `PromptError` from either is
     the caller's cue to REFUSE to dispatch rather than to send a brief with a
-    hole where the evidence belongs.
+    hole where the evidence belongs. It reads `PROMPTS / SPINE_QUESTIONS` to
+    locate the tier-question home.
 """
 
 from __future__ import annotations
@@ -145,6 +151,14 @@ KIT_PROMPTS = {
     ADJUDICATE_DISPUTE: "adjudicate-dispute.template.md",
 }
 
+# COMPOSED FRAGMENTS (WI-882): shipped files a brief reads at render time and
+# composes into one of its slots, so each is a source of a launched brief's
+# static instruction text exactly as a template is. A fragment has no key and
+# no `--prompt-map` override; the catalogue lists it by digest, freshness-gated
+# like the templates. Filename -> the slot it fills.
+SPINE_QUESTIONS = "spine-questions.md"
+KIT_FRAGMENTS = {SPINE_QUESTIONS: "questions"}
+
 # A single-brace `{name}` slot. Lower-case + underscore only, so a `{}` that is
 # part of prose (or a doubled `{{`) is not mistaken for a slot.
 SLOT_RE = re.compile(r"(?<!\{)\{([a-z][a-z0-9_]*)\}(?!\})")
@@ -191,16 +205,26 @@ def load(key, override=None):
     Raises `PromptError` naming the path on any read failure — a template the
     kit ships is not optional, and the alternative (an empty brief) is the
     silent-wrong-content failure this whole layer exists to prevent."""
-    path = template_path(key, override)
+    return _read_body(key, template_path(key, override))
+
+
+def _read_body(label, path):
+    """`path`'s text with its notes block stripped and trailing newline dropped,
+    or `PromptError` naming the path when it cannot be read or is empty after
+    the notes: the one read a template and a composed fragment both take.
+
+    Implements: SR-146, LLR-162"""
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         raise PromptError(
-            "prompt [{}]: cannot read {}: {}".format(key, path, exc)
+            "prompt [{}]: cannot read {}: {}".format(label, path, exc)
         ) from exc
     body = strip_dispatcher_block(text)
     if not body.strip():
-        raise PromptError("prompt [{}]: {} is empty after the notes".format(key, path))
+        raise PromptError(
+            "prompt [{}]: {} is empty after the notes".format(label, path)
+        )
     return body.rstrip("\n")
 
 
@@ -295,6 +319,20 @@ def catalog_rows():
             (key, KIT_PROMPTS[key], ";".join(sorted(slots(text))), digest(text))
         )
     return rows
+
+
+def fragment_rows():
+    """`[(file, slot, digest)]` over every composed fragment, sorted by file —
+    the catalogue's second table. NO SKIP: unlike a template, whose absence
+    `preflight` reports, a fragment that is absent, unreadable or empty after
+    its notes raises `PromptError`, so the catalogue never lists it as skipped
+    or digests it as empty.
+
+    Implements: SR-146, LLR-162"""
+    return [
+        (name, slot, digest(_read_body(name, PROMPTS / name)))
+        for name, slot in sorted(KIT_FRAGMENTS.items())
+    ]
 
 
 def _cmd_list(_args):

@@ -7966,6 +7966,30 @@ bracketed with any other word is no longer counted. A committed round whose
 `findings=N` was written to match a bracketed non-severity line now reads one
 finding short; do not rewrite the record.
 
+### The prompt catalogue lists the composed question home by digest [since 1916363a]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `prompts/CATALOG.md` gains a second table, "Composed
+fragments": each shipped file a brief composes into a slot at render time,
+with the digest of its normalized text and the slot it fills. Today that is
+`prompts/spine-questions.md`, which fills `{questions}` in the first-approval
+and amendment briefs. Its filename is now declared once, in
+`scripts/prompts.py`'s `KIT_FRAGMENTS`, and `scripts/adjudicate_brief.py`
+reads it from there. An edit to the home now stales the catalogue, so
+`gen_prompt_catalog.py --check` (the `prompt-catalog` step) goes red until it
+is regenerated. An absent, unreadable or empty home fails generation and the
+check, naming the file; it is never listed as skipped. The template table and
+`catalog_rows()` are unchanged.
+
+**Kit-owned files — overwrite:** `scripts/prompts.py`,
+`scripts/gen_prompt_catalog.py`, `scripts/adjudicate_brief.py`,
+`prompts/CATALOG.md`, `prompts/README.md`.
+
+**What to do.** If you edited `prompts/spine-questions.md`, run
+`python scripts/gen_prompt_catalog.py` after the overwrite and commit the
+catalogue. No registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

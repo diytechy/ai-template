@@ -178,6 +178,30 @@ def test_prompt_catalog_step_reds_when_a_template_changes(tmp_path):
     assert after.returncode == 0, after.stdout + after.stderr
 
 
+def test_prompt_catalog_step_reds_when_the_composed_question_home_changes(tmp_path):
+    # WI-882: `prompts/spine-questions.md` is composed into the first-approval
+    # and amendment briefs at render time, so it is a source of a launched
+    # brief's text like any template. An edit to it that leaves the catalogue
+    # alone must red the wired step, not pass it.
+    kit = _kit_copy(tmp_path, prompts=True)
+    before = _run_step(kit, "prompt-catalog", tmp_path)
+    assert before.returncode == 0, before.stdout + before.stderr
+
+    home = kit / "prompts" / "spine-questions.md"
+    home.write_text(
+        home.read_text(encoding="utf-8") + "\n- a question the catalogue missed\n",
+        encoding="utf-8",
+    )
+    red = _run_step(kit, "prompt-catalog", tmp_path)
+    assert red.returncode != 0, "a composed-home edit must stale the catalogue"
+    assert "STALE" in (red.stdout + red.stderr)
+
+    fix = run_py([kit / "scripts" / "gen_prompt_catalog.py"], cwd=tmp_path)
+    assert fix.returncode == 0, fix.stdout + fix.stderr
+    after = _run_step(kit, "prompt-catalog", tmp_path)
+    assert after.returncode == 0, after.stdout + after.stderr
+
+
 def test_skills_index_step_reds_when_a_skill_is_added(tmp_path):
     # Same shape for the index: a SKILL.md lands and INDEX.csv is not
     # regenerated, so the applicability index an agent reads omits a skill that
