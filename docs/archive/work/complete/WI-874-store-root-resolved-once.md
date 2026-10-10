@@ -2,11 +2,25 @@
 id = "WI-874"
 title = "The runtime store's primary checkout is resolved once per operation, not by a git spawn on every store access"
 workstream = "process"
-specref = "project-trajectory/scripts/session_keep.py"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+`session_keep.primary_out_dir` memoizes the git common directory per absolute
+root for the process's life, so one store operation (a keep, a bookkeeping
+release, the coordinator lease's take or release) spawns the lookup at most
+once. Its signature (IF-272) and every store caller are unchanged, and a
+lane's worktree still resolves to the primary checkout's `out/`. A red-first
+test counts the spawns and pins the lane's store and lease to the primary's.
+No spine row was made untrue. Quiet re-measure, three runs, beside WI-869's:
+`docs/log.d/2026-10-10-wi-874-store-lookup-measurement.md` (summed per-test
+time 29.3 s against 123.2 s across the four modules). Gate: Codex 6.1 Sol's
+fresh full-lane review `docs/reviews/wi-874/001-REVIEW-A-6b8cf4e.md`, APPROVE
+with 0 findings.
 
 ## Context
 

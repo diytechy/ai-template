@@ -7862,6 +7862,24 @@ If you wired an operator override of `REVIEW-A` or `REVIEW-B` through
 lacks any of the reviewer template's slots will refuse a narrow round once one
 is scheduled. No registry or setting changes.
 
+### The runtime store's primary checkout is looked up once per root [since 691ab6be]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/session_keep.py`'s `primary_out_dir`, which places
+the retained-session store and the coordinator lease under the primary
+checkout's `out/`, ran `git rev-parse --git-common-dir` on every store access,
+about five times for one keep. It now runs it once per root and remembers the
+answer for the life of the process. The store's location is unchanged, and a
+lane's worktree still shares the primary checkout's store.
+
+**Kit-owned files — overwrite:** `scripts/session_keep.py`.
+
+**What to do.** Nothing needs migrating, and no setting or registry changes.
+One process now answers each root as it first found it: if your own tooling
+turns a plain directory into a repository (or moves a worktree) and then reads
+the store from the same process, start a new process after the change.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

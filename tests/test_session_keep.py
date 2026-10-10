@@ -574,6 +574,80 @@ def test_the_store_lock_excludes_a_second_holder(tmp_path):
         pass  # free again once released
 
 
+def _lane(tmp_path):
+    """A primary checkout at `tmp_path/primary` with one linked lane worktree
+    at `tmp_path/lane`, both returned."""
+    import subprocess
+
+    primary, lane = tmp_path / "primary", tmp_path / "lane"
+    run = dict(check=True, capture_output=True)
+    subprocess.run(["git", "init", "-q", str(primary)], **run)
+    ident = ["-c", "user.name=t", "-c", "user.email=t@t"]
+    git = ["git", "-C", str(primary)] + ident
+    subprocess.run(git + ["commit", "-q", "--allow-empty", "-m", "base"], **run)
+    subprocess.run(git + ["worktree", "add", "-q", "--detach", str(lane)], **run)
+    return primary, lane
+
+
+def test_one_store_operation_resolves_the_primary_checkout_at_most_once(
+    tmp_path, monkeypatch
+):
+    """WI-874: the primary checkout's `out/` is looked up once per root, not
+    by a git spawn on every store access. Each store operation below (a keep
+    taking its lease, an adjudication's bookkeeping releasing it, and the
+    coordinator lease's take and release) spawns the lookup at most once,
+    and the lane worktree still shares the primary checkout's stores."""
+    import subprocess
+
+    guard = load_script("coordinator_guard")
+    # The one session_keep a running process holds: the service's and the
+    # guard's import, not this module's own load_script copy.
+    store = svc.session_keep
+    assert guard.session_keep is store
+    primary, lane = _lane(tmp_path)
+    spawns = []
+    real = subprocess.run
+
+    def counting(argv, *args, **kwargs):
+        if "--git-common-dir" in argv:
+            spawns.append(argv)
+        return real(argv, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", counting)
+
+    def lookups(operation):
+        spawns.clear()
+        result = operation()
+        assert len(spawns) <= 1, operation
+        return result
+
+    prepared = _prepared(lane)
+    kept = lookups(
+        lambda: store.keep_for(
+            lane,
+            ON,
+            role="ADJUDICATE",
+            brief="disposition",
+            family="ANTHROPIC",
+            route_id="ANTHROPIC-ROUTE",
+            wi="WI-1",
+            lease_wait=0,
+            prepared=prepared,
+        )
+    )
+    assert kept is not None
+    lookups(
+        lambda: svc.act(_call(lane, "ANTHROPIC", kept, _launch(_claude_stream(10))))
+    )
+    assert lookups(lambda: guard.take(lane, "S-1")) is None
+    assert lookups(lambda: guard.release(lane, "test")) is None
+    monkeypatch.setattr(subprocess, "run", real)
+    assert store.store_dir(lane) == store.store_dir(primary)
+    assert guard.lease_dir(lane) == guard.lease_dir(primary)
+    assert store.store_dir(primary) == primary / "out" / "adjudicator"
+    assert store.store_load(primary, "ANTHROPIC", "ANTHROPIC-ROUTE")["session_id"]
+
+
 def test_an_adjudication_waits_out_a_keep_warm_lease_then_runs_unretained(
     tmp_path, capsys
 ):

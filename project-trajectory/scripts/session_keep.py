@@ -193,16 +193,28 @@ def reset_pct(cfg, family):
 # --- the store: one record per route, under a lock ---------------------------
 
 
+_COMMON_DIR = {}  # absolute root -> its git common directory (None: no repo)
+
+
 def primary_out_dir(root):
     """The untracked `out/` directory of the PRIMARY checkout (the git common
     directory's parent, else `root` itself), so a lane's worktree, which comes
     and goes, shares one runtime store with the others and with the
     dispatcher. The one home of that lookup: the adjudicator store and the
-    coordinator lease both live under it."""
-    code, out = agent_common.git(
-        root, "rev-parse", "--path-format=absolute", "--git-common-dir"
-    )
-    common = Path(out.strip()) if code == 0 and out.strip() else None
+    coordinator lease both live under it. Resolved by one git spawn per root
+    and remembered for the life of the process (WI-874): a checkout's common
+    directory does not move under a running operation, and every store
+    access would otherwise pay the spawn again.
+
+    Implements: SR-227, LLR-270
+    """
+    key = os.path.abspath(root)
+    if key not in _COMMON_DIR:
+        code, out = agent_common.git(
+            root, "rev-parse", "--path-format=absolute", "--git-common-dir"
+        )
+        _COMMON_DIR[key] = Path(out.strip()) if code == 0 and out.strip() else None
+    common = _COMMON_DIR[key]
     base = common.parent if common is not None and common.name == ".git" else root
     return Path(base) / "out"
 
