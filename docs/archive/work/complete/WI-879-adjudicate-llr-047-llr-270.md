@@ -3,12 +3,16 @@ id = "WI-879"
 title = "adjudicate: LLR-047, LLR-270, LLR-300, LLR-301, SR-046, SR-227, SR-229, SR-230, TC-267, TC-316, TC-317, TC-318, TC-321 - approved/routed cell(s) amended on merged trunk ed2533c..fb1990a (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-046", "SR-227", "SR-229", "SR-230"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-047", "LLR-270", "LLR-300", "LLR-301", "SR-046", "SR-227", "SR-229", "SR-230", "TC-267", "TC-316", "TC-317", "TC-318", "TC-321"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-834's in-lane adjudicator re-attested or approved every listed row in sittings 008, 011, 015, 023, 027 and 038 (acts to seq 90, docs/archive/last_approved/acts.toml), and at the landing fb1990aa the system, low-level and test registries are byte-equal to their approved snapshots under docs/archive/last_approved/.
 
 ## Context
 
