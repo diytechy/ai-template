@@ -26,41 +26,42 @@ might.
 ## Trust
 
 `MERGE_HEAD` gains authority at the hook: it selects the commits whose
-judgment admits or refuses a hand merge (`project-trajectory/PROCESS.md` §3,
-"When a guard is owed": a file on disk another process writes).
+judgment admits or refuses a hand merge
+(`project-trajectory/PROCESS.md` §3, "When a guard is owed":
+a file on disk another process writes). The squash path this row reuses
+reads a second git carrier, `SQUASH_MSG`, whose contract is unchanged and is
+restated here so the walk's two inputs sit side by side.
 
-- **Producer:** git itself, through `git merge` (and `git pull`, which runs
-  it), writing `.git/MERGE_HEAD` through its own lock file before the merge
-  commit is made. The kit never writes it. A merge that fails or stops on
-  conflicts leaves it in place for the resolving commit; `git merge --abort`
-  removes it.
-- **Consumers** (found by grep for `MERGE_HEAD` under
-  `project-trajectory/scripts/`), every one reading it through
-  `git rev-parse --verify MERGE_HEAD`, never as a file:
-  - `acceptance_record.py` `staged_text_then_act_lines` (via `check.py`'s
-    text-then-act step): the reader that gains the range authority.
-  - `acceptance_record.py` `pending_status_moves`, `trace.py` (the merge's own
-    status moves and conflict reads) and `trunk_step.py` (fragment
-    composition): unchanged by this row.
-  - `check.py` reads `SQUASH_MSG` for the squash path this row reuses;
-    `integrate.py` owns the merge slot's per-lane-commit walk. Neither
-    carrier's contract changes.
-- **Ruling:**
-  - *Absent* (`rev-parse` resolves nothing): not a merge; the index is
-    judged against HEAD as today.
-  - *Present and resolving to a commit:* the authority binds to HEAD and
-    that commit, and to every commit `HEAD..MERGE_HEAD` judged against its
-    own parents. An octopus merge's further heads are not read, as
-    `pending_status_moves` already states; the merge commit itself is still
-    judged against both parents.
-  - *Present but not resolving* (unreadable or malformed): the hook refuses
-    the commit, naming `MERGE_HEAD`, rather than judging it as a non-merge.
-    Git would refuse that commit itself after the hook, so the refusal costs
-    nothing and keeps the walk from reading a merge as plain.
-  - A walk that cannot list `HEAD..MERGE_HEAD` (a failed git call) refuses
-    the commit; it never admits the merge unjudged.
-  - Under the review threat model (PROCESS.md §6), a hand-forged
-    `MERGE_HEAD` naming another commit is a tampered host and owes no guard.
+**Producers.** Git alone writes both files; the kit writes neither, and no
+model output reaches them.
+- `MERGE_HEAD`: `git merge` (and `git pull`, which runs it) writes
+  `.git/MERGE_HEAD` through git's lock file, committed by rename, so a reader
+  sees the whole file or none. A merge stopped on conflicts leaves it for the
+  resolving commit; `git merge --abort` and the merge commit remove it. Git
+  runs as a local subprocess, so there is no network timeout; a failed or
+  killed `git merge` leaves either no file or a whole one. A file that is
+  present but does not resolve (hand-edited, or naming a pruned object) is
+  the one malformed shape.
+- `SQUASH_MSG`: `git merge --squash` writes `.git/SQUASH_MSG` with one
+  `commit <40-hex>` header per folded commit, newest first; the squash
+  commit removes it, and `git stash` (its reset) deletes it.
+
+**Consumers and rulings** (found by grep for `MERGE_HEAD` and `SQUASH_MSG`
+under `project-trajectory/scripts/`):
+
+| Consumer | Role | Absent | Unreadable or malformed | Binds to |
+|---|---|---|---|---|
+| `acceptance_record.py` `staged_text_then_act_lines`, via `check.py` `_text_then_act_refusal` (CHANGED by this row) | selects the range the hook judges | not a merge: the index is judged against HEAD | present but not resolving, or `HEAD..MERGE_HEAD` not listable (a failed git call): the hook REFUSES the commit, naming `MERGE_HEAD`, and never judges it as a non-merge. Telling present from absent reads `git rev-parse --git-path MERGE_HEAD` for the file, not `--verify` alone. Git would refuse such a merge commit itself after the hook. | HEAD, the resolved `MERGE_HEAD`, and each commit `HEAD..MERGE_HEAD` against its own parents; the merge commit is judged against both parents. An octopus merge's further heads are not read (as `pending_status_moves` states). |
+| `acceptance_record.py` `pending_status_moves` (unchanged) | the merge's own status moves for the held-rung check | the index against HEAD | `--verify` fails, so the merge reads as the index against HEAD: every move counts as the commit's own, the held direction (it refuses more, never less) | HEAD and the resolved `MERGE_HEAD` |
+| `trace.py` `committed_watermark` (unchanged) | the id watermark baseline: max over HEAD, `MERGE_HEAD` and HEAD's parents, so resolving `--ours` cannot drop the other side's marks | HEAD and its parents only | read as absent; the other side's marks are then compared when the merge commit lands, through `HEAD^2` | the parsed watermark at each rev; None (rule SKIPPED, reported) when git supplies no baseline |
+| `trace.py` `committed_corrections` (unchanged) | the watermark's ruled-correction records, longest list per space across the same revs | as above | as above | as above |
+| `trunk_step.py` fragment adding-commit lookup (unchanged) | orders log fragments during a merge composition | a fragment with no adding commit on HEAD's side is refused | read as absent, so the same refusal | the fragment's adding commit on HEAD or `MERGE_HEAD` |
+| `check.py` `_text_then_act_refusal` reading `SQUASH_MSG` (unchanged) | names the commits a squash folds in, for the squash exemption | no folded commits: the index is judged like any commit | an unreadable file raises and fails the step (the commit is refused); lines not matching `commit <40-hex>` are skipped, and with none left the index is judged and a refusal carries `SQUASH_REBASE_HINT` | the listed tip, admitted only when it contains HEAD and the index's act registries and record are the tip's own (`_squash_lines`) |
+
+`integrate.py` owns the merge slot's per-lane-commit walk and reads neither
+file. Under the review threat model (PROCESS.md §6), a hand-forged
+`MERGE_HEAD` or `SQUASH_MSG` naming other commits is a tampered host and
+owes no guard.
 
 ## Done-when
 
