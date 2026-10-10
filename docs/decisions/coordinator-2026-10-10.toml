@@ -3,7 +3,7 @@
 # Lane decisions are in each lane's own record.
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-003", "D-006", "D-001"]
+high_risk = ["D-003", "D-006", "D-010", "D-001"]
 
 [decision.D-001]
 decided = "WI-854's uncommitted spine edits from the stopped leg 03 were kept, not redone: GPT Terra's intent turn (session 01a1224f) had completed, it dispositioned every item of the builder's spine change list, the seven tests and three symbols it cites exist in the lane, and the cells were UTF-8 with LF endings. The coordinator committed them, rebased the lane onto trunk (merging LLR-270's detail cell, which trunk's WI-834 landing had also changed, per cell), and sat them: amendment sitting 001 ruled all four rows MEANING and re-attested them."
@@ -52,4 +52,25 @@ decided = "The handoff's reading of test_run_session_idle_deadline_kills_a_silen
 alternative = "Raise the test's bound, or mark the test as environment-dependent."
 reversal_cost = "Low: a test bound and a row."
 why_not_escalated = "Surfacing a defect as a row is the standing rule; raising a bound to green a step is forbidden."
+review = ""
+
+[decision.D-008]
+decided = "Owner ruling in the attended session (2026-10-10), on WI-847's step 2 (the builder stopped there: retention needs a store identity beyond family and route, and the gate binding must close three hazards): split it out, and make the final reviewer configurable, either a fresh session or a persisted independent final reviewer. WI-847 is narrowed to step 1 in its lane; WI-884 carries step 2, the builder's design, the three hazards and the Trust ruling, extended to the persisted reviewer. WI-858's dependency moves from WI-847 to WI-884."
+alternative = "Build step 2 in WI-847's lane on the builder's design; or retire retention."
+reversal_cost = "Low: WI-884 is queued and unbuilt."
+why_not_escalated = "Escalated: the owner chose and extended an option among three put to them."
+review = ""
+
+[decision.D-009]
+decided = "The smoke tier's membership ceiling (docs/stack.ini max-tests) is re-stamped from 2395 to 2495, once on trunk, rather than per lane: trunk sat exactly at the ceiling (2395 at 691ab6be), and WI-847 and WI-874 each add in-process unit tests, which the ceiling's comment says should accrue. The 60 s seconds budget is not moved; it read 43.8 s at 691ab6be once the box was quiet."
+alternative = "Move other tests out of the smoke tier to keep 2395, or re-stamp in each lane."
+reversal_cost = "Low: one figure and its comment."
+why_not_escalated = "The ceiling is a growth sensor re-stamped with a reason by design; the binding budget, the seconds, is untouched."
+review = ""
+
+[decision.D-010]
+decided = "WI-884 needs only WI-847, not WI-800: it is built against the session store current when it is claimed, and if WI-800 (the store's replacement) lands first, the scope keying moves into WI-800's store, as WI-858's rule already does. This keeps WI-858's contention fix from waiting on WI-800."
+alternative = "Make WI-884 need WI-800, so the store is redesigned once, at the cost of holding WI-884 and WI-858 behind a strong row 14th in the queue."
+reversal_cost = "Low: a needs line on a queued row."
+why_not_escalated = "Both orders are recoverable; the owner can overrule by adding the needs line."
 review = ""
