@@ -25,6 +25,45 @@ The merge checkpoint at a8458c2 found observation test case TC-055 due for re-ju
 
 The check that filed this hashed the declared inputs and ran no model. Re-judge the case by its Method and record the result with `python scripts/record_observation.py --tc TC-055 --outcome pass|fail --by "<who or what observed>"`.
 
+## Trust
+
+This row adds no authority; it uses two carriers whose contracts the kit
+already states (`project-trajectory/PROCESS.md` §3, "When a guard is owed"),
+and adopts them unchanged.
+
+- **The observation record** `docs/test/observations/TC-055.<instant>.toml`:
+  - **Producer:** the judging session, through `scripts/record_observation.py`
+    and `kitlib/observation.py` `write_atomic` (a dot-named temporary file,
+    fsynced, then one replace; a replace that still fails after its retries
+    raises and removes the temporary file). A failed, timed-out or errored
+    judgment call records nothing.
+  - **Consumers:** `kitlib/observation.py` (`read_files`, `read_records`,
+    `latest`), `rejudge.py` (what is due), and the policy readers
+    `trace.py`, `assumption_rules.py` and `check_assumption_gate.py`;
+    `baseline_snapshot.py` reads record names only.
+  - **Ruling (LLR-234, unchanged):** an absent or unreadable file is no
+    record; a file that does not parse, or is misnamed, is left out, and a
+    readable malformed record fails trace integrity. With no new record the
+    case stays due under its trigger, so a failed write never reads as a
+    judgment made. The authority binds to the case id, the observation
+    instant, its expiry, the judged-input digest and the commit carrying the
+    record. An older valid record standing is not evidence this row's
+    judgment happened: only a record newer than the trigger at a8458c2 is.
+- **The rejudge verdict**
+  `docs/reviews/<this row's lane>/NNN-ADJUDICATE-<sha7>.md`:
+  - **Producer:** the rejudge sitting through `coordinator_adjudicate.py`
+    (`--brief rejudge`), which reserves the path exclusively and commits the
+    verdict.
+  - **Consumers:** `adjudicate_brief.py` (validation and the
+    `OUTCOME: RECORDED|NEEDS-JUDGEMENT result=` binding), `coordinator_adjudicate.py`
+    (the exit code) and `agent_loop.py` (completion), through
+    `kitlib/sitting.py`'s line parser.
+  - **Ruling (unchanged):** a failed call, timeout or structured error is
+    rejected before its verdict is read; an absent, unreadable, partial or
+    malformed verdict, or one without the machine line, is not completion
+    evidence, and the row stays open. `RECORDED` binds to this row, TC-055,
+    and the record its commit adds; `NEEDS-JUDGEMENT` goes to the owner.
+
 Advisory registry joins (WI-388; never gating):
 
 ### Decomposition code map (LLR/TC on the same SRs)
