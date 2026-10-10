@@ -109,3 +109,10 @@ alternative = "Rule a trunk identity as the coordinator and build on (OI-113 opt
 reversal_cost = "Low: WI-893 carries WI-828's spec forward; the parked diff re-applies once WI-892 has made room."
 why_not_escalated = "Escalated: OI-113 is the escalation, on the owner surface with its options and a recommendation."
 review = ""
+
+[decision.D-016]
+decided = "A consolidation pass over the frontier before the unattended run (owner request): the census cannot mint yet (WI-831, a judgement, is active, and two lanes are out), so the coordinator read the rows filed since WI-875's census (WI-878, WI-887, WI-892, WI-893, WI-894, WI-895) against their mechanical overlaps. Nothing is one work item wearing two ids: WI-858/WI-887 (both SR-227) split contention from retention and are already ordered, WI-892/WI-893 (both SR-140) are a deliberate split with WI-893 held by OI-113, and WI-833/WI-850/WI-851 already need WI-892. One packing change: WI-823 is queued third, ahead of WI-831, because WI-823's spec requires the TC-055 re-judge to run on the corrected rubric, and the rubric is a declared input of TC-055, so landing it after the re-judge would fire the trigger again and cost a second render-and-judge cycle. WI-831 stays claimed (its lane has no work and the kit has no unclaim path). The formal census is queued at the first idle station after WI-831 lands, before the next batch is claimed, so an independent adjudicator judges the full cluster."
+alternative = "Run WI-831 first as the handoff ordered, or release WI-831's claim by hand so the census can mint now."
+reversal_cost = "Low: a queue order; WI-831's lane is untouched."
+why_not_escalated = "WI-823's own spec states the order; a hand unclaim would invent procedure the kit does not have."
+review = ""
