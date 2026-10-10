@@ -166,6 +166,50 @@ def test_the_loop_brief_renders_the_new_slot_empty(tmp_path):
     assert text.endswith("Do not edit the code you are reviewing.")
 
 
+def _loop_narrow(root, templates=None):
+    return agent_brief.narrow_reviewer_prompt(
+        templates or {},
+        "REVIEW-A",
+        "docs/reviews/wi-900/v.md",
+        root=root,
+        worker={"assigned": ["WI-900"], "rows": {}, "base": BASE, "train": "wi-900"},
+        base=BASE,
+        sha=SHA,
+        findings="docs/reviews/wi-900/001-REVIEW-A-1111111.md",
+    )
+
+
+def test_the_loop_narrow_round_renders_its_delta_through_the_one_render(tmp_path):
+    # WI-847: a loop round that answers an earlier round reads only the round's
+    # delta, rendered from the shipped reviewer template through `prompts.fill`
+    # with the same narrow range sentence the attended render states.
+    root = _lane(tmp_path)
+    text = _loop_narrow(root)
+    assert "git diff {}...{} --".format(BASE, SHA) in text
+    assert "...HEAD" not in text
+    rel = "docs/reviews/wi-900/001-REVIEW-A-1111111.md"
+    (root / rel).parent.mkdir(parents=True)
+    (root / rel).write_text("VERDICT: CHANGES-REQUESTED findings=1\n", "utf-8")
+    attended = rb.render_review(root, _round("narrow", findings=rel))[0]
+    sentence = agent_brief.narrow_scope_line(BASE, SHA, rel)
+    assert sentence in text and sentence in attended
+    assert "NARROW round" in text and "FULL-LANE" not in text
+    # The loop's reviewer commits its own verdict: no attended recording facts.
+    assert "- The launcher records the verdict." not in text
+    assert "Write your verdict to docs/reviews/wi-900/v.md" in text
+    assert "  - WI-900" in text
+    assert rb.prompts.slots(text) == set()
+
+
+def test_a_loop_narrow_round_refuses_an_override_that_cannot_carry_its_range(
+    tmp_path,
+):
+    # An override without the range slots would send a narrow round the wrong
+    # reading scope; the strict fill refuses it instead.
+    with pytest.raises(rb.prompts.PromptError, match="unfilled|unknown"):
+        _loop_narrow(_lane(tmp_path), {"REVIEW-A": "Review. Write to {verdict}."})
+
+
 # --- the scope critique ----------------------------------------------------------
 
 

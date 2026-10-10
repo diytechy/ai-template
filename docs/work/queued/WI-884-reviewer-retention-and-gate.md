@@ -94,6 +94,9 @@ for the persisted final reviewer:
 - The loop's REVIEW role can resume its session within one lane's
   iteration, through the keep operation, the store and the lease, keyed so
   no lane or phase resumes another's transcript. The dial ships off.
+- The loop schedules its narrow iteration rounds through
+  `agent_brief.narrow_reviewer_prompt`, which WI-847 landed unwired
+  (decisions coordinator-2026-10-10 D-011).
 - The final reviewer is configurable, fresh or persisted independent, with
   fresh as the default. Either way it reviews the full lane, claim base to
   tip, and never resumes an iteration reviewer's session.

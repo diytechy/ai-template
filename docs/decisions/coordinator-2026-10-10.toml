@@ -74,3 +74,10 @@ alternative = "Make WI-884 need WI-800, so the store is redesigned once, at the 
 reversal_cost = "Low: a needs line on a queued row."
 why_not_escalated = "Both orders are recoverable; the owner can overrule by adding the needs line."
 review = ""
+
+[decision.D-011]
+decided = "WI-847 landed its step 1 unwired: `agent_brief.narrow_reviewer_prompt` exists, is tested and is blessed in LLR-045 and TC-082, but the loop schedules no narrow round until WI-884 builds iteration, so no live brief changes. Its other half lands live: the narrow range sentence has one home that the attended render now reads. WI-884's Done-when gains the wiring. GPT Terra raised the gap at the intent pass; the sitting judged the rows against the code as it stands."
+alternative = "Fold step 1 into WI-884 and close WI-847 without landing, so no function ships before its caller."
+reversal_cost = "Low: one unused public function and its tests, removable if WI-884 renders differently."
+why_not_escalated = "It follows from the owner's split ruling (D-008), which named step 1 as this row's; the owner can overrule toward the fold."
+review = ""

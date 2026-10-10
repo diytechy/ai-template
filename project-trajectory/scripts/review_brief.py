@@ -211,13 +211,7 @@ def _scope_lines(rnd):
             "- Range {}: a FULL-LANE review, the whole lane from its trunk base "
             "to its tip. It is the fresh review a landing is judged on.".format(span)
         ]
-    return [
-        "- Range {}: a NARROW round, the commits since the last reviewed one. "
-        "The findings this range answers are in `{}`: a claim under judgement, "
-        "never the premise. For each finding, confirm the fix at its own site, "
-        "then try one other site of the same failure class that the fix does "
-        "not name.".format(span, rnd.findings)
-    ]
+    return [agent_brief.narrow_scope_line(rnd.base, rnd.sha, rnd.findings)]
 
 
 def _ps(value):

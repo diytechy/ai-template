@@ -514,6 +514,53 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
     return text
 
 
+def narrow_scope_line(base, sha, findings):
+    """The NARROW round's range sentence, the one home of its wording: the
+    commits since the last reviewed one, answering a named round file's
+    findings, which are a claim under judgement. The attended render
+    (`review_brief`) and the loop's narrow brief both state it from here.
+
+    Implements: SR-154, LLR-045
+    """
+    return (
+        "- Range `{}..{}`: a NARROW round, the commits since the last reviewed "
+        "one. The findings this range answers are in `{}`: a claim under "
+        "judgement, never the premise. For each finding, confirm the fix at its "
+        "own site, then try one other site of the same failure class that the "
+        "fix does not name.".format(base, sha, findings)
+    )
+
+
+def narrow_reviewer_prompt(
+    prompt_templates, phase, verdict_path, *, root, worker, base, sha, findings
+):
+    """The loop's NARROW review brief (WI-847): the reviewer template (the
+    phase's override file, else the shipped one) filled STRICTLY through
+    `prompts.fill`, the render `review_brief.render_review` uses, with the
+    reading scope `{base}...{sha}` (the round's delta) and a `{round_facts}`
+    that states the narrow range (`narrow_scope_line`). The reviewer commits
+    its own verdict, as in every loop round, so no attended recording facts
+    are added. Raises `prompts.PromptError` when the template cannot carry
+    the range (a slot missing or unknown), so a narrow round never goes out
+    with the full-lane reading scope or a hole in it.
+
+    Implements: SR-154, LLR-045
+    """
+    base_text = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
+    values = {
+        "verdict": str(verdict_path),
+        "trunk": base,
+        "head": sha,
+        "process_doc": process_doc_path(root),
+        "scripts": scripts_dir(root),
+        "wis": reviewed_rows_block(worker),
+        "round_facts": "\n\nROUND FACTS (stated by the coordinator that "
+        "rendered this brief):\n" + narrow_scope_line(base, sha, findings),
+    }
+    text = prompts.fill(prompts.REVIEWER, base_text, values)
+    return text + done_when_flag_block(root, worker)
+
+
 def done_when_flag_block(root, worker):
     """The brief's DONE-WHEN CHANGED SINCE CLAIM block, or "" when the lane
     left every assigned row's Done-when as claimed (ticks and evidence aside).
@@ -957,6 +1004,8 @@ __all__ = (
     "phase_tier",
     "reviewer_prompt",
     "done_when_flag_block",
+    "narrow_scope_line",
+    "narrow_reviewer_prompt",
     "reviewed_rows_block",
     "process_doc_path",
     "scripts_dir",

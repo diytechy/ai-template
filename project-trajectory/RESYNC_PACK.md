@@ -7843,6 +7843,25 @@ refuses an override that lacks it. If you edited the skill's §1 to §3, move
 those edits into `prompts/spine-questions.md`, keeping each section's tiers
 line. No registry or setting changes.
 
+### The loop can render a narrow review round's brief [since 691ab6be]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/agent_brief.py` gains `narrow_reviewer_prompt`, the
+loop's brief for a review round that answers an earlier round's findings. It
+fills the reviewer template strictly through `prompts.fill` (the render
+`review_brief.py review --scope narrow` uses), with the round's delta as the
+reading scope and the narrow range sentence as its round facts. That sentence
+now has one home, `agent_brief.narrow_scope_line`, which `review_brief.py`
+states from too; its wording is unchanged. Nothing in the loop schedules a
+narrow round yet, so no brief a run sends changes.
+
+**What to do.** Re-sync `scripts/agent_brief.py` and `scripts/review_brief.py`.
+If you wired an operator override of `REVIEW-A` or `REVIEW-B` through
+`--prompt-map`, note that a narrow round fills it strictly: an override that
+lacks any of the reviewer template's slots will refuse a narrow round once one
+is scheduled. No registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
