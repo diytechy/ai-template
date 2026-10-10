@@ -122,6 +122,10 @@ MAPPING = [
         "prompts/adjudicate-dispute.template.md",
         "SR-146",
     ),
+    # The ONE home of the adjudicator's per-tier questions: the first-approval
+    # and amendment briefs compose it at render time (an absent copy refuses
+    # them), and the spine-authoring skill points at it.
+    ("prompts/spine-questions.md", "prompts/spine-questions.md", "SR-146"),
     (
         "prompts/dual-plan-planner.template.md",
         "prompts/dual-plan-planner.template.md",

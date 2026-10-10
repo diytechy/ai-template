@@ -7810,6 +7810,39 @@ there and switch them on through dev-setup's offer instead, once per machine;
 a bare `python` in a committed hook command runs whatever interpreter each
 machine puts first. No setting or registry changes otherwise.
 
+### The adjudication briefs compose the tier questions from one home [since ed2533cb]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The questions an adjudicator puts to a spine row, per tier,
+have one home the kit ships: the new `prompts/spine-questions.md`. Its §1 to
+§3 are the `spine-authoring` skill's former §1 to §3, moved whole, and its §0
+is the chain-reading method the first-approval brief used to carry (read
+upward, sideways and downward; the wording as a closed obligation). The skill
+now points at the file and holds no copy. `scripts/adjudicate_brief.py`
+composes the sections for the tiers of the rows each first-approval and
+amendment brief judges into a new `{questions}` slot at render time, and each
+combined section composing those briefs carries them too. The first-approval
+brief's own short method is gone; the amendment brief keeps its
+meaning-or-clarity method and uses the questions to judge whether a MEANING
+row's new text is one to bless. An absent or unreadable home, a section with
+no tiers line, or a judged tier no section serves refuses the brief: there is
+no fallback text. The home is also a governing input of a retained
+adjudicator session for those brief classes, so a retained session drains
+once after the upgrade.
+
+**What to do.** Re-sync `prompts/spine-questions.md` (new),
+`prompts/adjudicate-first-approval.template.md`,
+`prompts/adjudicate-amendment.template.md`, `prompts/README.md`,
+`prompts/CATALOG.md`, `scripts/adjudicate_brief.py`,
+`scripts/kitlib/bootstrap_manifest.py` and `skills/spine-authoring/SKILL.md`,
+then refresh the per-agent skill copies (`bootstrap.py --sync`). If you wired
+an operator override of `ADJUDICATE-FIRST-APPROVAL` or `ADJUDICATE-AMENDMENT`
+through `--prompt-map`, add the `{questions}` slot to it: the strict fill
+refuses an override that lacks it. If you edited the skill's §1 to §3, move
+those edits into `prompts/spine-questions.md`, keeping each section's tiers
+line. No registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

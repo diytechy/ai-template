@@ -1914,3 +1914,145 @@ def test_prior_names_what_earlier_consolidations_absorbed(tmp_path):
     assert values["prior"] == (
         "- WI-395 absorbed WI-390 (judged by WI-389), WI-391 (judged by WI-389)"
     )
+
+
+# --- the tier questions, composed from one home (WI-854) ----------------------
+#
+# The judging questions per spine tier have ONE home the kit ships beside the
+# prompt templates. The first-approval and amendment briefs (and each combined
+# section composing them) carry the sections for the tiers of the rows they
+# judge, read from that home at render time; the skill points at it and holds
+# no copy; an absent or unreadable home refuses the render.
+
+_SN_HEAD = "## 1. At SN intake"
+_SR_HEAD = "## 2. At SR derivation"
+_LLR_HEAD = "## 3. At LLR and TC"
+_EVERY_HEAD = "## 0. Every row"
+
+
+def _heads(text):
+    return [h for h in (_EVERY_HEAD, _SN_HEAD, _SR_HEAD, _LLR_HEAD) if h in text]
+
+
+def test_a_first_approval_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
+    # The row judged is an LLR, so the brief carries the every-row questions and
+    # the LLR/TC tier's, and neither the need tier's nor the requirement tier's.
+    repo = _first_approval_repo(tmp_path)
+    text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert _heads(text) == [_EVERY_HEAD, _LLR_HEAD]
+    assert "tiers:" not in text  # the home's section markers are not sent
+
+
+def test_an_amendment_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
+    repo = _amendment_repo(tmp_path)
+    text, why = ab.compose(repo, _am_row(), repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert _heads(text) == [_EVERY_HEAD, _SR_HEAD]
+    (tmp_path / "need").mkdir()
+    need = _need_amendment_repo(tmp_path / "need")
+    text, why = ab.compose(need, _am_row(Adjudicates="SN-001"), need / "v.md")
+    assert why is None, why
+    assert _heads(text) == [_EVERY_HEAD, _SN_HEAD]
+
+
+def test_each_combined_section_carries_its_own_rows_tier_questions(tmp_path):
+    repo = _first_approval_repo(tmp_path)
+    row = _fa_row(Brief="combined", Adjudicates="first-approval:LLR-001")
+    text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
+    assert why is None, why
+    section = text.split("=== SECTION `## first-approval` ===", 1)[1]
+    assert _heads(section) == [_EVERY_HEAD, _LLR_HEAD]
+
+
+def _home(path, body):
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def test_a_change_to_the_home_changes_the_brief(tmp_path, monkeypatch):
+    repo = _first_approval_repo(tmp_path)
+    home = _home(
+        tmp_path / "home.md",
+        "<!-- notes -->\n# Title\n\n## Q for LLR\n<!-- tiers: LLR -->\n"
+        "- the one LLR question\n\n## Q for SR\n<!-- tiers: SR -->\n"
+        "- the one SR question\n",
+    )
+    monkeypatch.setattr(ab, "QUESTIONS_HOME", home)
+    text, why = ab.compose(repo, _fa_row(), repo / "v.md")
+    assert why is None, why
+    assert "- the one LLR question" in text
+    assert "the one SR question" not in text
+    assert _LLR_HEAD not in text  # the shipped home was not read
+    _home(home, home.read_text(encoding="utf-8").replace("one LLR", "changed LLR"))
+    changed, why = ab.compose(repo, _fa_row(), repo / "v.md")
+    assert why is None, why
+    assert "- the changed LLR question" in changed and changed != text
+
+
+@pytest.mark.parametrize("make", ["absent", "directory", "undecodable"])
+def test_an_absent_or_unreadable_home_refuses_the_render(tmp_path, monkeypatch, make):
+    repo = _first_approval_repo(tmp_path)
+    home = tmp_path / "home.md"
+    if make == "directory":
+        home.mkdir()
+    elif make == "undecodable":
+        home.write_bytes(b"## Q\n<!-- tiers: LLR -->\n\xff\xfe\xfa\n")
+    monkeypatch.setattr(ab, "QUESTIONS_HOME", home)
+    for row in (
+        _fa_row(),
+        _fa_row(Brief="combined", Adjudicates="first-approval:LLR-001"),
+    ):
+        text, why = ab.compose(repo, row, repo / "v.md")
+        assert text is None
+        assert "tier questions" in why and str(home) in why, why
+
+
+@pytest.mark.parametrize(
+    "body, expect",
+    [
+        ("## Q\n- a question with no tiers line\n", "declares no tiers"),
+        ("## Q\n<!-- tiers: SR -->\n- only the SR tier\n", "no questions for"),
+        ("# Title only\n", "no questions for"),
+    ],
+)
+def test_a_home_that_cannot_answer_the_rows_tiers_refuses(
+    tmp_path, monkeypatch, body, expect
+):
+    repo = _first_approval_repo(tmp_path)
+    monkeypatch.setattr(ab, "QUESTIONS_HOME", _home(tmp_path / "home.md", body))
+    text, why = ab.compose(repo, _fa_row(), repo / "v.md")
+    assert text is None
+    assert expect in why, why
+
+
+def _question_lines(text):
+    """Each question's opening, as the home states it: a bullet's first 60
+    characters, long enough that a match is a copy and not a shared idiom."""
+    return [
+        line.strip()[:60]
+        for line in text.splitlines()
+        if line.startswith("- ") and len(line.strip()) >= 40
+    ]
+
+
+def test_no_second_copy_of_the_questions_exists(tmp_path):
+    # The skill and the templates read the home; none of them restates it. A
+    # question whose opening reappears in any of them is the second home this
+    # change removed.
+    home = ab.QUESTIONS_HOME.read_text(encoding="utf-8")
+    openings = _question_lines(home)
+    assert len(openings) > 20
+    kit = ab.QUESTIONS_HOME.parent.parent
+    readers = list((kit / "prompts").glob("*.template.md"))
+    readers += list((kit / "skills" / "spine-authoring").rglob("*.md"))
+    repo_root = kit.parent
+    for agent_dir in (".claude", ".agents", ".gemini"):
+        readers += list(
+            (repo_root / agent_dir / "skills" / "spine-authoring").rglob("*.md")
+        )
+    assert any("SKILL.md" == p.name for p in readers)
+    for path in readers:
+        body = path.read_text(encoding="utf-8")
+        copied = [o for o in openings if o in body]
+        assert copied == [], "{} restates {}".format(path, copied[:3])

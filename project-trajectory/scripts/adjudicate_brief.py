@@ -554,6 +554,76 @@ def _spine_excerpt(root, ids):
     return "\n".join(out), sorted(set(ids) - found)
 
 
+# --- the tier questions, composed from one home (WI-854) ----------------------
+
+#: The ONE home of the questions an adjudicator puts to a spine row, per tier,
+#: shipped beside the prompt templates and resolved script-relatively as they
+#: are, so a brief composes them in a repo with no skills installed. The
+#: spine-authoring skill points here and holds no copy.
+QUESTIONS_HOME = prompts.PROMPTS / "spine-questions.md"
+# The line under each section heading naming the tiers it serves; `*` is every
+# tier.
+_TIERS_LINE = re.compile(r"<!-- tiers: ([A-Z* ]+) -->")
+ANY_TIER = "*"
+# The briefs whose `{questions}` slot the home fills; the combined sitting
+# composes both, so the home governs it too.
+QUESTION_BRIEFS = ("amendment", "first-approval", COMBINED)
+
+
+def _question_sections(text):
+    """`(sections, None)` — each `## ` section of the home as `(tiers, text)`,
+    its tiers line dropped — or `([], heading)` naming the first section
+    with no tiers line. Text before the first heading is not a section.
+
+    Implements: SR-146, LLR-167"""
+    sections = []
+    for chunk in re.split(r"(?m)^(?=## )", text)[1:]:
+        heading, _, rest = chunk.partition("\n")
+        marker, _, body = rest.partition("\n")
+        match = _TIERS_LINE.fullmatch(marker.strip())
+        if match is None:
+            return [], heading
+        sections.append((frozenset(match.group(1).split()), heading + "\n" + body))
+    return sections, None
+
+
+def tier_questions(tiers):
+    """`(text, None)`: the home's sections serving any of `tiers` (its
+    every-tier sections included), in the home's order, or `(None, reason)`.
+
+    NO FALLBACK. An absent or unreadable home, a section with no tiers line,
+    or a judged tier no section serves refuses the brief (rule 2): a judge
+    handed a brief with its questions missing reads the gap as "nothing to
+    ask", and there is no second copy of them to fall back on.
+
+    Implements: SR-146, LLR-167
+    """
+    path = QUESTIONS_HOME
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, "the tier questions' home {} cannot be read: {}".format(path, exc)
+    sections, bad = _question_sections(prompts.strip_dispatcher_block(text))
+    if bad is not None:
+        return (
+            None,
+            "the tier questions' home {}: section {!r} declares no tiers".format(
+                path, bad
+            ),
+        )
+    served = set().union(*(declared for declared, _body in sections))
+    missing = [] if ANY_TIER in served else sorted(set(tiers) - served)
+    if missing or not sections:
+        return None, "the tier questions' home {} declares no questions for {}".format(
+            path, ", ".join(missing) or "any tier"
+        )
+    return "\n\n".join(
+        body.rstrip()
+        for declared, body in sections
+        if ANY_TIER in declared or declared & set(tiers)
+    ), None
+
+
 # --- the amendment brief (SN-029; routed at D-9 step 4b) ----------------------
 
 
@@ -645,10 +715,14 @@ def amendment_values(root, row):
                 len(scope), ", ".join(sorted(scope)), baseline_snapshot.SNAPSHOT_DIR
             )
         )
+    questions, why = tier_questions(tiers)
+    if questions is None:
+        return None, why
     return {
         "baseline": _amendment_baseline(root, tiers),
         "rows": "\n".join(lines),
         "aftermath": _aftermath(root, tiers),
+        "questions": questions,
     }, None
 
 
@@ -1116,6 +1190,9 @@ def first_approval_values(root, row):
                 ", ".join(live), ac.approval_through(root / "docs")
             )
         )
+    questions, why = tier_questions(_judged_tiers(registries))
+    if questions is None:
+        return None, why
     wi_id = (row.get("WI-ID") or "").strip()
     # Each registry the act would copy, with the commit that last wrote ITS
     # copy rather than the directory's newest write (another registry's copy).
@@ -1154,7 +1231,18 @@ def first_approval_values(root, row):
             )
             for rel, rids in registries.items()
         ),
+        # The questions for the tiers of the rows marked as this session's,
+        # from the one home (`tier_questions`).
+        "questions": questions,
     }, None
+
+
+def _judged_tiers(registries):
+    """The chain tiers of the rows a first approval marks as this session's:
+    the tiers whose registry its `--approves` walk collected.
+
+    Implements: SR-146, LLR-167"""
+    return {kind for kind in ("SR", "LLR", "TC") if _REGISTRY_OF[kind] in registries}
 
 
 def _chain_label(drafted, in_scope, yours):
@@ -1739,6 +1827,10 @@ def governing_templates(classes, prompt_templates=None):
             texts.append(override)
         elif key:
             paths.append(prompts.template_path(key))
+    # The tier questions' home fills those briefs' `{questions}` slot, so it
+    # governs them whether or not their template is overridden.
+    if set(classes or ()) & set(QUESTION_BRIEFS):
+        paths.append(QUESTIONS_HOME)
     return paths, texts
 
 

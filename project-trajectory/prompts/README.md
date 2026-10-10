@@ -22,6 +22,13 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | `adjudicate-combined.template.md` | one lane checkpoint's pending in-lane judgements, one section per kind | yes |
 | `adjudicate-dispute.template.md` | a review finding the lane contests, or one at its third round, ruled by the adjudicator | yes |
 
+`spine-questions.md` is not a brief: it is the one home of the questions an
+adjudicator puts to a spine row, per tier. The first-approval and amendment
+briefs compose the sections for the tiers they judge into their `{questions}`
+slot at render time, and the `spine-authoring` skill points at it. An absent or
+unreadable copy refuses those briefs; an override of either brief must keep the
+`{questions}` slot.
+
 The worker assignment is deliberately **not** overridable: the assignment is the
 whole scope of that session, and an env var that can replace it is a way to
 widen a claim without a reviewed diff. Editing the template *is* the supported

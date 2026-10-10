@@ -18,13 +18,13 @@ is a refusal rather than a silently empty instruction.
 
 | Key | File | Digest | Slots |
 |---|---|---|---|
-| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:6ad45636ed6a` | `{aftermath}`, `{baseline}`, `{rows}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:d7bda850b205` | `{aftermath}`, `{baseline}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-COMBINED` | [adjudicate-combined.template.md](adjudicate-combined.template.md) | `sha256:8a5c64882f71` | `{kinds}`, `{sections}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:861339ff1d07` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:160b2042c428` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPUTE` | [adjudicate-dispute.template.md](adjudicate-dispute.template.md) | `sha256:0d67eef48877` | `{commits}`, `{findings}`, `{process_doc}`, `{range}`, `{request}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DONE-WHEN` | [adjudicate-done-when.template.md](adjudicate-done-when.template.md) | `sha256:2fd58110f42b` | `{anchor}`, `{changes}`, `{claimed}`, `{context}`, `{current}`, `{digest}`, `{subject}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-FIRST-APPROVAL` | [adjudicate-first-approval.template.md](adjudicate-first-approval.template.md) | `sha256:2d30eac1efae` | `{approves_rows}`, `{baseline}`, `{chain}`, `{registries}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-FIRST-APPROVAL` | [adjudicate-first-approval.template.md](adjudicate-first-approval.template.md) | `sha256:b9aada216203` | `{approves_rows}`, `{baseline}`, `{chain}`, `{questions}`, `{registries}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-REJUDGE` | [adjudicate-rejudge.template.md](adjudicate-rejudge.template.md) | `sha256:5a1e40710449` | `{case}`, `{reason}`, `{tc}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:66976e43c582` | `{brief}`, `{verdict}` |

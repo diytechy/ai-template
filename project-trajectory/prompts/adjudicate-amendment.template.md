@@ -31,6 +31,14 @@
                    whose rows are shown, so the session is told whether the
                    re-attestation is its own act or the owner's rather than
                    working it out from a dial it would have to go read.
+       {questions} the judging questions for the tiers of the rows listed,
+                   composed at render time from the one home the kit ships
+                   (prompts/spine-questions.md, the sections whose tiers
+                   match, its every-tier section included). They judge whether
+                   a MEANING row's new text is one to bless; the
+                   meaning-or-clarity method above them stays this brief's own.
+                   An absent or unreadable home, or one with no section for a
+                   shown tier, refuses the render.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 
@@ -73,6 +81,10 @@ Method:
 - Compare the two obligations, not the two paragraphs. Diff noise is not the subject; the obligation is.
 - When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept attestation is a silent false claim that a human blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-attest costs one sitting.
 - If the diff is mixed — one cell clarified, another moved the obligation — the answer for the ROW is `meaning`, and you say which cell carried it.
+
+Whether a `MEANING` row's new text is one you would bless — or recommend to the owner — is judged by the questions for its tier, the same ones a first approval puts. A `CLARITY` verdict owes them nothing new: the obligation is the one already blessed.
+
+{questions}
 
 Write your verdict to {verdict}. One line per amended row, in the log.md block format:
 

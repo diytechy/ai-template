@@ -3,11 +3,29 @@ id = "WI-854"
 title = "The adjudication briefs carry spine-authoring's tier questions, composed from one home"
 workstream = "process"
 sr_refs = ["SR-146"]
-specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 +++
+
+## Deliverable
+
+The spine tier questions have one shipped home,
+`project-trajectory/prompts/spine-questions.md`. Each `## ` section declares
+the tiers it serves. The spine-authoring skill points at the home and no
+longer restates the questions. The first-approval and amendment briefs, and
+each combined section composing them, read the home at render time and
+carry the every-row questions plus the sections for the judged rows' tiers.
+An absent or unreadable home, a section without a tiers line, or a home
+serving none of the judged tiers refuses the render, naming the home; there
+is no fallback. The retained adjudicator session's identity covers the
+home. Spine: LLR-167, LLR-270, TC-161 and TC-322 amended (GPT Terra) and
+blessed MEANING by amendment sitting `docs/reviews/wi-854/001-ADJUDICATE-8d43a5c.md`
+(act seq 91). Gate: Codex 6.1 Sol's fresh full-lane review
+`docs/reviews/wi-854/002-REVIEW-A-529910e.md`, APPROVE with 0 findings.
+The sitting's separate finding, that the prompt catalogue does not list the
+composed home, is filed as WI-882.
 
 ## Context
 

@@ -38,6 +38,12 @@
                    text, and acceptance_record.adjudication_approval_refusal
                    stops that merge as WIDENED. Derived from the same walk that
                    builds {registries}, so the two cannot disagree.
+       {questions} the judging questions for the tiers of the rows marked as
+                   yours, composed at render time from the one home the kit
+                   ships (prompts/spine-questions.md, the sections whose tiers
+                   match, its every-tier section included). An absent or
+                   unreadable home, or one with no section for a judged tier,
+                   refuses the render: there is no fallback method here.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 
@@ -65,14 +71,11 @@ THE QUESTION, and it is the only one you answer:
 {baseline}
 --- END ---
 
-Method — read the CHAIN, not the row:
+Method — put to each row the questions for its tier, reading the CHAIN, not the row:
 
-- For each row, state to yourself the obligation it imposes: what a builder must do, what a test must check. A row you cannot restate as an obligation is not ready.
-- Read UPWARD. Does the parent it points at actually call for this? A decomposition row that answers a requirement nobody made is scope, not detail.
-- Read SIDEWAYS. Do the siblings together cover what the parent asks, without overlapping into each other's decisions? One decision per row.
-- Read DOWNWARD. Do the test cases that claim to verify this row verify what it actually says — and does anything it says go unverified?
-- Read the wording as a closed obligation: a "should" that means "must", a threshold with no units, an actor left unnamed, an acceptance condition nobody could observe. Each is a RETURN, not a note.
-- Fail toward `RETURN`. An approval is a standing claim that a competent reader blessed this text; a wrongly-returned row costs one more lane, and a wrongly-approved one is a false claim the record then carries forward.
+{questions}
+
+Fail toward `RETURN`. An approval is a standing claim that a competent reader blessed this text; a wrongly-returned row costs one more lane, and a wrongly-approved one is a false claim the record then carries forward.
 
 If the answer is APPROVE, perform the act — it is yours, and nothing downstream does it for you:
 

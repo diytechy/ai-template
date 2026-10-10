@@ -368,7 +368,12 @@ def _fake_spine_assemblers(monkeypatch):
 
     def amendment(_root, row):
         seen["amendment"] = row["Adjudicates"]
-        return {"baseline": "B", "rows": "- LLR LLR-1 drifted", "aftermath": "A"}, None
+        return {
+            "baseline": "B",
+            "rows": "- LLR LLR-1 drifted",
+            "aftermath": "A",
+            "questions": "Q",
+        }, None
 
     def first(_root, row):
         seen["first-approval"] = row["Adjudicates"]
@@ -377,6 +382,7 @@ def _fake_spine_assemblers(monkeypatch):
             "baseline": "B",
             "registries": "R",
             "approves_rows": "   - R covers TC-1",
+            "questions": "Q",
         }, None
 
     monkeypatch.setitem(ab._ASSEMBLERS, "amendment", amendment)

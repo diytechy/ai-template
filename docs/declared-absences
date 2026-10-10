@@ -132,6 +132,7 @@ prompts/adjudicate-rejudge.template.md — see the `prompts/` line above (kit ho
 prompts/adjudicate-done-when.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-done-when.template.md). The Done-when brief: a lane's own Done-when change, judged in the lane (WI-841).
 prompts/adjudicate-combined.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-combined.template.md). The combined lane-checkpoint sitting composing every pending in-lane judgement (WI-841).
 prompts/adjudicate-dispute.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/adjudicate-dispute.template.md). The dispute sitting: a review finding the lane contests, or one at its third round, ruled by the adjudicator (WI-865).
+prompts/spine-questions.md — see the `prompts/` line above (kit home: project-trajectory/prompts/spine-questions.md). The one home of the adjudicator's per-tier questions, composed into the first-approval and amendment briefs.
 prompts/dual-plan-planner.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-planner.template.md).
 prompts/dual-plan-critic.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-critic.template.md).
 prompts/dual-plan-arbiter.template.md — see the `prompts/` line above (kit home: project-trajectory/prompts/dual-plan-arbiter.template.md).

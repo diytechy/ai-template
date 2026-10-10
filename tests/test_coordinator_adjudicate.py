@@ -342,11 +342,14 @@ def test_the_loop_composes_the_same_keep_request_as_before(
             "brief": "disposition",
             "wi": "WI-7",
             "rows": {},
+            # ...and the tier questions' home, which the amendment brief
+            # composes (WI-854).
             "template_paths": [
                 prompts.template_path(key)
                 for key in shipped
                 if not (override and key == "ADJUDICATE-DISPOSITION")
-            ],
+            ]
+            + [cli.adjudicate_brief.QUESTIONS_HOME],
             "template_texts": [override] if override else [],
             "lease_seconds": (timeout or 7200) + 300,
         }
@@ -364,8 +367,16 @@ def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_templa
         ["red-tc", "no-such-class", "amendment"],
         {"ADJUDICATE-RED-TC": "an override"},
     )
-    assert paths == [ab.prompts.template_path("ADJUDICATE-AMENDMENT")]
+    # The amendment brief composes the tier questions' home, so the home is
+    # one of its governing inputs: a change to it drains a retained session.
+    assert paths == [
+        ab.prompts.template_path("ADJUDICATE-AMENDMENT"),
+        ab.QUESTIONS_HOME,
+    ]
     assert texts == ["an override"]
+    assert ab.governing_templates(["red-tc"])[0] == [
+        ab.prompts.template_path("ADJUDICATE-RED-TC")
+    ]
 
 
 # --- the sign-in probe (TC-323) ----------------------------------------------------

@@ -1,0 +1,29 @@
+# WI-854 amendment adjudication: 001 at 8d43a5c
+
+Anchor: `docs/archive/last_approved` (both registries copied 2026-10-09, commit fb1990aa).
+Question judged: did each amended cell change the row's MEANING or only its CLARITY?
+
+- [MEANING] LLR-167 Detail -> the brief route reads `Brief`/`Adjudicates` through the merge's normalization, the assemblers return all or nothing, a refusal holds, and amendment/first-approval rendering is scoped and anchored; nothing said where the `{questions}` slot's text comes from -> all of that unchanged, PLUS a new QUESTION HOME arm: `tier_questions` reads `prompts/spine-questions.md` at render time; sections declare their served tiers on a `<!-- tiers: ... -->` line (`*` = every tier); the render composes the every-tier sections and the sections for the judged rows' tiers in home order, without the declaration line; `_judged_tiers` derives first-approval tiers from the `--approves` walk and amendment tiers from the rows shown; `combined_values` gives each section its own questions; an absent or unreadable home, a section with no tiers line, a home with no section, or one serving none of the judged tiers refuses naming the home, with no fallback -> not the same: an implementation correct under the old text (for example a fixed question block inlined in the template, or a fallback text) fails the new tier-selection and refusal obligations.
+- [MEANING] TC-161 Method -> drive the loop and compose every routed brief (slots, refusals, routing both ways, verdict grammars, amendment scope, IF-124/IF-075 seams, the dial-derived aftermath) -> all of that, PLUS: compose an LLR first-approval brief and SR and SN amendment briefs and assert each carries the every-row questions and its own tier section and no other; assert a combined first-approval section carries its rows' questions; substitute a home and assert its text is carried and that a change changes the brief; assert an absent home, a directory, an undecodable file, a section with no tiers line, or a home serving none of the judged tiers refuses naming the home; assert no question opening appears in any prompt template or spine-authoring skill copy -> not the same: new acceptance checks were added, and a test suite satisfying the old Method would not satisfy the new one.
+- [MEANING] LLR-270 Detail -> `drain_reason`'s `governing_hash` covers CLAUDE.md, AGENTS.md, GEMINI.md, docs/process.toml, every skill SKILL.md, and each retained brief class's template (override text where wired, else the shipped file) -> the same set PLUS the tier questions' home whenever a retained class composes it (amendment, first-approval or combined) -> not the same: a retained session that a correct old implementation would keep resuming after `spine-questions.md` is edited must now drain. That is a new drain trigger, so the behaviour changes.
+- [MEANING] TC-322 Method -> assert the keep request carries route, work item, environment, configuration, deadline-derived lease inputs and a template identity for every retained class, with override text replacing the shipped path -> the same PLUS the tier questions' home in the identity when a retained class composes it -> not the same: a new acceptance condition was added, and it verifies the new LLR-270 drain input.
+
+## Would I bless the new text? (LLR/TC rung: released)
+
+Yes, all four rows. I judged them against the tier questions for each row and its chain:
+
+- **Up the chain.** LLR-167 hangs under SR-146 (prompts are shipped, reviewable files with strictly filled slots). Its new arm keeps the brief self-contained and gives the judging questions one shipped home, read at render time with no fallback. That is the SR-146 obligation, decomposed. LLR-270's new drain input is SR-227's "drain the session when ... the inputs it judges under change": the composed questions are one of those inputs.
+- **Across the chain.** The new arm stays inside LLR-167, the brief-assembly decision. It does not reach into catalogue or loader rows. LLR-270 adds only the identity input and leaves composition to LLR-167.
+- **Down the chain.** TC-161's new clauses map one-to-one onto LLR-167's new arm, as the arms map shows. "A home with no section" is covered as a case of "a home serving none of the judged tiers". TC-322 checks LLR-270's new identity input. The named tests exist in `tests/test_adjudicate_brief.py` and `tests/test_coordinator_adjudicate.py`. In this session the selected subset ran: 19 passed in 10.92 s.
+- **Wording.** The LLRs name modules and symbols, which is this tier's job, and contain no `shall`. Each acceptance condition is observable.
+
+## Separate finding (does not block these rows)
+
+The question home `prompts/spine-questions.md` is shipped instruction text that becomes part of the prompts the loop launches. It is not listed in the freshness-gated catalogue `prompts/CATALOG.md`, which is generated from `KIT_PROMPTS`. As a result:
+
+- editing the home moves no catalogued digest;
+- `gen_prompt_catalog.py --check` stays green after such an edit.
+
+Each session's rendered `prompt-sha` still changes, so the per-session audit trail in SR-146 holds. But the catalogue's "the template row identifies the SOURCE" no longer names every source of a launched brief's static instruction text. SR-146's text does not need to change. The gap is in the catalogue's coverage: either list the composed home there by digest, or record in the catalogue rows (IF-098) that composed fragments are excluded, as IF-100 already does for the dual-plan hats. This is a follow-up WI for the coordinator to file. It does not make LLR-167, TC-161, LLR-270 or TC-322 unsound. WI-854's spec is not an adjudication-kind spec, so a `## Dispositions` block there would not be minted. I am therefore reporting the finding here rather than drafting it.
+
+VERDICT: MEANING rows=4
