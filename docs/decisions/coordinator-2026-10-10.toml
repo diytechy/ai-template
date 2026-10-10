@@ -1,0 +1,55 @@
+# docs/decisions/coordinator-2026-10-10.toml — the attended coordinator
+# session of 2026-10-10; delegated decisions made on trunk (coordinator).
+# Lane decisions are in each lane's own record.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-003", "D-006", "D-001"]
+
+[decision.D-001]
+decided = "WI-854's uncommitted spine edits from the stopped leg 03 were kept, not redone: GPT Terra's intent turn (session 01a1224f) had completed, it dispositioned every item of the builder's spine change list, the seven tests and three symbols it cites exist in the lane, and the cells were UTF-8 with LF endings. The coordinator committed them, rebased the lane onto trunk (merging LLR-270's detail cell, which trunk's WI-834 landing had also changed, per cell), and sat them: amendment sitting 001 ruled all four rows MEANING and re-attested them."
+alternative = "Discard them and resume Terra for a fresh intent turn over the rebased lane."
+reversal_cost = "Low: the sitting judged the text as committed; a redo would re-sit it."
+why_not_escalated = "The handoff asked the session to read the edits and decide; reading them found a finished authoring turn."
+review = ""
+
+[decision.D-002]
+decided = "WI-847 stays one row, built in its lane in this order: the narrow round's brief rendered through prompts.py first, then reviewer retention together with the merge gate's freshness binding. Recorded in its spec's Context before the claim, answering the scope critique's S1."
+alternative = "Split the narrow-brief render into a preparatory row landing first, or split retention from the gate binding."
+reversal_cost = "Low: a split is still possible before the claim's build."
+why_not_escalated = "The render stands alone but is small; retention without the binding would let a resumed review clear a merge, so those two cannot land apart."
+review = ""
+
+[decision.D-003]
+decided = "WI-847's `## Trust` ruling: an absent, unreadable or malformed retained-reviewer record (or one naming another family or route) is no record, so the call mints fresh, and a malformed dial reads as off. The merge gate accepts only a verdict whose session was minted fresh for that review and whose range runs from the claim base to the tip; any other verdict holds the merge, with no fallback to an older verdict. Written into the spec before the claim, answering the scope critique's S2."
+alternative = "Let the gate accept a resumed session's verdict when its range is full-lane."
+reversal_cost = "Medium: the gate's acceptance rule is the row's central obligation; changing it after the build re-opens the gate code and its tests."
+why_not_escalated = "coordinator-cycle §1 has the coordinator write the Trust section and route its ruling to the owner for confirmation or overrule; the ruling follows the owner's 2026-10-07 direction that the last gate is a fresh, full-lane review."
+review = ""
+
+[decision.D-004]
+decided = "Owner ruling in the attended session (2026-10-10) on WI-880's reserved choice: this repository's committed `.claude/settings.json` guard hooks move to the machine-local opt-in (WI-834's `coordinator_guard.py hooks`, bound to the floor-resolved interpreter in `.claude/settings.local.json`); a machine that has not opted in runs no guard hooks. Recorded in WI-880's spec before the claim."
+alternative = "Keep the hooks committed with a portable floor-resolving command; or split the site into a held row with an open item."
+reversal_cost = "Medium: the committed settings file, dev-setup's readiness report and the coordinator workstation's opt-in."
+why_not_escalated = "Escalated: the owner chose this option among three put to them."
+review = ""
+
+[decision.D-005]
+decided = "WI-880's four sites land as one row in one lane, recorded in its spec before the claim, answering the scope critique's S1: they share one interpreter resolution and its candidate-parity pin, and one RESYNC entry carries the one migration."
+alternative = "One row per site."
+reversal_cost = "Low: a split is still possible before the claim's build."
+why_not_escalated = "Splitting leaves the class open at the waiting sites and multiplies the adopters' migration notes for one change."
+review = ""
+
+[decision.D-006]
+decided = "WI-859's Done-when clause 'the full unfiltered suite is green on the job-object workstation' is read as met for this row: in the full suite on its tip (5d8c3714: 1 failed, 5632 passed, 21 skipped) its isolation test passes, and the one failure is a separate defect, the session deadline kill's taskkill latency, which fails alone 3 of 3 on trunk too. That defect is filed as WI-881 rather than held against WI-859."
+alternative = "Hold WI-859 open until WI-881 lands and the full suite is green."
+reversal_cost = "Low: reopening the row costs a re-mint; no code depends on its closure."
+why_not_escalated = "The failure predates the lane and lies outside its surface; the row's own obligation is verified."
+review = ""
+
+[decision.D-007]
+decided = "The handoff's reading of test_run_session_idle_deadline_kills_a_silent_child as load-sensitive is corrected: on a quiet box it fails alone 3 of 3 (about 43 s against a 40 s bound) because taskkill takes about 50 s on this workstation, with or without /T. Filed as WI-881; the bound is not raised."
+alternative = "Raise the test's bound, or mark the test as environment-dependent."
+reversal_cost = "Low: a test bound and a row."
+why_not_escalated = "Surfacing a defect as a row is the standing rule; raising a bound to green a step is forbidden."
+review = ""
