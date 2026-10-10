@@ -75,7 +75,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
   add the skill's two scope and trust questions, and send it to a fresh Sol
-  session. Record the answer before the claim. Ask in the same brief for a ruling per
+  session. Record the answer before the claim. `review_brief.py critique`
+  names the same verdict path every round (`WI-NNN-scope-critique.md`): move
+  the previous round's file aside before rendering the next. Ask in the same brief for a ruling per
   consumer and for every carrier's failure contract (producer, write route,
   failed-write shape): asked piecemeal, they cost WI-882, WI-884 and WI-887
   three rounds each (2026-10-10).
@@ -172,6 +174,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 5. Restore the pause byte-identical in the next commit, again with the
    regenerated `docs/open-items.html`, even if a claim failed.
 
+A claim moves the row's spec from `queued/` to `active/<branch>/`, so any
+other row whose `specref` names that queued path stops resolving (R-E) the
+moment the claim lands (WI-887 on WI-884, 2026-10-10). Point a split's
+`specref` at its stable home (the decision record that split it), never at
+another row's spec. Run `check_trajectory.py --strict` after the claims and
+gate the restore commit on its summary line, not only on the smoke tier's.
+
 The pause gates claims only; acts, landings and sweeps run under it. `claim`
 refuses a row whose id appears in `status.md`'s hand text, so describe rows
 there by subject; reword an offending line in its own trunk commit before the
@@ -239,6 +248,8 @@ commit of its own, move it to trunk's tip
   `specref`) passes it. A lane that adds a doc also runs
   `"$PY" "$SCRIPTS/check_docs.py" --root . --strict-orphans`: the orphan check
   runs only in the full suite.
+  In a working checkout it also reports the gitignored `docs/test/report.md`
+  (written by `trace.py`) as an orphan; that one is local, not a finding.
 - **Close the row:**
   - `## Deliverable` comes before `## Context`, because the parser clips
     everything after Context (the hook refuses a missing one, R-A);
@@ -320,6 +331,9 @@ lane commit being replayed.
   dashes; normalize before any snapshot. On 2026-10-10 every Terra turn
   rewrote whole registries CRLF: count `` in each touched file and
   normalize before every commit.
+  Count CR bytes with Python (`open(p, "rb").read().count(b"")`): in Git
+  Bash `grep -c $''` loses the pattern and counts every line, which read
+  as a CRLF rewrite on 2026-10-10 (c) when the files were LF.
 - Re-read every whole cell a splice touches. Spliced sentences have come back
   without a verb.
 - If `apply_patch` cannot match a long one-line cell, use a guarded Python replace:
@@ -412,6 +426,14 @@ lane commit being replayed.
 
 ## 8. Re-judge and consolidation recipes
 
+- **Close a lane partial for an owner decision** (OI-70: never park it
+  claimed). Save any uncommitted build outside the repository and revert the
+  lane first: `handback.close_partial` commits residue as-is with the hook
+  skipped. Call it as `handback.close_partial(Path(root).resolve(), branch,
+  reason, fields)` (a `str` root raises), from the primary checkout; then
+  land the lane, re-home every open row that hard-depends on the closed one
+  (`check_trajectory` names them as dead-dep), and sweep, which mints the
+  disposition row.
 - **Re-sit a closed consolidation by rewinding its lane.** The entry point
   refuses a sitting on a row no longer under `active/`. Reset the lane to
   before the close (archive the discarded commits), re-sit, then re-run
