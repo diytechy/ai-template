@@ -32,7 +32,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   the coverage plan before fixes and the stop-and-file rule for consolidation
   outside the spec's surface in every build brief. Re-run the builder's
   claimed results before committing: one builder has reported a smoke result
-  it never produced.
+  it never produced. Brief a hook's coverage as reading the command word the
+  way the shell grammar does, from a list you give; a brief asking for every
+  form that gets past the hook was cut off by a safety classifier (WI-834).
 - **Terra, first turn:**
   `bash "$TOOLS/terra_author.sh" <lane> <prompt> <out> [effort]`.
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
@@ -66,7 +68,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      writes `docs/reviews/<lane>/NNN-REVIEW-A-<sha7>[-narrow].md`. It refuses
      a review not opening `Reviewed: <full sha>`, or without exactly one
      `VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<n>` line whose count
-     matches its findings.
+     matches its findings. It picks `NNN` itself: read the filed name before
+     a commit subject or brief cites the round.
   - With Codex capacity short, run two lanes' Sol reviews one at a time, so a
     usage limit takes out at most one review.
 - **Scope critique:** render
@@ -374,6 +377,9 @@ lane commit being replayed.
   in PowerShell first,
   run from a detached worktree in the background, and delete the basetemp
   after recording.
+- **A smoke budget breach under load:** time the parent commit in the same
+  window before charging the breach to the change; record both readings in
+  the commit message and re-measure quiet before landing.
 - The guard's relaunch has had no live verification. Check the current
   handoff and supervise its first unverified use.
 
