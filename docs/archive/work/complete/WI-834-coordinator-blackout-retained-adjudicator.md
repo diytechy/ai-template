@@ -3,12 +3,29 @@ id = "WI-834"
 title = "Blackout pauses lanes on both routes; run checks the workstation first; the entry points are documented"
 workstream = "process"
 sr_refs = ["SR-227", "SR-229", "SR-230"]
-specref = "docs/reviews/wi-834-plan/001-sol-plan-review.md"
+specref = ""
 needs = ["WI-835", "WI-846"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 8
 +++
+
+## Deliverable
+
+Inside the declared blackout window both routes pause: one window function in
+agent_policy answers whether the window is in force and when it ends; the
+session service refuses ordinary launches (admitting only a wrap-up
+adjudication of an active claim), the loop waits out a refused launch on every
+route, the dispatcher holds its claim, and the coordinator guard's hooks, with
+the guard dial at zero, deny a main session's model launches read at the shell
+grammar's command word (sittings 017, 025, 031; wrapper commands outside),
+tell the close-down, and cancel any relaunch. Retained adjudicator sessions
+retire lazily across the window. A bare `run` resolves one 3.11+ interpreter,
+hands it to dev-setup's readiness check (which reports and offers
+consent-first, and survives a missing Git) and runs the menu on it; dev-setup's
+consented hook opt-in binds the guard to that interpreter in the machine-local
+settings. The READMEs name the five entry points. Landed by squash after six
+full-lane gates; the last gate's one MINOR was dismissed by dispute 040.
 
 ## Context
 
@@ -210,8 +227,10 @@ against the code.
     claim, are refused inside the window;
   - the same session reopened with both drain causes still needs the owner's
     clear;
-  - a review-next lane pauses with the obligation in the handoff, and a
-    wrap-up verdict that requires rework waits;
+  - the close-down instruction (SessionStart and the monitored events) tells
+    the coordinator to write a handoff naming each lane's next obligation; for
+    a lane whose next step is a review or a rework a wrap-up verdict asked
+    for, that launch is refused inside the window and admitted after it;
   - with the context guard off, the hooks deny each listed call form, the
     claim is refused, and no relaunch is written or launched;
   - a pending relaunch at SessionEnd inside the window is cancelled.

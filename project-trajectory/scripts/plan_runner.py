@@ -159,7 +159,9 @@ def _dp_session(
 ):
     """One round session through the session service. Returns (ok, output).
     A pair row's Env cell is merged over the ambient env
-    (agent_route.parse_env), matching the loop's session launch.
+    (agent_route.parse_env), matching the loop's session launch. A round the
+    blackout window refuses waits the window out and is retried
+    (`session_service.through_blackout`).
 
     Implements: SR-222, LLR-269
     """
@@ -170,23 +172,22 @@ def _dp_session(
         env = dict(os.environ)
         env.update(agent_route.parse_env(env_cell))
     attribution = dict(attribution or {})
-    session = session_service.call(
-        session_service.Call(
-            root=root,
-            role=attribution.pop("role", "PLAN"),
-            template=template,
-            model=model,
-            prompt=prompt,
-            provider=attribution.pop("provider", ""),
-            tier=attribution.pop("tier", ""),
-            route_id=attribution.pop("roster-row", ""),
-            source_event=attribution.pop("source-event", "dual-plan"),
-            attempt_id=attribution.pop("attempt-id", ""),
-            attribution=attribution,
-            env=env,
-            timeout=timeout,
-        )
+    asked = session_service.Call(
+        root=root,
+        role=attribution.pop("role", "PLAN"),
+        template=template,
+        model=model,
+        prompt=prompt,
+        provider=attribution.pop("provider", ""),
+        tier=attribution.pop("tier", ""),
+        route_id=attribution.pop("roster-row", ""),
+        source_event=attribution.pop("source-event", "dual-plan"),
+        attempt_id=attribution.pop("attempt-id", ""),
+        attribution=attribution,
+        env=env,
+        timeout=timeout,
     )
+    session = session_service.through_blackout(lambda: session_service.call(asked))
     code, output, timed_out = session.code, session.text, session.timed_out
     ok = code == 0 and not timed_out
     # A --output-format json/stream-json template (what the real agents.toml rows

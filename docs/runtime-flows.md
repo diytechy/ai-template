@@ -162,6 +162,7 @@ sequenceDiagram
     participant Intake as intake.py (LLR-153/LLR-154)
     loop each tick, until a fatal code or a drained queue
         Disp->>Disp: tracked pause? dirty trunk? (LLR-138) — freeze admission, let lanes come home
+        Disp->>Disp: blackout window open? (LLR-300) — claim nothing; an idle station waits it out
         Disp->>Sched: re-derive the ready frontier as (WI, kind) pairs
         Sched-->>Disp: exclusive kinds ranked ahead of parallel ones (LLR-059/LLR-123)
         alt an exclusive kind is on the frontier
@@ -192,4 +193,38 @@ sequenceDiagram
         end
     end
     Disp->>Intake: empty frontier — gap census mints gap-closure rows, else drain and exit 0
+```
+
+### Flow 5 — The blackout window on both routes (SR-227, SR-229, SR-230, LLR-270, LLR-300, LLR-301)
+
+One window function answers "inside a window?" and "when did the last one
+end?"; every reader below asks it at the call. A lane claimed before the window
+stays claimed and idle, and resumes after it.
+
+```mermaid
+sequenceDiagram
+    participant Win as blackout window function (agent_policy)
+    participant Claim as integrate.claim (LLR-300)
+    participant Svc as session service launch boundary
+    participant Loop as agent_loop / dispatcher
+    participant Hook as coordinator guard hooks (LLR-300/LLR-301)
+    participant Keep as retained adjudicator keep (LLR-270)
+    Claim->>Win: inside? (every route, the dispatcher's included)
+    Win-->>Claim: inside: refused, naming the UTC end
+    Loop->>Svc: launch a session (build, review, probe, interactive)
+    Svc->>Win: inside?
+    alt inside, and not an ADJUDICATE call for an active claim
+        Svc-->>Loop: BlackoutRefused, nothing launched or recorded
+        Loop->>Loop: wait the window out (banner + countdown), retry
+    else the wrap-up adjudication of an active claim, or outside
+        Svc->>Keep: plan the retained session
+        Keep->>Win: when did the last window end?
+        Keep-->>Svc: last used before that end: retired (blackout), mint
+    end
+    Hook->>Win: inside? (at any context_guard_pct)
+    alt inside
+        Hook-->>Hook: deny Agent, SendMessage, a model CLI; tell the close-down
+        Note over Hook: no relaunch requested; a pending one is cancelled at SessionEnd
+    end
+    Keep->>Win: keep-warm tick: inside? (no ping), else retire a stale session first
 ```

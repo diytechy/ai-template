@@ -12,8 +12,16 @@
 # codex replaced opencode at the WI-160 provider-CLI swap, 2026-07-14b).
 # Consent-first: the default only reports; -Install acts.
 #
-# Usage:  powershell -ExecutionPolicy Bypass -File scripts\dev-setup.ps1 [-Check | -Install]
+# Usage:  powershell -ExecutionPolicy Bypass -File scripts\dev-setup.ps1 [-Check | -Install | -ForRun [-Python <interpreter>]]
 #   -Check    (default) report what's present; install nothing.
+#   -ForRun   what a bare root `run` calls first (WI-834): the -Check report,
+#             then, at an interactive console only (input not redirected), a
+#             missing runtime (through uv or winget, when present), the agent
+#             CLIs and the retained adjudicator's token step, each offered
+#             consent-first. -Python is the interpreter run.cmd
+#             resolved and will run its menu on (omitted when it resolved
+#             none); the report describes that interpreter only. Exits 0 when
+#             it satisfies the 3.11 floor, 1 with the step to take when not.
 #   -Install  create .\.venv (ruff + pytest + pytest-cov + pytest-xdist, asks first) AND wire
 #             the pre-commit process floor (core.hooksPath=.githooks; local +
 #             reversible). Then OFFERS the agent CLIs (claude, codex) — each
@@ -22,7 +30,7 @@
 #             tools or an IDE extension.
 #
 # Linux/macOS contributors: use scripts/dev-setup.sh.
-param([switch]$Check, [switch]$Install)
+param([switch]$Check, [switch]$Install, [switch]$ForRun, [string]$Python = "")
 $ErrorActionPreference = "Stop"
 # scripts/ -> the repo root (like the scaffolded layout), so .venv lands there.
 Push-Location (Split-Path $PSScriptRoot -Parent)
@@ -53,6 +61,11 @@ try {
         if ($LASTEXITCODE -eq 0) { return ("$v").Trim() }
         return ""
     }
+    # A consent prompt needs a console whose input is not redirected, so a
+    # prompt never consumes input meant for the run menu.
+    function Interactive {
+        [Environment]::UserInteractive -and -not $env:CI -and -not [Console]::IsInputRedirected
+    }
     function Report($label, $present, $hint) {
         if ($present) { Write-Host "  [ok]      $label" }
         else { Write-Host "  [missing] $label  — $hint" }
@@ -76,18 +89,24 @@ try {
     # `[ -d .venv ]` gate).
     $venvDirExists = Test-Path ".venv" -PathType Container
     $venvSupported = (Test-Path $venvPython) -and (HavePython $venvPython)
-    if ($venvSupported) { $py = $venvPython }
+    # The interpreters searched for a runtime after the venv, in order. WI-274c:
+    # after the bare candidates, try version-pinned `py -3.13/-3.12/-3.11`. A
+    # stale sub-3.11 .venv active on PATH (VS Code auto-activation) otherwise
+    # shadows every bare `python`/`py`, hiding an installed 3.11+ from the
+    # recreate offer below (the 2026-07-23 repro). Each is still floor-checked
+    # by HavePython. run.cmd probes this same list (WI-834; pinned by
+    # tests/test_run_devsetup.py), so a check that finds a runtime means run
+    # resolves one too.
+    $PyCandidates = @(@("py"), @("python"), @("python3"), @("py", "-3.13"), @("py", "-3.12"), @("py", "-3.11"))
+    $PyChecked = ".venv\Scripts\python.exe, " + (($PyCandidates | ForEach-Object { $_ -join " " }) -join ", ")
+    if ($ForRun) {
+        # A bare run's check (WI-834): only the interpreter run.cmd handed in,
+        # the one its menu runs on, so no search here can vouch for another.
+        if ($Python -and (HavePython $Python)) { $py = $Python }
+    }
+    elseif ($venvSupported) { $py = $venvPython }
     else {
-        # WI-274c: after the bare candidates, try version-pinned `py -3.13/-3.12/
-        # -3.11`. A stale sub-3.11 .venv active on PATH (VS Code auto-activation)
-        # otherwise shadows every bare `python`/`py`, hiding an installed 3.11+
-        # from the recreate offer below (the 2026-07-23 repro). Each is still
-        # floor-checked by HavePython.
-        $candidates = @(
-            @("py"), @("python"), @("python3"),
-            @("py", "-3.13"), @("py", "-3.12"), @("py", "-3.11")
-        )
-        foreach ($cand in $candidates) {
+        foreach ($cand in $PyCandidates) {
             if (HavePython @cand) {
                 $py = $cand[0]
                 $pyArgs = @($cand | Select-Object -Skip 1)
@@ -116,7 +135,12 @@ try {
             Write-Host "  [stale]   .venv is unusable (no working 3.11+ interpreter) — rerun -Install to recreate it"
         }
     }
-    Report "git" (Have "git") "install git"
+    # Git is queried only once it is known present: under ErrorActionPreference
+    # Stop, calling an absent native command throws, which would end the report
+    # before its runtime result (round 024 F2). Without git the floor reads
+    # missing, and nothing below offers or wires it.
+    $haveGit = Have "git"
+    Report "git" $haveGit "install git"
     Report "ruff (format/lint)" (HasModule "ruff") "pip install ruff (or run -Install)"
     Report "pytest (self-tests)" (HasModule "pytest") "pip install pytest (or run -Install)"
     Report "pytest-cov (harness coverage step)" (HasModule "pytest_cov") "pip install pytest-cov (or run -Install)"
@@ -137,21 +161,49 @@ try {
     # render-dashboard-critique skill. (Same report line as dev-setup.sh.)
     Report "dashboard shots (optional, meta-only)" (Test-Path "scripts/dashboard-shots/node_modules/playwright") `
         "cd scripts/dashboard-shots && npm ci && npx playwright install chromium (pinned; dev-only)"
-    $hooksPath = (git config --get core.hooksPath 2>$null)
-    Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") `
-        "run -Install, or: git config core.hooksPath .githooks"
-    # The retained adjudicator's long-lived token (WI-846): this repo's
-    # [adjudicator] retention is on, and a retained Claude launch reads its token
-    # from the file AGENT_CLAUDE_TOKEN_FILE names, refused before launch without
-    # one. Never read here.
-    function TokenReady {
-        $f = $env:AGENT_CLAUDE_TOKEN_FILE
-        if (-not $f) { return $false }
-        $item = Get-Item -LiteralPath $f -ErrorAction SilentlyContinue
-        return ($null -ne $item) -and (-not $item.PSIsContainer) -and ($item.Length -gt 0)
+    $hooksPath = if ($haveGit) { git config --get core.hooksPath 2>$null } else { "" }
+    $floorHint = if ($haveGit) { "run -Install, or: git config core.hooksPath .githooks" } else { "needs git: install git first" }
+    Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") $floorHint
+    # The retained adjudicator's sign-in (WI-834): with [adjudicator] retention
+    # on, a retained Claude launch runs under its dedicated home on the
+    # long-lived token in the file AGENT_CLAUDE_TOKEN_FILE names (WI-846),
+    # refused before launch without one. Read through the kit's own readers
+    # (the retention dial and the sign-in probe) when a runtime exists, else
+    # unknown; reported only while retention is on. The token is never read here.
+    $signin = "unknown"
+    if ($py) {
+        try {
+            # `-X utf8` first: the `py` launcher then runs the interpreter the
+            # probe validated, never one the script's shebang names.
+            $line = & $py @pyArgs -X utf8 project-trajectory/scripts/coordinator_adjudicate.py signin --retained --root . 2>$null
+        } catch { $line = "" }
+        if ((($line | Out-String).Trim()) -match '^signin \[ANTHROPIC\]: (\S+)$') { $signin = $Matches[1] }
     }
-    Report "retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)" (TokenReady) `
-        "run -Install for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+    switch ($signin) {
+        "off" { }
+        "signed-in" { Write-Host "  [ok]      retained adjudicator sign-in (AGENT_CLAUDE_TOKEN_FILE)" }
+        "missing" { Write-Host "  [missing] retained adjudicator sign-in  — run -Install (or a bare run) for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file" }
+        default { Write-Host "  [unknown] retained adjudicator sign-in  — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" }
+    }
+    # The one-time long-lived token step (WI-846's), consented; shown only while
+    # retention is on and the token is missing. Nothing here reads the token.
+    function Offer-Signin {
+        if (-not (($signin -eq "missing") -and (Have "claude"))) { return }
+        Write-Host ""
+        Write-Host "The retained adjudicator runs Claude under its own dedicated home, which signs"
+        Write-Host "in with a long-lived token. The one-time 'claude setup-token' step mints that"
+        Write-Host "token; you keep it in a file outside this repository, at the location you set"
+        Write-Host "AGENT_CLAUDE_TOKEN_FILE to. Your normal 'claude' login and every other"
+        Write-Host "repository are left alone, and declining changes no configuration or credential."
+        $ans = Read-Host "Run 'claude setup-token' now? [y/N]"
+        if ($ans -match '^[Yy]') {
+            & claude setup-token
+            Write-Host "  Keep the printed token in a file outside this repository, then set"
+            Write-Host "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. setx AGENT_CLAUDE_TOKEN_FILE <path>)."
+        } else {
+            Write-Host "  Skipped the token step; nothing was changed. A retained adjudication is refused until it is done."
+        }
+    }
 
     # Ambient-interpreter debris warning (WI-175 / WI-105). $py above prefers the
     # venv; a bare `python -m pytest` resolves via PATH, which may be a DIFFERENT
@@ -177,6 +229,66 @@ try {
             Write-Host "         debris at the repo root (WI-105). Run the suite through .\.venv"
             Write-Host "         (.venv\Scripts\python.exe -m pytest), or activate it, so the pinned tools run."
         }
+    }
+
+    # The agent-CLI offer (WI-112) — individually consented, never implicit.
+    function Offer-Cli($cmd, $pkg, $hint) {
+        if (Have $cmd) { return }
+        if (-not (Have "npm")) {
+            Write-Host "  [skip] $cmd — npm not found; install Node.js first, or install $cmd your own way."
+            return
+        }
+        $a = Read-Host "Install the $cmd CLI now (npm install -g $pkg)? [y/N]"
+        if ($a -match '^[Yy]') {
+            & npm install -g $pkg
+            if (($LASTEXITCODE -eq 0) -and (Have $cmd)) {
+                Write-Host "  [ok] $cmd installed — $hint"
+            } else {
+                Write-Host "  [warn] $cmd is still not on PATH — check the npm global bin dir, then: $hint"
+            }
+        } else {
+            Write-Host "  Skipped $cmd — fine if you use your own tools or an IDE extension."
+        }
+    }
+
+    # The runtime offer (round 032 F1): dev-setup.sh's offer_python on Windows.
+    # One consented install of a 3.11+ runtime, only through a provisioner the
+    # developer already has (uv, else winget: the two the runtime hint names),
+    # never one this script fetches. With neither, nothing is offered and the
+    # step text follows. A runtime installed here counts from the next run.
+    function Offer-Python {
+        if (Have "uv") { $tool = "uv"; $toolArgs = @("python", "install", "3.13") }
+        elseif (Have "winget") { $tool = "winget"; $toolArgs = @("install", "--id", "Python.Python.3.13", "-e") }
+        else { return }
+        $shown = "$tool " + ($toolArgs -join " ")
+        $a = Read-Host "No Python 3.11+ found, but $tool is installed. Run '$shown' now? [y/N]"
+        if ($a -match '^[Yy]') {
+            & $tool @toolArgs
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "  [ok] $tool finished - the new runtime counts from the next run."
+            } else {
+                Write-Host "  [warn] $tool could not install it - install Python 3.11+ your own way."
+            }
+        } else {
+            Write-Host "  Skipped - install Python 3.11+ your own way, then run again."
+        }
+    }
+
+    # --- -ForRun: the check above, then offers at a console only -------------
+    if ($ForRun) {
+        Write-Host ""
+        if (Interactive) {
+            if (-not $py) { Offer-Python }  # installed now, it counts from the next run
+            Offer-Cli "claude" "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
+            Offer-Cli "codex" "@openai/codex" "sign in with: codex login"
+            Offer-Signin
+        } else {
+            Write-Host "No interactive console: nothing is offered (run scripts\dev-setup.ps1 -Install at a console)."
+        }
+        if ($py) { exit 0 }
+        Write-Host ""
+        Write-Host "The runtime is still missing - the step to take: install Python 3.11+ (e.g. winget install Python.Python.3.13, uv python install 3.13, or the python.org Windows installer) or put an installed one first on PATH, then run again. run checked: $PyChecked"
+        exit 1
     }
 
     if (-not $Install) {
@@ -229,8 +341,8 @@ try {
     # meta-repo folds it into dev-setup — IMPROVEMENT_PLAN WI-1.42). Independent of
     # the venv install, so it happens even if that's declined. Reversible
     # (git config --unset core.hooksPath); idempotent.
-    $null = git rev-parse --is-inside-work-tree 2>$null
-    if ((Test-Path ".githooks/pre-commit") -and ($LASTEXITCODE -eq 0)) {
+    if ($haveGit) { $null = git rev-parse --is-inside-work-tree 2>$null }
+    if ($haveGit -and (Test-Path ".githooks/pre-commit") -and ($LASTEXITCODE -eq 0)) {
         git config core.hooksPath .githooks
         Write-Host "Enabled pre-commit floor (core.hooksPath=.githooks; undo: git config --unset core.hooksPath)."
     }
@@ -267,41 +379,12 @@ try {
     # Agent CLIs (WI-112) — individually consented, never implicit: most users
     # want the agentic workflow (agent-resume.*) easily accessible, but each
     # CLI is deferrable for someone driving sessions with their own tools or
-    # an IDE extension.
-    function Offer-Cli($cmd, $pkg, $hint) {
-        if (Have $cmd) { return }
-        if (-not (Have "npm")) {
-            Write-Host "  [skip] $cmd — npm not found; install Node.js first, or install $cmd your own way."
-            return
-        }
-        $a = Read-Host "Install the $cmd CLI now (npm install -g $pkg)? [y/N]"
-        if ($a -match '^[Yy]') {
-            & npm install -g $pkg
-            if (($LASTEXITCODE -eq 0) -and (Have $cmd)) {
-                Write-Host "  [ok] $cmd installed — $hint"
-            } else {
-                Write-Host "  [warn] $cmd is still not on PATH — check the npm global bin dir, then: $hint"
-            }
-        } else {
-            Write-Host "  Skipped $cmd — fine if you use your own tools or an IDE extension."
-        }
-    }
+    # an IDE extension (Offer-Cli, above).
     Write-Host ""
     Write-Host "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
     Offer-Cli "claude" "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
     Offer-Cli "codex" "@openai/codex" "sign in with: codex login"
-    # The one-time long-lived token step (WI-846), consented: `claude
-    # setup-token` prints the token once; nothing here reads, stores or prints it.
-    if ((-not (TokenReady)) -and (Have "claude")) {
-        $ans = Read-Host "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N]"
-        if ($ans -match '^[Yy]') {
-            & claude setup-token
-            Write-Host "  Keep the printed token in a file outside this repository, then set"
-            Write-Host "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. setx AGENT_CLAUDE_TOKEN_FILE <path>)."
-        } else {
-            Write-Host "  Skipped the token step; a retained adjudication is refused until it is done."
-        }
-    }
+    Offer-Signin
     if ((-not (Have "claude")) -or (-not (Have "codex"))) {
         Write-Host ""
         Write-Host "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"

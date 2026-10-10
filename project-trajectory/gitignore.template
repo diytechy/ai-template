@@ -6,6 +6,10 @@ __pycache__/
 .coverage
 .ruff_cache/
 
+# Claude Code's machine-local settings: dev-setup's coordinator-hooks opt-in
+# writes them with this machine's interpreter path, so they stay out of git.
+.claude/settings.local.json
+
 # OS filesystem metadata (macOS Finder writes these anywhere you browse)
 .DS_Store
 

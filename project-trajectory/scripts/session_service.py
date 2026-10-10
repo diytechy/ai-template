@@ -38,8 +38,9 @@ Contract IF-246: the session service's call surface. `Call` is the data a role
     `attempt_id`, any further log `attribution`, the launch `env`, the wall
     `timeout` and `idle_timeout`, the console `on_line` renderer, `attached`
     for a hands-on sitting, an optional `runner` standing in for the launch,
-    and an optional `keep` (from `keep_for`) naming the retained session the
-    call resumes or mints. `act(call, metrics=None)` returns an `Outcome` (`root`, `code`,
+    an optional `keep` (from `keep_for`) naming the retained session the
+    call resumes or mints, and `wi`, the work item an adjudication is for,
+    carried apart from the keep. `act(call, metrics=None)` returns an `Outcome` (`root`, `code`,
     `text`, `timed_out`, `stream`, `metrics`): `text` is the CLI's result as
     its adapter reads it, `stream` the whole captured output, and `metrics`
     the call's accounting, filled into a caller-owned dict so a call that
@@ -55,7 +56,13 @@ Contract IF-246: the session service's call surface. `Call` is the data a role
     record, and retires it if its launch raises; `one_turn` bounds the call to
     one turn where the runner can. `KeepWarmer`, built by `keep_warmer(root,
     cfg)` only when the dial and keep-warm are on, is the dispatcher's
-    non-blocking keep-warm (see its docstring).
+    non-blocking keep-warm (see its docstring). Inside the blackout window
+    (`agent_common.blackout_at`) `act`, and so `call`, raises
+    `BlackoutRefused` before anything is built, accounted, recorded or
+    launched, for every call but one whose role is ADJUDICATE and whose `wi`
+    has an active claim in the primary checkout's registry; a refused
+    retained call's lease is released. `through_blackout(launch)` is the
+    loop's handling: it waits the window out and retries the launch.
 
 Contract IF-282: the adjudication request and the sign-in probe, the surface
     the loop's route and the coordinator's entry point share.
@@ -185,6 +192,7 @@ class Call:
     runner: object = None
     keep: object = None
     one_turn: bool = False
+    wi: str = ""
 
 
 @dataclass
@@ -347,10 +355,18 @@ def _timeout_kind(timed_out):
 
 
 def act(call, metrics=None):
-    """Launch one call and account it; see Contract IF-246.
+    """Launch one call and account it; see Contract IF-246. Inside the
+    blackout window a call the window does not admit (`launch_refusal`)
+    raises BlackoutRefused before anything is built, accounted or launched,
+    and a retained call's lease is released first.
 
-    Implements: SR-222, LLR-269
+    Implements: SR-222, SR-229, LLR-269
     """
+    refused = launch_refusal(call)
+    if refused is not None:
+        if call.keep is not None:
+            session_keep.keep_release(call.root, call.keep)
+        raise refused
     metrics = {} if metrics is None else metrics
     call = _as_prepared(call)
     argv, stdin_input = agent_session.build_argv(call.template, call.model, call.prompt)
@@ -428,6 +444,80 @@ def act(call, metrics=None):
             )
         )
     return outcome
+
+
+# --- the blackout window at the launch boundary (WI-834) ---------------------------
+
+
+class BlackoutRefused(Exception):
+    """A launch the blackout window refuses, carrying the window as read at
+    the refusal (`blackout`, an `agent_common.blackout_at` answer). The loop
+    waits it out and retries (`through_blackout`); the coordinator's route
+    reports it.
+
+    Implements: SR-237, LLR-317
+    """
+
+    def __init__(self, blackout, role):
+        self.blackout = blackout
+        window, end = blackout.window, blackout.end
+        super().__init__(
+            "session service: the blackout window {} UTC is open until {} UTC; a "
+            "{} launch is refused inside it (only a wrap-up adjudication of a work "
+            "item whose claim is active starts a session there)".format(
+                window, end.strftime("%Y-%m-%d %H:%M"), role or "model"
+            )
+        )
+
+
+def claim_active(root, wi):
+    """Whether work item `wi`'s claim is `active` in the PRIMARY checkout's
+    registry: a lane's own checkout is not enough, because the close-first
+    rule moves its spec before the final verdict.
+
+    Implements: SR-237, LLR-317
+    """
+    primary = session_keep.primary_out_dir(root).parent
+    row = agent_common.load_wi_registry(primary).get(wi) or {}
+    return (row.get("Status") or "").strip().lower() == "active"
+
+
+def launch_refusal(call):
+    """BlackoutRefused for a call launched inside the blackout window, or
+    None. Every caller is refused there but one: a call whose role is
+    ADJUDICATE for a named work item (`call.wi`, carried apart from the keep,
+    so the rule holds with retention off) whose claim is active
+    (`claim_active`). Claims are refused inside the window on every route, so
+    an active claim is a lane claimed before it. Derived from the role and the
+    registry; no caller selects it.
+
+    Implements: SR-237, LLR-317
+    """
+    blackout = agent_common.blackout_at(Path(call.root) / "docs")
+    if not blackout.inside:
+        return None
+    if call.role == "ADJUDICATE" and call.wi and claim_active(call.root, call.wi):
+        return None
+    return BlackoutRefused(blackout, call.role)
+
+
+def through_blackout(launch, emit=print, sleep=time.sleep):
+    """`launch()`, and while the blackout window refuses it, the window waited
+    out (`agent_common.blackout_wait`: a banner and a countdown) and the
+    launch retried: the loop's handling of the launch boundary, on every loop
+    route (a worker session, the interactive sitting, a recovery probe, a
+    dual-plan round).
+
+    Implements: SR-237, LLR-317
+    """
+    while True:
+        try:
+            return launch()
+        except BlackoutRefused as refused:
+            b = refused.blackout
+            agent_common.blackout_wait(
+                max(1, b.wake_seconds), b.window, b.end, emit, sleep
+            )
 
 
 def _write_raw(raw_dir, name, stream):

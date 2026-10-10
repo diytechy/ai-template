@@ -47,8 +47,9 @@ During worker/review sessions this module:
     stop claiming/starting, at the next session boundary — the in-flight
     session finishes and commits normally, never a mid-session kill; unpausing
     is a reviewed deletion commit;
-  - honors docs/blackout: a declared `HH:MM-HH:MM` UTC WEEKDAY-ONLY window
-    (Mon–Fri; weekends are never blacked out, by blackout_wake's contract)
+  - honors the blackout window (`[policies] blackout`): a declared
+    `HH:MM-HH:MM` UTC window that starts on each weekday (Mon–Fri; a window
+    wrapping past midnight belongs to its start day, `agent_common.blackout_at`)
     inside which no new session starts — the in-flight one wraps normally, then
     the agent-resume -> agent_loop path waits the window out and resumes
     automatically (a single launch survives the blackout), printing a banner and
@@ -244,7 +245,7 @@ read_agent_loop_config = agent_common.read_agent_loop_config
 resolve_coordinator_dials = agent_common.resolve_coordinator_dials
 pause_reason = agent_common.pause_reason
 parse_blackout = agent_common.parse_blackout
-blackout_wake = agent_common.blackout_wake
+blackout_at = agent_common.blackout_at
 blackout_wait = agent_common.blackout_wait
 WI_TOKEN_RE = agent_common.WI_TOKEN_RE
 sanitize_train = agent_common.sanitize_train
@@ -1429,17 +1430,16 @@ def run_interactive(
     prompt = compose_session_prompt(
         model, "", "", guardrails_policy, root, warned_no_core
     )[0]
-    return session_service.call(
-        session_service.Call(
-            root=root,
-            role="INTERACTIVE",
-            template=itemplate,
-            model=model,
-            prompt=prompt,
-            source_event="interactive",
-            attached=True,
-        )
-    ).code
+    sitting = session_service.Call(
+        root=root,
+        role="INTERACTIVE",
+        template=itemplate,
+        model=model,
+        prompt=prompt,
+        source_event="interactive",
+        attached=True,
+    )
+    return session_service.through_blackout(lambda: session_service.call(sitting)).code
 
 
 def _subagent_gate_log_count(root):
@@ -2571,8 +2571,8 @@ def judging_session_integrity(ctx, plan, commits, session, now):
 
 
 def wait_out_blackout(lane):
-    """WI-148: a declared docs/blackout window pauses NEW sessions on UTC
-    weekdays. The in-flight session already wrapped normally (the pause
+    """WI-148: a declared blackout window pauses NEW sessions. The in-flight
+    session already wrapped normally (the pause
     semantic), so here we simply wait the window out and then let this
     iteration's session start — no iteration budget is consumed by waiting (we
     sleep inline, never `continue`), so a single walk-away launch survives the
@@ -2580,13 +2580,17 @@ def wait_out_blackout(lane):
 
     WI-261: a prominent banner + a periodic countdown heartbeat (vs the old
     one-liner) so a walk-away launch reads as deliberately WAITING, not hung.
-    Same wait semantics — total sleep is exactly `wake` seconds."""
-    blackout_line = declared_policy(lane, "blackout", "")
-    wake = blackout_wake(blackout_line, datetime.datetime.utcnow())
-    if not wake:
+    Same wait semantics — total sleep is exactly `wake` seconds. WI-834: the
+    window is the one window function's (`blackout_at`), read at this call.
+
+    Implements: SR-237, LLR-318
+    """
+    blackout = blackout_at(lane)
+    if blackout.wake_seconds <= 0:
         return
-    resume_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=wake)
-    blackout_wait(wake, blackout_line, resume_at, emit=print, sleep=time.sleep)
+    blackout_wait(
+        blackout.wake_seconds, blackout.window, blackout.end, print, time.sleep
+    )
 
 
 def current_assignment_wi(root, worker):
@@ -2678,7 +2682,10 @@ def launch_session(ctx, plan, wi=None):
     emitting JSON (spawn failure, timeout, crash). The loop hands over only
     the route's data and the console renderer. A retained adjudication whose
     dedicated home is not signed in launches nothing: the run stops needing
-    a human (EXIT_NEEDS_HUMAN is returned in place of an Outcome).
+    a human (EXIT_NEEDS_HUMAN is returned in place of an Outcome). A launch
+    the blackout window refuses waits the window out and is retried
+    (`session_service.through_blackout`); the call carries its work item, so
+    a wrap-up adjudication of an active claim is admitted inside it.
 
     Implements: SR-222, LLR-269
     """
@@ -2690,29 +2697,37 @@ def launch_session(ctx, plan, wi=None):
         on_line = live.event
     else:
         on_line = echo_session_line
-    try:
+
+    def attempt():
+        # The keep is planned per attempt: a launch the blackout window
+        # refused has released its lease, and the retry after the window
+        # meets the window's retirement at its own keep call.
         kept = adjudication_keep(ctx, plan, wi)
+        return session_service.act(
+            session_service.Call(
+                root=ctx.root,
+                role=plan["phase"],
+                template=plan["tmpl"],
+                model=plan["model"],
+                prompt=plan["prompt"],
+                provider=plan["route_family"] or "",
+                tier=plan["route_tier"],
+                route_id=plan["route_id"] or "",
+                attempt_id="{}@{}".format(ctx.worker["train"], ctx.worker["base"]),
+                env=plan["session_env"],
+                timeout=args.session_timeout,
+                idle_timeout=resolve_idle_timeout(args),
+                on_line=on_line,
+                keep=kept,
+                wi=wi or "",
+            )
+        )
+
+    try:
+        outcome = session_service.through_blackout(attempt)
     except session_service.SigninRefused as refused:
         stop_banner(ctx.status_path, SIGNIN_HOLD, str(refused))
         return EXIT_NEEDS_HUMAN
-    outcome = session_service.act(
-        session_service.Call(
-            root=ctx.root,
-            role=plan["phase"],
-            template=plan["tmpl"],
-            model=plan["model"],
-            prompt=plan["prompt"],
-            provider=plan["route_family"] or "",
-            tier=plan["route_tier"],
-            route_id=plan["route_id"] or "",
-            attempt_id="{}@{}".format(ctx.worker["train"], ctx.worker["base"]),
-            env=plan["session_env"],
-            timeout=args.session_timeout,
-            idle_timeout=resolve_idle_timeout(args),
-            on_line=on_line,
-            keep=kept,
-        )
-    )
     if live is not None:
         live.finish()
     return outcome
@@ -2845,25 +2860,25 @@ def probe_route(row, root, wall=30):
     VERBATIM (a template defect must be caught by the probe, not by a burned
     draw — the doubled --dir incident, 2026-08-30) with the fixed prompt and a
     30 s wall. `ok` means the session exited 0 inside the wall and the result
-    carries the word OK."""
+    carries the word OK. A probe the blackout window refuses waits the window
+    out and is retried (`session_service.through_blackout`)."""
     row_env = agent_route.parse_env(row.env)
     env = {**os.environ, **row_env} if row_env else None
+    asked = session_service.Call(
+        root=root,
+        role="PROBE",
+        template=row.cmd_template,
+        model=row.model or "",
+        prompt=PROBE_PROMPT,
+        provider=row.family,
+        tier=row.tier,
+        route_id=row.id,
+        source_event="recovery-probe",
+        env=env,
+        timeout=wall,
+    )
     try:
-        probe = session_service.call(
-            session_service.Call(
-                root=root,
-                role="PROBE",
-                template=row.cmd_template,
-                model=row.model or "",
-                prompt=PROBE_PROMPT,
-                provider=row.family,
-                tier=row.tier,
-                route_id=row.id,
-                source_event="recovery-probe",
-                env=env,
-                timeout=wall,
-            )
-        )
+        probe = session_service.through_blackout(lambda: session_service.call(asked))
     except ValueError as exc:
         return False, str(exc)
     code, output, timed_out = probe.code, probe.text, probe.timed_out
@@ -3690,7 +3705,7 @@ def resolve_session_policies(root, docs):
         push=declared_policy(docs, "push-policy", "human"),
         review=declared_policy(docs, "review-policy", "1"),
         guardrails=declared_policy(docs, "guardrails-policy", "off"),
-        blackout=declared_policy(docs, "blackout", ""),
+        blackout=blackout_at(docs).window,
     )
 
 

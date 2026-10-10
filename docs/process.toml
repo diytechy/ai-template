@@ -221,11 +221,13 @@ privacy_review = "require"
 # Vendored-core guardrail injection — was docs/guardrails-policy.
 #   "off" | "all" | "all except <sub> …" | "<sub> …"
 guardrails = "off"
-# The weekday blackout window, UTC, HH:MM-HH:MM — was docs/blackout. An empty
-# value (or start == end) disables it. Owner direction 2026-09-04: disabled
-# (was "12:00-19:00") so the supervised queue drain keeps moving; note the
-# window gates worker SESSIONS, never dispatch admission, so a claim made inside
-# it sits idle for the whole wait. Restore the value to re-arm.
+# The blackout window, UTC, HH:MM-HH:MM — was docs/blackout. It starts on each
+# weekday; a window wrapping past midnight belongs to its start day. An empty
+# value (or start == end) disables it. Owner direction 2026-09-04: disabled (was
+# "12:00-19:00") so the supervised queue drain keeps moving. When armed it gates
+# claims on every route, the dispatcher's included (owner ruling (i),
+# 2026-10-05, WI-834), and every new session but a wrap-up adjudication of an
+# active claim. Restore the value to re-arm.
 blackout = ""
 
 [checks]

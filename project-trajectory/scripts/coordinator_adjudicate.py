@@ -36,18 +36,21 @@ Contract IF-283: the coordinator's adjudication command line, its arguments.
     `docs/agents.toml` named on `docs/agents-enabled`, as an ADJUDICATE call
     of brief class CLASS for WI-N, retained where the `[adjudicator]` dial
     covers it, and writes and commits the call's session log.
-    `signin [--family F] [--root DIR]` prints the sign-in probe's reading
-    for family F (default ANTHROPIC), creating nothing and making no model
-    call; for ANTHROPIC the reading is whether the long-lived token file the
-    `AGENT_CLAUDE_TOKEN_FILE` environment variable names can be read, never
-    the token or its path.
+    `signin [--family F] [--root DIR] [--retained]` prints the sign-in
+    probe's reading for family F (default ANTHROPIC), creating nothing and
+    making no model call; for ANTHROPIC the reading is whether the long-lived
+    token file the `AGENT_CLAUDE_TOKEN_FILE` environment variable names can
+    be read, never the token or its path. With `--retained` it reads `off`,
+    probing nothing, while the `[adjudicator]` dial leaves retention off.
 
 Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     verdict; 1 for a call that failed, timed out or reported an error result
     (`session_service.call_succeeded`), or a missing (still
     empty) or invalid verdict; 2, before anything launches, for a root that
     is not a lane, an unusable route, a brief file that cannot be read or
-    decoded, or a PATH that exists or cannot be reserved; and 7 (needs a human) when the retained launch is refused
+    decoded, a PATH that exists or cannot be reserved, or a launch the
+    blackout window refuses (the session service admits only an
+    adjudication of a work item whose claim is active there); and 7 (needs a human) when the retained launch is refused
     because its dedicated CLI home is not signed in. `signin` exits 0.
 
 Contract IF-285: the command's stdout readings. `adjudicate` prints the
@@ -57,7 +60,7 @@ Contract IF-285: the command's stdout readings. `adjudicate` prints the
     validity under the brief class's grammar, or that the verdict is missing
     when the call left its reservation empty; any other call prints that it
     failed and that its verdict is not read. `signin` prints the sign-in probe's reading: `signed-in`,
-    `missing` or `unknown`.
+    `missing` or `unknown`, or `off` under `--retained` with retention off.
 
 Run with Python 3.11+:  python scripts/coordinator_adjudicate.py adjudicate \\
     --brief-file out/brief.md --brief amendment --wi WI-123 \\
@@ -298,24 +301,30 @@ def adjudicate(args):
         print("adjudicate: {}".format(refused))
         return agent_common.EXIT_NEEDS_HUMAN
     print(_keep_line(kept))
-    outcome = session_service.call(
-        session_service.Call(
-            root=root,
-            role=request.role,
-            template=row.cmd_template,
-            model=row.model or row.id,
-            prompt=prompt,
-            provider=row.family,
-            tier=row.tier,
-            route_id=row.id,
-            source_event="coordinator",
-            attribution={"wi": args.wi},
-            env=env,
-            timeout=args.timeout,
-            idle_timeout=IDLE_TIMEOUT,
-            keep=kept,
+    try:
+        outcome = session_service.call(
+            session_service.Call(
+                root=root,
+                role=request.role,
+                template=row.cmd_template,
+                model=row.model or row.id,
+                prompt=prompt,
+                provider=row.family,
+                tier=row.tier,
+                route_id=row.id,
+                source_event="coordinator",
+                attribution={"wi": args.wi},
+                env=env,
+                timeout=args.timeout,
+                idle_timeout=IDLE_TIMEOUT,
+                keep=kept,
+                wi=args.wi,
+            )
         )
-    )
+    except session_service.BlackoutRefused as refused:
+        _release(args.verdict)
+        print("adjudicate: refused: {}".format(refused))
+        return agent_common.EXIT_PREFLIGHT
     kinds = adjudicate_brief.requested_for(args.brief, prompt)
     code = _report(outcome, args.brief, args.verdict, kinds)
     # The route that ran the call RECORDS its acceptance (WI-841 rounds 11,
@@ -331,11 +340,17 @@ def adjudicate(args):
 def signin(args):
     """Print the sign-in probe's reading of a family's dedicated home (for
     Claude, whether its long-lived token file can be read; never the token).
+    With `--retained`, `off` and no probe while the `[adjudicator]` dial
+    (`session_keep.keep_config`) leaves retention off: dev-setup's reading.
 
     Implements: SR-231, LLR-306
     """
     family = args.family.upper()
-    status = session_service.signin_status(Path(args.root).resolve(), family)
+    root = Path(args.root).resolve()
+    if args.retained and not session_service.session_keep.keep_config(root).enabled:
+        status = "off"
+    else:
+        status = session_service.signin_status(root, family)
     print("signin [{}]: {}".format(family, status))
     return 0
 
@@ -363,6 +378,11 @@ def _parser():
     )
     probe.add_argument("--root", default=".")
     probe.add_argument("--family", default="ANTHROPIC")
+    probe.add_argument(
+        "--retained",
+        action="store_true",
+        help="read `off` while the [adjudicator] dial leaves retention off",
+    )
     probe.set_defaults(handler=signin)
     return parser
 

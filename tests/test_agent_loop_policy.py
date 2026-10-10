@@ -119,53 +119,54 @@ def test_parse_blackout_edges():
     assert al.parse_blackout("12:60-19:00") is None  # minute out of range
 
 
-def test_blackout_wake_boundary_minutes():
+def _wake(tmp_path, line, now):
+    """The wait the one window function (`blackout_at`, WI-834) reads at
+    `now` for a declared `line`, or None outside a window."""
     al = load_script("agent_loop")
+    (tmp_path / "process.toml").write_text(
+        '[policies]\nblackout = "{}"\n'.format(line), encoding="utf-8"
+    )
+    return al.blackout_at(tmp_path, now).wake_seconds or None
+
+
+def test_blackout_wake_boundary_minutes(tmp_path):
     line = "12:00-19:00"
     # A Monday (weekday 0) so the window is active.
     mon = datetime.datetime(2026, 7, 13)  # 2026-07-13 is a Monday
 
     def at(h, m, s=0):
-        return mon.replace(hour=h, minute=m, second=s)
+        return _wake(tmp_path, line, mon.replace(hour=h, minute=m, second=s))
 
     # Half-open [start, end): the first minute is inside, `end` itself is clear.
-    assert al.blackout_wake(line, at(11, 59)) is None  # just before -> unaffected
-    assert al.blackout_wake(line, at(12, 0)) == 7 * 3600  # start -> 7h to 19:00
-    assert al.blackout_wake(line, at(18, 59)) == 60  # last minute inside
-    assert al.blackout_wake(line, at(18, 59, 30)) == 30  # seconds honored
-    assert al.blackout_wake(line, at(19, 0)) is None  # end -> already clear
-    assert al.blackout_wake(line, at(19, 1)) is None  # after -> unaffected
+    assert at(11, 59) is None  # just before -> unaffected
+    assert at(12, 0) == 7 * 3600  # start -> 7h to 19:00
+    assert at(18, 59) == 60  # last minute inside
+    assert at(18, 59, 30) == 30  # seconds honored
+    assert at(19, 0) is None  # end -> already clear
+    assert at(19, 1) is None  # after -> unaffected
 
 
-def test_blackout_wake_disable_and_weekend():
-    al = load_script("agent_loop")
+def test_blackout_wake_disable_and_weekend(tmp_path):
     mon_noon = datetime.datetime(2026, 7, 13, 12, 0)  # Monday, inside a 12-19 window
     sat_noon = datetime.datetime(2026, 7, 11, 12, 0)  # Saturday
     sun_noon = datetime.datetime(2026, 7, 12, 12, 0)  # Sunday
     # start == end disables even on a weekday inside "the window".
-    assert al.blackout_wake("00:00-00:00", mon_noon) is None
-    assert al.blackout_wake("12:00-12:00", mon_noon) is None
-    # The window is Mon–Fri only — weekends are never blacked out.
-    assert al.blackout_wake("12:00-19:00", sat_noon) is None
-    assert al.blackout_wake("12:00-19:00", sun_noon) is None
+    assert _wake(tmp_path, "00:00-00:00", mon_noon) is None
+    assert _wake(tmp_path, "12:00-12:00", mon_noon) is None
+    # No window STARTS on a weekend (WI-834: a wrap belongs to its start day).
+    assert _wake(tmp_path, "12:00-19:00", sat_noon) is None
+    assert _wake(tmp_path, "12:00-19:00", sun_noon) is None
     # Absent/malformed line = disabled.
-    assert al.blackout_wake("", mon_noon) is None
-    assert al.blackout_wake("garbage", mon_noon) is None
+    assert _wake(tmp_path, "", mon_noon) is None
+    assert _wake(tmp_path, "garbage", mon_noon) is None
 
 
-def test_blackout_wake_wraps_past_midnight():
-    al = load_script("agent_loop")
+def test_blackout_wake_wraps_past_midnight(tmp_path):
     line = "22:00-06:00"  # start > end -> a window crossing UTC midnight
     tue = datetime.datetime(2026, 7, 14)  # a Tuesday
-    assert (
-        al.blackout_wake(line, tue.replace(hour=23, minute=0)) == 7 * 3600
-    )  # -> 06:00 next day
-    assert (
-        al.blackout_wake(line, tue.replace(hour=2, minute=0)) == 4 * 3600
-    )  # early-morning tail
-    assert (
-        al.blackout_wake(line, tue.replace(hour=12, minute=0)) is None
-    )  # midday -> clear
+    assert _wake(tmp_path, line, tue.replace(hour=23)) == 7 * 3600  # -> 06:00
+    assert _wake(tmp_path, line, tue.replace(hour=2)) == 4 * 3600  # Monday's tail
+    assert _wake(tmp_path, line, tue.replace(hour=12)) is None  # midday -> clear
 
 
 # --- WI-261: blackout pause feedback (banner + countdown heartbeat) -----------

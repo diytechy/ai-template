@@ -1157,6 +1157,8 @@ def _admit(
         if busy:
             return False, None
         return False, _paused_exit(root, tier, paused, state)
+    if _blackout_hold(root, busy, state):
+        return False, None
     return _admit_frontier(
         root,
         table,
@@ -1170,6 +1172,33 @@ def _admit(
         config_refusal,
         state,
     )
+
+
+def _blackout_hold(root, busy, state):
+    """True while the blackout window holds the claim (WI-834): the claim is
+    refused inside it on every route, the dispatcher's included, so the tick
+    claims nothing. In-flight lanes still finish, refresh and merge; an idle
+    station waits the window out here (the banner and the countdown), so the
+    run neither spins nor ends, and claims again on the tick after it.
+
+    Implements: SR-237, LLR-319
+    """
+    blackout = ac.blackout_at(root / "docs")
+    if not blackout.inside:
+        state.pop("blackout_said", None)
+        return False
+    if busy:
+        if state.get("blackout_said") != blackout.end:
+            state["blackout_said"] = blackout.end
+            _say(
+                "blackout window {} UTC open until {} UTC - no claim; the live "
+                "lanes finish".format(blackout.window, blackout.end.strftime("%H:%M"))
+            )
+        return True
+    ac.blackout_wait(
+        blackout.wake_seconds, blackout.window, blackout.end, _say, time.sleep
+    )
+    return True
 
 
 def _admit_frontier(

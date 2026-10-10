@@ -808,8 +808,10 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     # The coordinator context guard (WI-822) runs first and binds every route
     # to a claim but the live dispatcher's, which has its own protection: a
     # wrapper, an import and the CLI all land here. Off (no read, no refusal)
-    # while `[coordinator] context_guard_pct` is 0.
-    guarded = None if dispatch_lock_held else coordinator_guard.claim_refusal(root)
+    # while `[coordinator] context_guard_pct` is 0. The blackout window
+    # (WI-834) binds every route, the dispatcher's included, at any dial.
+    fence = coordinator_guard.window_refusal if dispatch_lock_held else None
+    guarded = (fence or coordinator_guard.claim_refusal)(root)
     refusal = guarded or _claim_refusal(root, wi_ids, branch)
     if refusal:
         return fail(refusal)

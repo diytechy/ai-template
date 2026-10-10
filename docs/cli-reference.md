@@ -318,6 +318,7 @@ Contracts (interfaces): IF-283, IF-284, IF-285
 | `--timeout` |  |
 | `--root` |  |
 | `--family` |  |
+| `--retained` | read `off` while the [adjudicator] dial leaves retention off |
 
 ### `scripts/coordinator_guard`
 _The coordinator context guard: stop new lanes at a context threshold, close_
@@ -333,6 +334,8 @@ Contracts (interfaces): IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280, 
 | `--handoff` |  |
 | `--session` |  |
 | `--prompt-file` |  |
+| `--example` | the inert hook config |
+| `--enable` |  |
 | `--reason` |  |
 
 ### `scripts/derive_stage`

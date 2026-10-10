@@ -55,7 +55,6 @@ Contract IF-224: `human_approves_spine(docs, registry)`, read by the owner's
     its own.
 """
 
-import datetime
 import hashlib
 import errno
 import os
@@ -135,6 +134,8 @@ _coerce = agent_policy._coerce
 process_shape_findings = agent_policy.process_shape_findings
 _line_shape_findings = agent_policy._line_shape_findings
 declared_policy = agent_policy.declared_policy
+parse_blackout = agent_policy.parse_blackout
+blackout_at = agent_policy.blackout_at
 LEGACY_APPROVAL = agent_policy.LEGACY_APPROVAL
 APPROVAL_DIAL_RUNGS = agent_policy.APPROVAL_DIAL_RUNGS
 LEGACY_DIAL_ORDINALS = agent_policy.LEGACY_DIAL_ORDINALS
@@ -538,63 +539,8 @@ def _declared_test_command(ini, py=None):
     return None
 
 
-# --- WI-148: weekday blackout window ------------------------------------------
-# A declared `docs/blackout` policy: first non-comment line `HH:MM-HH:MM` (UTC),
-# active Mon–Fri. Inside the window the coordinator starts no new session (the
-# in-flight one already wrapped, the same graceful semantic as docs/pause) — it
-# waits out the window, then resumes automatically, so a single walk-away launch
-# survives the blackout. An absent/empty/malformed file, or `start == end`,
-# disables it (byte-identical to a repo that never had the file — never-breaking);
-# a fresh scaffold ships `12:00-12:00`, i.e. DISABLED but written in window
-# SHAPE, so an adopter reads the format off the line they edit and inherits
-# nobody else's hours (owner ruling 2026-08-11, WI-433).
-BLACKOUT_RE = re.compile(r"^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$")
-
-
-def parse_blackout(line):
-    """Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)` — minutes
-    past UTC midnight — or `None` when absent/empty/malformed (an out-of-range
-    hour or minute is malformed). Deliberately does NOT apply the `start == end`
-    disable rule; the caller (blackout_wake) does, so the parse and the policy
-    stay separately testable."""
-    m = BLACKOUT_RE.match(line or "")
-    if not m:
-        return None
-    sh, sm, eh, em = (int(g) for g in m.groups())
-    if sh > 23 or eh > 23 or sm > 59 or em > 59:
-        return None
-    return (sh * 60 + sm, eh * 60 + em)
-
-
-def blackout_wake(line, now):
-    """Seconds until the current UTC weekday blackout window ends, or `None` when
-    a new session is NOT blacked out at `now` — the file is absent/empty/
-    malformed, the window is disabled (`start == end`), it is the weekend (the
-    window is Mon–Fri only), or `now` falls outside the window. The window is
-    half-open `[start, end)`: a session starting exactly at `end` is already
-    clear (so 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00). A
-    window whose start is after its end wraps past UTC midnight, honored on its
-    start weekday. `now` is a naive UTC datetime (datetime.utcnow())."""
-    win = parse_blackout(line)
-    if win is None:
-        return None
-    start, end = win
-    if start == end:
-        return None  # the disable form
-    if now.weekday() >= 5:  # Sat/Sun — the window is weekdays only
-        return None
-    minute = now.hour * 60 + now.minute
-    inside = start <= minute < end if start < end else (minute >= start or minute < end)
-    if not inside:
-        return None
-    wake = now.replace(hour=end // 60, minute=end % 60, second=0, microsecond=0)
-    if wake <= now:  # a wrap window's end is tomorrow morning
-        wake += datetime.timedelta(days=1)
-    return int((wake - now).total_seconds())
-
-
 # --- WI-261: blackout pause feedback (banner + countdown heartbeat) --------------
-# The window SEMANTICS live in blackout_wake above; these render the WAIT so a
+# The window SEMANTICS live in agent_policy.blackout_at; these render the WAIT so a
 # walk-away launch reads as deliberately paused, not hung. All three are pure /
 # injectable so the terminal feedback is testable without a real multi-second
 # sleep. The scaffold's default cadence between countdown heartbeats (seconds).
@@ -627,7 +573,7 @@ def blackout_banner(window, resume_at, wake_seconds, policy_file="docs/blackout"
             bar,
             "agent_loop: BLACKOUT — holding; no new session starts yet.",
             "  policy file : {}".format(policy_file),
-            "  window      : {} UTC  (weekday-only, Mon–Fri; weekends run)".format(
+            "  window      : {} UTC  (starts on weekdays, Mon–Fri)".format(
                 (window or "").strip()
             ),
             "  resuming at : {} UTC  (in ~{})".format(

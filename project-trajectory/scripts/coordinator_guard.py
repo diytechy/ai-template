@@ -25,11 +25,20 @@ lanes, and compaction then degrades it. This module is the whole guard:
   hook input carries;
 - **the relaunch** (`request_relaunch`, `session_end`, `launch_detached`): a
   request written atomically, acquired by rename at the holder's exit, and
-  launched detached through the repo's launcher in the declared repo root.
+  launched detached through the repo's launcher in the declared repo root;
+- **the blackout close-down** (`window_refusal`, `on_blackout`,
+  `launch_reason`, `blackout_session_end`, `window_check`; WI-834): inside
+  the declared blackout window every claim is refused, the main session's
+  launches are denied, it is told to close down, and no relaunch is requested
+  or launched, whatever the context guard's dial says;
+- **the hooks opt-in** (`hooks_state`, `enable_hooks`): dev-setup's consented
+  switch from the inert hook config to the project settings.
 
-SHIPPED OFF. At `[coordinator] context_guard_pct = 0` every entry point returns
-before reading or writing anything: claims behave exactly as without the guard
-and the hooks print nothing.
+SHIPPED OFF. At `[coordinator] context_guard_pct = 0` the context guard's
+entry points return before reading or writing its state: claims behave as
+without the guard and the hooks print nothing, except inside an open blackout
+window (`[policies] blackout`), which the claim and the hooks act on at any
+dial.
 
 The Claude Code facts this relies on are version-dependent claims, read from
 its hooks reference and from transcripts of 2.1.285: the hook input fields
@@ -45,21 +54,32 @@ Contracts: IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280, IF-281 —
 the interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
-Contract IF-271: `claim_refusal(root, env=None)` returns None when a guarded
-    claim may proceed, and always while `[coordinator] context_guard_pct` is
-    0; otherwise it returns the refusal text, naming the reason. The caller's
-    session is read from `CLAUDE_CODE_SESSION_ID` in `env` (default the
-    process environment). The live dispatcher's claim does not call it.
+Contract IF-271: `claim_refusal(root, env=None)` returns the refusal text,
+    naming the reason, or None when a guarded claim may proceed. It asks
+    `window_refusal(root)` first, before the dial: inside the blackout window
+    it refuses, naming the window's UTC end, at any dial. Outside the window
+    it returns None while `[coordinator] context_guard_pct` is 0, and
+    otherwise the context guard's decision. The caller's session is read from
+    `CLAUDE_CODE_SESSION_ID` in `env` (default the process environment). The
+    live dispatcher's claim calls `window_refusal` alone: it is exempt from
+    the context guard, not from the window.
 
 Contract IF-274: the hook's stdin is one JSON object carrying
     `hook_event_name`, `session_id` and `transcript_path`, with `agent_id`,
-    `reason` and `trigger` where the event provides them. Stdin that does not
-    parse is reported on stderr and answered with nothing; the exit is 0.
+    `reason` and `trigger` where the event provides them, and on PreToolUse
+    `tool_name` and `tool_input` (a shell tool's `command`). Stdin that does
+    not parse is reported on stderr and answered with nothing; the exit is 0.
 
 Contract IF-275: a hook response is one line of JSON on stdout,
     `hookSpecificOutput` with `hookEventName` and `additionalContext`, printed
-    only when the guard has context to add; otherwise nothing is printed. The
-    hook never refuses a tool call and always exits 0.
+    only when the guard has context to add; otherwise nothing is printed.
+    Inside the blackout window a main session's PreToolUse for a new `Agent`,
+    a `SendMessage`, or a `Bash` or `PowerShell` command naming a model CLI
+    as a command word (the line read with that shell's quoting) is refused:
+    `permissionDecision` `deny` with its `permissionDecisionReason`. So is a
+    shell command line that cannot be read (an unclosed quote, substitution
+    or here-string), naming why. The hook refuses nothing else and always
+    exits 0.
 
 Contract IF-277: our reading of the agent CLI's process environment, stated
     here because the CLI's documentation is not ours. A Bash child of a
@@ -89,12 +109,18 @@ Contract IF-279: the guard starts a launcher, detached, as
 Contract IF-280: the command line is `coordinator_guard.py [--root ROOT]`
     with one of `hook`, `status`, `take [--session S] [--transcript T]`,
     `release --reason R`, `clear --reason R`,
-    `request-relaunch --handoff H [--session S]` or
-    `handback --handoff H [--session S]`.
+    `request-relaunch --handoff H [--session S]`,
+    `handback --handoff H [--session S]`, `window-check`, or
+    `hooks --example E [--enable]`, which prints `none`, `on` or `off` for
+    the guard hooks the inert config E registers against the machine-local
+    `.claude/settings.local.json`, merging them in first with `--enable`,
+    each bound to the interpreter the command runs on.
 
 Contract IF-281: the command line's exit code is 0 on success and 1 on a
     refusal, whose reason goes to stderr after "coordinator guard: "; a
-    usage error exits 2; `hook` always exits 0.
+    usage error exits 2; `hook` always exits 0. `window-check` exits 1 inside
+    the blackout window and 0 outside it; `hooks` exits 1 only when a
+    settings file does not parse.
 
 Runtime state (internal, no seam: only this module reads or writes it, and
     every other reader goes through IF-271): `out/coordinator/` under the
@@ -110,6 +136,7 @@ Runtime state (internal, no seam: only this module reads or writes it, and
 import argparse
 import json
 import os
+import re
 import secrets
 import subprocess
 import sys
@@ -119,12 +146,16 @@ from pathlib import Path
 
 try:
     import agent_common
+    import agent_route
     import session_keep
+    from kitlib import guard_hooks, shell_line
     from kitlib.observation import write_atomic
 except ImportError:  # pragma: no cover - in-process import from elsewhere
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import agent_common
+    import agent_route
     import session_keep
+    from kitlib import guard_hooks, shell_line
     from kitlib.observation import write_atomic
 
 SECTION = "coordinator"
@@ -142,22 +173,65 @@ REMINDER_EVERY = 20
 # The transcript tail read first, and the most ever read for one reading.
 TAIL_BYTES = 256 * 1024
 MAX_TAIL_BYTES = 8 * 1024 * 1024
-GUARD = "python project-trajectory/scripts/coordinator_guard.py"
+# The characters a path may hold and still be written unquoted, so one command
+# line runs as typed in Bash and in PowerShell alike.
+_PLAIN_PATH = re.compile(r"^[A-Za-z0-9_./:-]+$")
 
+
+def _guard_command(args):
+    """The guard command the instructions below tell the session to run, as
+    text that runs as typed in each supported shell (round 035 F1): on the
+    interpreter this hook runs on, never a bare `python` that PATH may
+    resolve below the 3.11 floor (round 016 F2, decision D-019), and on this
+    file's own path, so it runs from any working directory and in a scaffold.
+    Plain paths give one line for both shells; any other path gives the Bash
+    and the PowerShell lines side by side, each quoted for its shell."""
+    paths = [Path(sys.executable).as_posix(), Path(__file__).resolve().as_posix()]
+    if all(_PLAIN_PATH.match(p) for p in paths):
+        return "`{} {} {}`".format(paths[0], paths[1], args)
+    bash = " ".join("'{}'".format(p.replace("'", "'\\''")) for p in paths)
+    pwsh = " ".join("'{}'".format(p.replace("'", "''")) for p in paths)
+    return "`{} {}` (Bash) or `& {} {}` (PowerShell)".format(bash, args, pwsh, args)
+
+
+# The opening both drain texts share, so the blackout close-down can tell the
+# context guard's drain instruction from its other output.
+DRAIN_MARK = "COORDINATOR CONTEXT GUARD"
 INSTRUCTION = (
-    "COORDINATOR CONTEXT GUARD: this session's context reached {pct:.1f}% of its "
+    DRAIN_MARK + ": this session's context reached {pct:.1f}% of its "
     "declared window (threshold {threshold}%), and drain mode is latched. "
     "Work-item claims now refuse. Close out now, following the session-protocol "
     "skill's coordinator close-out: (1) start no new claims or lanes; (2) bring "
     "every in-flight row to a safe point: land it, close it, or leave it "
     "committed on its lane and recorded; (3) write docs/status.md, a handoff "
     "with its session prompt, and a log fragment; (4) request the relaunch: "
-    "`" + GUARD + " request-relaunch --handoff <path>`, then end the session. "
+    "{command}, then end the session. "
     "The next session starts from the handoff when this one exits."
 )
 REMINDER = (
-    "COORDINATOR CONTEXT GUARD reminder: drain mode is latched ({pct:.1f}%). No new "
+    DRAIN_MARK + " reminder: drain mode is latched ({pct:.1f}%). No new "
     "claims; finish the close-out and request the relaunch."
+)
+# The close-down inside the blackout window (WI-834), told at SessionStart and
+# on the monitored events, whether or not the context guard is on.
+BLACKOUT_INSTRUCTION = (
+    "BLACKOUT WINDOW: the declared blackout window {window} UTC is open until "
+    "{end} UTC. Keep usage to a minimum: no work item is claimed, no new "
+    "subagent, resumed subagent or model CLI starts here, and no relaunch is "
+    "requested. Close down, following the session-protocol skill's coordinator "
+    "close-out (the blackout case): (1) bring each open lane to its pause point, "
+    "the last finished step whose evidence is committed, using a wrap-up "
+    "adjudication of an active claim where a step needs it (the session "
+    "service admits that one call); a lane whose next step is a review, rework "
+    "or any launch the window refuses stops there; (2) write the handoff naming "
+    "each lane and its next obligation; (3) end the session. The owner resumes "
+    "after the window."
+)
+BLACKOUT_DENIAL = (
+    "BLACKOUT WINDOW: {what} is refused until {end} UTC (the declared window "
+    "{window} UTC). Close down instead: bring each open lane to its pause point, "
+    "write the handoff naming each lane and its next obligation, and end the "
+    "session."
 )
 
 
@@ -398,7 +472,7 @@ def take(root, session_id, transcript=None):
         if lease.get("holder"):
             return (
                 "the coordinator lease is held by {}; the owner releases it: {}".format(
-                    _holder_line(lease), GUARD + ' release --reason "<why>"'
+                    _holder_line(lease), _guard_command('release --reason "<why>"')
                 )
             )
         _install(directory, lease, session_id, transcript, root, "take")
@@ -476,15 +550,39 @@ def latch_reading(directory, lease, cfg):
     return reading, latched_now
 
 
+def window_refusal(root):
+    """The blackout window's claim refusal, or None: inside the window
+    (`agent_common.blackout_at`, read at this call) every claim is refused,
+    naming the window's UTC end, on every route, the live dispatcher's
+    included, whatever the context guard's dial says.
+
+    Implements: SR-229, LLR-300
+    """
+    blackout = agent_common.blackout_at(Path(root) / "docs")
+    if not blackout.inside:
+        return None
+    return (
+        "coordinator guard: the blackout window {} UTC is open until {} UTC; no "
+        "work item is claimed inside it, on any route. Claim after it ends.".format(
+            blackout.window, blackout.end.strftime("%Y-%m-%d %H:%M")
+        )
+    )
+
+
 def claim_refusal(root, env=None):
     """The admission boundary the work-item claim calls on every route but the
     live dispatcher's: None when the claim may proceed, else the refusal.
-    Refuses when no lease is held, when the caller's session is not the
+    The blackout window is asked first (`window_refusal`), before the context
+    guard's dial, so it refuses with the guard off. Then, with the guard on,
+    it refuses when no lease is held, when the caller's session is not the
     holder, and when drain mode is latched, reading the holder's transcript
     itself first so admission never depends on a hook having run.
 
     Implements: SR-229, LLR-300
     """
+    refusal = window_refusal(root)
+    if refusal:
+        return refusal
     cfg = guard_config(root)
     if not cfg.enabled:
         return None
@@ -504,14 +602,18 @@ def _ownership_refusal(lease, session_id):
         return (
             "coordinator guard: no coordinator lease is held, and claims need "
             "one while [coordinator] context_guard_pct is on. Take it from "
-            "the coordinator session: {} take".format(GUARD)
+            "the coordinator session: {}".format(_guard_command("take"))
         )
     if session_id != lease["holder"]:
         return (
             "coordinator guard: the coordinator lease is held by {}, not by "
             "this caller (session {}); only the coordinator claims. The owner "
-            'releases a lease whose session has ended: {} release --reason "<why>"'
-        ).format(_holder_line(lease), session_id or "unknown", GUARD)
+            "releases a lease whose session has ended: {}"
+        ).format(
+            _holder_line(lease),
+            session_id or "unknown",
+            _guard_command('release --reason "<why>"'),
+        )
     return None
 
 
@@ -548,6 +650,15 @@ def _same_path(a, b):
     return bool(a and b) and norm(a) == norm(b)
 
 
+def _instruction(pct, threshold):
+    """The drain instruction, naming the request-relaunch command."""
+    return INSTRUCTION.format(
+        pct=pct,
+        threshold=threshold,
+        command=_guard_command("request-relaunch --handoff <path>"),
+    )
+
+
 def on_monitored(root, cfg, payload):
     """A tool, failed-tool, prompt or stop event: measure the holder's
     transcript, latch on a crossed threshold, and say so once at the latch,
@@ -565,9 +676,7 @@ def on_monitored(root, cfg, payload):
         was_draining = bool(lease.get("draining"))
         reading, latched_now = latch_reading(directory, lease, cfg)
         if latched_now:
-            return _context(
-                event, INSTRUCTION.format(pct=reading.pct, threshold=cfg.threshold)
-            )
+            return _context(event, _instruction(reading.pct, cfg.threshold))
         if not was_draining:
             return None
         lease["since_reminder"] = int(lease.get("since_reminder") or 0) + 1
@@ -616,9 +725,7 @@ def on_session_start(root, cfg, payload, env):
         if lease.get("draining"):
             return _context(
                 "SessionStart",
-                INSTRUCTION.format(
-                    pct=lease.get("latched_pct"), threshold=cfg.threshold
-                ),
+                _instruction(lease.get("latched_pct"), cfg.threshold),
             )
     return None
 
@@ -666,14 +773,28 @@ def classify_compaction(entry, cfg):
 
 def hook(payload, root, env=None, launch=None):
     """One hook call: the output dict to print, or None. A no-op when the
-    guard is off.
+    guard is off and no blackout window is open; inside an open window the
+    blackout close-down runs whatever the guard's dial says (`on_blackout`).
 
     Implements: SR-229, LLR-300
     """
     cfg = guard_config(root)
-    if not cfg.enabled or not isinstance(payload, dict):
+    if not isinstance(payload, dict):
         return None
-    env = os.environ if env is None else env
+    blackout = agent_common.blackout_at(Path(root) / "docs")
+    if blackout.inside:
+        return on_blackout(root, cfg, payload, blackout, env)
+    if not cfg.enabled:
+        return None
+    if payload.get("hook_event_name") == "SessionEnd":
+        session_end(root, payload, launch=launch)
+        return None
+    return _guard_event(root, cfg, payload, os.environ if env is None else env)
+
+
+def _guard_event(root, cfg, payload, env):
+    """The context guard's own handling of a tool, prompt, stop, start or
+    compaction event (not SessionEnd)."""
     event = payload.get("hook_event_name")
     if event in MONITORED:
         return on_monitored(root, cfg, payload)
@@ -681,9 +802,407 @@ def hook(payload, root, env=None, launch=None):
         return on_session_start(root, cfg, payload, env)
     if event == "PreCompact":
         return on_pre_compact(root, cfg, payload)
-    if event == "SessionEnd":
-        session_end(root, payload, launch=launch)
     return None
+
+
+# --- the blackout window: the coordinator's close-down (WI-834) ----------------
+
+
+def on_blackout(root, cfg, payload, blackout, env=None):
+    """One hook call inside the blackout window, guard on or off. SessionEnd
+    cancels the ending session's pending relaunch and launches nothing. Every
+    other event runs the context guard's handling first when it is on (the
+    latch is unchanged), then, for the main session (not a subagent), adds
+    the close-down: PreToolUse denies a launch (`launch_reason`), SessionStart
+    tells the close-down, and the monitored events tell it at the window's
+    first event and then every REMINDER_EVERY-th. A context-guard drain text
+    (it asks for a relaunch) is replaced by the close-down, told on that
+    event, while its latch stays recorded (round 035 F2). Nothing is latched
+    for the window: its drain is the clock's, so nothing is cleared after it.
+
+    Implements: SR-229, SR-230, LLR-300, LLR-301
+    """
+    if payload.get("hook_event_name") == "SessionEnd":
+        blackout_session_end(root, payload)
+        return None
+    env = os.environ if env is None else env
+    guarded = _guard_event(root, cfg, payload, env) if cfg.enabled else None
+    if payload.get("agent_id"):
+        return guarded
+    drain = _is_drain(guarded)
+    if drain:  # the latch is recorded; the window's close-down replaces its text
+        guarded = None
+    return _combine(guarded, _close_down(root, payload, blackout, drain))
+
+
+def _is_drain(output):
+    """True when a context guard hook output is its drain instruction or
+    reminder, which asks for the relaunch the window refuses."""
+    spec = (output or {}).get("hookSpecificOutput") or {}
+    return str(spec.get("additionalContext") or "").startswith(DRAIN_MARK)
+
+
+def _close_down(root, payload, blackout, tell=False):
+    """The main session's close-down output for one event, or None; `tell`
+    tells it whatever the reminder cadence (in place of a drain text)."""
+    event = payload.get("hook_event_name")
+    end = blackout.end.strftime("%Y-%m-%d %H:%M")
+    if event == "PreToolUse":
+        what = launch_reason(root, payload)
+        if what:
+            return _deny(
+                BLACKOUT_DENIAL.format(what=what, end=end, window=blackout.window)
+            )
+    told = (
+        tell
+        or event == "SessionStart"
+        or (event in MONITORED and _reminder_due(root, payload, blackout))
+    )
+    if not told:
+        return None
+    return _context(event, BLACKOUT_INSTRUCTION.format(window=blackout.window, end=end))
+
+
+def _deny(reason):
+    """A PreToolUse refusal of the tool call."""
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": reason,
+        }
+    }
+
+
+def _combine(first, second):
+    """One hook response from two: the second's decision kept, and the two
+    `additionalContext` texts joined."""
+    if not first or not second:
+        return first or second
+    out = dict(second["hookSpecificOutput"])
+    texts = [
+        o["hookSpecificOutput"].get("additionalContext")
+        for o in (first, second)
+        if o["hookSpecificOutput"].get("additionalContext")
+    ]
+    if texts:
+        out["additionalContext"] = "\n\n".join(texts)
+    return {"hookSpecificOutput": out}
+
+
+def _reminder_due(root, payload, blackout):
+    """True at the main session's first monitored event inside this window
+    and every REMINDER_EVERY-th after it: a cadence keyed by the window's end,
+    so a later window starts afresh and nothing needs clearing."""
+    session = payload.get("session_id") or ""
+    end = blackout.end.isoformat()
+    with session_keep.dir_lock(lease_dir(root)) as directory:
+        path = Path(directory) / "blackout-told.json"
+        try:
+            told = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            told = {}
+        told = {
+            k: v
+            for k, v in (told.items() if isinstance(told, dict) else ())
+            if isinstance(v, dict) and v.get("end") == end
+        }
+        count = int(told.get(session, {}).get("count") or 0)
+        told[session] = {"end": end, "count": count + 1}
+        write_atomic(path, json.dumps(told, indent=2) + "\n")
+    return count % REMINDER_EVERY == 0
+
+
+# The tools a main session starts or resumes another model with.
+LAUNCH_TOOLS = {"Agent": "a new subagent", "SendMessage": "a message to a subagent"}
+# The shell tools, each read with its own shell's quoting (`shell_line`).
+SHELL_TOOLS = {"Bash": "posix", "PowerShell": "powershell"}
+_ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+# A PowerShell assignment operator (`=` `+=` `-=` `*=` `/=` `%=` `??=`). An
+# assignment is recognised by its operator, never by its target's shape, so
+# property, index, typed, scoped and any other target form is covered (round
+# 016 F1 and round 018 F1, decision D-020).
+_PS_OPERATOR = re.compile(r"(?:[-+*/%]|\?\?)?=")
+_EXECUTABLE_SUFFIXES = (".exe", ".cmd", ".bat", ".com", ".ps1")
+# Option words of `timeout` and `env` that take the next word as their value
+# (env's split string is read by `_split_string`).
+_OPTION_ARGS = {
+    "timeout": frozenset({"-s", "-k", "--signal", "--kill-after"}),
+    "env": frozenset({"-u", "-C", "--unset", "--chdir"}),
+}
+# Shell grammar words that stand before a command and are never one, each
+# mapped to its shape (round 028 F1, decision D-025): the option words it
+# takes, and the openers before which one word is its NAME. Bash's
+# `time [-p] [--] pipeline`; `coproc [NAME] compound-command`, the NAME
+# taken before every compound-command opener (round 030 F1, D-026; the
+# reader splits at `(`, so `coproc NAME ( ... )` reads NAME and its body as
+# its own simple command), and `coproc` before a simple command.
+_NO_SHAPE = (frozenset(), frozenset())
+_GRAMMAR_WORDS = {
+    "time": (frozenset({"-p", "--"}), frozenset()),
+    "coproc": (
+        frozenset(),
+        frozenset({"{", "while", "until", "if", "for", "select", "case", "[[", "(("}),
+    ),
+    **dict.fromkeys(
+        ("!", "{", "}", "if", "then", "else", "elif", "do", "while", "until"),
+        _NO_SHAPE,
+    ),
+}
+
+
+def launch_reason(root, payload):
+    """What a main session's tool call would launch, or None: a new `Agent`
+    call, a `SendMessage`, or a `Bash` or `PowerShell` command naming a model
+    CLI as any command word (`command_words`, read with that shell's
+    quoting). The CLI names are the executables of `docs/agents.toml`'s
+    `cmd_template` cells (`model_clis`), never a hand-kept list. A command
+    line the hook cannot read is refused too, naming why (decision D-010 in
+    docs/decisions/wi-834.toml). Script wrappers are not inspected: a
+    coordinator launch script calls `window-check` itself.
+
+    Implements: SR-229, LLR-300
+    """
+    tool = payload.get("tool_name")
+    if tool in LAUNCH_TOOLS:
+        return LAUNCH_TOOLS[tool]
+    tool_input = payload.get("tool_input")
+    if tool not in SHELL_TOOLS or not isinstance(tool_input, dict):
+        return None
+    command = str(tool_input.get("command") or "")
+    try:
+        words = set(command_words(command, SHELL_TOOLS[tool]))
+    except shell_line.Unreadable as unreadable:
+        return "a {} command line the hook cannot read ({}); rewrite it".format(
+            tool, unreadable
+        )
+    named = sorted(words & model_clis(root))
+    return "the model CLI {}".format(named[0]) if named else None
+
+
+def model_clis(root):
+    """The command names of the executables `docs/agents.toml`'s
+    `cmd_template` cells start with (every row, enabled or not), read by the
+    kit's one template reader (`split_cmd`: the shell-string or JSON-array
+    form). A template that reader refuses launches nothing through the kit
+    and names nothing here.
+
+    Implements: SR-229, LLR-300
+    """
+    rows, _errors = agent_route.load_registry(Path(root) / "docs" / "agents.toml")
+    names = set()
+    for row in rows.values():
+        try:
+            argv = agent_common.split_cmd(row.cmd_template or "")
+        except ValueError:
+            continue
+        if argv:
+            names.add(command_name(argv[0]))
+    names.discard("")
+    return names
+
+
+def command_name(word):
+    """An unquoted command word as a name: its directory and an executable
+    suffix dropped, lowercased (`C:/bin/codex.exe` reads `codex`).
+
+    Implements: SR-229, LLR-300
+    """
+    base = re.split(r"[\\/]", word)[-1].lower()
+    for suffix in _EXECUTABLE_SUFFIXES:
+        if base.endswith(suffix):
+            return base[: -len(suffix)]
+    return base
+
+
+def command_words(command, dialect="posix"):
+    """The command word of every simple command of a shell command line
+    (`kitlib.shell_line.segments`, the one reading of it), read past
+    `VAR=value` assignments, the shell's grammar words and the `timeout` and
+    `env` prefixes (with their options, `timeout`'s duration and env's split
+    string). Raises `shell_line.Unreadable`. Scripts are not read into.
+
+    Implements: SR-229, LLR-300
+    """
+    found = shell_line.segments(command, dialect)
+    if dialect == "powershell":
+        found = [_invoked(_assigned(words)) for words in found]
+    names = (_segment_command(words) for words in found)
+    return [name for name in names if name]
+
+
+def _assigned(words):
+    """A PowerShell statement's words past a leading assignment: the
+    right-hand side, read as a command (`$r = claude -p x` runs `claude`), or
+    none when it opens with a value (a quoted string, or a variable that is
+    not itself an assignment). A statement is an assignment when its first
+    word is unquoted and starts with `$` or `[` and an unquoted assignment
+    operator follows (standalone, or written against a word); any other
+    statement's words are returned unchanged.
+
+    Implements: SR-229, LLR-300
+    """
+    first = words[0] if words else ""
+    if first[:1] not in ("$", "[") or first.opens_quoted:
+        return words
+    for i, word in enumerate(words):
+        end = _operator_end(word)
+        if end is not None:
+            return _right_hand(_tail(word, end), words[i + 1 :])
+    return words
+
+
+def _invoked(words):
+    """A PowerShell statement's words past a leading dot invocation operator:
+    an unquoted `.` word, like `&` (a boundary the reader already splits
+    at), makes the next word the command (`. claude -p x`). A quoted `'.'`
+    is data. Wrappers that take a command as an argument stay outside the
+    coverage (round 024 F1, dispute 025, decision D-024).
+
+    Implements: SR-229, LLR-300
+    """
+    if words and words[0] == "." and not words[0].spans:
+        return words[1:]
+    return words
+
+
+def _operator_end(word):
+    """Where the first assignment operator in `word` none of whose characters
+    was quoted ends, or None: `$h['answer']=x` holds one, `$h['a=b']` none."""
+    for found in _PS_OPERATOR.finditer(word):
+        if not any(word.quoted(i) for i in range(found.start(), found.end())):
+            return found.end()
+    return None
+
+
+def _tail(word, at):
+    """`word` from offset `at`, its quoted spans kept."""
+    tail = shell_line.Word(word[at:])
+    tail.spans = tuple(
+        (max(start - at, 0), end - at)
+        for start, end in word.spans
+        if end > at or start >= at
+    )
+    return tail
+
+
+def _right_hand(head, after):
+    """An assignment's right-hand side as a command: `head` (the part written
+    against the operator, when any) then `after`. None when it opens with a
+    quoted string, or with a variable that is not itself an assignment (a
+    chained `$a = $b = claude` runs `claude`)."""
+    words = ([head] if head else []) + after
+    if not words or words[0].opens_quoted:
+        return []
+    if words[0].startswith("$"):
+        chained = _assigned(words)
+        return [] if chained is words else chained
+    return words
+
+
+def _segment_command(words):
+    """The command one simple command's words run, past assignments,
+    grammar words with their shapes (`_past_grammar`) and prefixes."""
+    i = 0
+    while i < len(words):
+        name = command_name(words[i])
+        if name in _GRAMMAR_WORDS:
+            i = _past_grammar(words, i, name)
+        elif _ASSIGNMENT.match(words[i]) or not name:
+            i += 1
+        elif name in _OPTION_ARGS:
+            i, split = _past_prefix(words, i + 1, name)
+            if split is not None:
+                return _segment_command(["env"] + split + words[i:])
+        else:
+            return name
+    return None
+
+
+def _past_grammar(words, i, name):
+    """The index past the grammar word `name` at `i` and the words its
+    declared shape (`_GRAMMAR_WORDS`) gives it: its options, then a NAME
+    when the word after that opens a compound command (`coproc NAME {`)."""
+    options, name_before = _GRAMMAR_WORDS[name]
+    i += 1
+    while i < len(words) and words[i] in options:
+        i += 1
+    if i + 1 < len(words) and words[i + 1] in name_before:
+        i += 1
+    return i
+
+
+def _past_prefix(words, i, prefix):
+    """`(index, split)`: the index past `prefix`'s options (and `timeout`'s
+    duration), or past env's split string with that string's words."""
+    while i < len(words) and words[i].startswith("-"):
+        if words[i] == "--":
+            i += 1
+            break
+        split = _split_string(words, i) if prefix == "env" else None
+        if split is not None:
+            return split
+        i += 2 if words[i] in _OPTION_ARGS[prefix] else 1
+    if prefix == "timeout" and i < len(words):
+        i += 1  # the duration
+    return i, None
+
+
+def _split_string(words, i):
+    """`env -S STRING` (`-SSTRING`, `--split-string[=]STRING`): the index
+    past it and STRING's words, which env reads as more of its own
+    arguments; else None."""
+    word = words[i]
+    if word in ("-S", "--split-string"):
+        string, i = (words[i + 1] if i + 1 < len(words) else ""), i + 2
+    elif word.startswith("--split-string="):
+        string, i = word.partition("=")[2], i + 1
+    elif word.startswith("-S"):
+        string, i = word[2:], i + 1
+    else:
+        return None
+    found = shell_line.segments(string)
+    return i, (found[0] if found else [])
+
+
+def blackout_session_end(root, payload):
+    """At the main session's true exit inside the blackout window: its own
+    pending relaunch request is cancelled, renamed
+    `relaunch.<token>.cancelled` and recorded as `blackout`; no successor
+    starts. Returns True when one was cancelled.
+
+    Implements: SR-230, LLR-301
+    """
+    if payload.get("reason") not in EXIT_REASONS or payload.get("agent_id"):
+        return False
+    session_id = payload.get("session_id")
+    with session_keep.dir_lock(lease_dir(root)) as directory:
+        if not session_id or not _own_request_pending(directory, session_id):
+            return False
+        cancelled = Path(directory) / "relaunch.{}.cancelled".format(
+            secrets.token_hex(16)
+        )
+        os.replace(_request_path(directory), cancelled)
+        record_event(
+            directory, "relaunch-cancelled", reason="blackout", session=session_id
+        )
+    return True
+
+
+def window_check(root):
+    """The `window-check` subcommand, for a coordinator launch script that
+    starts a model outside the session service: the refusal inside the
+    blackout window (exit 1), else None (exit 0). A service-backed entry
+    point does not call it; the service's admission governs it.
+
+    Implements: SR-229, LLR-300
+    """
+    blackout = agent_common.blackout_at(Path(root) / "docs")
+    if not blackout.inside:
+        return None
+    return "the blackout window {} UTC is open until {} UTC; no model starts".format(
+        blackout.window, blackout.end.strftime("%Y-%m-%d %H:%M")
+    )
 
 
 # --- the relaunch ----------------------------------------------------------------
@@ -738,8 +1257,16 @@ def request_relaunch(root, handoff, session_id):
     root, the handoff and the creation time, atomically. Returns None, or the
     refusal.
 
+    Inside the blackout window no request is written: the close-down ends the
+    session instead (`window_check`).
+
     Implements: SR-230, LLR-301
     """
+    refusal = window_check(root)
+    if refusal:
+        return "{}: no relaunch is requested inside it; write the handoff and end the session".format(
+            refusal
+        )
     handoff = Path(handoff).resolve()
     refusal = _promptless(handoff)
     if refusal:
@@ -792,7 +1319,7 @@ def hand_back(root, handoff, session_id):
         refusal = _not_holder(lease, session_id, "hands the lease back")
         if refusal:
             return "{}; the owner releases a lease whose holder has gone: {}".format(
-                refusal, GUARD + ' release --reason "<why>"'
+                refusal, _guard_command('release --reason "<why>"')
             )
         if promptless:
             return promptless
@@ -1002,6 +1529,84 @@ def exec_claude(prompt_file, run=subprocess.call):
     return run(["claude", prompt])
 
 
+# --- the hooks opt-in (WI-834 part D) ----------------------------------------------
+
+
+def _read_json(path):
+    """A JSON object from `path`: {} when absent; ValueError when unreadable."""
+    path = Path(path)
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("{} is not a JSON object".format(path))
+    return data
+
+
+def _local_settings(root):
+    """The machine-local Claude Code settings the opt-in writes: their hook
+    commands name this machine's interpreter, so they never go in the
+    committed `.claude/settings.json` (decision D-019)."""
+    return Path(root) / ".claude" / "settings.local.json"
+
+
+def _guard_plan(example, interpreter):
+    """`(wanted, shapes)`: the inert example's guard hook groups bound to
+    `interpreter` (`{event: [group, ...]}`), and the guard's own command
+    shapes, the one definition of what the opt-in owns (`kitlib.guard_hooks`)."""
+    found = guard_hooks.guard_groups(_read_json(example))
+    wanted = {
+        e: [guard_hooks.bind(g, interpreter) for g in gs] for e, gs in found.items()
+    }
+    return wanted, guard_hooks.command_shapes(found)
+
+
+def hooks_state(root, example, interpreter=None):
+    """`none` when the inert config `example` registers no guard hook, `on`
+    when the machine-local settings already are what switching on would make
+    them (`kitlib.guard_hooks.merged`, bound to `interpreter`, this process's own by default),
+    else `off`.
+
+    Implements: SR-229, LLR-300
+    """
+    wanted, shapes = _guard_plan(example, interpreter or sys.executable)
+    if not wanted:
+        return "none"
+    live = _read_json(_local_settings(root)).get("hooks") or {}
+    return "on" if guard_hooks.merged(live, wanted, shapes) == live else "off"
+
+
+def enable_hooks(root, example, interpreter=None):
+    """Switch the coordinator's hooks on: every guard hook group the inert
+    config `example` registers, bound to `interpreter` (this process's own
+    by default: the floor-resolved one dev-setup runs this on), is merged
+    into the machine-local `.claude/settings.local.json` (`guard_hooks.merged`: only
+    the guard's own commands are replaced; every other command, group and
+    setting is kept). The committed `.claude/settings.json` is never
+    written. Idempotent.
+
+    Implements: SR-229, LLR-300
+    """
+    path = _local_settings(root)
+    settings = _read_json(path)
+    wanted, shapes = _guard_plan(example, interpreter or sys.executable)
+    settings["hooks"] = guard_hooks.merged(settings.get("hooks") or {}, wanted, shapes)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_atomic(path, json.dumps(settings, indent=2) + "\n")
+
+
+def _hooks_main(root, example, enable):
+    """`hooks`: print `none`, `on` or `off`, switching them on first with
+    `--enable` (a `none` example changes nothing)."""
+    try:
+        if enable and hooks_state(root, example) == "off":
+            enable_hooks(root, example)
+        print(hooks_state(root, example))
+    except ValueError as exc:
+        return "the hook settings do not parse: {}".format(exc)
+    return 0
+
+
 # --- CLI -------------------------------------------------------------------------
 
 
@@ -1056,6 +1661,15 @@ def _parser():
     p.add_argument("--session", default=None)
     p = sub.add_parser("exec-claude", help=argparse.SUPPRESS)
     p.add_argument("--prompt-file", required=True)
+    sub.add_parser(
+        "window-check",
+        help="exit 1 inside the blackout window (a coordinator launch script's check)",
+    )
+    p = sub.add_parser(
+        "hooks", help="report, or switch on, the coordinator's Claude Code hooks"
+    )
+    p.add_argument("--example", required=True, help="the inert hook config")
+    p.add_argument("--enable", action="store_true")
     return parser
 
 
@@ -1077,6 +1691,8 @@ def main(argv=None):
         "request-relaunch": lambda: request_relaunch(root, args.handoff, session),
         "handback": lambda: hand_back(root, args.handoff, session),
         "exec-claude": lambda: exec_claude(args.prompt_file),
+        "window-check": lambda: window_check(root),
+        "hooks": lambda: _hooks_main(root, args.example, args.enable),
     }
     result = actions[args.cmd]()
     if isinstance(result, str):

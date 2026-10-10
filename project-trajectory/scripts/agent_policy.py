@@ -6,19 +6,23 @@ shape findings, approval-rung comparisons, and the small coordinator dial
 resolution built from those declarations. Coordinator locks, Git, subprocess
 harnessing, assignment state, and telemetry remain in ``agent_common``.
 
-Contracts: IF-261 — the interface seam this file declares (process.md §8; row
+Contracts: IF-261, IF-291 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-261: ``agent_common`` imports and re-exports this module's policy
 readers and findings. A docs path or parsed policy is supplied; normalized dial
 values, authority decisions, or explicit refusal strings are returned. The
 module writes nothing and launches only the existing derived-stage fallback.
+
+Contract IF-291: blackout_at(docs, t=None) is the single policy-reading boundary for the blackout window. It returns Blackout(window, at, end, last_end): end is the exclusive end of the interval containing at, if any; last_end is the most recent interval end at or before at.
 """
 
+import datetime
 import os
 import re
 import sys
 import tomllib
+from dataclasses import dataclass
 from pathlib import Path
 
 try:
@@ -385,6 +389,112 @@ def declared_policy(docs, legacy_name, default):
         if value is not None:
             return value
     return read_declared(Path(docs) / legacy_name, default)
+
+
+# --- WI-148 / WI-834: the blackout window, read in ONE place -------------------
+# `[policies] blackout`: `HH:MM-HH:MM` UTC, a window that STARTS on each weekday
+# (Mon-Fri). Every reader of the dial calls `blackout_at` below and nothing else
+# reads it: the loop's pre-session wait, the session service's launch boundary,
+# the claim, the coordinator guard's hooks and the retained adjudicator's
+# retirement. An absent, empty or malformed value, or `start == end`, disables
+# it; a fresh scaffold ships `12:00-12:00`, disabled but in window SHAPE (owner
+# ruling 2026-08-11, WI-433).
+BLACKOUT_RE = re.compile(r"^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$")
+
+
+def parse_blackout(line):
+    """Parse a `HH:MM-HH:MM` blackout line into `(start_min, end_min)`, minutes
+    past UTC midnight, or None when absent, empty or malformed (an out-of-range
+    hour or minute is malformed). The `start == end` disable rule is
+    `blackout_at`'s, so the parse and the policy stay separately testable."""
+    m = BLACKOUT_RE.match(line or "")
+    if not m:
+        return None
+    sh, sm, eh, em = (int(g) for g in m.groups())
+    if sh > 23 or eh > 23 or sm > 59 or em > 59:
+        return None
+    return (sh * 60 + sm, eh * 60 + em)
+
+
+def _utcnow():
+    """Now, as a naive UTC datetime (the window's clock)."""
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+
+
+@dataclass(frozen=True)
+class Blackout:
+    """The blackout window as declared at one instant `at`: the declared value
+    (`window`, "" when none), the end of the window `at` is inside (`end`,
+    None outside one), and the end of the most recent window that ended AT OR
+    BEFORE `at` (`last_end`, None when none has). Times are naive UTC.
+
+    Implements: SR-237, LLR-316
+    """
+
+    window: str
+    at: datetime.datetime
+    end: datetime.datetime | None = None
+    last_end: datetime.datetime | None = None
+
+    @property
+    def inside(self):
+        return self.end is not None
+
+    @property
+    def wake_seconds(self):
+        """Whole seconds from `at` to the window's end (0 outside one)."""
+        return int((self.end - self.at).total_seconds()) if self.end else 0
+
+    @property
+    def last_end_epoch(self):
+        """`last_end` as epoch seconds, or None."""
+        if self.last_end is None:
+            return None
+        return self.last_end.replace(tzinfo=datetime.timezone.utc).timestamp()
+
+
+def _windows(span, t):
+    """`(start, end)` of every window that starts on a weekday from eight days
+    before `t`'s date to that date: enough to hold the one `t` is inside and
+    the most recent one that ended. A window whose start is after its end
+    wraps past midnight and belongs to its START weekday, so a Friday-night
+    window runs into Saturday and no window starts on a weekend."""
+    start, end = span
+    wrap = datetime.timedelta(days=1 if end < start else 0)
+    day0 = datetime.datetime(t.year, t.month, t.day)
+    for back in range(8, -1, -1):
+        day = day0 - datetime.timedelta(days=back)
+        if day.weekday() < 5:
+            yield (
+                day + datetime.timedelta(minutes=start),
+                day + datetime.timedelta(minutes=end) + wrap,
+            )
+
+
+def blackout_at(docs, t=None):
+    """The blackout window at instant `t` (default now, naive UTC), read from
+    `[policies] blackout` as declared in `docs` AT THIS CALL, so a changed
+    value applies from the next call on. The ONE reader of the dial and the
+    one window function: it answers both "is `t` inside a window?" (`end`, the
+    end being exclusive, `[start, end)`) and "when did the most recent window
+    end, at or before `t`?" (`last_end`, inclusive: a call exactly at an end
+    sees that window). Disabled (absent, empty, malformed or `start == end`)
+    answers neither.
+
+    Implements: SR-237, LLR-316
+    """
+    t = _utcnow() if t is None else t
+    line = declared_policy(docs, "blackout", "")
+    span = parse_blackout(line)
+    if span is None or span[0] == span[1]:
+        return Blackout(window=line, at=t)
+    end = last_end = None
+    for w_start, w_end in _windows(span, t):
+        if w_start <= t < w_end:
+            end = w_end
+        if w_end <= t:
+            last_end = w_end
+    return Blackout(window=line, at=t, end=end, last_end=last_end)
 
 
 # --- SN-029: the human-approval level, as an ORDINAL ----------------------

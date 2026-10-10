@@ -433,6 +433,29 @@ same artifacts and run the gates with you.
 > (native folder picker + an AI-agent handoff for non-coders) and a tiered
 > `dev-setup` ([`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
+## Entry points
+
+This repo's ways in, what each is for and what it checks:
+
+- **`scripts/dev-setup.*`** sets up the developer environment: the runtime,
+  the dev tools, the agent CLIs and the pre-commit floor (the privacy and
+  secrets checks declared in [`docs/process.toml`](docs/process.toml)), and
+  reports the retained adjudicator's sign-in while retention is on. The
+  coordinator's Claude Code hooks are already on here, tracked in
+  `.claude/settings.json`; a scaffolded repo gets them inert and dev-setup
+  offers to switch them on, in its machine-local
+  `.claude/settings.local.json`, bound to the interpreter dev-setup resolved.
+- **`run.*`** (root) runs the same check first on a bare double-click, then
+  this repo's actions menu (`docs/stack.ini [run]`: the smoke bar, the
+  trajectory and docs checks, the dashboard). An actions menu, not a product
+  launcher.
+- **A Claude Code coordinator session** runs under those hooks: the context
+  guard and the blackout window (`docs/process.toml`), with its procedure in
+  the `coordinator-cycle` skill.
+- **Any other LLM session** is guided by the skills and the agent guide.
+- **`agent-resume.*`** starts the unattended loop
+  (`project-trajectory/scripts/agent_loop.py`); it runs no workstation check.
+
 ## Built with the kit (self-adoption)
 
 This repo eats its own dog food: the kit is developed **using the kit's own

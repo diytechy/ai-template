@@ -84,7 +84,13 @@ Contract IF-248: the keep call surface the session service composes.
     reason)` and is asked under the lock before any lease is taken, so a
     refused ping holds nothing; a prepared row whose family differs from the
     record's session is refused there too (`_prepare_warm`), and a warmed
-    Keep takes the prepared row's family and home.
+    Keep takes the prepared row's family and home. The blackout window
+    (WI-834): `take_warm_lease` returns `(None, None)` inside it, and both it
+    and `keep_for` first retire a live session last used before the end of
+    the most recent window that ended (or with no last use), reset reason
+    `blackout` (`retire_after_blackout`), so the next call mints; a session
+    another call's live lease holds is left to that call, its bookkept last
+    use deciding at the next keep.
 """
 
 import hashlib
@@ -620,6 +626,31 @@ def _retire(record, reason):
     record["reset_reason"] = reason
 
 
+def retire_after_blackout(root, record):
+    """Retire a live session (active or draining) whose last use is before
+    the end of the most recent blackout window that ended at or before now
+    (`agent_common.blackout_at`), or that records no last use: its prompt
+    cache did not outlive the window, so resuming it would replay the whole
+    transcript uncached, which costs more than a fresh session reading only
+    its brief. The reset reason is `blackout`, and it overrides a draining
+    session's chain continuity. Nothing runs at the window's start: this is
+    the lazy retirement, at the first keep call or keep-warm tick after the
+    window. Returns whether it retired.
+
+    Implements: SR-227, LLR-270
+    """
+    if not isinstance(record, dict):
+        return False
+    if record.get("state") not in (STATE_ACTIVE, STATE_DRAINING):
+        return False
+    last_end = agent_common.blackout_at(Path(root) / "docs").last_end_epoch
+    used = record.get("last_used_epoch")
+    if last_end is None or (isinstance(used, (int, float)) and used >= last_end):
+        return False
+    _retire(record, "blackout")
+    return True
+
+
 def _before_launch(cfg, record, wi, governing, version, rows):
     """The pre-launch reset rules on a live record (see `keep_for`)."""
     judged = record.get("judged") or []
@@ -733,9 +764,9 @@ def _hold(root, cfg, record, subject, rows, lease, prepared):
     # Live means a session to resume: a retired record, and a lease-only one
     # (no session yet, no state), mint.
     live = record is not None and record.get("state") in (STATE_ACTIVE, STATE_DRAINING)
-    if live:
+    if live and not retire_after_blackout(root, record):
         _before_launch(cfg, record, wi, governing, version, rows)
-        live = record.get("state") != STATE_RETIRED
+    live = live and record.get("state") != STATE_RETIRED
     if record is None:
         record = {"family": (family or "").upper(), "route_id": route_id or ""}
     record["lease"] = {"holder": holder, "until": until}
@@ -969,9 +1000,9 @@ def keepwarm_due(record, cfg, now, work_pending):
     """Whether a keep-warm ping is due: the dial and `keepwarm_minutes` are
     on, the session is ANTHROPIC's (the only family whose prompt cache lives
     an hour; the others' live minutes and are never pinged) and active, work
-    is pending, and it has been idle `keepwarm_minutes`. The ping fires
-    through the blackout: the daily window never reaches the break-even count
-    of pings.
+    is pending, and it has been idle `keepwarm_minutes`. No ping fires inside
+    the blackout window (`take_warm_lease`, owner 2026-10-05, overruling OI-69
+    (c2)): a session idle across the window is retired after it instead.
 
     Implements: SR-227, LLR-270
     """
@@ -1003,6 +1034,18 @@ def due_routes(root, cfg, now, work_pending):
     return due
 
 
+def _warm_candidates(root, cfg, now, work_pending, routes):
+    """The due routes a keep-warm tick may ping: none inside the blackout
+    window, else `due_routes` narrowed to `routes` (None: every route).
+
+    Implements: SR-227, LLR-270
+    """
+    if agent_common.blackout_at(Path(root) / "docs").inside:
+        return []
+    due = due_routes(root, cfg, now, work_pending)
+    return [r for r in due if routes is None or r in routes]
+
+
 def take_warm_lease(
     root, cfg, *, now, work_pending, holder, prepare, routes=None, lease_seconds=600
 ):
@@ -1015,13 +1058,17 @@ def take_warm_lease(
     nothing is due. With `routes`, only those route ids are considered (a
     route the registry no longer lists is never pinged).
 
+    Inside the blackout window nothing is due. After one, a due session last
+    used before the window's end is retired (`retire_after_blackout`) before
+    any lease or ping, so no ping refreshes a stale session's last use. A
+    session another call's live lease holds is not retired here: the lease
+    is read first, under the same lock and clock read, and the session is
+    left to that call, whose bookkept last use decides at the next keep
+    (a due one returns the "leased to" reason).
+
     Implements: SR-227, LLR-270
     """
-    due = [
-        r
-        for r in due_routes(root, cfg, now, work_pending)
-        if routes is None or r in routes
-    ]
+    due = _warm_candidates(root, cfg, now, work_pending, routes)
     if not due:
         return None, None
     try:
@@ -1029,11 +1076,12 @@ def take_warm_lease(
             for route_id in due:
                 record = load_honoured(root, "ANTHROPIC", route_id)
                 clock = time.time()  # one read for this record's decision
-                if retire_stale_lease(record, holder, clock):
+                stale = retire_stale_lease(record, holder, clock)
+                busy = _lease_held(record, holder, clock)  # left to its holder
+                if (not busy and retire_after_blackout(root, record)) or stale:
                     store_save(root, record)  # never pinged: retired
                 if not keepwarm_due(record, cfg, now, work_pending):
                     continue
-                busy = _lease_held(record, holder, clock)
                 if busy:
                     return None, "the session is leased to {}".format(busy)
                 prepared, refused = _prepare_warm(prepare, route_id, record)

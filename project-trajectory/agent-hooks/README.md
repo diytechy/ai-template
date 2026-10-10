@@ -35,3 +35,18 @@ opt in). It is **Claude-only**
 here: Gemini's hook model differs and Codex has none, so the gemini config omits
 it. Like every hook, it is *supervision, not security* — a model that can edit
 files can remove it.
+
+`claude.settings.json` also registers **the coordinator guard's hooks**
+(`scripts/coordinator_guard.py hook`, on every event the guard reads). Two
+things act through them: the context guard (`[coordinator]
+context_guard_pct`, shipped `0`, off) and the blackout window (`[policies]
+blackout`), inside which the guard denies a coordinator session's new
+subagents and model-CLI launches and tells it to close down, whatever the
+guard's dial says. dev-setup offers, with consent, to switch **only these**
+on: they are merged into the machine-local `.claude/settings.local.json`
+beside any hooks already there, each command bound to the absolute path of the
+Python 3.11+ interpreter dev-setup resolved (so an older `python` first on
+PATH cannot run them), and declining changes nothing. That file is this
+machine's, so the scaffold's `.gitignore` keeps it out of git; the committed
+`.claude/settings.json` is never written. The other entries stay inert until you
+copy them yourself.

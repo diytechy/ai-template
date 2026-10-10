@@ -356,6 +356,13 @@ MAPPING = [
     # WI-865 added `dispute`: a contested review finding's findings file and
     # verdict grammar; `adjudicate_brief.py`, in this list, imports it.
     ("scripts/kitlib/dispute.py", "scripts/kitlib/dispute.py"),
+    # WI-834 added `shell_line`: the one reading of a shell command line, with
+    # the shell's quoting; `coordinator_guard.py`, in this list, imports it.
+    ("scripts/kitlib/shell_line.py", "scripts/kitlib/shell_line.py"),
+    # WI-834 round 7 added `guard_hooks`: which hook commands are the
+    # coordinator guard's own and how its opt-in merges them;
+    # `coordinator_guard.py`, in this list, imports it.
+    ("scripts/kitlib/guard_hooks.py", "scripts/kitlib/guard_hooks.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each

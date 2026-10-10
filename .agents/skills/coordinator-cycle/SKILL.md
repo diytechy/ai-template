@@ -211,7 +211,8 @@ along with push and merge to main.
 ## 6. Close-out
 
 Follow `session-protocol` §4, "Coordinator close-out", including the lease
-handback or relaunch. Record procedural corrections here or in the recipes.
+handback or relaunch, and its blackout close-down inside an armed window.
+Record procedural corrections here or in the recipes.
 The handoff links the one it replaces, points here for procedure, and holds
 state only: what landed, what is open, what the owner owes, and the session
 prompt. It carries no cycle, recipe or "corrections learned" section.

@@ -14,8 +14,15 @@
 # Consent-first and readable by design: the DEFAULT tier only detects and
 # reports; it installs nothing. Nothing here pipes a remote script to a shell.
 #
-# Usage:  sh dev-setup.sh [--check|--baseline|--full] [--profile <role>]
+# Usage:  sh dev-setup.sh [--check|--baseline|--full|--for-run [--python <interpreter>]] [--profile <role>]
 #   --check     (default) detect + report what's present; install nothing.
+#   --for-run   what a bare `run` calls first: the --check report, then, with
+#               an interactive terminal only, each missing piece offered
+#               consent-first (nothing offered without one). --python is the
+#               interpreter the launcher resolved and will run its menu on
+#               (omitted when it resolved none); the runtime reported is that
+#               interpreter only, never one found here. Exits 0 when it
+#               satisfies the 3.11 floor, 1 with the step to take when not.
 #   --baseline  ensure runtime + git + an offline Mermaid renderer, plus the
 #               selected role(s)' tools. Asks before each install.
 #   --full      baseline + an IDE and editor extensions. Opt-in, and skipped when
@@ -25,6 +32,14 @@
 #               DEFAULT (no --profile): every declared role. Roles: see ROLES below.
 #
 # Windows contributors: use scripts/dev-setup.ps1.
+# Contracts: IF-292, IF-293 — the interface seams this script declares (process.md §8;
+# rows of record in docs/requirements/interfaces.toml).
+#
+# Contract IF-292: a bare run invokes this script as --for-run from the repository
+#     root once before its menu, handing it as --python the interpreter it
+#     resolved for the menu (omitted when it resolved none).
+# Contract IF-293: exit 0 says that handed interpreter satisfies the runtime
+#     floor; nonzero leaves the menu unopened after setup guidance.
 set -eu
 
 # =================== EDIT FOR YOUR STACK / ROLES ===========================
@@ -60,14 +75,18 @@ design_INSTALL=""   # e.g. "sudo apt-get install -y inkscape"
 
 TIER="check"
 PROFILE=""   # empty = all declared roles
+RUN_PYTHON="" # --for-run only: the interpreter the launcher resolved
 while [ $# -gt 0 ]; do
   case "$1" in
     --check)     TIER="check" ;;
     --baseline)  TIER="baseline" ;;
     --full)      TIER="full" ;;
+    --for-run)   TIER="run" ;;
+    --python)    shift; RUN_PYTHON="${1:-}" ;;
+    --python=*)  RUN_PYTHON="${1#*=}" ;;
     --profile)   shift; PROFILE="${1:-}" ;;
     --profile=*) PROFILE="${1#*=}" ;;
-    -h|--help)   sed -n '2,26p' "$0"; exit 0 ;;
+    -h|--help)   sed -n '2,33p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -152,7 +171,27 @@ say "Developer workstation (process.md §7). Product deps are scripts/setup.sh."
 say
 
 # --- Detect + report (every tier does this first) ----------------------------
-if python_311 python3 || python_311 python; then RUNTIME=1; else RUNTIME=0; fi
+# PY_CANDIDATES: the interpreters searched, in order. Keep run.sh's list the
+# same (after its .venv entries), so a check that finds a runtime means run
+# resolves one too.
+PY_CANDIDATES="python3 python"
+# PYBIN: the interpreter the kit's own readers below run on; RUNTIME=1 when
+# there is one. For a bare run (--for-run) it is the interpreter the launcher
+# handed in, if that satisfies the floor: the one the menu runs on, so no
+# search here can vouch for a different one. Otherwise, the first
+# floor-satisfying candidate.
+detect_runtime() {
+  PYBIN=""
+  if [ "$TIER" = "run" ]; then
+    if [ -n "$RUN_PYTHON" ] && python_311 "$RUN_PYTHON"; then PYBIN="$RUN_PYTHON"; fi
+  else
+    for cand in $PY_CANDIDATES; do
+      if python_311 "$cand"; then PYBIN="$cand"; break; fi
+    done
+  fi
+  if [ -n "$PYBIN" ]; then RUNTIME=1; else RUNTIME=0; fi
+}
+detect_runtime
 # A remedy must be able to SATISFY the floor it is quoted against. This line used
 # to send macOS users to `xcode-select --install`, but the Command Line Tools ship
 # Python 3.9 — below this floor — so following it landed back here unchanged, with
@@ -180,20 +219,42 @@ if [ "$TIER" = "full" ]; then
   report "IDE (VS Code 'code')" "$(have code && echo 1 || echo 0)" "install an editor; run again with --full to add extensions"
 fi
 
-# The retained adjudicator's long-lived token (WI-846). With [adjudicator]
-# retention on, a retained Claude launch reads its token from the file the
-# AGENT_CLAUDE_TOKEN_FILE environment variable names, and is refused before
-# launch without one. Only a repo that turns retention on needs it, so it is a
-# note, never counted missing. dev-setup never reads, stores or prints the token.
-token_ready() {
-  f="${AGENT_CLAUDE_TOKEN_FILE:-}"
-  [ -n "$f" ] && [ -f "$f" ] && [ -r "$f" ] && [ -s "$f" ]
-}
-if token_ready; then
-  say "  [ok]      retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)"
-else
-  say "  [note]    retained adjudicator token not set — needed only with [adjudicator] retention on: run 'claude setup-token' once, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+# The retained adjudicator's sign-in (WI-834): with [adjudicator] retention on,
+# a retained Claude launch runs under its own dedicated home and authenticates
+# with the long-lived token in the file AGENT_CLAUDE_TOKEN_FILE names (WI-846),
+# refused before launch without one. Read through the kit's own readers (the
+# retention dial and the sign-in probe, coordinator_adjudicate.py signin
+# --retained) when a Python runtime exists, else unknown; reported only while
+# retention is on. dev-setup never reads, stores or prints the token.
+SIGNIN="unknown"
+if [ -n "$PYBIN" ]; then
+  SIGNIN=$("$PYBIN" scripts/coordinator_adjudicate.py signin --retained --root . 2>/dev/null |
+    sed -n 's/^signin \[ANTHROPIC\]: //p')
+  [ -n "$SIGNIN" ] || SIGNIN="unknown"
 fi
+case "$SIGNIN" in
+  off) ;;
+  signed-in) say "  [ok]      retained adjudicator sign-in (AGENT_CLAUDE_TOKEN_FILE)" ;;
+  missing)
+    say "  [missing] retained adjudicator sign-in — run 'claude setup-token' once (offered by --baseline and a bare run), keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+    missing=$((missing + 1))
+    ;;
+  *) say "  [unknown] retained adjudicator sign-in — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" ;;
+esac
+
+# The coordinator's Claude Code hooks (WI-834): shipped inert in
+# .claude/settings.json.example and switched on only with consent, merged into
+# the machine-local .claude/settings.local.json beside any hooks already there,
+# each bound to the interpreter that runs the opt-in (never the committed
+# .claude/settings.json: the bound path is this machine's).
+HOOKS="none"
+if [ -n "$PYBIN" ] && [ -f .claude/settings.json.example ]; then
+  HOOKS=$("$PYBIN" scripts/coordinator_guard.py --root . hooks --example .claude/settings.json.example 2>/dev/null) || HOOKS="none"
+fi
+case "$HOOKS" in
+  on) say "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" ;;
+  off) say "  [note]    coordinator Claude Code hooks are off — opt-in, offered by --baseline and a bare run" ;;
+esac
 
 say
 if [ -d .venv ]; then
@@ -209,36 +270,80 @@ if [ "$TIER" = "check" ]; then
   exit 0
 fi
 
-# --- --baseline / --full: consent-first installs -----------------------------
-say
-say "Installing the $TIER workstation (asks before each step)…"
-[ "$RUNTIME" -eq 1 ] || maybe_install "runtime" "$RUNTIME_INSTALL"
-renderer_present     || maybe_install "offline Mermaid renderer" "$RENDERER_INSTALL"
-for r in $SELECTED; do
-  role_present "$r" || maybe_install "role: $r" "$(role_val "$r" INSTALL)"
-done
-if [ "$TIER" = "full" ]; then
-  if interactive; then
-    maybe_install "IDE" "$IDE_INSTALL"
-  else
-    say "  - IDE: headless/non-interactive; skipped (opt-in, --full only)."
-  fi
-fi
-
-# The one-time long-lived token step (WI-846), consented. `claude setup-token`
-# prints the token once; the person keeps it in a file outside the repository
-# and points AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
-if ! token_ready && have claude && interactive; then
-  printf "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N] "
-  read -r ans
+# The one-time long-lived token step (WI-846's, shown only while retention is on
+# and the token is missing), consented. `claude setup-token` prints the token
+# once; the person keeps it in a file outside the repository and points
+# AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
+offer_signin() {
+  { [ "$SIGNIN" = "missing" ] && have claude && interactive; } || return 0
+  say
+  say "The retained adjudicator runs Claude under its own dedicated home, which signs"
+  say "in with a long-lived token. The one-time 'claude setup-token' step mints that"
+  say "token; you keep it in a file outside this repository, at the location you set"
+  say "AGENT_CLAUDE_TOKEN_FILE to. Your normal 'claude' login and every other"
+  say "repository are left alone, and declining changes no configuration or credential."
+  printf "Run 'claude setup-token' now? [y/N] "
+  read -r ans || ans=""
   case "$ans" in
     [Yy]*)
       claude setup-token || say "  [warn] claude setup-token did not finish; rerun it when ready."
       say "  Keep the printed token in a file outside this repository, then set"
       say "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. in your shell profile)."
       ;;
-    *) say "  - skipped the token step (needed only with adjudicator retention on)" ;;
+    *) say "  - skipped the token step; nothing was changed" ;;
   esac
+}
+
+# Switching the coordinator's hooks on, consented (WI-834).
+offer_hooks() {
+  { [ "$HOOKS" = "off" ] && interactive; } || return 0
+  printf "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N] "
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      "$PYBIN" scripts/coordinator_guard.py --root . hooks --example .claude/settings.json.example --enable >/dev/null &&
+        say "  Switched on the coordinator hooks in .claude/settings.local.json."
+      ;;
+    *) say "  - skipped the coordinator hooks; nothing was changed" ;;
+  esac
+}
+
+# --- --baseline / --full / --for-run: consent-first offers ----------------------
+say
+if [ "$TIER" = "run" ] && ! interactive; then
+  say "No interactive terminal: nothing is offered (run dev-setup at a terminal to install)."
+else
+  say "Installing the $TIER workstation (asks before each step)…"
+  [ "$RUNTIME" -eq 1 ] || maybe_install "runtime" "$RUNTIME_INSTALL"
+  renderer_present     || maybe_install "offline Mermaid renderer" "$RENDERER_INSTALL"
+  for r in $SELECTED; do
+    role_present "$r" || maybe_install "role: $r" "$(role_val "$r" INSTALL)"
+  done
+  if [ "$TIER" = "full" ]; then
+    if interactive; then
+      maybe_install "IDE" "$IDE_INSTALL"
+    else
+      say "  - IDE: headless/non-interactive; skipped (opt-in, --full only)."
+    fi
+  fi
+  offer_signin
+  offer_hooks
+fi
+
+# --- --for-run ends here, with its result: the runtime the menu needs --------
+# Nothing more is wired unasked (the floor below is offered, not set), and the
+# setup.sh chain stays with --baseline.
+if [ "$TIER" = "run" ]; then
+  if [ "$(git config --get core.hooksPath 2>/dev/null)" != ".githooks" ] &&
+    [ -f .githooks/pre-commit ] && interactive; then
+    printf 'Enable the pre-commit floor (git config core.hooksPath .githooks)? [y/N] '
+    read -r ans || ans=""
+    case "$ans" in [Yy]*) git config core.hooksPath .githooks ;; *) say "  - skipped the pre-commit floor" ;; esac
+  fi
+  [ "$RUNTIME" -eq 1 ] && exit 0
+  say
+  say "The runtime is still missing — the step to take: $PY_HINT, or put an installed one first on PATH, then run again. run checked: .venv/bin/python, .venv/Scripts/python.exe, $PY_CANDIDATES"
+  exit 1
 fi
 
 # Wire the agent-neutral pre-commit process floor (core.hooksPath) — universal,

@@ -13,8 +13,16 @@
 # codex replaced opencode at the WI-160 provider-CLI swap, 2026-07-14b).
 # Consent-first: the default only reports; --install acts.
 #
-# Usage:  sh scripts/dev-setup.sh [--check | --install]
+# Usage:  sh scripts/dev-setup.sh [--check | --install | --for-run [--python <interpreter>]]
 #   --check    (default) report what's present; install nothing.
+#   --for-run  what a bare root `run` calls first (WI-834): the --check
+#              report, then, at an interactive terminal only, the runtime,
+#              the agent CLIs and the retained adjudicator's token step, each
+#              offered consent-first. --python is the interpreter run.sh
+#              resolved and will run its menu on (omitted when it resolved
+#              none); the report describes that interpreter only. Exits 0
+#              when it satisfies the 3.11 floor, 1 with the step to take when
+#              not (a runtime installed here counts from the next run).
 #   --install  create ./.venv (ruff + pytest + pytest-cov + pytest-xdist, asks first) AND wire
 #              the pre-commit process floor (core.hooksPath=.githooks; local +
 #              reversible). Then OFFERS the agent CLIs (claude, codex) — each
@@ -27,10 +35,19 @@ set -eu
 cd "$(dirname "$0")/.."  # scripts/ -> the repo root (like the scaffolded layout)
 
 MODE="check"
+RUN_PYTHON="" # --for-run only: the interpreter run.sh resolved
 case "${1:-}" in
   --install) MODE="install" ;;
+  --for-run)
+    MODE="run"
+    case "${2:-}" in
+      --python) RUN_PYTHON="${3:-}" ;;
+      "") ;;
+      *) echo "Unknown option: $2" >&2; exit 2 ;;
+    esac
+    ;;
   --check|"") MODE="check" ;;
-  -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
+  -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
   *) echo "Unknown option: $1" >&2; exit 2 ;;
 esac
 
@@ -50,6 +67,9 @@ python_311() {
     "$1" -c 'import sys; raise SystemExit(sys.version_info < (3, 11))' \
       >/dev/null 2>&1
 }
+# A consent prompt needs a terminal: never one on piped or closed input, so a
+# prompt never consumes input meant for the run menu.
+interactive() { [ -t 0 ] && [ -z "${CI:-}" ]; }
 report() { # <label> <present:0/1> <hint>
   if [ "$2" -eq 1 ]; then echo "  [ok]      $1"; else echo "  [missing] $1  — $3"; fi
 }
@@ -114,15 +134,27 @@ offer_python() { # (WI-302) one consented offer of a 3.11+ RUNTIME — and only
 # A stale sub-3.11 .venv active on PATH otherwise shadows every bare python3,
 # hiding an installed 3.11+ from the recreate offer (the 2026-07-23 repro).
 # Each candidate is still floor-checked by python_311.
+# The interpreters searched for a runtime after the venv, in order; run.sh
+# probes this same list (WI-834; pinned by tests/test_run_devsetup.py), so a
+# check that finds a runtime means run resolves one too.
+PY_CANDIDATES="python3 python python3.13 python3.12 python3.11"
 discover_py() { # sets PY to a floor-satisfying interpreter, or "" (WI-302: a
   # function so --install can RE-run discovery after a consented provisioner
-  # install, instead of telling the user to start over.)
+  # install, instead of telling the user to start over.) A bare run's check
+  # (WI-834) takes only the interpreter run.sh handed in, the one its menu
+  # runs on, so no search here can vouch for another.
+  if [ "$MODE" = "run" ]; then
+    PY=""
+    [ -n "$RUN_PYTHON" ] && python_311 "$RUN_PYTHON" && PY="$RUN_PYTHON"
+    [ -n "$PY" ]
+    return
+  fi
   if [ -x .venv/bin/python ] && python_311 .venv/bin/python; then
     PY=.venv/bin/python
     return 0
   fi
   PY=""
-  for cand in python3 python python3.13 python3.12 python3.11; do
+  for cand in $PY_CANDIDATES; do
     if python_311 "$cand"; then PY="$cand"; return 0; fi
   done
   return 1
@@ -174,14 +206,45 @@ report "offline Mermaid renderer" "$( { have code || have mmdc || have npx; } &&
 # scripts/dashboard-shots/README.md + the render-dashboard-critique skill.
 report "dashboard shots (optional, meta-only)" "$( [ -d scripts/dashboard-shots/node_modules/playwright ] && echo 1 || echo 0)" "cd scripts/dashboard-shots && npm ci && npx playwright install chromium (pinned; dev-only)"
 report "pre-commit floor (core.hooksPath)" "$([ "$(git config --get core.hooksPath 2>/dev/null)" = ".githooks" ] && echo 1 || echo 0)" "run --install, or: git config core.hooksPath .githooks"
-# The retained adjudicator's long-lived token (WI-846): this repo's [adjudicator]
-# retention is on, and a retained Claude launch reads its token from the file
-# AGENT_CLAUDE_TOKEN_FILE names, refused before launch without one. Never read here.
-token_ready() {
-  f="${AGENT_CLAUDE_TOKEN_FILE:-}"
-  [ -n "$f" ] && [ -f "$f" ] && [ -r "$f" ] && [ -s "$f" ]
+# The retained adjudicator's sign-in (WI-834): with [adjudicator] retention on, a
+# retained Claude launch runs under its dedicated home on the long-lived token
+# in the file AGENT_CLAUDE_TOKEN_FILE names (WI-846), refused before launch
+# without one. Read through the kit's own readers (the retention dial and the
+# sign-in probe) when a runtime exists, else unknown; reported only while
+# retention is on. The token is never read here.
+SIGNIN="unknown"
+if [ -n "$PY" ]; then
+  SIGNIN=$("$PY" project-trajectory/scripts/coordinator_adjudicate.py signin --retained --root . 2>/dev/null |
+    sed -n 's/^signin \[ANTHROPIC\]: //p')
+  [ -n "$SIGNIN" ] || SIGNIN="unknown"
+fi
+case "$SIGNIN" in
+  off) ;;
+  signed-in) echo "  [ok]      retained adjudicator sign-in (AGENT_CLAUDE_TOKEN_FILE)" ;;
+  missing) echo "  [missing] retained adjudicator sign-in  — run --install (or a bare run) for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file" ;;
+  *) echo "  [unknown] retained adjudicator sign-in  — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" ;;
+esac
+# The one-time long-lived token step (WI-846's), consented; shown only while
+# retention is on and the token is missing. Nothing here reads the token.
+offer_signin() {
+  { [ "$SIGNIN" = "missing" ] && have claude; } || return 0
+  echo
+  echo "The retained adjudicator runs Claude under its own dedicated home, which signs"
+  echo "in with a long-lived token. The one-time 'claude setup-token' step mints that"
+  echo "token; you keep it in a file outside this repository, at the location you set"
+  echo "AGENT_CLAUDE_TOKEN_FILE to. Your normal 'claude' login and every other"
+  echo "repository are left alone, and declining changes no configuration or credential."
+  printf "Run 'claude setup-token' now? [y/N] "
+  read -r ans || ans=""
+  case "$ans" in
+    [Yy]*)
+      claude setup-token || echo "  [warn] claude setup-token did not finish; rerun it when ready."
+      echo "  Keep the printed token in a file outside this repository, then set"
+      echo "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. in your shell profile)."
+      ;;
+    *) echo "  Skipped the token step; nothing was changed. A retained adjudication is refused until it is done." ;;
+  esac
 }
-report "retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)" "$(token_ready && echo 1 || echo 0)" "run --install for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
 
 # Ambient-interpreter debris warning (WI-175 / WI-105). The report above describes
 # ./.venv (PY prefers it), but a bare `python -m pytest` resolves via PATH — which
@@ -207,6 +270,23 @@ if [ -n "$AMBIENT" ] && [ -x .venv/bin/python ] \
       echo "         (.venv/bin/python -m pytest), or activate it, so the pinned tools run."
       ;;
   esac
+fi
+
+# --- --for-run: the check above, then offers at a terminal only -------------
+if [ "$MODE" = "run" ]; then
+  echo
+  if interactive; then
+    [ -n "$PY" ] || offer_python || true  # installed now, it counts from the next run
+    offer_cli claude "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
+    offer_cli codex "@openai/codex" "sign in with: codex login"
+    offer_signin
+  else
+    echo "No interactive terminal: nothing is offered (run sh scripts/dev-setup.sh --install at a terminal)."
+  fi
+  [ -n "$PY" ] && exit 0
+  echo
+  echo "The runtime is still missing — the step to take: $PY_HINT, or put an installed one first on PATH, then run again. run checked: .venv/bin/python, .venv/Scripts/python.exe, $PY_CANDIDATES"
+  exit 1
 fi
 
 if [ "$MODE" = "check" ]; then
@@ -311,20 +391,7 @@ echo
 echo "Agent CLIs (docs/agents.csv routes unattended sessions through these):"
 offer_cli claude "@anthropic-ai/claude-code" "run claude once to sign in (or: claude setup-token)"
 offer_cli codex "@openai/codex" "sign in with: codex login"
-# The one-time long-lived token step (WI-846), consented: `claude setup-token`
-# prints the token once; nothing here reads, stores or prints it.
-if ! token_ready && have claude; then
-  printf "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N] "
-  read -r ans || ans=""
-  case "$ans" in
-    [Yy]*)
-      claude setup-token || echo "  [warn] claude setup-token did not finish; rerun it when ready."
-      echo "  Keep the printed token in a file outside this repository, then set"
-      echo "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. in your shell profile)."
-      ;;
-    *) echo "  Skipped the token step; a retained adjudication is refused until it is done." ;;
-  esac
-fi
+offer_signin
 if ! have claude || ! have codex; then
   echo
   echo "NOTE: docs/agents-enabled currently routes sessions through BOTH claude and"

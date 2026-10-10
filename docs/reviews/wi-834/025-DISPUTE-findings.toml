@@ -1,0 +1,19 @@
+range = "ed2533cb..5d0a27eb"
+
+[[finding]]
+id = "R24F1"
+held_by = "builder"
+finding = '''
+[MAJOR] project-trajectory/scripts/coordinator_guard.py:1033 -> K1/B1: inside blackout the actual hook allows PowerShell `. claude -p x` and `$r = . claude -p x` because _segment_command takes `.` as the executable; real PowerShell dot invocation executes/captures its following command, so ordinary direct model invocation escapes LLR-300/IF-275's any-command-word coverage -> interpret PowerShell's dot invocation at the existing shell-reading boundary, preserving quoted data and the current denial controls, and pin direct/captured dot forms in TC-339; this is interpretation of shell-tool input at PROCESS §3's genuine trust boundary, not a compensating downstream guard (antidote) -> @Software-Engineer
+'''
+position = '''
+The builder's position (it drove the actual hook as a subprocess at context_guard_pct = 0 inside an armed window, registry naming claude: PowerShell `& claude -p x` deny; `. claude -p x` no decision; `$r = . claude -p x` allowed; `$r = & claude -p x` deny; `. 'claude' -p x` allowed. `&` is an operator boundary in the PowerShell reader; `.` cannot be one because paths and numbers contain dots, so _segment_command takes the word `.` as the executable. Unlisted invocation prefixes as they behave today: Bash `command claude`, `builtin claude`, `exec claude`, `nohup claude`, `echo x | xargs claude -p`, `sh -c 'claude -p x'` allowed; Bash `time claude` deny (reserved word); PowerShell `Start-Process claude`, `Invoke-Expression 'claude -p x'`, `iex 'claude -p x'`, `cmd /c claude -p x` allowed. The spec's declared coverage names only the timeout and env prefixes, VAR=value and the chain operators, and says script wrappers are not inspected):
+
+FIX, and small. In PowerShell, `.` is an invocation operator alongside `&`. `. claude -p x` runs claude, and `$r = . claude -p x` captures its output. The reader already treats `&` this way, and denies `& claude` and `$r = & claude`. Treating the dot the same is consistent with the "any command word" coverage, not a new kind of inspection.
+
+The fix belongs in the PowerShell branch of command_words, beside _assigned: skip a leading unquoted `.` word, so the word after it is the command, while a quoted `'.'` stays data. That is about 5 lines and 4 TC-339 cases.
+
+Candidly, `. claude` is unusual in ordinary agent use. Agents write `claude ...`, or `& "path"` for a quoted path, and use the dot mostly to dot-source scripts. Its fix cost is low all the same.
+
+My probes show Bash `command`, `exec`, `nohup` and `xargs`, and PowerShell `Start-Process`, `iex` and `cmd /c`, also pass. These are arguably as ordinary as the dot. I ask the sitting to rule the coverage as a closed, declared list of transparent prefixes, so this class stops reopening one form per round.
+'''

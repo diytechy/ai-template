@@ -1,0 +1,15 @@
+range = "ed2533cb..e6717f0b"
+
+[[finding]]
+id = "R16F1"
+held_by = "builder"
+finding = '''
+[MAJOR] project-trajectory/scripts/coordinator_guard.py:965 -> A normal PowerShell assignment launches a model through the blackout hook: the actual hook at guard dial 0 denies `claude -p x` but allows `$response = claude -p x`, because command_words returns only `$response`; PowerShell's own CommandAst identifies `claude` as the RHS command. This violates Part B and SR-237/LLR-300/IF-275 (rubric K1, confirmed per B1), independently of the dismissed split-token evasion -> Make the single shell-reading boundary return the command in a PowerShell assignment RHS while retaining literal assignment values as data, and add this real-hook regression to TC-339; preserve parent acceptance and re-attest affected child text if changed. The input is external shell-tool text at PROCESS section 3's genuine trust boundary, so parse it once at its owning boundary rather than add a compensating hook guard, applying the antidote question in .agents/skills/antidote/SKILL.md -> @kit-builder
+'''
+position = '''
+The builder's position (it drove the real hook as a subprocess, coordinator_guard.py hook, with context_guard_pct = 0 inside an armed window: PowerShell 'claude -p x' -> deny; '$response = claude -p x' -> no decision; "$response = 'claude -p x'" -> allow; Bash 'r=$(claude -p x)' -> deny. shell_line.segments gives [['$response','=','claude','-p','x']] and command_words returns ['$response']; [string]$r = ..., $a, $b = ... and $r += ... slip through the same way, while $r = (claude ...) and $r = & claude ... are already denied):
+
+FIX. `$response = claude -p x` is how PowerShell captures a command's output. It is the direct counterpart of `r=$(claude -p x)`, which the reader already denies, and an ordinary launch, not evasion. Unlike the line-continuation case dismissed in sitting 005, nothing here bends the shell's grammar. The hook takes the assignment target as the command because only POSIX `NAME=value` assignments are skipped.
+
+The fix stays inside the one reading boundary: kitlib/shell_line.py records whether each PowerShell word opened quoted, so a quoted string stays data (about 15-25 lines); coordinator_guard.py's _segment_command, for PowerShell, skips a leading assignment ($name, [type]$name, $env:NAME or a comma list of these, before = += -= *= /= %= ??=) and takes the next unquoted, non-$ word as the command (about 15-20 lines); tests/test_blackout_window.py gains about six denied and allowed cases (TC-339). Literal values such as $r = 'claude -p x' stay allowed.
+'''

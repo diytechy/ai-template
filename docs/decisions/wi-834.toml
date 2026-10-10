@@ -1,0 +1,195 @@
+# docs/decisions/wi-834.toml — the blackout window pauses lanes on both routes,
+# a bare run checks the workstation first, and the entry points are documented;
+# delegated decisions (kit-builder, 2026-10-09).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-004", "D-005"]
+
+[decision.D-001]
+decided = "The kit's shipped inert Claude hook config (agent-hooks/claude.settings.json, copied by bootstrap as .claude/settings.json.example) now registers the coordinator guard's hook on its eight events, and dev-setup's consented switch merges only the guard's hook groups into .claude/settings.json. The spec's premise that the kit already shipped them inert was wrong: the guard's registration and the relaunch launchers were this repository's own tooling (README row and the WI-822 RESYNC entry: 'not scaffolded')."
+alternative = "Ship no guard hooks and have dev-setup offer nothing in a scaffold (part D reduced to this repo), or merge the whole example (the subagent gate and the Stop hook too)."
+reversal_cost = "Low: drop the eight groups from the shipped example and the hooks subcommand; adopters who switched them on remove them from .claude/settings.json."
+why_not_escalated = "Part D and its RESYNC line ('dev-setup now offers to switch on the coordinator's hooks') only make sense if the kit ships them; merging only the guard's groups keeps the opt-in to what the spec names. The relaunch launchers stay unshipped, so in a scaffold the hooks act on the blackout window (and on the context guard only if an adopter also supplies launchers), which the README states."
+review = ""
+
+[decision.D-002]
+decided = "The window function lives in agent_policy.py (blackout_at, with parse_blackout moved there) as the one reader of [policies] blackout, re-exported by agent_common; agent_common.blackout_wake is deleted and its callers and tests move to blackout_at."
+alternative = "Keep it in agent_common (over 1000 SLOC and baselined), or a new kitlib module, which could not read the dial through declared_policy's legacy dual-read without importing upward."
+reversal_cost = "Low: a function move; every caller names agent_common.blackout_at."
+why_not_escalated = "Placement inside the spec's 'one window function'; agent_policy is the module that owns the declared-policy read, and the move shrinks agent_common (re-stamped down 24 SLOC)."
+review = ""
+
+[decision.D-003]
+decided = "The loop's admission stays at its existing pre-session wait (wait_out_blackout, now through blackout_at), and every loop launch also handles the service's refusal by waiting and retrying (session_service.through_blackout: the worker session, the interactive sitting, the recovery probe and the dual-plan round). The loop itself therefore never runs a wrap-up adjudication inside the window: its in-flight session finishes (ruling (d)) and the next one waits."
+alternative = "Delete wait_out_blackout and let only the service's refusal pause the loop, so a loop-route adjudication of an active claim could run inside the window."
+reversal_cost = "Low: one call in run_iteration."
+why_not_escalated = "The spec states the loop already pauses this way and that the loop handles the refusal with its existing blackout_wait; the wrap-up exception is written for the coordinator's close-down (ruling (f))."
+review = ""
+
+[decision.D-004]
+decided = "Inside the window the hooks deny every SendMessage from the main session, not only one that resumes a subagent, and treat as the main session any call without agent_id (no lease is needed, so they act with the guard off)."
+alternative = "Inspect SendMessage's tool_input to deny only a message addressed to a subagent; or deny only the lease holder's calls."
+reversal_cost = "Low: one entry in LAUNCH_TOOLS and its test."
+why_not_escalated = "The hook input carries no field this code can rely on to tell a subagent target from another; every SendMessage target is a model that would work inside the window, so the broader denial keeps usage minimal (ruling (a)). With the guard off there is no lease to name a holder."
+review = ""
+
+[decision.D-005]
+decided = "The dispatcher holds its claim inside the window at the tick (dispatch._blackout_hold: an idle station waits the window out with the banner; with lanes live it claims nothing and lets them finish), in addition to integrate.claim refusing the dispatcher's claim. Without the hold a refused claim would end the run fatally."
+alternative = "Treat a refused claim's exit code as a hold inside the dispatcher instead of asking the window at the tick."
+reversal_cost = "Low: one function in dispatch.py."
+why_not_escalated = "Ruling (i) refuses the claim; how the dispatcher waits is implementation, and asking the one window function at the tick keeps the claim's refusal the boundary without decoding exit codes."
+review = ""
+
+[decision.D-006]
+decided = "dev-setup reads the retention dial and the sign-in through the existing coordinator_adjudicate.py signin command (WI-835's probe, WI-846's token), which gains --retained: it reads `off` while [adjudicator] retention is off (session_keep.keep_config) and probes nothing. Only the ANTHROPIC home is reported, and WI-846's dev-setup token step is reused, now shown only while retention is on and the token missing."
+alternative = "A new command on session_service or session_keep, or reporting the codex home too."
+reversal_cost = "Low; WI-801, which deletes coordinator_adjudicate.py, must move this caller with its others."
+why_not_escalated = "The spec says to build only what WI-846 did not and to read through the kit's readers; signin is the probe's existing command line. The spec's sign-in step is Claude's setup-token."
+review = ""
+
+[decision.D-007]
+decided = "A bare run's check (--for-run / -ForRun) offers, at an interactive terminal: the installs the tier already declares, WI-846's token step, the hook opt-in and the pre-commit floor (asked, not set); it never chains setup.sh. Without a terminal (piped or closed stdin, or CI) it offers nothing. Its result is exit 0 when a 3.11+ runtime is present afterwards, 1 with the step printed. On Windows Interactive now also requires that stdin is not redirected, in -Full and -Baseline too."
+alternative = "Run --baseline from run, which wires the pre-commit floor unasked and chains setup.sh."
+reversal_cost = "Low: the dev-setup scripts and run launchers."
+why_not_escalated = "Part C says check, then offer, consent-first, item by item, and that a prompt never consumes input piped to the menu."
+review = ""
+
+[decision.D-008]
+decided = "The PowerShell dev-setups run the kit's Python readers as `<interpreter> -X utf8 <script>`, because on this box `py <script>` follows the script's `#!/usr/bin/env python3` shebang to an interpreter below the 3.11 floor while `py -c` (the floor probe) runs 3.11."
+alternative = "Pass `-3`, which on this box also selected a sub-floor interpreter."
+reversal_cost = "None to speak of."
+why_not_escalated = "A measured runtime defect in the new call site; no policy is involved."
+review = ""
+
+[decision.D-009]
+decided = "In the window the coordinator's close-down keeps the lease (no hand-back), per the spec's resume cases; session-protocol §4 now says the hand-back rule has this exception. hand_back itself is not refused inside the window."
+alternative = "Refuse hand-back inside the window, or keep the old 'every close-out without a relaunch hands back' wording."
+reversal_cost = "Low: skill prose."
+why_not_escalated = "The spec names the two resume cases (reopen the same session holding the lease, or release and take); refusing a hand-back is not asked for."
+review = ""
+
+[decision.D-010]
+decided = "Inside an armed blackout window, a main session's Bash or PowerShell command line the hook cannot read (an unclosed quote, $( substitution, backtick substitution or PowerShell here-string) is DENIED, fail-closed, with a reason naming why and asking for the line to be rewritten; outside the window no line is read at all. An unterminated here-document is not unreadable: bash runs it to the end of input, so its body is skipped to the end."
+alternative = "Fail open: treat an unreadable line as naming no model CLI and allow it."
+reversal_cost = "Low: one except clause in coordinator_guard.launch_reason and its three test cases."
+why_not_escalated = "Fail-open would be a second, degenerate reading path beside the one interpretation (the owner's no-fallback rule): a line the hook cannot read is a line it cannot supervise. The cost is small and bounded: an unclosed quote is a syntax error the shell refuses anyway, the denial applies only to the main session and only inside the window, and the reason tells the session what to rewrite. The heredoc and here-string forms the close-down itself uses (writing the handoff, a commit message) are read, not refused, and are pinned in ALLOWED."
+review = ""
+
+[decision.D-011]
+decided = "The hook reads a command line through one module, kitlib/shell_line.py (`segments`), in the tool's dialect: POSIX quoting for the Bash tool and PowerShell's quoting (single quotes with doubled quotes, backtick escapes, here-strings, braces as boundaries) for the PowerShell tool. Command substitutions ($(...), POSIX backticks) are read as further commands; here-document and here-string bodies are data and are not read. The guard keeps only the command-word reading (assignments, grammar words, the timeout and env prefixes, env's split string read through the same module). model_clis reads cmd_template cells through the kit's one template reader (agent_session.split_cmd via agent_common), so a JSON-array template names its CLI."
+alternative = "stdlib shlex in punctuation-aware POSIX mode, inside coordinator_guard.py."
+reversal_cost = "Low: one pure module and its import in coordinator_guard.py."
+why_not_escalated = "shlex's POSIX mode returns a quoted ';' as the same token as the operator ';' (measured: `echo \";\" claude` lexes to ['echo', ';', 'claude']), so it cannot tell a quoted operator from a boundary, which is REVIEW-A F1's own case; it also has no PowerShell mode and does not skip here-document bodies. The lexer is a separate module because coordinator_guard.py would otherwise reach 1105 SLOC, past the 1000-SLOC module ratchet (tests/test_module_size_ratchet.py); it is 929 with the lexer outside it. The new module is tagged to SR-229 / LLR-300; LLR-300's module and code_symbol cells need it added (the spine author's, at the checkpoint)."
+review = ""
+
+[decision.D-012]
+decided = "REVIEW-A F3's scenario is covered as far as the kit's code carries it (tests/test_blackout_window.py::test_a_wrap_up_verdict_asking_for_rework_leaves_the_rework_waiting): a lane worktree whose committed review round is its pause point, the coordinator's real wrap-up dispute adjudication (coordinator_adjudicate.main) of the claim active in the primary checkout admitted inside the window with retention off, its verdict ruling the finding FIX read by the one dispute parser, then the rework refused (the hook denies the builder's Agent call and a model CLI; the service refuses BUILD and REVIEW) until the window ends, when BUILD is admitted. Writing and reading the handoff that names the obligation is the coordinator's prose, not code: no kit function writes or reads a lane's next obligation, so the test asserts none and says so; the close-down instruction that asks for it is pinned by test_session_start_and_the_monitored_events_tell_the_close_down. The former test, which made three refused service calls, is kept under a name and docstring that claim only that."
+alternative = "Build a handoff writer/reader so the test can assert the handoff's contents."
+reversal_cost = "None: a test and a test rename."
+why_not_escalated = "The spec makes the handoff the coordinator's resume map and its stop encouraged, not enforced (ruling (f)); building a handoff format would add behaviour the spec does not ask for. The scenario passes on the shipped code (a coverage gap, not a defect); two mutations of session_service.launch_refusal (no wrap-up exception; no refusal) each fail it."
+review = ""
+
+[decision.D-013]
+decided = "Round 002's F2 (the review-next handoff scenario, the round-001 F3 class in its second round, contested by the builder) went to a dispute sitting, not to another build round; the sitting (docs/reviews/wi-834/003-ADJUDICATE-f95988a.md) ruled R2F2 DISMISS not-worth-cost, and its remedy, rewording the spec's test-list bullet so it promises what the kit's code carries, is added to the lane's spine change list for the checkpoint's Done-when judgement. The finding is not re-raised and later coverage plans exclude it citing that verdict."
+alternative = "Have the builder add a scenario test that writes and reads a handoff file itself."
+reversal_cost = "Low: one more test, and the test-list bullet left as written."
+why_not_escalated = "The coordinator-cycle skill §3 step 6 routes a contested or second-round finding to the dispute sitting, whose ruling is final; the ruling names no high risk."
+review = ""
+
+[decision.D-014]
+decided = "Round 004's one finding (Bash line continuations splitting a here-document delimiter or a `$(` opener; the third review round of the hook's shell-reading class) went to a dispute sitting; docs/reviews/wi-834/005-ADJUDICATE-7a8e2d5.md ruled R4F1 DISMISS out-of-scope: reproducing it needs deliberate evasion of the hook, which PROCESS.md §6's threat model excludes, and the spec's coverage is supervision, not inspection of arbitrary shell programs. The class is closed at that coverage statement; the lane goes to its checkpoint."
+alternative = "Rewrite the shell reader around a continuation-aware cursor (toward full Bash lexing)."
+reversal_cost = "Medium: a module-wide lexer change in kitlib/shell_line.py and its pins."
+why_not_escalated = "The coordinator-cycle skill §3 step 6 sends a third-round finding to the dispute sitting, whose ruling is final; the ruling names no high risk."
+review = ""
+
+[decision.D-015]
+decided = "The coordinator applied one test-only line itself, openly: tests/test_run_devsetup.py's _devsetup_env drops CI, because the builder found (and the coordinator reproduced under WSL with CI=true: 1 failed) that test_a_denial_changes_no_configuration_or_credential reads a CI host as no terminal and would fail on the GitHub Linux and macOS legs. With the line, the module passes under CI=true (15 passed, 6 skipped)."
+alternative = "Dispatch another builder round for the one line, or leave it for the full-lane review to find."
+reversal_cost = "None: one test-helper line."
+why_not_escalated = "A byte-exact test-environment fix with its red and green observed; the fresh full-lane Sol gate reviews it with the rest of the lane."
+review = ""
+
+[decision.D-016]
+decided = "The lane is left committed on its lane, not landed: the session prompt's bound (a lane not SOUND after the dispute ruling and two more full-lane rounds) was reached. After dispute 005, full-lane round 009 found two defects (answered in 8cb21762, narrow round 010 APPROVE, sitting 011) and full-lane round 012 found one MAJOR: a bare run's readiness step (dev-setup -ForRun / --for-run) and the run.* launcher choose their Python interpreters independently, so with an older Python first on PATH and 3.11 installed the step reports the runtime ready and the launcher then starts the menu on the older interpreter, which fails importing tomllib. Not dismissed under the threat model: an older Python first on PATH is an ordinary workstation, not a contrived host. The owed work is recorded in the handoff for the owner."
+alternative = "Build the fix (one resolved, floor-satisfying interpreter consumed by both the readiness step and the menu launch) and run a third full-lane round in this leg."
+reversal_cost = "Low: the lane is committed and clean; resuming it means building that fix, a narrow round, a checkpoint for LLR-047/LLR-320 and IF-292/IF-293 text, and one more full-lane gate."
+why_not_escalated = "The session prompt states this bound and its action; the owner decides whether the lane gets another round."
+review = ""
+
+[decision.D-017]
+decided = "Answering full-lane round 012 F1, the one interpreter is resolved by the run launcher: each run.* launcher (root and template) runs its candidates (its .venv interpreter, then exactly its dev-setup's own runtime search in the same order: root run.cmd = scripts/dev-setup.ps1's py, python, python3, py -3.13, py -3.12, py -3.11; root run.sh = scripts/dev-setup.sh's python3, python, python3.13, python3.12, python3.11; the templates = their dev-setup templates' py, python, python3 and python3, python; each dev-setup's list lives in one variable, $PyCandidates / PY_CANDIDATES, and no candidate was added, a parity test pinning the four pairs) with one probe that prints sys.executable only at 3.11+, takes the first answer as a concrete executable path, hands it to the readiness operation as -Python / --python (omitted when none answered), and runs the menu on exactly that path. The readiness operation's run tier checks only the handed interpreter (the floor, by running it) and runs the kit's readers on it; it keeps no candidate search of its own, so its exit 0 speaks for the interpreter the menu runs on. The direct and list forms use the same resolution and, with none, exit 1 with the step, without the readiness operation, a prompt or a pause. The launcher's runnability-only choice and its py -3 fall-through are deleted. Because the sets match, whenever a dev-setup check reports a runtime, run resolves one. A runtime installed during a bare run's offers is not the resolved one, so that run still ends with the step, which names what was checked and says to install Python 3.11+ or put an installed one first on PATH, then run again."
+alternative = "The readiness operation resolves and reports its interpreter for the launcher to exec (a result file or a second output stream), or the launcher re-resolves after the readiness operation returns."
+reversal_cost = "Low: the four run.cmd / run.sh launchers' resolution blocks (run.command delegates), the dev-setup candidate variables and the four dev-setup run tiers' handed-interpreter branch, plus their pins in tests/test_run_devsetup.py."
+why_not_escalated = "The direct and list forms must refuse a sub-floor interpreter without running the readiness operation, so a launcher-side resolution is needed anyway; putting the only one there and handing it to the readiness step leaves a single choice. A readiness-side report would need a second channel out of PowerShell and sh (stdout carries the report and the prompts), and a launcher re-resolution after it would be a second choice. Resolving to sys.executable also removes the py-launcher shebang substitution D-008 measured. The trade-off (an install during the run needs a second run) is visible in the step text; on Windows a freshly installed interpreter is not on the running launcher's PATH anyway."
+review = ""
+
+[decision.D-018]
+decided = "The lane resumed past D-016's round bound on the owner's direction in an attended coordinator session (2026-10-09): 'Can you bring WI-834 to completion so that it is able to land? I think the rounds can continue to run given the scope of this WI to try and clear the found issues.' Round 4 answers 012 F1 (D-017); the cycle continues with a narrow Sol round, the checkpoint (Terra reconciles 013-SPINE-CHANGES-r4.md; one combined sitting) and a fresh full-lane gate, repeating while full-lane rounds find valid defects. The coordinator also widened the builder's first answer: the launcher's candidates were narrower than its dev-setup's own runtime search, so a standalone check could report a runtime that run would not resolve (verified on this workstation: C:/Python38 first on PATH, 3.11 reachable only as py -3.11); the parity pin closes it."
+alternative = "Keep the lane parked at D-016 for the owner to rule, or split the launcher-interpreter work into its own row."
+reversal_cost = "Low: the lane is unlanded; parking it again stops the rounds."
+why_not_escalated = "The owner gave the direction; D-016's own record stays for the owner to confirm or overrule."
+review = ""
+
+[decision.D-019]
+decided = "Owner ruling in the attended session (2026-10-09) on round 016 F2 (the guard hooks run as bare python, so an older interpreter first on PATH crashes the PreToolUse hook on tomllib and the call proceeds): bind at opt-in, machine-local. The hook opt-in writes the guard's hook groups with the absolute path of the floor-resolved interpreter it runs on into .claude/settings.local.json, never the committed .claude/settings.json; the relaunch launchers and the guard's injected command use the resolved interpreter too. This revises D-001's target file: D-019 supersedes D-001's `.claude/settings.json` as the opt-in's target (D-001's text stands as written; its other choices, which guard groups ship and that only they are merged, are unchanged). The kit-wide leftovers of the class (the shipped git pre-commit hook's interpreter choice, the docs/stack.ini [run] lines' bare python, this repository's own committed .claude/settings.json hooks) go to a follow-up row, filed on trunk after this lane's landing sweep and cited by subject until then."
+alternative = "A preparatory row for one shipped interpreter resolver every kit entry point reads, landed first; or a dispute sitting on F2."
+reversal_cost = "Medium: the opt-in's target file and command construction, LLR-322 and TC-345 text, and adopters who switched the hooks on re-run the opt-in."
+why_not_escalated = "Escalated: the owner chose this option among three put to them."
+review = ""
+
+[decision.D-020]
+decided = "Round 016 F1 (a PowerShell assignment such as `$response = claude -p x` hides its command word from the blackout hook; the hook's shell-reading class past its third round) went to dispute sitting 017 with the builder's FIX position; docs/reviews/wi-834/017-ADJUDICATE-1003705.md ruled R16F1 FIX: ordinary output capture inside the declared any-command-word coverage, fixed at the one shell-reading boundary with quoted right-hand values kept as data."
+alternative = "Build the fix without a sitting, or dismiss it as the line-continuation class was (dispute 005)."
+reversal_cost = "Low: the PowerShell assignment skip in the reader and its pins."
+why_not_escalated = "The coordinator-cycle skill routes a third-round class to the dispute sitting, whose ruling is final; the ruling names no high risk."
+review = ""
+
+[decision.D-021]
+decided = "Building round 5 (D-019, D-020): (1) the shell reader's words are a str subclass, kitlib.shell_line.Word, carrying quoted_at (the offset where its first quoted piece starts), so the guard tells PowerShell's `$r = 'claude'` (a value) from `$r = claude` (a command) without a second reading; coordinator_guard._assigned skips a leading assignment's targets and operator, also when the operator is written against the target (`$r=claude`), and a right-hand side opening with a quoted string or a variable is no command. (2) The opt-in binds each guard hook by replacing the example command's leading interpreter word with the opt-in's own sys.executable, as a forward-slash path in double quotes (read alike by the POSIX shell and cmd that Claude Code runs a hook command through); a re-run replaces the guard's own groups in .claude/settings.local.json and keeps every other group, so a different interpreter rebinds rather than duplicates. (3) GUARD is built at import from sys.executable, the hook's own interpreter. (4) The relaunch launchers are this repository's own, so their candidates are root run.cmd's / run.sh's (scripts/dev-setup.ps1's and scripts/dev-setup.sh's runtime search after .venv), pinned by the same parity test."
+alternative = "Mark quotedness with a separate segments() return shape; append rather than replace guard groups on re-enable; pass the interpreter to the relaunch launchers from launch_command."
+reversal_cost = "Low: each is local to its function and pinned by its test."
+why_not_escalated = "Construction inside D-019's and D-020's rulings; a Word subclass keeps every existing segments() caller unchanged, and the relaunch probe is the one the run launchers already use (D-019 names it)."
+review = ""
+
+[decision.D-022]
+decided = "Answering narrow round 018 within D-019 and D-020: (1) a PowerShell assignment's right-hand side that opens with a variable is data unless it is itself an assignment, so a chained `$a = $b = claude -p x` (which runs claude) is read through the same operator rule; (2) hooks_state reads the opt-in's command-level ownership by asking whether switching on would change the machine-local hooks at all (`_merged(live, wanted) == live`), so it and enable_hooks share one merge and cannot disagree."
+alternative = "Treat every variable right-hand side as data (missing the chained form); keep hooks_state's own group-membership test."
+reversal_cost = "Low: one branch in _right_hand and one line in hooks_state, each pinned."
+why_not_escalated = "Construction inside the coordinator's round-6 directions, which settle the operator rule and the merge's command-level ownership but not the chained form or how hooks_state reads the ownership."
+review = ""
+
+[decision.D-023]
+decided = "Answering round 020's observations O1 and O2: (1) kitlib.shell_line.Word now carries the spans of every quoted piece (quoted_at is deleted, one representation), and the guard finds the first assignment operator none of whose characters was quoted; (2) the guard's own hook commands are defined once from the shipped example's own commands, as (interpreter word, rest) shapes, owned with the example's interpreter word or a double-quoted absolute path; (3) that ownership and the opt-in's merge moved out of coordinator_guard.py into a new pure module, kitlib/guard_hooks.py (guard_groups, bind, command_shapes, merged), because the round took coordinator_guard.py past the 1000-line module ratchet (1003 lines), whose rule is to decompose rather than bump; coordinator_guard.py keeps the file reading and writing (hooks_state, enable_hooks) and IF-280. LLR-322's module and code_symbol trace cells name the new module, and the bootstrap manifest ships it."
+alternative = "A per-character quoted mask instead of spans; trimming coordinator_guard.py's docstrings under the ratchet, or a reviewed baseline bump."
+reversal_cost = "Low: one pure module and its import; the spans are read through Word.quoted and Word.opens_quoted only."
+why_not_escalated = "The coordinator's round-7 directions settle spans-or-mask and the shape-defined ownership; the decomposition follows the ratchet's own rule (WI-545), as D-011 did for shell_line.py."
+review = ""
+
+[decision.D-024]
+decided = "Round 024 F1 (PowerShell dot invocation, `. claude -p x` and `$r = . claude -p x`, read with `.` as the command word; the hook's shell-reading class in another round) went to dispute sitting 025 with the builder's FIX position, which asked for the coverage to be ruled a closed line. docs/reviews/wi-834/025-ADJUDICATE-22cf09c.md ruled R24F1 FIX and drew the line: the hook covers the word the shell's own grammar makes the command, so invocation operators (`&`, `.`) are inside the coverage, while commands that take a command as an argument (Start-Process, iex, cmd /c, sh -c, exec, command, builtin, nohup, xargs, script files) are outside it as the approved text says; findings against wrapper forms are dismissed by that line rather than reopened round by round, and widening it is an owner-level change to the coverage."
+alternative = "Dismiss the dot form as rare, or widen the coverage to wrapper commands."
+reversal_cost = "Low: the dot-operator skip in the PowerShell branch and its four TC-339 cases."
+why_not_escalated = "The coordinator-cycle skill routes a recurring class to the dispute sitting, whose ruling is final; the ruling names widening the coverage, not this fix, as the owner's."
+review = ""
+
+[decision.D-025]
+decided = "Round 028's one finding (Bash `time -p claude -p x`: the reader skips the `time` keyword but takes its `-p` option as the command) is answered with code under dispute sitting 025's ruled line, with no new sitting: `time` and its options are shell grammar, so the timed command is the command word, inside the coverage the ruling drew. To stop the class reopening one form per round, the build round derives the full set of grammar that can precede a command word in each dialect (the Bash reserved words and their options, the PowerShell invocation and assignment operators) from the shells' own grammar, and pins each, rather than fixing `time -p` alone."
+alternative = "A fresh dispute sitting on the time form, or a fix of `time -p` alone."
+reversal_cost = "Low: the reader's grammar table and its pins."
+why_not_escalated = "Applying a final ruling's stated line is not a new ruling; a wrapper-form finding would be dismissed by the same line."
+review = ""
+
+[decision.D-026]
+decided = "Round 030's finding (round 9's coproc entry took a NAME only before `{`, over-denying `coproc CLAUDE while true; ...` and missing `coproc WORK while claude -p x; ...`) went to dispute sitting 031 with the builder's FIX position; docs/reviews/wi-834/031-ADJUDICATE-6e90615.md ruled R30F1 FIX: coproc's NAME openers become every compound-command opener the reader keeps in a segment, with three TC-339 pins; the residual `coproc NAME ( ... )` reading NAME (its body still read) is accepted as recorded. The sitting also ruled for later rounds: with this cell the reader carries Bash's coprocess grammar whole, and a further grammar-only form that no ordinary agent writes, and that this lane did not just introduce, is R4F1's class (sitting 005) and is dismissed there rather than opened as another round."
+alternative = "Drop coproc from the grammar table, or dismiss the finding as contrived."
+reversal_cost = "Low: one table cell and three pins."
+why_not_escalated = "The shell-reading class goes to the dispute sitting, whose ruling is final; it names no high risk."
+review = ""
+
+[decision.D-027]
+decided = "The sixth fresh full-lane gate (docs/reviews/wi-834/039-REVIEW-A-b4f5047.md) found one MINOR and nothing else: a PowerShell function definition whose body names a model CLI is denied inside the window, though defining runs nothing. It went to dispute sitting 040 with the builder's DISMISS position; docs/reviews/wi-834/040-ADJUDICATE-73e78ae.md ruled R39F1 DISMISS not-worth-cost (the over-denial fails closed; the brace-depth fix risks fail-open misreads and would give up today's denial of define-and-call). The lane lands on that gate with no further Sol round, as WI-848 did (coordinator-2026-10-09-leg02.toml D-001)."
+alternative = "Run a seventh full-lane gate before landing."
+reversal_cost = "Low: a later row can take the deferred-body reading if the over-denial proves costly."
+why_not_escalated = "A final dispute ruling dismissed the gate's only finding; the precedent is recorded and awaiting the owner's confirmation."
+review = ""

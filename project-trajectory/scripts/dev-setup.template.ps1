@@ -11,8 +11,16 @@
 # Consent-first and readable: the DEFAULT tier only detects and reports; it
 # installs nothing. Nothing here pipes a remote script into a shell.
 #
-# Usage:  powershell -ExecutionPolicy Bypass -File dev-setup.ps1 [-Check|-Baseline|-Full] [-Profile <role>]
+# Usage:  powershell -ExecutionPolicy Bypass -File dev-setup.ps1 [-Check|-Baseline|-Full|-ForRun [-Python <interpreter>]] [-Profile <role>]
 #   -Check     (default) detect + report what's present; install nothing.
+#   -ForRun    what a bare `run` calls first: the -Check report, then, with an
+#              interactive console only, each missing piece offered
+#              consent-first (nothing offered without one, piped input
+#              included). -Python is the interpreter the launcher resolved
+#              and will run its menu on (omitted when it resolved none); the
+#              runtime reported is that interpreter only, never one found
+#              here. Exits 0 when it satisfies the 3.11 floor, 1 with the
+#              step to take when not.
 #   -Baseline  ensure runtime + git + an offline Mermaid renderer, plus the
 #              selected role(s)' tools. Asks before each install.
 #   -Full      baseline + an IDE and editor extensions. Opt-in; skipped headless.
@@ -21,10 +29,20 @@
 #              (no -Profile): every declared role. Roles: see $Roles below.
 #
 # Linux/macOS contributors: use scripts/dev-setup.sh.
+# Contracts: IF-292, IF-293 — the interface seams this script declares (process.md §8;
+# rows of record in docs/requirements/interfaces.toml).
+#
+# Contract IF-292: a bare run invokes this script as -ForRun from the repository
+#     root once before its menu, handing it as -Python the interpreter it
+#     resolved for the menu (omitted when it resolved none).
+# Contract IF-293: exit 0 says that handed interpreter satisfies the runtime
+#     floor; nonzero leaves the menu unopened after setup guidance.
 param(
     [switch]$Check,
     [switch]$Baseline,
     [switch]$Full,
+    [switch]$ForRun,
+    [string]$Python = "",   # -ForRun only: the interpreter the launcher resolved
     [string]$Profile = ""   # "" = all declared roles
 )
 $ErrorActionPreference = "Stop"
@@ -52,7 +70,7 @@ $Roles = [ordered]@{
 }
 # ===========================================================================
 
-$tier = if ($Full) { "full" } elseif ($Baseline) { "baseline" } else { "check" }
+$tier = if ($Full) { "full" } elseif ($Baseline) { "baseline" } elseif ($ForRun) { "run" } else { "check" }
 
 if ($Profile -and -not $Roles.Contains($Profile)) {
     # Write to stderr + exit 2 directly; Write-Error under -ErrorAction Stop
@@ -76,9 +94,12 @@ function HavePython($cand) {
     } catch { return $false }
     return ($LASTEXITCODE -eq 0)
 }
-# Interactive only with a real console and outside CI, so -Full never blocks
-# an automated run on a prompt.
-function Interactive { [Environment]::UserInteractive -and -not $env:CI }
+# Interactive only with a real console whose input is not redirected, and
+# outside CI, so -Full never blocks an automated run on a prompt and a consent
+# prompt never consumes input piped to the run menu.
+function Interactive {
+    [Environment]::UserInteractive -and -not $env:CI -and -not [Console]::IsInputRedirected
+}
 function RendererPresent { (Have "code") -or (Have "mmdc") -or (Have "npx") }
 # A role reads present when any detection command is on PATH, or when it
 # declares none (e.g. code, whose toolchain is setup.ps1's job).
@@ -110,14 +131,38 @@ Write-Host "Developer workstation (process.md §7). Product deps are scripts/set
 Write-Host ""
 
 # --- Detect + report ---------------------------------------------------------
-$runtime = (HavePython "py") -or (HavePython "python") -or (HavePython "python3")
+# $PyCandidates: the interpreters searched, in order. Keep run.cmd's list the
+# same (after its .venv entry), so a check that finds a runtime means run
+# resolves one too.
+$PyCandidates = @("py", "python", "python3")
+$PyChecked = ".venv\Scripts\python.exe, " + ($PyCandidates -join ", ")
+# $pybin: the interpreter the kit's own readers below run on; $runtime is
+# whether there is one. For a bare run (-ForRun) it is the interpreter the
+# launcher handed in, if that satisfies the floor: the one the menu runs on,
+# so no search here can vouch for a different one. Otherwise, the first
+# floor-satisfying candidate.
+function FindPython {
+    if ($tier -eq "run") {
+        if ($Python -and (HavePython $Python)) { return $Python }
+        return $null
+    }
+    foreach ($cand in $PyCandidates) { if (HavePython $cand) { return $cand } }
+    return $null
+}
+$pybin = FindPython
+$runtime = [bool]$pybin
 Report "runtime (python)" $runtime "install a Python 3.11+ runtime - e.g. winget install Python.Python.3.13, uv python install 3.13, or the python.org Windows installer"
-Report "git" (Have "git") "install git (needed to make reviewable changes)"
+# Git is queried only once it is known present: under ErrorActionPreference
+# Stop, calling an absent native command throws, which would end the report
+# before its runtime result (round 024 F2). Without git the floor reads
+# missing, and nothing below offers or wires it.
+$haveGit = Have "git"
+Report "git" $haveGit "install git (needed to make reviewable changes)"
 Report "offline Markdown+Mermaid renderer" (RendererPresent) `
     "VS Code + a Mermaid preview extension, or: npm i -g @mermaid-js/mermaid-cli"
-$hooksPath = (git config --get core.hooksPath 2>$null)
-Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") `
-    "run -Baseline (or: git config core.hooksPath .githooks)"
+$hooksPath = if ($haveGit) { git config --get core.hooksPath 2>$null } else { "" }
+$floorHint = if ($haveGit) { "run -Baseline (or: git config core.hooksPath .githooks)" } else { "needs git: install git first" }
+Report "pre-commit floor (core.hooksPath)" ($hooksPath -eq ".githooks") $floorHint
 
 foreach ($r in $selected) {
     Report "role: $r" (RolePresent $r) "fill `$Roles['$r'] Cmds/Install in the EDIT block for this role's tools"
@@ -126,21 +171,49 @@ if ($tier -eq "full") {
     Report "IDE (VS Code 'code')" (Have "code") "install an editor; run again with -Full to add extensions"
 }
 
-# The retained adjudicator's long-lived token (WI-846). With [adjudicator]
-# retention on, a retained Claude launch reads its token from the file the
-# AGENT_CLAUDE_TOKEN_FILE environment variable names, and is refused before
-# launch without one. Only a repo that turns retention on needs it, so it is a
-# note, never counted missing. dev-setup never reads, stores or prints the token.
-function TokenReady {
-    $f = $env:AGENT_CLAUDE_TOKEN_FILE
-    if (-not $f) { return $false }
-    $item = Get-Item -LiteralPath $f -ErrorAction SilentlyContinue
-    return ($null -ne $item) -and (-not $item.PSIsContainer) -and ($item.Length -gt 0)
+# The retained adjudicator's sign-in (WI-834): with [adjudicator] retention on,
+# a retained Claude launch runs under its own dedicated home and authenticates
+# with the long-lived token in the file AGENT_CLAUDE_TOKEN_FILE names (WI-846),
+# refused before launch without one. Read through the kit's own readers (the
+# retention dial and the sign-in probe, coordinator_adjudicate.py signin
+# -retained) when a Python runtime exists, else unknown; reported only while
+# retention is on. dev-setup never reads, stores or prints the token.
+function KitReading($argList) {
+    if (-not $pybin) { return "" }
+    # `-X utf8` first: the `py` launcher then runs the interpreter the probe
+    # validated, never one a script's shebang names.
+    try { $out = & $pybin -X utf8 @argList 2>$null } catch { return "" }
+    if ($LASTEXITCODE -ne 0) { return "" }
+    return (($out | Out-String).Trim())
 }
-if (TokenReady) { Write-Host "  [ok]      retained adjudicator token (AGENT_CLAUDE_TOKEN_FILE)" }
-else {
-    Write-Host "  [note]    retained adjudicator token not set - needed only with [adjudicator] retention on: run 'claude setup-token' once, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+$signin = "unknown"
+if ($pybin) {
+    $line = KitReading @("scripts/coordinator_adjudicate.py", "signin", "--retained", "--root", ".")
+    if ($line -match '^signin \[ANTHROPIC\]: (\S+)$') { $signin = $Matches[1] }
 }
+switch ($signin) {
+    "off" { }
+    "signed-in" { Write-Host "  [ok]      retained adjudicator sign-in (AGENT_CLAUDE_TOKEN_FILE)" }
+    "missing" {
+        Write-Host "  [missing] retained adjudicator sign-in - run 'claude setup-token' once (offered by -Baseline and a bare run), keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+        $script:missing++
+    }
+    default { Write-Host "  [unknown] retained adjudicator sign-in - could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" }
+}
+
+# The coordinator's Claude Code hooks (WI-834): shipped inert in
+# .claude/settings.json.example and switched on only with consent, merged into
+# the machine-local .claude/settings.local.json beside any hooks already there,
+# each bound to the interpreter that runs the opt-in (never the committed
+# .claude/settings.json: the bound path is this machine's).
+$hooksExample = ".claude/settings.json.example"
+$hooks = "none"
+if ($pybin -and (Test-Path $hooksExample)) {
+    $hooks = KitReading @("scripts/coordinator_guard.py", "--root", ".", "hooks", "--example", $hooksExample)
+    if (-not $hooks) { $hooks = "none" }
+}
+if ($hooks -eq "on") { Write-Host "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" }
+elseif ($hooks -eq "off") { Write-Host "  [note]    coordinator Claude Code hooks are off - opt-in, offered by -Baseline and a bare run" }
 
 Write-Host ""
 if (Test-Path ".venv") { Write-Host "Product toolchain: .venv present (run scripts/setup.ps1 to refresh)." }
@@ -153,36 +226,76 @@ if ($tier -eq "check") {
     exit 0
 }
 
-# --- -Baseline / -Full: consent-first installs -------------------------------
-Write-Host ""
-Write-Host "Installing the $tier workstation (asks before each step)…"
-if (-not $runtime) { MaybeInstall "runtime" $RuntimeInstall }
-if (-not (RendererPresent)) { MaybeInstall "offline Mermaid renderer" $RendererInstall }
-foreach ($r in $selected) {
-    if (-not (RolePresent $r)) { MaybeInstall "role: $r" $Roles[$r].Install }
-}
-if ($tier -eq "full") {
-    if (Interactive) { MaybeInstall "IDE" $IdeInstall }
-    else { Write-Host "  - IDE: headless/non-interactive; skipped (opt-in, -Full only)." }
-}
-
-# The one-time long-lived token step (WI-846), consented. `claude setup-token`
-# prints the token once; the person keeps it in a file outside the repository
-# and points AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
-if (-not (TokenReady) -and (Have "claude") -and (Interactive)) {
-    $ans = Read-Host "Run 'claude setup-token' now for the retained adjudicator's long-lived token (one-time)? [y/N]"
+# The one-time long-lived token step (WI-846's, shown only while retention is
+# on and the token is missing), consented. `claude setup-token` prints the
+# token once; the person keeps it in a file outside the repository and points
+# AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
+function OfferSignin {
+    if (-not (($signin -eq "missing") -and (Have "claude") -and (Interactive))) { return }
+    Write-Host ""
+    Write-Host "The retained adjudicator runs Claude under its own dedicated home, which signs"
+    Write-Host "in with a long-lived token. The one-time 'claude setup-token' step mints that"
+    Write-Host "token; you keep it in a file outside this repository, at the location you set"
+    Write-Host "AGENT_CLAUDE_TOKEN_FILE to. Your normal 'claude' login and every other"
+    Write-Host "repository are left alone, and declining changes no configuration or credential."
+    $ans = Read-Host "Run 'claude setup-token' now? [y/N]"
     if ($ans -match '^[Yy]') {
         & claude setup-token
         Write-Host "  Keep the printed token in a file outside this repository, then set"
         Write-Host "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. setx AGENT_CLAUDE_TOKEN_FILE <path>)."
-    } else { Write-Host "  - skipped the token step (needed only with adjudicator retention on)" }
+    } else { Write-Host "  - skipped the token step; nothing was changed" }
+}
+
+# Switching the coordinator's hooks on, consented (WI-834).
+function OfferHooks {
+    if (-not (($hooks -eq "off") -and (Interactive))) { return }
+    $ans = Read-Host "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N]"
+    if ($ans -match '^[Yy]') {
+        $null = KitReading @("scripts/coordinator_guard.py", "--root", ".", "hooks", "--example", $hooksExample, "--enable")
+        Write-Host "  Switched on the coordinator hooks in .claude/settings.local.json."
+    } else { Write-Host "  - skipped the coordinator hooks; nothing was changed" }
+}
+
+# --- -Baseline / -Full / -ForRun: consent-first offers -------------------------
+Write-Host ""
+if (($tier -eq "run") -and -not (Interactive)) {
+    Write-Host "No interactive console: nothing is offered (run dev-setup at a console to install)."
+} else {
+    Write-Host "Installing the $tier workstation (asks before each step)…"
+    if (-not $runtime) { MaybeInstall "runtime" $RuntimeInstall }
+    if (-not (RendererPresent)) { MaybeInstall "offline Mermaid renderer" $RendererInstall }
+    foreach ($r in $selected) {
+        if (-not (RolePresent $r)) { MaybeInstall "role: $r" $Roles[$r].Install }
+    }
+    if ($tier -eq "full") {
+        if (Interactive) { MaybeInstall "IDE" $IdeInstall }
+        else { Write-Host "  - IDE: headless/non-interactive; skipped (opt-in, -Full only)." }
+    }
+    OfferSignin
+    OfferHooks
+}
+
+# --- -ForRun ends here, with its result: the runtime the menu needs -----------
+# Nothing more is wired unasked (the floor below is offered, not set), and the
+# setup.ps1 chain stays with -Baseline.
+if ($tier -eq "run") {
+    $hooksPathNow = if ($haveGit) { git config --get core.hooksPath 2>$null } else { "" }
+    if ($haveGit -and ($hooksPathNow -ne ".githooks") -and (Test-Path ".githooks/pre-commit") -and (Interactive)) {
+        $ans = Read-Host "Enable the pre-commit floor (git config core.hooksPath .githooks)? [y/N]"
+        if ($ans -match '^[Yy]') { git config core.hooksPath .githooks }
+        else { Write-Host "  - skipped the pre-commit floor" }
+    }
+    if ($runtime) { exit 0 }
+    Write-Host ""
+    Write-Host "The runtime is still missing - the step to take: install a Python 3.11+ runtime (e.g. winget install Python.Python.3.13, uv python install 3.13, or the python.org Windows installer) or put an installed one first on PATH, then run again. run checked: $PyChecked"
+    exit 1
 }
 
 # Wire the agent-neutral pre-commit process floor (core.hooksPath) — universal,
 # zero-dependency, reversible (process.md §7).
 # setup.ps1 wires it too (idempotent); doing it here protects a dev-setup-only
 # onboarding. Skipped cleanly outside a git repo or before the hook is scaffolded.
-if (Test-Path ".githooks/pre-commit") {
+if ($haveGit -and (Test-Path ".githooks/pre-commit")) {
     $null = git rev-parse --is-inside-work-tree 2>$null
     if ($LASTEXITCODE -eq 0) {
         git config core.hooksPath .githooks

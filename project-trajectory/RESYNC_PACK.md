@@ -7707,6 +7707,109 @@ skill, not only its `SKILL.md`, so a reference file beside such a skill is
 no longer reported missing from MAPPING. No setting or registry changes;
 nothing needs migrating.
 
+### Blackout pauses lanes on both routes; a bare run checks the workstation first; dev-setup offers the coordinator's hooks [since d2d8b8f4]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**Kit-owned files — overwrite:** `scripts/agent_policy.py`,
+`scripts/agent_common.py`, `scripts/agent_loop.py`, `scripts/plan_runner.py`,
+`scripts/session_service.py`, `scripts/session_keep.py`,
+`scripts/coordinator_guard.py`, `scripts/kitlib/shell_line.py` (new),
+`scripts/kitlib/guard_hooks.py` (new),
+`scripts/coordinator_adjudicate.py`,
+`scripts/integrate.py`, `scripts/dispatch.py` and
+`agent-hooks/claude.settings.json` (re-copy it as
+`.claude/settings.json.example`). **Merge by hand** (you
+may have filled them): `run.cmd`, `run.sh`, `run.command`,
+`scripts/dev-setup.sh` and `scripts/dev-setup.ps1`, from their
+`*.template.*` sources, and `.gitignore` (add `.claude/settings.local.json`,
+from `gitignore.template`).
+
+**What changes for you.** Three things.
+
+1. **The blackout window** (`[policies] blackout`) changes behaviour only once
+   you arm it (you ship `"12:00-12:00"`, disabled). Armed, one window function
+   reads it: a window wrapping past midnight belongs to its start weekday
+   (Friday's runs into Saturday; none starts on Sunday). Inside it no work
+   item is claimed on any route, the live dispatcher's included (it waits the
+   window out); the session service starts no new session except a wrap-up
+   adjudication of a work item whose claim is active, and the loop waits a
+   refused launch out. A Claude Code coordinator with the guard's hooks is
+   denied new subagents and model-CLI launches, told to close down, and
+   requests no relaunch, at any `context_guard_pct` (a context latch tripped
+   inside the window is still recorded, but the session is told only the
+   close-down, never to request a relaunch). The guard commands a session is
+   told to run name the hook's own interpreter and the guard's own file, and
+   run as typed in Bash and PowerShell (a path holding a space gets the two
+   forms side by side). The hook reads a shell
+   command line with that shell's quoting (Bash or PowerShell), so a quoted
+   `;` is not a boundary while a substitution in a body the shell expands (an
+   unquoted here-document, a `@"..."@` here-string) is read as a command; a
+   line it cannot read (an unclosed quote) is
+   refused inside the window, naming why. A PowerShell assignment, recognised
+   by its operator whatever its target (`$r`, `$o.Prop`, `$a[0]`,
+   `[string[]]$r`, `$script:x`, a comma list, a chain), and wherever that
+   operator stands in a word (`$h['answer']=claude`), runs its right-hand
+   command and is denied, as is PowerShell's dot invocation (`. claude -p x`,
+   `$r = . claude -p x`), like `&` (a dot-sourced script, `. ./setup.ps1`, is
+   not read into; wrappers that take a command as an argument, such as
+   `Start-Process`, `iex`, `cmd /c` or `sh -c`, stay outside the coverage); a quoted or variable right-hand side
+   (`$r = 'claude -p x'`) is a value and is allowed. A Bash grammar word is
+   read past with its own options, so `time -p claude -p x`, `time -- claude`
+   and `coproc claude` (or `coproc NAME { claude; }`, or a named coprocess
+   whose `while`/`if` condition runs a model) are denied like `time claude`,
+   while a coprocess merely named after a model CLI is allowed; a function
+   definition runs nothing and is allowed. No keep-warm ping fires
+   inside the window, and a retained adjudicator session last used before its
+   end retires (reset reason `blackout`) at the first keep call after it; a
+   keep-warm tick leaves a session another call's live lease holds to that
+   call, whose own last use then decides.
+2. **A bare `run`** (no arguments) now runs dev-setup's check first,
+   `scripts/dev-setup.sh --for-run` / `dev-setup.ps1 -ForRun`: the report,
+   then consent-first offers at an interactive terminal only; a runtime
+   still missing ends the run with the step to take. A workstation without
+   Git is reported as such (`[missing] git`, the pre-commit floor missing
+   because it needs git) and no longer aborts the PowerShell check before
+   its runtime result, so a bare `run.cmd` still reaches its menu and the
+   standalone `-Check` exits 0 again. `run <name>` and
+   `run --list` no longer pause on Windows. Every form of `run` now resolves
+   one interpreter by running each candidate (`.venv`, then the same list
+   dev-setup's own runtime search uses, now one variable there:
+   `$PyCandidates` = `py`, `python`, `python3` in `dev-setup.ps1`,
+   `PY_CANDIDATES` = `python3 python` in `dev-setup.sh`) and taking the first
+   that is Python 3.11+, by its own path; the bare form hands it to the check
+   (`--python <path>` / `-Python <path>`), which reports on that interpreter
+   only, and the menu runs on it. An older Python first on PATH is no longer
+   picked: with no 3.11+ found, a direct or list call exits 1 with the step
+   (it names what was checked) instead of starting the menu on whatever
+   exists, and a runtime installed during a bare run counts from the next
+   run. If you merged the readiness operation into your own dev-setup, take
+   the `--python` / `-Python` handling and the candidate variable with it,
+   and if you widened your dev-setup's search, widen `run.cmd` / `run.sh`'s
+   list to the same set.
+3. **dev-setup offers to switch on the coordinator's hooks**: the inert
+   `.claude/settings.json.example` now registers `scripts/coordinator_guard.py
+   hook`, and only those entries are merged, with consent, into the
+   machine-local `.claude/settings.local.json`, never the committed
+   `.claude/settings.json`; only the guard's own commands (exactly the shape
+   the opt-in writes: an interpreter, the guard's script, its `hook`
+   subcommand) are replaced there, and every other command, group and matcher
+   you have is kept, including your own commands that merely name the guard's
+   file. Each installed
+   command names the absolute path of
+   the Python 3.11+ interpreter dev-setup resolved, so an older `python` first
+   on PATH cannot run the hook into a crash (a crashed PreToolUse hook blocks
+   nothing). That path is this machine's, which is why the file is git-ignored
+   (the `.gitignore` line above). dev-setup also reports the retained
+   adjudicator's sign-in (signed in, missing or unknown) only while
+   `[adjudicator]` retention is on.
+
+**Migrate (only if it applies):** if you copied the guard's hook groups from
+the example into your committed `.claude/settings.json` yourself, remove them
+there and switch them on through dev-setup's offer instead, once per machine;
+a bare `python` in a committed hook command runs whatever interpreter each
+machine puts first. No setting or registry changes otherwise.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

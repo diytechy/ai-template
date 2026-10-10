@@ -1,0 +1,13 @@
+range = "a2c94eed..9bc1eb2a"
+
+[[finding]]
+id = "R2F2"
+held_by = "builder"
+finding = '''
+[MAJOR] tests/test_blackout_window.py:623 -> [B1] The replacement scenario covers a committed review round and wrap-up FIX verdict, but still writes or reads no handoff and has no review-next lane; the spec explicitly requires a review-next pause with its next obligation in the handoff, while the cited instruction test only searches injected text for `next obligation` -> Complete the separate review-next pause/resume scenario with committed finished-step evidence and a handoff naming the pending review, checking refusal during blackout and admission after it through existing routes; this asks for scenario evidence, not a new handoff writer or compensating runtime guard -> @kit-builder
+'''
+position = '''
+The builder's position, recorded in round 001's coverage plan (docs/reviews/wi-834/001-PLAN-r1.md, R2) when it answered the round-001 finding of the same class ([MAJOR] tests/test_blackout_window.py:479 -> The promised review-next/handoff and rework-producing wrap-up scenario is absent: this test only creates an active spec and attempts REVIEW/BUILD/CRITIQUE service calls, never commits finished-step evidence, writes or reads a handoff, runs a wrap-up adjudication verdict, or checks its next obligation; its comment claims handoff coverage its assertions cannot supply -> Add the specified scenario coverage through the actual route with committed pause evidence, a handoff naming review/rework, and an admitted wrap-up returning rework whose next launch waits; the evidence checks concern externally authored handoff/verdict artifacts whose semantic contents cannot be guaranteed by in-process construction (antidote skill) -> @kit-builder):
+
+**Owning boundary:** the scenario test through the real route as far as the kit's code carries it: a primary checkout holding the active claim, a lane worktree with committed finished-step evidence, `coordinator_adjudicate`'s wrap-up dispute call admitted inside the window and returning a FIX ruling, the rework BUILD/REVIEW refused by the session service and the builder's `Agent` call denied by the hook until the window ends, then admitted. Writing and reading the handoff is the coordinator's prose, not code; the comment is corrected to claim only what is asserted.
+'''

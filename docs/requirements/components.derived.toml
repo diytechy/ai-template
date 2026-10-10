@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 294
-seam_rows = 240
-requirements_placed = 122
+design_rows = 301
+seam_rows = 243
+requirements_placed = 123
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -643,6 +643,7 @@ sr_refs = [
   "SR-233",
   "SR-234",
   "SR-235",
+  "SR-237",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -753,6 +754,10 @@ llr_refs = [
   "LLR-313",
   "LLR-314",
   "LLR-315",
+  "LLR-316",
+  "LLR-317",
+  "LLR-318",
+  "LLR-319",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -798,6 +803,7 @@ modules = [
   "project-trajectory/scripts/kitlib/done_when.py",
   "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/provenance.py",
+  "project-trajectory/scripts/kitlib/shell_line.py",
   "project-trajectory/scripts/kitlib/sitting.py",
   "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/station.py",
@@ -878,6 +884,7 @@ seam_internal_refs = [
   "IF-286",
   "IF-287",
   "IF-290",
+  "IF-291",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -1099,6 +1106,9 @@ llr_refs = [
   "LLR-287",
   "LLR-292",
   "LLR-296",
+  "LLR-320",
+  "LLR-321",
+  "LLR-322",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -1117,6 +1127,11 @@ modules = [
   "agent-resume.sh",
   "project-trajectory/registries",
   "project-trajectory/scripts/bootstrap.py",
+  "project-trajectory/scripts/coordinator_adjudicate.py",
+  "project-trajectory/scripts/coordinator_guard.py",
+  "project-trajectory/scripts/dev-setup.template.cmd",
+  "project-trajectory/scripts/dev-setup.template.command",
+  "project-trajectory/scripts/dev-setup.template.ps1",
   "project-trajectory/scripts/dev-setup.template.sh",
   "project-trajectory/scripts/gen_arch_map.py",
   "project-trajectory/scripts/gen_cases.py",
@@ -1129,6 +1144,7 @@ modules = [
   "project-trajectory/scripts/gen_trajectory.py",
   "project-trajectory/scripts/gen_verdict_rollup.py",
   "project-trajectory/scripts/kitlib/bootstrap_manifest.py",
+  "project-trajectory/scripts/kitlib/guard_hooks.py",
   "project-trajectory/scripts/onboard.template.sh",
   "project-trajectory/scripts/pending.py",
   "project-trajectory/scripts/rendering/__init__.py",
@@ -1137,6 +1153,9 @@ modules = [
   "project-trajectory/scripts/rendering/traj_panels.py",
   "project-trajectory/scripts/rendering/traj_render.py",
   "project-trajectory/scripts/rendering/traj_views.py",
+  "project-trajectory/scripts/run.template.cmd",
+  "project-trajectory/scripts/run.template.command",
+  "project-trajectory/scripts/run.template.sh",
   "project-trajectory/scripts/run_menu.py",
   "project-trajectory/scripts/traj_display.py",
   "project-trajectory/scripts/traj_parse.py",
@@ -1216,6 +1235,23 @@ seam_boundary_refs = [
   "IF-257",
   "IF-264",
   "IF-270",
+  "IF-271",
+  "IF-272",
+  "IF-273",
+  "IF-274",
+  "IF-275",
+  "IF-277",
+  "IF-278",
+  "IF-279",
+  "IF-280",
+  "IF-281",
+  "IF-282",
+  "IF-283",
+  "IF-284",
+  "IF-285",
+  "IF-291",
+  "IF-292",
+  "IF-293",
 ]
 
 [unplaced]

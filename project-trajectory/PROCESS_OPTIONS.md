@@ -851,12 +851,24 @@ worker". Absent = not paused, so an adopter who never creates it pays nothing.
 (The legacy *untracked* `docs/pause` marker retired with the dispatcher at
 concurrency-restructure Phase 5 — the tracked file is the one home.)
 
-**The blackout window — `[policies] blackout`** (`HH:MM-HH:MM`, UTC, Mon–Fri): a
-recurring window inside which the coordinator starts **no new session** — the
-same stop-claiming graceful semantic as `docs/work/pause`, but temporal and
-self-clearing. The in-flight session wraps normally, then the loop **waits the
-window out and resumes automatically**, so one walk-away launch survives a daily
-blackout (unlike a pause, no unpause commit needed). The window is half-open
+**The blackout window — `[policies] blackout`** (`HH:MM-HH:MM`, UTC): a
+recurring window, starting on each weekday (Mon–Fri), that keeps usage to a
+minimum while every lane reaches a good pause point — temporal and
+self-clearing, unlike a pause. A window that wraps past midnight belongs to its
+start day (Friday's runs into Saturday; none starts on Sunday). Inside it, on
+every route: **no work item is claimed** (the live dispatcher's claim
+included; it stays exempt from the context guard, not the window); the
+session service **starts no new session** — the one exception is a wrap-up
+adjudication of a work item whose claim is active, so a lane claimed before
+the window can reach its pause point; a session already in flight finishes
+within its existing bounds. The loop waits the window out and resumes
+automatically. A Claude Code coordinator session, through its hooks (at any
+`context_guard_pct`), is denied new subagents and model-CLI launches, is told
+to bring each lane to its pause point (the last finished step whose evidence
+is committed), write the handoff naming each lane's next obligation and end;
+it requests no relaunch, and a pending one is cancelled. No keep-warm ping
+fires inside the window, and a retained adjudicator session last used before
+its end is retired at the first keep call after it. The window is half-open
 `[start, end)` — 12:00–19:00 blocks 12:00 through 18:59 and releases at 19:00.
 `start == end` disables, and so does an empty value (disabled is
 byte-identical to before). The scaffold ships it **DISABLED but shaped** —

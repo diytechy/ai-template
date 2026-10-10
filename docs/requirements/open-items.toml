@@ -2978,7 +2978,9 @@ With the dial on and `reset_on_same_artifact = false`, the retained session WILL
 
 Whether the orchestrator's CLIs run under their own config homes (`CODEX_HOME`, `CLAUDE_CONFIG_DIR`; opencode's equivalent unverified) so retained transcripts, which carry repository content, are isolated from the owner's interactive sessions and can be retained, sized and deleted on a policy.
 
-WHAT IS DELIBERATELY NOT ASKED. Whether to build persistence beyond the dial (parked behind the A/B). The fork semantics of each CLI (unverified; the hardening path's problem, and finding 1 of the review). The degradation point the owner has observed near 60 % (the dial's value is the owner's to set from the telemetry the first row lands)."""
+WHAT IS DELIBERATELY NOT ASKED. Whether to build persistence beyond the dial (parked behind the A/B). The fork semantics of each CLI (unverified; the hardening path's problem, and finding 1 of the review). The degradation point the owner has observed near 60 % (the dial's value is the owner's to set from the telemetry the first row lands).
+
+Owner ruling 2026-10-05 overrules (c2): no keep-warm ping fires inside a blackout window, and a retained session last used before a window's end is retired lazily at the first keep call after it (docs/work/active/wi-834/WI-834-coordinator-blackout-retained-adjudicator.md)."""
 blast_radius = """### (a)
 Confirming costs nothing; if the owner reads the layer as a reversal, the ruling must say what invariant the doctrine protected and how the layer keeps it - the plan's answer is "no open stdin, no server, one bounded process per adjudication".
 

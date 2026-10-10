@@ -29,6 +29,8 @@ Every assertion here drives an INJECTED clock. A test that read
 """
 
 import datetime
+import tempfile
+from pathlib import Path
 
 import pytest
 from conftest import (
@@ -74,14 +76,26 @@ WEEK = [
 ]
 
 
+def wakes(window, clocks):
+    """The seconds a coordinator would wait at each of `clocks` under a
+    declared `window`, read through the one window function
+    (`agent_common.blackout_at`, WI-834) over a scratch `docs/`."""
+    with tempfile.TemporaryDirectory() as scratch:
+        docs = Path(scratch)
+        (docs / "process.toml").write_text(
+            '[policies]\nblackout = "{}"\n'.format(window), encoding="utf-8"
+        )
+        return [agent_common.blackout_at(docs, now).wake_seconds for now in clocks]
+
+
 def sleeps_at(window):
     """Every sampled clock time at which `window` would make a coordinator
     wait, as a list of `(weekday, HH:MM, seconds)`. Empty means the dial can
     never stop this suite."""
     return [
         (now.strftime("%a"), now.strftime("%H:%M"), wake)
-        for now in WEEK
-        if (wake := agent_common.blackout_wake(window, now))
+        for now, wake in zip(WEEK, wakes(window, WEEK))
+        if wake
     ]
 
 
@@ -177,10 +191,7 @@ def test_the_guard_reds_on_a_planted_live_window(tmp_path):
     # What the guard caught is a scaffold that would really have slept: this is
     # the measured 2026-08-11 reproduction, on an injected clock (a Tuesday
     # 14:22 UTC), not a string comparison.
-    assert (
-        agent_common.blackout_wake(caught[0][1], datetime.datetime(2026, 8, 11, 14, 22))
-        == 16680
-    )
+    assert wakes(caught[0][1], [datetime.datetime(2026, 8, 11, 14, 22)]) == [16680]
 
     disable_blackout(tmp_path)  # green again
     assert live_blackout_scaffolds(tmp_path) == []

@@ -2288,7 +2288,7 @@ rationale = """Every role that makes a model call needs the same launch, account
 owner = "scripts/session_service"
 requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch"]
 channel = "call"
-data = "Call, Outcome; act/call -> Outcome; record -> path; call_succeeded(outcome) -> bool; keep plan, version and warmer"
+data = "Call (including wi), Outcome; act/call -> Outcome or BlackoutRefused; through_blackout(launch) -> Outcome; record -> path; call_succeeded(outcome) -> bool; keep plan, version and warmer"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2310,7 +2310,7 @@ rationale = """The retention rules and the store are read by the service before 
 owner = "scripts/session_keep"
 requestors = ["scripts/session_service"]
 channel = "call"
-data = "KeepConfig; applies; keep_for(..., prepared=) -> Keep | None; keep_bookkeep(..., auth_failed=); keep_release -> record | None; take_warm_lease(..., prepare=)"
+data = "KeepConfig; applies; keep_for(..., prepared=) -> Keep | None after retire_after_blackout; keep_bookkeep(..., auth_failed=); keep_release -> record | None; take_warm_lease(..., prepare=) -> (Keep | None, reason | None)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2416,7 +2416,7 @@ rationale = "The generated legacy case header must use the registry vocabulary i
 owner = "scripts/coordinator_guard"
 requestors = ["scripts/integrate"]
 channel = "call"
-data = "claim_refusal(root, env=None) -> None | refusal text"
+data = "claim_refusal(root, env=None) -> None | blackout or guard refusal text"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2446,7 +2446,7 @@ rationale = "One exclusive-file lock primitive keeps coordinator lease updates a
 owner = "scripts/coordinator_guard"
 requestors = ["external:agent CLI"]
 channel = "cli"
-data = "hook event JSON on stdin: hook_event_name, session_id, transcript_path, agent_id?, reason?, trigger?"
+data = "hook event JSON on stdin: hook_event_name, session_id, transcript_path, agent_id?, reason?, trigger?, tool_name?, tool_input?"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2458,7 +2458,7 @@ notes = """No tie-back: the hook invocation and response are Claude Code's own p
 owner = "scripts/coordinator_guard"
 consumers = ["external:agent CLI"]
 channel = "stdout"
-data = "printed hook response JSON: hookSpecificOutput.hookEventName and additionalContext"
+data = "hook JSON: hookEventName/context; blackout denial adds permissionDecision=deny and reason, including unreadable command lines"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2501,7 +2501,7 @@ rationale = "The guard launches both platform helpers through one argument shape
 owner = "scripts/coordinator_guard"
 requestors = ["external:agent CLI"]
 channel = "cli"
-data = "take | request-relaunch --handoff | handback --handoff | release --reason | clear --reason | status"
+data = "take | request-relaunch --handoff | handback --handoff | release --reason | clear --reason | status | window-check | hooks --example E [--enable]"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2512,7 +2512,7 @@ notes = """No tie-back: a coordinator invokes this local command from its own re
 owner = "scripts/coordinator_guard"
 consumers = ["external:agent CLI"]
 channel = "exit-code"
-data = '0 success; 1 refusal, reason on stderr after "coordinator guard: "; 2 usage error; hook always 0'
+data = "0 success; 1 refusal or window-check inside blackout; 2 usage error; hook always 0"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2536,7 +2536,7 @@ rationale = "The coordinator needs one declared argument surface for an adjudica
 owner = "scripts/coordinator_adjudicate"
 requestors = ["external:coordinator"]
 channel = "cli"
-data = "Adjudication CLI; signin reads the retained family credential without creating a home; verdict reservation records call state; see Contract IF-283."
+data = "Adjudication CLI; signin --retained reports off without probing when retention is off; adjudicate carries wi and releases a blackout refusal; see Contract IF-283."
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2548,7 +2548,7 @@ rationale = "The coordinator needs a result surface distinct from command argume
 owner = "scripts/coordinator_adjudicate"
 consumers = ["external:coordinator"]
 channel = "exit-code"
-data = "adjudicate: 0 valid, accepted | 1 failed/timed out/reported error result/missing/invalid, recorded failed | 2 pre-launch refusal | 7 sign-in refusal; signin: 0"
+data = "adjudicate: 0 valid, accepted | 1 failed/timed out/reported error result/missing/invalid, recorded failed | 2 pre-launch or blackout refusal | 7 sign-in refusal; signin: 0"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2559,7 +2559,7 @@ rationale = "The coordinator needs the command's human-readable operational read
 owner = "scripts/coordinator_adjudicate"
 consumers = ["external:coordinator"]
 channel = "stdout"
-data = "Adjudication stdout includes the sign-in reading and call outcome; see Contract IF-285 in the owner module."
+data = "Adjudication stdout includes the sign-in reading, blackout refusal, and call outcome; see Contract IF-285 in the owner module."
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2619,3 +2619,36 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
+
+[interface.IF-291]
+rationale = "Every pause consumer needs one boundary interpretation, because separate parsing would disagree over wrapping weekdays, end instants or the interval whose end resets retained work."
+owner = "scripts/agent_policy"
+requestors = ["scripts/agent_loop", "scripts/session_service", "scripts/session_keep", "scripts/dispatch", "scripts/coordinator_guard"]
+channel = "call"
+data = "blackout_at(docs, t=None) -> Blackout(window, at, end?, last_end?); inside and wake_seconds"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - a pure policy reading at the supplied instant; the owner writes neither state nor a launch."
+
+[interface.IF-292]
+rationale = "A bare actions-menu launch needs one readiness invocation before it offers work, while direct and discovery calls remain non-interactive."
+owner = "scripts/dev-setup.template.sh"
+requestors = ["external:run.* launcher templates"]
+channel = "cli"
+data = "bare run invokes --for-run/-ForRun once from the repository root, passing --python/-Python its menu interpreter when one resolves"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = "The launcher supplies this invocation before it offers the actions menu."
+
+[interface.IF-293]
+rationale = "A bare actions-menu launcher needs a readiness result separate from its invocation so it can decide whether to open the menu."
+owner = "scripts/dev-setup.template.sh"
+consumers = ["external:run.* launcher templates"]
+channel = "exit-code"
+data = "0 says the handed interpreter meets the runtime floor; nonzero, including none handed, leaves the bare-run menu unopened after guidance"
+version = "v2"
+status = "Drafted"
+interface_to_external = "B-05"
+coincident = "The readiness result determines whether the launcher opens its menu."

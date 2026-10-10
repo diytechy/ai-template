@@ -199,10 +199,15 @@ privacy_review = "require"
 # Vendored-core guardrail injection — was docs/guardrails-policy.
 #   "off" | "all" | "all except <sub> …" | "<sub> …"
 guardrails = "off"
-# The weekday (Mon–Fri) blackout window, UTC, HH:MM-HH:MM — was docs/blackout.
-# The coordinator starts NO new session inside it; an in-flight session wraps
-# normally, then the loop waits the window out and resumes. An empty value, or
-# `start == end` as shipped below, DISABLES it.
+# The blackout window, UTC, HH:MM-HH:MM — was docs/blackout. A window starts on
+# each weekday (Mon–Fri); one that wraps past midnight belongs to its start day,
+# so Friday's runs into Saturday and none starts on Sunday. Inside it, on every
+# route: no work item is claimed (the live dispatcher included), and no new
+# session starts but a wrap-up adjudication of an active claim; an in-flight
+# session finishes, the loop waits the window out and resumes, and a Claude
+# Code coordinator is told to bring each lane to its pause point, write its
+# handoff and end, with no relaunch. An empty value, or `start == end` as
+# shipped below, DISABLES it.
 #
 # SHIPPED DISABLED, SHAPE KEPT (owner ruling 2026-08-11). This used to ship
 # `"12:00-19:00"` — the kit author's own operating window — and every adopter
@@ -397,8 +402,9 @@ retain_for = ["disposition", "amendment", "red-tc"]
 # while lanes are active, so its hour-long prompt cache is not rewritten; 0 =
 # off. A ping is a real one-turn call (resumed, --max-turns 1, recorded in the
 # session log like any other) that runs off the dispatcher's thread, never while
-# another call holds the session, and fires through the blackout. Other families' caches live
-# minutes and are never pinged.
+# another call holds the session, and never inside the blackout window: a
+# session last used before a window's end is retired at the first keep call
+# after it. Other families' caches live minutes and are never pinged.
 keepwarm_minutes = 0             # e.g. 50
 # Reset before re-judging an item the retained session already judged. Default
 # false: continuity across a worker round trip on the SAME item is the layer's
@@ -421,7 +427,8 @@ reset_on_same_artifact = false
 #
 # Percent of the context window at which drain mode latches. 0 = OFF: claims
 # behave exactly as without the guard, no lease is read or required, and its
-# hooks do nothing.
+# hooks do nothing, except inside an armed blackout window ([policies]
+# blackout), which the claim and the hooks act on at any value here.
 context_guard_pct = 0            # e.g. 50
 # The coordinator model's context window, in tokens. Occupancy is the newest
 # assistant reply's input plus cache-read plus cache-creation tokens over this

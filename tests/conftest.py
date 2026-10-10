@@ -102,6 +102,7 @@ SLOW_MODULES = frozenset(
         "test_pre_commit_hook",  # full pre-commit hook end-to-end
         "test_bootstrap",  # full scaffold bootstraps
         "test_onboard_devsetup",  # dev-setup.sh on a bootstrapped scaffold
+        "test_run_devsetup",  # run launchers + dev-setup --for-run as subprocesses, a scaffold (WI-834; in-process pins in test_blackout_window)
         "test_profile",  # scaffold-profile byte-compare
         "test_stack_profile",  # scaffold-profile byte-compare
         "test_check_perf",  # perf gate step on a scaffold

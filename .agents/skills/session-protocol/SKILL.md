@@ -192,10 +192,24 @@ session's results are recorded.
   log fragment; (4) request the relaunch,
   `python project-trajectory/scripts/coordinator_guard.py request-relaunch --handoff <path>`,
   then end the session: the relaunch runs at its exit, never at `/clear` or
-  `/resume`. Every coordinator close-out, latched or not, that requests no
-  relaunch ends instead by handing the lease back as its last act after the
+  `/resume`. Every other coordinator close-out, latched or not, that requests
+  no relaunch ends instead by handing the lease back as its last act after the
   handoff, `coordinator_guard.py handback --handoff <path>`, so the next
-  session's `take` succeeds. The handoff also classifies each compaction the
+  session's `take` succeeds, except the blackout close-down below.
+- **The blackout close-down (`[policies] blackout`, at any guard dial).** Inside
+  an armed window the hooks say so: claims refuse, and a new subagent, a
+  resumed one and a model CLI are denied; a wrap-up adjudication of an active
+  claim still runs through the session service. (1) Bring each open lane to its
+  pause point, the last finished step whose evidence is committed; a lane
+  whose next step is a review, rework or any launch the window refuses stops
+  there, and the review cycle is not completed to reach a pause; a lane stays
+  `active`, and only a stop the owner must act on closes partial. (2) Write the
+  handoff naming each lane and its next obligation. (3) End the session: no
+  relaunch is requested inside the window (a pending one is cancelled at the
+  exit), and the lease is kept, not handed back. To resume after the window,
+  the owner reopens the same session (a context-threshold latch still set
+  needs the owner's recorded `clear` too) or releases the lease and takes it
+  in a fresh one. The handoff also classifies each compaction the
   lease recorded (`coordinator_guard.py status`) as a **missed threshold**
   (auto-compaction before the latch), a **manual** compaction, or a
   compaction **during the drain**. A coordinator session takes the lease with `coordinator_guard.py
