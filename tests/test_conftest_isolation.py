@@ -11,9 +11,11 @@ subprocess that collects one module and nothing else.
 
 import importlib.util
 import os
+import re
 import subprocess
 import sys
 
+import pytest
 from conftest import ROOT, SCRIPTS, _put_scripts_on_path
 
 # The cheapest of the modules that import kitlib before any load_script call:
@@ -46,11 +48,68 @@ def test_a_module_importing_kitlib_collects_on_its_own():
         capture_output=True,
         encoding="utf-8",
     )
-    out = proc.stdout + proc.stderr
-    assert proc.returncode == 0, out
+    _assert_clean_run(proc.returncode, proc.stdout + proc.stderr)
+
+
+# pytest's closing line: outcome counts, then the wall time ("4 passed in 0.61s",
+# "1 failed, 3 passed, 1 error in 2.0s"), with `=` rules around it unless -q.
+SUMMARY = re.compile(
+    r"^=*\s*\d+ (passed|failed|errors?|skipped|xfailed|xpassed|warnings?|deselected)"
+    r"\b.* in \d+(\.\d+)?s\b"
+)
+
+
+def _pytest_summary(out):
+    """The last line shaped like pytest's summary, wherever the conftest's own
+    stderr notices fall around it; None when the run printed none."""
+    lines = [ln for ln in out.splitlines() if SUMMARY.match(ln.strip())]
+    return lines[-1] if lines else None
+
+
+def _assert_clean_run(returncode, out):
+    assert returncode == 0, out
     assert "ImportError" not in out, out
-    summary = out.strip().splitlines()[-1]
+    summary = _pytest_summary(out)
+    assert summary is not None, out
     assert "passed" in summary and "error" not in summary, out
+
+
+# The root conftest's stderr notice when the run sits inside another job object;
+# stderr follows stdout in the captured output, so it lands after the summary.
+JOB_NOTICE = (
+    "conftest: this run is already inside another job object, so it could not "
+    "join the shared 'ai-template-pytest' job and is capped at 50% ON ITS OWN "
+    "rather than sharing one ceiling (concurrent runs can then total more than 50%)"
+)
+CLEAN = (
+    "....                                                [100%]\n4 passed in 0.61s\n"
+)
+
+
+def test_a_clean_run_passes_with_the_job_notice_after_its_summary():
+    _assert_clean_run(0, CLEAN + JOB_NOTICE + "\n")
+
+
+@pytest.mark.parametrize(
+    "returncode, out",
+    [
+        (1, CLEAN + JOB_NOTICE),
+        (0, "E   ImportError: cannot import name 'x'\n" + CLEAN + JOB_NOTICE),
+        (0, "1 error in 0.40s\n" + JOB_NOTICE),
+        (0, "3 passed, 1 error in 0.52s\n" + JOB_NOTICE),
+        (0, JOB_NOTICE),
+    ],
+    ids=[
+        "nonzero-exit",
+        "import-error",
+        "collection-error",
+        "error-beside-passes",
+        "no-summary",
+    ],
+)
+def test_a_failed_run_still_fails_the_check(returncode, out):
+    with pytest.raises(AssertionError):
+        _assert_clean_run(returncode, out)
 
 
 def test_scripts_lands_first_exactly_once(monkeypatch):

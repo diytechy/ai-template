@@ -2,11 +2,24 @@
 id = "WI-859"
 title = "The conftest isolation test reads pytest's summary line, not the run's last line"
 workstream = "process"
-specref = "docs/work/README.md"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+`tests/test_conftest_isolation.py` finds the inner run's pytest summary line
+wherever the conftest's notices fall. The check still fails on a non-zero
+exit, an ImportError, a collection error, an error beside passes, or a
+missing summary. A regression supplies the job-object notice after a clean
+summary; it is red on the old last-line reading. Gate: Codex 6.1 Sol's fresh
+full-lane review `docs/reviews/wi-859/001-REVIEW-A-043ce2a.md`, APPROVE with
+0 findings. In the full unfiltered suite on the lane's tip (5d8c3714:
+1 failed, 5632 passed, 21 skipped), the isolation test passes. The one
+failure is the session kill's taskkill latency, filed separately
+(coordinator-2026-10-10 D-006, D-007).
 
 ## Context
 
