@@ -1,0 +1,37 @@
+Reviewed: 8a82eebefd1dd97abd0bc928e5a7ab423612f759
+
+Verified: Reviewed the specified three-dot narrow diff, CLAUDE.md/AGENTS.md, PROCESS.md §§3–6, the complete WI-881 spec, its agent_session.py carrier, the cited registry rows and interface counterparts, the kit-change-review rubric, sitting 001's dispositions, and D-002/D-003. Worst failure classes hunted first: an early return beside an unfinished member; an unbounded wait or leaked lifetime; incorrect caller cleanup; and a false interruption-test pass under xdist. The ordinary Windows deadline, interruption and containment-refusal tests pass. Independent instrumentation confirms both interruption variants raise from _wait_for_exit under xdist. The interruption regression fails against the pre-fix helper with “the grandchild outlived the interrupt”; the bound regression rejects the pre-fix helper with “DID NOT RAISE”. Snapshot-capacity overflow was additionally exercised with a smaller real Win32 query buffer: it raises error 234, still terminates the job, and both child and descendant end. This is fail-closed, not the early-return defect below. POSIX/macOS remain untested here. Final git status is clean; no code or worktree file was changed.
+
+Commands (Python commands used C:/Projects/ai-template/.venv/Scripts/python.exe; PYTHONDONTWRITEBYTECODE=1; pytest used GIT_CEILING_DIRECTORIES=C:/Projects/ai-template.wt/review-tmp):
+
+- `git rev-parse HEAD` -> `8a82eebefd1dd97abd0bc928e5a7ab423612f759`.
+- `git diff a6cbaea8fb030f6507849a608e4dde1e869d917a...8a82eebefd1dd97abd0bc928e5a7ab423612f759 -- . ':(exclude)docs/iteration' ':(exclude)docs/reviews' ':(exclude)docs/log.md' ':(exclude)docs/log.d' ':(exclude)PROJECT_STATE.html' ':(exclude)docs/open-items.html' ':(exclude)docs/stage'` -> six changed files; additional scoped diff/read/rg commands inspected their carrier code, cited rows, process sections, policies and rubric.
+- `python -m pytest -q -p no:cacheprovider -n 2 --basetemp 'C:/Projects/ai-template.wt/review-tmp/2026-10-10c-coord/wi-881' 'tests/test_session_stdin.py'` -> `27 passed in 10.47s`.
+- `python project-trajectory/scripts/check_trajectory.py --strict` -> `check_trajectory: clean (887 work item(s), 777 done (88%), 28 cancelled, graph acyclic).` Exit 0; advisory stream omitted.
+- `python project-trajectory/scripts/trace.py --strict-integrity | Select-Object -Last 1` -> `Traceability: SN=31 SR=130 LLR=302 TC=315 orphans=0 integrity=0 verified-mechanized=122 verified-demonstrated=6 verified-attested=0 drafts=2 budgets=4 budget-findings=0 components=4 component-findings=0 interfaces=243 interface-findings=0 ac-advisories=1 form-findings=1 paraphrase-advisories=3. Report -> docs\test\report.md`.
+- `python C:/Projects/ai-template.wt/review-tmp/2026-10-10c-coord/probe_881.py` -> `LATE TOTAL 233`: 12 real _spawn_session/_kill_tree runs; all 12 returned with unsignalled late-created descendants and job active count zero. Each run created 32 descendants after the original _open_job_members snapshot, before the actual TerminateJobObject. Retained observer handles were waited and closed afterward.
+- `python -m pytest -q -s -p no:cacheprovider -n 2 --basetemp 'C:/Projects/ai-template.wt/review-tmp/2026-10-10c-coord/probe-tests' 'C:/Projects/ai-template.wt/review-tmp/2026-10-10c-coord/test_probe_881.py'` -> `3 passed in 1.84s`: actual interruption-path instrumentation and pre-fix bound rejection.
+- `python C:/Projects/ai-template.wt/review-tmp/2026-10-10c-coord/probe_capacity_881.py` -> `CAPACITY OVERFLOW: fail-closed error 234`; `CAPACITY CLEANUP: child exit 1 descendant signalled True`.
+- `git merge-base --is-ancestor 8d75bc6c a6cbaea8fb030f6507849a608e4dde1e869d917a` -> exit 0: RESYNC anchor is on the base history (K4).
+- `python -m pytest -q -p no:cacheprovider -n 2 --basetemp 'C:/Projects/ai-template.wt/review-tmp/2026-10-10c-coord/old-interrupt-tests' 'C:/Projects/ai-template.wt/review-tmp/2026-10-10c-coord/test_old_interrupt_881.py' -k test_old_interrupt_verification` -> `1 failed in 1.83s`, expected red-before failure at tests/test_session_stdin.py:464: `AssertionError: the grandchild outlived the interrupt`.
+- `rg -n 'taskkill' project-trajectory/scripts tests/test_session_stdin.py` -> only agent_session.py's historical docstring; no executable taskkill site.
+- `git status --short` -> empty.
+
+Done-when coverage:
+
+- Direct child ends promptly and tree ends without taskkill: deadline tests plus real late-spawn probe; complete Windows tree-end guarantee is UNCOVERED by the shipped tests and violated below.
+- Idle deadline stays inside its unchanged 40-second bound; grandchild death on both platforms: test_run_session_idle_deadline_kills_a_silent_child and test_a_deadline_kill_ends_the_grandchild passed here on Windows, including the .cmd variant. POSIX/macOS execution is UNCOVERED in this review.
+- Audit other taskkill sites: independent tip grep confirms no executable site remains.
+- Review bar A: this is the independent narrow review record; it does not attest an unobserved cross-family full-lane approval.
+- RESYNC entry at trunk anchor: project-trajectory/RESYNC_PACK.md:7969, ancestor verified.
+
+Spine wording
+
+Independent semantic decision: changed LLR-026 CodeSymbol and its retained headless behavior are compatible with unchanged approved SR-026 acceptance; retain that parent and its signature. D-002 changes the domain promised by drafted SR-238 and the corresponding LLR-026 Detail: carry that domain restriction and the explicit detached/outside-job residual together at the checkpoint. D-003 changes the completion guarantee implemented by _kill_tree: carry the bounded wait and error behavior into LLR-026 and TC-026's Method/Expected together; TC-026 must name interruption, refusal and bound verification. The new code-symbol references alone do not settle those semantics. Retain IF-064's launch names/data and IF-041's headless prompt transport: neither changes its crossing, prompt ownership or successful return shape. These are scoped design/verification amendments under PROCESS.md §5, not a reason to weaken SR-026 or remove enduring stdin/deadline regressions. Changed child content still requires its applicable re-attestation; this review provides none. No new decomposition was proposed in this narrow diff. Deferred row wording is not counted as a finding, as instructed.
+
+### Independent reviewer — WI-881 narrow round — 2026-10-10
+
+Findings:
+- [MAJOR] project-trajectory/scripts/agent_session.py:399 -> [K1, B1] D-003's completed-tree wait covers only the pre-termination handle snapshot: a normal descendant can be created after _open_job_members returns and before TerminateJobObject, and _job_survivors then accepts active count zero without waiting for that omitted member to be signalled; the real shipped _kill_tree returned early in all 12 late-spawn trials (233 unsignalled descendants total), reproducing the same count-versus-completion defect at another site -> replace the snapshot gap with a completion boundary covering every member that can enter the job until termination, and add a real-process late-spawn regression; applying antidote's “smallest change that makes this fix unnecessary” question, process creation is external concurrent state that an in-process type cannot exclude, so the owning job-termination boundary must establish completion once rather than compensate at callers -> @Software-Engineer
+
+VERDICT: CHANGES-REQUESTED findings=1

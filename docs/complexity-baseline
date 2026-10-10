@@ -18,7 +18,6 @@ project-trajectory/scripts/agent_route.py	_rows_from_csv	17	34
 project-trajectory/scripts/agent_route.py	escalate	16	72
 project-trajectory/scripts/agent_route.py	load_registry	24	65
 project-trajectory/scripts/agent_route.py	main	16	62
-project-trajectory/scripts/agent_session.py	_wait_for_exit	16	24
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
 project-trajectory/scripts/assumption_rules.py	_classify	16	24	2026-10-03, WI-723 (3b872471): joint-delivery classification adds sibling-reference validation and class precedence to the sole classification parse (crossing to 16); WI-729 (17c54c2f) adds shared-need validation at the same score, so a declared sibling alone cannot establish joint delivery.
 project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	20	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.

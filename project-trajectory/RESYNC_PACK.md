@@ -7990,6 +7990,72 @@ check, naming the file; it is never listed as skipped. The template table and
 `python scripts/gen_prompt_catalog.py` after the overwrite and commit the
 catalogue. No registry or setting changes.
 
+### A Windows session's deadline kill ends its tree through a job object, not taskkill [since 178aa4e8]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** On Windows, `scripts/agent_session.py` killed a timed-out
+or interrupted session's process tree with `taskkill /F /T` and then killed
+the direct child. On a Windows build from October 2026, `taskkill` waited
+about 60 s and then failed with a timeout without killing anything, so every
+deadline kill held the coordinator for a minute and left the session's
+grandchildren running (a `.cmd` shim's `node`, still editing the worktree).
+The session child is now created suspended, placed in a job object of its
+own, and resumed, so every process it spawns starts inside that job. A
+deadline kill terminates the job in one call that returns at once. It also
+reaches a grandchild whose parent has already exited, which `taskkill /T`
+never did. On POSIX the child still leads its own process group, and the kill
+signals the group. On both platforms the kill now returns only once the tree
+has ended: the direct child is reaped, and the group (POSIX) or job (Windows)
+is polled until it is empty. On Windows the kill first closes the job to new
+processes, then takes a handle on every process in it, then terminates it, and
+waits until each of those processes has ended; a process the session tries to
+start during the kill is refused. A coordinator interruption (Ctrl+C) that
+lands while a session is still launching, or while its output threads start,
+now ends the session's tree before the interruption propagates; before, a child
+interrupted there was left running. If the tree has not ended within 10 s of the
+kill, or the kill cannot end it or show that it ended, the kill raises
+`agent_session.TreeNotEnded` naming what survived, and the coordinator
+stops instead of continuing. The kill does not reach a POSIX descendant that
+leaves the session's process group (`setsid`, `setpgid`), or a process that
+another service starts on the session's behalf outside the job.
+
+**Kit-owned files — overwrite:** `scripts/agent_session.py`.
+
+**What to do.** Nothing needs migrating, and no setting or registry changes.
+Check the items that apply to you:
+
+- **Windows 8 or later.** A session is now nested in a job object, and the
+  coordinator may already run inside one (a terminal, a CI agent, a test
+  runner's CPU cap). Nested jobs need Windows 8 or later. Where a session
+  cannot be contained, it ends as a session error before it runs; the
+  session does not run uncontained.
+- **No breakaway.** The job does not allow breakaway, so an agent CLI that
+  starts a process with `CREATE_BREAKAWAY_FROM_JOB` now fails to start that
+  process. If a CLI you configure fails this way, report it to the kit.
+- **A descendant that locks down its own process (Windows).** The kill must
+  be able to open every process in the session's job to wait on it. A
+  descendant that denies that access, as a sandboxed browser process may,
+  makes every deadline or interrupt kill raise after the job is terminated,
+  naming its pid, and the coordinator stops. If a CLI you configure hits
+  this, report it to the kit.
+- **A container whose PID 1 does not reap (POSIX).** The kill waits until
+  the session's process group is empty, and an unreaped zombie still
+  belongs to the group. If init never reaps the session's killed
+  grandchildren, every deadline kill raises after 10 s. Run the coordinator
+  with an init that reaps, such as `docker run --init`.
+- **Tooling that wraps sessions in `except Exception`.** `TreeNotEnded`
+  derives from `BaseException`, like `KeyboardInterrupt`, so an
+  `except OSError` or `except Exception` around a session no longer catches
+  a failure to end its tree. Before, that failure was an `OSError`, and on
+  the launch path it came back as an ordinary session-error result. Let it
+  stop the run. A handler that must clean up should catch `BaseException`
+  and re-raise.
+- **Your own tooling.** If your tooling called the private
+  `agent_session._kill_tree` on a process it started itself, start that
+  process through `run_session` instead. `_kill_tree` now needs the job that
+  `run_session` creates.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

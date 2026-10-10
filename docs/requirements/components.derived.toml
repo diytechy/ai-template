@@ -20,7 +20,7 @@
 components = 4
 design_rows = 302
 seam_rows = 243
-requirements_placed = 123
+requirements_placed = 124
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -645,6 +645,7 @@ sr_refs = [
   "SR-234",
   "SR-235",
   "SR-237",
+  "SR-238",
 ]
 sr_shared_refs = [
   "SR-139",

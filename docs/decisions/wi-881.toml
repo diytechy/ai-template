@@ -1,0 +1,60 @@
+# docs/decisions/wi-881.toml — WI-881's lane: delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-008", "D-002", "D-004", "D-001"]
+
+[decision.D-001]
+decided = "A Windows session's tree kill is a job object, not taskkill: the child is created suspended, assigned to its own job, then resumed with ntdll's NtResumeProcess, and a deadline kill terminates the job. On this workstation taskkill /F [/T] /PID times out after about 61 s and kills nothing (the builder's probes, 2026-10-10), so before this change only proc.kill() worked and a grandchild survived every deadline kill. NtResumeProcess is undocumented but long-standing; it is used because Popen discards the child's primary-thread handle, and the documented route (a thread snapshot to find that thread) takes about 1.2 s here. A child that cannot be contained is killed before it runs and the session errors; there is no fallback to an uncontained child. Probed live through the new spawn: node spawning a child, codex --version and claude --version all ran inside the job."
+alternative = "Resume through the documented thread-snapshot route (OpenThread plus ResumeThread) at about 1.2 s per spawn, or kill the direct child and walk the process list (1.2 s, and it misses a grandchild whose parent has exited)."
+reversal_cost = "Low: the resume call is one function (_contain_in_job); swapping it for the documented route changes no interface."
+why_not_escalated = "The owner's rule is to fix the single point of failure without a fallback path; the job object does that, and the undocumented call is isolated in one function the full-lane review will judge."
+review = ""
+
+[decision.D-002]
+decided = "Answer sitting 001's first return by bounding the claim, not strengthening the mechanism: SR-238 and LLR-026 promise that every process still in the session's process group (POSIX) or job (Windows) ends. The residual is recorded as a decided gap in SR-238's Rationale: a POSIX descendant that leaves the group (setsid or setpgid), or a process another service starts on the session's behalf outside the job (WMI, the task scheduler, an already-running daemon), is not ended."
+alternative = "Strengthen POSIX by tracking descendants instead of the group: a /proc walk on Linux plus a child subreaper, with no equivalent on macOS, or a cgroup, which needs privilege. Each is per-OS code for a descendant that detaches on purpose, and the Windows job has the analogous service-started residual anyway."
+reversal_cost = "Medium: a later row adds descendant tracking behind _kill_tree and widens SR-238's acceptance; no interface changes."
+why_not_escalated = "The sitting returned it as the coordinator's call. Bounding keeps the claim true to the mechanism, and the residual is written into the row where a reader finds it."
+review = ""
+
+[decision.D-003]
+decided = "Answer sitting 001's second return by waiting, not softening: after the kill, _kill_tree returns only once the group (POSIX) or job (Windows, its active-process count) is empty, and raises if it is not empty within one stated bound of 10 s. SR-238's 'before the coordinator continues' then holds as written, the test asserts the grandchild is gone the moment run_session returns, with no grace period, and the stated bound is the overrun after which the coordinator stops with an error instead of continuing. Built (round 2): on Windows the job's active-process count reads zero a few milliseconds before a terminated process is signalled (the builder's measurement, 2026-10-10), so the wait also holds a SYNCHRONIZE handle on each job member taken just before the terminate and waits until each is signalled; the count alone left the interruption test red. Residual, recorded with D-002's: on POSIX a zombie still counts as a group member, so under a PID 1 that never reaps (a container run without an init) every deadline kill raises after the bound. That failure is loud, not silent; RESYNC_PACK tells adopters to run under a reaping init."
+alternative = "Keep the kill asynchronous and state a grace bound in SR-238 (for example, descendants end within 5 s of the coordinator continuing), asserting that bound in the test."
+reversal_cost = "Low: the wait is the tail of one function."
+why_not_escalated = "The sitting offered both routes; waiting makes the stated threshold the code's behaviour rather than a tolerance."
+review = ""
+
+[decision.D-004]
+decided = "Narrow review 002's F1 (a job member created between the handle snapshot and the terminate was never waited on; 12 of 12 trials) is answered by closing the job to new members before the snapshot: _kill_tree sets the job's active-process limit to 1, then snapshots, then terminates, so no process can join after the snapshot (the builder's measurements: 384 creations refused in the gap, 0 unsignalled at return; a refused creation runs no code and holds no inherited pipe). A live member the kill cannot open for SYNCHRONIZE (access denied, told apart from a gone PID by its error code) makes the kill raise after the terminate rather than be read as exited. The cost: a session whose descendants deny their own SYNCHRONIZE right errors at every deadline kill."
+alternative = "Re-snapshot after the terminate (not airtight: after a job terminate a member leaves the PID list before it is signalled, 100 of 100), or a completion port (its messages are documented as not guaranteed). For an unopenable member, grant SYNCHRONIZE through the owner's WRITE_DAC right, which rewrites another process's permissions."
+reversal_cost = "Low: inside _kill_tree's Windows half; no interface changes."
+why_not_escalated = "It closes the reviewed class at its one owner without a fallback path; the unopenable-member cost is loud, and the DACL rewrite waits for a real case."
+review = ""
+
+[decision.D-005]
+decided = "The kill drops a held handle whose process is no longer in the job (IsProcessInJob), so a reused PID never makes the wait hang on an unrelated process. Adjacent to F1, not part of it; built in the same round because it sits at the same boundary."
+alternative = "Leave it for a later row."
+reversal_cost = "Low: one check in the member wait."
+why_not_escalated = "It removes a spurious wait without widening what the kill ends."
+review = ""
+
+[decision.D-006]
+decided = "Answering full-lane gate 006's F1, the spawn boundary owns the child (and its job) until it returns it, and one try/finally in run_session owns it from there, ending the tree on any exit but a natural one; the waiter's own interrupt handler is retired into that owner. Not built: an interruption that lands inside the standard library's process creation, before the child object reaches the kit's code (POSIX: during Popen's exec handshake, a running child is lost; Windows: at Popen's return, the child is left suspended and never runs). It is recorded as a residual in SR-238's Rationale."
+alternative = "Defer SIGINT around the launch (signal.pthread_sigmask on POSIX, a deferred handler on Windows), which works on the main thread only and adds signal plumbing to every launch."
+reversal_cost = "Low: a later row can add the deferral inside _spawn_session."
+why_not_escalated = "The window is the stdlib's own, a few instructions wide, and on Windows the left-behind child never runs; recording it keeps SR-238 true without a main-thread-only mechanism."
+review = ""
+
+[decision.D-007]
+decided = "Answering narrow review 007's F1, a failure to end the session's tree raises agent_session.TreeNotEnded, a BaseException no `except OSError` or `except Exception` catches, so run_session's launch-error conversion can no longer turn it into a session result. When the cleanup fails while an interrupt is in flight, TreeNotEnded wins (it names what the operator must act on) and the interrupt stays in its chain. One sibling site outside this row's surface is left for its own row: session_service.KeepWarm._ping swallows every exception on its background thread, so a keep-warm session whose tree could not be ended is recorded and dropped. Filed as a follow-up row on trunk at this session's close."
+alternative = "Subclass OSError and audit every handler, or widen this lane into session_service to carry the error from the keep-warm thread to the dispatcher."
+reversal_cost = "Low: one exception class; callers that need cleanup catch BaseException and re-raise, as RESYNC_PACK tells adopters."
+why_not_escalated = "It makes the failure unrepresentable as a result at its one owner; the keep-warm site follows the stop-and-file rule for work outside the spec's surface."
+review = ""
+
+[decision.D-008]
+decided = "The lane's fresh full-lane gate (011) was reviewed by Codex gpt-6-luna at high effort, not gpt-6.1-sol: on 2026-10-10 the Codex account signed in for the overnight run does not offer gpt-6.1-sol (both the PATH codex 0.162.1 and the VS Code extension's 0.162.0 return 400 'not supported when using Codex with a ChatGPT account', and the account's model list names gpt-6-luna, gpt-5.6-terra, gpt-5.6-luna and gpt-5.5 only). Luna stays a fresh, cross-family GPT reviewer of Opus-built code, and was the owner's sanctioned reviewer at high effort from 2026-10-03 until Sol replaced it. Its verdict: APPROVE, 0 findings."
+alternative = "Stop the lane at a committed point and close the leg until the owner signs in an account that offers Sol; or use a fresh independent Opus reviewer, which the skill allows only after two hours of Codex unavailability and which loses the cross-family split."
+reversal_cost = "Low: an overrule re-runs the gate with Sol once it is available; the lane's code and rows do not change."
+why_not_escalated = "The owner is away overnight and the substitution keeps both properties the review rule asks for (fresh session, a different model family from the builder); the overrule path is one more review."
+review = ""

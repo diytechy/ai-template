@@ -2,11 +2,15 @@
 id = "WI-881"
 title = "A session's deadline kill returns at once, not after taskkill's latency"
 workstream = "process"
-specref = "project-trajectory/scripts/agent_session.py"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+Landed 2026-10-10. A session's deadline or interruption kill no longer calls `taskkill`: on Windows the child is created suspended, placed in a job object of its own and resumed (decision D-001), and the kill closes the job to new members, takes a SYNCHRONIZE handle on each member, terminates the job and waits until each has ended; on POSIX the kill signals the child's process group and waits until it is empty. The kill returns only once the tree has ended, and anything not ended within 10 s raises `TreeNotEnded`, a BaseException no ordinary handler swallows (D-003, D-007). The launch owns the child until it hands it over, and one owner in `run_session` ends the tree on any exit but a natural one (D-006). Residuals are bounded in SR-238's Rationale (D-002, D-006): a POSIX descendant that leaves the group, a process a service starts outside the job, and an interruption inside the standard library's process creation. The idle-deadline test passes within its unchanged 40 s bound; tests pin a grandchild's death on Windows and POSIX. The tip re-grep found no executable `taskkill` call. Spine: SR-238 approved, LLR-026 and TC-026 re-attested (acts 99 to 102). Fresh full-lane gate 011 APPROVE, 0 findings, reviewed by Codex gpt-6-luna for gpt-6.1-sol (D-008). The keep-warm ping's swallowed tree-end failure is WI-895.
 
 ## Context
 

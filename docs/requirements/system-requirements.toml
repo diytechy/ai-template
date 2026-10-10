@@ -1857,3 +1857,17 @@ priority = "S"
 verification = "Test"
 status = "Approved"
 phase = 6
+
+[requirement.SR-238]
+title = "A deadline or interruption ends the session process tree"
+sn_refs = ["SN-006"]
+boundary_refs = ["B-10"]
+hat_refs = ["UNATTENDED-OPS"]
+requirement = "When a declared deadline or coordinator interruption ends a session, the delivered coordinator shall end every process in the session process group on POSIX or session job on Windows."
+rationale = "A descendant can outlive the direct session child and keep editing the worktree handed to the next session. Ending only the direct child was rejected because it leaves that concurrent writer outside the coordinator's supervision. The bounded guarantee excludes a descendant that leaves the session process group and a process another service starts outside the session job: neither is ended, and the kill does not report it. A POSIX zombie under a PID 1 that never reaps keeps the group nonempty, so the kill raises after the bound. A descendant that denies the kill access to wait on it also makes the kill raise, rather than letting the coordinator continue without knowing whether it ended. Stopping is the need's cannot-proceed case, not a supervision fault: continuing would hand the worktree to the next session beside a writer that may still be live, and nothing can proceed safely past that. An interruption inside platform process creation, before the child reaches the coordinator, is not covered."
+acceptance_criteria = "At a wall deadline, an idle deadline, or a coordinator interruption once the platform's process creation has returned the child, the direct session child and every process still in the session process group on POSIX or session job on Windows have ended before the coordinator continues; if any has not ended within 10 s of the kill, the coordinator stops with an error naming what survived instead of continuing."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+form = "cross-cutting"
