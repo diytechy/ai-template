@@ -2,155 +2,151 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** open for owner ruling, item by item. Item 5's core rule (requirements never reference code) was ruled by the owner on 2026-10-11 and is recorded in item 5; its open questions remain.
+**Status:** revision 2, open for owner ruling, item by item. Item 5's core rule (requirements never reference code) was ruled by the owner on 2026-10-11 and is recorded in item 5; its open questions remain.
 
-The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 rounds. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work: specs that promise behaviour over open-ended inputs, facts re-derived from git history, narrow approvals that do not predict the gate, and requirement rows that restate code and drift with every fix.
+The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
-| # | Change | Kind | Cost | Removes |
+Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file.
+
+| # | Change | Kind | Cost | Aims at |
 |---|---|---|---|---|
-| 6 | Lint before review: the brief renderer refuses while mechanical checks fail | small build | ~1 lane | ~6 findings / 3 days, each a 25–35 min round |
-| 1 | Closed coverage: promises over input spaces must be enumerated or fail closed by construction | ruling + rubric | hours | the largest class: 18 of 43 late findings |
-| 4 | Make every review round full-lane (trial), so an APPROVE means the gate | ruling + trial | one lane to try | narrow-APPROVE → gate-finds-more loops (6 in WI-834) |
-| 2 | Record a decision at its event; never re-derive it from history. Reshape WI-902 first | ruling, then WI-902 reshape | 1 spec amendment | WI-902's history-replay findings (6) |
-| 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time lint, contract voice | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves; much of the ~24 spine-text findings |
-| 3 | Split at birth when deliverables are independent and the WI is large | ruling | none | see the answer below: helps above a size, hurts below it |
-| 7 | A second reviewer from a third family (Gemini), on the first full review and the gate; the coordinator cycle reads `review_rounds` | ruling + trial | waits on WI-798's routes | moves discovery into round 1; adds coverage on a separate quota |
-| 8 | Record usage for every model call: Sol and Terra through the session service; sub-agents from transcripts | small build | ~1 lane | today ~63% of a leg's Claude output (builders) is unrecorded; makes the re-measure a query |
-| 9 | A reviewed plan before the build, decided at mint by a scope-critique anchor; a light plan stage until WI-805 | ruling + procedure | hours, then ~15–20 min per planned row | reactive per-round plans (10 in WI-834); writes item 1's closed list before code |
+| 1 | Closed coverage, made binding: deny-by-default construction for unbounded syntax, an enumerated allow-set in the spec, and the reviewer classifying fail-open vs fail-closed | ruling + rubric | hours | the largest class: open input spaces re-sampled every round (WI-834's gate findings 016, 024, 028) |
+| 6 | Mechanical checks block at the commit, against the parent: new `trace.py --strict` findings, `check_trajectory` staged, RESYNC presence | small build | ~1 lane | findings an instrument would catch (~6 in the sample) |
+| 8 | Record usage for every model call, under WI-800's invocation ledger: Sol and Terra through the session service, sub-agents from transcripts, deduplicated | small build | ~1 lane | ~74% of a leg's Claude output (builders) is unrecorded; makes every trial measurable |
+| 2 | Record a decision at its event, validated by a commit-vs-parent check; never re-derive it from history. Reshape WI-902 first | ruling, then WI-902 reshape | 1 spec amendment | WI-902's history-replay findings |
+| 9 | A planning need decided at mint; plan and scope advice becomes spec text before the claim; one planning path shared with WI-805 | ruling + ordering | hours, then one critique per planned row | advice that never binds (WI-834's pre-build reviews already asked for an enumerated list) |
+| 4 | Checkpoint only after a full review is clean; trial full-lane rounds only on lanes whose coverage is closed | ruling + trial | one lane to try | stale checkpoints; secondary to item 1 |
+| 7 | A second reviewer from a third family (Gemini) at the full reviews; the coordinator cycle reads `review_rounds` | ruling + trial | waits on WI-815's route | earlier discovery, on a separate quota |
+| 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
+| 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
-Order is cheapest-and-surest first. Numbers come from one analysis pass over `docs/reviews/`, the handoffs and `docs/log.d/`; treat them as claims at the precision of a three-day sample.
+Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
 
 ## The owner's two questions
 
 ### Narrow rounds and the full gate: what's actually different?
 
-Yes, a narrow round is restricted to the diff since the last reviewed commit. Three things separate it from the gate:
+Yes, a narrow round's reading scope is restricted to the diff since the last reviewed commit. But less separates the two than revision 1 claimed:
 
 |  | Narrow round | Full-lane gate |
 |---|---|---|
-| Reading scope | `git diff <last reviewed>...<tip>`: only the commits since the last review. The template's `{trunk}` slot is filled with the round's base (`review_brief.py:309`) | The whole lane from its trunk base to its tip, code and rows together |
-| Assignment | "For each finding, confirm the fix at its own site, then try one other site of the same failure class" (`agent_brief.py:653`). Row wording is deferred to the checkpoint. | "An APPROVE must mean you tried to break it and failed": map every Done-when item to a covering test, hunt the worst failure classes, sweep the rows (K1–K4) |
-| Session | Fresh `codex exec` | Fresh `codex exec` (`final_reviewer = "fresh"` in `docs/process.toml`) |
-| Wall-clock | 5–8 min | ~11 min |
+| Reading scope | `git diff <last reviewed>...<tip>`: the template's `{trunk}` slot is filled with the round's base (`review_brief.py:309`) | The whole lane from its trunk base to its tip, code and rows together |
+| Instructions | The shared reviewer template (find the failure classes, "an APPROVE must mean you tried to break it", map Done-when items, name each changed side's counterparts), *plus* a range line: confirm each fix at its own site and try one other site of the same class (`agent_brief.narrow_scope_line`) | The same template, with the full range |
+| Session | Fresh `codex exec` | Fresh `codex exec` (`final_reviewer = "fresh"`, `docs/process.toml:311`) |
 
-So a narrow APPROVE certifies "the named fixes hold, plus one probe per class". It does not certify the lane. Three kinds of finding can only show up at the gate:
+Both briefs carry the Done-when and break-it instructions. A narrow range just can't satisfy them for code outside the delta. Narrow rounds do catch regressions: narrow round 030 caught a WI-834 fix that newly denied a valid command.
 
-- **Regressions outside the delta.** A fix changes behaviour that unchanged code in the lane relies on, e.g. WI-834's "newly denies … (baseline allowed it)". The narrow reviewer reads the fix but not what the fix changed for its callers.
-- **Done-when gaps.** Only the gate maps the spec to tests.
-- **Re-sampling.** A fresh full reviewer picks a new corner of any open input space (item 1). That is luck of the draw, not a missed defect.
+So what did the full reviews find right after a narrow approval? In WI-834, narrow approvals 010, 014, 020/022, 026, 034 and 037 were each followed by a full review with findings (012, 016, 024, 028, 035, 039), 9 in all:
 
-Every narrow APPROVE also triggers a checkpoint: a Terra reconcile, a closure check and a sitting. When the gate then finds code defects, the lane goes back to iterating and owes another checkpoint. That is where the time goes. The review step itself is only about 3–6 min dearer for a full read. Item 4 builds on this.
+- **016, 024, 028:** new shell forms the blackout hook let through (`$r = claude`, `. claude`, `time -p claude`). These are fresh samples of an open input space, not something the narrow scope hid.
+- **039:** an over-denial (a PowerShell function definition), a side effect of the growing parser.
+- **012:** an interpreter mismatch in a different subsystem (dev-setup readiness), a genuine new defect.
+- **035:** two minors.
+
+The narrow-then-gate surprise in WI-834 was therefore mostly the open input space (item 1), not a blind spot of narrow scope. One cost is real regardless: every narrow APPROVE triggers a checkpoint (Terra reconcile, closure check, sitting), and when the gate reopens the lane that checkpoint was wasted. Item 4 addresses that, but it is secondary to item 1. Running full reviews every round on a lane with an open input space would just sample it faster.
 
 ### Does splitting a WI actually help, or just move the work around?
 
-Mostly your intuition is right. Splitting pays only at the very top of the size range, and it costs time everywhere else. Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11. Active hours exclude any gap over 2 h, which strips nights and rate-limit waits.
+Your intuition holds: splitting by itself buys little. The data shows no size threshold where cost takes off, only overhead that each extra WI pays again, plus two confounded outliers.
 
-| Code lines changed | WIs | Median rounds | Median sittings | Median active h | Active h / 100 lines |
+Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11 (`rows.json`). "Code lines" is gross lines added plus deleted under the scripts and tests, not net product code. "Sittings" counts adjudication files. "Gap-filtered hours" is claim-to-landing time minus every gap over 2 h between lane commits. That removes nights and rate-limit waits, but also removes long stretches of work without a commit, so it is not a measure of active labour.
+
+| Code lines changed | WIs | Median rounds | Median sittings | Median gap-filtered h | per 100 lines |
 |---|---|---|---|---|---|
 | 1–299 | 16 | 2 | 1 | 1.15 | 1.19 |
 | 300–999 | 6 | 2 | 3 | 1.2 | 0.16 |
 | 1,000–2,999 | 14 | 4 | 4.5 | 3.45 | 0.27 |
 | 3,000+ (WI-841, WI-834) | 2 | 19 | 16 | 12.8 | 0.30 |
 
-- **There is a fixed floor of about 1 h, 2 rounds and 1 sitting per WI**, whatever its size. The nine smallest code WIs (under 120 lines) sit right on it. A split pays that floor again for every piece, so splitting anything under ~1,000 lines makes the queue slower, not faster.
-- **Time per line stays roughly flat above 1,000 lines** (0.27 → 0.30 h per 100 lines). Cost does not explode with size in general.
-- **Round counts do jump in the two WIs over 3,000 lines**: 17–21 rounds, against a median of 4. Both carry confounders, though. WI-841 ran before narrow rounds existed, and WI-834 combined an open input space (item 1) with six disputes. Item 1 would have prevented much of WI-834's churn at any size.
-- **The arithmetic for a 4,000-line WI.** Kept whole, it took about 12–14 active hours and about 19 rounds. Split into three WIs of about 1,300 lines, it would take about 3 × 3.4 h ≈ 10 h and about 12 rounds. That saves 15–25% of the time and about a third of the rounds. Real, but modest, and smaller than what items 1, 4 and 6 can save across every WI.
+- **Each WI carries overhead.** The nine smallest code WIs (under 120 lines) have a median near 1 h, 2 rounds and 1 sitting, with real spread: WI-901 took 0.3 h with no sitting, and WI-860 had four sittings. Splitting a small or medium row multiplies that overhead.
+- **No threshold is visible.** WI-818 (2,041 lines, 5 rounds), WI-822 (2,552, 4) and WI-790 (2,873, 3) are ordinary. Only the two rows over 3,000 lines blew up, and both are confounded. WI-841 ran before narrow rounds existed. WI-834's churn was mostly an open input space, which item 1 addresses at any size. Two rows cannot establish a threshold or a savings figure, so revision 1's "15–25% saved" arithmetic is withdrawn.
+- **What holds is containment.** In one lane, a finding in one subsystem holds every subsystem, and nothing lands until all are clean. Separate lanes land independently. That is a reason to split *independent deliverables*, whatever their size, and no reason to split a coherent one.
 
-Splitting has one benefit the hours don't show: **containment**. In one large lane, a finding in one subsystem forces a fresh full gate over all three, and nothing lands until everything is clean. Three lanes land independently, and a stuck piece doesn't hold the other two. That matters most when the subsystems really are separate, which was true of WI-834 (shell parser, dev-setup readiness, hook opt-in). So the rule in item 3 is narrow on purpose.
+## 1. Closed coverage, made binding
 
-## 1. Closed coverage: bound the promise before the claim
+**Evidence.** Every reviewer-run full review after a WI-834 narrow approval found new members of an open input space (016, 024, 028: allowed shell forms). The builder asked mid-lane for "a closed, declared list … so this class stops reopening one form per round" (`docs/reviews/wi-834/025-DISPUTE-findings.toml:18`). The churn ended only once dispute sittings drew that line (ruling 025 put script wrappers outside the hook's coverage by an owner-level choice; ruling 040 accepted a specific over-denial after weighing its cost). The idea wasn't new. WI-834's first pre-build Sol review (`docs/reviews/wi-834-plan/001-sol-plan-review.md:29`) had already said to "enumerate the supported direct shell forms and require script wrappers to use the guarded service". The analysis pass also counts store-record shapes in WI-887, history edge cases in WI-902 and an ambient credential source in WI-798 in this class, for 18 of 43 late findings; that taxonomy is unreproduced.
 
-**Evidence.** 18 of the 43 late findings came from enumerating an open input space. 8 were shell grammar forms in WI-834 (heredoc, `coproc`, `time -p`, `. claude`, function definitions…). 3 were malformed store records in WI-887. 6 were git-replay edge cases in WI-902, and 1 was an ambient credential source in WI-798. The builder asked mid-WI-834 for "a closed, declared list … so this class stops reopening one form per round" (`docs/reviews/wi-834/025-DISPUTE-findings.toml:18`); the churn ended only once dispute sittings drew that line at rounds 25 and 31.
-
-**Root cause.** The spec and its `## Trust` section promise behaviour over an unbounded set ("any command word", "every failed-write shape", a ruling per consumer × per bad-input kind). The reviewer brief demands an attempt to break the change, and each gate is a fresh session, so every round samples a new member of the set. Each finding is valid. The set is the bug. WI-902's Trust section shows the multiplication: it rules absent / unreadable / failed / malformed for each of six consumers.
+**Root cause.** A spec promises behaviour over an unbounded set (any command form, every failed-write shape). The reviewer brief demands an attempt to break it, and each review is a fresh session, so every round samples a new member. Each finding is valid; the set is the bug. Advice to bound the set exists but is advisory: it doesn't become spec text the build and the reviewers are held to.
 
 ### Proposal
 
-1. **Scope critique gains anchor S3, "Coverage is closed"** (`docs/rubrics/scope-critique.md`). Any promise over an input space is either (a) an enumerated list with a stated fail-closed default for everything else, or (b) a construction that makes the space irrelevant: deny by default, or validate a whole record against one schema. *Bad:* "detects any shell form that launches the CLI".
-2. **The Trust ruling collapses to one reader.** Rewrite the bad-input part of the Trust question in `coordinator-cycle` §1: every consumer reads the carrier through one owning parser. That parser accepts exactly the well-formed shape and refuses everything else with one reason class. The Trust section then lists consumers but states one ruling, not a consumer × shape matrix. This is the reviewer template's own "validate once at a single owning boundary".
-3. **Reviewer brief: out-of-list findings are classed, not blocking** (`project-trajectory/prompts/reviewer.template.md`, shipped). An input outside the spec's declared list that the change fails closed on becomes a `coverage-extension` note for the spine change list or a successor row. If the change fails *open* on it, it stays a finding at full severity.
-4. **Revisit WI-834's parser (a candidate WI, not part of this program).** Ruling 040 already accepts over-denial inside a blackout window as failing closed (`docs/reviews/wi-834/040-ADJUDICATE…:72`). A "deny any line that mentions a model CLI" rule would delete the parser and its whole grammar class. Before filing, check whether that over-denial would bite real use.
+1. **For unbounded syntax, construction first.** Where the input space is a grammar (shell lines, free-form text), the spec chooses a deny-by-default construction: an enumerated allow-set of guarded forms, and a declared rule for everything else (denied, or outside coverage by an owner-level choice, as ruling 025 did for wrappers). No promise over the open grammar itself.
+2. **Scope critique gains anchor S3, "Coverage is closed"** (`docs/rubrics/scope-critique.md`). Any promise over an input space is either an enumerated set with a declared default, or a construction that makes the space irrelevant (deny by default, or validate a whole record against one schema). The critique's answer becomes spec text before the claim, in the Done-when or the Trust section. That is the step WI-834 lacked.
+3. **Consolidate shape validation, keep each consumer's policy.** Every consumer of a carrier reads it through one owning parser that accepts exactly the well-formed shape. Each consumer keeps its own authority, binding and refusal policy: the close, the review scheduler, historical readers and the mint legitimately differ, as WI-902's Trust section shows. The parser removes duplicated parsing, not those decisions.
+4. **The reviewer classifies, not the author.** An input outside the spec's declared set that the change fails *closed* on is filed as a `coverage-extension` note (spine change list or a successor row). One it fails *open* on stays a finding at full severity. The reviewer, independent of whoever wrote the list, decides which it is (`reviewer.template.md`, shipped).
+5. **WI-834's parser: investigate before proposing anything.** A "deny any line that mentions a model CLI" rule would not cover wrapper launches, which carry no CLI name in the submitted line (ruling 025). It would also over-deny broadly in this repo, where `claude` appears in paths and skill names. Read WI-834's original rationale and count recent coordinator commands that would have been denied, before filing any row.
 
-**Trade-off.** A closed list can miss a real form. The fail-closed default turns that miss into an over-refusal, not a hole, and a successor row extends the list on purpose instead of a review round discovering it by accident.
+**Trade-off.** A closed set can miss a real form. Deny-by-default turns that miss into an over-refusal, not a hole, and a successor row extends the set on purpose.
 
-**Measure.** The "open input space" share of late findings: 18/43 today, target ≤ 3 over the next 15 WIs.
+**Measure.** Late findings from open input spaces, per landed WI, counted under the phase-0 manifest. No numeric target until that baseline exists.
 
-**Downstream.** Step 3 changes a shipped template: one `RESYNC_PACK.md` entry, no migration. Steps 1–2 are this-repo only.
+**Downstream.** Step 4 changes a shipped template: one `RESYNC_PACK.md` entry, no migration. Steps 1–3 are this-repo rubric and procedure.
 
 **Owner calls:**
 
-- Confirm S3 as a scope-critique anchor.
-- Confirm the one-reader Trust rule.
-- Confirm that a fail-closed out-of-list input is a coverage note, not a blocking finding.
+- Confirm or overrule construction-first for unbounded syntax.
+- Confirm or overrule S3, with the critique's answer becoming spec text before the claim.
+- Confirm or overrule the reviewer classifying fail-open vs fail-closed.
 
-## 2. Record the decision at its event; never re-derive it from history
+## 2. Record the decision at its event, checked at the commit
 
-**Evidence.** WI-902 lets a disposition name an existing successor. Its sweep now "reads the open-state rule in the tree of the commit that landed the disposition (the oldest first-parent commit touching its spec in `complete/`)", added by review 001 F1, review 008 F1 and ruling 009 (spec, Consumers → The sweep). That history read then produced the shallow-clone, lossy-decode and file-existence findings. The lane stopped under the two-round breaker after 9 rounds and 6.3 h.
+**Evidence.** WI-902 lets a disposition name an existing successor. Its sweep "reads the open-state rule in the tree of the commit that landed the disposition (the oldest first-parent commit touching its spec in `complete/`)", added by review 001 F1, review 008 F1 and ruling 009. That history read then drew shallow-clone, lossy-decode and file-existence findings. The lane stopped under the two-round breaker after 9 rounds.
 
-**Root cause.** Two consumers, the close and the sweep, each re-validate the same adoption, and the sweep re-validates it on every run against whatever trunk is now. When that answer turned out to drift (the successor completes later), the fix replayed history to recover the original answer. This is the pattern your 2026-10-03 rule forbids: enforce at the commit, not through git-history archaeology.
+**Root cause.** The close and the sweep each re-validate the same adoption, and the sweep re-validates it on every run against whatever trunk is now. When that answer drifted (the successor completes later), the fix replayed history to recover the original answer. Your 2026-10-03 rule forbids exactly this: enforce at the commit, not through git-history archaeology.
 
 ### Proposal
 
-1. **Reshape WI-902 before resuming it**, as a spec amendment with a scope critique, not another build round. The close is the single owning boundary: it validates the adoption once (the named row is open and supersedes the disposed row) and records the result in the commit that closes the row, e.g. an `adopted = "WI-893"` cell on the closed row. The sweep trusts that recorded cell and never consults later trunk state or history. Most of the current Trust matrix and the history read go away.
-2. **State the rule once** in `PROCESS.md` §3, beside "When a guard is owed": a decision a later step depends on is recorded by the step that makes it, in the commit where it is made. A later reader trusts the record and never recomputes it from history. Add the matching scope-critique bad example (B3: "a consumer that re-derives a past decision from history or current state").
-3. **Audit the other history readers** (a read-only research task, not a build). 21 kit scripts call `git log`, `rev-list` or `--first-parent`; most legitimately diff a range. Classify each as "reads a range to review/check" (fine) or "recomputes a past decision" (candidate), and file a row only for the candidates.
+1. **Reshape WI-902 before resuming it**, as a spec amendment with a scope critique, not another build round. The close validates the adoption (the named row is open and supersedes the disposed row) and records the result in the commit that closes the row, e.g. an `adopted = "WI-893"` cell. A commit-time check of that closing commit against its parent re-runs the same validation and refuses an invalid close. The record is the validated event's result, not a marker anyone can write. The sweep trusts the cell and never consults later trunk state or history. A disposition that lacks the cell where one is owed refuses the sweep; there is no fallback to re-deriving. A cell written by hand or by an agent outside the close fails the commit check, since agent-written repo content is in scope.
+2. **State the rule once** in `PROCESS.md` §3, beside "When a guard is owed": a decision a later step depends on is recorded by the step that makes it, in the commit where it is made, and checked against that commit's parent. A later reader trusts the record and never recomputes it from history. Add a scope-critique bad example (B3: "a consumer that re-derives a past decision from history or current state").
+3. **Audit the other history readers** (read-only research, not a build). About 21–22 kit scripts call `git log`, `rev-list` or `--first-parent`, depending on the pattern; most legitimately diff a range. File a row only for a script that recomputes a past decision.
 
-**Trade-off.** One more recorded cell on the closed row. In exchange, the sweep's correctness no longer depends on clone depth, decode or file layout over time.
+**Measure.** The reshaped WI-902's rounds and findings, reported on their own, not pooled with item 4's trial. The audit's candidate count.
 
-**Measure.** The reshaped WI-902 lands in ≤ 2 review rounds. The audit turns up few or no candidates.
-
-**Downstream.** WI-902 changes shipped scripts either way (its Done-when already owes a RESYNC entry). The added cell is new data, not a migration.
+**Downstream.** WI-902 changes shipped scripts either way (its Done-when owes a RESYNC entry). The cell is new data, not a migration.
 
 **Owner calls:**
 
 - Resume WI-902 as built, or reshape it to record-at-close first (recommended)? Its Trust ruling (coordinator-2026-10-11 D-005) is still pending your confirm or overrule.
-- Confirm the record-at-event rule for `PROCESS.md` §3.
+- Confirm or overrule the record-at-event rule for `PROCESS.md` §3.
 
-## 3. Split at birth, above a size
+## 3. Split at birth on independent deliverables
 
-**Evidence.** See the splitting answer under "The owner's two questions". There is a floor of ~1 h, 2 rounds and 1 sitting per WI. Cost per line is flat from 1,000 to 3,000 lines. The only blow-ups (WI-841, WI-834) were both above 3,000 lines and both bundled independent subsystems.
+**Evidence.** See the splitting answer under the two questions: per-WI overhead is real, no size threshold is visible, and the two blow-ups are confounded. What holds is containment.
 
-**Root cause.** S1 of the scope critique already asks for independently landable deliverables, but it gives no basis for when keeping them together is costly. So the answer defaults to "keep together".
+**Root cause.** S1 of the scope critique already names independently landable deliverables, and the owner may keep them together. WI-834's spec kept three subsystems together by recorded choice.
 
 ### Proposal
 
-1. **Add a size basis to S1** (`docs/rubrics/scope-critique.md`). Split at birth only when *both* hold: the deliverables land independently (S1 already names them), and the row's expected code change is large, roughly 2,000+ lines or more than about four script families. Below that, keep the row whole even if it has several deliverables. This sits at birth, so it respects your 2026-10-07 ruling of no lane-size tripwire.
-2. **Don't split to fix churn mid-lane.** A lane that starts churning is usually an item 1 problem (an open promise), not a size problem. The remedy is a dispute sitting that draws the coverage line, as WI-834's rounds 25 and 31 eventually did.
-3. **Optional, data-backed: batch the tiny ones.** Docs- or spine-only rows land at ~0.5 h each. Code rows under ~150 lines pay the full ~1 h floor. Where two or three small queued rows touch the same module and share a reviewer's context, filing them as one row saves a floor each. Only worth doing when they truly share context.
-
-**Trade-off.** A size estimate at birth is a guess. That's acceptable because the rule only bites on the very large rows, where the guess is easy.
-
-**Measure.** No landed WI above ~3,000 code lines without a recorded owner reason to keep it whole.
-
-**Downstream.** None (this-repo rubric).
+1. **Keep S1 as the split rule; add no size threshold.** Split when the deliverables are independent and their dependencies are recorded, unless the owner keeps them together, as today. The critique may report an expected size as information, not a trigger. That respects your 2026-10-07 ruling of no lane-size tripwire.
+2. **Don't split to fix churn mid-lane.** A churning lane is usually an item 1 problem. The remedy is a dispute sitting that draws the coverage line.
+3. **Optional: batch tiny rows that share context.** Where two or three small queued rows touch the same module and share a reviewer's context, one row saves the per-WI overhead.
 
 **Owner calls:**
 
-- Confirm the narrow split rule: independent deliverables and ~2,000+ code lines.
+- Confirm or overrule keeping S1 as the only split rule.
 - Decide whether same-module tiny rows should be batched.
 
-## 4. Make an APPROVE mean the gate
+## 4. Don't spend a checkpoint on a lane the gate will reopen
 
-**Evidence.** In WI-834, narrow approvals 010, 014, 020/022, 026, 034 and 037 were each followed by a full gate that found new defects. 15 of the late findings were regressions from a previous fix. Each such loop cost a checkpoint (Terra reconcile, closure check, a 3–6 min sitting) that the next gate made stale.
+**Evidence.** See the narrow-versus-full answer. In WI-834, six narrow approvals each triggered a checkpoint, and each following full review reopened the lane, mostly with new members of the open shell space. Revision 1's figure of 15 regressions from previous fixes is unsupported by that sample and is withdrawn.
 
-**Root cause.** See the answer above: a narrow round verifies fixes, it does not certify the lane. Yet its APPROVE is what triggers the checkpoint.
+**Root cause.** The checkpoint fires on a narrow APPROVE, which certifies the named fixes, not the lane.
 
 ### Options, recommended first
 
-1. **Full-lane every round (trial on the next two lanes).** Drop narrow rounds. Every round is a fresh full-lane review that still carries the previous round file and the coverage plan as context, so it still confirms each fix. The checkpoint fires only on a full review with no BLOCKER or MAJOR, so a sitting is never spent on a lane the gate will reopen. Cost: ~3–6 min more per review and more Codex quota per round. Fewer rounds and fewer stale checkpoints should more than repay that, but measure it. Change lives in `coordinator-cycle` §3 and recipes §1; `review_brief.py` already supports `--scope full` with no findings file.
-2. **Widen the narrow round to the fix's blast radius.** Keep narrow rounds, but the brief also lists the callers of every symbol the delta changed, and asks for one behaviour comparison against the lane's base for each. This catches the "baseline allowed it" regressions while keeping narrow rounds cheap. Needs a small `review_brief.py` change (shipped).
-3. **Add a second, third-family reviewer at the full reviews** (item 7). Combine it with option 1 or 2; it attacks the same serial-discovery cost from the other side.
-4. **Persisted final reviewer** (`final_reviewer = "persisted"`, built in WI-887, shipped off). The gate resumes the session that saw the earlier rounds, so it stops re-sampling from zero. Least preferred: your persistent-adjudicator study found anchoring evidence, and a reviewer that resumes its own approvals is the weakest form of independence. Worth trying only if options 1–3 don't move the numbers.
+1. **Checkpoint after a clean full review, then gate again.** Iterate with narrow rounds as today. Before a checkpoint, run a full review; hold the checkpoint only when it has no BLOCKER or MAJOR. The fresh full-lane gate over the checkpoint tip stays, because the reconciled rows and any sitting changes still need an independent review. This reduces premature checkpoints; it doesn't remove the gate.
+2. **Trial full-lane rounds every round, but only on a lane whose coverage is closed** (item 1 applied). On an open input space, full rounds re-sample faster and can raise the round count. Each full round receives the previous review's findings, only so it can confirm the fixes, and never the builder's coverage plan. A plan written by the builder is builder material in a judge's brief.
+3. **Add a second, third-family reviewer at the full reviews** (item 7).
+4. **Persisted final reviewer** (`final_reviewer = "persisted"`, WI-887, shipped off). Least preferred: your persistent-adjudicator study found anchoring evidence.
 
-**Measure.** Checkpoints per landed WI. Full-gate rounds that find code defects after a checkpoint (target: near zero). Codex sessions per landed WI, against the ~15–24-session limit.
+**Measure.** Checkpoints per landed WI. Full reviews that reopen a lane after a checkpoint. Codex sessions per landed WI (item 8).
 
-**Downstream.** Option 1: none (this-repo procedure). Option 2: shipped brief, a RESYNC entry. Option 3: a dial flip.
+**Downstream.** Options 1–2 are this-repo procedure (`coordinator-cycle` §3, recipes §1). Option 4 is a dial flip.
 
 **Owner calls:**
 
-- Pick the trial: full-lane every round (recommended), blast-radius narrow rounds, or the persisted gate; add item 7's second reviewer when its route exists.
-- Confirm the trial length (two lanes) and the metrics above.
+- Confirm or overrule option 1. Decide whether to trial option 2 on a closed-coverage lane.
+- A question the reviews raised about today's practice: the recipes append the builder's coverage plan to each narrow brief ("carry the table into the next review"). Should the reviewer see it, given the template's rule that a judge's brief carries no claim of the judged party?
 
 ## 5. Requirements never reference code; code points up
 
@@ -160,9 +156,9 @@ Splitting has one benefit the hours don't show: **containment**. In one large la
 - Why: everything in the spine points up so that requirement ids stay stable. Code markers are not stable ids. A requirement that names code reopens every time the code moves, and that grinds requirements to a halt.
 - Sequencing: this can be done last.
 
-**Evidence.** About 24 of 79 findings were requirement-chain text, and the WI-798 sitting returned 11 rows at once. All 302 LLR rows carry `module` and `code_symbol` cells. LLR-312's `code_symbol` names five functions, and its `detail` narrates how they work ("plans one ordered sequence of rewrites … each rewrite starts from the specification as it then stands"). By a rough token census, about 202 of 302 LLR rows, 25 of 131 SR rows and 6 of 35 SN rows also name code-like tokens in their prose. The heuristic overcounts, but the order of magnitude stands. Any fix that renames or reshapes one of those functions makes an Approved row untrue. Then Terra reconciles, the sitting re-judges, and a return costs another sitting.
+**Evidence.** All 302 LLR rows carry `module` and `code_symbol` cells (both reviewers confirmed). LLR-312's `code_symbol` names five functions, and its `detail` narrates how they work. The WI-798 sitting returned 11 rows at once. A rough token census (unreproduced, and it overcounts) finds code-like names in the prose of about 202 of 302 LLR rows, 25 of 131 SR rows and 6 of 31 stakeholder needs. Any fix that renames or reshapes a named function makes an Approved row untrue, and then Terra reconciles, the sitting re-judges, and a return costs another sitting.
 
-**Root cause.** The trace direction is mixed. `Implements:` tags in code already point up, but the LLR's `module` and `code_symbol` cells point down at the same facts and must be hand-synced. The R2 ruling (2026-08-15) kept SR cells free of artifacts but left two doors open: a filename in acceptance as "current carrier" evidence, and concrete names at the LLR tier. Code churn reaches the spine through those doors.
+**Root cause.** The trace direction is mixed. `Implements:` tags in code point up, but the LLR's `module` and `code_symbol` cells point down at the same facts and must be hand-synced. The R2 ruling (2026-08-15) kept SR cells free of artifacts but left two doors open: a filename in acceptance as "current carrier" evidence, and concrete names at the LLR tier.
 
 ### What the rule covers
 
@@ -173,143 +169,173 @@ Splitting has one benefit the hours don't show: **containment**. In one large la
 | TC rows and tests | Yes: may name test modules and modules under test | verifies up; names code as evidence |
 | Generated views (dashboard architecture, trace matrix) | Yes, derived | computed from the up-pointers, never authored |
 
-The R2 allowances go away under this reading: "current carrier" evidence moves from SR acceptance to the TC rows that verify it, and the LLR tier states contracts, not carriers. R2's third guarantee, "why does this file exist", is kept by the inverse check: every shipped module carries at least one `Implements:` tag naming a live LLR, so a file with no requirement above it is a finding.
+Under this reading, "current carrier" evidence moves from SR acceptance to the TC rows that verify it, and the LLR tier states contracts, not carriers. R2's third guarantee, "why does this file exist", is kept by an inverse check: every shipped module carries at least one `Implements:` tag naming a live LLR.
 
 ### Bounding it mechanically: three layers, strongest first
 
-1. **Make it unrepresentable in the schema.** Delete `module` and `code_symbol` from the LLR schema (`kitlib/spine.py`), and make the loader refuse keys a requirement tier doesn't declare, so a row *cannot* carry them. Everything that reads those cells today (`trace.py`'s back-link check, `trajectory_arch.py`/`gen_trajectory.py`, `lane.py`, `check_doc_refs.py`, `spine_carrier.py`/`migrate_carrier.py`, `check_privacy.py`) switches to one derived index built from the `Implements:` tags. The index is generated, never committed as authored data. This removes the hand-synced cells entirely, and with them the K3 rubric anchor.
-2. **A commit-time check on requirement prose**, grown from the existing warn-only `trace_text.sr_artifact_advisories` (which today flags only `*.py` in SR requirement cells). Extend it to every text cell of SN, SR and LLR rows, and add a second token class derived from the code itself: the set of names defined in the shipped scripts (functions, classes, module constants, read by `ast`). A cell is refused if it contains a path-like token (`.py`, `scripts/`, a repo path that exists) or one of those code names written as code: backticked, snake_case with an underscore, CamelCase, or a call form. Plain English that happens to match a function name (`close`, `main`) passes. The name list comes from the code on every run, so nobody maintains it. Following your enforce-at-the-commit rule, it compares the commit against its parent: a row added or changed in the commit must be clean, and untouched rows are left alone. Existing prose then migrates as lanes touch rows, without a mass reopening. It runs in the pre-commit hook and in item 6's pre-review gate.
-3. **Judgement layer.** The adjudicator's sitting brief and the `spine-authoring` skill extend K2 from SR to all requirement tiers, written as contract voice: an LLR states the observable obligation (inputs, outcome, refusal boundary) and must survive a refactor that keeps behaviour. Test: would renaming a private helper or reordering steps make the row untrue? If so, it is describing mechanism, which belongs in the docstring. The mechanical layers catch names; this layer catches mechanism narrated in plain words, which no lint can.
+1. **Make it unrepresentable in the schema.** Delete `module` and `code_symbol` from the LLR schema (`kitlib/spine.py`), and make the loader refuse keys a requirement tier doesn't declare. Everything that reads those cells switches to one index generated from the `Implements:` tags. Readers today: `check_doc_refs.py`, `check_privacy.py`, `kitlib/spine.py`, `kitlib/secret_classes.py`, `lane.py`, `migrate_carrier.py`, `spine_carrier.py` and `trajectory_arch.py`, plus five tests (`test_assumption_gate`, `test_baseline_snapshot`, `test_derive_stage`, `test_module_size_ratchet`, `test_trajectory_arch`). This removes the hand-synced cells, not the meaning check (below).
+2. **A commit-time check on requirement text**, grown from the warn-only `trace_text.sr_artifact_advisories` (today: `*.py` in SR requirement cells). It covers the text cells of SN, SR and LLR rows. It refuses path-like tokens, and names defined in the shipped scripts (read by `ast` on every run) written as code: backticked, snake_case, CamelCase or a call. It compares the commit with its parent and looks only at *tokens added* to a requirement text cell. A lane that touches a row for a non-text reason (`test_refs`, phase, status) owes no prose rewrite, and untouched rows are left alone. An Approved row whose text is cleaned rides the layer-1 batch act or the lane's own sitting.
+3. **Judgement layer.** The sitting brief and the `spine-authoring` skill extend K2 from SR to all requirement tiers as contract voice. An LLR states the observable obligation (inputs, outcome, refusal boundary) and survives a refactor that keeps behaviour. No lint can catch mechanism narrated in plain words; this layer does.
 
-Alongside: **one judge per row.** The adjudicator's sitting is the sole judge of requirement text. Sol's code review raises a row finding only when code contradicts an Approved row, or a row the lane added is untrue against the code. That removes the double judging behind part of the spine-text churn, and both judges stay independent of the author.
+**Keep the meaning check.** An `Implements:` tag that names a live LLR doesn't prove the code implements it. The independent semantic check stays: the code reviewer judges, over the derived index, whether code and the rows the lane touches correspond. That includes omissions and inconsistent amendments of existing rows. What moves wholly to the sitting is wording quality and overlap, so the two judges stop overlapping without losing the correspondence check.
 
-**Migration.** Layer 1 removes two cells from all 302 LLR rows, most of them Approved, which the `approval-immutable` check forbids today. It needs one ruled batch act: "trace cells removed, requirement text unchanged". That is a single sitting for the batch, not 302 re-attestations. Layer 2 needs no migration: prose is cleaned as rows are next amended.
+**Migration.** Layer 1 removes two cells from all 302 LLR rows, most of them Approved, which the `approval-immutable` check forbids today. That needs one ruled batch act, "trace cells removed, requirement text unchanged": a single sitting, not 302 re-attestations. Layer 2 needs no migration.
 
-**Downstream.** A kit schema change. Adopters' LLR registries carry `module`/`code_symbol`, so this needs a `RESYNC_PACK.md` entry with a migration script (`migrate_carrier.py` is the precedent), an `ADOPTING.md` note and the template rows' update. Flagged per edit-conservatively: this is the one item in the plan that forces adopters to migrate.
+**Downstream.** A kit schema change: a `RESYNC_PACK.md` entry with a migration script (`migrate_carrier.py` is the precedent), an `ADOPTING.md` note and the template rows. This is the one item that forces adopters to migrate.
 
-**Measure.** Requirement rows amended because code moved: target 0. Rows returned per sitting. Spine-text findings per landed WI.
+**Measure.** Requirement rows amended because code moved: target 0. Rows returned per sitting.
 
 **Open questions for the owner:**
 
-- Confirm the reading above: no code in SN/SR/LLR rows, acceptance included, so "current carrier" evidence moves to TC rows. This supersedes R2's two allowances.
-- Interface (IF) and component (CMP) rows name concrete seams and modules today. Are they requirements under this rule, or architecture that may point at code? My lean: CMP rows point up like code; IF rows name a seam's contract, not its file, but a separate look is needed.
-- Confirm the one-judge split between Sol and the sitting.
+- Confirm or overrule the reading above: no code in SN/SR/LLR rows, acceptance included, so carrier evidence moves to TC rows. This supersedes R2's two allowances.
+- Do interface (IF) and component (CMP) rows count as requirements under this rule, or as architecture that may point at code? My lean: CMP points up like code; IF names a seam's contract, not its file. Needs its own look.
+- Confirm or overrule the split: wording and overlap go to the sitting, and code-versus-row correspondence stays with the reviewer.
 
-## 6. Lint before review
+## 6. Mechanical checks block at the commit, against the parent
 
-**Evidence.** About 6 findings were things an existing instrument already catches: SR-239's two "shall" clauses (`trace.py --strict`), IF-292's channel outside the closed set, an IF cell over 160 characters, a missing `RESYNC_PACK.md` entry, an undeclared IF seam. Each cost a 25–35 min round and Codex quota.
+**Evidence.** About 6 findings in the sample were things an existing instrument catches: SR-239's two "shall" clauses (`trace.py --strict`), IF-292's channel outside the closed set, an IF cell over 160 characters, a missing `RESYNC_PACK.md` entry, an undeclared IF seam. Each cost a 25–35 min round.
 
-**Root cause.** The commit hook runs `trace.py --strict-integrity` but not the semantic `--strict` lints, and runs `check_trajectory.py --staged` non-blocking (`|| true`, `project-trajectory/hooks/pre-commit:296`). Nothing runs the stricter checks between a commit and a review, so a human-grade reviewer spends a round on them.
+**Root cause.** The commit hook runs `trace.py --strict-integrity` but not the semantic `--strict` lints, and runs `check_trajectory.py --staged` non-blocking (`|| true`, `project-trajectory/hooks/pre-commit:296`). A whole-tree gate wouldn't work either. `trace.py --strict` exits 1 on trunk today ("LLR-292 Detail uses 'minimal'"), so refusing on any finding would block every commit and review until trunk is clean.
 
 ### Proposal
 
-1. **`review_brief.py review` refuses to render while the pre-review lints fail**: `trace.py --strict`, `check_trajectory.py --strict`, and a RESYNC-presence check (a shipped file changed in the range ⇒ an entry anchored at a trunk commit). The refusal names each failure. The renderer is the one door every review goes through, so this is a mechanism, not another recipe line to remember.
-2. **Mechanize what K2–K4 still ask a reviewer to eyeball** where it's cheap. K4 is step 1's RESYNC check. K3 (each `Implements:` tag matches its LLR's `module`/`code_symbol`) goes away with item 5's schema layer. K2 becomes item 5's commit-time prose check.
-3. **Drop those anchors from the reviewer rubric** once each is mechanized, so the reviewer's attention goes to judgement.
+1. **Block what the commit introduces, at the commit.** The pre-commit hook (and the per-commit check at merge) compares against the parent and refuses three things: new `trace.py --strict` findings; `check_trajectory.py --staged` failures (dropping `|| true`); and a shipped file changed with no RESYNC entry anchored at a trunk commit. That follows your enforce-at-the-commit rule. There is no render-time refusal and no override flag, so no second door and no bypass. Existing findings like LLR-292 are fixed on trunk as their own small row.
+2. **Retire rubric anchors as they become mechanical.** K4 becomes the RESYNC check. K3's module/symbol matching goes away with item 5's schema layer, and its meaning half stays as item 5's correspondence check. K2 becomes item 5's commit-time text check.
 
-**Trade-off.** The renderer gets slower by the lints' runtime, seconds against a 25–35 min round. Refusing at render could block a review of a deliberately red lane, so allow an explicit `--allow-lint-fail <reason>` that prints into the brief.
+**Measure.** Review findings an instrument would have caught: target 0.
 
-**Measure.** Findings an instrument would have caught → 0.
-
-**Downstream.** `review_brief.py` is shipped: one RESYNC entry, no migration.
+**Downstream.** The shipped hook changes: one RESYNC entry. Adopters get a stricter floor, compared against the parent so existing findings don't block them.
 
 **Owner calls:**
 
-- Approve filing this as the first build row.
+- Confirm or overrule filing this as the first build row, and the LLR-292 cleanup row beside it.
 
 ## 7. A second reviewer from a third model family
 
-**Evidence.** The kit already ships the dial: `[policies] review_rounds = 0|1|2` (this repo: `1`; `PROCESS_OPTIONS.md`, "The reviewer dial + cross-provider routing"). At `2` two independent reviewers split charters (A: method, risk, corner cases; B: process, trace, prose). A cross-provider pair is the recommended setup, routed per phase through `AGENT_CMD_MAP` (e.g. `REVIEW-B=gemini -p {prompt}`). Only the managed loop reads it. The coordinator cycle the legs run hard-codes one Sol review per round through `sol_review.sh`, and each spec carries "Review bar: A".
+**Evidence.** The kit already ships the dial: `[policies] review_rounds = 0|1|2` (this repo: `1`, `docs/process.toml:202`). At `2` two independent reviewers split charters (A: method, risk, corner cases; B: process, trace, prose), and a cross-provider pair is the recommended setup, routed per phase through `AGENT_CMD_MAP`. Only the managed loop reads it. The coordinator cycle hard-codes one Sol review per round through `sol_review.sh`, and specs carry "Review bar: A".
 
-**Why it helps.** The dominant cost is serial discovery: each round's fresh reviewer finds a corner the last one didn't. Two reviewers in parallel move discovery into round 1 at no extra wall-clock. A different family brings different blind spots ("two samples of one model share blind spots" is the kit's own reasoning).
-
-**What it won't fix.** An open-ended promise (item 1). Two reviewers sample an unbounded input set twice as fast and still don't converge, so item 1 comes first.
+**Why it helps, and what it won't fix.** Two reviewers in parallel pull discovery forward at no extra wall-clock, and a different family brings different blind spots. On an open input space they just sample twice as fast, so item 1 comes first.
 
 ### Proposal
 
-1. **The family must be a third one.** The builder and the adjudicator are Claude, and Sol is OpenAI. A Claude reviewer B shares a family with the builder, and Luna (`luna_review.sh`) shares one with Sol. That leaves Gemini. No Gemini route exists yet: none in `docs/agents.toml` and no `gemini` CLI on this machine. WI-798 (account tables and per-account homes for every CLI route) is the groundwork, so this item waits on it.
-2. **Re-cut the charters for this repo.** Once items 5 and 6 mechanize trace checks and make the sitting the sole judge of row text, reviewer B's process/trace/prose charter is mostly gone. Use the split the Q4 answer points to instead. A covers correctness and failure classes of the change. B covers regressions in unchanged lane code that relies on what changed, plus Done-when coverage: the two things only the full gate catches today.
-3. **Trial it inside item 4.** Sol plus a Gemini reviewer on the lane's first full review and on the final gate; narrow (or later full) rounds stay single. The coordinator cycle reads `review_rounds` instead of hard-coding one reviewer, so the dial means the same thing on both paths. That brings the coordinator cycle back in line with the kit.
+1. **The family must be a third one.** The builder and the adjudicator are Claude, and Sol and Luna are OpenAI. That leaves Gemini. The route is not close: WI-815 owns the Gemini stdin route (its title says "an untested Gemini route") and needs WI-798 and WI-801. The trial waits on WI-815 plus one verified independent Gemini launch.
+2. **Trial with the kit's current charters.** Re-cutting B toward regressions and Done-when coverage only makes sense once items 5 and 6 have mechanized trace and prose checks. Revisit the charters after that.
+3. **The coordinator cycle reads `review_rounds`** instead of hard-coding one reviewer, so the dial means the same thing on both paths.
 
-**Trade-off.** More findings per round, some overlapping. Each reviewer's findings are filed separately and the coverage plan merges them. Quota helps: reviewer B on Gemini uses a different quota, so it adds coverage without bringing the Codex limit (~15–24 sessions per window) closer.
+**Measure.** Share of a lane's findings raised in its first review. Findings only one reviewer raised: if B's are mostly duplicates, it isn't earning its cost.
 
-**Measure.** Share of a lane's total findings raised in round 1 (higher is better). Review rounds per landed WI. Findings only one reviewer raised, per reviewer: if B's are almost all duplicates, the second reviewer isn't earning its cost.
-
-**Downstream.** None for the dial (it ships). A Gemini route and template are adopter options, not requirements.
+**Downstream.** None for the dial (it ships). A Gemini route is an adopter option.
 
 **Owner calls:**
 
-- Confirm a Gemini reviewer B as the third family, after WI-798 lands.
-- Confirm the re-cut charters (A: correctness; B: regressions outside the delta, plus Done-when coverage).
-- Confirm the coordinator cycle reads `review_rounds`.
+- Confirm or overrule a Gemini reviewer B, after WI-815 and a verified launch.
+- Confirm or overrule the coordinator cycle reading `review_rounds`.
 
 ## 8. Record usage for every model call, sub-agents included
 
-**Evidence.** `session_service.py` is meant to be "the one path every model call takes". It writes tokens, cost and timing to `docs/iteration/*.log`, but only for calls it launches itself. In the coordinator cycle that is only the adjudicator: the last 40 session logs are all `role: ADJUDICATE`. Builders run as Claude Code sub-agents (`kit-builder`) of the coordinator session. Sol and Terra launch through `coordinator-tools/sol_review.sh` and `terra_author.sh` straight to `codex exec`. The coordinator leg itself runs as `claude -p` from `overnight_legs.py`. None of those are recorded.
+**Evidence.** `session_service.py` calls itself "the one path every model call takes", but in the coordinator cycle only the adjudicator goes through it: the last 40 session logs in `docs/iteration/` are all `role: ADJUDICATE` (both reviewers confirmed). Builders are Claude Code sub-agents of the coordinator session. Sol and Terra launch through `coordinator-tools/sol_review.sh` and `terra_author.sh` straight to `codex exec`. The leg itself runs as `claude -p`. None of those are recorded.
 
-**Size of the gap.** Leg 3 (2026-10-11), read from its transcripts. The coordinator: ~365k output tokens and ~75M cache-read tokens. Its 10 builder sub-agents: ~622k output tokens and ~263M cache-read tokens. Builders were about 63% of the leg's Claude output and about 78% of its cache reads, and none of it is in the kit's records. Sol and Terra usage is unmeasured entirely.
+**Size of the gap.** Leg 3 (2026-10-11), read from its transcripts and counted once per message id. Revision 1 summed repeated records of the same message, which doubled the totals. The coordinator: about 151k output tokens and 33.5M cache-read tokens. Nine `kit-builder` sub-agents: about 564k output. One `Plan` sub-agent: about 51k. Builders were about 74% of the leg's Claude output (all sub-agents about 80%), none of it in the kit's records. Sol and Terra usage is unmeasured.
 
-**Where the data already is.** Claude Code writes each sub-agent's transcript under `<session>/subagents/agent-*.jsonl`, with per-message usage, beside a `.meta.json` naming the agent type, its task description and its `spawnDepth`. Nested sub-agents are represented, though where depth-2 transcripts land is unverified. `codex exec --json` reports usage, and the service's Codex adapter already reads it.
-
-### Proposal
-
-1. **Route Sol and Terra through `session_service`**, as `coordinator_adjudicate.py` already routes the adjudicator. The launch scripts keep their flags (sandbox, effort, HEAD/status checks) but call the service instead of `codex` directly. That restores the "one path" the service's own docstring promises, and the module records why: a usage fix once landed in one launch path and not the others.
-2. **Record Claude sub-agent usage from the transcripts at close-out.** A sub-agent spawned inside a Claude session can never pass through the service, so the close-out reads the leg's transcript and its `subagents/*.jsonl` files. It writes one row per sub-agent: role from `agentType`, task from `description`, the WI parsed from it, model, tokens, timing. Rows go through the service's existing `record` writer, so there is still one writer, and nested agents are caught however deep. The leg's own coordinator row comes from the same read.
-3. **Verify before choosing step 2 over launching builders as headless `claude -p` through the service.** The open question is whether a `-p` session's final usage report includes its own sub-agents. If it does, builders could launch through the service directly. If it doesn't, the transcript read is needed regardless, and step 2 stands.
-4. **Use the rows.** Per landed WI: builder, reviewer, author and adjudicator tokens and wall-clock, beside its review rounds. That makes this plan's re-measure (phase 4) a query rather than an analysis pass, and shows which item moved cost, not just rounds.
-
-**Trade-off.** Step 2 reads Claude Code's on-disk transcript format, which the kit doesn't own and which can change. Keep the reader in one adapter (`session_adapters` already holds per-CLI readers) and have it refuse loudly on an unknown shape, never guess.
-
-**Measure.** Share of a leg's model calls with a recorded usage row: today only adjudications; target every call.
-
-**Downstream.** Step 1 touches this repo's coordinator tools only. Step 2 adds an adapter to a shipped module: one RESYNC entry, no migration.
-
-**Owner calls:**
-
-- Confirm routing Sol and Terra through the session service.
-- Confirm recording sub-agent usage from transcripts through the one writer.
-
-## 9. A reviewed plan before the build, decided at mint
-
-**Evidence.** The kit has two planning layers, and neither runs in the coordinator legs. **Dual-plan decomposition** (`planmode = "dual"`, `PROCESS_OPTIONS.md` "Dual-plan decomposition") breaks a goal into WIs: two planners from different families, a `plan_coverage.py` pre-pass, one cross-critique round against `docs/rubrics/plan-decomposition.md`, and an arbiter that selects and ports. Its engine exists (`plan_runner.py`, `agent_loop --dual-plan`), but `dispatch.py` never picks dual rows up: a regression since the old dispatcher was deleted, recorded in `docs/plans/2026-10-04-planning-before-build-research.md`, with WI-813 queued to fix it. Its one round (DP-001, July) ended with the arbiter changing nothing. **Per-item single plan** (`planmode = "single"`: plan, gate, critique, at most one revision, plus a replan after two CHANGES-REQUESTED in a row) is designed (WI-788) and filed as WI-805, queued behind WI-804 (which needs WI-801 and WI-803) and WI-799. Today the builder plans inside its own session, and the only review before a claim is the scope critique, which judges the spec, not a build plan.
-
-**Root cause.** Planning happens after review instead of before code. WI-834's ten `PLAN-r1…r10` files in `docs/reviews/wi-834/` are coverage plans answering each round's findings: ten reactive plans in place of one reviewed plan up front. The `planmode` trigger exists ("one declared trigger at filing time, like BuildTier — never a vibe call mid-loop"), but criteria exist only for dual, no queued row sets it, and the scope critique never asks.
+**Where the data is.** Claude Code writes each sub-agent's transcript under `<session>/subagents/agent-*.jsonl`, beside a `.meta.json` naming the agent type, its task and its `spawnDepth`. A message's usage appears in several records and must be counted once. Where depth-2 transcripts land is unverified. WI-800 (queued) already owns the durable invocation store and an idempotent usage ledger.
 
 ### Proposal
 
-1. **Scope critique decides the planning need.** A new anchor, S4 "Planning need", answers none / single / dual from stated criteria and records `planmode` in the spec before the claim. **single** when the expected code change is over ~1,000 lines (the size band where review rounds double, item 3's data), the row carries a `## Trust` section, or it touches two or more script families or IF seams; **dual** only on the existing design-shaping applies-when; **none** when the diff fits in one sentence or a cheap test fully specifies it.
-2. **The plan carries item 1's closed coverage list.** A reviewed plan before code is where the enumerated, fail-closed input list gets written, along with the unchanged code the change could break (item 4's blast radius). The code reviewer then reviews against it. An open-ended promise is caught for the price of one plan review (~15–20 min) instead of rounds of code review.
-3. **A light version now, not after WI-805's chain.** In the coordinator cycle, for a `single` row: the builder's first output is a `Plan-WI` table against the Done-when, in the format `plan_coverage.py` already checks. One fresh Sol critique of the plan, grounded in the Done-when and the Trust section, then one revision, then the build. WI-805 later replaces the light version with the loop's own path and adds the replan on failure. The light version is recorded as that interim so it doesn't become a second permanent path.
-4. **Rule on dual.** Either fix its pickup (WI-813), or retire the arbiter step and keep only the cross-critique, which the research and DP-001 both say does the useful work. An engine nothing dispatches is the kind of dead path the no-fallback rule argues against.
+1. **Route Sol and Terra through `session_service`**, as `coordinator_adjudicate.py` already routes the adjudicator. The launch scripts keep their sandbox, effort and HEAD/status checks but call the service.
+2. **Ingest Claude sub-agent usage under WI-800's ledger contract.** Read the leg's transcript and its sub-agent transcripts. Count once per message id. Attribute each invocation exactly once (by invocation identity, so a repeated close-out or a resumed transcript adds nothing). Write through the service's one writer. Verify where nested transcripts land before claiming coverage of nested agents.
+3. **Verify the alternative.** If a `claude -p` session's final usage includes its own sub-agents, builders could launch through the service directly. Unverified.
+4. **Use the rows.** Per landed WI: builder, reviewer, author and adjudicator tokens and wall-clock beside its review rounds. That turns the re-measure (phase 4) into a query.
 
-**Trade-off.** A plan stage adds ~15–20 min and one Codex session to every `single` row. The research note warns that a bad plan does worse than none, and that a reviewer told to find gaps always finds some. Grounding the critique in the Done-when and capping it at one revision is what keeps the stage from becoming its own churn loop.
+**Trade-off.** The transcript format belongs to Claude Code and can change. Keep the reader in one adapter (`session_adapters`), refusing loudly on an unknown shape.
 
-**Measure.** For `single` rows against comparable unplanned ones: review rounds, findings first raised in round 2 or later, and how many late findings the plan's coverage list already named (the plan should prevent those).
-
-**Downstream.** Steps 1–3 are this-repo rubric and procedure. `planmode` already ships as a spec key. Step 4 either lands a queued fix or removes a shipped option (a RESYNC entry).
+**Downstream.** Step 1 touches this repo's coordinator tools. Step 2 adds an adapter to a shipped module: one RESYNC entry.
 
 **Owner calls:**
 
-- Confirm S4 and its criteria.
-- Confirm the light plan stage as an interim until WI-805.
+- Confirm or overrule routing Sol and Terra through the session service.
+- Confirm or overrule ingesting sub-agent usage under WI-800's ledger, ahead of WI-800's other parts if needed.
+
+## 9. Planning need decided at mint; advice made binding
+
+**Evidence.** The kit has two planning layers, and neither runs in the coordinator legs. **Dual-plan decomposition** (`planmode = "dual"`) breaks a goal into WIs: two planners from different families, a `plan_coverage.py` pre-pass, one cross-critique round, and an arbiter. Its engine exists, but `dispatch.py` never picks dual rows up (WI-813 queued to fix it), and its one round (DP-001) ended with the arbiter changing nothing. The **per-item single plan** (`planmode = "single"`) is designed (WI-788) and filed as WI-805, queued behind WI-804 (itself behind WI-801 and WI-803) and WI-799. What WI-834 *did* have was scope planning: two pre-build Sol reviews of its spec and plan (`docs/reviews/wi-834-plan/`). The first already asked for the enumerated list that rounds 25 and 31 finally drew. The build then produced twelve reactive coverage plans (`PLAN-r1` to `PLAN-r12`).
+
+**Root cause.** Not a missing review. The pre-build review's recommendation did not become binding spec text, so the build and its reviewers were not held to it. A second gap: the `planmode` trigger exists ("one declared trigger at filing time"), but criteria exist only for dual, and no queued row sets it.
+
+### Proposal
+
+1. **Bind the advice.** A pre-claim review (scope critique, plan review) ends with its accepted recommendations written into the spec, in the Done-when or the Trust section, before the claim. A recommendation not adopted is recorded with the reason. This is item 1 step 2 applied to every pre-claim review.
+2. **Scope critique decides the planning need** (anchor S4). The answer is none, single or dual, recorded as `planmode`. **single** when the row has a `## Trust` section, touches two or more script families or IF seams, or promises behaviour over an input space; **dual** only on the existing design-shaping applies-when; **none** for a diff a cheap test fully specifies. No size threshold, consistent with item 3.
+3. **One planning path, not an interim one.** Either pull WI-805's plan gate forward (decoupled from the rest of its chain if the owner agrees), or wait for it. Revision 1's "light version" would have been a second path, and it allowed building without a passing critique; both are withdrawn. On the one path, a build starts only after a passing independent plan verdict. If the capped revision doesn't pass, it goes to a dispute sitting or to the owner, never to the build.
+4. **Rule on dual.** Fix its pickup (WI-813), or retire the arbiter and keep the cross-critique, which the research and DP-001 both say does the useful work. Read WI-190/WI-199's rationale before retiring anything.
+
+**Trade-off.** A planned row costs one more Codex session and ~15–20 min. A bad plan does worse than none (the 2026-10-04 research note), so the critique is grounded in the Done-when.
+
+**Measure.** For `single` rows against comparable unplanned ones: review rounds, late findings, and how many late findings the bound spec text already named.
+
+**Owner calls:**
+
+- Confirm or overrule binding pre-claim advice into the spec.
+- Confirm or overrule S4 and its criteria.
+- Pull WI-805's plan gate forward, or wait for it.
 - Fix dual's pickup (WI-813), or retire its arbiter.
 
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
-| 0 · rulings | Items 1 (S3, one-reader Trust, coverage notes), 2 (record-at-event rule, WI-902 reshape), 3 (split rule), 4 (pick the trial), 5's open questions (IF/CMP scope, one judge), 7 (third-family reviewer, charters), 8 (one path for usage), 9 (S4 planning need, the light plan stage, dual's fate); 5's core rule is already ruled. No code. | Owner |
-| 1 · cheap builds | Item 6 lint gate (first row). Item 8 usage recording (second row, so the trials below are measured). Rubric and skill edits for 1, 2, 3, 5, 9 (S4 and the light plan stage). Reviewer-template clause for 1. | Coordinator lanes |
-| 2 · trial | Item 4 on the next two lanes. WI-902 reshaped and resumed as the first lane under the new rules. Item 7 joins the trial once WI-798's Gemini route works. | Coordinator |
-| 3 · structural (last) | Item 5: schema removal, derived index and batch act, plus the commit-time prose check. Item 2 history-reader audit. The WI-834 deny-on-mention candidate, if the audit of real use supports it. | Coordinator lanes |
-| 4 · re-measure | Re-run the same churn analysis over the next 15 landed WIs and compare against the baseline below. | Coordinator / analysis agent |
+| 0 · rulings and baseline | Owner calls on items 1–9 (item 5's core rule is already ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
+| 1 · cheap builds | Item 6 (commit-time checks) and the LLR-292 cleanup. Item 8 (usage), so every later change is measured. Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
+| 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4 option 1 on the next lanes. Option 2 only on a closed-coverage lane. Item 7 once WI-815's route works. | Coordinator |
+| 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 9's planning path, if WI-805 is pulled forward. | Coordinator lanes |
+| 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
 
-| Baseline (2026-10-09 → 10-11) | Now | Target |
+**Session budget.** Items 4, 7 and 9 each add review sessions. Gemini (item 7) draws on a different quota. Codex sessions per WI are recorded by item 8, and when a window's limit (~15–24 sessions) is the bottleneck, item 4's extra full reviews yield first.
+
+**Record per lane:** which changes applied, sessions by role, gap-filtered and wall-clock time. Isolating each change's effect needs that record, since several start at once.
+
+| Measure | Baseline | Direction |
 |---|---|---|
-| Review rounds per reviewed WI (mean, 69 / 21) | 3.3 | ≤ 2 |
-| WIs needing ≥ 6 rounds | 4 of 21 | ≤ 1 in 15 |
-| Late findings from open input spaces | 18 of 43 | ≤ 3 |
-| Findings an instrument would catch | ~6 | 0 |
-| Gate finds code defects after a checkpoint | 6 in WI-834 alone | ≈ 0 |
+| Net queue: rows filed + successors minted − rows closed, per week | to be counted (phase 0) | negative: the queue shrinks |
+| Review rounds per landed WI | 3.3 mean (69 / 21, unreproduced basis) | down |
+| WIs needing ≥ 6 rounds | 4 of 21 | down |
+| Late findings from open input spaces | manifest owed | down |
+| Review findings an instrument would catch | ~6 in the sample | 0 |
+| Full reviews reopening a lane after a checkpoint | 6 in WI-834 | near 0 |
+| Model calls with a recorded usage row | adjudications only | every call |
 
-What this plan deliberately doesn't do: reduce review depth or the reviewer's stance. The 15 genuinely new defects caught in late rounds (WI-834's warm-tick race and interpreter mismatch, WI-902's truncated fence, WI-887's misspelled config value) were worth catching. The aim is to stop paying for the same class over and over.
+What this plan deliberately doesn't do: reduce review depth or the reviewer's stance. Late rounds also caught genuine new defects (WI-834's warm-tick race and interpreter mismatch, WI-902's truncated fence, WI-887's misspelled config value). The aim is to stop paying for the same class over and over.
+
+## Independent review and dispositions
+
+Two reviewers, the same brief, against commit 85a37767a: Claude Sonnet 5.5 (REVISE, 16 findings) and Codex 6.1 Sol at medium effort (REVISE, 18 findings). Each finding was treated as a claim and checked before acting. Every finding was adopted, four of them only in part. The full texts are in [`reviews/sonnet.md`](reviews/sonnet.md) and [`reviews/sol.md`](reviews/sol.md); the shared brief is [`reviews/brief.md`](reviews/brief.md).
+
+| Finding | From | Checked | Disposition |
+|---|---|---|---|
+| "Can only show up at the gate" is false; WI-834's post-approval gate findings were mostly new open-space forms; "15 regressions" unsupported | Sonnet BLOCKER; Sol MAJOR | Confirmed: read 012/016/024/028/035/039 and narrow 030 | Adopted: Q4 answer and item 4 rewritten; item 4 made secondary to item 1 |
+| Narrow briefs carry the Done-when and break-it instructions too | Sol MAJOR; Sonnet MINOR | Confirmed (`reviewer.template.md` is shared) | Adopted: table corrected |
+| Record-at-close without a commit-vs-parent check is a marker convention | Sol BLOCKER | Agreed against the owner rule | Adopted: item 2 adds the commit check; the cell is the validated result |
+| `--allow-lint-fail` is a bypass; whole-tree `trace --strict` is red on trunk; enforce at the hook vs parent | Sol BLOCKER; Sonnet MAJOR | Confirmed: `trace.py --strict` exits 1 (LLR-292) | Adopted: item 6 rebuilt as a commit-time check; no override |
+| The light plan stage is a second path and can build without a passing critique | Sol BLOCKER; Sonnet MINOR | Agreed against the no-fallback rule | Adopted: item 9 uses one path (WI-805's gate) and requires a passing verdict |
+| Item 9 omits WI-834's two pre-build plan reviews, which already asked for the enumerated list | Sol MAJOR | Confirmed (`wi-834-plan/001…:29`) | Adopted: item 9's root cause is now "advice not binding"; it feeds item 1 |
+| Usage totals double-count repeated message records; one agent is a Plan agent | Sol MAJOR; Sonnet MAJOR | Confirmed: deduplicated 151k coordinator, 564k builders, 51k Plan | Adopted: figures corrected (builders ~74%); dedup made an adapter obligation |
+| Harvesting needs exactly-once attribution; WI-800 owns the ledger; nested placement unverified | Sol MAJOR | Confirmed (WI-800 exists) | Adopted: item 8 step 2 under WI-800 |
+| A Gemini route is WI-815's (untested; needs WI-798 and WI-801), not WI-798's | Sol MAJOR | Confirmed | Adopted: item 7 depends on WI-815 plus a verified launch |
+| Item 7's re-cut charter assumes items 5–6 already built | Sonnet MAJOR | Agreed | Adopted: trial uses current charters |
+| Splitting: causal claims, savings arithmetic and the 2,000-line threshold don't follow; "active hours" misnamed | Sol MAJOR ×2; Sonnet MAJOR | Confirmed (medians reproduce; WI-818/822/790 ordinary) | Adopted: answer made descriptive, arithmetic withdrawn, no threshold, metric renamed |
+| Cohort, "late" and the finding classes have no manifest; two counting bases | Sol MAJOR; Sonnet MINOR | Agreed; not reproduced here | Adopted in part: bases labelled, taxonomy marked unreproduced, manifest made a phase-0 task |
+| One owning parser can't replace consumer-specific policies | Sol MAJOR | Agreed (WI-902's Trust section) | Adopted: item 1 step 3 |
+| Deny-on-mention misses wrapper launches and over-denies; read the rationale first | Sol MAJOR; Sonnet MINOR | Confirmed (ruling 025) | Adopted: item 1 step 5 is investigation only |
+| Item 1's relief mostly illusory: fail-open stays blocking; list authorship; construction should be primary | Sonnet MAJOR | Agreed in part: the list sits in the spec, set at scope critique, not by the builder | Adopted in part: construction-first, the reviewer classifies, numeric target dropped |
+| A full review before the checkpoint can't certify the reconciled rows | Sol MAJOR | Agreed | Adopted: the gate over the checkpoint tip stays |
+| Feeding the builder's coverage plan to a full reviewer anchors it | Sonnet MAJOR | Agreed; today's narrow briefs already carry it | Adopted in part: excluded from full rounds; today's practice raised as an owner question |
+| Removing K3 drops the semantic correspondence check; limiting Sol excludes omissions | Sol MAJOR | Agreed | Adopted: item 5 keeps the meaning check |
+| The layer-2 text check would force prose rewrites on non-text edits | Sonnet MAJOR | Agreed | Adopted: added tokens in text cells only |
+| Items 4, 7 and 9 add sessions with no combined budget | Sonnet MAJOR | Agreed | Adopted in part: a yield order and per-WI session tracking, not a fixed number |
+| Simultaneous changes confound trials; no queue-growth metric | Sol MAJOR | Agreed | Adopted: per-lane change record, WI-902 measured alone, net-queue metric added |
+| Twelve WI-834 coverage plans, not ten | Both, MINOR | Confirmed | Corrected |
+| 31 stakeholder needs, not 35; "Approve filing" breaks the decision vocabulary | Sol MINOR | Confirmed | Corrected; owner calls now read "confirm or overrule" |
+| `code_symbol` reader list wrong (not `trace.py`/`gen_trajectory.py`; add `secret_classes` and five tests) | Sonnet MINOR | Accepted (revision 1's grep also matched "module") | Corrected |
+| History-reader count varies with the pattern (21–22) | Sonnet MINOR | Accepted | Corrected |
+| Item 2: say who may write the cell and what a missing cell does | Sonnet MINOR | Accepted | Adopted in item 2 step 1 |
+
+Left unchecked by either reviewer, and still claims: the late-finding taxonomy (18 of 43, ~24 spine-text, ~6 mechanical), the narrow and full wall-clock minutes, the prose census, and where nested sub-agent transcripts land.
