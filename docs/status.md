@@ -25,20 +25,19 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-10d-overnight-coordinator.md](handoff-2026-10-10d-overnight-coordinator.md):
-  three lanes wait on their branches (the session tree kill, at its last
-  amendment sitting and final gate; the review-gate binding, built and owing
-  its spine intent; the dashboard re-judge, claimed, now behind the rubric
-  fix it judges on), the hand-merge walk waits on an owner ruling, a
-  consolidation census waits for the first idle station, and the remaining
-  queue and the headless-leg session prompt are there. The coordinator's
+  [handoff-2026-10-10-leg01-coordinator.md](handoff-2026-10-10-leg01-coordinator.md):
+  no lane is out and no judgement is active; the queue resumes at the
+  configurable final reviewer, the hand-merge walk waits on an owner ruling,
+  the signed-in Codex account offers no Sol (reviews run on Luna pending the
+  owner), and the remaining queue and the headless-leg session prompt are
+  there. The coordinator's
   procedure lives in the `coordinator-cycle` skill; unattended legs run
   through `coordinator-tools/overnight_legs.py`, each writing the next handoff.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 98 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 105 on trunk. The context guard's hooks are machine-local
   (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back

@@ -52,6 +52,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Sol review: render, launch, file.** Never write a review brief by hand.
   1. Render from the lane root:
      `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <sha> --sha <tip> --scope narrow|full --tests <files> --scratch <dated root> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
+     `--tests` takes the files as separate arguments; one quoted string
+     renders as a single bogus path in the brief's pytest line.
      A narrow round adds `--findings <the round file it answers>`; the
      full-lane gate names none and runs from the lane's trunk base. The brief
      names the verdict path under the scratch root.
@@ -122,6 +124,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `"$PY" "$SCRIPTS/coordinator_adjudicate.py" signin` and read
      `signed-in`, `missing` or `unknown`; `signin` itself always exits 0.
      Leave the verdict path absent: `adjudicate` reserves it exclusively.
+     Check the composer's output before appending to the brief: a
+     `compose_lane: REFUSED` line leaves no brief, and an append then makes
+     a brief of the append alone, which the sitting will judge (WI-894,
+     2026-10-10). Chain the append and the launch on the composer with `&&`.
   4. Run it in the background (a headless leg: foreground, §7), because a
      call can outlast the 10-minute tool cap:
      `"$PY" -u "$SCRIPTS/coordinator_adjudicate.py" adjudicate --brief-file <brief> --brief <class> --wi WI-NNN --verdict <path>`
@@ -282,7 +288,11 @@ commit of its own, move it to trunk's tip
 - **Review rollup:** restore `docs/reviews/rollup/` to its trunk version before
   committing the lane. `trunk_step.py --regen` writes it on trunk at landing,
   from the round files the lane brought in.
-- **Messages:** write each to a file and use `git commit -F <file>`. Never
+- **Messages:** cite every review and verdict file by the name read from
+  disk (`ls docs/reviews/<lane>/`), never by the sha you composed it at:
+  the entry point names a verdict after the lane tip at launch, and an amend
+  to correct a landing's message is refused by the open-items freshness
+  check. Write each to a file and use `git commit -F <file>`. Never
   reuse a message file across a lane act and a trunk landing.
 
 ## 4. Rebasing
@@ -396,6 +406,13 @@ lane commit being replayed.
 
 ## 7. Environment and limits
 
+- **Model not offered on the signed-in account:** `400 ... not supported
+  when using Codex with a ChatGPT account` from a current CLI (2026-10-10:
+  0.162.x refused `gpt-6.1-sol`) means the account, not the CLI version.
+  Read the offered models from `~/.codex/models_cache.json` (`models[].slug`,
+  read as UTF-8). Overnight leg 01 reviewed with `gpt-6-luna` at high through
+  `"$TOOLS/luna_review.sh"` (coordinator-2026-10-10 D-017, pending the
+  owner); record the substitution in every lane's decisions record.
 - **Codex usage limit:** wait for the reset the CLI error names. Retain Terra
   and keep review rounds narrow; observed session counts are not a quota.
   Every Codex call runs through the `codex` CLI on `PATH`; the owner switches
@@ -426,6 +443,13 @@ lane commit being replayed.
 
 ## 8. Re-judge and consolidation recipes
 
+- **A disposition whose successor was filed by hand** (WI-894): the verdict
+  drafts none, so `handback.close_adjudication` refuses (`owes_successor`)
+  and the landing's sweep refuses the empty `## Dispositions` (OI-73).
+  Until WI-902 lands, close the row by hand into `docs/work/complete/`
+  citing the verdict, give the existing successor `supersedes`, and record
+  the sweep's refusal; it mints nothing else. A close whose commit range is
+  empty does not compose a disposition brief until WI-901 lands.
 - **Close a lane partial for an owner decision** (OI-70: never park it
   claimed). Save any uncommitted build outside the repository and revert the
   lane first: `handback.close_partial` commits residue as-is with the hook
