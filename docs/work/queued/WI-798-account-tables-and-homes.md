@@ -78,7 +78,8 @@ stated here, under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
 
 **The carriers.**
 
-1. **Account tables** in `docs/agents.toml`: `cli`, `notes`, an optional `env`,
+1. **Account tables** in `docs/agents.toml`: `cli`, `notes`, an optional `env`
+   (composed after the route's env; see the one environment rule below),
    an optional `token_file_variable` naming the environment variable that
    locates the account's token file (never a path, OI-110 (b)), and
    `verified = "<date> <cli version>"`, empty by default (D-011).
@@ -86,8 +87,9 @@ stated here, under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
    (IF-162).
 3. **The account home**, `<user config dir>/project-trajectory/accounts/<ID>/`
    (`%APPDATA%` on Windows; `$XDG_CONFIG_HOME`, else `~/.config`, on POSIX). The
-   provider-owned authentication and session state inside it is never opened by
-   the kit.
+   provider-owned authentication state inside it is never opened by the kit.
+   The one provider-written file the kit reads there is a Codex session
+   rollout (`sessions/**/rollout-*-<thread id>.jsonl`), for telemetry only.
 4. **The token locator variable** a `token_file_variable` names
    (`AGENT_CLAUDE_TOKEN_FILE` for this repo), and the file it names.
 5. **The login-isolation evidence:** the account's `verified` cell, citing the
@@ -105,10 +107,17 @@ stated here, under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
   through a reviewed lane; bootstrap copies `agents.template.toml` to
   `docs/agents.toml` (`bootstrap.py`, `kitlib/bootstrap_manifest.py`), the
   template shipping one commented account example and no qualified entry; the
-  RESYNC migration is a hand edit. A committed file is never read half-written,
-  only malformed: an interrupted edit or merge leaves a file that does not parse
-  or a table missing a key; a failed bootstrap copy exits non-zero and leaves the
-  file absent or as the template's bytes.
+  RESYNC migration is a hand edit. An interrupted edit or merge leaves a file
+  that does not parse or a table missing a key; a failed or interrupted
+  bootstrap copy (`bootstrap.py`, `_write_scaffold_file`) exits non-zero and
+  can leave the file absent, empty, truncated or as the template's bytes. The
+  readers treat every such result by the rules below, whatever produced it: a
+  file that does not parse is a registry error (with routing on, preflight
+  fails, as today); a parseable but incomplete file reads table by table, a
+  table missing a key being a registry error naming it and an account table
+  that is absent leaving its account undeclared, so a qualifier naming it is
+  an enable-list error; an empty `docs/agents.toml` declares no rows and no
+  accounts.
 - **Carrier 3:** the person provisions it (for example
   `CODEX_HOME=<home> codex login`) and the provider CLI writes it. The kit
   creates only a token account's home, empty, because it holds no credential;
@@ -116,7 +125,9 @@ stated here, under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
   deletes any home (D-013). An aborted or timed-out login leaves no
   authentication file, or a partial or expired one; the status command then
   answers "not logged in" (the CLI's structured error) or something
-  undocumented; an unwritable home fails the CLI at launch.
+  undocumented; an unwritable home fails the CLI at launch. The Codex CLI
+  writes its rollouts as it runs: a killed or interrupted run leaves a
+  rollout whose last line is truncated, or none.
 - **Carrier 4:** the owner writes it: `claude setup-token` prints the token,
   the owner keeps it in a file outside every checkout and sets the variable as
   dev-setup says. The kit writes neither. Failed writes: the variable unset, or
@@ -135,7 +146,8 @@ stated here, under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
 
 **What the authority binds to.** A call's authority is the selected entry,
 resolved once per call into: the route row (CLI, template, model, declared
-env); the account (none means the person's ambient login); the effective home,
+env); the account and its declared env (no account means the person's ambient
+login); the effective home,
 derived from the account id and the user config directory alone (no home for
 an ambient entry); the authentication source (the account's token locator if
 it declares one, else the login in its own home); and, for a retained call, the
@@ -171,8 +183,9 @@ checkout-local path or another account.
   is dropped; a qualifier with an empty side, more than one `@`, an undeclared
   account, or an account whose `cli` differs from the route's CLI is an
   enable-list error naming the line, never stripped to the unqualified entry; a
-  qualified entry whose route `env` declares its CLI's home variable is refused,
-  so neither side silently wins (D-012).
+  qualified entry whose route `env` declares its CLI's home variable, or whose
+  route `env` and account `env` declare the same key, is refused, so neither
+  side silently wins (D-012).
 - **Failed:** token problems refuse before launch, naming the variable and
   dev-setup but never the path or the value (today's wording, now per
   account); a status command that fails, times out or answers outside its
@@ -214,8 +227,13 @@ checkout-local path or another account.
   `project-trajectory/scripts/session_service.py` (`prepare_launch`,
   `launch_credential`, `_read_token`, `refuse_competing`, `require_signin`,
   `signin_status`, `route_env`, `keep_warmer` and `KeepWarmer`): one
-  environment rule (the ambient environment, then the route's declared env,
-  then the account's home variables); the token is read only for an account
+  environment rule, composed once per call: the ambient environment, then the
+  route's declared env, then the account's declared env, then the account's
+  home variables. A key that both the route's env and the account's env
+  declare is refused before launch, naming both, so neither silently
+  overrides the other. That one composed environment is the one every
+  consumer of the call uses: the launch, the version and sign-in probes, and
+  a keep-warm ping. The token is read only for an account
   that declares a locator, and the competing-credential refusal applies to that
   account; an ambient entry has no kit-held home and no sign-in gate; keep-warm
   pings only records whose entry is still enabled and whose account resolves.
@@ -226,9 +244,16 @@ checkout-local path or another account.
   differs from the call's, or that lacks `account` (every record written before
   this row), reads as not its own, and the next launch mints, once, as the
   RESYNC entry states. Write and lock rules are unchanged.
-- **The Codex rollout reader**, `project-trajectory/scripts/session_adapters.py`:
-  reads `CODEX_HOME` from the composed launch environment; unchanged, it
-  receives the account home through the one rule.
+- **The Codex rollout reader**, `project-trajectory/scripts/session_adapters.py`
+  (`_codex_home`, `_codex_rollout`, the codex adapter's `context` and
+  `compaction`): telemetry only, never deciding a hold, an act or a gate. It
+  reads exactly the call's thread id's newest rollout under the composed
+  environment's `CODEX_HOME` (the account home for a qualified entry, codex's
+  own default for an ambient one), so one account's rollouts are never read
+  for another's thread. An absent home, rollout or thread id, or an
+  unreadable file, leaves occupancy blank and records no compaction
+  observation; a malformed or truncated line is skipped. These rules are
+  today's and stay unchanged; the row changes only the home it receives.
 - **Readers left unchanged:** `project-trajectory/scripts/coordinator_guard.py`
   (command templates only; an account carries none);
   `project-trajectory/scripts/dispatch.py` (the enable list's presence only; an

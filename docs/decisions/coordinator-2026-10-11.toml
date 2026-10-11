@@ -108,3 +108,10 @@ alternative = "Build round 7 and run a third full-lane gate this leg."
 reversal_cost = "None: resuming is a build round, a narrow review and a fresh full-lane gate."
 why_not_escalated = "The breaker is the leg's standing instruction; resuming the lane is for the owner or the next leg's instruction."
 review = ""
+
+[decision.D-016]
+decided = "WI-798's round-2 scope critique (Sol gpt-6.1-sol, medium) returned two MAJORs on its Trust section, both answered in the spec: the account env is composed after the route's env in the one environment rule (ambient, route env, account env, account home variables), a key both declare is refused before launch, and the one composed environment serves the launch, the version and sign-in probes and keep-warm; bootstrap's failed or interrupted copy can leave the file empty or truncated and readers apply the parse rules whatever produced the file; the Codex session rollout is the one provider-written file the kit reads in a home (telemetry only), with its producer, interrupted-write shape and the rollout reader's four failure arms stated as today's rules. The MINOR (add anchor B3 to the scope rubric) is left to the owner as a rubric change (D-014)."
+alternative = "Rule the account env inert and remove it from the contract."
+reversal_cost = "Low: spec text before the claim."
+why_not_escalated = "Completing a Trust section's carrier and consumer rulings is the coordinator's pre-claim step; the owner confirms or overrules the Ruling (D-009)."
+review = ""
