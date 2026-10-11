@@ -2,11 +2,15 @@
 id = "WI-894"
 title = "dispose: the close recorded at docs/handbacks/WI-828-wi-828.md - cancel / defer / draft a successor / surface an open item (a disposition row never closes early; R3)"
 workstream = "process"
-specref = "docs/work/partial/WI-828-hand-merge-walks-its-commits.md"
+specref = ""
 buildtier = "quick"
 safety_class = "adjudication"
 brief = "disposition"
 +++
+
+## Deliverable
+
+Closed by hand 2026-10-10, as the disposition verdict directs (`docs/reviews/wi-894/001-ADJUDICATE-3cd530b.md`): OUTCOME PARTIAL, no successor drafted. WI-828's partial close is confirmed (none of its Done-when delivered; keep and discard both empty). Its ask continues in two rows filed by hand before this row was minted (decision D-015): WI-892 carries the shared lane-commit walk, and WI-893 the hand-merge path behind the owner's OI-113. Drafting a successor here would have minted a duplicate of WI-893. The verdict's lineage finding is answered on trunk: WI-893 gains `supersedes = "WI-828"`. The mechanical close refuses a disposition with no draft, so this row closes by hand (the missing arm, adopting an existing successor, is filed as its own row), and the sitting's brief was not composed because the composer refuses the report's empty range (filed as its own row; coordinator decision D-022).
 
 ## Context
 
