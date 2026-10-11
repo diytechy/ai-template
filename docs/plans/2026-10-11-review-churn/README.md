@@ -16,6 +16,7 @@ The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) to
 | 3 | Split at birth when deliverables are independent and the WI is large | ruling | none | see the answer below: helps above a size, hurts below it |
 | 7 | A second reviewer from a third family (Gemini), on the first full review and the gate; the coordinator cycle reads `review_rounds` | ruling + trial | waits on WI-798's routes | moves discovery into round 1; adds coverage on a separate quota |
 | 8 | Record usage for every model call: Sol and Terra through the session service; sub-agents from transcripts | small build | ~1 lane | today ~63% of a leg's Claude output (builders) is unrecorded; makes the re-measure a query |
+| 9 | A reviewed plan before the build, decided at mint by a scope-critique anchor; a light plan stage until WI-805 | ruling + procedure | hours, then ~15–20 min per planned row | reactive per-round plans (10 in WI-834); writes item 1's closed list before code |
 
 Order is cheapest-and-surest first. Numbers come from one analysis pass over `docs/reviews/`, the handoffs and `docs/log.d/`; treat them as claims at the precision of a three-day sample.
 
@@ -268,12 +269,37 @@ Alongside: **one judge per row.** The adjudicator's sitting is the sole judge of
 - Confirm routing Sol and Terra through the session service.
 - Confirm recording sub-agent usage from transcripts through the one writer.
 
+## 9. A reviewed plan before the build, decided at mint
+
+**Evidence.** The kit has two planning layers, and neither runs in the coordinator legs. **Dual-plan decomposition** (`planmode = "dual"`, `PROCESS_OPTIONS.md` "Dual-plan decomposition") breaks a goal into WIs: two planners from different families, a `plan_coverage.py` pre-pass, one cross-critique round against `docs/rubrics/plan-decomposition.md`, and an arbiter that selects and ports. Its engine exists (`plan_runner.py`, `agent_loop --dual-plan`), but `dispatch.py` never picks dual rows up: a regression since the old dispatcher was deleted, recorded in `docs/plans/2026-10-04-planning-before-build-research.md`, with WI-813 queued to fix it. Its one round (DP-001, July) ended with the arbiter changing nothing. **Per-item single plan** (`planmode = "single"`: plan, gate, critique, at most one revision, plus a replan after two CHANGES-REQUESTED in a row) is designed (WI-788) and filed as WI-805, queued behind WI-804 (which needs WI-801 and WI-803) and WI-799. Today the builder plans inside its own session, and the only review before a claim is the scope critique, which judges the spec, not a build plan.
+
+**Root cause.** Planning happens after review instead of before code. WI-834's ten `PLAN-r1…r10` files in `docs/reviews/wi-834/` are coverage plans answering each round's findings: ten reactive plans in place of one reviewed plan up front. The `planmode` trigger exists ("one declared trigger at filing time, like BuildTier — never a vibe call mid-loop"), but criteria exist only for dual, no queued row sets it, and the scope critique never asks.
+
+### Proposal
+
+1. **Scope critique decides the planning need.** A new anchor, S4 "Planning need", answers none / single / dual from stated criteria and records `planmode` in the spec before the claim. **single** when the expected code change is over ~1,000 lines (the size band where review rounds double, item 3's data), the row carries a `## Trust` section, or it touches two or more script families or IF seams; **dual** only on the existing design-shaping applies-when; **none** when the diff fits in one sentence or a cheap test fully specifies it.
+2. **The plan carries item 1's closed coverage list.** A reviewed plan before code is where the enumerated, fail-closed input list gets written, along with the unchanged code the change could break (item 4's blast radius). The code reviewer then reviews against it. An open-ended promise is caught for the price of one plan review (~15–20 min) instead of rounds of code review.
+3. **A light version now, not after WI-805's chain.** In the coordinator cycle, for a `single` row: the builder's first output is a `Plan-WI` table against the Done-when, in the format `plan_coverage.py` already checks. One fresh Sol critique of the plan, grounded in the Done-when and the Trust section, then one revision, then the build. WI-805 later replaces the light version with the loop's own path and adds the replan on failure. The light version is recorded as that interim so it doesn't become a second permanent path.
+4. **Rule on dual.** Either fix its pickup (WI-813), or retire the arbiter step and keep only the cross-critique, which the research and DP-001 both say does the useful work. An engine nothing dispatches is the kind of dead path the no-fallback rule argues against.
+
+**Trade-off.** A plan stage adds ~15–20 min and one Codex session to every `single` row. The research note warns that a bad plan does worse than none, and that a reviewer told to find gaps always finds some. Grounding the critique in the Done-when and capping it at one revision is what keeps the stage from becoming its own churn loop.
+
+**Measure.** For `single` rows against comparable unplanned ones: review rounds, findings first raised in round 2 or later, and how many late findings the plan's coverage list already named (the plan should prevent those).
+
+**Downstream.** Steps 1–3 are this-repo rubric and procedure. `planmode` already ships as a spec key. Step 4 either lands a queued fix or removes a shipped option (a RESYNC entry).
+
+**Owner calls:**
+
+- Confirm S4 and its criteria.
+- Confirm the light plan stage as an interim until WI-805.
+- Fix dual's pickup (WI-813), or retire its arbiter.
+
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
-| 0 · rulings | Items 1 (S3, one-reader Trust, coverage notes), 2 (record-at-event rule, WI-902 reshape), 3 (split rule), 4 (pick the trial), 5's open questions (IF/CMP scope, one judge), 7 (third-family reviewer, charters), 8 (one path for usage); 5's core rule is already ruled. No code. | Owner |
-| 1 · cheap builds | Item 6 lint gate (first row). Item 8 usage recording (second row, so the trials below are measured). Rubric and skill edits for 1, 2, 3, 5. Reviewer-template clause for 1. | Coordinator lanes |
+| 0 · rulings | Items 1 (S3, one-reader Trust, coverage notes), 2 (record-at-event rule, WI-902 reshape), 3 (split rule), 4 (pick the trial), 5's open questions (IF/CMP scope, one judge), 7 (third-family reviewer, charters), 8 (one path for usage), 9 (S4 planning need, the light plan stage, dual's fate); 5's core rule is already ruled. No code. | Owner |
+| 1 · cheap builds | Item 6 lint gate (first row). Item 8 usage recording (second row, so the trials below are measured). Rubric and skill edits for 1, 2, 3, 5, 9 (S4 and the light plan stage). Reviewer-template clause for 1. | Coordinator lanes |
 | 2 · trial | Item 4 on the next two lanes. WI-902 reshaped and resumed as the first lane under the new rules. Item 7 joins the trial once WI-798's Gemini route works. | Coordinator |
 | 3 · structural (last) | Item 5: schema removal, derived index and batch act, plus the commit-time prose check. Item 2 history-reader audit. The WI-834 deny-on-mention candidate, if the audit of real use supports it. | Coordinator lanes |
 | 4 · re-measure | Re-run the same churn analysis over the next 15 landed WIs and compare against the baseline below. | Coordinator / analysis agent |
