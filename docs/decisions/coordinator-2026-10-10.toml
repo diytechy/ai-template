@@ -137,3 +137,17 @@ alternative = "Amend the scope-critique rubric inside WI-823's pre-claim answer,
 reversal_cost = "Low: filing the row later costs nothing."
 why_not_escalated = "It changes no work item's scope and holds no row."
 review = ""
+
+[decision.D-020]
+decided = "Rows the machinery mints as adjudications whose scope the minting defines (the consolidation census row WI-900, and WI-894, the disposition of WI-828's partial close) are claimed without a separate Sol/Luna scope critique: the census fixes the cluster and its digests, and a disposition's outcomes are the closed set R3 names, so no deliverable or trust boundary is the row author's to choose. The overnight prompt's census recipe (mint, claim, sit, land) names no critique."
+alternative = "Run a scope critique on every minted adjudication row before its claim, as for authored rows."
+reversal_cost = "Low: a critique can be run on any later minted row; these two rows' sittings are recorded."
+why_not_escalated = "No row scope is authored, so a critique has nothing to judge but the minting machinery, which its own tests cover."
+review = ""
+
+[decision.D-021]
+decided = "WI-892's scope critique closed at round 1: its only finding was again a proposed new rubric anchor B3 (scopes that move behaviour name the invariants they preserve), a finding against docs/rubrics/scope-critique.md that D-019 already routes to the owner as a follow-up topic. The critic found WI-892 one deliverable, landing before WI-893, WI-833, WI-850 and WI-851, and its trust question moot (a behaviour-free move adds no authority)."
+alternative = "Amend the scope-critique rubric now, or re-run the critique until the critic stops proposing the anchor."
+reversal_cost = "Low: the rubric row can be filed at any time."
+why_not_escalated = "It changes no row's scope; the owner sees the recurring proposal in the handoff."
+review = ""
