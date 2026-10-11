@@ -3,12 +3,16 @@ id = "WI-905"
 title = "adjudicate: LLR-045, LLR-140, LLR-207, LLR-262, LLR-269, LLR-270, LLR-305, SR-154, SR-156, TC-205, TC-266, TC-322 - approved/routed cell(s) amended on merged trunk b3ef428..c10cce0 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-154", "SR-156", "SR-222", "SR-227", "SR-238"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-045", "LLR-140", "LLR-207", "LLR-262", "LLR-269", "LLR-270", "LLR-305", "SR-154", "SR-156", "TC-205", "TC-266", "TC-322"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan §4.2; owner-agreed close, 2026-10-03). WI-887's in-lane sittings judged every row named here: sitting 005 (`docs/reviews/wi-887/005-ADJUDICATE-adc244d.md`) re-attested SR-154 and SR-156 (act seq 107); sitting 006 (`docs/reviews/wi-887/006-ADJUDICATE-4c9a427.md`) re-attested LLR-045, LLR-140, LLR-207, LLR-262, LLR-269, LLR-270, LLR-305, TC-205, TC-266 and TC-322 (act seq 108) and first-approved SR-239 and TC-351 (act seq 109); sitting 009 (`docs/reviews/wi-887/009-ADJUDICATE-2310bdc.md`) re-attested LLR-270, TC-205 and TC-266 again with SR-239 and TC-351 (act seq 110); act seq 111 re-anchored a traced-only code_symbol change. At the landing c10cce0b the system, low-level and test registries are byte-equal to their approved snapshots under docs/archive/last_approved/.
 
 ## Context
 
