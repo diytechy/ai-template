@@ -2,7 +2,7 @@
 id = "WI-901"
 title = "A disposition brief composes for a close whose commit range is empty"
 workstream = "process"
-sr_refs = ["SR-208"]
+sr_refs = ["SR-144"]
 specref = "project-trajectory/scripts/adjudicate_brief.py"
 buildtier = "quick"
 safety_class = "ordinary"
@@ -30,7 +30,7 @@ alone; the adjudicator read the report and the repository itself.
   a range git cannot resolve still refuses, naming git's failure.
 - Tests: an empty range composes and states it is empty; an unresolvable
   range refuses; a non-empty range is unchanged.
-- The rows the change makes untrue (LLR-246's chain) state it and pass
+- The rows the change makes untrue (LLR-167's chain; the change amends neither SR-208 nor LLR-246, per WI-903's census note) state it and pass
   adjudication.
 - Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit (a shipped script changes).

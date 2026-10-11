@@ -10,3 +10,10 @@ alternative = "Rewind the lane and have the adjudicator take the act after the c
 reversal_cost = "Low: an overrule restores the act-110 copy and re-sits LLR-270 for a traced-cell re-anchor."
 why_not_escalated = "A traced-only change owes no sitting; the copy blesses no requirement text."
 review = ""
+
+[decision.D-002]
+decided = "WI-858's scope critique (Sol gpt-6.1-sol, medium, round 1) returned two MAJORs: S1, the coordinator_guard lock-site check is an independently landable deliverable with no recorded order or joint-landing decision; S2, durable bookkeeping and release markers give files authority over lease holds and retirement, and the spec has no Trust section. Answering S2 is a design of the lockless bookkeeping protocol (every carrier's producer, write route and failed-write shape, every consumer, a ruling per consumer), which this leg could not finish inside its occupancy budget; WI-858 is left queued, unclaimed, for the next leg to write its Trust section and settle S1 before the claim. WI-901 (queue row 4; WI-895 at row 3 has landed) is claimed ahead of it, its critique approved at round 1. WI-901's sr_refs were re-anchored to SR-144 and its Done-when to LLR-167's chain before the critique, per WI-903's census note."
+alternative = "Hold every later row until WI-858's Trust section is written and critiqued, or write a provisional Trust ruling now without reading the store protocol through."
+reversal_cost = "Low: WI-858 stays first in the next leg's queue; WI-901 is independent of it."
+why_not_escalated = "The Trust ruling goes to the owner for confirmation once written; skipping one unclaimable row to the next ready one changes no scope."
+review = ""
