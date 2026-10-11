@@ -45,3 +45,10 @@ alternative = "Run a fourth Sol round on WI-902 before its claim."
 reversal_cost = "Low: the lane's full-lane review reads the spec; a gap found there is answered in the lane."
 why_not_escalated = "A MINOR answered as its own text proposed changes no scope; the skill asks that each critique be answered before the claim, which it is."
 review = ""
+
+[decision.D-007]
+decided = "WI-798 is not claimed this leg. Its scope critique (Sol gpt-6.1-sol, medium, round 1) returned three MAJORs: S1, the spec names no landing order or keep-together decision for its account tables, the per-family home's retirement, the route@account cooldown key and the adjudicator-authentication move; S2, it has no Trust section although route and account selection authorize launches and the account home carries the adjudicator's sign-in (carriers, producers, write routes, failed-write shapes, every consumer by path, a ruling per consumer, the binding); B3 (a proposed new rubric anchor), the Windows two-login check and the live sign-in migration need owner-provisioned credentials and are not separated from the unattended deliverables, with no stated hold or partial disposition when the isolation result is missing. The leg then reached the Codex usage limit, so the next leg writes the order, the Trust section and the owner-dependent split before re-critiquing."
+alternative = "Write WI-798's Trust section in this leg after the limit, without a critique to check it."
+reversal_cost = "Low: WI-798 stays first among unclaimed rows."
+why_not_escalated = "Settling scope before a claim is the coordinator's step; the Trust ruling goes to the owner once written."
+review = ""

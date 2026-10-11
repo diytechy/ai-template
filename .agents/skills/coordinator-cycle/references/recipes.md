@@ -32,7 +32,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   the coverage plan before fixes and the stop-and-file rule for consolidation
   outside the spec's surface in every build brief. Re-run the builder's
   claimed results before committing: one builder has reported a smoke result
-  it never produced. Brief a hook's coverage as reading the command word the
+  it never produced. In a headless leg, tell every builder to run its
+  commands in the foreground: one that backgrounded its pytest run returned
+  "waiting" with no result (WI-902, 2026-10-11). Resume it with SendMessage;
+  its report then arrives as a task notification while you keep working.
+  Brief a hook's coverage as reading the command word the
   way the shell grammar does, from a list you give; a brief asking for every
   form that gets past the hook was cut off by a safety classifier (WI-834).
 - **Terra, first turn:**
@@ -356,10 +360,13 @@ lane commit being replayed.
 
 - Write UTF-8 only, with LF line endings. Terra has left CRLF and cp1252
   dashes; normalize before any snapshot. On 2026-10-10 every Terra turn
-  rewrote whole registries CRLF: count `` in each touched file and
+  rewrote whole registries CRLF: count `
+` in each touched file and
   normalize before every commit.
-  Count CR bytes with Python (`open(p, "rb").read().count(b"")`): in Git
-  Bash `grep -c $''` loses the pattern and counts every line, which read
+  Count CR bytes with Python (`open(p, "rb").read().count(b"
+")`): in Git
+  Bash `grep -c $'
+'` loses the pattern and counts every line, which read
   as a CRLF rewrite on 2026-10-10 (c) when the files were LF.
 - Re-read every whole cell a splice touches. Spliced sentences have come back
   without a verb.
