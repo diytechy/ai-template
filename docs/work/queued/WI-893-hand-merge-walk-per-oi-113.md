@@ -5,6 +5,7 @@ workstream = "process"
 sr_refs = ["SR-140"]
 specref = "docs/requirements/open-items.toml#OI-113"
 needs = ["OI-113", "WI-892"]
+supersedes = "WI-828"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
