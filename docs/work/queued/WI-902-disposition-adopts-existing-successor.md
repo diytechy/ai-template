@@ -53,7 +53,8 @@ lane's spec, committed or not) is never closed on: the close runs only after
 a sitting that exited 0, and the coordinator reverts a failed sitting's
 writes before the re-sit. A malformed block, or a half-written section (a
 git-committed file cannot be read half-written, only malformed), is a parse
-refusal at every consumer below. No consumer repairs or guesses a block.
+refusal at every consumer below except the historical absorption reader,
+which keeps its own rule (its bullet). No consumer repairs or guesses a block.
 
 **What the authority binds to.** An adoption names only the successor. The
 row it disposes is never read from the adjudicator's text: it is read from
@@ -108,6 +109,18 @@ and `adjudication_review_owed`):
   (it mints and amends nothing), and acceptance stays the close's and the
   sweep's. A malformed section or an unreadable spec keeps today's
   fail-toward-review rule.
+- **The historical absorption reader**
+  (`project-trajectory/scripts/consolidate.py:_enacted_supersedes`, read
+  through `enacted_absorbs`, `judged_absorbed` and
+  `consolidation_successors` by the census's `_seed_pairs` and `clusters`,
+  and by `project-trajectory/scripts/adjudicate_brief.py:_prior_lines`):
+  unchanged. It reads only a `consolidate` outcome's drafts' `supersedes`,
+  and an adoption carries no `supersedes`, so an adoption never counts as an
+  absorption. It keeps its draft-only rule for bad input: an absent
+  section enacted nothing, and a block that does not parse is skipped (the
+  close and the mint refuse a malformed verdict, so no absorption rode on
+  one); since a consolidation close refuses an adoption (above), no
+  consolidation verdict on trunk carries one.
 - **The successor sweep for Done-when verdicts** (`intake._successor_drafts`):
   unchanged; a SUCCESSOR Done-when verdict still needs a draft.
 

@@ -38,3 +38,10 @@ alternative = "Let the adjudicator name both the successor and the disposed row;
 reversal_cost = "Low: nothing is built yet."
 why_not_escalated = "The skill routes every Trust ruling to the owner for confirmation or overrule after the fact."
 review = ""
+
+[decision.D-006]
+decided = "Both rows are claimed on their scope critiques as answered, without a fourth round for WI-902: WI-858's round 3 approved with 0 findings; WI-902's round 3 returned one MINOR (the Trust section omitted consolidate._enacted_supersedes, the historical absorption reader), answered in the spec exactly as the finding allowed (the draft-only reader is preserved and named, and the blanket refusal statement is qualified), with no change of design."
+alternative = "Run a fourth Sol round on WI-902 before its claim."
+reversal_cost = "Low: the lane's full-lane review reads the spec; a gap found there is answered in the lane."
+why_not_escalated = "A MINOR answered as its own text proposed changes no scope; the skill asks that each critique be answered before the claim, which it is."
+review = ""
