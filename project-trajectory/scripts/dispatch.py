@@ -135,19 +135,21 @@ def _round_owed(root, branch):
     COMPOSED FROM THE TWO READERS THAT ALREADY OWN THE QUESTION, never a third
     copy of the rule. `integrate._verdict_gate` is the authority on whether the
     slot would refuse at all — it holds the reviewer dial, the no-merged-outcome
-    arm, the adjudication waiver and the legacy-rollup migration window, and a
-    coordinator that resumed past any of those would spend a worker session
-    against a slot that was already satisfied (and break the hand-compiled
-    rollup recovery an operator is using today). `kitlib.verdict.phases_owed`
-    at the governing identity is the NARROWING: it answers which declared
-    phases were never DRAWN at this tree, which is exactly the refusal class a
+    arm and the adjudication waiver, and a coordinator that resumed past any of
+    those would spend a worker session against a slot that was already
+    satisfied. `kitlib.verdict.phases_owed` at the governing identity, over the
+    SAME evidence the gate reads (the fresh full-lane rounds from the lane's
+    claim base), is the NARROWING: it answers which declared phases have no
+    verdict at this tree — never drawn, drawn only narrow, or whose last round
+    file is invalid evidence (WI-884) — which is exactly the refusal class a
     worker can discharge. A refusal with nothing owed is one of the gate's
     other three answers — a dissent, a reroll-until-green, or a contradicted
     attestation — and none of them is fixed by drawing another round.
 
     Fails toward NOT owed at every unreadable step: git that cannot name the
-    tree leaves the gate's own fail-closed refusal to stop the run, where
-    resuming would spend a session on a lane no round could clear.
+    tree, or a lane with no readable claim commit, leaves the gate's own
+    fail-closed refusal to stop the run, where resuming would spend a session
+    on a lane no round could clear.
     """
     outcomes, unresolved = integrate.branch_outcomes(root, branch)
     if unresolved or not integrate._verdict_gate(root, branch, outcomes):
@@ -157,11 +159,11 @@ def _round_owed(root, branch):
     except ValueError:
         return False  # a malformed dial is the gate's fail-closed stop, not a resume
     want = kverdict.governing_identity(root, branch)
-    code, base = ac.git(root, "merge-base", "HEAD", branch)
-    if want is None or code != 0 or not base.strip():
+    claim, _readable = ac.claim_base(root, branch)
+    if want is None or claim is None:
         return False
     entries = kverdict.branch_entries(
-        root, branch, base.strip(), want, score_reviews.parse_verdict
+        root, branch, claim, want, score_reviews.parse_verdict
     )
     return bool(kverdict.phases_owed(entries or (), required))
 

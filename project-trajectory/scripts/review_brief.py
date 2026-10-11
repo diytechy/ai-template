@@ -103,7 +103,6 @@ import agent_brief  # noqa: E402  (path set above; the script-sibling idiom)
 import agent_common  # noqa: E402
 import prompts  # noqa: E402
 import score_reviews  # noqa: E402
-from kitlib import sitting as ksitting  # noqa: E402
 from kitlib import verdict as kverdict  # noqa: E402
 from kitlib.config import utf8_console  # noqa: E402
 
@@ -350,25 +349,15 @@ def render_critique(root, wi, rubric, verdict):
 def review_refusal(text, sha):
     """Why `text` is not a review of `sha` in the kit's verdict format, or None.
 
+    The rule is `kitlib.verdict.filing_refusal`, which the merge gate's round
+    reader applies too (WI-884): a committed round it refuses is invalid
+    evidence there, so what is never filed here never clears the gate either.
+    This boundary binds the scorer's parser, which reads the VERDICT line
+    through the shared review-line reader (WI-870).
+
     Implements: SR-235, LLR-313
     """
-    lines = [ln for ln in text.splitlines() if ln.strip()]
-    if not lines or lines[0].strip() != "Reviewed: " + sha:
-        return "its first line is not `Reviewed: {}`".format(sha)
-    # The one reader of a review's VERDICT line, which the merge gate's round
-    # reader uses too (WI-870): what it refuses is never filed.
-    machine, why = ksitting.review_line(text)
-    if why:
-        return why
-    label, count = machine
-    found = len(score_reviews.parse_verdict(text).findings)
-    if count != found:
-        return "its VERDICT line says findings={} but it carries {}".format(
-            count, found
-        )
-    if label == "CHANGES-REQUESTED" and not found:
-        return "it requests changes but names no finding"
-    return None
+    return kverdict.filing_refusal(text, sha, score_reviews.parse_verdict)
 
 
 def round_path(root, lane, phase, sha, scope):

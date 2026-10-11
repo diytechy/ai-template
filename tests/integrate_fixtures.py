@@ -197,6 +197,50 @@ def _rev(root, ref):
     return _git(root, "rev-parse", ref).strip()
 
 
+def claim_lane(root, branch, wid="WI-401", slug="widget", when=None):
+    """Queue `wid`, then commit its claim on the checked-out trunk exactly as
+    `integrate.claim` records it (the spec moved from `queued/` into
+    `active/<branch>/` under `agent_common.claim_subject`); return the claim
+    commit. The merge gate binds a full-lane review round to it (WI-884)."""
+    queued = write_spec(root, "queued", wid, slug)
+    _commit(root, "queue {}".format(wid), when=when)
+    active = root / "docs" / "work" / "active" / branch / queued.name
+    active.parent.mkdir(parents=True, exist_ok=True)
+    queued.rename(active)
+    _commit(root, integ.ac.claim_subject([wid], branch), when=when)
+    return _rev(root, "HEAD")
+
+
+def logged_full_round(lane, train, text, when, ordinal=3):
+    """One FULL-LANE review round on the checkout `lane` (on branch `train`),
+    in the loop's two commits: the reviewer's verdict (opening `Reviewed:`
+    with the head it read), then the coordinator's session log recording its
+    range, its full scope from the lane's claim base, and a minted session."""
+    head = _rev(lane, "HEAD")
+    rnd = lane / "docs" / "reviews" / train
+    rnd.mkdir(parents=True, exist_ok=True)
+    name = "{:03d}-REVIEW-A-{}.md".format(ordinal, head[:7])
+    (rnd / name).write_text(
+        "Reviewed: {}\n\n{}".format(head, text), encoding="utf-8", newline="\n"
+    )
+    _commit(lane, "review: round {}".format(ordinal), when=when)
+    claim = integ.ac.claim_base(lane, train)[0]
+    log = (
+        lane
+        / "docs"
+        / "iteration"
+        / "{}-{:03d}-20260101-000000.log".format(train, ordinal)
+    )
+    log.parent.mkdir(parents=True, exist_ok=True)
+    log.write_text(
+        "# phase: REVIEW-A\n# commits: {}..{}\n# review-scope: full {}..{}\n"
+        "# session-gen:\n".format(head, _rev(lane, "HEAD"), claim, head),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(lane, "telemetry: session {}-{:03d}".format(train, ordinal), when=when + 1)
+
+
 def refused(root, branch, bar):
     """Drive the merge slot on `branch` and return its refusal, having
     asserted that NOTHING MERGED: trunk's HEAD is the commit it was before the

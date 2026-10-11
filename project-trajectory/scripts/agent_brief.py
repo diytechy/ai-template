@@ -27,6 +27,7 @@ try:
     import agent_session
     import prompts
     import schedule
+    import score_reviews
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -35,6 +36,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_session
     import prompts
     import schedule
+    import score_reviews
     import spine_carrier
 
 from kitlib import decisions as kdecisions
@@ -465,12 +467,20 @@ def phase_tier(phase, tier_map):
     return DEFAULT_PHASE_TIER.get(phase, "strong")
 
 
-def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=None):
-    """The redacted reviewer prompt for a review phase: the per-phase prompt-map
-    template (a FILE the operator wired) if present, else the embedded
-    REVIEWER_PROMPT — with {verdict} resolved to the path the reviewer must
-    write. Never carries the implementer's self-assessment (redaction by
-    construction).
+def reviewer_prompt(prompt_templates, phase, verdict_path, *, root, worker, base, sha):
+    """The loop's FULL-LANE review brief, the round a merge is judged on: the
+    per-phase prompt-map template (a FILE the operator wired) if present, else
+    the embedded REVIEWER_PROMPT — with {verdict} resolved to the path the
+    reviewer must write. Never carries the implementer's self-assessment
+    (redaction by construction).
+
+    STRICT, like the narrow brief (WI-884): filled through `prompts.fill`, so a
+    template that cannot carry the round's facts raises `prompts.PromptError`
+    rather than sending a brief with no binding in it. `{round_facts}` states
+    the full-lane range from `base`, the lane's recorded claim base, to `sha`
+    (`full_scope_line`), which is what the merge gate binds the verdict to;
+    the reading scope stays three dots against the CURRENT trunk, so a station
+    refresh never re-feeds the reviewer trunk's own merged work.
 
     C7 (docs/plans/2026-08-30-stall-guard-plan.md): the brief's reading scope
     renders per repo — `{trunk}` (the primary checkout's branch, the
@@ -491,27 +501,108 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
     either. An override file without the slot still renders unchanged —
     `str.replace` on an absent needle is a no-op.
 
-    WI-852 adds `{round_facts}`, which only an attended launcher fills
-    (`review_brief.render_review`): the loop renders it empty, so the brief
-    it sends ends where it always did. It also adds `{head}`, the reading
-    scope's end, which the loop renders `HEAD` as before and an attended
-    render fills with the reviewed commit.
+    WI-852 added `{round_facts}` and `{head}`, the reading scope's end, which
+    this brief fills with the reviewed commit.
 
     Implements: SR-154, LLR-045
     """
-    base = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
-    text = (
-        base.replace("{verdict}", str(verdict_path))
-        .replace("{wis}", reviewed_rows_block(worker))
-        .replace("{round_facts}", "")
-        .replace("{head}", "HEAD")
+    base_text = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
+    values = {
+        "verdict": str(verdict_path),
+        "trunk": trunk_name(root, worker),
+        "head": sha,
+        "process_doc": process_doc_path(root),
+        "scripts": scripts_dir(root),
+        "wis": reviewed_rows_block(worker),
+        "round_facts": _ROUND_FACTS + full_scope_line(base, sha),
+    }
+    text = prompts.fill(prompts.REVIEWER, base_text, values)
+    return text + done_when_flag_block(root, worker)
+
+
+# The `{round_facts}` opener both loop briefs share: the loop is the launcher.
+_ROUND_FACTS = "\n\nROUND FACTS (stated by the coordinator that rendered this brief):\n"
+
+
+def full_scope_line(base, sha):
+    """The FULL-LANE round's range sentence: the whole lane from its recorded
+    claim base to `sha`, read fresh, and the `Reviewed:` opener the filing
+    check (`kitlib.verdict.filing_refusal`) requires of a verdict the merge
+    gate counts. A lane with no readable claim commit renders its base `?`:
+    the round still steers iteration, and the gate holds on it.
+
+    Implements: SR-154, LLR-045
+    """
+    return (
+        "- Range `{}..{}`: a FULL-LANE round, the whole lane from its claim base "
+        "to its tip, read fresh: it answers no earlier findings, and it is the "
+        "review this lane's merge is judged on. The verdict file's first line "
+        "is exactly `Reviewed: {}`.".format(base or "?", sha, sha)
     )
-    if root is not None:
-        text = text.replace("{process_doc}", process_doc_path(root))
-        text = text.replace("{trunk}", trunk_name(root, worker))
-        text = text.replace("{scripts}", scripts_dir(root))
-        text += done_when_flag_block(root, worker)
-    return text
+
+
+def review_template_refusals(prompt_templates):
+    """The preflight failures for operator review templates that cannot carry
+    a loop round's facts: a `--prompt-map` REVIEW entry must declare exactly
+    the slots of the shipped reviewer template, because both loop briefs fill
+    it strictly (`reviewer_prompt`, `narrow_reviewer_prompt`). Refused before
+    iteration 1, never by a session mid-run (WI-884). With the shipped
+    template itself unreadable there is nothing to compare against, and
+    `prompts.preflight` already names that failure.
+
+    Implements: SR-154, LLR-045
+    """
+    try:
+        want = prompts.slots(_kit_prompt(prompts.REVIEWER))
+    except prompts.PromptError:
+        return []
+    return [
+        "prompt-map [{}]: a review template must declare exactly the slots {} "
+        "(it declares {})".format(
+            ph,
+            ", ".join(sorted(want)),
+            ", ".join(sorted(prompts.slots(text))) or "none",
+        )
+        for ph, text in sorted(prompt_templates.items())
+        if ph in kverdict.REVIEW_PHASES and prompts.slots(text) != want
+    ]
+
+
+def review_round_brief(
+    prompt_templates, phase, verdict_path, *, root, worker, sha, narrow_from
+):
+    """`(brief, scope)` for one loop review round of `sha`: the NARROW brief
+    over the rework since the reviewed commit a CHANGES-REQUESTED round left
+    (`narrow_from` = (that sha, its round files)), else the FULL-LANE brief
+    from the lane's claim base (`worker["claim"]`). `scope` is the value the
+    session log records (`kitlib.verdict.format_scope`), the coordinator's
+    statement of which round this was; only a full one can gate a merge.
+    Every round is a fresh session: nothing here resumes a reviewer.
+
+    `sha` is expanded to the full commit first: the loop names its reviewed
+    head in short form, and the brief's `Reviewed:` opener and the recorded
+    scope both bind the full one, which is what the filing check compares. A
+    sha git cannot expand is kept as given in both, so the two never differ.
+
+    Implements: SR-154, LLR-045
+    """
+    code, out = agent_common.git(root, "rev-parse", "--verify", "--quiet", sha)
+    sha = out.strip() if code == 0 and out.strip() else sha
+    common = dict(root=root, worker=worker, sha=sha)
+    if narrow_from:
+        base, findings = narrow_from
+        brief = narrow_reviewer_prompt(
+            prompt_templates,
+            phase,
+            verdict_path,
+            base=base,
+            findings=findings,
+            **common,
+        )
+        return brief, kverdict.format_scope(kverdict.NARROW, base, sha)
+    claim = (worker or {}).get("claim")
+    brief = reviewer_prompt(prompt_templates, phase, verdict_path, base=claim, **common)
+    return brief, kverdict.format_scope(kverdict.FULL, claim, sha)
 
 
 def narrow_scope_line(base, sha, findings):
@@ -554,8 +645,7 @@ def narrow_reviewer_prompt(
         "process_doc": process_doc_path(root),
         "scripts": scripts_dir(root),
         "wis": reviewed_rows_block(worker),
-        "round_facts": "\n\nROUND FACTS (stated by the coordinator that "
-        "rendered this brief):\n" + narrow_scope_line(base, sha, findings),
+        "round_facts": _ROUND_FACTS + narrow_scope_line(base, sha, findings),
     }
     text = prompts.fill(prompts.REVIEWER, base_text, values)
     return text + done_when_flag_block(root, worker)
@@ -984,7 +1074,134 @@ def lane_completion(root, base):
     return built, built - claimed_on_branch(root)
 
 
+def review_verdict_trailer(root, merged, worker):
+    """The round's `Review-Verdict:` line, or None when there is nothing to
+    attest (no merged verdict, or git cannot name the tree).
+
+    THE TREE IS THE ONE THE TWO READERS KEY ON — `governing_identity` at the
+    lane's BRANCH, the same call `review_owed_by_evidence` and
+    `integrate._verdict_gate` make. It was `tree_identity(root, "HEAD")`, which
+    is right only while no station refresh sits below the tip: the fold drops
+    `docs/reviews/`, so the round file the reviewer just added does not move the
+    identity, but the refresh does, and the peel is what the readers apply to
+    it. Stamping the unpeeled value filed the attestation under a key
+    `integrate._round_refusal` never looks up, so the cross-check silently stood
+    down on exactly the branches that had been refreshed (REVIEW-A round 015).
+    The fail-direction was safe — a trailer is never an accept path — but a
+    third place choosing its own rev is the finding IF-175's contract names.
+
+    WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own
+    commit attests nothing the round file did not already claim; what makes this
+    one evidence is the same thing that makes the session log evidence — it is
+    written by the process that ROUTED the round, after the round completed."""
+    if not worker:
+        return None
+    return kverdict.format_branch_trailer(
+        root, worker["train"], worker.get("claim"), merged, score_reviews.parse_verdict
+    )
+
+
+def review_owed_by_evidence(root, worker, required=1):
+    """COMMITTED evidence of which review PHASES are owed: the declared phases
+    with no round verdict naming the branch's current NON-RECORD TREE, once
+    every assigned WI carries its trailer on the branch. Empty means none —
+    the falsey answer every caller's `not ...` already read. This is what a
+    resumed worker trusts (a worker reads committed facts, never run-state) —
+    the out/review-owed marker only adds advisory fields. A verdict for a
+    phase, of either outcome, means that phase was served; a rework commit
+    changes the tree and owes the whole set again.
+
+    A PHASE LIST AND NOT A FLAG, because the merge slot demands EVERY declared
+    phase (round 022) and the phase queue is in-memory run state: a run that
+    died between REVIEW-A and REVIEW-B left REVIEW-A served, this derivation
+    answered "nothing owed" on the strength of it, and the lane wedged against
+    a gate refusing the phase nobody would draw. Handing back the missing
+    phases lets `resume_owed_round` redraw exactly those — never a phase
+    already served at this identity, whose redraw the gate would read as a
+    reroll-until-green. `kitlib.verdict.phases_owed` holds the rule.
+
+    THE SAME DEFINITION THE MERGE SLOT USES (WI-560 DW1), and it had to become
+    so. This asked "does a round file name HEAD's short sha?" while
+    `integrate._verdict_gate` asked a freshness question over a tree with
+    `docs/reviews` and `docs/log.d` removed — two rules for one question, and
+    the gap between them is a measured defect: on WI-547 the loop's OWN
+    `telemetry:` and `scoreboard` commits moved HEAD past a verdict nothing had
+    invalidated, this derivation re-fired, and two identical `APPROVE
+    findings=0` rounds were drawn. `kitlib.verdict.tree_identity` excludes those
+    record paths for both readers, so the double-identical-round class is not
+    merely unlikely here — it is unrepresentable, because the commits that
+    caused it cannot change the identity either reader compares.
+
+    THE REV IS PART OF THAT DEFINITION, which is why this calls
+    `governing_identity(branch)` and not `tree_identity(HEAD)`. A station
+    refresh is bookkeeping the merge slot PEELS, so measuring at HEAD made the
+    two readers disagree across exactly one commit class: on a refreshed branch
+    this answered "owed" while the gate was already satisfied, and the resumed
+    lane drew a strong-tier round whose file the gate would not even read
+    (REVIEW-A round 007, finding 2). The branch, not `HEAD`, because the peel
+    verifies a refresh commit against the branch it names.
+
+    OFF GIT, every declared phase is OWED: `tree_identity` answers None when git
+    cannot say, and a derivation that cannot prove a verdict was served must not
+    assume one was.
+
+    THREE ANSWERS, NOT TWO. `None` means THIS DERIVATION CANNOT SAY — the
+    train's own build trailers are not in `base..HEAD`, so there is no evidence
+    here to read either way; `[]` means read it and nothing is owed; a list
+    names the phases. They were one falsey value, and a caller that reads "the
+    evidence owes nothing" off a scan that never saw the evidence is not
+    reading evidence at all: `default_base` merge-bases to HEAD whenever the
+    primary checkout IS the lane branch (its own docstring says so — a
+    single-checkout attended run), so on a RESUMED run of that shape the range
+    is empty, every assigned WI reads unbuilt, and a genuinely parked round
+    answered "nothing owed" (found by the unfiltered suite at REVIEW-A round
+    034, five commits after the round-033 rework that introduced it).
+
+    This is round 033 finding 2's own antidote applied one level down. That
+    finding split "the caller named nothing" from "the evidence owes nothing"
+    in `schedule_review_round`; the same two-states-one-value defect was left
+    HERE, one call deeper, and closing it there is what made it reachable."""
+    if not worker:
+        return []
+    built, _blocked = train_evidence(root, worker["base"])
+    if not all(w in built for w in worker["assigned"]):
+        return None
+    want = kverdict.governing_identity(root, worker["train"])
+    if want is None:
+        return kverdict.phases_owed((), required)
+    entries = kverdict.branch_entries(
+        root, worker["train"], worker.get("claim"), want, score_reviews.parse_verdict
+    )
+    # An unreadable path set answers None, which folds into the same
+    # everything-is-owed direction as an unreadable identity above.
+    return kverdict.phases_owed(entries or (), required)
+
+
+def last_build_family(iter_dir, registry):
+    """The family of the most recent BUILD session recorded in the lane's
+    session logs (their `# phase:` / `# model:` headers, joined to the
+    registry) — the C5 heterogeneity key when the marker did not survive.
+    None when no build log names a registered model."""
+    for path in sorted(Path(iter_dir).glob("*.log"), reverse=True):
+        try:
+            head = path.read_text(encoding="utf-8", errors="replace")[:4000]
+        except OSError:
+            continue
+        phase = re.search(r"^# phase: ?(.*)$", head, re.M)
+        model = re.search(r"^# model: ?(.*)$", head, re.M)
+        if not (phase and model) or phase.group(1).strip() not in ("BUILD", ""):
+            continue
+        wanted = model.group(1).strip()
+        for row in registry.values():
+            if (row.model or row.id) == wanted:
+                return row.family
+    return None
+
+
 __all__ = (
+    "review_verdict_trailer",
+    "review_owed_by_evidence",
+    "last_build_family",
     "_kit_prompt",
     "_PROMPT_CACHE",
     "DEFAULT_PHASE_TIER",
@@ -1006,6 +1223,9 @@ __all__ = (
     "done_when_flag_block",
     "narrow_scope_line",
     "narrow_reviewer_prompt",
+    "full_scope_line",
+    "review_round_brief",
+    "review_template_refusals",
     "reviewed_rows_block",
     "process_doc_path",
     "scripts_dir",

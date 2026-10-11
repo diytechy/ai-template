@@ -160,12 +160,17 @@ def test_an_unfilled_slot_refuses_and_no_brief_is_written(
     assert not out.exists()
 
 
-def test_the_loop_brief_renders_the_new_slot_empty(tmp_path):
-    # The loop fills `{round_facts}` with nothing: its own brief is unchanged
-    # apart from the recording clause, and never carries a literal slot.
-    text = agent_brief.reviewer_prompt({}, "REVIEW-A", "v.md", root=tmp_path)
-    assert "{round_facts}" not in text
-    assert text.endswith("Do not edit the code you are reviewing.")
+def test_the_loop_full_lane_brief_states_its_range_and_binding(tmp_path):
+    # WI-884: the loop's full-lane round states the whole lane from the claim
+    # base, reads the reviewed commit (never `HEAD`), and asks for the
+    # `Reviewed:` opener the gate's filing check requires.
+    text = agent_brief.reviewer_prompt(
+        {}, "REVIEW-A", "v.md", root=tmp_path, worker=None, base=BASE, sha=SHA
+    )
+    assert "{round_facts}" not in text and "...HEAD" not in text
+    assert agent_brief.full_scope_line(BASE, SHA) in text
+    assert "Reviewed: {}".format(SHA) in text
+    assert "NARROW" not in text
 
 
 def _loop_narrow(root, templates=None):

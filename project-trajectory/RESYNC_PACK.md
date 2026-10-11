@@ -8056,6 +8056,63 @@ Check the items that apply to you:
   process through `run_session` instead. `_kill_tree` now needs the job that
   `run_session` creates.
 
+### The merge gate binds a fresh full-lane review from the claim base; the loop draws narrow rounds between [since 1f87388b]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A lane's merge is now judged on one kind of review round
+only: a FULL-LANE round, from a session minted for it, over the lane's whole
+range from its recorded claim base (the `claim: <ids> -> active/<branch>
+(bookkeeping)` commit `integrate.py claim` writes) to the reviewed commit.
+`scripts/agent_loop.py` records each review session's scope in its session
+log as `# review-scope: full|narrow <base>..<sha>`, and `kitlib/verdict.py`
+counts a round for the gate only when that header says `full`, the range
+starts at the claim base, and `# session-gen:` is empty (a fresh session).
+`integrate.py`'s verdict gate reads the claim base through
+`agent_common.claim_base`, never a merge-base, so a trunk refresh no longer
+moves it. Between full rounds the loop now draws NARROW rounds: after a
+CHANGES-REQUESTED round, the next round reviews only the rework since the
+reviewed commit and answers that round's findings
+(`agent_brief.narrow_reviewer_prompt`); a narrow APPROVE schedules the fresh
+full-lane round at once. A narrow verdict steers iteration and never clears
+the gate, and it never raises the unchanged-rework page. Every reviewer is
+still a fresh session.
+
+A committed round file the filing check refuses (its first physical line is
+not exactly `Reviewed: <full sha>` — a leading blank line or whitespace
+around the opener is refused, a CRLF ending is not — or its one `VERDICT:`
+line is missing, malformed or
+miscounts its findings, or it requests changes naming none), or one that
+cannot be read, is invalid evidence: no verdict of either kind. As a phase's
+latest round it holds the merge (no older APPROVE stands in for it), and the
+loop and the dispatcher read that phase as still owed. The filing check has
+one home, `kitlib.verdict.filing_refusal`, which `review_brief.py file` uses
+too. The loop's full-lane brief now asks for that `Reviewed:` opener.
+
+**The legacy hand-authored rollup window is closed.** A
+`docs/reviews/WI-<n>-REVIEW-A.md` no longer clears the gate at
+`review_rounds = 1`, with or without a warning. A lane with no readable claim
+commit (a manual or pre-claim lane) holds at the gate, named.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/verdict.py`,
+`scripts/integrate.py`, `scripts/agent_loop.py`, `scripts/agent_brief.py`,
+`scripts/agent_common.py`, `scripts/dispatch.py`, `scripts/review_brief.py`,
+`scripts/score_reviews.py`.
+
+**What to do.** This forces a migration on a repo whose review dial is on.
+(1) A lane in flight whose rounds were drawn before this change has no
+`# review-scope:` header in its session logs, so none of its rounds clears
+the gate: draw one fresh full-lane round on it after the overwrite (a resumed
+worker does this; the dispatcher resumes a finished lane that owes it). (2) If
+you were landing lanes on a hand-compiled `WI-<n>-REVIEW-A.md`, that path is
+gone: draw a logged round instead. (3) A lane cut by hand, without
+`integrate.py claim`, cannot pass the gate; re-claim it through the claim
+step. (4) An operator `--prompt-map` override for `REVIEW-A`/`REVIEW-B` must
+now declare exactly the shipped reviewer template's slots (`{verdict}`,
+`{trunk}`, `{head}`, `{process_doc}`, `{scripts}`, `{wis}`,
+`{round_facts}`); one that does not fails the loop's preflight by name. No
+registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

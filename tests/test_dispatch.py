@@ -872,7 +872,7 @@ def test_the_spine_batch_admits_first_and_together(tmp_path, capfd):
 
 
 def hand_finished_branch(
-    root, rows=(("WI-777", "residue"),), branch="wi-777", trailers=False
+    root, rows=(("WI-777", "residue"),), branch="wi-777", trailers=False, claimed=False
 ):
     """A lane finished BETWEEN runs, by hand: trunk still shows its spec(s)
     under active/, while the branch has already moved them to complete/. That
@@ -884,16 +884,24 @@ def hand_finished_branch(
     WIs is only visible when a residue branch carries more than one. Trunk must
     already hold everything it is going to hold when this is called: the branch
     is cut from HEAD, and §A2 admits it only while trunk is still its
-    ancestor."""
+    ancestor.
+
+    `claimed` records the claim as `integrate.claim` does (queued -> active
+    under the claim subject), the commit a full-lane review binds to (WI-884);
+    otherwise the claim is the by-hand move a manual lane makes."""
+    ids = [w for w, _s in rows]
     for wid, slug in rows:
-        write_spec(root, "active/" + branch, wid, slug=slug, specref="seed.txt")
-    _commit(
-        root,
-        "claim: {} -> active/{} (by hand)".format(
-            ";".join(w for w, _s in rows), branch
-        ),
-        when=T_CODE,
-    )
+        home = "queued" if claimed else "active/" + branch
+        spec = write_spec(root, home, wid, slug=slug, specref="seed.txt")
+        if claimed:
+            _commit(root, "queue {}".format(wid), when=T_CODE)
+            active = root / "docs" / "work" / "active" / branch / spec.name
+            active.parent.mkdir(parents=True, exist_ok=True)
+            spec.rename(active)
+    subject = "claim: {} -> active/{} (by hand)".format(";".join(ids), branch)
+    if claimed:
+        subject = drv.ac.claim_subject(ids, branch)
+    _commit(root, subject, when=T_CODE)
     _git(root, "branch", branch)
     wt, err = drv.integrate.lane_worktree(root, branch)
     assert err is None, err
@@ -995,7 +1003,8 @@ def test_a_finished_branch_that_owes_a_round_is_resumed_not_integrated(tmp_path,
     root = stub_harness_repo(tmp_path)
     _declare_review_policy(root, 1)
     _commit(root, "declare review-policy 1", when=T_CODE)
-    hand_finished_branch(root)  # finished, and no round names its tree
+    # Finished, claimed, and no round names its tree.
+    hand_finished_branch(root, claimed=True)
 
     worker = Recorder(outcomes=(0,))
     rc = drv.run(root, drive_args(stall_limit=2), worker=worker, tier="smoke")

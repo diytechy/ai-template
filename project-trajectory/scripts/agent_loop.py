@@ -257,6 +257,7 @@ train_evidence = agent_common.train_evidence
 # question, and a second merge-base rule would be a second answer.
 trunk_name = agent_common.trunk_name
 default_base = agent_common.default_base
+claim_base = agent_common.claim_base
 _clip = agent_common._clip
 _read_csv_rows = agent_common._read_csv_rows
 _refs = agent_common._refs
@@ -304,6 +305,10 @@ row_routing = agent_brief.row_routing
 adjudicating = agent_brief.adjudicating
 phase_tier = agent_brief.phase_tier
 reviewer_prompt = agent_brief.reviewer_prompt
+review_round_brief = agent_brief.review_round_brief
+review_owed_by_evidence = agent_brief.review_owed_by_evidence
+review_verdict_trailer = agent_brief.review_verdict_trailer
+last_build_family = agent_brief.last_build_family
 done_when_flag_block = agent_brief.done_when_flag_block
 reviewed_rows_block = agent_brief.reviewed_rows_block
 process_doc_path = agent_brief.process_doc_path
@@ -459,6 +464,10 @@ class RoutingState:
         # --- managed-routing / reviewer-dispatch state (S8) ---
         self.cooldowns = {}  # model id -> epoch it is available again
         self.review_queue = []  # the pending review phases for the current round
+        # WI-884: the (reviewed sha, round files) a CHANGES-REQUESTED round left,
+        # which makes the next round NARROW; None draws the full lane.
+        self.narrow_from = None
+        self.round_files = []  # this round's verdict files, for a narrow follow-up
         # The build-vs-design-check phase for the next non-review/non-critique
         # session, held in-process now that docs/run-phase is retired (WI-180).
         self.next_phase = "BUILD"
@@ -576,13 +585,30 @@ class RoutingState:
             seconds if seconds is not None else self.cooldown_seconds,
         )
 
-    def record_review_verdict(self, phase, verdict, family, model_id):
-        """Append one reviewer's verdict to the round and pop the phase it
-        consumed off the review queue."""
+    def record_review_verdict(self, phase, verdict, family, model_id, path=""):
+        """Append one reviewer's verdict (and its round file `path`) to the
+        round and pop the phase it consumed off the review queue."""
         self.review_draw_failures = 0  # C1: a recorded verdict resets the streak
         self.round_verdicts.append((phase, verdict, family, model_id))
+        self.round_files += [path] if path else []
         if self.review_queue:
             self.review_queue.pop(0)
+
+    def close_round_scope(self, merged):
+        """What this round's merged verdict makes the NEXT round (WI-884): a
+        CHANGES-REQUESTED leaves its reviewed sha and round files, so the round
+        after the rework is NARROW over the rework alone; any other verdict
+        draws the full lane next. Returns True when a NARROW round approved:
+        a narrow verdict steers iteration and never gates a merge, so the
+        fresh full-lane round the gate binds is owed now.
+
+        Implements: SR-154, LLR-045
+        """
+        narrow = self.narrow_from is not None
+        sha = (self.impl_range or "").partition("..")[2]
+        changes = merged == "CHANGES-REQUESTED"
+        self.narrow_from = (sha, ", ".join(self.round_files)) if changes else None
+        return narrow and merged == "APPROVE"
 
     def round_ready(self):
         """True when the review queue has drained and a verdict was collected —
@@ -678,6 +704,7 @@ class RoutingState:
         list now means an empty round, so the two states cannot share a value
         and no caller has to guard the fallback."""
         self.round_verdicts = []
+        self.round_files = []
         self.round_relaxed = False  # C5: a fresh round starts cross-family
         self.review_queue = list(phases)
         return list(self.review_queue)
@@ -1256,6 +1283,7 @@ def map_preflight(
             prompt_templates[ph] = p.read_text(encoding="utf-8", errors="replace")
         except OSError as exc:
             failures.append("prompt-map [{}]: cannot read {}: {}".format(ph, p, exc))
+    failures.extend(agent_brief.review_template_refusals(prompt_templates))
 
     # Managed routing preflight (only when the enable-list opts in): the registry
     # must parse, every enabled id must resolve to a real registry row, each
@@ -1374,6 +1402,9 @@ def build_worker_assignment(args, root):
             "train": sanitize_train(tag),
             "assigned": assigned,
             "base": base,
+            # WI-884: the claim commit the merge gate binds a full-lane round
+            # to (None for a manual or pre-claim lane: no round can gate it).
+            "claim": claim_base(root)[0],
             "rows": rows,
             # (No scheduler view: the `sched` map existed only to feed the §7
             # continuation re-check, deleted with session grouping — WI-383.)
@@ -1655,6 +1686,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     is_critique = False
     relaxed = False  # C5: a same-family review draw this session (recorded)
     verdict_path = None
+    review_scope = ""  # WI-884: a review round's scope, for its session log
     hold = None  # a declared adjudicator brief that could not be composed
     brief_key = ""  # the adjudicator brief this session was composed from
     route_id = None  # the selected registry id (managed mode)
@@ -1738,8 +1770,14 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
                     session, phase, reviewed_sha[:7], "-relaxed" if relaxed else ""
                 ),
             )
-            body = reviewer_prompt(
-                prompt_templates, phase, verdict_path, root=root, worker=worker
+            body, review_scope = review_round_brief(
+                prompt_templates,
+                phase,
+                verdict_path,
+                root=root,
+                worker=worker,
+                sha=reviewed_sha,
+                narrow_from=st.narrow_from,
             )
         elif is_critique:
             verdict_path = fresh_verdict_path(
@@ -1817,6 +1855,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # C5: this session is a review drawn with heterogeneity relaxed — a
         # typed field for the telemetry header, never a filename re-parse.
         "relaxed": relaxed,
+        "review_scope": review_scope,
         # S9: the tree's uncommitted state as the session found it, so what a
         # judging session leaves behind can be told from what was already there.
         "pre_dirty": substantive_working_tree_dirty(root),
@@ -1941,7 +1980,9 @@ def absorb_review_verdict(root, st, plan, outcome, now):
     elif v.verdict is None:
         why = "verdict file has no parseable VERDICT line"
     else:
-        st.record_review_verdict(phase, v, plan["route_family"], route_id)
+        rel = os.path.relpath(str(plan["verdict_path"]), str(root))
+        rel = rel.replace(os.sep, "/")
+        st.record_review_verdict(phase, v, plan["route_family"], route_id, rel)
         return
     # ONE failure arm, because there was only ever one CONSEQUENCE: the two
     # cases differ in what to SAY, and they had the cool/draw-failure/re-route
@@ -2036,33 +2077,6 @@ def apply_rework_scope(worker, st, merged):
         worker["rework_wi"] = ""
 
 
-def review_verdict_trailer(root, merged, worker):
-    """The round's `Review-Verdict:` line, or None when there is nothing to
-    attest (no merged verdict, or git cannot name the tree).
-
-    THE TREE IS THE ONE THE TWO READERS KEY ON — `governing_identity` at the
-    lane's BRANCH, the same call `review_owed_by_evidence` and
-    `integrate._verdict_gate` make. It was `tree_identity(root, "HEAD")`, which
-    is right only while no station refresh sits below the tip: the fold drops
-    `docs/reviews/`, so the round file the reviewer just added does not move the
-    identity, but the refresh does, and the peel is what the readers apply to
-    it. Stamping the unpeeled value filed the attestation under a key
-    `integrate._round_refusal` never looks up, so the cross-check silently stood
-    down on exactly the branches that had been refreshed (REVIEW-A round 015).
-    The fail-direction was safe — a trailer is never an accept path — but a
-    third place choosing its own rev is the finding IF-175's contract names.
-
-    WHY THE COORDINATOR WRITES IT. A trailer a reviewer could stamp on its own
-    commit attests nothing the round file did not already claim; what makes this
-    one evidence is the same thing that makes the session log evidence — it is
-    written by the process that ROUTED the round, after the round completed."""
-    if not worker:
-        return None
-    return kverdict.format_branch_trailer(
-        root, worker["train"], worker["base"], merged, score_reviews.parse_verdict
-    )
-
-
 def complete_review_round(ctx, session):
     """The round is full: merge, score, record, escalate, and apply. Returns an
     int exit code (a page-human) or None."""
@@ -2133,6 +2147,9 @@ def complete_review_round(ctx, session):
     decision = st.escalation()
     print("escalate: {} — {}".format(decision["action"], decision["reason"]))
     apply_rework_scope(ctx.worker, st, merged)
+    if st.close_round_scope(merged):
+        queued = st.schedule_review_round(kverdict.declared_phases(ctx.rp_int))
+        print("dispatch: narrow round approved -> fresh full-lane round", queued)
     st.round_verdicts = []
     # State consequences of the escalation happen ONCE, here (WI-171 page
     # re-arm, swap/tier-up/changes-requested); the page branch below keeps only
@@ -2256,7 +2273,7 @@ def schedule_review_round(ctx, after):
     if not all(w in built_now for w in worker["assigned"]):
         return None
     if kverdict.tree_already_judged(
-        ctx.root, worker["train"], worker["base"], score_reviews.parse_verdict
+        ctx.root, worker["train"], worker.get("claim"), score_reviews.parse_verdict
     ):
         print("dispatch: no review round scheduled — " + kverdict.UNCHANGED_REWORK)
         return page_human(ctx, kverdict.UNCHANGED_PAGE, kverdict.UNCHANGED_REWORK)
@@ -2778,6 +2795,7 @@ def session_meta(
         "guardrails": "on" if plan["guarded"] else "",
         "outcome": outcome,
         "commits": commits,
+        "review-scope": plan.get("review_scope", ""),
         "tokens": tokens,
         "cost-usd": data.get("total_cost_usd", ""),
         "wall-secs": wall_secs,
@@ -3041,107 +3059,6 @@ def read_review_owed(root):
             key, _sep, value = line.partition("=")
             fields[key.strip()] = value.strip()
     return fields
-
-
-def review_owed_by_evidence(root, worker, required=1):
-    """COMMITTED evidence of which review PHASES are owed: the declared phases
-    with no round verdict naming the branch's current NON-RECORD TREE, once
-    every assigned WI carries its trailer on the branch. Empty means none —
-    the falsey answer every caller's `not ...` already read. This is what a
-    resumed worker trusts (a worker reads committed facts, never run-state) —
-    the out/review-owed marker only adds advisory fields. A verdict for a
-    phase, of either outcome, means that phase was served; a rework commit
-    changes the tree and owes the whole set again.
-
-    A PHASE LIST AND NOT A FLAG, because the merge slot demands EVERY declared
-    phase (round 022) and the phase queue is in-memory run state: a run that
-    died between REVIEW-A and REVIEW-B left REVIEW-A served, this derivation
-    answered "nothing owed" on the strength of it, and the lane wedged against
-    a gate refusing the phase nobody would draw. Handing back the missing
-    phases lets `resume_owed_round` redraw exactly those — never a phase
-    already served at this identity, whose redraw the gate would read as a
-    reroll-until-green. `kitlib.verdict.phases_owed` holds the rule.
-
-    THE SAME DEFINITION THE MERGE SLOT USES (WI-560 DW1), and it had to become
-    so. This asked "does a round file name HEAD's short sha?" while
-    `integrate._verdict_gate` asked a freshness question over a tree with
-    `docs/reviews` and `docs/log.d` removed — two rules for one question, and
-    the gap between them is a measured defect: on WI-547 the loop's OWN
-    `telemetry:` and `scoreboard` commits moved HEAD past a verdict nothing had
-    invalidated, this derivation re-fired, and two identical `APPROVE
-    findings=0` rounds were drawn. `kitlib.verdict.tree_identity` excludes those
-    record paths for both readers, so the double-identical-round class is not
-    merely unlikely here — it is unrepresentable, because the commits that
-    caused it cannot change the identity either reader compares.
-
-    THE REV IS PART OF THAT DEFINITION, which is why this calls
-    `governing_identity(branch)` and not `tree_identity(HEAD)`. A station
-    refresh is bookkeeping the merge slot PEELS, so measuring at HEAD made the
-    two readers disagree across exactly one commit class: on a refreshed branch
-    this answered "owed" while the gate was already satisfied, and the resumed
-    lane drew a strong-tier round whose file the gate would not even read
-    (REVIEW-A round 007, finding 2). The branch, not `HEAD`, because the peel
-    verifies a refresh commit against the branch it names.
-
-    OFF GIT, every declared phase is OWED: `tree_identity` answers None when git
-    cannot say, and a derivation that cannot prove a verdict was served must not
-    assume one was.
-
-    THREE ANSWERS, NOT TWO. `None` means THIS DERIVATION CANNOT SAY — the
-    train's own build trailers are not in `base..HEAD`, so there is no evidence
-    here to read either way; `[]` means read it and nothing is owed; a list
-    names the phases. They were one falsey value, and a caller that reads "the
-    evidence owes nothing" off a scan that never saw the evidence is not
-    reading evidence at all: `default_base` merge-bases to HEAD whenever the
-    primary checkout IS the lane branch (its own docstring says so — a
-    single-checkout attended run), so on a RESUMED run of that shape the range
-    is empty, every assigned WI reads unbuilt, and a genuinely parked round
-    answered "nothing owed" (found by the unfiltered suite at REVIEW-A round
-    034, five commits after the round-033 rework that introduced it).
-
-    This is round 033 finding 2's own antidote applied one level down. That
-    finding split "the caller named nothing" from "the evidence owes nothing"
-    in `schedule_review_round`; the same two-states-one-value defect was left
-    HERE, one call deeper, and closing it there is what made it reachable."""
-    if not worker:
-        return []
-    built, _blocked = train_evidence(root, worker["base"])
-    if not all(w in built for w in worker["assigned"]):
-        return None
-    want = kverdict.governing_identity(root, worker["train"])
-    if want is None:
-        return kverdict.phases_owed((), required)
-    entries = kverdict.branch_entries(
-        root,
-        worker["train"],
-        worker["base"],
-        want,
-        score_reviews.parse_verdict,
-    )
-    # An unreadable path set answers None, which folds into the same
-    # everything-is-owed direction as an unreadable identity above.
-    return kverdict.phases_owed(entries or (), required)
-
-
-def last_build_family(iter_dir, registry):
-    """The family of the most recent BUILD session recorded in the lane's
-    session logs (their `# phase:` / `# model:` headers, joined to the
-    registry) — the C5 heterogeneity key when the marker did not survive.
-    None when no build log names a registered model."""
-    for path in sorted(Path(iter_dir).glob("*.log"), reverse=True):
-        try:
-            head = path.read_text(encoding="utf-8", errors="replace")[:4000]
-        except OSError:
-            continue
-        phase = re.search(r"^# phase: ?(.*)$", head, re.M)
-        model = re.search(r"^# model: ?(.*)$", head, re.M)
-        if not (phase and model) or phase.group(1).strip() not in ("BUILD", ""):
-            continue
-        wanted = model.group(1).strip()
-        for row in registry.values():
-            if (row.model or row.id) == wanted:
-                return row.family
-    return None
 
 
 def resume_owed_round(root, setup, st, rp_int, iter_dir):

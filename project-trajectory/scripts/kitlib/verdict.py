@@ -108,17 +108,20 @@ Contract IF-175: the verdict record, as functions two independent readers call
     carry, and `ROLLUP_DIR` the one directory under `docs/reviews/` that is no
     review scope; `branch_paths` / `log_history` / `review_logs` / `logged_rounds` /
     `round_entries`
-    the round evidence a branch holds, restricted to rounds a logged reviewer
-    session produced and COMMITTED, read as it committed them, and to the tree
-    under judgement; `parse_range` / `session_range` / `range_paths` a session's
+    the round evidence a branch holds, restricted to FULL-LANE rounds a fresh
+    logged reviewer session produced over the lane's claim base to its reviewed
+    commit (`format_scope` / `gating_span`, WI-884) and COMMITTED, read as it
+    committed them, and to the tree under judgement, a round the filing check
+    (`filing_refusal`) refuses read as invalid evidence; `parse_range` /
+    `session_range` / `range_paths` a session's
     recorded range and what it changed, and `scope_offenders` /
     `session_scope_offenders` / `review_scope_refusal` what a REVIEW session
     may change - its own verdict file and nothing else, one rule for the live
     loop and the merge slot; `declared_phases` / `phases_owed` the phase span
-    a review policy declares and which of those phases a tree has never had
-    DRAWN — the resume's question, weaker than the gate's demand for a parseable
-    APPROVE on exactly the mangled-verdict class and no other, so the two
-    readers share a span without pretending to share a threshold;
+    a review policy declares and which of those phases a tree has no verdict
+    for (never drawn, or whose latest round is invalid evidence) — the resume's
+    question, weaker than the gate's demand for an APPROVE only on a dissent,
+    so the two readers share a span without pretending to share a threshold;
     `branch_trailers` the verified attestations on
     the branch's own commits, in commit order. Pure functions plus thin reads through
     `kitlib.git`, so nothing here writes and nothing imports a sibling service —
@@ -168,6 +171,11 @@ __all__ = [
     "session_log",
     "parse_range",
     "session_range",
+    "FULL",
+    "NARROW",
+    "format_scope",
+    "gating_span",
+    "filing_refusal",
     "range_paths",
     "scope_offenders",
     "session_scope_offenders",
@@ -237,6 +245,15 @@ _PHASE_HEADER_RE = re.compile(r"^# phase:[ \t]*(.*)$", re.M)
 # session committed nothing; the loop's `(root)` / `?` placeholders for an
 # unborn or unreadable head parse as no range at all.
 _COMMITS_HEADER_RE = re.compile(r"^# commits:[ \t]*(.*)$", re.M)
+# A REVIEW session's scope, as the coordinator that ROUTED the round recorded it
+# (WI-884): `full <claim base>..<reviewed sha>` for the fresh full-lane round a
+# merge is judged on, `narrow <base>..<sha>` for an iteration round. A base the
+# coordinator could not name is `?`, which `parse_range` reads as no range. The
+# service records a RETAINED session's generation in `# session-gen:`, so a
+# present, empty value is the session minted for its round.
+_SCOPE_HEADER_RE = re.compile(r"^# review-scope:[ \t]*(.*)$", re.M)
+_GEN_HEADER_RE = re.compile(r"^# session-gen:[ \t]*(.*)$", re.M)
+FULL, NARROW = "full", "narrow"
 _RANGE_RE = re.compile(r"^([0-9a-f]{7,64})\.\.([0-9a-f]{7,64})$")
 
 _REVIEWS = "docs/reviews"
@@ -812,6 +829,73 @@ def session_range(blob):
     return parse_range(header.group(1)) if header else None
 
 
+def format_scope(kind, base, sha):
+    """The `# review-scope:` value the loop records for a REVIEW session of
+    `kind` (`FULL` or `NARROW`) over `base..sha`; a base it could not name
+    renders `?`, which no reader takes for a range.
+
+    Implements: SR-156, LLR-207
+    """
+    return "{} {}..{}".format(kind, base or "?", sha or "?")
+
+
+def gating_span(blob):
+    """`(claim base, reviewed sha)` when a REVIEW session log records the scope
+    a merge may be judged on, else None.
+
+    THE TWO FACTS ARE THE COORDINATOR'S, never the reviewer's: the FULL scope
+    it routed the round under, over a readable range, and a session minted for
+    that round (an empty `# session-gen:`; a retained session records its
+    generation there). A narrow round, a missing or malformed scope, or a
+    retained session yields None, which every reader of round evidence turns
+    into no gate authority: a narrow verdict steers iteration and nothing else
+    (WI-884's Trust ruling).
+
+    Implements: SR-156, LLR-207
+    """
+    head = (blob or "")[:4000]
+    scope = _SCOPE_HEADER_RE.search(head)
+    generation = _GEN_HEADER_RE.search(head)
+    kind, _sep, span = (scope.group(1).strip() if scope else "").partition(" ")
+    if kind != FULL or generation is None or generation.group(1).strip():
+        return None
+    return parse_range(span)
+
+
+def filing_refusal(text, sha, parse):
+    """Why `text` is not a review of the full commit `sha` in the kit's verdict
+    format, or None: THE FILING CHECK, stated once.
+
+    `review_brief.review_refusal` files nothing this refuses, and
+    `round_entries` reads a committed round this refuses as INVALID EVIDENCE,
+    never as a verdict of either kind, so a partial write or a garbled round
+    cannot clear the gate the filing boundary would have kept it from. It must
+    open with `Reviewed: <sha>` as its FIRST PHYSICAL LINE, exactly — the text
+    up to its first LF, less a CR ending it, with no line skipped and nothing
+    stripped, as the brief tells the reviewer — carry exactly one canonical
+    VERDICT line (the shared review-line reader inside `parse`) whose count
+    matches its finding lines, and name a finding when it requests changes.
+    `parse` is `score_reviews.parse_verdict`, injected as everywhere in this
+    module.
+
+    Implements: SR-156, LLR-207
+    """
+    first = (text or "").split("\n", 1)[0]
+    if first.removesuffix("\r") != "Reviewed: " + sha:
+        return "its first line is not `Reviewed: {}`".format(sha)
+    parsed = parse(text)
+    if parsed.verdict is None:
+        return parsed.refusal or "it carries no VERDICT line"
+    found = len(parsed.findings)
+    if parsed.declared_n != found:
+        return "its VERDICT line says findings={} but it carries {}".format(
+            parsed.declared_n, found
+        )
+    if parsed.verdict == "CHANGES-REQUESTED" and not found:
+        return "it requests changes but names no finding"
+    return None
+
+
 def range_paths(root, span):
     """Every path the commits `before..after` changed, sorted, or None when git
     cannot answer. `--no-renames`, so a moved file names BOTH ends: a session
@@ -924,10 +1008,11 @@ def _log_changes(out):
 
 def review_logs(root, branch, base, paths):
     """Every coordinator session log among `paths` that declares a REVIEW
-    phase, as `(log_path, (train, ordinal), phase, span)`, read AS THE COMMIT
-    THAT ADDED IT recorded it (`log_history`), never at the branch tip.
+    phase, as `(log_path, (train, ordinal), phase, span, gate)`, read AS THE
+    COMMIT THAT ADDED IT recorded it (`log_history`), never at the branch tip.
 
-    `span` is the log's recorded range, or None when it records none. A log
+    `span` is the log's recorded range, or None when it records none; `gate`
+    is its `gating_span`, None for every round that carries no gate authority. A log
     that cannot be read, or that no commit in `base..branch` added, is left
     out, which every reader of this list turns toward more review: no round
     comes from it, and the scope check at merge has nothing to clear it with
@@ -948,7 +1033,7 @@ def review_logs(root, branch, base, paths):
         header = _PHASE_HEADER_RE.search(blob[:4000])
         phase = header.group(1).strip() if header else ""
         if phase in REVIEW_PHASES:
-            found.append((path, key, phase, session_range(blob)))
+            found.append((path, key, phase, session_range(blob), gating_span(blob)))
     return found
 
 
@@ -977,7 +1062,9 @@ def review_scope_refusal(root, branch, base):
                 sha[:10], "modified" if status == "M" else "deleted", log
             )
         )
-    for log, (train, ordinal), phase, span in review_logs(root, branch, base, paths):
+    for log, (train, ordinal), phase, span, _gate in review_logs(
+        root, branch, base, paths
+    ):
         if span is None:
             continue
         changed = range_paths(root, span)
@@ -1023,8 +1110,16 @@ def branch_paths(root, branch, base):
 
 def logged_rounds(root, branch, base, paths):
     """The rounds among `paths` that a LOGGED REVIEWER SESSION produced, as
-    `(ordinal, phase, reviewed_sha, path, read_at)` — the plan's finding K,
-    closed.
+    `(ordinal, phase, reviewed_sha, path, read_at, reviewed)` — the plan's
+    finding K, closed. `reviewed` is the full commit the round's gating span
+    names.
+
+    ONLY A ROUND THAT MAY GATE A MERGE (WI-884): its log records the FULL scope
+    from a session minted for the round (`gating_span`), and that span runs
+    from `base`, which every caller passes as the lane's recorded claim base,
+    to the commit the round file names. A narrow round, or a full one over any
+    other range, is no round here, so no reader of this evidence can fall back
+    to it.
 
     A round file with no coordinator session log for its (train, ordinal), or
     one whose log declares a non-review phase, is NOT a round: it is a file
@@ -1062,8 +1157,8 @@ def logged_rounds(root, branch, base, paths):
     Implements: SR-154, SR-156, LLR-207, LLR-262
     """
     declared = {}
-    for _log, key, phase, span in review_logs(root, branch, base, paths):
-        declared.setdefault(key, set()).add((phase, span))
+    for _log, key, phase, span, gate in review_logs(root, branch, base, paths):
+        declared.setdefault(key, set()).add((phase, span, gate))
     reviewer = {key: rec.pop() for key, rec in declared.items() if len(rec) == 1}
     touched = {}
     rounds = set()
@@ -1072,14 +1167,20 @@ def logged_rounds(root, branch, base, paths):
         if parsed is None:
             continue
         train, ordinal, _name_phase, sha = parsed
-        phase, span = reviewer.get((train, ordinal), (None, None))
-        if span is None:
+        phase, span, gate = reviewer.get((train, ordinal), (None, None, None))
+        if span is None or not _binds(gate, base, sha):
             continue
         if span not in touched:
             touched[span] = range_paths(root, span) or []
         if path in touched[span]:
-            rounds.add((ordinal, phase, sha, path, span[1]))
+            rounds.add((ordinal, phase, sha, path, span[1], gate[1]))
     return sorted(rounds)
+
+
+def _binds(gate, base, sha):
+    """Whether a log's gating span runs from `base`, the lane's recorded claim
+    base, to the reviewed commit its round file names."""
+    return gate is not None and gate[0] == base and gate[1].startswith(sha)
 
 
 def round_entries(root, branch, rounds, want, parse):
@@ -1107,17 +1208,22 @@ def round_entries(root, branch, rounds, want, parse):
     top of it.
 
     `parse` is `score_reviews.parse_verdict`, injected rather than imported so
-    this leaf keeps no edge back into the scoring layer."""
+    this leaf keeps no edge back into the scoring layer. An entry whose verdict
+    is None is invalid evidence (`filing_refusal`), never a verdict."""
     entries = []
     resolved = {}
-    for ordinal, phase, sha, path, read_at in rounds:
+    for ordinal, phase, sha, path, read_at, reviewed in rounds:
         if sha not in resolved:
             resolved[sha] = governing_identity(root, branch, sha)
         if resolved[sha] != want:
             continue
-        # AT THE SESSION'S OWN COMMIT (`logged_rounds`), never at the tip.
+        # AT THE SESSION'S OWN COMMIT (`logged_rounds`), never at the tip. An
+        # unreadable file, or one the filing check refuses (a partial write, a
+        # garble), is INVALID EVIDENCE: an entry with no verdict, so it is the
+        # phase's last word and no older APPROVE governs past it.
         text = git_out(root, ["show", "{}:{}".format(read_at, path)])
-        if text is None:
+        if text is None or filing_refusal(text, reviewed, parse):
+            entries.append((phase, ordinal, None))
             continue
         parsed = parse(text)
         # THROUGH `effective_verdict`, the same call `agent_loop` routes on: a
@@ -1157,11 +1263,20 @@ def tree_already_judged(root, branch, base, parse):
     Unreadable git, or an unreadable path set, answers False: a lane whose
     evidence cannot be read has not been SHOWN to be unchanged, and refusing to
     draw a round on git's silence would stop every first build in a repo these
-    readers cannot see into."""
+    readers cannot see into.
+
+    ONLY A VERDICT THAT COULD GATE COUNTS (WI-884): `base` is the lane's claim
+    base, so a narrow round is no entry, and an entry with no verdict is
+    invalid evidence. Paging on either would stop the lane before the fresh
+    full-lane round the gate needs, so neither answers True; nor does a lane
+    with no claim base.
+
+    Implements: SR-156, LLR-207"""
     want = governing_identity(root, branch)
-    if want is None:
+    if want is None or not base:
         return False
-    return bool(branch_entries(root, branch, base, want, parse))
+    entries = branch_entries(root, branch, base, want, parse) or ()
+    return any(verdict for _phase, _ordinal, verdict in entries)
 
 
 def declared_phases(required):
@@ -1181,8 +1296,9 @@ def declared_phases(required):
 
 
 def phases_owed(entries, required):
-    """The declared phases with NO entry among `entries` — the phases this tree
-    has never had DRAWN, which is `agent_loop.resume_owed_round`'s question.
+    """The declared phases whose LATEST entry among `entries` is missing or
+    invalid evidence — the phases this tree has never had drawn with a verdict,
+    which is `agent_loop.resume_owed_round`'s question.
 
     THE WEDGE THIS CLOSES. The merge slot began requiring every declared phase
     (round 022's finding — `review_rounds = 2` had been collapsed to a boolean,
@@ -1198,17 +1314,21 @@ def phases_owed(entries, required):
     reroll-until-green and be escalated — the gate's own `flipped` rule firing
     on an honest crash recovery.
 
-    DELIBERATELY NOT THE GATE'S QUESTION, and the divergence is the design.
-    This asks whether a phase was drawn; the gate asks whether it produced a
-    parseable APPROVE (`score_reviews.latest_phase_verdicts`). They must differ
-    on exactly one class — a round whose verdict file is present but UNPARSEABLE
-    — because the two answers there are "do not draw it again" (it was drawn;
-    redrawing it is the double-round class WI-560 DW1 exists to kill) and "do
-    not merge on it" (a mangled meant-to-dissent must page, WI-260 review fix
-    2). What they may NOT differ on is the phase span, which is why both slice
-    `declared_phases`."""
-    served = {phase for phase, _ordinal, _verdict in entries or ()}
-    return [ph for ph in declared_phases(required) if ph not in served]
+    NOT THE GATE'S QUESTION. This asks whether a phase was drawn with a
+    verdict; the gate asks whether that verdict is an APPROVE
+    (`score_reviews.latest_phase_verdicts`), so a dissent is served here and
+    refused there. An UNREADABLE, partial or refusable round file is owed on
+    both sides (WI-884's Trust ruling): it is invalid evidence, never a verdict
+    of either kind, so the full-lane round is still owed and is drawn again,
+    and an older verdict at the same tree never stands in for it. What the two
+    may NOT differ on is the phase span, which is why both slice
+    `declared_phases`.
+
+    Implements: SR-156, LLR-207"""
+    latest = {}
+    for phase, _ordinal, verdict in sorted(entries or (), key=lambda e: e[1]):
+        latest[phase] = verdict
+    return [ph for ph in declared_phases(required) if not latest.get(ph)]
 
 
 def round_count(entries):

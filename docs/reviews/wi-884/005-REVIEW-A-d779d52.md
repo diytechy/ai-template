@@ -1,0 +1,10 @@
+Reviewed: d779d521670cec9a0743397cdf4fca66a599716f
+
+Verified: Read the exact three-dot diff, WI-884 and its specref, PROCESS.md §§5–6, the cited SR/LLR/TC rows, and rubric anchors. The shipped flow now schedules narrow rework rounds and a fresh full round; the gate admits only fresh full claim-base evidence, and the claim-base, refresh, invalid-file, narrow-only, unchanged-rework, and legacy-rollup cases are exercised through the real loop and merge-gate paths. The amended SR-154/SR-156, LLR-045/140/207/262, and TC-082/205 contents have snapshot re-attestations in acts 103–104. I reviewed IF-175 as the changed interface and LLR-207 as its counterpart: carry the corresponding full/narrow scope, claim-base, freshness, and filing-check changes; the rows and code agree. Done-when coverage: narrow scheduling (`test_the_loop_draws_narrow_rounds_and_then_the_fresh_full_lane_round`); full claim-base range and trunk refresh (`test_the_gate_range_survives_a_trunk_refresh`); three gate hazards (`test_a_lane_with_only_narrow_rounds_does_not_clear_the_gate`, `test_a_narrow_approve_at_the_tip_does_not_raise_the_unchanged_rework_page`, and the claim-base check); partial/refusable evidence (`test_a_partial_or_refusable_round_file_does_not_clear_the_gate`); requirement re-attestation and RESYNC anchoring verified. The narrow-only and narrow-APPROVE regression cases assert the opposite of the pre-fix unscoped-round behavior.
+
+Commands:
+- `git rev-parse HEAD` — `d779d521670cec9a0743397cdf4fca66a599716f`
+- `C:/Projects/ai-template/.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n 0 --basetemp C:/Projects/ai-template.wt/review-tmp/2026-10-10-leg01/wi884/wi-884 tests/test_verdict_record.py tests/test_agent_loop_review.py tests/test_integrate_admission.py tests/test_dispatch.py tests/test_review_brief.py` — `276 passed in 838.06s (0:13:58)`
+- `C:/Projects/ai-template/.venv/Scripts/python.exe project-trajectory/scripts/check_trajectory.py --strict` — `check_trajectory: clean (894 work item(s), 781 done (87%), 28 cancelled, graph acyclic).`
+
+VERDICT: APPROVE findings=0

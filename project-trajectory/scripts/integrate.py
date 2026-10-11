@@ -1501,57 +1501,6 @@ def _verdict_owed(root, branch, metas):
     )
 
 
-def _legacy_rollup_refusal(root, branch, wi, want):
-    """THE MIGRATION WINDOW (the plan's §6): at `review-policy = 1`, a legacy
-    hand-authored `docs/reviews/WI-<n>-REVIEW-A.md` still clears the gate, with
-    a WARN.
-
-    AT POLICY 1 ONLY. One hand-authored document is one author's word, and a
-    policy of 2 declares two INDEPENDENT ones; letting this file answer both
-    would be the single-reviewer clearance the round-030 join fix removed from
-    the live path, re-admitted through the deprecated one. The caller applies
-    the narrowing and states it; this docstring is where an adopter reading the
-    window's implementation finds the same sentence.
-
-    Returns a refusal string, or None when the legacy rollup carries a fresh
-    APPROVE. Adopters hold these files today and their wrappers grep them; the
-    window costs them nothing and the WARN is what makes the deprecation
-    visible on the path that is actually being used. The rollup is judged by the
-    SAME rule as a round — it names this tree or it does not count — so the
-    retired time comparison leaves no second definition behind it."""
-    rel = "docs/reviews/{}-REVIEW-A.md".format(wi)
-    code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
-    if code != 0:
-        return (
-            "no logged review round on {} names its current tree, and the "
-            "legacy verdict {} is absent from {} — draw a round, or (migration "
-            "window) commit the rollup".format(branch, rel, branch)
-        )
-    word = score_reviews.parse_verdict(text).verdict
-    if word != "APPROVE":
-        return "{} is not an APPROVE (parsed: {!r})".format(rel, word)
-    code, at = ac.git(root, "log", "-1", "--format=%H", branch, "--", rel)
-    # Through `governing_identity` and not the bare fold, for the reason the
-    # round evidence is: `want` is composed with the refresh peel, so a legacy
-    # rollup committed after a refresh would name the post-refresh tree and
-    # never match, whatever it said. Same comparison, same definition.
-    rev = at.strip() if code == 0 else ""
-    named = kverdict.governing_identity(root, branch, rev) if rev else None
-    if named != want:
-        return (
-            "{} does not name the branch's current tree - a verdict that did "
-            "not judge this tree does not clear the gate".format(rel)
-        )
-    print(
-        "integrate: WARNING - {} cleared the gate through the LEGACY "
-        "hand-authored rollup (migration window, RESYNC_PACK.md). Nothing in "
-        "the kit writes that file; the round files a logged reviewer session "
-        "produced are the record.".format(rel),
-        file=sys.stderr,
-    )
-    return None
-
-
 def _verdict_gate(root, branch, outcomes):
     """RULING-7 under OI-76: the dialed verdict, bound to the tree it judged.
 
@@ -1587,9 +1536,17 @@ def _verdict_gate(root, branch, outcomes):
     ONE REVIEW SCOPE PER TRAIN (LLR-140), which is why the round evidence is
     computed once for the branch rather than per WI. A worker schedules its
     round only when every assigned WI is built, and the round covers the
-    combined train diff; a per-WI slice of that round never existed. The per-WI
-    loop that remains is the MIGRATION WINDOW's, because the legacy rollup was
-    per-WI and an adopter's tree still is.
+    combined train diff; a per-WI slice of that round never existed.
+
+    ONLY THE FRESH FULL-LANE ROUND GATES (WI-884's Trust ruling). The rounds
+    read are those whose session log records the FULL scope from a session
+    minted for the round, over the lane's recorded claim base to the commit it
+    reviewed (`kitlib.verdict.logged_rounds`). The claim base is read through
+    `agent_common.claim_base` alone, never a merge-base, so a trunk refresh
+    cannot move it. A narrow round's verdict, an invalid round file, a lane
+    with no readable claim commit, or a branch with no such round at all holds
+    the merge, naming what is missing: there is no fallback to an older
+    verdict and no legacy hand-authored rollup window.
 
     AN ADJUDICATION LANE MAY OWE NO VERDICT AT ALL — `_verdict_owed`, the dial,
     and the reader `agent_loop`'s round scheduler shares with it.
@@ -1629,43 +1586,28 @@ def _verdict_gate(root, branch, outcomes):
     # `agent_loop.review_owed_by_evidence` makes — one definition includes the
     # rev it is measured at, or the two readers disagree across a refresh.
     want = kverdict.governing_identity(root, branch)
-    code, out = ac.git(root, "merge-base", _head(root) or "HEAD", branch)
-    base = out.strip()
-    if want is None or code != 0 or not base:
+    claim, readable = ac.claim_base(root, branch)
+    if want is None:
+        return "cannot resolve {}'s reviewed tree (git could not answer) - fail closed".format(
+            branch
+        )
+    if claim is None:
         return (
-            "cannot resolve {}'s reviewed tree against the trunk (git could not "
-            "answer) - fail closed".format(branch)
+            "{}: no readable claim commit{}, so no full-lane review can bind its "
+            "claim base - fail closed".format(
+                branch, "" if readable else " (its history is unreadable)"
+            )
         )
     parse = score_reviews.parse_verdict
-    entries = kverdict.branch_entries(root, branch, base, want, parse) or []
-    if not entries and required == 1:
-        return _legacy_window_refusal(root, branch, merged, want)
-    return _round_refusal(root, branch, base, want, entries, required)
-
-
-def _legacy_window_refusal(root, branch, merged, want):
-    """The MIGRATION WINDOW's answer for a branch with no round evidence — the
-    first WI whose legacy rollup refuses the merge, or None if they all pass.
-
-    THE WINDOW IS POLICY-1 ONLY, and the narrowing is a rule rather than an
-    oversight: a legacy rollup is ONE hand-authored document, so honouring it
-    at `review-policy = 2` would clear both declared phases on a single
-    author's word - the "gate cleared on a SINGLE reviewer" class closed at
-    round 030, re-entered through the deprecated path. An adopter at policy 2
-    has no window; they draw real rounds. Said here, in `_legacy_rollup_
-    refusal`, and in the RESYNC_PACK entry that promises the window, so the
-    shipped narrowing and the promise cannot disagree (REVIEW-A round 033).
-    The per-WI loop is the window's own shape, because the legacy rollup was
-    per-WI and an adopter's tree still is; one review scope per train
-    (LLR-140) is why nothing else here is computed per WI.
-
-    Implements: SR-156, LLR-140
-    """
-    for wi in merged:
-        refusal = _legacy_rollup_refusal(root, branch, wi, want)
-        if refusal:
-            return refusal
-    return None
+    entries = kverdict.branch_entries(root, branch, claim, want, parse)
+    if not entries:
+        return (
+            "{}: no fresh full-lane review round from its claim base {} names its "
+            "current tree{} - a narrow round never clears the gate".format(
+                branch, claim[:10], "" if entries is not None else " (unreadable)"
+            )
+        )
+    return _round_refusal(root, branch, claim, want, entries, required)
 
 
 def _round_refusal(root, branch, base, want, entries, required):
@@ -1677,9 +1619,15 @@ def _round_refusal(root, branch, base, want, entries, required):
     contradicted attestation) are all about the same set."""
     latest, flipped = score_reviews.latest_phase_verdicts(entries, required)
     dissent = sorted(ph for ph, word in latest.items() if word != "APPROVE")
-    if dissent or not latest:
+    if dissent:
+        # A phase with no latest word is missing, or its last round file is
+        # invalid evidence (unreadable, partial or refused by the filing check).
         return "{}: the governing round(s) at this tree are not an APPROVE ({})".format(
-            branch, ", ".join(dissent) or "no parseable verdict"
+            branch,
+            ", ".join(
+                "{} {}".format(ph, latest[ph] or "has no valid verdict")
+                for ph in dissent
+            ),
         )
     if flipped:
         return (

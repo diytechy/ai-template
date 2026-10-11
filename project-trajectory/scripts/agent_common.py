@@ -1182,11 +1182,14 @@ def _is_claim_move(root, commit, branch, wi_ids):
     return added == set(wi_ids) and removed == set(wi_ids)
 
 
-def claim_base(root):
-    """The current branch's claim commit, if its committed claim record is
-    readable.  `integrate.claim` writes the exact subject below before it cuts
-    the branch, so its first-parent history keeps the integration boundary even
-    when the checkout later becomes that branch itself.
+def claim_base(root, branch=None):
+    """`branch`'s claim commit (default: the current branch's), if its
+    committed claim record is readable.  `integrate.claim` writes the exact
+    subject below before it cuts the branch, so its first-parent history keeps
+    the integration boundary even when the checkout later becomes that branch
+    itself, and a trunk refresh merged into the lane leaves it an ancestor on
+    that first-parent line.  It is THE claim base the merge gate binds a
+    full-lane review to (WI-884), read from trunk by branch name.
 
     Returns ``(base, readable)``.  `base is None` means this is a manual or
     pre-claim worker and lets `default_base` retain its merge-base compatibility
@@ -1194,25 +1197,23 @@ def claim_base(root):
     not read its history; that is deliberately distinct so the caller does not
     silently turn an unreadable claim into an empty HEAD..HEAD evidence range.
     """
-    code, branch = git(root, "branch", "--show-current")
-    branch = branch.strip()
-    if code != 0 or not branch:
+    if branch is None:
+        code, out = git(root, "branch", "--show-current")
+        branch = out.strip() if code == 0 else ""
+    if not branch:
         return None, True
     suffix = " -> active/{} (bookkeeping)".format(branch)
     grep = ("--first-parent", "--fixed-strings", "--grep=" + suffix)
-    code, history = git(root, "log", *grep, "--format=%H%x09%s", "HEAD")
+    code, history = git(root, "log", *grep, "--format=%H%x09%s", branch, "--")
     if code != 0:
         return None, False
     for line in history.splitlines():
-        sha, sep, subject = line.partition("\t")
+        # `%H<TAB>%s`: a line with no tab leaves an empty subject, which no
+        # claim subject equals, so the one comparison below rules on it too.
+        sha, _sep, subject = line.partition("\t")
         wi_ids = subject.removeprefix("claim: ").removesuffix(suffix).split(";")
-        is_claim_subject = (
-            sep
-            and sha
-            and all(WI_TOKEN_RE.fullmatch(wi) for wi in wi_ids)
-            and subject == claim_subject(wi_ids, branch)
-        )
-        if not is_claim_subject:
+        ids_ok = all(WI_TOKEN_RE.fullmatch(wi) for wi in wi_ids)
+        if not ids_ok or subject != claim_subject(wi_ids, branch):
             continue
         valid_move = _is_claim_move(root, sha, branch, wi_ids)
         if valid_move is None:
@@ -1404,6 +1405,9 @@ def write_session_log(iter_dir, meta, transcript):
         "guardrails",
         "outcome",
         "commits",
+        # WI-884: a REVIEW session's scope as the loop routed it,
+        # `full|narrow <base>..<reviewed sha>` (kitlib.verdict.gating_span).
+        "review-scope",
         "tokens",
         "cost-usd",
         "wall-secs",

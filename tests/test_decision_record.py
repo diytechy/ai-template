@@ -353,8 +353,15 @@ def test_a_review_session_is_not_handed_the_note(tmp_path):
     # A reviewer closes nothing: its brief is composed apart from the fork that
     # carries the note, whatever the dial says.
     _dial(tmp_path, '"record"')
+    slots = "{trunk}{head}{process_doc}{scripts}{wis}{round_facts}"
     text = al.reviewer_prompt(
-        {"REVIEW-A": "REVIEW {verdict}"}, "REVIEW-A", "v.md", worker=_worker()
+        {"REVIEW-A": "REVIEW {verdict}" + slots},
+        "REVIEW-A",
+        "v.md",
+        root=tmp_path,
+        worker=_worker(),
+        base="a" * 40,
+        sha="b" * 40,
     )
     assert text.startswith("REVIEW v.md")
     assert "docs/decisions" not in text and "DECISIONS RECORD" not in text

@@ -1,0 +1,81 @@
+# docs/decisions/wi-884.toml — WI-884's lane: delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-011", "D-001", "D-002", "D-003"]
+
+[decision.D-001]
+decided = "The legacy rollup window is deleted outright, per the spec's Trust ruling (no fallback to the legacy window): a lane whose only evidence is a legacy rollup never clears the merge gate. Downstream migration, with steps in RESYNC_PACK."
+alternative = "Keep the window behind a warning for one more release."
+reversal_cost = "Medium: an adopter mid-lane on a legacy rollup must draw a fresh full-lane round."
+why_not_escalated = "The Trust ruling settles it; recorded because it forces a downstream migration."
+review = ""
+
+[decision.D-002]
+decided = "reviewer_prompt is the strict full-lane brief, and the loop's preflight refuses an operator review-template override that lacks the reviewer slots, instead of crashing mid-run. Downstream migration, in RESYNC_PACK."
+alternative = "Render a missing slot as blank and warn."
+reversal_cost = "Low: the preflight check is one function (review_template_refusals)."
+why_not_escalated = "A refusal at preflight is the no-fallback form of the existing mid-run crash."
+review = ""
+
+[decision.D-003]
+decided = "The filing check (one home: kitlib.verdict.filing_refusal) now applies to the loop's own rounds, so a loop reviewer must open its verdict with `Reviewed: <full sha>`; review_round_brief expands the loop's short sha first, and when git cannot expand it the sha is kept as given in both the brief and the scope, so the two always match."
+alternative = "Apply the filing check to attended rounds only."
+reversal_cost = "Low."
+why_not_escalated = "One filing contract for both routes, as the spec's Trust section rules."
+review = ""
+
+[decision.D-004]
+decided = "A round counts at the gate only when its session log records `# review-scope: full <claim base>..<sha>` and an empty `# session-gen:` (a fresh session). WI-887 must keep that meaning of fresh when it adds the persisted final reviewer."
+alternative = "Infer freshness from the session id's novelty."
+reversal_cost = "Low: one predicate in kitlib.verdict.logged_rounds."
+why_not_escalated = "It is the gate's binding; WI-887's spec already owns the persisted-reviewer variant."
+review = ""
+
+[decision.D-005]
+decided = "The full brief still reads its diff three-dot against the current trunk, so a refresh does not re-feed trunk's merged work to the reviewer; only the recorded range and the gate's binding use the claim base."
+alternative = "Read the diff from the claim base too."
+reversal_cost = "Low."
+why_not_escalated = "The reading scope is a reviewer aid; the authority is the recorded range."
+review = ""
+
+[decision.D-006]
+decided = "A lane with no readable claim commit: the loop still draws its full round (scope base `?`), the gate holds and names the missing claim, and dispatch's _round_owed answers not owed for it."
+alternative = "Refuse to draw any round for such a lane."
+reversal_cost = "Low."
+why_not_escalated = "The gate is the authority and names the fact; drawing the round loses nothing."
+review = ""
+
+[decision.D-007]
+decided = "A full-lane verdict the filing check would refuse, still uncommitted mid-run, is routed on by the loop's in-run routing; it is caught as owed by the gate, dispatch's _round_owed and the loop's resume reader, so it is redrawn after the worker exits, not within the run. Changing in-run routing would touch every fake reviewer in the loop suites."
+alternative = "Add a failed-draw case to in-run routing now."
+reversal_cost = "Low: a later row can add it."
+why_not_escalated = "No authority reads the in-run routing; the gate does not admit the round."
+review = ""
+
+[decision.D-008]
+decided = "review_brief.review_refusal stays as a one-line binder over kverdict.filing_refusal because LLR-313's detail names it; removing the pass-through needs row text and goes to the checkpoint's spine change list."
+alternative = "Delete it now and amend LLR-313."
+reversal_cost = "Low."
+why_not_escalated = "Row text belongs to the checkpoint."
+review = ""
+
+[decision.D-009]
+decided = "review_owed_by_evidence, review_verdict_trailer and last_build_family move verbatim from agent_loop.py to agent_brief.py (aliased in agent_loop) to keep agent_loop.py under its line-count baseline; three module baselines are restamped downward."
+alternative = "Bump agent_loop.py's baseline."
+reversal_cost = "Low: a structural move of three functions."
+why_not_escalated = "A ratchet is lowered, never bumped."
+review = ""
+
+[decision.D-010]
+decided = "Pre-existing complexity over 15 in route_session (37), map_preflight (41) and build_worker_assignment (28) is left as is; this round adds none to them."
+alternative = "Decompose them in this lane."
+reversal_cost = "Low."
+why_not_escalated = "Outside the row's surface; the baseline holds them."
+review = ""
+
+[decision.D-011]
+decided = "This lane's reviews run on Codex gpt-6-luna at high effort, not gpt-6.1-sol: on 2026-10-10 the Codex account signed in for the overnight run does not offer gpt-6.1-sol (the CLI returns 400 'not supported when using Codex with a ChatGPT account'; the account's model list names gpt-6-luna, gpt-5.6-terra, gpt-5.6-luna and gpt-5.5). Luna is a fresh, cross-family reviewer of Opus-built code and was the owner's sanctioned reviewer at high effort from 2026-10-03 until Sol replaced it. Same call as wi-881 D-008."
+alternative = "Hold the lane until the owner signs in an account that offers Sol, or use a fresh independent Opus reviewer, which the skill allows only after two hours of Codex unavailability and which loses the cross-family split."
+reversal_cost = "Low: an overrule re-runs the final gate with Sol; code and rows do not change."
+why_not_escalated = "The owner is away overnight; the substitution keeps a fresh session from a different model family, which is what the review rule asks."
+review = ""

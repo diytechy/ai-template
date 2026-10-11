@@ -44,6 +44,8 @@ of `test_integrate_station.py` gets to move it:
 
 import os
 
+import pytest
+
 from conftest import SCRIPTS, env_gate_skipif, load_script, run_py
 from integrate_fixtures import (
     T_BASE,
@@ -54,6 +56,7 @@ from integrate_fixtures import (
     _commit,
     _git,
     _rev,
+    claim_lane,
     claim_repo,
     refused,
     declare_shipped_generated,
@@ -1034,13 +1037,15 @@ VERDICT: CHANGES-REQUESTED findings=2
 
 
 def verdict_repo(tmp_path, policy="1"):
-    """A trunk carrying the declared review-policy dial, plus a work branch with
-    one code commit on it (pinned at T_CODE)."""
+    """A trunk carrying the declared review-policy dial and the lane's CLAIM
+    commit (the base a full-lane review binds to, WI-884), plus a work branch
+    with one code commit on it (pinned at T_CODE)."""
     root = git_repo(tmp_path)
     docs = root / "docs"
     docs.mkdir(exist_ok=True)
     (docs / "review-policy").write_text(policy + "\n", encoding="utf-8", newline="\n")
     _commit(root, "declare the review policy", when=T_BASE)
+    claim_lane(root, "wi-401", when=T_BASE)
     _git(root, "checkout", "-q", "-b", "wi-401")
     (root / "src").mkdir(exist_ok=True)
     (root / "src" / "widget.py").write_text(
@@ -1065,85 +1070,26 @@ def test_verdict_is_not_required_at_review_policy_zero(tmp_path):
 
 
 def test_a_required_verdict_absent_from_the_branch_refuses_by_name(tmp_path):
-    # Fail-closed and ACTIONABLE: the refusal names the exact path the branch
-    # must carry, so the remedy needs no lookup.
+    # Fail-closed and ACTIONABLE: the refusal names what is missing, the fresh
+    # full-lane round from the lane's claim base, so the remedy needs no lookup.
     root = verdict_repo(tmp_path, policy="1")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "docs/reviews/WI-401-REVIEW-A.md" in refusal
-    assert "absent from wi-401" in refusal
+    assert "no fresh full-lane review round from its claim base" in refusal
 
 
-def test_a_changes_requested_verdict_refuses(tmp_path):
-    # Present is not enough — the machine line is PARSED (score_reviews), so a
-    # verdict that asked for changes cannot clear the gate by existing.
+@pytest.mark.parametrize("text", [VERDICT_APPROVE, VERDICT_CHANGES])
+def test_a_legacy_rollup_never_clears_the_gate(tmp_path, capsys, text):
+    # THE MIGRATION WINDOW IS CLOSED (WI-884's Trust ruling): a hand-authored
+    # `docs/reviews/WI-<n>-REVIEW-A.md` is no logged round from a fresh session
+    # over the lane, so even an APPROVE naming this very tree holds the merge,
+    # and nothing warns that it cleared, because it never does.
     root = verdict_repo(tmp_path, policy="1")
-    write_verdict(root, VERDICT_CHANGES, when=T_VERDICT)
-
+    write_verdict(root, text, when=T_VERDICT)
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "is not an APPROVE" in refusal
-    assert "CHANGES-REQUESTED" in refusal
-
-
-def test_an_approve_that_did_not_judge_this_tree_does_not_count(tmp_path):
-    # GOVERNING = TREE IDENTITY (OI-76, ruled 2026-08-31). This used to be a
-    # TIME comparison — "the verdict's commit is no older than the branch's last
-    # non-record commit" — and the ruling dissolved it into an identity: a
-    # verdict names the tree it judged or it does not count. The observable
-    # behaviour on THIS input is unchanged (real code committed after the
-    # APPROVE is the stale pass that must not clear the gate); what changed is
-    # that there is no longer an ordering rule to get wrong, so the case where
-    # the old comparison silently promoted a stale APPROVE — a re-run round
-    # after a trivial edit — cannot arise.
-    root = verdict_repo(tmp_path, policy="1")
-    write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
-    (root / "src" / "widget.py").write_text(
-        "VALUE = 2\n", encoding="utf-8", newline="\n"
-    )
-    _commit(root, "feat: change the widget after the review", when=T_LATER)
-
-    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
-    assert refusal is not None
-    assert "does not name the branch's current tree" in refusal
-
-
-def test_an_approve_that_names_the_current_tree_passes(tmp_path):
-    # The green path of the same rule — asserted alongside the case above so the
-    # identity is proven to have two answers, not one.
-    root = verdict_repo(tmp_path, policy="1")
-    write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
-    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
-
-
-def test_the_legacy_rollup_path_warns_while_it_clears(tmp_path, capsys):
-    # THE MIGRATION WINDOW (the plan's §6). An adopter holding a hand-authored
-    # rollup keeps merging — and hears about it. The WARN is the whole point of
-    # the window: a deprecation nobody is told about is a deprecation that never
-    # happens, and this is the path an adopter is actually on.
-    root = verdict_repo(tmp_path, policy="1")
-    write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
-    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
-    err = capsys.readouterr().err
-    assert "LEGACY hand-authored rollup" in err
-    assert "migration window" in err
-
-
-def test_a_later_log_fragment_commit_does_not_stale_a_good_verdict(tmp_path):
-    # The `:(exclude)docs/log.d` half of the freshness pathspec. A branch drops
-    # its §5.1 log fragment as the LAST thing it does, routinely after the
-    # review — if bookkeeping counted as code, the honest flow would stale its
-    # own verdict every time and the gate would be unpassable. The previous test
-    # (a real src/ commit at the same later stamp DOES stale it) is what proves
-    # this is an exclusion rather than a broken comparison.
-    root = verdict_repo(tmp_path, policy="1")
-    write_verdict(root, VERDICT_APPROVE, when=T_VERDICT)
-    fragment = root / "docs" / "log.d" / "WI-401-widget.md"
-    fragment.parent.mkdir(parents=True, exist_ok=True)
-    fragment.write_text("## WI-401 — the widget\n", encoding="utf-8", newline="\n")
-    _commit(root, "log: WI-401 fragment", when=T_LATER)
-
-    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+    assert "no fresh full-lane review round" in refusal
+    assert "LEGACY" not in capsys.readouterr().err
 
 
 def test_only_the_merged_outcome_owes_a_verdict(tmp_path):
@@ -1160,7 +1106,9 @@ def test_only_the_merged_outcome_owes_a_verdict(tmp_path):
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "handback"}) is None
     # ...and a MIXED branch is gated on its merged constituent alone.
     mixed = {"WI-401": "handback", "WI-402": "merged"}
-    assert "WI-402-REVIEW-A.md" in integ._verdict_gate(root, "wi-401", mixed)
+    assert "no fresh full-lane review round" in integ._verdict_gate(
+        root, "wi-401", mixed
+    )
 
 
 def test_a_malformed_review_policy_fails_closed(tmp_path):

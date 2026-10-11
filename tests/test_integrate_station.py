@@ -64,6 +64,7 @@ from integrate_fixtures import (
     claim_repo,
     declare_generated,
     integ,
+    logged_full_round,
     scaffolded_closed_branch,
     write_spec,
 )
@@ -979,10 +980,7 @@ def test_the_mechanical_refresh_does_not_stale_a_good_verdict(tmp_path):
     (root / "docs" / "review-policy").write_text("1\n", encoding="utf-8", newline="\n")
     _commit(root, "policy: require a verdict", when=T_CODE)
     wt = root.parent / (root.name + integ.LANE_WORKTREE_SUFFIX) / "wi-401"
-    verdict = wt / "docs" / "reviews" / "WI-401-REVIEW-A.md"
-    verdict.parent.mkdir(parents=True, exist_ok=True)
-    verdict.write_text(VERDICT_APPROVE, encoding="utf-8", newline="\n")
-    _commit(wt, "review: WI-401 REVIEW-A", when=T_LATER)
+    logged_full_round(wt, "wi-401", VERDICT_APPROVE, when=T_LATER)
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
 
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")

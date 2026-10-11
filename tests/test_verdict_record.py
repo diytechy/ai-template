@@ -31,6 +31,7 @@ from integrate_fixtures import (
     _commit,
     _git,
     _rev,
+    claim_lane,
     git_repo,
     write_spec,
 )
@@ -53,6 +54,9 @@ CHANGES = (
 )
 
 LOG = "# agent-loop session log\n# session: {ordinal:03d}\n# train: {train}\n# phase: {phase}\n# outcome: COMMITTED\n"
+# What the loop's log adds for a REVIEW session it MINTED (WI-884): the scope
+# it routed the round under, and the service's empty retained-session column.
+SCOPE = "# review-scope: {kind} {base}..{sha}\n# session-gen: {gen}\n"
 
 
 # --- 1. the identity, as a pure fold -----------------------------------------
@@ -229,6 +233,8 @@ def rounds_repo(tmp_path, policy="1"):
     docs.mkdir(exist_ok=True)
     (docs / "review-policy").write_text(policy + "\n", encoding="utf-8", newline="\n")
     _commit(root, "declare the review policy", when=T_BASE)
+    # The trunk's CLAIM commit, which the gate binds a full-lane round to.
+    claim_lane(root, "wi-401", when=T_BASE)
     _git(root, "checkout", "-q", "-b", "wi-401")
     (root / "src").mkdir(exist_ok=True)
     (root / "src" / "widget.py").write_text(
@@ -237,6 +243,16 @@ def rounds_repo(tmp_path, policy="1"):
     _commit(root, "feat: the widget", when=T_CODE)
     _git(root, "checkout", "-q", "main")
     return root
+
+
+def claim(root):
+    """The lane's claim commit, found independently of the reader under test:
+    the newest first-parent commit of `wi-401` carrying the claim subject, or
+    None for a lane with no claim."""
+    subject = "claim: WI-401 -> active/wi-401 (bookkeeping)"
+    out = _git(root, "log", "--first-parent", "--format=%H%x09%s", "wi-401")
+    hits = [ln.split("	")[0] for ln in out.splitlines() if ln.endswith(subject)]
+    return hits[0] if hits else None
 
 
 def add_round(
@@ -248,6 +264,10 @@ def add_round(
     when=T_LATER,
     extra_phases=(),
     extra_files=(),
+    kind="full",
+    base=None,
+    gen="",
+    reviewed=True,
 ):
     """Commit one round on `wi-401` in the loop's own two steps: the reviewer's
     verdict file, named for the code HEAD it read, in the session's commit; then
@@ -258,10 +278,20 @@ def add_round(
     same single session log — the shape a session that names its own second
     phase produces, which is what the log-owns-the-phase join must refuse.
     `extra_files` commits further paths in the SESSION's own commit - a review
-    session writing outside its verdict, which the merge ladder must refuse."""
+    session writing outside its verdict, which the merge ladder must refuse.
+
+    WI-884: the log records the round's scope, by default the FULL lane from
+    the claim base (`base`) to the reviewed head, from a session the service
+    minted (`gen` empty); `kind="narrow"` is an iteration round. The verdict
+    opens `Reviewed: <full sha>` unless `reviewed` is False; a string
+    `reviewed` is the opener's own template (`{}` the full sha), for an opener
+    the filing check must refuse."""
     _git(root, "checkout", "-q", "wi-401")
     before = _rev(root, "wi-401")
     sha = (before or "")[:7]
+    if reviewed:
+        opener = reviewed if isinstance(reviewed, str) else "Reviewed: {}\n\n"
+        text = opener.format(before) + text
     rnd = (
         root
         / "docs"
@@ -292,7 +322,8 @@ def add_round(
             train="wi-401",
             phase=session_phase or round_phase,
         )
-        + "# commits: {}..{}\n".format(before, _rev(root, "wi-401")),
+        + "# commits: {}..{}\n".format(before, _rev(root, "wi-401"))
+        + SCOPE.format(kind=kind, base=base or claim(root), sha=before, gen=gen),
         encoding="utf-8",
         newline="\n",
     )
@@ -345,6 +376,7 @@ def test_a_half_drawn_round_owes_its_missing_phase_and_only_that(tmp_path):
     _git(root, "checkout", "-q", "wi-401")
     base = _rev(root, "main")
     worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    worker["claim"] = claim(root)
     assert al.review_owed_by_evidence(root, worker, 1) == [], (
         "the fixture must be a lane the POLICY-1 reader considers served, or "
         "the policy-2 answer below proves nothing about the declared count"
@@ -376,16 +408,22 @@ def test_the_declared_phase_span_is_read_the_same_length_by_both_readers():
     assert kv.declared_phases(5) == ["REVIEW-A", "REVIEW-B"]
     assert kv.declared_phases(-1) == []
 
-    # phases_owed asks whether a phase was DRAWN, which is a weaker test than
-    # the gate's "produced a parseable APPROVE" — deliberately, and on exactly
-    # one class: a present-but-unparseable verdict is not re-drawn (that is the
-    # double-round class) but does not clear the gate either.
-    unparseable = [("REVIEW-A", 3, "")]
-    assert kv.phases_owed(unparseable, 2) == ["REVIEW-B"]
+    # phases_owed asks whether a phase was drawn WITH A VERDICT, so a dissent
+    # is served (the gate refuses it; redrawing it is a reroll). An invalid
+    # round file is no verdict of either kind (WI-884's Trust ruling): it is
+    # owed again AND it is a non-approval at the gate, and as the phase's
+    # LATEST word no older APPROVE at the same tree stands in for it.
+    unparseable = [("REVIEW-A", 3, None)]
+    assert kv.phases_owed(unparseable, 2) == ["REVIEW-A", "REVIEW-B"]
+    assert kv.phases_owed([("REVIEW-A", 3, "CHANGES-REQUESTED")], 1) == []
     latest, _flipped = score.latest_phase_verdicts(unparseable, 2)
     assert latest.get("REVIEW-A") == "" and latest.get("REVIEW-B") == "", (
         "a drawn-but-mangled phase must still be a non-approval at the gate"
     )
+    over_an_approve = [("REVIEW-A", 3, "APPROVE"), ("REVIEW-A", 5, None)]
+    assert kv.phases_owed(over_an_approve, 1) == ["REVIEW-A"]
+    latest, _flipped = score.latest_phase_verdicts(over_an_approve, 1)
+    assert latest["REVIEW-A"] == "", "no fallback to the older APPROVE"
     assert kv.phases_owed([], 2) == ["REVIEW-A", "REVIEW-B"]
     assert kv.phases_owed([("REVIEW-A", 3, "APPROVE")], 1) == []
 
@@ -400,7 +438,7 @@ def test_an_implementer_authored_file_in_the_review_path_is_not_a_round(tmp_path
     add_round(root, 3, session_phase="BUILD")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "no logged review round" in refusal
+    assert "no fresh full-lane review round" in refusal
 
 
 def test_one_session_cannot_serve_a_phase_its_log_does_not_declare(tmp_path):
@@ -475,7 +513,7 @@ def test_two_logs_at_one_key_declaring_two_phases_serve_no_round(tmp_path):
     assert kv.branch_entries(root, "wi-401", base, want, score.parse_verdict) == []
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "no logged review round" in refusal
+    assert "no fresh full-lane review round" in refusal
 
 
 def test_a_round_that_judged_an_earlier_tree_does_not_count(tmp_path):
@@ -491,7 +529,7 @@ def test_a_round_that_judged_an_earlier_tree_does_not_count(tmp_path):
     _git(root, "checkout", "-q", "main")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "no logged review round" in refusal
+    assert "no fresh full-lane review round" in refusal
 
 
 def test_a_record_only_commit_after_the_round_leaves_it_governing(tmp_path):
@@ -573,7 +611,7 @@ def test_a_verdict_its_session_did_not_commit_is_not_a_round(tmp_path):
     _commit(root, "WI-401: the next session sweeps the verdict in", when=T_LATER)
     _git(root, "checkout", "-q", "main")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
-    assert refusal is not None and "no logged review round" in refusal
+    assert refusal is not None and "no fresh full-lane review round" in refusal
 
 
 def test_a_later_session_rewriting_a_session_log_cannot_launder_its_round(tmp_path):
@@ -634,12 +672,9 @@ def test_the_merge_ladder_refuses_a_review_range_beyond_its_verdict(tmp_path):
     assert "src/helper.py" in refusal and "docs/log.d/WI-401-note.md" in refusal
     assert "nothing was merged" in refusal
     # ...and it is the merge LADDER's rung: `_merge_refusal` reaches it on a
-    # branch whose claimed spec closed cleanly, before the verdict gate.
-    _git(root, "checkout", "-q", "main")
-    write_spec(root, "active/wi-401", "WI-401")
-    _commit(root, "claim: WI-401 -> active/wi-401 (bookkeeping)", when=T_LATER + 50)
+    # branch whose claimed spec (the fixture's claim commit) closed cleanly,
+    # before the verdict gate.
     _git(root, "checkout", "-q", "wi-401")
-    _git(root, "merge", "-q", "--no-edit", "main")
     _git(root, "mv", "docs/work/active/wi-401/WI-401-widget.md", "docs/work/")
     (root / "docs" / "work" / "complete").mkdir(parents=True, exist_ok=True)
     _git(
@@ -865,6 +900,7 @@ def test_a_station_refresh_owes_no_round_and_the_two_readers_agree(tmp_path):
     _git(root, "checkout", "-q", "wi-401")
     base = _rev(root, "main")
     worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    worker["claim"] = claim(root)
     assert al.review_owed_by_evidence(root, worker) == []
 
     work = _refresh_commit(root, "wi-401", T_LATER + 100)
@@ -915,6 +951,7 @@ def test_a_record_commit_stacked_on_a_refresh_does_not_bury_the_peel(tmp_path):
     add_round(root, 3)
     base = _rev(root, "main")
     worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    worker["claim"] = claim(root)
     _git(root, "checkout", "-q", "wi-401")
     served = kv.governing_identity(root, "wi-401")
 
@@ -1069,6 +1106,7 @@ def test_a_round_drawn_after_a_refresh_is_visible_to_both_readers(tmp_path):
     _commit(root, "WI-401: close\n\nWI: WI-401", when=T_CODE + 50)
     base = _rev(root, "main")
     worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    worker["claim"] = claim(root)
 
     work = _refresh_commit(root, "wi-401", T_LATER + 100)
     assert kv.tree_identity(root, "HEAD") != kv.tree_identity(root, work), (
@@ -1222,6 +1260,7 @@ def _loop_ctx(al, root, rp_int=1, **over):
             "train": "wi-401",
             "assigned": ["WI-401"],
             "base": _rev(root, "main"),
+            "claim": claim(root),
             "rework": "",
         },
         run=al.LoopRun(routing=al.RoutingState(rp_int, 900, set(), 3, {})),
@@ -1326,7 +1365,7 @@ def test_a_minting_adjudication_still_owes_its_round(tmp_path):
     root = adjudication_repo(tmp_path, "when-minting", drafts_class="spine")
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
     assert refusal is not None
-    assert "no logged review round" in refusal
+    assert "no fresh full-lane review round" in refusal
 
 
 # --- 5. the loop side: the honest banner, the shared derivation, the rollup ---
@@ -1383,6 +1422,7 @@ def test_the_trailer_count_is_derived_at_the_governing_tree(tmp_path):
         "train": "wi-401",
         "assigned": ["WI-401"],
         "base": _rev(root, "main"),
+        "claim": claim(root),
         "rework": "",
     }
     first = kv.parse_trailer(al.review_verdict_trailer(root, "APPROVE", worker))
@@ -1410,6 +1450,7 @@ def test_the_review_owed_derivation_and_the_gate_share_one_definition(tmp_path):
     _git(root, "checkout", "-q", "wi-401")
     base = _rev(root, "main")
     worker = {"train": "wi-401", "assigned": ["WI-401"], "base": base, "rework": ""}
+    worker["claim"] = claim(root)
     reviews = root / "docs" / "reviews" / "wi-401"
 
     # The train's WI trailer is what makes the lane BUILT; without it no round
@@ -1594,7 +1635,7 @@ def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, c
     # an evidence range that names nothing, and asserted to be a LINE and not a
     # stop — the round still records and still commits its scoreboard.
     blind = _loop_ctx(al, root, scoreboard=reviews / "scoreboard.txt")
-    blind.worker["base"] = _rev(root, "wi-401")
+    blind.worker["claim"] = _rev(root, "wi-401")  # binds no round
     blind.run.routing.round_verdicts = [
         ("REVIEW-A", score.parse_verdict(APPROVE), "anthropic", "model-a")
     ]
@@ -2156,3 +2197,307 @@ def test_a_rework_that_moves_the_spec_draws_its_round(tmp_path, capsys):
     assert code is None
     assert "scheduling review round" in capsys.readouterr().out
     assert st.next_phase != "DESIGN-CHECK"
+
+
+# --- WI-884: only the fresh full-lane round from the claim base gates ---------
+#
+# The three gate hazards WI-847's builder found, each driven on the real gate:
+# a lane whose only rounds are NARROW fell through to the legacy hand-rollup
+# window; a narrow APPROVE at the tip raised the unchanged-rework page; and the
+# gate's base was the merge-base with trunk, which a refresh moves. Then the
+# Trust ruling's invalid evidence: a partial or refusable round file.
+
+
+def _gate(root):
+    return integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+
+
+def test_a_lane_with_only_narrow_rounds_does_not_clear_the_gate(tmp_path):
+    root = rounds_repo(tmp_path)
+    add_round(root, 3, kind="narrow")
+    # The legacy window it used to fall through to: a hand-authored APPROVE
+    # naming this tree, which must not clear it either.
+    _git(root, "checkout", "-q", "wi-401")
+    rollup = root / "docs" / "reviews" / "WI-401-REVIEW-A.md"
+    rollup.write_text(APPROVE, encoding="utf-8", newline="\n")
+    _commit(root, "a hand-compiled rollup", when=T_LATER + 50)
+    _git(root, "checkout", "-q", "main")
+
+    refusal = _gate(root)
+    assert refusal is not None, "a narrow verdict (or the legacy rollup) cleared"
+    assert "no fresh full-lane review round" in refusal
+    assert "narrow round never clears" in refusal
+    # ...and the schedulers' reading of the same evidence owes the full round.
+    want = kv.governing_identity(root, "wi-401")
+    entries = kv.branch_entries(root, "wi-401", claim(root), want, score.parse_verdict)
+    assert entries == [] and kv.phases_owed(entries, 1) == ["REVIEW-A"]
+
+    add_round(root, 4, when=T_LATER + 100)  # the fresh full-lane round
+    assert _gate(root) is None
+
+
+def test_a_full_round_from_a_retained_session_does_not_clear_the_gate(tmp_path):
+    # "From a session minted for that review": the service records a retained
+    # session's generation, and such a session is not fresh.
+    root = rounds_repo(tmp_path)
+    add_round(root, 3, gen="2")
+    assert "no fresh full-lane review round" in _gate(root)
+
+
+def test_a_lane_with_no_claim_commit_holds_and_names_it(tmp_path):
+    root = git_repo(tmp_path)
+    docs = root / "docs"
+    docs.mkdir(exist_ok=True)
+    (docs / "review-policy").write_text("1\n", encoding="utf-8", newline="\n")
+    _commit(root, "declare the review policy", when=T_BASE)
+    _git(root, "checkout", "-q", "-b", "wi-401")
+    (root / "src").mkdir(exist_ok=True)
+    (root / "src" / "widget.py").write_text("V = 1\n", encoding="utf-8", newline="\n")
+    _commit(root, "feat: the widget", when=T_CODE)
+    _git(root, "checkout", "-q", "main")
+    add_round(root, 3, base=_rev(root, "main"))  # a full round over the merge-base
+
+    refusal = _gate(root)
+    assert refusal is not None and "no readable claim commit" in refusal
+
+
+def test_the_gate_range_survives_a_trunk_refresh(tmp_path):
+    root = rounds_repo(tmp_path)
+    claimed = claim(root)
+    # Trunk moves on (another lane lands), and the lane refreshes onto it.
+    (root / "other.txt").write_text("another lane\n", encoding="utf-8", newline="\n")
+    _commit(root, "feat: another lane lands", when=T_CODE + 20)
+    _git(root, "checkout", "-q", "wi-401")
+    _git(root, "merge", "-q", "--no-edit", "main")
+    _git(root, "checkout", "-q", "main")
+    moved = _git(root, "merge-base", "main", "wi-401").strip()
+    assert moved != claimed, "the refresh must really move the merge-base"
+    assert claim(root) == claimed, "the claim base is not moved by a refresh"
+
+    # A "full" round whose range starts at the MOVED merge-base covers only
+    # part of the lane, so it does not gate...
+    add_round(root, 3, base=moved)
+    refusal = _gate(root)
+    assert refusal is not None and claimed[:10] in refusal
+    # ...and the round over the whole lane, claim base to tip, does.
+    add_round(root, 4, when=T_LATER + 100)
+    assert _gate(root) is None
+
+
+@pytest.mark.parametrize(
+    "text, reviewed",
+    [
+        ("# Review A\n\nModel: test/reviewer\n\n- [MAJOR] src/w", True),  # partial
+        (APPROVE, False),  # no `Reviewed: <sha>` opener
+        ("# Review A\n\nVERDICT: APPROVE findings=2\n", True),  # count mismatch
+        ("# Review A\n\nVERDICT: CHANGES-REQUESTED findings=0\n", True),
+        (APPROVE, "\nReviewed: {}\n\n"),  # the opener is not the first line
+        (APPROVE, "  Reviewed: {}\n\n"),  # leading whitespace on the opener
+        (APPROVE, "Reviewed: {} \n\n"),  # trailing whitespace on the opener
+    ],
+)
+def test_a_partial_or_refusable_round_file_does_not_clear_the_gate(
+    tmp_path, text, reviewed
+):
+    root = rounds_repo(tmp_path)
+    add_round(root, 3)  # an earlier APPROVE at the same tree
+    assert _gate(root) is None
+    add_round(root, 4, text=text, reviewed=reviewed, when=T_LATER + 100)
+
+    refusal = _gate(root)
+    assert refusal is not None, "invalid evidence cleared, or an older APPROVE did"
+    assert "REVIEW-A has no valid verdict" in refusal
+    # Invalid evidence is no verdict of either kind: the round is owed again.
+    want = kv.governing_identity(root, "wi-401")
+    entries = kv.branch_entries(root, "wi-401", claim(root), want, score.parse_verdict)
+    assert kv.phases_owed(entries, 1) == ["REVIEW-A"]
+
+
+def test_the_filing_check_is_the_one_the_gate_applies():
+    sha = "a" * 40
+    good = "Reviewed: {}\n\n{}".format(sha, APPROVE)
+    assert kv.filing_refusal(good, sha, score.parse_verdict) is None
+    assert "Reviewed:" in kv.filing_refusal(APPROVE, sha, score.parse_verdict)
+    garbled = "Reviewed: {}\n\nVERDICT: APPROVE\n".format(sha)
+    assert kv.filing_refusal(garbled, sha, score.parse_verdict)
+    # The opener is the FIRST PHYSICAL LINE, exactly: its line ending (LF or
+    # CRLF) is not part of it, but no line is skipped and nothing is stripped.
+    crlf = good.replace("\n", "\r\n")
+    assert kv.filing_refusal(crlf, sha, score.parse_verdict) is None
+    trailing = good.replace(sha, sha + " ", 1)
+    feed = "Reviewed: {}\x0cx\n\n{}".format(sha, APPROVE)
+    for bad in ("\n" + good, "\r\n" + good, " " + good, "\t" + good, trailing, feed):
+        assert "Reviewed:" in kv.filing_refusal(bad, sha, score.parse_verdict)
+
+
+def test_a_narrow_approve_at_the_tip_does_not_raise_the_unchanged_rework_page(
+    tmp_path, capsys
+):
+    # A full round refused; the rework moved the tree; a NARROW round approved
+    # the rework at the tip. The fresh full-lane round is now owed and must be
+    # drawn: no page, and nothing reads the narrow APPROVE as a served tree.
+    root = _built_lane_with_a_round(tmp_path)
+    _rework(root, "src/widget.py", "VALUE = 3\n")
+    add_round(root, 4, kind="narrow", when=T_LATER + 100)
+    assert not kv.tree_already_judged(root, "wi-401", claim(root), score.parse_verdict)
+
+    _al_mod, ctx, code = _drive_committing_build(root, _rev(root, "wi-401"))
+    st = ctx.run.routing
+    assert code is None
+    assert st.review_queue == ["REVIEW-A"], "the full-lane round was not drawn"
+    assert "rework changed no non-record path" not in capsys.readouterr().out
+
+
+def test_an_invalid_round_file_at_the_tip_raises_no_page_either(tmp_path):
+    root = _built_lane_with_a_round(tmp_path, text="# Review A\n\n- [MAJOR] x")
+    assert not kv.tree_already_judged(root, "wi-401", claim(root), score.parse_verdict)
+
+
+@pytest.mark.parametrize("text", [APPROVE, CHANGES, "# Review A\n\n- [MAJOR] x"])
+def test_with_no_base_nothing_is_judged_and_only_a_verdict_judges(tmp_path, text):
+    # LLR-207's two arms, each beside its opposite: a logged round sits at the
+    # lane's current tree in every case. With the claim base, the tree reads
+    # judged exactly when that round's entry CARRIES a verdict (APPROVE or
+    # CHANGES-REQUESTED) and not for an entry whose file parses to none. With
+    # no base - None or empty - it never reads judged, whatever sits there.
+    root = _built_lane_with_a_round(tmp_path, text=text)
+    want = kv.governing_identity(root, "wi-401")
+    entries = kv.branch_entries(root, "wi-401", claim(root), want, score.parse_verdict)
+    assert len(entries) == 1, "the round is an entry at this tree in every case"
+    carries = entries[0][2] is not None
+    assert carries == (text != "# Review A\n\n- [MAJOR] x")
+
+    judged = kv.tree_already_judged
+    assert judged(root, "wi-401", claim(root), score.parse_verdict) is carries
+    for no_base in (None, ""):
+        assert judged(root, "wi-401", no_base, score.parse_verdict) is False
+
+
+def test_the_loop_draws_narrow_rounds_and_then_the_fresh_full_lane_round(tmp_path):
+    # The loop's iteration, driven through its own round ladder: a refused
+    # FULL round leaves its reviewed sha and round file, so the round after the
+    # rework is NARROW over the rework, briefed through the narrow renderer; a
+    # narrow APPROVE owes the fresh full-lane round at once.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    reviews = root / "docs" / "reviews" / "wi-401"
+    ctx = _loop_ctx(al, root, scoreboard=reviews / "scoreboard.txt")
+    st = ctx.run.routing
+    reviewed = _rev(root, "wi-401")
+    st.set_train_range("{}..{}".format(ctx.worker["base"], reviewed))
+    findings = "docs/reviews/wi-401/003-REVIEW-A-{}.md".format(reviewed[:7])
+    st.schedule_review_round(["REVIEW-A"])
+    verdict = score.parse_verdict(CHANGES)
+    st.record_review_verdict("REVIEW-A", verdict, "anthropic", "m", findings)
+    assert al.complete_review_round(ctx, "004") is None
+    assert st.narrow_from == (reviewed, findings)
+    assert st.review_queue == []
+
+    tip = _rev(root, "wi-401")
+    brief, scope = al.review_round_brief(
+        {},
+        "REVIEW-A",
+        "v.md",
+        root=root,
+        worker=ctx.worker,
+        sha=tip,
+        narrow_from=st.narrow_from,
+    )
+    assert scope == kv.format_scope(kv.NARROW, reviewed, tip)
+    assert "a NARROW round" in brief and findings in brief
+    narrow_log = "# review-scope: {}\n# session-gen:\n".format(scope)
+    assert kv.gating_span(narrow_log) is None
+
+    st.set_train_range("{}..{}".format(ctx.worker["base"], tip))
+    st.schedule_review_round(["REVIEW-A"])
+    st.record_review_verdict("REVIEW-A", score.parse_verdict(APPROVE), "openai", "m")
+    assert al.complete_review_round(ctx, "005") is None
+    assert st.narrow_from is None
+    assert st.review_queue == ["REVIEW-A"], "the narrow APPROVE owes the full round"
+
+    brief, scope = al.review_round_brief(
+        {},
+        "REVIEW-A",
+        "v.md",
+        root=root,
+        worker=ctx.worker,
+        sha=tip,
+        narrow_from=st.narrow_from,
+    )
+    assert scope == kv.format_scope(kv.FULL, claim(root), tip)
+    assert "FULL-LANE round" in brief and "Reviewed: {}".format(tip) in brief
+    full_log = "# review-scope: {}\n# session-gen:\n".format(scope)
+    assert kv.gating_span(full_log) == (claim(root), tip)
+
+
+def _next_brief_kind(al, root, st, worker):
+    """The kind of round the loop would brief next at the lane tip, `FULL` only
+    when its recorded scope binds the claim base to that tip exactly."""
+    tip = _rev(root, "wi-401")
+    _brief, scope = al.review_round_brief(
+        {},
+        "REVIEW-A",
+        "v.md",
+        root=root,
+        worker=worker,
+        sha=tip,
+        narrow_from=st.narrow_from,
+    )
+    if scope == kv.format_scope(kv.FULL, claim(root), tip):
+        return kv.FULL
+    return scope.split(" ", 1)[0]
+
+
+@pytest.mark.parametrize(
+    "narrow_first, text",
+    [
+        (True, "# Review A\n\n- [MAJOR] x"),  # a narrow round with no verdict
+        (False, APPROVE),  # a full-lane APPROVE: it owes no further round
+        (False, "# Review A\n\n- [MAJOR] x"),  # a full round with no verdict
+    ],
+)
+def test_another_verdict_and_a_resume_draw_a_full_lane_round(
+    tmp_path, narrow_first, text
+):
+    # LLR-045's "another verdict draws full next, and a resume draws full":
+    # neither a CHANGES-REQUESTED (which draws NARROW) nor a narrow APPROVE
+    # (which queues the full round at once). Driven through the loop's own
+    # round close and the resume path, and briefed through review_round_brief.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    ctx = _loop_ctx(al, root, scoreboard=root / "docs" / "reviews" / "sb.txt")
+    st = ctx.run.routing
+    st.set_train_range("{}..{}".format(ctx.worker["base"], _rev(root, "wi-401")))
+    if narrow_first:  # a refused full round leaves the next one NARROW
+        st.schedule_review_round(["REVIEW-A"])
+        changes = score.parse_verdict(CHANGES)
+        st.record_review_verdict("REVIEW-A", changes, "anthropic", "m", "f.md")
+        assert al.complete_review_round(ctx, "004") is None
+        assert _next_brief_kind(al, root, st, ctx.worker) == kv.NARROW
+    st.schedule_review_round(["REVIEW-A"])
+    st.record_review_verdict("REVIEW-A", score.parse_verdict(text), "openai", "m")
+    assert al.complete_review_round(ctx, "005") is None
+    assert st.narrow_from is None and st.review_queue == []
+    assert _next_brief_kind(al, root, st, ctx.worker) == kv.FULL
+
+    # A RESUMED run over a lane that owes its round (built, no verdict at the
+    # tree) draws the round full, whatever the parked run's state was.
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "src" / "widget.py").write_text("V = 7\n", encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: rework\n\nWI: WI-401", when=T_LATER + 200)
+    setup = types.SimpleNamespace(
+        worker=ctx.worker,
+        routing=types.SimpleNamespace(managed=True, registry={}),
+    )
+    resumed = al.RoutingState(1, 900, set(), 3, {})
+    al.resume_owed_round(root, setup, resumed, 1, root / "docs" / "iteration")
+    assert resumed.review_queue == ["REVIEW-A"] and resumed.narrow_from is None
+    assert _next_brief_kind(al, root, resumed, ctx.worker) == kv.FULL
+
+
+def test_the_session_log_records_the_review_scope(tmp_path):
+    meta = {"session": "007", "stamp": "20260101-000000", "train": "t1"}
+    meta["review-scope"] = kv.format_scope(kv.FULL, "a" * 40, "b" * 40)
+    ac.write_session_log(tmp_path, meta, "transcript")
+    (log,) = tmp_path.glob("*.log")
+    assert kv.gating_span(log.read_text(encoding="utf-8")) == ("a" * 40, "b" * 40)

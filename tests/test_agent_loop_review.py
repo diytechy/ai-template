@@ -6,6 +6,7 @@ reviewer, so no test touches a real CLI. Absent files keep the legacy behavior
 
 import csv
 import json
+import re
 import subprocess
 import sys
 
@@ -461,15 +462,34 @@ def test_prompt_map_slots_a_custom_reviewer_template(managed_repo):
     (ctl / "done_after").write_text("2", encoding="utf-8")
     tmpl = repo / "docs" / "prompts" / "rev.md"
     tmpl.parent.mkdir(parents=True)
+    # Every slot of the shipped reviewer template: both loop review briefs
+    # fill it strictly (WI-884), so the round's facts always reach the reviewer.
     tmpl.write_text(
-        "CUSTOM-REVIEW-MARKER — write your verdict.\nWrite your verdict to {verdict}\n",
+        "CUSTOM-REVIEW-MARKER — review {wis} over {trunk}...{head} against {process_doc} with {scripts}.\nWrite your verdict to {verdict}{round_facts}\n",
         encoding="utf-8",
     )
     proc = _loop(repo, cmd, "--prompt-map", "REVIEW-A=docs/prompts/rev.md")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
     assert "CUSTOM-REVIEW-MARKER" in prompts  # the mapped template was used
+    assert "FULL-LANE round" in prompts  # ...carrying the round's own facts
     assert "prompt-map [REVIEW-A]" in proc.stdout  # surfaced in the banner
+
+
+def test_a_review_template_that_cannot_carry_the_round_fails_preflight(
+    managed_repo,
+):
+    # A template missing the slots would raise at the first review session,
+    # mid-run; it is refused before iteration 1 instead, by name (WI-884).
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    tmpl = repo / "docs" / "prompts" / "rev.md"
+    tmpl.parent.mkdir(parents=True)
+    tmpl.write_text("Write your verdict to {verdict}\n", encoding="utf-8")
+    proc = _loop(repo, cmd, "--prompt-map", "REVIEW-A=docs/prompts/rev.md")
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "prompt-map [REVIEW-A]: a review template must declare" in proc.stderr
+    assert not (ctl / "prompts.txt").exists(), "no session launched"
 
 
 def test_prompt_map_missing_file_fails_preflight(managed_repo):
@@ -1007,7 +1027,8 @@ def test_reviewer_prompt_renders_trunk_and_process_doc_slots(managed_repo):
     prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
     rev_block = prompts.split("=== revb ===\n", 1)[1].split("\n=== ", 1)[0]
     assert "{trunk}" not in rev_block and "{process_doc}" not in rev_block
-    assert "git diff llm/train/t1...HEAD" in rev_block
+    # The reading scope ends at the REVIEWED commit, not a moving HEAD (WI-884).
+    assert re.search(r"git diff llm/train/t1\.\.\.[0-9a-f]{40} ", rev_block)
     assert "':(exclude)docs/iteration'" in rev_block
     assert "project-trajectory/PROCESS.md" in rev_block
     # Round 2: the script directory is the same hazard — this fixture has no
@@ -1032,7 +1053,8 @@ def test_reviewer_prompt_names_the_rows_under_review(managed_repo):
     assert "  - WI-201 — Scoped work for WI-201" in rev_block
     # Naming the rows must not narrow the READING scope, which is still the
     # diff — the redaction and the three-dot range are untouched.
-    assert "git diff llm/train/t1...HEAD" in rev_block
+    # The reading scope ends at the REVIEWED commit, not a moving HEAD (WI-884).
+    assert re.search(r"git diff llm/train/t1\.\.\.[0-9a-f]{40} ", rev_block)
     assert "stays the diff itself" in rev_block
 
 
@@ -1042,15 +1064,25 @@ def test_reviewer_prompt_without_an_assignment_says_so(managed_repo):
     # sentence, never a literal `{wis}` in a brief that is actually SENT and
     # never an empty bullet reading "this diff covers nothing".
     repo, _ctl, _cmd = managed_repo
-    text = agent_loop.reviewer_prompt({}, "REVIEW-A", "v.md", root=repo, worker=None)
+    sha = "b" * 40
+    text = agent_loop.reviewer_prompt(
+        {}, "REVIEW-A", "v.md", root=repo, worker=None, base="a" * 40, sha=sha
+    )
     assert "{wis}" not in text
     assert "(not declared for this round — infer the scope from the diff)" in text
-    # An operator override carrying none of the slots still renders unchanged.
+    # An operator override that cannot carry the round's facts is refused, not
+    # sent without them (WI-884; preflight refuses it before iteration 1).
     override = "review the diff. Write your verdict to {verdict} and stop.\n"
-    out = agent_loop.reviewer_prompt(
-        {"REVIEW-A": override}, "REVIEW-A", "v.md", root=repo, worker=None
-    )
-    assert out == "review the diff. Write your verdict to v.md and stop.\n"
+    with pytest.raises(agent_loop.prompts.PromptError):
+        agent_loop.reviewer_prompt(
+            {"REVIEW-A": override},
+            "REVIEW-A",
+            "v.md",
+            root=repo,
+            worker=None,
+            base="a" * 40,
+            sha=sha,
+        )
 
 
 def test_review_owed_resume_keeps_the_relaxed_audit_trail(managed_repo, tmp_path):
@@ -1455,7 +1487,13 @@ def _claimed_lane(tmp_path, closed_text):
 
 def _brief(repo, worker):
     return agent_loop.reviewer_prompt(
-        {}, "REVIEW-A", repo / "docs" / "reviews" / "t1" / "v.md", repo, worker
+        {},
+        "REVIEW-A",
+        repo / "docs" / "reviews" / "t1" / "v.md",
+        root=repo,
+        worker=worker,
+        base=worker["base"],
+        sha=_git(repo, "rev-parse", "HEAD"),
     )
 
 

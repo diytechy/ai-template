@@ -788,6 +788,7 @@ def test_session_meta_is_the_log_row_in_the_logs_own_column_order():
         "guardrails",
         "outcome",
         "commits",
+        "review-scope",
         "tokens",
         "cost-usd",
         "wall-secs",

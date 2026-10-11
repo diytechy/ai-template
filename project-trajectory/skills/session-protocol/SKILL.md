@@ -178,9 +178,9 @@ session's results are recorded.
   **Do not hand-compile `docs/reviews/WI-<n>-REVIEW-A.md`.** Nothing in the kit
   writes it and the gate no longer asks for it: the round files a logged
   reviewer session produced ARE the record, and the readable per-scope summary
-  is generated (`gen_verdict_rollup.py`). The legacy path still clears the gate
-  during the migration window and says so on stderr — a WARN there means a lane
-  merged on the fossil, not on its evidence.
+  is generated (`gen_verdict_rollup.py`). The legacy file never clears the
+  gate: only a fresh full-lane round from the lane's claim base does, and a
+  narrow round's verdict steers iteration only (WI-884).
 - Update `docs/status.md` to point at what's next; don't leave a stale "next".
 - **Coordinator close-out (the context guard, `[coordinator]` in
   `docs/process.toml`).** When the guard says drain mode is latched, the

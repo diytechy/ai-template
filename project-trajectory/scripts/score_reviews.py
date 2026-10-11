@@ -147,14 +147,17 @@ class Finding:
 
 
 class Verdict:
-    __slots__ = ("model", "verdict", "declared_n", "findings", "text")
+    __slots__ = ("model", "verdict", "declared_n", "findings", "text", "refusal")
 
-    def __init__(self, model, verdict, declared_n, findings, text):
+    def __init__(self, model, verdict, declared_n, findings, text, refusal=None):
         self.model = model
         self.verdict = verdict
         self.declared_n = declared_n
         self.findings = findings
         self.text = text
+        # Why the shared review-line reader refused the VERDICT line, None when
+        # it read one: the filing check's reason (`kitlib.verdict.filing_refusal`).
+        self.refusal = refusal
 
 
 def _parse_anchor(token):
@@ -207,7 +210,7 @@ def parse_verdict(text, model=None):
     VERDICT line in any case) has NO verdict, which the gate reads fail-closed.
     """
     findings = []
-    machine, _refusal = review_line(text)
+    machine, refusal = review_line(text)
     verdict, declared_n = machine or (None, None)
     hdr_model = None
     for ln in text.splitlines():
@@ -224,6 +227,7 @@ def parse_verdict(text, model=None):
         declared_n=declared_n,
         findings=findings,
         text=text,
+        refusal=refusal,
     )
 
 

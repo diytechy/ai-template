@@ -3,12 +3,16 @@ id = "WI-884"
 title = "The loop schedules narrow review rounds, and the merge gate binds a fresh full-lane final review"
 workstream = "process"
 sr_refs = ["SR-154"]
-specref = "docs/log.d/2026-10-06-wave18-coordinator.md"
+specref = ""
 needs = ["WI-847"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 +++
+
+## Deliverable
+
+Landed 2026-10-10. The loop schedules narrow iteration rounds: after a CHANGES-REQUESTED round it records the reviewed commit and that round's files (`close_round_scope`) and briefs the next round narrow over the rework (`review_round_brief`, `narrow_reviewer_prompt`); a narrow APPROVE queues a fresh full-lane round, and any other verdict or a resume draws full. Reviewers stay fresh sessions. The full-lane brief is filled strictly, binds the claim-base-to-reviewed-commit range and asks for the `Reviewed: <full sha>` opener; each REVIEW session's log records its scope. The merge gate counts only a fresh, logged, full-lane round from the claim base (read from the claim commit by branch name, never a merge-base) to the reviewed commit: a narrow-only lane, a retained session, a missing claim commit, a partial range or an invalid latest round file holds the gate by name, with no fallback to an older APPROVE; the legacy hand-authored rollup window is deleted (D-001, a downstream migration in RESYNC_PACK). One filing check (`kitlib.verdict.filing_refusal`, the review's first physical line exactly) serves the filing tool and the gate. Spine: SR-154, SR-156, LLR-045, LLR-140, LLR-207 and LLR-262 re-attested at sitting 003; TC-082 and TC-205 at sitting 004 (acts on the lane); IF-175 updated. Reviews by Codex gpt-6-luna for gpt-6.1-sol (D-011): full 001 (two MINOR, answered), narrow 002 APPROVE, fresh full-lane gate 005 APPROVE, 0 findings.
 
 ## Context
 
