@@ -1,0 +1,39 @@
+# docs/decisions/wi-887.toml — delegated decisions made in lane wi-887
+# (overnight leg 02, 2026-10-11). Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "Done-when's 'the gate's evidence that a verdict came from the final reviewer's scope is the verdict file itself, under WI-884's filing contract' is read as WI-884's whole filing contract, which already binds the coordinator-written `# review-scope:` and `# session-gen:` records in the committed session log (WI-884 D-004). Round 1's fix (plan R1, answering review 001's F1) adds a distinct final kind to that existing `# review-scope:` record and has the gate read that one binding, with the mode resolved from both dials (retention on and final_reviewer persisted) in one reader. The new session-mode and keep-scope columns stay audit-only. The reviewer-written round text is not used as provenance: a reviewer cannot attest where its own session came from."
+alternative = "Read 'the verdict file itself' as the round file's own text, and have the reviewer write its scope into it; or amend the Done-when wording first under a bound verdict."
+reversal_cost = "Medium: an overrule moves the binding from the session log header to the round file, rewriting the gate reader and its tests before landing."
+why_not_escalated = "It applies the spec's own pointer to WI-884's contract, adds no authority beyond the record the gate already reads, and the checkpoint sitting judges the rows that state it; the lane's Done-when text is unchanged."
+review = ""
+
+[decision.D-002]
+decided = "The two upward size re-stamps (agent_loop.py 2408 -> 2416, then 2418 and 2427 in the fix rounds; agent_common.py 1051 -> 1053) are accepted as reviewed bumps with their reasons in the ratchet, as the ratchet's long record of reviewed bumps allows for modules already past the threshold; no verbatim helper move was made to net them to zero."
+alternative = "Move a pure helper verbatim out of each module (WI-884 D-009's pattern) so neither grows."
+reversal_cost = "Low: a later verbatim move can re-stamp both down."
+why_not_escalated = "Neither module is pushed past the threshold by this change; both were past it already, and the growth is the spec's own wiring and log columns."
+review = ""
+
+[decision.D-003]
+decided = "Reviews in this lane run on Codex gpt-6.1-sol at medium: the signed-in account offers it again (probed 2026-10-10 22:40 local), so coordinator-2026-10-10 D-017's Luna substitution no longer applies."
+alternative = "Keep reviewing on gpt-6-luna at high for continuity with leg 01."
+reversal_cost = "Low."
+why_not_escalated = "It restores the owner's named reviewer."
+review = ""
+
+[decision.D-004]
+decided = "The full-lane gate 007 (six findings) was triaged under PROCESS.md section 6: none needs a compromised host. Two went to dispute sitting 008 and both were ruled FIX (final): DA (gate F1, the third round of the store record-shape class: type every optional field a consumer reads, in the one variant declaration) and DB (gate F6, SR-239's two shalls fail the singular-requirement gate: restore one shall per row without the reviewer's six-way split). F2 (a present invalid final_reviewer value with a valid percent left retention on) was fixed as written; F3, F4 and F5 (row-text clarity: IF-175 notes, TC-205 Expected, LLR-270's opening) go to Terra with DB."
+alternative = "Fix DA as a fourth build round without a sitting, or dismiss DB on sittings 005/006's approval."
+reversal_cost = "Low: the rulings are final under the skill; the fixes are tests-backed."
+why_not_escalated = "The dispute sitting is the skill's final arbiter for a contested or third-round finding."
+review = ""
+
+[decision.D-005]
+decided = "The second full-lane gate 010's one finding (a malformed nested lease admitted by the store reader) re-raised the class dispute 008 had ruled on, and its reproduction needs a hand-edited runtime store file; the coordinator sent it to dispute 011 rather than dismiss it under the threat model, because the store is the trust boundary the spec's Trust section names. Dispute 011 ruled DC FIX (final), correcting 008's statement about nested lease values; the builder typed the lease holder and deadline and the judged items in the one declaration. No row text became untrue (the rows already said every consumed field is typed), so no sitting was owed."
+alternative = "Dismiss DC under PROCESS.md section 6 (a tampered host file) without a sitting."
+reversal_cost = "Low: the fix narrows what the reader admits; an overrule would only drop the extra typing."
+why_not_escalated = "The dispute sitting's ruling is final; the change is inside the spec's named store boundary."
+review = ""

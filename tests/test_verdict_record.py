@@ -2244,6 +2244,85 @@ def test_a_full_round_from_a_retained_session_does_not_clear_the_gate(tmp_path):
     assert "no fresh full-lane review round" in _gate(root)
 
 
+def _final_reviewer(root, body):
+    """Declare `[reviewer]` on the trunk the gate reads (WI-887)."""
+    (root / "docs" / "process.toml").write_text(body, encoding="utf-8", newline="\n")
+    _commit(root, "declare the final reviewer", when=T_CODE + 5)
+
+
+PERSISTED = '[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = "persisted"\n'
+
+
+def test_in_persisted_mode_the_final_reviewers_resumed_round_clears_the_gate(
+    tmp_path,
+):
+    # WI-887's Trust ruling: in persisted mode the gate accepts a session
+    # resumed from the persisted final reviewer's own scope. The coordinator
+    # records that fact itself: the loop renders the `final` kind only for a
+    # full round its draw kept under the final stage (D-001).
+    root = rounds_repo(tmp_path)
+    _final_reviewer(root, PERSISTED)
+    add_round(root, 3, kind="final", gen="2")
+    assert _gate(root) is None
+    want = kv.governing_identity(root, "wi-401")
+    entries = kv.branch_entries(root, "wi-401", claim(root), want, score.parse_verdict)
+    assert kv.phases_owed(entries, 1) == []
+
+
+def test_a_retained_full_round_never_clears_the_gate_in_persisted_mode(tmp_path):
+    # Review 001 F1: a `full` round from a retained session is not the final
+    # reviewer's by inference from the mode word; only the recorded `final`
+    # kind says so. A fresh full round still clears it in either mode.
+    root = rounds_repo(tmp_path)
+    _final_reviewer(root, PERSISTED)
+    add_round(root, 3, gen="2")
+    assert "no fresh full-lane review round" in _gate(root)
+    add_round(root, 4, when=T_LATER + 100)
+    assert _gate(root) is None
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        '[reviewer]\nfinal_reviewer = "persisted"\n',  # retention off: fresh
+        '[reviewer]\ncontext_reset_pct = 0\nfinal_reviewer = "persisted"\n',
+        "[reviewer]\ncontext_reset_pct = 50\n",  # fresh mode
+    ],
+)
+def test_a_final_round_clears_the_gate_only_with_both_dials_on(tmp_path, body):
+    root = rounds_repo(tmp_path)
+    _final_reviewer(root, body)
+    add_round(root, 3, kind="final", gen="2")
+    assert "no fresh full-lane review round" in _gate(root)
+
+
+def test_a_resumed_iteration_sessions_verdict_does_not_clear_the_gate(tmp_path):
+    # In either mode: an iteration reviewer's resumed session serves a narrow
+    # round, and a narrow verdict steers iteration and never gates.
+    root = rounds_repo(tmp_path)
+    _final_reviewer(root, PERSISTED)
+    add_round(root, 3, kind="narrow", gen="3")
+    assert "no fresh full-lane review round" in _gate(root)
+    assert not kv.tree_already_judged(root, "wi-401", claim(root), score.parse_verdict)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "[reviewer]\ncontext_reset_pct = 50\n",  # fresh, the default
+        '[reviewer]\nfinal_reviewer = "Persisted"\n',  # malformed: reads fresh
+        "[reviewer]\nfinal_reviewer = true\n",  # not a word: reads fresh
+    ],
+)
+def test_in_fresh_mode_a_resumed_full_round_still_holds_the_gate(tmp_path, body):
+    root = rounds_repo(tmp_path)
+    _final_reviewer(root, body)
+    add_round(root, 3, gen="2")
+    assert "no fresh full-lane review round" in _gate(root)
+    add_round(root, 4, when=T_LATER + 100)  # a fresh full-lane round clears it
+    assert _gate(root) is None
+
+
 def test_a_lane_with_no_claim_commit_holds_and_names_it(tmp_path):
     root = git_repo(tmp_path)
     docs = root / "docs"
@@ -2428,6 +2507,38 @@ def test_the_loop_draws_narrow_rounds_and_then_the_fresh_full_lane_round(tmp_pat
     assert "FULL-LANE round" in brief and "Reviewed: {}".format(tip) in brief
     full_log = "# review-scope: {}\n# session-gen:\n".format(scope)
     assert kv.gating_span(full_log) == (claim(root), tip)
+
+
+def test_only_a_full_round_drawn_under_the_final_stage_records_the_final_kind(
+    tmp_path,
+):
+    # WI-887 D-001: the `final` kind is derived from the stage the loop's draw
+    # settled (`session_keep.review_retention`), never composed by hand, so a
+    # narrow round, and a full round drawn under no stage, cannot carry it.
+    al = _al()
+    root = rounds_repo(tmp_path)
+    ctx = _loop_ctx(al, root)
+    tip = _rev(root, "wi-401")
+
+    def scope(narrow_from, stage):
+        return al.review_round_brief(
+            {},
+            "REVIEW-A",
+            "v.md",
+            root=root,
+            worker=ctx.worker,
+            sha=tip,
+            narrow_from=narrow_from,
+            stage=stage,
+        )[1]
+
+    assert scope(None, "final") == "final {}..{}".format(claim(root), tip)
+    assert scope(None, "") == kv.format_scope(kv.FULL, claim(root), tip)
+    narrow = scope((claim(root), "f.md"), "final")
+    assert narrow == kv.format_scope(kv.NARROW, claim(root), tip)
+    log = "# review-scope: {}\n# session-gen: 2\n".format(scope(None, "final"))
+    assert kv.gating_span(log, persisted=True) == (claim(root), tip)
+    assert kv.gating_span(log, persisted=False) is None
 
 
 def _next_brief_kind(al, root, st, worker):

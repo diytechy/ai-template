@@ -128,3 +128,8 @@ Each line below is a human's citation of the act that authorised a refresh absor
 - 2026-10-10 — refresh under approval. Copied: test-cases.toml (re-attested: TC-082, TC-205). Registries not named by this act keep their prior snapshot bytes.
 - 2026-10-10 — refresh under approval. Copied: test-cases.toml (re-attested: TC-055). Registries not named by this act keep their prior snapshot bytes.
 - 2026-10-10 — refresh under approval. Copied: low-level-requirements.toml (re-attested: LLR-270); test-cases.toml (re-attested: TC-268). Registries not named by this act keep their prior snapshot bytes.
+- 2026-10-11 — refresh under approval. Copied: system-requirements.toml (re-attested: SR-154, SR-156). Registries not named by this act keep their prior snapshot bytes.
+- 2026-10-11 — refresh under approval. Copied: low-level-requirements.toml (re-attested: LLR-045, LLR-140, LLR-207, LLR-262, LLR-269, LLR-270, LLR-305); test-cases.toml (re-attested: TC-205, TC-266, TC-322). Registries not named by this act keep their prior snapshot bytes.
+- 2026-10-11 — refresh under approval. Copied: system-requirements.toml (ref: WI-887); test-cases.toml (ref: WI-887). Registries not named by this act keep their prior snapshot bytes.
+- 2026-10-11 — refresh under approval. Copied: system-requirements.toml (re-attested: SR-239); low-level-requirements.toml (re-attested: LLR-270); test-cases.toml (re-attested: TC-205, TC-266, TC-351). Registries not named by this act keep their prior snapshot bytes.
+- 2026-10-11 — refresh under approval. Copied: low-level-requirements.toml (ref: docs/reviews/wi-887/009-ADJUDICATE-2310bdc.md). Registries not named by this act keep their prior snapshot bytes.

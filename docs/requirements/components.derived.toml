@@ -20,7 +20,7 @@
 components = 4
 design_rows = 302
 seam_rows = 243
-requirements_placed = 124
+requirements_placed = 125
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -395,6 +395,7 @@ seam_boundary_refs = [
   "IF-255",
   "IF-256",
   "IF-258",
+  "IF-260",
   "IF-262",
   "IF-264",
   "IF-265",
@@ -647,6 +648,7 @@ sr_refs = [
   "SR-235",
   "SR-237",
   "SR-238",
+  "SR-239",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -801,6 +803,7 @@ modules = [
   "project-trajectory/scripts/intake.py",
   "project-trajectory/scripts/integrate.py",
   "project-trajectory/scripts/kitlib/authority.py",
+  "project-trajectory/scripts/kitlib/config.py",
   "project-trajectory/scripts/kitlib/decisions.py",
   "project-trajectory/scripts/kitlib/dispute.py",
   "project-trajectory/scripts/kitlib/done_when.py",

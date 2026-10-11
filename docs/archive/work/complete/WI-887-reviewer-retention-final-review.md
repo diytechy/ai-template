@@ -3,12 +3,18 @@ id = "WI-887"
 title = "The loop's reviewer resumes within a lane, and the final reviewer is configurable, fresh or persisted"
 workstream = "process"
 sr_refs = ["SR-227"]
-specref = "docs/decisions/coordinator-2026-10-10.toml"
+specref = ""
 needs = ["WI-884"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 +++
+
+## Deliverable
+
+Landed 2026-10-11. The loop's REVIEW role can retain its session within one lane's iteration: store records carry a verbatim scope (lane@claim-base:phase:iteration|final), the record file name hashes route id plus scope (an empty scope keeps the adjudicator's name), and the store's one reader admits only the record variants its writers produce, every consumed and optional field typed, nested lease and judged values included; anything else is no record and the call mints. A new `[reviewer]` dial (`context_reset_pct`, `final_reviewer`), shipped off and read once by `kitlib.config.reviewer_dials`, fails closed to off and fresh on any malformed value. A narrow round pins its lane's retained reviewer route; drawing the full-lane round retires the iteration session and runs fresh or, persisted, under the final scope with its route pinned. The coordinator-written `# review-scope:` record gains a `final` kind; the gate admits a fresh full round in either mode and a `final` round only with retention on and persistence (lane D-001, for the owner). The reviewer's template text is resolved once per round and feeds both the brief and the governing identity. Two audit-only session-log columns, session-mode and keep-scope. RESYNC entry.
+
+Spine: SR-154 and SR-156 amended (persisted final admission); new SR-239 (reviewer retention, derived) split from SR-227, which is unchanged; LLR-045, LLR-140, LLR-207, LLR-262, LLR-269, LLR-270, LLR-305 and TC-205, TC-266, TC-322 amended; new TC-351; IF-099, IF-175, IF-247, IF-248, IF-260, IF-282 updated. Sittings 004 and 005 returned rows reworked in the lane, 006 and 009 blessed and anchored them (acts 107 to 110; act 111 re-anchors a traced-only code_symbol change, coordinator-2026-10-11 D-001); disputes 008 (DA, DB) and 011 (DC) ruled FIX. Reviews: 001 full (4 MAJOR), 002 narrow (2 MAJOR), 003 narrow APPROVE, gates 007 (6) and 010 (1), final gate 012 APPROVE, 0 findings (Codex gpt-6.1-sol, medium). Decisions: docs/decisions/wi-887.toml.
 
 ## Context
 

@@ -69,12 +69,14 @@ Contract IF-282: the adjudication request and the sign-in probe, the surface
     `AdjudicationRequest` carries `root`, the brief class `brief`, `route`
     (the registry row the caller SELECTED; None: no route), the work item
     `wi`, `role` (default ADJUDICATE), the operator's `prompt_templates`
-    overrides (None: the shipped templates), and the call's wall `deadline`
-    in seconds (None: 7200). `adjudication_keep(request)` returns the Keep the
-    adjudication launches under, or None where the `[adjudicator]` dial does
-    not cover it; its lease is the deadline plus 300 s, and its governing
+    overrides (None: the shipped templates), the call's wall `deadline`
+    in seconds (None: 7200), and the `scope` a loop review round is kept under
+    ("" for an adjudication; WI-887). `adjudication_keep(request)` returns the
+    Keep the call launches under, or None where the `[adjudicator]` dial (or,
+    for a review round, the `[reviewer]` dial) does not cover it; its lease is the deadline plus 300 s, and its governing
     template identity covers the templates of every class the dial retains,
-    so switching between retained classes does not drain the session.
+    so switching between retained classes does not drain the session, or,
+    for a review round, the reviewer template its brief is built from.
     `signin_status(root, family, run=None)` returns `signed-in`, `missing` or
     `unknown` for the family's dedicated CLI home, with no model call and
     nothing created. A family in `TOKEN_VARIABLES` (ANTHROPIC) reads its
@@ -326,6 +328,10 @@ def _identity(call):
         "tier": call.tier or "",
         "roster-row": call.route_id or "",
         "gen_ai.request.model": call.model or "",
+        # WI-887's audit columns: whether the session was minted fresh or
+        # resumed, and the scope it is kept under. No gate reads them.
+        "session-mode": "resumed" if call.keep and call.keep.session_id else "fresh",
+        "keep-scope": call.keep.scope if call.keep else "",
     }
     row.update(call.attribution)
     return row
@@ -655,10 +661,11 @@ def cli_version(prepared):
     return lines[0] if proc.returncode == 0 and lines else ""
 
 
-def plan_keep(root, cfg, *, route, role, brief, **kw):
-    """The Keep an adjudication launches under, or None: `session_keep.keep_for`
-    with the runner's version read first, and only when the keep operation
-    covers the call, so the off dial launches nothing extra. `route` is the
+def plan_keep(root, cfg, *, route, role, brief, scope="", **kw):
+    """The Keep an adjudication, or a loop review round under `scope`
+    (WI-887), launches under, or None: `session_keep.keep_for` with the
+    runner's version read first, and only when the keep operation covers the
+    call, so the off dial launches nothing extra. `route` is the
     registry row the caller SELECTED (None: no route). A covered call is
     refused first, before any lease or home exists, unless its launch
     prepares from that row (`prepare_launch`) and its family's home is signed
@@ -670,7 +677,7 @@ def plan_keep(root, cfg, *, route, role, brief, **kw):
     Implements: SR-227, LLR-270
     """
     route_id = getattr(route, "id", "") or ""
-    if route is None or not session_keep.applies(cfg, role, brief, route_id):
+    if route is None or not session_keep.applies(cfg, role, brief, route_id, scope):
         return None
     prepared = prepare_launch(root, route)
     require_signin(root, prepared.family)
@@ -683,6 +690,7 @@ def plan_keep(root, cfg, *, route, role, brief, **kw):
         family=prepared.family,
         cli_version=cli_version(prepared),
         prepared=prepared,
+        scope=scope,
         **kw,
     )
 
@@ -699,8 +707,10 @@ class AdjudicationRequest:
     work item, the operator's `prompt_templates` overrides (keyed by prompt
     key; None or empty: the shipped templates), and the call's wall
     `deadline` in seconds (None: the default session wall), which the lease
-    outlives. The governing template identity is not the caller's to compose:
-    the keep derives it from the dial's retained set (`adjudication_keep`).
+    outlives, and the `scope` a loop review round is kept under ("" for an
+    adjudication; WI-887). The governing template identity is not the
+    caller's to compose: the keep derives it from the dial's retained set,
+    or a review round's own reviewer template (`adjudication_keep`).
 
     Implements: SR-227, LLR-305
     """
@@ -712,6 +722,7 @@ class AdjudicationRequest:
     role: str = "ADJUDICATE"
     prompt_templates: object = None
     deadline: object = None
+    scope: str = ""
 
 
 # The session wall a request with no deadline is bounded by, and how long the
@@ -728,13 +739,14 @@ def adjudication_keep(request):
     (`adjudicate_brief.governing_templates` over `retain_for`, under the
     request's overrides), so a retained session judges every retained class
     under one identity and drains only when a template, or an override,
-    changes. Raises SigninRefused as `plan_keep` does.
+    changes; a loop review round's identity is its own reviewer template, by
+    the request's role (WI-887). Raises SigninRefused as `plan_keep` does.
 
     Implements: SR-227, LLR-305
     """
     cfg = session_keep.keep_config(request.root)
     paths, texts = adjudicate_brief.governing_templates(
-        cfg.retain_for, request.prompt_templates
+        cfg.retain_for, request.prompt_templates, request.role
     )
     return plan_keep(
         request.root,
@@ -742,6 +754,7 @@ def adjudication_keep(request):
         route=request.route,
         role=request.role,
         brief=request.brief,
+        scope=request.scope,
         wi=request.wi,
         rows=agent_common.load_wi_registry(request.root),
         template_paths=paths,

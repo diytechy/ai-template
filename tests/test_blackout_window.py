@@ -865,6 +865,8 @@ def seed(root, last_used, state="active", **extra):
         "route_id": "ANTHROPIC-ROUTE",
         "session_id": "S1",
         "generation": 1,
+        "governing_hash": "",
+        "cli_version": "",
         "state": state,
         "reset_reason": "",
         "judged": ["WI-9"],

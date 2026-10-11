@@ -50,6 +50,7 @@ __all__ = [
     "read_declared",
     "read_declared_lower",
     "read_toml_text",
+    "reviewer_dials",
     "utf8_console",
     "step_paths",
     "RETIRED_STAGE_ALIASES",
@@ -171,6 +172,49 @@ def assumption_gate_enabled(docs):
         return False
     table = data.get("checks")
     return isinstance(table, dict) and table.get("assumption_gate") is True
+
+
+# `[reviewer] final_reviewer`'s two words (WI-887). Any other present value is
+# a malformed setting: retention off and fresh.
+FINAL_FRESH, FINAL_PERSISTED = "fresh", "persisted"
+
+
+def reviewer_dials(root):
+    """`(context_reset_pct, final_reviewer)` from `[reviewer]` in
+    `<root>/docs/process.toml`, the ONE reader of that table: the keep
+    operation retains a loop review session by it (`session_keep.keep_config`),
+    and the merge gate's evidence readers admit the persisted final reviewer's
+    round by it (`kitlib.verdict.review_logs`), so the two cannot disagree on
+    the mode.
+
+    `context_reset_pct` is an int in 0..100, and 0, the shipped value, is OFF:
+    no review session is retained. `final_reviewer` is `"persisted"` or
+    `"fresh"`, the shipped value. THE MODE IS RESOLVED HERE, FROM BOTH DIALS:
+    a persisted final reviewer is a retained session, so `"persisted"` reads
+    `"fresh"` while retention is off, and no reader can admit a retained
+    final round the keep operation would never have kept. A MALFORMED DIAL
+    READS OFF: an absent, unreadable or unparseable file, a missing table, a
+    percent that is not an int in range (a bool is not one), and a final
+    value present but neither `"fresh"` nor `"persisted"` (another word or
+    another type) read `0` and `"fresh"`, so a malformed dial can only leave
+    review retention off and the final reviewer fresh. An absent final value
+    is the shipped `"fresh"`.
+
+    Implements: SR-227, SR-239, LLR-270
+    """
+    try:
+        text = (Path(root) / "docs" / "process.toml").read_text(encoding="utf-8-sig")
+        table = tomllib.loads(text).get("reviewer")
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        table = None
+    table = table if isinstance(table, dict) else {}
+    pct = table.get("context_reset_pct")
+    pct_ok = isinstance(pct, int) and not isinstance(pct, bool) and 0 <= pct <= 100
+    final = table.get("final_reviewer", FINAL_FRESH)
+    if not pct_ok or final not in (FINAL_FRESH, FINAL_PERSISTED):
+        return 0, FINAL_FRESH
+    persisted = pct > 0 and final == FINAL_PERSISTED
+    return pct, FINAL_PERSISTED if persisted else FINAL_FRESH
 
 
 def process_check_text(root, key):

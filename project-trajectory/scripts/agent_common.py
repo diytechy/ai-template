@@ -1406,7 +1406,8 @@ def write_session_log(iter_dir, meta, transcript):
         "outcome",
         "commits",
         # WI-884: a REVIEW session's scope as the loop routed it,
-        # `full|narrow <base>..<reviewed sha>` (kitlib.verdict.gating_span).
+        # `full|narrow <base>..<reviewed sha>` (kitlib.verdict.gating_span):
+        # the reviewed range, base and tip.
         "review-scope",
         "tokens",
         "cost-usd",
@@ -1451,6 +1452,10 @@ def write_session_log(iter_dir, meta, transcript):
         # with its reported or inferred source; blank where not observed.
         "session-gen",
         "reset-reason",
+        # WI-887, an audit record no gate reads: minted fresh or resumed, and
+        # the scope a retained session is kept under.
+        "session-mode",
+        "keep-scope",
         "compacted",
         "compaction-source",
         "invocation-id",

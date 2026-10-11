@@ -72,9 +72,12 @@ def _kit_prompt(key):
     """One shipped prompt's text, cached per key for the process lifetime.
 
     Read once and held because `worker_prompt` runs at EVERY claim and the
-    reviewer/critique briefs at every review round; the file is kit-owned and
-    does not change mid-run. A refusal propagates as `prompts.PromptError`,
-    which `route_session`'s callers surface by name."""
+    critique brief at every critique round; their sessions are never
+    retained, so no governing identity reads the file beside the render. The
+    reviewer template is NOT read here: a retained reviewer's identity is the
+    content its brief renders, so it is resolved per round
+    (`review_template`, WI-887). A refusal propagates as
+    `prompts.PromptError`, which `route_session`'s callers surface by name."""
     cached = _PROMPT_CACHE.get(key)
     if cached is None:
         cached = _PROMPT_CACHE[key] = prompts.load(key)
@@ -467,6 +470,37 @@ def phase_tier(phase, tier_map):
     return DEFAULT_PHASE_TIER.get(phase, "strong")
 
 
+def review_template(prompt_templates, phase):
+    """The TEXT a loop review brief of `phase` is built from, THE ONE RESOLVER
+    of it: the operator's `--prompt-map` text wired under the phase key, else
+    the shipped reviewer template read NOW (`prompts.load`), never through
+    the process-lifetime prompt cache, so an edited shipped template reaches
+    the next round. Both loop briefs render from it, and a retained
+    reviewer's governing identity is this same text
+    (`adjudicate_brief.governing_templates`, WI-887), so a changed reviewer
+    template, or override, drains that reviewer. The loop resolves it ONCE
+    per round (`review_round_templates`), so the brief it renders and the
+    identity its keep hashes are one read.
+
+    Implements: SR-154, LLR-045
+    """
+    override = (prompt_templates or {}).get(phase)
+    if override is not None:
+        return override
+    return prompts.load(prompts.REVIEWER)
+
+
+def review_round_templates(prompt_templates, phase):
+    """The templates one loop review round of `phase` is composed from: the
+    operator's `prompt_templates` with the phase's reviewer template resolved
+    (`review_template`) under its key, so the round's brief and its keep's
+    governing identity read the one content resolved here.
+
+    Implements: SR-154, LLR-045
+    """
+    return {**(prompt_templates or {}), phase: review_template(prompt_templates, phase)}
+
+
 def reviewer_prompt(prompt_templates, phase, verdict_path, *, root, worker, base, sha):
     """The loop's FULL-LANE review brief, the round a merge is judged on: the
     per-phase prompt-map template (a FILE the operator wired) if present, else
@@ -506,7 +540,7 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, *, root, worker, base
 
     Implements: SR-154, LLR-045
     """
-    base_text = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
+    base_text = review_template(prompt_templates, phase)
     values = {
         "verdict": str(verdict_path),
         "trunk": trunk_name(root, worker),
@@ -553,7 +587,7 @@ def review_template_refusals(prompt_templates):
     Implements: SR-154, LLR-045
     """
     try:
-        want = prompts.slots(_kit_prompt(prompts.REVIEWER))
+        want = prompts.slots(prompts.load(prompts.REVIEWER))
     except prompts.PromptError:
         return []
     return [
@@ -569,15 +603,18 @@ def review_template_refusals(prompt_templates):
 
 
 def review_round_brief(
-    prompt_templates, phase, verdict_path, *, root, worker, sha, narrow_from
+    prompt_templates, phase, verdict_path, *, root, worker, sha, narrow_from, stage=""
 ):
     """`(brief, scope)` for one loop review round of `sha`: the NARROW brief
     over the rework since the reviewed commit a CHANGES-REQUESTED round left
     (`narrow_from` = (that sha, its round files)), else the FULL-LANE brief
     from the lane's claim base (`worker["claim"]`). `scope` is the value the
     session log records (`kitlib.verdict.format_scope`), the coordinator's
-    statement of which round this was; only a full one can gate a merge.
-    Every round is a fresh session: nothing here resumes a reviewer.
+    statement of which round this was; only a full (or, in persisted mode,
+    final) one can gate a merge. Nothing here resumes a reviewer: whether a
+    round's session is kept is the keep operation's
+    (`session_keep.review_retention`, WI-887), whose drawn `stage` the scope
+    records, and the brief is the same either way.
 
     `sha` is expanded to the full commit first: the loop names its reviewed
     head in short form, and the brief's `Reviewed:` opener and the recorded
@@ -602,7 +639,7 @@ def review_round_brief(
         return brief, kverdict.format_scope(kverdict.NARROW, base, sha)
     claim = (worker or {}).get("claim")
     brief = reviewer_prompt(prompt_templates, phase, verdict_path, base=claim, **common)
-    return brief, kverdict.format_scope(kverdict.FULL, claim, sha)
+    return brief, kverdict.format_scope(kverdict.FULL, claim, sha, stage)
 
 
 def narrow_scope_line(base, sha, findings):
@@ -637,7 +674,7 @@ def narrow_reviewer_prompt(
 
     Implements: SR-154, LLR-045
     """
-    base_text = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
+    base_text = review_template(prompt_templates, phase)
     values = {
         "verdict": str(verdict_path),
         "trunk": base,
@@ -1226,6 +1263,8 @@ __all__ = (
     "full_scope_line",
     "review_round_brief",
     "review_template_refusals",
+    "review_template",
+    "review_round_templates",
     "reviewed_rows_block",
     "process_doc_path",
     "scripts_dir",

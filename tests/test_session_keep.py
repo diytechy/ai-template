@@ -11,6 +11,7 @@ recorded 2026-09-28, the codex and opencode ones 2026-09-30, WI-541). The store 
 
 import json
 import threading
+import time
 import tomllib
 from pathlib import Path
 
@@ -1464,3 +1465,780 @@ def test_codex_context_and_compaction_receive_same_ambient_environment(
     _codex_turn(tmp_path, 30378)
     assert seen[0] is seen[1]
     assert seen[1]["CODEX_HOME"] == str(tmp_path / "ambient")
+
+
+# --- WI-887: REVIEW retention within a lane, and the persisted final reviewer --
+#
+# The loop's REVIEW role resumes its session within one lane's iteration under
+# its own dial (`[reviewer] context_reset_pct`, shipped 0), through the same
+# keep operation, store and lease as the adjudicator, keyed by a verbatim
+# `scope` (the lane, its claim base, the review phase and the stage), so no
+# lane or phase resumes another's transcript. The final reviewer is fresh by
+# default, or persisted under its own scope (`[reviewer] final_reviewer`).
+
+REVIEW_ON = keep.KeepConfig(review_reset_pct=50)
+NO_RETENTION = keep.ReviewRetention()  # nothing kept, no stage, no pin
+CLAIM_A, CLAIM_B = "a" * 40, "b" * 40
+LANE_A = "wi-1@{}:REVIEW-A:iteration".format(CLAIM_A)
+LANE_B = "wi-2@{}:REVIEW-A:iteration".format(CLAIM_B)
+
+
+def _review_keep(tmp_path, cfg, scope, family="ANTHROPIC", **kw):
+    kw.setdefault("lease_wait", 0)
+    kw.setdefault("prepared", _prepared(tmp_path, family))
+    return keep.keep_for(
+        tmp_path,
+        cfg,
+        role="REVIEW-A",
+        brief="",
+        family=family,
+        route_id=family + "-ROUTE",
+        wi="WI-1",
+        scope=scope,
+        **kw,
+    )
+
+
+def _review(tmp_path, cfg, scope, seen=None):
+    kept = _review_keep(tmp_path, cfg, scope)
+    runner = _launch(_claude_stream(20), seen=seen)
+    return svc.act(_call(tmp_path, "ANTHROPIC", kept, runner, role="REVIEW-A"))
+
+
+def _reviewer_toml(root, body):
+    docs = Path(root) / "docs"
+    docs.mkdir(parents=True, exist_ok=True)
+    (docs / "process.toml").write_text(body, encoding="utf-8")
+
+
+def test_two_iteration_rounds_resume_one_review_session(tmp_path):
+    seen = []
+    first = _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
+    second = _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
+    record = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    minted = seen[0][seen[0].index("--session-id") + 1]
+    assert seen[1][seen[1].index("--resume") + 1] == minted == record["session_id"]
+    assert record["scope"] == LANE_A and record["generation"] == 1
+    # The session log's audit columns: minted fresh, then resumed, both scoped.
+    assert first.metrics["session-mode"] == "fresh"
+    assert second.metrics["session-mode"] == "resumed"
+    assert first.metrics["keep-scope"] == second.metrics["keep-scope"] == LANE_A
+
+
+def test_a_second_lane_on_the_same_route_does_not_resume_the_first(tmp_path):
+    seen = []
+    _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
+    _review(tmp_path, REVIEW_ON, LANE_B, seen=seen)
+    assert "--resume" not in seen[1] and "--session-id" in seen[1]
+    a = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    b = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_B)
+    assert a["session_id"] != b["session_id"]
+    # Neither is the route's adjudicator record, which keeps its own file.
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE") is None
+
+
+def test_the_empty_scope_keeps_the_adjudicators_file_name(tmp_path):
+    import hashlib
+
+    key = hashlib.sha256(b"ANTHROPIC-ROUTE").hexdigest()[:24]
+    path = keep.store_dir(tmp_path) / "ANTHROPIC-{}.json".format(key)
+    assert keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE") == path
+    assert keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) != path
+    # A record written before scopes existed (no `scope` key) still loads:
+    # a full record as its writer wrote it, every session field present.
+    path.parent.mkdir(parents=True)
+    old = {
+        "family": "ANTHROPIC",
+        "route_id": "ANTHROPIC-ROUTE",
+        "session_id": "S",
+        "generation": 1,
+        "governing_hash": "",
+        "cli_version": "",
+        "judged": [],
+        "state": "active",
+        "reset_reason": "",
+    }
+    path.write_text(json.dumps(old), encoding="utf-8")
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE") == old
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) is None
+
+
+def test_a_record_naming_another_scope_reads_as_no_record(tmp_path):
+    seen = []
+    _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
+    a = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    b = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_B)
+    b.write_text(a.read_text(encoding="utf-8"), encoding="utf-8")  # misfiled
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_B) is None
+    _review(tmp_path, REVIEW_ON, LANE_B, seen=seen)
+    assert "--resume" not in seen[1], "a record of another scope was resumed"
+
+
+def test_with_the_review_dial_off_nothing_changes(tmp_path):
+    # The adjudicator's dial on does not retain a reviewer: REVIEW has its own.
+    adjudicator_only = keep.KeepConfig(context_reset_pct=50, keepwarm_minutes=50)
+    assert not keep.applies(adjudicator_only, "REVIEW-A", "", "R", LANE_A)
+    assert _review_keep(tmp_path, adjudicator_only, LANE_A) is None
+    assert not keep.store_dir(tmp_path).exists()
+    # ...and on, a review with no scope is never kept (it would share the
+    # adjudicator's record), nor an adjudication with one.
+    assert not keep.applies(REVIEW_ON, "REVIEW-A", "", "R", "")
+    assert not keep.applies(ON, "ADJUDICATE", "disposition", "R", LANE_A)
+    worker = {"train": "wi-1", "claim": CLAIM_A}
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", True) == NO_RETENTION
+
+
+def test_a_malformed_reviewer_dial_reads_off_and_fresh(tmp_path):
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = "lots"\nfinal_reviewer = 7\n'
+    )
+    cfg = keep.keep_config(tmp_path)
+    assert cfg.review_reset_pct == 0 and cfg.final_reviewer == "fresh"
+    _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = true\n")
+    assert keep.keep_config(tmp_path).review_reset_pct == 0
+    _reviewer_toml(tmp_path, "[reviewer\n")  # does not parse
+    assert keep.keep_config(tmp_path) == keep.KeepConfig()
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 40\nfinal_reviewer = "persisted"\n'
+    )
+    cfg = keep.keep_config(tmp_path)
+    assert (cfg.review_reset_pct, cfg.final_reviewer) == (40, "persisted")
+    # An absent final reviewer and the explicit fresh word keep the percent.
+    _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 40\n")
+    assert keep.kconfig.reviewer_dials(tmp_path) == (40, "fresh")
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 40\nfinal_reviewer = "fresh"\n'
+    )
+    assert keep.kconfig.reviewer_dials(tmp_path) == (40, "fresh")
+
+
+def test_the_shipped_reviewer_dial_is_off_and_fresh():
+    kit = (ROOT / "project-trajectory" / "process.toml.template").read_text(
+        encoding="utf-8"
+    )
+    template = tomllib.loads(kit)["reviewer"]
+    assert template == {"context_reset_pct": 0, "final_reviewer": "fresh"}
+    live = tomllib.loads((ROOT / "docs" / "process.toml").read_text(encoding="utf-8"))
+    assert set(live["reviewer"]) == set(template)
+
+
+def test_keep_warm_never_pings_a_reviewer_record(tmp_path):
+    _review(tmp_path, REVIEW_ON, LANE_A)
+    record = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    warm = keep.KeepConfig(
+        context_reset_pct=50, keepwarm_minutes=1, review_reset_pct=50
+    )
+    later = record["last_used_epoch"] + 3600
+    assert not keep.keepwarm_due(record, warm, later, True)
+    assert keep.due_routes(tmp_path, warm, later, True) == []
+
+
+def _final_worker():
+    return {"train": "wi-1", "claim": CLAIM_A}
+
+
+def test_the_gating_round_in_fresh_mode_mints_fresh_and_retires_the_iteration(
+    tmp_path,
+):
+    _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 50\n")
+    worker = _final_worker()
+    scope, stage, pin = keep.review_retention(tmp_path, worker, "REVIEW-A", True)
+    assert (scope, stage, pin) == (LANE_A, "iteration", ())  # nothing to pin yet
+    _review(tmp_path, REVIEW_ON, scope)
+    # The next narrow round pins the lane's retained reviewer route.
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", True) == (
+        LANE_A,
+        "iteration",
+        ("ANTHROPIC-ROUTE",),
+    )
+    # The gating round is unretained in fresh mode, and drawing it retires the
+    # lane's iteration record, so the next iteration mints.
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", False) == NO_RETENTION
+    record = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    assert record["state"] == "retired"
+    assert record["reset_reason"] == "gating round drawn"
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", True).pin == ()
+    assert _review_keep(tmp_path, REVIEW_ON, LANE_A).session_id == ""
+
+
+def test_persisted_mode_resumes_only_the_final_reviewers_scope(tmp_path):
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = "persisted"\n'
+    )
+    cfg = keep.keep_config(tmp_path)
+    worker = _final_worker()
+    final = keep.review_retention(tmp_path, worker, "REVIEW-A", False).scope
+    assert final == "wi-1@{}:REVIEW-A:final".format(CLAIM_A)
+    seen = []
+    _review(tmp_path, cfg, final, seen=seen)  # the first full round mints
+    iteration = keep.review_retention(tmp_path, worker, "REVIEW-A", True).scope
+    _review(tmp_path, cfg, iteration, seen=seen)  # the iteration mints its own
+    _review(tmp_path, cfg, iteration, seen=seen)  # ...and resumes it
+    gating = keep.review_retention(tmp_path, worker, "REVIEW-A", False).scope
+    assert gating == final
+    _review(tmp_path, cfg, gating, seen=seen)
+    minted = [argv[argv.index("--session-id") + 1] for argv in (seen[0], seen[1])]
+    resumed = [argv[argv.index("--resume") + 1] for argv in (seen[2], seen[3])]
+    assert resumed == [minted[1], minted[0]], "the final round resumed another scope"
+    retired = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", iteration)
+    assert retired["state"] == "retired"
+
+
+def test_a_lane_with_no_claim_base_retains_no_reviewer(tmp_path):
+    _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 50\n")
+    worker = {"train": "wi-1", "claim": None}
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", True) == NO_RETENTION
+
+
+def test_an_unretained_call_logs_a_fresh_unscoped_session(tmp_path):
+    out = svc.act(_call(tmp_path, "ANTHROPIC", None, _launch(_claude_stream(20))))
+    assert out.metrics["session-mode"] == "fresh" and out.metrics["keep-scope"] == ""
+    meta = {"session": "001", "stamp": "20260101-000000", **out.metrics}
+    log = common.write_session_log(tmp_path / "iter", meta, "t")
+    text = Path(log).read_text(encoding="utf-8")
+    assert "# session-mode: fresh\n" in text and "# keep-scope:\n" in text
+
+
+def test_the_loop_draw_pins_a_narrow_round_and_its_launch_keeps_its_scope(
+    tmp_path, monkeypatch
+):
+    from types import SimpleNamespace
+
+    al = load_script("agent_loop")
+    _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 50\n")
+    st = al.RoutingState(1, 900, set(), 3, {})
+    st.narrow_from = ("c" * 40, "f.md")  # a CHANGES-REQUESTED round left it
+    drawn = []
+
+    def select(ctx, st_, phase, tier, exclude, prefer, ids, now):
+        drawn.append(list(ids))
+        return "ANTHROPIC-ROUTE", "drawn"
+
+    monkeypatch.setattr(al, "select_with_probe", select)
+    ctx = _loop_ctx(tmp_path)
+    ctx.worker, ctx.run = _final_worker(), SimpleNamespace(routing=st)
+    plan = {**PLAN, "phase": "REVIEW-A"}
+    for _round in range(2):  # two narrow rounds, each drawn then launched
+        al.draw_session_route(ctx, st, "REVIEW-A", "strong", set(), 1, ["X"], 0)
+        kept = al.adjudication_keep(ctx, plan, "WI-1")
+        assert st.keep_scope == kept.scope == LANE_A
+        runner = _launch(_claude_stream(20))
+        svc.act(_call(tmp_path, "ANTHROPIC", kept, runner, role="REVIEW-A"))
+    # The first draw had nothing to pin; the second pins the lane's retained
+    # route and resumes its session.
+    assert drawn == [["X"], ["ANTHROPIC-ROUTE", "X"]]
+    assert kept.session_id, "the second narrow round did not resume"
+    # Any other session's draw clears the scope, and an adjudication never
+    # takes one.
+    al.draw_session_route(ctx, st, "ADJUDICATE", "strong", set(), 1, [], 0)
+    assert st.keep_scope == "" and al.review_keep_scope(ctx, PLAN) == ""
+
+
+# --- WI-887 round 1 (review 001 F1, F2, F4) ------------------------------------
+
+
+def test_a_persisted_final_reviewer_reads_fresh_with_retention_off(tmp_path):
+    # F1: the mode is resolved once, from both dials: a persisted final
+    # reviewer needs review retention on, so the keep operation and the gate
+    # cannot disagree on it.
+    kconfig = keep.kconfig
+    _reviewer_toml(tmp_path, '[reviewer]\nfinal_reviewer = "persisted"\n')
+    assert kconfig.reviewer_dials(tmp_path) == (0, "fresh")
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 0\nfinal_reviewer = "persisted"\n'
+    )
+    assert kconfig.reviewer_dials(tmp_path) == (0, "fresh")
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 1\nfinal_reviewer = "persisted"\n'
+    )
+    assert kconfig.reviewer_dials(tmp_path) == (1, "persisted")
+
+
+def test_review_retention_names_the_stage_it_settled(tmp_path):
+    # F1: the stage is a typed fact of the draw, which the session log's
+    # review-scope kind is derived from.
+    worker = _final_worker()
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", False).stage == ""
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = "persisted"\n'
+    )
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", True).stage == (
+        keep.ITERATION
+    )
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", False).stage == (
+        keep.FINAL
+    )
+
+
+def _store_file(tmp_path, name, body):
+    path = keep.store_dir(tmp_path) / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def test_a_malformed_scoped_record_is_no_record_and_the_draw_mints(tmp_path):
+    # F2: the reviewer's object, a scope and a state but no identity, read as
+    # no record by the store's one reader: the draw pins nothing and the
+    # round mints, where it raised KeyError 'family' before.
+    _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 50\n")
+    _store_file(
+        tmp_path, "ANTHROPIC-x.json", json.dumps({"scope": LANE_A, "state": "active"})
+    )
+    worker = _final_worker()
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", True) == (
+        LANE_A,
+        "iteration",
+        (),
+    )
+    assert keep.scoped_route(tmp_path, LANE_A) is None
+    assert _review_keep(tmp_path, REVIEW_ON, LANE_A).session_id == ""
+    keep.retire_scope(tmp_path, LANE_A, "gating round drawn")  # no raise
+
+
+@pytest.mark.parametrize(
+    "record",
+    [
+        {"family": "ANTHROPIC", "route_id": 7, "scope": LANE_A, "state": "active"},
+        {"family": "ANTHROPIC", "route_id": "ANTHROPIC-ROUTE", "scope": 3},
+        {
+            "family": "ANTHROPIC",
+            "route_id": "ANTHROPIC-ROUTE",
+            "scope": LANE_A,
+            "state": "active",
+            "lease": "held",
+        },
+        {
+            "family": "ANTHROPIC",
+            "route_id": "ANTHROPIC-ROUTE",
+            "scope": LANE_A,
+            "state": "awake",
+        },
+    ],
+)
+def test_a_record_of_the_wrong_shape_is_no_record_at_its_own_name(tmp_path, record):
+    # F2: filed under its own name, a record whose identity or shape is not
+    # one the store declares still reads as no record, so nothing pins,
+    # resumes or crashes on it.
+    name = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A).name
+    _store_file(tmp_path, name, json.dumps(record))
+    assert keep.scoped_route(tmp_path, LANE_A) is None
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) is None
+    assert _review_keep(tmp_path, REVIEW_ON, LANE_A).session_id == ""
+
+
+def test_a_misfiled_or_non_object_record_is_no_record_for_every_scan(tmp_path):
+    # F2: discovery, the pin and keep-warm read through the one reader.
+    _review(tmp_path, REVIEW_ON, LANE_A)
+    a = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    moved = a.with_name("ANTHROPIC-elsewhere.json")
+    a.replace(moved)
+    assert keep.scoped_route(tmp_path, LANE_A) is None
+    _store_file(tmp_path, "ANTHROPIC-list.json", "[1, 2]")
+    record = json.loads(moved.read_text(encoding="utf-8"))
+    del record["scope"]  # an adjudicator-shaped record, misfiled
+    moved.write_text(json.dumps(record), encoding="utf-8")
+    warm = keep.KeepConfig(context_reset_pct=50, keepwarm_minutes=1)
+    assert keep.due_routes(tmp_path, warm, record["last_used_epoch"] + 3600, True) == []
+
+
+def _draw_ctx(tmp_path, monkeypatch, al):
+    """The loop's real draw over two available strong routes weighted 1:2,
+    advancing its draw ordinal at every draw."""
+    from types import SimpleNamespace
+
+    ctx = _loop_ctx(tmp_path)
+    ordinals = iter(range(100))
+    monkeypatch.setattr(al, "phase_draw_ordinal", lambda dirs, phase: next(ordinals))
+    ctx.worker = _final_worker()
+    ctx.enabled = ["ANTHROPIC-ROUTE", "OPENCODE-ROUTE"]
+    ctx.weight_map = {
+        "ANTHROPIC-ROUTE": {"REVIEW-A": 1},
+        "OPENCODE-ROUTE": {"REVIEW-A": 2},
+    }
+    ctx.draw_iter_dirs = []
+    st = al.RoutingState(1, 900, set(), 3, {})
+    ctx.run = SimpleNamespace(routing=st)
+    return ctx, st
+
+
+def _gating_draws(ctx, st, al, count):
+    return [
+        al.draw_session_route(ctx, st, "REVIEW-A", "strong", set(), False, [], 0)[0]
+        for _ in range(count)
+    ]
+
+
+def test_consecutive_gating_draws_resume_the_persisted_final_reviewer(
+    tmp_path, monkeypatch
+):
+    # F4: with two available weighted routes, the gating round's draw pins the
+    # live final reviewer's route, so the next gate resumes it instead of
+    # minting another reviewer on the other route.
+    al = load_script("agent_loop")
+    ctx, st = _draw_ctx(tmp_path, monkeypatch, al)
+    assert set(_gating_draws(ctx, st, al, 3)) == {"ANTHROPIC-ROUTE", "OPENCODE-ROUTE"}
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = "persisted"\n'
+    )
+    cfg = keep.keep_config(tmp_path)
+    final = "wi-1@{}:REVIEW-A:final".format(CLAIM_A)
+    seen = []
+    _review(tmp_path, cfg, final, seen=seen)  # the first gate minted on ANTHROPIC
+    assert _gating_draws(ctx, st, al, 3) == ["ANTHROPIC-ROUTE"] * 3
+    assert st.keep_scope == final
+    _review(tmp_path, cfg, st.keep_scope, seen=seen)
+    minted = seen[0][seen[0].index("--session-id") + 1]
+    assert seen[1][seen[1].index("--resume") + 1] == minted
+
+
+def test_an_unavailable_final_route_falls_back_and_mints(tmp_path, monkeypatch):
+    # F4: the pin is a preference: a cooling final route falls back through
+    # the ordinary selection, and the record there is another route's: it mints.
+    al = load_script("agent_loop")
+    ctx, st = _draw_ctx(tmp_path, monkeypatch, al)
+    _reviewer_toml(
+        tmp_path, '[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = "persisted"\n'
+    )
+    cfg = keep.keep_config(tmp_path)
+    final = "wi-1@{}:REVIEW-A:final".format(CLAIM_A)
+    _review(tmp_path, cfg, final)
+    st.cooldowns["ANTHROPIC-ROUTE"] = 10**12
+    assert _gating_draws(ctx, st, al, 1) == ["OPENCODE-ROUTE"]
+    kept = keep.keep_for(
+        tmp_path,
+        cfg,
+        role="REVIEW-A",
+        brief="",
+        family="OPENCODE",
+        route_id="OPENCODE-ROUTE",
+        wi="WI-1",
+        scope=st.keep_scope,
+        lease_wait=0,
+        prepared=_prepared(tmp_path, "OPENCODE"),
+    )
+    assert kept.scope == final and kept.session_id == ""
+
+
+def test_a_changed_reviewer_template_drains_the_retained_reviewer(tmp_path):
+    # F3, end to end through the keep operation: a reviewer minted under the
+    # shipped reviewer template retires at its next round once the operator
+    # wires an override for its phase, and that round mints; another phase's
+    # override changes nothing.
+    ab = load_script("adjudicate_brief")
+
+    def identity(templates):
+        paths, texts = ab.governing_templates((), templates, role="REVIEW-A")
+        return {"template_paths": paths, "template_texts": texts}
+
+    seen = []
+    first = _review_keep(tmp_path, REVIEW_ON, LANE_A, **identity({}))
+    svc.act(
+        _call(
+            tmp_path,
+            "ANTHROPIC",
+            first,
+            _launch(_claude_stream(20), seen=seen),
+            role="REVIEW-A",
+        )
+    )
+    other = identity({"REVIEW-B": "another phase's reviewer"})
+    resumed = _review_keep(tmp_path, REVIEW_ON, LANE_A, **other)
+    assert resumed.session_id == seen[0][seen[0].index("--session-id") + 1]
+    keep.keep_release(tmp_path, resumed)
+    changed = identity({"REVIEW-A": "the operator's reviewer"})
+    assert _review_keep(tmp_path, REVIEW_ON, LANE_A, **changed).session_id == ""
+    record = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    assert record["reset_reason"] == "governing-inputs changed"
+
+
+# --- WI-887 round 2 (review 002 F1, F2) ------------------------------------
+
+
+def _rewrite_record(tmp_path, scope, edit, family="ANTHROPIC"):
+    path = keep._store_path(tmp_path, family, family + "-ROUTE", scope)
+    record = json.loads(path.read_text(encoding="utf-8"))
+    edit(record)
+    path.write_text(json.dumps(record), encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "edit",
+    [
+        *(
+            pytest.param(lambda r, f=f: r.pop(f), id="missing-" + f)
+            for f in (
+                "judged",
+                "governing_hash",
+                "session_id",
+                "generation",
+                "state",
+                "reset_reason",
+                "cli_version",
+            )
+        ),
+        pytest.param(lambda r: r.update(cli_version=["1"]), id="list-cli_version"),
+    ],
+)
+def test_a_live_record_missing_a_field_its_consumers_read_mints_fresh(tmp_path, edit):
+    # F1 (review 002), end to end: a live scoped record whose session fields
+    # are incomplete or mistyped is no record at the store's one reader, so
+    # the next round mints, and the service's bookkeeping lands the new
+    # session, where it resumed and raised KeyError 'judged' before.
+    seen = []
+    _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
+    _rewrite_record(tmp_path, LANE_A, edit)
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) is None
+    assert keep.scoped_route(tmp_path, LANE_A) is None
+    _review(tmp_path, REVIEW_ON, LANE_A, seen=seen)
+    assert "--resume" not in seen[1] and "--session-id" in seen[1]
+    record = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    assert record["session_id"] == seen[1][seen[1].index("--session-id") + 1]
+    assert record["state"] == "active" and record["judged"] == ["WI-1"]
+
+
+def test_every_record_variant_the_store_writes_reads_back(tmp_path):
+    # F1 (review 002): the declared variants are the writers' own: a first
+    # call's lease-only record, the retired-first record a stale first lease
+    # leaves (with the next call's lease on it), and the full live record.
+    first = _review_keep(tmp_path, REVIEW_ON, LANE_A)
+    lease_only = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    assert keep.is_lease_only(lease_only) and lease_only["lease"]["holder"]
+    _rewrite_record(
+        tmp_path,
+        LANE_A,
+        lambda r: r.update(lease={"holder": "review-a:gone", "until": 1}),
+    )
+    second = _review_keep(tmp_path, REVIEW_ON, LANE_A)
+    retired = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    assert retired["state"] == "retired" and "session_id" not in retired
+    assert retired["lease"]["holder"] == second.holder != first.holder
+    runner = _launch(_claude_stream(20))
+    svc.act(_call(tmp_path, "ANTHROPIC", second, runner, role="REVIEW-A"))
+    full = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+    assert full["state"] == "active" and full["session_id"] and "lease" not in full
+
+
+def _shipped_reviewer(tmp_path, monkeypatch, brief):
+    """Point the shipped reviewer template at a scratch copy; returns it."""
+    prompts = brief.prompts
+    shipped = tmp_path / "shipped-prompts"
+    shipped.mkdir()
+    name = prompts.KIT_PROMPTS[prompts.REVIEWER]
+    (shipped / name).write_bytes((prompts.PROMPTS / name).read_bytes())
+    monkeypatch.setattr(prompts, "PROMPTS", shipped)
+    return shipped / name
+
+
+def _add_rule(template, rule):
+    text = template.read_text(encoding="utf-8")
+    template.write_text(text.rstrip("\n") + "\n\n" + rule + "\n", encoding="utf-8")
+
+
+def test_an_edited_shipped_reviewer_template_reaches_the_next_rounds_brief(
+    tmp_path, monkeypatch
+):
+    # F2 (review 002): an ordinary edit of the shipped reviewer template
+    # between two rounds changes the next round's governing identity AND its
+    # brief: the reviewer is never drained onto a template it is not sent.
+    al = load_script("agent_loop")
+    ab = load_script("adjudicate_brief")
+    template = _shipped_reviewer(tmp_path, monkeypatch, al.agent_brief)
+
+    def one_round():
+        body, _scope = al.agent_brief.review_round_brief(
+            {},
+            "REVIEW-A",
+            tmp_path / "v.md",
+            root=tmp_path,
+            worker=None,
+            sha="c" * 40,
+            narrow_from=None,
+        )
+        paths, texts = ab.governing_templates((), {}, role="REVIEW-A")
+        return body, keep.governing_hash(tmp_path, paths, texts)
+
+    before = one_round()
+    _add_rule(template, "RULE-887-R2: a newly shipped reviewer rule.")
+    after = one_round()
+    assert after[1] != before[1], "the edit did not change the identity"
+    assert "RULE-887-R2" in after[0], "the next brief rendered the stale template"
+    assert "RULE-887-R2" not in before[0]
+
+
+def test_a_review_rounds_brief_and_identity_share_one_template_read(
+    tmp_path, monkeypatch
+):
+    # F2 (review 002): the loop resolves the reviewer template once per round,
+    # at its draw; the launch's governing identity is that same content, so a
+    # file edit after the brief rendered is neither half-seen nor hashed new.
+    al = load_script("agent_loop")
+    template = _shipped_reviewer(tmp_path, monkeypatch, al.agent_brief)
+    ctx, st = _draw_ctx(tmp_path, monkeypatch, al)
+    _reviewer_toml(tmp_path, "[reviewer]\ncontext_reset_pct = 50\n")
+    st.narrow_from = ("c" * 40, "f.md")
+    al.draw_session_route(ctx, st, "REVIEW-A", "strong", set(), False, [], 0)
+    rendered = st.keep_templates["REVIEW-A"]
+    _add_rule(template, "RULE-887-R2: shipped after the brief rendered.")
+    plan = {**PLAN, "phase": "REVIEW-A"}
+    kept = al.adjudication_keep(ctx, plan, "WI-1")
+    assert "RULE-887-R2" not in rendered
+    assert kept.governing == keep.governing_hash(tmp_path, [], [rendered])
+    keep.keep_release(tmp_path, kept)
+    al.draw_session_route(ctx, st, "REVIEW-A", "strong", set(), False, [], 0)
+    assert "RULE-887-R2" in st.keep_templates["REVIEW-A"]
+
+
+# --- WI-887 round 3 (gate review 007 F1, F2) -------------------------------
+
+# Each optional field of a full record, set to a type its writer
+# (`_fresh_record`, `_observe`, `_observe_compaction`) never produces.
+MISTYPED_OPTIONAL = {
+    "started": 1,
+    "window": None,
+    "occupancy": [1],
+    "pct": {},
+    "last_used": 1.5,
+    "last_used_epoch": "now",
+    "rollout_requests": "oops",
+    "request_prompt": "120",
+    "input_total": "220",
+    "compaction_source": 1,
+    "compacted": "yes",
+}
+
+
+def _codex_review(tmp_path, seen):
+    kept = _review_keep(tmp_path, REVIEW_ON, LANE_A, family="OPENAI")
+    runner = _launch(_fixture(STREAMS["OPENAI"]), seen=seen)
+    return svc.act(_call(tmp_path, "OPENAI", kept, runner, role="REVIEW-A"))
+
+
+@pytest.mark.parametrize("field", sorted(MISTYPED_OPTIONAL))
+def test_a_mistyped_optional_field_is_no_record_and_the_resumed_review_mints(
+    tmp_path, monkeypatch, field
+):
+    # F1 (gate review 007, dispute DA): a live scoped record whose optional
+    # field is of a type no writer produces is no record at the store's one
+    # reader, so the next review round mints instead of resuming it and
+    # raising in bookkeeping (rollout_requests "oops": TypeError at the
+    # compaction slice).
+    observation = {"prompts": [100, 120], "totals": [220], "reported": False}
+    monkeypatch.setattr(
+        svc.session_adapters.CodexAdapter,
+        "compaction",
+        lambda *a, **k: dict(observation),
+    )
+    seen = []
+    _codex_review(tmp_path, seen)
+    written = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE", LANE_A)
+    assert field in written, "the writers no longer write this declared field"
+    bad = MISTYPED_OPTIONAL[field]
+    _rewrite_record(tmp_path, LANE_A, lambda r: r.update({field: bad}), "OPENAI")
+    assert keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE", LANE_A) is None
+    assert keep.scoped_route(tmp_path, LANE_A) is None
+    _codex_review(tmp_path, seen)
+    assert "resume" not in seen[1]
+    record = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE", LANE_A)
+    assert record["state"] == "active" and record["judged"] == ["WI-1"]
+    assert record["generation"] == 1 and record["rollout_requests"] == 2
+
+
+@pytest.mark.parametrize("final", ['"persited"', "7", "true", '["persisted"]'])
+def test_a_malformed_final_reviewer_turns_retention_off_through_the_draw(
+    tmp_path, monkeypatch, final
+):
+    # F2 (gate review 007): a present final-reviewer value that is neither
+    # fresh nor persisted is a malformed reviewer setting, so even with a
+    # valid positive percent it reads as retention off and fresh: the loop's
+    # narrow rounds settle no scope, keep nothing and never resume.
+    from types import SimpleNamespace
+
+    al = load_script("agent_loop")
+    body = "[reviewer]\ncontext_reset_pct = 50\nfinal_reviewer = {}\n"
+    _reviewer_toml(tmp_path, body.format(final))
+    assert keep.kconfig.reviewer_dials(tmp_path) == (0, "fresh")
+    st = al.RoutingState(1, 900, set(), 3, {})
+    st.narrow_from = ("c" * 40, "f.md")
+    monkeypatch.setattr(
+        al, "select_with_probe", lambda *a: ("ANTHROPIC-ROUTE", "drawn")
+    )
+    ctx = _loop_ctx(tmp_path)
+    ctx.worker, ctx.run = _final_worker(), SimpleNamespace(routing=st)
+    plan = {**PLAN, "phase": "REVIEW-A"}
+    seen = []
+    for _round in range(2):  # two narrow rounds, each drawn then launched
+        al.draw_session_route(ctx, st, "REVIEW-A", "strong", set(), 1, ["X"], 0)
+        kept = al.adjudication_keep(ctx, plan, "WI-1")
+        assert st.keep_scope == "" and kept is None
+        runner = _launch(_claude_stream(20), seen=seen)
+        svc.act(_call(tmp_path, "ANTHROPIC", kept, runner, role="REVIEW-A"))
+    assert len(seen) == 2 and not any("--resume" in argv for argv in seen)
+    worker = _final_worker()
+    assert keep.review_retention(tmp_path, worker, "REVIEW-A", False) == NO_RETENTION
+
+
+# --- WI-887 round 4 (gate review 010 F1, dispute DC) -----------------------
+
+# A live lease of a type its writers (`_hold`, `take_warm_lease`) never
+# produce: a holder that is not a non-empty str, or an `until` that is not a
+# number. Each reads as no record, so the next call mints.
+MALFORMED_LEASES = {
+    "holder-list": {"holder": [], "until": "FUTURE"},
+    "holder-null": {"holder": None, "until": "FUTURE"},
+    "holder-zero": {"holder": 0, "until": "FUTURE"},
+    "holder-empty": {"holder": "", "until": "FUTURE"},
+    "until-string": {"holder": "review-a:other", "until": "soon"},
+}
+# A judged list whose item is not the work-item id str `_observe` appends.
+MISTYPED_JUDGED = {"int": [1], "null": [None], "list": [["WI-1"]]}
+
+
+def _next_review_mints(tmp_path, edit):
+    # Two real review rounds through the keep operation and the service; the
+    # record is edited between them. The second must mint, never resume.
+    seen = []
+    _codex_review(tmp_path, seen)
+    _rewrite_record(tmp_path, LANE_A, edit, "OPENAI")
+    _codex_review(tmp_path, seen)
+    assert len(seen) == 2 and "resume" not in seen[1]
+    record = keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE", LANE_A)
+    assert record["state"] == "active" and record["judged"] == ["WI-1"]
+    assert "lease" not in record
+
+
+@pytest.mark.parametrize("case", sorted(MALFORMED_LEASES))
+def test_a_malformed_live_lease_is_no_record_and_the_next_review_mints(tmp_path, case):
+    # F1 (gate review 010, dispute DC): a live lease on an active review
+    # record whose holder is not a non-empty str (or whose until is not a
+    # number) is no record at the store's one reader, so the next call mints
+    # a fresh session rather than reading the falsy holder as no holder and
+    # resuming a transcript the lease says is held.
+    lease = dict(MALFORMED_LEASES[case])
+    if lease["until"] == "FUTURE":
+        lease["until"] = time.time() + 3600
+    _next_review_mints(tmp_path, lambda r: r.update({"lease": lease}))
+
+
+@pytest.mark.parametrize("case", sorted(MISTYPED_JUDGED))
+def test_a_mistyped_judged_item_is_no_record_and_the_next_review_mints(tmp_path, case):
+    # Dispute DC: `judged`'s items are typed in the one declaration too.
+    items = MISTYPED_JUDGED[case]
+    _next_review_mints(tmp_path, lambda r: r.update({"judged": items}))
+
+
+@pytest.mark.parametrize("case", sorted(MALFORMED_LEASES))
+@pytest.mark.parametrize("variant", ["lease-only", "retired-first"])
+def test_a_malformed_lease_is_no_record_on_every_variant(tmp_path, case, variant):
+    # Dispute DC: the lease is typed on every variant that carries one.
+    lease = dict(MALFORMED_LEASES[case], until=time.time() + 3600)
+    if case == "until-string":
+        lease["until"] = "soon"
+    record = {"family": "ANTHROPIC", "route_id": "ANTHROPIC-ROUTE", "scope": LANE_A}
+    if variant == "retired-first":
+        record.update(state="retired", reset_reason="lease expired unreleased")
+    good = dict(record, lease={"holder": "review-a:x", "until": 1.5})
+    assert keep._variant(good) == variant
+    name = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A).name
+    _store_file(tmp_path, name, json.dumps(dict(record, lease=lease)))
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) is None

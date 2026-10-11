@@ -110,7 +110,9 @@ Contract IF-175: the verdict record, as functions two independent readers call
     `round_entries`
     the round evidence a branch holds, restricted to FULL-LANE rounds a fresh
     logged reviewer session produced over the lane's claim base to its reviewed
-    commit (`format_scope` / `gating_span`, WI-884) and COMMITTED, read as it
+    commit (`format_scope` / `gating_span`, WI-884), or in persisted-final-
+    reviewer mode a `final` round the loop drew under the final reviewer's
+    own stage (WI-887), and COMMITTED, read as it
     committed them, and to the tree under judgement, a round the filing check
     (`filing_refusal`) refuses read as invalid evidence; `parse_range` /
     `session_range` / `range_paths` a session's
@@ -138,6 +140,7 @@ import hashlib
 import os
 import re
 
+from .config import FINAL_PERSISTED, reviewer_dials
 from .git import git_bytes, git_out
 from .station import (
     BAR_GREEN,
@@ -173,6 +176,7 @@ __all__ = [
     "session_range",
     "FULL",
     "NARROW",
+    "FINAL",
     "format_scope",
     "gating_span",
     "filing_refusal",
@@ -250,10 +254,12 @@ _COMMITS_HEADER_RE = re.compile(r"^# commits:[ \t]*(.*)$", re.M)
 # merge is judged on, `narrow <base>..<sha>` for an iteration round. A base the
 # coordinator could not name is `?`, which `parse_range` reads as no range. The
 # service records a RETAINED session's generation in `# session-gen:`, so a
-# present, empty value is the session minted for its round.
+# present, empty value is the session minted for its round. WI-887 adds
+# `final <claim base>..<reviewed sha>`: a full-lane round the loop drew under
+# the persisted final reviewer's own stage, the one retained round that gates.
 _SCOPE_HEADER_RE = re.compile(r"^# review-scope:[ \t]*(.*)$", re.M)
 _GEN_HEADER_RE = re.compile(r"^# session-gen:[ \t]*(.*)$", re.M)
-FULL, NARROW = "full", "narrow"
+FULL, NARROW, FINAL = "full", "narrow", "final"
 _RANGE_RE = re.compile(r"^([0-9a-f]{7,64})\.\.([0-9a-f]{7,64})$")
 
 _REVIEWS = "docs/reviews"
@@ -829,17 +835,25 @@ def session_range(blob):
     return parse_range(header.group(1)) if header else None
 
 
-def format_scope(kind, base, sha):
+def format_scope(kind, base, sha, stage=""):
     """The `# review-scope:` value the loop records for a REVIEW session of
     `kind` (`FULL` or `NARROW`) over `base..sha`; a base it could not name
     renders `?`, which no reader takes for a range.
 
+    `stage` is the keep stage the round's draw settled
+    (`session_keep.review_retention`, WI-887): a FULL round drawn under the
+    `final` stage renders the distinct kind `final`, the coordinator's record
+    that this round ran on the persisted final reviewer's own scope. The kind
+    is derived here from the drawn stage, never composed by a caller, so a
+    narrow round, or a full round drawn under no stage, cannot carry it.
+
     Implements: SR-156, LLR-207
     """
-    return "{} {}..{}".format(kind, base or "?", sha or "?")
+    final = kind == FULL and stage == FINAL
+    return "{} {}..{}".format(FINAL if final else kind, base or "?", sha or "?")
 
 
-def gating_span(blob):
+def gating_span(blob, persisted=False):
     """`(claim base, reviewed sha)` when a REVIEW session log records the scope
     a merge may be judged on, else None.
 
@@ -851,15 +865,25 @@ def gating_span(blob):
     into no gate authority: a narrow verdict steers iteration and nothing else
     (WI-884's Trust ruling).
 
+    `persisted` is the resolved persisted-final-reviewer mode (WI-887,
+    `kitlib.config.reviewer_dials`: `final_reviewer = "persisted"` with
+    review retention on). In it, and only in it, a `final` round also gates:
+    the kind the coordinator recorded for a full round its draw kept under
+    the final reviewer's own stage (`format_scope`). The mode word never
+    promotes a `full` round: a retained session's `full` round holds in both
+    modes, so an iteration reviewer's session cannot clear the gate.
+
     Implements: SR-156, LLR-207
     """
     head = (blob or "")[:4000]
     scope = _SCOPE_HEADER_RE.search(head)
     generation = _GEN_HEADER_RE.search(head)
     kind, _sep, span = (scope.group(1).strip() if scope else "").partition(" ")
-    if kind != FULL or generation is None or generation.group(1).strip():
+    if generation is None:
         return None
-    return parse_range(span)
+    fresh_full = kind == FULL and not generation.group(1).strip()
+    admitted = fresh_full or (kind == FINAL and persisted)
+    return parse_range(span) if admitted else None
 
 
 def filing_refusal(text, sha, parse):
@@ -1012,7 +1036,11 @@ def review_logs(root, branch, base, paths):
     COMMIT THAT ADDED IT recorded it (`log_history`), never at the branch tip.
 
     `span` is the log's recorded range, or None when it records none; `gate`
-    is its `gating_span`, None for every round that carries no gate authority. A log
+    is its `gating_span` under the repository's resolved final-reviewer mode
+    (`kitlib.config.reviewer_dials`, both dials, read once here so every
+    reader of round evidence applies the same mode), None for every round
+    that carries no
+    gate authority. A log
     that cannot be read, or that no commit in `base..branch` added, is left
     out, which every reader of this list turns toward more review: no round
     comes from it, and the scope check at merge has nothing to clear it with
@@ -1022,6 +1050,7 @@ def review_logs(root, branch, base, paths):
     """
     history = log_history(root, branch, base)
     added = history[0] if history else {}
+    persisted = reviewer_dials(root)[1] == FINAL_PERSISTED
     found = []
     for path in paths:
         key = session_log(path)
@@ -1033,7 +1062,8 @@ def review_logs(root, branch, base, paths):
         header = _PHASE_HEADER_RE.search(blob[:4000])
         phase = header.group(1).strip() if header else ""
         if phase in REVIEW_PHASES:
-            found.append((path, key, phase, session_range(blob), gating_span(blob)))
+            gate = gating_span(blob, persisted)
+            found.append((path, key, phase, session_range(blob), gate))
     return found
 
 

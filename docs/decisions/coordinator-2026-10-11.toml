@@ -1,0 +1,12 @@
+# docs/decisions/coordinator-2026-10-11.toml — overnight leg 02 (2026-10-11);
+# delegated decisions made on trunk (coordinator). Lane decisions are in each
+# lane's own record. Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "WI-887's lane re-anchored the low-level-requirements snapshot with a coordinator act as its last spine commit (seq 111, `intake.py snapshot --approves \"low-level-requirements=docs/reviews/wi-887/009-ADJUDICATE-2310bdc.md\"`, no re-attests): after sitting 009's act 110, the dispute-011 fix added two symbols to LLR-270's traced code_symbol cell, so the live registry differed from its anchor only in that traced cell. The recipes sanction this re-anchor for a traced-only change; taken on trunk inside the squash it was refused by text-then-act, so it was taken in the lane; no approved text moved and nothing was blessed."
+alternative = "Rewind the lane and have the adjudicator take the act after the code_symbol change, or drop the two symbols from code_symbol and leave their back-links unlisted."
+reversal_cost = "Low: an overrule restores the act-110 copy and re-sits LLR-270 for a traced-cell re-anchor."
+why_not_escalated = "A traced-only change owes no sitting; the copy blesses no requirement text."
+review = ""

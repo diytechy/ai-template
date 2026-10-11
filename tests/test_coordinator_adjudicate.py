@@ -340,6 +340,7 @@ def test_the_loop_composes_the_same_keep_request_as_before(
             "route": LOOP_ROW,  # the row the loop selected, carried whole
             "role": "ADJUDICATE",
             "brief": "disposition",
+            "scope": "",  # WI-887: an adjudication is kept under no scope
             "wi": "WI-7",
             "rows": {},
             # ...and the tier questions' home, which the amendment brief
@@ -874,3 +875,55 @@ def test_a_dispute_brief_naming_no_findings_is_refused_before_launch(
     assert _adjudicate(root, brief="dispute") == 2
     assert launched["argv"] == []
     assert "DISPUTE:" in capsys.readouterr().out
+
+
+# --- WI-887 round 1 (review 001 F3): a retained reviewer's own template ---------
+
+
+def _keep_request_templates(monkeypatch, tmp_path, role, templates):
+    """The governing template identity the shared request step hands the keep
+    operation for a call of `role`, under the operator's `templates`."""
+    svc = cli.session_service
+    seen = []
+    monkeypatch.setattr(svc, "plan_keep", lambda root, cfg, **kw: seen.append(kw))
+    svc.adjudication_keep(
+        svc.AdjudicationRequest(
+            root=tmp_path,
+            brief="" if role != "ADJUDICATE" else "disposition",
+            route=LOOP_ROW,
+            wi="WI-1",
+            role=role,
+            prompt_templates=templates,
+            scope="wi-1@c:{}:iteration".format(role) if role != "ADJUDICATE" else "",
+        )
+    )
+    return seen[0]["template_paths"], seen[0]["template_texts"]
+
+
+def test_a_retained_reviewers_identity_is_its_own_template(tmp_path, monkeypatch):
+    # F3: a REVIEW call's governing identity is the template text its brief
+    # is built from, the phase's override text else the shipped reviewer
+    # template's (read per round, review 002 F2), so a changed reviewer
+    # template or override drains the retained reviewer through the existing
+    # mechanism. An ADJUDICATE call's identity is unchanged by either.
+    prompts = load_script("prompts")
+    shipped = prompts.load(prompts.REVIEWER)
+    review = _keep_request_templates(monkeypatch, tmp_path, "REVIEW-A", {})
+    assert review == ([], [shipped])
+    overridden = {"REVIEW-A": "the operator's reviewer"}
+    assert _keep_request_templates(monkeypatch, tmp_path, "REVIEW-A", overridden) == (
+        [],
+        ["the operator's reviewer"],
+    )
+    # The other phase's override is not this phase's template.
+    assert _keep_request_templates(monkeypatch, tmp_path, "REVIEW-B", overridden) == (
+        [],
+        [shipped],
+    )
+    adjudication = _keep_request_templates(monkeypatch, tmp_path, "ADJUDICATE", {})
+    assert shipped not in adjudication[1]
+    assert prompts.template_path(prompts.REVIEWER) not in adjudication[0]
+    assert (
+        _keep_request_templates(monkeypatch, tmp_path, "ADJUDICATE", overridden)
+        == adjudication
+    )

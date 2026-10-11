@@ -411,6 +411,35 @@ keepwarm_minutes = 0             # e.g. 50
 # purpose; true restores the strict posture at the cost of that continuity.
 reset_on_same_artifact = false
 
+[reviewer]
+# LOOP REVIEWER SESSION RETENTION (opt-in, ships OFF). With the dial on, the
+# loop's review role resumes its session within one lane's iteration: a NARROW
+# round (after a CHANGES-REQUESTED round, over the rework alone) resumes the
+# session that reviewed that lane's previous narrow round, through the same
+# keep operation, store, lease and dedicated CLI homes as [adjudicator]
+# retention, so provision credentials there first. Each kept session is keyed
+# by its scope (the lane, its claim base, the review phase and the stage), so
+# no other lane, re-claim or phase ever resumes it, and it is never pinged to
+# keep warm. Drawing the lane's gating (full-lane) round retires that lane's
+# iteration session.
+#
+# Percent of the context window at which a retained review session is retired
+# before its next round. 0 = OFF: every review round is a fresh session and
+# nothing below applies. Other values read as for [adjudicator], and any value
+# that is not an int in 0..100 reads 0.
+context_reset_pct = 0            # e.g. 55
+# The final reviewer: the gating round, the full lane from the claim base to
+# the tip, which a merge is judged on. "fresh" (the default) runs it as a
+# fresh session every time. "persisted" keeps one independent final reviewer
+# per lane and phase under its own scope while the dial above is on, so it
+# reviews the lane again knowing its earlier full review. It never resumes an
+# iteration reviewer's session. The coordinator records such a round's scope
+# as `final` in its session log, and in this mode the merge gate also accepts
+# a `final` round from a resumed session; a full-lane round from any other
+# retained session, and a narrow round, never clear it. Any other value, and
+# "persisted" while the dial above is 0, reads "fresh".
+final_reviewer = "fresh"
+
 [coordinator]
 # COORDINATOR CONTEXT GUARD (opt-in, ships OFF). An interactive Claude Code
 # coordinator session that runs many lanes grows its context until compaction

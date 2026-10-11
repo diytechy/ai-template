@@ -8161,6 +8161,68 @@ recorded as ERROR and the run continues.
 calls its `finish` and catches broad exceptions around it, let
 `TreeNotEnded` (a `BaseException`) propagate. No registry or setting changes.
 
+### The loop's reviewer can resume within a lane, and the final reviewer is fresh or persisted [since b3ef42844]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new, opt-in `[reviewer]` table in `docs/process.toml`
+holds two dials, read in one place (`kitlib.config.reviewer_dials`):
+`context_reset_pct` (0, the shipped value, is off) and `final_reviewer`
+(`"fresh"`, the shipped value, or `"persisted"`). A value of the wrong type,
+out of range, or a final value present but neither `"fresh"` nor
+`"persisted"` (even with a valid percent), reads as off and fresh,
+and `"persisted"` reads as fresh while `context_reset_pct` is 0: a persisted
+final reviewer needs retention on. With the dial on, the loop's narrow review rounds within one lane resume one
+retained reviewer session through the same keep operation, store, lease and
+dedicated CLI homes as adjudicator retention (`scripts/session_keep.py`). A
+narrow round prefers that session's route. Drawing the lane's full-lane
+(gating) round retires it. Each retained review session is keyed by a scope,
+`<train>@<claim base>:<phase>:<iteration|final>`, kept verbatim in its record
+and hashed into its file name with the route id. The store's one reader
+admits a record only as one of the shapes its writers produce: lease-only,
+retired before any session, or a full session record with every field its
+consumers read present and of its type, and each optional field it carries
+(occupancy, use stamps, compaction cursor and baselines) of the type its
+writer produces. Nested values are typed too: a lease, on any shape that
+carries one, needs a non-empty string holder and a numeric deadline, and
+each judged item is a work-item id string. A record of another family, route
+or scope, one of any other shape (a missing or mistyped field, an unknown
+state) and one filed under another record's name all read as no record, to
+every load and scan of the store, so the call mints fresh and nothing pins
+or pings it. A retained reviewer's governing identity is the text of its own
+reviewer template (the phase's `--prompt-map` override, else the shipped
+reviewer template), resolved once per round for its brief and its identity
+alike and never cached for the process, so editing either drains that
+reviewer and the next round's brief carries the edit. A scoped record
+is never pinged to keep warm. The empty scope keeps the adjudicator's file
+name, so existing adjudicator records still load. In persisted mode the
+gating round runs on one final reviewer per lane and phase, under its own
+scope, which an iteration round never uses, and its draw prefers that
+reviewer's live route (a cooling route falls back and mints). The session
+log's `review-scope` record then names a new kind, `final <claim
+base>..<tip>`, written by the coordinator for a full-lane round drawn under
+the final reviewer's scope. The merge gate (`kitlib.verdict.gating_span`
+through `review_logs`, so the integrator, the loop, the dispatcher and the
+scorer alike) accepts a `final` round only in persisted mode with retention
+on; a `full` round still clears it only from a fresh session, in either
+mode, and a narrow round never does. Every session log gains two audit columns, `session-mode`
+(`fresh` or `resumed`) and `keep-scope`. No gate or scheduler reads them.
+
+**Kit-owned files — overwrite:** `scripts/session_keep.py`,
+`scripts/session_service.py`, `scripts/agent_loop.py`,
+`scripts/agent_brief.py`, `scripts/agent_common.py`,
+`scripts/adjudicate_brief.py`, `scripts/kitlib/config.py`,
+`scripts/kitlib/verdict.py`, `process.toml.template`.
+
+**What to do.** Nothing is forced: with no `[reviewer]` table every review
+round stays a fresh session and the gate is unchanged. To opt in, copy the
+template's `[reviewer]` table into your `docs/process.toml`. Provision the
+dedicated CLI homes as for `[adjudicator]` retention (a reviewer route on a
+family whose home is not signed in stops the loop needing a human). Then set
+`context_reset_pct`, and optionally `final_reviewer = "persisted"`. A
+session log written before this change has no `session-mode` or
+`keep-scope` column; nothing reads either.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -331,6 +331,7 @@ fresh_verdict_path = agent_brief.fresh_verdict_path
 lane_spec_text = agent_brief.lane_spec_text
 claimed_on_branch = agent_brief.claimed_on_branch
 lane_completion = agent_brief.lane_completion
+review_retention = session_service.session_keep.review_retention
 
 
 # The limit-hit message a throttled headless run returns, e.g. "You've hit
@@ -468,6 +469,8 @@ class RoutingState:
         # which makes the next round NARROW; None draws the full lane.
         self.narrow_from = None
         self.round_files = []  # this round's verdict files, for a narrow follow-up
+        self.keep_scope = self.keep_stage = ""  # WI-887: the draw's keep scope, stage
+        self.keep_templates = None  # WI-887: the review round's resolved templates
         # The build-vs-design-check phase for the next non-review/non-critique
         # session, held in-process now that docs/run-phase is retired (WI-180).
         self.next_phase = "BUILD"
@@ -1771,13 +1774,14 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
                 ),
             )
             body, review_scope = review_round_brief(
-                prompt_templates,
+                st.keep_templates,
                 phase,
                 verdict_path,
                 root=root,
                 worker=worker,
                 sha=reviewed_sha,
                 narrow_from=st.narrow_from,
+                stage=st.keep_stage,
             )
         elif is_critique:
             verdict_path = fresh_verdict_path(
@@ -2668,12 +2672,36 @@ def resolve_idle_timeout(args):
 SIGNIN_HOLD = "NEEDS-HUMAN — the retained adjudicator's CLI home is not signed in"
 
 
+def review_keep_scope(ctx, plan):
+    """The keep scope of a review round, as its draw settled it
+    (`draw_session_route`); "" for every other session (WI-887).
+
+    Implements: SR-227, SR-239, LLR-270
+    """
+    is_review = plan["phase"] in kverdict.REVIEW_PHASES
+    return ctx.run.routing.keep_scope if is_review else ""
+
+
+def review_keep_templates(ctx, plan):
+    """The templates a session's keep derives its governing identity from: a
+    review round's, resolved once at its draw (`draw_session_route`), the
+    content its brief rendered; the operator's loaded overrides for every
+    other session (WI-887).
+
+    Implements: SR-227, SR-239, LLR-270
+    """
+    is_review = plan["phase"] in kverdict.REVIEW_PHASES
+    return ctx.run.routing.keep_templates if is_review else ctx.prompt_templates
+
+
 def adjudication_keep(ctx, plan, wi):
-    """The retained adjudicator session this launch resumes or mints, or
-    None — which, at the shipped `[adjudicator] context_reset_pct = 0`, is
-    every launch. The request is composed through the session service's
+    """The retained session this launch resumes or mints, or None — which,
+    at the shipped `[adjudicator] context_reset_pct = 0` and `[reviewer]
+    context_reset_pct = 0`, is every launch; a review round is kept under the
+    scope its draw settled (`review_keep_scope`, WI-887). The request is composed through the session service's
     shared step (`AdjudicationRequest`, `adjudication_keep`), the one the
-    coordinator's entry point uses, with the operator's loaded overrides; the
+    coordinator's entry point uses, with the operator's loaded overrides, or
+    a review round's once-resolved templates (`review_keep_templates`); the
     governing inputs it derives include every retained class's template. It
     raises SigninRefused when the dedicated home is not signed in.
 
@@ -2686,8 +2714,9 @@ def adjudication_keep(ctx, plan, wi):
             brief=plan.get("brief") or "",
             route=ctx.registry.get(plan["route_id"]),
             wi=wi or "",
-            prompt_templates=ctx.prompt_templates,
+            prompt_templates=review_keep_templates(ctx, plan),
             deadline=ctx.args.session_timeout,
+            scope=review_keep_scope(ctx, plan),
         )
     )
 
@@ -2957,8 +2986,24 @@ def draw_session_route(
     and, when nothing is routable at all for a worker's review, the REVIEW
     OWED park — never a NEEDS-HUMAN page the dispatcher would turn into a
     handback of finished work. Returns `(route_id, reason, exit_code)`; a
-    non-None exit_code ends the run (the banner is already written)."""
+    non-None exit_code ends the run (the banner is already written). A review
+    round's keep scope is settled here (`session_keep.review_retention`,
+    WI-887): a retained round prefers its scope's live route and keeps its
+    stage; drawing a gating round retires the lane's iteration reviewer. A
+    review round's reviewer template is resolved here, once
+    (`agent_brief.review_round_templates`): its brief and its keep's governing
+    identity both read that content.
+
+    Implements: SR-227, SR-239, LLR-270"""
     is_review = phase in kverdict.REVIEW_PHASES
+    kept = review_retention(ctx.root, ctx.worker, phase, st.narrow_from)
+    st.keep_scope, st.keep_stage = kept.scope, kept.stage
+    st.keep_templates = (
+        agent_brief.review_round_templates(ctx.prompt_templates, phase)
+        if is_review
+        else None
+    )
+    preferred_ids = list(kept.pin) + list(preferred_ids)
     route_id, reason = select_with_probe(
         ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
     )

@@ -303,6 +303,13 @@ retain_for = [
 keepwarm_minutes = 0             # e.g. 50
 reset_on_same_artifact = false
 
+[reviewer]
+# Loop reviewer session retention and the final reviewer (WI-887), shipped
+# OFF and fresh; the shipped template's [reviewer] header carries the full
+# reasoning. This repo keeps the shipped values until the owner turns it on.
+context_reset_pct = 0            # 0 = off
+final_reviewer = "fresh"         # or "persisted"
+
 [coordinator]
 # The coordinator context guard (WI-822). The shipped template's [coordinator]
 # header carries the full reasoning. This repo's coordinator runs a 1M-context

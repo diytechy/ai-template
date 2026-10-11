@@ -1810,17 +1810,25 @@ def _assemble(brief, root, row, verdict_path, prompt_templates):
     return _ASSEMBLERS[brief](root, row)
 
 
-def governing_templates(classes, prompt_templates=None):
+def governing_templates(classes, prompt_templates=None, role="ADJUDICATE"):
     """`(template_paths, template_texts)`: the identity of the templates the
-    brief `classes` are composed from, as the retention layer's governing
-    input. Each class contributes the operator's override text when one is
-    wired under its prompt key (it wins, as in `compose`), else the shipped
-    template's path; a class with no template contributes nothing. Given the
-    whole retained set, every call of a retained class shares one identity,
-    so switching classes is not a change of rules.
+    call of `role` is composed from, as the retention layer's governing
+    input. For an adjudication, the brief `classes`: each class contributes
+    the operator's override text when one is wired under its prompt key (it
+    wins, as in `compose`), else the shipped template's path; a class with no
+    template contributes nothing. Given the whole retained set, every call of
+    a retained class shares one identity, so switching classes is not a
+    change of rules. For a loop review round (`role` a review phase,
+    WI-887), the reviewer template TEXT its brief is built from
+    (`agent_brief.review_template`: the phase's override text, else the
+    shipped file read now; the loop passes the round's once-resolved
+    templates, so this is the very text its brief rendered), so a changed
+    reviewer template drains a retained reviewer.
 
     Implements: SR-227, LLR-305
     """
+    if role in agent_brief.kverdict.REVIEW_PHASES:
+        return [], [agent_brief.review_template(prompt_templates, role)]
     paths, texts = [], []
     for brief in sorted(set(classes or ())):
         key = BRIEF_PROMPTS.get(brief)
