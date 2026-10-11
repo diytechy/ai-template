@@ -25,12 +25,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-10-leg01-coordinator.md](handoff-2026-10-10-leg01-coordinator.md):
+  [handoff-2026-10-11-leg01-coordinator.md](handoff-2026-10-11-leg01-coordinator.md):
   no lane is out and no judgement is active; the queue resumes at the
-  configurable final reviewer, the hand-merge walk waits on an owner ruling,
-  the signed-in Codex account offers no Sol (reviews run on Luna pending the
-  owner), and the remaining queue and the headless-leg session prompt are
-  there. The coordinator's
+  store-lock contention row, which owes its Trust section before its claim;
+  reviews run on Codex Sol again; the hand-merge walk still waits on an
+  owner ruling, and the remaining queue and the headless-leg session prompt
+  are there. The coordinator's
   procedure lives in the `coordinator-cycle` skill; unattended legs run
   through `coordinator-tools/overnight_legs.py`, each writing the next handoff.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or

@@ -54,7 +54,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <sha> --sha <tip> --scope narrow|full --tests <files> --scratch <dated root> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
      `--tests` takes the files as separate arguments; one quoted string
      renders as a single bogus path in the brief's pytest line.
-     A narrow round adds `--findings <the round file it answers>`; the
+     A lane's first review is `--scope full`: `review` refuses a narrow
+     round with no round file to answer. A narrow round adds
+     `--findings <the round file it answers>`; the
      full-lane gate names none and runs from the lane's trunk base. The brief
      names the verdict path under the scratch root.
   2. Append to the brief only what the template cannot know: for a narrow
@@ -231,9 +233,19 @@ commit of its own, move it to trunk's tip
   one way in every mode (owner, 2026-10-07). This order is not yet proven on a
   same-registry checkpoint, so record the first one. `--approves` splits on
   `;`, so never put one in a ref. A traced-only change owes no sitting.
-  If the squash touches
-  its snapshot, re-anchor it with
-  `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`.
+  A traced cell changed after the act (a `code_symbol` a later fix adds)
+  leaves the registry off its anchor: re-anchor it in the LANE, as its last
+  spine commit, with
+  `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`
+  (no `--reattests`; the ref names the sitting that last anchored it).
+  Taken on trunk inside the squash, text-then-act refuses it (WI-887,
+  2026-10-11). Run `trace.py --strict-integrity` on the staged squash: the
+  lane hook does not catch this drift.
+- **A return in a sitting holds its whole registry.** A row the sitting
+  would bless is not anchored while another row in the same registry is
+  returned; rework the returns and re-sit them all together. Move each
+  answered verdict's `## Dispositions` under another heading in the lane,
+  or the landing sweep mints the rework rows.
 - **Squash** on trunk with `git merge --squash <lane>`, one per lane. Never
   `git stash` between the squash and its commit: the stash's reset deletes
   `.git/SQUASH_MSG`, and `text-then-act` then refuses the landing as an
@@ -410,9 +422,11 @@ lane commit being replayed.
   when using Codex with a ChatGPT account` from a current CLI (2026-10-10:
   0.162.x refused `gpt-6.1-sol`) means the account, not the CLI version.
   Read the offered models from `~/.codex/models_cache.json` (`models[].slug`,
-  read as UTF-8). Overnight leg 01 reviewed with `gpt-6-luna` at high through
-  `"$TOOLS/luna_review.sh"` (coordinator-2026-10-10 D-017, pending the
-  owner); record the substitution in every lane's decisions record.
+  read as UTF-8), then probe with a one-word `codex exec -m gpt-6.1-sol`
+  call: the cache listed it and it worked again on 2026-10-10 at 22:40
+  local (leg 02). While it is not offered, review with `gpt-6-luna` at high
+  through `"$TOOLS/luna_review.sh"` (coordinator-2026-10-10 D-017, pending
+  the owner) and record the substitution in every lane's decisions record.
 - **Codex usage limit:** wait for the reset the CLI error names. Retain Terra
   and keep review rounds narrow; observed session counts are not a quota.
   Every Codex call runs through the `codex` CLI on `PATH`; the owner switches
@@ -448,8 +462,8 @@ lane commit being replayed.
   and the landing's sweep refuses the empty `## Dispositions` (OI-73).
   Until WI-902 lands, close the row by hand into `docs/work/complete/`
   citing the verdict, give the existing successor `supersedes`, and record
-  the sweep's refusal; it mints nothing else. A close whose commit range is
-  empty does not compose a disposition brief until WI-901 lands.
+  the sweep's refusal; it mints nothing else. Since WI-901 (2026-10-11) a
+  close whose commit range is empty composes its disposition brief.
 - **Close a lane partial for an owner decision** (OI-70: never park it
   claimed). Save any uncommitted build outside the repository and revert the
   lane first: `handback.close_partial` commits residue as-is with the hook
