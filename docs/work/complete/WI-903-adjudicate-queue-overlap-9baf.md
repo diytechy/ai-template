@@ -2,7 +2,7 @@
 id = "WI-903"
 title = "adjudicate queue overlap [9bafb7b507a5]: WI-798;WI-799;WI-800;WI-801;WI-804;WI-805;WI-807;WI-808;WI-809;WI-810;WI-811;WI-813;WI-816;WI-817;WI-827;WI-832;WI-833;WI-850;WI-851;WI-856;WI-857;WI-858;WI-878;WI-887;WI-893;WI-895;WI-897;WI-901;WI-902"
 workstream = "process"
-specref = "docs/work/README.md"
+specref = ""
 buildtier = "strong"
 priority = 9
 safety_class = "adjudication"
@@ -10,6 +10,10 @@ brief = "consolidate"
 adjudicates = ["WI-798", "WI-799", "WI-800", "WI-801", "WI-804", "WI-805", "WI-807", "WI-808", "WI-809", "WI-810", "WI-811", "WI-813", "WI-816", "WI-817", "WI-827", "WI-832", "WI-833", "WI-850", "WI-851", "WI-856", "WI-857", "WI-858", "WI-878", "WI-887", "WI-893", "WI-895", "WI-897", "WI-901", "WI-902"]
 digests = "9bafb7b507a5|e3900a5ad95a"
 +++
+
+## Deliverable
+
+Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this row's own merge (drafts-not-mints), the mint replaces the superseded row's inbound hard edges, and any human-owed answer becomes a `pending` open item the successor depends on. The verdict artifact is under `docs/reviews/`.
 
 ## Context
 
@@ -254,3 +258,19 @@ The mechanical pre-filter selected them; it has concluded NOTHING. Each line bel
 > WI-901 and WI-902 both touch handback.py;intake.py
 
 This row's `Adjudicates` cell fixes the population — judge those rows and no others. Its `Digests` cell is `9bafb7b507a5|e3900a5ad95a`: the queue state and the spine state this question was asked against, so the census never asks it twice and a verdict that has gone stale is detectable rather than assumed fresh.
+
+## Consolidation
+
+Judged by an independent adjudicator; the verdict, with each finding, is
+`docs/reviews/wi-903/001-ADJUDICATE-9ac41fc.md`. No contradiction, no
+answered scope, no consolidation. WI-875's judgement of the rows it sat on
+stands. The new rows and the pairs the landed prerequisites have made
+claimable together give three unordered collisions, each with a hard edge:
+WI-798 and WI-887 both re-key the retained session record, and the sweep and
+dispute-binding rules WI-902 and WI-878 build must precede WI-810's and
+WI-811's folds of them.
+
+```toml
+outcome = "queue-with-edge"
+edges = ["WI-798 needs WI-887", "WI-810 needs WI-902", "WI-811 needs WI-878"]
+```
