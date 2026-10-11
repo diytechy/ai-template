@@ -2,7 +2,7 @@
 # delegated decisions made on trunk (coordinator). Lane decisions are in each
 # lane's own record. Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-001", "D-004", "D-005"]
+high_risk = ["D-001", "D-004", "D-005", "D-009", "D-010"]
 
 [decision.D-001]
 decided = "WI-887's lane re-anchored the low-level-requirements snapshot with a coordinator act as its last spine commit (seq 111, `intake.py snapshot --approves \"low-level-requirements=docs/reviews/wi-887/009-ADJUDICATE-2310bdc.md\"`, no re-attests): after sitting 009's act 110, the dispute-011 fix added two symbols to LLR-270's traced code_symbol cell, so the live registry differed from its anchor only in that traced cell. The recipes sanction this re-anchor for a traced-only change; taken on trunk inside the squash it was refused by text-then-act, so it was taken in the lane; no approved text moved and nothing was blessed."
@@ -51,4 +51,60 @@ decided = "WI-798 is not claimed this leg. Its scope critique (Sol gpt-6.1-sol, 
 alternative = "Write WI-798's Trust section in this leg after the limit, without a critique to check it."
 reversal_cost = "Low: WI-798 stays first among unclaimed rows."
 why_not_escalated = "Settling scope before a claim is the coordinator's step; the Trust ruling goes to the owner once written."
+review = ""
+
+[decision.D-008]
+decided = "WI-798 stays one row, built as two commits: (b) the selected enable-list entry becomes the identity resolution, selection and cooldowns carry (behaviour-preserving, every entry unqualified today), then (a) account tables, the ROUTE@ACCOUNT qualifier, adapter home variables and the per-family home's retirement together with (c) the adjudicator token's move to one declared account. (a) and (c) cannot land apart: the token is keyed by family today, so retiring the family home without moving the token either authenticates every Claude account as the token's account or strips the adjudicator's token. Only the live two-login isolation check is split out (D-014). Recorded in the spec's 'Deliverables and landing order' section, answering scope critique S1."
+alternative = "Split (b) into its own preparatory row, or split cooldowns from homes."
+reversal_cost = "Low before the claim; medium after: a split lane re-plans its commits."
+why_not_escalated = "Settling a row's internal order before its claim is the coordinator's step; the owner confirms or overrules."
+review = ""
+
+[decision.D-009]
+decided = "WI-798's Trust ruling, as its spec's ## Trust section states it: seven carriers (account tables, ROUTE@ACCOUNT lines, the account home, the token locator variable, the verified cell, retained records keyed with account, in-process cooldowns), each producer's write route and failed-write shape, and a ruling per consumer found by census (agent_route the one parser; agent_loop, plan_runner, coordinator_adjudicate, session_service, session_keep, session_adapters, the four dev-setup scripts; coordinator_guard, dispatch and the launcher slots unchanged). Authority binds to the selected entry resolved once per call into route, account, effective home, authentication source and retained identity; an account's readiness is read only from its own source; no input falls back to the ambient login, the unqualified entry, the retired family home or another account. Census greps (from the repo root): rg -n 'agents.toml|agents-enabled|CODEX_HOME|CLAUDE_CONFIG_DIR|GEMINI_CLI_HOME' project-trajectory/scripts scripts; rg -n 'load_registry\\(|load_enabled\\(|load_enabled_entries\\(|load_tag_rank\\(|dedicated_home\\(|dedicated_home_env\\(|home_env|TOKEN_VARIABLES|signin_status' project-trajectory/scripts scripts --glob '*.py'; rg -n 'session_service|signin|setup-token|signed|AGENT_CLAUDE_TOKEN_FILE' project-trajectory/scripts scripts --glob 'dev-setup*'; rg -n 'parse_env\\(' project-trajectory/scripts; rg -n -i cooldown project-trajectory/scripts --glob '*.py'. Drafted by an Opus planner from the critique, edited by the coordinator (an unverified login account is printed, not refused, matching the design)."
+alternative = "Leave the Trust section to the lane's builder."
+reversal_cost = "Medium once built: the rulings shape every launch site."
+why_not_escalated = "The coordinator-cycle skill requires a Trust section before the claim and routes its Ruling to the owner for confirmation or overrule, which this entry does."
+review = ""
+
+[decision.D-010]
+decided = "The token locator binds to exactly one declared account through the account table's token_file_variable (this repo: AGENT_CLAUDE_TOKEN_FILE, unchanged as a variable), and this repo's adjudicator runs on that account through a qualified enable-list entry (coordinator_adjudicate's default route becomes the qualified entry). A retained launch on an unqualified entry runs on the person's ambient login with no kit-held home, a change from today's family home and family-keyed token; the RESYNC entry states it. Existing retained records lack account and re-mint once."
+alternative = "Keep the token family-wide beside account homes."
+reversal_cost = "Medium: the token's binding and the adjudicator's route."
+why_not_escalated = "It follows from the approved design's retirement of the per-family home (README change 3, OI-69 (e1)); the owner confirms or overrules."
+review = ""
+
+[decision.D-011]
+decided = "The login-isolation evidence is the account table's verified cell (date and CLI version), written only by WI-908 in a reviewed commit; an empty cell means unverified. A login-authenticated non-ambient Claude account that is unverified is printed at preflight and by the sign-in probe, not refused, as the design prints every untested route (chapter 2, 'Untested is visible'). Token accounts are outside the isolation question. The planner's draft proposed refusing; the coordinator chose the design's visible-not-refused rule."
+alternative = "Refuse an unverified login-authenticated non-ambient Claude account at preflight."
+reversal_cost = "Low: one preflight arm."
+why_not_escalated = "It applies the approved design's rule as written."
+review = ""
+
+[decision.D-012]
+decided = "In WI-798's Trust ruling: an agents-enabled file that exists but cannot be read is an error, never read as routing off (today it reads as absent); a qualified entry whose route env declares its CLI's home variable is refused, so neither side silently wins; an unresolvable user config directory refuses every qualified launch."
+alternative = "Keep today's unreadable-reads-as-absent rule for the enable list."
+reversal_cost = "Low: loader arms."
+why_not_escalated = "Each closes a silent fallback the owner's no-fallback rule forbids."
+review = ""
+
+[decision.D-013]
+decided = "The kit creates only a token account's home (empty; it holds no credential) and never creates a login account's home, nor moves, copies, reads or deletes any home; the retired family home's directory is left in place. A retained record without a matching account reads as not its own and the next launch mints, once."
+alternative = "Migrate the family home's contents into the account home."
+reversal_cost = "Low."
+why_not_escalated = "Homes hold provider-owned credentials the kit must not touch."
+review = ""
+
+[decision.D-014]
+decided = "WI-798's owner-dependent completion is separated (scope critique B3): the lane builds and checks everything unattended, including the empty-home half of the Claude isolation check and the adjudicator's continued sign-in on its token account; the two-login half is filed as WI-908, held by the pending open item OI-114, and does not hold WI-798. WI-798's Done-when is edited to match (fixture CLIs per adapter, entry-keyed cooldowns, the empty-home half, LLR-270, LLR-305 and IF-247 added to its spine list, a test per consumer arm of the Trust ruling). The scope rubric's proposed anchor B3 is not added: that is a rubric change for the owner (follow-up topic)."
+alternative = "Hold WI-798's completion on the owner's two-login check."
+reversal_cost = "Low: WI-908 can be cancelled or folded back."
+why_not_escalated = "Filing an open item with its placeholder row is the coordinator's step; the ruling is the owner's."
+review = ""
+
+[decision.D-015]
+decided = "WI-902 is left committed on its lane (branch wi-902, worktree C:/Projects/ai-template.wt/wi-902) under the overnight leg's breaker: after dispute ruling 011, two full-lane rounds (reviews 014 and 015) were not SOUND; 014's MINOR was built, 015's MAJOR (an unclosed trailing fence in a Dispositions section is dropped silently) is accepted and unbuilt. The lane's own record is docs/decisions/wi-902.toml D-005 to D-010 (it reaches trunk with the landing)."
+alternative = "Build round 7 and run a third full-lane gate this leg."
+reversal_cost = "None: resuming is a build round, a narrow review and a fresh full-lane gate."
+why_not_escalated = "The breaker is the leg's standing instruction; resuming the lane is for the owner or the next leg's instruction."
 review = ""
