@@ -3,11 +3,15 @@ id = "WI-901"
 title = "A disposition brief composes for a close whose commit range is empty"
 workstream = "process"
 sr_refs = ["SR-144"]
-specref = "project-trajectory/scripts/adjudicate_brief.py"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Landed 2026-10-11. `adjudicate_brief._commit_facts` returns `(facts, None)` for a range git resolves and `(None, git's failure)` for one it cannot, so an empty range and a failed one are no longer the same value; an empty resolvable range's facts say it holds no commits. Both callers, `disposition_values` and `dispute_values`, compose an empty range and refuse only an unresolvable one, naming git's failure (lane D-002). Four tests in `tests/test_adjudicate_brief.py` and `tests/test_dispute.py`; RESYNC entry. No row text became untrue, so no sitting was held (lane D-001; LLR-167's detail and TC-161's method are incomplete, not false). Gate: full 001 APPROVE, 0 findings (Codex gpt-6.1-sol, medium).
 
 ## Context
 

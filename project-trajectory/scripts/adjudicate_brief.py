@@ -430,9 +430,11 @@ def disposition_values(root, row):
             "{} declares no usable `commit_range`, so the commit facts cannot "
             "be derived".format(reports[-1].name)
         )
-    evidence = _commit_facts(root, span)
+    evidence, failure = _commit_facts(root, span)
     if evidence is None:
-        return None, "the range {} does not resolve in this repository".format(span)
+        return None, "the range {} does not resolve in this repository: {}".format(
+            span, failure
+        )
     return {"report": report_text, "spec": spec_text, "evidence": evidence}, None
 
 
@@ -450,15 +452,27 @@ def _report_range(path):
 
 
 def _commit_facts(root, span):
-    """`git log --oneline` + `--name-status` over the declared range, clipped at
+    """`(facts, None)` for a range git resolves, or `(None, failure)` with
+    git's own report of why it could not.
+
+    The facts are `git log --oneline` + `--name-status`, clipped at
     `EVIDENCE_CLIP` lines. Facts, not narrative — no commit BODIES, so a lane's
-    self-assessment cannot ride in through its own commit message."""
+    self-assessment cannot ride in through its own commit message. A range
+    that resolves and holds nothing (a lane that stopped before its first
+    commit closes as `X..X`) is a fact too, and is stated as one: an empty
+    range and an unresolvable one are different values, never one `None`
+    (WI-901).
+    """
     code, log_out = ac.git(root, "log", "--oneline", "--no-decorate", span)
     if code != 0:
-        return None
-    _code, stat_out = ac.git(root, "diff", "--name-status", span)
-    body = "{}\n\n{}".format(log_out.rstrip("\n"), stat_out.rstrip("\n")).strip()
-    return _clip(body, EVIDENCE_CLIP) if body else None
+        return None, log_out or "git log exited {}".format(code)
+    code, stat_out = ac.git(root, "diff", "--name-status", span)
+    if code != 0:
+        return None, stat_out or "git diff exited {}".format(code)
+    body = "{}\n\n{}".format(log_out, stat_out).strip()
+    if not body:
+        return "the range {} holds no commits".format(span), None
+    return _clip(body, EVIDENCE_CLIP), None
 
 
 # --- the red-TC brief (SN-030 rung 6) -----------------------------------------
@@ -1760,9 +1774,9 @@ def dispute_values(root, row):
         return None, "the findings file's `range` {!r} is not <base>..<head>".format(
             span
         )
-    commits = _commit_facts(root, span)
+    commits, failure = _commit_facts(root, span)
     if commits is None:
-        return None, "git cannot resolve the range {} to any commit".format(span)
+        return None, "git cannot resolve the range {}: {}".format(span, failure)
     ids = [f["id"] for f in found["findings"]]
     return {
         "range": span,

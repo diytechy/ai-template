@@ -175,6 +175,30 @@ def test_a_malformed_findings_file_refuses_the_brief(tmp_path, body, cell, needl
     assert text is None and needle in why, why
 
 
+@env_gate_skipif("git")
+def test_an_empty_lane_range_composes_and_says_it_holds_no_commits(tmp_path):
+    """`X..X` resolves and holds nothing: the brief states that fact rather
+    than refusing as if git could not resolve the range (WI-901)."""
+    repo, span = _lane(tmp_path)
+    head = span.split("..")[1]
+    empty = "{}..{}".format(head, head)
+    (repo / "findings.toml").write_text(_findings_toml(empty), encoding="utf-8")
+    text, why = ab.compose(repo, _row(), "v.md")
+    assert why is None, why
+    assert "the range {} holds no commits".format(empty) in text
+
+
+@env_gate_skipif("git")
+def test_an_unresolvable_lane_range_refuses_naming_gits_failure(tmp_path):
+    repo, _span = _lane(tmp_path)
+    (repo / "findings.toml").write_text(
+        _findings_toml("0000000..1111111"), encoding="utf-8"
+    )
+    text, why = ab.compose(repo, _row(), "v.md")
+    assert text is None
+    assert "git cannot resolve" in why and "fatal:" in why, why
+
+
 # --- the verdict grammar ------------------------------------------------------
 
 VALID = """\

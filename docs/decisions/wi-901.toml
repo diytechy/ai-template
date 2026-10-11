@@ -1,0 +1,18 @@
+# docs/decisions/wi-901.toml — delegated decisions made in lane wi-901
+# (overnight leg 02, 2026-10-11). Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "No spine sitting is held: the Done-when owes adjudication only for rows the change makes untrue, and none is. LLR-167's detail (the commit-facts walk) and TC-161's method describe neither the empty-range composition nor the unresolvable-range refusal naming git's failure; they are incomplete, not false, and TC-161's evidence already names the whole test module. The builder's proposed wording is kept out of the repository (scratch wi901-spine-changes.md) as a candidate for a later amendment."
+alternative = "Have Terra amend LLR-167 and TC-161 and sit them in the lane."
+reversal_cost = "Low: an amendment can be filed as its own row."
+why_not_escalated = "The Done-when's own condition is not met; adding rows beyond it widens the lane."
+review = ""
+
+[decision.D-002]
+decided = "dispute_values, the second caller of _commit_facts, now composes an empty resolvable range too, where it used to refuse; its refusal of an unresolvable range names git's failure. This follows LLR-315's wording (it accepts a range git resolves) and keeps the two callers on one meaning of the facts."
+alternative = "Keep dispute_values refusing an empty range."
+reversal_cost = "Low."
+why_not_escalated = "The rows already state the new behaviour."
+review = ""

@@ -8223,6 +8223,25 @@ family whose home is not signed in stops the loop needing a human). Then set
 session log written before this change has no `session-mode` or
 `keep-scope` column; nothing reads either.
 
+### A disposition brief composes for a close whose commit range is empty [since 5c6e61350]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The disposition and dispute briefs
+(`scripts/adjudicate_brief.py`) derive their commit facts from the range a
+per-close report or findings file declares. A range that resolves but holds
+no commits (`X..X`, a lane that stopped before its first commit) used to
+refuse as if git could not resolve it, so every such close's disposition
+was held for a human. It now composes, and its commit facts say the range
+holds no commits. A range git cannot resolve still refuses, and the reason
+now carries git's own failure text. A non-empty range is unchanged.
+
+**Kit-owned files — overwrite:** `scripts/adjudicate_brief.py`.
+
+**What to do.** Overwrite the file. A disposition or dispute row held
+earlier with "does not resolve" or "cannot resolve ... to any commit" for
+an empty range composes on its next claim. No registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

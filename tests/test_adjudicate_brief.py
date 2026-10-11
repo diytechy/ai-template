@@ -181,6 +181,7 @@ def test_the_disposition_brief_carries_the_report_the_spec_and_the_commit_facts(
     # The spec as the lane received it, and the commit facts (log + name-status).
     assert 'title = "the whole ask"' in text
     assert "half the ask" in text and "A\thalf.txt" in text
+    assert "holds no commits" not in text
     # Fill is strict in both directions, so a leftover slot cannot survive —
     # this asserts the OUTPUT carries no hole, which is the property that
     # matters to the session that reads it.
@@ -218,6 +219,48 @@ def test_a_report_without_a_typed_commit_range_is_refused(tmp_path):
     text, why = ab.compose(repo, DISPOSITION_ROW, repo / "docs/reviews/v.md")
     assert text is None
     assert "commit_range" in why
+
+
+def _declare_range(repo, span):
+    """Rewrite the fixture report's typed `commit_range` to `span`."""
+    report = repo / "docs" / "handbacks" / "WI-300-lane.md"
+    report.write_text(
+        re.sub(
+            r'commit_range = "[^"]*"',
+            'commit_range = "{}"'.format(span),
+            report.read_text(encoding="utf-8"),
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_a_close_whose_range_is_empty_composes_and_says_it_holds_no_commits(
+    tmp_path,
+):
+    """A lane that stopped before its first commit closes with `X..X`: the
+    range resolves and holds nothing. That is a fact for the judge, not a
+    failure to derive one, so the brief composes and its COMMIT FACTS say the
+    range is empty (WI-901: it used to refuse as if git could not resolve it)."""
+    repo = _disposition_repo(tmp_path)
+    tip = _git(repo, "rev-parse", "HEAD")[:10]
+    span = "{}..{}".format(tip, tip)
+    _declare_range(repo, span)
+    text, why = ab.compose(repo, DISPOSITION_ROW, repo / "docs/reviews/v.md")
+    assert why is None, why
+    assert "the range {} holds no commits".format(span) in text
+    assert "A\thalf.txt" not in text
+    assert re.findall(r"\{[a-z_]+\}", text) == []
+
+
+def test_a_range_git_cannot_resolve_refuses_naming_gits_failure(tmp_path):
+    """A range naming commits this repository does not have still refuses, and
+    the reason carries git's own failure rather than a paraphrase of it."""
+    repo = _disposition_repo(tmp_path)
+    _declare_range(repo, "0000000..1111111")
+    text, why = ab.compose(repo, DISPOSITION_ROW, repo / "docs/reviews/v.md")
+    assert text is None
+    assert "0000000..1111111" in why
+    assert "fatal:" in why
 
 
 # --- the red-TC brief (SN-030 rung 6) -----------------------------------------
