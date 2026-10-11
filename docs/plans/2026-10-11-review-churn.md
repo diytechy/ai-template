@@ -14,6 +14,8 @@ The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) to
 | 2 | Record a decision at its event; never re-derive it from history. Reshape WI-902 first | ruling, then WI-902 reshape | 1 spec amendment | WI-902's history-replay findings (6) |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time lint, contract voice | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves; much of the ~24 spine-text findings |
 | 3 | Split at birth when deliverables are independent and the WI is large | ruling | none | see the answer below: helps above a size, hurts below it |
+| 7 | A second reviewer from a third family (Gemini), on the first full review and the gate; the coordinator cycle reads `review_rounds` | ruling + trial | waits on WI-798's routes | moves discovery into round 1; adds coverage on a separate quota |
+| 8 | Record usage for every model call: Sol and Terra through the session service; sub-agents from transcripts | small build | ~1 lane | today ~63% of a leg's Claude output (builders) is unrecorded; makes the re-measure a query |
 
 Order is cheapest-and-surest first. Numbers come from one analysis pass over `docs/reviews/`, the handoffs and `docs/log.d/`; treat them as claims at the precision of a three-day sample.
 
@@ -137,7 +139,8 @@ Splitting has one benefit the hours don't show: **containment**. In one large la
 
 1. **Full-lane every round (trial on the next two lanes).** Drop narrow rounds. Every round is a fresh full-lane review that still carries the previous round file and the coverage plan as context, so it still confirms each fix. The checkpoint fires only on a full review with no BLOCKER or MAJOR, so a sitting is never spent on a lane the gate will reopen. Cost: ~3–6 min more per review and more Codex quota per round. Fewer rounds and fewer stale checkpoints should more than repay that, but measure it. Change lives in `coordinator-cycle` §3 and recipes §1; `review_brief.py` already supports `--scope full` with no findings file.
 2. **Widen the narrow round to the fix's blast radius.** Keep narrow rounds, but the brief also lists the callers of every symbol the delta changed, and asks for one behaviour comparison against the lane's base for each. This catches the "baseline allowed it" regressions while keeping narrow rounds cheap. Needs a small `review_brief.py` change (shipped).
-3. **Persisted final reviewer** (`final_reviewer = "persisted"`, built in WI-887, shipped off). The gate resumes the session that saw the earlier rounds, so it stops re-sampling from zero. Least preferred: your persistent-adjudicator study found anchoring evidence, and a reviewer that resumes its own approvals is the weakest form of independence. Worth trying only if options 1 and 2 don't move the numbers.
+3. **Add a second, third-family reviewer at the full reviews** (item 7). Combine it with option 1 or 2; it attacks the same serial-discovery cost from the other side.
+4. **Persisted final reviewer** (`final_reviewer = "persisted"`, built in WI-887, shipped off). The gate resumes the session that saw the earlier rounds, so it stops re-sampling from zero. Least preferred: your persistent-adjudicator study found anchoring evidence, and a reviewer that resumes its own approvals is the weakest form of independence. Worth trying only if options 1–3 don't move the numbers.
 
 **Measure.** Checkpoints per landed WI. Full-gate rounds that find code defects after a checkpoint (target: near zero). Codex sessions per landed WI, against the ~15–24-session limit.
 
@@ -145,7 +148,7 @@ Splitting has one benefit the hours don't show: **containment**. In one large la
 
 **Owner calls:**
 
-- Pick the trial: full-lane every round (recommended), blast-radius narrow rounds, or the persisted gate.
+- Pick the trial: full-lane every round (recommended), blast-radius narrow rounds, or the persisted gate; add item 7's second reviewer when its route exists.
 - Confirm the trial length (two lanes) and the metrics above.
 
 ## 5. Requirements never reference code; code points up
@@ -213,13 +216,65 @@ Alongside: **one judge per row.** The adjudicator's sitting is the sole judge of
 
 - Approve filing this as the first build row.
 
+## 7. A second reviewer from a third model family
+
+**Evidence.** The kit already ships the dial: `[policies] review_rounds = 0|1|2` (this repo: `1`; `PROCESS_OPTIONS.md`, "The reviewer dial + cross-provider routing"). At `2` two independent reviewers split charters (A: method, risk, corner cases; B: process, trace, prose). A cross-provider pair is the recommended setup, routed per phase through `AGENT_CMD_MAP` (e.g. `REVIEW-B=gemini -p {prompt}`). Only the managed loop reads it. The coordinator cycle the legs run hard-codes one Sol review per round through `sol_review.sh`, and each spec carries "Review bar: A".
+
+**Why it helps.** The dominant cost is serial discovery: each round's fresh reviewer finds a corner the last one didn't. Two reviewers in parallel move discovery into round 1 at no extra wall-clock. A different family brings different blind spots ("two samples of one model share blind spots" is the kit's own reasoning).
+
+**What it won't fix.** An open-ended promise (item 1). Two reviewers sample an unbounded input set twice as fast and still don't converge, so item 1 comes first.
+
+### Proposal
+
+1. **The family must be a third one.** The builder and the adjudicator are Claude, and Sol is OpenAI. A Claude reviewer B shares a family with the builder, and Luna (`luna_review.sh`) shares one with Sol. That leaves Gemini. No Gemini route exists yet: none in `docs/agents.toml` and no `gemini` CLI on this machine. WI-798 (account tables and per-account homes for every CLI route) is the groundwork, so this item waits on it.
+2. **Re-cut the charters for this repo.** Once items 5 and 6 mechanize trace checks and make the sitting the sole judge of row text, reviewer B's process/trace/prose charter is mostly gone. Use the split the Q4 answer points to instead. A covers correctness and failure classes of the change. B covers regressions in unchanged lane code that relies on what changed, plus Done-when coverage: the two things only the full gate catches today.
+3. **Trial it inside item 4.** Sol plus a Gemini reviewer on the lane's first full review and on the final gate; narrow (or later full) rounds stay single. The coordinator cycle reads `review_rounds` instead of hard-coding one reviewer, so the dial means the same thing on both paths. That brings the coordinator cycle back in line with the kit.
+
+**Trade-off.** More findings per round, some overlapping. Each reviewer's findings are filed separately and the coverage plan merges them. Quota helps: reviewer B on Gemini uses a different quota, so it adds coverage without bringing the Codex limit (~15–24 sessions per window) closer.
+
+**Measure.** Share of a lane's total findings raised in round 1 (higher is better). Review rounds per landed WI. Findings only one reviewer raised, per reviewer: if B's are almost all duplicates, the second reviewer isn't earning its cost.
+
+**Downstream.** None for the dial (it ships). A Gemini route and template are adopter options, not requirements.
+
+**Owner calls:**
+
+- Confirm a Gemini reviewer B as the third family, after WI-798 lands.
+- Confirm the re-cut charters (A: correctness; B: regressions outside the delta, plus Done-when coverage).
+- Confirm the coordinator cycle reads `review_rounds`.
+
+## 8. Record usage for every model call, sub-agents included
+
+**Evidence.** `session_service.py` is meant to be "the one path every model call takes". It writes tokens, cost and timing to `docs/iteration/*.log`, but only for calls it launches itself. In the coordinator cycle that is only the adjudicator: the last 40 session logs are all `role: ADJUDICATE`. Builders run as Claude Code sub-agents (`kit-builder`) of the coordinator session. Sol and Terra launch through `coordinator-tools/sol_review.sh` and `terra_author.sh` straight to `codex exec`. The coordinator leg itself runs as `claude -p` from `overnight_legs.py`. None of those are recorded.
+
+**Size of the gap.** Leg 3 (2026-10-11), read from its transcripts. The coordinator: ~365k output tokens and ~75M cache-read tokens. Its 10 builder sub-agents: ~622k output tokens and ~263M cache-read tokens. Builders were about 63% of the leg's Claude output and about 78% of its cache reads, and none of it is in the kit's records. Sol and Terra usage is unmeasured entirely.
+
+**Where the data already is.** Claude Code writes each sub-agent's transcript under `<session>/subagents/agent-*.jsonl`, with per-message usage, beside a `.meta.json` naming the agent type, its task description and its `spawnDepth`. Nested sub-agents are represented, though where depth-2 transcripts land is unverified. `codex exec --json` reports usage, and the service's Codex adapter already reads it.
+
+### Proposal
+
+1. **Route Sol and Terra through `session_service`**, as `coordinator_adjudicate.py` already routes the adjudicator. The launch scripts keep their flags (sandbox, effort, HEAD/status checks) but call the service instead of `codex` directly. That restores the "one path" the service's own docstring promises, and the module records why: a usage fix once landed in one launch path and not the others.
+2. **Record Claude sub-agent usage from the transcripts at close-out.** A sub-agent spawned inside a Claude session can never pass through the service, so the close-out reads the leg's transcript and its `subagents/*.jsonl` files. It writes one row per sub-agent: role from `agentType`, task from `description`, the WI parsed from it, model, tokens, timing. Rows go through the service's existing `record` writer, so there is still one writer, and nested agents are caught however deep. The leg's own coordinator row comes from the same read.
+3. **Verify before choosing step 2 over launching builders as headless `claude -p` through the service.** The open question is whether a `-p` session's final usage report includes its own sub-agents. If it does, builders could launch through the service directly. If it doesn't, the transcript read is needed regardless, and step 2 stands.
+4. **Use the rows.** Per landed WI: builder, reviewer, author and adjudicator tokens and wall-clock, beside its review rounds. That makes this plan's re-measure (phase 4) a query rather than an analysis pass, and shows which item moved cost, not just rounds.
+
+**Trade-off.** Step 2 reads Claude Code's on-disk transcript format, which the kit doesn't own and which can change. Keep the reader in one adapter (`session_adapters` already holds per-CLI readers) and have it refuse loudly on an unknown shape, never guess.
+
+**Measure.** Share of a leg's model calls with a recorded usage row: today only adjudications; target every call.
+
+**Downstream.** Step 1 touches this repo's coordinator tools only. Step 2 adds an adapter to a shipped module: one RESYNC entry, no migration.
+
+**Owner calls:**
+
+- Confirm routing Sol and Terra through the session service.
+- Confirm recording sub-agent usage from transcripts through the one writer.
+
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
-| 0 · rulings | Items 1 (S3, one-reader Trust, coverage notes), 2 (record-at-event rule, WI-902 reshape), 3 (split rule), 4 (pick the trial), 5's open questions (IF/CMP scope, one judge); 5's core rule is already ruled. No code. | Owner |
-| 1 · cheap builds | Item 6 lint gate (first row). Rubric and skill edits for 1, 2, 3, 5. Reviewer-template clause for 1. | Coordinator lanes |
-| 2 · trial | Item 4 on the next two lanes. WI-902 reshaped and resumed as the first lane under the new rules. | Coordinator |
+| 0 · rulings | Items 1 (S3, one-reader Trust, coverage notes), 2 (record-at-event rule, WI-902 reshape), 3 (split rule), 4 (pick the trial), 5's open questions (IF/CMP scope, one judge), 7 (third-family reviewer, charters), 8 (one path for usage); 5's core rule is already ruled. No code. | Owner |
+| 1 · cheap builds | Item 6 lint gate (first row). Item 8 usage recording (second row, so the trials below are measured). Rubric and skill edits for 1, 2, 3, 5. Reviewer-template clause for 1. | Coordinator lanes |
+| 2 · trial | Item 4 on the next two lanes. WI-902 reshaped and resumed as the first lane under the new rules. Item 7 joins the trial once WI-798's Gemini route works. | Coordinator |
 | 3 · structural (last) | Item 5: schema removal, derived index and batch act, plus the commit-time prose check. Item 2 history-reader audit. The WI-834 deny-on-mention candidate, if the audit of real use supports it. | Coordinator lanes |
 | 4 · re-measure | Re-run the same churn analysis over the next 15 landed WIs and compare against the baseline below. | Coordinator / analysis agent |
 
