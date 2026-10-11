@@ -1009,6 +1009,96 @@ def test_the_run_end_records_a_finished_ping_only_over_a_clean_trunk(
     assert not (tmp_path / "docs" / "iteration").exists()
 
 
+# --- WI-895: a ping whose session tree cannot be ended stops the run ------------
+
+
+def _raising(exc):
+    def run(argv, root, timeout, **kw):
+        raise exc
+
+    return run
+
+
+def _tree_ping(tmp_path, monkeypatch, dirty, exc=None):
+    """A warmer whose one ping raised `exc` (a TreeNotEnded by default), joined
+    so the next tick or finish sees it; returns (warmer, exc, committed)."""
+    committed = []
+    monkeypatch.setattr(
+        svc.agent_common, "commit_telemetry", lambda *a, **k: committed.append(1)
+    )
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    exc = exc or svc.agent_session.TreeNotEnded("the ping's tree survived")
+    warmer = _warmer(tmp_path, _raising(exc), dirty=lambda: dirty)
+    warmer.tick(work_pending=True)
+    warmer.thread.join(10)
+    return warmer, exc, committed
+
+
+def _logged_outcomes(tmp_path):
+    logs = sorted((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    return [common.read_log_meta(log)["outcome"] for log in logs]
+
+
+@pytest.mark.parametrize("end", ["tick", "finish"])
+def test_a_ping_whose_tree_cannot_be_ended_is_recorded_then_raised(
+    tmp_path, monkeypatch, end
+):
+    warmer, exc, committed = _tree_ping(tmp_path, monkeypatch, dirty=False)
+    with pytest.raises(svc.agent_session.TreeNotEnded) as raised:
+        if end == "tick":
+            warmer.tick(work_pending=False)
+        else:
+            warmer.finish()
+    assert raised.value is exc
+    assert committed == [1]  # recorded first, over the clean trunk
+    assert _logged_outcomes(tmp_path) == ["ERROR"]
+
+
+@pytest.mark.parametrize("end", ["tick", "finish"])
+def test_over_a_dirty_trunk_the_unended_tree_is_raised_unrecorded(
+    tmp_path, monkeypatch, capsys, end
+):
+    warmer, exc, committed = _tree_ping(tmp_path, monkeypatch, dirty=True)
+    with pytest.raises(svc.agent_session.TreeNotEnded) as raised:
+        if end == "tick":
+            warmer.tick(work_pending=False)
+        else:
+            warmer.finish()
+    assert raised.value is exc
+    assert committed == []
+    assert not (tmp_path / "docs" / "iteration").exists()
+    if end == "finish":
+        assert "session log not recorded (the trunk is dirty)" in (
+            capsys.readouterr().err
+        )
+
+
+def test_a_failed_recording_never_replaces_the_unended_tree(tmp_path, monkeypatch):
+    warmer, exc, _ = _tree_ping(tmp_path, monkeypatch, dirty=False)
+    broken = OSError("the log could not be written")
+
+    def fail(*a, **k):
+        raise broken
+
+    monkeypatch.setattr(svc, "record", fail)
+    with pytest.raises(svc.agent_session.TreeNotEnded) as raised:
+        warmer.tick(work_pending=False)
+    assert raised.value is exc
+    assert raised.value.__context__ is broken
+
+
+def test_an_ordinary_ping_failure_is_still_recorded_and_swallowed(
+    tmp_path, monkeypatch
+):
+    warmer, _, committed = _tree_ping(
+        tmp_path, monkeypatch, dirty=False, exc=RuntimeError("launch broke")
+    )
+    assert warmer.tick(work_pending=False) == []
+    assert committed == [1]
+    assert _logged_outcomes(tmp_path) == ["ERROR"]
+    assert warmer.finished == []
+
+
 def test_a_raising_launch_under_a_held_store_lock_still_retires_its_session(
     tmp_path,
 ):

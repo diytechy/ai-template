@@ -3,12 +3,16 @@ id = "WI-895"
 title = "A keep-warm ping whose session tree cannot be ended stops the run, not a recorded error"
 workstream = "process"
 sr_refs = ["SR-238"]
-specref = "project-trajectory/scripts/session_service.py"
+specref = ""
 needs = ["WI-881"]
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 4
 +++
+
+## Deliverable
+
+Landed 2026-10-11. A `TreeNotEnded` raised in a keep-warm ping now rides with the finished call through `KeepWarmer.finished` to the dispatcher's thread: the tick that sees it, or `finish`, raises it, after recording the call over a clean trunk (a failed recording rides as its context, `_record_finished` re-raising from a `finally`) and unrecorded over a dirty one (`_raise_unended`, so the hold never defers the stop). Every other ping failure keeps its recorded ERROR. Six tests in `tests/test_session_keep.py`; RESYNC entry. Spine: LLR-270 gains SR-238 as a parent and the carried-exception sentence in its detail; TC-268 verifies SR-238 and names the four tests (GPT Terra); sitting 001 ruled both MEANING and re-attested them (act 106). Gate: full 002 APPROVE, 0 findings (Codex gpt-6.1-sol, medium). The scope critique's Trust amendment is coordinator-2026-10-10 D-023.
 
 ## Context
 

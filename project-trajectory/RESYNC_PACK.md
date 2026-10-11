@@ -8138,6 +8138,29 @@ scaffold without it cannot run the merge slot.
 imports any of the five moved names from `acceptance_record`, import them
 from `text_then_act` instead. No registry or setting changes.
 
+### A keep-warm ping whose session tree cannot be ended stops the run [since 54f74c27a]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A keep-warm ping (`scripts/session_service.py`,
+`KeepWarmer`) runs its launch on a background thread and recorded any failure
+as an ERROR call. A ping whose session tree could not be ended
+(`agent_session.TreeNotEnded`) was therefore recorded and dropped, and the
+dispatcher continued beside a writer that may still be live. The ping now
+hands that exception, with the finished call, to the dispatcher's thread,
+and the next keep-warm tick (or the run-end `finish`) raises it, so the run
+stops. Over a clean trunk the call is recorded first; a failure to record it
+rides as the exception's context and never replaces it. Over a dirty trunk
+the session log is not written and the exception is raised anyway: the
+dirty-trunk hold never defers the stop. Every other ping failure is still
+recorded as ERROR and the run continues.
+
+**Kit-owned files — overwrite:** `scripts/session_service.py`.
+
+**What to do.** Overwrite the file. If your own code ticks a `KeepWarmer` or
+calls its `finish` and catches broad exceptions around it, let
+`TreeNotEnded` (a `BaseException`) propagate. No registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

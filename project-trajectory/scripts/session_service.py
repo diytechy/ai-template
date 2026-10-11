@@ -1212,6 +1212,7 @@ class KeepWarmer:
             self.thread = None
         if self.finished:
             if self.dirty():
+                self._raise_unended()  # the stop never waits on the hold
                 lines.append("keep-warm: session log held (the trunk is dirty)")
                 return self._once(lines)  # one ping at a time, until recorded
             self._record_finished()
@@ -1275,27 +1276,57 @@ class KeepWarmer:
 
     def _ping(self, call_):
         """The ping's thread: launch and account only. Nothing here touches
-        the working tree or git."""
+        the working tree or git. A `TreeNotEnded` rides with the finished
+        call to the dispatcher's thread, which raises it; any other failure
+        is a recorded ERROR.
+
+        Implements: SR-227, SR-238, LLR-270
+        """
         metrics = {}
-        outcome, word = None, "ERROR"
+        outcome, word, unended = None, "ERROR", None
         try:
             outcome = act(call_, metrics)
             word = _outcome_word(outcome)
+        except agent_session.TreeNotEnded as exc:
+            unended = exc
         except BaseException:  # recorded ERROR on the dispatcher's thread
             pass
-        self.finished.append((call_, outcome, metrics, word))
+        self.finished.append((call_, outcome, metrics, word, unended))
 
     def _record_finished(self):
+        """Record each finished call, then raise a carried `TreeNotEnded`;
+        a failed recording rides as its context and never replaces it.
+
+        Implements: SR-227, SR-238, LLR-270
+        """
         while self.finished:
-            call_, outcome, metrics, word = self.finished.pop(0)
-            _record_call(call_, outcome, metrics, word)
+            call_, outcome, metrics, word, unended = self.finished.pop(0)
+            try:
+                _record_call(call_, outcome, metrics, word)
+            finally:
+                if unended is not None:
+                    raise unended
+
+    def _raise_unended(self):
+        """Over a dirty trunk: raise a carried `TreeNotEnded` unrecorded, so
+        the hold on the session log never defers the stop.
+
+        Implements: SR-227, SR-238, LLR-270
+        """
+        for *_, unended in self.finished:
+            if unended is not None:
+                raise unended
 
     def finish(self, timeout=KEEPWARM_TIMEOUT + 30):
         """At the run's end: wait out a ping in flight, then record every
         finished one through the same rule the tick applies — only over a
         clean trunk. Over a dirty one the log is not written, and the reason
         is printed and returned instead, so the exit path never commits beside
-        uncommitted work."""
+        uncommitted work. A carried `TreeNotEnded` is raised either way, after
+        the recording over a clean trunk, unrecorded over a dirty one.
+
+        Implements: SR-227, SR-238, LLR-270
+        """
         if self.thread is not None:
             self.thread.join(timeout)
         if not self.finished:
@@ -1303,6 +1334,7 @@ class KeepWarmer:
         if self.dirty():
             line = "keep-warm: session log not recorded (the trunk is dirty)"
             print(line, file=sys.stderr)
+            self._raise_unended()
             self.finished.clear()
             return [line]
         self._record_finished()
