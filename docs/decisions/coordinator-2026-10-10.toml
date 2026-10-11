@@ -158,3 +158,10 @@ alternative = "Rewind WI-894's lane and re-sit once WI-901 lands; or draft a dup
 reversal_cost = "Low: an overrule re-sits WI-894 after WI-901, reopening nothing else."
 why_not_escalated = "The adjudicator's ruling rests on the documents the brief would have carried, read directly; a duplicate successor would be worse than the guards' refusal."
 review = ""
+
+[decision.D-023]
+decided = "WI-895's scope critique (Sol gpt-6.1-sol, medium, overnight leg 02) returned one MAJOR at round 1: the in-process TreeNotEnded carrier's ruling left recording failure, tick's dirty-trunk hold, finish's dirty-trunk discard and the atexit route unsettled. Answered on trunk by amending the spec's Trust and Done-when: the stop never waits on telemetry (re-raise from a finally after recording; raised unrecorded over a dirty trunk; the atexit route reports at exit). Round 2 approved with zero findings. The critic again proposed a rubric anchor B3 (a non-file carrier that authorizes continuing or stopping names its ruling when recording fails or is deferred), routed with D-019 and D-021 to the owner, the rubric unchanged."
+alternative = "Leave the dirty-trunk paths to the builder's judgement, or amend docs/rubrics/scope-critique.md with B3 now."
+reversal_cost = "Low: the ruling is spec text on a queued row; the builder has not started."
+why_not_escalated = "It settles one row's failure contract inside SR-238's stated obligation (the run stops rather than continue beside a possible writer); the rubric change stays the owner's."
+review = ""
