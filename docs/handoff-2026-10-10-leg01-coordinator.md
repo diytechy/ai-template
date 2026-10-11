@@ -32,35 +32,56 @@ recipes; this handoff holds state only. The leg's record is
   skipped, 0 failed** in 1043 s.
 - **Another session committed on trunk** during this leg's lease:
   `1f87388b` (WI-897 filed, "owner request", 17:43 local).
+- **After this leg (attended session, owner request):** a second census,
+  WI-903, landed as `f1d2b423` over 29 queued rows: QUEUE-WITH-EDGE,
+  nothing absorbed. Its close added three hard edges: WI-798 needs WI-887,
+  WI-810 needs WI-902, WI-811 needs WI-878. Its two MINOR notes are in the
+  queue below (WI-901's anchor; WI-833/WI-851's landing clause). Lane tip
+  archived; the sweep minted nothing. Watermark WI 903. The queue below
+  now lists every queued row; WI-897 builds last (owner, 2026-10-10).
 
 ## The queue
 
-The census reordered nothing it enacted; WI-878 moves ahead of WI-801 on
-its recorded overlap. Rows needing a scope critique owe it before their
-claim (minted adjudication rows excepted, D-020).
+Every queued row, in build order; a row whose `needs` are not yet met waits
+for them (the census edges are in its `needs`). Rows needing a scope
+critique owe it before their claim (minted adjudication rows excepted,
+D-020).
 
 | # | Row | Tier | What |
 |---|---|---|---|
 | 1 | WI-887 | strong | The loop's reviewer resumes within a lane; the final reviewer is configurable, fresh or persisted (WI-884 landed) |
 | 2 | WI-858 | strong | Lease release and bookkeeping survive store-lock contention (needs WI-887) |
 | 3 | WI-895 | quick | A keep-warm ping's tree-end failure stops the run (WI-881 landed) |
-| 4 | WI-897 | quick | The guard hook costs less per tool call (owner request) |
-| 5 | WI-901 | quick | A disposition brief composes for an empty commit range |
-| 6 | WI-902 | medium | A disposition can name an already-filed successor |
-| 7 | WI-798 | strong | Account tables and per-account homes for every CLI route |
-| 8 | WI-851 | strong | Held-rung spine rows are protected by state (WI-892 landed) |
-| 9 | WI-850 | medium | A spine row is approved only after the rows it hangs from (WI-892 landed) |
-| 10 | WI-799 | strong | Lane-state provider, representation only |
-| 11 | WI-832 | medium | A decisions record has an identity no other run can share |
-| 12 | WI-800 | strong | One session store with durable invocations, the usage ledger and the spool |
-| 13 | WI-856 | medium | A queue-with-edge verdict edges a waiter with no needs line |
-| 14 | WI-878 | medium | A dispute sitting's binding records the findings file it ruled (before WI-801, census) |
-| 15 | WI-801 | strong | One labelled entry point for model calls, with the per-kind routing table |
-| 16 | WI-807 | strong | The station authority, lane-side claims and cancellation |
+| 4 | WI-901 | quick | A disposition brief composes for an empty commit range. At the claim, re-anchor its `sr_refs` to SR-144 and its "LLR-246's chain" to LLR-167's (WI-903 note); it amends neither SR-208 nor LLR-246 |
+| 5 | WI-902 | medium | A disposition can name an already-filed successor (before WI-810, census edge) |
+| 6 | WI-798 | strong | Account tables and per-account homes for every CLI route (needs WI-887, census edge: extends WI-887's scoped record key with the account) |
+| 7 | WI-851 | strong | Held-rung spine rows are protected by state. Its merge-landing clause is met by a rider on WI-892's walk (WI-903 note) |
+| 8 | WI-850 | medium | A spine row is approved only after the rows it hangs from |
+| 9 | WI-799 | strong | Lane-state provider, representation only |
+| 10 | WI-832 | medium | A decisions record has an identity no other run can share |
+| 11 | WI-800 | strong | One session store with durable invocations, the usage ledger and the spool |
+| 12 | WI-856 | medium | A queue-with-edge verdict edges a waiter with no needs line |
+| 13 | WI-878 | medium | A dispute sitting's binding records the findings file it ruled (before WI-801 and WI-811) |
+| 14 | WI-801 | strong | One labelled entry point for model calls, with the per-kind routing table |
+| 15 | WI-807 | strong | The station authority, lane-side claims and cancellation |
+| 16 | WI-833 | medium | An owner's verdict stays bound to the decision text it judged. Merge-landing clause as WI-851's (WI-903 note) |
+| 17 | WI-857 | strong | A verdict records its judging session; an act backed by the authoring session's verdict is refused |
+| 18 | WI-816 | medium | Retire the runtime dual paths that need no adopter migration |
+| 19 | WI-817 | strong | Retire the SN-028 one-word config window and the non-TOML carriers |
+| 20 | WI-808 | strong | One landing per lane on both paths, the tip archived and the record checked |
+| 21 | WI-804 | strong | Plan kinds through the entry point, with selection by the drafters |
+| 22 | WI-805 | strong | Per-item planning, the replan at the family swap, the build-below-planner dial |
+| 23 | WI-814 | strong | Weekly-pace account selection within a family |
+| 24 | WI-815 | medium | Grok and FreeLLMAPI groundwork through OpenCode, and an untested Gemini route |
+| 25 | WI-809 | strong | The in-lane sitting from LOCK to MERGE_ACTION (needs WI-802, in draft: redraft it to name WI-887's two dials once WI-887 lands) |
+| 26 | WI-810 | strong | MINT in the lane (needs WI-809, WI-902) |
+| 27 | WI-811 | medium | RESOLVE for disputed findings, and LS9's wording (needs WI-809, WI-878) |
+| 28 | WI-812 | strong | The spine-authoring flow (needs WI-809, WI-802, WI-810) |
+| 29 | WI-813 | strong | Restore the dual-plan pickup in a claimed lane (needs WI-804, WI-810) |
+| 30 | WI-897 | quick | The guard hook costs less per tool call (owner request). **Always the last row**: it builds just before the owner's FileBackup resync test |
 
-Stretch: WI-833, WI-857, WI-808 and WI-804. WI-802 is in draft (census).
-Rows held by the owner are skipped: WI-684 (OI-98), WI-795 (OI-105), WI-871
-(OI-112) and WI-893 (OI-113); WI-827 is the owner's signature.
+Held by the owner, skipped: WI-684 (OI-98), WI-795 (OI-105), WI-871
+(OI-112) and WI-893 (OI-113); WI-827 is the owner's signature (SN-029).
 
 ## For the owner
 
