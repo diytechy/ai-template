@@ -1,0 +1,11 @@
+range = "fe30b0a4..cf1f8f30"
+
+[[finding]]
+id = "W823F1"
+held_by = "coordinator"
+finding = '''
+[MINOR] project-trajectory/skills/render-dashboard-critique/SKILL.md:54 -> K4: this changed skill is under the shipped `project-trajectory/skills/` tree, but the lane adds no corresponding `RESYNC_PACK.md` entry (the WI spec's “no RESYNC entry” decision does not fit this shipped file) -> add a RESYNC_PACK entry anchored at a trunk commit; @owner
+'''
+position = '''
+The coordinator's position: the finding's premise is refuted by the kit's own shipping rule. `project-trajectory/skills/render-dashboard-critique/SKILL.md` declares `scope: this-repo` in its frontmatter. `project-trajectory/scripts/bootstrap.py` `select_skills` materializes only `scope: kit` skills downstream (its docstring: "`this-repo` skills maintain *this* template and are meaningless in an adopted product repo"), and its delivery census `delivery_inventory` excludes every file of a `scope: this-repo` skill with the reason "scope: this-repo skill; never materialized downstream" (bootstrap.py near line 1903; RESYNC_PACK's own entry recording that exclusion). An adopter therefore never receives this file, and a RESYNC_PACK entry would tell adopters to re-sync a file they do not have. The spec's Landing order (decision D-018) states no RESYNC entry is owed for that reason. Rubric K4 binds a change to a SHIPPED file; this file is in the shipped tree's directory but is not shipped.
+'''

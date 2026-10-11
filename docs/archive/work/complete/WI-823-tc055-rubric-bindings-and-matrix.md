@@ -3,11 +3,15 @@ id = "WI-823"
 title = "TC-055's rubric binds T2 and T5 to their test rows, and the shot matrix covers every rendered tab"
 workstream = "process"
 sr_refs = ["SR-054"]
-specref = "docs/reviews/wi-796-re-judge-tc-055-declared-trig/002-ADJUDICATE-5fb0fc7.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Landed 2026-10-10, the three deliverables in one lane (D-018). The rubric's T2 cites LLR-099's rule in place of SR-089's and names LLR-099/TC-102 as its start-collapse core; T5 names LLR-105/TC-108 and LLR-285/TC-296 as its contrast cores; each says what stays the judge's, and the header lists every live anchor's test-held rows. `shoot.mjs` shoots the Retired tab (a live run shot five tabs, 36 shots, none left out). The render-dashboard-critique skill and the shots README say a failed run or an incomplete matrix is never judged, and the skill's judge brief carries the scope lines of every live anchor's test-held rows; the shipped rejudge template is unchanged, so no RESYNC entry (the skill is scope: this-repo). Spine: TC-055's Method amended and re-attested at sitting 001 (act 105). Fresh full-lane gate 002 (Codex gpt-6-luna for gpt-6.1-sol, D-001): one MINOR, dismissed as refuted by dispute sitting 003 (D-002). LLR-055's child-row list, incomplete before this lane, is a follow-up.
 
 ## Context
 

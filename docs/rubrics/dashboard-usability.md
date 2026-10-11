@@ -14,9 +14,12 @@ Judge as a **first-time reviewer** opening the dashboard cold.
 > **T1, T3, T6 and T7 are bound as tests, not critique anchors** (owner rulings
 > 2026-07-26) — T1 to `LLR-115`/`TC-120`, T3 to `LLR-100`/`TC-103`, T6 to
 > `LLR-117`/`TC-122`, T7 to `LLR-116`/`TC-121`; none is **yours to judge**. The
-> live anchor set is **T2, T4, T5, T8**. T8's box-clearance
+> live anchor set is **T2, T4, T5, T8**, and each keeps only a residue: T2's
+> start-collapse core (`LLR-099`/`TC-102`), T4's ink-outside-its-box and
+> next-work-card halves (`LLR-119`/`TC-124`), T5's contrast cores
+> (`LLR-105`/`TC-108`, `LLR-285`/`TC-296`) and T8's box-clearance
 > (`LLR-120`/`TC-125`) and lane-separation (`LLR-292`/`TC-305`) clauses are
-> also test-bound; judge only the remaining crossing-legibility clause below.
+> test-bound; judge only the clause each anchor below says stays yours.
 
 ## The core reading tasks (the concrete "one tab switch" list)
 
@@ -52,9 +55,21 @@ never through a verdict. *Bad (the test's job now):* "how the parts connect"
 requires two tab switches or expanding three nested blocks to locate.
 
 **T2 — Default-density legibility.** Views default to a legible density —
-start-collapsed per the SR-089 `>3` rule so a large project is not a wall of
-nodes on open — while a small project still reads flat. *Bad:* the When view opens
-fully exploded with hundreds of overlapping nodes.
+start-collapsed per LLR-099's rule (a view whose scale earns tiering opens as the
+shared type-tiered drill: a bundle spanning more than 3 OKF types, a module set
+above the component threshold, a What icicle above 3 SNs) so a large project is
+not a wall of nodes on open — while a small project still reads flat. *Bad:* the
+When view opens fully exploded with hundreds of overlapping nodes.
+
+*The start-collapse core of this anchor is a test*, `LLR-099`/`TC-102`: above
+the threshold the Knowledge, How-SW and landing What views open start-collapsed,
+and at or below it they stay flat, both directions asserted. A view you see
+open flat above its threshold, or collapsed at or below it, is a **gap in
+`TC-102`** — route it through change-intake, never through a verdict.
+
+What stays yours is the clause the rule cannot settle: whether the view a reader
+opens on, collapsed or flat, **reads legibly at its default density** rather
+than as a wall of nodes.
 
 **T3 — Detail in context. RETIRED as a critique anchor 2026-07-26 (owner ruling)
 — bound to `LLR-100`/`TC-103`; do not judge it here.** The bar it stated:
@@ -101,6 +116,20 @@ numbers: the WCAG AA thresholds live in the accessibility rubric's [A4 — Text
 contrast](dashboard-accessibility.md); T5 extends that floor to interactive
 controls and adds the both-themes obligation. *Bad:* the active-tab underline or
 a focus ring is crisp in light theme but washes into its background in dark.
+
+*Two contrast cores of this anchor are tests.* **A control painted over a node's
+own fill** (the descend/hover/focus ring and the containment arrow, shaft and
+marker head) clearing 3:1 against every declared node fill in both themes is
+`LLR-105`/`TC-108`; **a de-emphasised node's label and descend arrow** clearing
+4.5:1 against its de-emphasised fill in both themes is `LLR-285`/`TC-296`. A ring
+or arrow you see washing into its block, or a dimmed node's label you cannot
+read, is a **gap in `TC-108` or `TC-296`** — route it through change-intake,
+never through a verdict.
+
+What stays yours is what those tests do not measure: a control **not** painted
+over a node fill (the tab buttons and the active-tab marker, any filter or
+field, a focus ring on page chrome) against its own background, in **both**
+themes; and whether an affordance reads as one a reader can find and operate.
 
 **T6 — Theme-lock (no mid-view inversion).** *Bound to `LLR-117`/`TC-122`
 (WI-314) — not a critique anchor; kept here as the stated intent the test

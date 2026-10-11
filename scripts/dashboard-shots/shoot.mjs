@@ -36,19 +36,23 @@ const WIDTHS = { narrow: 390, laptop: 1280, wide: 1680 };
 // so emulating colorScheme is the whole toggle (no click needed).
 const THEMES = ["light", "dark"];
 // Every tab nav.tabs can carry (data-tab attributes), landing tab first. This
-// is the declared SUPERSET, not a promise: some tabs are DIAL-DEPENDENT (the
-// Knowledge tab renders only while `[checks] okf_export` is on and a docs/okf/
-// bundle exists), so the matrix is intersected with the tabs actually present
+// is the declared SUPERSET, not a promise: some tabs are DIAL- or DATA-
+// DEPENDENT (the Knowledge tab renders only while `[checks] okf_export` is on
+// and a docs/okf/ bundle exists; the Retired tab only while docs/log.d/retired/
+// holds a record), so the matrix is intersected with the tabs actually present
 // in the rendered page and an absent one is SKIPPED with a named message.
 // Unconditional clicking was the bug: with the OKF dial off, `page.click` on
 // `know` waited out its 30s default timeout and the run exited 1 four shots in,
 // so the render-critique loop could not be run in this repo at all.
+// A rendered tab missing here is an INCOMPLETE matrix: no judgment is made on
+// it (the render-dashboard-critique skill) until it is added.
 const TABS = [
   ["arch", "What (SR breakdown)"],
   ["dag", "When (roadmap DAG)"],
   ["sw", "How (SW architecture)"],
   ["know", "Knowledge (OKF)"],
   ["process", "Process"],
+  ["retired", "Retired"],
 ];
 // Full-page for every cell; above-the-fold (viewport clip) only for the landing
 // tab, where "what you see first" is the critique that matters most.

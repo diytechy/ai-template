@@ -1,0 +1,18 @@
+# docs/decisions/wi-823.toml — WI-823's lane: delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002", "D-001"]
+
+[decision.D-001]
+decided = "This lane's reviews ran on Codex gpt-6-luna at high effort, not gpt-6.1-sol, which the Codex account signed in for the overnight run does not offer (coordinator-2026-10-10 D-017). Luna is a fresh, cross-family reviewer of Opus-built work."
+alternative = "Hold the lane until an account offering Sol is signed in, or use a fresh independent Opus reviewer (allowed only after two hours of Codex unavailability, and same-family)."
+reversal_cost = "Low: an overrule re-runs the final gate with Sol; the lane's files do not change."
+why_not_escalated = "The owner is away overnight; the substitution keeps a fresh session from a different model family."
+review = ""
+
+[decision.D-002]
+decided = "Gate 002's only finding (W823F1, K4: a RESYNC entry for the render-dashboard-critique skill) was contested by the coordinator and DISMISSED as refuted by dispute sitting 003 (the skill is scope: this-repo, never materialized downstream). The lane lands on gate 002 without another full-lane round: no file under review changed after the gate (only review records were added), so a second gate would review the same tree. This follows the 2026-10-09 leg-02 precedent (coordinator D-001 of that day), which also awaits the owner."
+alternative = "Run one more fresh full-lane round over the unchanged tree before landing."
+reversal_cost = "Low: an overrule runs one more full-lane round over the landed change; any finding becomes a follow-up row."
+why_not_escalated = "The dispute ruling is final under the review rule, and the tree the gate judged is the tree that lands."
+review = ""
