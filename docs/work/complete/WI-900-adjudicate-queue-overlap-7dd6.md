@@ -2,7 +2,7 @@
 id = "WI-900"
 title = "adjudicate queue overlap [7dd6770f2f97]: WI-798;WI-799;WI-800;WI-801;WI-802;WI-804;WI-805;WI-807;WI-808;WI-809;WI-810;WI-811;WI-813;WI-816;WI-817;WI-827;WI-832;WI-833;WI-850;WI-851;WI-856;WI-857;WI-858;WI-878;WI-887;WI-892;WI-893;WI-895;WI-897"
 workstream = "process"
-specref = "docs/work/README.md"
+specref = ""
 buildtier = "strong"
 priority = 9
 safety_class = "adjudication"
@@ -10,6 +10,10 @@ brief = "consolidate"
 adjudicates = ["WI-798", "WI-799", "WI-800", "WI-801", "WI-802", "WI-804", "WI-805", "WI-807", "WI-808", "WI-809", "WI-810", "WI-811", "WI-813", "WI-816", "WI-817", "WI-827", "WI-832", "WI-833", "WI-850", "WI-851", "WI-856", "WI-857", "WI-858", "WI-878", "WI-887", "WI-892", "WI-893", "WI-895", "WI-897"]
 digests = "7dd6770f2f97|5db3bfb6e636"
 +++
+
+## Deliverable
+
+Adjudication verdict recorded on the lane; this row is closed MECHANICALLY at its DONE (OI-70/OI-73). Its `## Dispositions` successors mint at this row's own merge (drafts-not-mints), the mint replaces the superseded row's inbound hard edges, and any human-owed answer becomes a `pending` open item the successor depends on. The verdict artifact is under `docs/reviews/`.
 
 ## Context
 
@@ -258,3 +262,20 @@ The mechanical pre-filter selected them; it has concluded NOTHING. Each line bel
 > WI-893 and WI-897 both touch integrate.py
 
 This row's `Adjudicates` cell fixes the population — judge those rows and no others. Its `Digests` cell is `7dd6770f2f97|5db3bfb6e636`: the queue state and the spine state this question was asked against, so the census never asks it twice and a verdict that has gone stale is detectable rather than assumed fresh.
+
+## Consolidation
+
+Judged by an independent adjudicator; the verdict, with each finding, is
+`docs/reviews/wi-900/001-ADJUDICATE-e71b776.md`. One contradiction: WI-802's
+Done-when, unchanged since WI-855, pins the merge-gating review always fresh
+and names WI-847's retention dial and tests, while the owner's 2026-10-10
+ruling D-008, built by WI-887 (which WI-802 transitively waits on), makes the
+final reviewer configurable, fresh or persisted. No answered scope, no
+consolidation. The edges this sitting found (WI-801 and WI-811 each needing
+WI-878) are recorded in the verdict for the coordinator and the next census.
+
+```toml
+outcome = "return-to-draft"
+returns = ["WI-802"]
+finding = "WI-900's consolidation sitting (docs/reviews/wi-900/001-ADJUDICATE-e71b776.md): this row's Done-when bullet 'The [review] family carries WI-847's within-lane retention dial into [sessions.review] (shipped off; the merge-gating review is always fresh) ... and WI-847's tests stay green' contradicts the owner's ruling D-008 (docs/decisions/coordinator-2026-10-10.toml), which WI-887 builds: the final reviewer is configurable, a fresh session (the default) or a persisted independent final reviewer, and WI-887 amends SR-227 to cover the review class and that configuration. WI-847 landed with no retention dial or retention tests; both are WI-887's. Redraft the bullet so [sessions.<family>] carries WI-887's two dials (within-lane review retention, and the final reviewer's mode with its own persisted scope), state which family's reset terms the persisted final reviewer takes, replace WI-847's tests with WI-887's, and add needs WI-887 (today transitive through WI-801, WI-800 and WI-858)."
+```

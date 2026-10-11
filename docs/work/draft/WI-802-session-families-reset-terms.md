@@ -12,6 +12,10 @@ priority = 3
 
 ## Context
 
+Returned to `draft/` by a consolidation judgement (the 2026-09-02 backlog-restructure plan §1.5). The finding, verbatim:
+
+> WI-900's consolidation sitting (docs/reviews/wi-900/001-ADJUDICATE-e71b776.md): this row's Done-when bullet 'The [review] family carries WI-847's within-lane retention dial into [sessions.review] (shipped off; the merge-gating review is always fresh) ... and WI-847's tests stay green' contradicts the owner's ruling D-008 (docs/decisions/coordinator-2026-10-10.toml), which WI-887 builds: the final reviewer is configurable, a fresh session (the default) or a persisted independent final reviewer, and WI-887 amends SR-227 to cover the review class and that configuration. WI-847 landed with no retention dial or retention tests; both are WI-887's. Redraft the bullet so [sessions.<family>] carries WI-887's two dials (within-lane review retention, and the final reviewer's mode with its own persisted scope), state which family's reset terms the persisted final reviewer takes, replace WI-847's tests with WI-887's, and add needs WI-887 (today transitive through WI-801, WI-800 and WI-858).
+
 Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design note
 (OI-104, ruled 2026-10-04). This is S788-session-families (ch.2 §2, §9). Five
 families share one retention slot and one independence rule each: [plan and build],
