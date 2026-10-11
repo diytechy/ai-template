@@ -3,11 +3,15 @@ id = "WI-892"
 title = "The lane-commit walk and its text-then-act rider move to their own module, shared and unchanged"
 workstream = "process"
 sr_refs = ["SR-140"]
-specref = "project-trajectory/scripts/acceptance_record.py"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Landed 2026-10-10. The text-then-act section moved byte-identical from `acceptance_record.py` (999 -> 920 SLOC) to `project-trajectory/scripts/text_then_act.py`, which also holds `lane_commit_walk` and its rider tuple `LANE_COMMIT_RIDERS`; the hook's squash path and the merge slot's per-commit rungs (text-then-act, and ruling sync with its own riders) walk the same commits through it. Every refusal, its wording and its order are unchanged; the walk takes its commit list from the caller because the two paths list the range differently today (D-002). `_commit_parents` keeps one home in `acceptance_record`. Callers import the new home with no shim; the script is registered for scaffolds; RESYNC entry. Trace upkeep: LLR-298 and LLR-302 module and code_symbol, IF-102 requestors. The Done-when's size bullet was amended to match the ratchet (both modules under its threshold) and blessed at sitting 002. Gates: full 001 (one MINOR, the size bullet), full 003 APPROVE, 0 findings (Codex gpt-6-luna for gpt-6.1-sol, D-001).
 
 ## Context
 
@@ -51,7 +55,10 @@ WI-893 (whatever OI-113 rules) and before WI-833, WI-850 and WI-851.
 - Every caller (`check.py`, `integrate.py`, the tests) imports the new home;
   no re-export shim is left behind.
 - The existing text-then-act and acceptance-record tests pass unchanged
-  (beyond import lines), and the module-size baseline records both modules.
+  (beyond import lines), and the module-size ratchet passes with both modules
+  measured: `acceptance_record.py` and the new module each stay under its SLOC
+  threshold, so neither carries a baseline entry (the ratchet admits none
+  under it).
 - LLR-302's module and code_symbol cells and the Implements tags follow the
   move (traced cells only; no row text changes, so no sitting is owed).
 - Review bar: A (one cross-family REVIEW-A).

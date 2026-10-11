@@ -688,6 +688,10 @@ MAPPING = [
     # which imports it UNGUARDED and joins its findings to the failure set, so a
     # scaffold without it cannot run the checker — let alone report drift.
     ("scripts/acceptance_record.py", "scripts/acceptance_record.py"),
+    # Text then act (WI-806), moved out of the acceptance record by WI-892, and
+    # the one lane-commit walk: `integrate.py` imports it unguarded and
+    # `check.py`'s text-then-act step reads it, both in this list.
+    ("scripts/text_then_act.py", "scripts/text_then_act.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure

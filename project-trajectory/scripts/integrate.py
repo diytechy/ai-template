@@ -171,6 +171,7 @@ import bookkeeping
 import coordinator_guard
 import score_reviews
 import spec_move
+import text_then_act
 from kitlib import authority as _kitauthority
 from kitlib import decisions as kdecisions
 from kitlib import provenance as _kitprovenance
@@ -1336,7 +1337,7 @@ def _ruling_sync_refusal(root, branch):
     import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
 
     found = _each_lane_commit(
-        root, branch, "rulings", acceptance_record.commit_ruling_sync_lines
+        root, branch, "rulings", (acceptance_record.commit_ruling_sync_lines,)
     )
     if found is None or isinstance(found, str):
         return found
@@ -1352,7 +1353,7 @@ def _text_then_act_refusal(root, branch):
 
     Every commit of the lane, oldest first, is judged against its parents by
     the same function the pre-commit hook runs over the staged tree
-    (`acceptance_record.commit_text_then_act_lines`): a commit that writes the
+    (`text_then_act.commit_text_then_act_lines`): a commit that writes the
     approval record changes no spine cell but `Status` and adds or removes no
     row. A merge is judged by what neither parent carried, so a refresh that
     brings in trunk's own text and act is not the lane's. The lane then lands
@@ -1361,24 +1362,23 @@ def _text_then_act_refusal(root, branch):
 
     Implements: SR-140, LLR-302
     """
-    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
-
     found = _each_lane_commit(
-        root, branch, "text and act", acceptance_record.commit_text_then_act_lines
+        root, branch, "text and act", text_then_act.LANE_COMMIT_RIDERS
     )
     if found is None or isinstance(found, str):
         return found
     _sha, lines = found
     return "{}: {}: {}; nothing was merged".format(
-        branch, "; ".join(lines), acceptance_record.TEXT_THEN_ACT_REMEDY
+        branch, "; ".join(lines), text_then_act.TEXT_THEN_ACT_REMEDY
     )
 
 
-def _each_lane_commit(root, branch, reading, judge):
-    """The first lane commit, oldest first, that `judge(root, sha)` returns
-    lines for, as `(sha, lines)`; None when every commit passes; a refusal
-    string when git cannot list the range, which is never a skip. The one walk
-    the per-commit rungs share.
+def _each_lane_commit(root, branch, reading, riders):
+    """The first lane commit, oldest first, that a rider in `riders` returns
+    lines for on `text_then_act.lane_commit_walk`, as `(sha, lines)`; None
+    when every commit passes; a refusal string when git cannot list the range,
+    which is never a skip. Lists the range the per-commit rungs share the walk
+    over.
 
     Implements: SR-148, SR-140, LLR-298, LLR-302
     """
@@ -1389,11 +1389,7 @@ def _each_lane_commit(root, branch, reading, judge):
         return "cannot read {}'s commits to check their {}; nothing was merged:\n{}".format(
             branch, reading, ac._failure_tail(out)
         )
-    for sha in out.split():
-        lines = judge(root, sha)
-        if lines:
-            return sha, lines
-    return None
+    return next(text_then_act.lane_commit_walk(root, out.split(), riders), None)
 
 
 def _loop_trailer_refusal(root, branch):

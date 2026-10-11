@@ -1381,13 +1381,13 @@ component = "CMP-008"
 
 [interface.IF-102]
 owner = "scripts/spine_carrier"
-requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge", "scripts/retire", "scripts/observation_cadence"]
+requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/text_then_act", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status", "scripts/check_test_first", "scripts/rejudge", "scripts/retire", "scripts/observation_cadence"]
 channel = "call"
 data = "spine_carrier readers: load, resolve, tier_carriers, tier_rows_from_text, rows_from_text, status_cells; rows or None on TOML decode error"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than eleven copies, which is the one admitted exception to the rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly."""
+notes = """source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than twelve copies, which is the one admitted exception to the rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly."""
 
 [interface.IF-103]
 owner = "scripts/migrate_carrier"

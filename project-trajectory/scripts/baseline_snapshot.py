@@ -845,7 +845,7 @@ def refresh_ledger(root, snapshot=None):
     nothing (the rule two paragraphs down). Amend-plus-flip is NOT approval
     (WI-806, retiring it with OI-101 Q2): the text a flip blesses is committed
     first, on its own, and the act that flips and copies it is a second commit
-    changing no other spine cell, which `acceptance_record.text_then_act_lines`
+    changing no other spine cell, which `text_then_act.text_then_act_lines`
     enforces at the hook and per lane commit at the merge slot.
 
     Rows the snapshot does not carry are not here at all — an approval with no

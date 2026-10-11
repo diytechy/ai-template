@@ -380,9 +380,17 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # agent_common's chain (about 60 ms) that no other trunk-step path needs.
     # Both are CMP-008 and spec_move imports no trunk_step, so no cycle or
     # layer edge grew. Reason in docs/decisions/wi-821.toml (D-007).
-    assert 14 <= deferred <= 32, (
+    # RE-STAMPED 32 -> 33 (2026-10-10, WI-892): check -> text_then_act joins
+    # deferred. Text then act moved out of acceptance_record into its own
+    # module, and check.py's text-then-act step now imports that module where
+    # it imported acceptance_record, deferred for the same kitlib-only floor;
+    # check -> acceptance_record stays deferred for its other two steps.
+    # integrate imports the new module at module level (acceptance_record is
+    # already loaded through agent_policy), so it adds no deferred edge.
+    # text_then_act imports acceptance_record one way, so no cycle grew.
+    assert 14 <= deferred <= 33, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..32 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..33 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

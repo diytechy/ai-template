@@ -2009,7 +2009,7 @@ def _text_then_act_refusal(root="."):
     """
     if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
         return None
-    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+    import text_then_act  # a leaf reader of two git trees, sibling of this one
 
     rel = (_git_out(root, ["rev-parse", "--git-path", "SQUASH_MSG"]) or "").strip()
     path = Path(root) / rel
@@ -2019,10 +2019,10 @@ def _text_then_act_refusal(root="."):
         for ln in text.splitlines()
         if ln.startswith("commit ") and len(ln) >= 47 and set(ln[7:]) <= _HEX
     ]
-    lines = acceptance_record.staged_text_then_act_lines(root, squashed)
+    lines = text_then_act.staged_text_then_act_lines(root, squashed)
     if not lines:
         return None
-    return "{}: {}".format("; ".join(lines), acceptance_record.TEXT_THEN_ACT_REMEDY)
+    return "{}: {}".format("; ".join(lines), text_then_act.TEXT_THEN_ACT_REMEDY)
 
 
 def _text_then_act_mode(args):

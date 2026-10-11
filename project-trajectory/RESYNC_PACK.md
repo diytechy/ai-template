@@ -8113,6 +8113,31 @@ now declare exactly the shipped reviewer template's slots (`{verdict}`,
 `{round_facts}`); one that does not fails the loop's preflight by name. No
 registry or setting changes.
 
+### Text then act moves to its own module, with the one lane-commit walk [since fe6c74a2]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The text-then-act rule moves, unchanged, out of
+`scripts/acceptance_record.py` into a new `scripts/text_then_act.py`:
+`TEXT_THEN_ACT_REMEDY`, `SQUASH_REBASE_HINT`, `text_then_act_lines`,
+`commit_text_then_act_lines` and `staged_text_then_act_lines` now live there,
+and `acceptance_record` no longer defines them. The new module also holds
+`lane_commit_walk` and its rider tuple `LANE_COMMIT_RIDERS`, the one walk the
+pre-commit hook's squash path and the merge slot's per-lane-commit rungs (the
+ruling sync, then text then act) now share. Every refusal, its wording and
+its order are unchanged. `acceptance_record._commit_parents` stays where it
+was and is shared. `scripts/integrate.py` imports the new module, so a
+scaffold without it cannot run the merge slot.
+
+**Kit-owned files — overwrite:** `scripts/text_then_act.py` (new),
+`scripts/acceptance_record.py`, `scripts/check.py`, `scripts/integrate.py`,
+`scripts/baseline_snapshot.py`, `scripts/kitlib/bootstrap_manifest.py`,
+`README.md`.
+
+**What to do.** Copy the new file in with the overwrite. If your own code
+imports any of the five moved names from `acceptance_record`, import them
+from `text_then_act` instead. No registry or setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

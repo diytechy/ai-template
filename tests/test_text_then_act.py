@@ -17,6 +17,7 @@ import subprocess
 from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
 
 ar = load_script("acceptance_record")
+tta = load_script("text_then_act")
 integrate = load_script("integrate")
 snap = load_script("baseline_snapshot")
 
@@ -93,7 +94,7 @@ def test_a_mixed_commit_is_refused_at_pre_commit(tmp_path):
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
     _act(root)
     _git(root, "add", "-A")
-    (line,) = ar.staged_text_then_act_lines(root)
+    (line,) = tta.staged_text_then_act_lines(root)
     assert "SR-002" in line and "Title" in line and "Status" not in line
     proc = _step(root)
     assert proc.returncode == 1, proc.stdout + proc.stderr
@@ -106,12 +107,12 @@ def test_the_two_commit_form_is_accepted(tmp_path):
     root = _base(tmp_path)
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
     _git(root, "add", "-A")
-    assert ar.staged_text_then_act_lines(root) == []  # text alone, no act
+    assert tta.staged_text_then_act_lines(root) == []  # text alone, no act
     _commit(root, "the text")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
     _act(root)
     _git(root, "add", "-A")
-    assert ar.staged_text_then_act_lines(root) == []  # the act: flips and copy
+    assert tta.staged_text_then_act_lines(root) == []  # the act: flips and copy
     proc = _step(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
@@ -126,13 +127,13 @@ def test_a_row_added_or_removed_beside_the_act_is_refused(tmp_path):
     )
     _act(root)
     _git(root, "add", "-A")
-    (line,) = ar.staged_text_then_act_lines(root)
+    (line,) = tta.staged_text_then_act_lines(root)
     assert "SR-003" in line and "added" in line
     _git(root, "reset", "-q", "--hard")
     _rows(root, ("SR-001", "One", "Approved"))
     _act(root)
     _git(root, "add", "-A")
-    (line,) = ar.staged_text_then_act_lines(root)
+    (line,) = tta.staged_text_then_act_lines(root)
     assert "SR-002" in line and "removed" in line
 
 
@@ -148,7 +149,7 @@ def test_a_traced_cell_beside_the_act_is_text_too(tmp_path):
     )
     _act(root)
     _git(root, "add", "-A")
-    (line,) = ar.staged_text_then_act_lines(root)
+    (line,) = tta.staged_text_then_act_lines(root)
     assert "SR-001" in line and "SN-Refs" in line
 
 
@@ -156,7 +157,7 @@ def test_a_commit_that_writes_no_record_is_never_judged(tmp_path):
     root = _base(tmp_path)
     _rows(root, ("SR-001", "One amended", "Approved"), ("SR-009", "New", "Drafted"))
     _git(root, "add", "-A")
-    assert ar.staged_text_then_act_lines(root) == []
+    assert tta.staged_text_then_act_lines(root) == []
 
 
 def test_a_no_verify_lane_commit_is_refused_at_the_landing(tmp_path):
@@ -220,7 +221,7 @@ def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
     _git(root, "checkout", "-q", "wi-001")
     _git(root, "merge", "-q", "--no-ff", "--no-edit", "main")
     merge = _git(root, "rev-parse", "HEAD")
-    assert ar.commit_text_then_act_lines(root, merge) == []
+    assert tta.commit_text_then_act_lines(root, merge) == []
     _git(root, "checkout", "-q", "main")
     assert integrate._text_then_act_refusal(root, "wi-001") is None
     # A merge that writes text AND the record of its own is still refused. A
@@ -234,7 +235,7 @@ def test_a_refresh_merge_is_judged_by_what_neither_side_carried(tmp_path):
     _rows(root, ("SR-001", "One evil", "Approved"), ("SR-002", "Two", "Drafted"))
     _act(root)
     _git(root, "add", "-A")
-    (line,) = ar.staged_text_then_act_lines(root)
+    (line,) = tta.staged_text_then_act_lines(root)
     assert "SR-001" in line
 
 
@@ -251,8 +252,8 @@ def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
     _commit(root, "the act")
     _git(root, "checkout", "-q", "main")
     _git(root, "merge", "-q", "--squash", "wi-002")
-    assert ar.staged_text_then_act_lines(root) != []  # judged as a plain commit
-    assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
+    assert tta.staged_text_then_act_lines(root) != []  # judged as a plain commit
+    assert tta.staged_text_then_act_lines(root, _squashed(root)) == []
     proc = _step(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     _git(root, "commit", "-q", "--no-verify", "-m", "WI-002: land")
@@ -263,7 +264,7 @@ def test_a_squash_landing_is_admitted_only_when_its_lane_commits_pass(tmp_path):
     bad = _commit(root, "text and act together")
     _git(root, "checkout", "-q", "main")
     _git(root, "merge", "-q", "--squash", "wi-003")
-    lines = ar.staged_text_then_act_lines(root, _squashed(root))
+    lines = tta.staged_text_then_act_lines(root, _squashed(root))
     assert lines and bad[:10] in lines[0] and "SR-001" in lines[0]
     proc = _step(root)
     assert proc.returncode == 1 and bad[:10] in proc.stdout, proc.stdout + proc.stderr
@@ -274,9 +275,9 @@ def test_a_first_commit_has_nothing_before_it(tmp_path):
     _rows(root, ("SR-001", "One", "Approved"))
     _act(root)
     _git(root, "add", "-A")
-    assert ar.staged_text_then_act_lines(root) == []
+    assert tta.staged_text_then_act_lines(root) == []
     sha = _commit(root, "first")
-    assert ar.commit_text_then_act_lines(root, sha) == []
+    assert tta.commit_text_then_act_lines(root, sha) == []
 
 
 def test_the_pre_commit_hook_runs_the_text_then_act_step():
@@ -292,7 +293,7 @@ def test_no_refusal_text_offers_amend_plus_flip(tmp_path):
     for text in (
         snap._refusal_text(blocked, {SR}),
         snap._refusal_text(blocked, set()),
-        ar.TEXT_THEN_ACT_REMEDY,
+        tta.TEXT_THEN_ACT_REMEDY,
     ):
         assert "amend-plus-flip" not in text.lower()
         assert "same tree" not in text and "same commit" not in text
@@ -313,13 +314,13 @@ def test_a_commit_whose_parent_cannot_be_read_is_refused_by_name(tmp_path):
     clone = tmp_path / "shallow"
     _git(tmp_path, "clone", "-q", "--depth", "1", root.as_uri(), str(clone))
     sha = _git(clone, "rev-parse", "HEAD")
-    (line,) = ar.commit_text_then_act_lines(clone, sha)
+    (line,) = tta.commit_text_then_act_lines(clone, sha)
     assert parent[:10] in line and "cannot be read" in line
 
 
 def test_a_diff_git_cannot_read_is_reported_not_skipped(tmp_path):
     root = _base(tmp_path)
-    (line,) = ar.text_then_act_lines(root, ["0" * 40])
+    (line,) = tta.text_then_act_lines(root, ["0" * 40])
     assert "0" * 40 in line and "unknown" in line
 
 
@@ -348,11 +349,11 @@ def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
     )
     _act(root)
     _git(root, "add", "-A")
-    (line,) = ar.staged_text_then_act_lines(root)
+    (line,) = tta.staged_text_then_act_lines(root)
     assert "SR-003: Title" in line
     _git(root, "commit", "-q", "--no-verify", "-m", "merge with its own text")
     merge = _git(root, "rev-parse", "HEAD")
-    (line,) = ar.commit_text_then_act_lines(root, merge)
+    (line,) = tta.commit_text_then_act_lines(root, merge)
     assert "SR-003: Title" in line
     # The same merge carrying the lane's row unchanged, with only the flip and
     # the copy, is the lane's text and an act: it passes.
@@ -366,7 +367,7 @@ def test_a_row_only_one_parent_carried_is_judged_by_its_cell_values(tmp_path):
     )
     _act(root)
     _git(root, "add", "-A")
-    assert ar.staged_text_then_act_lines(root) == []
+    assert tta.staged_text_then_act_lines(root) == []
 
 
 def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
@@ -392,7 +393,7 @@ def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
     _act(root)
     _git(root, "add", "-A")
-    assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
+    assert tta.staged_text_then_act_lines(root, _squashed(root)) == []
     # Any other spine text beside that record is not the tip's, so the stale
     # message exempts nothing and the commit is judged plainly.
     llr = root / "docs/requirements/low-level-requirements.csv"
@@ -401,8 +402,8 @@ def test_a_stale_squash_message_exempts_no_other_commit(tmp_path):
         encoding="utf-8",
     )
     _git(root, "add", "-A")
-    line, hint = ar.staged_text_then_act_lines(root, _squashed(root))
-    assert "LLR-001: added" in line and hint == ar.SQUASH_REBASE_HINT
+    line, hint = tta.staged_text_then_act_lines(root, _squashed(root))
+    assert "LLR-001: added" in line and hint == tta.SQUASH_REBASE_HINT
     proc = _step(root)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     # git deletes SQUASH_MSG at the next commit, so the residue's window is
@@ -453,7 +454,7 @@ def test_a_squash_combining_two_judged_cells_into_a_third_is_refused(tmp_path):
     _git(root, "merge", "-q", "--squash", "wi-004")
     staged = _git(root, "show", ":" + SR)
     assert "lane" in staged and "trunk" in staged  # the third value
-    lines = ar.staged_text_then_act_lines(root, _squashed(root))
+    lines = tta.staged_text_then_act_lines(root, _squashed(root))
     assert lines and "SR-001: Requirement" in lines[0]
     assert "rebase" in lines[-1]
     proc = _step(root)
@@ -475,7 +476,7 @@ def test_a_squash_of_a_lane_not_containing_head_is_refused_with_the_rebase_hint(
     (root / "trunk.txt").write_text("trunk\n", encoding="utf-8")
     _commit(root, "trunk moves on")
     _git(root, "merge", "-q", "--squash", "wi-002")
-    lines = ar.staged_text_then_act_lines(root, _squashed(root))
+    lines = tta.staged_text_then_act_lines(root, _squashed(root))
     assert lines and "SR-002" in lines[0]
     assert "rebase the lane onto trunk" in lines[-1]
     proc = _step(root)
@@ -491,8 +492,8 @@ def test_a_refreshed_lanes_squash_is_admitted(tmp_path):
     _git(root, "rebase", "-q", "main")
     _git(root, "checkout", "-q", "main")
     _git(root, "merge", "-q", "--squash", "wi-004")
-    assert ar.staged_text_then_act_lines(root) != []  # judged as a plain commit
-    assert ar.staged_text_then_act_lines(root, _squashed(root)) == []
+    assert tta.staged_text_then_act_lines(root) != []  # judged as a plain commit
+    assert tta.staged_text_then_act_lines(root, _squashed(root)) == []
     proc = _step(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
@@ -534,6 +535,6 @@ def test_a_refresh_merge_combining_two_text_commits_beside_trunks_act_passes(
     merged = (root / llr).read_text(encoding="utf-8")
     assert "lane" in merged and "trunk" in merged  # neither parent's value
     merge = _git(root, "rev-parse", "HEAD")
-    assert ar.commit_text_then_act_lines(root, merge) == []
+    assert tta.commit_text_then_act_lines(root, merge) == []
     _git(root, "checkout", "-q", "main")
     assert integrate._text_then_act_refusal(root, "wi-001") is None

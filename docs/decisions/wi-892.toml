@@ -1,0 +1,25 @@
+# docs/decisions/wi-892.toml — WI-892's lane: delegated decisions (coordinator).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002", "D-001"]
+
+[decision.D-001]
+decided = "This lane's reviews ran on Codex gpt-6-luna at high effort, not gpt-6.1-sol, which the Codex account signed in for the overnight run does not offer (coordinator-2026-10-10 D-017)."
+alternative = "Hold the lane until an account offering Sol is signed in, or use a fresh independent Opus reviewer (same-family, allowed only after two hours of Codex unavailability)."
+reversal_cost = "Low: an overrule re-runs the final gate with Sol."
+why_not_escalated = "The owner is away overnight; Luna keeps a fresh session from a different model family."
+review = ""
+
+[decision.D-002]
+decided = "The one lane-commit walk (text_then_act.lane_commit_walk) takes its commit list from its caller rather than listing the range itself: the hook's squash path and the merge slot list the range differently today (the hook treats a failed listing as nothing to exempt and lists without --topo-order; the slot refuses quoting git's stderr and lists with --topo-order), so one listing would change behaviour the Done-when keeps unchanged. The ruling-sync judge rides the same walk with its own rider tuple rather than joining one combined pass, which would change which refusal shows when two commits fail different rules. The hook's missing --topo-order may be a defect; it is out of this move's scope."
+alternative = "One listing inside the walk (a behaviour change for one of the two paths), or one combined rider pass in the merge slot (a change in refusal precedence)."
+reversal_cost = "Low: a later row can move the listing into the walk once its failure and order contract is ruled."
+why_not_escalated = "The Done-when requires refusals, wording and order unchanged; both alternatives break that."
+review = ""
+
+[decision.D-003]
+decided = "tests/test_import_layers.py's deferred-import window rises from 32 to 33, with a dated reason: check.py's text-then-act rung now defers `import text_then_act` (it deferred acceptance_record before). The other way to hold 32, turning integrate's deferred acceptance_record imports into top-level ones, touches rungs outside this move's surface."
+alternative = "Make integrate's deferred imports top-level to hold the window at 32."
+reversal_cost = "Low: the window is one constant."
+why_not_escalated = "A one-import rise with its reason recorded in the test, as the window's rule asks."
+review = ""
