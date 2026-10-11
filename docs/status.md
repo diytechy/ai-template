@@ -25,20 +25,20 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-11-leg02-coordinator.md](handoff-2026-10-11-leg02-coordinator.md)
-  (not before its `Resume-not-before` time: Codex reached its usage limit):
-  one lane is out, the disposition-adoption row, at its checkpoint rework
-  after a sitting returned two rows; the account-homes row owes its order,
-  Trust section and owner-dependent split before its claim; the hand-merge
-  walk still waits on an owner ruling, and the remaining queue and the
-  headless-leg session prompt are there. The coordinator's
+  [handoff-2026-10-11-leg03-coordinator.md](handoff-2026-10-11-leg03-coordinator.md):
+  two lanes are out. The account-homes row has settled code (a narrow review
+  approved it) and owes its checkpoint rework after a sitting returned its
+  rows' text. The disposition-adoption row stands committed under the
+  two-round breaker with one accepted, unbuilt finding. The hand-merge walk
+  and the second Claude login wait on owner rulings; the remaining queue and
+  the headless-leg session prompt are there. The coordinator's
   procedure lives in the `coordinator-cycle` skill; unattended legs run
   through `coordinator-tools/overnight_legs.py`, each writing the next handoff.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 105 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 112 on trunk. The context guard's hooks are machine-local
   (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back

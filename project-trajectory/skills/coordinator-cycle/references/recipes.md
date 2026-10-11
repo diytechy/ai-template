@@ -36,6 +36,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   commands in the foreground: one that backgrounded its pytest run returned
   "waiting" with no result (WI-902, 2026-10-11). Resume it with SendMessage;
   its report then arrives as a task notification while you keep working.
+  Tell every builder never to run a full `check_complexity.py --restamp`
+  (one rewrote four rows' line counts upward, WI-798) and to delete any
+  `.ruff_cache` its ruff run leaves in the tree: one under
+  `project-trajectory/scripts/` reddened `test_mapping_purpose` in the smoke
+  tier (WI-798, 2026-10-11).
   Brief a hook's coverage as reading the command word the
   way the shell grammar does, from a list you give; a brief asking for every
   form that gets past the hook was cut off by a safety classifier (WI-834).
@@ -248,7 +253,9 @@ commit of its own, move it to trunk's tip
   `"$PY" "$SCRIPTS/intake.py" snapshot --approves "<registry>=<ref>"`
   (no `--reattests`; the ref names the sitting that last anchored it).
   Taken on trunk inside the squash, text-then-act refuses it (WI-887,
-  2026-10-11). Run `trace.py --strict-integrity` on the staged squash: the
+  2026-10-11). Adding an IF to an approved TC's `Verifies` (the strict gate refuses
+  an IF row no TC cites) is traced-only too: the composer refuses an
+  amendment sitting for it, and the re-anchor is the step (WI-902, act 117). Run `trace.py --strict-integrity` on the staged squash: the
   lane hook does not catch this drift.
 - **A return in a sitting holds its whole registry.** A row the sitting
   would bless is not anchored while another row in the same registry is
