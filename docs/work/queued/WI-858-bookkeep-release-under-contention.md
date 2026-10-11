@@ -65,19 +65,23 @@ WI-906 and lands after this row; this row does not change `coordinator_guard`.
 Durable bookkeeping gives a file authority over a lease's release and over a
 session's retirement, so this section states the carrier, its producers, its
 consumers and a ruling per consumer (coordinator 2026-10-11 D-004, for the
-owner to confirm or overrule).
+owner to confirm or overrule), under `project-trajectory/PROCESS.md` §3,
+"When a guard is owed".
 
 **One carrier.** A *store marker* is a JSON file written whole beside a
 record (`_write_whole`: a temporary file, then a replace), in the store
 directory under a suffix no record glob (`*.json`, `ANTHROPIC-*.json`)
-matches. It names one record identity (family, route id, scope), the call's
-lease holder, the session id and generation the call held (`Keep`), and one
-kind: `bookkeep` (the call's raw observation: the outcome's usable flag, the
+matches. It names one record identity (family, route id, scope), its
+*publisher id*, the session id and generation it concerns, and one kind: `bookkeep` (the call's raw observation: the outcome's usable flag, the
 metrics `keep_bookkeep` reads, the compaction observation and the judged WI),
 `release` (lease release only) or `retire` (the tombstone's reason). The
 existing `.retire` tombstone becomes this carrier's `retire` kind: one
-carrier, one reader. A marker's file name carries the record's stem and a
-hash of its holder, so each call's marker has its own identity: a marker is
+carrier, one reader. A call's publisher id is its lease holder, and the
+session id and generation are the ones the call held (`Keep`). A
+publication with no call behind it (a scope retirement, below) mints a
+fresh publisher id, `scope-retire:<uuid>`, and names the session id and
+generation it read. A marker's file name carries the record's stem and a
+hash of its publisher id, so each marker has its own identity: a marker is
 written once, never overwritten, and deleted only by name by the locked
 reader that applied it (the WI-846 round 3 finding: a reader deleting a newer
 release it never applied). The reset decision is not in the marker: it is
@@ -95,13 +99,30 @@ keep-warm ping's bookkeeping and release (through `act`), and
 `retire_scope` (a lane's gating round retires its iteration reviewer). A
 failed write is an `OSError` before the replace: no marker exists (a
 leftover `*.tmp` matches no glob), the producer raises it to its caller, and
-the lease follows the expiry rule. A partial marker cannot be observed (the
+a call's lease follows the expiry rule.
+
+`retire_scope` runs after the iteration session's last call has released
+its lease, so it holds no lease and releases none: it publishes one `retire`
+marker per live record of the scope, each under its own fresh publisher id
+and naming the session id and generation its lockless read found, and
+applies them under a short lock wait. A `retire` marker retires only the
+session and generation it names (a newer session on the record is left
+alone) and drops a lease only when the record's lease holder equals its
+publisher id, which a scope retirement's id never does. If a publication
+fails, `retire_scope` raises the `OSError` to the loop's round
+(`agent_loop`), which records the round as failed; the session stays live
+and the next gating round's draw retires it. A deferred apply needs no
+caller action: the lockless readers fold the marker, so the next round
+pins nothing and mints. A partial marker cannot be observed (the
 replace is whole). Contention on the apply is not a failure: the marker
 stands for the next locked read.
 
-**Consumers and rulings.**
+**Consumers and rulings.** Every runtime consumer is in
+`project-trajectory/scripts/session_keep.py` or calls into it from the paths
+named below (`rg -n 'session_keep|out/adjudicator|\.retire'
+project-trajectory/scripts scripts --glob '*.py'`).
 
-- **Locked readers** (`load_honoured`, so `keep_for`, `keep_release`,
+- **Locked readers** (in `session_keep.py`: `load_honoured`, so `keep_for`, `keep_release`,
   `keep_bookkeep`, `keep_abandon`, `retire_scope` and `take_warm_lease`):
   read the clock first, then list the record's markers, apply each in
   publication order, then run `retire_stale_lease`, so no reader retires a
@@ -116,23 +137,33 @@ stands for the next locked read.
   expired lease on this read; a malformed one (unparseable, a missing field,
   or an identity that disagrees with its file name) is deleted with one
   stderr line and read as absent.
-- **Lockless readers** (`due_routes` and its `_warm_candidates`,
-  `scoped_route`, `_scoped_records`): fold the record's markers with the
+- **Lockless readers** (in `session_keep.py`: `due_routes` and its
+  `_warm_candidates`, `scoped_route`, `_scoped_records`): fold the record's markers with the
   same pure function the locked reader applies, never deleting one, and
   decide on the folded record. A pending `bookkeep` or `release` marker
   never makes a record skipped; only a fold that retires it does (WI-846
   round 2, finding 4: a release marker made keep-warm skip the record, so
   nothing ever applied it). An unreadable or malformed marker is read as
   absent here.
-- **The call's caller** (`session_service.act`, so `coordinator_adjudicate`,
-  `agent_loop` and the keep-warm `_ping`): bookkeeping no longer raises
+- **The call's caller** (`project-trajectory/scripts/session_service.py`:
+  `act` and the keep-warm `KeepWarmer._ping`; through it
+  `project-trajectory/scripts/coordinator_adjudicate.py` and
+  `project-trajectory/scripts/agent_loop.py`): bookkeeping no longer raises
   `StoreBusy`, so the outcome returns and a blackout refusal surfaces as
   `BlackoutRefused`. When the apply was deferred, the row's `reset-reason`
   column reads `pending` and its `session-gen` is the call's own; telemetry
   readers take `pending` as not yet known.
-- **The coordinator by hand** (the recipes' read of
-  `out/adjudicator/*.json`): a record can lag its pending markers until the
-  next locked read; the recipe says so.
+- **The coordinator by hand** (the read of `out/adjudicator/*.json` in the
+  `coordinator-cycle` recipes, §1 "Adjudication" step 6:
+  `project-trajectory/skills/coordinator-cycle/references/recipes.md` and
+  its dogfooded copies under `.claude/skills/` and `.agents/skills/`): the
+  hand reader reads records for telemetry only (`state`, `pct`,
+  `reset_reason`) and decides no hold, act or gate from them. A record can
+  lag its pending markers until the next locked read, so the recipe says a
+  marker beside a record means its state is pending; an absent or
+  unreadable record means no retained session is known; a malformed one is
+  no record, as `_read_record` rules for the runtime. The hand reader never
+  edits or deletes a record or a marker.
 
 **What the authority binds to.** A marker binds to one record identity, one
 lease holder (minted per call: `<role>:<uuid>` in `keep_for`,

@@ -30,7 +30,8 @@ Written before the claim, answering the scope critique's S2 (coordinator
 2026-10-11 D-005, for the owner to confirm or overrule). Naming an existing
 row as the successor gives the adjudicator's text authority over the close
 and the sweep, so this section states the carrier, its producer, its
-consumers and a ruling per consumer. This row has one landable deliverable.
+consumers and a ruling per consumer, under `project-trajectory/PROCESS.md`
+§3, "When a guard is owed". This row has one landable deliverable.
 
 **The carrier.** An *adoption* is a block in the disposition row's own
 `## Dispositions` section, beside or instead of drafts (the section the
@@ -44,20 +45,42 @@ that `successors=` is present, and this row adds no count comparison.
 **Producer and write route.** The adjudicator writes the block in the
 sitting's own spec in the lane, as it writes drafts
 (`adjudicate-disposition.template.md` gains the adoption form), and commits
-it with the verdict. Failed writes: a failed or timed-out call is exit 1 with
-no verdict, and the loop's `adjudication_owed` holds the close as today; a
-malformed block, or a half-written section (a git-committed file cannot be
-read half-written, only malformed), is a parse refusal at every consumer
-below. No consumer repairs or guesses a block.
+it with the verdict. Failed writes: a failed call, a timeout and a
+structured error from the CLI all end the sitting with exit 1 (no valid
+verdict), and the loop's `adjudication_owed` holds the close as today. Any
+output the failed sitting already wrote (a partial block or section in the
+lane's spec, committed or not) is never closed on: the close runs only after
+a sitting that exited 0, and the coordinator reverts a failed sitting's
+writes before the re-sit. A malformed block, or a half-written section (a
+git-committed file cannot be read half-written, only malformed), is a parse
+refusal at every consumer below. No consumer repairs or guesses a block.
 
 **What the authority binds to.** An adoption names only the successor. The
-row it disposes is never read from the adjudicator's text: it is the closed
-row whose report path the disposition row's title carries (the immutable
-token `_mint` dedups on; the row's `specref` is cleared at the close). An
-adoption is accepted only while the named row exists open on trunk's
-registry (`queued/`, `active/` or `draft/`) and its `supersedes` cell names
-that disposed row, read at each consumer's read, not trusted from the time
-the adjudicator wrote it.
+row it disposes is never read from the adjudicator's text: it is read from
+the disposition row's title, the immutable event token `_mint` dedups on
+(the row's `specref` is cleared at the close). Both minted forms carry a
+terminal path whose file name leads with the disposed row's id: a
+report-backed close's title names the close report (`<wi>-<branch>`), and a
+report-less cancellation's (`intake._close_drafts`, "the cancellation
+recorded at") names the cancelled spec (`WI-NNN-<slug>.md`). One function,
+shared by the close and the sweep, resolves that id; a title whose token is
+absent or does not resolve to exactly one WI id refuses at both, never
+guessed. An adoption is accepted only while the named row exists open on
+trunk's registry (`queued/`, `active/` or `draft/`) and its `supersedes`
+cell names that disposed row, read at each consumer's read, not trusted from
+the time the adjudicator wrote it.
+
+**Absent, unreadable and failed inputs.** At the close and the sweep: an
+adopted id naming no open row refuses ("names no open row"); an adopted row
+whose spec cannot be read or parsed refuses with a distinct reason ("cannot
+read"); a registry that cannot be loaded refuses. No case falls back to
+minting or to accepting. The sweep today skips a merged adjudication spec it
+cannot read or whose front matter does not parse; this row makes that a
+sweep refusal (the merge stands, exit 1), because a skipped early close is a
+close that vanishes without a successor. An absent `## Dispositions`
+section keeps today's rule at every consumer: the close and the sweep refuse
+it for a row that owes a successor, and the scheduler and gate read it as
+nothing drafted.
 
 **Consumers and rulings** (found by grep over `project-trajectory/scripts`
 for `Dispositions`, `owes_successor`, `_DRAFT_KEYS`, `parse_dispositions`
@@ -80,9 +103,11 @@ and `adjudication_review_owed`):
   never a draft and is never minted; `_DRAFT_KEYS` does not gain `adopts`.
 - **The review scheduler and the merge gate** (`agent_loop.dispositions_drafted`
   and `integrate._verdict_owed`, both through
-  `agent_policy.adjudication_review_owed`): an accepted adoption owes no
-  spine review (it mints and amends nothing); a malformed section keeps
-  today's fail-toward-review rule.
+  `agent_policy.adjudication_review_owed`): these read the block's shape
+  only, never the adopted row; a well-formed adoption owes no spine review
+  (it mints and amends nothing), and acceptance stays the close's and the
+  sweep's. A malformed section or an unreadable spec keeps today's
+  fail-toward-review rule.
 - **The successor sweep for Done-when verdicts** (`intake._successor_drafts`):
   unchanged; a SUCCESSOR Done-when verdict still needs a draft.
 
