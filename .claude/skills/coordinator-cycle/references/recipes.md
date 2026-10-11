@@ -142,7 +142,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
        one-time `claude setup-token` step (`scripts/dev-setup.*`) and the
        variable above, never an interactive sign-in.
   6. After each call, read `C:/Projects/ai-template/out/adjudicator/*.json`
-     (`state`, `pct`, `reset_reason`); the store is under the primary checkout.
+     (`state`, `pct`, `reset_reason`) for telemetry only, never to decide a
+     hold, act or gate; the store is under the primary checkout. A `*.mark`
+     file beside a record (same stem) means its state is pending until the
+     next locked read; an absent or unreadable record means no retained
+     session is known, and a malformed one is no record. Never edit or
+     delete a record or a marker.
   7. The adjudicator commits its verdict and its act. The entry point commits
      the telemetry.
 - **Dispute sitting,** from the lane root:

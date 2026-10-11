@@ -754,7 +754,7 @@ def test_a_first_mint_that_raises_removes_its_lease_only_record(tmp_path):
         svc.act(_call(tmp_path, "ANTHROPIC", kept, broken))
     assert _state(tmp_path) is None
     assert not list(keep.store_dir(tmp_path).glob("*.json"))
-    assert not list(keep.store_dir(tmp_path).glob("*.retire"))
+    assert not list(keep.store_dir(tmp_path).glob("*.mark"))
     assert _keep(tmp_path, ON) is not None  # the route is free again
 
 
@@ -1121,7 +1121,7 @@ def test_a_raising_launch_under_a_held_store_lock_still_retires_its_session(
     assert nxt.session_id == ""  # the next launch mints
     assert _state(tmp_path)["state"] == "retired"
     assert _state(tmp_path)["reset_reason"] == "session unusable"
-    assert not list(keep.store_dir(tmp_path).glob("*.retire"))
+    assert not list(keep.store_dir(tmp_path).glob("*.mark"))
 
 
 def test_the_warmer_reads_the_trunk_through_the_shared_dirty_check(tmp_path):
@@ -2242,3 +2242,415 @@ def test_a_malformed_lease_is_no_record_on_every_variant(tmp_path, case, variant
     name = keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A).name
     _store_file(tmp_path, name, json.dumps(dict(record, lease=lease)))
     assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) is None
+
+
+# --- WI-858: every lease release and bookkeeping write survives store-lock -------
+# contention through one lockless carrier, the store marker. The design's test
+# list is WI-846's three Codex Sol rounds' contention findings
+# (docs/decisions/wi-846.toml D-005): round 1 MAJOR 3, round 2 MAJORs 4 and 5,
+# round 3 MAJOR 2. Contention is deterministic: the test holds the store lock.
+
+
+@pytest.fixture
+def short_apply(monkeypatch):
+    """A producer's apply waits a twentieth of a second for the lock, so a
+    held lock defers it at once (in this module's copy and the session
+    service's own)."""
+    monkeypatch.setattr(keep, "APPLY_WAIT", 0.05)
+    monkeypatch.setattr(svc.session_keep, "APPLY_WAIT", 0.05)
+
+
+def _markers(tmp_path):
+    return sorted(keep.store_dir(tmp_path).glob("*.mark"))
+
+
+def _locked_read(tmp_path, scope="", holder=""):
+    with keep.store_lock(tmp_path):
+        return keep.load_honoured(
+            tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", scope, holder
+        )
+
+
+def _auth_stream(sid):
+    events = (
+        {
+            "type": "assistant",
+            "message": {"model": "m", "content": []},
+            "session_id": sid,
+            "error": "authentication_failed",
+        },
+        {
+            "type": "result",
+            "is_error": True,
+            "session_id": sid,
+            "usage": {"input_tokens": 0, "output_tokens": 0},
+        },
+    )
+    return "\n".join(json.dumps(event) for event in events)
+
+
+def _later(monkeypatch, seconds=60):
+    later = keep.time.time() + seconds
+    monkeypatch.setattr(keep.time, "time", lambda: later)
+
+
+def _marker_path(tmp_path, tag):
+    stem = keep._record_name("ANTHROPIC", "ANTHROPIC-ROUTE")[: -len(".json")]
+    return keep.store_dir(tmp_path) / "{}.{}.mark".format(stem, tag)
+
+
+def test_a_bookkept_call_under_contention_keeps_its_observation_and_resumes(
+    tmp_path, short_apply
+):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    held = _keep(tmp_path, ON, wi="WI-2")
+    sid = held.session_id
+    with keep.store_lock(tmp_path):  # another holder keeps the lock throughout
+        out = svc.act(
+            _call(tmp_path, "ANTHROPIC", held, _launch(_claude_stream(20, sid=sid)))
+        )
+        assert out.metrics["reset-reason"] == "pending"
+        assert out.metrics["session-gen"] == held.generation
+        assert len(_markers(tmp_path)) == 1
+    record = _locked_read(tmp_path).record
+    assert "lease" not in record and record["state"] == "active"
+    assert record["pct"] == 20 and "WI-2" in record["judged"]
+    assert _markers(tmp_path) == []  # applied, then deleted by name
+    assert _keep(tmp_path, ON, wi="WI-3").session_id == sid  # resumed
+
+
+def test_a_draining_call_under_contention_drains_and_is_not_retired(
+    tmp_path, short_apply
+):
+    _adjudicate(tmp_path, ON, _claude_stream(10), wi="WI-1")
+    held = _keep(tmp_path, ON, wi="WI-1")
+    with keep.store_lock(tmp_path):
+        out = svc.act(_call(tmp_path, "ANTHROPIC", held, _launch(_claude_stream(60))))
+        assert out.metrics["reset-reason"] == "pending"
+    record = _locked_read(tmp_path).record
+    assert record["state"] == "draining" and "lease" not in record
+    assert record["reset_reason"] == "crest 60% >= 50%"
+    rows = _rows(WI_1="done", WI_2="queued:adjudication:pred=WI-1", WI_9="queued")
+    assert _keep(tmp_path, ON, wi="WI-9", rows=rows).session_id == held.session_id
+
+
+def test_an_auth_failure_release_under_contention_never_retires_the_session(
+    tmp_path, short_apply, monkeypatch
+):
+    """WI-846 round 1 MAJOR 3: the lock held across an authentication
+    failure's release left the lease; once it expired the next call retired
+    the session 'lease expired unreleased'."""
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    held = _keep(tmp_path, ON, lease_seconds=5)
+    runner = _launch(_auth_stream(held.session_id), code=1)
+    with keep.store_lock(tmp_path):
+        out = svc.act(_call(tmp_path, "ANTHROPIC", held, runner))
+    assert out.metrics["reset-reason"] == ""
+    _later(monkeypatch)  # the call's lease has expired since
+    assert _keep(tmp_path, ON).session_id == held.session_id
+    assert _state(tmp_path)["state"] == "active"
+
+
+def test_a_keep_warm_ping_under_contention_leaves_no_lease_and_stays_warm(
+    tmp_path, short_apply, monkeypatch
+):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    sid = _state(tmp_path)["session_id"]
+    warmer = _warmer(tmp_path, _launch(_claude_stream(11, sid=sid)))
+    lock = keep.store_lock(tmp_path)
+    original = svc.session_keep.take_warm_lease
+
+    def take_then_hold(*a, **k):
+        taken = original(*a, **k)
+        lock.__enter__()  # the ping's bookkeeping meets a held lock
+        return taken
+
+    monkeypatch.setattr(svc.session_keep, "take_warm_lease", take_then_hold)
+    try:
+        warmer.tick(work_pending=True)
+        warmer.thread.join(10)
+    finally:
+        lock.__exit__(None, None, None)
+    (_, _, metrics, word, _) = warmer.finished[0]
+    assert word == "COMPLETED" and metrics["reset-reason"] == "pending"
+    record = _locked_read(tmp_path).record
+    assert "lease" not in record and record["state"] == "active"
+    assert record["pct"] == 11
+    assert keep.due_routes(tmp_path, ON, 10**10, True) == ["ANTHROPIC-ROUTE"]
+
+
+def test_a_release_marker_never_makes_keep_warm_skip_the_record(tmp_path, short_apply):
+    """WI-846 round 2 MAJOR 4: a release published under contention made
+    `due_routes` skip the record, so keep-warm never applied it."""
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    held = _keep(tmp_path, ON)
+    with keep.store_lock(tmp_path):
+        keep.keep_release(tmp_path, held)
+    assert len(_markers(tmp_path)) == 1  # pending
+    assert keep.due_routes(tmp_path, ON, 10**10, True) == ["ANTHROPIC-ROUTE"]
+    ping, reason = keep.take_warm_lease(
+        tmp_path,
+        ON,
+        now=10**10,
+        work_pending=True,
+        holder="keep-warm:x",
+        prepare=_warm_prepare(tmp_path),
+    )
+    assert reason is None and ping.session_id == held.session_id
+    assert _markers(tmp_path) == []
+
+
+def test_a_reader_that_saw_expiry_after_a_release_was_published_does_not_retire(
+    tmp_path, monkeypatch
+):
+    """WI-846 round 2 MAJOR 5: a locked reader that read the markers before a
+    release was published, then read the clock and saw the lease expired,
+    retired it. Here the release is published at the instant of the reader's
+    clock read: the reader reads the clock first, so it lists the release."""
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    held = _keep(tmp_path, ON, lease_seconds=5)
+    later, published = keep.time.time() + 60, []
+
+    def clock():
+        if not published:
+            published.append(1)
+            keep.publish_marker(tmp_path, keep.keep_marker(held, keep.RELEASE))
+        return later
+
+    monkeypatch.setattr(keep.time, "time", clock)
+    found = _locked_read(tmp_path)
+    assert found.record["state"] == "active" and "lease" not in found.record
+    assert _markers(tmp_path) == []
+
+
+def test_a_reader_never_deletes_a_marker_it_did_not_apply(tmp_path, monkeypatch):
+    """WI-846 round 3 MAJOR 2: a reader holding an older marker unlinked a
+    newer release published while it held the lock, without applying it,
+    and the current session was retired."""
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    current = _keep(tmp_path, ON, lease_seconds=5)
+    old = keep.Keep(**{**current.__dict__, "holder": "adjudicate:old"})
+    keep.publish_marker(tmp_path, keep.keep_marker(old, keep.RELEASE))
+    fold = keep.fold_marker
+
+    def fold_then_publish(record, marker):
+        keep.publish_marker(tmp_path, keep.keep_marker(current, keep.RELEASE))
+        monkeypatch.setattr(keep, "fold_marker", fold)
+        return fold(record, marker)
+
+    monkeypatch.setattr(keep, "fold_marker", fold_then_publish)
+    first = _locked_read(tmp_path)
+    assert first.record["lease"]["holder"] == current.holder  # not yet applied
+    assert len(_markers(tmp_path)) == 1  # the newer release stands
+    _later(monkeypatch)
+    assert _keep(tmp_path, ON).session_id == current.session_id  # never retired
+    assert _markers(tmp_path) == []
+
+
+def test_retire_scope_under_contention_retires_on_the_next_read(tmp_path, short_apply):
+    _review(tmp_path, REVIEW_ON, LANE_A)
+    assert keep.scoped_route(tmp_path, LANE_A) == "ANTHROPIC-ROUTE"
+    with keep.store_lock(tmp_path):
+        keep.retire_scope(tmp_path, LANE_A, "gating round drawn")  # no raise
+        assert keep.scoped_route(tmp_path, LANE_A) is None  # the fold pins nothing
+        on_disk = keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A)
+        assert on_disk["state"] == "active"
+    (marker,) = _markers(tmp_path)
+    body = json.loads(marker.read_text(encoding="utf-8"))
+    assert body["publisher"].startswith("scope-retire:")
+    assert body["session_id"] == on_disk["session_id"]
+    assert body["generation"] == on_disk["generation"]
+    record = _locked_read(tmp_path, LANE_A).record
+    assert record["state"] == "retired"
+    assert record["reset_reason"] == "gating round drawn"
+    assert _markers(tmp_path) == []
+
+
+def test_a_retire_marker_spares_a_newer_session_and_a_lease_it_does_not_hold():
+    record = {
+        "family": "ANTHROPIC",
+        "route_id": "R",
+        "session_id": "S2",
+        "generation": 2,
+        "state": "active",
+        "reset_reason": "",
+        "lease": {"holder": "h", "until": 9},
+    }
+    marker = {
+        "family": "ANTHROPIC",
+        "route_id": "R",
+        "scope": "",
+        "kind": "retire",
+        "publisher": "scope-retire:x",
+        "session_id": "S1",
+        "generation": 1,
+        "published": 0,
+        "reason": "gating round drawn",
+    }
+    folded, _ = keep.fold_marker(record, marker)
+    assert folded == record  # another session, another holder's lease
+    same = {**marker, "session_id": "S2", "generation": 2}
+    folded, _ = keep.fold_marker(record, same)
+    assert folded["state"] == "retired" and folded["lease"] == record["lease"]
+    assert record["state"] == "active"  # the fold is pure
+
+
+def test_a_malformed_marker_is_deleted_with_one_line_and_read_as_absent(
+    tmp_path, capsys
+):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    before = _state(tmp_path)
+    bad = _marker_path(tmp_path, "0123456789abcdef")
+    bad.write_text("{not json", encoding="utf-8")
+    assert keep.due_routes(tmp_path, ON, 10**10, True) == ["ANTHROPIC-ROUTE"]
+    assert bad.exists()  # a lockless reader never deletes
+    capsys.readouterr()
+    assert _locked_read(tmp_path).record == before
+    assert not bad.exists()
+    err = capsys.readouterr().err
+    assert len(err.strip().splitlines()) == 1 and bad.name in err
+
+
+def test_an_unreadable_marker_stays_and_holds_back_the_expired_lease(
+    tmp_path, monkeypatch
+):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    held = _keep(tmp_path, ON, lease_seconds=5)
+    unreadable = _marker_path(tmp_path, "fedcba9876543210")
+    unreadable.mkdir()  # reading it raises an OSError
+    _later(monkeypatch)
+    found = _locked_read(tmp_path)
+    assert found.blocked and found.record["lease"]["holder"] == held.holder
+    assert found.record["state"] == "active" and unreadable.exists()
+    assert _keep(tmp_path, ON) is None  # not taken over while it stands
+    unreadable.rmdir()
+    assert _keep(tmp_path, ON).session_id == ""  # now retired, and minted
+    assert _state(tmp_path)["reset_reason"] == "lease expired unreleased"
+
+
+def test_a_failed_publication_raises_to_the_caller(tmp_path, monkeypatch):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    held = _keep(tmp_path, ON)
+
+    def full(path, text):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(svc.session_keep, "_write_whole", full)
+    with pytest.raises(OSError):
+        svc.act(_call(tmp_path, "ANTHROPIC", held, _launch(_claude_stream(20))))
+    assert _markers(tmp_path) == []
+
+
+# --- WI-858 round 2 (review 001 F1): a marker is applied at most once, and only to
+# the record state it was published against. A marker a failed unlink left behind
+# is replayed by every later locked read; its effect must be inert there.
+
+
+@pytest.fixture
+def stuck_markers(monkeypatch):
+    """Every store marker's deletion fails (a sharing violation), so each
+    applied marker stays on disk and every later locked read lists it again."""
+    real = Path.unlink
+
+    def unlink(path, *a, **kw):
+        if path.suffix == keep.MARKER_SUFFIX:
+            raise PermissionError("sharing violation")
+        return real(path, *a, **kw)
+
+    monkeypatch.setattr(Path, "unlink", unlink)
+
+
+def test_a_replayed_bookkeep_marker_never_frees_a_newer_holders_lease(
+    tmp_path, stuck_markers
+):
+    """F1: call 2 completes and its marker's deletion fails; call 3 takes the
+    session; call 4's locked read replays call 2's marker. It must not drop
+    call 3's lease (call 4 runs unretained) nor overwrite newer observations."""
+    _adjudicate(tmp_path, ON, _claude_stream(10))  # call 1 mints
+    second = _keep(tmp_path, ON, wi="WI-2")
+    sid = second.session_id
+    svc.act(_call(tmp_path, "ANTHROPIC", second, _launch(_claude_stream(20, sid=sid))))
+    assert len(_markers(tmp_path)) == 2  # both applied, neither deleted
+    third = _keep(tmp_path, ON, wi="WI-3")
+    assert third.session_id == sid
+    assert _keep(tmp_path, ON, wi="WI-4") is None  # the session is call 3's
+    record = _state(tmp_path)
+    assert record["lease"]["holder"] == third.holder
+    svc.act(_call(tmp_path, "ANTHROPIC", third, _launch(_claude_stream(30, sid=sid))))
+    record = _locked_read(tmp_path).record
+    assert record["pct"] == 30 and "lease" not in record  # call 2 not replayed
+
+
+def test_after_a_failed_unlink_two_competing_resumed_calls_get_one_session(
+    tmp_path, stuck_markers
+):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    second = _keep(tmp_path, ON, wi="WI-2")
+    svc.act(_call(tmp_path, "ANTHROPIC", second, _launch(_claude_stream(20))))
+    start, taken = threading.Barrier(2), []
+
+    def compete(wi):
+        start.wait()
+        taken.append(_keep(tmp_path, ON, wi=wi, lease_wait=2))
+
+    threads = [threading.Thread(target=compete, args=(w,)) for w in ("WI-3", "WI-4")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(30)
+    resumed = [held for held in taken if held is not None]
+    assert len(taken) == 2 and len(resumed) == 1
+    assert _state(tmp_path)["lease"]["holder"] == resumed[0].holder
+
+
+def test_a_replayed_release_is_inert(tmp_path, stuck_markers):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    second = _keep(tmp_path, ON, wi="WI-2")
+    keep.keep_release(tmp_path, second)  # e.g. an authentication failure
+    third = _keep(tmp_path, ON, wi="WI-3")
+    assert third.session_id == second.session_id
+    assert _keep(tmp_path, ON, wi="WI-4") is None
+    assert _state(tmp_path)["lease"]["holder"] == third.holder
+
+
+def test_a_replayed_retire_is_inert(tmp_path, stuck_markers):
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    second = _keep(tmp_path, ON, wi="WI-2")
+    keep.keep_abandon(tmp_path, second, "launch raised")
+    assert _state(tmp_path)["state"] == "retired"
+    _adjudicate(tmp_path, ON, _claude_stream(10), wi="WI-3")  # mints
+    record = _locked_read(tmp_path).record  # call 2's retire is listed again
+    assert record["session_id"] != second.session_id
+    assert record["state"] == "active" and record["generation"] == 2
+    third = _keep(tmp_path, ON, wi="WI-4")
+    assert third.session_id == record["session_id"]
+    found = _locked_read(tmp_path).record  # call 2's retire is listed again
+    assert found["state"] == "active" and found["lease"]["holder"] == third.holder
+
+
+def test_a_replayed_scope_retirement_spares_the_next_reviewer(tmp_path, stuck_markers):
+    _review(tmp_path, REVIEW_ON, LANE_A)
+    keep.retire_scope(tmp_path, LANE_A, "gating round drawn")
+    _review(tmp_path, REVIEW_ON, LANE_A)  # the next iteration mints
+    record = _locked_read(tmp_path, LANE_A).record
+    assert record["state"] == "active" and record["generation"] == 2
+
+
+def test_an_overrun_calls_late_bookkeep_never_frees_its_successors_lease(
+    tmp_path, monkeypatch
+):
+    """The same class without a failed unlink: call 2 overran its lease, call
+    3 retired the session and took the route; call 2's bookkeeping then lands
+    late. It must not touch the record call 3 now holds."""
+    _adjudicate(tmp_path, ON, _claude_stream(10))
+    second = _keep(tmp_path, ON, wi="WI-2", lease_seconds=5)
+    _later(monkeypatch)
+    third = _keep(tmp_path, ON, wi="WI-3")
+    assert third.session_id == ""  # retired "lease expired unreleased"; mints
+    taken = _state(tmp_path)
+    late = _launch(_claude_stream(20, sid=second.session_id))
+    out = svc.act(_call(tmp_path, "ANTHROPIC", second, late))
+    assert out.metrics["reset-reason"] == "store moved on"
+    record = _locked_read(tmp_path).record
+    assert record == taken  # still retired, still call 3's lease
+    assert _keep(tmp_path, ON, wi="WI-4") is None

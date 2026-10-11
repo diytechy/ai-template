@@ -364,7 +364,8 @@ def act(call, metrics=None):
     """Launch one call and account it; see Contract IF-246. Inside the
     blackout window a call the window does not admit (`launch_refusal`)
     raises BlackoutRefused before anything is built, accounted or launched,
-    and a retained call's lease is released first.
+    and a retained call's lease is released first (`keep_release`, which
+    does not raise on store-lock contention).
 
     Implements: SR-222, SR-229, LLR-269
     """
@@ -1183,8 +1184,10 @@ class KeepWarmer:
     - It never races a lane: the ping holds the route's lease
       (`session_keep.take_warm_lease`), which an adjudication waits on, and a
       ping whose session is leased to an adjudication does not run.
-    - It writes the store only under the store lock (the bookkeeping `act`
-      does), each write through its own temporary file.
+    - It writes a record only under the store lock, each write through its
+      own temporary file; the ping's bookkeeping (`act`) publishes its store
+      marker first, so a held lock defers it to the next locked read and
+      never raises.
     - It moves trunk only through the serialized telemetry path: the ping's
       thread launches and accounts, and its session log is written and
       committed later on the dispatcher's own thread, between polls, and only

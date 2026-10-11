@@ -8242,6 +8242,45 @@ now carries git's own failure text. A non-empty range is unchanged.
 earlier with "does not resolve" or "cannot resolve ... to any commit" for
 an empty range composes on its next claim. No registry or setting changes.
 
+### Retained-session bookkeeping and lease releases survive store-lock contention [since 30d32823a]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The retained-session store (`scripts/session_keep.py`,
+`out/adjudicator/`) gains one lockless carrier, the store marker: a JSON
+file beside a record, `<record stem>.<hash of the publisher id>.mark`,
+written whole without the lock. Every call's bookkeeping, every lease
+release (an authentication failure, a blackout refusal), every abandoned
+launch's retirement and every scope retirement publishes its marker first,
+then applies it under the store lock if the lock is had within a second.
+Under contention the marker stands: the next locked read (the clock first,
+then the markers in publication order, then the expired-lease rule) applies
+it and deletes it by name, and the lockless reads (keep-warm's due list, a
+review round's pin) fold it in without deleting it. So a healthy session
+whose bookkeeping met a held lock is resumed, not retired "lease expired
+unreleased". A call's marker takes effect only while the record still
+carries that call's lease, and taking effect drops it in the same write (a
+scope retirement's, only on the live session and generation it names), so
+a marker left behind by a failed delete is inert when read again, and a
+call that overran its lease never touches the record its successor now
+holds. Bookkeeping no longer raises `StoreBusy`; a deferred one
+logs `reset-reason` `pending` with the call's own `session-gen`. A failed
+publication raises `OSError`. The old `<record>.retire` tombstone is
+replaced by the marker's `retire` kind and is no longer read.
+
+**Kit-owned files — overwrite:** `scripts/session_keep.py`,
+`scripts/session_service.py`, `skills/coordinator-cycle/` (a `scope:
+this-repo` skill; only if you vendored it).
+
+**What to do.** Overwrite the files. Nothing is forced: no registry,
+setting or record format changes, and existing records load as before. A
+leftover `out/adjudicator/*.retire` file from before the change is inert:
+the lease it was written to release expires, and the expired-lease rule
+retires that session then, as it would have; delete such files at will. If
+your own code catches `StoreBusy` around a retained call's bookkeeping or
+release, that catch is now dead. A telemetry reader of `reset-reason`
+should read `pending` as not yet known.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

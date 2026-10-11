@@ -2299,18 +2299,18 @@ rationale = """A retained adjudicator session must outlive the lane worktree who
 owner = "scripts/session_keep"
 consumers = ["scripts/agent_loop", "scripts/dispatch"]
 channel = "file"
-data = "out/adjudicator/<FAMILY>-<hash of route id, or route id NUL scope>.json: lease-only family,route_id,[scope,]lease; retired-first adds state,reset_reason; full adds session fields; lease optional"
+data = "out/adjudicator/<FAMILY>-<hash of route id, or route id NUL scope>.json; .mark JSON: identity, publisher, session/generation, kind, payload"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """No tie-back: the record is per-clone runtime state under the ignored out/ directory, read and written by the one module that owns it; it crosses no boundary and publishes nothing. Every read-modify-write holds the store lock, each record is written through its own temporary file and a replace, and one reader decides every load and scan: a record naming another family, route or scope, not one of the declared variants with every consumed field typed and each optional field of its writer's type, or filed under another record's name, reads as no session, so the next launch mints."""
+notes = """No tie-back: the record is per-clone runtime state under the ignored out/ directory, read and written by the one module that owns it; it crosses no boundary and publishes nothing. Every record write holds the store lock; markers are written whole without it and are applied and deleted only under it. One reader decides every load and scan: a record naming another family, route or scope, not one of the declared variants with every consumed field typed and each optional field of its writer's type, or filed under another record's name, reads as no session, so the next launch mints."""
 
 [interface.IF-248]
 rationale = """The retention rules and the store are read by the service before and after every retained call and by the keep-warm schedule, and a copy of any rule in the service would let the launch side and the bookkeeping side disagree about when a session resets; one module owns them and the service imports it."""
 owner = "scripts/session_keep"
 requestors = ["scripts/session_service"]
 channel = "call"
-data = "KeepConfig; applies; keep_for(..., prepared=) -> Keep | None after retire_after_blackout; keep_bookkeep(..., auth_failed=); keep_release -> record | None; take_warm_lease(..., prepare=) -> (Keep | None, reason | None); applies(..., scope); keep_for(..., scope=); review_retention(root, worker, phase, narrow) -> ReviewRetention(scope, stage, pin); scoped_route; retire_scope"
+data = "KeepConfig; keep_for; keep_bookkeep; keep_release; keep_abandon; take_warm_lease; review_retention; scoped_route; retire_scope; publish_marker; fold_marker"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

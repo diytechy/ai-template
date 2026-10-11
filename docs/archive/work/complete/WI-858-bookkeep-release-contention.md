@@ -2,13 +2,32 @@
 id = "WI-858"
 title = "Every lease release and bookkeeping write survives store-lock contention without retiring a healthy session"
 workstream = "process"
-specref = "docs/work/README.md"
+specref = ""
 sr_refs = ["SR-227"]
 needs = ["WI-846", "WI-887"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 +++
+
+## Deliverable
+
+Landed 2026-10-11. One lockless carrier, the store marker
+(`<record stem>.<publisher hash>.mark`, kinds bookkeep, release and retire;
+the `.retire` tombstone folded into it), carries every lease release,
+bookkeeping write and retirement of the retained-session store through
+store-lock contention: every producer publishes first and applies under a
+short wait (`APPLY_WAIT`); `load_honoured` reads the clock, applies markers
+in publication order, then retires an expired lease; lockless readers fold
+markers with the same pure function; bookkeeping never raises `StoreBusy`
+(a deferred apply reports `pending`). A call's observation lands only on
+its own lease, so a replayed marker is inert (review 001 F1, lane D-002).
+`retire_scope` publishes per-record retire markers under fresh publisher
+ids. Eighteen contention tests, WI-846's three rounds of findings among
+them. Sitting 003 re-attested LLR-270, TC-267 and TC-329 (MEANING; act
+seq 112). The coordinator lease's contention is WI-906's. Smoke membership
+ceiling 2495 -> 2600 (lane D-001). Gates: full 001 (1 MAJOR), narrow 002
+APPROVE, full 004 APPROVE 0 findings (Codex gpt-6.1-sol, medium).
 
 ## Context
 
@@ -128,9 +147,10 @@ project-trajectory/scripts scripts --glob '*.py'`).
   publication order, then run `retire_stale_lease`, so no reader retires a
   lease whose release was published before it observed the lease expired
   (WI-846 round 2, finding 5). A marker applies under `_landing`'s rule: a
-  resumed session's observation lands only on the record still holding that
-  session, a mint's only while the record still carries that holder's lease;
-  a marker that no longer lands releases its holder's lease, if still held,
+  call's observation lands only while the record still carries that call's
+  lease (a resumed call's, only on the live session and generation it
+  resumed), and landing drops it in the same write, so a replayed marker
+  is inert (review 001, F1); a marker that no longer lands releases its holder's lease, if still held,
   and is otherwise spent. Each applied or spent marker is deleted by name.
   An unreadable marker (an `OSError`, such as a sharing violation during a
   replace) is left in place, and the reader does not retire that record's

@@ -392,8 +392,8 @@ def test_keep_warm_with_a_bare_route_is_refused_before_any_lease(tmp_path, monke
     assert warmer.thread is None and seen == []
     record = sk._state(tmp_path)
     assert "lease" not in record and record["state"] == "active"
-    marker = sk.keep._tombstone_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE")
-    assert not marker.exists()  # nothing to release: no lease was taken
+    markers = list(sk.keep.store_dir(tmp_path).glob("*" + sk.keep.MARKER_SUFFIX))
+    assert markers == []  # nothing to release: no lease was taken
 
 
 # --- round 4 (Sol r3): one route snapshot through preparation and launch ---------

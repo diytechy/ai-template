@@ -1,0 +1,18 @@
+# docs/decisions/wi-858.toml — WI-858's lane (overnight leg 02, 2026-10-11);
+# delegated decisions made in the lane. Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "The smoke tier's membership ceiling is re-stamped in this lane from 2495 to 2600: the lane collects 2501 (its in-process store-marker contention cases, the round-2 replay regressions among them) and the parallel WI-902 lane adds 5 in-process cases, about 2506 on trunk once both land; 2600 keeps ~4% headroom, the recipes' rule (restamp only past the ceiling). The 60 s wall budget is unchanged (36.7 s on the lane)."
+alternative = "Fold the new cases into fewer parametrized tests to stay under 2495, or move the contention cases to SLOW_MODULES."
+reversal_cost = "Low: one stack.ini line and its note."
+why_not_escalated = "The ceiling is a coordinator re-stamp with precedent (coordinator-2026-10-10 D-009); the seconds budget, the owner's bar, is not moved."
+review = ""
+
+[decision.D-002]
+decided = "Review 001 F1 (a replayed bookkeep marker freed a newer holder's lease) is fixed by binding consumption to the per-call lease, not by a separate consumed-marker set: a call's observation lands only while the record still carries that call's own lease (a resumed call's, only on the live session and generation it resumed), and landing drops the lease in the same whole-record write, so a replay finds no lease of its publisher and is inert. The builder's reason: a separate set would be a second store of the same fact, and the lease field is bounded. The spec's Trust sentence on the locked readers states the rule."
+alternative = "The reviewer's direction read literally: the record keeps a bounded set of consumed publication ids written with their effects."
+reversal_cost = "Medium: a consumed set added to the record shape and its pruning rule."
+why_not_escalated = "The fix makes the replay unrepresentable at the store boundary, the reviewer's stated aim; the next Sol round judges it."
+review = ""

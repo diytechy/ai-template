@@ -60,7 +60,13 @@ Contract IF-247: the retained-session record, one JSON object per route at
     (`out/adjudicator/.lock`, created exclusively, stale after two minutes);
     a record is written whole through its own temporary file and a replace; a
     file that does not parse, or names another family, route or scope, reads
-    as no session.
+    as no session. Beside a record lie its pending STORE MARKERS (WI-858),
+    `<record stem>.<hash of the publisher id>.mark`, one JSON object each,
+    written whole without the lock: `family`, `route_id`, `scope`,
+    `publisher`, `session_id`, `generation`, `published` and `kind`
+    (`bookkeep` with the call's `observation`, `release`, or `retire` with
+    its `reason`). A locked read applies and deletes them; a record can lag
+    them until then.
 
 Contract IF-248: the keep call surface the session service composes.
     `keep_config(root)` reads `[adjudicator]` and `[reviewer]` as a
@@ -81,12 +87,17 @@ Contract IF-248: the keep call surface the session service composes.
     refused the credential) it changes nothing but releasing the call's lease
     (`keep_release`) and returns the session's generation (blank for a mint)
     and an empty `reset-reason`. `keep_abandon(root, keep, reason)` retires
-    the session of a launch that raised, through a tombstone
-    (`<record>.retire`, written whole without the lock) that every locked read
-    applies first (`load_honoured`) when the lock cannot be had at once.
-    `keep_release(root, keep)` releases the call's lease UNDER the store lock
-    and leaves its session's record as it was (a first mint's lease-only
-    record is removed); store-lock contention is not handled here (WI-858).
+    the session of a launch that raised. `keep_release(root, keep)` releases
+    the call's lease and leaves its session's record as it was (a first
+    mint's lease-only record is removed). Each of the three, and
+    `retire_scope`, PUBLISHES a store marker first (`publish_marker`, no
+    lock) and then applies it if the store lock is had within `APPLY_WAIT`;
+    otherwise the next locked read (`load_honoured`: the clock, then the
+    markers in publication order, then the stale-lease rule) applies it, and
+    the lockless reads fold it in (`fold_marker`) without deleting it. None
+    raises StoreBusy; a deferred bookkeeping returns `reset-reason`
+    `pending` and the call's own `session-gen`; a failed publication raises
+    OSError.
     `take_warm_lease(root, cfg, now=, work_pending=, holder=, prepare=)`
     returns `(keep, reason)` for the next due keep-warm ping, `reason` naming
     why a due ping cannot run now; `prepare(route_id)` returns `(prepared,
@@ -110,6 +121,7 @@ Contract IF-248: the keep call surface the session service composes.
     is no record to every load and scan (`_read_record`).
 """
 
+import copy
 import hashlib
 import json
 import os
@@ -490,47 +502,6 @@ def _write_whole(path, text):
     os.replace(tmp, path)
 
 
-def _tombstone_path(root, family, route_id, scope=""):
-    return _store_path(root, family, route_id, scope).with_suffix(".retire")
-
-
-def write_tombstone(root, keep, reason):
-    """Mark a retained session for retirement WITHOUT the store lock: a file
-    beside the route's record, written whole, naming the session, the reason
-    and the lease holder. Every locked read of the record honours it before
-    anything else (`load_honoured`), and the lockless keep-warm read skips a
-    marked record, so a session whose launch failed is retired even when the
-    lock could not be had at the moment of failure.
-
-    Implements: SR-227, LLR-270
-    """
-    body = {"session_id": keep.session_id, "reason": reason, "holder": keep.holder}
-    path = _tombstone_path(root, keep.family, keep.route_id, keep.scope)
-    _write_whole(path, json.dumps(body))
-
-
-def load_honoured(root, family, route_id, scope=""):
-    """`store_load`, with a pending tombstone applied: the session it names
-    is retired, the holder's lease dropped, the record saved and the
-    tombstone removed. Callers hold `store_lock`.
-
-    Implements: SR-227, LLR-270
-    """
-    record = store_load(root, family, route_id, scope)
-    path = _tombstone_path(root, family, route_id, scope)
-    try:
-        tomb = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return record
-    if isinstance(record, dict) and isinstance(tomb, dict):
-        record = _apply_tombstone(root, record, tomb)
-    try:
-        path.unlink()
-    except OSError:
-        pass
-    return record
-
-
 def is_lease_only(record):
     """Whether `record` holds no session yet: only its identity and, while a
     first call mints, that call's lease (see `_hold`): the declared lease-only
@@ -541,48 +512,375 @@ def is_lease_only(record):
     return _variant(record) == LEASE_ONLY
 
 
-def _apply_tombstone(root, record, tomb):
-    """Retire the session `tomb` names and drop its holder's lease; a
-    lease-only record left with no lease is removed (a first mint that raised
-    stored nothing), else the record is saved. Returns what remains.
+# --- the store marker: the one lockless carrier (WI-858) ---------------------------
+#
+# Every lease release and every bookkeeping write is PUBLISHED first, with no
+# lock, as a marker beside its record, then applied under the lock if the lock
+# is had within APPLY_WAIT; past that the marker stands for the next locked
+# read. A marker is written once under its own name (the record's stem and a
+# hash of its publisher id), applied by a locked reader and then deleted by
+# that name only, so no reader drops a publication it has not applied. The
+# reset decision is not in the marker: it is computed when the marker is
+# applied (`fold_marker`), by the same rule for the locked reader, which saves
+# it, and the lockless readers, which only decide on it.
+
+MARKER_SUFFIX = ".mark"
+BOOKKEEP, RELEASE, RETIRE = "bookkeep", "release", "retire"
+# Implements: SR-227, LLR-270
+APPLY_WAIT = 1.0  # seconds a producer waits for the lock to apply its marker
+
+
+def _compaction_seen(value):
+    """Whether `value` is a call's compaction observation as the codex
+    adapter returns it (`_observe_compaction` reads it), or None for none.
 
     Implements: SR-227, LLR-270
     """
-    if tomb.get("session_id") and record.get("session_id") == tomb["session_id"]:
-        _retire(record, tomb.get("reason") or "session unusable")
-    return _drop_lease(root, record, tomb.get("holder"))
+    return value is None or _conforms(value, _COMPACTION)
 
 
-def _drop_lease(root, record, holder):
-    """Drop `holder`'s lease from `record`, then save it; a lease-only record
-    left with no lease is removed instead (a first mint stored nothing).
-    Returns what remains. Callers hold `store_lock`.
+_COMPACTION = {"reported": bool, "prompts": [int], "totals": [int]}
+_METRICS = {
+    "ended-at": str,
+    "context-used": (int, str),
+    "context-window": (int, str),
+    "context-pct": (int, str),
+}
+_OBSERVATION = {
+    "minted": str,
+    "usable": bool,
+    "metrics": _METRICS,
+    "epoch": (int, float),
+    "compaction": _compaction_seen,
+    "wi": str,
+    "governing": str,
+    "cli_version": str,
+    "reset_at": int,
+}
+_MARKER = {
+    "family": str,
+    "route_id": str,
+    "scope": str,
+    "publisher": _nonempty_str,
+    "session_id": str,
+    "generation": int,
+    "kind": str,
+    "published": (int, float),
+}
+_KIND_FIELDS = {
+    BOOKKEEP: {"observation": _OBSERVATION},
+    RELEASE: {},
+    RETIRE: {"reason": str},
+}
+
+
+def _marker_name(family, route_id, scope, publisher):
+    """The file one publisher's marker on one record is filed under: the
+    record's stem, a hash of the publisher id and `MARKER_SUFFIX`, which no
+    record glob matches. Each publication has its own name.
 
     Implements: SR-227, LLR-270
     """
+    stem = _record_name(family, route_id, scope)[: -len(".json")]
+    tag = hashlib.sha256(publisher.encode("utf-8")).hexdigest()[:16]
+    return "{}.{}{}".format(stem, tag, MARKER_SUFFIX)
+
+
+def keep_marker(keep, kind, **payload):
+    """The marker a call publishes: its record's identity, its lease holder
+    as the publisher id, the session id and generation it held, the `kind`
+    and that kind's `payload`.
+
+    Implements: SR-227, LLR-270
+    """
+    return {
+        "family": keep.family,
+        "route_id": keep.route_id,
+        "scope": keep.scope or "",
+        "publisher": keep.holder,
+        "session_id": keep.session_id,
+        "generation": keep.generation,
+        "kind": kind,
+        **payload,
+    }
+
+
+def publish_marker(root, body):
+    """Publish one marker WITHOUT the store lock: `body` stamped with its
+    publication time, written whole (`_write_whole`) under its own name. A
+    failed write raises OSError before the replace and leaves no marker (a
+    leftover `*.tmp` matches no glob).
+
+    Implements: SR-227, LLR-270
+    """
+    body = {**body, "published": time.time()}
+    name = _marker_name(
+        body["family"], body["route_id"], body["scope"], body["publisher"]
+    )
+    _write_whole(store_dir(root) / name, json.dumps(body, sort_keys=True))
+
+
+class Pending(NamedTuple):
+    """A record's markers as read (`_pending`): the well-formed ones as
+    `(path, marker)` in publication order, and the paths that could not be
+    read (an OSError) or were malformed.
+
+    Implements: SR-227, LLR-270
+    """
+
+    markers: list
+    unreadable: list
+    malformed: list
+
+
+def _pending(root, identity):
+    """The markers beside the record of `identity` (`(FAMILY, route_id,
+    scope)`), read and never deleted.
+
+    Implements: SR-227, LLR-270
+    """
+    stem = _record_name(*identity)[: -len(".json")]
+    found = Pending([], [], [])
+    for path in store_dir(root).glob(stem + ".*" + MARKER_SUFFIX):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            found.unreadable.append(path)
+            continue
+        marker = _parse_marker(text, path, identity)
+        if marker is None:
+            found.malformed.append(path)
+        else:
+            found.markers.append((path, marker))
+    found.markers.sort(key=lambda item: (item[1]["published"], item[0].name))
+    return found
+
+
+def _parse_marker(text, path, identity):
+    """The marker `text` holds, or None when it is malformed: not a JSON
+    object with every declared field of its kind, typed, or naming another
+    record than `identity`, or filed under another name than its own.
+
+    Implements: SR-227, LLR-270
+    """
+    try:
+        marker = json.loads(text)
+    except ValueError:
+        return None
+    if not (isinstance(marker, dict) and _typed(marker, _MARKER, True)):
+        return None
+    fields = _KIND_FIELDS.get(marker["kind"])
+    if fields is None or not _typed(marker, fields, True):
+        return None
+    named = (marker["family"], marker["route_id"], marker["scope"])
+    own = _marker_name(*named, marker["publisher"])
+    return marker if named == identity and path.name == own else None
+
+
+def fold_marker(record, marker):
+    """`(record, columns)`: `record` with one marker applied, the record
+    given left unchanged; None is no record. THE ONE RULE both readers
+    apply: a `release` drops its publisher's lease; a `retire` retires the
+    live session and generation it names, then does the same; a `bookkeep`
+    lands the call's observation (`_fold_bookkeep`). A lease-only record
+    left with no lease is no record (a first mint stored nothing). `columns`
+    are a bookkeeping call's `session-gen`, `reset-reason` and compaction
+    columns.
+
+    Implements: SR-227, LLR-270
+    """
+    record = copy.deepcopy(record)
+    if marker["kind"] == BOOKKEEP:
+        return _fold_bookkeep(record, marker)
+    if marker["kind"] == RETIRE and _names_session(record, marker):
+        _retire(record, marker["reason"] or "session unusable")
+    return _released(record, marker["publisher"]), {}
+
+
+def fold_markers(record, markers):
+    """`(record, applied)`: `fold_marker` over `markers` in order, and each
+    publisher's columns.
+
+    Implements: SR-227, LLR-270
+    """
+    applied = {}
+    for marker in markers:
+        record, applied[marker["publisher"]] = fold_marker(record, marker)
+    return record, applied
+
+
+def _names_session(record, marker):
+    """Whether `record` is live on the session and generation `marker`
+    names (a newer session on the record is not)."""
+    return (
+        isinstance(record, dict)
+        and marker["session_id"] != ""
+        and record.get("session_id") == marker["session_id"]
+        and record.get("generation") == marker["generation"]
+        and record.get("state") in (STATE_ACTIVE, STATE_DRAINING)
+    )
+
+
+def _released(record, holder):
+    """`record` without `holder`'s lease; a lease-only record left with no
+    lease is None.
+
+    Implements: SR-227, LLR-270
+    """
+    if not isinstance(record, dict):
+        return None
     if (record.get("lease") or {}).get("holder") == holder:
         record.pop("lease", None)
-    if is_lease_only(record) and "lease" not in record:
-        store_remove(root, record)
+    return None if is_lease_only(record) and "lease" not in record else record
+
+
+def _fold_bookkeep(record, marker):
+    """Land a call's observation under `_landing`'s rule, decide its reset
+    (`_reset_after`) and release its lease (the landed record carries it,
+    by `_landing`'s rule); a marker that no longer lands releases its
+    holder's lease, if still held, and is otherwise spent (inert)."""
+    keep, seen = _marker_keep(marker), marker["observation"]
+    landed = _landing(record, keep, seen["minted"], seen["metrics"]["ended-at"])
+    if landed is None:
+        moved = {"session-gen": "", "reset-reason": "store moved on"}
+        return _released(record, keep.holder), moved
+    columns = _observe_compaction(landed, seen["compaction"], not keep.session_id)
+    _observe(landed, keep, seen["metrics"], seen["epoch"])
+    _reset_after(landed, seen, keep.governing)
+    landed.pop("lease", None)
+    gen, reason = landed["generation"], landed["reset_reason"]
+    return landed, {"session-gen": gen, "reset-reason": reason, **columns}
+
+
+def _marker_keep(marker):
+    """The call a bookkeeping marker stands for, as `_landing` and `_observe`
+    read it (no launch: nothing prepared)."""
+    seen = marker["observation"]
+    return Keep(
+        family=marker["family"],
+        route_id=marker["route_id"],
+        session_id=marker["session_id"],
+        wi=seen["wi"],
+        governing=seen["governing"],
+        cfg=None,
+        prepared=None,
+        holder=marker["publisher"],
+        cli_version=seen["cli_version"],
+        generation=marker["generation"],
+        scope=marker["scope"],
+    )
+
+
+def _reset_after(record, seen, governing):
+    """The reset rules after a call: no session id or an unusable session
+    retires at once; an occupancy at the call's dial drains."""
+    if not record["session_id"]:
+        _retire(record, "session id unavailable")
+    elif not seen["usable"]:
+        _retire(record, "session unusable")
+    else:
+        reason = drain_reason(record, record["pct"], seen["reset_at"], governing)
+        if reason:
+            record["state"], record["reset_reason"] = STATE_DRAINING, reason
+
+
+class Honoured(NamedTuple):
+    """One locked read (`load_honoured`): the record as it now stands, the
+    one clock read its decision uses, each applied publisher's columns, and
+    whether an unreadable marker held back the stale-lease rule.
+
+    Implements: SR-227, LLR-270
+    """
+
+    record: object
+    clock: float
+    applied: dict
+    blocked: bool
+
+
+def load_honoured(root, family, route_id, scope="", holder=""):
+    """The LOCKED READ of one record (callers hold `store_lock`): read the
+    clock first, then list the record's markers, apply each in publication
+    order, then retire an expired lease another holder than `holder` left
+    (`retire_stale_lease`), so no reader retires a lease whose release was
+    published before it observed the lease expired. The record is saved (or
+    removed) when it changed; each applied or spent marker is then deleted
+    by name. An unreadable marker is left in place and this read retires no
+    expired lease; a malformed one is deleted with one stderr line.
+
+    Implements: SR-227, LLR-270
+    """
+    clock = time.time()
+    pending = _pending(root, ((family or "").upper(), route_id or "", scope or ""))
+    before = store_load(root, family, route_id, scope)
+    markers = [marker for _, marker in pending.markers]
+    record, applied = fold_markers(copy.deepcopy(before), markers)
+    blocked = bool(pending.unreadable)
+    if not blocked:
+        retire_stale_lease(record, holder, clock)
+    if record is not None and record != before:
+        store_save(root, record)
+    elif record is None and before is not None:
+        store_remove(root, before)
+    _spend(pending)
+    return Honoured(record, clock, applied, blocked)
+
+
+def _spend(pending):
+    """Delete each applied marker, and each malformed one with one stderr
+    line, by its own name."""
+    for path in pending.malformed:
+        print(
+            "keep: deleted malformed store marker {}".format(path.name), file=sys.stderr
+        )
+    for path in [p for p, _ in pending.markers] + pending.malformed:
+        try:
+            path.unlink()
+        except OSError:
+            pass  # left for the next locked read, which applies it again
+
+
+def _folded(root, record):
+    """A record read WITHOUT the lock, with its markers folded in by the
+    locked reader's rule (`fold_markers`) and none deleted; an unreadable
+    or malformed marker is read as absent.
+
+    Implements: SR-227, LLR-270
+    """
+    if record is None:
         return None
-    store_save(root, record)
-    return record
+    identity = (record["family"], record["route_id"], record.get("scope", ""))
+    markers = [marker for _, marker in _pending(root, identity).markers]
+    return fold_markers(record, markers)[0]
+
+
+def _apply_now(root, identities):
+    """Apply what a producer just published: the locked reads of
+    `identities` if the lock is had within `APPLY_WAIT`, else None (the
+    markers stand for the next locked read)."""
+    try:
+        with store_lock(root, wait=APPLY_WAIT):
+            return [load_honoured(root, *identity) for identity in identities]
+    except StoreBusy:
+        return None
+
+
+def _identity(keep):
+    return (keep.family, keep.route_id, keep.scope or "")
 
 
 def keep_release(root, keep):
-    """Release the call's lease under the store lock and leave its session's
-    record as it was: the end of a call whose failure says nothing about the
-    session (the runner refused its credential). A first mint's lease-only
-    record is removed, so the next call mints. Store-lock contention is not
-    handled here (WI-858): it raises StoreBusy as the ordinary bookkeeping
-    does.
+    """Release the call's lease and leave its session's record as it was:
+    the end of a call whose failure says nothing about the session (the
+    runner refused its credential, or the blackout refused the launch). A
+    `release` marker is published first, then applied if the lock is had
+    within `APPLY_WAIT`; a first mint's lease-only record is removed, so the
+    next call mints. A failed publication raises OSError.
 
     Implements: SR-227, LLR-270
     """
-    with store_lock(root):
-        record = load_honoured(root, keep.family, keep.route_id, keep.scope)
-        if record is not None:
-            _drop_lease(root, record, keep.holder)
+    publish_marker(root, keep_marker(keep, RELEASE))
+    _apply_now(root, [_identity(keep)])
 
 
 def _record_path(root, record):
@@ -787,6 +1085,22 @@ def _lease_held(record, holder, now):
     return lease.get("holder") or ""
 
 
+def _busy(found, holder):
+    """Who holds a locked read's record (`Honoured`) against `holder`: a
+    live lease's holder; while an unreadable marker holds back the
+    stale-lease rule, any other holder's lease, expired or not, which may
+    have been released; else "".
+
+    Implements: SR-227, LLR-270
+    """
+    held = _lease_held(found.record, holder, found.clock)
+    record = found.record if isinstance(found.record, dict) else {}
+    lease = record.get("lease") if found.blocked and not held else None
+    if isinstance(lease, dict) and lease.get("holder") not in ("", holder):
+        return "an unreadable store marker"
+    return held
+
+
 def retire_stale_lease(record, holder, now):
     """Retire a session whose lease EXPIRED without being released. A lease
     is released by the call that took it when that call is bookkept or
@@ -929,20 +1243,19 @@ def keep_for(
     while True:
         try:
             with store_lock(root):
-                record = load_honoured(root, family, route_id, scope)
-                # ONE clock read per locked decision: two reads could see a
-                # lease live to the retire rule and free to the busy rule.
-                clock = time.time()
-                retire_stale_lease(record, holder, clock)
-                busy = _lease_held(record, holder, clock)
+                # ONE clock read per locked decision (`load_honoured` reads
+                # it first): two reads could see a lease live to the retire
+                # rule and free to the busy rule.
+                found = load_honoured(root, family, route_id, scope, holder)
+                busy = _busy(found, holder)
                 if not busy:
                     return _hold(
                         root,
                         cfg,
-                        record,
+                        found.record,
                         (family, route_id, scope, wi, governing, cli_version),
                         rows,
-                        (holder, clock + lease_seconds),
+                        (holder, found.clock + lease_seconds),
                         prepared,
                     )
         except StoreBusy:
@@ -1025,25 +1338,29 @@ def _fresh_record(keep, session_id, prior, stamp):
 
 def _landing(current, keep, session_id, stamp):
     """The record this call's observation lands on, or None when the store
-    moved on to another session while the call ran (that one is left alone).
-    A mint lands only while the record still carries ITS OWN lease (taken in
-    `_hold`, expired or not): any other holder, or none, means another call
-    took the expired lease over, and that call's record (in flight or
-    completed) owns the route."""
-    if keep.session_id:
-        ours = (
-            isinstance(current, dict) and current.get("session_id") == keep.session_id
-        )
-        return current if ours else None
+    moved on (that record is left alone). A call's observation lands only
+    while the record still carries ITS OWN lease (taken in `_hold`, expired
+    or not), and a resumed call's only on the live session and generation it
+    resumed. Landing drops that lease in the same whole-record write, so the
+    lease is the store's record that this call is not yet consumed: a
+    replayed marker (one a failed unlink left) finds no lease of its own and
+    lands nothing, and an overrun call whose lease another call took over
+    never touches that call's record (in flight or completed).
+
+    Implements: SR-227, LLR-270
+    """
     lease = current.get("lease") if isinstance(current, dict) else None
     if not isinstance(lease, dict) or lease.get("holder") != keep.holder:
         return None
-    prior = max(keep.generation, (current or {}).get("generation", 0))
+    if keep.session_id:
+        resumed = {"session_id": keep.session_id, "generation": keep.generation}
+        return current if _names_session(current, resumed) else None
+    prior = max(keep.generation, current.get("generation", 0))
     return _fresh_record(keep, session_id, prior, stamp)
 
 
 def _unusable(outcome, reported_error):
-    return outcome.code != 0 or bool(outcome.timed_out) or reported_error
+    return outcome.code != 0 or bool(outcome.timed_out) or bool(reported_error)
 
 
 def keep_bookkeep(
@@ -1056,13 +1373,20 @@ def keep_bookkeep(
     compaction=None,
     auth_failed=False,
 ):
-    """Fold one retained call into its record, under the store lock, and
-    decide its reset: an unusable session (a non-zero exit, a timeout, an
-    error the runner reported) retires at once; one whose occupancy reached
-    the dial drains. Releases the lease. Returns the call's `session-gen` and
-    `reset-reason` columns. A call whose credential the runner refused
-    (`auth_failed`) failed, but not its session: only its lease is released
-    (`keep_release`), and the record stays as it was.
+    """Fold one retained call into its record and decide its reset: an
+    unusable session (a non-zero exit, a timeout, an error the runner
+    reported) retires at once; one whose occupancy reached the dial drains.
+    Releases the lease. The call's raw observation is PUBLISHED first as a
+    `bookkeep` marker (`publish_marker`), then applied if the store lock is
+    had within `APPLY_WAIT` (`fold_marker` decides the reset there); under
+    contention the marker stands for the next locked read, so the
+    observation and the release are never lost and never raise StoreBusy.
+    Returns the call's `session-gen` and `reset-reason` columns: when the
+    apply was deferred, `reset-reason` is `pending` and `session-gen` the
+    call's own. A call whose credential the runner refused (`auth_failed`)
+    failed, but not its session: only its lease is released
+    (`keep_release`), and the record stays as it was. A failed publication
+    raises OSError.
 
     Implements: SR-227, LLR-270
     """
@@ -1070,33 +1394,36 @@ def keep_bookkeep(
         keep_release(root, keep)
         generation = keep.generation if keep.session_id else ""
         return {"session-gen": generation, "reset-reason": ""}
+    seen = _observation(keep, minted, outcome, reported_error, compaction)
+    publish_marker(root, keep_marker(keep, BOOKKEEP, observation=seen))
+    done = _apply_now(root, [_identity(keep)])
+    columns = done[0].applied.get(keep.holder) if done else None
+    if columns is None:
+        own = keep.generation if keep.session_id else keep.generation + 1
+        return {"session-gen": own, "reset-reason": "pending"}
+    return columns
+
+
+def _observation(keep, minted, outcome, reported_error, compaction):
+    """A finished call's raw observation, as a `bookkeep` marker carries it:
+    the session id it reported, whether the session is usable, the metrics
+    the bookkeeping reads, when it was used, the codex compaction
+    observation, the judged work item, and the inputs and dial it ran
+    under.
+
+    Implements: SR-227, LLR-270
+    """
     m = outcome.metrics
-    with store_lock(root):
-        current = load_honoured(root, keep.family, keep.route_id, keep.scope)
-        record = _landing(
-            current, keep, minted or m.get("session-id", ""), m["ended-at"]
-        )
-        if record is None:
-            return {"session-gen": "", "reset-reason": "store moved on"}
-        compaction_columns = _observe_compaction(
-            record, compaction, not keep.session_id
-        )
-        _observe(record, keep, m)
-        if not record["session_id"]:
-            _retire(record, "session id unavailable")
-        elif _unusable(outcome, reported_error):
-            _retire(record, "session unusable")
-        else:
-            reset_at = reset_pct(keep.cfg, keep.family, keep.scope)
-            reason = drain_reason(record, record["pct"], reset_at, keep.governing)
-            if reason:
-                record["state"], record["reset_reason"] = STATE_DRAINING, reason
-        record.pop("lease", None)
-        store_save(root, record)
     return {
-        "session-gen": record["generation"],
-        "reset-reason": record["reset_reason"],
-        **compaction_columns,
+        "minted": minted or m.get("session-id") or "",
+        "usable": not _unusable(outcome, reported_error),
+        "metrics": {key: m.get(key, "") for key in _METRICS},
+        "epoch": time.time(),
+        "compaction": compaction or None,
+        "wi": keep.wi or "",
+        "governing": keep.governing or "",
+        "cli_version": keep.cli_version or "",
+        "reset_at": reset_pct(keep.cfg, keep.family, keep.scope),
     }
 
 
@@ -1131,14 +1458,14 @@ def _observe_compaction(record, observation, fresh):
     return {"compacted": bool(source), "compaction-source": source}
 
 
-def _observe(record, keep, m):
-    """Copy one call's occupancy and use into its record."""
+def _observe(record, keep, m, epoch):
+    """Copy one call's occupancy and use (at `epoch`) into its record."""
     for key, column in (("occupancy", "context-used"), ("window", "context-window")):
         if m.get(column, "") != "":
             record[key] = m[column]
     record["pct"] = m.get("context-pct", "")
     record["last_used"] = m["ended-at"]
-    record["last_used_epoch"] = time.time()
+    record["last_used_epoch"] = epoch
     if keep.wi and keep.wi not in record["judged"]:
         record["judged"].append(keep.wi)
 
@@ -1146,19 +1473,16 @@ def _observe(record, keep, m):
 def keep_abandon(root, keep, reason):
     """A retained launch raised before it could be bookkept: retire the
     session it resumed (its transcript state is unknown) and release the
-    lease. The retirement is GUARANTEED: a tombstone is written first, with no
-    lock needed, and then applied at once if the store lock can be had; if it
-    cannot, the next locked read of the record applies it. A mint that raised
-    has no session to retire: its lease-only record is removed.
+    lease. The retirement is GUARANTEED: a `retire` marker naming the
+    session, its generation and `reason` is published first, with no lock
+    needed, and then applied if the store lock is had within `APPLY_WAIT`;
+    if it is not, the next locked read of the record applies it. A mint that
+    raised has no session to retire: its lease-only record is removed.
 
     Implements: SR-227, LLR-270
     """
-    write_tombstone(root, keep, reason)
-    try:
-        with store_lock(root, wait=1.0):
-            load_honoured(root, keep.family, keep.route_id, keep.scope)
-    except StoreBusy:
-        pass  # the tombstone stands; the next locked read honours it
+    publish_marker(root, keep_marker(keep, RETIRE, reason=reason))
+    _apply_now(root, [_identity(keep)])
 
 
 # --- scoped records: a lane's review sessions (WI-887) ----------------------------
@@ -1167,47 +1491,56 @@ def keep_abandon(root, keep, reason):
 def _scoped_records(root, scope):
     """Every record kept under `scope`, read without the lock (whole records
     only) through the store's one reader (`_read_record`), so a malformed or
-    misfiled file is no record here as everywhere."""
+    misfiled file is no record here as everywhere, each with its pending
+    markers folded in (`_folded`)."""
     found = []
     for path in sorted(store_dir(root).glob("*.json")):
         record = _read_record(path)
         if record is not None and scope and record.get("scope") == scope:
-            found.append(record)
+            record = _folded(root, record)
+            found.extend([record] if record is not None else [])
     return found
 
 
 def scoped_route(root, scope):
     """The route id of the live session kept under `scope`, or None: the
     route a lane's next review round of that scope pins, so it resumes the
-    reviewer that served the round before. A record marked for retirement
-    pins nothing.
+    reviewer that served the round before. A record whose pending markers
+    retire it pins nothing.
 
     Implements: SR-227, SR-239, LLR-270
     """
     for record in _scoped_records(root, scope):
-        retiring = _record_path(root, record).with_suffix(".retire").exists()
-        if not retiring and record.get("state") in (STATE_ACTIVE, STATE_DRAINING):
+        if record.get("state") in (STATE_ACTIVE, STATE_DRAINING):
             return record["route_id"]
     return None
 
 
 def retire_scope(root, scope, reason):
-    """Retire every live session kept under `scope`, under the store lock,
-    with `reset_reason` `reason`: the loop retires a lane's iteration
-    reviewer when that lane's gating round is drawn, so the next iteration
-    mints. StoreBusy surfaces to the caller.
+    """Retire every live session kept under `scope`, with `reset_reason`
+    `reason`: the loop retires a lane's iteration reviewer when that lane's
+    gating round is drawn, so the next iteration mints. It holds no lease
+    and releases none: per live record its lockless read finds, it publishes
+    one `retire` marker under a fresh publisher id (`scope-retire:<uuid>`)
+    naming the session id and generation it read, then applies them if the
+    store lock is had within `APPLY_WAIT`; a deferred apply needs nothing
+    more, since the lockless readers fold the marker. A failed publication
+    raises OSError to the caller.
 
     Implements: SR-227, SR-239, LLR-270
     """
-    with store_lock(root):
-        for found in _scoped_records(root, scope):
-            record = load_honoured(root, found["family"], found["route_id"], scope)
-            if record is not None and record.get("state") in (
-                STATE_ACTIVE,
-                STATE_DRAINING,
-            ):
-                _retire(record, reason)
-                store_save(root, record)
+    identities = []
+    for found in _scoped_records(root, scope):
+        if found.get("state") not in (STATE_ACTIVE, STATE_DRAINING):
+            continue
+        identity = (found["family"], found["route_id"], scope)
+        body = dict(zip(("family", "route_id", "scope"), identity))
+        body.update(publisher="scope-retire:" + uuid.uuid4().hex, kind=RETIRE)
+        body.update(session_id=found["session_id"], generation=found["generation"])
+        publish_marker(root, {**body, "reason": reason})
+        identities.append(identity)
+    if identities:
+        _apply_now(root, identities)
 
 
 # The two stages a lane's review session is kept under; the final stage's
@@ -1336,12 +1669,16 @@ def keepwarm_due(record, cfg, now, work_pending):
 def due_routes(root, cfg, now, work_pending):
     """The route ids whose retained session is due a keep-warm ping, read
     without the lock (a read of whole records only) through the store's one
-    reader (`_read_record`): a malformed or misfiled record is never due."""
+    reader (`_read_record`), each with its pending markers folded in
+    (`_folded`): a malformed or misfiled record is never due, one a pending
+    marker retires is never due, and a pending bookkeeping or release
+    marker never makes a record skipped.
+
+    Implements: SR-227, LLR-270
+    """
     due = []
     for path in sorted(store_dir(root).glob("ANTHROPIC-*.json")):
-        record = _read_record(path)
-        if record is None or path.with_suffix(".retire").exists():
-            continue  # marked for retirement: never pinged
+        record = _folded(root, _read_record(path))
         if keepwarm_due(record, cfg, now, work_pending):
             due.append(record.get("route_id") or "")
     return due
@@ -1387,11 +1724,11 @@ def take_warm_lease(
     try:
         with store_lock(root, wait=0.5):
             for route_id in due:
-                record = load_honoured(root, "ANTHROPIC", route_id)
-                clock = time.time()  # one read for this record's decision
-                stale = retire_stale_lease(record, holder, clock)
-                busy = _lease_held(record, holder, clock)  # left to its holder
-                if (not busy and retire_after_blackout(root, record)) or stale:
+                # One clock read for this record's decision (`load_honoured`).
+                found = load_honoured(root, "ANTHROPIC", route_id, holder=holder)
+                record, clock = found.record, found.clock
+                busy = _busy(found, holder)  # left to its holder
+                if not busy and retire_after_blackout(root, record):
                     store_save(root, record)  # never pinged: retired
                 if not keepwarm_due(record, cfg, now, work_pending):
                     continue
