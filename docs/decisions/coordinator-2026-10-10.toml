@@ -3,7 +3,7 @@
 # Lane decisions are in each lane's own record.
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-003", "D-006", "D-010", "D-001"]
+high_risk = ["D-017", "D-003", "D-006", "D-010", "D-001"]
 
 [decision.D-001]
 decided = "WI-854's uncommitted spine edits from the stopped leg 03 were kept, not redone: GPT Terra's intent turn (session 01a1224f) had completed, it dispositioned every item of the builder's spine change list, the seven tests and three symbols it cites exist in the lane, and the cells were UTF-8 with LF endings. The coordinator committed them, rebased the lane onto trunk (merging LLR-270's detail cell, which trunk's WI-834 landing had also changed, per cell), and sat them: amendment sitting 001 ruled all four rows MEANING and re-attested them."
@@ -115,4 +115,18 @@ decided = "A consolidation pass over the frontier before the unattended run (own
 alternative = "Run WI-831 first as the handoff ordered, or release WI-831's claim by hand so the census can mint now."
 reversal_cost = "Low: a queue order; WI-831's lane is untouched."
 why_not_escalated = "WI-823's own spec states the order; a hand unclaim would invent procedure the kit does not have."
+review = ""
+
+[decision.D-017]
+decided = "Overnight leg 01 (2026-10-10): every Codex review and scope critique runs on gpt-6-luna at high effort instead of gpt-6.1-sol, because the Codex account signed in for the run does not offer gpt-6.1-sol (the CLI returns 400 'not supported when using Codex with a ChatGPT account'; the account's model list names gpt-6-luna, gpt-5.6-terra, gpt-5.6-luna and gpt-5.5). Luna is a fresh, cross-family reviewer of Opus-built code, and was the owner's sanctioned reviewer at high effort from 2026-10-03 until Sol replaced it. Applied in wi-881 (D-008, landed) and wi-884 (D-011, landed), and to WI-823's critique."
+alternative = "Close the leg at once with a Resume-not-before line and wait for the owner to sign in an account that offers Sol; or use a fresh independent Opus reviewer, which the skill allows only after two hours of Codex unavailability and which loses the cross-family split."
+reversal_cost = "Medium: an overrule re-runs the final gates of WI-881 and WI-884 with Sol after the fact (both landed), and any finding becomes a follow-up row."
+why_not_escalated = "The owner is away overnight and no reset time applies (an account capability, not a usage limit); Luna keeps a fresh session from a different model family, which is what the review rule asks."
+review = ""
+
+[decision.D-018]
+decided = "WI-823's three deliverables (the rubric's T2/T5 test bindings, the shot matrix with the skill's matrix text, and the judge brief's scope lines) stay in one lane, rubric first, then matrix, then brief; the judge brief's home is the this-repo render-dashboard-critique skill, not the shipped rejudge template. Answers scope critique round 1's S1."
+alternative = "Three rows landing apart, each followed by its own TC-055 re-judge; or carry the scope lines in the shipped adjudicate-rejudge template, which would owe a RESYNC entry and change every adopter's re-judge brief."
+reversal_cost = "Low: each deliverable is a separate file; a split later is a re-filing."
+why_not_escalated = "Each deliverable changes what one TC-055 judge is given, and WI-831's re-judge needs all three; the row already scopes them together."
 review = ""
