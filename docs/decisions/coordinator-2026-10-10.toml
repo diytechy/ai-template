@@ -130,3 +130,10 @@ alternative = "Three rows landing apart, each followed by its own TC-055 re-judg
 reversal_cost = "Low: each deliverable is a separate file; a split later is a re-filing."
 why_not_escalated = "Each deliverable changes what one TC-055 judge is given, and WI-831's re-judge needs all three; the row already scopes them together."
 review = ""
+
+[decision.D-019]
+decided = "WI-823's scope critique round 2 proposed a new rubric anchor, B3 (a scope must cover its cited SN/SR intent), as a MAJOR. It is a finding against docs/rubrics/scope-critique.md, not against WI-823's scope, so this row does not act on it; it is carried as an unfiled follow-up topic in the handoff for the owner. Round 2's S2 (per-consumer rulings for unreadable and failed inputs) was answered in WI-823's Trust section."
+alternative = "Amend the scope-critique rubric inside WI-823's pre-claim answer, or file a row now; either widens a this-repo rubric on one critic's proposal without the owner's view."
+reversal_cost = "Low: filing the row later costs nothing."
+why_not_escalated = "It changes no work item's scope and holds no row."
+review = ""

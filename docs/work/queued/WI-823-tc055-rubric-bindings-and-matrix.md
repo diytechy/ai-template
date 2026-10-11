@@ -55,15 +55,24 @@ and the declared `rubric` of TC-055.
   review before landing; it is never written outside a commit.
 - **Consumers and rulings** (all unchanged):
   - `project-trajectory/scripts/rejudge.py`, through
-    `record_observation.inputs_digest`: the file is digested as declared;
-    an absent file digests as `(absent)`, so a deletion or a malformed edit
-    still moves the digest and makes the case due. Digesting judges
-    nothing: a due case is a re-judge owed, never a pass.
+    `record_observation.inputs_digest`. It digests the rubric as COMMITTED,
+    from a snapshot it extracts with git at each checkpoint, never from the
+    working tree, so an unreadable working copy is not an input it reads.
+    - Absent at a commit: digests as `(absent)`, which differs from the
+      recorded digest, so the case is due.
+    - Malformed (any bytes the judge cannot use): digested as bytes; a
+      changed digest makes the case due. Digesting judges nothing, so a due
+      case is a re-judge owed, never a pass.
+    - Failed or unreadable read (git cannot run, list or archive the path):
+      `RejudgeError` refuses the due-case operation by name; nothing is
+      drafted and no case reads as judged.
   - The TC-055 judges (the `render-dashboard-critique` skill and recipes §8,
-    `.claude/skills/coordinator-cycle/references/recipes.md`): a judge
-    given an absent, unreadable or malformed rubric records no verdict; the
-    re-judge stays open until the rubric is repaired, or the case goes to
-    the owner. No verdict is recorded against a rubric it did not read.
+    `.claude/skills/coordinator-cycle/references/recipes.md`). A judge whose
+    rubric is absent, unreadable, fails to load or is malformed, or whose
+    shot run failed or produced an incomplete matrix, records NO verdict and
+    NO observation record: the re-judge stays open (the case stays due)
+    until the input is repaired, or goes to the owner. No verdict is ever
+    recorded against a rubric or a matrix it did not fully read.
   - `docs/requirements/low-level-requirements.toml` (LLR-055) and
     `docs/test/test-cases.toml` (TC-055) name it as text; they read nothing
     at run time.
@@ -79,11 +88,17 @@ recipe that fixes which widths, themes and tabs a judge sees.
   already reports by name.
 - **Consumers and rulings:**
   - `project-trajectory/scripts/check_trajectory.py`
-    (`_render_surface_paths`, `_RENDER_RECIPE_REL`): the runner is an
-    optional member of the watched render surface; an edit to it after the
-    latest critique stales the perceptual stamp (unchanged). Its absence
-    removes it from the watched surface by design (a downstream scaffold
-    has no runner); this row does not delete it.
+    (`_render_surface_paths`, `_RENDER_RECIPE_REL`). It never reads the
+    runner's content: it lists the path when it is a file and compares its
+    last commit time with the latest critique's. The result is an advisory
+    WARN (re-run the critique), never a gate, and this row leaves it as is.
+    - Absent: dropped from the watched surface by design (a downstream
+      scaffold has no runner); this row does not delete it.
+    - Unreadable or malformed content: not read, so no effect; a content
+      change still moves the commit time and raises the WARN.
+    - Failed git read (no commit time): read as not newer, so no WARN. That
+      advisory gap predates this row; the TC-055 case's own due rule
+      (rejudge.py, above) is what holds the judgment, not this WARN.
   - The `render-dashboard-critique` skill, recipes §8 and
     `scripts/dashboard-shots/README.md`: the operator stops on a failed run
     or an incomplete matrix and repairs or escalates; a judgment is never
