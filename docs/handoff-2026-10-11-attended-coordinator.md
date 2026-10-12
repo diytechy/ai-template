@@ -83,10 +83,11 @@ reviewer. Until batch item 1 below lands, follow the ruling by hand:
   or a successor row.
 - **The last allowed round and the post-checkpoint gate run in convergence
   mode:** a new finding blocks only if it is fail-open, data loss or a
-  Done-when gap. To confirm fixes they receive the earlier rounds' reviewer
-  verdicts. `review_brief.py` refuses findings on a full-scope round, so
-  append the prior verdict files to both renders by hand until B1 changes
-  that; never append the builder's coverage plan.
+  Done-when gap. They **never see earlier verdicts** (owner ruling: prior
+  conclusions anchor a reviewer). A fix is confirmed by its regression test
+  instead: every accepted finding carries a test that fails on the pre-fix
+  code, which the reviewer template already makes the reviewer verify.
+  Before the round, check that each accepted finding maps to such a test.
 - **Severity is tied to reachability:** BLOCKER or MAJOR needs a scenario
   reachable in normal use, or a fail-open, data-loss or security path.
 - **Reviewers get the WI definition** (spec, Done-when, Trust, touched rows),
@@ -138,14 +139,13 @@ signature (SN-029).
   D-008, D-011..D-016, and the open lanes' `wi-798.toml` (D-001 first) and
   `wi-902.toml`. D-015 (WI-902 left committed) is overtaken by the reshape
   ruling.
-- **New questions from the Fable review:**
-  - Should TC rows name modules under test, or should that column be
-    generated from the test files' tags? A module rename would otherwise
-    reopen a TC row.
-  - Should the managed loop refuse with an empty route pool, with the
-    template shipping empty (no single-model fallback)?
-  - Should the convergence round see the earlier reviewer verdicts? That
-    relaxes "a full-lane round is fresh" for the last round only.
+- **Ruled since the Fable review** (plan revision 8):
+  - Test files name their TC; TC rows name no test files or modules, and
+    their evidence column becomes generated.
+  - The loop refuses an empty route pool. Today it silently falls back to
+    the single-model path instead.
+  - The convergence round never sees earlier verdicts; regression tests
+    confirm fixes.
 - **Confirm or overrule** the revision 6–7 clarifications, in the plan's
   rulings section: the cap counts rounds before the checkpoint and the gate
   always runs in convergence stance; convergence-class findings are never

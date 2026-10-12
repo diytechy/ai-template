@@ -33,14 +33,14 @@ flowchart BT
   IF -->|component id| CMP
   LLR -.->|may name| SHIP
   TC -.->|may name| SHIP
-  TC -.->|names evidence| TESTS
+  TESTS ==>|"Verifies: TC-NNN"| TC
   CODE ==>|"Implements: LLR-NNN"| LLR
   CODE ==>|"Contract IF-NNN"| IF
   CODE -. generated from the code's citations .-> GEN
 ```
 
 Solid arrows are id pointers; dotted arrows from LLR and TC name a file;
-thick arrows are tags in the code; the arrow into the generated views marks
+thick arrows are tags in the code and the tests; the arrow into the generated views marks
 derived content, never authored.
 
 | Artifact | Points to (by id) | May name files | Never names |
@@ -48,7 +48,8 @@ derived content, never authored.
 | SN | stakeholders, assumptions | none | any file; any code |
 | SR | SN (`sn_refs`); assumptions | none, rationale included (artifact-class voice: "the delivered registry") | any file; any code |
 | LLR | SR (`sr_refs`); its component (`component`) | shipped boundary files: registries, templates, `process.toml`, launchers | code files, functions, symbols (the `module` and `code_symbol` cells are removed) |
-| TC | what it verifies (LLR, SR) | test files and shipped boundary files; modules under test only if the owner confirms (open question: a module rename would reopen the row, so that column may be generated from the test files' tags instead) | code functions and symbols |
+| TC | what it verifies (LLR, SR) | shipped boundary files only | test files, modules, functions, symbols (its evidence column is generated from the test files' tags) |
+| Test files | up: a tag naming the TC they verify | n/a | nothing; like code, a leaf |
 | CMP | none required (architecture block) | none | any file; code (its module list is generated) |
 | IF | its component; the assumptions an external crossing relies on | none: artifact-class wording (whether an external crossing may label a shipped file is an open owner question) | any file; code modules (owner, consumers and requestors become generated) |
 | Code | up: `Implements: LLR-NNN`, `Contract IF-NNN` | n/a | nothing; it is the leaf every other map is computed from |
