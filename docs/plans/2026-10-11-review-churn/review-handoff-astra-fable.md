@@ -79,7 +79,17 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
     PROCESS.md §5 recurses through sub-scope SRs per component ("the tier
     does not recurse, the activity does"; `DevStg-LLReqs` is terminal).
     Find how a sub-scope SR points to its parent obligation and component
-    scope, or confirm that no cell does. Say how this sits with items 3 and 9.
+    scope, or confirm that no cell does.
+- **The decomposition alternatives (owner's request).** Item 11 records two
+  readings: (a) SRs at every component scope decomposing to a terminal LLR,
+  and (b) SRs only at the system boundary, with architecture decomposing
+  them into LLRs recursively. The owner leans to (b) on churn grounds, but
+  has not ruled. Give the strengths and weaknesses of each, judged on
+  long-term design sustainability rather than on past rulings, with the
+  concrete migration cost of (b) and its effect on physical projects.
+- **Depth.** The reviewer may spawn its own sub-agents to drill into
+  details (history, call sites, Gilbert), where its tooling allows. Their
+  findings are folded into the one review file, and they modify nothing. Say how this sits with items 3 and 9.
 - **Terminology cross-check (owner's request).** These terms were settled many
   sessions ago, and the kit must stay compatible with physical projects.
   - **Module:** item 11 says a module is one unit of realization represented
@@ -182,8 +192,8 @@ alone.
    procedure) in full, the plan README.md's "Owner rulings" section and
    item 11, and your memory index.
 2. Write the brief as the handoff says, including the terminology
-   cross-check of "module" and "contract" and the owner's two queries on
-   item 11.
+   cross-check of "module" and "contract", the owner's two queries on
+   item 11, and the two decomposition alternatives.
 3. Stage 1: run Astra (medium) in a detached worktree in the background. When
    it finishes, confirm or refute every finding against the repository. Then
    update the plan, pointer-rules.md and the coordinator handoff, record the
@@ -194,6 +204,54 @@ alone.
 5. Anything that needs the owner's decision: ask the owner, or record it as
    an open call. Never decide it yourself. Never push. Report each verdict,
    what changed, and the open calls.
+
+Never: read OWNER_SCRATCHPAD.md; push or merge; bypass a commit hook; let a
+reviewer sub-agent see anything but its brief.
+```
+
+## Headless session prompt (scheduled, unattended)
+
+For a run started by Task Scheduler through
+`C:/Projects/ai-template.wt/coordinator-tools/scheduled_review.py`, which
+reads the fenced block below. A `claude -p` session exits when its turn ends
+and kills its background tasks, and nobody is there to answer. So everything
+runs in the foreground, and owner questions become open calls.
+
+```text
+You are running ONE UNATTENDED review session for the ai-template
+review-churn plan (headless; the owner is asleep and cannot answer): two
+independent reviews in sequence, Codex gpt-6-astra at medium effort, then
+Claude Fable 5.1 at medium effort, each followed by the disposition of its
+findings. You are not the coordinator: take no lease, claim nothing, touch no
+lane, and leave docs/work/pause and docs/status.md alone.
+
+HEADLESS RULES: this session ends when your turn ends and kills anything in
+the background. Never use run_in_background, Monitor or notifications. Run
+the Codex command in the FOREGROUND with the Bash tool's timeout at 3600000
+ms. Spawn the Fable reviewer with run_in_background: false. Never ask a
+question: record anything needing the owner as an open call.
+
+1. Read CLAUDE.md. Then read
+   docs/plans/2026-10-11-review-churn/review-handoff-astra-fable.md (this
+   procedure) in full, the plan README.md's "Owner rulings" section and
+   item 11, and your memory index.
+2. Write the brief as the handoff says, including the terminology
+   cross-check of "module" and "contract", the owner's two queries on
+   item 11, and the two decomposition alternatives.
+3. Stage 1: run Astra (medium) in a detached worktree, in the foreground. If
+   Codex refuses on a usage limit, stop. Write the reason to the summary file
+   (step 6), remove the worktree and commit nothing. Otherwise confirm or
+   refute every finding against the repository. Then update the plan,
+   pointer-rules.md and the coordinator handoff, record the review and its
+   disposition table, and commit.
+4. Stage 2: at the new tip, run Fable 5.1 (medium) as a sub-agent
+   (model: fable, effort: medium, foreground) that reads only the brief.
+   Disposition it the same way, and commit.
+5. Never decide an owner call yourself; record it as an open call and in the
+   coordinator handoff's "For the owner". Never push.
+6. Finally write C:/Projects/ai-template.wt/review-tmp/<date>-churn-plan-summary.md:
+   each verdict, what changed (commit ids), the open calls, and anything that
+   failed. Your last message repeats it.
 
 Never: read OWNER_SCRATCHPAD.md; push or merge; bypass a commit hook; let a
 reviewer sub-agent see anything but its brief.
