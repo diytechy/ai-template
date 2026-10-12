@@ -2,11 +2,11 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 3, open for owner ruling, item by item. Item 5's core rule (requirements never reference code) was ruled by the owner on 2026-10-11 and is recorded in item 5; its open questions remain.
+**Status:** revision 4, open for owner ruling, item by item. Item 5's core rule (requirements never reference code) was ruled by the owner on 2026-10-11 and is recorded in item 5; its open questions remain.
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
-Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Those revision-3 changes have not been independently reviewed.
+Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Revision 4 records the owner's ruling on item 10 after a read-only investigation of both configuration files. Revisions 3 and 4 have not been independently reviewed.
 
 | # | Change | Kind | Cost | Aims at |
 |---|---|---|---|---|
@@ -18,7 +18,7 @@ Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, 
 | 4 | Review settings: reviewers and rounds per WI (owner's draft 0 / 0 / 2 / 2), an adjudicated exit at the cap, MINORs never cost a round, a convergence final round, severity tied to reachability | ruling + template change | 1 lane + migration | unbounded rounds (WI-834: 20); ad hoc breakers (WI-902); stale checkpoints |
 | 7 | A second reviewer from a third family (Gemini) at the full reviews; the coordinator cycle reads `review_rounds` | ruling + trial | waits on WI-815's route | earlier discovery, on a separate quota |
 | 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
-| 10 | One file for the chain's behaviour: `process.toml` holds policy, review and routes; `stack.ini` holds only the product toolchain | ruling + migration | shares item 4's migration | routing in three homes; chain settings in the toolchain file |
+| 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 14 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -304,40 +304,52 @@ Under this reading, "current carrier" evidence moves from SR acceptance to the T
 - Pull WI-805's plan gate forward, or wait for it.
 - Fix dual's pickup (WI-813), or retire its arbiter.
 
-## 10. One file for the chain's behaviour
+## 10. One configuration file, in TOML
 
-**Evidence.** `docs/process.toml` was created on 2026-08-08 (SN-028) as "one home for every policy dial", replacing about ten one-word files. Its header lists three deliberate exceptions. `docs/stack.ini` stays out as "the product toolchain, not a process dial", adopter-owned across re-syncs, with five Python consumers; folding it in "would put an adopter-owned file under a kit-owned template". Presence files (`docs/work/pause`, `docs/agents-enabled`) stay because deleting the file is the act. `docs/stage` stays because it is generated. In practice, though, the chain's behaviour is configured in at least four places:
+**Owner ruling, 2026-10-11:**
 
-- `process.toml`: policy dials;
-- `docs/agents.toml`: model routes, eight `[agent.*]` entries;
-- `stack.ini`'s `[agent-loop]` section: `model` and `model-map`, a second routing home;
-- hard-coded values in this repo's coordinator tools (`sol_review.sh` names `gpt-6.1-sol`; the `kit-builder` agent pins Opus at medium).
+- The automated chain is configured from one file in one format. `docs/work/pause` stays a presence file, the main exception, so `docs/agents-enabled` becomes a setting.
+- The format is TOML, in `docs/process.toml`. `stack.ini`'s content moves into it.
+- A re-sync does not replace `process.toml`: the adopter's values stay, and only new settings are taken in. Re-sync is carried out mainly by an LLM, so it doesn't need to be mechanized. Nothing in re-sync does, though existing mechanization may stay.
+- Sequence it before the FileBackup re-sync, so adopters migrate once.
 
-**Root cause.** The stated boundary is right, and it isn't held. "Toolchain" versus "process" is a real line, but chain settings have leaked across it, and routing has three homes.
+**Why the split existed.** `stack.ini` was created on 2026-07-04, when the kit's Python floor was 3.8. Python 3.8 ships `configparser` but no TOML reader; `tomllib` arrived in 3.11. WI-262 raised the floor to 3.11 on 2026-07-22. `process.toml` followed on 2026-08-08 in TOML, its header noting the 3.8 constraint was "spent", but `stack.ini` was excluded for an ownership reason instead of converted. No shell or PowerShell script reads `stack.ini`: all 14 readers are Python, and the hook only checks that the file exists. The shell-readability rule belongs to `process.toml` (two privacy keys), not to INI.
 
-### Proposal
+**Investigation (three read-only passes, 2026-10-11).**
 
-1. **Two files, one boundary.** `process.toml` holds everything about how the automated chain behaves: policy dials, the `[review]` section (item 4), and the model routes. `stack.ini` holds only what the product's tools are (paths, format, lint and test commands, smoke budget, launcher capabilities). An adopter who switches language edits `stack.ini`; one who tunes the chain edits `process.toml`, and only it.
-2. **Move the leaks.** `stack.ini [agent-loop]` goes to `process.toml`, or retires in favour of the routes. `agents.toml`'s routes become `process.toml` sections; check them against the file's flat one-key-per-line rule, which exists so the hooks can grep keys. The coordinator tools read their models from those routes instead of hard-coding them.
-3. **Revisit the presence files.** On 2026-08-11 you overturned check toggles as files ("creating files to toggle something off is also very confusing"). `agents-enabled` (consent to managed routing) could become a key on the same reasoning, since a key flip is also a one-line reviewed diff. `docs/work/pause` is used heavily by the scoped-unpause claim procedure; changing it is a bigger move, so I'd leave it unless you want it gone.
-4. **One file in full is possible, but costs more.** Merging `stack.ini` in as well would mean moving its five consumers and its INI format to TOML, and every adopter migrating both files. The stated "adopter-owned versus kit template" reason is weaker than it reads: `process.toml` already holds adopter values under a kit-owned structure, exactly as `stack.ini` does. So the real cost is migration effort, not principle. The two-file boundary gets "one file configures the chain" without touching the toolchain readers.
+- **Readers.** `stack.ini` is parsed separately in 14 places across about 15 scripts, each with its own `configparser`. No code writes it; bootstrap copies the template and does one text replace. `process.toml` is read mostly through a shared reader (`agent_policy.process_config`), plus five self-contained scripts and a two-key shell grep in the hooks. Its one writer (`bootstrap.set_process_key`) rewrites single lines and keeps comments.
+- **Content.** `stack.ini` is 1,277 lines, of which 1,168 are comments, including an 865-line smoke-budget history log. Only 70 lines are settings. The chain-behaviour parts are `[agent-loop]` (model, model-map, read only when managed routing is off) and `[run]` (launcher capabilities).
+- **TOML fit.** `[step:smoke]` becomes `[step.smoke]`. `smoke.desc` beside `smoke` becomes `[run.smoke] command / desc`. Path keys under `[generated]` are quoted. Windows paths use literal strings. Lists packed into comma-, pipe- and space-joined strings can become arrays. INI's key case-folding goes away.
+- **Tests and spine.** About 55 test files touch `stack.ini` and 56 touch `process.toml`/`agents.toml`/`agents-enabled`, much of it fixture text. 23 LLR, 8 TC, 3 SR and 7 IF rows name the files, and they already break item 5's ruling.
+- **Downstream.** No adopter has taken even the 2026-08-08 `process.toml` migration. Gilbert, Finance-Auditor and NotHomeWrecker carry `stack.ini` and the legacy one-word files; FileBackup has neither. Their `stack.ini` content is small: paths, product, tiers, coverage, `arch-map`, and a few `[step:*]` gates of their own. None uses `[agent-loop]` or `[run]`.
+- **Precedent and cost.** The 2026-08-08 migration was the same kind of work. It drew 8 BLOCKERs, including the privacy gate failing open on a decoy value in a TOML comment, and weeks of follow-ups.
 
-**Downstream.** Adopters migrate: `[agent-loop]` and `agents.toml` move, through `bootstrap.py --migrate-config`, the precedent from SN-028. Refusing a repo that declares a setting in both homes (SN-028's rule) applies here too. This forces a migration, so it should share one RESYNC step with item 4's `[review]` migration.
+### Program
 
-**Owner calls:**
+1. **One shared loader for today's `stack.ini`**, replacing the 14 separate parses. A pure refactor with no format change. Every later step then touches one reader, and it is worth doing regardless.
+2. **Settle the shell-grep rule.** The hooks grep `privacy_check` and `privacy_review` so a machine without Python still fails closed, and that is what imposes `process.toml`'s one-key-per-line shape (SR-137, SN-028). Verify whether the same hook already refuses to commit without a 3.11 interpreter; it runs `check.py` and points to the installer when none is found. If it does, the grep is redundant, and the shape rule can go by ruling. If not, the privacy keys keep a small section the grep reads, and the rest of the file may use full TOML.
+3. **Adopter-owned values, kit-owned schema.** `process.toml` stops being "overwrite, then re-apply your dials". The kit ships the schema: a template that documents every setting and its default, and a validator that refuses unknown or malformed settings. The structure test changes from "live equals template" to "live satisfies the schema", so adopters can declare their own `[step.*]` sections. A re-sync adds new settings and never overwrites values. Per the ruling, the RESYNC entry says what to add and the LLM doing the re-sync applies it; no new migrator is built.
+4. **Move `stack.ini`'s settings into `process.toml`** as TOML sections, through the shared loader from step 1. The smoke-budget history log moves out of config into the log. Readers use the new home only, with no dual-read window (no fallback paths). A repo that still has `docs/stack.ini` is refused by name, pointing at the RESYNC entry, so an unmigrated file is never silently ignored.
+5. **Fold in routing and consent.** `agents.toml`'s routes become `process.toml` sections; its fifteen triple-quoted strings become single-line, unless step 2 lifts the shape rule. `agents-enabled` becomes a setting. `[agent-loop]` retires into the routes. This repo's coordinator tools read their models from the routes instead of hard-coding them.
+6. **Amend the spec rows and docs together with item 5**: 23 LLR, 8 TC, 3 SR and 7 IF rows, about 10 adopter-facing docs (`RESYNC_PACK`, `ADOPTING`, `PROCESS_OPTIONS`, the kit README, …), and the generated references. Ship it all as one RESYNC entry, before FileBackup's re-sync.
 
-- Two files with one boundary (recommended), or one file in full?
-- Fold the routes (`agents.toml`, `[agent-loop]`) into `process.toml`?
-- `agents-enabled` and `pause`: keep as files, or make them keys?
+**Trade-off.** A 4–6 WI program touching a security-relevant reader: the privacy keys. Step 2 settles that first, and the 2026-08-08 decoy-comment failure goes into each review brief as a named failure class.
+
+**Downstream.** One migration for adopters instead of two. The RESYNC entry carries both the 2026-08-08 one-word-file fold and this consolidation, for an LLM to apply.
+
+**Still open:**
+
+- The file keeps the name `docs/process.toml`, which touches the fewest files. It will hold the toolchain too, so say if you'd rather rename it (e.g. `docs/project.toml`).
+- Step 2's outcome, after the check: drop the shell grep and the shape rule, or keep a small greppable section.
 
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
 | 0 · rulings and baseline | Owner calls on items 1–9 (item 5's core rule is already ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
-| 1 · cheap builds | Item 6 (LLR-292, the hook change, the RESYNC check). Item 8 (usage), so every later change is measured. Item 4's `[review]` section and item 10's config moves, as one migration. Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
+| 1 · cheap builds | Item 6 (LLR-292, the hook change, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
 | 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. | Coordinator |
-| 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 9's planning path, if WI-805 is pulled forward. | Coordinator lanes |
+| 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 9's planning path, if WI-805 is pulled forward. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. | Coordinator lanes |
 | 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
 
 **Session budget.** Item 4's cap bounds review sessions per WI: at most four with your values, plus one plan critique for an item 9 row and one dispute sitting at the limit. A Gemini slot (item 7) draws on a different quota. Item 8 records the sessions, so the budget is measured, not estimated.
