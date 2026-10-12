@@ -120,7 +120,7 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
    after; if either changed, inspect the change before trusting the review.
 
    ```text
-   codex exec -m gpt-6-astra -c model_reasoning_effort="medium" \
+   codex exec -m gpt-6-astra -c model_reasoning_effort="low" \
      -c 'windows.sandbox="unelevated"' -s workspace-write \
      --add-dir C:/Projects/ai-template.wt/review-tmp \
      -C C:/Projects/ai-template.wt/review-churn-plan-astra-m --skip-git-repo-check \
