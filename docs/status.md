@@ -25,15 +25,17 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-11-leg03-coordinator.md](handoff-2026-10-11-leg03-coordinator.md):
-  two lanes are out. The account-homes row has settled code (a narrow review
-  approved it) and owes its checkpoint rework after a sitting returned its
-  rows' text. The disposition-adoption row stands committed under the
-  two-round breaker with one accepted, unbuilt finding. The hand-merge walk
-  and the second Claude login wait on owner rulings; the remaining queue and
-  the headless-leg session prompt are there. The coordinator's
-  procedure lives in the `coordinator-cycle` skill; unattended legs run
-  through `coordinator-tools/overnight_legs.py`, each writing the next handoff.
+  [handoff-2026-10-11-attended-coordinator.md](handoff-2026-10-11-attended-coordinator.md),
+  run **attended**, with the owner. The owner ruled the review-churn program
+  ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md),
+  its "Owner rulings" section first). Its first batch is filed and built
+  before the queue continues. Two lanes are out. The account-homes row owes
+  its checkpoint rework. The disposition-adoption row is reshaped to
+  record-at-close before it resumes. The handoff carries the attended session
+  prompt and how to run reviews under the ruling until the skill is updated.
+  The coordinator's procedure lives in the `coordinator-cycle` skill. The
+  overnight loop (`coordinator-tools/overnight_legs.py`) is stopped, and the
+  handoff's `Overnight: stop` line keeps it so.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
@@ -47,8 +49,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
   0. **The lane in flight first** (claimed, on its branch; the handoff names
      its returns), then the handoff's queue table in order.
-     Review rule (owner, 2026-10-07): narrow rounds while a lane iterates, then
-     one fresh, full-lane review as the last gate. Review threat model (owner,
+     Review rule (owner, 2026-10-11, superseding 2026-10-07): no narrow rounds.
+     Each round runs two full-lane reviewers in parallel (Codex Sol, and Claude
+     Sonnet as the stand-in), at most three rounds, with a dispute sitting at
+     the cap; the handoff states the rest. Review threat model (owner,
      2026-10-08, PROCESS.md §6): a finding that needs a compromised or
      contrived host is dismissed in one recorded line; a contested or
      third-round finding goes to the coordinator's `dispute` sitting

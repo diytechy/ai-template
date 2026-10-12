@@ -210,6 +210,8 @@ Keep "try to break it", but calibrate it. That stance found the warm-tick race a
 
 Under this reading, "current carrier" evidence moves from SR acceptance to the TC rows that verify it, and the LLR tier states contracts, not carriers. R2's third guarantee, "why does this file exist", is kept by an inverse check: every shipped module carries at least one `Implements:` tag naming a live LLR.
 
+The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md) beside this file.
+
 ### Bounding it mechanically: three layers, strongest first
 
 1. **Make it unrepresentable in the schema.** Delete `module` and `code_symbol` from the LLR schema (`kitlib/spine.py`), and make the loader refuse keys a requirement tier doesn't declare. Everything that reads those cells switches to one index generated from the `Implements:` tags. Readers today: `check_doc_refs.py`, `check_privacy.py`, `kitlib/spine.py`, `kitlib/secret_classes.py`, `lane.py`, `migrate_carrier.py`, `spine_carrier.py` and `trajectory_arch.py`, plus five tests (`test_assumption_gate`, `test_baseline_snapshot`, `test_derive_stage`, `test_module_size_ratchet`, `test_trajectory_arch`). This removes the hand-synced cells, not the meaning check (below).
