@@ -593,7 +593,7 @@ One reviewer, a different model in the author's family, against commit 17e87484a
 
 ### Review of revision 11: GPT-6 Astra, low effort
 
-One reviewer, against commit be2d10c3d (the plan, `pointer-rules.md` and the attended handoff): REVISE, 17 findings (13 MAJOR, 2 MINOR as numbered lines, plus views on every item 11 call). Each was checked against the repository before acting. All were confirmed, one census figure in part. None decides an owner call: where a finding needs a ruling, it became an open call. The full text is in [`reviews/astra-low-r11.md`](reviews/astra-low-r11.md); its brief is [`reviews/brief-r11.md`](reviews/brief-r11.md).
+One reviewer, against commit be2d10c3d (the plan, `pointer-rules.md` and the attended handoff): REVISE, 17 findings (14 MAJOR, 3 MINOR), plus views on every item 11 call. Each was checked against the repository before acting. All were confirmed, one census figure in part. None decides an owner call: where a finding needs a ruling, it became an open call. The full text is in [`reviews/astra-low-r11.md`](reviews/astra-low-r11.md); its brief is [`reviews/brief-r11.md`](reviews/brief-r11.md).
 
 | Finding | Checked | Disposition |
 |---|---|---|
