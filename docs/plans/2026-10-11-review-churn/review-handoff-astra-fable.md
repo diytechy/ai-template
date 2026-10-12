@@ -229,7 +229,22 @@ HEADLESS RULES: this session ends when your turn ends and kills anything in
 the background. Never use run_in_background, Monitor or notifications. Run
 the Codex command in the FOREGROUND with the Bash tool's timeout at 10800000
 ms (3 hours). Spawn the Fable reviewer with run_in_background: false. Never ask a
-question: record anything needing the owner as an open call.
+question: record anything needing the owner as an open call. These rules
+OVERRIDE the procedure wherever it says to run in the background, wait for a
+notification or ask the owner. Skip the optional rendered-page update
+entirely: publish or republish no artifact.
+
+FAILURE RULES: on any failure, clean up, write the summary (step 6), and
+stop; never improvise around a failure.
+- A worktree path that already exists: use the same path with a -2 suffix
+  (then -3), never reuse or delete an existing one. Remove every worktree
+  you created on every exit path, success or failure.
+- Codex exits non-zero, hits the 3-hour timeout, reports a usage limit, or
+  leaves its review file missing or empty: the stage failed.
+- The Fable sub-agent errors or returns no review file: the stage failed.
+- A commit hook refuses: fix the cause only if it lies in the files you
+  edited, and commit again. Never bypass a hook. If you cannot fix it, leave
+  the change uncommitted, name it in the summary, and stop.
 
 1. Read CLAUDE.md. Then read
    docs/plans/2026-10-11-review-churn/review-handoff-astra-fable.md (this
