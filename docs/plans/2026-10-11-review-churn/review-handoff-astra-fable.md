@@ -49,6 +49,10 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
 - **Item 11's history.** Check its history table against the repository: the
   log.md entries, OI-14, OI-39/OI-42, OI-67, the 2026-09-20 assumption-tier
   plan, and the commits it cites.
+- **Item 11 is in scope in full:** its history, terms, proposal table,
+  nuances, the owner's two queries, and every one of its open calls. Each
+  open call gets a grounded view the owner can rule on; leave none
+  unaddressed.
 - **Item 11's proposal.** Judge whether it holds together:
   - each module states the contract of every interface it serves;
   - IF → LLR/SR;
@@ -71,8 +75,11 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
     edges should be checked against, or derived from, the interfaces'
     provider and consumer order. Check what the requirement rows' parent
     links can and can't express today (`sn_refs`, `sr_refs`,
-    `delivered_with`; there is no LLR → LLR link), and whether the queue
-    should mirror that tree. Say how this sits with items 3 and 9.
+    `delivered_with`), and whether the queue should mirror that tree.
+    PROCESS.md §5 recurses through sub-scope SRs per component ("the tier
+    does not recurse, the activity does"; `DevStg-LLReqs` is terminal).
+    Find how a sub-scope SR points to its parent obligation and component
+    scope, or confirm that no cell does. Say how this sits with items 3 and 9.
 - **Terminology cross-check (owner's request).** These terms were settled many
   sessions ago, and the kit must stay compatible with physical projects.
   - **Module:** item 11 says a module is one unit of realization represented
