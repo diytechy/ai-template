@@ -2,22 +2,23 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 2, open for owner ruling, item by item. Item 5's core rule (requirements never reference code) was ruled by the owner on 2026-10-11 and is recorded in item 5; its open questions remain.
+**Status:** revision 3, open for owner ruling, item by item. Item 5's core rule (requirements never reference code) was ruled by the owner on 2026-10-11 and is recorded in item 5; its open questions remain.
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
-Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file.
+Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Those revision-3 changes have not been independently reviewed.
 
 | # | Change | Kind | Cost | Aims at |
 |---|---|---|---|---|
 | 1 | Closed coverage, made binding: deny-by-default construction for unbounded syntax, an enumerated allow-set in the spec, and the reviewer classifying fail-open vs fail-closed | ruling + rubric | hours | the largest class: open input spaces re-sampled every round (WI-834's gate findings 016, 024, 028) |
-| 6 | Mechanical checks block at the commit, against the parent: new `trace.py --strict` findings, `check_trajectory` staged, RESYNC presence | small build | ~1 lane | findings an instrument would catch (~6 in the sample) |
+| 6 | Run the mechanical lints on every commit: fix LLR-292, add `trace.py --strict` to the hook, make `check_trajectory` blocking, add a RESYNC-presence check | small build | ~1 lane | findings an instrument would catch (~6 in the sample) |
 | 8 | Record usage for every model call, under WI-800's invocation ledger: Sol and Terra through the session service, sub-agents from transcripts, deduplicated | small build | ~1 lane | ~74% of a leg's Claude output (builders) is unrecorded; makes every trial measurable |
 | 2 | Record a decision at its event, validated by a commit-vs-parent check; never re-derive it from history. Reshape WI-902 first | ruling, then WI-902 reshape | 1 spec amendment | WI-902's history-replay findings |
 | 9 | A planning need decided at mint; plan and scope advice becomes spec text before the claim; one planning path shared with WI-805 | ruling + ordering | hours, then one critique per planned row | advice that never binds (WI-834's pre-build reviews already asked for an enumerated list) |
-| 4 | Checkpoint only after a full review is clean; trial full-lane rounds only on lanes whose coverage is closed | ruling + trial | one lane to try | stale checkpoints; secondary to item 1 |
+| 4 | Review settings: reviewers and rounds per WI (owner's draft 0 / 0 / 2 / 2), an adjudicated exit at the cap, MINORs never cost a round, a convergence final round, severity tied to reachability | ruling + template change | 1 lane + migration | unbounded rounds (WI-834: 20); ad hoc breakers (WI-902); stale checkpoints |
 | 7 | A second reviewer from a third family (Gemini) at the full reviews; the coordinator cycle reads `review_rounds` | ruling + trial | waits on WI-815's route | earlier discovery, on a separate quota |
 | 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
+| 10 | One file for the chain's behaviour: `process.toml` holds policy, review and routes; `stack.ini` holds only the product toolchain | ruling + migration | shares item 4's migration | routing in three homes; chain settings in the toolchain file |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -43,7 +44,7 @@ So what did the full reviews find right after a narrow approval? In WI-834, narr
 - **012:** an interpreter mismatch in a different subsystem (dev-setup readiness), a genuine new defect.
 - **035:** two minors.
 
-The narrow-then-gate surprise in WI-834 was therefore mostly the open input space (item 1), not a blind spot of narrow scope. One cost is real regardless: every narrow APPROVE triggers a checkpoint (Terra reconcile, closure check, sitting), and when the gate reopens the lane that checkpoint was wasted. Item 4 addresses that, but it is secondary to item 1. Running full reviews every round on a lane with an open input space would just sample it faster.
+The narrow-then-gate surprise in WI-834 was therefore mostly the open input space (item 1), not a blind spot of narrow scope. One cost is real regardless: every narrow APPROVE triggers a checkpoint (Terra reconcile, closure check, sitting), and when the gate reopens the lane that checkpoint was wasted. Item 4's review settings address that: no narrow rounds, one checkpoint after the last full round, a cap with an adjudicated exit, and a convergence final round, which keeps full rounds from re-sampling an open space indefinitely. Item 1 still comes first.
 
 ### Does splitting a WI actually help, or just move the work around?
 
@@ -126,27 +127,46 @@ Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11 (`rows.json`)
 - Confirm or overrule keeping S1 as the only split rule.
 - Decide whether same-module tiny rows should be batched.
 
-## 4. Don't spend a checkpoint on a lane the gate will reopen
+## 4. Review settings: a cap, an exit, and a convergence round
 
-**Evidence.** See the narrow-versus-full answer. In WI-834, six narrow approvals each triggered a checkpoint, and each following full review reopened the lane, mostly with new members of the open shell space. Revision 1's figure of 15 regressions from previous fixes is unsupported by that sample and is withdrawn.
+**Evidence.** See the narrow-versus-full answer. In WI-834, six narrow approvals each triggered a checkpoint that the following full review reopened, mostly with new members of the open shell space. Nothing bounds the number of rounds: WI-834 ran 20, and dispute sittings drew the coverage line only at rounds 25 and 31. The "two-round breaker" that stopped WI-902 after two non-SOUND full gates was the coordinator's own call (coordinator-2026-10-11 D-015), not a setting. The kit has one review dial, `[policies] review_rounds = 0|1|2`. Despite its name, it counts independent reviewers, and only the managed loop reads it; the coordinator cycle hard-codes one Sol review per round.
 
-**Root cause.** The checkpoint fires on a narrow APPROVE, which certifies the named fixes, not the lane.
+**Root cause.** Review has no declared shape. How many reviewers, how many rounds, what happens at the limit, which findings block and how the last round behaves are all decided per lane, ad hoc.
 
-### Options, recommended first
+### Proposal: one `[review]` section (owner's draft, refined)
 
-1. **Checkpoint after a clean full review, then gate again.** Iterate with narrow rounds as today. Before a checkpoint, run a full review; hold the checkpoint only when it has no BLOCKER or MAJOR. The fresh full-lane gate over the checkpoint tip stays, because the reconciled rows and any sitting changes still need an independent review. This reduces premature checkpoints; it doesn't remove the gate.
-2. **Trial full-lane rounds every round, but only on a lane whose coverage is closed** (item 1 applied). On an open input space, full rounds re-sample faster and can raise the round count. Each full round receives the previous review's findings, only so it can confirm the fixes, and never the builder's coverage plan. A plan written by the builder is builder material in a judge's brief.
-3. **Add a second, third-family reviewer at the full reviews** (item 7).
-4. **Persisted final reviewer** (`final_reviewer = "persisted"`, WI-887, shipped off). Least preferred: your persistent-adjudicator study found anchoring evidence.
+| Key | Owner's value | Meaning |
+|---|---|---|
+| `iteration_reviewers` | 0 | Reviewers of each fix's delta (today's narrow round). 0 means no narrow rounds: a fix goes straight to the next full round. |
+| `iteration_rounds_max` | 0 | Delta rounds allowed per WI. |
+| `full_reviewers` | 2 | Independent full-lane reviewers per full round, run in parallel. Replaces `review_rounds`. |
+| `full_rounds_max` | 2 | Full rounds per WI before `on_limit` fires. |
+| `on_limit` | `"adjudicate"` (proposed) | Open findings at the cap go to one dispute sitting, which rules each FIX-as-successor-row, DISMISS, or ESCALATE to the owner. The lane then lands what is clean. The alternative value is `"owner"`. |
+| `block_on` | `["BLOCKER", "MAJOR"]` (proposed) | Severities that cost a round. MINORs are recorded (spine change list or successor) and never trigger one. |
+| `reviewer_families` | `["openai", "google"]` (proposed) | One family per reviewer slot, each different from the builder's (item 7 has the Gemini route). |
+| `final_round_stance` | `"convergence"` (proposed) | How the last allowed round behaves (below). |
 
-**Measure.** Checkpoints per landed WI. Full reviews that reopen a lane after a checkpoint. Codex sessions per landed WI (item 8).
+With the owner's values a WI runs: build, two reviewers in parallel, fix, two reviewers again, then land or adjudicate. That is at most four review sessions per WI, split across two quotas. Most WIs already land within 1–2 rounds, so the cap only binds on the churners. `on_limit` is what makes the cap work: without it, "max 2" leaves open findings with nowhere to go, which is what happened ad hoc with WI-902. The checkpoint fires once, after the last full round, so no sitting is spent on a lane a later review reopens. The fresh gate over the checkpoint tip stays, because reconciled rows still need an independent review.
 
-**Downstream.** Options 1–2 are this-repo procedure (`coordinator-cycle` §3, recipes §1). Option 4 is a dial flip.
+### The reviewer's stance
+
+Keep "try to break it", but calibrate it. That stance found the warm-tick race and the truncated fence. Two changes stop it from hunting rare, nuanced edge cases into an endless loop:
+
+1. **Severity tied to reachability** (reviewer template, shipped). A BLOCKER or MAJOR needs a stated scenario reachable in normal use, or a fail-open, data-loss or security path. A rare or contrived edge case is at most MINOR, and under `block_on` it never costs a round. This extends the threat-model rule, which already dismisses compromised-host findings, to findings that are possible but unlikely.
+2. **A convergence stance for the last allowed round.** The final round's reviewers confirm the fixes, check Done-when coverage and look for regressions. A *new* finding blocks only if it is fail-open, data loss or a Done-when gap; anything else is filed as a successor row. This stops the cap's last round from becoming a fresh sample of the input space, as the 2026-10-04 research note advised: "a reviewer told to find gaps will always find some, so ground the review in the acceptance criteria". A per-slot stance (A adversarial, B acceptance-only) is possible later; the per-round form is the one aimed at convergence.
+
+**Trade-off.** A cap with an exit can leave a valid finding to a successor row instead of fixing it in the lane. That is deliberate: the dispute sitting decides, and the finding is recorded, not lost. The convergence round can miss a new subtle defect, but only a non-fail-open, non-data-loss one, and it still lands as a successor.
+
+**Measure.** Rounds per landed WI. How often `on_limit` fires, and its outcomes (FIX-successor, DISMISS, ESCALATE). Successor rows minted by convergence rounds, counted against the net-queue measure so the queue doesn't grow by stealth.
+
+**Downstream.** A new section in the shipped `process.toml` template (the structure must match, `test_dogfood_sync`), `review_rounds` migrated into it, and the reviewer template's severity rule: one RESYNC entry and a `--migrate-config` step. The coordinator cycle and the managed loop both read the section, so they mean the same thing.
 
 **Owner calls:**
 
-- Confirm or overrule option 1. Decide whether to trial option 2 on a closed-coverage lane.
-- A question the reviews raised about today's practice: the recipes append the builder's coverage plan to each narrow brief ("carry the table into the next review"). Should the reviewer see it, given the template's rule that a judge's brief carries no claim of the judged party?
+- Confirm or overrule the `[review]` keys and your values (0 / 0 / 2 / 2).
+- Confirm or overrule `on_limit = "adjudicate"`, `block_on`, and the convergence round.
+- Confirm or overrule severity tied to reachability.
+- The builder's coverage plan in review briefs: today's recipes append it to each narrow brief. Should a reviewer see it, given the template's rule that a judge's brief carries no claim of the judged party?
 
 ## 5. Requirements never reference code; code points up
 
@@ -191,24 +211,29 @@ Under this reading, "current carrier" evidence moves from SR acceptance to the T
 - Do interface (IF) and component (CMP) rows count as requirements under this rule, or as architecture that may point at code? My lean: CMP points up like code; IF names a seam's contract, not its file. Needs its own look.
 - Confirm or overrule the split: wording and overlap go to the sitting, and code-versus-row correspondence stays with the reviewer.
 
-## 6. Mechanical checks block at the commit, against the parent
+## 6. Run the mechanical lints on every commit
 
-**Evidence.** About 6 findings in the sample were things an existing instrument catches: SR-239's two "shall" clauses (`trace.py --strict`), IF-292's channel outside the closed set, an IF cell over 160 characters, a missing `RESYNC_PACK.md` entry, an undeclared IF seam. Each cost a 25–35 min round.
+**Evidence.** About 6 findings in the sample were things an existing instrument catches: SR-239's two "shall" clauses (`trace.py --strict`), IF-292's channel outside the closed set, an IF cell over 160 characters, a missing `RESYNC_PACK.md` entry, an undeclared IF seam. Each cost a 25–35 min review round.
 
-**Root cause.** The commit hook runs `trace.py --strict-integrity` but not the semantic `--strict` lints, and runs `check_trajectory.py --staged` non-blocking (`|| true`, `project-trajectory/hooks/pre-commit:296`). A whole-tree gate wouldn't work either. `trace.py --strict` exits 1 on trunk today ("LLR-292 Detail uses 'minimal'"), so refusing on any finding would block every commit and review until trunk is clean.
+**Root cause.** The lints exist but nothing runs them mechanically after a build. The commit hook runs `trace.py --strict-integrity` but not `--strict`, and runs `check_trajectory.py --staged` non-blocking (`|| true`, `project-trajectory/hooks/pre-commit:296`). A recipe line asking the coordinator to run them gets skipped; an earlier session already recorded "run check_trajectory --strict before a landing commit" as a trap.
+
+**This is not a guard.** A guard, in the antidote sense, compensates for a bad state the design could have made impossible. Two "shall" clauses can't be made impossible, because they are authored text. The remedy is the lint step after the build, run where every lane commit (builder, Terra, coordinator) already passes: the pre-commit hook.
 
 ### Proposal
 
-1. **Block what the commit introduces, at the commit.** The pre-commit hook (and the per-commit check at merge) compares against the parent and refuses three things: new `trace.py --strict` findings; `check_trajectory.py --staged` failures (dropping `|| true`); and a shipped file changed with no RESYNC entry anchored at a trunk commit. That follows your enforce-at-the-commit rule. There is no render-time refusal and no override flag, so no second door and no bypass. Existing findings like LLR-292 are fixed on trunk as their own small row.
-2. **Retire rubric anchors as they become mechanical.** K4 becomes the RESYNC check. K3's module/symbol matching goes away with item 5's schema layer, and its meaning half stays as item 5's correspondence check. K2 becomes item 5's commit-time text check.
+1. **Make trunk clean, then keep it at zero.** Fix LLR-292 ("minimal" with no measurable bound), the one finding that makes `trace.py --strict` exit 1 on trunk today. Then add `trace.py --strict` to the hook (about 9 s on this box) and drop the `|| true` after `check_trajectory --staged`. Once trunk is clean, no parent comparison is needed: every commit keeps the count at zero.
+2. **Build the one missing check:** a shipped file changed in the commit with no `RESYNC_PACK.md` entry anchored at a trunk commit. No such check exists today.
+3. **Retire rubric anchors as they become mechanical.** K4 becomes the RESYNC check. K3's module/symbol matching goes away with item 5's schema layer, and its meaning half stays as item 5's correspondence check. K2 becomes item 5's commit-time text check.
+
+**Trade-off.** About 9 s more per commit, against the 60 s smoke budget, which the hook does not count. A newly strict lint can surface old findings in an adopter's repo; the RESYNC entry says to run `trace.py --strict` once and clear them before upgrading.
 
 **Measure.** Review findings an instrument would have caught: target 0.
 
-**Downstream.** The shipped hook changes: one RESYNC entry. Adopters get a stricter floor, compared against the parent so existing findings don't block them.
+**Downstream.** The shipped hook changes: one RESYNC entry.
 
 **Owner calls:**
 
-- Confirm or overrule filing this as the first build row, and the LLR-292 cleanup row beside it.
+- Confirm or overrule the LLR-292 fix and the hook change as the first rows.
 
 ## 7. A second reviewer from a third model family
 
@@ -220,7 +245,7 @@ Under this reading, "current carrier" evidence moves from SR acceptance to the T
 
 1. **The family must be a third one.** The builder and the adjudicator are Claude, and Sol and Luna are OpenAI. That leaves Gemini. The route is not close: WI-815 owns the Gemini stdin route (its title says "an untested Gemini route") and needs WI-798 and WI-801. The trial waits on WI-815 plus one verified independent Gemini launch.
 2. **Trial with the kit's current charters.** Re-cutting B toward regressions and Done-when coverage only makes sense once items 5 and 6 have mechanized trace and prose checks. Revisit the charters after that.
-3. **The coordinator cycle reads `review_rounds`** instead of hard-coding one reviewer, so the dial means the same thing on both paths.
+3. **The reviewers come from item 4's settings** (`full_reviewers`, `reviewer_families`), read by the coordinator cycle and the managed loop alike, instead of one hard-coded Sol review.
 
 **Measure.** Share of a lane's findings raised in its first review. Findings only one reviewer raised: if B's are mostly duplicates, it isn't earning its cost.
 
@@ -229,7 +254,7 @@ Under this reading, "current carrier" evidence moves from SR acceptance to the T
 **Owner calls:**
 
 - Confirm or overrule a Gemini reviewer B, after WI-815 and a verified launch.
-- Confirm or overrule the coordinator cycle reading `review_rounds`.
+- Until the Gemini route works, should `full_reviewers = 2` run as two fresh Sol sessions (same family), or stay at 1?
 
 ## 8. Record usage for every model call, sub-agents included
 
@@ -279,17 +304,43 @@ Under this reading, "current carrier" evidence moves from SR acceptance to the T
 - Pull WI-805's plan gate forward, or wait for it.
 - Fix dual's pickup (WI-813), or retire its arbiter.
 
+## 10. One file for the chain's behaviour
+
+**Evidence.** `docs/process.toml` was created on 2026-08-08 (SN-028) as "one home for every policy dial", replacing about ten one-word files. Its header lists three deliberate exceptions. `docs/stack.ini` stays out as "the product toolchain, not a process dial", adopter-owned across re-syncs, with five Python consumers; folding it in "would put an adopter-owned file under a kit-owned template". Presence files (`docs/work/pause`, `docs/agents-enabled`) stay because deleting the file is the act. `docs/stage` stays because it is generated. In practice, though, the chain's behaviour is configured in at least four places:
+
+- `process.toml`: policy dials;
+- `docs/agents.toml`: model routes, eight `[agent.*]` entries;
+- `stack.ini`'s `[agent-loop]` section: `model` and `model-map`, a second routing home;
+- hard-coded values in this repo's coordinator tools (`sol_review.sh` names `gpt-6.1-sol`; the `kit-builder` agent pins Opus at medium).
+
+**Root cause.** The stated boundary is right, and it isn't held. "Toolchain" versus "process" is a real line, but chain settings have leaked across it, and routing has three homes.
+
+### Proposal
+
+1. **Two files, one boundary.** `process.toml` holds everything about how the automated chain behaves: policy dials, the `[review]` section (item 4), and the model routes. `stack.ini` holds only what the product's tools are (paths, format, lint and test commands, smoke budget, launcher capabilities). An adopter who switches language edits `stack.ini`; one who tunes the chain edits `process.toml`, and only it.
+2. **Move the leaks.** `stack.ini [agent-loop]` goes to `process.toml`, or retires in favour of the routes. `agents.toml`'s routes become `process.toml` sections; check them against the file's flat one-key-per-line rule, which exists so the hooks can grep keys. The coordinator tools read their models from those routes instead of hard-coding them.
+3. **Revisit the presence files.** On 2026-08-11 you overturned check toggles as files ("creating files to toggle something off is also very confusing"). `agents-enabled` (consent to managed routing) could become a key on the same reasoning, since a key flip is also a one-line reviewed diff. `docs/work/pause` is used heavily by the scoped-unpause claim procedure; changing it is a bigger move, so I'd leave it unless you want it gone.
+4. **One file in full is possible, but costs more.** Merging `stack.ini` in as well would mean moving its five consumers and its INI format to TOML, and every adopter migrating both files. The stated "adopter-owned versus kit template" reason is weaker than it reads: `process.toml` already holds adopter values under a kit-owned structure, exactly as `stack.ini` does. So the real cost is migration effort, not principle. The two-file boundary gets "one file configures the chain" without touching the toolchain readers.
+
+**Downstream.** Adopters migrate: `[agent-loop]` and `agents.toml` move, through `bootstrap.py --migrate-config`, the precedent from SN-028. Refusing a repo that declares a setting in both homes (SN-028's rule) applies here too. This forces a migration, so it should share one RESYNC step with item 4's `[review]` migration.
+
+**Owner calls:**
+
+- Two files with one boundary (recommended), or one file in full?
+- Fold the routes (`agents.toml`, `[agent-loop]`) into `process.toml`?
+- `agents-enabled` and `pause`: keep as files, or make them keys?
+
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
 | 0 · rulings and baseline | Owner calls on items 1–9 (item 5's core rule is already ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
-| 1 · cheap builds | Item 6 (commit-time checks) and the LLR-292 cleanup. Item 8 (usage), so every later change is measured. Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
-| 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4 option 1 on the next lanes. Option 2 only on a closed-coverage lane. Item 7 once WI-815's route works. | Coordinator |
+| 1 · cheap builds | Item 6 (LLR-292, the hook change, the RESYNC check). Item 8 (usage), so every later change is measured. Item 4's `[review]` section and item 10's config moves, as one migration. Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
+| 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. | Coordinator |
 | 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 9's planning path, if WI-805 is pulled forward. | Coordinator lanes |
 | 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
 
-**Session budget.** Items 4, 7 and 9 each add review sessions. Gemini (item 7) draws on a different quota. Codex sessions per WI are recorded by item 8, and when a window's limit (~15–24 sessions) is the bottleneck, item 4's extra full reviews yield first.
+**Session budget.** Item 4's cap bounds review sessions per WI: at most four with your values, plus one plan critique for an item 9 row and one dispute sitting at the limit. A Gemini slot (item 7) draws on a different quota. Item 8 records the sessions, so the budget is measured, not estimated.
 
 **Record per lane:** which changes applied, sessions by role, gap-filtered and wall-clock time. Isolating each change's effect needs that record, since several start at once.
 
