@@ -10,7 +10,7 @@ it up. The coordinator's resume map remains
 
 ## What is under review
 
-- [`README.md`](README.md): the plan, revision 10.
+- [`README.md`](README.md): the plan, revision 11.
   - Items 1–10 are ruled, in its "Owner rulings, 2026-10-11" section. The
     revision 6–7 clarifications not marked as rulings await the owner's
     confirm or overrule.
@@ -18,6 +18,11 @@ it up. The coordinator's resume map remains
     for each interface it serves, interfaces name the requirements they carry,
     and modules (files) declare their component. Its terms (contract, module)
     are the owner's. Nobody has reviewed it.
+  - **Item 11 also carries two owner's queries** (revision 11), listed under
+    its terms: (1) a contract is never mandated per function, and a function
+    cites one only if it actually realizes that seam; (2) work items name
+    the interfaces they serve, so the queue traces to the requirements
+    mechanically.
 - [`pointer-rules.md`](pointer-rules.md): the ruled pointer table, and the
   item 11 proposal as a second diagram.
 - [`../../handoff-2026-10-11-attended-coordinator.md`](../../handoff-2026-10-11-attended-coordinator.md):
@@ -40,7 +45,7 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
   revision. Say the earlier reviews include `fable.md`. Put the closest look
   on **item 11**, and on whatever revisions 7–10 changed: the convergence
   round's fresh-reviewer rule, tests naming their TC, the empty-pool refusal,
-  and item 11's history, proposals and terms.
+  and item 11's history, proposals and terms, and its two owner's queries.
 - **Item 11's history.** Check its history table against the repository: the
   log.md entries, OI-14, OI-39/OI-42, OI-67, the 2026-09-20 assumption-tier
   plan, and the commits it cites.
@@ -51,6 +56,20 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
   - the 55 LLRs in modules with no interface;
   - the interaction with item 5's removal of the LLR `module` cell and with
     SR-180.
+- **The owner's two queries on item 11.** Judge each, grounded in the repo.
+  - **Contracts only where served.** Confirm that nothing in the plan, the
+    kit's checks or PROCESS.md would require a contract per function or per
+    module. Find what today's "every shipped module carries an
+    `Implements:` tag" rule becomes under item 11. Then say what, if
+    anything, can mechanically refuse a contract cited by a symbol that
+    doesn't realize the seam, and whether review alone is acceptable.
+  - **Work items bound to served interfaces.** Read the WI schema (the
+    `docs/work/` front matter, `work-items.template.csv`, PROCESS_OPTIONS.md's
+    work-items layer) and the consolidation census in `check_trajectory.py`.
+    Judge whether an `if_refs` cell should replace or sit beside
+    `sr_refs`, how rows with no interface stand, and whether `needs`
+    edges should be checked against, or derived from, the interfaces'
+    provider and consumer order. Say how this sits with items 3 and 9.
 - **Terminology cross-check (owner's request).** These terms were settled many
   sessions ago, and the kit must stay compatible with physical projects.
   - **Module:** item 11 says a module is one unit of realization represented
@@ -153,7 +172,8 @@ alone.
    procedure) in full, the plan README.md's "Owner rulings" section and
    item 11, and your memory index.
 2. Write the brief as the handoff says, including the terminology
-   cross-check of "module" and "contract".
+   cross-check of "module" and "contract" and the owner's two queries on
+   item 11.
 3. Stage 1: run Astra (medium) in a detached worktree in the background. When
    it finishes, confirm or refute every finding against the repository. Then
    update the plan, pointer-rules.md and the coordinator handoff, record the

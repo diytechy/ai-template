@@ -2,7 +2,7 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 10. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) are the owner's.
+**Status:** revision 11. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) and its two owner's queries (revision 11: contracts cited only where served; work items bound to the interfaces they serve) are the owner's.
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
@@ -400,6 +400,15 @@ Three read-only passes traced the history first, because the owner didn't recall
 - **Contract:** the stated bounds of what crosses one interface, such as the range of an output, the character limit of a stdout, the pattern of CLI output or the shape of a refusal. It is written in the owning module beside the code (`Contract IF-NNN:`). It is not the business behaviour the code exists to achieve; that is the LLR's ("an interface says what crosses; a requirement says what must be achieved", PROCESS.md). Some existing contract bodies read more like obligations (IF-001 opens "SR-157's obligation delivered as a CLI"), so they are tightened to interface bounds as they are touched.
 - **Module:** one unit of realization, represented by one file in git. In a software project that is a code file; where physical parts join (Gilbert), it is the part's file. A component groups modules, and "file" is a valid synonym. Earlier sessions defined these terms for compatibility with physical projects, and the reviews cross-check that this reading matches.
 
+**Owner's queries (2026-10-11, revision 11), for the reviews to test:**
+
+1. **A contract is cited only where it is served, and never mandated.** Not every function is expected to have a contract today, and nothing in the proposal should require one: a module or function with no seam of its own carries no `Contract IF-NNN`. The other half is the one that needs a bound. A function names a contract only if it actually realizes that interface's outcome (it produces, checks or refuses what crosses that seam), never because it sits nearby or helps. Today's rule that every shipped module carries at least one `Implements:` tag would become a per-module rule (a component declaration, plus at least one contract *or* an explicit "internal" standing), never a per-function one. Open for the reviews: what bounds an over-claimed citation mechanically, if anything does? Candidates are the contract's own TCs exercising the citing symbol, the citing file declaring the component that owns the IF or is a declared consumer of it, or review alone. Is review alone acceptable, given item 1's preference for closed rules?
+2. **Work items bound to the interfaces they serve.** A WI row today carries `sr_refs` (the SRs it delivers, warning-level per PROCESS_OPTIONS.md; 25 of 32 queued rows fill it) and `needs` (its DAG edges, authored by hand). The query is whether a WI should instead, or as well, name the interface(s) it serves or changes (an `if_refs` cell, ids only). Then its requirement trace is mechanical (WI → IF → LLR/SR), and so is its blast radius (WI → IF → component → the TCs verifying the carried requirements). The work-queue tree would then relate to the spine. Two WIs serving one IF overlap by construction (the consolidation census already flags "both answer SR-222" by string match). A WI changing a consumed interface would order before its consumers' WIs, from the IF's provider and consumer cells. For the reviews:
+   - Does `if_refs` replace `sr_refs`, or sit beside it? Work with no interface (process, adjudication and doc rows: 7 of 32 queued rows have no `sr_refs`) needs a declared standing, not a placeholder id.
+   - Should `needs` edges be checked against IF provider and consumer order, or derived from it?
+   - Note that the requirement rows carry no SR → SR or LLR → LLR dependency today (only the SN → SR → LLR hierarchy). So any "requirement dependency" the queue mirrors comes through the interfaces, not from a new requirement-tier cell.
+   - Does this sit with item 3 (split on independent deliverables: one interface as the natural split unit?) and with item 9 (S4's "two or more IF seams" criterion becomes countable)?
+
 ### How the links got their shape
 
 | Date | Change | Why (as recorded) |
@@ -459,6 +468,8 @@ Item 5's ruling removes the LLR → module join. That join was the one route fro
 - Every LLR must be carried by at least one interface (adding `call`-channel seams for the 55 LLRs in modules with no interface, or reframing them)?
 - Code files declare their component; IF component is derived. Is LLR → component kept as checked allocation, or derived?
 - Do IF rows gain an approval status once they name requirements?
+- Are contract citations never mandated per function, and bounded to symbols that actually realize the seam (query 1)? And what checks an over-claimed citation?
+- Do work items name the interfaces they serve (`if_refs`), replacing or beside `sr_refs`, with `needs` checked against or derived from the interfaces' provider and consumer order (query 2)?
 
 ## Sequence and how we'll know
 

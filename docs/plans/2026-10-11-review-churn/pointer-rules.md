@@ -105,3 +105,5 @@ flowchart BT
 | Code file → component | none | declared in each file's header, as a PART row does |
 | IF → component | optional authored cell | derived from the owner file's component |
 | LLR → component | authored allocation | kept as design intent and checked against the files, or derived (owner call) |
+| Contract citations | `Contracts:` on 84 files | never mandated per function; a symbol cites an IF only if it realizes that seam (owner's query 1) |
+| WI → spine | `sr_refs` (warning) + hand-authored `needs` | names the interfaces it serves (`if_refs`), so the trace and overlap are mechanical (owner's query 2, open) |
