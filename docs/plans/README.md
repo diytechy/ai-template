@@ -42,7 +42,7 @@ rounds, lint before review), plus a third-family second reviewer, usage
 recording for every model call, a reviewed plan before the build, and one
 TOML configuration file. Its "Owner rulings" section records every call;
 item 11 (what points where) is open, and a separate review handoff in the
-folder boots an independent Codex Astra review.
+folder boots independent Codex Astra and Claude Fable reviews.
 
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one

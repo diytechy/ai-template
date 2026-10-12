@@ -2,11 +2,11 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 9. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open.
+**Status:** revision 10. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) are the owner's.
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
-Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Revision 4 records the owner's ruling on item 10 after a read-only investigation of both configuration files. Revision 5 records the owner's rulings on every open call (next section). Revision 6 answers an independent GPT-6 Astra review of revisions 3–5, and revision 7 a Claude Fable 5.1 review of revision 6 (dispositions at the end). Revision 8 records the owner's rulings on the three questions revision 7 raised. Revision 9 adds item 11 (what points where), from a read-only trace of how the interface, component and code links got their shape; its calls are open.
+Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Revision 4 records the owner's ruling on item 10 after a read-only investigation of both configuration files. Revision 5 records the owner's rulings on every open call (next section). Revision 6 answers an independent GPT-6 Astra review of revisions 3–5, and revision 7 a Claude Fable 5.1 review of revision 6 (dispositions at the end). Revision 8 records the owner's rulings on the three questions revision 7 raised. Revision 9 adds item 11 (what points where), from a read-only trace of how the interface, component and code links got their shape; its calls are open. Revision 10 adds the owner's definitions of contract and module to it.
 
 | # | Change | Kind | Cost | Aims at |
 |---|---|---|---|---|
@@ -395,6 +395,11 @@ The owner asked (2026-10-11) whether more of the pointer model should change. In
 
 Three read-only passes traced the history first, because the owner didn't recall how these links came to be.
 
+**Terms (owner, 2026-10-11):**
+
+- **Contract:** the stated bounds of what crosses one interface, such as the range of an output, the character limit of a stdout, the pattern of CLI output or the shape of a refusal. It is written in the owning module beside the code (`Contract IF-NNN:`). It is not the business behaviour the code exists to achieve; that is the LLR's ("an interface says what crosses; a requirement says what must be achieved", PROCESS.md). Some existing contract bodies read more like obligations (IF-001 opens "SR-157's obligation delivered as a CLI"), so they are tightened to interface bounds as they are touched.
+- **Module:** one unit of realization, represented by one file in git. In a software project that is a code file; where physical parts join (Gilbert), it is the part's file. A component groups modules, and "file" is a valid synonym. Earlier sessions defined these terms for compatibility with physical projects, and the reviews cross-check that this reading matches.
+
 ### How the links got their shape
 
 | Date | Change | Why (as recorded) |
@@ -433,10 +438,10 @@ Item 5's ruling removes the LLR → module join. That join was the one route fro
 ### Nuances the owner may want to weigh
 
 - **Every LLR then needs an interface.** 55 of 302 LLRs live in modules that own no IF today. Under code → IF only, an LLR with no interface has no path to code. That fits the contract-voice rule (item 5: an LLR states observable behaviour, and behaviour is observable only at an interface). But it means adding `call`-channel interfaces for internal seams, or reframing or retiring those LLRs. The registry grows.
-- **Granularity.** `Implements:` is per function (793 symbols); IFs are module seams (243 rows). Tracing through the IF loses which function realizes which LLR, unless the contract tag sits on the realizing symbols, as proposed.
+- **Granularity.** `Implements:` is per function (793 symbols); IFs are module seams (243 rows). Tracing through the IF loses which function realizes which LLR, unless the contract (`Contract IF-NNN`) is stated on the realizing symbols, as proposed.
 - **Two recorded decisions are reversed.** OI-67's removal of the IF requirement column, and the 2026-09-20 rejection of `realizes`. Their objections no longer hold, but the owner should overrule them explicitly.
 - **SR-180 / LLR-180 / TC-175** state the registry → code "symbol resolves" gate as an approved requirement. Item 5 already retires that down-pointer, so these rows retire or are re-minted. The new discharge rule: an LLR is discharged when at least one interface carrying it is cited by code and its TCs pass.
-- **The 2026-08-18 research** found that code annotations decay and no standard requires them. Here the up-tags are enforced at the commit (a tag must name a live row, and every LLR must be reached), which the surveyed tools did not do. That is the trade.
+- **The 2026-08-18 research** found that code annotations decay and no standard requires them. Here the contracts and component declarations are enforced at the commit (a tag must name a live row, and every LLR must be reached), which the surveyed tools did not do. That is the trade.
 - **Interfaces would carry requirement weight but have no approval status** (all 243 are Drafted). Should IF rows gain approval once they name requirements?
 - **Tools that count LLR ids in `Implements:` lines** (the test-first check, the coverage dial) would count through IF → LLR instead.
 - **Shared code.** A file serving several components needs the shared-kernel declaration OI-48 already uses for `kitlib`, rather than a multi-tag.
