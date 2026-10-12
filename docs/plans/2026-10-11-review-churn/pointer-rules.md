@@ -48,10 +48,10 @@ derived content, never authored.
 | SN | stakeholders, assumptions | none | any file; any code |
 | SR | SN (`sn_refs`); assumptions | none, rationale included (artifact-class voice: "the delivered registry") | any file; any code |
 | LLR | SR (`sr_refs`); its component (`component`) | shipped boundary files: registries, templates, `process.toml`, launchers | code files, functions, symbols (the `module` and `code_symbol` cells are removed) |
-| TC | what it verifies (LLR, SR) | shipped boundary files only | test files, modules, functions, symbols (its evidence column is generated from the test files' tags) |
+| TC | what it verifies (LLR, SR, sometimes IF) | shipped boundary files only (whether CI, inspection and node-level evidence stays authored is open, plan revision 12) | test files, modules, functions, symbols (its evidence column is generated from the test files' tags) |
 | Test files | up: a tag naming the TC they verify | n/a | nothing; like code, a leaf |
 | CMP | none required (architecture block) | none | any file; code (its module list is generated) |
-| IF | its component; the assumptions an external crossing relies on | none: artifact-class wording (whether an external crossing may label a shipped file is an open owner question) | any file; code modules (owner, consumers and requestors become generated) |
+| IF | its component; the assumptions an external crossing relies on | none: artifact-class wording (whether an external crossing may label a shipped file is an open owner question) | any file; code modules (owner, consumers and requestors become generated; how roles and external owners are declared is open, plan revision 12) |
 | Code | up: `Implements: LLR-NNN`, `Contract IF-NNN` | n/a | nothing; it is the leaf every other map is computed from |
 | Generated views | computed from the code's tags and the id pointers | anything (derived) | never hand-edited |
 
@@ -59,9 +59,10 @@ The boundary-file set is an explicit `boundary` class on each entry of the
 one shipped-file inventory, matched on the destination path (so launchers
 shipped from `scripts/run.template.*` count as boundary files). The commit-time
 check refuses code tokens in SN, SR, LLR, IF and CMP rows, and boundary-file
-names in SN, SR, IF and CMP rows. Every shipped module must carry at least one
-`Implements:` tag naming a live LLR, which keeps "why does this file exist"
-answerable.
+names in SN, SR, IF and CMP rows. Item 5 proposes that every shipped module
+carry at least one `Implements:` tag naming a live LLR, which keeps "why does
+this file exist" answerable. That rule is new: today back-link coverage is a
+dial shipped at 0 (PROCESS.md §3).
 
 ## Proposed under item 11 (open, not ruled)
 
@@ -90,7 +91,8 @@ flowchart BT
   SR -->|sn_refs| SN
   LLR -->|sr_refs| SR
   TC -->|verifies| LLR
-  IF -->|carries: LLR or SR ids| LLR
+  IF -->|carries: LLR ids| LLR
+  IF -->|carries: SR ids| SR
   LLR -->|allocation, checked against files| CMP
   CODE ==>|"Contract IF-NNN"| IF
   CODE ==>|"Component: CMP-NNN"| CMP
@@ -106,4 +108,4 @@ flowchart BT
 | IF → component | optional authored cell | derived from the owner file's component |
 | LLR → component | authored allocation | kept as design intent and checked against the files, or derived (owner call) |
 | Contract citations | `Contracts:` on 84 files | never mandated per function; a symbol cites an IF only if it realizes that seam (owner's query 1) |
-| WI → spine | `sr_refs` (warning) + hand-authored `needs` | names the interfaces it serves (`if_refs`), so the trace and overlap are mechanical (owner's query 2, open) |
+| WI → spine | `sr_refs` (warning) + hand-authored `needs` | names the interfaces it serves (`if_refs`), so the trace is mechanical and overlap is surfaced, not proven (owner's query 2, open) |

@@ -19,7 +19,10 @@ are its reasoning. The pointer rules it sets for the spine are drawn in
 The plan's revision 2 was independently reviewed by Sonnet and Sol, and
 revisions 3–5 (the rulings, the pointer rules and this handoff) by GPT-6
 Astra, and revision 6 by Claude Fable 5.1. All four reviews are recorded
-under `reviews/`; revisions 6 and 7 answer the last two.
+under `reviews/`; revisions 6 and 7 answer the last two. Revision 11 was
+reviewed by GPT-6 Astra at low effort; revision 12 answers it. Item 11 is
+open: hold any pointer or schema migration that depends on it until the
+owner rules.
 
 ## State (trunk `refactor_again`, nothing pushed)
 
@@ -86,8 +89,11 @@ reviewer. Until batch item 1 below lands, follow the ruling by hand:
   Done-when gap. They **never see earlier verdicts** (owner ruling: prior
   conclusions anchor a reviewer). A fix is confirmed by its regression test
   instead: every accepted finding carries a test that fails on the pre-fix
-  code, which the reviewer template already makes the reviewer verify.
-  Before the round, check that each accepted finding maps to such a test.
+  code. Before the round, check that each accepted finding maps to such a
+  test. The reviewer template verifies pre-fix failure only where the diff
+  adds a test, so say so in the brief by hand. A wording or inspection
+  defect has no test; how its fix is confirmed is an open owner call (plan
+  revision 12).
 - **Severity is tied to reachability:** BLOCKER or MAJOR needs a scenario
   reachable in normal use, or a fail-open, data-loss or security path.
 - **Reviewers get the WI definition** (spec, Done-when, Trust, touched rows),
@@ -152,6 +158,16 @@ signature (SN-029).
   deferred; lanes in flight restart at zero; IF rows name no files (your IF remark is kept as an
   open question); an explicit `boundary` class in the shipped inventory; the
   plan gate before rows that need it; `agents-enabled`'s TOML shape.
+- **Item 11 (what points where) is open:** its open calls, the two owner's
+  queries and the decomposition choice (a)/(b) are in the plan's item 11,
+  with GPT-6 Astra's views (revision 12) beside them. New with revision 12:
+  whether "module" stays the software source file with the wider
+  realization units named separately; how generated IF cells declare
+  roles and external owners; and whether IF rows' existing approval must
+  cover a requirement-bearing allocation.
+- **Open after revision 12** (plan rulings section): how a non-executable
+  fix is confirmed under the convergence ruling; and which TC evidence
+  (CI, inspection records, `::` nodes) stays authored.
 
 ## Traps from this session
 
@@ -177,7 +193,8 @@ here (this is not a headless leg).
 2. Read, in order: CLAUDE.md; docs/status.md; the newest handoff (the one
    status.md's RESUME HERE names), all of it; the "Owner rulings, 2026-10-11"
    section of docs/plans/2026-10-11-review-churn/README.md and its
-   pointer-rules.md; the coordinator-cycle skill and its references/recipes.md;
+   pointer-rules.md, and the plan's item 11 (open; build nothing that
+   depends on it until ruled); the coordinator-cycle skill and its references/recipes.md;
    your memory index (review-churn-program-rulings first).
 3. Run reviews the way the handoff's "How to run reviews now" says. It
    overrides the skill where they differ, until batch row B1 lands and the
