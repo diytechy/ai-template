@@ -20,7 +20,9 @@ The plan's revision 2 was independently reviewed by Sonnet and Sol, and
 revisions 3–5 (the rulings, the pointer rules and this handoff) by GPT-6
 Astra, and revision 6 by Claude Fable 5.1. All four reviews are recorded
 under `reviews/`; revisions 6 and 7 answer the last two. Revision 11 was
-reviewed by GPT-6 Astra at low effort; revision 12 answers it. Item 11 is
+reviewed by GPT-6 Astra at low effort (revision 12 answers it), and
+revision 12 by Claude Fable 5.1 at medium effort (revision 13 answers it).
+All six reviews are under `reviews/`. Item 11 is
 open: hold any pointer or schema migration that depends on it until the
 owner rules.
 
@@ -168,6 +170,12 @@ signature (SN-029).
 - **Open after revision 12** (plan rulings section): how a non-executable
   fix is confirmed under the convergence ruling; and which TC evidence
   (CI, inspection records, `::` nodes) stays authored.
+- **Open after revision 13:** item 11 and **OI-112** are one question
+  (OI-112's (b) points SR → IF, item 11 points IF → requirement); rule the
+  direction once. Item 11's calls 1 and 4 would amend ruling 5's wording.
+  Also: the minimum profile's path from code to LLRs; whether the authored
+  IF list carries LLRs only, with the SR side derived through
+  `boundary_refs`.
 
 ## Traps from this session
 

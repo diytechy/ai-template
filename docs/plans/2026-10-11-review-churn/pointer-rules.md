@@ -93,7 +93,7 @@ flowchart BT
   TC -->|verifies| LLR
   IF -->|carries: LLR ids| LLR
   IF -->|carries: SR ids| SR
-  LLR -->|allocation, checked against files| CMP
+  LLR -->|"allocation (owner call: checked or derived)"| CMP
   CODE ==>|"Contract IF-NNN"| IF
   CODE ==>|"Component: CMP-NNN"| CMP
   TESTS ==>|"Verifies: TC-NNN"| TC
@@ -103,7 +103,7 @@ flowchart BT
 | Link | Today | Proposed |
 |---|---|---|
 | Code → spine | `Implements: SR, LLR` per function, plus `Contract IF-NNN` | `Contract IF-NNN` only, on the realizing symbols; `Implements:` retires |
-| IF → requirement | none (derived through LLR `module`) | an authored list of the LLR or SR ids it carries |
+| IF → requirement | none (derived through LLR `module`) | an authored list of the LLR or SR ids it carries (or LLRs only, the SR side derived through `boundary_refs`; ruled with OI-112, plan revision 13) |
 | Code file → component | none | declared in each file's header, as a PART row does |
 | IF → component | optional authored cell | derived from the owner file's component |
 | LLR → component | authored allocation | kept as design intent and checked against the files, or derived (owner call) |
