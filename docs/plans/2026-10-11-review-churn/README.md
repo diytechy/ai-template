@@ -2,11 +2,11 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 8, ruled. The owner ruled every open call on 2026-10-11 (see "Owner rulings, 2026-10-11"); the revision 6–7 clarifications not marked as rulings are for the owner to confirm or overrule.
+**Status:** revision 9. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open.
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
-Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Revision 4 records the owner's ruling on item 10 after a read-only investigation of both configuration files. Revision 5 records the owner's rulings on every open call (next section). Revision 6 answers an independent GPT-6 Astra review of revisions 3–5, and revision 7 a Claude Fable 5.1 review of revision 6 (dispositions at the end). Revision 8 records the owner's rulings on the three questions revision 7 raised.
+Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Revision 4 records the owner's ruling on item 10 after a read-only investigation of both configuration files. Revision 5 records the owner's rulings on every open call (next section). Revision 6 answers an independent GPT-6 Astra review of revisions 3–5, and revision 7 a Claude Fable 5.1 review of revision 6 (dispositions at the end). Revision 8 records the owner's rulings on the three questions revision 7 raised. Revision 9 adds item 11 (what points where), from a read-only trace of how the interface, component and code links got their shape; its calls are open.
 
 | # | Change | Kind | Cost | Aims at |
 |---|---|---|---|---|
@@ -19,6 +19,7 @@ Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, 
 | 7 | A second reviewer from a third family (Gemini) at the full reviews; the coordinator cycle reads item 4's `full_reviewers` | ruling + trial | waits on WI-815's route | earlier discovery, on a separate quota |
 | 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
 | 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 13 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
+| 11 | What points where (open): code cites only interfaces; interfaces name the requirements they carry; files declare their component; LLR → component checked or derived | open calls | folds into item 5's migration | the last mixed-direction links; mechanical blast radius per component |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -383,6 +384,77 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 - The file keeps the name `docs/process.toml` (ruled).
 - Step 2: all three hooks refuse without Python 3.11+, so the shell grep and the shape rule go; the remaining shell reads, including the legacy `docs/privacy-check` read, become one `tomllib` read in `kit-python.sh` after the interpreter check (not objected).
 
+## 11. What points where: interfaces as the measured boundary
+
+The owner asked (2026-10-11) whether more of the pointer model should change. In the owner's proposal:
+
+- implementation code points up only to the interface (IF), the contract whose behaviour can be measured;
+- the IF points to the LLR or SR it carries;
+- a code file names the component (CMP) it belongs to, as a physical part does its assembly;
+- components then bound what is at risk, and what must stay compatible, when one changes.
+
+Three read-only passes traced the history first, because the owner didn't recall how these links came to be.
+
+### How the links got their shape
+
+| Date | Change | Why (as recorded) |
+|---|---|---|
+| 2026-06-04 | The kit is born with two-way code links: LLR `Module`/`CodeSymbol` down, `Implements: SR, LLR` up | The initial template's design |
+| 2026-07-09 | CMP is ratified as one domain-neutral id. LLR, IF, PART and ASSET rows name their component; the CMP row holds only what a tag can't. A design where the component listed its LLRs (`Realises`) was rejected. | Owner: "structure is derived, never restated". LLRs carry the tag because a software component has no members via IF alone. |
+| 2026-07-11 | First IF registry, with an `SR-Refs` requirement link and a module path for this project's side. Every script gains a `Contracts: IF-NNN` header line. | WI-057 |
+| 2026-07-14 | Allocation is LLR → CMP, stated once on the LLR; SRs reach components only through their LLRs | Owner intake answer |
+| 2026-08-12 | OI-14: the component partition is "formative", and "a module belongs to exactly one component" | Owner: "component is not a function of module"; a module serving two components is evidence about the partition |
+| 2026-08-13 | All 302 LLRs are re-tagged to the new components *mechanically from their module* | WI-441. In practice the authored LLR → CMP tag is a copy of a module → component map. |
+| 2026-08-15 | IF `owner` becomes an id: a requirement may own a seam (Q1: "both"). R4 re-points owners toward the design tier. | Owner: "a requirement and a module can provide/own an interface" |
+| 2026-08-18–20 | Research (OI-39, OI-42): registry → code "assert-and-verify" is kept, and is hard-gated by SR-180 (an LLR is discharged only when its `CodeSymbol` resolves). Code → registry tags are a measured convention with a coverage dial. | No standard or surveyed tool requires annotations in code, and annotations decay |
+| 2026-08-29 | OI-67: IF `owner` flips back to a module path; the requirement column leaves the IF row. `Contract IF-NNN:` bodies are added to code (WI-527). | An SR-owned interface couldn't be traced to code (an SR has no module). The requirement links were "verified by nothing" and duplicated the owner → module → LLR join. |
+| 2026-09-20 | A proposed IF → requirement `realizes` cell is rejected | It "would give the relation two homes" |
+| 2026-10-11 | Requirement rows name no code; code and tests point up (items 5 and 10) | Code markers aren't stable ids |
+
+### Where things stand today
+
+- **Code points up twice.** `Implements: SR, LLR` appears on about 900 lines, tagging 793 functions and covering 229 of 302 LLRs. `Contracts: IF-NNN` plus `Contract IF-NNN:` bodies cite about 204–245 interfaces. 97 script files carry `Implements:` and 84 carry a contract; 76 carry both.
+- **An IF reaches a requirement only indirectly:** owner module → the LLR rows whose `module` names it. That is the very down-pointer item 5 removes. Another route is the SR's `boundary_refs` to an external crossing. 95 of 316 TCs already list an IF in what they verify.
+- **No code file has ever declared its component.** Each component's modules appear only in its hand-kept `notes`. The generated view places an IF by its tag, unioned with the components its endpoints resolve to.
+
+### The proposal, and what it changes
+
+Item 5's ruling removes the LLR → module join. That join was the one route from an IF to its requirement, and the main reason the IF → requirement pointer was dropped twice. With the join gone, an IF → requirement pointer is no longer a second home: it becomes the only home. And because code would cite its interfaces, the 2026-08-29 objection (an SR-owned seam can't be traced to code) also falls away.
+
+| Link | Today | Proposed (for ruling) |
+|---|---|---|
+| Code → spine | `Implements: SR, LLR` per function, plus `Contract IF-NNN` | `Contract IF-NNN` only, on the symbols that realize the seam; `Implements:` retires |
+| IF → requirement | none (derived through LLR `module`) | an authored list of the LLRs or SRs whose behaviour the interface carries (ids only) |
+| Code file → component | none (the map is derived from LLR `module` + `component`) | each file declares its component in its header, as a PART row already does |
+| IF → component | optional authored cell | derived from the owner file's component |
+| LLR → component | authored allocation (ratified 2026-07-09) | kept as design intent, with a check that the files realizing it declare the same component; or derived and retired (owner call) |
+| TC → what it verifies | LLR, SR, sometimes IF | unchanged; tests name their TC (revision 8) |
+
+### Nuances the owner may want to weigh
+
+- **Every LLR then needs an interface.** 55 of 302 LLRs live in modules that own no IF today. Under code → IF only, an LLR with no interface has no path to code. That fits the contract-voice rule (item 5: an LLR states observable behaviour, and behaviour is observable only at an interface). But it means adding `call`-channel interfaces for internal seams, or reframing or retiring those LLRs. The registry grows.
+- **Granularity.** `Implements:` is per function (793 symbols); IFs are module seams (243 rows). Tracing through the IF loses which function realizes which LLR, unless the contract tag sits on the realizing symbols, as proposed.
+- **Two recorded decisions are reversed.** OI-67's removal of the IF requirement column, and the 2026-09-20 rejection of `realizes`. Their objections no longer hold, but the owner should overrule them explicitly.
+- **SR-180 / LLR-180 / TC-175** state the registry → code "symbol resolves" gate as an approved requirement. Item 5 already retires that down-pointer, so these rows retire or are re-minted. The new discharge rule: an LLR is discharged when at least one interface carrying it is cited by code and its TCs pass.
+- **The 2026-08-18 research** found that code annotations decay and no standard requires them. Here the up-tags are enforced at the commit (a tag must name a live row, and every LLR must be reached), which the surveyed tools did not do. That is the trade.
+- **Interfaces would carry requirement weight but have no approval status** (all 243 are Drafted). Should IF rows gain approval once they name requirements?
+- **Tools that count LLR ids in `Implements:` lines** (the test-first check, the coverage dial) would count through IF → LLR instead.
+- **Shared code.** A file serving several components needs the shared-kernel declaration OI-48 already uses for `kitlib`, rather than a multi-tag.
+- **Non-code realizations.** Shipped boundary files (templates, registries) have no docstring. Their component and interfaces need a comment header, or derivation from the IF `data` cells.
+- **Blast radius becomes mechanical:** a changed file → its component → the interfaces on that component's boundary → the requirements those interfaces carry → the TCs verifying them. That answers the owner's "what is at risk when a component is updated".
+
+**Scope.** A large program that belongs with item 5's migration, sequenced last. It touches the code tags (about 900 `Implements:` lines become contract tags), the IF schema (a requirement list in, generated owner/consumer cells per item 5), the CMP derivation, and the checks that read either.
+
+**Downstream.** A schema and tag-grammar change for adopters, carried in item 5's RESYNC entry.
+
+**Owner calls (open):**
+
+- Code points up only to interfaces (`Implements:` retires), or keeps both tags?
+- Interfaces name the LLRs or SRs they carry (overruling OI-67's removal and the 2026-09-20 rejection)?
+- Every LLR must be carried by at least one interface (adding `call`-channel seams for the 55 LLRs in modules with no interface, or reframing them)?
+- Code files declare their component; IF component is derived. Is LLR → component kept as checked allocation, or derived?
+- Do IF rows gain an approval status once they name requirements?
+
 ## Sequence and how we'll know
 
 | Phase | What | Who |
@@ -390,7 +462,7 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 | 0 · rulings and baseline | Owner calls on items 1–9 (item 5's core rule is already ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
 | 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
 | 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. | Coordinator |
-| 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 9's planning path, if WI-805 is pulled forward. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. | Coordinator lanes |
+| 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 9's planning path, if WI-805 is pulled forward. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. Item 11, once ruled, with item 5's migration. | Coordinator lanes |
 | 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
 
 **Session budget.** Item 4's cap bounds review sessions per WI: at most six with the ruled values (three Codex), plus one plan critique for an item 9 row and one dispute sitting at the limit. A Gemini slot (item 7) draws on a different quota. Item 8 records the sessions, so the budget is measured, not estimated.

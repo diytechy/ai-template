@@ -62,3 +62,46 @@ check refuses code tokens in SN, SR, LLR, IF and CMP rows, and boundary-file
 names in SN, SR, IF and CMP rows. Every shipped module must carry at least one
 `Implements:` tag naming a live LLR, which keeps "why does this file exist"
 answerable.
+
+## Proposed under item 11 (open, not ruled)
+
+The plan's item 11 proposes changing what code and interfaces point to, for
+the owner to rule: code cites only the interfaces it realizes, interfaces name
+the requirements they carry, and code files declare their component. The
+history behind each link and the nuances (55 of 302 LLRs live in modules that
+own no interface today) are in [item 11](README.md).
+
+```mermaid
+flowchart BT
+  subgraph REQ["Requirement rows (stable ids)"]
+    SN["SN"]
+    SR["SR"]
+    LLR["LLR"]
+    TC["TC"]
+  end
+  subgraph ARCH["Architecture rows"]
+    CMP["CMP: component"]
+    IF["IF: interface (the measured contract)"]
+  end
+  subgraph REAL["Delivered files and code"]
+    TESTS["Test files"]
+    CODE["Code files and symbols"]
+  end
+  SR -->|sn_refs| SN
+  LLR -->|sr_refs| SR
+  TC -->|verifies| LLR
+  IF -->|carries: LLR or SR ids| LLR
+  LLR -->|allocation, checked against files| CMP
+  CODE ==>|"Contract IF-NNN"| IF
+  CODE ==>|"Component: CMP-NNN"| CMP
+  TESTS ==>|"Verifies: TC-NNN"| TC
+  IF -. component derived from the owner file .-> CMP
+```
+
+| Link | Today | Proposed |
+|---|---|---|
+| Code → spine | `Implements: SR, LLR` per function, plus `Contract IF-NNN` | `Contract IF-NNN` only, on the realizing symbols; `Implements:` retires |
+| IF → requirement | none (derived through LLR `module`) | an authored list of the LLR or SR ids it carries |
+| Code file → component | none | declared in each file's header, as a PART row does |
+| IF → component | optional authored cell | derived from the owner file's component |
+| LLR → component | authored allocation | kept as design intent and checked against the files, or derived (owner call) |
