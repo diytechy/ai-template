@@ -220,7 +220,7 @@ runs in the foreground, and owner questions become open calls.
 ```text
 You are running ONE UNATTENDED review session for the ai-template
 review-churn plan (headless; the owner is asleep and cannot answer): two
-independent reviews in sequence, Codex gpt-6-astra at medium effort, then
+independent reviews in sequence, Codex gpt-6-astra at LOW effort, then
 Claude Fable 5.1 at medium effort, each followed by the disposition of its
 findings. You are not the coordinator: take no lease, claim nothing, touch no
 lane, and leave docs/work/pause and docs/status.md alone.
@@ -253,7 +253,7 @@ stop; never improvise around a failure.
 2. Write the brief as the handoff says, including the terminology
    cross-check of "module" and "contract", the owner's two queries on
    item 11, and the two decomposition alternatives.
-3. Stage 1: run Astra (medium) in a detached worktree, in the foreground. If
+3. Stage 1: run Astra at LOW effort (model_reasoning_effort="low", not medium) in a detached worktree, in the foreground. If
    Codex refuses on a usage limit, stop. Write the reason to the summary file
    (step 6), remove the worktree and commit nothing. Otherwise confirm or
    refute every finding against the repository. Then update the plan,
