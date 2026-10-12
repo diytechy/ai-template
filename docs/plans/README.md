@@ -33,15 +33,14 @@ with the queue (§8, with five owner questions), and the reviewed drafts of the
 `coordinator-cycle` and `spine-authoring` skill changes. The owner's rulings
 from it are in the 2026-10-07 log fragment.
 
-Also open for owner ruling:
+Ruled by the owner on 2026-10-11, being built:
 [`2026-10-11-review-churn/`](2026-10-11-review-churn/README.md)
 — why coordinator legs take so long: where review-round churn comes from
 (2026-10-09 → 10-11), whether splitting work items pays, and six changes to cut
 it (closed coverage, record-at-event, a size basis for splits, full-lane
 rounds, lint before review), plus a third-family second reviewer, usage
-recording for every model call, and a reviewed plan before the build. Item
-5's core rule (requirements never reference code; code points up) was ruled
-by the owner on 2026-10-11.
+recording for every model call, a reviewed plan before the build, and one
+TOML configuration file. Its "Owner rulings" section records every call.
 
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
