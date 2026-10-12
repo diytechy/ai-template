@@ -406,7 +406,7 @@ Three read-only passes traced the history first, because the owner didn't recall
 2. **Work items bound to the interfaces they serve.** A WI row today carries `sr_refs` (the SRs it delivers, warning-level per PROCESS_OPTIONS.md; 25 of 32 queued rows fill it) and `needs` (its DAG edges, authored by hand). The query is whether a WI should instead, or as well, name the interface(s) it serves or changes (an `if_refs` cell, ids only). Then its requirement trace is mechanical (WI → IF → LLR/SR), and so is its blast radius (WI → IF → component → the TCs verifying the carried requirements). The work-queue tree would then relate to the spine. Two WIs serving one IF overlap by construction (the consolidation census already flags "both answer SR-222" by string match). A WI changing a consumed interface would order before its consumers' WIs, from the IF's provider and consumer cells. For the reviews:
    - Does `if_refs` replace `sr_refs`, or sit beside it? Work with no interface (process, adjudication and doc rows: 7 of 32 queued rows have no `sr_refs`) needs a declared standing, not a placeholder id.
    - Should `needs` edges be checked against IF provider and consumer order, or derived from it?
-   - Note that the requirement rows carry no SR → SR or LLR → LLR dependency today (only the SN → SR → LLR hierarchy). So any "requirement dependency" the queue mirrors comes through the interfaces, not from a new requirement-tier cell.
+   - The requirement rows' dependencies are their parent links: SR → SN (`sn_refs`), LLR → SR (`sr_refs`), and an SR's joint-delivery siblings (`delivered_with`). With WI → IF → LLR/SR, the queue can group under that decomposition tree mechanically. Today an LLR points only to SRs: no cell lets an LLR decompose another LLR, although the owner expected one. Should one exist? Neither the parent links nor `delivered_with` states a build order between siblings, so the order between WIs comes from the interfaces' provider and consumer cells.
    - Does this sit with item 3 (split on independent deliverables: one interface as the natural split unit?) and with item 9 (S4's "two or more IF seams" criterion becomes countable)?
 
 ### How the links got their shape
@@ -470,6 +470,7 @@ Item 5's ruling removes the LLR → module join. That join was the one route fro
 - Do IF rows gain an approval status once they name requirements?
 - Are contract citations never mandated per function, and bounded to symbols that actually realize the seam (query 1)? And what checks an over-claimed citation?
 - Do work items name the interfaces they serve (`if_refs`), replacing or beside `sr_refs`, with `needs` checked against or derived from the interfaces' provider and consumer order (query 2)?
+- May an LLR decompose another LLR (a parent-LLR pointer beside `sr_refs`), so the decomposition tree the queue mirrors can run deeper than SR → LLR?
 
 ## Sequence and how we'll know
 

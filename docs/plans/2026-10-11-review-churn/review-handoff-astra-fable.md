@@ -69,7 +69,10 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
     Judge whether an `if_refs` cell should replace or sit beside
     `sr_refs`, how rows with no interface stand, and whether `needs`
     edges should be checked against, or derived from, the interfaces'
-    provider and consumer order. Say how this sits with items 3 and 9.
+    provider and consumer order. Check what the requirement rows' parent
+    links can and can't express today (`sn_refs`, `sr_refs`,
+    `delivered_with`; there is no LLR → LLR link), and whether the queue
+    should mirror that tree. Say how this sits with items 3 and 9.
 - **Terminology cross-check (owner's request).** These terms were settled many
   sessions ago, and the kit must stay compatible with physical projects.
   - **Module:** item 11 says a module is one unit of realization represented
