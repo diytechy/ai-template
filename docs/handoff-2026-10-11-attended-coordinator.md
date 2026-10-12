@@ -16,8 +16,10 @@ owner then ruled item by item:
 Its **"Owner rulings, 2026-10-11"** section governs, and the other sections
 are its reasoning. The pointer rules it sets for the spine are drawn in
 [plans/2026-10-11-review-churn/pointer-rules.md](plans/2026-10-11-review-churn/pointer-rules.md).
-The plan's revision 2 was independently reviewed (Sonnet and Sol, both
-recorded under `reviews/`). Revisions 3–5 (the rulings) were not.
+The plan's revision 2 was independently reviewed by Sonnet and Sol, and
+revisions 3–5 (the rulings, the pointer rules and this handoff) by GPT-6
+Astra. All three reviews are recorded under `reviews/`, and revision 6 answers
+Astra's.
 
 ## State (trunk `refactor_again`, nothing pushed)
 
@@ -49,11 +51,24 @@ The `coordinator-cycle` skill still describes narrow rounds and one Sol
 reviewer. Until batch item 1 below lands, follow the ruling by hand:
 
 - **No narrow rounds.** Every review is a full-lane review. Each round runs
-  two fresh reviewers **in parallel**:
-  - **A: Codex Sol** (`sol_review.sh`, medium);
-  - **B: Claude Sonnet**, a fresh sub-agent given the same brief rendered by
-    `review_brief.py review --scope full`. Sonnet is a **stand-in** for the
+  two fresh reviewers **in parallel**, each from its **own render** of
+  `review_brief.py review --scope full` with its **own `--scratch`
+  directory** (for example `<dated root>/A` and `<dated root>/B`). One shared
+  render would give both the same verdict path and pytest `--basetemp`:
+  - **A: Codex Sol** (`sol_review.sh`, medium), filed as REVIEW-A;
+  - **B: Claude Sonnet**, a fresh sub-agent, filed with
+    `review_brief.py file --phase REVIEW-B`. Sonnet is a **stand-in** for the
     Gemini reviewer; record the substitution in each lane's decisions record.
+- **Add item 1's classification clause to both briefs:** an input outside
+  the spec's declared set that the change fails closed on is a
+  coverage-extension note; one it fails open on stays a finding. The
+  reviewer decides which.
+- **The checkpoint sits inside the cap.** Full rounds run until one has no
+  BLOCKER or MAJOR code finding. The checkpoint follows that round, and the
+  fresh gate over the checkpoint tip is the next round and counts. So does a
+  round over a rebase that changed code or rows. Lanes already in flight
+  (WI-798, WI-902) start at zero at their next review; record that as a
+  decision.
 - **At most 3 full rounds per WI.** At the cap, open findings go to one
   dispute sitting, which rules each FIX-as-successor-row, DISMISS, or
   ESCALATE.
@@ -86,9 +101,10 @@ its arbiter.
 
 | # | Row | What |
 |---|---|---|
-| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`; the record-at-event rule in `PROCESS.md` §3; severity-by-reachability and the convergence round in the shipped reviewer template (RESYNC entry) |
+| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`; the record-at-event rule in `PROCESS.md` §3; in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause |
+| G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that |
 | B2 | *to file* | Item 6: fix LLR-292; add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
-| B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 14 separate parsers (a pure refactor) |
+| B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 13 separate parsers (13 `ConfigParser` constructions in 12 files; a pure refactor) |
 | B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat; then rebuild in the lane |
 | 0 | WI-798 | In flight: Terra's rework of sitting 004's returns, re-sit, full-lane gate in the new shape, land |
 | 1… | leg 03's queue | Its table, rows 1–25, in its order until re-ordered. WI-897 stays last, just before the owner's FileBackup resync test, and the item 10 config consolidation must land before that test |
@@ -107,8 +123,11 @@ signature (SN-029).
   D-008, D-011..D-016, and the open lanes' `wi-798.toml` (D-001 first) and
   `wi-902.toml`. D-015 (WI-902 left committed) is overtaken by the reshape
   ruling.
-- **Optional:** an independent Sonnet and Sol review of the plan's revisions
-  3–5 before batch 1 is filed.
+- **Confirm or overrule** revision 6's clarifications, in the plan's rulings
+  section: the checkpoint gate counts inside the three-round cap; lanes in
+  flight restart at zero; IF rows name no files (your IF remark is kept as an
+  open question); an explicit `boundary` class in the shipped inventory; the
+  plan gate before rows that need it; `agents-enabled`'s TOML shape.
 
 ## Traps from this session
 
@@ -139,9 +158,9 @@ here (this is not a headless leg).
 3. Run reviews the way the handoff's "How to run reviews now" says. It
    overrides the skill where they differ, until batch row B1 lands and the
    skill says the same.
-4. Work the handoff's queue in order: file B1–B3 on trunk with their scope
-   critiques and dispositions, then B4 (WI-902's reshape), then continue
-   WI-798, then re-order the rest against the plan with the owner. Claim under
+4. Work the handoff's queue in order: file and land B1, then the plan gate
+   G, then B2–B4 (B4 is WI-902's reshape), each filed on trunk with its scope
+   critique and dispositions first; then continue WI-798, then re-order the rest against the plan with the owner. Claim under
    one scoped unpause per batch (a reviewed deletion commit, the claims, a
    byte-identical restore). Cut lanes from trunk's tip and land them one at a
    time. Roles: Claude Opus builds (kit-builder agent, medium); GPT Terra

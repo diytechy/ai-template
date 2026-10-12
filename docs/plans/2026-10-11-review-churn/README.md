@@ -2,23 +2,23 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 5, ruled. The owner ruled every open call on 2026-10-11; see "Owner rulings, 2026-10-11".
+**Status:** revision 6, ruled. The owner ruled every open call on 2026-10-11 (see "Owner rulings, 2026-10-11"); revision 6's clarifications after the Astra review are for the owner to confirm or overrule.
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
-Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Revision 4 records the owner's ruling on item 10 after a read-only investigation of both configuration files. Revision 5 records the owner's rulings on every open call (next section). Revisions 3–5 have not been independently reviewed.
+Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, same brief, against commit 85a37767a). Both returned REVISE; every finding was checked against the repo, and the dispositions are in the last section. The reviews themselves are in [`reviews/`](reviews/) beside this file. Revision 3 (owner direction, same day): item 4 becomes the review settings, item 6 shrinks to the hook change, and item 10 is added. Revision 4 records the owner's ruling on item 10 after a read-only investigation of both configuration files. Revision 5 records the owner's rulings on every open call (next section). Revision 6 answers an independent GPT-6 Astra review of revisions 3–5 (dispositions at the end).
 
 | # | Change | Kind | Cost | Aims at |
 |---|---|---|---|---|
 | 1 | Closed coverage, made binding: deny-by-default construction for unbounded syntax, an enumerated allow-set in the spec, and the reviewer classifying fail-open vs fail-closed | ruling + rubric | hours | the largest class: open input spaces re-sampled every round (WI-834's gate findings 016, 024, 028) |
-| 6 | Run the mechanical lints on every commit: fix LLR-292, add `trace.py --strict` to the hook, make `check_trajectory` blocking, add a RESYNC-presence check | small build | ~1 lane | findings an instrument would catch (~6 in the sample) |
+| 6 | Run the strict lints after every build (commit bar, closure check, landing check; not the commit hook): fix LLR-292, add a RESYNC-presence check | small build | ~1 lane | findings an instrument would catch (~6 in the sample) |
 | 8 | Record usage for every model call, under WI-800's invocation ledger: Sol and Terra through the session service, sub-agents from transcripts, deduplicated | small build | ~1 lane | ~74% of a leg's Claude output (builders) is unrecorded; makes every trial measurable |
 | 2 | Record a decision at its event, validated by a commit-vs-parent check; never re-derive it from history. Reshape WI-902 first | ruling, then WI-902 reshape | 1 spec amendment | WI-902's history-replay findings |
 | 9 | A planning need decided at mint; plan and scope advice becomes spec text before the claim; one planning path shared with WI-805 | ruling + ordering | hours, then one critique per planned row | advice that never binds (WI-834's pre-build reviews already asked for an enumerated list) |
 | 4 | Review settings: reviewers and rounds per WI (owner's draft 0 / 0 / 2 / 2), an adjudicated exit at the cap, MINORs never cost a round, a convergence final round, severity tied to reachability | ruling + template change | 1 lane + migration | unbounded rounds (WI-834: 20); ad hoc breakers (WI-902); stale checkpoints |
 | 7 | A second reviewer from a third family (Gemini) at the full reviews; the coordinator cycle reads `review_rounds` | ruling + trial | waits on WI-815's route | earlier discovery, on a separate quota |
 | 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
-| 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 14 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
+| 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 13 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -39,6 +39,16 @@ Ruled in session, item by item. Where an item's text below differs, this section
 | 8 | **Confirmed:** Sol and Terra launch through the session service, and sub-agent usage is ingested under WI-800's ledger contract (counted once per message, each invocation attributed exactly once), pulling that part forward. |
 | 9 | **Confirmed:** every pre-claim recommendation gets an explicit disposition (adopted, quoting the carrying spec text, or rejected with a reason), and a fresh critique round confirms adopted ones are in the spec in the recommended shape before the claim. **Confirmed:** S4 decides `planmode` on the stated criteria. **Confirmed:** pull WI-805's plan gate forward. **Ruled:** fix dual-plan pickup as is (WI-813), arbiter kept. |
 | 10 | **Ruled** (revision 4): one TOML file. **Confirmed:** keep the name `docs/process.toml`. **Not objected:** since WI-880 all three hooks refuse without Python 3.11+, so the shell grep and the one-key-per-line shape rule (SR-137) can go. The two remaining shell reads (a missing scripts directory, the legacy mixed-config refusal) become a `tomllib` read after the interpreter check. |
+
+**Revision 6 clarifications, after the Astra review (for the owner to confirm or overrule):**
+
+- **Where the checkpoint sits within the cap (item 4).** Full rounds run until one has no BLOCKER or MAJOR code finding. The checkpoint (Terra reconcile, closure check, sitting) follows that round. The fresh gate over the checkpoint tip is the next full round and counts toward `full_rounds_max = 3`, as does a round over a rebase that changed code or rows. If the cap is reached with findings open, `on_limit` fires. Nothing lands unreviewed: the last full round always reads the tip that lands.
+- **Lanes already in flight** (WI-798, WI-902) start the count at zero at their next review under the new shape. The coordinator records that as a decision.
+- **Session budget (item 4).** At most six review sessions per WI (three Codex, three Sonnet or Gemini), plus a dispute sitting at the cap and one plan critique for a row S4 marks `single`.
+- **IF rows name no files (item 5).** The ruling allows shipped boundary files at LLR and TC only, so interface rows use component and interface ids and artifact-class wording. The owner's earlier remark that interface definitions can label files tied back to assumption rows is kept as an open question, not an allowance.
+- **The boundary-file set is an explicit classification.** The shipped-file inventory records source, destination and reference, not a boundary class. Subtracting "code" by directory or suffix would wrongly drop the launchers (which ship from `scripts/run.template.*`), and excluding only Python would admit other scripts. So the one inventory gains an explicit `boundary` class on each entry, matched on the destination path. That is a closed allowance, with no second list.
+- **The planning gate comes before rows that need it (item 9).** Once S4 exists, a row it marks `single` waits for WI-805's pulled-forward plan gate. The gate's own row is built without the gate (it cannot plan itself), and that is recorded. The handoff's batch is ordered so.
+- **`agents-enabled` as a setting (item 10).** The file is an ordered pool of route ids with per-phase draw weights and strict validation (`agent_route.py`), not a toggle. Its setting keeps exactly that: an ordered TOML array of tables, each an `id` with optional per-phase weights, validated as today. An absent or empty pool grants no managed-routing consent.
 
 Also ruled: coordination of the build runs interactively in this session, with Sol plus the Sonnet stand-in reviewing each change in parallel, in the shape item 4 sets.
 
@@ -102,7 +112,7 @@ Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11 (`rows.json`)
 
 **Downstream.** Step 4 changes a shipped template: one `RESYNC_PACK.md` entry, no migration. Steps 1–3 are this-repo rubric and procedure.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Confirm or overrule construction-first for unbounded syntax.
 - Confirm or overrule S3, with the critique's answer becoming spec text before the claim.
@@ -124,7 +134,7 @@ Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11 (`rows.json`)
 
 **Downstream.** WI-902 changes shipped scripts either way (its Done-when owes a RESYNC entry). The cell is new data, not a migration.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Resume WI-902 as built, or reshape it to record-at-close first (recommended)? Its Trust ruling (coordinator-2026-10-11 D-005) is still pending your confirm or overrule.
 - Confirm or overrule the record-at-event rule for `PROCESS.md` §3.
@@ -141,7 +151,7 @@ Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11 (`rows.json`)
 2. **Don't split to fix churn mid-lane.** A churning lane is usually an item 1 problem. The remedy is a dispute sitting that draws the coverage line.
 3. **Optional: batch tiny rows that share context.** Where two or three small queued rows touch the same module and share a reviewer's context, one row saves the per-WI overhead.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Confirm or overrule keeping S1 as the only split rule.
 - Decide whether same-module tiny rows should be batched.
@@ -165,7 +175,7 @@ Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11 (`rows.json`)
 | `reviewer_families` | `["openai", "google"]` (proposed) | One family per reviewer slot, each different from the builder's (item 7 has the Gemini route). |
 | `final_round_stance` | `"convergence"` (proposed) | How the last allowed round behaves (below). |
 
-With the owner's values a WI runs: build, two reviewers in parallel, fix, two reviewers again, then land or adjudicate. That is at most four review sessions per WI, split across two quotas. Most WIs already land within 1–2 rounds, so the cap only binds on the churners. `on_limit` is what makes the cap work: without it, "max 2" leaves open findings with nowhere to go, which is what happened ad hoc with WI-902. The checkpoint fires once, after the last full round, so no sitting is spent on a lane a later review reopens. The fresh gate over the checkpoint tip stays, because reconciled rows still need an independent review.
+With the owner's values a WI runs: build, two reviewers in parallel, fix, two reviewers again, then land or adjudicate. With the ruled cap of three rounds that is at most six review sessions per WI (three Codex, three Sonnet or Gemini). Most WIs already land within 1–2 rounds, so the cap only binds on the churners. `on_limit` is what makes the cap work: without it, a cap leaves open findings with nowhere to go, which is what happened ad hoc with WI-902. The checkpoint follows the first round with no BLOCKER or MAJOR code finding, and the gate over the checkpoint tip is the next counted round (revision 6 clarification, in the rulings section).
 
 ### The reviewer's stance
 
@@ -180,7 +190,7 @@ Keep "try to break it", but calibrate it. That stance found the warm-tick race a
 
 **Downstream.** A new section in the shipped `process.toml` template (the structure must match, `test_dogfood_sync`), `review_rounds` migrated into it, and the reviewer template's severity rule: one RESYNC entry and a `--migrate-config` step. The coordinator cycle and the managed loop both read the section, so they mean the same thing.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Confirm or overrule the `[review]` keys and your values (0 / 0 / 2 / 2).
 - Confirm or overrule `on_limit = "adjudicate"`, `block_on`, and the convergence round.
@@ -215,30 +225,30 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 ### Bounding it mechanically: three layers, strongest first
 
 1. **Make it unrepresentable in the schema.** Delete `module` and `code_symbol` from the LLR schema (`kitlib/spine.py`), and make the loader refuse keys a requirement tier doesn't declare. Everything that reads those cells switches to one index generated from the `Implements:` tags. Readers today: `check_doc_refs.py`, `check_privacy.py`, `kitlib/spine.py`, `kitlib/secret_classes.py`, `lane.py`, `migrate_carrier.py`, `spine_carrier.py` and `trajectory_arch.py`, plus five tests (`test_assumption_gate`, `test_baseline_snapshot`, `test_derive_stage`, `test_module_size_ratchet`, `test_trajectory_arch`). This removes the hand-synced cells, not the meaning check (below).
-2. **A commit-time check on requirement text**, grown from the warn-only `trace_text.sr_artifact_advisories` (today: `*.py` in SR requirement cells). It covers the text cells of SN, SR and LLR rows. It refuses path-like tokens, and names defined in the shipped scripts (read by `ast` on every run) written as code: backticked, snake_case, CamelCase or a call. It compares the commit with its parent and looks only at *tokens added* to a requirement text cell. A lane that touches a row for a non-text reason (`test_refs`, phase, status) owes no prose rewrite, and untouched rows are left alone. An Approved row whose text is cleaned rides the layer-1 batch act or the lane's own sitting.
+2. **A commit-time check on requirement text**, grown from the warn-only `trace_text.sr_artifact_advisories` (today: `*.py` in SR requirement cells). Its rules follow the ruling, tier by tier. Code tokens are refused in SN, SR, LLR, IF and CMP rows: paths to implementation files, and names defined in the shipped scripts (read by `ast` on every run) written as code (backticked, snake_case, CamelCase or a call). Shipped boundary-file names are refused in SN, SR, IF and CMP rows and allowed in LLR and TC rows, the boundary set being the inventory's explicit `boundary` class (revision 6). It compares the commit with its parent and looks only at *tokens added* to a requirement text cell. A lane that touches a row for a non-text reason (`test_refs`, phase, status) owes no prose rewrite, and untouched rows are left alone. An Approved row whose text is cleaned rides the layer-1 batch act or the lane's own sitting.
 3. **Judgement layer.** The sitting brief and the `spine-authoring` skill extend K2 from SR to all requirement tiers as contract voice. An LLR states the observable obligation (inputs, outcome, refusal boundary) and survives a refactor that keeps behaviour. No lint can catch mechanism narrated in plain words; this layer does.
 
 **Keep the meaning check.** An `Implements:` tag that names a live LLR doesn't prove the code implements it. The independent semantic check stays: the code reviewer judges, over the derived index, whether code and the rows the lane touches correspond. That includes omissions and inconsistent amendments of existing rows. What moves wholly to the sitting is wording quality and overlap, so the two judges stop overlapping without losing the correspondence check.
 
 **Migration.** Layer 1 removes two cells from all 302 LLR rows, most of them Approved, which the `approval-immutable` check forbids today. That needs one ruled batch act, "trace cells removed, requirement text unchanged": a single sitting, not 302 re-attestations. Layer 2 needs no migration.
 
-**Downstream.** A kit schema change: a `RESYNC_PACK.md` entry with a migration script (`migrate_carrier.py` is the precedent), an `ADOPTING.md` note and the template rows. This is the one item that forces adopters to migrate.
+**Downstream.** A kit schema change: a `RESYNC_PACK.md` entry with a migration script (`migrate_carrier.py` is the precedent), an `ADOPTING.md` note and the template rows. With items 4 and 10, one of three changes that force adopters to migrate; they ship as one RESYNC entry.
 
 **Measure.** Requirement rows amended because code moved: target 0. Rows returned per sitting.
 
-**Open questions for the owner:**
+**Open questions (ruled; the rulings section governs):**
 
 - Confirm or overrule the reading above: no code in SN/SR/LLR rows, acceptance included, so carrier evidence moves to TC rows. This supersedes R2's two allowances.
 - Do interface (IF) and component (CMP) rows count as requirements under this rule, or as architecture that may point at code? My lean: CMP points up like code; IF names a seam's contract, not its file. Needs its own look.
 - Confirm or overrule the split: wording and overlap go to the sitting, and code-versus-row correspondence stays with the reviewer.
 
-## 6. Run the mechanical lints on every commit
+## 6. Run the strict lints after every build
 
 **Evidence.** About 6 findings in the sample were things an existing instrument catches: SR-239's two "shall" clauses (`trace.py --strict`), IF-292's channel outside the closed set, an IF cell over 160 characters, a missing `RESYNC_PACK.md` entry, an undeclared IF seam. Each cost a 25–35 min review round.
 
 **Root cause.** The lints exist but nothing runs them mechanically after a build. The commit hook runs `trace.py --strict-integrity` but not `--strict`, and runs `check_trajectory.py --staged` non-blocking (`|| true`, `project-trajectory/hooks/pre-commit:296`). A recipe line asking the coordinator to run them gets skipped; an earlier session already recorded "run check_trajectory --strict before a landing commit" as a trap.
 
-**This is not a guard.** A guard, in the antidote sense, compensates for a bad state the design could have made impossible. Two "shall" clauses can't be made impossible, because they are authored text. The remedy is the lint step after the build, run where every lane commit (builder, Terra, coordinator) already passes: the pre-commit hook.
+**This is not a guard.** A guard, in the antidote sense, compensates for a bad state the design could have made impossible. Two "shall" clauses can't be made impossible, because they are authored text. The remedy is the lint step after the build, run at three boundaries nothing skips: the commit-bar command each build round already runs, the closure check before a sitting, and the landing check. The pre-commit hook stays as it is (ruled).
 
 ### Proposal
 
@@ -246,13 +256,13 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 2. **Build the one missing check:** a shipped file changed in the commit with no `RESYNC_PACK.md` entry anchored at a trunk commit. No such check exists today.
 3. **Retire rubric anchors as they become mechanical.** K4 becomes the RESYNC check. K3's module/symbol matching goes away with item 5's schema layer, and its meaning half stays as item 5's correspondence check. K2 becomes item 5's commit-time text check.
 
-**Trade-off.** About 9 s more per commit, against the 60 s smoke budget, which the hook does not count. A newly strict lint can surface old findings in an adopter's repo; the RESYNC entry says to run `trace.py --strict` once and clear them before upgrading.
+**Trade-off.** About 9 s per build round and at each closure and landing, not on every commit. A newly strict lint can surface old findings in an adopter's repo; the RESYNC entry says to run `trace.py --strict` once and clear them before upgrading.
 
 **Measure.** Review findings an instrument would have caught: target 0.
 
-**Downstream.** The shipped hook changes: one RESYNC entry.
+**Downstream.** The commit-bar profile, the closure check and the landing check change; the hook does not: one RESYNC entry.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Confirm or overrule the LLR-292 fix and the hook change as the first rows.
 
@@ -272,7 +282,7 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 
 **Downstream.** None for the dial (it ships). A Gemini route is an adopter option.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Confirm or overrule a Gemini reviewer B, after WI-815 and a verified launch.
 - Until the Gemini route works, should `full_reviewers = 2` run as two fresh Sol sessions (same family), or stay at 1?
@@ -296,7 +306,7 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 
 **Downstream.** Step 1 touches this repo's coordinator tools. Step 2 adds an adapter to a shipped module: one RESYNC entry.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Confirm or overrule routing Sol and Terra through the session service.
 - Confirm or overrule ingesting sub-agent usage under WI-800's ledger, ahead of WI-800's other parts if needed.
@@ -318,7 +328,7 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 
 **Measure.** For `single` rows against comparable unplanned ones: review rounds, late findings, and how many late findings the bound spec text already named.
 
-**Owner calls:**
+**Owner calls (ruled; the rulings section governs):**
 
 - Confirm or overrule binding pre-claim advice into the spec.
 - Confirm or overrule S4 and its criteria.
@@ -338,42 +348,42 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 
 **Investigation (three read-only passes, 2026-10-11).**
 
-- **Readers.** `stack.ini` is parsed separately in 14 places across about 15 scripts, each with its own `configparser`. No code writes it; bootstrap copies the template and does one text replace. `process.toml` is read mostly through a shared reader (`agent_policy.process_config`), plus five self-contained scripts and a two-key shell grep in the hooks. Its one writer (`bootstrap.set_process_key`) rewrites single lines and keeps comments.
+- **Readers.** `stack.ini` is parsed separately in 13 places across 12 scripts (13 `ConfigParser` constructions; `check_trajectory.py` reuses `trajectory_arch.py`'s), each with its own `configparser`. No code writes it; bootstrap copies the template and does one text replace. `process.toml` is read mostly through a shared reader (`agent_policy.process_config`), plus five self-contained scripts and a two-key shell grep in the hooks. Its one writer (`bootstrap.set_process_key`) rewrites single lines and keeps comments.
 - **Content.** `stack.ini` is 1,277 lines, of which 1,168 are comments, including an 865-line smoke-budget history log. Only 70 lines are settings. The chain-behaviour parts are `[agent-loop]` (model, model-map, read only when managed routing is off) and `[run]` (launcher capabilities).
 - **TOML fit.** `[step:smoke]` becomes `[step.smoke]`. `smoke.desc` beside `smoke` becomes `[run.smoke] command / desc`. Path keys under `[generated]` are quoted. Windows paths use literal strings. Lists packed into comma-, pipe- and space-joined strings can become arrays. INI's key case-folding goes away.
-- **Tests and spine.** About 55 test files touch `stack.ini` and 56 touch `process.toml`/`agents.toml`/`agents-enabled`, much of it fixture text. 23 LLR, 8 TC, 3 SR and 7 IF rows name the files, and they already break item 5's ruling.
+- **Tests and spine.** About 55 test files touch `stack.ini` and 56 touch `process.toml`/`agents.toml`/`agents-enabled`, much of it fixture text. 23 LLR, 8 TC, 3 SR and 7 IF rows name the files. Under item 5's ruling the SR and IF mentions must go; LLR and TC rows may keep naming the configuration file, a shipped boundary file, but not code.
 - **Downstream.** No adopter has taken even the 2026-08-08 `process.toml` migration. Gilbert, Finance-Auditor and NotHomeWrecker carry `stack.ini` and the legacy one-word files; FileBackup has neither. Their `stack.ini` content is small: paths, product, tiers, coverage, `arch-map`, and a few `[step:*]` gates of their own. None uses `[agent-loop]` or `[run]`.
 - **Precedent and cost.** The 2026-08-08 migration was the same kind of work. It drew 8 BLOCKERs, including the privacy gate failing open on a decoy value in a TOML comment, and weeks of follow-ups.
 
 ### Program
 
-1. **One shared loader for today's `stack.ini`**, replacing the 14 separate parses. A pure refactor with no format change. Every later step then touches one reader, and it is worth doing regardless.
+1. **One shared loader for today's `stack.ini`**, replacing the 13 separate parses. A pure refactor with no format change. Every later step then touches one reader, and it is worth doing regardless.
 2. **Settle the shell-grep rule.** The hooks grep `privacy_check` and `privacy_review` so a machine without Python still fails closed, and that is what imposes `process.toml`'s one-key-per-line shape (SR-137, SN-028). Verify whether the same hook already refuses to commit without a 3.11 interpreter; it runs `check.py` and points to the installer when none is found. If it does, the grep is redundant, and the shape rule can go by ruling. If not, the privacy keys keep a small section the grep reads, and the rest of the file may use full TOML.
 3. **Adopter-owned values, kit-owned schema.** `process.toml` stops being "overwrite, then re-apply your dials". The kit ships the schema: a template that documents every setting and its default, and a validator that refuses unknown or malformed settings. The structure test changes from "live equals template" to "live satisfies the schema", so adopters can declare their own `[step.*]` sections. A re-sync adds new settings and never overwrites values. Per the ruling, the RESYNC entry says what to add and the LLM doing the re-sync applies it; no new migrator is built.
 4. **Move `stack.ini`'s settings into `process.toml`** as TOML sections, through the shared loader from step 1. The smoke-budget history log moves out of config into the log. Readers use the new home only, with no dual-read window (no fallback paths). A repo that still has `docs/stack.ini` is refused by name, pointing at the RESYNC entry, so an unmigrated file is never silently ignored.
-5. **Fold in routing and consent.** `agents.toml`'s routes become `process.toml` sections; its fifteen triple-quoted strings become single-line, unless step 2 lifts the shape rule. `agents-enabled` becomes a setting. `[agent-loop]` retires into the routes. This repo's coordinator tools read their models from the routes instead of hard-coding them.
+5. **Fold in routing and consent.** `agents.toml`'s routes become `process.toml` sections; its fifteen triple-quoted strings become single-line, unless step 2 lifts the shape rule. `agents-enabled` becomes a setting that keeps its semantics: an ordered pool of route ids with per-phase weights, validated as today, where an absent or empty pool grants no consent. `[agent-loop]` retires into the routes. This repo's coordinator tools read their models from the routes instead of hard-coding them.
 6. **Amend the spec rows and docs together with item 5**: 23 LLR, 8 TC, 3 SR and 7 IF rows, about 10 adopter-facing docs (`RESYNC_PACK`, `ADOPTING`, `PROCESS_OPTIONS`, the kit README, …), and the generated references. Ship it all as one RESYNC entry, before FileBackup's re-sync.
 
 **Trade-off.** A 4–6 WI program touching a security-relevant reader: the privacy keys. Step 2 settles that first, and the 2026-08-08 decoy-comment failure goes into each review brief as a named failure class.
 
 **Downstream.** One migration for adopters instead of two. The RESYNC entry carries both the 2026-08-08 one-word-file fold and this consolidation, for an LLM to apply.
 
-**Still open:**
+**Resolved (revision 5):**
 
-- The file keeps the name `docs/process.toml`, which touches the fewest files. It will hold the toolchain too, so say if you'd rather rename it (e.g. `docs/project.toml`).
-- Step 2's outcome, after the check: drop the shell grep and the shape rule, or keep a small greppable section.
+- The file keeps the name `docs/process.toml` (ruled).
+- Step 2: all three hooks refuse without Python 3.11+, so the shell grep and the shape rule go; the remaining shell reads become a `tomllib` read after the interpreter check (not objected).
 
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
 | 0 · rulings and baseline | Owner calls on items 1–9 (item 5's core rule is already ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
-| 1 · cheap builds | Item 6 (LLR-292, the hook change, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
+| 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. | Coordinator lanes |
 | 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. | Coordinator |
 | 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 9's planning path, if WI-805 is pulled forward. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. | Coordinator lanes |
 | 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
 
-**Session budget.** Item 4's cap bounds review sessions per WI: at most four with your values, plus one plan critique for an item 9 row and one dispute sitting at the limit. A Gemini slot (item 7) draws on a different quota. Item 8 records the sessions, so the budget is measured, not estimated.
+**Session budget.** Item 4's cap bounds review sessions per WI: at most six with the ruled values (three Codex), plus one plan critique for an item 9 row and one dispute sitting at the limit. A Gemini slot (item 7) draws on a different quota. Item 8 records the sessions, so the budget is measured, not estimated.
 
 **Record per lane:** which changes applied, sessions by role, gap-filtered and wall-clock time. Isolating each change's effect needs that record, since several start at once.
 
@@ -423,3 +433,21 @@ Two reviewers, the same brief, against commit 85a37767a: Claude Sonnet 5.5 (REVI
 | Item 2: say who may write the cell and what a missing cell does | Sonnet MINOR | Accepted | Adopted in item 2 step 1 |
 
 Left unchecked by either reviewer, and still claims: the late-finding taxonomy (18 of 43, ~24 spine-text, ~6 mechanical), the narrow and full wall-clock minutes, the prose census, and where nested sub-agent transcripts land.
+
+### Review of revisions 3–5: GPT-6 Astra, low effort
+
+One reviewer, against commit 88472beb0 (the ruled plan, `pointer-rules.md` and the attended handoff): REVISE, 11 findings. Each was checked before acting, and all were adopted. The full text is in [`reviews/astra.md`](reviews/astra.md).
+
+| Finding | Checked | Disposition |
+|---|---|---|
+| BLOCKER: parallel reviewers given the same rendered brief share a verdict path and pytest `--basetemp` | Confirmed: both derive from scratch root, lane, sha and scope (`review_brief.py` `_run_lines`, verdict path) | Handoff: render one brief per reviewer with its own scratch directory; file B with `--phase REVIEW-B` |
+| BLOCKER: the pointer table let IF rows name boundary files, but the ruling says LLR/TC only | Confirmed | IF exception removed from `pointer-rules.md` and the diagram page; the owner's IF remark kept as an open question |
+| MAJOR: three rounds plus a gate over the checkpoint tip can't both hold; session budget wrong; existing lanes' counts unstated | Agreed | Clarified: the gate is a counted round, at most six sessions, lanes in flight restart at zero (rulings section, revision 6) |
+| MAJOR: item 5's text check refused all paths in LLR text and skipped IF/CMP; item 10 called LLR/TC config mentions violations | Confirmed | Check made tier-specific; item 10 corrected |
+| MAJOR: item 6's summary, heading, rationale, downstream and phase row still said "hook" | Confirmed | All moved to the build bar, closure and landing |
+| MAJOR: S4 would mark B3 `single` before the plan gate exists, and the ruling forbids an interim path | Agreed | Handoff orders WI-805's plan gate right after B1; its own row is built without it, recorded |
+| MAJOR: B1 omitted item 1's reviewer classification clause | Confirmed | Added to B1 and to the hand-run brief instructions |
+| MAJOR: `agents-enabled` is an ordered pool with weights, not a toggle | Confirmed (`agent_route.py`) | Item 10 specifies the TOML shape; absent or empty grants no consent |
+| MAJOR: "inventory minus code" would drop the launchers or admit other scripts | Agreed | An explicit `boundary` class on each inventory entry |
+| MINOR: 13 `ConfigParser` constructions across 12 files, not 14 parsers | Confirmed (grep: 13 in 12 files) | Corrected |
+| MINOR: "the one item that forces migration" is stale; superseded choices still read as actionable | Confirmed | Corrected; every owner-call box labelled ruled |
