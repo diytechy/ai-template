@@ -18,13 +18,13 @@ are its reasoning. The pointer rules it sets for the spine are drawn in
 [plans/2026-10-11-review-churn/pointer-rules.md](plans/2026-10-11-review-churn/pointer-rules.md).
 The plan's revision 2 was independently reviewed by Sonnet and Sol, and
 revisions 3–5 (the rulings, the pointer rules and this handoff) by GPT-6
-Astra. All three reviews are recorded under `reviews/`, and revision 6 answers
-Astra's.
+Astra, and revision 6 by Claude Fable 5.1. All four reviews are recorded
+under `reviews/`; revisions 6 and 7 answer the last two.
 
 ## State (trunk `refactor_again`, nothing pushed)
 
-- **Trunk tip:** the commit that adds this handoff, on top of `43f5771a8`
-  (plan revision 5). The pre-commit checks passed on every commit this
+- **Trunk tip:** the newest plan-revision commit (`git log -1`), which also
+  edits this handoff. The pre-commit checks passed on every commit this
   session. No full suite ran: no code changed. Leg 03's full suite
   (5811 passed, 22 skipped, 0 failed at `67bf3bf2`) stands.
 - **No lease is held, no judgement is active.** `docs/work/pause` is tracked
@@ -56,26 +56,37 @@ reviewer. Until batch item 1 below lands, follow the ruling by hand:
   directory** (for example `<dated root>/A` and `<dated root>/B`). One shared
   render would give both the same verdict path and pytest `--basetemp`:
   - **A: Codex Sol** (`sol_review.sh`, medium), filed as REVIEW-A;
-  - **B: Claude Sonnet**, a fresh sub-agent, filed with
-    `review_brief.py file --phase REVIEW-B`. Sonnet is a **stand-in** for the
-    Gemini reviewer; record the substitution in each lane's decisions record.
+  - **B: Claude Sonnet**, filed with `review_brief.py file --phase REVIEW-B`.
+    Spawn it with `model: sonnet` and give it **only** the path to its
+    rendered REVIEW-B brief: no build prompt, no coordinator notes, no builder
+    material. It writes nothing except its own `--scratch` directory. This is
+    not the forbidden self-review: the builder is a different sub-agent, and
+    the reviewer reads only the brief. Sonnet is a **stand-in** for the Gemini
+    reviewer and shares the builder's and the adjudicator's model family,
+    which is why each lane's decisions record notes the substitution.
 - **Add item 1's classification clause to both briefs:** an input outside
   the spec's declared set that the change fails closed on is a
   coverage-extension note; one it fails open on stays a finding. The
   reviewer decides which.
-- **The checkpoint sits inside the cap.** Full rounds run until one has no
-  BLOCKER or MAJOR code finding. The checkpoint follows that round, and the
-  fresh gate over the checkpoint tip is the next round and counts. So does a
-  round over a rebase that changed code or rows. Lanes already in flight
-  (WI-798, WI-902) start at zero at their next review; record that as a
-  decision.
-- **At most 3 full rounds per WI.** At the cap, open findings go to one
-  dispute sitting, which rules each FIX-as-successor-row, DISMISS, or
-  ESCALATE.
+- **At most 3 full rounds before the checkpoint.** Rounds run until one has
+  no BLOCKER or MAJOR code finding; the checkpoint follows it. The gate over
+  the checkpoint tip, and a round over a rebase that changed code or rows,
+  always run, in convergence stance, and are not counted, so the tip that
+  lands is always reviewed. Lanes already in flight (WI-798, WI-902) start at
+  zero at their next review; record that as a decision.
+- **At the cap**, open findings go to one dispute sitting, which rules each
+  FIX-as-successor-row, DISMISS, or ESCALATE. A **convergence-class** finding
+  (fail-open, data loss, Done-when gap) is never deferred: the sitting orders
+  one more fix round or ESCALATEs. Successor rows are filed **on trunk at the
+  landing**, from the sitting's binding; a work branch never mints a WI id.
 - **Only BLOCKER and MAJOR cost a round.** MINORs go to the spine change list
   or a successor row.
-- **Round 3 runs in convergence mode:** a new finding blocks only if it is
-  fail-open, data loss or a Done-when gap.
+- **The last allowed round and the post-checkpoint gate run in convergence
+  mode:** a new finding blocks only if it is fail-open, data loss or a
+  Done-when gap. To confirm fixes they receive the earlier rounds' reviewer
+  verdicts. `review_brief.py` refuses findings on a full-scope round, so
+  append the prior verdict files to both renders by hand until B1 changes
+  that; never append the builder's coverage plan.
 - **Severity is tied to reachability:** BLOCKER or MAJOR needs a scenario
   reachable in normal use, or a fail-open, data-loss or security path.
 - **Reviewers get the WI definition** (spec, Done-when, Trust, touched rows),
@@ -91,8 +102,12 @@ reviewer. Until batch item 1 below lands, follow the ruling by hand:
 
 ## The queue
 
-The program's first batch comes first. Each row is new: file it on trunk with
-its scope critique (under the rules above) before claiming it. Then WI-798
+The program's first batch comes first. B1–B3 are new rows, and G is minted
+on trunk as a split of WI-805: file each on trunk with its scope critique
+(under the rules above) before claiming it. B4 is a spec amendment of an
+already-claimed row. Rows may be claimed before G lands, but a row S4 marks
+`single` builds only after G lands, and its plan is produced after its claim,
+in the lane, before its first build. Then WI-798
 continues, then leg 03's queue. **Re-order leg 03's queue against the plan once
 batch 1 is filed:** several rows now overlap the rulings. WI-817 retires the
 SN-028 window, which item 10 folds into one migration. WI-805's plan gate is
@@ -102,10 +117,10 @@ its arbiter.
 | # | Row | What |
 |---|---|---|
 | B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`; the record-at-event rule in `PROCESS.md` §3; in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause |
-| G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that |
+| G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that. It launches its planner and critic the way the scope critique is launched by hand today (`review_brief.py critique`, `sol_review.sh`); WI-804 later routes the same calls, so no second launch path is added |
 | B2 | *to file* | Item 6: fix LLR-292; add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
 | B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 13 separate parsers (13 `ConfigParser` constructions in 12 files; a pure refactor) |
-| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat; then rebuild in the lane |
+| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat. The lane's rows approved through acts 113–117 for the history-reading sweep are re-judged or retired under the new shape before the rebuild |
 | 0 | WI-798 | In flight: Terra's rework of sitting 004's returns, re-sit, full-lane gate in the new shape, land |
 | 1… | leg 03's queue | Its table, rows 1–25, in its order until re-ordered. WI-897 stays last, just before the owner's FileBackup resync test, and the item 10 config consolidation must land before that test |
 
@@ -123,9 +138,18 @@ signature (SN-029).
   D-008, D-011..D-016, and the open lanes' `wi-798.toml` (D-001 first) and
   `wi-902.toml`. D-015 (WI-902 left committed) is overtaken by the reshape
   ruling.
-- **Confirm or overrule** revision 6's clarifications, in the plan's rulings
-  section: the checkpoint gate counts inside the three-round cap; lanes in
-  flight restart at zero; IF rows name no files (your IF remark is kept as an
+- **New questions from the Fable review:**
+  - Should TC rows name modules under test, or should that column be
+    generated from the test files' tags? A module rename would otherwise
+    reopen a TC row.
+  - Should the managed loop refuse with an empty route pool, with the
+    template shipping empty (no single-model fallback)?
+  - Should the convergence round see the earlier reviewer verdicts? That
+    relaxes "a full-lane round is fresh" for the last round only.
+- **Confirm or overrule** the revision 6–7 clarifications, in the plan's
+  rulings section: the cap counts rounds before the checkpoint and the gate
+  always runs in convergence stance; convergence-class findings are never
+  deferred; lanes in flight restart at zero; IF rows name no files (your IF remark is kept as an
   open question); an explicit `boundary` class in the shipped inventory; the
   plan gate before rows that need it; `agents-enabled`'s TOML shape.
 
