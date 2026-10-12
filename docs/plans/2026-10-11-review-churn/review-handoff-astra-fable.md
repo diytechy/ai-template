@@ -227,8 +227,8 @@ lane, and leave docs/work/pause and docs/status.md alone.
 
 HEADLESS RULES: this session ends when your turn ends and kills anything in
 the background. Never use run_in_background, Monitor or notifications. Run
-the Codex command in the FOREGROUND with the Bash tool's timeout at 3600000
-ms. Spawn the Fable reviewer with run_in_background: false. Never ask a
+the Codex command in the FOREGROUND with the Bash tool's timeout at 10800000
+ms (3 hours). Spawn the Fable reviewer with run_in_background: false. Never ask a
 question: record anything needing the owner as an open call.
 
 1. Read CLAUDE.md. Then read
