@@ -109,3 +109,13 @@ flowchart BT
 | LLR → component | authored allocation | kept as design intent and checked against the files, or derived (owner call) |
 | Contract citations | `Contracts:` on 84 files | never mandated per function; a symbol cites an IF only if it realizes that seam (owner's query 1) |
 | WI → spine | `sr_refs` (warning) + hand-authored `needs` | names the interfaces it serves (`if_refs`), so the trace is mechanical and overlap is surfaced, not proven (owner's query 2, open) |
+
+**Recommended instead: variant E** (plan revision 14,
+[`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md); not a ruling).
+The ruled diagram above stays as drawn, with three additions:
+
+- **IF → LLR**, authored only on interfaces that genuinely carry a behaviour, each one reviewed. The SR side is derived through `boundary_refs` and the crossing cells.
+- **A few new seams** for artifacts the kit delivers. The dashboard comes first.
+- **A measured reach dial** with a closed internal allowance.
+
+`Implements:` stays, and no file declares its component yet.

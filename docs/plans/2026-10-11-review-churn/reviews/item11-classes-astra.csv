@@ -1,0 +1,303 @@
+llr,component,fitness,failed_tests,interface_class,candidate_if,basis,note
+LLR-001,CMP-006,fit,,existing-if,IF-145,hand,TC-001 executes strict CLI on linked/orphan fixtures.
+LLR-002,CMP-006,reword,2,existing-if,IF-145,script,implementation-token: ID_PATTERNS; candidate and evidence adequacy unconfirmed.
+LLR-003,CMP-006,reword,2,existing-if,IF-145,script,implementation-token: phase_num; candidate and evidence adequacy unconfirmed.
+LLR-004,CMP-006,reword,1,existing-if,IF-001,hand,Define comparative vocabulary and predicate markers; TC-004 exercises CLI warnings.
+LLR-005,CMP-006,fit,,existing-if,IF-075,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-006,CMP-007,reword,1;3,existing-if,IF-013,hand,"TC-006 missing-command case yields FAIL, or lenient SKIP; row promises SKIP(missing) with nonzero."
+LLR-007,CMP-007,fit,,existing-if,IF-040,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-008,CMP-007,fit,,existing-if,IF-013,hand,TC-008 drives malformed profile CLI and missing-binary step refusal.
+LLR-009,CMP-009,fit,,existing-if,IF-014,hand,TC-009 scaffolds node profile and inspects delivered omissions/checklist.
+LLR-010,CMP-009,reword,2,existing-if,IF-262,script,implementation-token: append_stack_checklist; candidate and evidence adequacy unconfirmed.
+LLR-011,CMP-009,fit,,existing-if,IF-014,hand,TC-011 invokes bootstrap both ways; existing customized file preserved or replaced.
+LLR-012,CMP-007,reword,2,existing-if,IF-002,script,implementation-token: check.py; candidate and evidence adequacy unconfirmed.
+LLR-013,CMP-007,fit,,existing-if,IF-003,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-014,CMP-007,fit,,existing-if,IF-167,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-015,CMP-006,fit,,existing-if,IF-001,hand,TC-015 injects unknown PB reference and reads diagnostic.
+LLR-016,CMP-007,reword,1;2,existing-if,IF-006,hand,Name strict condition and exempt scope; tests distinguish warn from strict and inspect stub forms.
+LLR-017,CMP-007,fit,,existing-if,IF-005,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-018,CMP-007,reword,2,existing-if,IF-005,script,implementation-token: privacy_check; candidate and evidence adequacy unconfirmed.
+LLR-019,CMP-007,reword,2,existing-if,IF-134,hand,State commit refusal capability; TC-019 executes hook for staged secret.
+LLR-020,CMP-007,fit,,existing-if,IF-135,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-021,CMP-007,reword,2,existing-if,IF-134,hand,Remove probe symbol and sourcing prescription; evidence invokes hook with older interpreter.
+LLR-022,CMP-007,fit,,existing-if,IF-016,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-023,CMP-006,reword,1,existing-if,IF-150,hand,Resolve promised retiring map target; TC-023 checks staleness and splice preservation.
+LLR-024,CMP-009,reword,1,existing-if,IF-017,hand,Define range/set/bool and coverage strategies; TC-024 tests pairwise and actual TOML stdout.
+LLR-025,CMP-009,reword,3,existing-if,IF-019,hand,"TC-025 file tests collect/count rows; read main test rejects short description, not stale-index mutation."
+LLR-026,CMP-008,reword,2,existing-if,IF-064,script,implementation-token: build_argv; candidate and evidence adequacy unconfirmed.
+LLR-027,CMP-008,fit,,existing-if,IF-015,hand,TC-027 invokes loop; missing CLI exits 2 before session.
+LLR-028,CMP-008,fit,,existing-if,IF-015,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-029,CMP-008,reword,2;3,existing-if,IF-065,hand,Remove OS mechanism; cited file stale: actual cross-process death test is test_agent_loop_support.
+LLR-030,CMP-008,reword,1;3,existing-if,IF-065,hand,Support tests exempt unsupported POSIX filesystem; state domain; TC evidence still names old file.
+LLR-031,CMP-007,reframe-or-retire,2,no-observable-seam,,script,implementation-token: agent_loop; structural/retired claim; adjudicate retained behaviour; candidate and evidence adequacy unconfirmed.
+LLR-032,CMP-009,fit,,boundary-artifact,Onboarding launcher,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-033,CMP-009,fit,,existing-if,IF-018,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-034,CMP-006,reword,2,existing-if,IF-056,script,implementation-token: trajectory_check; candidate and evidence adequacy unconfirmed.
+LLR-035,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,hand,TC-038 generates HTML and checks views/offline content; no dashboard-output IF today.
+LLR-037,CMP-008,reword,2,existing-if,IF-015,script,implementation-token: cmd_map; candidate and evidence adequacy unconfirmed.
+LLR-038,CMP-007,reword,2,existing-if,IF-087,script,implementation-token: gen_arch_map; candidate and evidence adequacy unconfirmed.
+LLR-039,CMP-009,reword,2,existing-if,IF-012,script,implementation-token: on_disk; candidate and evidence adequacy unconfirmed.
+LLR-040,CMP-007,reword,2,existing-if,IF-169,script,implementation-token: tool_name; candidate and evidence adequacy unconfirmed.
+LLR-041,CMP-006,fit,,existing-if,IF-001,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-042,CMP-006,reword,2,existing-if,IF-263,script,implementation-token: interfaces_check; candidate and evidence adequacy unconfirmed.
+LLR-043,CMP-009,reword,2,existing-if,IF-019,script,implementation-token: gen_skills_index; candidate and evidence adequacy unconfirmed.
+LLR-044,CMP-008,fit,,existing-if,IF-044,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-045,CMP-008,reword,2,existing-if,IF-260,script,implementation-token: close_round_scope; candidate and evidence adequacy unconfirmed.
+LLR-046,CMP-008,fit,,existing-if,IF-046,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-047,CMP-009,reword,2,existing-if,IF-158,script,implementation-token: load_capabilities; candidate and evidence adequacy unconfirmed.
+LLR-048,CMP-008,fit,,existing-if,IF-260,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-049,CMP-006,reword,2,existing-if,IF-263,script,implementation-token: TOP_VIEW_MAX; candidate and evidence adequacy unconfirmed.
+LLR-050,CMP-006,reframe-or-retire,2,no-observable-seam,,script,implementation-token: sr_gate; structural/retired claim; adjudicate retained behaviour; candidate and evidence adequacy unconfirmed.
+LLR-051,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: build_html; candidate and evidence adequacy unconfirmed.
+LLR-052,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-055,CMP-009,reword,3,boundary-artifact,Delivered project-state dashboard,script,no resolvable automated evidence file; inspect alternate evidence; candidate and evidence adequacy unconfirmed.
+LLR-056,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: process_panel; candidate and evidence adequacy unconfirmed.
+LLR-057,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: MAX_TIER_COL; candidate and evidence adequacy unconfirmed.
+LLR-058,CMP-008,fit,,existing-if,IF-055,hand,TC-058 tests frontier and CLI JSON; TC-253 checks OI status read.
+LLR-059,CMP-008,fit,,existing-if,IF-053,hand,TC-059 exercises classifier refusals and CLI agreement; consumer-level observable.
+LLR-060,CMP-008,reword,2,existing-if,IF-155,script,implementation-token: gen_trajectory; candidate and evidence adequacy unconfirmed.
+LLR-061,CMP-008,reword,2,existing-if,IF-260,script,implementation-token: integrate.py; candidate and evidence adequacy unconfirmed.
+LLR-067,CMP-006,reword,2,existing-if,IF-263,hand,Remove scanner symbol; TC-067 drives real checker and directional kernel exemption.
+LLR-068,CMP-006,fit,,existing-if,IF-263,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-069,CMP-006,reword,2,existing-if,IF-060,script,implementation-token: finding_clauses; candidate and evidence adequacy unconfirmed.
+LLR-070,CMP-008,reword,1,existing-if,IF-058,hand,TC-070 drives transitions; row omits numeric caps and legal-step table; reference declared policy precisely.
+LLR-071,CMP-008,fit,,boundary-artifact,Planning brief,hand,"TC-071 builds actual brief with excluded sentinel; consumer is planner, no UI needed."
+LLR-072,CMP-008,fit,,existing-if,IF-044,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-073,CMP-008,fit,,existing-if,IF-058,hand,"TC-073 runs real coverage subprocess and round machine; disposition seam, not adapter ownership."
+LLR-074,CMP-008,fit,,existing-if,IF-061,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-075,CMP-006,fit,,existing-if,IF-009,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-076,CMP-008,fit,,existing-if,IF-066,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-077,CMP-006,fit,,existing-if,IF-009,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-078,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-079,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-080,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-081,CMP-008,reword,2,existing-if,IF-044,script,implementation-token: session_hold; candidate and evidence adequacy unconfirmed.
+LLR-082,CMP-008,reword,2,existing-if,IF-015,script,implementation-token: AGENT_CRITIQUE_MAX; candidate and evidence adequacy unconfirmed.
+LLR-083,CMP-006,fit,,existing-if,IF-001,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-084,CMP-006,fit,,existing-if,IF-009,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-085,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-086,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: TOP_VIEW_MAX; candidate and evidence adequacy unconfirmed.
+LLR-087,CMP-009,reword,1;3,boundary-artifact,Delivered project-state dashboard,hand,"TC-089 only compares endpoint x sets, not semantic endpoints/y or every tier; define correct."
+LLR-088,CMP-009,reword,3,boundary-artifact,Delivered project-state dashboard,hand,"TC-090 checks listener strings and attributes, never activates input or observes restored view."
+LLR-089,CMP-008,fit,,existing-if,IF-053,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-095,CMP-008,fit,,existing-if,IF-055,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-096,CMP-008,fit,,existing-if,IF-015,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-097,CMP-006,reword,2,existing-if,IF-009,script,implementation-token: spec_interface_findings; candidate and evidence adequacy unconfirmed.
+LLR-098,CMP-007,fit,,existing-if,IF-069,hand,TC-101 executes CLI; breach names module and fails.
+LLR-099,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: _drill_layer_svg; candidate and evidence adequacy unconfirmed.
+LLR-100,CMP-009,reword,2;3,boundary-artifact,Delivered project-state dashboard,hand,TC-103 asserts handler substring; reword outcome and exercise ancestor navigation.
+LLR-101,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,hand,TC-104 structural fixture/shipped walk fits explicit scope; remove markup and _svg_role.
+LLR-102,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: STATUS_FILL; candidate and evidence adequacy unconfirmed.
+LLR-103,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: <i; candidate and evidence adequacy unconfirmed.
+LLR-104,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-105,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: STATUS_FILL; candidate and evidence adequacy unconfirmed.
+LLR-106,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-107,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-108,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,hand,"TC-113 parses delivered names/landmarks; adequate to stated naming condition, not full accessibility."
+LLR-109,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: PHASE_ACCENTS; candidate and evidence adequacy unconfirmed.
+LLR-110,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: SVG_RX; candidate and evidence adequacy unconfirmed.
+LLR-111,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-112,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: ordered; candidate and evidence adequacy unconfirmed.
+LLR-113,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: TIER_FILL; candidate and evidence adequacy unconfirmed.
+LLR-114,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: tokens; candidate and evidence adequacy unconfirmed.
+LLR-115,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-116,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: NODE_TYPE_PX; candidate and evidence adequacy unconfirmed.
+LLR-117,CMP-009,reword,1;2,boundary-artifact,Delivered project-state dashboard,script,vague-token review: correct; implementation-token: fill; candidate and evidence adequacy unconfirmed.
+LLR-118,CMP-009,reword,2,existing-if,IF-074,script,implementation-token: open_item_queue; candidate and evidence adequacy unconfirmed.
+LLR-119,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: row_h; candidate and evidence adequacy unconfirmed.
+LLR-120,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,hand,"TC-125 samples emitted geometry; remove helper/history; scope is box intersection, not perceptual routing."
+LLR-121,CMP-009,reword,2,existing-if,IF-014,script,implementation-token: write_kit_version; candidate and evidence adequacy unconfirmed.
+LLR-122,CMP-009,fit,,existing-if,IF-293,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-123,CMP-008,fit,,existing-if,IF-171,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-124,CMP-008,reword,2,existing-if,IF-155,script,implementation-token: trunk_step; candidate and evidence adequacy unconfirmed.
+LLR-130,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-131,CMP-008,fit,,existing-if,IF-071,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-132,CMP-008,reword,2,existing-if,IF-015,script,implementation-token: page_action; candidate and evidence adequacy unconfirmed.
+LLR-133,CMP-006,reword,2,existing-if,IF-076,script,implementation-token: provenance_findings; candidate and evidence adequacy unconfirmed.
+LLR-134,CMP-006,reword,2,existing-if,IF-076,script,implementation-token: form_findings; candidate and evidence adequacy unconfirmed.
+LLR-135,CMP-006,reword,2,existing-if,IF-076,script,implementation-token: paraphrase_advisories; candidate and evidence adequacy unconfirmed.
+LLR-136,CMP-006,reword,2,existing-if,IF-078,script,implementation-token: write_spec_file; candidate and evidence adequacy unconfirmed.
+LLR-137,CMP-008,reword,2,existing-if,IF-155,script,implementation-token: plan_artifacts; candidate and evidence adequacy unconfirmed.
+LLR-138,CMP-008,reword,2,existing-if,IF-189,script,implementation-token: pause_reason; candidate and evidence adequacy unconfirmed.
+LLR-139,CMP-009,fit,,existing-if,IF-088,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-140,CMP-008,reword,2,existing-if,IF-080,script,implementation-token: agent_common; candidate and evidence adequacy unconfirmed.
+LLR-141,CMP-007,reword,2,existing-if,IF-040,script,implementation-token: _TRUNK_FRESHNESS_STEPS; candidate and evidence adequacy unconfirmed.
+LLR-142,CMP-008,reword,2,existing-if,IF-155,script,implementation-token: derive_stage; candidate and evidence adequacy unconfirmed.
+LLR-143,CMP-008,reword,2,boundary-artifact,Capability result: Plain-launch drive loop (claim->build->integ,script,implementation-token: agent_loop.py; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-144,CMP-008,reword,2,existing-if,IF-137,script,implementation-token: close_partial; candidate and evidence adequacy unconfirmed.
+LLR-145,CMP-008,reword,2,boundary-artifact,Capability result: Link-aware spec-move ritual (move + relink i,script,implementation-token: move_spec; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-146,CMP-007,reword,2,existing-if,IF-086,script,implementation-token: check_doc_refs; candidate and evidence adequacy unconfirmed.
+LLR-147,CMP-006,reword,2,boundary-artifact,"Capability result: SN-coverage stage rung, folded into spine_st",script,implementation-token: spine_stage; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-148,CMP-006,fit,,existing-if,IF-165,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-149,CMP-008,reword,2,boundary-artifact,Capability result: §A8 admission: the kind x approval-level tab,script,implementation-token: kind_of; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-150,CMP-008,reword,2,existing-if,IF-136,script,implementation-token: lane_worktree; candidate and evidence adequacy unconfirmed.
+LLR-151,CMP-008,reword,2,existing-if,IF-173,script,implementation-token: _claim_refusal; candidate and evidence adequacy unconfirmed.
+LLR-152,CMP-008,reword,2,existing-if,IF-094,script,implementation-token: _lane_bar_directives; candidate and evidence adequacy unconfirmed.
+LLR-153,CMP-008,reword,2,existing-if,IF-090,script,implementation-token: next_wi_id; candidate and evidence adequacy unconfirmed.
+LLR-154,CMP-008,reword,2,existing-if,IF-173,script,implementation-token: integrate_one; candidate and evidence adequacy unconfirmed.
+LLR-155,CMP-008,reword,2,existing-if,IF-261,script,implementation-token: process_config; candidate and evidence adequacy unconfirmed.
+LLR-156,CMP-009,reword,2,existing-if,IF-014,script,implementation-token: set_process_key; candidate and evidence adequacy unconfirmed.
+LLR-157,CMP-006,reword,2,boundary-artifact,Capability result: The second axis: which tier is in process,script,implementation-token: spine_stage; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-158,CMP-006,reword,2,existing-if,IF-196,script,implementation-token: split_changed_cells; candidate and evidence adequacy unconfirmed.
+LLR-159,CMP-008,reframe-or-retire,2,boundary-artifact,Capability result: Admission order and the red-TC census,script,implementation-token: _judgement_first; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-160,CMP-006,fit,,existing-if,IF-177,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-161,CMP-008,reword,2,existing-if,IF-137,script,implementation-token: close_partial; candidate and evidence adequacy unconfirmed.
+LLR-162,CMP-008,reword,2,existing-if,IF-097,script,implementation-token: KIT_FRAGMENTS; candidate and evidence adequacy unconfirmed.
+LLR-163,CMP-008,reword,2,existing-if,IF-064,script,implementation-token: split_cmd; candidate and evidence adequacy unconfirmed.
+LLR-164,CMP-009,reword,2,boundary-artifact,Prompt catalogue,script,implementation-token: gen_arch_map; candidate and evidence adequacy unconfirmed.
+LLR-165,CMP-006,reword,2,existing-if,IF-103,script,implementation-token: written_paths; candidate and evidence adequacy unconfirmed.
+LLR-166,CMP-006,reword,2,existing-if,IF-102,script,implementation-token: trace_text; candidate and evidence adequacy unconfirmed.
+LLR-167,CMP-008,reword,2,existing-if,IF-115,script,implementation-token: agent_loop; candidate and evidence adequacy unconfirmed.
+LLR-168,CMP-008,reword,2,boundary-artifact,Perspective record,script,implementation-token: applies_when; candidate and evidence adequacy unconfirmed.
+LLR-169,CMP-007,reword,2,boundary-artifact,Capability result: Retired-vocabulary enforcer,script,implementation-token: in_scope; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-170,CMP-007,reword,2,existing-if,IF-121,script,implementation-token: spine_carrier; candidate and evidence adequacy unconfirmed.
+LLR-171,CMP-009,reword,2,existing-if,IF-039,script,implementation-token: trace.py; candidate and evidence adequacy unconfirmed.
+LLR-172,CMP-006,reword,2,existing-if,IF-263,script,implementation-token: component_findings; candidate and evidence adequacy unconfirmed.
+LLR-173,CMP-006,reword,2,existing-if,IF-123,script,implementation-token: last_approved; candidate and evidence adequacy unconfirmed.
+LLR-174,CMP-008,reword,2,existing-if,IF-015,script,implementation-token: is_error; candidate and evidence adequacy unconfirmed.
+LLR-175,CMP-008,reword,2,existing-if,IF-015,script,implementation-token: note_session; candidate and evidence adequacy unconfirmed.
+LLR-176,CMP-008,reword,2,boundary-artifact,"Capability result: The push-channel inclusion conventions, pinn",script,implementation-token: plan_briefs; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-177,CMP-008,reword,2,existing-if,IF-065,script,implementation-token: write_session_log; candidate and evidence adequacy unconfirmed.
+LLR-178,CMP-006,reword,2,existing-if,IF-083,script,implementation-token: staged_snapshot_findings; candidate and evidence adequacy unconfirmed.
+LLR-179,CMP-006,reword,2,existing-if,IF-076,script,implementation-token: ears_advisories; candidate and evidence adequacy unconfirmed.
+LLR-180,CMP-006,reframe-or-retire,2,existing-if,IF-008,hand,"Symbol-binding discharge is superseded by ruling 5; TC-175 proves old gate, not replacement."
+LLR-181,CMP-006,reframe-or-retire,2;3,no-observable-seam,,hand,"Bundle mixes reuse topology, parsing, git defaults and scaffold completeness; split retained outcomes."
+LLR-182,CMP-008,reword,2,kernel-or-internal-edge,,hand,TC-177 drives outcome decision; IF-093 carries vocabulary only; do not assign entire mixed row to it.
+LLR-183,CMP-006,reword,1;2,existing-if,IF-104,script,vague-token review: correct; implementation-token: spine_carrier; candidate and evidence adequacy unconfirmed.
+LLR-184,CMP-006,reframe-or-retire,2,kernel-or-internal-edge,,hand,Separate ordering/refusal behaviour from identity/import topology; TC-179 tests both.
+LLR-185,CMP-006,reword,2,kernel-or-internal-edge,,script,implementation-token: require_rung; consumer contract needed; do not mint helper IF; candidate and evidence adequacy unconfirmed.
+LLR-186,CMP-006,reword,2,existing-if,IF-050,hand,Remove function delegation narrative; TC-181 drives derivation and harness freshness.
+LLR-187,CMP-006,reword,1;2,existing-if,IF-075,script,vague-token review: correct; implementation-token: frame_findings; candidate and evidence adequacy unconfirmed.
+LLR-188,CMP-008,reframe-or-retire,2,boundary-artifact,"Capability result: The registry-gap census as a read model, sit",script,implementation-token: gap_census; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-189,CMP-008,reword,2,existing-if,IF-093,script,implementation-token: report_path; candidate and evidence adequacy unconfirmed.
+LLR-190,CMP-007,reword,2,boundary-artifact,Hosted verification workflow,hand,"TC-185 parses delivered workflow and mutation; suitable for structural contract, not hosted execution."
+LLR-191,CMP-007,fit,,boundary-artifact,Whole-suite evidence record,hand,TC-186 invokes producer with fake harness outcome and verifies record; sufficient for conditional writer claim.
+LLR-192,CMP-006,reword,2,boundary-artifact,Whole-suite evidence record,hand,TC-187 edits bound source and checks stale verdict; remove package topology.
+LLR-193,CMP-009,reword,2,boundary-artifact,Agent resume launcher,script,implementation-token: pick_py; candidate and evidence adequacy unconfirmed.
+LLR-194,CMP-006,reword,2,existing-if,IF-075,script,implementation-token: schema_findings; candidate and evidence adequacy unconfirmed.
+LLR-195,CMP-007,reword,2,boundary-artifact,"Capability result: Standing duplicated-function-body census, wa",script,implementation-token: __pycache__; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-196,CMP-008,reword,2,existing-if,IF-065,script,implementation-token: write_session_log; candidate and evidence adequacy unconfirmed.
+LLR-197,CMP-006,reframe-or-retire,2,no-observable-seam,,script,implementation-token: sn_draft_ids; structural/retired claim; adjudicate retained behaviour; candidate and evidence adequacy unconfirmed.
+LLR-198,CMP-009,reword,2,existing-if,IF-164,script,implementation-token: spine_pending; candidate and evidence adequacy unconfirmed.
+LLR-199,CMP-009,reword,1;2,existing-if,IF-140,script,vague-token review: correct; implementation-token: gen_components.py; candidate and evidence adequacy unconfirmed.
+LLR-200,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: traj_parse; candidate and evidence adequacy unconfirmed.
+LLR-201,CMP-006,fit,,boundary-artifact,Capability result: Checker cross-row coherence module below its,script,proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-202,CMP-006,reword,2,existing-if,IF-129,script,implementation-token: staged_hat_refs_findings; candidate and evidence adequacy unconfirmed.
+LLR-203,CMP-009,reword,2,existing-if,IF-262,script,implementation-token: mapping_entries; candidate and evidence adequacy unconfirmed.
+LLR-204,CMP-006,reword,2,existing-if,IF-028,script,implementation-token: backlink_ids; candidate and evidence adequacy unconfirmed.
+LLR-205,CMP-006,reword,2,kernel-or-internal-edge,,script,implementation-token: SECRET_CLASSES; consumer contract needed; do not mint helper IF; candidate and evidence adequacy unconfirmed.
+LLR-206,CMP-007,reword,2,existing-if,IF-188,script,implementation-token: __pycache__; candidate and evidence adequacy unconfirmed.
+LLR-207,CMP-008,reword,2,existing-if,IF-175,script,implementation-token: tree_identity; candidate and evidence adequacy unconfirmed.
+LLR-208,CMP-009,reword,2,boundary-artifact,Review rollup,script,implementation-token: _off_trunk_refusal; candidate and evidence adequacy unconfirmed.
+LLR-209,CMP-006,reword,2,existing-if,IF-165,script,implementation-token: _EXEMPT_DECREASE; candidate and evidence adequacy unconfirmed.
+LLR-210,CMP-008,reword,2,boundary-artifact,Capability result: The consolidation census: which queued rows ,script,implementation-token: check_trajectory; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-211,CMP-006,reword,2,existing-if,IF-114,script,implementation-token: spine.py; candidate and evidence adequacy unconfirmed.
+LLR-212,CMP-006,reword,2,existing-if,IF-180,script,implementation-token: frame_rules.py; candidate and evidence adequacy unconfirmed.
+LLR-213,CMP-006,reword,2,existing-if,IF-180,script,implementation-token: crossing_systems; candidate and evidence adequacy unconfirmed.
+LLR-214,CMP-006,reword,2,existing-if,IF-231,script,implementation-token: need_frame_gap_advisories; candidate and evidence adequacy unconfirmed.
+LLR-215,CMP-006,reword,2,existing-if,IF-112,script,implementation-token: spine_carrier; candidate and evidence adequacy unconfirmed.
+LLR-216,CMP-006,reword,2,existing-if,IF-180,script,implementation-token: stakeholder_findings; candidate and evidence adequacy unconfirmed.
+LLR-217,CMP-006,reword,2,existing-if,IF-180,script,implementation-token: frame_rules; candidate and evidence adequacy unconfirmed.
+LLR-218,CMP-006,reword,2,existing-if,IF-118,script,implementation-token: OFFSPINE_TABLE; candidate and evidence adequacy unconfirmed.
+LLR-219,CMP-006,reword,2,existing-if,IF-089,script,implementation-token: assumption_rules; candidate and evidence adequacy unconfirmed.
+LLR-220,CMP-006,reword,2,existing-if,IF-091,script,implementation-token: baseline_snapshot; candidate and evidence adequacy unconfirmed.
+LLR-221,CMP-006,reword,2,existing-if,IF-190,script,implementation-token: surrogate_findings; candidate and evidence adequacy unconfirmed.
+LLR-222,CMP-006,reword,2,existing-if,IF-102,script,implementation-token: da_refs; candidate and evidence adequacy unconfirmed.
+LLR-223,CMP-006,reword,2,existing-if,IF-226,script,implementation-token: sr_classification_advisories; candidate and evidence adequacy unconfirmed.
+LLR-224,CMP-006,reword,2,existing-if,IF-190,script,implementation-token: spine.py; candidate and evidence adequacy unconfirmed.
+LLR-225,CMP-006,reword,2,existing-if,IF-129,script,implementation-token: SPINE_TRACED_CELLS; candidate and evidence adequacy unconfirmed.
+LLR-226,CMP-006,reword,2,existing-if,IF-180,script,implementation-token: frame_rules; candidate and evidence adequacy unconfirmed.
+LLR-227,CMP-006,reword,2,existing-if,IF-226,script,implementation-token: reaching_parties; candidate and evidence adequacy unconfirmed.
+LLR-228,CMP-006,reword,2,existing-if,IF-190,script,implementation-token: uncited_assumption_advisories; candidate and evidence adequacy unconfirmed.
+LLR-229,CMP-006,reword,2,existing-if,IF-104,script,implementation-token: assumption_refs; candidate and evidence adequacy unconfirmed.
+LLR-230,CMP-006,reword,2,existing-if,IF-165,script,implementation-token: _phase_groups; candidate and evidence adequacy unconfirmed.
+LLR-231,CMP-006,reword,2,existing-if,IF-146,script,implementation-token: assumption_evidence_rows; candidate and evidence adequacy unconfirmed.
+LLR-232,CMP-006,reword,2,existing-if,IF-102,script,implementation-token: spine.py; candidate and evidence adequacy unconfirmed.
+LLR-233,CMP-006,reword,2,existing-if,IF-200,script,implementation-token: is_observation_tc; candidate and evidence adequacy unconfirmed.
+LLR-234,CMP-006,reword,2,existing-if,IF-214,script,implementation-token: evidence.py; candidate and evidence adequacy unconfirmed.
+LLR-235,CMP-006,reword,2,existing-if,IF-215,script,implementation-token: record_observation.py; candidate and evidence adequacy unconfirmed.
+LLR-236,CMP-006,reword,2,existing-if,IF-216,script,implementation-token: observation_record_findings; candidate and evidence adequacy unconfirmed.
+LLR-238,CMP-006,reword,2,existing-if,IF-216,script,implementation-token: falsification_worklist; candidate and evidence adequacy unconfirmed.
+LLR-239,CMP-006,reword,2,existing-if,IF-217,script,implementation-token: risk_acceptance_act; candidate and evidence adequacy unconfirmed.
+LLR-240,CMP-006,reword,2,existing-if,IF-226,script,implementation-token: assumption_rules; candidate and evidence adequacy unconfirmed.
+LLR-241,CMP-006,reword,2,existing-if,IF-050,script,implementation-token: load_spine; candidate and evidence adequacy unconfirmed.
+LLR-242,CMP-007,reword,2,existing-if,IF-231,script,implementation-token: boundary_gate_findings; candidate and evidence adequacy unconfirmed.
+LLR-243,CMP-007,reword,2,existing-if,IF-216,script,implementation-token: release_gate_findings; candidate and evidence adequacy unconfirmed.
+LLR-244,CMP-007,reword,2,existing-if,IF-231,script,implementation-token: module_srs; candidate and evidence adequacy unconfirmed.
+LLR-245,CMP-006,reword,2,existing-if,IF-220,script,implementation-token: refresh_refusal; candidate and evidence adequacy unconfirmed.
+LLR-246,CMP-008,reword,2,existing-if,IF-196,script,implementation-token: staged_status_moves; candidate and evidence adequacy unconfirmed.
+LLR-247,CMP-008,reword,2,existing-if,IF-194,script,implementation-token: provenance.py; candidate and evidence adequacy unconfirmed.
+LLR-248,CMP-008,reword,2,existing-if,IF-194,script,implementation-token: format_loop_trailer; candidate and evidence adequacy unconfirmed.
+LLR-249,CMP-006,reword,2,existing-if,IF-195,script,implementation-token: authority.py; candidate and evidence adequacy unconfirmed.
+LLR-250,CMP-006,reword,2,existing-if,IF-190,script,implementation-token: bridged_by; candidate and evidence adequacy unconfirmed.
+LLR-251,CMP-006,reword,2,existing-if,IF-089,script,implementation-token: speaks_for; candidate and evidence adequacy unconfirmed.
+LLR-252,CMP-006,reword,2,existing-if,IF-190,script,implementation-token: obstacle_hat_findings; candidate and evidence adequacy unconfirmed.
+LLR-254,CMP-008,reword,2,existing-if,IF-228,script,implementation-token: consolidate.py; candidate and evidence adequacy unconfirmed.
+LLR-255,CMP-008,reword,2,existing-if,IF-229,script,implementation-token: intake_after_merge; candidate and evidence adequacy unconfirmed.
+LLR-256,CMP-007,reword,2,existing-if,IF-187,script,implementation-token: check_readability.py; candidate and evidence adequacy unconfirmed.
+LLR-257,CMP-007,reword,2,existing-if,IF-198,script,implementation-token: test_first_since; candidate and evidence adequacy unconfirmed.
+LLR-258,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: traj_parse; candidate and evidence adequacy unconfirmed.
+LLR-259,CMP-006,reword,2,existing-if,IF-075,script,implementation-token: released_tiers; candidate and evidence adequacy unconfirmed.
+LLR-260,CMP-006,reword,2,kernel-or-internal-edge,,script,implementation-token: evidence_items; consumer contract needed; do not mint helper IF; candidate and evidence adequacy unconfirmed.
+LLR-261,CMP-007,reword,2,existing-if,IF-187,script,implementation-token: flag_axis; candidate and evidence adequacy unconfirmed.
+LLR-262,CMP-008,reword,2,existing-if,IF-175,script,implementation-token: session_range; candidate and evidence adequacy unconfirmed.
+LLR-263,CMP-006,reword,2,existing-if,IF-233,script,implementation-token: module_tests; candidate and evidence adequacy unconfirmed.
+LLR-264,CMP-008,reword,2,existing-if,IF-229,script,implementation-token: intake.py; candidate and evidence adequacy unconfirmed.
+LLR-265,CMP-008,reword,2,existing-if,IF-229,script,implementation-token: intake.py; candidate and evidence adequacy unconfirmed.
+LLR-266,CMP-008,reword,2,existing-if,IF-245,script,implementation-token: adapter_for; candidate and evidence adequacy unconfirmed.
+LLR-267,CMP-008,reword,2,existing-if,IF-245,script,implementation-token: session_id; candidate and evidence adequacy unconfirmed.
+LLR-268,CMP-008,reword,2,existing-if,IF-245,script,implementation-token: USAGE_KEYS; candidate and evidence adequacy unconfirmed.
+LLR-269,CMP-008,reword,2,existing-if,IF-246,script,implementation-token: agent_session; candidate and evidence adequacy unconfirmed.
+LLR-270,CMP-008,reword,2,existing-if,IF-248,script,implementation-token: keep_config; candidate and evidence adequacy unconfirmed.
+LLR-271,CMP-006,reword,2,existing-if,IF-123,script,implementation-token: baseline_snapshot; candidate and evidence adequacy unconfirmed.
+LLR-272,CMP-006,reword,2,existing-if,IF-075,script,implementation-token: missing_cell_findings; candidate and evidence adequacy unconfirmed.
+LLR-273,CMP-006,reword,2,existing-if,IF-075,script,implementation-token: baseline_snapshot; candidate and evidence adequacy unconfirmed.
+LLR-274,CMP-006,reword,2,existing-if,IF-252,script,implementation-token: absolute_advisories; candidate and evidence adequacy unconfirmed.
+LLR-275,CMP-009,reword,2,existing-if,IF-014,script,implementation-token: delivery_inventory; candidate and evidence adequacy unconfirmed.
+LLR-276,CMP-006,reword,2,existing-if,IF-131,script,implementation-token: mapping_purpose_findings; candidate and evidence adequacy unconfirmed.
+LLR-277,CMP-006,reword,2,existing-if,IF-112,script,implementation-token: spine_carrier; candidate and evidence adequacy unconfirmed.
+LLR-278,CMP-006,reword,2,existing-if,IF-091,script,implementation-token: acceptance_record; candidate and evidence adequacy unconfirmed.
+LLR-279,CMP-009,reword,2,existing-if,IF-014,script,implementation-token: skill_copies; candidate and evidence adequacy unconfirmed.
+LLR-280,CMP-008,reword,2,existing-if,IF-260,script,implementation-token: guardrails_core; candidate and evidence adequacy unconfirmed.
+LLR-281,CMP-009,reword,2,existing-if,IF-254,script,implementation-token: DESCRIPTION_FLOOR; candidate and evidence adequacy unconfirmed.
+LLR-282,CMP-008,reword,2,existing-if,IF-261,script,implementation-token: decision_recording; candidate and evidence adequacy unconfirmed.
+LLR-283,CMP-008,reword,2,existing-if,IF-256,script,implementation-token: decisions.py; candidate and evidence adequacy unconfirmed.
+LLR-284,CMP-008,reword,2,existing-if,IF-154,script,implementation-token: _decision_record_refusal; candidate and evidence adequacy unconfirmed.
+LLR-285,CMP-009,fit,,boundary-artifact,Delivered project-state dashboard,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-286,CMP-006,reword,2,existing-if,IF-257,script,implementation-token: row_id; candidate and evidence adequacy unconfirmed.
+LLR-287,CMP-009,reword,2,boundary-artifact,Delivered project-state dashboard,script,implementation-token: retired_panel; candidate and evidence adequacy unconfirmed.
+LLR-288,CMP-008,fit,,existing-if,IF-264,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-290,CMP-008,reword,2,existing-if,IF-266,script,implementation-token: CODEX_HOME; candidate and evidence adequacy unconfirmed.
+LLR-291,CMP-007,fit,,existing-if,IF-267,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-292,CMP-009,reword,1,boundary-artifact,Delivered project-state dashboard,script,vague-token review: minimal; candidate and evidence adequacy unconfirmed.
+LLR-293,CMP-008,fit,,existing-if,IF-269,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-294,CMP-008,reword,2,existing-if,IF-269,script,implementation-token: observation_rubric_findings; candidate and evidence adequacy unconfirmed.
+LLR-295,CMP-008,reword,2,existing-if,IF-115,script,implementation-token: assumption_brief_lines; candidate and evidence adequacy unconfirmed.
+LLR-296,CMP-009,reword,2,existing-if,IF-018,script,implementation-token: spine_carrier; candidate and evidence adequacy unconfirmed.
+LLR-297,CMP-008,reword,2,boundary-artifact,Perspective record,script,implementation-token: hats.py; candidate and evidence adequacy unconfirmed.
+LLR-298,CMP-008,fit,,existing-if,IF-080,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-299,CMP-008,reword,2,existing-if,IF-056,script,implementation-token: open_item_queue; candidate and evidence adequacy unconfirmed.
+LLR-300,CMP-008,reword,2,existing-if,IF-280,script,implementation-token: guard_config; candidate and evidence adequacy unconfirmed.
+LLR-301,CMP-008,reword,2,existing-if,IF-279,script,implementation-token: session_prompt; candidate and evidence adequacy unconfirmed.
+LLR-302,CMP-006,reword,2,existing-if,IF-196,script,implementation-token: text_then_act_lines; candidate and evidence adequacy unconfirmed.
+LLR-303,CMP-008,reword,2,existing-if,IF-256,script,implementation-token: git_paths; candidate and evidence adequacy unconfirmed.
+LLR-304,CMP-008,reword,2,existing-if,IF-256,script,implementation-token: _retired_verdict; candidate and evidence adequacy unconfirmed.
+LLR-305,CMP-008,reword,2,existing-if,IF-282,script,implementation-token: adjudication_keep; candidate and evidence adequacy unconfirmed.
+LLR-306,CMP-008,reword,2,existing-if,IF-284,script,implementation-token: coordinator_adjudicate; candidate and evidence adequacy unconfirmed.
+LLR-307,CMP-008,reword,2,existing-if,IF-286,script,implementation-token: bound_items; candidate and evidence adequacy unconfirmed.
+LLR-308,CMP-008,reword,2,existing-if,IF-115,script,implementation-token: CANDIDATE_CLIP; candidate and evidence adequacy unconfirmed.
+LLR-309,CMP-008,reword,2,existing-if,IF-015,script,implementation-token: routed_session; candidate and evidence adequacy unconfirmed.
+LLR-310,CMP-008,reword,2,existing-if,IF-287,script,implementation-token: review_line; candidate and evidence adequacy unconfirmed.
+LLR-311,CMP-008,fit,,boundary-artifact,Capability result: Review threat-model definition and reviewer ,script,proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-312,CMP-008,fit,,existing-if,IF-137,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-313,CMP-008,reword,2,existing-if,IF-289,script,implementation-token: render_review; candidate and evidence adequacy unconfirmed.
+LLR-314,CMP-008,reword,2,existing-if,IF-290,script,implementation-token: held_by; candidate and evidence adequacy unconfirmed.
+LLR-315,CMP-008,reword,2,existing-if,IF-115,script,implementation-token: dispute_values; candidate and evidence adequacy unconfirmed.
+LLR-316,CMP-008,reword,2,existing-if,IF-291,script,implementation-token: blackout_at; candidate and evidence adequacy unconfirmed.
+LLR-317,CMP-008,reword,2,existing-if,IF-246,script,implementation-token: through_blackout; candidate and evidence adequacy unconfirmed.
+LLR-318,CMP-008,reword,2,existing-if,IF-015,script,implementation-token: wait_out_blackout; candidate and evidence adequacy unconfirmed.
+LLR-319,CMP-008,reword,2,boundary-artifact,Capability result: The dispatcher retains an earlier claim whil,script,implementation-token: claim_work; proposed output seam; producer ownership is not allocation; candidate and evidence adequacy unconfirmed.
+LLR-320,CMP-009,fit,,existing-if,IF-293,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-321,CMP-009,fit,,existing-if,IF-283,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-322,CMP-009,fit,,existing-if,IF-293,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.
+LLR-326,CMP-009,fit,,boundary-artifact,Developer setup result,script,No lexical/metadata failure detected; candidate and evidence adequacy unconfirmed.

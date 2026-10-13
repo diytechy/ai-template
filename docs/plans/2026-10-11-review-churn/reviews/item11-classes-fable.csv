@@ -1,0 +1,303 @@
+llr,component,fitness,failed_tests,interface_class,candidate_if,basis,note
+LLR-001,CMP-006,fit,,existing-if,IF-001,hand,exit 1 under --strict and named ids; TC-001 runs trace.py as a subprocess
+LLR-002,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-003,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-004,CMP-006,fit,,existing-if,IF-076,hand,warn-only outcome stated; driven through the CLI
+LLR-005,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-006,CMP-007,fit,,existing-if,IF-013,hand,SKIP(missing) nonzero outcome; driven via check.py subprocess
+LLR-007,CMP-007,fit,,existing-if,IF-267,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-008,CMP-007,fit,,existing-if,IF-267,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-009,CMP-009,fit,,existing-if,IF-014,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-010,CMP-009,reword,2,existing-if,IF-014,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-011,CMP-009,fit,,existing-if,IF-014,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-012,CMP-007,reword,2,existing-if,IF-002,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-013,CMP-007,fit,,existing-if,IF-003,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-014,CMP-007,reword,2,existing-if,IF-167,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-015,CMP-006,fit,,existing-if,IF-233,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-016,CMP-007,reword,2,existing-if,IF-006,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-017,CMP-007,fit,,existing-if,IF-005,hand,blocked-with-privacy-off outcome; driven via the lint
+LLR-018,CMP-007,reword,2,existing-if,IF-043,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-019,CMP-007,reword,2,existing-if,IF-134,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-020,CMP-007,fit,,existing-if,IF-135,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-021,CMP-007,fit,,existing-if,IF-134 / IF-135 (hook exit codes),hand,"probe outcomes decidable (3.11 floor, refusal names dev-setup); one symbol; TC-021 runs the hooks"
+LLR-022,CMP-007,fit,,existing-if,IF-016,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-023,CMP-006,fit,,existing-if,IF-010,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-024,CMP-009,fit,,existing-if,IF-017,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-025,CMP-009,fit,,existing-if,IF-019,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-026,CMP-008,reword,2,existing-if,IF-064,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-027,CMP-008,fit,,existing-if,IF-065,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-028,CMP-008,fit,,existing-if,IF-253,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-029,CMP-008,fit,,existing-if,IF-065,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-030,CMP-008,fit,,existing-if,IF-065,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-031,CMP-007,reword,2,existing-if,IF-043,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-032,CMP-009,reframe-or-retire,1,boundary-artifact,IF-014 (bootstrap scaffold tree),hand,a siting row (sites SR-032's obligation in the templates); no predicate of its own; TC-032 checks scaffold presence
+LLR-033,CMP-009,fit,,existing-if,IF-018,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-034,CMP-006,reword,2,existing-if,IF-009,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-035,CMP-009,fit,,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-037,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-038,CMP-007,reword,2,existing-if,IF-008,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-039,CMP-009,reword,2,existing-if,IF-149,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-040,CMP-007,reword,2,existing-if,IF-151,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-041,CMP-006,fit,,existing-if,IF-233,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-042,CMP-006,reword,2,existing-if,IF-263,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-043,CMP-009,reword,2,existing-if,IF-019,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-044,CMP-008,fit,3,existing-if,IF-044,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-045,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=7; evidence=boundary-dominant
+LLR-046,CMP-008,fit,,existing-if,IF-046,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-047,CMP-009,reword,2,existing-if,IF-157,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-048,CMP-008,fit,,existing-if,IF-260,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-049,CMP-006,reword,2,existing-if,IF-263,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-050,CMP-006,reframe-or-retire,1,no-observable-seam,,hand,a retirement record (no successor function occupies this row); carries no obligation; retire or move to the log
+LLR-051,CMP-009,reword,2,existing-if,IF-011,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-052,CMP-009,fit,,boundary-artifact,new: dashboard HTML,hand,threshold and dedup union decidable; TC-052 parses the emitted view
+LLR-055,CMP-009,fit,,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=unresolved
+LLR-056,CMP-009,reword,2,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-057,CMP-009,reword,2;3,boundary-artifact,new: dashboard HTML,hand,"MAX_TIER_COL, mouseleave and data-hl are mechanism; TC-057 asserts DRILL_SCRIPT source strings"
+LLR-058,CMP-008,fit,,existing-if,IF-171,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-059,CMP-008,fit,,existing-if,IF-171,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-060,CMP-008,reword,2,existing-if,IF-155,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-061,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-067,CMP-006,reword,2,existing-if,IF-263,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-068,CMP-006,fit,,existing-if,IF-263,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-069,CMP-006,reword,2,existing-if,IF-152,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-070,CMP-008,fit,,existing-if,IF-058,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-071,CMP-008,fit,3,boundary-artifact,"new: composed planner brief (owner plan_briefs, channel file/stdout)",hand,"allow-list outcome decidable and stated; TC-071 asserts the surface dict in-process, not the delivered brief"
+LLR-072,CMP-008,fit,3,existing-if,IF-044,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-073,CMP-008,fit,3,existing-if,IF-153 (coverage report) -> round record,hand,typed-outcome mapping decidable; the adapter is internal; tests in-process
+LLR-074,CMP-008,fit,,existing-if,IF-061,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-075,CMP-006,fit,,existing-if,IF-009,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-076,CMP-008,fit,,existing-if,IF-066,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-077,CMP-006,reword,2,existing-if,IF-009,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-078,CMP-009,fit,,existing-if,IF-052,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-079,CMP-009,fit,,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-080,CMP-009,fit,,existing-if,IF-010,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-081,CMP-008,reword,2,existing-if,IF-044,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-082,CMP-008,fit,,existing-if,IF-253,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-083,CMP-006,fit,,existing-if,IF-233,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-084,CMP-006,fit,,existing-if,IF-009,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-085,CMP-009,fit,,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-086,CMP-009,fit,,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-087,CMP-009,reword,1,boundary-artifact,"new: dashboard HTML (owner gen_trajectory, channel file)",hand,"'correct ports' undefined in the row; TC-089 parses emitted SVG ports and wires, which is the artifact seam"
+LLR-088,CMP-009,fit,3,boundary-artifact,new: dashboard HTML,hand,"row states one-layer descent and restore; TC-090 asserts handler source text (addEventListener, e.key) rather than the artifact's behaviour"
+LLR-089,CMP-008,fit,3,existing-if,IF-171,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-095,CMP-008,fit,,existing-if,IF-171,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-096,CMP-008,fit,,existing-if,IF-253,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-097,CMP-006,reword,2,existing-if,IF-009,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-098,CMP-007,reword,2,existing-if,IF-069,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-099,CMP-009,fit,,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-100,CMP-009,reword,2;3,boundary-artifact,new: dashboard HTML,hand,"names markup (nav class crumbs, data-root-crumb); TC-103 asserts trail=trail.slice handler text"
+LLR-101,CMP-009,reword,2,boundary-artifact,new: dashboard HTML,hand,behavioural; ARIA attributes are the artifact surface and may stay; one symbol (_svg_role) is an item 5 edit; TC-104 walks fixture and shipped artifact
+LLR-102,CMP-009,reword,2;3,boundary-artifact,new: dashboard HTML,hand,stated over five palette constants; observable form is no two unrelated concepts share a colour in the rendered document; TC-105 asserts module constants in-process
+LLR-103,CMP-009,fit,,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-104,CMP-009,fit,,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-105,CMP-009,reword,2,boundary-artifact,new: dashboard HTML,hand,"3:1 floor is decidable; names _ring_ink, RING_INKS, .cedge; one evidence test in-process over constants, one parses emitted CSS"
+LLR-106,CMP-009,fit,3,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-107,CMP-009,fit,3,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-108,CMP-009,reword,1;3,existing-if,IF-011,script,script: vague=right; code-tokens=0; evidence=in-process-only
+LLR-109,CMP-009,fit,3,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-110,CMP-009,fit,,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-111,CMP-009,fit,3,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-112,CMP-009,reword,1;3,existing-if,IF-011,script,script: vague=sensible; code-tokens=0; evidence=in-process-only
+LLR-113,CMP-009,fit,,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-114,CMP-009,fit,,boundary-artifact,new: dashboard HTML,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-115,CMP-009,fit,,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-116,CMP-009,reword,2,boundary-artifact,new: dashboard HTML,hand,9px floor and formula decidable; NODE_TYPE_PX symbol is an item 5 edit; TC-121 parses every emitted svg
+LLR-117,CMP-009,reword,1;3,existing-if,IF-011,script,script: vague=correctly; code-tokens=0; evidence=in-process-only
+LLR-118,CMP-009,reword,2,existing-if,IF-074,script,script: vague=-; code-tokens=5; evidence=boundary-dominant
+LLR-119,CMP-009,reword,2,existing-if,IF-011,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-120,CMP-009,fit,,boundary-artifact,new: dashboard HTML,hand,"decidable floor, sweeps the shipped artifact; one symbol in its not-claimed clause"
+LLR-121,CMP-009,reword,2,existing-if,IF-014,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-122,CMP-009,fit,,existing-if,IF-292,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-123,CMP-008,fit,,existing-if,IF-171,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-124,CMP-008,reword,2,existing-if,IF-155,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-130,CMP-009,fit,,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-131,CMP-008,reword,2,existing-if,IF-171,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-132,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-133,CMP-006,reword,2;3,existing-if,IF-076,script,script: vague=-; code-tokens=19; evidence=in-process-only
+LLR-134,CMP-006,reword,2;3,existing-if,IF-076,script,script: vague=-; code-tokens=2; evidence=in-process-only
+LLR-135,CMP-006,reword,2;3,existing-if,IF-076,script,script: vague=-; code-tokens=1; evidence=in-process-only
+LLR-136,CMP-006,reword,2;3,existing-if,IF-078,script,script: vague=-; code-tokens=6; evidence=in-process-only
+LLR-137,CMP-008,reword,2;3,existing-if,IF-155,script,script: vague=-; code-tokens=2; evidence=in-process-only
+LLR-138,CMP-008,reword,2;3,existing-if,IF-065,script,script: vague=-; code-tokens=2; evidence=in-process-only
+LLR-139,CMP-009,fit,3,existing-if,IF-088,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-140,CMP-008,reword,2,existing-if,IF-154,script,script: vague=-; code-tokens=10; evidence=mixed
+LLR-141,CMP-007,fit,,existing-if,IF-267,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-142,CMP-008,fit,3,existing-if,IF-155,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-143,CMP-008,reword,2,cli-seam-unregistered,IF-015 (agent_loop exit codes) or a dispatch cli seam,hand,"outcomes (exit 8, dirty-trunk refusal) decidable; row narrates schedule.frontier, integrate.claim; TC-137 drives run over git fixtures"
+LLR-144,CMP-008,reword,2,existing-if,IF-137,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-145,CMP-008,reword,2,cli-seam-unregistered,new: cli/exit-code seam of scripts/spec_move,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-146,CMP-007,reword,2,existing-if,IF-086,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-147,CMP-006,reword,2,existing-if,IF-050 (docs/stage file),hand,the rung outcome is decidable; the row narrates deletion history and symbols; observable at docs/stage
+LLR-148,CMP-006,reword,2,existing-if,IF-050,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-149,CMP-008,reword,2;3,kernel-or-internal-edge,IF-173 (integrate.claim) is where admission becomes observable,hand,pure decision table; names _kind_action/_admission; TC-143 in-process
+LLR-150,CMP-008,reword,2,existing-if,IF-136,script,script: vague=-; code-tokens=5; evidence=boundary-dominant
+LLR-151,CMP-008,reword,2,existing-if,IF-154,script,script: vague=-; code-tokens=5; evidence=mixed
+LLR-152,CMP-008,reword,2,existing-if,IF-171,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-153,CMP-008,reword,2,existing-if,IF-229,script,script: vague=-; code-tokens=11; evidence=mixed
+LLR-154,CMP-008,reword,2,existing-if,IF-154,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-155,CMP-008,reword,2,existing-if,IF-261,script,script: vague=-; code-tokens=6; evidence=mixed
+LLR-156,CMP-009,reword,2,existing-if,IF-014,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-157,CMP-006,reword,2;3,existing-if,IF-050 (docs/stage file),hand,"lowest-unfinished-tier rule decidable; names spine_stage, stage_to_gate; TC-151 drives in-process predicates"
+LLR-158,CMP-006,reword,2;3,existing-if,IF-091,script,script: vague=-; code-tokens=10; evidence=in-process-only
+LLR-159,CMP-008,reword,2;3,kernel-or-internal-edge,IF-173,hand,"stable partition decidable; names _judgement_first, parse_red_tc; in-process"
+LLR-160,CMP-006,reword,2;3,existing-if,IF-009,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-161,CMP-008,reword,2,existing-if,IF-137,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-162,CMP-008,reword,2,existing-if,IF-097,script,script: vague=-; code-tokens=5; evidence=mixed
+LLR-163,CMP-008,reword,2,existing-if,IF-064,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-164,CMP-009,reword,2,boundary-artifact,new: prompt catalogue file (owner gen_prompt_catalog); IF-098 is only the call seam behind it,hand,render/PromptError are symbols; --check and the staleness outcome are observable; catalog.main is driven in-process at CLI level
+LLR-165,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=10; evidence=mixed
+LLR-166,CMP-006,reword,2,existing-if,IF-102,script,script: vague=-; code-tokens=6; evidence=mixed
+LLR-167,CMP-008,reword,2,existing-if,IF-115,script,script: vague=-; code-tokens=17; evidence=mixed
+LLR-168,CMP-008,fit,3,boundary-artifact,new: hats.toml registry file seam (owner docs/requirements/hats.toml),hand,"malformed-refuses/absent-opt-out decidable; names the boundary file, allowed; tests in-process"
+LLR-169,CMP-007,fit,2,cli-seam-unregistered,new: check_vocab cli/exit-code seam,hand,"one finding per line, --strict exit decidable; names in_scope; evidence file mixes ladder-grep tests with check_vocab runs"
+LLR-170,CMP-007,reword,2,existing-if,IF-121,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-171,CMP-009,reword,2,existing-if,IF-039,script,script: vague=-; code-tokens=1; evidence=unresolved
+LLR-172,CMP-006,fit,,existing-if,IF-263,script,script: vague=-; code-tokens=0; evidence=unresolved
+LLR-173,CMP-006,reword,2,existing-if,IF-220,script,script: vague=-; code-tokens=11; evidence=boundary-dominant
+LLR-174,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-175,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-176,CMP-008,reword,2,boundary-artifact,new: composed briefs,hand,pinned-as-they-exist row naming module.function throughout; the obligation (no status/log/authorship reaches a brief) is observable on the brief
+LLR-177,CMP-008,reword,2,existing-if,IF-065,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-178,CMP-006,reword,2,existing-if,IF-009,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-179,CMP-006,reword,2;3,existing-if,IF-076,script,script: vague=-; code-tokens=1; evidence=in-process-only
+LLR-180,CMP-006,reword,2,existing-if,IF-010,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-181,CMP-006,reword,2;3,kernel-or-internal-edge,IF-014 for the arrives-whole-in-a-scaffold half,hand,"two obligations: package content (a kernel, OI-48: not a seam) and complete arrival in a scaffold (observable at bootstrap's output); split, keep the second"
+LLR-182,CMP-008,reword,2;3,existing-if,IF-093,script,script: vague=-; code-tokens=1; evidence=in-process-only
+LLR-184,CMP-006,reframe-or-retire,2;3,kernel-or-internal-edge,IF-050 data cell (closed 8-rung vocabulary),hand,"pure data module; the observable fact is the closed vocabulary docs/stage and every reader share; state once on the file seam, keep the identity test as a test"
+LLR-183,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=7; evidence=mixed
+LLR-185,CMP-006,reword,2;3,existing-if,IF-050 (docs/stage file),hand,"fingerprint, format and freshness are the file's contract; names read_stage, DECLARED_INPUTS; tests in-process"
+LLR-186,CMP-006,reword,2,existing-if,IF-050,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-187,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-188,CMP-008,reword,2;3,kernel-or-internal-edge,fold into the dispatcher's stdout/exit seam,hand,read model sited below; names gap_census/red_tc_census; in-process
+LLR-189,CMP-008,reword,2,existing-if,IF-093,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-198,CMP-009,reword,2;3,existing-if,IF-164,script,script: vague=-; code-tokens=9; evidence=in-process-only
+LLR-190,CMP-007,fit,,boundary-artifact,ci/check.yml and the [ci-tiers] declaration (IF-022/049/068 family),hand,names boundary files only; TC-185 reads both
+LLR-191,CMP-007,fit,,boundary-artifact,new: test-evidence record file seam,hand,green-writes/red-writes-nothing decidable; TC-186 drives the producer and reads the record
+LLR-192,CMP-006,fit,3,kernel-or-internal-edge,,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-193,CMP-009,reword,2,boundary-artifact,new: agent-resume launcher cli/exit-code seam,hand,"pick_py, :pickpy, PYWHY are mechanism; refusal naming each candidate is the observable; TC-188 runs the launchers live"
+LLR-194,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=1; evidence=boundary-dominant
+LLR-195,CMP-007,reword,2,cli-seam-unregistered,new: check_dupes_census cli/exit-code seam,hand,warn-first outcome decidable; names measure()/main()/configparser; TC-190 runs the script
+LLR-196,CMP-008,reword,2,existing-if,IF-065,script,script: vague=-; code-tokens=7; evidence=boundary-dominant
+LLR-197,CMP-006,reframe-or-retire,2;3,no-observable-seam,IF-051 data cell for the status-casing rule,hand,re-exported names ARE the kitlib object is a code-structure rule verified by identity; the one behavioural clause (case-insensitive Status) belongs on the registry file seam
+LLR-199,CMP-009,reword,1;2,existing-if,IF-140,script,script: vague=right; code-tokens=8; evidence=mixed
+LLR-200,CMP-009,reword,2,boundary-artifact,new: dashboard HTML,hand,"behavioural; names traj_parse.frame_context; read-model half tested in-process, view half parses the artifact"
+LLR-201,CMP-006,reword,2;3,existing-if,IF-001,hand,the orphan rules are observable in trace's report; row states module placement and symbols; TC-197 drives rule functions directly
+LLR-202,CMP-006,reword,2,existing-if,IF-091,script,script: vague=-; code-tokens=6; evidence=mixed
+LLR-203,CMP-009,reword,2,existing-if,IF-262,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-204,CMP-006,reword,2,existing-if,IF-010,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-205,CMP-006,reword,2;3,kernel-or-internal-edge,,script,script: vague=-; code-tokens=7; evidence=in-process-only
+LLR-206,CMP-007,reword,2,existing-if,IF-188,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-207,CMP-008,reword,2,existing-if,IF-175,script,script: vague=-; code-tokens=22; evidence=mixed
+LLR-208,CMP-009,reword,2,boundary-artifact,new: generated document file seam,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-209,CMP-006,reword,2,existing-if,IF-050,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-210,CMP-008,reword,2,kernel-or-internal-edge,"consumed: IF-177, IF-178, IF-287",script,script: vague=-; code-tokens=16; evidence=mixed
+LLR-312,CMP-008,fit,,existing-if,IF-137,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-211,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-212,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=5; evidence=boundary-dominant
+LLR-213,CMP-006,reword,2;3,existing-if,IF-180,script,script: vague=-; code-tokens=2; evidence=in-process-only
+LLR-214,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-215,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-216,CMP-006,reword,2,existing-if,IF-180,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-217,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-218,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=6; evidence=boundary-dominant
+LLR-219,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-220,CMP-006,reword,2,existing-if,IF-220,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-221,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-222,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-223,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-224,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-225,CMP-006,reword,2;3,existing-if,IF-091,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-226,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-227,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-228,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-229,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-230,CMP-006,reword,2,existing-if,IF-050,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-231,CMP-006,reword,2;3,existing-if,IF-233,script,script: vague=-; code-tokens=3; evidence=in-process-only
+LLR-232,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-233,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=7; evidence=mixed
+LLR-234,CMP-006,reword,2,existing-if,IF-214,script,script: vague=-; code-tokens=5; evidence=mixed
+LLR-235,CMP-006,reword,2,existing-if,IF-215,script,script: vague=-; code-tokens=6; evidence=boundary-dominant
+LLR-236,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-238,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-239,CMP-006,reword,2,existing-if,IF-220,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-240,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=6; evidence=boundary-dominant
+LLR-241,CMP-006,reword,2,existing-if,IF-050,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-242,CMP-007,reword,2,existing-if,IF-267,script,script: vague=-; code-tokens=6; evidence=boundary-dominant
+LLR-243,CMP-007,reword,2,existing-if,IF-267,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-244,CMP-007,reword,2,existing-if,IF-267,script,script: vague=-; code-tokens=6; evidence=boundary-dominant
+LLR-245,CMP-006,reword,2,existing-if,IF-229,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-246,CMP-008,reword,2,existing-if,IF-154,script,script: vague=-; code-tokens=8; evidence=mixed
+LLR-247,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=5; evidence=boundary-dominant
+LLR-248,CMP-008,reword,2,existing-if,IF-154,script,script: vague=-; code-tokens=5; evidence=boundary-dominant
+LLR-249,CMP-006,reword,2,existing-if,IF-009,script,script: vague=-; code-tokens=9; evidence=mixed
+LLR-250,CMP-006,reword,2,existing-if,IF-103,script,script: vague=-; code-tokens=3; evidence=boundary-dominant
+LLR-251,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-252,CMP-006,reword,2,existing-if,IF-190,script,script: vague=-; code-tokens=5; evidence=mixed
+LLR-254,CMP-008,reword,2,existing-if,IF-228,script,script: vague=-; code-tokens=5; evidence=mixed
+LLR-255,CMP-008,reword,2,existing-if,IF-229,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-256,CMP-007,reword,2,existing-if,IF-187,script,script: vague=-; code-tokens=5; evidence=mixed
+LLR-257,CMP-007,reword,2,existing-if,IF-267,script,script: vague=-; code-tokens=8; evidence=mixed
+LLR-258,CMP-009,reword,2,existing-if,IF-052,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-259,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=7; evidence=boundary-dominant
+LLR-260,CMP-006,reword,2;3,existing-if,IF-001 / trace stdout,hand,tier-agreement finding is observable in the checker's output; names evidence_items/tier_findings; tests in-process
+LLR-263,CMP-006,reword,2;3,existing-if,IF-233,script,script: vague=-; code-tokens=5; evidence=in-process-only
+LLR-261,CMP-007,reword,2,existing-if,IF-240,script,script: vague=-; code-tokens=5; evidence=mixed
+LLR-262,CMP-008,reword,1;2,existing-if,IF-154,script,script: vague=right; code-tokens=18; evidence=mixed
+LLR-264,CMP-008,reword,2,existing-if,IF-229,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-265,CMP-008,reword,2;3,existing-if,IF-229,script,script: vague=-; code-tokens=3; evidence=in-process-only
+LLR-274,CMP-006,reword,2;3,existing-if,IF-252,script,script: vague=-; code-tokens=4; evidence=in-process-only
+LLR-275,CMP-009,reword,2;3,existing-if,IF-014,script,script: vague=-; code-tokens=2; evidence=in-process-only
+LLR-276,CMP-006,reword,2,existing-if,IF-010,script,script: vague=-; code-tokens=11; evidence=mixed
+LLR-271,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=9; evidence=boundary-dominant
+LLR-272,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=6; evidence=boundary-dominant
+LLR-273,CMP-006,reword,2,existing-if,IF-233,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-277,CMP-006,reword,2,existing-if,IF-220,script,script: vague=-; code-tokens=8; evidence=mixed
+LLR-278,CMP-006,reword,2;3,existing-if,IF-091,script,script: vague=-; code-tokens=6; evidence=in-process-only
+LLR-279,CMP-009,reword,2,existing-if,IF-014,script,script: vague=-; code-tokens=4; evidence=boundary-dominant
+LLR-280,CMP-008,reword,2,existing-if,IF-260,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-281,CMP-009,reword,2;3,existing-if,IF-019,script,script: vague=-; code-tokens=2; evidence=in-process-only
+LLR-285,CMP-009,fit,3,existing-if,IF-011,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-282,CMP-008,reword,2,existing-if,IF-261,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-283,CMP-008,reword,2,existing-if,IF-074,script,script: vague=-; code-tokens=16; evidence=mixed
+LLR-284,CMP-008,reword,2;3,existing-if,IF-154,script,script: vague=-; code-tokens=10; evidence=in-process-only
+LLR-286,CMP-006,reword,2,existing-if,IF-258,script,script: vague=-; code-tokens=13; evidence=boundary-dominant
+LLR-287,CMP-009,reword,2,existing-if,IF-011,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-266,CMP-008,reword,2;3,existing-if,IF-245,script,script: vague=-; code-tokens=4; evidence=in-process-only
+LLR-267,CMP-008,reword,2;3,existing-if,IF-245,script,script: vague=-; code-tokens=8; evidence=in-process-only
+LLR-268,CMP-008,reword,2,existing-if,IF-245,script,script: vague=-; code-tokens=15; evidence=mixed
+LLR-269,CMP-008,reword,2,existing-if,IF-253,script,script: vague=-; code-tokens=8; evidence=mixed
+LLR-270,CMP-008,reword,2,existing-if,IF-247,script,script: vague=-; code-tokens=36; evidence=mixed
+LLR-288,CMP-008,fit,,existing-if,IF-171,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-290,CMP-008,reword,2,existing-if,IF-247,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-291,CMP-007,fit,3,existing-if,IF-267,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-292,CMP-009,fit,,boundary-artifact,new: dashboard HTML,hand,"precise, artifact-level, swept over emitted SVGs; the word minimal appears only in a non-claim"
+LLR-293,CMP-008,reword,2,existing-if,IF-269,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-294,CMP-008,reword,2,existing-if,IF-269,script,script: vague=-; code-tokens=2; evidence=boundary-dominant
+LLR-295,CMP-008,reword,2;3,existing-if,IF-115,script,script: vague=-; code-tokens=1; evidence=in-process-only
+LLR-296,CMP-009,reword,2;3,existing-if,IF-018,script,script: vague=-; code-tokens=1; evidence=in-process-only
+LLR-297,CMP-008,reword,2,boundary-artifact,new: perspectives record file (owner scripts/hats),hand,record shape decidable; names hats.py record; the record file is the seam
+LLR-298,CMP-008,fit,,existing-if,IF-154,script,script: vague=-; code-tokens=0; evidence=mixed
+LLR-299,CMP-008,reword,2,existing-if,IF-009,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-300,CMP-008,reword,1;2,existing-if,IF-154,script,script: vague=right; code-tokens=10; evidence=mixed
+LLR-301,CMP-008,reword,2,existing-if,IF-274,script,script: vague=-; code-tokens=9; evidence=mixed
+LLR-302,CMP-006,reword,2,existing-if,IF-154,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-303,CMP-008,reword,2,existing-if,IF-255,script,script: vague=-; code-tokens=7; evidence=mixed
+LLR-304,CMP-008,reword,2,existing-if,IF-255,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-305,CMP-008,reword,2,existing-if,IF-247,script,script: vague=-; code-tokens=8; evidence=mixed
+LLR-306,CMP-008,reword,2,existing-if,IF-283,script,script: vague=-; code-tokens=2; evidence=mixed
+LLR-307,CMP-008,reword,2,existing-if,IF-242,script,script: vague=-; code-tokens=7; evidence=mixed
+LLR-308,CMP-008,fit,3,existing-if,IF-115,script,script: vague=-; code-tokens=0; evidence=in-process-only
+LLR-309,CMP-008,reword,2,existing-if,IF-154,script,script: vague=-; code-tokens=4; evidence=mixed
+LLR-310,CMP-008,reword,2;3,existing-if,IF-283,script,script: vague=-; code-tokens=4; evidence=in-process-only
+LLR-311,CMP-008,fit,,boundary-artifact,PROCESS.md and the shipped prompt templates,hand,a document-content requirement; decidable; TC-332 reads the shipped files
+LLR-314,CMP-008,reword,2,existing-if,IF-290,script,script: vague=-; code-tokens=3; evidence=mixed
+LLR-315,CMP-008,reword,2,existing-if,IF-115,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-313,CMP-008,reword,2,existing-if,IF-288,script,script: vague=-; code-tokens=6; evidence=mixed
+LLR-316,CMP-008,reword,2,existing-if,IF-261,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-317,CMP-008,reword,2,existing-if,IF-246,script,script: vague=-; code-tokens=1; evidence=mixed
+LLR-318,CMP-008,reword,2;3,existing-if,IF-253,script,script: vague=-; code-tokens=3; evidence=in-process-only
+LLR-319,CMP-008,reword,2;3,existing-if,IF-173 (integrate.claim) / IF-015,hand,"refusal-inside-window decidable; names claim_work, blackout_at, run; TC-338 monkeypatches internals"
+LLR-320,CMP-009,reword,2,existing-if,IF-292,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-321,CMP-009,reword,1,existing-if,IF-283,script,script: vague=suitable; code-tokens=0; evidence=boundary-dominant
+LLR-322,CMP-009,fit,,existing-if,IF-274,script,script: vague=-; code-tokens=0; evidence=boundary-dominant
+LLR-326,CMP-009,reword,2,boundary-artifact,new: dev-setup launcher cli seam,hand,Find-Runtime/Offer-Python are symbols; consent-then-provision outcome decidable; TC-350 runs the script

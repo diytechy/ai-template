@@ -173,6 +173,18 @@ signature (SN-029).
 - **Open after revision 13:** item 11 and **OI-112** are one question
   (OI-112's (b) points SR → IF, item 11 points IF → requirement); rule the
   direction once. Item 11's calls 1 and 4 would amend ruling 5's wording.
+- **Revision 14 (item 11 fitness):** two analyses, Astra and Fable at medium
+  effort, independently find that item 11 as proposed does not reduce
+  rework, and recommend variant E.
+  - **What E keeps:** `Implements:` stays, and IF → LLR is authored only on
+    interfaces that carry a behaviour.
+  - **What E adds:** a delivered-dashboard IF and a reach dial.
+  - **Where fitness is judged:** when a row is touched, not as a gate.
+  - **New calls,** in `docs/plans/2026-10-11-review-churn/item-11-llr-fitness-report.md`:
+    - the authoring guidance (`spine-questions.md:218`) still tells authors
+      to name symbols in LLRs; pull the fix into phase 1?
+    - 114 IF `data` cells name code: classify the `call` rows first?
+    - interactive dashboard evidence?
   Also: the minimum profile's path from code to LLRs; whether the authored
   IF list carries LLRs only, with the SR side derived through
   `boundary_refs`.
