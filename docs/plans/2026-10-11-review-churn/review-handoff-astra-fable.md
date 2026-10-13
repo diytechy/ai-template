@@ -177,6 +177,27 @@ Run it only after stage 1 is committed, so it reviews the revised plan.
   it with the Artifact tool's `read` action and republish to its `url`. The
   markdown in this folder is the record; the pages are views.
 
+## The next review pair (revision 15)
+
+The procedure above holds, with a new tip and revision, and these changes to the brief.
+
+- **Scope.** Two pieces of the plan, plus the reports behind them:
+  - **Item 11's variant F,** read through its status table ("Where every item 11 call stands after variant F"). F is the owner's position and is not yet ruled; the owner chose to leave it unruled so the reviewers test it.
+  - **Item 12** (architectural decomposition at three moments).
+  - **The reports:** `item-11-llr-fitness-report.md` and `item-11-value-domain-research.md`.
+- **Earlier reviews.** These now also include `reviews/astra-medium-item11.md` and `reviews/fable-medium-item11.md`. Findings already dispositioned are not repeated.
+- **Stance: two phases, in order** (owner, 2026-10-13).
+  1. **Challenge.** Is F the right direction against its alternatives (E, A–D, and anything better), judged on long-term sustainability? That means keeping behaviour divorced from implementation and keeping authored links few.
+  2. **Stress-test, if F holds up or needs only minor changes.** Go further: find where it breaks down and where contradictions surface. The likeliest places to look:
+     - against ruling 5 (F retires LLR → CMP), ruling 1, OI-48 and OI-112;
+     - the cost of decomposition (b) with `part_of` (the ladder text, the parent links, Gilbert);
+     - whether a deeper LLR needs a parent pointer, or can derive one from the component tree;
+     - IF consumer and requestor roles under thin interfaces;
+     - whether item 12's skill and prompt route actually reach a Codex planner.
+
+  Say which phase each finding comes from.
+- **Capacity.** In an earlier run, Astra at medium effort hit the Codex usage limit. If it happens again, fall back to low effort or to `gpt-6-luna`, and record the substitution.
+
 ## Session prompt (paste to start the review session)
 
 ```text

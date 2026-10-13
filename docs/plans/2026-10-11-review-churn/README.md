@@ -62,13 +62,13 @@ Ruled in session, item by item. Where an item's text below differs, this section
 **Open after revision 12 (Astra review of revision 11; for the owner to rule):**
 
 - **Confirming a non-executable fix.** The convergence ruling confirms fixes by a test that fails on the pre-fix code. A wording, documentation or inspection defect has none. Does it carry independently checkable evidence instead (the corrected text, an inspection record), which the coordinator maps the same way?
-- **Generating IF roles.** If the IF `owner`, `consumers` and `requestors` cells are generated from code, the citation must carry the role (owner, consumer, requestor), and an external owner (`external:git`) has no code to cite. Is the role a typed citation (`Contract IF-NNN` for the owner, a consumer form for the rest), with external owners kept as an authored id cell?
+- **Generating IF roles.** (Revision 15: narrowed by item 11's variant F; see its status table.) If the IF `owner`, `consumers` and `requestors` cells are generated from code, the citation must carry the role (owner, consumer, requestor), and an external owner (`external:git`) has no code to cite. Is the role a typed citation (`Contract IF-NNN` for the owner, a consumer form for the rest), with external owners kept as an authored id cell?
 - **TC evidence that isn't a test file.** Test-file tags can generate test evidence, but not CI results, inspection records or reviews, nor the 185 `::` node references. Do those stay authored in the TC row (CI configs and inspection records are boundary files), with only test-file evidence generated?
 
 **Open after revision 13 (Fable review of revision 12; for the owner to rule):**
 
-- **Item 11 and OI-112 are one question.** OI-112 (pending since 2026-10-08, its WI-871 held) asks how far IF rows join the adjudicated spine: (a) route IF rows through the first-approval sitting; (b) each SR names the IF rows carrying its inputs and outputs. Its (b) points SR → IF; item 11 points IF → requirement. Ruling both separately would give the relation two homes. Does an item 11 ruling also answer OI-112, with one direction, or does item 11's calls 2 and 5 fold into OI-112's design pass?
-- **Items 11 and 5 overlap.** Ruling 5 says code references up to its requirements and LLRs keep naming their component. Item 11's call 1 (retire `Implements:`) and call 4's "derived" option would amend that wording: a reversal, not an extension.
+- **Item 11 and OI-112 are one question.** (Revision 15: answered by variant F; see item 11's status table.) OI-112 (pending since 2026-10-08, its WI-871 held) asks how far IF rows join the adjudicated spine: (a) route IF rows through the first-approval sitting; (b) each SR names the IF rows carrying its inputs and outputs. Its (b) points SR → IF; item 11 points IF → requirement. Ruling both separately would give the relation two homes. Does an item 11 ruling also answer OI-112, with one direction, or does item 11's calls 2 and 5 fold into OI-112's design pass?
+- **Items 11 and 5 overlap.** (Revision 15: narrowed by variant F to the LLR → CMP reversal; see item 11's status table.) Ruling 5 says code references up to its requirements and LLRs keep naming their component. Item 11's call 1 (retire `Implements:`) and call 4's "derived" option would amend that wording: a reversal, not an extension.
 
 Also ruled: coordination of the build runs interactively in this session, with Sol plus the Sonnet stand-in reviewing each change in parallel, in the shape item 4 sets.
 
@@ -493,7 +493,31 @@ Item 5's ruling removes the LLR → module join. That join was the one route fro
 
 **Downstream.** A schema and tag-grammar change for adopters, carried in item 5's RESYNC entry.
 
-**Owner calls (open):**
+**Where every item 11 call stands after variant F** (revision 15 consolidation). F is still the owner's position, for confirmation; "answered" means F gives an answer, not that it is ruled. The lists below this table are kept as raised, as history.
+
+| Call (as raised) | Status | Where |
+|---|---|---|
+| `Implements:` retires, or both tags kept? | **Answered:** kept and sparse; links back encouraged, measured by the dial. Ruling 5's "code references up to its requirements" stands, and the minimum profile works unchanged | F points 3 and 5 |
+| IF names the LLRs or SRs it carries? | **Superseded:** the direction is reversed. An LLR names the IF it constrains; the SR side is derived through the crossings and the assumption bridge. No IF-side list exists, so OI-67's removal and the 2026-09-20 `realizes` rejection **stand** | F points 3 and 7 |
+| Every LLR carried by an interface? | **Answered: no.** Interfaces are required at every architectural boundary at any depth. An LLR is verified at its own interface or its parent's | F point 3 |
+| Files declare their component; LLR → CMP checked or derived? | **Answered:** the file header (or the PART/ASSET row) declares it, and LLR → CMP **retires**. That amends ruling 5's "LLRs keep naming their component by id", a reversal to overrule explicitly. IF → CMP is F-call 1 | F point 1, F-call 1 |
+| Must a requirement-bearing IF allocation be Approved? | **Dissolved:** no IF row bears requirements. IFs are approved just in time at the level of use, for class compatibility only | F point 4 |
+| Contract citations never mandated per function; what checks an over-claim? | **Answered in part:** never mandated (links back encouraged). The over-claim check is the authored owner id, F-call 1, still open | F point 5, F-call 1 |
+| WIs name the interfaces they serve (`if_refs`)? (query 2) | **Still open.** F doesn't address it. A possible derivation to weigh: a WI's touched LLRs → the IFs they constrain | — |
+| Decomposition (a) or (b)? | **Still open; F leans (b).** With `part_of` the component tree is the one decomposition. New question for (b): does a deeper LLR point to its SR, to a parent LLR, or is its parent derived from the component tree (the LLR on the enclosing component's boundary)? | F-call 5 |
+| Terminology: "module" | **Still open.** Fable's recommendation stands (module = source file; "realization artifact" for the bound unit) | — |
+| How IF roles and external owners are declared | **Narrowed:** the owner is F-call 1. Consumers and requestors (authored component ids, or generated from typed citations) are still open | F-call 1 |
+| Rev 14: variant E or A–D? | **Superseded by F** (the owner's refinement of E) | F |
+| Rev 14: mint a delivered-dashboard interface? | **Adopted in F,** with the other delivered-artifact and CLI interfaces judged one by one | F (agrees with E) |
+| Rev 14: a reach dial or a gate? | **Answered: no gate.** Whether to measure reach as a dial is a minor, open detail | F point 3 |
+| Rev 14: SR-180's replacement | **Answered:** SR-180, LLR-180 and TC-175 retire, and new ids carry the rule (structure at the commit, meaning by the reviewer, results at the gate) | F point 6 |
+| Rev 14: fitness at touch; the guidance fix in phase 1 | **Fitness at touch adopted in F.** Scheduling the `spine-questions.md:218` fix is still open | F (agrees with E) |
+| Rev 14: interactive dashboard evidence | **Still open** | — |
+| Rev 14: the 114 IF `data` cells naming code | **Still open, and sharpened:** under F a `data` cell becomes a value domain, so each `call` row is reworded to a domain or retired | F points 4 and 8 |
+| Item 11 and OI-112 are one question (rev 13) | **Answered:** requirement → IF is OI-112's (b) direction, taken at LLR level with the SR side derived. OI-112's (a) (route IF rows through the first-approval sitting) is not adopted (F point 4). OI-112 can be ruled from F | F points 3 and 4 |
+| Items 11 and 5 overlap (rev 13) | **Narrowed:** F keeps `Implements:`, so no reversal there; the one reversal left is LLR → CMP (above) | F point 1 |
+
+**Owner calls as raised (revisions 9–14; history, statuses in the table above):**
 
 - Code points up only to interfaces (`Implements:` retires), or keeps both tags? Retiring it amends ruling 5's "code blocks reference up to their requirements", and needs a rule for the minimum profile (revision 13).
 - Interfaces name the LLRs or SRs they carry (overruling OI-67's removal and the 2026-09-20 rejection)? Or LLRs only, with the SR side derived through `boundary_refs` and the crossing cells (revision 13)? Either way, rule the direction once with OI-112.
@@ -518,7 +542,7 @@ Item 5's ruling removes the LLR → module join. That join was the one route fro
 
 **Fable's views (revision 13, not rulings).** The full views are in [`reviews/fable-medium-r12.md`](reviews/fable-medium-r12.md). Where they add to Astra's: retire `Implements:` only in one migration gated on "every LLR reachable through a code-cited IF, or declared unreachable with a reason"; an authored IF → LLR list (SR derived), with its direction ruled once with OI-112; no `call` seams minted to satisfy a rule, with a closed "internal" allowance instead; component headers on software source files only; IF approval through the sitting (OI-112's (a)); keep an authored, role-bearing owner id per IF, the one independent check of an over-claimed citation; `if_refs` beside `sr_refs`, IF order used to warn on a missing `needs` edge, never to derive one. On decomposition, (b), on conditions: leaf versus aggregate derived from having children, one parent link per row, a leaf discharged by realization and a parent by its children plus an integration TC, shipped in item 5's schema WI as one RESYNC entry. Under (b), Gilbert's sub-scope SRs (SR-012's rig) would become parent LLRs with no artifact. Its contract sample counts 7 of 20 bodies mixing (Astra: 11 of 15); the difference is whether a rationale sentence counts, and Fable proposes the rule "a bound may carry its reason; it may not state what a caller must achieve".
 
-**Recommended variant E (revision 14, not a ruling).** Two independent analyses of all 302 LLRs reach this on their own, and the integrator's checks confirm it ([`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md)).
+**Recommended variant E (revision 14, not a ruling; refined by the owner into variant F, revision 15).** Two independent analyses of all 302 LLRs reach this on their own, and the integrator's checks confirm it ([`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md)).
 - **Why not A.** A would not reduce rework. The defects that cause churn are symbols and mechanism in LLR text, and ruling 5 already removes them. A replaces about 527 code-side anchors with at least 508 authored links (302 or more IF → LLR plus about 206 code → IF), before file headers. It also adds an allocation that a seam split reopens.
 - **What E keeps.** Code → LLR (`Implements:`), so ruling 5 stands as written and the minimum profile still has a path from code to its LLRs. LLR → CMP stays authored design intent. File component headers are deferred.
 - **What E adds.** One delivered-dashboard interface and a few more delivered-artifact and CLI seams. IF → LLR only on interfaces that genuinely carry the behaviour, each reviewed, with the SR side derived. A reach dial with a closed internal allowance; no `call` seam is minted to satisfy a rule (OI-48).
