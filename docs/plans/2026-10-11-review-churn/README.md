@@ -20,7 +20,7 @@ Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, 
 | 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
 | 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 13 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
 | 11 | What points where (open): code cites only interfaces; interfaces name the requirements they carry; files declare their component; LLR → component checked or derived. Revision 14 recommends variant E: keep `Implements:`, IF → LLR only on carrying interfaces, mint the missing delivered-artifact seams. Revision 15 adds the owner's variant F: components declared on the realization, no IF → LLR list, thin interfaces | open calls | folds into item 5's migration | the last mixed-direction links; mechanical blast radius per component |
-| 12 | Architectural decomposition at three moments (open): one rubric, an ARCHITECT hat and a `DevStg-Arch` question section, reached from a fresh-vision breakdown, a scope-critique anchor S5 for architectural deltas, and a `run.cmd arch-audit` action; dry-run on W3 first | text, then builds | ~1 lane of text; builds after item 11 | under-decomposed components (W3: 60 modules, the lane's stages inside) |
+| 12 | Architectural decomposition at three moments (open): one rubric and an `architecture-decomposition` skill, reached from a fresh-vision breakdown, the planner's architectural-delta question (handback when beyond scope) and an on-demand `run.cmd arch-audit`; dry-run on W3 first | text, then builds | ~1 lane of text; builds after item 11 | under-decomposed components (W3: 60 modules, the lane's stages inside) |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -619,9 +619,9 @@ The owner asked (2026-10-12, revision 15) how to get LLMs to decompose the archi
 
 **Root cause.** The kit has no home for the definition at the step where decomposition happens.
 - **The question list skips the architecture rung.** `project-trajectory/prompts/spine-questions.md` has sections for SN intake, SR derivation and LLR/TC, and none for `DevStg-Arch`, even though the ladder repeats that step per component scope (PROCESS.md §4).
-- **No hat asks architecture questions.** Hats are the kit's way to put a perspective in front of an author, and none of the 16 in `hats.toml` covers states, value domains or dependencies.
+- **No skill covers breaking the spine down at the architecture rung.** `spine-authoring` is the adjudicator's question list per tier, and `deep-module-design` works at the code level. Hats don't fit (owner, revision 15): the roster's questions are put to SN → SR decomposition. 126 SRs carry `hat_refs`, against 13 LLRs and no SNs or IFs.
 - **No rubric judges interfaces and boundaries.** The `docs/rubrics/` set has decomposition *proportionality* and *plan* decomposition, but nothing for components and interfaces.
-- **No scope-critique anchor asks whether a WI shifts the architecture.**
+- **No step asks whether a WI shifts the architecture.**
 
 The result: W3 Autonomy grew to 60 modules with its lane stages inside it (item 11, F point 3).
 
@@ -637,8 +637,8 @@ The result: W3 Autonomy grew to 60 modules with its lane stages inside it (item 
    - the stopping point is recorded, under the "state or source" test.
 
    Its failure patterns: a product of booleans standing in for one domain; one meaning carried by two interfaces; an under-decomposed component. Terms come from the vocabulary in [`item-11-value-domain-research.md`](item-11-value-domain-research.md).
-2. **An ARCHITECT hat** in `hats.toml`. It asks: "What states can the stakeholder name here, what crosses each boundary as a closed domain, and which output depends on which inputs?"
-3. **A new section in `spine-questions.md`, "At architecture (`DevStg-Arch`, per component scope)",** citing the rubric's anchors by id. It is the list an authoring LLM follows.
+2. **A skill, `architecture-decomposition`** (owner, revision 15, in place of a hat). It is the procedure an authoring LLM follows at `DevStg-Arch` and when planning a WI. It walks the author through four steps: name the states, state each boundary's value domain, tabulate which output depends on which inputs, and apply the descend test (F-call 6). It cites the rubric's anchors rather than restating them, and points to `deep-module-design` for the code level below.
+3. **A one-line pointer in `spine-questions.md`** for adjudicating at `DevStg-Arch`: judge against the rubric. It restates nothing.
 4. **Instruments:** checks A (well-formed value domains) and C (a dependency matrix per component) from item 11's F-call 7, as evidence for the judgement.
 
 **Entry point 1: a fresh vision.** The `DevStg-Arch` step at each component scope gets a stated output, produced before any LLR at that scope:
@@ -646,16 +646,15 @@ The result: W3 Autonomy grew to 60 modules with its lane stages inside it (item 
 - the scope's boundary interfaces, each with its value domain;
 - a small output × input dependency table.
 
-LLRs then attach to those interfaces, as F requires. The hat raises the questions while the author writes. An independent critique against the rubric runs before the step is approved.
+LLRs then attach to those interfaces, as F requires. The skill guides the author. An independent critique against the rubric runs before the step is approved.
 
-**Entry point 2: an amendment that shifts the architecture.** Scope critique gains anchor **S5, "Architectural delta"**: does the WI add a state, add a value to a domain, make an output depend on a new input, or cross a new boundary? If yes:
-- the spec carries the architecture change explicitly (interface and domain edits, perhaps a sub-component split);
-- S4 marks the WI for planning (item 9);
-- item 3's split rule separates the refactor from the feature ("make the change easy, then make the easy change").
+**Entry point 2: an amendment that shifts the architecture. The planner decides** (owner, revision 15). When a WI is planned (WI-805's plan gate, item 9), the planner follows the skill and answers the architectural-delta question: does the WI add a state, add a value to a domain, make an output depend on a new input, or cross a new boundary? The answer depends on the WI's scope:
+- **Within its scope:** the plan carries the architecture change explicitly (interface and domain edits, perhaps a sub-component split). Item 3's split rule separates the refactor from the feature ("make the change easy, then make the easy change").
+- **Beyond its scope:** the planner hands the WI back with a proposed refactor WI. This is the existing handback, not a new path.
 
-Three mechanical triggers can prompt S5 without anyone remembering to ask: the WI's files span more than one component; it mints an interface; check A or C gets worse at the lane tip. Under ruling 9, the critique's answer becomes binding spec text before the claim.
+The plan critique judges the answer; `docs/rubrics/plan-decomposition.md` gains the question. **Nothing triggers it automatically.** The planner may consult checks A and C as information.
 
-**Entry point 3: an audit, `run.cmd arch-audit`.** A new action in `docs/stack.ini [run]`, shaped like the `render-dashboard-critique` skill:
+**Entry point 3: an audit, `run.cmd arch-audit`, on demand only** (owner, revision 15). A new action in `docs/stack.ini [run]`, shaped like the `render-dashboard-critique` skill:
 1. **The mechanical half** needs no model. It runs `trajectory_arch`, checks A and C, `check_complexity`, the duplicates census and `gen_arch_map`, and writes a findings bundle.
 2. **The judgement half** is an independent critique session. It reads the bundle against the rubric and ranks components by what a refactor would gain.
 3. **The output** is candidate WIs or open items filed through intake. The critic never edits the spine (`docs/rubrics/README.md`).
@@ -671,23 +670,24 @@ Give an independent model only the drafted rubric and W3 Autonomy's current shap
 The dry run also gives F-call 5 (recursive components) its first worked case.
 
 **Cost.**
-- **Text only (phase 1):** the rubric, the hat, the spine-questions section and S5, about one lane.
+- **Text only (phase 1):** the rubric, the skill, the spine-questions pointer and the plan-decomposition question, about one lane.
 - **Builds (phase 3, after item 11's ruling):** checks A and C, the audit action and its critique skill.
 
-**Downstream.** The rubric, hat, question section and scope anchor ship to adopters as kit-owned text; the audit action ships in the run-menu template. It is one RESYNC entry; adopters migrate nothing, since everything is additive.
+**Downstream.** The rubric, skill, pointer and plan-critique question ship to adopters as kit-owned text; the audit action ships in the run-menu template. It is one RESYNC entry; adopters migrate nothing, since everything is additive.
 
-**Owner calls (open):**
-- **The hat:** "always", or only on architecture-tagged rows?
+**Decided by the owner (revision 15):** a skill, not a hat; the planner decides on an architectural delta, with no automatic trigger (a WI beyond its scope is handed back); the audit runs on demand.
+
+**Owner call (open):**
 - **The critique before approving `DevStg-Arch`:** required at every component scope, or only at depth 0 and on request below it?
-- **S5's mechanical triggers:** advisory or blocking?
-- **The audit's cadence:** on demand only, or also at phase close?
+
+**Found on the way (a separate finding, not fixed):** PROCESS.md §1's role table names no owner for the architecture rows. The Software Engineer owns LLRs, code and `runtime-flows.md`, but no role owns CMP and IF rows. That gap is what item 12's skill would be authoring for.
 
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
 | 0 · rulings and baseline | Owner calls still open: item 11's, and the "Open after revision 12" and "Open after revision 13" calls in the rulings section (items 1–10 are ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
-| 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. WI-805's plan gate, pulled forward (ruling 9; the handoff orders it right after B1). Item 12's text pieces (the rubric, the ARCHITECT hat, the `DevStg-Arch` question section, scope anchor S5), after its dry run on W3. | Coordinator lanes |
+| 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. WI-805's plan gate, pulled forward (ruling 9; the handoff orders it right after B1). Item 12's text pieces (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), after its dry run on W3. | Coordinator lanes |
 | 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. | Coordinator |
 | 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. Item 11, once ruled, with item 5's migration. Item 12's builds (checks A and C, the `arch-audit` action and its critique skill), after item 11 is ruled. | Coordinator lanes |
 | 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
