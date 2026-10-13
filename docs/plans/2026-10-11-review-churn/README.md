@@ -599,6 +599,20 @@ F agrees with E on four things: keep `Implements:`, no rule that every LLR is ca
   - **First test case:** W3 Autonomy, split into the lane's stages (planning, build, review, landing).
   - **The depth-0 frame stays locked** at four components; sub-components sit under it.
   - **It ties to decomposition (b)** (SRs only at the system boundary, decomposed recursively by the architecture). The recursion would be carried by the component tree and its interfaces, and LLRs hang off it through their TCs.
+  - **What is authored and what is derived** (owner, revision 15).
+    - **Authored:** `part_of`, one cell per component naming its parent. It is the only authored link. The nesting can't be derived from the interfaces, because many groupings fit the same edges (a chain A → B → C could be {A, B} plus C, or A plus {B, C}). Choosing which boundary to enclose is the design decision, which is OI-14's "formative" partition.
+    - **Derived from `part_of` and the IF → component map:**
+      - an IF's level, the lowest common ancestor of its producer and consumers, so no IF needs a level cell;
+      - a component's boundary set, the IFs with one end inside and one outside;
+      - an LLR's scope, the level of the IF it constrains;
+      - a file's full ancestry, from its declared leaf component;
+      - depth, which sets the critique cadence (item 12).
+
+      An `external:` IF resolves to the system root, and edges into the declared kernel stay exempt (OI-48).
+    - **Check C** (a dependency matrix per component) may *suggest* groupings; it never defines them.
+  - **Not a second decomposition.** Under (b) there is one tree: the component tree *is* the decomposition, IFs sit on its edges, and LLRs hang off those IFs (F point 3). The requirement structure follows the architecture; it does not mirror it.
+    - **Under (a),** sub-scope SRs would form a second tree that nothing links to the component tree. That is a further argument for (b).
+    - **This is the standard product breakdown structure,** or bill of materials, or SysML composition. It is the owner's 2026-07-09 framing, "as a physical part does its assembly". Gilbert's PART and ASSET rows already carry their component.
 - **F-call 6: a test for when to descend** (owner's criterion, revision 15). The aim is to keep interface permutations few, while keeping the spine light enough to maintain. The owner's position: decompose what a stakeholder can describe as a state; stop at the values they could only choose on seeing the implementation. Proposed wording for the `spine-questions.md` list, beside its existing "Descend only where a mechanized check earns its keep" and "Record the stopping boundary". Ask of each candidate child:
   1. **A describable state: descend.** Can the stakeholder name the state, what the system does in it, and what moves it on, in their own words and without inventing a number? This is an SCR *mode class*. Plan → build → review → land passes. Where one state hands its output to the next, the handoff is an interface. Where the states own files, they are sub-components.
   2. **An invented number: stop.** Is the only new content a value the stakeholder could not state *or source* today and would pick only on seeing the implementation (a 6 px gap, an 8 pt font)? The parent keeps the quality ("legible"), verified by a rubric or `Attest`, and the value lives in code or config. A binary floor ("no two wires overlap", LLR-292) is a describable state and stays. So does a number the stakeholder can source, such as one set by a standard (INCOSE's "solution free unless there is rationale").
