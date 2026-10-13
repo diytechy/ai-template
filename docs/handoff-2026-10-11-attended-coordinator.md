@@ -264,10 +264,13 @@ signature (SN-029).
     direct and through its LLRs) over the smoke floor; an advisory mutation
     trial. The dashboard's interaction checks run in a browser, off the
     commit bar, each view stamped from its observation record.
-  - **To confirm:** decision 3, who admits a dependency in a lane. The
-    owner's framing is one value, owner-or-delegate (the lane hands back as
-    an open item, ruled by the owner or a recorded delegate); the other is
-    an independent admission session. Options A–C are in item 13.
+  - **Confirmed in revision 19:** decision 3, option (A).
+    `dependency_admission = "owner-or-delegate" | "independent"`, with the
+    first the default: the lane hands back as an open item, ruled by the
+    owner or a delegate. A delegate can do everything the owner can; the
+    owner has explicitly permitted an LLM agent to act in their stead. Owed:
+    PROCESS.md §4's wording, which today grants delegation only to an
+    attended session and only for held-rung approval.
   - **The owner's acts owed once F is ruled:** overrule ruling 5's "LLRs
     keep naming their component" explicitly, and amend OI-67 (a)'s
     IF-owner header text.
