@@ -536,6 +536,11 @@ F agrees with E on four things: keep `Implements:`, no rule that every LLR is ca
    - **Where it is tested.** At the interface where its behaviour can be observed, often an outer one: many renderer LLRs are testable at the delivered dashboard. The test can be direct or a rubric.
    - **How the link is recorded.** Only where the test drives a separately measurable interface does the TC's `verifies` name that IF beside the LLR. That cell is the single home of "this LLR is checked at this interface"; nothing on the IF side repeats it.
    - **Blast radius** (IF → TC → LLR) is derived.
+   - **An LLR that constrains a defined interface names it** (owner, revision 15, refining the bullet above). Such an LLR states what must hold across that interface: the mapping from its input domain to its output domain. It names that IF by id, in the requirement → IF direction of OI-112's option (b), which also settles "rule the direction once with OI-112".
+     - **A TC repeats nothing.** It names an IF only when it tests at a *different* interface, such as the outer delivered dashboard, so "checked at" and "constrains" each keep one home.
+     - **An LLR with no defined interface of its own** is verified at its parent's interface, as above.
+   - **Where interfaces are strictly required** (owner, revision 15): wherever the architecture draws a boundary, at any depth. That means the system boundary, plus every component and sub-component boundary a decomposition creates; the 2026-08-13 form rule already applies each shall "to interfaces going to the respective component level". Inside a component, interfaces are optional (OI-48's line). A TC never mints an interface; it names one the architecture drew.
+   - **The real gap risk** is a component drawn too coarse, not an LLR without an interface. The lane is the example. Planning, build, review, integration and handback all sit in CMP-008 W3 Autonomy, which holds 60 modules and 54 internal seams. So the stage handoffs are internal seams that nothing requires, and the stage sequence lives only in `runtime-flows.md` Flow 4. The fix is to decompose W3 into sub-components (F-call 5), which turns each handoff into a required boundary interface. Most lane handoffs pass through files (the review verdicts, IF-047; the work specs), which import analysis can't see, so those boundaries still depend on being authored and on the runtime flows.
 4. **Interfaces are thin.** An IF row is a typed node joining ports: its channel class, owner and consumers. The contract body lives in code.
    - **Approval** is given at the level the interface is used, just before the SR or LLR it serves, and checks only that the interface class fits what it serves.
    - **Mechanizing** that approval comes last.
@@ -547,16 +552,31 @@ F agrees with E on four things: keep `Implements:`, no rule that every LLR is ca
 
    Otherwise the row retires with a successor record and new ids are minted. SR-180, LLR-180 and TC-175 retire outright, and new ids carry the new discharge rule. The kit already says ids are "never reused" (PROCESS.md §2) and splits amendments into CLARITY and MEANING (§3), but it never says when an amendment must become a successor. This rule fills that gap: a CLARITY amendment keeps its id; a MEANING amendment keeps it only under the test above.
 7. **The SR side is derived through the assumptions too.** Where a boundary crossing can't be measured, an assumption turns it into an interface that can, and that permits the connection. The links already exist: 17 DA rows carry `effect_at` naming a crossing, 9 IFs carry `bridged_by` DA ids (IF-013 by DA-001 and DA-002), and 3 surrogates `emulates` an external party. So SR → `B-xx` reaches an IF either directly (`interface_to_external`) or through a bridging DA. Some of this assumption work is still in the WI queue.
+8. **Interfaces carry problem-oriented state; boundaries keep dependencies sparse** (owner, revision 15).
+   - **An interface's value domain is a closed enumeration.** Its values are mutually exclusive and collectively exhaustive, with an explicit catch-all such as UNKNOWN. Take a parcel's location: one enumeration (MAILBOX, SORTING FACILITY, TRUCK, UNKNOWN) carries exactly the 4 valid cases, where four booleans carry 16 values, 12 of them invalid. Invalid states are unrepresentable by construction, and no value is carried twice.
+   - **This extends ruling 1.** A WI spec facing an open input space chooses "an enumerated allow-set plus a declared rule for everything else"; here the same rule is applied to interfaces. The contract (the owner's term) is then the interface's value domain.
+   - **Component boundaries are placed to keep the input space small.** The measure: for each output, the product of the sizes of the inputs it actually depends on. A component with a 4-state and a 2-state input has 8 input cases to test exhaustively, whether it is one component or two. Splitting it pays off only where an output depends on fewer inputs. If the 2-state output depends only on the 2-state input, a boundary that exposes that needs 2 cases for that output instead of 8, and a change to the 4-state input provably cannot reach it.
+   - **The domains must exist before the split.** This presumes the domains, intermediate ones included, are stated during problem breakdown.
+   - **Known names for these ideas, to be confirmed by research (F-call 7):**
+     - "make illegal states unrepresentable" (Minsky), with sum types against product types;
+     - "parse, don't validate" (King);
+     - the SCR/Parnas tabular method, whose mode classes are enumerations and whose condition tables are checked for disjointness and completeness;
+     - MECE;
+     - Axiomatic Design's Independence Axiom and its uncoupled, decoupled and coupled design matrices (Suh), with the Design Structure Matrix (Steward, Eppinger);
+     - information hiding and coupling (Parnas; Stevens, Myers and Constantine);
+     - the category-partition method (Ostrand and Balcer), with pairwise testing (already in `gen_cases`).
 
 | Link or rule | E | F |
 |---|---|---|
 | Code → LLR (`Implements:`) | kept; coverage dial | kept, sparse; any link back (tag, contract, a link within the same artifact) counts |
-| IF → LLR | authored on carrying interfaces (about 100–150 cells, reviewed) | **none**; the TC's `verifies` names the IF where a separate interface is driven |
+| IF → LLR | authored on carrying interfaces (about 100–150 cells, reviewed) | **none on the IF side.** An LLR that constrains a defined interface names it (requirement → IF, OI-112 (b)); a TC names an IF only when it tests at a different one |
+| Interface value domain | not addressed | **a closed enumeration** (mutually exclusive, collectively exhaustive, with a catch-all), so invalid states are unrepresentable; boundaries placed to keep dependencies sparse (point 8) |
 | IF → SR | derived through `boundary_refs` and the crossing cells | derived the same way, **plus the assumption bridge** |
 | LLR → CMP | authored design intent | **retired** |
 | File → CMP | deferred | **declared in the file header**, or in the PART/ASSET row for a physical realization; created at design time |
 | IF → CMP / IF owner | an authored owner id that names its role | open (F-call 1) |
 | IF approval | through the sitting (Fable) | just in time, at the level of use; class compatibility only; mechanized last |
+| Where an IF is required | delivered artifacts and carrying seams; no `call` seams to satisfy a rule | **every architectural boundary at any depth** (system, component, sub-component); optional inside; components decompose recursively (F-call 5) by the descend test (F-call 6) |
 | Id amendment | retire or re-mint | the continuity rule above |
 | Authored links, against E | n/a | about 300 LLR → CMP cells and about 100–150 IF → LLR cells removed; about 117–150 file headers added |
 
@@ -569,6 +589,18 @@ F agrees with E on four things: keep `Implements:`, no rule that every LLR is ca
 - **F-call 2: the design-time stubs.** At which rung are files created, and what may a stub carry? The test-first check must not count a stub as implementation.
 - **F-call 3: when a TC names an interface.** Confirm that a TC names an IF only where it drives a separately measurable interface.
 - **F-call 4: where the id-continuity rule lives.** Write it into PROCESS.md beside "never reused", tied to the CLARITY/MEANING split.
+- **F-call 5: components decompose recursively.** A sub-component is linked to its parent component (`part_of`, with a scope check, as Astra suggested in revision 12), and it follows the same rule: interfaces at its boundary, freedom inside.
+  - **First test case:** W3 Autonomy, split into the lane's stages (planning, build, review, landing).
+  - **The depth-0 frame stays locked** at four components; sub-components sit under it.
+  - **It ties to decomposition (b)** (SRs only at the system boundary, decomposed recursively by the architecture). The recursion would be carried by the component tree and its interfaces, and LLRs hang off it through their TCs.
+- **F-call 6: a test for when to descend** (owner's criterion, revision 15). The aim is to keep interface permutations few, while keeping the spine light enough to maintain. The owner's position: decompose what a stakeholder can describe as a state; stop at the values they could only choose on seeing the implementation. Proposed wording for the `spine-questions.md` list, beside its existing "Descend only where a mechanized check earns its keep" and "Record the stopping boundary". Ask of each candidate child:
+  1. **A describable state: descend.** Can the stakeholder name the state, what the system does in it, and what moves it on, in their own words and without inventing a number? Plan → build → review → land passes. Where one state hands its output to the next, the handoff is an interface. Where the states own files, they are sub-components.
+  2. **An invented number: stop.** Is the only new content a value the stakeholder could not state today and would pick only on seeing the implementation (a 6 px gap, an 8 pt font)? The parent keeps the quality ("legible"), verified by a rubric or `Attest`, and the value lives in code or config. A binary floor ("no two wires overlap", LLR-292) is a describable state and stays.
+  3. **A paraphrase: stop** (existing rule).
+  4. **No pass/fail of its own: stop** (existing rule).
+
+  Interfaces then come only from handoffs between describable states, so a linear flow of n stages has n − 1 of them, and they match the handoffs the runtime flow draws. The judgement stays subjective at the edges. The existing "record the stopping boundary" rule makes each call reviewable.
+- **F-call 7: a short research piece** on the names in point 8. It would confirm the sources and look for prior art the kit should borrow. The SCR completeness and disjointness checks, and the Design Structure Matrix's way of finding where to split, are the likeliest candidates to mechanize. It also adopts one vocabulary, so the spine-authoring rubric can cite established terms instead of inventing its own.
 
 ## Sequence and how we'll know
 

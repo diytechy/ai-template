@@ -194,7 +194,14 @@ signature (SN-029).
     - an id-continuity rule governs amendments;
     - the assumption bridge joins the SR-side derivation.
 
-    F-calls 1–4 are open.
+    Interfaces are required at every architectural boundary at any depth.
+    An LLR names the IF it constrains (requirement → IF, OI-112 (b)). An
+    interface's value domain is a closed MECE enumeration, and boundaries
+    keep dependencies sparse. F-calls 1–7 are open:
+    - 5 is recursive components, with W3's lane stages as the first case;
+    - 6 is the test for when to descend (a describable state descends; an
+      invented number stops);
+    - 7 is a short research piece on the established terms.
   - **Item 7:** the second reviewer is from a third family when one is
     available, otherwise a different family or model.
   - **Item 5:** the per-module `Implements:` floor is withdrawn; links back
