@@ -216,8 +216,13 @@ signature (SN-029).
       `run.cmd arch-audit`.
     - **First step:** a dry run of the drafted rubric on W3 Autonomy, before
       anything is built.
-    - **Open:** whether the critique before `DevStg-Arch` approval runs at
-      every component scope.
+    - **Critique cadence (owner's position):** at depth 0, once over the
+      whole tree before the build, and every second level of component
+      depth. Confirm the reading of "top level".
+    - **Also proposed:** an Architect role owning the CMP and IF rows; the
+      planner prompt naming the skill; and code-hygiene tools in the audit
+      (stdlib in-kit; jscpd, knip, vulture, lizard, radon, shellcheck and
+      PSScriptAnalyzer if the adopter declares them).
   Also: the minimum profile's path from code to LLRs; whether the authored
   IF list carries LLRs only, with the SR side derived through
   `boundary_refs`.

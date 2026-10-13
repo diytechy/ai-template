@@ -677,10 +677,36 @@ The dry run also gives F-call 5 (recursive components) its first worked case.
 
 **Decided by the owner (revision 15):** a skill, not a hat; the planner decides on an architectural delta, with no automatic trigger (a WI beyond its scope is handed back); the audit runs on demand.
 
-**Owner call (open):**
-- **The critique before approving `DevStg-Arch`:** required at every component scope, or only at depth 0 and on request below it?
+**When the critique runs during the initial breakdown** (owner's position, revision 15). Not at every component scope. Three moments:
+- **The top level.** Read as the first architecture step below the SRs: depth 0, where SRs are allocated to components and the first LLRs attach. The SRs themselves are already judged by their own sitting.
+- **Once over the whole tree,** when the lower levels appear complete and before the build begins.
+- **Every second level of component depth** away from the SRs, in a deep tree. A wrong split is then caught at most two levels after it is made, instead of only at the pre-build pass.
 
-**Found on the way (a separate finding, not fixed):** PROCESS.md §1's role table names no owner for the architecture rows. The Software Engineer owns LLRs, code and `runtime-flows.md`, but no role owns CMP and IF rows. That gap is what item 12's skill would be authoring for.
+*Open:* confirm the reading of "top level", and whether the every-two-levels rule applies always or only where the tree is deeper than two levels. The "floors" here are component depths, not spine tiers: the tiers stay SN, SR, LLR and TC, and the recursion is in the component tree (F-call 5).
+
+**How a planner picks up the skill** (owner's concern, revision 15). The architectural-delta question arises inside a WI, so the planner must meet the skill without being told each time. Today nothing routes skills to a planner:
+- **The frontmatter isn't read.** A skill's `phases` frontmatter (`dev`, `gate`, `release`) only feeds `skills/INDEX.csv`; no brief reads it.
+- **The planner prompt doesn't mention skills.** `plan_briefs.py` and `prompts/dual-plan-planner.template.md` name none.
+- **Model-dependent discovery.** A Claude session may find a skill from its `description` ("Use when …"); a Codex planner won't.
+
+So the reliable route is the prompt. The planner template, and WI-805's single-plan prompt when it exists, carry one line: answer the architectural-delta question by following the `architecture-decomposition` skill. The skill's `description` is written to trigger on planning, as a second route.
+
+**An architecture role** (owner's position, revision 15). PROCESS.md §1's role table gains an **Architect** row owning `components.toml` (CMP) and `interfaces.toml` (IF), the rows no role owns today. The planner wears it whenever the architectural-delta question comes up, and the author wears it at `DevStg-Arch`. *Open:* whether `runtime-flows.md` moves from the Software Engineer to the Architect. Its state flows are the Architect's mode classes; its sequence detail is the engineer's.
+
+**Code-hygiene instruments in the audit** (owner, revision 15, from a separate session's tool list). The audit's mechanical half covers the code level beside the architecture level. In-kit, stdlib-only:
+- duplication: `check_dupes_census`;
+- complexity and size: `check_complexity` (cognitive complexity and SLOC);
+- `check_readability`.
+
+Optional, declared by the adopter for their own stack (CLAUDE.md: tools a downstream project needs are theirs to install, and the kit must not require them to run its own checks):
+- duplication across languages: jscpd;
+- dead code: knip for JS/TS (unused files, exports and dependencies), vulture for Python;
+- complexity: lizard (any language) or radon (Python);
+- shell: shellcheck and PSScriptAnalyzer.
+
+The audit runs each declared tool as a step and reads its output; it never changes code. **The kit has no dead-code check at all.** Whether a stdlib one belongs in the kit (unused module-level functions found by `ast`, with the false positives of dynamic dispatch) is a separate call, not part of this item. Python examples are marked "swap for your stack".
+
+**Found on the way:** PROCESS.md §1's role table names no owner for the CMP and IF rows. The Architect role proposed above answers it.
 
 ## Sequence and how we'll know
 
