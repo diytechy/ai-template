@@ -51,7 +51,7 @@ derived content, never authored.
 | TC | what it verifies (LLR, SR, sometimes IF) | shipped boundary files only (whether CI, inspection and node-level evidence stays authored is open, plan revision 12) | test files, modules, functions, symbols (its evidence column is generated from the test files' tags) |
 | Test files | up: a tag naming the TC they verify | n/a | nothing; like code, a leaf |
 | CMP | none required (architecture block) | none | any file; code (its module list is generated) |
-| IF | its component; the assumptions an external crossing relies on | none: artifact-class wording (whether an external crossing may label a shipped file is an open owner question) | any file; code modules (owner, consumers and requestors become generated; how roles and external owners are declared is open, plan revision 12) |
+| IF | its component; the assumptions an external crossing relies on | none: artifact-class wording (whether an external crossing may label a shipped file is an open owner question) | any file; code modules (owner, consumers and requestors become generated; under variant F the owner's form is F-call 1, revision 16; how roles and external owners are declared is open, plan revision 12) |
 | Code | up: `Implements: LLR-NNN`, `Contract IF-NNN` | n/a | nothing; it is the leaf every other map is computed from |
 | Generated views | computed from the code's tags and the id pointers | anything (derived) | never hand-edited |
 
@@ -122,15 +122,23 @@ The ruled diagram above stays as drawn, with three additions:
 
 `Implements:` stays, and no file declares its component yet.
 
-**The owner's variant F** (revision 15, for confirmation) refines E. It is
-set out in full, with a table comparing it to E, in [item 11](README.md):
+**The owner's variant F** (revision 15, corrected in revision 16; for
+confirmation) refines E. It is set out in full, with its status table and a
+comparison to E, in [item 11](README.md):
 
 - **One home for a component:** a code file declares its component in its
-  header, created at design time. A part or asset declares it in its
-  PART/ASSET row. LLR → CMP retires.
-- **No IF → LLR list:** a TC's `verifies` names an IF only where its test
-  drives a separately measurable interface.
-- **Thin interfaces,** approved just in time at the level of use.
+  header (a non-code shipped file in its `#` header, or on its inventory
+  entry). A part or asset declares it in its PART/ASSET row. LLR → CMP
+  retires. Containment is `PartOf` (already in the CMP schema).
+- **An LLR names the IF it constrains** (requirement → IF), as a traced
+  cell; whether every LLR must name one is F-call 8. There is no IF → LLR
+  list.
+- **A TC names an IF** only where it tests at a *different* interface from
+  its LLR's.
+- **Thin interfaces,** approved through the sitting of the row they serve,
+  judging payload compatibility, not class alone.
+- **A closed value domain** per interface, with one home for the contract
+  (F-call 9).
 - **An id-continuity rule** for amendments.
 - **The SR side** is derived through boundary crossings *and* the
   assumptions that bridge them.

@@ -230,9 +230,20 @@ signature (SN-029).
       planner prompt naming the skill; and code-hygiene tools in the audit
       (stdlib in-kit; jscpd, knip, vulture, lizard, radon, shellcheck and
       PSScriptAnalyzer if the adopter declares them).
-  Also: the minimum profile's path from code to LLRs; whether the authored
-  IF list carries LLRs only, with the SR side derived through
-  `boundary_refs`.
+  Also: the minimum profile's path from code to LLRs (kept under F, since
+  `Implements:` stays). The authored IF list is superseded by F's
+  requirement → IF direction; see item 11's status table.
+- **Revision 16 (Astra and Fable reviews of revision 15, both REVISE):**
+  F is corrected in place, and two new calls are open: F-call 8 (must every
+  LLR name an interface?) and F-call 9 (one home for the contract). F-call 1
+  now has three positions:
+  - an authored component id, which amends OI-67 (a);
+  - a generated owner;
+  - the module path, which conflicts with ruling 5.
+
+  Item 12's critique gates are named. Item 13's green record becomes one
+  tree-bound bar attestation shared with landing, and its red-before is a
+  record, with typed evidence for non-executable TCs.
 
 ## Traps from this session
 
