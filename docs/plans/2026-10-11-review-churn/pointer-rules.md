@@ -3,10 +3,10 @@
 What each spine artifact points to, what is derived, and what it may never
 name. The ruled base is the owner's rulings of 2026-10-11 (the review-churn
 plan's [Owner rulings](README.md), items 5 and 10). On top of it sits item 11's
-variant F as the owner answered it on 2026-10-13 (plan revision 18): F-calls 1,
+variant F as the owner answered it on 2026-10-13 (plan revision 20): F-calls 1,
 2, 8 and 9, decision 1 (an interface's owner is a component id or an
-`external:` party) and decision 2 (an interface states its form; an LLR states
-its behaviour). F-calls 3 to 7 are open. The same content, with diagrams, is the
+`external:` party) and decision 2 (an interface states its form; an LLR or SR
+states its behaviour). F-calls 3 to 7 are open. The same content, with diagrams, is the
 published "Spine Pointer Rules" page.
 
 This file shows the target. Today the registries still have the old shape:
@@ -37,7 +37,8 @@ flowchart BT
   LLR -->|sr_refs| SR
   TC -->|verifies| LLR
   TC -->|"verifies, directly (9 TCs)"| SR
-  LLR -->|"constrains: states the behaviour (optional; every IF has one)"| IF
+  LLR -->|"constrains: states the behaviour (optional)"| IF
+  SR -->|"constrains, at the system boundary (optional)"| IF
   TC -->|"observed at, only where it differs"| IF
   IF -->|"owner: a CMP id, or an external: party"| CMP
   CMP -->|part_of| CMP
@@ -60,19 +61,22 @@ The contract is the interface's form, and it exists in one place at a time.
 
 | | Before the build | After the build |
 |---|---|---|
-| Home | the IF row's `data` cell: the form, one line | the first line of the code's `Contract IF-NNN:` body, in the file whose header names the owner |
-| Judged | at the sitting of the row it serves | unchanged: the cell is generated from the body's form line, compared exactly |
-| Approval | copied into the approval snapshot | a change to the form line shows as drift on the approved row |
+| Home | the IF row's `data` cell: the whole form, as many lines as it needs | the opening of the code's `Contract IF-NNN:` body, the same text, in the file whose header names the owner |
+| Judged | at the sitting of the row it serves | unchanged: the cell is generated from the body's form, compared exactly |
+| Approval | copied into the approval snapshot | a change to the form shows as drift on the approved row |
 | Hand-over | — | checked at the commit: a body's introduction must match the cell; its removal must move or retire the contract |
 
 ## Form on the interface, behaviour in the LLR
 
 An interface is testable, but its row states only its form. The expectation
 it fulfils is an LLR, or an SR at the system boundary, and that LLR states the
-full dimensional scope of the behaviour. Form is what both sides must agree on
-to connect at all; behaviour is what must be true of what flows through. Every
-interface is pointed at by at least one LLR or SR; an LLR need not name an
-interface.
+full dimensional scope of the behaviour: the LLR or SR defines the interface's
+behaviour with respect to its form. Form is what both sides must agree on to
+connect at all; behaviour is what must be true of what flows through. Every
+interface is pointed at by at least one LLR or SR through a `constrains` cell
+(an SR has one too, for the system boundary), and reaches at least one
+executable test that way. An LLR need not name an interface. A shared crossing
+is navigation, not a pointer: 35 SRs share crossing B-05.
 
 | Interface | Form, on the interface row | Behaviour, in the LLR |
 |---|---|---|
@@ -80,18 +84,19 @@ interface.
 | NEMA 17 mount | 4 × M3 on a 31 mm square, 22 mm pilot (four screws, one interface) | holds the motor without slipping under its rated torque |
 | Exit code | an integer in {0, 1, 2} | which code is returned, and when |
 | Parcel location | one of {MAILBOX, SORTING FACILITY, TRUCK, UNKNOWN} | which scan event moves it to which value |
+| A function call across components | request: a TC id; answer: one of {verified, red, unknown} (typed, no symbol names) | which answer for which TC state |
 
 ## The rules, artifact by artifact
 
 | Artifact | Points to | May name files | Never names | Status |
 |---|---|---|---|---|
 | SN | stakeholders, assumptions | none | any file; any code | ruled |
-| SR | SN (`sn_refs`); assumptions; the boundary crossings it serves (`boundary_refs`) | none, rationale included | any file; any code | ruled |
-| LLR | SR (`sr_refs`); the IF it constrains, if it has one (an optional traced cell). That LLR states the behaviour across the IF and its full dimensional scope | shipped boundary files | code files, functions, symbols; its component (the cell retires; placement is derived) | answered; the component cell's retirement amends ruling 5, and the explicit overrule is still owed |
+| SR | SN (`sn_refs`); assumptions; the boundary crossings it serves (`boundary_refs`); the IF it constrains at the system boundary, if any (an optional traced cell) | none, rationale included | any file; any code | ruled; the `constrains` cell answered in revision 20 |
+| LLR | SR (`sr_refs`); the IF it constrains, if it has one (an optional traced cell). That LLR states the behaviour across the IF and its full dimensional scope, in its dimensions cell, the one home of that input space | shipped boundary files | code files, functions, symbols; its component (the cell retires; placement is derived) | answered; the component cell's retirement amends ruling 5, and the explicit overrule is still owed |
 | TC | what it verifies: LLRs, or an SR directly; the IF it observes at, only where that differs from its LLRs' (per TC and LLR pair) | shipped boundary files | test files, modules, symbols (its evidence column is generated from test-file tags) | F-call 3 open |
 | IF | its owner, a component id or an `external:` party; its consumers and requestors; the assumptions bridging an external crossing. Its form only; at least one LLR or SR points at it | none | any file; code (the owner's path leaves the row); any behaviour | answered: F-call 1 (i), decision 2; consumers and requestors open |
 | CMP | its parent (`part_of`, already in the schema) | none | any file; any code | F-call 5 open |
-| Code file | up: `Component: CMP-NNN` in its header; the `Contract IF-NNN:` body of each IF it owns, opening with the form line; `Implements: LLR-NNN` where useful | n/a | nothing; the leaf every map is computed from | answered: F-calls 1, 2, 9 |
+| Code file | up: `Component: CMP-NNN` in its header; the `Contract IF-NNN:` body of each IF it owns, opening with the form; `Implements: LLR-NNN` where useful | n/a | nothing; the leaf every map is computed from | answered: F-calls 1, 2, 9 |
 | Test file | up: a tag naming the TC it verifies | n/a | nothing | ruled |
 | PART / ASSET | its component (the `Component` cell already in the schema) | its own source location | code | answered: F point 1 |
 | Generated views | computed from the cells and tags above | anything (derived) | never hand-edited | ruled |
@@ -120,8 +125,13 @@ them (PROCESS.md §3).
   proof of complete coverage.
 - **The SR side:** an SR reaches IFs through its boundary crossings and the
   assumptions that bridge them.
-- **An IF's test coverage:** every IF reaches a test through the LLR or SR that
-  points at it; no TC has to cite the IF directly.
+- **An IF's test coverage:** every IF reaches at least one executable test
+  through the LLR or SR that constrains it, or a TC's observed-at cell; no TC
+  has to cite the IF directly. OI-43's direct check stays until this link is
+  populated.
+- **A work item's component context** (proposed, revision 20): its SRs and their
+  LLRs lead to the interfaces they constrain and those interfaces' owner
+  components, which the build brief renders for the builder. No `if_refs` cell.
 - **The IF's `data` cell after the build,** and the TC evidence column, from
   the bodies and tags in files.
 
@@ -134,15 +144,28 @@ them (PROCESS.md §3).
   becomes that owner; the 35 to 39 cells that name where the IF sits rather
   than who produces it are migrated (decision 1).
 - **Code files gain a `Component:` header.** None carries one today.
-- **Contract bodies shrink to their form line.** The behavioural prose in
-  today's 204 bodies either already exists in an LLR, and is deleted, or
-  becomes LLR text.
-- **OI-43's direct IF → TC rule is replaced** by coverage through the LLR; its
-  147-row allowlist becomes the list of IFs still needing a requirement.
-- **IFs no requirement can point at retire**, the `call` rows whose `data`
-  cell names code first (OI-48).
-- **An LLR that constrains an IF gains a dimensions cell**, like the SR
-  `permutations` cell: a schema change adopters inherit.
+- **Contract bodies shrink to their form.** The behavioural prose in today's
+  204 bodies either already exists in an LLR, and is deleted, or becomes LLR
+  text. The 160-character limit retires for form cells.
+- **OI-43's direct IF → TC rule is replaced** by coverage through the
+  `constrains` link, once that link is populated; about 197 IFs need one. The
+  147-row allowlist measures a different relation, so the migration list is
+  recomputed.
+- **The 115 `call` rows are classified.** One inside a component is optional
+  and retires on its original rationale; one crossing a boundary gets a
+  symbol-free typed form.
+- **External-owned IFs keep their far-side body** (IF-032's lives in
+  `check_privacy.py`), checked against a local endpoint, and an LLR or SR
+  constrains each of the four.
+- **One body per IF:** the stray-declaration rule becomes uniqueness over
+  shipped scripts and registry headers, with the body's file header naming the
+  owner component. A hand-edited boundary file is owned by the component its
+  own header declares.
+- **The hand-over** is new build work: one effective-contract reader and a
+  commit check on each transition.
+- **An LLR that constrains an IF gains a dimensions cell** (the `gen_cases`
+  grammar of the SR `permutations` cell, which stays for boundary dimensions
+  only): a schema change adopters inherit.
 - **No IF lists the requirements it carries.** The direction is requirement →
   IF, so OI-67's removal and the `realizes` rejection stand.
 - **Stubs are not minted for every file.** The builder creates files as needed
@@ -152,16 +175,12 @@ them (PROCESS.md §3).
 
 - **F-call 3, per pair:** a TC names an IF only where it differs from the IF of
   some LLR it verifies; 32 TCs verify more than one LLR.
-- **External-owned IFs** keep their far-side body (IF-032's lives in
-  `check_privacy.py`), checked against a local endpoint, never as the owner.
-- **One body per IF:** the stray-declaration rule becomes uniqueness, with the
-  body's file header naming the owner component.
-- **The hand-over** is new build work: one effective-contract reader and a
-  commit check on each transition.
 - **Consumers and requestors:** authored component ids, or generated from typed
   citations.
 - **F-calls 4 to 7:** the id-continuity rule's home, recursive components by
   `part_of`, the descend test, and which checks to mechanize.
+- **A work item's component context** in the build brief (proposed above).
 
-Decisions 3 (who admits a dependency) and 4 (the plan comes after the claim)
-are process questions in items 13 and 9, not pointer rules.
+Decisions 3 (who admits a dependency; owner and delegate are one role, apart
+from an autonomous run) and 4 (the plan comes after the claim) are process
+questions in items 13 and 9, not pointer rules.

@@ -271,6 +271,25 @@ signature (SN-029).
     owner has explicitly permitted an LLM agent to act in their stead. Owed:
     PROCESS.md §4's wording, which today grants delegation only to an
     attended session and only for held-rung approval.
+- **Revision 20 (the owner's answers to the revision 19 reviews of Astra-high
+  and Fable-medium, both REVISE):**
+  - The IF `data` cell holds the whole form, no one-line limit; `call` rows
+    are classified, a boundary-crossing one getting a typed form without
+    symbol names.
+  - An SR gains the optional `constrains` cell; a derived check keeps OI-43's
+    executable-test guarantee, and OI-43's check stays until the link exists.
+  - Owner and delegate are one role, owner-or-delegate, distinct from an
+    autonomous run (what the kit's machinery starts and marks). Enforcers are
+    unchanged; a vocabulary rewrite rides item 10's RESYNC entry. **For the
+    owner:** is the coordinator role owner-or-delegate (unmarked, as today)
+    or an autonomous run when headless?
+  - The red-before is proven by strict expected-failure marks, described
+    stack-neutrally; contrived scenarios are not designed against.
+  - The LLR's dimensions cell is the one home of an input space.
+  - **Proposed, for the owner:** a derived component context in the build
+    brief.
+  - **Next:** one more review pair in a fresh session, from
+    `docs/plans/2026-10-11-review-churn/review-handoff-r20.md`.
   - **The owner's acts owed once F is ruled:** overrule ruling 5's "LLRs
     keep naming their component" explicitly, and amend OI-67 (a)'s
     IF-owner header text.

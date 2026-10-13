@@ -1,5 +1,9 @@
 # Review handoff: put the review-churn plan through Codex Astra (medium), then Claude Fable 5.1 (medium)
 
+> **Historical (revisions 10–15).** The current review handoff is
+> [`review-handoff-r20.md`](review-handoff-r20.md), and the newest brief is the
+> highest-numbered `reviews/brief-r*.md`. Kept for its record of earlier rounds.
+
 A boot document for **one standalone session** whose only job is two
 independent reviews of this plan, run in sequence, each followed by the
 disposition of its findings. It is **not** the coordinator's handoff. It lives
@@ -124,7 +128,7 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
      -c 'windows.sandbox="unelevated"' -s workspace-write \
      --add-dir C:/Projects/ai-template.wt/review-tmp \
      -C C:/Projects/ai-template.wt/review-churn-plan-astra-m --skip-git-repo-check \
-     -o <review root>/astra-medium-review.md - < <review root>/brief.md \
+     -o <review root>/astra-medium-final-message.md - < <review root>/brief.md \
      > <review root>/astra-medium-review.md.log 2>&1
    ```
 
