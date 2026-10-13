@@ -184,6 +184,7 @@ The procedure above holds, with a new tip and revision, and these changes to the
 - **Scope.** Two pieces of the plan, plus the reports behind them:
   - **Item 11's variant F,** read through its status table ("Where every item 11 call stands after variant F"). F is the owner's position and is not yet ruled; the owner chose to leave it unruled so the reviewers test it.
   - **Item 12** (architectural decomposition at three moments).
+  - **Item 13** (review only a green tip; test cases reviewed in stages).
   - **The reports:** `item-11-llr-fitness-report.md` and `item-11-value-domain-research.md`.
 - **Earlier reviews.** These now also include `reviews/astra-medium-item11.md` and `reviews/fable-medium-item11.md`. Findings already dispositioned are not repeated.
 - **Stance: two phases, in order** (owner, 2026-10-13).
@@ -194,6 +195,7 @@ The procedure above holds, with a new tip and revision, and these changes to the
      - whether a deeper LLR needs a parent pointer, or can derive one from the component tree;
      - IF consumer and requestor roles under thin interfaces;
      - whether item 12's skill and prompt route actually reach a Codex planner.
+     - whether item 13's gate and the test-first order fit the coordinator cycle and the unattended loop without a second record of "green".
 
   Say which phase each finding comes from.
 - **Capacity.** In an earlier run, Astra at medium effort hit the Codex usage limit. If it happens again, fall back to low effort or to `gpt-6-luna`, and record the substitution.

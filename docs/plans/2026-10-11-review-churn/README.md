@@ -2,7 +2,7 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 15. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) and its two owner's queries (revision 11: contracts cited only where served; work items bound to the interfaces they serve) are the owner's. Revision 12 adds the open calls a GPT-6 Astra review of revision 11 raised (item 11's open calls, and "Open after revision 12" in the rulings section). Revision 13 adds those a Claude Fable 5.1 review of revision 12 raised, among them item 11's overlap with OI-112. Revision 14 answers the owner's follow-up on item 11 (are the LLRs fit to be carried by interfaces?): two independent analyses, GPT-6 Astra and Claude Fable 5.1 at medium effort, judged in [`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md). Both find that item 11 as proposed would not reduce rework, and both recommend a narrower variant E, with new owner calls. Revision 15 records the owner's refinement of E as variant F in item 11. It also loosens item 7's reviewer-family rule and withdraws item 5's per-module `Implements:` floor (both owner positions). It adds item 12 (architectural decomposition at three moments: a fresh-vision breakdown, an amendment that shifts the architecture, and an audit), at the owner's request.
+**Status:** revision 15. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) and its two owner's queries (revision 11: contracts cited only where served; work items bound to the interfaces they serve) are the owner's. Revision 12 adds the open calls a GPT-6 Astra review of revision 11 raised (item 11's open calls, and "Open after revision 12" in the rulings section). Revision 13 adds those a Claude Fable 5.1 review of revision 12 raised, among them item 11's overlap with OI-112. Revision 14 answers the owner's follow-up on item 11 (are the LLRs fit to be carried by interfaces?): two independent analyses, GPT-6 Astra and Claude Fable 5.1 at medium effort, judged in [`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md). Both find that item 11 as proposed would not reduce rework, and both recommend a narrower variant E, with new owner calls. Revision 15 records the owner's refinement of E as variant F in item 11. It also loosens item 7's reviewer-family rule and withdraws item 5's per-module `Implements:` floor (both owner positions). It adds item 12 (architectural decomposition at three moments: a fresh-vision breakdown, an amendment that shifts the architecture, and an audit), at the owner's request, and item 13 (review only a green tip; test cases reviewed in stages).
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
@@ -21,6 +21,7 @@ Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, 
 | 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 13 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
 | 11 | What points where (open): code cites only interfaces; interfaces name the requirements they carry; files declare their component; LLR → component checked or derived. Revision 14 recommends variant E: keep `Implements:`, IF → LLR only on carrying interfaces, mint the missing delivered-artifact seams. Revision 15 adds the owner's variant F: components declared on the realization, no IF → LLR list, thin interfaces | open calls | folds into item 5's migration | the last mixed-direction links; mechanical blast radius per component |
 | 12 | Architectural decomposition at three moments (open): one rubric and an `architecture-decomposition` skill, reached from a fresh-vision breakdown, the planner's architectural-delta question (handback when beyond scope) and an on-demand `run.cmd arch-audit`; dry-run on W3 first | text, then builds | ~1 lane of text; builds after item 11 | under-decomposed components (W3: 60 modules, the lane's stages inside) |
+| 13 | Review only a green tip (open): lint, then tests, then review; nothing refuses a red-tip review today. Test cases reviewed in stages: written first with recorded red-before, mechanically at the gate, for adequacy by the reviewers, as text at the sitting; a mutation trial later | text + a small build | after item 6 | reviews spent on failures a tool would catch; weak tests that pass |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -746,13 +747,84 @@ The audit runs each declared tool as a step and reads its output; it never chang
 
 **Found on the way:** PROCESS.md §1's role table names no owner for the CMP and IF rows. The Architect role proposed above answers it.
 
+## 13. Review only a green tip; review test cases in stages
+
+The owner asked (2026-10-13, revision 15) how test cases should be reviewed, and proposed an order. Once test cases exist and the WI is queued: run the lints, *then* the tests, and start the review only if both pass. The owner's expectation is that this reduces churn, but whether today's process already does it was unknown.
+
+### What happens today (checked)
+
+**Nothing refuses a review on a red tip.** Smoke and its budget run before each commit, so a reviewed commit has usually passed them, but that is practice, not construction:
+- **The coordinator.** Its only check before dispatching a review is that the commit landed: "`git log -1` moved" (`.claude/skills/coordinator-cycle/SKILL.md:100`).
+- **The unattended loop.** It schedules a review as soon as the build is committed, treating the tip as "locally green" without checking (`agent_loop.py:2259`).
+- **A red smoke has been committed before,** through a chain that checked only an exit code (coordinator-cycle `references/recipes.md:412`).
+
+**The lints aren't in the path yet.**
+- Ruling 6 puts `trace.py --strict` and `check_trajectory --strict` in the commit bar after each build. That hasn't reached `session-protocol` or the recipes.
+- `trace.py --strict` runs nowhere today: the hook and the closure check use `--strict-integrity`.
+- The hook's `check_trajectory --staged` ends in `|| true`, so it never blocks.
+- The builder and the reviewer each run lints by instruction, with nothing enforcing it.
+
+**Test cases are written after the code in a lane.** The coordinator dispatches Terra to author the change set's spine rows *after* the first build round (`SKILL.md:88-94`). That is the reverse of the test-first order PROCESS.md sets for `DevStg-Impl` (§7: each TC becomes a failing test before code), and the `test-first` check that reads the order from history only warns.
+
+**How test cases are reviewed today:**
+- **TC rows** are judged as text at the combined sitting ("do the test cases that claim to verify this row verify what it actually says", `spine-questions.md`).
+- **Test code** has no review of its own. It is part of the code diff, and the reviewer maps each Done-when item to a covering test.
+- **Pre-fix failure** is confirmed only where the diff adds a regression test. Revision 8's per-finding rule is still unwritten template text.
+- **Test strength** (would this test catch a broken implementation?) is checked by no one.
+
+### Assessment
+
+**The owner's order is right, and it is cheap.** Review sessions are the scarce, metered resource: Codex sessions are capped, and every round costs two reviewers. Lints and tests are cheap and deterministic. Spending a review on a tip a tool already knows is red buys a finding the tool would have produced. It also reviews code that is about to change. The precedent is Gerrit's `Verified` label, which AOSP introduced to mean "compiles, passes basic unit tests" before a change can submit. Gerrit gates *submission* and lets review run in parallel. The owner's stricter form, gating the *start* of review, fits a kit where reviews cost more than checks. It also serves item 6, whose aim is "review findings an instrument would catch: 0".
+
+**But green only removes failures; it doesn't make the tests right.** A weak test (one that asserts handler text, or passes on a broken implementation) turns green just as easily. So the gate needs a second half: review of the tests themselves, staged so each stage catches what it is cheapest at catching.
+
+**Three preconditions:**
+1. **Trunk must be clean first** (item 6, step 1). Otherwise every lane inherits a red bar, starting with LLR-292's false positive under `trace.py --strict`.
+2. **The green record is made at the commit and trusted at dispatch** (item 2's record-at-event rule), not re-run by whoever dispatches. The merge slot already verifies a `Bar-Green:` attestation of the declared bar on the exact tree (`integrate.py`). The review gate reuses that one record rather than inventing a second.
+3. **A red bar returns to the builder without a review,** inside the builder's own bound. Otherwise the churn moves from review rounds to build rounds.
+
+### Proposal: the order, and test cases reviewed in stages
+
+1. **Test cases first.** In a lane, the TC rows and their failing tests are written before the code, for each Done-when item. This is PROCESS.md's test-first order, restored in the coordinator cycle.
+   - **Within the lane, the failing tests are the build's first deliverable,** with their red-before recorded.
+   - **For a pre-claim WI,** the TCs could be named in the spec (item 9's binding advice), so the queue holds testable work.
+2. **Lint.** `trace.py --strict` and `check_trajectory --strict` (ruling 6).
+3. **Tests.** The commit bar (smoke plus its budget), the lane's named tests, and each new test's recorded red-before and green-after on the exact tree. This is test review's mechanical stage:
+   - every new TC has a test that names it (revision 8);
+   - every new test failed before the fix;
+   - nothing previously green has regressed.
+4. **Review, only on a green record for the tip.** The coordinator and the loop both refuse to dispatch reviewers without it. The reviewers then judge what tools can't: whether the code meets the requirement, and whether **the tests are adequate**. That covers four questions:
+   - Does each test drive the interface the requirement names, and not handler source (the report's corrected test 3)?
+   - Would it fail on a plausible wrong implementation?
+   - Is each Done-when item covered?
+   - Does a test name the IF it drives, where variant F requires it?
+5. **The sitting** judges TC *text* at the checkpoint, as today.
+6. **Later, a measured trial: mutation testing** of the lane's changed lines only, as advisory evidence of test strength for the reviewers. Google surfaces mutants of changed code during code review (Petrović, Ivanković, Fraser, Just, *Practical Mutation Testing at Scale*, arXiv 2102.11378). They first found most surfaced mutants unproductive, and fixed that by filtering mutants and choosing operators by their history. So the trial starts narrow and advisory. A stdlib mutator (operator, comparison and constant swaps) over the diff is feasible; its cost is test runtime.
+
+**Measure.**
+- Review rounds started on a red tip: should be 0 (counted in the phase-0 manifest).
+- Findings an instrument would catch: should be 0 (item 6's measure).
+- Review rounds per landed WI: should fall.
+
+**Cost.**
+- **Text and a small build:** the dispatch gate in the coordinator cycle and the loop, reusing the `Bar-Green` record. It comes after item 6.
+- **Text only:** the TC-first order in the coordinator cycle and `in-lane.md`, and the test-adequacy questions in the reviewer template.
+- **Optional, later:** the mutation trial.
+
+**Owner calls (open):**
+- **Where the gate sits.** Should it gate the *start* of review (the owner's order, recommended), or only landing, the Gerrit form that lets review run in parallel?
+- **TC-first in lanes.** Should TC rows and failing tests come before the first build? Today they come after.
+- **Mutation testing.** Should the trial run, advisory, on changed lines only?
+
+**Found on the way (separate, not fixed):** `coordinator-cycle/SKILL.md:93` says "interface rows have no approval status", which contradicts PROCESS.md §8's `Drafted` · `Approved` for IF rows (the revision 12 correction).
+
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
 | 0 · rulings and baseline | Owner calls still open: item 11's, and the "Open after revision 12" and "Open after revision 13" calls in the rulings section (items 1–10 are ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
-| 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. WI-805's plan gate, pulled forward (ruling 9; the handoff orders it right after B1). Item 12's text pieces (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), after its dry run on W3. | Coordinator lanes |
-| 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. | Coordinator |
+| 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. WI-805's plan gate, pulled forward (ruling 9; the handoff orders it right after B1). Item 12's text pieces (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), after its dry run on W3. Item 13's review gate (reusing the `Bar-Green` record) right after item 6, and its text: TC-first in lanes and the reviewer's test-adequacy questions. | Coordinator lanes |
+| 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. Item 13's mutation trial (advisory, changed lines only), if ruled. | Coordinator |
 | 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. Item 11, once ruled, with item 5's migration. Item 12's builds (checks A and C, the `arch-audit` action and its critique skill), after item 11 is ruled. | Coordinator lanes |
 | 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
 

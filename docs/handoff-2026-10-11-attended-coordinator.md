@@ -207,6 +207,13 @@ signature (SN-029).
     available, otherwise a different family or model.
   - **Item 5:** the per-module `Implements:` floor is withdrawn; links back
     are encouraged, not mandated.
+  - **Item 13 (new, open):** review only a green tip. The order is lint,
+    then tests, then review; today nothing refuses a review on a red tip.
+    Test cases are reviewed in stages: written before the code with a
+    recorded red-before, checked mechanically at the gate, judged for
+    adequacy by the reviewers, and judged as text at the sitting. Calls:
+    whether the gate sits at the start of review or only at landing,
+    TC-first in lanes, and a mutation trial.
   - **Item 12 (new, open):** architectural decomposition at three moments.
     - **One definition:** a rubric and an `architecture-decomposition`
       skill, not a hat (the owner decided: hats serve SN → SR).
