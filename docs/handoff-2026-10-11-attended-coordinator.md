@@ -185,6 +185,20 @@ signature (SN-029).
       to name symbols in LLRs; pull the fix into phase 1?
     - 114 IF `data` cells name code: classify the `call` rows first?
     - interactive dashboard evidence?
+- **Revision 15 (owner's positions, for confirmation):**
+  - **Variant F** refines E (item 11):
+    - components are declared on the realization, so LLR → CMP retires;
+    - files are created at design time;
+    - there is no IF → LLR list: a TC names the IF it drives;
+    - interfaces are thin and approved just in time;
+    - an id-continuity rule governs amendments;
+    - the assumption bridge joins the SR-side derivation.
+
+    F-calls 1–4 are open.
+  - **Item 7:** the second reviewer is from a third family when one is
+    available, otherwise a different family or model.
+  - **Item 5:** the per-module `Implements:` floor is withdrawn; links back
+    are encouraged, not mandated.
   Also: the minimum profile's path from code to LLRs; whether the authored
   IF list carries LLRs only, with the SR side derived through
   `boundary_refs`.

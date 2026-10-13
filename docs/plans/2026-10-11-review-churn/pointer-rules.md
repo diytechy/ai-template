@@ -59,10 +59,12 @@ The boundary-file set is an explicit `boundary` class on each entry of the
 one shipped-file inventory, matched on the destination path (so launchers
 shipped from `scripts/run.template.*` count as boundary files). The commit-time
 check refuses code tokens in SN, SR, LLR, IF and CMP rows, and boundary-file
-names in SN, SR, IF and CMP rows. Item 5 proposes that every shipped module
-carry at least one `Implements:` tag naming a live LLR, which keeps "why does
-this file exist" answerable. That rule is new: today back-link coverage is a
-dial shipped at 0 (PROCESS.md §3).
+names in SN, SR, IF and CMP rows. Links back to the spine are encouraged,
+never mandated (the owner withdrew item 5's per-module floor in revision 15).
+Any one of three counts: an `Implements:` tag, a `Contract` citation, or a
+link within the same artifact. The dial, shipped at 0, measures it
+(PROCESS.md §3). It balances discoverability against the rot of stale
+pointers.
 
 ## Proposed under item 11 (open, not ruled)
 
@@ -119,3 +121,16 @@ The ruled diagram above stays as drawn, with three additions:
 - **A measured reach dial** with a closed internal allowance.
 
 `Implements:` stays, and no file declares its component yet.
+
+**The owner's variant F** (revision 15, for confirmation) refines E. It is
+set out in full, with a table comparing it to E, in [item 11](README.md):
+
+- **One home for a component:** a code file declares its component in its
+  header, created at design time. A part or asset declares it in its
+  PART/ASSET row. LLR → CMP retires.
+- **No IF → LLR list:** a TC's `verifies` names an IF only where its test
+  drives a separately measurable interface.
+- **Thin interfaces,** approved just in time at the level of use.
+- **An id-continuity rule** for amendments.
+- **The SR side** is derived through boundary crossings *and* the
+  assumptions that bridge them.

@@ -2,7 +2,7 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 13. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) and its two owner's queries (revision 11: contracts cited only where served; work items bound to the interfaces they serve) are the owner's. Revision 12 adds the open calls a GPT-6 Astra review of revision 11 raised (item 11's open calls, and "Open after revision 12" in the rulings section). Revision 13 adds those a Claude Fable 5.1 review of revision 12 raised, among them item 11's overlap with OI-112. Revision 14 answers the owner's follow-up on item 11 (are the LLRs fit to be carried by interfaces?): two independent analyses, GPT-6 Astra and Claude Fable 5.1 at medium effort, judged in [`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md). Both find that item 11 as proposed would not reduce rework, and both recommend a narrower variant E, with new owner calls.
+**Status:** revision 15. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) and its two owner's queries (revision 11: contracts cited only where served; work items bound to the interfaces they serve) are the owner's. Revision 12 adds the open calls a GPT-6 Astra review of revision 11 raised (item 11's open calls, and "Open after revision 12" in the rulings section). Revision 13 adds those a Claude Fable 5.1 review of revision 12 raised, among them item 11's overlap with OI-112. Revision 14 answers the owner's follow-up on item 11 (are the LLRs fit to be carried by interfaces?): two independent analyses, GPT-6 Astra and Claude Fable 5.1 at medium effort, judged in [`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md). Both find that item 11 as proposed would not reduce rework, and both recommend a narrower variant E, with new owner calls. Revision 15 records the owner's refinement of E as variant F in item 11. It also loosens item 7's reviewer-family rule and withdraws item 5's per-module `Implements:` floor (both owner positions).
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
@@ -16,10 +16,10 @@ Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, 
 | 2 | Record a decision at its event, validated by a commit-vs-parent check; never re-derive it from history. Reshape WI-902 first | ruling, then WI-902 reshape | 1 spec amendment | WI-902's history-replay findings |
 | 9 | A planning need decided at mint; plan and scope advice becomes spec text before the claim; one planning path shared with WI-805 | ruling + ordering | hours, then one critique per planned row | advice that never binds (WI-834's pre-build reviews already asked for an enumerated list) |
 | 4 | Review settings: reviewers and rounds per WI (ruled 0 / 0 / 2 / 3), an adjudicated exit at the cap, MINORs never cost a round, a convergence final round, severity tied to reachability | ruling + template change | 1 lane + migration | unbounded rounds (WI-834: 20); ad hoc breakers (WI-902); stale checkpoints |
-| 7 | A second reviewer from a third family (Gemini) at the full reviews; the coordinator cycle reads item 4's `full_reviewers` | ruling + trial | waits on WI-815's route | earlier discovery, on a separate quota |
+| 7 | A second reviewer from a third family (Gemini) when available, otherwise a different family or model from the first, at the full reviews; the coordinator cycle reads item 4's `full_reviewers` | ruling + trial | waits on WI-815's route | earlier discovery, on a separate quota |
 | 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
 | 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 13 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
-| 11 | What points where (open): code cites only interfaces; interfaces name the requirements they carry; files declare their component; LLR → component checked or derived. Revision 14 recommends variant E: keep `Implements:`, IF → LLR only on carrying interfaces, mint the missing delivered-artifact seams | open calls | folds into item 5's migration | the last mixed-direction links; mechanical blast radius per component |
+| 11 | What points where (open): code cites only interfaces; interfaces name the requirements they carry; files declare their component; LLR → component checked or derived. Revision 14 recommends variant E: keep `Implements:`, IF → LLR only on carrying interfaces, mint the missing delivered-artifact seams. Revision 15 adds the owner's variant F: components declared on the realization, no IF → LLR list, thin interfaces | open calls | folds into item 5's migration | the last mixed-direction links; mechanical blast radius per component |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -191,7 +191,7 @@ Data: 38 code-changing WIs claimed and landed 2026-10-03 → 10-11 (`rows.json`)
 | `full_rounds_max` | 3 (ruled; drafted as 2) | Full rounds per WI before `on_limit` fires. |
 | `on_limit` | `"adjudicate"` (proposed) | Open findings at the cap go to one dispute sitting, which rules each FIX-as-successor-row, DISMISS, or ESCALATE to the owner. The lane then lands what is clean. A convergence-class finding (fail-open, data loss, Done-when gap) is never deferred to a successor (revision 7). The alternative value is `"owner"`. |
 | `block_on` | `["BLOCKER", "MAJOR"]` (proposed) | Severities that cost a round. MINORs are recorded (spine change list or successor) and never trigger one. |
-| `reviewer_families` | `["openai", "google"]` (proposed) | One family per reviewer slot, each different from the builder's (item 7 has the Gemini route). |
+| `reviewer_families` | `["openai", "anthropic"]` until a Gemini route is verified, then `["openai", "google"]` (proposed; revision 15) | One family per reviewer slot. A third family is preferred when available; otherwise a different family or model from the first reviewer, recorded as a substitution (item 7). |
 | `final_round_stance` | `"convergence"` (proposed) | How the last allowed round behaves (below). |
 
 With the ruled values (0 / 0 / 2 / 3) a WI runs: build; up to three full rounds of two parallel reviewers, fixing between them; the checkpoint after the first round with no BLOCKER or MAJOR code finding; the post-checkpoint gate in convergence stance; then land, or adjudicate at the cap. That is eight review sessions per WI in the ordinary case (four Codex); a convergence-class fix round or an uncounted rebase round adds two each (rulings section). Most WIs already land within 1–2 rounds, so the cap only binds on the churners. `on_limit` is what makes the cap work: without it, a cap leaves open findings with nowhere to go, which is what happened ad hoc with WI-902. Where the checkpoint and its gate sit is set out in the rulings section's clarifications (revision 7).
@@ -240,7 +240,10 @@ Keep "try to break it", but calibrate it. That stance found the warm-tick race a
 | Test files | Yes: a tag naming the TC they verify | point up to their TC; the TC evidence column is generated |
 | Generated views (dashboard architecture, trace matrix) | Yes, derived | computed from the up-pointers, never authored |
 
-Under this reading, "current carrier" evidence moves from SR acceptance to the TC rows that verify it, and the LLR tier states contracts, not code carriers. R2's third guarantee, "why does this file exist", is kept by an inverse check: every shipped module carries at least one `Implements:` tag naming a live LLR. That check is **new** (revision 12): today back-link coverage is a dial (`[checks] backlink_coverage_min`, shipped at 0 and measured, never a blanket rule; PROCESS.md §3, OI-42), so making it a per-module rule is a proposal with an adoption cost, not existing behaviour.
+Under this reading, "current carrier" evidence moves from SR acceptance to the TC rows that verify it, and the LLR tier states contracts, not code carriers. R2's third guarantee, "why does this file exist", was to be kept by an inverse check: every shipped module carries at least one `Implements:` tag naming a live LLR. That check is **new** (revision 12): today back-link coverage is a dial (`[checks] backlink_coverage_min`, shipped at 0 and measured, never a blanket rule; PROCESS.md §3, OI-42), so making it a per-module rule is a proposal with an adoption cost, not existing behaviour. **Withdrawn by the owner (revision 15, variant F):**
+- **Encouraged, not mandated.** Every artifact is encouraged to link back to the spine, never required to.
+- **What counts as a link back.** An `Implements:` tag, a `Contract` citation, or a link within the same artifact (for example, a shared header that the files using it import).
+- **Why only encouraged.** It weighs discoverability (if something is wrong, what to change and what is affected) against rot (a pointer left stale). The dial measures it.
 
 The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md) beside this file.
 
@@ -296,7 +299,7 @@ The pointer rules, as ruled, are drawn in [`pointer-rules.md`](pointer-rules.md)
 
 ### Proposal
 
-1. **The family must be a third one.** The builder and the adjudicator are Claude, and Sol and Luna are OpenAI. That leaves Gemini. The route is not close: WI-815 owns the Gemini stdin route (its title says "an untested Gemini route") and needs WI-798 and WI-801. The trial waits on WI-815 plus one verified independent Gemini launch.
+1. **A third family when one is available.** The builder and the adjudicator are Claude, and Sol and Luna are OpenAI, so the preferred second reviewer is Gemini. Otherwise the second reviewer is an independent reviewer of a different family *or a different model* from the first reviewer (today, Claude Sonnet beside Codex Sol, per ruling 7), recorded as a substitution (owner, revision 15: "must be a third one" was too strict). The route is not close: WI-815 owns the Gemini stdin route (its title says "an untested Gemini route") and needs WI-798 and WI-801. The trial waits on WI-815 plus one verified independent Gemini launch.
 2. **Trial with the kit's current charters.** Re-cutting B toward regressions and Done-when coverage only makes sense once items 5 and 6 have mechanized trace and prose checks. Revisit the charters after that.
 3. **The reviewers come from item 4's settings** (`full_reviewers`, `reviewer_families`), read by the coordinator cycle and the managed loop alike, instead of one hard-coded Sol review.
 
@@ -469,7 +472,11 @@ Item 5's ruling removes the LLR → module join. That join was the one route fro
 - **Interfaces already have an approval status** (revision 12 correction): PROCESS.md §8 defines `Drafted` · `Approved` for IF rows, and `kitlib/authority.py` assigns interfaces to `DevStg-Arch`. All 243 are Drafted today, a population state. The question is whether a requirement-bearing allocation must be Approved and amendment-controlled under that existing authority.
 - **Tools that count LLR ids in `Implements:` lines** (the test-first check, the coverage dial) would count through IF → LLR instead.
 - **Shared code.** A file serving several components needs the shared-kernel declaration OI-48 already uses for `kitlib`, rather than a multi-tag.
-- **Non-code realizations.** Shipped boundary files (templates, registries) have no docstring. Their component and interfaces need a comment header, or derivation from the IF `data` cells. Physical realizations are wider still: OI-20 admits designed part sources, and a fetched asset or a bought part has no file to carry a header (revision 12).
+- **Non-code realizations.** (Withdrawn under variant F, owner, revision 15.)
+  - **Why the nuance existed.** It followed only from A's "every file declares its component in its header".
+  - **Why it isn't needed.** Ruling 5 lets an LLR name a shipped boundary file. Gilbert's PART rows already carry `IF-Ref` and `Component`, and its ASSET rows carry `Component`. A realization that can't carry a header declares itself in its registry row.
+
+  The original text: shipped boundary files (templates, registries) have no docstring. Their component and interfaces need a comment header, or derivation from the IF `data` cells. Physical realizations are wider still: OI-20 admits designed part sources, and a fetched asset or a bought part has no file to carry a header (revision 12).
 - **The minimum profile** (revision 13). PROCESS.md's standalone one-module project has no interface registry, and §8 says single-module projects skip it. Under code → IF only and "every LLR carried by an interface", such a project has no path from code to any LLR. The rule for it is open: a declared system-boundary IF becomes mandatory there, or `Implements:` survives there.
 - **The SR half of IF → requirement already has a home** (revision 13). All 131 SR rows carry `boundary_refs` to a `B-xx` crossing, and 47 IF rows name the crossing they realize (`interface_from_external` / `interface_to_external`). SR ↔ boundary IF is derivable through the crossing (no check joins them today), so an authored IF → SR list would be a second home. Fable recommends restricting the authored list to IF → LLR and deriving the SR side; an owner call.
 - **An over-claimed owner citation is refused today** (revision 13). `trajectory_arch`'s owner-exact check (warn) and the strict contract-body gate's stray-declaration error check a `Contract IF-NNN:` body against the registry's authored `owner` cell. If `owner` is generated from the citations, that check becomes circular, and a consumer-side citation is today exactly the strict error. Keeping an authored owner id per IF keeps the independent check (the "Generating IF roles" call).
@@ -516,6 +523,52 @@ Item 5's ruling removes the LLR → module join. That join was the one route fro
 - **What E adds.** One delivered-dashboard interface and a few more delivered-artifact and CLI seams. IF → LLR only on interfaces that genuinely carry the behaviour, each reviewed, with the SR side derived. A reach dial with a closed internal allowance; no `call` seam is minted to satisfy a rule (OI-48).
 - **Where the fitness tests go.** The three corrected tests go into the spine-authoring rubric and item 5's commit-time text check, applied when a row is touched. A 302-row gate is not used: the analysts disagree on 7 of the 15 rows both read by hand, so a fitness gate would itself generate review rounds.
 - **The way back to A.** E can grow into A later without discarding anything.
+
+**Variant F: the owner's refinement of E (revision 15; the owner's positions, for confirmation, not yet rulings).** It is kept as its own letter so the record shows what came from the analysts (E) and what from the owner (F), and so a later review can judge one against the other.
+
+F agrees with E on four things: keep `Implements:`, no rule that every LLR is carried by an interface, mint the delivered-dashboard interface, and judge fitness when a row is touched. It goes further in seven places:
+
+1. **One home for component membership: the realization.** A code file declares its component in its header. A part or a fetched asset declares it in its PART or ASSET row; Gilbert's already have `Component`, and PART also has `IF-Ref`, the same shape as a file citing its contract. **LLR → CMP retires.** Today the fact has two homes: 150 of 243 IF rows and all 302 LLRs carry a `component` cell.
+2. **Files are created at design time.** When LLR and IF rows are written, their files are created as stubs: a component header and contract markers. This is PROCESS.md §8's existing "mint header-first" moved from the work item that creates a module to the design step.
+   - **The pre-code gap closes.** An approved LLR's realization has a home before the code exists.
+   - **Early work items stop clashing.** The first WIs no longer build a file structure around each other.
+3. **No IF → LLR list.** Every defined behaviour is verified, either itself or through its parent. That is why an LLR exists: to be a testable point of reference.
+   - **Where it is tested.** At the interface where its behaviour can be observed, often an outer one: many renderer LLRs are testable at the delivered dashboard. The test can be direct or a rubric.
+   - **How the link is recorded.** Only where the test drives a separately measurable interface does the TC's `verifies` name that IF beside the LLR. That cell is the single home of "this LLR is checked at this interface"; nothing on the IF side repeats it.
+   - **Blast radius** (IF → TC → LLR) is derived.
+4. **Interfaces are thin.** An IF row is a typed node joining ports: its channel class, owner and consumers. The contract body lives in code.
+   - **Approval** is given at the level the interface is used, just before the SR or LLR it serves, and checks only that the interface class fits what it serves.
+   - **Mechanizing** that approval comes last.
+5. **Links back to the spine are encouraged, not mandated** (item 5's per-module floor is withdrawn). The trade is discoverability against rot, and the dial measures it.
+6. **Id continuity.** A row keeps its id when amended only if its meaning stays close to the original purpose. In practice that means three things hold:
+   - most existing links stay valid;
+   - the rest can be updated with confidence;
+   - a missed one, such as another repository citing the id, would not mislead.
+
+   Otherwise the row retires with a successor record and new ids are minted. SR-180, LLR-180 and TC-175 retire outright, and new ids carry the new discharge rule. The kit already says ids are "never reused" (PROCESS.md §2) and splits amendments into CLARITY and MEANING (§3), but it never says when an amendment must become a successor. This rule fills that gap: a CLARITY amendment keeps its id; a MEANING amendment keeps it only under the test above.
+7. **The SR side is derived through the assumptions too.** Where a boundary crossing can't be measured, an assumption turns it into an interface that can, and that permits the connection. The links already exist: 17 DA rows carry `effect_at` naming a crossing, 9 IFs carry `bridged_by` DA ids (IF-013 by DA-001 and DA-002), and 3 surrogates `emulates` an external party. So SR → `B-xx` reaches an IF either directly (`interface_to_external`) or through a bridging DA. Some of this assumption work is still in the WI queue.
+
+| Link or rule | E | F |
+|---|---|---|
+| Code → LLR (`Implements:`) | kept; coverage dial | kept, sparse; any link back (tag, contract, a link within the same artifact) counts |
+| IF → LLR | authored on carrying interfaces (about 100–150 cells, reviewed) | **none**; the TC's `verifies` names the IF where a separate interface is driven |
+| IF → SR | derived through `boundary_refs` and the crossing cells | derived the same way, **plus the assumption bridge** |
+| LLR → CMP | authored design intent | **retired** |
+| File → CMP | deferred | **declared in the file header**, or in the PART/ASSET row for a physical realization; created at design time |
+| IF → CMP / IF owner | an authored owner id that names its role | open (F-call 1) |
+| IF approval | through the sitting (Fable) | just in time, at the level of use; class compatibility only; mechanized last |
+| Id amendment | retire or re-mint | the continuity rule above |
+| Authored links, against E | n/a | about 300 LLR → CMP cells and about 100–150 IF → LLR cells removed; about 117–150 file headers added |
+
+**F's open calls:**
+- **F-call 1: how an IF reaches its component.** Two options:
+  - Authored: the IF owner is the producing component's id, as design intent, checked against the owning file's header. This is two facts, so the check is not circular.
+  - Derived from the owning file: one home, but no independent check.
+
+  Either way, a file that serves no requirement-bound interface still declares its component in its own header, so the owner's worry about such files doesn't decide this call. The owner is undecided.
+- **F-call 2: the design-time stubs.** At which rung are files created, and what may a stub carry? The test-first check must not count a stub as implementation.
+- **F-call 3: when a TC names an interface.** Confirm that a TC names an IF only where it drives a separately measurable interface.
+- **F-call 4: where the id-continuity rule lives.** Write it into PROCESS.md beside "never reused", tied to the CLARITY/MEANING split.
 
 ## Sequence and how we'll know
 

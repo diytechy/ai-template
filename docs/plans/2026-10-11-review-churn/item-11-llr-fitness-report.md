@@ -28,6 +28,8 @@ The brief named A–D and asked each analyst for "any variant of your own". Each
 
 The E here combines the two. "Variant E, link by link" below lays it out against today, A and D.
 
+**Since revision 15:** the owner refined E into **variant F**, recorded in the plan's [item 11](README.md) with a table comparing it to E. In short: components are declared on the realization (LLR → CMP retires), there is no IF → LLR list, and interfaces are thin. F also corrects E's IF → SR derivation, which must follow the assumption bridge as well as the crossing cells.
+
 ## Why E, on your two criteria
 
 **1. Behaviour stays divorced from implementation.** The things that couple a requirement to its implementation are the symbols and mechanism inside LLR text, and the `module` and `code_symbol` cells. Item 5 removes both, whatever is decided here. After that, every remaining link points up, from code and tests to LLRs. A refactor moves `Implements:` tags, which live in code, and never reopens a requirement row. Item 11 adds nothing to this, and A weakens one part of it. With every LLR routed through an IF, the IF → LLR allocation becomes a new authored relation that changes whenever a seam is split or merged. A seam split is a refactor-shaped event, so under A a refactor *can* reopen the spine, through the IF rows.
