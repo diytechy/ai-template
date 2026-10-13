@@ -201,7 +201,8 @@ signature (SN-029).
     - 5 is recursive components, with W3's lane stages as the first case;
     - 6 is the test for when to descend (a describable state descends; an
       invented number stops);
-    - 7 is a short research piece on the established terms.
+    - 7 is what to mechanize (checks A–C) and the vocabulary, after the
+      research in item-11-value-domain-research.md.
   - **Item 7:** the second reviewer is from a third family when one is
     available, otherwise a different family or model.
   - **Item 5:** the per-module `Implements:` floor is withdrawn; links back
