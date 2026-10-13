@@ -128,6 +128,11 @@ Copy [`reviews/brief-r6.md`](reviews/brief-r6.md) into the review root as
      > <review root>/astra-medium-review.md.log 2>&1
    ```
 
+   **Point `-o` at a different file from the review path the brief names**
+   (revision 18 trap): `-o` writes Codex's final message, and at the same
+   path it overwrites the review the reviewer wrote. The revision 17 review
+   was recovered from the `.log`.
+
    This machine's Codex knows `gpt-6-astra`; `gpt-6.1-astra` is refused for
    this account. A medium run can take tens of minutes: run it in the
    background and wait for the notification.

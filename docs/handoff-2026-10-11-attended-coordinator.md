@@ -244,6 +244,36 @@ signature (SN-029).
   Item 12's critique gates are named. Item 13's green record becomes one
   tree-bound bar attestation shared with landing, and its red-before is a
   record, with typed evidence for non-executable TCs.
+- **Revisions 17–18 (the owner's 2026-10-13 answers, and the Astra-high and
+  Fable-medium reviews of revision 17, both REVISE).** These supersede the
+  revision 15 and 16 bullets above where they differ; the plan's status
+  paragraph and item 11's status table are the current record.
+  - **Answered:** F-call 1 (i), so an IF's owner is a component id or an
+    `external:` party, with the 35–39 cells that hold placement today
+    migrated (decision 1). F-call 2: stubs only where the design needs them;
+    the builder mints files and must not duplicate. F-call 8: an LLR need
+    not name an IF; placement is derived. F-call 9 with decision 2: an
+    interface states its form only, in one line that is the `data` cell
+    until the build and the body's first line after; an LLR or SR states
+    the behaviour and its dimensional scope; every IF is pointed at by at
+    least one. Decision 4: the plan comes after the claim; the scope
+    critique asks the questions that reshape the queue.
+  - **Item 13 answered:** gate the start of review; about three red rounds,
+    then a partial close (OI-70's only stop); TC rows before the build with
+    failing test code as its first deliverable; a scoped test set (SR,
+    direct and through its LLRs) over the smoke floor; an advisory mutation
+    trial. The dashboard's interaction checks run in a browser, off the
+    commit bar, each view stamped from its observation record.
+  - **To confirm:** decision 3, who admits a dependency in a lane. The
+    owner's framing is one value, owner-or-delegate (the lane hands back as
+    an open item, ruled by the owner or a recorded delegate); the other is
+    an independent admission session. Options A–C are in item 13.
+  - **The owner's acts owed once F is ruled:** overrule ruling 5's "LLRs
+    keep naming their component" explicitly, and amend OI-67 (a)'s
+    IF-owner header text.
+  - **Still open:** F-calls 3 (now per TC and LLR pair) to 7, consumer and
+    requestor roles, item 12's reading of "top level", and the dashboard
+    check's cadence.
 
 ## Traps from this session
 
