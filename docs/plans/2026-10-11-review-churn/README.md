@@ -2,7 +2,7 @@
 
 *ai-template · 2026-10-11 · evidence window 2026-10-09 → 10-11 (21 WIs, 69 review rounds, 79 findings) · for the owner to confirm or overrule item by item*
 
-**Status:** revision 15. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) and its two owner's queries (revision 11: contracts cited only where served; work items bound to the interfaces they serve) are the owner's. Revision 12 adds the open calls a GPT-6 Astra review of revision 11 raised (item 11's open calls, and "Open after revision 12" in the rulings section). Revision 13 adds those a Claude Fable 5.1 review of revision 12 raised, among them item 11's overlap with OI-112. Revision 14 answers the owner's follow-up on item 11 (are the LLRs fit to be carried by interfaces?): two independent analyses, GPT-6 Astra and Claude Fable 5.1 at medium effort, judged in [`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md). Both find that item 11 as proposed would not reduce rework, and both recommend a narrower variant E, with new owner calls. Revision 15 records the owner's refinement of E as variant F in item 11. It also loosens item 7's reviewer-family rule and withdraws item 5's per-module `Implements:` floor (both owner positions).
+**Status:** revision 15. Items 1–10 are ruled (see "Owner rulings, 2026-10-11"; the revision 6–7 clarifications not marked as rulings await the owner's confirm or overrule). Item 11 (what points where) is open; its terms (contract, module) and its two owner's queries (revision 11: contracts cited only where served; work items bound to the interfaces they serve) are the owner's. Revision 12 adds the open calls a GPT-6 Astra review of revision 11 raised (item 11's open calls, and "Open after revision 12" in the rulings section). Revision 13 adds those a Claude Fable 5.1 review of revision 12 raised, among them item 11's overlap with OI-112. Revision 14 answers the owner's follow-up on item 11 (are the LLRs fit to be carried by interfaces?): two independent analyses, GPT-6 Astra and Claude Fable 5.1 at medium effort, judged in [`item-11-llr-fitness-report.md`](item-11-llr-fitness-report.md). Both find that item 11 as proposed would not reduce rework, and both recommend a narrower variant E, with new owner calls. Revision 15 records the owner's refinement of E as variant F in item 11. It also loosens item 7's reviewer-family rule and withdraws item 5's per-module `Implements:` floor (both owner positions). It adds item 12 (architectural decomposition at three moments: a fresh-vision breakdown, an amendment that shifts the architecture, and an audit), at the owner's request.
 
 The churn is real but concentrated: four WIs (WI-834, WI-902, WI-887, WI-881) took 41 of the 69 review rounds in the window. Adjudication upheld most contested findings, so the reviewer is not the problem. What keeps rounds coming is the shape of the work. Specs promise behaviour over open-ended inputs, and every fresh review samples a new corner. Advice about that from earlier reviews never becomes binding. Facts get re-derived from git history. And requirement rows restate code and drift with every fix.
 
@@ -20,6 +20,7 @@ Revision 2, after two independent reviews (Claude Sonnet 5.5 and Codex 6.1 Sol, 
 | 3 | Split at birth on independent deliverables, for containment; no size threshold (the data doesn't support one) | ruling | none | one stuck subsystem holding the rest |
 | 10 | One configuration file in TOML (owner ruling 2026-10-11): `stack.ini`, routes and consent move into `process.toml`; adopter-owned values, kit-owned schema; re-sync adds, never replaces | ruled · 4–6 WIs | before the FileBackup re-sync | 13 separate parsers; routing in three homes; a re-sync that overwrites adopter values |
 | 11 | What points where (open): code cites only interfaces; interfaces name the requirements they carry; files declare their component; LLR → component checked or derived. Revision 14 recommends variant E: keep `Implements:`, IF → LLR only on carrying interfaces, mint the missing delivered-artifact seams. Revision 15 adds the owner's variant F: components declared on the realization, no IF → LLR list, thin interfaces | open calls | folds into item 5's migration | the last mixed-direction links; mechanical blast radius per component |
+| 12 | Architectural decomposition at three moments (open): one rubric, an ARCHITECT hat and a `DevStg-Arch` question section, reached from a fresh-vision breakdown, a scope-critique anchor S5 for architectural deltas, and a `run.cmd arch-audit` action; dry-run on W3 first | text, then builds | ~1 lane of text; builds after item 11 | under-decomposed components (W3: 60 modules, the lane's stages inside) |
 | 5 | Requirements never reference code; code points up (owner ruling 2026-10-11): schema, commit-time text check, contract voice, semantic trace check kept | ruled · 1–2 WIs, last | schema WI + migration | requirement churn from code moves |
 
 Order is cheapest-and-surest first. Counting bases differ, so each figure names its source. The window counts (21 WIs, 69 rounds, 79 findings, and the late-finding taxonomy: 43 late findings, 18 from open input spaces, ~24 spine-text, ~6 mechanical) come from one analysis pass and have not been reproduced. Sol's reproducible added-file window gives 19 WIs, 65 REVIEW-A files and 74 verdict findings. A manifest of included files and per-finding classes is owed before any of these become a baseline (sequence, phase 0). The size table comes from `rows.json` and was reproduced by both reviewers.
@@ -612,14 +613,83 @@ F agrees with E on four things: keep `Implements:`, no rule that every LLR is ca
 
   Also for ruling: adopt the report's ten terms in the spine-authoring rubric, with its glosses for *module* and *seam*.
 
+## 12. Architectural decomposition, encouraged at three moments
+
+The owner asked (2026-10-12, revision 15) how to get LLMs to decompose the architecture well at three moments: when the spine is broken down from a fresh vision, when a WI is large enough to shift the architecture, and on demand as an audit of the current architecture. Variant F (item 11) says *what* good decomposition is. This item is *where an author or a reviewer meets that definition*.
+
+**Root cause.** The kit has no home for the definition at the step where decomposition happens.
+- **The question list skips the architecture rung.** `project-trajectory/prompts/spine-questions.md` has sections for SN intake, SR derivation and LLR/TC, and none for `DevStg-Arch`, even though the ladder repeats that step per component scope (PROCESS.md §4).
+- **No hat asks architecture questions.** Hats are the kit's way to put a perspective in front of an author, and none of the 16 in `hats.toml` covers states, value domains or dependencies.
+- **No rubric judges interfaces and boundaries.** The `docs/rubrics/` set has decomposition *proportionality* and *plan* decomposition, but nothing for components and interfaces.
+- **No scope-critique anchor asks whether a WI shifts the architecture.**
+
+The result: W3 Autonomy grew to 60 modules with its lane stages inside it (item 11, F point 3).
+
+### Proposal: one definition, three entry points
+
+**The shared core, stated once.** Each entry point cites it; none restates it.
+1. **A rubric, `docs/rubrics/architecture-decomposition.md`,** written from variant F. Its anchors:
+   - each state a stakeholder can name is a mode class, with its transitions;
+   - every interface carries a closed value domain, checked for disjointness and coverage, with the two kinds of UNKNOWN kept apart;
+   - boundaries sit where dependencies are sparse or an intermediate value is narrow;
+   - no control coupling across a boundary;
+   - interfaces at every boundary, optional inside a component;
+   - the stopping point is recorded, under the "state or source" test.
+
+   Its failure patterns: a product of booleans standing in for one domain; one meaning carried by two interfaces; an under-decomposed component. Terms come from the vocabulary in [`item-11-value-domain-research.md`](item-11-value-domain-research.md).
+2. **An ARCHITECT hat** in `hats.toml`. It asks: "What states can the stakeholder name here, what crosses each boundary as a closed domain, and which output depends on which inputs?"
+3. **A new section in `spine-questions.md`, "At architecture (`DevStg-Arch`, per component scope)",** citing the rubric's anchors by id. It is the list an authoring LLM follows.
+4. **Instruments:** checks A (well-formed value domains) and C (a dependency matrix per component) from item 11's F-call 7, as evidence for the judgement.
+
+**Entry point 1: a fresh vision.** The `DevStg-Arch` step at each component scope gets a stated output, produced before any LLR at that scope:
+- the state flow, as mode classes and transitions recorded in `runtime-flows.md`;
+- the scope's boundary interfaces, each with its value domain;
+- a small output × input dependency table.
+
+LLRs then attach to those interfaces, as F requires. The hat raises the questions while the author writes. An independent critique against the rubric runs before the step is approved.
+
+**Entry point 2: an amendment that shifts the architecture.** Scope critique gains anchor **S5, "Architectural delta"**: does the WI add a state, add a value to a domain, make an output depend on a new input, or cross a new boundary? If yes:
+- the spec carries the architecture change explicitly (interface and domain edits, perhaps a sub-component split);
+- S4 marks the WI for planning (item 9);
+- item 3's split rule separates the refactor from the feature ("make the change easy, then make the easy change").
+
+Three mechanical triggers can prompt S5 without anyone remembering to ask: the WI's files span more than one component; it mints an interface; check A or C gets worse at the lane tip. Under ruling 9, the critique's answer becomes binding spec text before the claim.
+
+**Entry point 3: an audit, `run.cmd arch-audit`.** A new action in `docs/stack.ini [run]`, shaped like the `render-dashboard-critique` skill:
+1. **The mechanical half** needs no model. It runs `trajectory_arch`, checks A and C, `check_complexity`, the duplicates census and `gen_arch_map`, and writes a findings bundle.
+2. **The judgement half** is an independent critique session. It reads the bundle against the rubric and ranks components by what a refactor would gain.
+3. **The output** is candidate WIs or open items filed through intake. The critic never edits the spine (`docs/rubrics/README.md`).
+
+With an empty route pool, the judgement half refuses rather than falling back (revision 8 ruling).
+
+### First step: a dry run on W3, before building anything
+
+Give an independent model only the drafted rubric and W3 Autonomy's current shape: its modules, internal seams, the lane's runtime flow (Flow 4) and its interfaces. Ask it for a decomposition.
+- **If it proposes a lane split** close to the stages a stakeholder would name (planning, build, review, landing), with sensible handoff domains, the rubric works.
+- **If not, the rubric is fixed** while it is still text.
+
+The dry run also gives F-call 5 (recursive components) its first worked case.
+
+**Cost.**
+- **Text only (phase 1):** the rubric, the hat, the spine-questions section and S5, about one lane.
+- **Builds (phase 3, after item 11's ruling):** checks A and C, the audit action and its critique skill.
+
+**Downstream.** The rubric, hat, question section and scope anchor ship to adopters as kit-owned text; the audit action ships in the run-menu template. It is one RESYNC entry; adopters migrate nothing, since everything is additive.
+
+**Owner calls (open):**
+- **The hat:** "always", or only on architecture-tagged rows?
+- **The critique before approving `DevStg-Arch`:** required at every component scope, or only at depth 0 and on request below it?
+- **S5's mechanical triggers:** advisory or blocking?
+- **The audit's cadence:** on demand only, or also at phase close?
+
 ## Sequence and how we'll know
 
 | Phase | What | Who |
 |---|---|---|
 | 0 · rulings and baseline | Owner calls still open: item 11's, and the "Open after revision 12" and "Open after revision 13" calls in the rulings section (items 1–10 are ruled). A baseline manifest: the included review files and a class for each finding, so the counts above become reproducible. No code. | Owner; analysis agent for the manifest |
-| 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. WI-805's plan gate, pulled forward (ruling 9; the handoff orders it right after B1). | Coordinator lanes |
+| 1 · cheap builds | Item 6 (LLR-292, the lints after each build, the RESYNC check). Item 8 (usage), so every later change is measured. Item 10 step 1 (one shared `stack.ini` loader) and step 2 (settle the shell-grep rule). Rubric and skill edits for items 1, 2, 3 and 9 (S3, S4, B3, binding advice). The reviewer-template clause for item 1. WI-805's plan gate, pulled forward (ruling 9; the handoff orders it right after B1). Item 12's text pieces (the rubric, the ARCHITECT hat, the `DevStg-Arch` question section, scope anchor S5), after its dry run on W3. | Coordinator lanes |
 | 2 · trials, one change at a time | WI-902 reshaped (item 2), measured on its own. Item 4's settings on the next lanes. Item 7's Gemini slot once WI-815's route works. | Coordinator |
-| 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. Item 11, once ruled, with item 5's migration. | Coordinator lanes |
+| 3 · structural (last) | Item 5: schema removal, derived index, batch act, commit-time text check. Item 2's history-reader audit. Item 10 steps 3–6 with item 4's `[review]` section, shipped as one RESYNC entry before the FileBackup re-sync. Item 11, once ruled, with item 5's migration. Item 12's builds (checks A and C, the `arch-audit` action and its critique skill), after item 11 is ruled. | Coordinator lanes |
 | 4 · re-measure | Over the next 15 landed WIs, against the phase-0 manifest. | Coordinator / analysis agent |
 
 **Session budget.** Item 4's cap bounds review sessions per WI: eight in the ordinary case with the ruled values (four Codex), more when a convergence-class fix round or a changed rebase adds a round (rulings section), plus one plan critique for an item 9 row and one dispute sitting at the limit. A Gemini slot (item 7) draws on a different quota. Item 8 records the sessions, so the budget is measured, not estimated.

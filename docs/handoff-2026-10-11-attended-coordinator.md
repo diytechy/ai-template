@@ -207,6 +207,15 @@ signature (SN-029).
     available, otherwise a different family or model.
   - **Item 5:** the per-module `Implements:` floor is withdrawn; links back
     are encouraged, not mandated.
+  - **Item 12 (new, open):** architectural decomposition at three moments.
+    - **One definition:** a rubric, an ARCHITECT hat, and a `DevStg-Arch`
+      section in `spine-questions.md`.
+    - **Three entry points:** a fresh-vision breakdown, scope anchor S5 for
+      architectural deltas, and a `run.cmd arch-audit` action.
+    - **First step:** a dry run of the drafted rubric on W3 Autonomy, before
+      anything is built.
+    - **Owner calls:** the hat's scope, critique depth, whether S5's
+      triggers block, and the audit's cadence.
   Also: the minimum profile's path from code to LLRs; whether the authored
   IF list carries LLRs only, with the SR side derived through
   `boundary_refs`.
