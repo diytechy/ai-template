@@ -1,6 +1,6 @@
 # What `contract_split` holds that this branch never received
 
-**Status: FINDINGS FOR OWNER REVIEW.** This report recovers nothing and mints
+**Status: ANSWERED 2026-10-13, except question 6** (§5). This report recovers nothing and mints
 nothing. It records what the divergence lost, so that a review sitting can
 decide what to bring back and under which new IDs. It was written 2026-10-13
 on `refactor_again` at `bf45bd35`. Later the same day, §4 gained what this
@@ -265,19 +265,39 @@ group 2 covered differently. That has not been checked.
    [item 14 of the review-churn plan](2026-10-11-review-churn/README.md#14-retire-the-perspective-record-sidecar-apply-the-2026-09-06-hat-ruling-here).
    No fresh OI is needed: on `contract_split` the SN-036 act cited the
    ruling's log fragment directly, and a fragment here can do the same.
-2. **One WI per lane (group 1).** Adopt, reject or re-judge it against the
-   lane model this branch now runs? It is owner-level scheduling policy, not
-   a mechanical fix.
-3. **Primary-turn adjudication (group 2 and §2).** Has this branch's redesign
-   replaced the mechanism? If so, the group 2 amendments and the `primary_*`
-   code can be recorded as superseded. If not, which pieces come back, and as
-   which new WIs?
-4. **Lane close (group 4) and the test-case rewrites (group 6, TC-211
-   aside).** Carry them
-   with whichever of groups 1 and 2 survives, or drop them with it.
-5. **IDs.** Whatever comes back is minted fresh here. Should this report's
-   cross-reference table (§3) be kept as the record of the old meanings, so
-   that `contract_split`'s records stay readable?
+2. **One WI per lane (group 1). Answered 2026-10-13:** adopted. The owner:
+   "if the rest of the mechanisms in the current branch are only built for a
+   single WI, agreed scope should be configured to match". Planned as
+   [item 15](2026-10-11-review-churn/README.md#15-one-work-item-per-lane).
+3. **Primary-turn adjudication (group 2 and §2). Answered 2026-10-13:**
+   superseded. What it fixed was a snapshot copied in a lane before review had
+   settled (WI-605's incident, recorded in `contract_split`'s
+   `CONTROL-RETRY.md`); the owner's 2026-09-07 answer then was "a worktree
+   should absolutely never touch a snapshot". The owner now rules that
+   snapshots are permitted in a lane when they are ruled in that lane, which
+   is this branch's practice: the coordinator takes the act mechanically after
+   the sitting's verdict. So the group 2 amendments and the `primary_*` code
+   do not come back. The hazard the owner named instead, the id watermark
+   rising in parallel lanes, is planned as
+   [item 16](2026-10-11-review-churn/README.md#16-one-mint-and-one-spine-stream-across-parallel-lanes).
+   WI-605's preserved lane worktree (`668edaf4`) is that incident's evidence.
+4. **Lane close (group 4) and the test-case rewrites (group 6). Answered by
+   2 and 3:** lane close and the test cases under groups 1 and 4 travel with
+   item 15. Those verifying group 2 rows drop. TC-178 and TC-211 belong to
+   group 3 (item 14).
+5. **IDs. Settled by default:** whatever comes back is minted fresh, and this
+   report stays as the record of the old meanings (§3).
+6. **Still open: stable id meaning.** The same 2026-09-07 entry carries a
+   second owner ruling: "an ID's meaning must remain stable or every use and
+   reference needs an impact review". `contract_split` built it into
+   `PROCESS_OPTIONS.md` ("Changed meaning requires impact review of every use
+   and reference, including downstream requirements, tests, implementation
+   and approval evidence, before acceptance. A `MEANING` verdict alone never
+   authorizes a copy."), the amendment brief and its composer, the
+   `gate-advance` skill and one LLR. None of it is here: this branch has the
+   CLARITY/MEANING verdict, and a MEANING row stays the owner's (PROCESS.md
+   §4), but no impact review of an id's other uses. Does the ruling stand
+   here?
 
 ## Reproducing
 

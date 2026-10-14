@@ -320,6 +320,14 @@ signature (SN-029).
   applicable hats against its SRs, filing findings through intake.
   **For the owner:** one `run.cmd audit` with `arch` and `hats` parts
   (recommended), or a sibling `hats-audit` action.
+- **Revision 25 (owner rulings, 2026-10-13):** SAFETY leaves this repo's
+  roster (item 14). One WI per lane, retiring the managed loop's spine batch
+  (item 15). Snapshots are permitted in a lane when ruled there, overruling
+  the stranded 2026-09-07 "never in a worktree". The id watermark across
+  parallel lanes gets a designated spine branch with one mint (item 16).
+  **For the owner:** item 16's design questions, or its lighter
+  trunk-reservation option; and the divergence report's question 6 (does the
+  stranded stable-id-meaning ruling stand here?).
 
 ## Traps from this session
 
