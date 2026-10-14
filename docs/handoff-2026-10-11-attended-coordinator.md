@@ -13,7 +13,7 @@ leg 03 (its last line in `C:/Projects/ai-template.wt/overnight-logs/loop.log`
 records why), investigated why legs take 4–6+ hours, and wrote a plan the
 owner then ruled item by item:
 [plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md).
-Its **"Owner rulings"** sections (2026-10-11 through revision 36) govern, and
+Its **"Owner rulings"** sections (2026-10-11 through revision 37) govern, and
 the other sections are its reasoning. The pointer rules it sets for the spine are drawn in
 [plans/2026-10-11-review-churn/pointer-rules.md](plans/2026-10-11-review-churn/pointer-rules.md).
 The plan's revision 2 was independently reviewed by Sonnet and Sol, and
@@ -522,7 +522,7 @@ here (this is not a headless leg).
 2. Read, in order: CLAUDE.md; docs/status.md; the newest handoff (the one
    status.md's RESUME HERE names), all of it; the Status and every "Owner
    rulings" section of docs/plans/2026-10-11-review-churn/README.md
-   (2026-10-11 through revision 36) and its pointer-rules.md; the
+   (2026-10-11 through revision 37) and its pointer-rules.md; the
    coordinator-cycle skill and its references/recipes.md;
    your memory index (review-churn-program-rulings first).
 3. Run reviews the way the handoff's "How to run reviews now" says. It

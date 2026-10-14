@@ -13,7 +13,7 @@ Standing rules, in addition to the prompt:
 
 - **Where you work.**
   - Work ONLY in the lane worktree you were given. Never touch the primary
-    checkout `C:/Projects/ai-template`.
+    checkout, the repository your lane worktree belongs to.
   - Never push, merge, or commit. Leave your change uncommitted; the coordinator
     verifies it, regenerates generated files and commits it on the lane.
   - Do not regenerate or edit `PROJECT_STATE.html`, `docs/status.md`'s generated
@@ -31,8 +31,9 @@ Standing rules, in addition to the prompt:
 - **Tests.**
   - Record a red result before the change and a green one after, with one fixed
     `--basetemp "$TEMP/pt-<wi>"`, `-p no:cacheprovider` and
-    `GIT_CEILING_DIRECTORIES=C:/Projects/ai-template.wt`. The drive is nearly
-    full, so never vary the basetemp path.
+    `GIT_CEILING_DIRECTORIES` set to your lane's parent folder (the checkout's
+    sibling `.wt`). Disk space is tight, so never vary the basetemp path; a
+    sub-agent you start that runs tests uses its own basetemp beside yours.
   - Run your affected modules and the whole smoke tier at `-n 2`. Do not run
     the full unfiltered suite.
 - **Before you finish:**

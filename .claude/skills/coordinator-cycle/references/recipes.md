@@ -53,13 +53,15 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     does not request a whole subtree or arms map.
   - The script runs `codex exec -m gpt-5.6-terra` at medium with the
     unelevated sandbox, workspace-write,
-    `--add-dir C:/Projects/ai-template.wt/review-tmp` and
+    `--add-dir` on the review scratch root (`$REPO.wt/review-tmp`) and
     `--skip-git-repo-check`. It exits 3 if HEAD moved.
   - Note the `session id:` line in its log.
 - **Terra, resumed.** Run this from the lane directory; `resume` takes no `-s`
   or `-C`:
   `codex exec resume <session id> -m gpt-5.6-terra -c model_reasoning_effort="medium" -c 'windows.sandbox="unelevated"' -c 'sandbox_mode="workspace-write"' -c 'sandbox_workspace_write.writable_roots=["C:/Projects/ai-template.wt/review-tmp"]' --skip-git-repo-check -o <out> - < <prompt>`
-  Keep the quoting exactly as shown.
+  Keep the quoting exactly as shown. The writable root is the review scratch
+  root, `$REPO.wt/review-tmp`: on a checkout elsewhere, write that path in
+  place of the literal, inside the same quotes.
 - **Sol review: render, launch, file.** Never write a review brief by hand.
   1. Render from the lane root:
      `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <sha> --sha <tip> --scope narrow|full --tests <files> --scratch <dated root> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
@@ -152,7 +154,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
        credential. The remedy for a home that is not signed in is dev-setup's
        one-time `claude setup-token` step (`scripts/dev-setup.*`) and the
        variable above, never an interactive sign-in.
-  6. After each call, read `C:/Projects/ai-template/out/adjudicator/*.json`
+  6. After each call, read `$REPO/out/adjudicator/*.json`
      (`state`, `pct`, `reset_reason`) for telemetry only, never to decide a
      hold, act or gate; the store is under the primary checkout. A `*.mark`
      file beside a record (same stem) means its state is pending until the
@@ -211,7 +213,7 @@ there by subject; reword an offending line in its own trunk commit before the
 claim. A branch cut at the claim lacks the restored pause: while it has no
 commit of its own, move it to trunk's tip
 (`git branch -f wi-NNN <trunk tip>`), then add its worktree with
-`git worktree add C:/Projects/ai-template.wt/wi-NNN wi-NNN`.
+`git worktree add "$REPO.wt/wi-NNN" wi-NNN`.
 
 ## 3. Landing
 
@@ -467,7 +469,7 @@ lane commit being replayed.
   probe run inside it never sees the command processor's working-directory
   lookup; unset it when that lookup is the subject (dispute 005, WI-880).
 - Set `export MSYS_NO_PATHCONV=1`; Git Bash rewrites leading-slash arguments.
-- **Scratch:** one dated root, `C:/Projects/ai-template.wt/review-tmp/<date>-<session>/`, with one literal
+- **Scratch:** one dated root, `$REPO.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
   the root once results are recorded.
 - **Full suite:** past runs used about 4 GB of basetemp. Check `(Get-PSDrive C).Free`

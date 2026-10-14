@@ -96,6 +96,11 @@ following owner rulings.
   - Four retired files stay behind in the old folder, which is kept until the
     repo copy has run on a second machine. B1 takes the Terra brief's stale
     ruling-5 line.
+  - At close-out, the recipes' remaining command paths (the adjudicator
+    store, `git worktree add`, the scratch root) and the builder's definition
+    (its git ceiling, the primary checkout) were made layout-free too. The
+    Terra resume command keeps its tuned quoting, with a note on the path to
+    substitute elsewhere.
 
 The commit bar passed at `eb42a1c9a`: `2547 passed, 2 skipped` in the smoke
 tier, `51.4s vs 60s budget -> within`.
