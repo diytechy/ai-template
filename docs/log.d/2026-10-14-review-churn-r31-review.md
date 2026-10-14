@@ -46,10 +46,11 @@ unchanged.
   the rest listed in the plan's revision 35 rulings. OI-112 is ruled from F
   in `open-items.toml`, and its placeholder WI-871 is cancelled.
 - **Revision 35 brief:** `reviews/brief-r35.md` and `review-handoff-r35.md`,
-  for one narrow pair (Astra and Fable, both medium) that reads only what
-  revisions 32–35 changed and cross-checks revision 35's rulings. The integrator recommended against another
-  whole-plan review at high effort, since every queued row still gets its own
-  scope critique; the delta's claims about existing code are unchecked.
+  for one more pair (Astra and Fable) that reads what revisions 32–35
+  changed and cross-checks the rulings. The integrator first proposed medium
+  effort on the delta alone; after the rulings walk the owner raised it to
+  high, and the integrator agreed, keeping the delta-plus-cross-check scope
+  since revision 31 had read the rest at high.
 - **The owner's other open calls**, walked the same way: OI-113 ruled (d),
   won't fix, and WI-893 cancelled; OI-114 ruled (a), provision now, with
   WI-908 released to run after WI-798 lands; OI-98 and OI-105 kept pending.

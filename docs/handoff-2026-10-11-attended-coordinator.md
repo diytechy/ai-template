@@ -399,8 +399,9 @@ signature (SN-029).
   `human_or_delegate_approval_through` in item 10's migration; headless
   coordinator legs are marked autonomous runs; OI-112 is ruled from F and
   WI-871 cancelled; `spine-questions.md` §3's guidance fix joins B1. The
-  narrow review, now `review-handoff-r35.md`, covers revisions 32–35 and
-  cross-checks these.
+  review, now `review-handoff-r35.md`, covers revisions 32–35 and
+  cross-checks these, at **high** effort (owner, 2026-10-14), in a fresh
+  session before this queue starts.
 - When the box is loaded, process queries through WMI (`Get-CimInstance`,
   `tasklist`, `ps -W`) hang. `Get-Process` and its `.Parent` property work.
 - Never kill the overnight loop's Python while a leg runs. The venv launcher

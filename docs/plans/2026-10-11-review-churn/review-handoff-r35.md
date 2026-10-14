@@ -1,4 +1,4 @@
-# Review handoff: revision 35, the delta since revision 31 (GPT-6 Astra and Claude Fable 5.1, both medium)
+# Review handoff: revision 35, the delta since revision 31 (GPT-6 Astra and Claude Fable 5.1, both high)
 
 A boot document for **one fresh session**. Its job is one pair of independent
 reviews of what revisions 32–35 changed, then judging every finding and
@@ -7,7 +7,7 @@ folding in only what holds. It is not the coordinator's handoff
 It replaces [`review-handoff-r31.md`](review-handoff-r31.md), which ran and is
 now historical.
 
-**Why this round, and why it is narrow.** The revision 31 pair, both at high
+**Why this round, its scope and its effort.** The revision 31 pair, both at high
 effort, reviewed the whole plan and found no direction wrong. Every finding
 was about build scope, ordering, or a claim about existing code that didn't
 hold. Revisions 32–34 folded those in, and revision 35 records the owner's
@@ -17,11 +17,14 @@ P1–P8, item 16's verdict/act split in the shipped sitting briefs, item 8's
 change check, the narrowed carrier, and revision 35's rulings (among them a
 parent link between LLRs and a hand-over of interface roles), and none of it
 has been checked against the code or against each other. The owner asked that
-the reviewers see the rulings so they can cross-check them for conflicts. A whole-plan review at high effort again would mostly re-read
-reviewed text, and every queued row still gets its own scope critique before
-it is claimed. So this round reads only the delta, at medium effort (the
-integrator's recommendation, 2026-10-14; the owner may raise it). It is meant
-to be the last plan-level review: after it, the coordinator's queue starts.
+the reviewers see the rulings so they can cross-check them for conflicts, and,
+after walking the remaining open items and delegated decisions the same day
+(commit `4a0600c99`), asked for this round at **high** effort (owner,
+2026-10-14): revision 35 changed structure, not only wording. The scope stays
+the delta since revision 31 plus the cross-check, with the sections the rulings
+touch read whole: the rest was reviewed at high in revision 31, and every queued
+row still gets its own scope critique before it is claimed. It is meant to be
+the last plan-level review: after it, the coordinator's queue starts.
 
 ## State
 
@@ -88,29 +91,30 @@ addressing and could reasonably occur.** So:
 
 2. **Render two briefs** from `reviews/brief-r35.md` into the review root,
    replacing `{TIP}`, `{WT}` (each reviewer's own worktree), `{OUT}` (each
-   one's review file, `astra-medium-review.md` and `fable-medium-review.md` in
+   one's review file, `astra-high-review.md` and `fable-high-review.md` in
    the review root) and `{ROOT}`. Check that no `{`-placeholder is left.
 
 3. **Run both reviewers in parallel, in the background.** At high effort on the
-   whole plan, revision 31 took about 10 minutes (Astra) and 14 (Fable); this
-   round is smaller.
-   - **Astra through Codex**, at medium. `-o` must point at a different file
+   whole plan, revision 31 took about 10 minutes (Astra) and 14 (Fable); expect
+   similar. Fable's run outlives the shell tool's 10-minute cap, so wait on its
+   completion notification rather than a foreground command.
+   - **Astra through Codex**, at high. `-o` must point at a different file
      from `{OUT}`: it writes Codex's final message, and at the same path it
      overwrites the review. On Windows add `-c 'windows.sandbox="unelevated"'`.
 
      ```bash
      R="$S/<date>-churn-plan-r35"; WT="$S/wt-churn-r35-astra"
-     codex exec -m gpt-6-astra -c model_reasoning_effort="medium" \
+     codex exec -m gpt-6-astra -c model_reasoning_effort="high" \
        -c 'windows.sandbox="unelevated"' \
        -s workspace-write --add-dir "$R" -C "$WT" --skip-git-repo-check \
-       --color never -o "$R/astra-medium-final-message.md" - < "$R/brief-astra.md" \
-       > "$R/astra-medium-review.md.log" 2>&1
+       --color never -o "$R/astra-high-final-message.md" - < "$R/brief-astra.md" \
+       > "$R/astra-high-review.md.log" 2>&1
      ```
 
-   - **Fable as a sub-agent** (`model: fable`, `effort: medium`,
+   - **Fable as a sub-agent** (`model: fable`, `effort: high`,
      `subagent_type: general-purpose`, in the background). Give it only this:
      read `<review root>/brief-fable.md` and carry it out exactly; write the
-     review to `<review root>/fable-medium-review.md`; modify nothing in any
+     review to `<review root>/fable-high-review.md`; modify nothing in any
      repository or worktree except that file and scratch under
      `<review root>/scratch/`; read no other file in the review root; never
      read `OWNER_SCRATCHPAD.md`; return the review text.
@@ -138,8 +142,8 @@ addressing and could reasonably occur.** So:
      the fixes touch;
    - where a finding changes the coordinator handoff's queue table, change it
      there, since that table is what the next coordinator session works from;
-   - file the reviews as `reviews/astra-medium-r35.md` and
-     `reviews/fable-medium-r35.md`, each with a one-line provenance header, as
+   - file the reviews as `reviews/astra-high-r35.md` and
+     `reviews/fable-high-r35.md`, each with a one-line provenance header, as
      the revision 31 pair were;
    - bring `pointer-rules.md`, `docs/status.md`'s resume line and the
      coordinator handoff's "For the owner" block up to date if they are
@@ -167,7 +171,7 @@ addressing and could reasonably occur.** So:
 Work in the ai-template repository on branch refactor_again. Read
 docs/plans/2026-10-11-review-churn/review-handoff-r35.md and follow it: run
 the revision 35 review pair (GPT-6 Astra through Codex and Claude Fable 5.1
-as a sub-agent, both at MEDIUM effort, in parallel, each in its own
+as a sub-agent, both at HIGH effort, in parallel, each in its own
 read-only worktree at trunk's tip, on reviews/brief-r35.md), which reviews
 only what revisions 32-35 changed and cross-checks revision 35's rulings
 for conflicts. Judge every finding against the repository by the
