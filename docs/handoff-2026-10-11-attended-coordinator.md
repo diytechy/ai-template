@@ -47,7 +47,7 @@ owner rules.
   new shape. This supersedes leg 03's resume instruction (one more build
   round on the history-reading sweep).
 - **Watermark** on trunk is unchanged from leg 03: SR 239, LLR 326, IF 293,
-  TC 351, WI 908, OI 114; acts to seq 112. The lanes hold more, as leg 03
+  TC 351, WI 910, OI 114; acts to seq 112. The lanes hold more, as leg 03
   lists.
 
 ## How to run reviews now (owner ruling, ahead of the code)
@@ -108,6 +108,8 @@ reviewer. Until batch item 1 below lands, follow the ruling by hand:
   `check_trajectory.py --strict` with the commit bar. `trace.py --strict`
   exits 1 on trunk today ("LLR-292 Detail uses 'minimal'"); batch item 2 fixes
   it, and until then compare against that one known finding.
+  `check_trajectory.py --strict` also exits 1 on trunk, on WI-910's empty
+  `specref`; the queue's "pre" row fixes it before B1.
 
 ## The queue
 
@@ -117,20 +119,34 @@ on trunk as a split of WI-805: file each on trunk with its scope critique
 already-claimed row. Rows may be claimed before G lands, but a row S4 marks
 `single` builds only after G lands, and its plan is produced after its claim,
 in the lane, before its first build. Then WI-798
-continues, then leg 03's queue. **Re-order leg 03's queue against the plan once
+continues, then the phase-1 rows P1–P8, then leg 03's queue. **Re-order leg 03's queue against the plan once
 batch 1 is filed:** several rows now overlap the rulings. WI-817 retires the
 SN-028 window, which item 10 folds into one migration. WI-805's plan gate is
 pulled forward. WI-800's usage part is pulled forward for item 8. WI-813 keeps
 its arbiter.
 
+Revision 32 of the plan checked this table against its phase 1 (the r31
+review pair) and added the rows phase 1 schedules (P1–P8). Their order follows
+the plan's stated dependencies, each named in its row. Independent rows may
+run as parallel lanes. Lanes that take acts still land one at a time.
+
 | # | Row | What |
 |---|---|---|
-| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`; the record-at-event rule in `PROCESS.md` §3; in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause |
+| pre | *trunk fix* | Name WI-910's spec of record (`specref` is empty, so `check_trajectory.py --strict` exits 1 on trunk) before B1, so the first lane's lint bar starts at zero apart from LLR-292 (plan item 6) |
+| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). **Needs first** the owner's answer on how a non-executable fix is confirmed, which the convergence clause encodes |
 | G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that. It launches its planner and critic the way the scope critique is launched by hand today (`review_brief.py critique`, `sol_review.sh`); WI-804 later routes the same calls, so no second launch path is added |
-| B2 | *to file* | Item 6: fix LLR-292; add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
+| B2 | *to file* | Item 6: fix LLR-292 (Approved, so an amendment and its act); add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
 | B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 13 separate parsers (13 `ConfigParser` constructions in 12 files; a pure refactor) |
-| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat. The lane's rows approved through acts 113–117 for the history-reading sweep are re-judged or retired under the new shape before the rebuild |
+| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat. The lane's rows approved through acts 113–117 for the history-reading sweep are re-judged or retired under the new shape before the rebuild. Trunk is at seq 112 and B2's act lands first, so the reshape decides those acts **before the lane rebases**, and any it keeps are renumbered above trunk's, never landed as duplicates (the WI-866 repair, D-002) |
 | 0 | WI-798 | In flight: Terra's rework of sitting 004's returns, re-sit, full-lane gate in the new shape, land |
+| P1 | *to file* | Item 13's review gate, after B2: one tree-bound bar attestation (one grammar, one verifier in `kitlib`; `Bar-Green` stays the landing refresh's), checked by the coordinator and the loop before any review dispatch; its text (TC-first in lanes, the reviewer's test-adequacy and duplication questions); the red-round cap as a partial close |
+| P2 | *to file* | Item 8: Sol and Terra through the session service (the wrappers' change check runs between the service's `act` and `record`; parallel reviewers' logs commit one at a time), and sub-agent usage under WI-800's ledger contract, split from WI-800, whose own `needs` (WI-798, WI-799 and others) the split keeps only where the usage part needs them |
+| P3 | *to file* | Item 14: retire the perspective-record sidecar, the SN-036 ruling's four row acts, the hat questions in the SN → SR briefs. One sitting, one owner act. Before item 5's migration and the FileBackup re-sync |
+| P4 | *to file* | Item 15: one WI per lane (retire the batch; port `contract_split`'s rows). After B4's rebuild lands, since both edit `handback.py`; before the managed loop is unpaused |
+| P5 | *to file* | Item 16: the watermark carrier and the keep-or-mint rule in PROCESS.md §4, after P4. Its act-seq and WI-id scope waits on the owner's revision 32 call |
+| P6 | *to file* | Item 12: the W3 dry run, then its text (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), plus the pointer in B1's delta anchor and the line in G's planner prompt naming the skill. After the owner rules F-call 6, which the rubric's stopping-point anchor rests on |
+| P7 | *to file* | Item 10 step 2's build: the hooks' remaining shell reads become one `tomllib` read in `kit-python.sh` |
+| P8 | *to file* | Before the gate's scoped set is enabled: the test-file TC tags (the spec fixes the grammar and its one reader first; nothing reads test → TC today), the scoped-set derivation with its refusal of an empty or partial set, and the strict-mark commit check. S1 is likely to split it |
 | 1… | leg 03's queue | Its table, rows 1–25, in its order until re-ordered. WI-897 stays last, just before the owner's FileBackup resync test, and the item 10 config consolidation must land before that test |
 
 Held by the owner, skipped: WI-684 (OI-98), WI-795 (OI-105), WI-871
@@ -323,6 +339,21 @@ signature (SN-029).
   `docs/plans/2026-10-11-review-churn/review-handoff-r31.md`; its brief adds
   a pre-mortem, a build-readiness walk and a check of this handoff's queue
   against the plan's phase 1.
+- **Revision 32 (2026-10-14):** the revision 31 pair (GPT-6 Astra and Claude
+  Fable 5.1, both high, both REVISE) is folded in; dispositions in
+  `history.md`. This queue table gains a "pre" trunk fix (WI-910's empty
+  `specref` reds `check_trajectory --strict`) and rows P1–P8 for phase 1.
+  B1 now carries item 16's verdict/act split in the shipped sitting briefs,
+  which today put the act in the judging turn. B4 decides its lane's acts
+  113–117 before rebasing onto B2's act. Item 8's wrappers check for edits
+  between the service's `act` and `record`. **For the owner:**
+  - **How a non-executable fix is confirmed** (open since revision 12),
+    needed before B1 writes the convergence clause. Recommendation: by
+    independently checkable evidence (the corrected text, or an inspection
+    record), mapped to the finding as a regression test is.
+  - **Whether item 16's carrier still carries act seqs and WI ids** now
+    that acts keep landing order. Recommendation: only the spine spaces
+    lanes mint; see the plan's item 16.
 
 ## Traps from this session
 
@@ -354,9 +385,11 @@ here (this is not a headless leg).
 3. Run reviews the way the handoff's "How to run reviews now" says. It
    overrides the skill where they differ, until batch row B1 lands and the
    skill says the same.
-4. Work the handoff's queue in order: file and land B1, then the plan gate
-   G, then B2–B4 (B4 is WI-902's reshape), each filed on trunk with its scope
-   critique and dispositions first; then continue WI-798, then re-order the rest against the plan with the owner. Claim under
+4. Work the handoff's queue table in order: the "pre" trunk fix; file and
+   land B1, then the plan gate G, then B2–B4 (B4 is WI-902's reshape), each
+   filed on trunk with its scope critique and dispositions first; then
+   continue WI-798; then P1–P8 under the dependencies their rows name; then
+   re-order leg 03's rows against the plan with the owner. Claim under
    one scoped unpause per batch (a reviewed deletion commit, the claims, a
    byte-identical restore). Cut lanes from trunk's tip and land them one at a
    time. Roles: Claude Opus builds (kit-builder agent, medium); GPT Terra

@@ -28,9 +28,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   [handoff-2026-10-11-attended-coordinator.md](handoff-2026-10-11-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md),
-  revision 31: its Status, then its rulings; one more review pair runs
-  before the build, from its `review-handoff-r31.md`, in a fresh session). Its first batch is filed and built
-  before the queue continues. Two lanes are out. The account-homes row owes
+  revision 32: its Status, then its rulings; its last review pair is
+  folded in, and two owner calls it raised are in the handoff). Its first
+  batch is filed and built before the queue continues. Two lanes are out. The account-homes row owes
   its checkpoint rework. The disposition-adoption row is reshaped to
   record-at-close before it resumes. The handoff carries the attended session
   prompt and how to run reviews under the ruling until the skill is updated.
@@ -48,8 +48,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (`coordinator_guard.py handback --handoff <path>`) as the close-out's last act.
   Every adjudication sitting now authenticates with the owner's long-lived token:
   set `AGENT_CLAUDE_TOKEN_FILE` to its path before `coordinator_adjudicate.py`.
-  0. **The lane in flight first** (claimed, on its branch; the handoff names
-     its returns), then the handoff's queue table in order.
+  0. **The handoff's queue table in order:** the program's first batch,
+     then the lane in flight (claimed, on its branch; the handoff names its
+     returns), then the phase-1 rows.
      Review rule (owner, 2026-10-11, superseding 2026-10-07): no narrow rounds.
      Each round runs two full-lane reviewers in parallel (Codex Sol, and Claude
      Sonnet as the stand-in), at most three rounds, with a dispute sitting at
