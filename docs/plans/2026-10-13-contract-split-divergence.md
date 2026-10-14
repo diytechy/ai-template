@@ -259,14 +259,12 @@ group 2 covered differently. That has not been checked.
 
 ## 5. Questions for the review
 
-1. **SN-036 / SR-161 (group 3).** Does the 2026-09-06 perspective-record
-   ruling stand? If it does, this branch's SN-036, SR-161, LLR-183 and TC-211
-   need its four acts, plus a recorded ruling under a fresh OI; the ruling's
-   text can be taken from `contract_split`'s `docs/log.md`. WI-688's build
-   then becomes superseded. Retiring it changes shipped kit text and a
-   shipped script, so it owes its own `RESYNC_PACK.md` entry: adopters have
-   already received the `record` subcommand. If the ruling falls, SN-036 and
-   SR-161 stand as written here, and WI-688's build is their discharge.
+1. **SN-036 / SR-161 (group 3). Answered 2026-10-13:** the owner directed
+   that the ruling stands. The retirement of WI-688's build and the ruling's
+   four row acts are planned as
+   [item 14 of the review-churn plan](2026-10-11-review-churn/README.md#14-retire-the-perspective-record-sidecar-apply-the-2026-09-06-hat-ruling-here).
+   No fresh OI is needed: on `contract_split` the SN-036 act cited the
+   ruling's log fragment directly, and a fragment here can do the same.
 2. **One WI per lane (group 1).** Adopt, reject or re-judge it against the
    lane model this branch now runs? It is owner-level scheduling policy, not
    a mechanical fix.
