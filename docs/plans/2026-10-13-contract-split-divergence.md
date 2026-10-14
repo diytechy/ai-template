@@ -302,13 +302,15 @@ group 2 covered differently. That has not been checked.
 ## Reproducing
 
 ```sh
-git fetch origin contract_split   # the local ref matched origin at writing
+git fetch origin contract_split
+# The local branch now stops at 607cf609 (2026-10-14), so name the remote
+# ref, whose tip is 961f9e47, never the local one:
 python docs/plans/2026-10-13-contract-split-divergence-census.py \
-    --base 607cf609 --lost contract_split --here HEAD
+    --base 607cf609 --lost origin/contract_split --here HEAD
 # one row's amendment in full:
-git diff 607cf609 contract_split -- docs/requirements/stakeholder-needs.toml
+git diff 607cf609 origin/contract_split -- docs/requirements/stakeholder-needs.toml
 # group 3: the ruling's text, its timing, and what this branch built since:
-git show contract_split:docs/log.md | grep -n -A40 'SN-036 / SR-161 owner ruling'
+git show origin/contract_split:docs/log.md | grep -n -A40 'SN-036 / SR-161 owner ruling'
 git show -s --format='%h %ad %s' --date=iso 607cf609 f6c7360f 7a7a07a0
 git show --stat a9791303
 ```

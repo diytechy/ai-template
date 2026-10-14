@@ -304,11 +304,19 @@ signature (SN-029).
   briefs; SAFETY leaves this repo's roster), item 15 (one WI per lane) and
   item 16 (a watermark carrier lane every mint draws from, the keep-or-mint
   rule for ids, and the adjudicator freed from landing order, for a closer
-  look). The last full review ran on revision 22. **Next:** an optional
-  fresh review round from
-  `docs/plans/2026-10-11-review-churn/review-handoff-r29.md`; the open owner
-  calls are the plan's phase 0. The `contract_split` divergence report is
+  look). The open owner calls are the plan's phase 0. The `contract_split` divergence report is
   closed (`docs/plans/2026-10-13-contract-split-divergence.md`).
+- **Revision 30 (2026-10-14):** the revision 29 review pair (GPT-6 Astra
+  and Claude Fable 5.1, medium, both REVISE) is folded in; dispositions in
+  `history.md`. Item 16's carrier now re-founds the watermark's hand-raise
+  rule on recorded reservations (WI, space, range), checks a lane's new ids
+  against them at landing, and orders the act ledger by seq. Item 15's port
+  gains LLR-061 and TC-061, and "`contract_split`" means `961f9e47` (the
+  local branch stops at the ancestor). F-call 4 is answered by keep-or-mint.
+  **For the owner:** the unlatched adjudicator, narrowed to the reviewers'
+  option (verdicts move between lanes, acts keep landing order); whether to
+  fast-forward the local `contract_split` branch to origin; and confirm or
+  overrule the reservation record and F-call 4's closure.
 
 ## Traps from this session
 

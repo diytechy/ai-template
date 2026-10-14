@@ -6,7 +6,8 @@ plan's [Owner rulings](README.md), items 5 and 10). On top of it sits item 11's
 variant F as the owner answered it on 2026-10-13 (plan revision 20): F-calls 1,
 2, 8 and 9, decision 1 (an interface's owner is a component id or an
 `external:` party) and decision 2 (an interface states its form; an LLR or SR
-states its behaviour). F-calls 3 to 7 are open. The same content, with diagrams, is the
+states its behaviour). F-calls 3 and 5 to 7 are open; F-call 4 is answered by the owner's
+keep-or-mint rule (plan item 16, revision 30). The same content, with diagrams, is the
 published "Spine Pointer Rules" page.
 
 This file shows the target. Today the registries still have the old shape:
@@ -179,8 +180,9 @@ them (PROCESS.md §3).
   some LLR it verifies; 32 TCs verify more than one LLR.
 - **Consumers and requestors:** authored component ids, or generated from typed
   citations.
-- **F-calls 4 to 7:** the id-continuity rule's home, recursive components by
-  `part_of`, the descend test, and which checks to mechanize.
+- **F-calls 5 to 7:** recursive components by `part_of`, the descend test,
+  and which checks to mechanize. (F-call 4, the id-continuity rule's home, is
+  answered: the keep-or-mint rule, once, in PROCESS.md §4.)
 - **A work item's component context** in the build brief (proposed above).
 
 Decisions 3 (who admits a dependency; owner and delegate are one role, apart
