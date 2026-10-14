@@ -29,7 +29,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md),
   revision 31: its Status, then its rulings; one more review pair runs
-  before the build). Its first batch is filed and built
+  before the build, from its `review-handoff-r31.md`, in a fresh session). Its first batch is filed and built
   before the queue continues. Two lanes are out. The account-homes row owes
   its checkpoint rework. The disposition-adoption row is reshaped to
   record-at-close before it resumes. The handoff carries the attended session

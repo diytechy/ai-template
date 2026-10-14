@@ -318,7 +318,11 @@ signature (SN-029).
   `coordinator-cycle` §4 text); the reservation record is confirmed;
   keep-or-mint answers F-call 4 with a cross-reference to the id's other
   users; the local `contract_split` branch is dead. One more review pair
-  runs on revision 31 before the build.
+  (Astra and Fable, both high) runs on revision 31 before the build, in a
+  fresh session from
+  `docs/plans/2026-10-11-review-churn/review-handoff-r31.md`; its brief adds
+  a pre-mortem, a build-readiness walk and a check of this handoff's queue
+  against the plan's phase 1.
 
 ## Traps from this session
 
