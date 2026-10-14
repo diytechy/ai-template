@@ -360,6 +360,12 @@ signature (SN-029).
   are (P5). A fix with no executable test is confirmed by independently
   checkable evidence, mapped by the coordinator before the convergence
   round (B1).
+- **Revision 34 (2026-10-14):** WI-902's reshape is sequenced in the plan's
+  phase 1 (item 2, "Sequence"): after B1 and G, before P4 and P5, its acts
+  settled before it rebases. **Before this queue starts,** one narrow review
+  pair (Astra and Fable, both medium) reads only what revisions 32–34
+  changed, in a fresh session from
+  `docs/plans/2026-10-11-review-churn/review-handoff-r34.md`.
 
 ## Traps from this session
 
