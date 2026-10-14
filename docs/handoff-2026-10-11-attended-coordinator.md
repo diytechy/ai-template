@@ -94,8 +94,9 @@ reviewer. Until batch item 1 below lands, follow the ruling by hand:
   code. Before the round, check that each accepted finding maps to such a
   test. The reviewer template verifies pre-fix failure only where the diff
   adds a test, so say so in the brief by hand. A wording or inspection
-  defect has no test; how its fix is confirmed is an open owner call (plan
-  revision 12).
+  defect has no test: map it instead to independently checkable evidence,
+  the corrected text at the cited site or an inspection record (owner,
+  plan revision 33).
 - **Severity is tied to reachability:** BLOCKER or MAJOR needs a scenario
   reachable in normal use, or a fail-open, data-loss or security path.
 - **Reviewers get the WI definition** (spec, Done-when, Trust, touched rows),
@@ -133,7 +134,7 @@ run as parallel lanes. Lanes that take acts still land one at a time.
 | # | Row | What |
 |---|---|---|
 | pre | *trunk fix* | Name WI-910's spec of record (`specref` is empty, so `check_trajectory.py --strict` exits 1 on trunk) before B1, so the first lane's lint bar starts at zero apart from LLR-292 (plan item 6) |
-| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). **Needs first** the owner's answer on how a non-executable fix is confirmed, which the convergence clause encodes |
+| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). The convergence clause carries revision 33's ruling: a fix with no executable test is confirmed by independently checkable evidence (the corrected text at the cited site, or an inspection record), which the coordinator maps to the finding before the round, as it maps a regression test |
 | G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that. It launches its planner and critic the way the scope critique is launched by hand today (`review_brief.py critique`, `sol_review.sh`); WI-804 later routes the same calls, so no second launch path is added |
 | B2 | *to file* | Item 6: fix LLR-292 (Approved, so an amendment and its act); add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
 | B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 13 separate parsers (13 `ConfigParser` constructions in 12 files; a pure refactor) |
@@ -143,7 +144,7 @@ run as parallel lanes. Lanes that take acts still land one at a time.
 | P2 | *to file* | Item 8: Sol and Terra through the session service (the wrappers' change check runs between the service's `act` and `record`; parallel reviewers' logs commit one at a time), and sub-agent usage under WI-800's ledger contract, split from WI-800, whose own `needs` (WI-798, WI-799 and others) the split keeps only where the usage part needs them |
 | P3 | *to file* | Item 14: retire the perspective-record sidecar, the SN-036 ruling's four row acts, the hat questions in the SN → SR briefs. One sitting, one owner act. Before item 5's migration and the FileBackup re-sync |
 | P4 | *to file* | Item 15: one WI per lane (retire the batch; port `contract_split`'s rows). After B4's rebuild lands, since both edit `handback.py`; before the managed loop is unpaused |
-| P5 | *to file* | Item 16: the watermark carrier and the keep-or-mint rule in PROCESS.md §4, after P4. Its act-seq and WI-id scope waits on the owner's revision 32 call |
+| P5 | *to file* | Item 16: the watermark carrier, for spine ids only (revision 33: act seqs and WI ids stay as they are), and the keep-or-mint rule in PROCESS.md §4, after P4 |
 | P6 | *to file* | Item 12: the W3 dry run, then its text (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), plus the pointer in B1's delta anchor and the line in G's planner prompt naming the skill. After the owner rules F-call 6, which the rubric's stopping-point anchor rests on |
 | P7 | *to file* | Item 10 step 2's build: the hooks' remaining shell reads become one `tomllib` read in `kit-python.sh` |
 | P8 | *to file* | Before the gate's scoped set is enabled: the test-file TC tags (the spec fixes the grammar and its one reader first; nothing reads test → TC today), the scoped-set derivation with its refusal of an empty or partial set, and the strict-mark commit check. S1 is likely to split it |
@@ -354,6 +355,11 @@ signature (SN-029).
   - **Whether item 16's carrier still carries act seqs and WI ids** now
     that acts keep landing order. Recommendation: only the spine spaces
     lanes mint; see the plan's item 16.
+- **Revision 33 (2026-10-14):** the owner confirmed both recommendations.
+  Item 16's carrier carries spine ids only; act seqs and WI ids stay as they
+  are (P5). A fix with no executable test is confirmed by independently
+  checkable evidence, mapped by the coordinator before the convergence
+  round (B1).
 
 ## Traps from this session
 

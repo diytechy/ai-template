@@ -26,6 +26,7 @@ Later revisions, one line each (the git log has the rest):
 - **30** (2026-10-14): answers a GPT-6 Astra and a Claude Fable 5.1 review of revision 29 (both medium, both REVISE): item 16's carrier mechanics re-founded on recorded reservations, item 15's port list completed, the `contract_split` source pinned, F-call 4 answered by keep-or-mint, and the latch's guards corrected. Dispositions at the end.
 - **31** (2026-10-14): the owner's answers to revision 30's calls: verdicts move between lanes while acts keep landing order; the reservation record confirmed; F-call 4 answered by keep-or-mint, with a cross-reference to the id's other users added; the local `contract_split` branch dead.
 - **32** (2026-10-14): answers a GPT-6 Astra and a Claude Fable 5.1 review of revision 31 (both high, both REVISE; the last before the build): item 16's verdict/act split reaches the shipped sitting briefs, item 8's wrappers check for edits between the service's `act` and `record`, the coordinator handoff's queue gains a trunk fix and rows P1–P8 for phase 1, B1 asks the delta question without a rubric that does not exist yet, both strict lints are named red on trunk, and two calls go to the owner. Dispositions at the end.
+- **33** (2026-10-14): the owner's answers to revision 32's calls: item 16's carrier carries spine ids only (act seqs and WI ids stay as they are), and a fix with no executable test is confirmed by independently checkable evidence, mapped by the coordinator before the convergence round.
 
 ## Independent review and dispositions
 
