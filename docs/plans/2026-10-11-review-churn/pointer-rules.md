@@ -9,8 +9,9 @@ variant F as the owner answered it on 2026-10-13 (plan revision 20): F-calls 1,
 states its behaviour). Revision 35 rules F as a whole, with every F-call: among
 them an authored parent link between LLRs (F-call 5), consumers and requestors
 handed over from the IF row to code like the form, and F-call 4 answered by the
-owner's keep-or-mint rule (plan item 16, revision 30). The same content, with diagrams, is the
-published "Spine Pointer Rules" page.
+owner's keep-or-mint rule (plan item 16, revision 30). Revision 36 refines the
+hand-over: it runs side by side, and an `external:` side stays on the row. The
+same content, with diagrams, is the published "Spine Pointer Rules" page.
 
 This file shows the target. Today the registries still have the old shape:
 every LLR names its component, interface owners are file paths, and no code
@@ -49,7 +50,7 @@ flowchart BT
   TESTS ==>|"names its TC"| TC
   CODE ==>|"Implements: (optional, encouraged)"| LLR
   CODE ==>|"Contract IF-NNN: body (the form, once built)"| IF
-  CODE ==>|"role-typed citation (consumer, requestor), once built"| IF
+  CODE ==>|"role-typed citation (a local consumer or requestor), once built"| IF
   CODE ==>|"Component: header"| CMP
   PARTS -->|Component cell| CMP
   LLR -. "placement, derived through the interface's owner" .-> CMP
@@ -99,7 +100,7 @@ is navigation, not a pointer: 35 SRs share crossing B-05.
 | SR | SN (`sn_refs`); assumptions; the boundary crossings it serves (`boundary_refs`); the IF it constrains at the system boundary, if any (an optional traced cell) | none, rationale included | any file; any code | ruled; the `constrains` cell answered in revision 20 |
 | LLR | SR (`sr_refs`), on a top-level LLR only; a child LLR names its one parent LLR instead, and its SR is derived up the chain (acyclic). The IF it constrains, if it has one (an optional traced cell). That LLR states the behaviour across the IF and its full dimensional scope, in its dimensions cell, the one home of that input space | shipped boundary files | code files, functions, symbols; its component (the cell retires; placement is derived) | ruled (revision 35); ruling 5's "LLRs keep naming their component" overruled |
 | TC | what it verifies: LLRs, or an SR directly; the IF it observes at, only where that differs from its LLRs' (per TC and LLR pair) | shipped boundary files | test files, modules, symbols (its evidence column is generated from test-file tags; CI, inspection and review records stay authored) | ruled (revision 35); the repeat check runs in the strict lints |
-| IF | its owner, a component id or an `external:` party (authored, permanently); its consumers and requestors, authored component ids until code cites the IF, then generated (one home at a time); the assumptions bridging an external crossing. Its form only; at least one LLR or SR points at it | none | any file; code (the owner's path leaves the row); any behaviour | ruled: F-call 1 (i), decision 2, roles (revision 35) |
+| IF | its owner, a component id or an `external:` party (authored, permanently); its consumers and requestors, side by side: a local side is an authored component id until a file of that component takes the IF with a role-typed tag, then generated from it, and an `external:` side stays authored; the assumptions bridging an external crossing. Its form only; at least one LLR or SR points at it | none | any file; code (the owner's path leaves the row); any behaviour | ruled: F-call 1 (i), decision 2, roles (revisions 35 and 36) |
 | CMP | its parent (`part_of`, already in the schema) | none | any file; any code | ruled (revision 35) |
 | Code file | up: `Component: CMP-NNN` in its header; the `Contract IF-NNN:` body of each IF it owns, opening with the form; a role-typed citation of each IF it consumes or requests; `Implements: LLR-NNN` where useful | n/a | nothing; the leaf every map is computed from | answered: F-calls 1, 2, 9 |
 | Test file | up: a tag naming the TC it verifies | n/a | nothing | ruled |
@@ -137,8 +138,11 @@ them (PROCESS.md §3).
 - **A child LLR's SR:** up its parent chain to the top-level LLR's `sr_refs`.
   The dashboard's spine view shows the requirement tree as the component view
   shows nesting.
-- **An IF's consumers and requestors, once code cites it,** from the role-typed
-  citations and each citing file's `Component:` header.
+- **An IF's local consumer and requestor sides, once code takes them,** from
+  the role-typed citations and each citing file's `Component:` header. The
+  role tag is its own grammar, never a `Contract IF-NNN:` body, so one file
+  still states each contract. An `external:` side has no file to cite it and
+  stays authored on the row, as an `external:` owner does (revision 36).
 - **A work item's component context** (confirmed, revision 35): its SRs and their
   LLRs lead, through the placement relation (a `constrains` cell, or the
   interface a verifying TC names), to interfaces and their owner components,
@@ -155,7 +159,8 @@ them (PROCESS.md §3).
   parent and carries no `sr_refs`. Every LLR today is top-level, so no row
   migrates until a child is written; PROCESS.md §4's "TERMINAL" and "the tier
   does not recurse" text changes, with the orphan and coverage rules counting
-  the tree.
+  the tree. So does every other derivation that walks SR → LLR: the scoped
+  test set, the blast radius and the component context (revision 36).
 - **The IF owner becomes a component id or an `external:` party**, in place
   of a file path. The existing optional `component` cell (150 of 243 rows)
   becomes that owner; the 35 to 39 cells that name where the IF sits rather
@@ -188,14 +193,15 @@ them (PROCESS.md §3).
 - **Stubs are not minted for every file.** The builder creates files as needed
   and must not duplicate an existing one, exactly or in intent.
 
-## Ruled in revision 35
+## Ruled in revisions 35 and 36
 
 Every call this file once listed as open is ruled (the plan's revision 35
 rulings): F-call 3 per pair, its repeat check in `trace.py --strict`; F-call 5
 with an authored parent-LLR link; F-calls 6 and 7; consumers and requestors
 handed over like the form; the component context in the build brief.
 "Module" is no longer a spine term: the units are component, interface and
-file.
+file. Revision 36 adds that the role hand-over runs side by side, with an
+`external:` side staying on the row.
 
 Decisions 3 (who admits a dependency; the human-or-delegate is one role, apart
 from an autonomous run) and 4 (the plan comes after the claim) are process

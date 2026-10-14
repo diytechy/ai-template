@@ -13,7 +13,7 @@ priority = 3
 
 ## Deliverable
 
-CANCELLED (owner, 2026-10-14): OI-113 is ruled (d), won't fix. The merge slot walks every lane commit on the sanctioned landing path, and the case this row guarded needs a hand merge of a `--no-verify` commit, a hook bypass outside the review threat model. WI-892 (text-then-act in its own module) is unaffected and stays queued.
+CANCELLED (owner, 2026-10-14): OI-113 is ruled (d), won't fix. The merge slot walks every lane commit on the sanctioned landing path, and the case this row guarded needs a hand merge of a `--no-verify` commit, a hook bypass outside the review threat model. WI-892 (text-then-act in its own module) is unaffected; it landed on 2026-10-10.
 
 ## Context
 

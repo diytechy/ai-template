@@ -28,10 +28,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   [handoff-2026-10-11-attended-coordinator.md](handoff-2026-10-11-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md),
-  revision 35: every call is ruled; its Status, then its rulings. Before the
-  queue starts, one review pair at high effort reads revisions 32–35 and
-  cross-checks the rulings, in a fresh session from its
-  `review-handoff-r35.md`). Its first
+  revision 36: every call is ruled and its last plan-level review is folded
+  in; read its Status, then its rulings). No review is pending. Its first
   batch is filed and built before the queue continues. Two lanes are out. The account-homes row owes
   its checkpoint rework. The disposition-adoption row is reshaped to
   record-at-close before it resumes. The handoff carries the attended session

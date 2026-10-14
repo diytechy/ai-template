@@ -13,8 +13,8 @@ leg 03 (its last line in `C:/Projects/ai-template.wt/overnight-logs/loop.log`
 records why), investigated why legs take 4–6+ hours, and wrote a plan the
 owner then ruled item by item:
 [plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md).
-Its **"Owner rulings, 2026-10-11"** section governs, and the other sections
-are its reasoning. The pointer rules it sets for the spine are drawn in
+Its **"Owner rulings"** sections (2026-10-11 through revision 36) govern, and
+the other sections are its reasoning. The pointer rules it sets for the spine are drawn in
 [plans/2026-10-11-review-churn/pointer-rules.md](plans/2026-10-11-review-churn/pointer-rules.md).
 The plan's revision 2 was independently reviewed by Sonnet and Sol, and
 revisions 3–5 (the rulings, the pointer rules and this handoff) by GPT-6
@@ -22,9 +22,9 @@ Astra, and revision 6 by Claude Fable 5.1. All four reviews are recorded
 under `reviews/`; revisions 6 and 7 answer the last two. Revision 11 was
 reviewed by GPT-6 Astra at low effort (revision 12 answers it), and
 revision 12 by Claude Fable 5.1 at medium effort (revision 13 answers it).
-All six reviews are under `reviews/`. Item 11 is
-open: hold any pointer or schema migration that depends on it until the
-owner rules.
+All six reviews are under `reviews/`. Item 11 was ruled in revision 35
+(variant F as a whole) and refined in revision 36; its migration is phase 3,
+last.
 
 ## State (trunk `refactor_again`, nothing pushed)
 
@@ -50,7 +50,7 @@ owner rules.
   TC 351, WI 910, OI 114; acts to seq 112. The lanes hold more, as leg 03
   lists.
 - **This handoff's "For the owner" block is a revision history** (revisions
-  8–34, each bullet superseding parts of earlier ones). When the next
+  8–36, each bullet superseding parts of earlier ones). When the next
   coordinator session closes out and writes its new handoff, carry forward
   only what is still open for the owner, and point at the plan's Status for
   the rest, rather than copying the block.
@@ -125,7 +125,7 @@ on trunk as a split of WI-805: file each on trunk with its scope critique
 already-claimed row. Rows may be claimed before G lands, but a row S4 marks
 `single` builds only after G lands, and its plan is produced after its claim,
 in the lane, before its first build. Then WI-798
-continues, then the phase-1 rows P1–P8, then leg 03's queue. **Re-order leg 03's queue against the plan once
+continues, then the phase-1 rows P1–P9, then leg 03's queue. **Re-order leg 03's queue against the plan once
 batch 1 is filed:** several rows now overlap the rulings. WI-817 retires the
 SN-028 window, which item 10 folds into one migration. WI-805's plan gate is
 pulled forward. WI-800's usage part is pulled forward for item 8. WI-813 keeps
@@ -133,30 +133,33 @@ its arbiter.
 
 Revision 32 of the plan checked this table against its phase 1 (the r31
 review pair) and added the rows phase 1 schedules (P1–P8). Their order follows
-the plan's stated dependencies, each named in its row. Independent rows may
-run as parallel lanes. Lanes that take acts still land one at a time.
+the plan's stated dependencies, each named in its row. Revision 36 (the r35
+pair and the owner's two rulings) corrected B1, G, B4 and P2, added P9, and
+amended leg 03's WI-851 and WI-833. Independent rows may run as parallel
+lanes. Lanes that take acts still land one at a time.
 
 | # | Row | What |
 |---|---|---|
 | pre | *trunk fix* | Name WI-910's spec of record (`specref` is empty, so `check_trajectory.py --strict` exits 1 on trunk) before B1, so the first lane's lint bar starts at zero apart from LLR-292 (plan item 6) |
-| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 and B4 bad examples (B4: owner-dependent work not separated, revision 35) in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; `spine-questions.md` §3's "LLRs name modules and symbols by design" rewritten to ruling 5's contract voice (revision 35; shipped text, RESYNC entry); in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). The convergence clause carries revision 33's ruling: a fix with no executable test is confirmed by independently checkable evidence (the corrected text at the cited site, or an inspection record), which the coordinator maps to the finding before the round, as it maps a regression test |
-| G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that. It launches its planner and critic the way the scope critique is launched by hand today (`review_brief.py critique`, `sol_review.sh`); WI-804 later routes the same calls, so no second launch path is added |
+| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 and B4 bad examples (B4: owner-dependent work not separated, revision 35) in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; `spine-questions.md` §3's "LLRs name modules and symbols by design" rewritten to ruling 5's contract voice, saying that the traced `module` and `code_symbol` cells stay filled and binding until item 5 removes them (revisions 35 and 36; shipped text, RESYNC entry); in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4; the shipped sitting briefs (first-approval, amendment, combined, and the composer's two acting arms, the released re-attest and the held CLARITY re-attest), which today put the act in the judging turn; and an act turn in `coordinator_adjudicate.py`, which today runs only a fresh judgement (it reserves a new verdict path and grades what is written there): the turn takes the act from the committed verdict and writes no new judgement (plan item 16, revision 36; RESYNC entry; split under S1 if its critique finds it separate). Under the loop marker, the sitting briefs tell the adjudicator to end each commit with the `Loop-Session` trailer (owner, revision 36; P9 carries the rest). The convergence clause carries revision 33's ruling: a fix with no executable test is confirmed by independently checkable evidence (the corrected text at the cited site, or an inspection record), which the coordinator maps to the finding before the round, as it maps a regression test |
+| G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that. It launches its planner and critic the way the scope critique is launched by hand today (`review_brief.py critique`, `sol_review.sh`); WI-804 later routes the same calls, so no second launch path is added. It is filed with its own `needs`, not WI-805's: WI-804 and WI-799 (both queued) stay with WI-805's remainder, and its scope critique confirms nothing else is needed (revision 36) |
 | B2 | *to file* | Item 6: fix LLR-292 (Approved, so an amendment and its act); add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
 | B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 13 separate parsers (13 `ConfigParser` constructions in 12 files; a pure refactor) |
-| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat. The lane's rows approved through acts 113–117 for the history-reading sweep are re-judged or retired under the new shape before the rebuild. **The owner's verdict on D-005** (WI-902's Trust ruling, 2026-10-14), for the re-sit: the adoption carrier (a one-key TOML block in the disposition row's own Dispositions section, written by the adjudicator), the disposed row derived from the title's report path, minting nothing and the consolidation-close refusal **stand**; "accepted only while the named row is open, re-read at each consumer" is **replaced** by record-at-close (the close validates once and records it; the sweep trusts the record). The lane's own record, `wi-902.toml` D-001 to D-010, is decided here too: each kept, re-made or withdrawn with the code it covered, the survivors brought to the owner. Trunk is at seq 112 and B2's act lands first, so the reshape decides those acts **before the lane rebases**, and any it keeps are renumbered above trunk's, never landed as duplicates (the WI-866 repair, D-002). It lands before P4 and P5, which share its `handback.py` and `intake.py` (plan item 2, "Sequence") |
+| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat. The lane's rows approved through acts 113–117 for the history-reading sweep are re-judged or retired under the new shape before the rebuild. **The owner's verdict on D-005** (WI-902's Trust ruling, 2026-10-14), for the re-sit: the adoption carrier (a one-key TOML block in the disposition row's own Dispositions section, written by the adjudicator), the disposed row derived from the title's report path, minting nothing and the consolidation-close refusal **stand**; "accepted only while the named row is open, re-read at each consumer" is **replaced** by record-at-close (the close validates once and records it; the sweep trusts the record). That is two cells, not one (revision 36): the adjudicator's `adopts` block is the request, the close validates it and writes the validated record in the closing commit, and the commit-versus-parent check judges that closing commit. The lane's own record, `wi-902.toml` D-001 to D-010, is decided here too: each kept, re-made or withdrawn with the code it covered, the survivors brought to the owner. Trunk is at seq 112 and B2's act lands first, so the reshape decides those acts **before the lane rebases**, and any it keeps are renumbered above trunk's, never landed as duplicates (the WI-866 repair, D-002). It lands before P4 and P5, which share its `handback.py` and `intake.py` (plan item 2, "Sequence") |
 | 0 | WI-798 | In flight: Terra's rework of sitting 004's returns, re-sit, full-lane gate in the new shape, land |
 | P1 | *to file* | Item 13's review gate, after B2: one tree-bound bar attestation (one grammar, one verifier in `kitlib`; `Bar-Green` stays the landing refresh's), checked by the coordinator and the loop before any review dispatch; its text (TC-first in lanes, the reviewer's test-adequacy and duplication questions); the red-round cap as a partial close |
-| P2 | *to file* | Item 8: Sol and Terra through the session service (the wrappers' change check runs between the service's `act` and `record`; parallel reviewers' logs commit one at a time), and sub-agent usage under WI-800's ledger contract, split from WI-800, whose own `needs` (WI-798, WI-799 and others) the split keeps only where the usage part needs them |
+| P2 | *to file* | Item 8: Sol and Terra through the session service (the wrappers' change check runs between the service's `act` and `record`). Its spec settles where a call run outside a lane, such as a scope critique on trunk, records its log, and that a log commit another call makes on the same lane is not an edit; the "one writer" is WI-800's store, not yet built (plan item 8, revision 36). And sub-agent usage under WI-800's ledger contract, split from WI-800, whose own `needs` (WI-798, WI-799 and others) the split keeps only where the usage part needs them |
 | P3 | *to file* | Item 14: retire the perspective-record sidecar, the SN-036 ruling's four row acts, the hat questions in the SN → SR briefs. One sitting, one owner act. Before item 5's migration and the FileBackup re-sync |
 | P4 | *to file* | Item 15: one WI per lane (retire the batch; port `contract_split`'s rows). After B4's rebuild lands, since both edit `handback.py`; before the managed loop is unpaused |
 | P5 | *to file* | Item 16: the watermark carrier, for spine ids only (revision 33: act seqs and WI ids stay as they are), and the keep-or-mint rule in PROCESS.md §4, after P4 |
 | P6 | *to file* | Item 12: the W3 dry run, then its text (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), plus the pointer in B1's delta anchor and the line in G's planner prompt naming the skill. F-call 6, which the rubric's stopping-point anchor rests on, is ruled (revision 35) |
 | P7 | *to file* | Item 10 step 2's build: the hooks' remaining shell reads become one `tomllib` read in `kit-python.sh` |
 | P8 | *to file* | Before the gate's scoped set is enabled: the test-file TC tags (the spec fixes the grammar and its one reader first; nothing reads test → TC today), the scoped-set derivation with its refusal of an empty or partial set, and the strict-mark commit check. S1 is likely to split it |
-| 1… | leg 03's queue | Its table, rows 1–25, in its order until re-ordered. WI-897 stays last, just before the owner's FileBackup resync test, and the item 10 config consolidation must land before that test |
+| P9 | *to file* | The headless coordinator's marking (owner, revision 36), before any headless leg: `overnight_legs.py` sets the loop marker; every commit a headless leg makes carries the `Loop-Session` trailer, through the leg prompt and the coordinator's recipes (the sitting briefs' instruction is B1's); and one lane-mode rule: a lane claimed headless lands headless, or the attended coordinator re-claims it before committing in it (how a re-claim clears the loop mark is this row's design). After B1, and before WI-808 moves coordinator landings onto the merge slot |
+| 1… | leg 03's queue | Its table, rows 1–25, in its order until re-ordered. WI-897 stays last, just before the owner's FileBackup resync test, and the item 10 config consolidation must land before that test. WI-851 (row 2) and WI-833 (row 11) are amended in revision 36: their hand-merge clauses lapse under OI-113 (d), so "a rider on WI-892's walk" covers the hook's squash path and the merge slot only; and WI-851's marker arm narrows instead of retiring, so a marked commit outside a lane that moves a held status stays refused (owner, revision 36) |
 
-**No open call blocks any row** (revision 35: the owner ruled every call in
-the plan, including F-call 6, which P6 needed). The rulings section of the
+**No open call blocks any row** (revisions 35 and 36: the owner ruled every
+call in the plan, including F-call 6, which P6 needed). The rulings section of the
 plan is the record; the phase-3 rows file against it.
 
 Held by the owner, skipped: WI-684 (OI-98, the FileBackup re-sync) and
@@ -180,7 +183,9 @@ signature (SN-029).
   `coordinator-2026-10-11.toml` D-001 to D-016 are confirmed, except D-005,
   which B4 re-sits with the owner's verdict in its row. D-004 (WI-858's Trust
   ruling) was confirmed with a request that the plan's reviewers look at it
-  for ways it could break. **In WI-798's lane, record the owner's
+  for ways it could break. WI-858 had already landed (`8b7e25e51`,
+  2026-10-11), so both revision 35 reviewers read the built carrier, and
+  neither found a plausible break in normal use; a break found later is a WI. **In WI-798's lane, record the owner's
   confirmations at its next commit:** `wi-798.toml` D-001 to D-009, all
   confirmed (`owner = "confirmed"`, review "Confirmed by the owner,
   2026-10-14, in session."). `wi-902.toml` D-001 to D-010 are left for B4.
@@ -386,9 +391,6 @@ signature (SN-029).
   pair (Astra and Fable, both medium) reads only what revisions 32–34
   changed, in a fresh session from
   `docs/plans/2026-10-11-review-churn/review-handoff-r35.md`.
-
-## Traps from this session
-
 - **Revision 35 (2026-10-14):** the owner walked every open call in the plan
   and ruled each; the plan's "Owner rulings, 2026-10-14 (revision 35)" is the
   record, and nothing in the plan is open. Among them: variant F and item 13
@@ -402,6 +404,20 @@ signature (SN-029).
   review, now `review-handoff-r35.md`, covers revisions 32–35 and
   cross-checks these, at **high** effort (owner, 2026-10-14), in a fresh
   session before this queue starts.
+- **Revision 36 (2026-10-14):** the revision 35 pair (GPT-6 Astra and Claude
+  Fable 5.1, both high, both REVISE) is folded in; dispositions in
+  `history.md`. B1 gains an act turn in `coordinator_adjudicate.py`, both
+  acting arms of the composer, the traced-cells clause for `spine-questions.md`
+  and the trailer instruction for a marked sitting. G files with its own
+  `needs`, B4 names its two cells, and P2 settles where a trunk-run call's log
+  goes. WI-833, WI-850 and WI-851 drop the hand-merge path OI-113 declined.
+  The owner ruled the round's two calls: headless coordinator legs are marked
+  now (P9, with WI-851's marker arm narrowed instead of retired), and interface
+  consumers and requestors hand over side by side, an `external:` side staying
+  on the row. No review is pending: this queue starts.
+
+## Traps from this session
+
 - When the box is loaded, process queries through WMI (`Get-CimInstance`,
   `tasklist`, `ps -W`) hang. `Get-Process` and its `.Parent` property work.
 - Never kill the overnight loop's Python while a leg runs. The venv launcher
@@ -422,10 +438,10 @@ here (this is not a headless leg).
    `python project-trajectory/scripts/coordinator_guard.py take --transcript "$(ls ~/.claude/projects/*/$CLAUDE_CODE_SESSION_ID.jsonl | head -1)"`.
    If the take is refused, report why and stop.
 2. Read, in order: CLAUDE.md; docs/status.md; the newest handoff (the one
-   status.md's RESUME HERE names), all of it; the "Owner rulings, 2026-10-11"
-   section of docs/plans/2026-10-11-review-churn/README.md and its
-   pointer-rules.md, and the plan's item 11 (open; build nothing that
-   depends on it until ruled); the coordinator-cycle skill and its references/recipes.md;
+   status.md's RESUME HERE names), all of it; the Status and every "Owner
+   rulings" section of docs/plans/2026-10-11-review-churn/README.md
+   (2026-10-11 through revision 36) and its pointer-rules.md; the
+   coordinator-cycle skill and its references/recipes.md;
    your memory index (review-churn-program-rulings first).
 3. Run reviews the way the handoff's "How to run reviews now" says. It
    overrides the skill where they differ, until batch row B1 lands and the
@@ -433,7 +449,7 @@ here (this is not a headless leg).
 4. Work the handoff's queue table in order: the "pre" trunk fix; file and
    land B1, then the plan gate G, then B2–B4 (B4 is WI-902's reshape), each
    filed on trunk with its scope critique and dispositions first; then
-   continue WI-798; then P1–P8 under the dependencies their rows name; then
+   continue WI-798; then P1–P9 under the dependencies their rows name; then
    re-order leg 03's rows against the plan with the owner. Claim under
    one scoped unpause per batch (a reviewed deletion commit, the claims, a
    byte-identical restore). Cut lanes from trunk's tip and land them one at a

@@ -13,8 +13,9 @@ priority = 5
 ## Context
 
 Re-homed 2026-10-10 (D-015): the shared lane-commit walk this row rides
-moved from WI-828 (closed partial) to WI-892; the hand-merge path stays with
-WI-893 behind OI-113.
+moved from WI-828 (closed partial) to WI-892, which landed the same day.
+OI-113 was ruled (d), won't fix, on 2026-10-14, and WI-893 was cancelled: no
+hook walks a hand merge, and the merge slot is the sanctioned landing path.
 
 Filed by hand on 2026-10-07 from the WI-841 retrospective (proposal §7.2,
 row P3), carrying the owner's ruling 4 of 2026-10-07
@@ -35,7 +36,7 @@ adjudication sitting can settle its chain before the check lands.
   that is not approved is refused, where the commit moved either row's status.
   An SR waits for every SN it cites, an LLR for every SR, and a TC for every
   row it verifies. It is refused at pre-commit and on each lane commit through
-  the shared lane-commit walk (WI-828).
+  the shared lane-commit walk (WI-892).
 - `trace.py --strict-integrity` reports any standing case as an integrity
   finding, naming the child, the parent and both statuses.
 - `spine-authoring`'s parent-first rule (WI-848) names this check as its

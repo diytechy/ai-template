@@ -13,8 +13,9 @@ priority = 3
 ## Context
 
 Re-homed 2026-10-10 (D-015): the shared lane-commit walk this row rides
-moved from WI-828 (closed partial) to WI-892; the hand-merge path stays with
-WI-893 behind OI-113.
+moved from WI-828 (closed partial) to WI-892, which landed the same day.
+OI-113 was ruled (d), won't fix, on 2026-10-14, and WI-893 was cancelled: no
+hook walks a hand merge, and the merge slot is the sanctioned landing path.
 
 Filed by hand by the wave-16 coordinator on 2026-10-05 from the independent
 adjudicator's separate finding F2 at WI-818
@@ -30,8 +31,8 @@ the owner never read. The retired `reviewed` key had the same property.
   whose parent carries `owner`, unless the same commit removes that `owner` key
   (commit against its parent; no history walk, no marker), at the pre-commit hook
   and on each lane commit in the merge slot.
-- On a hand squash or merge landing, the ruling sync also judges each
-  folded-in commit through the shared lane-commit walk (WI-828).
+- On a hand squash landing, the ruling sync also judges each folded-in commit
+  through the shared lane-commit walk (WI-892).
 - Tests: a disclosure edit under a kept verdict is refused staged and at the
   merge; the same edit removing the verdict passes; an edit to an entry with no
   verdict passes; an unparseable parent side refuses as the overrule sync does.

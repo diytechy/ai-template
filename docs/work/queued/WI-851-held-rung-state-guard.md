@@ -13,8 +13,16 @@ priority = 5
 ## Context
 
 Re-homed 2026-10-10 (D-015): the shared lane-commit walk this row rides
-moved from WI-828 (closed partial) to WI-892; the hand-merge path stays with
-WI-893 behind OI-113.
+moved from WI-828 (closed partial) to WI-892, which landed the same day.
+OI-113 was ruled (d), won't fix, on 2026-10-14, and WI-893 was cancelled: no
+hook walks a hand merge, and the merge slot is the sanctioned landing path.
+
+Amended 2026-10-14 (the review-churn plan's revision 36, owner): a headless
+coordinator leg is marked as an autonomous run (`KIT_LOOP_SESSION`), and its
+held acts stay refused. Ruling 5 exempts a direct trunk approval "by the owner
+or an authorized approver", which an autonomous run is not, so the
+marker-armed arm of `held-status` narrows to a marked commit outside a lane
+instead of retiring.
 
 Filed by hand on 2026-10-07 from the WI-841 retrospective (proposal §7.1,
 row P4), carrying the owner's ruling 5 of 2026-10-07
@@ -31,8 +39,7 @@ Today two checks protect a held rung, and neither judges state:
   verdict in the act ledger.
 
 The coordinator lands by hand, so the rule rides the lane-commit walk that
-WI-828 makes shared between the merge slot and the hook's squash and merge
-paths.
+WI-892 made shared between the merge slot and the hook's squash path.
 
 Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.md`,
 `docs/knowledge/effort-tiering.md`, `docs/knowledge/prompt-image-token-efficiency.md`.
@@ -45,11 +52,12 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   that copy. The one exception is a row whose Status is unchanged and which a
   verdict in the lane's range rules CLARITY, bound to its exact text by a
   digest. The refusal names the row, its rung and the dial.
-- The walk is WI-828's shared lane-commit walk: the merge slot, and the hook
-  on a squash or merge landing. A plain trunk commit is not judged.
-- The trailer-armed arm of `held-status` (LLR-246's loop-marker condition) and
-  the act-ledger CLARITY arm (LLR-278's held clause) retire into this one rule,
-  in this row.
+- The walk is WI-892's shared lane-commit walk: the merge slot, and the hook
+  on a squash landing. An unmarked plain trunk commit is not judged.
+- The act-ledger CLARITY arm (LLR-278's held clause) retires into this one
+  rule, in this row. The marker-armed arm of `held-status` (LLR-246's
+  loop-marker condition) narrows instead of retiring: a commit made under the
+  loop marker outside a lane that moves a held status is still refused.
 - `spine-authoring`'s `references/in-lane.md` held CLARITY line follows the
   rule (proposal §8.4).
 - WI-800, WI-807, WI-809 and WI-810 amend LLR-246 after this row and cite this
@@ -60,8 +68,10 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   - a lane commit that approves a held SN is refused;
   - a CLARITY re-attestation bound to the exact text passes;
   - text changed after that verdict is refused;
-  - a plain trunk commit approving a held row passes;
+  - an unmarked plain trunk commit approving a held row passes;
+  - the same commit made under the loop marker is refused;
   - loop and coordinator lanes are judged alike.
 - Review bar: A (one cross-family REVIEW-A).
-- RESYNC_PACK: an entry anchored at a trunk commit. It names the two retired
-  arms and says an adopter's trunk approvals are untouched.
+- RESYNC_PACK: an entry anchored at a trunk commit. It names the retired
+  CLARITY arm and the narrowed marker arm, and says an adopter's unmarked trunk
+  approvals are untouched.
