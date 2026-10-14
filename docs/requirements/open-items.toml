@@ -4046,10 +4046,12 @@ ruled_date = "2026-10-07"
 
 [open_item.OI-112]
 title = "Interfaces as the spine's measurable inputs and outputs: approval and checks for IF rows"
-status = "pending"
+status = "ruled"
 raised = "2026-10-08"
-one_line = "Decide how far interface rows join the adjudicated spine: from routing new and amended IF rows through the in-lane first-approval sitting, up to stating every SR as a transform whose inputs and outputs are its declared interfaces, with checks to match."
-decision = """Raised by the owner on 2026-10-08, after the coordinator reported that none of the repository's 237 IF rows has ever been approved. The owner's words: "Technically, all SRs should be built up over interfaces, the SR would be transform definition, the interfaces are on the measureable input / output, but right now the IF checks are quite light." Filed as an open item because it may be heavy.
+one_line = "RULED 2026-10-14 from the review-churn plan's variant F: (a)'s mechanism, an interface approved through the sitting of the row it serves; (b)'s direction at requirement level, through the optional `constrains` cell; (c) declined. WI-871 cancelled; the work is item 11's phase-3 slice."
+decision = """RULED 2026-10-14 by the owner, walking the review-churn plan's open calls: "Rule it from F" (docs/plans/2026-10-11-review-churn/README.md, the revision 35 rulings). Variant F answers both of OI-112's halves with one direction. (a): an IF row is approved through the sitting of the requirement row it serves, at the level of use, judging payload compatibility and counterpart effects, not channel class alone. (b): an SR does not list every interface it consumes; an LLR or SR names the interface it constrains in an optional `constrains` cell, and every interface is pointed at by at least one requirement that reaches an executable test. (c) is declined. The placeholder WI-871 is cancelled in the same commit; item 11's phase-3 migration files the interface-approval row.
+
+Raised by the owner on 2026-10-08, after the coordinator reported that none of the repository's 237 IF rows has ever been approved. The owner's words: "Technically, all SRs should be built up over interfaces, the SR would be transform definition, the interfaces are on the measureable input / output, but right now the IF checks are quite light." Filed as an open item because it may be heavy.
 
 WHAT IS TRUE TODAY. PROCESS.md §8 keeps `IF-###` rows "separate from the spine": an interface hangs off the SN -> SR -> LLR -> TC chain through its owner module and the TC whose `Verifies` cites it, and states no requirement id. `INTERFACES.template.md` gives each row a `Status` of `Drafted` or `Approved` and makes the flip "a human act in a reviewed commit"; it has never been taken here, so every row is `Drafted`. The coordinator's adjudication route knows only the chain tiers (SR, LLR and TC, plus SN and the assumption tiers for amendments), so no sitting can approve an IF row; the adjudicator reads a seam's contract only indirectly, while judging the TC that verifies it. The checks that exist are structural (trace.py's interface findings: owner, channel, the `Data` cell's form, a declared contract in the owner module, a cross-component import needing a seam).
 
@@ -4059,6 +4061,7 @@ options = """- (a) LIGHT: route new and amended IF rows through the in-lane firs
 - (b) HEAVY: an SR is a transform definition over declared interfaces. Each SR names the IF rows that carry its measurable inputs and outputs; IF rows become adjudicated spine content (Data schema, channel and version judged as claims); the adjudicator's UPWARD/DOWNWARD questions extend to the IF tier; trace.py checks that every SR's inputs and outputs resolve to approved seams. Needs a design note and a migration plan for this repo and adopters.
 - (c) Keep the human act and accept the status column as unused, or drop `Status` from IF rows."""
 recommendation = "A design pass first: a short note that sizes (b) against this repo's 124 SRs and 237 IF rows and the adopter migration, with (a) as its first slice, since (a) is useful on its own and is a prerequisite of (b). Rule the note before building either."
+ruled_date = "2026-10-14"
 
 [open_item.OI-113]
 title = "How a hand merge's pre-commit walk tells the commits it brings in from trunk's own history"

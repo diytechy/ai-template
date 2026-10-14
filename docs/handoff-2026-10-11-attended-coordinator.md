@@ -139,7 +139,7 @@ run as parallel lanes. Lanes that take acts still land one at a time.
 | # | Row | What |
 |---|---|---|
 | pre | *trunk fix* | Name WI-910's spec of record (`specref` is empty, so `check_trajectory.py --strict` exits 1 on trunk) before B1, so the first lane's lint bar starts at zero apart from LLR-292 (plan item 6) |
-| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). The convergence clause carries revision 33's ruling: a fix with no executable test is confirmed by independently checkable evidence (the corrected text at the cited site, or an inspection record), which the coordinator maps to the finding before the round, as it maps a regression test |
+| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; `spine-questions.md` §3's "LLRs name modules and symbols by design" rewritten to ruling 5's contract voice (revision 35; shipped text, RESYNC entry); in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). The convergence clause carries revision 33's ruling: a fix with no executable test is confirmed by independently checkable evidence (the corrected text at the cited site, or an inspection record), which the coordinator maps to the finding before the round, as it maps a regression test |
 | G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that. It launches its planner and critic the way the scope critique is launched by hand today (`review_brief.py critique`, `sol_review.sh`); WI-804 later routes the same calls, so no second launch path is added |
 | B2 | *to file* | Item 6: fix LLR-292 (Approved, so an amendment and its act); add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
 | B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 13 separate parsers (13 `ConfigParser` constructions in 12 files; a pure refactor) |
@@ -150,27 +150,26 @@ run as parallel lanes. Lanes that take acts still land one at a time.
 | P3 | *to file* | Item 14: retire the perspective-record sidecar, the SN-036 ruling's four row acts, the hat questions in the SN → SR briefs. One sitting, one owner act. Before item 5's migration and the FileBackup re-sync |
 | P4 | *to file* | Item 15: one WI per lane (retire the batch; port `contract_split`'s rows). After B4's rebuild lands, since both edit `handback.py`; before the managed loop is unpaused |
 | P5 | *to file* | Item 16: the watermark carrier, for spine ids only (revision 33: act seqs and WI ids stay as they are), and the keep-or-mint rule in PROCESS.md §4, after P4 |
-| P6 | *to file* | Item 12: the W3 dry run, then its text (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), plus the pointer in B1's delta anchor and the line in G's planner prompt naming the skill. After the owner rules F-call 6, which the rubric's stopping-point anchor rests on |
+| P6 | *to file* | Item 12: the W3 dry run, then its text (the rubric, the `architecture-decomposition` skill, the `spine-questions.md` pointer, the plan-decomposition question), plus the pointer in B1's delta anchor and the line in G's planner prompt naming the skill. F-call 6, which the rubric's stopping-point anchor rests on, is ruled (revision 35) |
 | P7 | *to file* | Item 10 step 2's build: the hooks' remaining shell reads become one `tomllib` read in `kit-python.sh` |
 | P8 | *to file* | Before the gate's scoped set is enabled: the test-file TC tags (the spec fixes the grammar and its one reader first; nothing reads test → TC today), the scoped-set derivation with its refusal of an empty or partial set, and the strict-mark commit check. S1 is likely to split it |
 | 1… | leg 03's queue | Its table, rows 1–25, in its order until re-ordered. WI-897 stays last, just before the owner's FileBackup resync test, and the item 10 config consolidation must land before that test |
 
-**Open calls that block a row** (plan phase 0). Nothing open blocks "pre",
-B1, G or B2–B4. F-call 6 (the descend test) blocks P6, as its row says. The
-consumer and requestor roles block item 11's IF-cell work in phase 3, which
-this table doesn't reach (plan item 11: endpoint roles resolve before any
-derivation). Ask the owner for a call before filing the row it blocks, not
-before starting the queue.
+**No open call blocks any row** (revision 35: the owner ruled every call in
+the plan, including F-call 6, which P6 needed). The rulings section of the
+plan is the record; the phase-3 rows file against it.
 
-Held by the owner, skipped: WI-684 (OI-98), WI-795 (OI-105), WI-871
-(OI-112), WI-893 (OI-113) and WI-908 (OI-114). WI-827 is the owner's
+Held by the owner, skipped: WI-684 (OI-98), WI-795 (OI-105), WI-893
+(OI-113) and WI-908 (OI-114). (WI-871 was cancelled when OI-112 was ruled,
+revision 35.) WI-827 is the owner's
 signature (SN-029).
 
 ## For the owner
 
 - **Push** `refactor_again` and `archive/lanes`.
 - **Rule OI-113** (holds WI-893) and **OI-114** (holds WI-908; leg 03
-  recommends (b), defer). OI-98, OI-105 and OI-112 still wait.
+  recommends (b), defer). OI-98 and OI-105 still wait; OI-112 is ruled (plan
+  revision 35).
 - **Decisions to confirm or overrule:** leg 03's list stands. That is
   `docs/decisions/coordinator-2026-10-11.toml` D-009 and D-010 first, then
   D-008, D-011..D-016, and the open lanes' `wi-798.toml` (D-001 first) and
@@ -377,10 +376,22 @@ signature (SN-029).
   settled before it rebases. **Before this queue starts,** one narrow review
   pair (Astra and Fable, both medium) reads only what revisions 32–34
   changed, in a fresh session from
-  `docs/plans/2026-10-11-review-churn/review-handoff-r34.md`.
+  `docs/plans/2026-10-11-review-churn/review-handoff-r35.md`.
 
 ## Traps from this session
 
+- **Revision 35 (2026-10-14):** the owner walked every open call in the plan
+  and ruled each; the plan's "Owner rulings, 2026-10-14 (revision 35)" is the
+  record, and nothing in the plan is open. Among them: variant F and item 13
+  ruled as wholes; LLRs gain an authored parent link (only a top-level LLR
+  carries `sr_refs`); IF consumers and requestors hand over from the row to
+  code like the form; "module" retires as a spine term; the vocabulary is
+  "human-or-delegate" / "autonomous run", with the key renamed
+  `human_or_delegate_approval_through` in item 10's migration; headless
+  coordinator legs are marked autonomous runs; OI-112 is ruled from F and
+  WI-871 cancelled; `spine-questions.md` §3's guidance fix joins B1. The
+  narrow review, now `review-handoff-r35.md`, covers revisions 32–35 and
+  cross-checks these.
 - When the box is loaded, process queries through WMI (`Get-CimInstance`,
   `tasklist`, `ps -W`) hang. `Get-Process` and its `.Parent` property work.
 - Never kill the overnight loop's Python while a leg runs. The venv launcher

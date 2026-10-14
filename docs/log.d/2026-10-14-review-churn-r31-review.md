@@ -1,7 +1,7 @@
-## 2026-10-14: the review-churn plan's revision 31 review pair, revisions 32–34, and the revision 34 review brief
+## 2026-10-14: the review-churn plan's revision 31 review pair, revisions 32–35, and the revision 35 review brief
 
-Deferred open items: none ruled. OI-98, OI-105, OI-112, OI-113 and OI-114
-stay the owner's.
+Deferred open items: OI-98, OI-105, OI-113 and OI-114 stay the owner's.
+OI-112 was ruled this session (revision 35).
 
 A fresh session ran the plan's last whole-plan review from
 [review-handoff-r31.md](../plans/2026-10-11-review-churn/review-handoff-r31.md).
@@ -37,9 +37,16 @@ unchanged.
 - **Revision 34** (`445104bfe`), at the owner's question: the plan's Sequence
   had left WI-902's reshape in phase 2, after the items that share its files.
   It is now in phase 1, after B1 and G and before items 15 and 16.
-- **Revision 34 brief:** `reviews/brief-r34.md` and `review-handoff-r34.md`,
+- **Revision 35** records the owner's rulings on every call the plan still
+  had open, walked one at a time: variant F and item 13 ruled as wholes, an
+  authored parent link between LLRs, interface roles handed over like the
+  form, "module" retired as a spine term, the vocabulary "human-or-delegate"
+  with its key renamed, headless coordinator legs marked autonomous, and
+  the rest listed in the plan's revision 35 rulings. OI-112 is ruled from F
+  in `open-items.toml`, and its placeholder WI-871 is cancelled.
+- **Revision 35 brief:** `reviews/brief-r35.md` and `review-handoff-r35.md`,
   for one narrow pair (Astra and Fable, both medium) that reads only what
-  revisions 32–34 changed. The integrator recommended against another
+  revisions 32–35 changed and cross-checks revision 35's rulings. The integrator recommended against another
   whole-plan review at high effort, since every queued row still gets its own
   scope critique; the delta's claims about existing code are unchecked.
 

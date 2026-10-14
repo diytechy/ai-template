@@ -1,20 +1,20 @@
-<!-- The brief for the revision 34 review pair (GPT-6 Astra and Claude Fable 5.1, both at medium effort), run from review-handoff-r34.md. It reviews only what revisions 32–34 changed. Render one copy per reviewer, replacing {TIP} with the reviewed commit, {WT} with that reviewer's detached worktree, {OUT} with its review file and {ROOT} with the review root. Neither reviewer sees the other's review. -->
+<!-- The brief for the revision 35 review pair (GPT-6 Astra and Claude Fable 5.1, both at medium effort), run from review-handoff-r35.md. It reviews only what revisions 32–35 changed, and cross-checks revision 35's rulings for conflicts. Render one copy per reviewer, replacing {TIP} with the reviewed commit, {WT} with that reviewer's detached worktree, {OUT} with its review file and {ROOT} with the review root. Neither reviewer sees the other's review. -->
 
-# Independent review: what revisions 32–34 of the review-churn plan changed, before the build
+# Independent review: what revisions 32–35 of the review-churn plan changed, before the build
 
-You are an INDEPENDENT reviewer, a different model and a fresh context from the plan's author. You did not write this. Assume the author was careful but wrong somewhere, and find where. The whole plan was reviewed at revision 31 by two reviewers at high effort; revisions 32–34 folded in their findings and the owner's answers, and **that new text has not been reviewed**. Your job is that delta: is each change correct against the code, complete, and consistent with the rest of the plan and the coordinator's queue? Do not edit, create or commit any file in the repository or any worktree. Never read `OWNER_SCRATCHPAD.md`. Write only your review file, at `{OUT}`.
+You are an INDEPENDENT reviewer, a different model and a fresh context from the plan's author. You did not write this. Assume the author was careful but wrong somewhere, and find where. The whole plan was reviewed at revision 31 by two reviewers at high effort; revisions 32–35 folded in their findings and the owner's answers, and **that new text has not been reviewed**. Revision 35 is large: the owner ruled every call the plan still had open, walking them one at a time, so nothing in the plan is open any more. Your job is that delta: is each change correct against the code, complete, and consistent with the rest of the plan and the coordinator's queue, and do revision 35's rulings conflict with each other, with earlier rulings, or with text that still says otherwise? Do not edit, create or commit any file in the repository or any worktree. Never read `OWNER_SCRATCHPAD.md`. Write only your review file, at `{OUT}`.
 
 ## Where things are
 
 - **Repository (read-only):** `{WT}`, a detached worktree at commit `{TIP}`. It shares the main repository's refs. Python 3.11+ with `tomllib`: the primary checkout's `.venv` interpreter, by absolute path (the worktree has no `.venv` of its own). Scratch scripts may go in `{ROOT}/scratch/`.
 - **`contract_split`** means its tip `961f9e47`, which `origin/contract_split` holds. The local `contract_split` branch is dead (owner); never read it.
-- **The delta under review:** `git -C {WT} log --oneline 4a25720e2..{TIP}` and `git -C {WT} diff 4a25720e2..{TIP} -- docs/plans/2026-10-11-review-churn docs/handoff-2026-10-11-attended-coordinator.md docs/status.md`. Revision 32 dispositioned the revision 31 reviews (`history.md`, "Review of revision 31", which says what was taken, cut down and dismissed, and why); revision 33 records the owner's answers to revision 32's two calls; revision 34 sequences WI-902's reshape.
+- **The delta under review:** `git -C {WT} log --oneline 4a25720e2..{TIP}` and `git -C {WT} diff 4a25720e2..{TIP} -- docs/plans/2026-10-11-review-churn docs/handoff-2026-10-11-attended-coordinator.md docs/status.md`. Revision 32 dispositioned the revision 31 reviews (`history.md`, "Review of revision 31", which says what was taken, cut down and dismissed, and why); revision 33 records the owner's answers to revision 32's two calls; revision 34 sequences WI-902's reshape; revision 35 records the owner's rulings on every remaining call (the rulings section's "Owner rulings, 2026-10-14 (revision 35)"), rules OI-112 in `docs/requirements/open-items.toml`, cancels WI-871, and updates `pointer-rules.md`. Include `docs/requirements/open-items.toml` and `docs/archive/work/cancelled/WI-871-interfaces-as-spine-io.md` in the diff you read.
 
 ## What is under review: the delta, read in place
 
-Read the plan's Status and rulings section first, then each section the diff touches **whole**, in its current form: items 2, 6, 8, 12 and 13 where changed, item 16 entire, the Sequence table, and the coordinator handoff's "The queue" section entire (its table is what the next coordinator session works from). Text the delta did not touch is out of scope, unless a change breaks it or contradicts it.
+Read the plan's Status and rulings section first, then each section the diff touches **whole**, in its current form: items 2, 6, 8, 12 and 13 where changed, item 11's status table and variant F entire, item 16 entire, the Sequence table, `pointer-rules.md` entire, and the coordinator handoff's "The queue" section entire (its table is what the next coordinator session works from). Text the delta did not touch is out of scope, unless a change breaks it or contradicts it.
 
-- **Ruled:** everything the rulings section lists, through revision 33: item 16's carrier carries spine ids only (act seqs and WI ids stay as they are); a fix with no executable test is confirmed by independently checkable evidence, mapped by the coordinator before the convergence round. Challenge a ruling only where the plan's text applies it wrongly or would make a lane redo work.
+- **Ruled:** everything the rulings section lists, through revision 35. Challenge a ruling only where the plan's text applies it wrongly, where it conflicts with another ruling, or where building it as written would make a lane redo work. Don't re-argue a ruling's direction; the owner chose it. Where you believe one is unsound, say so once under "Views for the owner", with evidence.
 - **Already dispositioned:** the revision 31 round. Don't repeat a finding it dispositioned, including the ones it dismissed or cut down, unless the fix it chose is wrong, incomplete, or contradicted elsewhere.
 
 ## The owner's lens
@@ -65,15 +65,28 @@ A question a builder answers in a minute from the code is not a finding. Report 
 
 The handoff's queue table now runs: a "pre" trunk fix, B1, G, B2–B4, WI-798, P1–P8, then leg 03's rows. For each row, play its spine author or builder at the first step. Does any row depend on something scheduled after it? Do two rows edit the same surface in an order that forces one to redo the other? Is anything in the plan's phase 1 still missing? Check the stated constraints against each other and against the plan: WI-902 (B4) after B1 and G and before items 15 and 16 (P4, P5); item 13's gate (P1) after item 6 (B2); item 16 after item 15; item 14 (P3) before item 5's migration and the FileBackup re-sync; item 12's text (P6) after its W3 dry run and F-call 6's ruling; WI-897 last.
 
-### Check 3: consistency
+### Check 3: revision 35's rulings, cross-checked
 
-Do the plan's Status, summary table, rulings section, item texts and Sequence agree with each other and with the handoff's queue and "For the owner" block and `docs/status.md`'s resume line, after revisions 32–34?
+For each revision 35 ruling: does any text in the plan, `pointer-rules.md`, the coordinator handoff or `docs/status.md` still say otherwise; does it conflict with another ruling, old or new; and would building it as written leave a lane without something it needs? At least these:
+
+- **The parent-LLR link** (F-call 5): only a top-level LLR carries `sr_refs`, a child's SR derived up the chain, a parent discharged by its children plus an integration TC. Check it against PROCESS.md §4's ladder ("TERMINAL", "the tier does not recurse"), SR → LLR coverage and the orphan rules (`trace.py`), F's placement and scope rules (an LLR's scope is its IF owner's component), F-call 8 (an LLR need not name an IF), keep-or-mint, and the plan text that still describes flat LLRs.
+- **Consumers and requestors handed over like the form,** while the owner stays authored (F-call 1 (i)): is the asymmetry coherent? What does the role-typed citation do to the uniqueness rule (exactly one in-tree file states `Contract IF-NNN:`) and to F-call 1's over-claim check?
+- **F-call 3's repeat check in `trace.py --strict`,** not the hook: does anything still call it a commit check?
+- **"Module" retired as a spine term:** where do the kit's shipped docs and schemas still give it a spine meaning that items 5 and 11 don't already remove?
+- **"human-or-delegate" replacing "owner-or-delegate",** and the key rename to `human_or_delegate_approval_through` in item 10's migration: is the vocabulary consistent across the plan's items 10 and 13?
+- **Headless coordinator legs marked as autonomous runs:** what does that change for `overnight_legs.py` and for the acts a headless leg may take?
+- **OI-112 ruled and WI-871 cancelled** in one commit: does the ruling-sync rule hold, and does anything else still cite WI-871 or a pending OI-112?
+- **The Architect role owning `runtime-flows.md`**, and item 12's cadence (the every-two-levels critique always runs).
+
+### Check 4: consistency
+
+Do the plan's Status, summary table, rulings section, item texts and Sequence agree with each other and with the handoff's queue and "For the owner" block and `docs/status.md`'s resume line, after revisions 32–35?
 
 ## Output
 
 One line per finding, most severe first:
 
-    - [BLOCKER|MAJOR|MINOR] [check 1|2|3] <file:line or section> -> what is wrong (claim checked / evidence found) -> rework it would cause -> the concrete change
+    - [BLOCKER|MAJOR|MINOR] [check 1|2|3|4] <file:line or section> -> what is wrong (claim checked / evidence found) -> rework it would cause -> the concrete change
 
 Then, under **"Views for the owner"**, at most three short grounded paragraphs: anything the owner should weigh before the first lane is filed.
 
