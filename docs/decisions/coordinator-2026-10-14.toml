@@ -11,3 +11,10 @@ alternative = "Point the specref at an existing document instead: a placeholder 
 reversal_cost = "Low: move the text back into the row and choose another specref; nothing reads the spec file but R-E, R-F and the review brief."
 why_not_escalated = "The review-churn plan's revision 32 dispositions leave choosing WI-910's spec to the coordinator; the kit's docs/specs/ README names docs/specs/WI-###.md as a standalone WI's spec of record, and a placeholder would green R-E without giving the row a spec."
 review = ""
+
+[decision.D-002]
+decided = "The review-churn batch row B1 is split at filing under S1: WI-911 carries the text every later lane runs under (the coordinator-cycle skill's review shape and pre-claim dispositions, the scope-critique rubric's S3, S4, B3, B4, delta and dependency anchors with its widened artifact line and the critique brief's matching render change, PROCESS.md section 3's record-at-event rule, the spine-questions and Terra-brief contract-voice fix, and the reviewer template's three clauses); WI-912 carries the verdict/act split (sitting briefs that judge only, the act turn in coordinator_adjudicate.py, the Loop-Session trailer line and the skill's section 4 text for it), needs WI-911, and builds behind the plan gate if S4 marks it single."
+alternative = "File B1 whole and let its scope critique decide the split, as the handoff allows ('split under S1 if its critique finds it separate')."
+reversal_cost = "Low: before either is claimed, fold WI-912 back into WI-911 and cancel WI-912."
+why_not_escalated = "S1 is the coordinator's question at filing (coordinator-cycle section 1), the handoff anticipated this split, and the critique still judges it; the text half has no Trust section and no code beyond one render change, so holding it behind the act split's plan gate would delay every later lane's rules."
+review = ""
