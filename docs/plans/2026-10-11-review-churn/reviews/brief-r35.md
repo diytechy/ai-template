@@ -59,6 +59,8 @@ Every sentence the delta adds that says how existing code behaves, or that an ex
 - **Revision 33's narrowed carrier.** With act seqs and WI ids off the carrier, is item 16 internally consistent (steps 1–3, the landing, the measure, the latch's guards)? Does anything else in the plan, the handoff or the code still rely on the carrier for an act seq or a WI id?
 - **The reservation record as a header line** of `docs/id-watermark`, copied into the lane and unioned at landing: does that fit `trace.py`'s watermark reader and its correction-record checks?
 
+- **WI-858's Trust ruling** (`docs/decisions/coordinator-2026-10-11.toml` D-004; WI-858's spec under `docs/work/`), confirmed by the owner with a request that this review look at it: a lockless marker carrier for the session store, published first and applied under a short lock, folded by one pure function. Nothing is built yet. Could it break in normal use (a lost or double-applied marker, a record retired or kept wrongly, a reader that disagrees with the locked applier)? Read `session_keep`'s store and lock code to judge it.
+
 A question a builder answers in a minute from the code is not a finding. Report only what would cost rework.
 
 ### Check 2: the queue

@@ -4065,10 +4065,12 @@ ruled_date = "2026-10-14"
 
 [open_item.OI-113]
 title = "How a hand merge's pre-commit walk tells the commits it brings in from trunk's own history"
-status = "pending"
+status = "ruled"
 raised = "2026-10-10"
-one_line = "Decide how the hook knows which commits a hand merge brings in that were never judged, so WI-828's walk refuses a mixed side-branch commit without refusing every station refresh."
-decision = """Raised by the coordinator on 2026-10-10 from WI-828's first build round (the builder stopped and reported; its diff is kept outside the repository at C:/Projects/ai-template.wt/wi-828-round1-parked.patch).
+one_line = "RULED 2026-10-14 (d) WON'T FIX: the integrator's merge slot walks every lane commit on the sanctioned path, and a hand merge of a --no-verify commit is a hook bypass outside the review threat model. WI-893 cancelled; WI-892 stays queued on its own merits."
+decision = """RULED 2026-10-14 by the owner: option (d), won't fix. The owner leaned to (d) and asked what (a) would cost. `trunk_name` is not a declared setting but a guess (the branch the primary checkout holds), and a declared `[integration] trunk` would have to be edited in a commit whenever trunk moves (this repo's trunk is `refactor_again` today). The only sanctioned landing path, the merge slot, already walks every lane commit; the case WI-828 guards needs a hand merge of a commit made with `--no-verify`, a hook bypass outside the threat model's normal working environment. WI-893, the held successor, is cancelled in the same commit; WI-892 (moving text-then-act into its own module) stays queued on its own merits.
+
+Raised by the coordinator on 2026-10-10 from WI-828's first build round (the builder stopped and reported; its diff is kept outside the repository at C:/Projects/ai-template.wt/wi-828-round1-parked.patch).
 
 WHAT IS TRUE TODAY. On trunk, a hand `git merge` of a side branch carrying a `--no-verify` commit that mixes spine text with the approval act passes the pre-commit hook: the hook judges only the merge commit. WI-828 binds the fix to judging every commit HEAD..MERGE_HEAD against its parents.
 
@@ -4079,13 +4081,16 @@ options = """- (a) DECLARE THE TRUNK: one declared trunk branch (for example in 
 - (c) NARROW THE ROW: judge HEAD..MERGE_HEAD only when HEAD is the branch the primary checkout holds and the merge is not a refresh; accepts trunk_name's fallback for single-checkout repos.
 - (d) WON'T FIX: close WI-828; the integrator's merge slot covers the sanctioned path, and a hand merge with --no-verify is outside the review threat model's normal working environment."""
 recommendation = "(a): one declared trunk is the single source the walk needs, and it removes a guessed identity that three other readers share. Whatever the ruling, the text-then-act section of acceptance_record.py first moves to its own module (WI-892): the module sits at 999 of 1000 SLOC, and WI-828's round grew it past the ratchet."
+ruled_date = "2026-10-14"
 
 [open_item.OI-114]
 title = "A second Claude login for the two-home login-isolation check"
-status = "pending"
+status = "ruled"
 raised = "2026-10-11"
-one_line = "Decide when to provision a second Claude login on this Windows box in a declared account home, so WI-908's no-spend two-login isolation check can run."
-decision = """Raised by the coordinator on 2026-10-11 (leg 03) with WI-908, split out of WI-798 before its claim (coordinator-2026-10-11 D-014).
+one_line = "RULED 2026-10-14 (a) PROVISION NOW: the owner signs in a second Claude login under a declared account home once WI-798 has landed, and the coordinator runs WI-908's check with the owner attending."
+decision = """RULED 2026-10-14 by the owner: option (a), provision now. WI-908 checks the account homes WI-798 builds, so it runs after WI-798 lands, attended by the owner, who signs in the second login. WI-908's Done-when is updated in the same commit.
+
+Raised by the coordinator on 2026-10-11 (leg 03) with WI-908, split out of WI-798 before its claim (coordinator-2026-10-11 D-014).
 
 WHAT IS TRUE TODAY. WI-788's design (chapter 2 section 5) owes a no-spend check that two CLAUDE_CONFIG_DIR homes on Windows show two different logins. Until it passes, a Claude account other than the ambient login stays unverified (D-029). WI-798 lands account homes, records the empty-home half of the check (a fresh home reads not logged in while the ambient login reads logged in), and prints every enabled unverified account at preflight. The two-login half needs a second Claude login, which only the owner can provision. The adjudicator is unaffected: it authenticates with the long-lived token, which outranks any login."""
 blast_radius = "WI-908 only. Nothing else waits on it: token accounts, the ambient login and every other CLI's accounts are unaffected, and an unverified login account is printed, not refused."
@@ -4093,3 +4098,4 @@ options = """- (a) PROVISION NOW: the owner signs in a second Claude login under
 - (b) DEFER: WI-908 stays held; login-authenticated non-ambient Claude accounts stay unverified and printed at preflight.
 - (c) DECLINE: close WI-908 won't-fix; non-ambient Claude accounts are supported by token only, and the RESYNC entry says so."""
 recommendation = "(b) until a second Claude login is wanted: nothing else waits on it, and the adjudicator already runs on its token account."
+ruled_date = "2026-10-14"

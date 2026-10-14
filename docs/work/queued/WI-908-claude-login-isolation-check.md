@@ -3,7 +3,7 @@ id = "WI-908"
 title = "Owner-assisted Claude login-isolation check: two account homes on Windows show two logins"
 workstream = "process"
 sr_refs = ["SR-222"]
-specref = "docs/requirements/open-items.toml#OI-114"
+specref = "docs/plans/2026-10-04-wi788-design/2-sessions-routing-accounts.md#5-providers-and-routes"
 needs = ["WI-798", "OI-114"]
 buildtier = "quick"
 safety_class = "ordinary"
@@ -23,14 +23,15 @@ unaffected: it authenticates by its long-lived token.
 
 ## Done-when
 
-- The owner provisions a second Claude login under a declared account home
-  (WI-798's account tables).
+- After WI-798 has landed, the owner provisions a second Claude login under
+  a declared account home (WI-798's account tables), attending the session
+  while the coordinator runs this check (OI-114 ruled (a), 2026-10-14).
 - Run under each home, with no model spend, Claude's status command reports
   each home's own login, and signing in under one leaves the other and the
   ambient login unchanged; the result is recorded in a log fragment.
 - On a pass, that account's `verified` cell is set to the date and Claude
   version in a reviewed commit citing the fragment.
-- On a fail, the cell stays empty, and OI-114's ruling records that
-  login-authenticated non-ambient Claude accounts are unsupported on Windows
-  (token accounts are unaffected).
+- On a fail, the cell stays empty, and the fragment and the RESYNC entry
+  record that login-authenticated non-ambient Claude accounts are unsupported
+  on Windows (token accounts are unaffected).
 - Review bar: A (one cross-family REVIEW-A).

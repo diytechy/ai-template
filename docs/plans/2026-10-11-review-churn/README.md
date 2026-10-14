@@ -123,6 +123,7 @@ Also ruled: coordination of the build runs interactively in this session, with S
 - **The dashboard interaction check runs on demand only;** each view's stamp shows its age.
 - **The derived component context in the build brief is confirmed,** built with item 11's phase-3 work; no `if_refs` cell.
 - **Item 13 is ruled as a whole**, with the vocabulary above.
+- **A new scope-critique bad example, B4, goes in B1** (owner, revision 35, from WI-798's critique, deferred in coordinator-2026-10-11 D-014 and D-016): "owner-dependent work not separated", a Done-when that needs an owner act or credential mixed with unattended work, with no stated hold or partial disposition. One paragraph of rubric text.
 - **The revision 6–7 clarifications are confirmed** (the checkpoint and cap, never deferring a convergence-class finding, successors filed on trunk, in-flight lanes restarting at zero, the session budget, IF rows naming no files, the explicit `boundary` class, the planning gate first, `agents-enabled` as an ordered route array); the IF-cell generation clarification is superseded by the hand-over above.
 
 ## The owner's two questions

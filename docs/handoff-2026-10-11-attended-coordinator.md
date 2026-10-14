@@ -139,11 +139,11 @@ run as parallel lanes. Lanes that take acts still land one at a time.
 | # | Row | What |
 |---|---|---|
 | pre | *trunk fix* | Name WI-910's spec of record (`specref` is empty, so `check_trajectory.py --strict` exits 1 on trunk) before B1, so the first lane's lint bar starts at zero apart from LLR-292 (plan item 6) |
-| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 bad example in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; `spine-questions.md` §3's "LLRs name modules and symbols by design" rewritten to ruling 5's contract voice (revision 35; shipped text, RESYNC entry); in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). The convergence clause carries revision 33's ruling: a fix with no executable test is confirmed by independently checkable evidence (the corrected text at the cited site, or an inspection record), which the coordinator maps to the finding before the round, as it maps a regression test |
+| B1 | *to file* | Process edits that govern every later lane: the review shape and pre-claim dispositions in the `coordinator-cycle` skill; S3, S4 and the B3 and B4 bad examples (B4: owner-dependent work not separated, revision 35) in `docs/rubrics/scope-critique.md`, plus its dependency anchor, the architectural-delta question in item 12 entry point 2's own words (no pointer to a rubric that does not exist yet; P6 adds it) and the widened artifact line (plan item 12); the record-at-event rule in `PROCESS.md` §3; `spine-questions.md` §3's "LLRs name modules and symbols by design" rewritten to ruling 5's contract voice (revision 35; shipped text, RESYNC entry); in the shipped reviewer template (RESYNC entry), severity-by-reachability, the convergence round and item 1's fail-open/fail-closed classification clause; item 16's verdict/act split: `coordinator-cycle` §4, plus the shipped sitting briefs (first-approval, amendment, combined, and the composer's re-attest text), which today put the act in the judging turn (plan item 16; RESYNC entry; split under S1 if its critique finds it separate). The convergence clause carries revision 33's ruling: a fix with no executable test is confirmed by independently checkable evidence (the corrected text at the cited site, or an inspection record), which the coordinator maps to the finding before the round, as it maps a regression test |
 | G | *split from WI-805* | WI-805's per-item plan gate, pulled forward (owner ruling). Once S4 exists, a row it marks `single` waits for this gate, so it comes before B2–B4. Its own row is built without the gate (it cannot plan itself); record that. It launches its planner and critic the way the scope critique is launched by hand today (`review_brief.py critique`, `sol_review.sh`); WI-804 later routes the same calls, so no second launch path is added |
 | B2 | *to file* | Item 6: fix LLR-292 (Approved, so an amendment and its act); add the strict lints to the commit bar, the closure check and the landing check (not the pre-commit hook); build the RESYNC-presence check |
 | B3 | *to file* | Item 10 step 1: one shared `stack.ini` loader in place of its 13 separate parsers (13 `ConfigParser` constructions in 12 files; a pure refactor) |
-| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat. The lane's rows approved through acts 113–117 for the history-reading sweep are re-judged or retired under the new shape before the rebuild. Trunk is at seq 112 and B2's act lands first, so the reshape decides those acts **before the lane rebases**, and any it keeps are renumbered above trunk's, never landed as duplicates (the WI-866 repair, D-002). It lands before P4 and P5, which share its `handback.py` and `intake.py` (plan item 2, "Sequence") |
+| B4 | WI-902 | The record-at-close spec amendment with its scope critique; D-005 re-sat. The lane's rows approved through acts 113–117 for the history-reading sweep are re-judged or retired under the new shape before the rebuild. **The owner's verdict on D-005** (WI-902's Trust ruling, 2026-10-14), for the re-sit: the adoption carrier (a one-key TOML block in the disposition row's own Dispositions section, written by the adjudicator), the disposed row derived from the title's report path, minting nothing and the consolidation-close refusal **stand**; "accepted only while the named row is open, re-read at each consumer" is **replaced** by record-at-close (the close validates once and records it; the sweep trusts the record). The lane's own record, `wi-902.toml` D-001 to D-010, is decided here too: each kept, re-made or withdrawn with the code it covered, the survivors brought to the owner. Trunk is at seq 112 and B2's act lands first, so the reshape decides those acts **before the lane rebases**, and any it keeps are renumbered above trunk's, never landed as duplicates (the WI-866 repair, D-002). It lands before P4 and P5, which share its `handback.py` and `intake.py` (plan item 2, "Sequence") |
 | 0 | WI-798 | In flight: Terra's rework of sitting 004's returns, re-sit, full-lane gate in the new shape, land |
 | P1 | *to file* | Item 13's review gate, after B2: one tree-bound bar attestation (one grammar, one verifier in `kitlib`; `Bar-Green` stays the landing refresh's), checked by the coordinator and the loop before any review dispatch; its text (TC-first in lanes, the reviewer's test-adequacy and duplication questions); the red-round cap as a partial close |
 | P2 | *to file* | Item 8: Sol and Terra through the session service (the wrappers' change check runs between the service's `act` and `record`; parallel reviewers' logs commit one at a time), and sub-agent usage under WI-800's ledger contract, split from WI-800, whose own `needs` (WI-798, WI-799 and others) the split keeps only where the usage part needs them |
@@ -159,22 +159,31 @@ run as parallel lanes. Lanes that take acts still land one at a time.
 the plan, including F-call 6, which P6 needed). The rulings section of the
 plan is the record; the phase-3 rows file against it.
 
-Held by the owner, skipped: WI-684 (OI-98), WI-795 (OI-105), WI-893
-(OI-113) and WI-908 (OI-114). (WI-871 was cancelled when OI-112 was ruled,
-revision 35.) WI-827 is the owner's
+Held by the owner, skipped: WI-684 (OI-98, the FileBackup re-sync) and
+WI-795 (OI-105, the FreeLLMAPI router). WI-908 is released (OI-114 ruled:
+provision now) and runs after WI-798 lands, with the owner attending. WI-871
+and WI-893 are cancelled (OI-112 and OI-113 ruled, 2026-10-14).
+
+**Back burner, to file when convenient** (owner, 2026-10-14): dev-setup's
+last step sets up or confirms the declared accounts (the ADJUDICATOR token
+account WI-798 makes the shipped default needs). File it on trunk with its
+scope critique; it isn't part of WI-798. WI-827 is the owner's
 signature (SN-029).
 
 ## For the owner
 
 - **Push** `refactor_again` and `archive/lanes`.
-- **Rule OI-113** (holds WI-893) and **OI-114** (holds WI-908; leg 03
-  recommends (b), defer). OI-98 and OI-105 still wait; OI-112 is ruled (plan
-  revision 35).
-- **Decisions to confirm or overrule:** leg 03's list stands. That is
-  `docs/decisions/coordinator-2026-10-11.toml` D-009 and D-010 first, then
-  D-008, D-011..D-016, and the open lanes' `wi-798.toml` (D-001 first) and
-  `wi-902.toml`. D-015 (WI-902 left committed) is overtaken by the reshape
-  ruling.
+- **Open items:** OI-112, OI-113 and OI-114 were ruled on 2026-10-14. OI-98
+  (the FileBackup re-sync) and OI-105 (the FreeLLMAPI router) stay pending
+  until their conditions are met.
+- **Delegated decisions** (ruled 2026-10-14, in session):
+  `coordinator-2026-10-11.toml` D-001 to D-016 are confirmed, except D-005,
+  which B4 re-sits with the owner's verdict in its row. D-004 (WI-858's Trust
+  ruling) was confirmed with a request that the plan's reviewers look at it
+  for ways it could break. **In WI-798's lane, record the owner's
+  confirmations at its next commit:** `wi-798.toml` D-001 to D-009, all
+  confirmed (`owner = "confirmed"`, review "Confirmed by the owner,
+  2026-10-14, in session."). `wi-902.toml` D-001 to D-010 are left for B4.
 - **Ruled since the Fable review** (plan revision 8):
   - Test files name their TC; TC rows name no test files or modules, and
     their evidence column becomes generated.

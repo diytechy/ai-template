@@ -3,13 +3,17 @@ id = "WI-893"
 title = "A hand merge on trunk judges the commits it brings in, as OI-113 rules"
 workstream = "process"
 sr_refs = ["SR-140"]
-specref = "docs/requirements/open-items.toml#OI-113"
+specref = ""
 needs = ["OI-113", "WI-892"]
 supersedes = "WI-828"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+CANCELLED (owner, 2026-10-14): OI-113 is ruled (d), won't fix. The merge slot walks every lane commit on the sanctioned landing path, and the case this row guarded needs a hand merge of a `--no-verify` commit, a hook bypass outside the review threat model. WI-892 (text-then-act in its own module) is unaffected and stays queued.
 
 ## Context
 

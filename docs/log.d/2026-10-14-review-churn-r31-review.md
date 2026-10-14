@@ -1,7 +1,8 @@
 ## 2026-10-14: the review-churn plan's revision 31 review pair, revisions 32–35, and the revision 35 review brief
 
-Deferred open items: OI-98, OI-105, OI-113 and OI-114 stay the owner's.
-OI-112 was ruled this session (revision 35).
+Deferred open items: OI-98 and OI-105 stay the owner's, each until its
+condition is met (the FileBackup re-sync; the FreeLLMAPI router). OI-112,
+OI-113 and OI-114 were ruled this session.
 
 A fresh session ran the plan's last whole-plan review from
 [review-handoff-r31.md](../plans/2026-10-11-review-churn/review-handoff-r31.md).
@@ -49,6 +50,18 @@ unchanged.
   revisions 32–35 changed and cross-checks revision 35's rulings. The integrator recommended against another
   whole-plan review at high effort, since every queued row still gets its own
   scope critique; the delta's claims about existing code are unchecked.
+- **The owner's other open calls**, walked the same way: OI-113 ruled (d),
+  won't fix, and WI-893 cancelled; OI-114 ruled (a), provision now, with
+  WI-908 released to run after WI-798 lands; OI-98 and OI-105 kept pending.
+  `coordinator-2026-10-11.toml` D-001 to D-016 confirmed except D-005, whose
+  verdict (the carrier stands; re-reading at each consumer is replaced by
+  record-at-close) goes into B4's queue row for the re-sit. D-004, WI-858's
+  Trust ruling, is confirmed with the owner's request that the r35 reviewers
+  look at it. WI-798's lane record D-001 to D-009 is confirmed, for the
+  coordinator to record in the lane; WI-902's D-001 to D-010 are left for B4.
+  A new scope-critique bad example, B4 (owner-dependent work not separated),
+  joins B1, and a back-burner row (dev-setup confirms the declared accounts)
+  is noted in the handoff for filing.
 
 Every commit passed the commit bar, for example at `445104bfe`:
 `2547 passed, 2 skipped` in the smoke tier, `34.5s vs 60s budget -> within`.
