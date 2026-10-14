@@ -142,7 +142,8 @@ Also ruled: coordination of the build runs interactively in this session, with S
 - **Planners, builders and reviewers may spin up sub-agents where reasonable** (owner, to speed up development). The bounds that hold for the spawning agent hold for its sub-agents:
   - a reviewer's sub-agents see only what its brief gives it, never builder material or another reviewer's verdict (ruling 4 and the anchoring ruling), and write only in its scratch;
   - a builder's sub-agents work in its lane, never two writers on one file at once, and the builder stays accountable for the change and runs the bar;
-  - no sub-agent reviews or adjudicates the work of the agent that spawned it (no session that authored the work reviews it, OI-111).
+  - no sub-agent reviews or adjudicates the work of the agent that spawned it (no session that authored the work reviews it, OI-111);
+  - a sub-agent that runs tests uses its own `--basetemp` beside its spawner's, or leaves the runs to its spawner, since pytest deletes an existing basetemp when a run starts. The handoff states the rest of how tests share the box across parallel lanes (a quiet budget reading at landing, the disk floor, load-sensitive reds filed as defects).
 
   Item 8 then has to count nested agents: verifying where their transcripts land, and ingesting them, is part of P2's scope, not an aside.
 - **Mechanism changes land one at a time, and a defect in one is fixed forward** (the handoff's queue rules). A lane that changes the machinery the cycle runs on may be built beside others but lands alone, and the next lands only after the cycle has run through the last one's change. A defect is fixed forward in a lane, with a regression test, never by reverting a landing: a landing carries acts and minted ids, and a watermark mark may not fall. Where the defect blocks the fix's own path, that one step runs by hand, attended and recorded.

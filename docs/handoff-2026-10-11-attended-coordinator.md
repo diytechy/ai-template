@@ -89,7 +89,11 @@ reviewer. Until batch item 1 below lands, follow the ruling by hand:
   sub-agents get only what its brief gives it and write only in its scratch;
   a builder's work in its lane, never two writers on one file at once, with
   the builder accountable for the change and running the bar; no sub-agent
-  reviews or adjudicates the work of the agent that spawned it.
+  reviews or adjudicates the work of the agent that spawned it. A sub-agent
+  that runs tests uses its own `--basetemp` beside its spawner's, or leaves
+  the runs to its spawner: pytest deletes an existing basetemp when a run
+  starts, so sharing the builder's `pt-<wi>` or a reviewer's
+  `<scratch>/<lane>` would wipe the other run mid-flight.
 - **Add item 1's classification clause to every brief:** an input outside
   the spec's declared set that the change fails closed on is a
   coverage-extension note; one it fails open on stays a finding. The
@@ -175,6 +179,23 @@ refuses the fix commit itself is the owner's to decide: the coordinator never
 bypasses a hook. B1, which edits the `coordinator-cycle` skill, carries both
 rules into its §4.
 
+**Tests across parallel lanes** (owner, 2026-10-14). The box has 24 logical
+CPUs, and builders and reviewers run at `-n 2`, so CPU is not the limit.
+- **One basetemp per test runner.** Lanes, reviewers and sub-agents never
+  share a `--basetemp` (the sub-agent rule above).
+- **The landing's budget reading is quiet.** With lanes in parallel,
+  contention is the normal state, so an in-lane smoke-budget breach is judged
+  against the parent commit timed in the same window (recipes §6). The
+  reading that binds is taken at landing, while no other lane runs tests.
+- **Disk is the limit:** free space fell to 18.6 GB on 2026-10-14, before a
+  cleanup. Check it before fanning lanes out. The full suite (about 4 GB of basetemp) runs one
+  at a time, at phase close, and its basetemp is deleted once its result is
+  recorded. A landed lane's worktree is removed once its tip is archived and
+  the worktree is clean.
+- **A red that passes when re-run quietly** is a load-sensitive test: file it
+  as a defect (plan item 13), never charge it to the lane or re-run it until
+  green.
+
 | # | Row | What |
 |---|---|---|
 | pre | *trunk fix* | Name WI-910's spec of record (`specref` is empty, so `check_trajectory.py --strict` exits 1 on trunk) before B1, so the first lane's lint bar starts at zero apart from LLR-292 (plan item 6) |
@@ -214,6 +235,12 @@ signature (SN-029).
 ## For the owner
 
 - **Push** `refactor_again` and `archive/lanes`.
+- **Worktrees** (2026-10-14, at the owner's request): the 44 worktrees of
+  landed lanes were removed, with their branches kept. Left: `wi-798` and
+  `wi-902` (live), `trunk-tmp` (a detached scratch checkout), and `wi-880`,
+  which holds an uncommitted 4-line edit to `.githooks/pre-commit`: an older,
+  single-quoted copy of the `KIT_DEV_SETUP_INSTALL` export, above the
+  committed line. Keep it or discard it, then remove the worktree.
 - **Open items:** OI-112, OI-113 and OI-114 were ruled on 2026-10-14. OI-98
   (the FileBackup re-sync) and OI-105 (the FreeLLMAPI router) stay pending
   until their conditions are met.

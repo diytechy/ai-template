@@ -69,6 +69,18 @@ following owner rulings.
 
   The phase-0 baseline manifest, which nothing had scheduled, becomes the
   queue's row M.
+- **Tests across parallel lanes** (owner, the same evening). The handoff
+  gains four rules:
+  - each test runner keeps its own `--basetemp`, a sub-agent included, since
+    pytest deletes an existing basetemp when a run starts;
+  - the landing's smoke-budget reading is taken quietly;
+  - disk is the limit: 18.6 GB was free before a cleanup, and the 24
+    logical CPUs are not the limit;
+  - a red that passes when re-run quietly is filed as a defect.
+
+  At the owner's request, the 44 worktrees of landed lanes were removed
+  (branches kept), each checked first for a terminal spec and a clean status.
+  `wi-880` is kept for the owner: it holds an uncommitted 4-line hook edit.
 
 The commit bar passed at `eb42a1c9a`: `2547 passed, 2 skipped` in the smoke
 tier, `51.4s vs 60s budget -> within`.
