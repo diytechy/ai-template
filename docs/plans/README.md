@@ -33,7 +33,7 @@ with the queue (§8, with five owner questions), and the reviewed drafts of the
 `coordinator-cycle` and `spine-authoring` skill changes. The owner's rulings
 from it are in the 2026-10-07 log fragment.
 
-Answered by the owner on 2026-10-13, except one question (stable id meaning):
+Answered by the owner on 2026-10-13 and 2026-10-14:
 [`2026-10-13-contract-split-divergence.md`](2026-10-13-contract-split-divergence.md)
 — what the `contract_split` branch holds that this branch never received
 (110 commits from 2026-09-06 to 09-07): the primary-adjudication code, four

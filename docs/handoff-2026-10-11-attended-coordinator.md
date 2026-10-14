@@ -328,6 +328,13 @@ signature (SN-029).
   **For the owner:** item 16's design questions, or its lighter
   trunk-reservation option; and the divergence report's question 6 (does the
   stranded stable-id-meaning ruling stand here?).
+- **Revision 26 (owner, 2026-10-14):** the keep-or-mint rule for ids (lean
+  toward a new id; keep one whose spirit is retained when that costs fewer
+  changes), which closes the divergence report. Item 16 is now a watermark
+  carrier lane: lanes reserve ids from its top under a short lock at the
+  drafting step, it merges with each landing, and a landing refuses marks
+  that were never reserved. **For the owner:** whether WI ids and act seqs
+  move to the carrier too (both recommended).
 
 ## Traps from this session
 

@@ -1,6 +1,6 @@
 # What `contract_split` holds that this branch never received
 
-**Status: ANSWERED 2026-10-13, except question 6** (§5). This report recovers nothing and mints
+**Status: ANSWERED** (§5; questions 1–5 on 2026-10-13, question 6 on 2026-10-14). This report recovers nothing and mints
 nothing. It records what the divergence lost, so that a review sitting can
 decide what to bring back and under which new IDs. It was written 2026-10-13
 on `refactor_again` at `bf45bd35`. Later the same day, §4 gained what this
@@ -279,7 +279,7 @@ group 2 covered differently. That has not been checked.
    the sitting's verdict. So the group 2 amendments and the `primary_*` code
    do not come back. The hazard the owner named instead, the id watermark
    rising in parallel lanes, is planned as
-   [item 16](2026-10-11-review-churn/README.md#16-one-mint-and-one-spine-stream-across-parallel-lanes).
+   [item 16](2026-10-11-review-churn/README.md#16-one-mint-across-parallel-lanes).
    WI-605's preserved lane worktree (`668edaf4`) is that incident's evidence.
 4. **Lane close (group 4) and the test-case rewrites (group 6). Answered by
    2 and 3:** lane close and the test cases under groups 1 and 4 travel with
@@ -287,17 +287,17 @@ group 2 covered differently. That has not been checked.
    group 3 (item 14).
 5. **IDs. Settled by default:** whatever comes back is minted fresh, and this
    report stays as the record of the old meanings (§3).
-6. **Still open: stable id meaning.** The same 2026-09-07 entry carries a
-   second owner ruling: "an ID's meaning must remain stable or every use and
-   reference needs an impact review". `contract_split` built it into
-   `PROCESS_OPTIONS.md` ("Changed meaning requires impact review of every use
-   and reference, including downstream requirements, tests, implementation
-   and approval evidence, before acceptance. A `MEANING` verdict alone never
-   authorizes a copy."), the amendment brief and its composer, the
-   `gate-advance` skill and one LLR. None of it is here: this branch has the
-   CLARITY/MEANING verdict, and a MEANING row stays the owner's (PROCESS.md
-   §4), but no impact review of an id's other uses. Does the ruling stand
-   here?
+6. **Stable id meaning. Answered 2026-10-14:** the owner's keep-or-mint rule
+   replaces the stranded 2026-09-07 one ("an ID's meaning must remain stable
+   or every use and reference needs an impact review", which `contract_split`
+   built into `PROCESS_OPTIONS.md`, the amendment brief, `gate-advance` and one
+   LLR). The owner: "in general to lean into minting IDs, but to retain IDs if
+   the spirit of the ID is retained and it would be less changes overall to
+   continue using the same ID and potentially modifying some of its current
+   usage locations compared to minting a new ID and potentially touching more
+   downstream users than just reusing." No tracked record on this branch held
+   the rule before; it is recorded now, and item 16 of the review-churn plan
+   states it once in PROCESS.md §4.
 
 ## Reproducing
 
