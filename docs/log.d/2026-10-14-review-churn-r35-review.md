@@ -52,6 +52,23 @@ following owner rulings.
     missing; their own description of the flow was this option.
 - `docs/status.md`'s resume line now points straight at the coordinator
   handoff, with no review pending.
+- **Revision 37** (`0488eba14`), after the close-out, at the owner's
+  questions: the program is ready with no further plan-level review, and it
+  runs as separate lanes, not one branch, landing one mechanism change at a
+  time. The owner's rulings:
+  - three reviewers per round for this program only, as a trial: Sol medium,
+    Fable medium, Opus high. Two stays the norm, and nothing is built for a
+    third slot;
+  - planners, builders and reviewers may spin up sub-agents within the
+    spawning agent's bounds, and P2 records nested agents' usage;
+  - a defect in a landed mechanism change is fixed forward, never by
+    reverting the landing. The owner questioned the integrator's first
+    wording ("revert, don't work around"), and the check confirmed it:
+    `trace.py` refuses a lowered watermark mark, so a landing that minted ids
+    cannot be reverted cleanly.
+
+  The phase-0 baseline manifest, which nothing had scheduled, becomes the
+  queue's row M.
 
 The commit bar passed at `eb42a1c9a`: `2547 passed, 2 skipped` in the smoke
 tier, `51.4s vs 60s budget -> within`.
