@@ -3,7 +3,9 @@
 **Status: FINDINGS FOR OWNER REVIEW.** This report recovers nothing and mints
 nothing. It records what the divergence lost, so that a review sitting can
 decide what to bring back and under which new IDs. It was written 2026-10-13
-on `refactor_again` at `bf45bd35`.
+on `refactor_again` at `bf45bd35`. Later the same day, §4 gained what this
+branch built under group 3 since the split, and the ruling's surviving text
+was located.
 
 <!-- fig: cmd="python docs/plans/2026-10-13-contract-split-divergence-census.py --base 607cf609 --lost contract_split --here bf45bd35" rev=bf45bd35 -->
 Every count and table below comes from that one read-only command, using the
@@ -127,11 +129,15 @@ no registry row. Grouped by theme:
    reviewed against every applicable perspective, with the review record
    naming each perspective and its outcome. SR-161 follows, and its
    verification changes from Test to Inspection. The amendment cites an owner
-   ruling of 2026-09-06 as `docs/log.d/2026-09-06-sn036-owner-ruling.md`, a
-   file that exists on neither branch. Its disposition record,
+   ruling of 2026-09-06 as `docs/log.d/2026-09-06-sn036-owner-ruling.md`. That
+   fragment was added in `f6c7360f` and later compiled into `contract_split`'s
+   `docs/log.md`, under "2026-09-06 — SN-036 / SR-161 owner ruling", so the
+   path exists on neither branch but the ruling's full text survives there.
+   Its disposition record,
    `docs/reviews/2026-09-06-sn036-review-dispositions.md`, exists only on
    `contract_split`. **An owner ruling is therefore missing here, and this
-   branch's SN-036 still states the design that ruling withdrew.**
+   branch's SN-036 still states the design that ruling withdrew.** This
+   branch has since built that design (below).
 4. **Lane close:** SR-144, LLR-144, LLR-161. A close of a branch holding
    anything other than exactly one claimed spec refuses before any report or
    state change.
@@ -139,6 +145,56 @@ no registry row. Grouped by theme:
    consequential edits that follow groups 1 and 2.
 6. **Test cases:** TC-058, 061, 138, 143–148, 153, 154, 156, 161, 178, 205,
    211. Method, evidence or expected-result rewrites to match the rows above.
+
+### Group 3 since the split: this branch built what the ruling withdrew
+
+The ruling lists four acts: amend SN-036, re-point SR-161, close LLR-183's
+NOT DISCHARGED clause, and re-point TC-211 at a real review record. So LLR-183
+(listed in group 5) and TC-211 (group 6) belong to this group too. The ruling
+ends: "Do NOT build `hats_no_finding`, a sidecar record, or a coverage check."
+
+It landed at `f6c7360f` (2026-09-06 17:45), after the common ancestor (17:04
+the same day). Every pointer to the old design was already in the ancestor,
+so this branch kept all four:
+
+- SR-161's Approved text: a machine-readable record, and a reportable finding
+  when an applicable perspective is missing from it.
+- LLR-183's NOT DISCHARGED clause: "the no-finding half needs a
+  per-decomposition artifact that does not exist".
+- The `docs/status.md` line "Next implementation: resolve the existing SR-161
+  per-decomposition perspective-record gap and complete TC-211's normal
+  sample".
+- The decomposition proportionality inspection in
+  `docs/test/inspection-procedures.md`, which TC-211's method follows. It
+  reads "the existing scoped decomposition/review record and its applicable
+  SR-161 applicability/no-finding record".
+
+`contract_split` retired all four (`7a7a07a0`). Here, a merge checkpoint filed
+WI-688 to re-judge TC-211. Its first judgement, on 2026-09-28
+(`docs/reviews/wi-688-re-judge-tc-211-no-result-rec/001-ADJUDICATE-fe96ec6.md`),
+blocked on the missing record. Citing LLR-183's clause and the status line, it
+named building the producer as the owed work. It also named the other way out:
+re-attest TC-211's dependence on that record, "a decision for the tier
+authority". The owner folded the build into WI-688 on 2026-09-30, and
+`a9791303` (2026-10-03) shipped it:
+
+- `hats.py record` writes a `<stem>.perspectives.toml` sidecar holding an
+  authored `no_finding` for each applicable hat that produced no row.
+  `record --check` reports MISSING, STALE and CONFLICT.
+- LLR-297 and TC-312, approved in act 26, which also re-attested LLR-183;
+  act 27 re-attested TC-211.
+- Text that tells sessions to use it: the `Hat-Refs` paragraph of `PROCESS.md`
+  §1, item (c3) of `prompts/spine-questions.md`, and a comment in
+  `registries/hats.template.toml`. A `RESYNC_PACK.md` entry ("The
+  per-decomposition perspective record") carries it to adopters.
+- One record:
+  `docs/ai-template-redesign-2026-09-05-codex/DECOMPOSITION-AMENDMENTS.perspectives.toml`.
+
+The check is warn-first. No gate, hook or CI step runs it; (c3) tells the
+adjudicator to. The per-need `hats_no_finding` cell the ruling named was never
+built. The rest is the sidecar record and coverage check the ruling withdrew.
+None of it was built against the ruling knowingly: nothing on this branch,
+including what the owner saw at the fold, recorded the ruling.
 
 ### Per-row state against this branch
 
@@ -204,9 +260,13 @@ group 2 covered differently. That has not been checked.
 ## 5. Questions for the review
 
 1. **SN-036 / SR-161 (group 3).** Does the 2026-09-06 perspective-record
-   ruling stand? If it does, this branch's SN-036 and SR-161 need the
-   amendment, plus a recorded ruling under a fresh OI. The original log
-   fragment is missing on both branches.
+   ruling stand? If it does, this branch's SN-036, SR-161, LLR-183 and TC-211
+   need its four acts, plus a recorded ruling under a fresh OI; the ruling's
+   text can be taken from `contract_split`'s `docs/log.md`. WI-688's build
+   then becomes superseded. Retiring it changes shipped kit text and a
+   shipped script, so it owes its own `RESYNC_PACK.md` entry: adopters have
+   already received the `record` subcommand. If the ruling falls, SN-036 and
+   SR-161 stand as written here, and WI-688's build is their discharge.
 2. **One WI per lane (group 1).** Adopt, reject or re-judge it against the
    lane model this branch now runs? It is owner-level scheduling policy, not
    a mechanical fix.
@@ -214,7 +274,8 @@ group 2 covered differently. That has not been checked.
    replaced the mechanism? If so, the group 2 amendments and the `primary_*`
    code can be recorded as superseded. If not, which pieces come back, and as
    which new WIs?
-4. **Lane close (group 4) and the test-case rewrites (group 6).** Carry them
+4. **Lane close (group 4) and the test-case rewrites (group 6, TC-211
+   aside).** Carry them
    with whichever of groups 1 and 2 survives, or drop them with it.
 5. **IDs.** Whatever comes back is minted fresh here. Should this report's
    cross-reference table (§3) be kept as the record of the old meanings, so
@@ -228,4 +289,8 @@ python docs/plans/2026-10-13-contract-split-divergence-census.py \
     --base 607cf609 --lost contract_split --here HEAD
 # one row's amendment in full:
 git diff 607cf609 contract_split -- docs/requirements/stakeholder-needs.toml
+# group 3: the ruling's text, its timing, and what this branch built since:
+git show contract_split:docs/log.md | grep -n -A40 'SN-036 / SR-161 owner ruling'
+git show -s --format='%h %ad %s' --date=iso 607cf609 f6c7360f 7a7a07a0
+git show --stat a9791303
 ```

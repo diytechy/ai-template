@@ -38,7 +38,8 @@ Open for owner review:
 — what the `contract_split` branch holds that this branch never received
 (110 commits from 2026-09-06 to 09-07): the primary-adjudication code, four
 colliding spine IDs, and 40 amended requirement rows, including a 2026-09-06
-SN-036 ruling missing here. Its read-only census script sits beside it.
+SN-036 ruling missing here, whose withdrawn design this branch has since built
+(WI-688). Its read-only census script sits beside it.
 
 Ruled by the owner on 2026-10-11, being built:
 [`2026-10-11-review-churn/`](2026-10-11-review-churn/README.md)
