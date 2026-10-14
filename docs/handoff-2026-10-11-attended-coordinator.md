@@ -49,6 +49,11 @@ owner rules.
 - **Watermark** on trunk is unchanged from leg 03: SR 239, LLR 326, IF 293,
   TC 351, WI 910, OI 114; acts to seq 112. The lanes hold more, as leg 03
   lists.
+- **This handoff's "For the owner" block is a revision history** (revisions
+  8–34, each bullet superseding parts of earlier ones). When the next
+  coordinator session closes out and writes its new handoff, carry forward
+  only what is still open for the owner, and point at the plan's Status for
+  the rest, rather than copying the block.
 
 ## How to run reviews now (owner ruling, ahead of the code)
 
@@ -149,6 +154,13 @@ run as parallel lanes. Lanes that take acts still land one at a time.
 | P7 | *to file* | Item 10 step 2's build: the hooks' remaining shell reads become one `tomllib` read in `kit-python.sh` |
 | P8 | *to file* | Before the gate's scoped set is enabled: the test-file TC tags (the spec fixes the grammar and its one reader first; nothing reads test → TC today), the scoped-set derivation with its refusal of an empty or partial set, and the strict-mark commit check. S1 is likely to split it |
 | 1… | leg 03's queue | Its table, rows 1–25, in its order until re-ordered. WI-897 stays last, just before the owner's FileBackup resync test, and the item 10 config consolidation must land before that test |
+
+**Open calls that block a row** (plan phase 0). Nothing open blocks "pre",
+B1, G or B2–B4. F-call 6 (the descend test) blocks P6, as its row says. The
+consumer and requestor roles block item 11's IF-cell work in phase 3, which
+this table doesn't reach (plan item 11: endpoint roles resolve before any
+derivation). Ask the owner for a call before filing the row it blocks, not
+before starting the queue.
 
 Held by the owner, skipped: WI-684 (OI-98), WI-795 (OI-105), WI-871
 (OI-112), WI-893 (OI-113) and WI-908 (OI-114). WI-827 is the owner's
