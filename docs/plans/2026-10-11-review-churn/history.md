@@ -27,6 +27,7 @@ Later revisions, one line each (the git log has the rest):
 - **31** (2026-10-14): the owner's answers to revision 30's calls: verdicts move between lanes while acts keep landing order; the reservation record confirmed; F-call 4 answered by keep-or-mint, with a cross-reference to the id's other users added; the local `contract_split` branch dead.
 - **32** (2026-10-14): answers a GPT-6 Astra and a Claude Fable 5.1 review of revision 31 (both high, both REVISE; the last before the build): item 16's verdict/act split reaches the shipped sitting briefs, item 8's wrappers check for edits between the service's `act` and `record`, the coordinator handoff's queue gains a trunk fix and rows P1–P8 for phase 1, B1 asks the delta question without a rubric that does not exist yet, both strict lints are named red on trunk, and two calls go to the owner. Dispositions at the end.
 - **33** (2026-10-14): the owner's answers to revision 32's calls: item 16's carrier carries spine ids only (act seqs and WI ids stay as they are), and a fix with no executable test is confirmed by independently checkable evidence, mapped by the coordinator before the convergence round.
+- **34** (2026-10-14): WI-902's reshape moves from phase 2 to phase 1, where the handoff's queue already had it (B4). Item 2 gains a Sequence: after B1 and G, before items 15 and 16 (shared `intake.py` and `handback.py`), its lane's acts settled before it rebases. Phase 2 still measures it on its own.
 
 ## Independent review and dispositions
 
