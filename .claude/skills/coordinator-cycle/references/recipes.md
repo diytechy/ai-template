@@ -421,6 +421,10 @@ lane commit being replayed.
   `docs/ratify/CURRENT.md`. Regenerate it and read what it lists before an act.
 - Where freshness is gated, `interface-reference` refuses a stale view after
   a declared header or contract changes; regenerate it.
+- On trunk, `open-items` can refuse a docs-only commit with no source change:
+  the page's baseline line goes stale on its own (2026-10-14). Regenerate it
+  (`gen_open_items.py`) and include it; the long list of deferral warnings
+  above the refusal is standing noise from old fragments.
 - `skills-sync` drift: run `"$PY" "$SCRIPTS/bootstrap.py" --dest . --sync`
   in every lane commit that touches a kit skill.
 - Redirect each commit's output to a file: the pre-commit hook prints about
