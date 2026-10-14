@@ -313,6 +313,13 @@ signature (SN-029).
   header. The dependency coupling binds to the act that admitted the set.
   The contract-body scan includes configuration. Dispositions are in the
   plan's last section.
+- **Revision 24 (owner, 2026-10-13):** the hats apply when a need is
+  decomposed into SRs, so item 14's hat block covers the SN → SR step only.
+  The on-demand audit also rechecks the hats: `hats.py audit` for the
+  mechanical half, then an independent session re-asking each need's
+  applicable hats against its SRs, filing findings through intake.
+  **For the owner:** one `run.cmd audit` with `arch` and `hats` parts
+  (recommended), or a sibling `hats-audit` action.
 
 ## Traps from this session
 
