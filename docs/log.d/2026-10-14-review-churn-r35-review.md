@@ -81,6 +81,21 @@ following owner rulings.
   At the owner's request, the 44 worktrees of landed lanes were removed
   (branches kept), each checked first for a terminal spec and a clean status.
   `wi-880` is kept for the owner: it holds an uncommitted 4-line hook edit.
+- **The coordinator's tools enter the repository** (owner, the same
+  evening). On a second machine the coordinator found the recipes but not the
+  Terra spine-author brief: the recipes ran ten tools from an untracked folder
+  beside the checkout, a single unversioned copy.
+  - The ten the procedure uses moved verbatim into `scripts/coordinator/`
+    (`f8352b9eb`): this repo's own tooling, not shipped, since the kit is
+    absorbing their jobs (WI-852's briefs, WI-801's `ask.py`, WI-812).
+  - The next commit derives their paths from their own location
+    (`layout.py`, `layout.sh`), and the recipes' `REPO`, `PY` and `TOOLS`
+    from git, so no tool names a machine or a user. Verified on this machine
+    by syntax checks, derived paths equal to the old literals, and a Terra
+    brief whose only change is PowerShell's quoted call form.
+  - Four retired files stay behind in the old folder, which is kept until the
+    repo copy has run on a second machine. B1 takes the Terra brief's stale
+    ruling-5 line.
 
 The commit bar passed at `eb42a1c9a`: `2547 passed, 2 skipped` in the smoke
 tier, `51.4s vs 60s budget -> within`.

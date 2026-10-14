@@ -23,7 +23,7 @@
 set -u
 WT=${1:?worktree}; PROMPT=${2:?prompt.md}; OUT=${3:?out.md}; EFFORT=${4:-high}
 TOOLS=$(cd "$(dirname "$0")" && pwd)
-TMPROOT=C:/Projects/ai-template.wt/review-tmp
+. "$TOOLS/layout.sh"  # TMPROOT, beside the checkout
 EXT=$(ls -d "$HOME"/.vscode/extensions/openai.chatgpt-*-win32-x64 2>/dev/null | sort -V | tail -1)
 CODEX="$EXT/bin/windows-x86_64/codex.exe"
 [ -x "$CODEX" ] || { echo "luna_review: no codex.exe under $EXT" >&2; exit 2; }

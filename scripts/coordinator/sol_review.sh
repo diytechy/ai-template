@@ -10,7 +10,7 @@
 # compared before and after; exit 3 reports a change and nothing is reverted.
 set -u
 WT=${1:?worktree}; PROMPT=${2:?prompt.md}; OUT=${3:?out.md}; EFFORT=${4:-medium}
-TMPROOT=C:/Projects/ai-template.wt/review-tmp
+. "$(dirname "$0")/layout.sh"  # TMPROOT, beside the checkout
 [ -f "$PROMPT" ] || { echo "sol_review: no prompt file $PROMPT" >&2; exit 2; }
 mkdir -p "$TMPROOT"
 before_head=$(git -C "$WT" rev-parse HEAD)

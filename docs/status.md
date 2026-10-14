@@ -35,7 +35,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   record-at-close before it resumes. The handoff carries the attended session
   prompt and how to run reviews under the ruling until the skill is updated.
   The coordinator's procedure lives in the `coordinator-cycle` skill. The
-  overnight loop (`coordinator-tools/overnight_legs.py`) is stopped, and the
+  overnight loop (`scripts/coordinator/overnight_legs.py`) is stopped, and the
   handoff's `Overnight: stop` line keeps it so.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions

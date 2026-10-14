@@ -2,11 +2,15 @@
 
 Refuses (exit 2) when a slot in the template is left unfilled, so a review never
 launches with a literal `@SHA@` in it. `@LANE_SLUG@` defaults to LANE with `/`
-replaced by `-`.
+replaced by `-`. `@WTROOT@` (the checkout's sibling `.wt` folder) and `@PY@`
+(the checkout's venv Python) default to the paths `layout.py` derives, so no
+template names a machine.
 """
 
 import re
 import sys
+
+from layout import PYTHON, WTROOT
 
 
 def main(argv):
@@ -14,6 +18,8 @@ def main(argv):
     values = dict(p.split("=", 1) for p in pairs)
     if "LANE" in values:
         values.setdefault("LANE_SLUG", values["LANE"].replace("/", "-"))
+    values.setdefault("WTROOT", WTROOT.as_posix())
+    values.setdefault("PY", PYTHON.as_posix())
     text = open(template, encoding="utf-8").read()
     for key, value in values.items():
         text = text.replace("@{}@".format(key), value)

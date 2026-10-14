@@ -1,11 +1,17 @@
-# Coordinator tools (outside the repo; wave 8, 2026-10-03)
+# Coordinator tools (this repository's own tooling, not shipped)
+
+Built from wave 8 (2026-10-03) in an untracked folder beside the checkout and
+moved into the repository on 2026-10-14. They derive the checkout, its sibling
+`<checkout>.wt` folder (lanes, `review-tmp`, `overnight-logs`) and the venv
+Python from their own location (`layout.py`, `layout.sh`), so no tool names a
+machine or a user. The coordinator recipes set `TOOLS` and `PY` the same way.
 
 Run from the repo root with the repo venv.
 
-- `compose.py WI-NNN <verdict-path> <out.md> [WI-MMM <verdict> <out> ...]`:
-  composes each adjudication row's kit brief through
-  `adjudicate_brief.compose`. Verdict paths are repo-relative, e.g.
-  `docs/reviews/wi-NNN-<slug>/001-ADJUDICATE-<trunk sha7>.md`.
+- `compose_lane.py WI-NNN <brief> "<ID;ID;...>" "<SR;SR>" <verdict-path> <out.md>`,
+  run from the lane root: composes an in-lane adjudication brief through the
+  kit's `adjudicate_brief.compose`. Verdict paths are repo-relative, e.g.
+  `docs/reviews/wi-NNN-<slug>/001-ADJUDICATE-<sha7>.md`.
 - `toml_merge3.py <branch> <registry paths...> [--out-dir DIR]`: a table-wise
   three-way merge of `[kind.ID]` registry blocks, from the merge base. Run it
   after `git merge --squash <branch>` hits conflicts in a registry. It refuses
@@ -13,20 +19,18 @@ Run from the repo root with the repo venv.
 
 ## Codex Luna review through the CLI (owner, 2026-10-03)
 
-1. Fill the reviewer prompt. Slots: WI, SHA, BASE, LANE, SPEC, NOTES and TESTS;
-   LANE_SLUG is derived. An unfilled slot is refused.
+Today it is the reviewer when Sol is unavailable (the coordinator recipes, §7).
 
-       .venv/Scripts/python.exe C:/Projects/ai-template.wt/coordinator-tools/mkprompt.py \
-         C:/Projects/ai-template.wt/coordinator-tools/review-prompt.template.md <scratch>/review-wi-NNN.md \
-         WI=WI-NNN SHA=<lane tip> BASE=<trunk at cut> LANE=build/wi-NNN \
-         SPEC=docs/work/queued/WI-NNN-<slug>.md NOTES="<paths to builder report / prior reviews>" \
-         TESTS="tests/test_a.py tests/test_b.py"
+1. Render the brief with the kit's `review_brief.py review` (WI-852 retired this
+   folder's hand-filled review templates; the recipes give the command).
+   `mkprompt.py` still fills the Terra spine-author brief,
+   `terra-spine-prompt.template.md`: an unfilled slot is refused, and
+   `@LANE_SLUG@`, `@WTROOT@` and `@PY@` are derived.
 
 2. Launch it, from the Bash tool with `run_in_background: true`. The effort
    defaults to high.
 
-       bash C:/Projects/ai-template.wt/coordinator-tools/luna_review.sh \
-         C:/Projects/ai-template.wt/wi-NNN <scratch>/review-wi-NNN.md <scratch>/luna-wi-NNN.md
+       bash "$TOOLS/luna_review.sh" <lane worktree> <brief.md> <scratch>/luna-wi-NNN.md
 
    The review goes to `<out>`, the CLI transcript to `<out>.log`, and the first
    line is echoed (`<sha> SOUND` or `<sha> NOT YET SOUND`).
@@ -56,8 +60,7 @@ refused with exit 2), so the call goes through the loop's keep operation and
 
 3. Launch it with `run_in_background: true` (a call can outlast the 10-minute tool cap):
 
-       C:/Projects/ai-template/.venv/Scripts/python.exe -u \
-         project-trajectory/scripts/coordinator_adjudicate.py adjudicate \
+       "$PY" -u project-trajectory/scripts/coordinator_adjudicate.py adjudicate \
          --brief-file <brief.md> --brief <class> --wi WI-NNN \
          --verdict docs/reviews/<wi-slug>/NNN-ADJUDICATE-<sha7>.md
 
@@ -70,6 +73,6 @@ refused with exit 2), so the call goes through the loop's keep operation and
    returned row's follow-up arrives as a `## Dispositions` block in the spec.
    If it is answered in-lane, replace the section under another heading, since
    intake refuses a `## Dispositions` heading with no toml block.
-5. Read the store record (`C:/Projects/ai-template/out/adjudicator/*.json`)
+5. Read the store record (`out/adjudicator/*.json` in the primary checkout)
    after each call: `state`, `pct` and `reset_reason` show whether the session
    is active, draining or retired.

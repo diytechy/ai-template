@@ -2,7 +2,7 @@
 
 Run FROM THE LANE ROOT with the repo venv:
 
-    python C:/Projects/ai-template.wt/coordinator-tools/preview_mint.py <before> [<after>]
+    python "$TOOLS/preview_mint.py" <before> [<after>]
 
 <before> is the trunk commit the lane forked from (its merge-base with trunk);
 <after> defaults to HEAD. It calls the kit's own draft builders,

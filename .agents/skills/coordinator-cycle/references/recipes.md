@@ -1,19 +1,21 @@
 # Coordinator recipes
 
 The exact commands and the traps behind each step of the coordinator cycle
-([../SKILL.md](../SKILL.md)). Paths assume the primary checkout
-`C:/Projects/ai-template`, lanes under `C:/Projects/ai-template.wt/wi-NNN`,
-and the coordinator tools in `C:/Projects/ai-template.wt/coordinator-tools/`
-(this repo's working setup, outside the repository; its README documents only
-part of it).
+([../SKILL.md](../SKILL.md)). Example paths assume the primary checkout
+`C:/Projects/ai-template`, with lanes and scratch in its sibling folder
+`C:/Projects/ai-template.wt/`. The coordinator tools are this repository's own
+`scripts/coordinator/` (not shipped; their README documents part of them), and
+they derive these paths from their own location.
 
 Use **Git Bash** for the commands below. Run kit commands from the checkout
 being operated on: trunk for claims/landings, the lane for authoring and
-adjudication. Substitute placeholders, and set these in each shell:
+adjudication. Substitute placeholders, and set these in each shell. `REPO` is
+the primary checkout from any lane, so nothing names a machine:
 
 ```bash
-PY=C:/Projects/ai-template/.venv/Scripts/python.exe
-TOOLS=C:/Projects/ai-template.wt/coordinator-tools
+REPO=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
+PY=$REPO/.venv/Scripts/python.exe
+TOOLS=$REPO/scripts/coordinator
 SCRIPTS=project-trajectory/scripts
 ```
 

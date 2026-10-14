@@ -25,8 +25,10 @@ Stops (never retries blindly):
 A handoff line `Resume-not-before: <ISO local time>` (a Codex plan limit,
 say) makes the loop wait until then before the next leg.
 
-    python overnight_legs.py [--repo C:/Projects/ai-template] [--max-legs 6]
-                             [--dry-run]
+    python overnight_legs.py [--repo <checkout>] [--max-legs 6] [--dry-run]
+
+The checkout defaults to the one holding this script, and the logs go to
+`overnight-logs` in its sibling `.wt` folder (`layout.py`).
 """
 
 import argparse
@@ -38,7 +40,9 @@ import sys
 import time
 from pathlib import Path
 
-LOGDIR = Path("C:/Projects/ai-template.wt/overnight-logs")
+from layout import REPO, WTROOT
+
+LOGDIR = WTROOT / "overnight-logs"
 SETTINGS = {"env": {"BASH_MAX_TIMEOUT_MS": "3600000", "BASH_DEFAULT_TIMEOUT_MS": "600000"}}
 STOP_RE = re.compile(r"^\s*Overnight:\s*stop\b", re.M | re.I)
 WAIT_RE = re.compile(r"^\s*Resume-not-before:\s*(\S+)", re.M)
@@ -76,7 +80,7 @@ def lease_holder(repo):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--repo", default="C:/Projects/ai-template")
+    ap.add_argument("--repo", default=str(REPO))
     ap.add_argument("--max-legs", type=int, default=6)
     ap.add_argument("--model", default="claude-opus-5-5")
     ap.add_argument("--dry-run", action="store_true")

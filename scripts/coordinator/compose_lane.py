@@ -2,7 +2,7 @@
 
 Run FROM THE LANE ROOT with the repo venv:
 
-    python C:/Projects/ai-template.wt/coordinator-tools/compose_lane.py \
+    python "$TOOLS/compose_lane.py" \
         WI-NNN <brief> "<ID;ID;...>" "<SR;SR>" <verdict-path> <out.md>
 
 <brief> is the adjudication kind the merge would mint (`amendment` or

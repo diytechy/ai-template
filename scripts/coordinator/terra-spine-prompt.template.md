@@ -18,10 +18,10 @@ You are the SPINE AUTHOR (GPT Terra, gpt-5.6-terra) for one work item in the ai-
 ## Check before you finish
 From this worktree, in PowerShell:
 
-    $env:GIT_CEILING_DIRECTORIES = "C:/Projects/ai-template.wt"
-    C:/Projects/ai-template/.venv/Scripts/python.exe project-trajectory/scripts/check_trajectory.py --strict
-    C:/Projects/ai-template/.venv/Scripts/python.exe project-trajectory/scripts/trace.py --strict
-    C:/Projects/ai-template/.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n 2 --basetemp C:/Projects/ai-template.wt/review-tmp/@LANE_SLUG@-terra tests/test_spine_carrier.py tests/test_trace.py @TESTS@
+    $env:GIT_CEILING_DIRECTORIES = "@WTROOT@"
+    & "@PY@" project-trajectory/scripts/check_trajectory.py --strict
+    & "@PY@" project-trajectory/scripts/trace.py --strict
+    & "@PY@" -m pytest -q -p no:cacheprovider -n 2 --basetemp "@WTROOT@/review-tmp/@LANE_SLUG@-terra" tests/test_spine_carrier.py tests/test_trace.py @TESTS@
 
 `trace.py --strict` exits 1 on trunk from LLR-292's "no claim is made that crossing count is minimal"; that one finding is pre-existing. Always pass that literal `--basetemp`; never `$TEMP`.
 
