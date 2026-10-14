@@ -312,7 +312,7 @@ signature (SN-029).
   its retirement gains SR-161's `coincident` cell and this repo's roster
   header. The dependency coupling binds to the act that admitted the set.
   The contract-body scan includes configuration. Dispositions are in the
-  plan's last section.
+  plan's `history.md`.
 - **Revision 24 (owner, 2026-10-13):** the hats apply when a need is
   decomposed into SRs, so item 14's hat block covers the SN → SR step only.
   The on-demand audit also rechecks the hats: `hats.py audit` for the
