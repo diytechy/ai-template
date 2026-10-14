@@ -3,7 +3,8 @@
 > **Historical (2026-10-13): this round never ran.** The owner ran a review of
 > revision 22 instead (GPT-6 Astra and Claude Fable 5.1, both at medium), on
 > [`reviews/brief-r22.md`](reviews/brief-r22.md); its dispositions are the
-> "Review of revision 22" section of [`history.md`](history.md).
+> "Review of revision 22" section of [`history.md`](history.md). The next round runs from
+> [`review-handoff-r29.md`](review-handoff-r29.md).
 
 A boot document for **one fresh session** whose job is one more pair of
 independent reviews of this plan, then judging every finding and reporting

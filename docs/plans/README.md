@@ -48,9 +48,12 @@ Ruled by the owner on 2026-10-11, being built:
 it (closed coverage, record-at-event, a size basis for splits, full-lane
 rounds, lint before review), plus a third-family second reviewer, usage
 recording for every model call, a reviewed plan before the build, and one
-TOML configuration file. Its "Owner rulings" section records every call;
-item 11 (what points where) is open, and a separate review handoff in the
-folder boots independent Codex Astra and Claude Fable reviews.
+TOML configuration file; later items retire the perspective-record sidecar
+(14), set one work item per lane (15) and give every mint one carrier lane
+(16). Its Status says what is ruled, open and proposed, and its "Owner
+rulings" section records every call; its `history.md` holds the revision log
+and every review's dispositions, and `review-handoff-r29.md` boots the next
+independent Codex Astra and Claude Fable reviews.
 
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one

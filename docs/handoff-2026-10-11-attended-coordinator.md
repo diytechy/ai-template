@@ -296,46 +296,19 @@ signature (SN-029).
   - **Still open:** F-calls 3 (now per TC and LLR pair) to 7, consumer and
     requestor roles, item 12's reading of "top level", and the dashboard
     check's cadence.
-- **Revisions 21–22 (2026-10-13, item 14):** the owner's 2026-09-06 SN-036
-  ruling, stranded on the unmerged `contract_split` branch, stands. Item 14
-  retires the perspective-record sidecar WI-688 built, applies the ruling's
-  four row acts in `contract_split`'s wording, wires the hat questions into
-  the coordinator's sitting and spine-author briefs, and deletes the existing
-  sidecar; both calls are answered. Phase 1, before the FileBackup re-sync.
-  Background: `docs/plans/2026-10-13-contract-split-divergence.md`.
-- **Revision 23 (the revision 22 review pair, GPT-6 Astra and Claude Fable
-  5.1, both medium, both REVISE; it replaced the revision 20 handoff's pair,
-  which never ran):** 12 findings held, two parts dismissed as speculative.
-  Item 13's red-before runs on the review bar (smoke plus the scoped set),
-  since smoke skips 122 of 232 test modules, and its pytest mark admits
-  `pytest.raises`. Item 14's hat block is bounded to decomposition rounds, and
-  its retirement gains SR-161's `coincident` cell and this repo's roster
-  header. The dependency coupling binds to the act that admitted the set.
-  The contract-body scan includes configuration. Dispositions are in the
-  plan's `history.md`.
-- **Revision 24 (owner, 2026-10-13):** the hats apply when a need is
-  decomposed into SRs, so item 14's hat block covers the SN → SR step only.
-  The on-demand audit also rechecks the hats: `hats.py audit` for the
-  mechanical half, then an independent session re-asking each need's
-  applicable hats against its SRs, filing findings through intake.
-  **For the owner:** one `run.cmd audit` with `arch` and `hats` parts
-  (recommended), or a sibling `hats-audit` action.
-- **Revision 25 (owner rulings, 2026-10-13):** SAFETY leaves this repo's
-  roster (item 14). One WI per lane, retiring the managed loop's spine batch
-  (item 15). Snapshots are permitted in a lane when ruled there, overruling
-  the stranded 2026-09-07 "never in a worktree". The id watermark across
-  parallel lanes gets a designated spine branch with one mint (item 16).
-  **For the owner:** item 16's design questions, or its lighter
-  trunk-reservation option; and the divergence report's question 6 (does the
-  stranded stable-id-meaning ruling stand here?).
-- **Revision 26 (owner, 2026-10-14):** the keep-or-mint rule for ids (lean
-  toward a new id; keep one whose spirit is retained when that costs fewer
-  changes), which closes the divergence report. Item 16 is now a watermark
-  carrier lane: lanes reserve ids from its top under a short lock at the
-  drafting step, it merges with each landing, and a landing refuses marks
-  that were never reserved.
-- **Revision 27 (owner, 2026-10-14):** WI ids and act seqs move to the
-  carrier too, so every mint has one writer.
+- **Revisions 21–29 (2026-10-13 and 14):** the plan is consolidated (revision
+  28): read its Status first, which says what is ruled, open and proposed;
+  the revision log and every review's dispositions moved to its
+  `history.md`. New since revision 20: item 14 (retire the SN-036
+  perspective-record sidecar and wire the hat questions into the SN → SR
+  briefs; SAFETY leaves this repo's roster), item 15 (one WI per lane) and
+  item 16 (a watermark carrier lane every mint draws from, the keep-or-mint
+  rule for ids, and the adjudicator freed from landing order, for a closer
+  look). The last full review ran on revision 22. **Next:** an optional
+  fresh review round from
+  `docs/plans/2026-10-11-review-churn/review-handoff-r29.md`; the open owner
+  calls are the plan's phase 0. The `contract_split` divergence report is
+  closed (`docs/plans/2026-10-13-contract-split-divergence.md`).
 
 ## Traps from this session
 

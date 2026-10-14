@@ -20,6 +20,10 @@ The three summary rows as they stood at revision 27:
 | 12 | Architectural decomposition at three moments (open): one rubric and an `architecture-decomposition` skill, reached from a fresh-vision breakdown, the architectural-delta question (asked by the scope critique before the claim since revision 18) and an on-demand `run.cmd arch-audit`, which also rechecks the hats (revision 24); dry-run on W3 first | text, then builds | ~1 lane of text; builds after item 11 | under-decomposed components (W3: 60 modules, the lane's stages inside) |
 | 13 | Review only a green tip (open): lint, then tests, then review; nothing refuses a red-tip review today. Test cases reviewed in stages: written first with recorded red-before, mechanically at the gate, for adequacy by the reviewers, as text at the sitting; a mutation trial later. Revisions 17–18: gate the start of review, a red cap closing partial, a scoped test set, a typed red-before record; a dependency policy (decision 3, confirmed in revision 19); revision 20 proves the red-before with strict expected-failure marks | text + builds | after item 6 | reviews spent on failures a tool would catch; weak tests that pass |
 
+Later revisions, one line each (the git log has the rest):
+
+- **29** (2026-10-14): the owner's note that the adjudicator need not wait on landing order, with what the landing latch guards today (item 16), for a closer look.
+
 ## Independent review and dispositions
 
 Two reviewers, the same brief, against commit 85a37767a: Claude Sonnet 5.5 (REVISE, 16 findings) and Codex 6.1 Sol at medium effort (REVISE, 18 findings). Each finding was treated as a claim and checked before acting. Every finding was adopted, four of them only in part. The full texts are in [`reviews/sonnet.md`](reviews/sonnet.md) and [`reviews/sol.md`](reviews/sol.md); the shared brief is [`reviews/brief.md`](reviews/brief.md).
