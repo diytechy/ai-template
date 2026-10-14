@@ -8281,6 +8281,24 @@ your own code catches `StoreBusy` around a retained call's bookkeeping or
 release, that catch is now dead. A telemetry reader of `reset-reason`
 should read `pending` as not yet known.
 
+### The hooks' interpreter probe parses on macOS /bin/sh [since d3d3cc9d]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `hooks/kit-python.sh`, which the pre-commit, commit-msg
+and pre-push hooks source, did not parse under macOS's `/bin/sh` (bash 3.2).
+An apostrophe inside a quoted `${KIT_DEV_SETUP_INSTALL:-…}` default read as
+an opening quote, so on a stock Mac every hook refused with "unexpected EOF
+while looking for matching `''". Linux (dash) and Git Bash were unaffected.
+The default now sits in its own assignment, and the refusal text is
+byte-identical.
+
+**Kit-owned files — overwrite:** `hooks/kit-python.sh` (re-copy it to
+`.githooks/kit-python.sh`).
+
+**What to do.** Re-copy the file. If your hooks refused on a Mac since
+adopting the probe, they run again. No registry, setting or record changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

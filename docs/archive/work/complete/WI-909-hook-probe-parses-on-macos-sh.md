@@ -9,6 +9,11 @@ safety_class = "ordinary"
 priority = 1
 +++
 
+## Deliverable
+
+`project-trajectory/hooks/kit-python.sh` sets its default install text in its own assignment (`kit_install_default`), so no apostrophe sits inside a `${…}` word; it parses under macOS `/bin/sh` (bash 3.2.57), and the no-interpreter refusal prints the same text as before. `tests/test_shell_portability.py` (new, smoke tier) scans every tracked shell file outside `docs/archive/`: a stdlib rule forbidding `'` inside a `${NAME<op>word}` word, and `sh -n` on each. Against the pre-fix file both checks went red on `kit-python.sh` and nothing else; with the fix the module is green. `tests/test_pre_commit_hook.py` went from 9 failed to green on this Mac. Two `tests/test_run_devsetup.py` `run.command` cases fail on this Mac with and without the change (a fixture's `run.sh` is not executable) and are not this row's. RESYNC_PACK carries the re-copy entry. Closed by hand at the owner's direction (2026-10-13) with no independent review round.
+
+
 ## Context
 
 Filed by hand on 2026-10-13 at the owner's direction, after a commit on the

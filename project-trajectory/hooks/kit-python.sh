@@ -32,7 +32,11 @@ kit_python() {
   echo "$1: no Python 3.11+ interpreter found (checked .venv/bin/python," >&2
   echo "  .venv/Scripts/python.exe, python3 and python), so its checks cannot" >&2
   echo "  run: refusing to skip them, and refusing the $2. The fix:" >&2
-  printf '  %s,\n' "${KIT_DEV_SETUP_INSTALL:-run dev-setup's install, which offers the runtime: sh scripts/dev-setup.sh --baseline (Windows: scripts\\dev-setup.cmd -Baseline)}" >&2
+  # The default is its own assignment, never a ${VAR:-word} word: macOS's
+  # /bin/sh (bash 3.2) reads the apostrophe inside a quoted expansion word as
+  # an opening quote and the whole file fails to parse (WI-909).
+  kit_install_default="run dev-setup's install, which offers the runtime: sh scripts/dev-setup.sh --baseline (Windows: scripts\\dev-setup.cmd -Baseline)"
+  printf '  %s,\n' "${KIT_DEV_SETUP_INSTALL:-$kit_install_default}" >&2
   echo "  or put an installed Python 3.11+ first on PATH; then try again." >&2
   return 1
 }
