@@ -1,5 +1,10 @@
 # Review handoff: revision 20, GPT-6 Astra (high), then Claude Fable 5.1 (medium)
 
+> **Historical (2026-10-13): this round never ran.** The owner ran a review of
+> revision 22 instead (GPT-6 Astra and Claude Fable 5.1, both at medium), on
+> [`reviews/brief-r22.md`](reviews/brief-r22.md); its dispositions are the
+> plan's "Review of revision 22" section.
+
 A boot document for **one fresh session** whose job is one more pair of
 independent reviews of this plan, then judging every finding and reporting
 to the owner. It is not the coordinator's handoff

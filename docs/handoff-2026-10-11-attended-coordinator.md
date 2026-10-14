@@ -303,9 +303,16 @@ signature (SN-029).
   the coordinator's sitting and spine-author briefs, and deletes the existing
   sidecar; both calls are answered. Phase 1, before the FileBackup re-sync.
   Background: `docs/plans/2026-10-13-contract-split-divergence.md`.
-  - **Next:** the review pair runs on revision 22 (GPT-6 Astra and Claude
-    Fable 5.1, both at medium), replacing the revision 20 handoff's pair,
-    which never ran.
+- **Revision 23 (the revision 22 review pair, GPT-6 Astra and Claude Fable
+  5.1, both medium, both REVISE; it replaced the revision 20 handoff's pair,
+  which never ran):** 12 findings held, two parts dismissed as speculative.
+  Item 13's red-before runs on the review bar (smoke plus the scoped set),
+  since smoke skips 122 of 232 test modules, and its pytest mark admits
+  `pytest.raises`. Item 14's hat block is bounded to decomposition rounds, and
+  its retirement gains SR-161's `coincident` cell and this repo's roster
+  header. The dependency coupling binds to the act that admitted the set.
+  The contract-body scan includes configuration. Dispositions are in the
+  plan's last section.
 
 ## Traps from this session
 

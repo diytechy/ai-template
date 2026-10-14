@@ -126,12 +126,14 @@ them (PROCESS.md §3).
 - **The SR side:** an SR reaches IFs through its boundary crossings and the
   assumptions that bridge them.
 - **An IF's test coverage:** every IF reaches at least one executable test
-  through the LLR or SR that constrains it, or a TC's observed-at cell; no TC
+  through the LLR or SR that constrains it, or a TC whose `verifies` names it; no TC
   has to cite the IF directly. OI-43's direct check stays until this link is
   populated.
 - **A work item's component context** (proposed, revision 20): its SRs and their
-  LLRs lead to the interfaces they constrain and those interfaces' owner
-  components, which the build brief renders for the builder. No `if_refs` cell.
+  LLRs lead, through the placement relation (a `constrains` cell, or the
+  interface a verifying TC names), to interfaces and their owner components,
+  which the build brief renders for the builder; an unplaced requirement is
+  listed as unplaced. No `if_refs` cell.
 - **The IF's `data` cell after the build,** and the TC evidence column, from
   the bodies and tags in files.
 
@@ -158,7 +160,7 @@ them (PROCESS.md §3).
   `check_privacy.py`), checked against a local endpoint, and an LLR or SR
   constrains each of the four.
 - **One body per IF:** the stray-declaration rule becomes uniqueness over
-  shipped scripts and registry headers, with the body's file header naming the
+  shipped scripts, configuration files and registry headers, with the body's file header naming the
   owner component. A hand-edited boundary file is owned by the component its
   own header declares.
 - **The hand-over** is new build work: one effective-contract reader and a
