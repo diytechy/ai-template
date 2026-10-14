@@ -1,0 +1,13 @@
+# docs/decisions/coordinator-2026-10-14.toml — the attended coordinator session
+# of 2026-10-14 (review-churn program, first batch); delegated decisions made on
+# trunk (coordinator). Lane decisions are in each lane's own record. Format:
+# project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-910's spec of record is a new docs/specs/WI-910.md holding the Mac drill record (how the drill ran, its two findings, why they went unseen), moved verbatim out of the row; the row's specref names it, and the row keeps its filing line and its Done-when. This is the review-churn queue's 'pre' trunk fix: the empty specref made check_trajectory.py --strict exit 1 on trunk (R-E)."
+alternative = "Point the specref at an existing document instead: a placeholder that resolves (docs/work/README.md, as WI-906 does), the archived WI-909 row the drill continued, or the test module the fix touches; or point it at the row's own queued file, which stops resolving when the claim moves the row to active/."
+reversal_cost = "Low: move the text back into the row and choose another specref; nothing reads the spec file but R-E, R-F and the review brief."
+why_not_escalated = "The review-churn plan's revision 32 dispositions leave choosing WI-910's spec to the coordinator; the kit's docs/specs/ README names docs/specs/WI-###.md as a standalone WI's spec of record, and a placeholder would green R-E without giving the row a spec."
+review = ""
