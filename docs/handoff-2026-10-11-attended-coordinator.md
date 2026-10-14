@@ -296,6 +296,16 @@ signature (SN-029).
   - **Still open:** F-calls 3 (now per TC and LLR pair) to 7, consumer and
     requestor roles, item 12's reading of "top level", and the dashboard
     check's cadence.
+- **Revisions 21–22 (2026-10-13, item 14):** the owner's 2026-09-06 SN-036
+  ruling, stranded on the unmerged `contract_split` branch, stands. Item 14
+  retires the perspective-record sidecar WI-688 built, applies the ruling's
+  four row acts in `contract_split`'s wording, wires the hat questions into
+  the coordinator's sitting and spine-author briefs, and deletes the existing
+  sidecar; both calls are answered. Phase 1, before the FileBackup re-sync.
+  Background: `docs/plans/2026-10-13-contract-split-divergence.md`.
+  - **Next:** the review pair runs on revision 22 (GPT-6 Astra and Claude
+    Fable 5.1, both at medium), replacing the revision 20 handoff's pair,
+    which never ran.
 
 ## Traps from this session
 
