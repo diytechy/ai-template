@@ -52,9 +52,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      then the lane in flight (claimed, on its branch; the handoff names its
      returns), then the phase-1 rows.
      Review rule (owner, 2026-10-11, superseding 2026-10-07): no narrow rounds.
-     Each round runs two full-lane reviewers in parallel (Codex Sol, and Claude
-     Sonnet as the stand-in), at most three rounds, with a dispute sitting at
-     the cap; the handoff states the rest. Review threat model (owner,
+     Each round runs full-lane reviewers in parallel, three during this
+     program as a trial (Codex Sol, Claude Fable, Claude Opus; two is the
+     norm), at most three rounds, with a dispute sitting at the cap; the
+     handoff states the rest. Review threat model (owner,
      2026-10-08, PROCESS.md §6): a finding that needs a compromised or
      contrived host is dismissed in one recorded line; a contested or
      third-round finding goes to the coordinator's `dispute` sitting
