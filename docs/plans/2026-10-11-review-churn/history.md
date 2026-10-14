@@ -24,6 +24,7 @@ Later revisions, one line each (the git log has the rest):
 
 - **29** (2026-10-14): the owner's note that the adjudicator need not wait on landing order, with what the landing latch guards today (item 16), for a closer look.
 - **30** (2026-10-14): answers a GPT-6 Astra and a Claude Fable 5.1 review of revision 29 (both medium, both REVISE): item 16's carrier mechanics re-founded on recorded reservations, item 15's port list completed, the `contract_split` source pinned, F-call 4 answered by keep-or-mint, and the latch's guards corrected. Dispositions at the end.
+- **31** (2026-10-14): the owner's answers to revision 30's calls: verdicts move between lanes while acts keep landing order; the reservation record confirmed; F-call 4 answered by keep-or-mint, with a cross-reference to the id's other users added; the local `contract_split` branch dead.
 
 ## Independent review and dispositions
 

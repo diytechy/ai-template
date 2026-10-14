@@ -313,10 +313,12 @@ signature (SN-029).
   against them at landing, and orders the act ledger by seq. Item 15's port
   gains LLR-061 and TC-061, and "`contract_split`" means `961f9e47` (the
   local branch stops at the ancestor). F-call 4 is answered by keep-or-mint.
-  **For the owner:** the unlatched adjudicator, narrowed to the reviewers'
-  option (verdicts move between lanes, acts keep landing order); whether to
-  fast-forward the local `contract_split` branch to origin; and confirm or
-  overrule the reservation record and F-call 4's closure.
+- **Revision 31 (2026-10-14):** the owner ruled revision 30's calls:
+  verdicts move between lanes while acts keep landing order (B1 carries the
+  `coordinator-cycle` §4 text); the reservation record is confirmed;
+  keep-or-mint answers F-call 4 with a cross-reference to the id's other
+  users; the local `contract_split` branch is dead. One more review pair
+  runs on revision 31 before the build.
 
 ## Traps from this session
 
