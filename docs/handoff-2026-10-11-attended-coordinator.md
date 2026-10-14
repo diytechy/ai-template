@@ -333,8 +333,9 @@ signature (SN-029).
   changes), which closes the divergence report. Item 16 is now a watermark
   carrier lane: lanes reserve ids from its top under a short lock at the
   drafting step, it merges with each landing, and a landing refuses marks
-  that were never reserved. **For the owner:** whether WI ids and act seqs
-  move to the carrier too (both recommended).
+  that were never reserved.
+- **Revision 27 (owner, 2026-10-14):** WI ids and act seqs move to the
+  carrier too, so every mint has one writer.
 
 ## Traps from this session
 
