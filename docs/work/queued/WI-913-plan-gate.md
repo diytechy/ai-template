@@ -181,7 +181,11 @@ file on disk, and the plan and the critique it rests on are model output
      critique as a record beside the plan, and the coordinator commits that
      record alone.
   2. **Pass.** From that commit, its pass form checks that HEAD holds the
-     filed critique and any dispute verdict it cites, that the coverage gate
+     filed critique and any dispute verdict it cites, that the tree the
+     critique reviewed holds the same work item, the exact plan bytes and the
+     same Done-when digest as HEAD (compared by content, so a rebase keeps
+     them; a mismatch is refused until a fresh critique judges the changed
+     inputs), that the coverage gate
      passes on the plan at HEAD, and that the delta line is `none` or
      `within`. It then writes the pass record, which the coordinator commits
      alone.
@@ -194,7 +198,11 @@ file on disk, and the plan and the critique it rests on are model output
 - **Failed-write shapes.** A failed or timed-out critic call leaves no verdict
   file, so nothing is filed. A refused filing exits 2 and writes nothing
   (IF-289's rule). An interrupted write can leave a partial record, which
-  every reader treats as malformed. None of these releases anything.
+  every reader treats as malformed. A failed planner call leaves no plan,
+  held as Absent. The dispute verdict's producer and failure shapes are the
+  adjudication entry point's (`coordinator_adjudicate.py`, IF-283 to
+  IF-285): a failed or refused sitting leaves no accepted binding, held as
+  Failed. None of these releases anything.
 - **Consumers.** Grep finds no reader of `docs/plans/<WI>/` today:
   `plan_artifacts.py` writes only `docs/plans/DP-NNN-<slug>/`, and
   `check_vocab.py` and `check_doc_refs.py` only exempt `docs/plans/` from
@@ -202,7 +210,8 @@ file on disk, and the plan and the critique it rests on are model output
   reader:
   - `project-trajectory/scripts/check.py`, the pre-commit step. It validates
     a commit that adds or changes a pass record against its parent: its
-    digests are the parent's plan and Done-when, and the critique and dispute
+    digests are the parent's plan and Done-when and equal those in the tree
+    the cited critique reviewed, and the critique and dispute
     records it cites are in the parent and pass. It holds a build commit
     whose parent has no binding record.
   - `project-trajectory/scripts/text_then_act.py`'s lane-commit walk, as the
@@ -279,7 +288,9 @@ This ruling goes to the owner to confirm or overrule (`coordinator-cycle`
   that is unbound, malformed or count-mismatched; a plan the coverage gate
   fails; a missing or `beyond` delta line; at the cap, a dispute verdict that
   is not an accepted DISMISS of every BLOCKER and MAJOR finding; and a pass
-  form run where HEAD lacks a record it cites. A test covers each. A
+  form run where HEAD lacks a record it cites; and a pass form, or a
+  pass-record commit, whose cited critique reviewed other plan bytes or
+  another Done-when digest than HEAD's. A test covers each. A
   MINOR-only CHANGES-REQUESTED critique passes and one with no findings does
   not, and the pre-commit check refuses a pass record committed together
   with a critique it cites, while the two-commit order passes.
@@ -409,3 +420,18 @@ Round 1 (Codex Sol, medium, 2026-10-14; two findings):
   an APPROVE and has no BLOCKER or MAJOR finding to dispute ... also closes
   the lane partial for the owner: an empty dispute set never authorizes a
   pass record" (coordinator-2026-10-14 D-007).
+
+Round 2 (Codex Sol, medium, 2026-10-14, the first confirming round; two
+findings):
+
+- **S2, MAJOR: adopted.** A pass record could pair current digests with a
+  critique of an older plan. The pass form now checks "that the tree the
+  critique reviewed holds the same work item, the exact plan bytes and the
+  same Done-when digest as HEAD (compared by content, so a rebase keeps
+  them; a mismatch is refused until a fresh critique judges the changed
+  inputs)"; the pre-commit check verifies the same, and the Done-when tests
+  both.
+- **S2, MINOR: adopted.** "Failed-write shapes" now names the planner's and
+  the dispute verdict's failures: "A failed planner call leaves no plan,
+  held as Absent. The dispute verdict's producer and failure shapes are the
+  adjudication entry point's".

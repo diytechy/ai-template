@@ -213,7 +213,9 @@ slot's bound today, unchanged here.
   interrupted between its flip and its snapshot refused as a dirty lane, and
   re-run in full once the leftovers are discarded; a combined act
   interrupted between its two commits re-run with only its first-approval
-  act listed; a flip committed without its copy refused, naming the row;
+  act listed; a flip committed without its copy refused, naming the row; a
+  Drafted row already present unchanged in a whole-registry snapshot listed
+  as owed;
   with the loop
   marker set, every prompt the entry point launches ending with the
   `Loop-Session` instruction, and none without it.
@@ -254,13 +256,16 @@ slot's bound today, unchanged here.
     them. A MEANING row without the bless mark owes none, and neither does
     any class other than amendment, first-approval and combined.
   - **Re-runs.** The assembler judges each authorized act at the lane's
-    HEAD, in its committed tree, never the working tree. Per row, an APPROVE
-    is taken when HEAD carries both the Approved status and a snapshot copy
-    equal to the row's committed text, and owed when HEAD carries neither; a
-    re-attest is taken when the copy equals the row's committed text, and
-    owed otherwise. Any other combination, such as a flip committed without
-    its copy, is inconsistent: it is refused before the launch, naming the
-    row, and never counted as taken. The act turn also refuses a lane with
+    HEAD, in its committed tree, never the working tree, by the act the
+    row's ruling authorizes. A first approval is owed while the row's
+    committed status is below Approved, whatever its snapshot copy holds (a
+    whole-registry copy carries Drafted rows), and taken when the row is
+    Approved and its snapshot copy equals its committed text. A re-attest of
+    an Approved row is taken when the copy equals the row's committed text,
+    and owed otherwise. Any other state, such as an Approved row without an
+    equal copy at a first approval, or a re-attest of a row below Approved,
+    is inconsistent: it is refused before the launch, naming the row, and
+    never counted as taken. The act turn also refuses a lane with
     uncommitted changes before the launch, naming the paths. So an act
     interrupted between its flip and its snapshot, which leaves the flip
     uncommitted, is refused until the coordinator discards the leftovers
@@ -342,3 +347,15 @@ Round 1 (Codex Sol, medium, 2026-10-14; one finding):
   acts from "HEAD's committed tree", the Trust section's act-turn ruling
   carries both refusals, and the Done-when's tests include each recovery
   case (coordinator-2026-10-14 D-008).
+
+Round 2 (Codex Sol, medium, 2026-10-14, the first confirming round; one
+finding):
+
+- **S3, MAJOR: adopted.** Round 1's partition refused an ordinary unacted
+  row: a whole-registry snapshot carries Drafted rows, so a Drafted row with
+  an equal copy is owed, not inconsistent. The Re-runs answer is now
+  status-aware: "A first approval is owed while the row's committed status
+  is below Approved, whatever its snapshot copy holds ... A re-attest of an
+  Approved row is taken when the copy equals the row's committed text, and
+  owed otherwise." The Done-when's tests add "a Drafted row already present
+  unchanged in a whole-registry snapshot listed as owed".

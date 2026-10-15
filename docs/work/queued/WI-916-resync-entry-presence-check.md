@@ -74,7 +74,7 @@ never ships.
 
 The pack's added heading is what lets this part of the bar pass, so the pack
 gains a say over a gate input. Written before the claim, answering S2 under
-`project-trajectory/PROCESS.md` §3, "When a guard is owed". The ruling goes
+[`PROCESS.md` §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication). The ruling goes
 to the owner to confirm or overrule (coordinator-cycle §1 and §5).
 
 - **Producer:** the lane's builder or the coordinator, editing `RESYNC_PACK.md`
@@ -134,3 +134,12 @@ Round 1 (Codex Sol, medium, 2026-10-14; one finding):
   §3, "When a guard is owed"", the form WI-912's and WI-913's Trust sections
   use. A relative link would break when the claim moves this spec from
   `queued/` to `active/<branch>/`, one directory deeper.
+
+Round 2 (Codex Sol, medium, 2026-10-14, the first confirming round; one
+finding):
+
+- **S2, MINOR: adopted.** The citation is now a link, "[`PROCESS.md` §3,
+  "When a guard is owed"](...)", as the rubric's S2 asks ("linked, not
+  restated"). Round 1's reason for plain text was wrong: `spec_move.py`
+  re-relativises a moved spec's own links (WI-353), so the link survives the
+  claim.

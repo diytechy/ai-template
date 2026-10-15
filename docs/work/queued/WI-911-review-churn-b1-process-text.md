@@ -54,10 +54,12 @@ rule in the target's own voice and does not copy the plan's reasoning.
      Rounds run until one has no BLOCKER or MAJOR code finding, and the
      checkpoint follows it. The gate over the checkpoint tip, and a round
      over a rebase that changed code or rows, always run, in convergence
-     stance, and are not counted. At the cap, open findings go to one
-     dispute sitting, which rules each FIX-as-successor, DISMISS or ESCALATE.
-     A convergence-class finding (fail-open, data loss, Done-when gap) is
-     never deferred: the sitting orders one more fix round or escalates.
+     stance, and are not counted. At the cap, and after a convergence round,
+     every open BLOCKER or MAJOR goes to one dispute sitting, which rules each
+     FIX, SUCCESSOR, DISMISS or ESCALATE (deliverable 8). Only that sitting
+     moves a finding to a successor row (owner, 2026-10-14, in session). A
+     convergence-class finding (fail-open, data loss, Done-when gap) is never
+     deferred: the sitting orders one more fix round or escalates.
      Successor rows are filed on trunk at the landing from the sitting's
      binding. Only BLOCKER and MAJOR cost a round; a MINOR goes to the spine
      change list or a successor row. A lane in flight when this lands starts
@@ -75,7 +77,11 @@ rule in the target's own voice and does not copy the plan's reasoning.
    - **Before the claim** (rulings 1 and 9): every scope-critique
      recommendation gets a disposition, adopted (quoting the spec text that
      now carries it) or rejected (with the reason), and a fresh critique
-     round confirms the adopted ones before the claim. A queued row born
+     round confirms the adopted ones before the claim. A confirming round
+     runs in convergence stance (owner, 2026-10-14, in session): it checks
+     each adopted disposition, and a new finding blocks the claim only if it
+     is fail-open, data loss or a Done-when gap; any other new finding gets
+     its disposition in the spec without another round. A queued row born
      before S3, S4 and the delta question is re-critiqued when it comes up
      for claim, one at a time.
    - **After each build round** (ruling 6): `trace.py --strict` and
@@ -130,14 +136,16 @@ rule in the target's own voice and does not copy the plan's reasoning.
      the runtime flows and `docs/dependencies.md`), which are registries,
      never code.
    - **The verdict section** says every recommendation will be dispositioned
-     before the claim, so the critic writes each as one concrete change.
+     before the claim, so the critic writes each as one concrete change, and
+     that in a confirming round a new finding is BLOCKER or MAJOR only if it
+     is fail-open, data loss or a Done-when gap.
 3. **`review_brief.py`** (a shipped script: RESYNC entry):
    - `critique` names those registries in the brief for the critic to read,
      beside the spec and its `specref` target, with a test that fails without
      it;
-   - `review` gains the `--stance` choice the Trust section defines
-     (`ordinary` by default, or `convergence`), with a test that fails without
-     it.
+   - `review` gains a `--stance` choice, `ordinary` by default or
+     `convergence`, rendered as one fixed ROUND FACTS line and refused with
+     `--scope narrow`, with a test that fails without it.
 4. **`PROCESS.md` §3, the record-at-event rule** (ruling 2), beside "When a
    guard is owed": a decision a later step depends on is recorded by the step
    that makes it, in the commit where it is made, and checked against that
@@ -165,55 +173,21 @@ rule in the target's own voice and does not copy the plan's reasoning.
    - the convergence stance, for a round whose brief says so: confirm each
      fix through its regression test failing on the pre-fix code, or through
      its independently checkable evidence; check the Done-when's coverage and
-     look for regressions; a new finding blocks only if it is fail-open, data
-     loss or a Done-when gap, and anything else is marked for a successor
-     row. A brief marks a convergence round only through `review_brief.py
-     review --stance convergence` (see `## Trust`); the skill's recipes give
+     look for regressions; and tag each new BLOCKER or MAJOR as
+     convergence-class (fail-open, data loss or a Done-when gap) or not. The
+     tag is advice to the dispute sitting, which alone rules a finding
+     SUCCESSOR (deliverable 1). The verdict's grammar, its word and its
+     findings count are unchanged. A brief marks a convergence round through
+     `review_brief.py review --stance convergence`; the skill's recipes give
      the command.
-
-## Trust
-
-Written before the claim, answering the round-2 critique's S2 finding under
-`project-trajectory/PROCESS.md` §3, "When a guard is owed". The ruling goes to
-the owner to confirm or overrule (coordinator-cycle §1 and §5).
-
-- **The carrier.** A review brief's convergence marking (deliverable 7). A
-  reviewer whose brief carries it lets a new BLOCKER or MAJOR that is not
-  fail-open, data loss or a Done-when gap pass to a successor row instead of
-  holding the landing, so the marking has a say over the landing gate.
-- **Producer and write route.** Only `review_brief.py review`, from its new
-  `--stance` choice: `ordinary`, the default, or `convergence`, which renders
-  one fixed line in the brief's ROUND FACTS beside the scope line. `Round`
-  refuses `convergence` with `--scope narrow`: a convergence round is
-  full-lane and answers no earlier findings. Nothing else marks a round. A
-  line appended by hand is not a marking, and the unattended loop, which
-  fills ROUND FACTS empty, marks none. A failed render raises `BriefError`
-  and writes no brief, so no partial marking exists. The coordinator sets the
-  stance only on the three rounds deliverable 1 names (the last counted round
-  before the checkpoint, the gate over the checkpoint tip, and an uncounted
-  round over a rebase that changed code or rows), and records each round's
-  stance in the lane's decisions record when it launches the round.
-- **Consumers and rulings.**
-  - **The reviewer,** through `project-trajectory/prompts/reviewer.template.md`
-    (Sol and each Claude stand-in, each reading its own render). The reduced
-    blocking rule applies only when the brief's ROUND FACTS carry the
-    rendered convergence line. With it absent, altered or unreadable, the
-    reviewer takes the ordinary stance, in which every BLOCKER or MAJOR
-    blocks.
-  - **The coordinator,** through the `coordinator-cycle` skill (§3 and §4)
-    and its recipes. A finding a verdict marks for a successor leaves the
-    landing's path only when the lane's decisions record shows that round as
-    one of the three convergence rounds, launched at the tip the verdict's
-    `Reviewed:` line names. Otherwise every BLOCKER or MAJOR in that verdict
-    blocks, as in an ordinary round.
-  - **Mechanical readers of filed round files** (`kitlib.verdict.effective_verdict`,
-    and the merge slot through it) never read the marking: the brief is not
-    filed, and a verdict's word stays the reviewer's, so a successor-marked
-    MAJOR reads to them as it is written.
-- **What the authority binds to.** One rendered brief and the commit its
-  `--sha` names; a marking never carries to another round or a later tip.
-  Every failure is fail-closed: an absent, altered or misplaced marking
-  leaves the stricter ordinary stance.
+8. **The dispute sitting's SUCCESSOR ruling** (owner, 2026-10-14, in session;
+   shipped, RESYNC entry): `project-trajectory/scripts/kitlib/dispute.py`
+   gains a fourth ruling, `RULING: <id> SUCCESSOR <why>`, for a finding that
+   becomes a successor row filed on trunk at the landing from the sitting's
+   binding; `project-trajectory/prompts/adjudicate-dispute.template.md` says
+   a convergence-class finding is never ruled SUCCESSOR; and
+   `plan_coverage.py --findings` excludes a SUCCESSOR finding citing the
+   verdict, as it excludes a DISMISS.
 
 ## Done-when
 
@@ -224,11 +198,14 @@ the owner to confirm or overrule (coordinator-cycle §1 and §5).
   (`bootstrap.py --dest . --sync`).
 - `review_brief.py critique` names the registries; `review --stance
   convergence` renders the one fixed ROUND FACTS line, an absent `--stance`
-  renders the ordinary stance, and a narrow round refuses `convergence`. A
-  test for each fails on the code before the change. The change's trace rows
-  are authored and sat at the lane's checkpoint.
+  renders the ordinary stance, and a narrow round refuses `convergence`. The
+  dispute parser reads SUCCESSOR and still refuses any other unknown ruling,
+  and the coverage gate excludes a SUCCESSOR finding only with an accepted
+  verdict's citation. A test for each fails on the code before the change.
+  The change's trace rows are authored and sat at the lane's checkpoint.
 - `RESYNC_PACK.md` carries one entry for the shipped changes (PROCESS.md §3,
-  `spine-questions.md`, `reviewer.template.md`, `review_brief.py`), with no
+  `spine-questions.md`, `reviewer.template.md`, `review_brief.py`,
+  `kitlib/dispute.py`, the dispute template, `plan_coverage.py`), with no
   forced migration.
 - The build starts only after the plan gate (WI-913) has landed; the lane's
   plan is produced after the claim and passes that gate (S4).
@@ -245,20 +222,28 @@ the owner to confirm or overrule (coordinator-cycle §1 and §5).
   lane's cycle reads, plus the one render change the rubric's artifact line
   needs, and none is useful landed without the others. The verdict/act split
   is independently landable and is WI-912 (needs this row).
-- **S2:** yes. A review brief's convergence marking has a say over the
-  landing gate; see `## Trust`. The rest of the skill and rubric text governs
-  the coordinator's own procedure, and the critique brief only names files
-  for the critic to read.
+- **S2:** no file gains authority over a hold, an act or a gate. Moving a
+  BLOCKER or MAJOR to a successor row is the dispute sitting's ruling alone
+  (owner, 2026-10-14, in session), through its existing findings file,
+  binding and accepted verdict, whose call is final; SUCCESSOR adds a value
+  to that sitting's ruling set, not a carrier. A review brief's convergence
+  marking changes only what the reviewer checks and tags: absent or
+  misplaced, every finding stays open, as the ordinary stance leaves it. The
+  skill and rubric text govern the coordinator's own procedure, and the
+  critique brief only names files for the critic to read.
 - **S3:** no promise over an open input space. The rubric's anchors are a
   closed list, the critique brief's registry list is a fixed, named set, and
-  a review brief's stance is one of two values, `ordinary` by default.
+  a review brief's stance is one of two values, `ordinary` by default. The
+  dispute ruling set becomes FIX, SUCCESSOR, DISMISS and ESCALATE, and any
+  other value is refused, as today.
 - **S4:** `single`. Deliverables 3 and 7 change two interface seams: the
   critique brief's reading surface, and the reviewer template's severity
   and convergence contract (IF-099). It builds after the plan gate lands.
 - **Architectural delta:** within scope. The critic's judgement gains new
   inputs (the architecture and dependency registries, deliverables 2 and 3),
-  and a reviewer's blocking rule gains one (the brief's convergence marking,
-  deliverable 7). Both are carried here; no preparatory refactor is needed.
+  a reviewer's duties gain one (the brief's convergence marking, deliverable
+  7), and the dispute ruling's domain gains SUCCESSOR (deliverable 8). All
+  are carried here; no preparatory refactor is needed.
 - **Dependencies:** `needs = ["~WI-913"]`, soft: the plan gate lands before
   this row's build, since S4 marks the row `single`, and the row may be
   claimed before it. No third-party dependency. It lands next after WI-913,
@@ -293,3 +278,19 @@ adoptions and raised two findings):
 - **Dependencies, MINOR: adopted.** The answer now reads: "`needs =
   ["~WI-913"]`, soft: the plan gate lands before this row's build, since S4
   marks the row `single`".
+
+Round 3 (Codex Sol, medium, 2026-10-14; two findings, both on the round-2
+Trust section):
+
+- **S2, MAJOR (the decisions record as an uncontracted carrier) and S2,
+  MAJOR (the mechanical gate reading a successor-marked MAJOR as written):
+  answered by construction under the owner's ruling (2026-10-14, in
+  session) that only the dispute sitting defers a finding.** The marking
+  now carries no authority, so the round-2 Trust section and the
+  decisions-record evidence it relied on are removed, and the S2 answer
+  reads: "Moving a BLOCKER or MAJOR to a successor row is the dispute
+  sitting's ruling alone". The verdict grammar is unchanged ("The verdict's
+  grammar, its word and its findings count are unchanged"), so a deferred
+  MAJOR stays a finding until the sitting rules it SUCCESSOR, which
+  deliverable 8 adds. The same ruling overrules
+  `docs/decisions/coordinator-2026-10-14.toml#D-006`.
