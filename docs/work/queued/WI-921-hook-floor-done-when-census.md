@@ -382,3 +382,6 @@ Round 1 (Codex Sol, medium, 2026-10-15; CHANGES-REQUESTED, two findings):
 - **S4, MAJOR: adopted.** `planmode = "single"`: "The row has a Trust
   section, and it promises behaviour over two input spaces, the built-in
   step set and the step's staged changes (S3); either alone is enough."
+
+Round 2 (Codex Sol, medium, 2026-10-15; a confirming round in convergence
+stance): APPROVE, no findings; both adoptions confirmed in the spec as quoted.
