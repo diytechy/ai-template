@@ -3,7 +3,7 @@
 # trunk (coordinator). Lane decisions are in each lane's own record. Format:
 # project-trajectory/decisions.template.toml.
 
-high_risk = []
+high_risk = ["D-005"]
 
 [decision.D-001]
 decided = "WI-910's spec of record is a new docs/specs/WI-910.md holding the Mac drill record (how the drill ran, its two findings, why they went unseen), moved verbatim out of the row; the row's specref names it, and the row keeps its filing line and its Done-when. This is the review-churn queue's 'pre' trunk fix: the empty specref made check_trajectory.py --strict exit 1 on trunk (R-E)."

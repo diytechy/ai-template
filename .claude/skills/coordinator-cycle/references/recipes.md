@@ -98,6 +98,18 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   consumer and for every carrier's failure contract (producer, write route,
   failed-write shape): asked piecemeal, they cost WI-882, WI-884 and WI-887
   three rounds each (2026-10-10).
+  Run each critique from a detached scratch checkout at the committed tip
+  (`git -C "$REPO.wt/trunk-tmp" checkout --detach <tip>`): the launcher
+  compares the checkout's HEAD and status before and after, so the
+  coordinator's own uncommitted trunk edits would read as the critic's.
+  Several critiques may run at once from that one checkout, each with its own
+  scratch directory (2026-10-14).
+- **Filing a row by hand:** bump the mark (`trace.py --bump-ids`) in the
+  commit that adds the row. A row whose spec is its own evidence gets a spec
+  of record in `docs/specs/WI-NNN.md`, the text moved there, never a
+  `specref` that merely resolves (coordinator-2026-10-14 D-001); R-F archives
+  it at close. Delegate drafting to planner sub-agents writing into scratch,
+  and read their Done-when, Trust and Scope answers before filing.
 - **Coverage plan (rework):** from the lane root,
   `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> --findings <round file> <plan>`.
   Dispatch the fix only on exit 0. A finding a dispute sitting dismissed is
@@ -206,6 +218,11 @@ moment the claim lands (WI-887 on WI-884, 2026-10-10). Point a split's
 `specref` at its stable home (the decision record that split it), never at
 another row's spec. Run `check_trajectory.py --strict` after the claims and
 gate the restore commit on its summary line, not only on the smoke tier's.
+
+A batch claimed under one scoped unpause carries only soft edges
+(`~WI-NNN`) between its rows: a hard edge blocks a claim until its
+predecessor is done. The landing order and each row's Done-when holds (the
+plan gate before a `single` build) carry the sequence (2026-10-14).
 
 The pause gates claims only; acts, landings and sweeps run under it. `claim`
 refuses a row whose id appears in `status.md`'s hand text, so describe rows
@@ -437,6 +454,10 @@ lane commit being replayed.
   mark that line `privacy-ok`.
 - `gen_verdict_rollup.py` refuses on a work branch; a lane that changes how
   rounds read leaves its rollups to the trunk landing.
+- `test_the_live_repos_own_mark_covers_its_live_ids` reads the working
+  tree: an uncommitted row numbered above the mark reds the smoke tier. Set
+  unrelated uncommitted rows aside before running the bar for a commit
+  (2026-10-14).
 - `git add -A <paths>` aborts entirely if one path is missing. `2>/dev/null`
   hides that, and `staged-divergence` then fails. `components.derived.toml`
   lives under `docs/requirements/`.
@@ -479,6 +500,9 @@ lane commit being replayed.
 - **A smoke budget breach under load:** time the parent commit in the same
   window before charging the breach to the change; record both readings in
   the commit message and re-measure quiet before landing.
+- **Context:** the boot reading took about a quarter of the window on
+  2026-10-14. Delegate long reads to sub-agents and read only their
+  summaries and the sections you judge.
 - The guard's relaunch has had no live verification. Check the current
   handoff and supervise its first unverified use.
 
