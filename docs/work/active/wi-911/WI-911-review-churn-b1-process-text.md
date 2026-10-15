@@ -192,7 +192,7 @@ rule in the target's own voice and does not copy the plan's reasoning.
 ## Trust
 
 Written before the claim, answering the round-4 critique's S2 finding under
-[`PROCESS.md` §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+[`PROCESS.md` §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 The ruling goes to the owner to confirm or overrule (coordinator-cycle §1 and
 §5).
 
