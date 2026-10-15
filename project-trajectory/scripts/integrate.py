@@ -126,7 +126,10 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     the verdict gate with git-derived freshness before the fast-forward-only
     trunk advance; a lane whose changed Done-when no verdict or owner ruling
     binds is refused (WI-841). `done-when-hold` refuses a staged close of such
-    a lane (the pre-commit hook's step). `audit` is the non-merge
+    a lane (the pre-commit hook's step), and on trunk any staged change of a
+    claim copy's Done-when no verdict or ruling binds (WI-921); an index
+    delta or a current branch git cannot read is refused too, naming why.
+    `audit` is the non-merge
     product-commit window check. The
     trunk only ever moves inside the slot, to a branch whose own bar passed on
     exactly the tree being advanced, and nothing here ever pushes. Every
@@ -2924,22 +2927,21 @@ def _done_when_refusal(root, branch, wi_ids):
 
 
 def staged_done_when_refusal(root):
-    """WI-841 AT A HAND CLOSE: the commit being made moves a spec out of
-    `active/<branch>/` into a closed folder while its Done-when change no
-    verdict or ruling in the index binds. The claim copy is read at the lane's
-    integration base when the close is made on the lane's own branch, else at
-    HEAD (trunk's copy, the merge slot's reading). A refusal string, or None.
+    """WI-841 AT A HAND CLOSE, WI-921 ON TRUNK: the commit being made changes
+    a claim copy's Done-when (a close, or on trunk any change) while no
+    verdict or ruling in the index binds it; an index delta or a current
+    branch git cannot read holds too. The reader is
+    `kitlib.done_when.staged_hold`; this hands it what `agent_common` owns,
+    each read only for a listed change. A refusal string, or None.
 
     Implements: SR-156, LLR-309
     """
-    current = ac.git(root, "branch", "--show-current")[1].strip()
-    reasons = []
-    for branch, wi_id in kdone.staged_closes(root):
-        base = ac.default_base(root) if branch == current else "HEAD"
-        reason = kdone.lane_hold(root, None, base, branch, [wi_id])
-        if reason:
-            reasons.append(reason)
-    return "\n".join(reasons) or None
+    return kdone.staged_hold(
+        root,
+        lambda: ac.git(root, "branch", "--show-current"),
+        lambda: ac.trunk_name(root),
+        lambda: ac.default_base(root),
+    )
 
 
 def _merge_refusal(root, branch, wi_ids):
@@ -3306,7 +3308,9 @@ def main(argv=None):
     sub.add_parser(
         "done-when-hold",
         help="refuse a staged close whose changed Done-when no verdict or owner "
-        "ruling binds (WI-841; the pre-commit hook's done-when-blessed step)",
+        "ruling binds, or on trunk any such staged Done-when change, and a "
+        "staged delta or branch git cannot read (WI-841, WI-921; the "
+        "pre-commit hook's done-when-blessed step)",
     )
     p_audit = sub.add_parser("audit", help="RULING-6 window check")
     p_audit.add_argument("--since", required=True, help="the window's base revision")

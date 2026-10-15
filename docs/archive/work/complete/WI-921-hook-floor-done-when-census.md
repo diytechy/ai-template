@@ -3,13 +3,38 @@ id = "WI-921"
 title = "The shipped commit hook holds a hand close on an unblessed Done-when change, and no built-in check step goes unclassified for the commit floor"
 workstream = "process"
 sr_refs = ["SR-156", "SR-019"]
-specref = "docs/archive/work/complete/WI-841-done-when-blessed-in-lane.md#deliverable"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-913"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-15, before its post-checkpoint gate. The
+shipped pre-commit hook's batched floor now runs `done-when-blessed`, and its
+comment block describes the step, so a hand close whose changed Done-when no
+accepted verdict or owner ruling binds is refused at commit, as the merge
+slot already refused it. The step's reader (`kitlib/done_when.py` and
+`integrate.py`, IF-286) also judges a commit on trunk that changes a claimed
+row's Done-when, a landing's first commit or a trunk amendment, against HEAD;
+holds a read it cannot complete (an index delta or a branch identity git
+cannot read), naming why; and reads claim paths NUL-delimited and unquoted,
+so a quoted path is judged. A smoke-tier census
+(`tests/test_commit_floor_census.py`) classifies every built-in check step as
+in the floor, run by name, or not run at commit with a cited reason, and
+fails on a step in no class or two, or a listed name that is not a step. The
+commits the step judges against HEAD rather than their real parent, or not at
+all (an amend; a cherry-pick, revert or rebase; a non-conflicting merge
+commit; a hand fast-forward; a linked-worktree commit on trunk), are the
+owner-ruled residue its Trust section states (D-014); their successor is
+filed on trunk at the landing. Three full-lane rounds in the trial shape (001
+to 009), then sitting 011 (combined; sitting 010 was discarded, D-018).
+Spine: LLR-019, LLR-307, LLR-309, TC-019 and TC-325 amended and re-attested
+(act 116). `RESYNC_PACK.md` carries the entry, anchored at the landing's
+parent. Decisions: `docs/decisions/wi-921.toml`.
 
 ## Context
 
@@ -248,7 +273,26 @@ restated.
     landing re-judges it (WI-922's identity class);
   - a trunk commit made with the hook bypassed is outside the threat model
     (PROCESS.md §6); the merge slot and the landing sweep's mint still read
-    the merged result.
+    the merged result;
+  - the step judges the commit being made against HEAD, which is its parent
+    only for an ordinary commit (owner ruling, 2026-10-15,
+    `docs/decisions/wi-921.toml#D-014`). These commits are not judged against
+    their real parent: an amend is judged against HEAD, the commit it
+    replaces, so an amended close that gains a Done-when edit, or an amend
+    that drops a trunk edit's only blessing, passes; a cherry-pick, revert or
+    rebase runs no pre-commit hook; a merge commit made by a non-conflicting
+    `git merge` runs no pre-commit hook either (git runs only a
+    pre-merge-commit hook for it, and the kit ships none); a hand
+    fast-forward makes no commit; and
+    a commit in a linked worktree on the trunk branch while the primary
+    checkout sits on another branch reads as elsewhere, so a Done-when change
+    that closes nothing is not judged and a later close there compares
+    against the edited copy. What catches each after the fact is the
+    merge-time mint: an uncovered Done-when change on the merged trunk mints
+    the goalposts row, but only when the sweep's hand-chosen `--before` is
+    the trunk commit before the change. A successor row, filed on trunk at
+    this row's landing, owns judging a commit against its real parent at the
+    branch-ref update.
 - **What the authority binds to:** the digest, over the work item's id and
   the items the close carries, each claim item that is only ticked or
   evidenced read as that item (LLR-307). It binds neither the claim text they

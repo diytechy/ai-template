@@ -8348,6 +8348,51 @@ whose lane holds build commits** fails the landing walk at each of them once
 the gate is in: rebase those commits onto the plan, critique and pass-record
 commits, or re-cut the lane and plan first.
 
+### The hook runs `done-when-blessed`, and a trunk commit's unblessed Done-when change is held [since 9ddc5ee2a]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The shipped pre-commit hook now runs `done-when-blessed`
+in its batched `--run-steps` floor. The step was registered in `check.py`
+but no hook ran it, so a hand close never met the Done-when hold. Now:
+
+- a hand close whose changed Done-when no accepted verdict or owner ruling
+  `done_when = "<digest>"` in the index binds is refused at commit, as the
+  merge slot already refuses it;
+- so is a commit on trunk that changes a claimed row's Done-when (the spec
+  under `docs/work/active/<branch>/`) unblessed, whether it is a landing's
+  first commit, which carries a lane's edit into trunk's claim copy, or a
+  trunk amendment. It is judged against HEAD, its parent for an ordinary
+  commit; an amend is judged against the commit it replaces, and a
+  cherry-pick, revert, rebase, a merge commit from a non-conflicting
+  `git merge` (git runs no pre-commit hook for it) or a hand fast-forward
+  onto trunk is not judged at all, so the landing sweep's mint is what flags an uncovered Done-when
+  change those carry. A lane's own commit that edits its Done-when is still
+  never refused;
+- an index delta, or a current branch, that git cannot read holds, naming
+  why. Off a git work tree nothing is judged;
+- a claimed spec whose path git quotes (a non-ASCII name) is judged like
+  any other: the step and every hold point that reads a claim copy now read
+  paths NUL-delimited and unquoted, where before such a copy read as never
+  claimed and passed.
+
+`kitlib.done_when.staged_closes` now returns `(closes, why)`; the new
+reader is `kitlib.done_when.staged_hold`.
+
+**Kit-owned files — overwrite:** `hooks/pre-commit` (re-copy it to
+`.githooks/pre-commit`), `scripts/check.py`, `scripts/integrate.py`,
+`scripts/kitlib/done_when.py`. They are a set (§2.3): the hook names the
+step `check.py` registers, and `integrate.py` and `kitlib/done_when.py` must
+be at this version, since the trunk arm and the failed-read hold ship in
+them.
+
+**What to do.** Overwrite the files. Nothing changes in a repository that
+never claims into `docs/work/active/<branch>/`. No migration is forced. A
+lane that changed its Done-when owes an accepted done-when verdict, or an
+owner ruling binding the digest, in the tree of the commit that first
+carries the change onto trunk: land the blessing with it, or the commit is
+refused naming the digest and the line to write.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

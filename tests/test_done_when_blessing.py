@@ -21,7 +21,17 @@ import subprocess
 import sys
 
 import pytest
-from conftest import env_gate_skipif, load_script, pin_autocrlf, skip_without_env_gates
+from conftest import (
+    KIT,
+    SCRIPTS,
+    env_gate_skipif,
+    hook_check_lines,
+    load_script,
+    make_minimal_project,
+    pin_autocrlf,
+    run_py,
+    skip_without_env_gates,
+)
 
 pytestmark = env_gate_skipif("git")
 
@@ -76,11 +86,8 @@ def _commit(root, message):
     return _git(root, "rev-parse", "HEAD")
 
 
-def _trunk(tmp_path):
-    """`main` with the claim of WI-007 under `active/wi-007/` committed."""
-    skip_without_env_gates("git")
-    root = tmp_path / "trunk"
-    root.mkdir(parents=True)
+def _init(root):
+    """A git repository at `root` on `main`, with an identity to commit as."""
     _git(root, "init", "-q")
     pin_autocrlf(root)
     for key, value in (
@@ -90,6 +97,15 @@ def _trunk(tmp_path):
     ):
         _git(root, "config", key, value)
     _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
+
+
+def _trunk(tmp_path, spec=SPEC):
+    """`main` with the claim of WI-007 under `active/wi-007/` committed, as
+    the file `spec`."""
+    skip_without_env_gates("git")
+    root = tmp_path / "trunk"
+    root.mkdir(parents=True)
+    _init(root)
     _write(root, "seed.txt", "seed\n")
     _write(root, "docs/stack.ini", "[generated]\nPROJECT_STATE.html = trajectory\n")
     _write(
@@ -98,7 +114,7 @@ def _trunk(tmp_path):
         trace.render_watermark({s: 0 for s in trace.WATERMARK_SPACES}),
     )
     _commit(root, "seed")
-    _write(root, "docs/work/active/{}/{}".format(BRANCH, SPEC), _spec(DONE_WHEN))
+    _write(root, "docs/work/active/{}/{}".format(BRANCH, spec), _spec(DONE_WHEN))
     _commit(root, "claim: {} -> active/{} (bookkeeping)".format(WI, BRANCH))
     return root
 
@@ -225,7 +241,7 @@ def test_a_hand_close_into_any_terminal_home_is_held(tmp_path, dest):
     there is the ordinary one and must be held like the legacy home."""
     _trunk_root, lane = _lane(tmp_path)
     _stage_close(lane, dest)
-    assert kdone.staged_closes(lane) == [(BRANCH, WI)]
+    assert kdone.staged_closes(lane) == ([(BRANCH, WI)], None)
     assert integrate.staged_done_when_refusal(lane)
 
 
@@ -564,14 +580,17 @@ def test_at_merge_a_successor_verdict_mints_its_own_draft(tmp_path):
 
 
 def test_the_hold_points_share_one_predicate():
-    """No hold point re-derives the rule: each reads `lane_hold`."""
+    """No hold point re-derives the rule: each reads `lane_hold`. The hand
+    close's point is the reader `integrate.staged_done_when_refusal` hands
+    the index to (WI-921), `kitlib.done_when.staged_hold`."""
     for module, name in (
         (agent_loop, "build_hold"),
         (integrate, "_done_when_refusal"),
-        (integrate, "staged_done_when_refusal"),
+        (kdone, "staged_hold"),
     ):
         source = getattr(module, name).__code__.co_names
         assert "lane_hold" in source, name
+    assert "staged_hold" in integrate.staged_done_when_refusal.__code__.co_names
     assert os.path.basename(kdone.__file__) == "done_when.py"
 
 
@@ -1400,3 +1419,205 @@ def test_a_machine_keyword_outside_every_section_invalidates_a_sitting(tmp_path)
         encoding="utf-8",
     )
     assert ab.verdict_refusal("combined", path, kinds=("done-when",))
+
+
+# --- WI-921: the trunk arm, the failed reads, and the hook's own floor --------
+
+_ACTIVE_REL = "docs/work/active/{}/{}".format(BRANCH, SPEC)
+_RULING_REL = "docs/decisions/{}.toml".format(BRANCH)
+
+
+def _ruling(bound):
+    """An owner-confirmed decisions entry binding the Done-when digest `bound`."""
+    return (
+        "[decision.D-001]\n"
+        'decided = "WI-007 renders at 30 fps."\nalternative = "60 fps."\n'
+        'reversal_cost = "One line."\nwhy_not_escalated = "Owner ruled."\n'
+        'review = ""\ndone_when = "{}"\nowner = "confirmed"\n'.format(bound)
+    )
+
+
+def _stage_blessing(root, blessing):
+    """Stage, in `root`'s index, the lane's accepted verdict on the narrowed
+    Done-when, or the owner-confirmed ruling binding its digest."""
+    if blessing == "verdict":
+        line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
+        _write(root, _VERDICT_REL, line)
+        text = ab.ksitting.render_requested("done-when", ("done-when",), "accepted")
+        _write(root, ab.ksitting.requested_path(_VERDICT_REL), text)
+    else:
+        _write(root, _RULING_REL, _ruling(_digest()))
+    _git(root, "add", "-A")
+
+
+@pytest.mark.parametrize("blessing", ("verdict", "ruling"))
+def test_a_two_commit_landing_is_held_at_its_first_commit_until_blessed(
+    tmp_path, blessing
+):
+    """WI-835's shape: the lane edits its Done-when and closes in a later
+    commit; trunk lands the squash up to the commit before the close, then
+    the close. The first commit carries the unblessed edit into trunk's claim
+    copy, so it is judged against its parent and held until its own tree
+    carries a blessing; the close then compares against the blessed copy."""
+    trunk, lane = _lane(tmp_path)
+    edited = _git(lane, "rev-parse", "HEAD")
+    _stage_close(lane)
+    _git(lane, "commit", "-qm", "close {}".format(WI))
+    _git(trunk, "merge", "--squash", edited)
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and _digest() in held, held
+    assert integrate.main(["--root", str(trunk), "done-when-hold"]) == 1
+    _stage_blessing(trunk, blessing)
+    assert integrate.staged_done_when_refusal(trunk) is None
+    _git(trunk, "commit", "-qm", "squash: WI-007 up to its close")
+    _stage_close(trunk)
+    assert kdone.staged_closes(trunk) == ([(BRANCH, WI)], None)
+    assert integrate.staged_done_when_refusal(trunk) is None
+
+
+def test_a_trunk_amendment_of_a_claimed_done_when_is_held_and_one_that_changes_none_is_not(
+    tmp_path,
+):
+    trunk = _trunk(tmp_path)
+    _write(trunk, _ACTIVE_REL, _spec(DONE_WHEN).replace("A widget.", "A gadget."))
+    _git(trunk, "add", "-A")
+    assert integrate.staged_done_when_refusal(trunk) is None
+    _write(trunk, _ACTIVE_REL, _spec(NARROWED))
+    _git(trunk, "add", "-A")
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and _digest() in held, held
+    _stage_blessing(trunk, "ruling")
+    assert integrate.staged_done_when_refusal(trunk) is None
+
+
+def test_a_trunk_commit_deleting_a_claim_copy_is_held_and_no_blessing_releases_it(
+    tmp_path,
+):
+    """A trunk commit whose delta only deletes the claim copy under
+    `active/<branch>/` leaves the claimed row with no copy, so it is held
+    naming why, and neither a covering verdict nor an owner ruling releases
+    it: the kit has no route that returns a claimed spec to the queue."""
+    trunk = _trunk(tmp_path)
+    _git(trunk, "rm", "-q", _ACTIVE_REL)
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and "no copy of its spec" in held, held
+    _stage_blessing(trunk, "verdict")
+    _stage_blessing(trunk, "ruling")
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and "no copy of its spec" in held, held
+
+
+def test_an_index_delta_git_cannot_list_holds_naming_why(tmp_path, monkeypatch):
+    """An index git cannot parse: whether this commit changes a claimed
+    Done-when is unknown, so the step holds, naming the delta read. Off any
+    git work tree no commit is being made, and nothing is judged."""
+    _trunk_root, lane = _lane(tmp_path)
+    _stage_close(lane)
+    index = _git(lane, "rev-parse", "--git-path", "index")
+    path = index if os.path.isabs(index) else str(lane / index)
+    with open(path, "wb") as handle:
+        handle.write(b"not an index at all\n")
+    held = integrate.staged_done_when_refusal(lane)
+    assert held and "index delta cannot be listed" in held, held
+    assert integrate.main(["--root", str(lane), "done-when-hold"]) == 1
+    off_git = tmp_path / "off-git"
+    off_git.mkdir()
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    assert integrate.staged_done_when_refusal(off_git) is None
+
+
+def test_a_branch_identity_git_cannot_read_holds_naming_why(tmp_path, monkeypatch):
+    """The current branch decides which reading applies; a read git cannot
+    complete holds, naming it, rather than reading git's error text as a
+    branch name and judging the close against the lane's own edited copy."""
+    _trunk_root, lane = _lane(tmp_path)
+    _stage_close(lane)
+    real = integrate.ac.git
+
+    def failing(root, *args):
+        if args == ("branch", "--show-current"):
+            return 128, "fatal: the branch cannot be read"
+        return real(root, *args)
+
+    monkeypatch.setattr(integrate.ac, "git", failing)
+    held = integrate.staged_done_when_refusal(lane)
+    assert held and "current branch cannot be read" in held, held
+
+
+_QUOTED_SPEC = "WI-007-café.md"  # a name git quotes under core.quotePath
+
+
+def _step_run(root):
+    """`check.py --run-steps done-when-blessed` run in `root`."""
+    return run_py([SCRIPTS / "check.py", "--run-steps", "done-when-blessed"], root)
+
+
+def test_a_claim_copy_whose_path_git_quotes_is_judged_like_any_other(tmp_path):
+    """A claimed spec whose name git's default `core.quotePath` quotes (a
+    non-ASCII slug) is judged like any other: an unblessed trunk amendment of
+    its Done-when is held, by the reader and by the registered step, and a
+    covering verdict releases both. The step reads every path losslessly, so
+    a quoted path never reaches the classifier as another path."""
+    trunk = _trunk(tmp_path, spec=_QUOTED_SPEC)
+    _git(trunk, "config", "core.quotePath", "true")
+    _write(
+        trunk, "docs/work/active/{}/{}".format(BRANCH, _QUOTED_SPEC), _spec(NARROWED)
+    )
+    _git(trunk, "add", "-A")
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and _digest() in held, held
+    proc = _step_run(trunk)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    out = proc.stdout + proc.stderr
+    assert "REFUSED" in out and _digest() in out, out
+    _stage_blessing(trunk, "verdict")
+    assert integrate.staged_done_when_refusal(trunk) is None
+    proc = _step_run(trunk)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def _floor_run(root, hook=KIT / "hooks" / "pre-commit"):
+    """`check.py --run-steps <the hook's own floor>` run in `root`, as the
+    hook runs it (WI-913's pattern: read the floor, never restate it)."""
+    floor, _by_name = hook_check_lines(hook)
+    return run_py([SCRIPTS / "check.py", "--run-steps", ",".join(floor)], root)
+
+
+def test_the_shipped_hooks_floor_holds_an_unblessed_hand_close(tmp_path):
+    """The floor the shipped hook runs holds a staged close whose changed
+    Done-when nothing blesses, releases it once the lane's verdict is
+    committed, and never holds the lane's commit that edits the Done-when.
+    Other floor steps may fail on this minimal fixture, so each case reads
+    the step's own result line."""
+    _trunk_root, lane = _lane(tmp_path, body=None)
+    _write(lane, _ACTIVE_REL, _spec(NARROWED))
+    _git(lane, "add", "-A")
+    proc = _floor_run(lane)
+    assert "PASS  done-when-blessed" in proc.stdout, proc.stdout + proc.stderr
+    _git(lane, "commit", "-qm", "edit the Done-when")
+    _stage_close(lane)
+    proc = _floor_run(lane)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "FAIL  done-when-blessed" in proc.stdout and _digest() in proc.stdout
+    _git(lane, "reset", "-q", "--hard")
+    _bless(lane, "DONE-WHEN: BLESSED changes=2 digest={}".format(_digest()))
+    _stage_close(lane)
+    proc = _floor_run(lane)
+    assert "PASS  done-when-blessed" in proc.stdout, proc.stdout + proc.stderr
+
+
+def test_the_scaffold_hooks_floor_resolves_and_passes_on_a_clean_tree(scaffold):
+    """A bootstrapped scaffold's hook copy carries the step in its floor,
+    every floor name resolves in the scaffold's own check.py, and the floor
+    passes with nothing staged."""
+    skip_without_env_gates("git")
+    make_minimal_project(scaffold)
+    _init(scaffold)
+    _commit(scaffold, "the scaffold")
+    hook = scaffold / ".githooks" / "pre-commit"
+    floor, _by_name = hook_check_lines(hook)
+    assert "done-when-blessed" in floor, floor
+    proc = run_py(
+        [scaffold / "scripts" / "check.py", "--run-steps", ",".join(floor)], scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr

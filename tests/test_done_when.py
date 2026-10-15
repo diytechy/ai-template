@@ -147,3 +147,37 @@ def test_the_flag_lines_quote_the_texts_they_compare():
     assert lines[0].startswith("- at claim, no longer present as written: ")
     assert "60 fps" in lines[0] and "30 fps" in lines[1]
     assert lines[1].startswith("- added since claim: ")
+
+
+def test_the_staged_delta_classifies_each_claim_copy_change():
+    """WI-921: the index delta's claim-copy entries, classified over the
+    listing alone. Any entry for a claim copy other than a lone `A` is a
+    change, a close when the same delta adds the item's spec in a closed
+    home; a lone `A` (a new claim copy, every entry on an unborn HEAD) and a
+    path outside a claim folder are not listed. The entries are `(status,
+    path)` pairs, as the lossless delta read hands them over."""
+    copy = "docs/work/active/wi-7/WI-007-thing.md"
+
+    def listing(*entries):
+        return list(entries)
+
+    change = [("change", "wi-7", "WI-007")]
+    assert kdw.classify_delta(listing(("M", copy))) == change
+    for home in ("docs/archive/work", "docs/work"):
+        for sub in ("complete", "partial", "cancelled"):
+            closed = "{}/{}/WI-007-thing.md".format(home, sub)
+            found = kdw.classify_delta(listing(("D", copy), ("A", closed)))
+            assert found == [("close", "wi-7", "WI-007")], closed
+    renamed = "docs/work/active/wi-7/WI-007-renamed.md"
+    assert kdw.classify_delta(listing(("D", copy), ("A", renamed))) == change
+    assert kdw.classify_delta(listing(("D", copy))) == change
+    assert kdw.classify_delta(listing(("T", copy))) == change
+    assert kdw.classify_delta(listing(("A", copy))) == []
+    unborn = listing(("A", copy), ("A", "seed.txt"), ("A", "docs/work/x.md"))
+    assert kdw.classify_delta(unborn) == []
+    assert kdw.classify_delta(listing(("M", "docs/work/WI-007-thing.md"))) == []
+    assert kdw.classify_delta([]) == []
+    # A path git would quote under core.quotePath is matched as written: the
+    # delta reaches the classifier losslessly (`staged_changes`).
+    quoted = "docs/work/active/wi-7/WI-007-café.md"
+    assert kdw.classify_delta(listing(("M", quoted))) == change

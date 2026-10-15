@@ -1253,9 +1253,13 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # A hand close's Done-when blessing (WI-841): a commit that moves a
         # spec out of `active/<branch>/` into a closed folder while its
         # Done-when differs from the claimed one is refused unless a verdict or
-        # an owner ruling in the index binds the exact text. The commit that
-        # edits the Done-when is never refused; the merge slot asks the same
-        # question of the branch, and the loop of its next build dispatch.
+        # an owner ruling in the index binds the exact text. On trunk any
+        # commit that changes a claim copy's Done-when, closing it or not, is
+        # judged the same way against its parent (WI-921), and an index delta
+        # or a current branch git cannot read holds. A lane's commit that edits
+        # its own Done-when is never refused; the merge slot asks the same
+        # question of the branch, and the loop of its next build dispatch. The
+        # pre-commit hook runs it in its batched floor.
         (
             "done-when-blessed",
             (),

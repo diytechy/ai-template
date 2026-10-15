@@ -1,0 +1,30 @@
+Reviewed: f06bd16eb0e3624c833125c16399da3755f8225e
+
+### INDEPENDENT PLAN CRITIC — Plan decomposition — Round 2 — 2026-10-15
+
+Provenance: this invocation is the fresh, non-author reviewer session for WI-921's second and final plan critique, in convergence stance. No provider session id was supplied. The assigned review carrier is `2026-10-15c-coord/wi-921/pcrit-2/WI-921-plan-critique-2.md`. The invocation's final reading-scope instruction requires writing only this file, without filing or committing.
+
+Artifact inspected directly: `git show f06bd16eb0e3624c833125c16399da3755f8225e:docs/plans/WI-921/plan.md`. Intent sources at the same commit: `docs/work/active/wi-921/WI-921-hook-floor-done-when-census.md` in full and its specref, `docs/archive/work/complete/WI-841-done-when-blessed-in-lane.md#deliverable`; `docs/requirements/system-requirements.toml` SR-019 and SR-156; their parent needs SN-005, SN-009, SN-027, SN-008 and SN-025 in `docs/requirements/stakeholder-needs.toml`. The supplied coverage report is the clause/ref inventory. Architectural checks used the interface and component registries, component-derived view, `docs/runtime-flows.md` and `docs/dependencies.md`. No excluded critique files, review records, lane decisions record, session notes, status or log were read. Embedded retrospective and disposition claims in the required artifacts were not treated as proof of correctness.
+
+Rubric: `docs/rubrics/plan-decomposition.md` at the reviewed commit, blob `4657dfef3725cc8c1f0920db60f2c52b10602985`, supplemented by the invocation's additional anchors and final convergence/reading-scope rules. The reused B3/B4 identifiers below are qualified by their rubric meaning.
+
+Rubric adequacy, checked before scoring: the scoped intent is agent-neutral commit enforcement (SR-019 / SN-005), honest holds and a gated landing (SR-156 / SN-008 and SN-027), with tracked claim authority (SN-025). DevStg-Tests and B2 require actual coverage of these obligations rather than citations; S3 tests closed classification and default handling; S2 tests carrier authority; G4/B4 test that the reviewed and landed authored tree stay aligned. These anchors independently cover this plan's construction against the intent and Done-when. They do not substitute a permissive TC for the parent obligations. No missing anchor is identified.
+
+Anchor judgments:
+
+- DevStg-Reqs: P1-P6 each name a deliverable and checkable completion condition. P1 owns the reader, P2 owns hook activation and classification, P3 owns adopter guidance, P4 owns trace reconciliation and its checkpoint, and P5/P6 own review and landing preparation. Conditional sitting outcomes have explicit routes.
+- DevStg-Tests; B2: all D1-D12 have substantive work and checks. P1 supplies the two-commit landing, trunk amendment and unreadable-index cases; P2 exercises the hook-derived floor, scaffold and all three census faults; P3/P5 anchor the RESYNC entry; P4 carries the required trace changes; P6 runs the landing bar. The excluded TCs concern unchanged arms and remain in P5's full suite. Citations are not being used to conceal omitted deliverables.
+- DevStg-Impl; B3 (padding): the D6 split is entry authoring versus final anchor; the F1 split is gated-tip preparation versus preservation at landing. Both are declared and have distinct outcomes. No redundant build scope requires removal.
+- G4; B4 (dependencies): P2 consumes P1's corrected reader before arming it; P3 consumes the shipped behavior; P4's checkpoint consumes settled P1/P2 code and evidence; P5 consumes the entry and acts; P6 consumes the gated closed tip. P4 explicitly places its preliminary intent drafting after P1's first build, while its completion waits for P2. P5 closes and finalizes authored content before its final full-lane gate. Trunk movement repeats P5, including review. No missing artifact dependency remains.
+- B1: the plan consumes IF-286/IF-242's shared interpretation and IF-080/IF-154's existing command/refusal seam, then activates it through IF-040/IF-134. It introduces no competing seam.
+- S3: the plan carries the spec's closed census with failure for unclassified, multiply classified and nonexistent names. Its reader distinguishes new claim additions, changes, closes and other paths, partitions branch identity, and holds failed required reads. It explicitly preserves the off-git and unborn-HEAD cases and the scoped elsewhere-branch residue. The classifier and branch-read tests make these construction choices checkable.
+- S4: `single` is appropriate because the spec has Trust and promises behavior over input spaces. This plan supplies that decomposition before build.
+- Architectural delta: `DELTA: within` is supported. P1 carries the step's new dependence on trunk claim changes and read completion, including contract text and the failure-bearing return. P2 carries the hook's new dependence on the blessing result. Existing components and seams suffice; no new state or domain value is required.
+- Dependencies: WI-913 is the declared prerequisite and supplies the existing floor context. P6 states the WI-911 pass-record landing hold and the WI-922 ordering/return-shape handoff. No new third-party package, service or tool is proposed.
+- S2; B3 (past-decision re-derivation); B4 (owner-dependent work): the plan preserves the one existing accepted-verdict/owner-ruling reader and the spec's per-consumer Trust contracts. The trunk arm compares the staged tree with its parent rather than searching history for a claimed decision. Owner rulings are an alternative release, not a mandatory credential or signature mixed into unattended build completion; unresolved classification reasons explicitly go to the coordinator without moving another step.
+
+Transfer caveat: protocol evidence comes from QA, math and code with objective verifiers. Plan-artifact quality and two-planner reconciliation remain unbenchmarked; this rubric is a supported extrapolation, not a proven instrument.
+
+Findings: none. This judgment approves the implementation plan, not an implementation or unexecuted test result.
+
+VERDICT: APPROVE findings=0

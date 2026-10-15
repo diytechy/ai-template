@@ -901,6 +901,26 @@ def run_py(args, cwd):
     )
 
 
+def hook_check_lines(hook):
+    """`(floor, by_name)`: the check.py steps a pre-commit hook runs - the
+    batched floor (its one `--run-steps` line) and the steps it runs one at a
+    time (`--run-step`) - read off its non-comment `"$PY" ... check.py`
+    command lines (WI-921). A hook with no batched floor line, or more than
+    one, is refused: the census and the hook-driven tests read exactly one."""
+    floors, by_name = [], []
+    for line in Path(hook).read_text(encoding="utf-8").splitlines():
+        words = line.split()
+        if words[:1] != ['"$PY"'] or "check.py" not in "".join(words[1:2]):
+            continue
+        for flag, into in (("--run-steps", floors), ("--run-step", by_name)):
+            if flag in words:
+                into.append(words[words.index(flag) + 1])
+    assert len(floors) == 1, "expected one batched --run-steps line, read {}".format(
+        floors
+    )
+    return floors[0].split(","), by_name
+
+
 # (seed_venv — the end-to-end dispatch fixtures' floor-satisfying ./.venv
 # builder — retired with the dispatcher's WI-286 harness-floor preflight at
 # concurrency-restructure Phase 5; no surviving fixture drives that gate.)

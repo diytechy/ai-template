@@ -1,0 +1,22 @@
+Reviewed: 3924a127e6ea830e72596c3acb3bd00dd28a90e8
+
+### Independent plan critic — WI-921 single-plan gate — Round 1 — 2026-10-15
+
+Session: fresh non-author Codex critic session supplied by this coordinator invocation; this session did not produce the plan. No provider session id was supplied. This verdict is the assigned scratch carrier; no filing command or commit was run.
+
+Artifact: `docs/plans/WI-921/plan.md` as held at the Reviewed commit, read directly with git show. This is a text artifact; no render proxy was needed. The supplied coverage report was checked against the plan's actual deliverables.
+
+Rubric: `docs/rubrics/plan-decomposition.md` at the Reviewed commit, blob `4657dfef3725cc8c1f0920db60f2c52b10602985`, plus the invocation's additional anchors (owner rulings 1, 2 and 9, revision 35). Duplicate anchor labels are qualified below: rubric B3 means padding and rubric B4 means dependency; additional B3 means decision re-derivation and additional B4 means owner-dependent work.
+
+Intent sources: the complete `docs/work/active/wi-921/WI-921-hook-floor-done-when-census.md`, its specref `docs/archive/work/complete/WI-841-done-when-blessed-in-lane.md#deliverable`, SR-019 and SR-156 in `docs/requirements/system-requirements.toml`, and their parents SN-005, SN-009, SN-027, SN-008 and SN-025 in `docs/requirements/stakeholder-needs.toml`, all at the Reviewed commit. The spec's prior critique dispositions and the specref's review summaries were not evidence for this judgment. No adjacent plan critique, implementer session notes, docs/status.md or docs/log.md was read.
+
+Rubric derivation: adequate for this plan's construction. SR-019/SN-005 require an agent-neutral commit floor; SR-156/SN-027 and SN-008 require a gated, fail-closed landing with honest pass evidence. DevStg-Tests and B2 require substantive coverage of the hook-driven refusal/release, trunk-parent comparison, failed-read hold and census rather than decorative citations; S2/S3 cover the authority carriers and closed input classifications; G4/rubric B4 require the review to consume the tree that will land. The unchanged secret/privacy and wider lifecycle obligations are regression context, not additional scope. This derivation does not come from a permissive TC. No missing anchor is needed for the finding below.
+
+Anchor coverage: DevStg-Reqs, DevStg-Tests, DevStg-Impl, G4, B1, B2, rubric B3, rubric B4, S3, S4, architectural delta, dependencies, additional B3, additional B4 and the supplied S2 consumer/carrier questions were judged. P1/P2 have concrete deliverables and checks; P3/P5's D6 overlap has a declared authoring-versus-final-anchor split; the excluded TCs retain unchanged arms and run in P5. Existing IF-286/IF-080 and IF-040/IF-134 carry the two new input dependencies, so DELTA: within is supported. Single planning is appropriate for the Trust section and input spaces. The census denies unclassified names by default; the reader retains the declared branch classes and shared predicate. No new third-party dependency, duplicate seam, history-derived blessing or unattended owner-credential dependency is proposed. The ordering defect below remains.
+
+Transfer caveat: the debate/selection evidence comes from QA, math and code with objective verifiers; it does not benchmark plan artifacts. Two-planner reconciliation evaluated for plan quality remains an open research gap. This rubric is an extrapolation, not a proven instrument.
+
+Findings:
+- [MAJOR] G4 / B4 (rubric: missing dependency) -> `plan.md`, P4 checkpoint step 4 versus P5's close/rebase/regeneration: the fresh full-lane gate is completed in P4, but P5 subsequently fills and moves the WI spec, clears its specref, and changes the pack anchor and generated tree. The review therefore precedes artifacts it must consume. SR-156 requires independent review through the reviewed tip; session-protocol section 4 explicitly counts docs/work changes as non-record changes and requires closing before the final verdict. Following this order either leaves the landing without review of its final tree or costs another normal review round. -> Amend the plan's P4/P5 construction so P4 ends with the checkpoint act and P5 performs all close, rebase, re-anchor, regeneration and bar work before taking the fresh final full-lane review of that resulting tip; make that review the last prerequisite to landing, replacing P4's premature final gate. -> @plan-author
+
+VERDICT: CHANGES-REQUESTED findings=1

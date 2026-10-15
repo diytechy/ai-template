@@ -75,6 +75,17 @@ Contract IF-286: a Done-when change's blessing. `digest(wi_id, claimed,
     the covering entry, for the merge-time mint); `lane_hold(root, rev,
     base, branch, wi_ids)` is the hold reason for a lane's tree, or None. An
     unreadable tree reads as uncovered: the hold fails closed.
+    `staged_hold(root, current_branch, trunk_name, lane_base)` is the hold
+    for the commit being made (WI-921): each claim-copy change its index
+    delta carries (`classify_delta`: any entry but a lone `A`) is judged by
+    `lane_hold` - on the claim's own branch only a close, against the lane's
+    integration base; on trunk every change, close or not, against HEAD,
+    the commit's parent; elsewhere a close, against HEAD. An index delta
+    or a current branch git cannot read holds, naming why; off a git work
+    tree nothing is judged. `staged_closes(root)` is `(closes, why)`, so no
+    caller reads an unreadable delta as no close. Every path the reader
+    classifies or looks up is read losslessly (`kitlib.git.git_paths`), so a
+    path git would quote is judged like any other.
 """
 
 import hashlib
@@ -83,7 +94,7 @@ import tomllib
 
 from . import decisions as kdecisions
 from . import sitting as _kitsitting
-from .git import git_out
+from .git import git_out, git_paths
 from .registry import done_when_section
 
 __all__ = [
@@ -102,7 +113,10 @@ __all__ = [
     "hold_reason",
     "spec_at",
     "lane_hold",
+    "classify_delta",
+    "staged_changes",
     "staged_closes",
+    "staged_hold",
 ]
 
 # A list item's opening: `-`, `*`, `+` or `1.` / `1)`, then an optional checkbox.
@@ -231,6 +245,9 @@ def _copy_at(root, rev, folders, wi_id):
     holding one at `rev` (None: the index); `(None, None, None)` when `rev`
     reads and none of `folders` holds it (ABSENT); `(None, None, why)` when
     the listing or the copy cannot be read (UNREADABLE), never read as absent.
+    The listing is read losslessly (`git_paths`, WI-921): a plain listing
+    quotes a path with a non-ASCII byte, which then names no spec and would
+    read a claimed copy as ABSENT.
 
     Implements: SR-156, LLR-307
     """
@@ -239,13 +256,13 @@ def _copy_at(root, rev, folders, wi_id):
         if rev is None
         else ["ls-tree", "-r", "--name-only", rev, "--"]
     )
-    listing = git_out(root, args + list(folders))
+    listing = git_paths(root, args + list(folders))
     if listing is None:
         at = "the index" if rev is None else str(rev)[:10]
         return None, None, "{} cannot be read at {}".format(", ".join(folders), at)
     hits = [
         (folders.index(path.rpartition("/")[0]), path)
-        for path in listing.splitlines()
+        for path in listing
         if path.rpartition("/")[0] in folders
         and path.rpartition("/")[2].startswith(wi_id + "-")
     ]
@@ -495,20 +512,114 @@ def unreadable_reason(wi_id, why):
     )
 
 
-def staged_closes(root):
-    """`[(branch, wi_id)]` for each spec the index moves out of
-    `active/<branch>/` into a closed folder - a close being committed.
+# --- the commit being made (WI-921) -------------------------------------------
+
+_DELTA_UNREADABLE = (
+    "the index delta cannot be listed (`git diff --cached` failed), so whether "
+    "this commit changes a claimed Done-when is unknown; it is held until the "
+    "index reads"
+)
+_BRANCH_UNREADABLE = (
+    "the current branch cannot be read ({}), so which reading applies to the "
+    "staged change of a claimed Done-when is unknown; it is held until the "
+    "branch reads"
+)
+
+
+def classify_delta(entries):
+    """`[(kind, branch, wi_id)]`, sorted, for each claim copy an index delta
+    changes, given its `(status, path)` entries (`git diff --cached
+    --name-status --no-renames`, read losslessly by `staged_changes`).
+    DENY BY DEFAULT: any entry for a spec under `active/<branch>/` other than
+    a lone `A` is a change (`M`, `D`, `T`, or any status git reports), of
+    kind `close` when the same delta adds the item's spec under a closed
+    folder, else `change` (a `D` plus an `A` of a new slug in the same claim
+    folder is one). A lone `A` is a new claim copy with no parent copy to
+    compare, so it is not listed; on an unborn HEAD every entry is one.
 
     Implements: SR-156, LLR-307
     """
-    delta = git_out(root, ["diff", "--cached", "--name-status", "--no-renames"])
-    removed, closed = [], set()
-    for line in (delta or "").splitlines():
-        status, _tab, path = line.partition("\t")
+    statuses, closed = {}, set()
+    for status, path in entries:
         active = _ACTIVE_SPEC_RE.match(path)
         landed = _CLOSED_SPEC_RE.match(path)
-        if status.startswith("D") and active:
-            removed.append((active.group(1), active.group(2)))
-        elif status.startswith("A") and landed:
+        if active:
+            statuses.setdefault(active.groups(), []).append(status[:1])
+        elif landed and status.startswith("A"):
             closed.add(landed.group(1))
-    return [(branch, wi_id) for branch, wi_id in removed if wi_id in closed]
+    return sorted(
+        ("close" if wi_id in closed else "change", branch, wi_id)
+        for (branch, wi_id), found in statuses.items()
+        if found != ["A"]
+    )
+
+
+def staged_changes(root):
+    """`(changes, why)`: `classify_delta` over the index delta of the commit
+    being made. Off a git work tree no commit is being made, so `([], None)`;
+    a delta git cannot list is `([], why)`, never read as no change. The
+    delta is read losslessly (`git_paths`: NUL-delimited, unquoted), so a
+    claim copy whose path git would quote is classified like any other.
+
+    Implements: SR-156, LLR-307
+    """
+    if git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
+        return [], None
+    delta = git_paths(root, ["diff", "--cached", "--name-status", "--no-renames"])
+    if delta is None:
+        return [], _DELTA_UNREADABLE
+    return classify_delta(zip(delta[0::2], delta[1::2])), None
+
+
+def staged_closes(root):
+    """`([(branch, wi_id)], why)`: each spec the index moves out of
+    `active/<branch>/` into a closed folder - a close being committed - and
+    the reason the delta cannot be read (None when it reads), so no caller
+    reads an unreadable delta as no close.
+
+    Implements: SR-156, LLR-307
+    """
+    found, why = staged_changes(root)
+    return [(branch, wi_id) for kind, branch, wi_id in found if kind == "close"], why
+
+
+def _staged_base(kind, branch, current, trunk_name, lane_base):
+    """`(rev,)`, the revision one staged claim-copy change is judged against,
+    or `()` when it is not judged. On the claim's own branch (asked first)
+    only a close is judged, against the lane's integration base; on trunk
+    every change is judged against HEAD, the commit's parent; elsewhere (a
+    detached HEAD, an alias branch) a close is judged against HEAD.
+
+    Implements: SR-156, LLR-307
+    """
+    if current and branch == current:
+        return (lane_base(),) if kind == "close" else ()
+    if kind == "close" or (current and current == trunk_name()):
+        return ("HEAD",)
+    return ()
+
+
+def staged_hold(root, current_branch, trunk_name, lane_base):
+    """THE HAND-CLOSE POINT'S READER: the hold for the commit being made, or
+    None. Each staged claim-copy change `staged_changes` lists is judged by
+    `lane_hold` against the revision `_staged_base` picks. The readers are
+    called only for a listed change: `current_branch()` is git's
+    `(returncode, text)` for `branch --show-current`, `trunk_name()` the
+    trunk's name, `lane_base()` the lane's integration base (None reads as
+    no revision, so it holds). A delta or a branch git cannot read holds,
+    naming why.
+
+    Implements: SR-156, LLR-307
+    """
+    found, why = staged_changes(root)
+    if why or not found:
+        return why
+    code, current = current_branch()
+    if code != 0:
+        return _BRANCH_UNREADABLE.format(current.strip() or "exit {}".format(code))
+    current = current.strip()
+    reasons = []
+    for kind, branch, wi_id in found:
+        for base in _staged_base(kind, branch, current, trunk_name, lane_base):
+            reasons.append(lane_hold(root, None, base, branch, [wi_id]))
+    return "\n".join(r for r in reasons if r) or None

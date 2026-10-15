@@ -384,11 +384,13 @@ commit of its own, move it to trunk's tip
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
   If the lane recorded an owner overrule in
   `docs/decisions`, land two commits: the squash up to the commit before the
-  close, then the close. Until WI-921 lands, the hook judges neither
-  commit's Done-when change (the close compares against the first commit's
-  edit, as WI-835's did): stage the full squash, run
-  `"$PY" "$SCRIPTS/integrate.py" done-when-hold`, `git reset --hard HEAD`,
-  then land the two commits. Ruling-sync needs an open item citing the overrule.
+  close, then the close. The hook judges the first commit's Done-when change
+  against its parent, so that commit carries the lane's covering verdict or
+  owner ruling in its own tree, or the hook refuses it naming the digest; the
+  close then compares against the blessed copy. Never amend either commit to
+  change a Done-when or drop a blessing: an amend is judged against the
+  commit it replaces, not its real parent (WI-921's stated residue).
+  Ruling-sync needs an open item citing the overrule.
 - **Regenerate** with `"$PY" "$SCRIPTS/trunk_step.py" --regen`. By hand, the traps are:
   - pass `--src project-trajectory/scripts` to both `gen_arch_map.py` forms (a
     bare `--contracts-doc` wipes the interface reference);
