@@ -489,6 +489,18 @@ lane commit being replayed.
   Expected and dropped approved obligations (WI-913, 2026-10-14).
 - An interface row names no file in any cell; a "No tie-back" note belongs
   only to a row with an `external:` party.
+- Before composing a sitting, match each TC `expected` clause to a
+  sentence of an LLR or SR in the set. A reconcile dropped two obligations
+  the tests carried (a tick does not unbind a record; the second critique
+  never meets the first verdict), which a sitting returns as a TC
+  expecting what no requirement states (WI-913, 2026-10-15).
+- An acceptance clause must be stated by its requirement: sitting 010
+  returned SR-154 for a clause no requirement sentence made. Run
+  `trace.py --strict` on a return's rework before its re-sit: the
+  disposition's "shall refuse" gave SR-154 a second `shall`, which the
+  one-`shall` form rule reports (WI-913, 2026-10-15).
+- A TC's `tier` is the cheapest tier at which every cited arm runs
+  (TC-205's rule): a TC citing any test in `SLOW_MODULES` is `Full`.
 
 ## 6. Commits and hooks
 
@@ -587,7 +599,10 @@ lane commit being replayed.
 - **Reviews in the trial shape, by hand until WI-911 renders them:** append
   the scratch root's `review-addendum.md` (severity by reachability, the
   closed-set classification, the threat model) to every review brief, and
-  `review-convergence-addendum.md` too for a convergence round. Give each
+  `review-convergence-addendum.md` too for a convergence round. Its
+  reading exclusion names the lane's decisions record beside
+  `docs/reviews/`: the record summarizes every earlier finding (wi-913
+  D-009). Give each
   Claude reviewer only its brief's path plus the lane worktree and the
   interpreter, which the brief does not name, and ask for a two-line reply
   (the verdict path and its VERDICT line). Three reviewers file three

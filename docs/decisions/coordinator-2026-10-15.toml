@@ -1,0 +1,13 @@
+# docs/decisions/coordinator-2026-10-15.toml — the attended coordinator session
+# of 2026-10-15 (review-churn program, the plan gate's landing); delegated
+# decisions made on trunk (coordinator). Lane decisions are in each lane's own
+# record. Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The two hook-coverage rows are drafted and not yet filed; the next session files each on trunk with its scope critique. They are the queue's 'to file' row for WI-841's done-when-blessed step, which the shipped hook never runs, and the successor row that WI-913's lane decision D-006 said would be filed at the lane's landing, for the landing shapes the hook does not judge. D-010 of that lane adds two MINORs to the second row: SR-154's single-plan predicate stated with its own condition, and the gate's unreachable cap branch deleted. A planner drafted both into the session scratch (review-tmp/2026-10-15-coord/drafts/: row-hook-floor.md and row-landing-shapes.md, with notes and probes). The landing used the session's context budget, so filing them here would have left their scope critiques and dispositions half done. The landing-shapes draft carries three calls (its Q1 to Q3) to rule at filing; its Q2 notes that a merge which commits itself runs no pre-commit hook at all, a gap beyond the plan gate."
+alternative = "File both rows at the landing as D-006 planned, and leave their scope critiques to the next session, which splits each row's filing from its critique across two sessions."
+reversal_cost = "None: the drafts are complete, and filing them is the next session's first queue row."
+why_not_escalated = "A sequencing call inside the queue; no ruling changes, and the rows' calls stay for their filing."
+review = ""
