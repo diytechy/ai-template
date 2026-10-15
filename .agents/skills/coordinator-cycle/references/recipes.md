@@ -46,6 +46,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   Brief a hook's coverage as reading the command word the
   way the shell grammar does, from a list you give; a brief asking for every
   form that gets past the hook was cut off by a safety classifier (WI-834).
+  A plan that orders its commits (a pin, then a structural move alone,
+  then the rest) is built in stages: the builder stops after each, you
+  verify and commit, and SendMessage resumes the same builder (WI-911,
+  2026-10-15).
 - **Terra, first turn:**
   `bash "$TOOLS/terra_author.sh" <lane> <prompt> <out> [effort]`.
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
@@ -501,6 +505,13 @@ lane commit being replayed.
   and append the new text in contract voice. Told only to restate the
   builder's function names, it rewrote LLR-313's whole Detail and TC-333's
   Expected and dropped approved obligations (WI-913, 2026-10-14).
+- Check an intent or reconcile set mechanically before committing it: in
+  each changed cell of an approved row the approved text must occur
+  verbatim (old within new, read with `tomllib`; judge a tier or list
+  cell by hand). Terra reworded two approved phrases in SR-233 while
+  reporting every approved text kept: restore the approved bytes by a
+  guarded replace, keep its addition, and record it (wi-911 D-007,
+  2026-10-15).
 - An interface row names no file in any cell; a "No tie-back" note belongs
   only to a row with an `external:` party.
 - Before composing a sitting, match each TC `expected` clause to a
@@ -524,6 +535,21 @@ lane commit being replayed.
   hook does not run it: run `python -m pytest -q -n auto -m smoke` and
   `python scripts/check_smoke_budget.py --mode enforce` yourself, before a
   landing commit rather than after it.
+- One timed run serves both halves of the bar: time the smoke run's wall
+  clock and pass it to `check_smoke_budget.py --mode enforce --elapsed
+  <s>`, which otherwise runs the tier again. A wrapper must exit nonzero
+  on a red tier or a breach: one that exited 0 let a chained `&& git
+  commit` record a 66.2 s reading unmentioned (WI-921's pass record,
+  its message amended, 2026-10-15).
+- Time a breach's parent in a detached scratch worktree at the lane's
+  HEAD (`git worktree add --detach <scratch>/parent-wt HEAD`, removed
+  after), never by stashing an uncommitted build, and record both
+  readings. Three reviewers running their suites in parallel took a
+  parent to 86 s (2026-10-15): re-measure quiet before the landing.
+- A build whose in-process tests take the smoke tier past `max-tests`
+  re-stamps the ceiling in that commit, with its reason, fig line and a
+  decision, not at the landing: a red bar is not left standing (wi-911
+  D-005).
 - A commit sometimes exits 1 with every hook step passing. Read the hook
   output and retry with `-F`; never skip the hook.
 - On trunk (or `check.py --trunk-lane`), `approval-fresh` refuses a stale
@@ -564,6 +590,10 @@ lane commit being replayed.
 
 ## 7. Environment and limits
 
+- **A lane that changes the reviewer template** is reviewed under
+  trunk's: render its briefs with the primary checkout's
+  `review_brief.py review --root <lane>` (prompts resolve beside the
+  script), plus the interim addenda (wi-911 D-008, 2026-10-15).
 - **Model not offered on the signed-in account:** `400 ... not supported
   when using Codex with a ChatGPT account` from a current CLI (2026-10-10:
   0.162.x refused `gpt-6.1-sol`) means the account, not the CLI version.
