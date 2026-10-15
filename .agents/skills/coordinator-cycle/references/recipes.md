@@ -503,6 +503,13 @@ lane commit being replayed.
   probe run inside it never sees the command processor's working-directory
   lookup; unset it when that lookup is the subject (dispute 005, WI-880).
 - Set `export MSYS_NO_PATHCONV=1`; Git Bash rewrites leading-slash arguments.
+  With it set, write every path as `C:/...`, never `/c/...`: `git -C /c/...`
+  fails, and a Windows Python writes `/c/x` to `C:\c\x` (a critique
+  brief landed in a stray `C:\c\` folder on 2026-10-14).
+- A long Python heredoc that mixes backticks, quotes or backslashes has
+  failed in the agent's shell (a parse error, or an escape the shell
+  rewrote). Write such an edit script to the scratch root with the file
+  tool and run it from there (2026-10-14).
 - **Scratch:** one dated root, `$REPO.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
   the root once results are recorded.
