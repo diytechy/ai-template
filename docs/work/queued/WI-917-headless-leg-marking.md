@@ -82,14 +82,28 @@ rule in the target's own voice. No shipped file is touched (Done-when).
 
      A block that is absent, unreadable or empty, or an empty note, refuses
      the run before any leg (exit 2).
-   - **The audit.** After each leg, the launcher judges every commit the leg
-     added to trunk's first-parent line and to `archive/lanes`, with
-     `provenance.loop_trailer_refusal(message, session)`. A refusal, or a
-     trunk that no longer descends from its pre-leg tip, stops the run
-     (exit 3) and names the commit. This stop sits beside the launcher's
+   - **The audit.** The launcher records the tip of every local branch
+     before each leg starts and again after it exits (the binding; see
+     `## Trust`). It then judges:
+     - every commit the leg added to trunk's first-parent line and to the
+       first-parent line of `archive/lanes`, with
+       `provenance.loop_trailer_refusal(message, session)`, and trunk must
+       still descend from its pre-leg tip;
+     - every other branch the leg created or moved, over its range from
+       trunk, by the merge slot's own rule: `provenance.loop_lane_window`,
+       then the trailer check inside the window, which accepts any
+       well-formed session, as the slot does.
+
+     A refusal, or a read it cannot complete, stops the run (exit 3) and
+     names the commit or the read. This stop sits beside the launcher's
      existing stops.
-   - **The marker's failure contract under its new producer** (no Trust
-     section; see S2):
+   - **The lane check before a landing.** The same lane rule runs as
+     `overnight_legs.py check-lane <branch>` (exit 0, or 3 naming the first
+     refused commit or the failed read). The skill's headless-leg section
+     runs it before a leg squashes a lane, so a lane holding an unmarked
+     commit is not landed.
+   - **The marker's failure contract under its new producer** (with the
+     audit's, in `## Trust`):
      - **Absent from a leg's shell** (the inheritance failed): the block's
        first check ends the leg before any write, and the launcher then
        stops because the leg added no handoff.
@@ -166,6 +180,56 @@ rule in the target's own voice. No shipped file is touched (Done-when).
        merge slot's trailer rung.
      - **The recipe is the subject's one home** until WI-918 moves it into
        `provenance.py`, before WI-808 puts landings on the slot.
+   - **A leg's landing.** A leg squashes a lane only after `check-lane`
+     passes on it. Until WI-918 lands, a leg leaves a lane holding a
+     re-claim to the attended session: the lane rule does not read
+     re-claims yet, so the lane's attended commits would refuse the check.
+
+## Trust
+
+Written before the claim, answering S2 under `project-trajectory/PROCESS.md`
+§3, "When a guard is owed" (the round-1 scope critique). The ruling goes to
+the owner to confirm or overrule (coordinator-cycle §1 and §5).
+
+**The gate.** The launcher's after-leg audit decides whether the next leg
+starts, and `check-lane` decides whether a leg lands a lane (deliverable 1).
+Both read the refs a leg may move and the commits it adds. Neither releases
+anything a run would otherwise refuse: a pass only lets the next leg start
+or the landing proceed, as every leg and landing did before this row.
+
+**Producers and write routes.**
+
+- **The commits:** the leg's processes write them by porcelain (under the
+  commit-msg floor), through the kit's writers (which add the trailer
+  themselves), or, for the archive commit, through `commit-tree` with the
+  recipe's trailer. A hook-refused commit writes nothing. Git moves a ref
+  atomically, so an interrupted update leaves it at its old tip or its new
+  one.
+- **The binding:** the launcher itself records the tip of every local branch
+  (`refs/heads/*`) immediately before it starts a leg and again after the
+  leg exits.
+
+**What the authority binds to.** The two snapshots around one leg. Trunk and
+`archive/lanes` are judged on their first-parent lines from the pre-leg tip
+to the post-leg tip. Every other branch the leg created or moved is judged
+over its range from trunk by the slot's rule. A branch the leg deleted is
+logged, not judged. `check-lane` binds to the branch's tip when it runs.
+
+**Consumer and rulings.** One consumer, `scripts/coordinator/overnight_legs.py`
+(the audit and `check-lane`). It checks every git read's exit status and
+never reads a failed or unparseable read as an empty range. It stops the run
+(exit 3), or refuses the landing, naming what it could not judge, on:
+
+- a git read that fails or returns output it cannot parse;
+- a ref it cannot resolve, or a trunk that no longer descends from its
+  pre-leg tip;
+- a commit whose message it cannot read;
+- a trunk or `archive/lanes` commit whose trailer is missing, malformed or
+  names another session;
+- a lane window refusal (a commit inside a loop window without a
+  well-formed trailer).
+
+It never repairs, skips or re-orders a commit.
 
 ## Done-when
 
@@ -184,6 +248,13 @@ rule in the target's own voice. No shipped file is touched (Done-when).
   - a leg that adds a trunk or `archive/lanes` commit without the trailer,
     adds one naming another session, or rewinds trunk stops the run
     (exit 3), naming the commit;
+  - a leg that adds a commit without the trailer to a lane it marked, then a
+    marked commit or a marked squash, stops the run, naming the unmarked
+    commit, and `check-lane` refuses that lane before the squash;
+  - a lane whose replayed commits carry another run's well-formed session
+    passes;
+  - a git read that fails during the audit or `check-lane` stops the run or
+    refuses the landing; it is never read as an empty range;
   - a leg whose commits all carry the run's trailer runs the next leg.
 - The skill copy in `.claude/skills/` matches the kit source
   (`bootstrap.py --dest . --sync`). `check_docs.py --root . --strict-orphans`
@@ -210,16 +281,17 @@ rule in the target's own voice. No shipped file is touched (Done-when).
   section describes the launcher's marking, so none is useful landed alone.
   The merge slot's reading of the re-claim is independently landable and is
   WI-918 (the owner's split ruling, 2026-10-14).
-- **S2:** no. No deliverable gives a file authority over a hold, an act or a
-  gate, and the criteria allow none here:
+- **S2:** yes, one gate: the launcher's audit and `check-lane` decide
+  whether the next leg starts and whether a leg lands a lane, from the refs
+  the leg moved and the commits it added; see `## Trust` (round-1
+  critique). Nothing else gains authority:
   - The marker is a process environment variable, not a file. Every reader
     of it only adds a refusal or a trailer: `check.py`'s floor and
     held-status step, the loop writers' `loop_held_status_refusal`,
     `provenance.with_loop_trailer`, `agent_brief.loop_provenance_note`, and
     the commit-msg hook's fail-closed check. Its failure contract under its
     new producer is in deliverable 1 and the Done-when.
-  - The launcher's audit and the block's first check can only stop a run.
-    They never release anything a run would otherwise refuse.
+  - The block's first check can only end a leg before any write.
   - The skill and the block govern the coordinator's own procedure.
   - The re-claim commit is read by nothing until WI-918, whose Trust section
     carries its authority.
@@ -248,11 +320,15 @@ rule in the target's own voice. No shipped file is touched (Done-when).
       new authorship.
     - **Default:** any other route (`--no-verify`, `git revert`, other
       plumbing) is outside the procedure. The launcher's audit judges
-      outcomes, not routes: every commit the leg added to trunk and to
-      `archive/lanes` carries the run's trailer, or the run stops.
-    - **Lane commits** are judged at the lane's landing. Today the squash
-      commit runs the hooks under the marker; once WI-808 moves landings
-      onto the merge slot, its trailer rung judges them.
+      outcomes, not routes: every commit the leg added to trunk, to
+      `archive/lanes` and to any branch it created or moved passes its
+      rule, or the run stops.
+    - **Lane commits** are judged by the rule the merge slot applies:
+      before a leg's squash (`check-lane`) and after every leg (the audit).
+      Once WI-808 moves landings onto the slot, its trailer rung judges them
+      too. Until WI-918 lands, that rule does not read re-claims, so a lane
+      with attended commits after a headless mark fails it: fail-closed,
+      and a leg leaves such a lane to the attended session.
     - A commit on no landing ref (`refs/stash`) is outside the promise.
     - Builders, reviewers, Terra and planners never commit (Sol's and
       Terra's launchers check for a moved HEAD). One that did commit would
@@ -263,10 +339,10 @@ rule in the target's own voice. No shipped file is touched (Done-when).
     default.
   - **Lanes in flight:** every lane open when this lands was claimed unmarked
     and holds no marked writer commit, so each reads as a person's, as today.
-- **S4:** `single`, on one criterion: the row promises behaviour over an
-  input space (every commit a headless leg makes, across every writer and
-  route, and the set of owner-held steps). It has no Trust section, changes
-  one script plus text, and changes no interface seam: it calls
+- **S4:** `single`: the row has a Trust section, and it promises behaviour
+  over an input space (every commit a headless leg makes, across every
+  writer and route, and the set of owner-held steps). It changes one script
+  plus text, and no interface seam: it calls
   `mark_loop_process`, `loop_trailer_refusal`, `loop_provenance_note` and
   `session_prompt` as they stand.
 - **Architectural delta:** yes, carried within scope, and no preparatory
@@ -337,3 +413,28 @@ rule in the target's own voice. No shipped file is touched (Done-when).
   - **Q5, the trailer's coverage:** the S3 answer: by construction for
     porcelain commits and kit writers, by recipe for the archive commit, and
     by the launcher's audit for every other route.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; CHANGES-REQUESTED, two findings):
+
+- **S3, MAJOR: adopted, with a change to the remedy.** Lane commits were
+  judged only through the squash's own message, so an unmarked lane commit
+  could ride into a marked landing. The critic asked for a landing-recipe
+  check; the row now has both a check before the landing and an outcome
+  audit after every leg, from one rule (the merge slot's): "every other
+  branch the leg created or moved, over its range from trunk, by the merge
+  slot's own rule", and "`overnight_legs.py check-lane <branch>` ... runs it
+  before a leg squashes a lane, so a lane holding an unmarked commit is not
+  landed". The audit is kept as well because a construction the leg cannot
+  skip covers a lane the leg never lands. The Done-when adds "a leg that adds
+  a commit without the trailer to a lane it marked, then a marked commit or
+  a marked squash, stops the run, naming the unmarked commit, and
+  `check-lane` refuses that lane before the squash".
+- **S2, MAJOR: adopted.** The audit gates the next leg, so the row gains a
+  `## Trust` section: the commits and the launcher's two ref snapshots as
+  carriers, their producers and failed-write shapes, the one consumer, the
+  binding, and the rule that "It checks every git read's exit status and
+  never reads a failed or unparseable read as an empty range". The Done-when
+  adds "a git read that fails during the audit or `check-lane` stops the run
+  or refuses the landing; it is never read as an empty range".

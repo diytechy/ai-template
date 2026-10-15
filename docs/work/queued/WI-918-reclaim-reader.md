@@ -65,8 +65,12 @@ rule in the target's own voice.
      first:
      - the window opens at a loop claim or a marked loop-writer commit, as
        today;
-     - a re-claim closes it: this branch's exact subject, with no
-       `Loop-Session` trailer at all;
+     - a re-claim closes it: an empty commit (exactly one parent, and a tree
+       equal to that parent's), with this branch's exact subject and no
+       `Loop-Session` trailer at all. A commit that fails any of the four is
+       not a re-claim and is judged like any other commit in the window, so a
+       non-empty commit under the subject without the trailer is refused,
+       naming it;
      - the trailer rule judges only commits inside an open window;
      - a lane with no loop mark stays a person's (`None`);
      - a lane ever marked returns a list, possibly empty, so
@@ -76,7 +80,8 @@ rule in the target's own voice.
      lane MORE governed".
 2. **`project-trajectory/scripts/integrate.py`'s docstrings** follow
    (`_loop_window`, `_loop_trailer_refusal`, `_held_status_refusal`). Its
-   code is unchanged: `_loop_window` passes the commits through.
+   code changes only if `_loop_window` must hand the reader what the
+   emptiness check reads (each commit's parents and tree), and no further.
 3. **The `coordinator-cycle` skill's re-claim step** (kit source
    `project-trajectory/skills/coordinator-cycle/`, synced to
    `.claude/skills/`; `scope: this-repo`, so no RESYNC entry). The step
@@ -92,8 +97,9 @@ Written before the claim, answering S2 under `project-trajectory/PROCESS.md`
 overrule (coordinator-cycle §1 and §5).
 
 **The carrier.** A re-claim commit in a lane: an unmarked commit whose subject
-is `provenance.reclaim_subject(<the lane's branch>)` and which carries no
-`Loop-Session` trailer. The merge slot reads it through
+is `provenance.reclaim_subject(<the lane's branch>)`, which carries no
+`Loop-Session` trailer, and which is empty: exactly one parent, and a tree
+equal to that parent's. The merge slot reads it through
 `provenance.loop_lane_window`, the one reader. It closes the trailer rung's
 window for the commits after it, which no record can do today ("a person's
 commit inside a loop lane is refused too", `integrate._loop_trailer_refusal`).
@@ -106,7 +112,8 @@ loop-writer subject "only makes a lane MORE governed" (the module's own rule).
   lane a headless leg marked. It makes the commit with
   `git commit --allow-empty` and that subject (the skill's recipe), with
   nothing else in it. Before this row, the recipe writes the subject as a
-  literal; after it, through the composer.
+  literal; after it, through the composer. The reader holds the record to
+  that shape (below), so a commit that is not empty earns nothing.
 - **Failed writes:** if the hooks refuse the commit, or it is never made,
   there is no re-claim. The window stays open, and the slot refuses the
   attended commits after it, naming the first.
@@ -117,8 +124,11 @@ loop-writer subject "only makes a lane MORE governed" (the module's own rule).
   threat model and outside the procedure (the Never list). It would exempt
   later commits from the trailer rung alone.
 
-**What the authority binds to.** Two things only:
+**What the authority binds to.** Three things only:
 
+- the re-claim's own shape, validated against its commit's parent at every
+  read: one parent and an unchanged tree (a record written at the event and
+  checked against its parent, ruling 2 and the scope rubric's B3);
 - the re-claim's place in the lane's own range as the slot reads it
   (trunk..branch, oldest first; a rebase keeps the lane's order);
 - the trailer rung.
@@ -133,9 +143,11 @@ after.
 
 - **The trailer rung**, `integrate._loop_trailer_refusal` via `_loop_window`.
   It judges the commits inside an open window. A re-claim that is absent or
-  misspelled, names another branch, or carries any `Loop-Session` trailer
-  (well-formed or malformed) is not a re-claim. The window then stays as it
-  was, and a later commit without a trailer is refused, naming it. A range
+  misspelled, names another branch, carries any `Loop-Session` trailer
+  (well-formed or malformed), or is not empty (a merge, or a tree that
+  differs from its parent's) is not a re-claim. The window then stays as it
+  was, and that commit and any later commit without a trailer are refused,
+  naming the first. A range
   git cannot read is refused, as today.
 - **The held-status rung**, `integrate._held_status_refusal` via
   `_loop_window` (unchanged). A lane with any loop mark is judged whole,
@@ -162,6 +174,9 @@ after.
     is judged from that commit, and a re-claim after it clears it;
   - a re-claim carrying a `Loop-Session` trailer (well-formed or malformed),
     or another branch's subject, is not one;
+  - a commit with the exact subject and no trailer that changes the tree,
+    or that has two parents, does not close the window and is itself refused
+    by the trailer rung, naming it;
   - a marked loop-writer commit after a re-claim re-opens the window;
   - a lane never marked stays a person's, and the held-status rung judges a
     re-claimed lane whole;
@@ -194,7 +209,8 @@ after.
   trailer rung; see `## Trust`.
 - **S3:** closed by construction, with deny by default.
   - **The window:** each lane commit is exactly one of three things: a
-    re-claim, a marked loop-writer commit, or neither. The window's state
+    re-claim (one parent, an unchanged tree, the exact subject, no
+    trailer), a marked loop-writer commit, or neither. The window's state
     changes only at the first two. A subject or trailer outside those two
     forms is neither.
   - **Records written before this row:** WI-917's recipe writes the same
@@ -218,7 +234,8 @@ after.
   - **A new input:** the slot's trailer window depends on re-claim commits.
 - **B3 and B4:**
   - **B3:** the slot reads the re-claim from the commit written at the event,
-    in the lane's own range. It never re-derives a lane's mode from the
+    in the lane's own range, and validates its shape against that commit's
+    parent (one parent, an unchanged tree) at every read. It never re-derives a lane's mode from the
     environment, the lease or dates.
   - **B4:** no Done-when item needs an owner act or credential. SR-209 sits
     on a rung this repo's dial releases, so its amendment act is the
@@ -248,3 +265,21 @@ after.
     commits after it, and a marked process cannot make one through
     porcelain.
   - The ruling on it goes to the owner with the Trust section.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; CHANGES-REQUESTED, one finding):
+
+- **S2/S3/B3, MAJOR: adopted.** The reader accepted any commit with the
+  exact subject and no trailer, so a non-empty commit could close the window.
+  The re-claim is now validated against its commit's parent at every read:
+  deliverable 1's reader takes "an empty commit (exactly one parent, and a
+  tree equal to that parent's)", and "A commit that fails any of the four is
+  not a re-claim and is judged like any other commit in the window"; the
+  Trust section binds the authority to "the re-claim's own shape, validated
+  against its commit's parent at every read", and the trailer rung's ruling
+  refuses such a commit, "naming the first"; the Done-when adds "a commit
+  with the exact subject and no trailer that changes the tree, or that has
+  two parents, does not close the window and is itself refused by the
+  trailer rung, naming it". The owning check is the one reader,
+  `provenance.loop_lane_window`.
