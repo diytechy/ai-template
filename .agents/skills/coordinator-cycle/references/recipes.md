@@ -34,7 +34,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   the coverage plan before fixes and the stop-and-file rule for consolidation
   outside the spec's surface in every build brief. Re-run the builder's
   claimed results before committing: one builder has reported a smoke result
-  it never produced. In a headless leg, tell every builder to run its
+  it never produced, and one read a check's exit code through `tail`
+  (WI-921, 2026-10-15). Tell every builder that a comment it writes, code or
+  test, never cites a review round or finding number: the convergence round
+  reads the diff and must not see earlier findings (wi-911 D-014). In a headless leg, tell every builder to run its
   commands in the foreground: one that backgrounded its pytest run returned
   "waiting" with no result (WI-902, 2026-10-11). Resume it with SendMessage;
   its report then arrives as a task notification while you keep working.
@@ -188,6 +191,14 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   id. Until WI-878 binds the findings file into the sitting, keep finding ids
   unique within a lane: a second dispute reusing ids refuses a valid
   dismissal.
+  Before writing a disposition broader than a finding, read the finding's
+  own remedy: a triage that forbade WI ids in shipped comments contradicted
+  both reviewers' remedies and a pinned convention (wi-911 D-014). A
+  fail-open or Done-when-gap finding the builder accepts, whose only fix is
+  a new boundary beyond the spec's surface, goes to the owner as a choice
+  (a successor, the build, or a sitting): neither you nor a sitting may
+  defer it. A successor ruling is stated in the spec's Trust section, never
+  its Done-when, so the pass record stays bound (wi-921 D-014).
   Run a fix round in two stages on one builder. Stage 1 confirms each
   finding on the real path and writes the coverage plans (one per round
   file), changing nothing in the lane; you re-run each gate, rule the
@@ -210,8 +221,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      For `combined`, `<ids>` is **kind-prefixed**, for example
      `"amendment:LLR-123;first-approval:SR-234;first-approval:LLR-345;first-approval:TC-456;done-when:WI-NNN"`.
      Include only kinds actually owed (`amendment`, `first-approval`,
-     `done-when`); `<srs>` is the semicolon-joined SR scope. Single-kind briefs
-     use bare ids. An empty section refuses the entire composition. Include
+     `done-when`); `<srs>` is the semicolon-joined SR scope. A checkpoint is
+     always `combined`, even when only amendments are owed: sitting 010,
+     composed as the single-kind `amendment` class, came back with a
+     `## amendment` section the one verdict parser refuses for a single-kind
+     brief, after its act was committed, and was discarded (wi-921 D-018).
+     Single-kind briefs use bare ids. An empty section refuses the entire composition. Include
      affected chain rows in the appropriate scope and supply the arms map
      as an additional input; the composer does not generate it.
   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.
@@ -512,6 +527,12 @@ lane commit being replayed.
 - The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
   and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
   decisive tests outside that sandbox before treating them as code defects.
+- Name the sentences a lane added and no sitting approved: Terra may
+  rewrite those. Told only to amend by addition, it appended a corrective
+  sentence after a lane-added one it contradicted, which the coordinator
+  removed before the sitting (WI-921 LLR-309, 2026-10-15). A term one row
+  defines is defined again, or cited by name, in a sibling row that uses
+  it: the sitting returned LLR-309 for an "elsewhere" only LLR-307 defines.
 - Brief Terra to amend an approved row by addition: keep the approved cell
   verbatim, function names included (item 5's schema lane migrates them),
   and append the new text in contract voice. Told only to restate the
