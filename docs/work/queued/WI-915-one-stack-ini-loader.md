@@ -180,10 +180,11 @@ One lane, one landing.
   `agent_common.py`. `[dupes-census]` is re-stamped too if its reading moves.
   Each re-stamp has its reason in the log.
 - `RESYNC_PACK.md` carries the entry in deliverable 4.
-- The row lands only after the phase-0 baseline manifest (the handoff's row M)
-  is committed on trunk. It lands alone, under the handoff's mechanism-change
-  rule: the commit bar, the merge slot and the trunk regen all read through
-  the sites it changes.
+- The row lands only after the phase-0 baseline manifest
+  (`docs/plans/2026-10-11-review-churn/baseline/baseline-manifest.md`, plan
+  revision 38) is committed on trunk. It lands alone, under the handoff's
+  mechanism-change rule: the commit bar, the merge slot and the trunk regen
+  all read through the sites it changes.
 - The build starts only after the plan gate (WI-913) has landed (S4).
 - The bar is green on the landing tip:
   - the smoke tier within its budget;
@@ -256,9 +257,14 @@ The reader keeps both small:
     does. It imports only `kitlib.ladder`, so `tests/test_import_layers.py`
     sees no cycle. IF-022, IF-049 and IF-068 (owner `docs/stack.ini`) keep
     their form and consumers.
-- **Dependencies:** `needs = []`.
-  - The claim waits on nothing. Building waits for G (S4). Landing waits for
-    row M and the mechanism-change rule (Done-when).
+- **Dependencies:** `needs = ["~WI-913"]`, the header's one edge.
+  - **WI-913 (G), soft:** building waits for its plan gate, since S4 marks
+    this row `single`. The claim waits on nothing, so the edge stays soft.
+  - **The baseline manifest, a landing hold and not an edge:** an analysis
+    committed on trunk, not a work item
+    (`docs/plans/2026-10-11-review-churn/baseline/baseline-manifest.md`,
+    plan revision 38), so `needs` cannot name it. The Done-when carries the
+    hold, with the mechanism-change rule.
   - WI-911 (B1) sets how this row's critique and reviews run, not what it
     builds, so it is not an edge.
   - The in-flight lanes (WI-798, WI-902) overlap this row only on the ratchet
@@ -289,3 +295,13 @@ The coordinator ruled the drafter's seven calls as recommended
 
 Q1 and Q2 are the row's only behaviour changes, so it is a refactor plus two
 fail-closed corrections, not the pure refactor the handoff named.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; one finding):
+
+- **Dependencies, MINOR: adopted.** The answer now matches the header,
+  "`needs = ["~WI-913"]`, the header's one edge", with its reason, and names
+  the baseline manifest by its artifact as "a landing hold and not an edge:
+  an analysis committed on trunk, not a work item", in the answer and in the
+  Done-when.

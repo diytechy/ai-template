@@ -73,7 +73,9 @@ never ships.
 ## Trust
 
 The pack's added heading is what lets this part of the bar pass, so the pack
-gains a say over a gate input.
+gains a say over a gate input. Written before the claim, answering S2 under
+`project-trajectory/PROCESS.md` §3, "When a guard is owed". The ruling goes
+to the owner to confirm or overrule (coordinator-cycle §1 and §5).
 
 - **Producer:** the lane's builder or the coordinator, editing `RESYNC_PACK.md`
   by hand in the same change. A failed write is any of: no added heading, a
@@ -122,3 +124,13 @@ gains a say over a gate input.
   state or domain value and needs no preparatory refactor.
 - **Dependencies:** WI-914, soft (its bar line, and the order in which
   mechanism changes land), and the plan gate WI-913, soft (`single`). No third-party dependency.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; one finding):
+
+- **S2, MINOR: adopted, as a citation rather than a link.** The Trust
+  section now opens with "answering S2 under `project-trajectory/PROCESS.md`
+  §3, "When a guard is owed"", the form WI-912's and WI-913's Trust sections
+  use. A relative link would break when the claim moves this spec from
+  `queued/` to `active/<branch>/`, one directory deeper.

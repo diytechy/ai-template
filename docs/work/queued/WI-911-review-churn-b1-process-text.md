@@ -131,9 +131,13 @@ rule in the target's own voice and does not copy the plan's reasoning.
      never code.
    - **The verdict section** says every recommendation will be dispositioned
      before the claim, so the critic writes each as one concrete change.
-3. **`review_brief.py critique`** names those registries in the brief for the
-   critic to read, beside the spec and its `specref` target, with a test that
-   fails without it. (A shipped script: RESYNC entry.)
+3. **`review_brief.py`** (a shipped script: RESYNC entry):
+   - `critique` names those registries in the brief for the critic to read,
+     beside the spec and its `specref` target, with a test that fails without
+     it;
+   - `review` gains the `--stance` choice the Trust section defines
+     (`ordinary` by default, or `convergence`), with a test that fails without
+     it.
 4. **`PROCESS.md` §3, the record-at-event rule** (ruling 2), beside "When a
    guard is owed": a decision a later step depends on is recorded by the step
    that makes it, in the commit where it is made, and checked against that
@@ -163,8 +167,53 @@ rule in the target's own voice and does not copy the plan's reasoning.
      its independently checkable evidence; check the Done-when's coverage and
      look for regressions; a new finding blocks only if it is fail-open, data
      loss or a Done-when gap, and anything else is marked for a successor
-     row. How the coordinator marks a round as convergence is stated in the
-     skill's recipes.
+     row. A brief marks a convergence round only through `review_brief.py
+     review --stance convergence` (see `## Trust`); the skill's recipes give
+     the command.
+
+## Trust
+
+Written before the claim, answering the round-2 critique's S2 finding under
+`project-trajectory/PROCESS.md` §3, "When a guard is owed". The ruling goes to
+the owner to confirm or overrule (coordinator-cycle §1 and §5).
+
+- **The carrier.** A review brief's convergence marking (deliverable 7). A
+  reviewer whose brief carries it lets a new BLOCKER or MAJOR that is not
+  fail-open, data loss or a Done-when gap pass to a successor row instead of
+  holding the landing, so the marking has a say over the landing gate.
+- **Producer and write route.** Only `review_brief.py review`, from its new
+  `--stance` choice: `ordinary`, the default, or `convergence`, which renders
+  one fixed line in the brief's ROUND FACTS beside the scope line. `Round`
+  refuses `convergence` with `--scope narrow`: a convergence round is
+  full-lane and answers no earlier findings. Nothing else marks a round. A
+  line appended by hand is not a marking, and the unattended loop, which
+  fills ROUND FACTS empty, marks none. A failed render raises `BriefError`
+  and writes no brief, so no partial marking exists. The coordinator sets the
+  stance only on the three rounds deliverable 1 names (the last counted round
+  before the checkpoint, the gate over the checkpoint tip, and an uncounted
+  round over a rebase that changed code or rows), and records each round's
+  stance in the lane's decisions record when it launches the round.
+- **Consumers and rulings.**
+  - **The reviewer,** through `project-trajectory/prompts/reviewer.template.md`
+    (Sol and each Claude stand-in, each reading its own render). The reduced
+    blocking rule applies only when the brief's ROUND FACTS carry the
+    rendered convergence line. With it absent, altered or unreadable, the
+    reviewer takes the ordinary stance, in which every BLOCKER or MAJOR
+    blocks.
+  - **The coordinator,** through the `coordinator-cycle` skill (§3 and §4)
+    and its recipes. A finding a verdict marks for a successor leaves the
+    landing's path only when the lane's decisions record shows that round as
+    one of the three convergence rounds, launched at the tip the verdict's
+    `Reviewed:` line names. Otherwise every BLOCKER or MAJOR in that verdict
+    blocks, as in an ordinary round.
+  - **Mechanical readers of filed round files** (`kitlib.verdict.effective_verdict`,
+    and the merge slot through it) never read the marking: the brief is not
+    filed, and a verdict's word stays the reviewer's, so a successor-marked
+    MAJOR reads to them as it is written.
+- **What the authority binds to.** One rendered brief and the commit its
+  `--sha` names; a marking never carries to another round or a later tip.
+  Every failure is fail-closed: an absent, altered or misplaced marking
+  leaves the stricter ordinary stance.
 
 ## Done-when
 
@@ -173,16 +222,19 @@ rule in the target's own voice and does not copy the plan's reasoning.
   rounds or a single reviewer.
 - The skill copy in `.claude/skills/` matches the kit source
   (`bootstrap.py --dest . --sync`).
-- `review_brief.py critique` names the registries, with a test that fails on
-  the code before the change; the change's trace rows are authored and sat at
-  the lane's checkpoint.
+- `review_brief.py critique` names the registries; `review --stance
+  convergence` renders the one fixed ROUND FACTS line, an absent `--stance`
+  renders the ordinary stance, and a narrow round refuses `convergence`. A
+  test for each fails on the code before the change. The change's trace rows
+  are authored and sat at the lane's checkpoint.
 - `RESYNC_PACK.md` carries one entry for the shipped changes (PROCESS.md §3,
   `spine-questions.md`, `reviewer.template.md`, `review_brief.py`), with no
   forced migration.
 - The build starts only after the plan gate (WI-913) has landed; the lane's
   plan is produced after the claim and passes that gate (S4).
 - The row lands only after the phase-0 baseline manifest (the plan's
-  revision 37; the handoff's row M) is committed on trunk.
+  revision 37), `docs/plans/2026-10-11-review-churn/baseline/baseline-manifest.md`,
+  is committed on trunk.
 - The bar is green on the landing tip: the smoke tier within its budget,
   `check_trajectory.py --strict` clean, and `trace.py --strict` with no
   finding beyond LLR-292's (B2 fixes that one).
@@ -193,11 +245,13 @@ rule in the target's own voice and does not copy the plan's reasoning.
   lane's cycle reads, plus the one render change the rubric's artifact line
   needs, and none is useful landed without the others. The verdict/act split
   is independently landable and is WI-912 (needs this row).
-- **S2:** no file gains authority over a hold, an act or a gate. The skill and
-  rubric text govern the coordinator's own procedure; the critique brief only
-  names files for the critic to read. No Trust section.
-- **S3:** no promise over an input space. The rubric's anchors are a closed
-  list, and the critique brief's registry list is a fixed, named set.
+- **S2:** yes. A review brief's convergence marking has a say over the
+  landing gate; see `## Trust`. The rest of the skill and rubric text governs
+  the coordinator's own procedure, and the critique brief only names files
+  for the critic to read.
+- **S3:** no promise over an open input space. The rubric's anchors are a
+  closed list, the critique brief's registry list is a fixed, named set, and
+  a review brief's stance is one of two values, `ordinary` by default.
 - **S4:** `single`. Deliverables 3 and 7 change two interface seams: the
   critique brief's reading surface, and the reviewer template's severity
   and convergence contract (IF-099). It builds after the plan gate lands.
@@ -205,8 +259,11 @@ rule in the target's own voice and does not copy the plan's reasoning.
   inputs (the architecture and dependency registries, deliverables 2 and 3),
   and a reviewer's blocking rule gains one (the brief's convergence marking,
   deliverable 7). Both are carried here; no preparatory refactor is needed.
-- **Dependencies:** no row; no third-party dependency. It lands first in the
-  batch: every later row's critique and review runs under it.
+- **Dependencies:** `needs = ["~WI-913"]`, soft: the plan gate lands before
+  this row's build, since S4 marks the row `single`, and the row may be
+  claimed before it. No third-party dependency. It lands next after WI-913,
+  ahead of the batch's other rows: every later row's critique and review runs
+  under it.
 
 ## Critique dispositions
 
@@ -220,3 +277,19 @@ Round 1 (Codex Sol, medium, 2026-10-14; three findings):
   with no lane (the handoff's row M), committed on trunk before any claim.
 - **Architectural delta, MINOR: adopted.** The delta answer now names the
   critic's and the reviewer's new inputs as carried within scope.
+
+Round 2 (Codex Sol, medium, 2026-10-14; it confirmed round 1's three
+adoptions and raised two findings):
+
+- **S2, MAJOR: adopted.** The convergence marking has a say over the landing
+  gate, so the row gains a `## Trust` section, and the S2 answer now reads:
+  "yes. A review brief's convergence marking has a say over the landing gate;
+  see `## Trust`." The marking's route is a construction, not a convention:
+  "Only `review_brief.py review`, from its new `--stance` choice ... Nothing
+  else marks a round", with every failure "fail-closed: an absent, altered or
+  misplaced marking leaves the stricter ordinary stance". Deliverable 3 and
+  the Done-when carry the render change and its tests (coordinator-2026-10-14
+  D-006).
+- **Dependencies, MINOR: adopted.** The answer now reads: "`needs =
+  ["~WI-913"]`, soft: the plan gate lands before this row's build, since S4
+  marks the row `single`".

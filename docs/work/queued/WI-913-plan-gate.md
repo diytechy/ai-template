@@ -88,21 +88,30 @@ text assumes each recommendation.
      family than the planner.
 3. **The filing step, the pass record and the cap** (shipped; RESYNC entry).
    - A `review_brief.py` subcommand files each critique verdict beside the
-     plan and writes the pass record. The Trust section is its contract.
+     plan and, from a later commit, writes the pass record. The Trust section
+     is its contract.
    - It checks the critique's commit binding and runs the coverage gate once,
      here. Later readers trust the record and recompute neither (ruling 2).
-   - A CHANGES-REQUESTED critique allows one revision (item 9 step 3; WI-805's
-     "at most one revision"). The revised plan must pass
+   - A critique's word is read through `kitlib.verdict.effective_verdict`,
+     the one rule the loop and the merge slot share: a CHANGES-REQUESTED
+     whose findings are all MINOR reads as an APPROVE (ruling 4: a MINOR
+     never costs a round), its findings left in the filed record for the
+     build to weigh, and one with no findings stays a refusal.
+   - Any other CHANGES-REQUESTED critique allows one revision (item 9 step 3;
+     WI-805's "at most one revision"). The revised plan must pass
      `plan_coverage.py --item <spec> --findings <that critique's record>`
      (WI-853's shared step: each finding covered by a row, or excluded with a
      reason). Then a second, fresh critique judges it, in the convergence
      stance and never seeing the first verdict (Q2).
-   - If the second critique does not approve, its BLOCKER and MAJOR findings
-     go to one `dispute` sitting, through the existing entry point and brief.
-     The pass record is written only when the sitting's accepted verdict
-     rules each of them DISMISS. A FIX or an ESCALATE goes to the owner: the
-     lane closes partial for an owner decision (OI-70), never to the build
-     (Q3).
+   - If the second critique does not read as an APPROVE, its BLOCKER and
+     MAJOR findings go to one `dispute` sitting, through the existing entry
+     point and brief. The pass record is written only when the sitting's
+     accepted verdict rules each of them DISMISS. A FIX or an ESCALATE goes
+     to the owner: the lane closes partial for an owner decision (OI-70),
+     never to the build (Q3). A second critique that does not read as an
+     APPROVE and has no BLOCKER or MAJOR finding to dispute (a
+     CHANGES-REQUESTED with no findings) also closes the lane partial for
+     the owner: an empty dispute set never authorizes a pass record.
    - A `beyond` delta is not critiqued and never passes. The lane closes
      partial, and the disposition adjudicator drafts the refactor successor
      (item 12, revision 18).
@@ -135,7 +144,8 @@ text assumes each recommendation.
 5. **The `coordinator-cycle` skill and its recipes** (this repo's tooling,
    synced to `.claude/skills/`; no RESYNC entry).
    - The plan step for a `single` row, after the claim and before the first
-     build: render, launch, commit, gate, critique, file, the one revision,
+     build: render, launch, commit the plan, gate, critique, file and commit
+     the critique, then write and commit the pass record; the one revision,
      the sitting or the owner at the cap, and the `beyond` close. The
      commands go in the recipes.
    - The build brief names the accepted plan. The builder reports a change of
@@ -162,19 +172,25 @@ file on disk, and the plan and the critique it rests on are model output
 (`project-trajectory/PROCESS.md` §3, "When a guard is owed").
 
 - **Producer and write route.** One filing step (deliverable 3), run by the
-  coordinator from the lane root. It validates, then writes:
-  - the critique is bound to the lane commit it judged, whose tree holds the
-    plan, and carries exactly one `VERDICT:` line whose count matches its
-    findings (`kitlib.verdict.filing_refusal`, the rule
-    `review_brief.py file` applies to a review);
-  - the coverage gate passes on that plan, and its delta line is `none` or
-    `within`.
+  coordinator from the lane root, in two commits, so the commit that adds a
+  pass record has a parent holding everything the record cites:
+  1. **File.** It checks that the critique is bound to the lane commit it
+     judged, whose tree holds the plan, and carries exactly one `VERDICT:`
+     line whose count matches its findings (`kitlib.verdict.filing_refusal`,
+     the rule `review_brief.py file` applies to a review). It files every
+     critique as a record beside the plan, and the coordinator commits that
+     record alone.
+  2. **Pass.** From that commit, its pass form checks that HEAD holds the
+     filed critique and any dispute verdict it cites, that the coverage gate
+     passes on the plan at HEAD, and that the delta line is `none` or
+     `within`. It then writes the pass record, which the coordinator commits
+     alone.
 
-  It files every critique as a record beside the plan. It writes the pass
-  record only for an APPROVE, or, at the cap, for a critique whose BLOCKER
-  and MAJOR findings the cited accepted dispute verdict all rules DISMISS.
-  The coordinator commits the record in a commit that changes only
-  `docs/plans/<WI>/`.
+  Both commits change only `docs/plans/<WI>/`. The pass form writes a record
+  only for a critique that reads as an APPROVE through
+  `kitlib.verdict.effective_verdict` (deliverable 3), or, at the cap, for a
+  critique whose BLOCKER and MAJOR findings the cited accepted dispute
+  verdict all rules DISMISS.
 - **Failed-write shapes.** A failed or timed-out critic call leaves no verdict
   file, so nothing is filed. A refused filing exits 2 and writes nothing
   (IF-289's rule). An interrupted write can leave a partial record, which
@@ -206,8 +222,9 @@ file on disk, and the plan and the critique it rests on are model output
   - **Absent** (no record, no plan, no plan directory): held, naming the row
     and what is missing.
   - **Unreadable** (a git read or a decode fails): held, naming why.
-  - **Failed** (only a CHANGES-REQUESTED critique, a coverage failure, a
-    `beyond` delta, a sitting's FIX or ESCALATE): no pass record exists, so
+  - **Failed** (only a critique that does not read as an APPROVE, a coverage
+    failure, a `beyond` delta, a sitting's FIX or ESCALATE): no pass record
+    exists, so
     held. The lane goes to the owner or closes partial, as deliverable 3
     says.
   - **Malformed** (a record outside its grammar, a digest that is not the
@@ -260,9 +277,12 @@ This ruling goes to the owner to confirm or overrule (`coordinator-cycle`
   slot, or a missing spec, plan or rubric, refuses and writes nothing.
 - The filing step refuses, exiting 2 and writing nothing, each of: a critique
   that is unbound, malformed or count-mismatched; a plan the coverage gate
-  fails; a missing or `beyond` delta line; and, at the cap, a dispute verdict
-  that is not an accepted DISMISS of every BLOCKER and MAJOR finding. A test
-  covers each.
+  fails; a missing or `beyond` delta line; at the cap, a dispute verdict that
+  is not an accepted DISMISS of every BLOCKER and MAJOR finding; and a pass
+  form run where HEAD lacks a record it cites. A test covers each. A
+  MINOR-only CHANGES-REQUESTED critique passes and one with no findings does
+  not, and the pre-commit check refuses a pass record committed together
+  with a critique it cites, while the two-commit order passes.
 - `prompts/plan-single.template.md` is in `prompts/CATALOG.md` (the
   `prompt-catalog` check passes), asks the delta question in item 12 entry
   point 2's words in both modes, and names no skill.
@@ -365,3 +385,27 @@ a `single` mark would let its own new check hold its own lane.
 - **Q7:** the gate's own requirement hangs from SR-154.
 - **Q8:** the plan states its architectural-delta answer on a typed `DELTA:`
   line.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; two findings):
+
+- **S2, MAJOR: adopted.** The filing step wrote the pass record in the same
+  step as the critique it cites, which the pre-commit check, reading cited
+  records from the parent, must refuse. The Trust section's write route now
+  runs "in two commits, so the commit that adds a pass record has a parent
+  holding everything the record cites": "**File.** ... the coordinator
+  commits that record alone" and "**Pass.** From that commit, its pass form
+  checks that HEAD holds the filed critique and any dispute verdict it cites
+  ... which the coordinator commits alone". Deliverables 3 and 5 and the
+  Done-when carry the order and its tests.
+- **S3, MINOR: adopted, with a different resolution.** The capped
+  MINOR-only case is closed through the kit's one severity rule instead of a
+  partial close, which would cost the owner a decision over findings ruling
+  4 says never cost a round. Deliverable 3 now reads: "A critique's word is
+  read through `kitlib.verdict.effective_verdict` ... a CHANGES-REQUESTED
+  whose findings are all MINOR reads as an APPROVE", at either critique. The
+  remaining case is the critic's: "A second critique that does not read as
+  an APPROVE and has no BLOCKER or MAJOR finding to dispute ... also closes
+  the lane partial for the owner: an empty dispute set never authorizes a
+  pass record" (coordinator-2026-10-14 D-007).

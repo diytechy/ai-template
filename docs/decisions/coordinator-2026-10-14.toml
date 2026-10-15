@@ -3,7 +3,7 @@
 # trunk (coordinator). Lane decisions are in each lane's own record. Format:
 # project-trajectory/decisions.template.toml.
 
-high_risk = ["D-005"]
+high_risk = ["D-005", "D-006"]
 
 [decision.D-001]
 decided = "WI-910's spec of record is a new docs/specs/WI-910.md holding the Mac drill record (how the drill ran, its two findings, why they went unseen), moved verbatim out of the row; the row's specref names it, and the row keeps its filing line and its Done-when. This is the review-churn queue's 'pre' trunk fix: the empty specref made check_trajectory.py --strict exit 1 on trunk (R-E)."
@@ -38,4 +38,25 @@ decided = "The plan gate G is filed as WI-913, split from WI-805 (whose title, D
 alternative = "A procedural gate only (the review brief or the coordinator's checklist refusing an unplanned build) instead of a commit check; or the review brief naming the accepted plan for reviewers."
 reversal_cost = "Low before the claim: amend WI-913's deliverables and re-critique; WI-805's split reverts with one file."
 why_not_escalated = "Ruling 9 pulled the gate forward and fixed its one path; a commit-time refusal follows the owner's 2026-10-03 enforce-at-the-commit rule, and the scope critique judges the design before the claim."
+review = ""
+
+[decision.D-006]
+decided = "WI-911's round-2 scope critique (S2, MAJOR) is adopted: a review brief's convergence marking lets a non-convergence-class MAJOR pass to a successor row instead of holding the landing, so the row gains a Trust section. The marking is a construction, not a convention: only review_brief.py review renders it, from a new --stance choice (ordinary by default, or convergence) as one fixed ROUND FACTS line, refused on a narrow round; a hand-appended line is not a marking and the unattended loop marks none; the reviewer applies the reduced blocking rule only on that rendered line, and the coordinator lets a successor-marked finding leave the landing's path only for a round its lane decisions record shows as one of the three convergence rounds at the verdict's reviewed tip. Every failure leaves the stricter ordinary stance."
+alternative = "A coordinator-appended stance line named in the recipes, with the Trust section stating its failure rules (no code change); or reviewers that never relax, grading every round alike, with the coordinator alone applying the convergence blocking rule from the round's position."
+reversal_cost = "Low before the claim: amend WI-911's deliverables 3 and 7 and its Trust section, and re-critique."
+why_not_escalated = "The critique's remedy asked for a Trust section, which the coordinator writes before the claim (coordinator-cycle section 1); the rendered choice reuses review_brief.py's existing round model, which already refuses a narrow round's shape in a full one. The Trust ruling itself goes to the owner to confirm or overrule, as every row's does."
+review = ""
+
+[decision.D-007]
+decided = "WI-913's round-1 scope critique (S3, MINOR, a capped CHANGES-REQUESTED of MINORs only) is adopted with a different resolution than the critic's partial close: the plan critique's word is read through kitlib.verdict.effective_verdict, the one rule the loop and the merge slot share, so a CHANGES-REQUESTED whose findings are all MINOR reads as an APPROVE at either critique and its findings stay in the filed record for the build to weigh. The critic's resolution keeps the remaining case: a capped critique that does not read as an APPROVE and has no BLOCKER or MAJOR finding to dispute closes the lane partial for the owner, and an empty dispute set never authorizes a pass record."
+alternative = "The critic's remedy as written: a capped MINOR-only CHANGES-REQUESTED closes the lane partial for an owner decision; or a revision at the first critique for MINOR findings, as the row first read."
+reversal_cost = "Low before the claim: amend WI-913's deliverable 3 and Trust section, and re-critique."
+why_not_escalated = "Ruling 4 says a MINOR never costs a round, and the kit already routes a MINOR-only CHANGES-REQUESTED as an APPROVE in one home for its two readers; a partial close would spend an owner decision on findings the reviewer did not think worth blocking on. The confirming critique judges the change before the claim."
+review = ""
+
+[decision.D-008]
+decided = "WI-912's round-1 scope critique (S3, MAJOR, the act turn's re-runs) is adopted with one change to the remedy: each authorized act is judged at the lane's HEAD in its committed tree, taken when HEAD carries all of it and owed when it carries none of it; any other combination, such as a flip committed without its snapshot copy, is refused before the launch, naming the row, instead of resumed; and the act turn refuses a lane with uncommitted changes, so a flip left uncommitted by an interrupted turn is discarded by the coordinator, recorded, before the re-run lists the whole act."
+alternative = "The critic's remedy as written: a status-only partial act at HEAD is resumed, the brief listing the missing snapshot and its commit without a second flip."
+reversal_cost = "Low before the claim: amend WI-912's S3 Re-runs answer, Trust ruling and Done-when tests, and re-critique."
+why_not_escalated = "Both forms fail closed; refusing serves a state the commit hook's integrity floor may already exclude without adding a resume path for it, and the reachable partial states (an uncommitted flip, or a combined act stopped between its two commits) are handled either way. The confirming critique judges it before the claim."
 review = ""

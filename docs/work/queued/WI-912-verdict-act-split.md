@@ -69,7 +69,8 @@ rule in the target's own voice. Q1 to Q4 are answered in Scope answers.
    catalogue line, and an assembler (Q1). The assembler reads the named
    verdict and its binding at the lane's HEAD through
    `kitlib.sitting.accepted_at` and lists every act the verdict authorizes
-   that the tree does not yet carry: rows ruled APPROVE are flipped, with
+   that HEAD's committed tree does not yet carry in full (Scope answers, S3,
+   "Re-runs"): rows ruled APPROVE are flipped, with
    `--approves` naming only their registries; rows ruled CLARITY, and MEANING
    rows the verdict blesses on a released rung, are re-attested, with
    `--verdict` on a held rung. The amendment act comes first, then the
@@ -167,7 +168,9 @@ slot's bound today, unchanged here.
 - **The act turn**, `coordinator_adjudicate.py` (new). A verdict that is
   absent at HEAD, unreadable, unaccepted (no binding, or `pending`, or
   `failed`) or malformed, or one that owes no act, is refused before the
-  launch (exit 2), naming why. Nothing is launched, reserved or written.
+  launch (exit 2), naming why. So is a lane with uncommitted changes (naming
+  the paths), and a row whose act evidence at HEAD is inconsistent (S3,
+  "Re-runs"; naming the row). Nothing is launched, reserved or written.
 - **The act brief's assembler** (new). It uses the same reader, and any of
   those inputs returns `(None, reason)`, never a partial brief.
 - **The merge slot**, `integrate._approval_act_refusal` →
@@ -206,7 +209,12 @@ slot's bound today, unchanged here.
   before its first-approval act; a mixed first-approval verdict whose
   `--approves` names only its approved rows' registries; a MEANING row
   without the bless mark left unacted; a call that stops short of a listed
-  act, or writes under `docs/reviews/`, not reporting success; with the loop
+  act, or writes under `docs/reviews/`, not reporting success; an act
+  interrupted between its flip and its snapshot refused as a dirty lane, and
+  re-run in full once the leftovers are discarded; a combined act
+  interrupted between its two commits re-run with only its first-approval
+  act listed; a flip committed without its copy refused, naming the row;
+  with the loop
   marker set, every prompt the entry point launches ending with the
   `Loop-Session` instruction, and none without it.
 - The change's trace rows are authored and sat at the lane's checkpoint,
@@ -245,8 +253,22 @@ slot's bound today, unchanged here.
   - **The acts.** Exactly the rows each accepted part rules to authorize
     them. A MEANING row without the bless mark owes none, and neither does
     any class other than amendment, first-approval and combined.
-  - **Re-runs.** A row already flipped, or already anchored to its snapshot
-    copy, is not acted again, so a re-run after a failed act is safe.
+  - **Re-runs.** The assembler judges each authorized act at the lane's
+    HEAD, in its committed tree, never the working tree. Per row, an APPROVE
+    is taken when HEAD carries both the Approved status and a snapshot copy
+    equal to the row's committed text, and owed when HEAD carries neither; a
+    re-attest is taken when the copy equals the row's committed text, and
+    owed otherwise. Any other combination, such as a flip committed without
+    its copy, is inconsistent: it is refused before the launch, naming the
+    row, and never counted as taken. The act turn also refuses a lane with
+    uncommitted changes before the launch, naming the paths. So an act
+    interrupted between its flip and its snapshot, which leaves the flip
+    uncommitted, is refused until the coordinator discards the leftovers
+    (recorded as a decision), and the re-run then lists the whole act. A
+    combined act interrupted between its amendment commit and its
+    first-approval commit is re-run with only the first-approval act
+    listed. A re-run after a completed act owes none and is refused as
+    such.
   - **The trailer.** One construction covers every prompt the entry point
     launches.
   - **Lanes in flight.** A lane in flight when this lands takes its next act
@@ -276,7 +298,8 @@ slot's bound today, unchanged here.
   - **`needs` WI-911, soft.** It is claimed with the batch and built after
     WI-911 lands. Both rows edit the `coordinator-cycle` skill's §4
     and its recipes. WI-911 lands first, as the text every later lane runs
-    under, and after the baseline manifest (row M).
+    under, and after the baseline manifest
+    (`docs/plans/2026-10-11-review-churn/baseline/baseline-manifest.md`).
   - **The plan gate, WI-913,** is a soft edge and a Done-when hold, since
     the handoff lets a `single` row be claimed before the gate lands.
   - **A mechanism change:** this row lands alone, and the next mechanism
@@ -298,3 +321,24 @@ slot's bound today, unchanged here.
     and the managed loop stays paused until WI-809 lands.
   - **Q4, the trailer line's home:** the entry point appends
     `agent_brief.loop_provenance_note()` to every prompt it launches.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; one finding):
+
+- **S3, MAJOR: adopted, with one change to the remedy.** A partial act is
+  reachable in normal use: a turn can stop between its flip and its
+  snapshot, or between a combined act's two commits. The Re-runs answer now
+  states one completion contract, judged at HEAD: "an APPROVE is taken when
+  HEAD carries both the Approved status and a snapshot copy equal to the
+  row's committed text, and owed when HEAD carries neither ... Any other
+  combination, such as a flip committed without its copy, is inconsistent:
+  it is refused before the launch, naming the row, and never counted as
+  taken." The critic asked for a flip-only state to be resumed; it is
+  refused instead, because a resume path would serve a state the commit
+  hook's integrity floor may already exclude, and a refusal fails closed
+  either way. The reachable flip-only state is uncommitted, and "the act
+  turn also refuses a lane with uncommitted changes". Deliverable 2 reads
+  acts from "HEAD's committed tree", the Trust section's act-turn ruling
+  carries both refusals, and the Done-when's tests include each recovery
+  case (coordinator-2026-10-14 D-008).
