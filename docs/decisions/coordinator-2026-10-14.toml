@@ -96,3 +96,10 @@ alternative = "Split the unpaired-fence refusal into its own row under S1, landi
 reversal_cost = "Low: a split row can be filed on trunk before the rebuild, taking deliverable 5 and its tests."
 why_not_escalated = "S1 lets independent deliverables stay together when that is recorded in the spec with its reasons; the coordinator records the keep-together, as D-002 did for WI-912's trailer line, for the owner to confirm or overrule (if split, the parser fix lands first)."
 review = ""
+
+[decision.D-014]
+decided = "WI-902 keeps the mint's lineage corrections (the lane's D-003 and D-004: a drafts-only replay re-points to the full successor set, and an exact-title match on another lineage refuses the mint before any write) in the same row and landing as the adoption record, as its deliverable 10, rather than splitting them into a row that lands first; this answers the round-1 scope critique's MINOR S1 finding, which asked that they be named and their grouping decided."
+alternative = "Split them into their own row under S1, landing before the rebuild, since they fix trunk's mint for drafts without the record."
+reversal_cost = "Low: a split row can be filed on trunk before the rebuild, taking deliverable 10 and its tests from the lane's survivors."
+why_not_escalated = "As D-013 for the parser fix: S1 lets independent deliverables stay together when the spec records why; their functions are the ones the adoption's lineage join extends, D-004 builds a dispute ruling's FIX already reviewed in the lane, and the owner may split them (the spec states the order)."
+review = ""

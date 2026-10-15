@@ -100,6 +100,12 @@ writes each rule in that surface's own voice.
    record.
 9. **`RESYNC_PACK.md`**: one entry, anchored at the landing's parent, that
    replaces the lane's entry.
+10. **The mint's lineage corrections** (`scripts/intake.py`,
+    `_standing_successors` and `_mint`; the lane's D-003 and D-004). A
+    replay re-points a late dependent to the full successor set, drafts-only
+    replays included. A standing row found by exact title must carry the
+    draft's `supersedes`, or the mint refuses before any write. Both hold for
+    drafts whether or not adoptions sit beside them.
 
 ## Trust
 
@@ -334,7 +340,7 @@ under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
 
 ## Scope answers
 
-- **S1:** two deliverables could each land alone.
+- **S1:** three deliverables could each land alone.
   - **(A) The section parser's unpaired-fence refusal.** It fixes a defect
     trunk already has for drafts: when a valid draft is followed by an
     unclosed one, the second draft is silently lost.
@@ -342,14 +348,22 @@ under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
     commit check, the sweep that trusts the record, and the deleted history
     readers. B's parts cannot land apart: the record is trustworthy only
     through the check, and the check has nothing to judge without the record.
+  - **(C) The mint's lineage corrections** (deliverable 10). A drafts-only
+    replay re-points to the full successor set, and an exact-title match on
+    another lineage refuses the mint. Both fix trunk's mint for drafts,
+    without the record.
 
   They are kept together at the coordinator's direction
-  (`docs/decisions/coordinator-2026-10-14.toml` D-013), for three reasons:
+  (`docs/decisions/coordinator-2026-10-14.toml` D-013 for A, D-014 for C),
+  for four reasons:
   - the reshape rewrites A's parser and its return shape;
   - A's regression is review 015's adoption reproduction;
-  - a split would serialize two mechanism landings on one function.
+  - C's functions are the ones B's lineage join extends with adopted pairs,
+    and C is already built and reviewed in the lane (D-004 builds dispute
+    004's FIX);
+  - a split would serialize more mechanism landings on the same functions.
 
-  If the owner splits them, A lands first.
+  If the owner splits them, A and C land first, in either order, then B.
 - **S2:** yes. Two authorities are created: the request gives the
   adjudicator's text authority over the close, and the record gives the
   close's result authority over the sweep's re-point. The commit check gates
@@ -396,3 +410,14 @@ under `project-trajectory/PROCESS.md` §3, "When a guard is owed".
   - **Landing:** it changes machinery the cycle runs on (the close, the
     sweep and a hook step), so it lands alone.
   - **Third-party:** none.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; APPROVE, one finding):
+
+- **S1, MINOR: adopted.** The S1 answer now names a third independently
+  landable deliverable, "(C) The mint's lineage corrections (deliverable
+  10)", carried by deliverable 10, and records keeping it in this landing
+  with its reasons and the order if split: "If the owner splits them, A and
+  C land first, in either order, then B." The keep-together is
+  `docs/decisions/coordinator-2026-10-14.toml` D-014.
