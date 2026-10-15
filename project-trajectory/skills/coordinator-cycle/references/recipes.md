@@ -97,7 +97,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
   add the skill's two scope and trust questions, and send it to a fresh Sol
-  session. Record the answer before the claim. `review_brief.py critique`
+  session. Record the answer before the claim. In an attended session, put
+  the spec's filing calls to the owner first and record them under
+  `## Calls ruled at filing`, so the critique judges the ruled spec (WI-921
+  to WI-923, 2026-10-15). `review_brief.py critique`
   names the same verdict path every round (`WI-NNN-scope-critique.md`): move
   the previous round's file aside before rendering the next. Ask in the same brief for a ruling per
   consumer and for every carrier's failure contract (producer, write route,
@@ -185,6 +188,15 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   id. Until WI-878 binds the findings file into the sitting, keep finding ids
   unique within a lane: a second dispute reusing ids refuses a valid
   dismissal.
+  Run a fix round in two stages on one builder. Stage 1 confirms each
+  finding on the real path and writes the coverage plans (one per round
+  file), changing nothing in the lane; you re-run each gate, rule the
+  plan's stop points (a site of the class outside the spec's surface is
+  reported, not built), then SendMessage releases the fix (WI-921 and
+  WI-911, 2026-10-15). Brief the builder to confirm a route it names by
+  reading the function behind it: one cited `handback.py`'s `--no-verify`
+  commit as a return-to-queue route, which `close_partial` owns and
+  `spec_move.py`'s stale docstring still describes (wi-921 D-013).
 - **Closure checks,** from the lane root:
   `"$PY" "$SCRIPTS/trace.py" --strict-integrity` and
   `"$PY" "$SCRIPTS/check_trajectory.py" --strict`.

@@ -173,3 +173,6 @@ Round 1 (Codex Sol, medium, 2026-10-15; CHANGES-REQUESTED, one finding):
   row promises behaviour over an input space: the exclusive create's four
   outcome classes, read on Windows and on POSIX (S3). That alone is enough,
   however cheaply each outcome is tested."
+
+Round 2 (Codex Sol, medium, 2026-10-15; a confirming round in convergence
+stance): APPROVE, no findings; the adoption confirmed in the spec as quoted.

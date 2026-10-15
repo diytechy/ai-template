@@ -25,30 +25,34 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-15d-attended-coordinator.md](handoff-2026-10-15d-attended-coordinator.md),
+  [handoff-2026-10-15e-attended-coordinator.md](handoff-2026-10-15e-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). Its phase-0
   baseline manifest is recorded. The two lanes at the head of the queue are
-  built and in review. The hook-floor row (the never-run Done-when hold
+  in their full-lane rounds. The hook-floor row (the never-run Done-when hold
   step in the hook's step floor, a census of every check step, and the
-  step's two-commit fail-open fixed) has passed its plan gate, and its first
-  full-lane round waits for triage; it lands first. The batch's process-text
-  row is built from its passed plan, and its first round's one round-costing
-  finding is fixed; it lands next, through the first row's hold. The other
-  hook-coverage row, the landing shapes the hook misses, lands after the
-  headless marking. The strict-lints lane waits for its sitting until the
-  lanes ahead of it land. The disposition-adoption row is re-cut before it
-  resumes, and the account-homes row still owes its checkpoint rework. A
-  defect a load-sensitive smoke red showed (the runtime store's lock crashes
-  on Windows when a create meets the holder's in-progress delete) is filed,
-  before its scope critique. The headless
-  coordinator's marking is filed in two rows: the marking itself, which
-  lands right after the verdict/act split, and the merge slot's re-claim
-  reader, which lands before the slot takes coordinator landings. The
-  handoff carries the attended session prompt; how to run reviews under the
-  ruling stays in the 2026-10-11 handoff, with the recipes' hand-applied
-  addenda, until the skill says the same.
+  step's two-commit fail-open fixed) has fixed its first round's quoted-path
+  fail-open. Its second round left one finding open (an amended commit is
+  judged against the wrong parent), which its builder's coverage plan and,
+  if contested, a dispute sitting settle before its third round; it lands
+  first. The batch's process-text row has fixed its second round's one
+  round-costing finding (the reading-scope exclusion now belongs to the
+  convergence stance alone), and its third and last counted round, in convergence stance, found no blocking finding, so its checkpoint follows once the first row lands; it lands next, through the first
+  row's hold. The other hook-coverage row, the landing shapes the hook
+  misses, lands after the headless marking. The strict-lints lane waits for
+  its sitting until the lanes ahead of it land. The disposition-adoption row
+  is re-cut before it resumes, and the account-homes row still owes its
+  checkpoint rework. The store-lock defect (the runtime store's lock crashes
+  on Windows when a create meets the holder's in-progress delete) has its
+  filing call ruled and its scope critique confirmed: it plans `single` and
+  is claimed in the next batch. The headless coordinator's marking is filed
+  in two rows: the marking itself, which lands right after the verdict/act
+  split, and the merge slot's re-claim reader, which lands before the slot
+  takes coordinator landings. The handoff carries the attended session
+  prompt; how to run reviews under the ruling stays in the 2026-10-11
+  handoff, with the recipes' hand-applied addenda, until the skill says the
+  same.
   The coordinator's procedure lives in the `coordinator-cycle` skill. The
   overnight loop (`scripts/coordinator/overnight_legs.py`) is stopped, and the
   handoff's `Overnight: stop` line keeps it so; it becomes usable once the
