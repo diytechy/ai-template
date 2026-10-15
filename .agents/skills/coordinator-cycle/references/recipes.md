@@ -378,6 +378,10 @@ lane commit being replayed.
   lanes; a rebase clears them.
 - Ids collide across unlanded lanes. Brief each lane's Terra with every open
   lane's ids as a floor, or renumber in the later lane before committing.
+  A floor spends the skipped ids on the lane: once it lands, `trace.py
+  --strict` lists them as spent with no retirement record until their own
+  lanes land. Record the floor in the lane's decisions; never retire them
+  (WI-913 D-004).
 - Acts collide too: check `acts.toml` after every rebase for duplicate act
   seqs (the skill's §4 latches sittings to avoid them).
 - A registry cell's line can carry leading whitespace (` detail = "...`):
@@ -435,6 +439,13 @@ lane commit being replayed.
 - The local Codex sandbox has failed shallow-clone tests and `git worktree add`,
   and hit Windows locks at `-n 2`. Ask for `-n 0`; confirm those failures with
   decisive tests outside that sandbox before treating them as code defects.
+- Brief Terra to amend an approved row by addition: keep the approved cell
+  verbatim, function names included (item 5's schema lane migrates them),
+  and append the new text in contract voice. Told only to restate the
+  builder's function names, it rewrote LLR-313's whole Detail and TC-333's
+  Expected and dropped approved obligations (WI-913, 2026-10-14).
+- An interface row names no file in any cell; a "No tie-back" note belongs
+  only to a row with an `external:` party.
 
 ## 6. Commits and hooks
 
@@ -476,6 +487,11 @@ lane commit being replayed.
   citation can stale `docs/open-items.html` again (2026-10-14).
 - Specref anchors take plain headings (no backticks or apostrophes), one
   anchor per row.
+- A new built-in check step runs at commit only from the shipped hook's
+  `--run-steps` floor or a path trigger; registering it in `check.py` runs
+  it nowhere. Ask a builder adding a step for a test that drives the
+  hook's own step list (WI-913 round 2; WI-841's `done-when-blessed` has
+  the same gap).
 
 ## 7. Environment and limits
 
@@ -525,6 +541,18 @@ lane commit being replayed.
   summaries and the sections you judge.
 - The guard's relaunch has had no live verification. Check the current
   handoff and supervise its first unverified use.
+- **Reviews in the trial shape, by hand until WI-911 renders them:** append
+  the scratch root's `review-addendum.md` (severity by reachability, the
+  closed-set classification, the threat model) to every review brief, and
+  `review-convergence-addendum.md` too for a convergence round. Give each
+  Claude reviewer only its brief's path plus the lane worktree and the
+  interpreter, which the brief does not name, and ask for a two-line reply
+  (the verdict path and its VERDICT line). Three reviewers file three
+  round files, and `plan_coverage.py --findings` takes one, so the builder
+  writes one coverage plan per round file (WI-913, 2026-10-15).
+- Unset `MSYS_NO_PATHCONV` in a shell that runs pytest: exported, it
+  breaks the shallow-clone tests' `git clone` of a file URI ("'/C:/...'
+  does not appear to be a git repository"; WI-913, 2026-10-15).
 
 ## 8. Re-judge and consolidation recipes
 

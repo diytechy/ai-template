@@ -25,20 +25,25 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-14c-attended-coordinator.md](handoff-2026-10-14c-attended-coordinator.md),
+  [handoff-2026-10-15-attended-coordinator.md](handoff-2026-10-15-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). Its phase-0
-  baseline manifest is recorded, its first batch is claimed, and the
-  plan-gate and strict-lints lanes have their first build rounds. The
+  baseline manifest is recorded and its first batch is claimed. The
+  plan-gate lane has passed its three review rounds, and its checkpoint is
+  next; the strict-lints lane's review round is filed, and it waits for its
+  sitting until the lanes ahead of it land. One Done-when hold step is
+  registered but never run by the commit hook: a row is owed to put it in
+  the hook's step floor. The
   disposition-adoption row's record-at-close amendment is filed and its
   critique passed; that row is re-cut before it resumes, and the
   account-homes row still owes its checkpoint rework. The headless
   coordinator's marking is filed in two rows: the marking itself, which
   lands right after the verdict/act split, and the merge slot's re-claim
-  reader, which lands before the slot takes coordinator landings. The handoff carries the attended session prompt and the owner's
-  two newest review rulings; how to run reviews under the ruling stays in the
-  2026-10-11 handoff until the skill says the same.
+  reader, which lands before the slot takes coordinator landings. The handoff carries the attended session prompt and the review
+  trial's first counts; how to run reviews under the ruling stays in the
+  2026-10-11 handoff, with the recipes' hand-applied addenda, until the
+  skill says the same.
   The coordinator's procedure lives in the `coordinator-cycle` skill. The
   overnight loop (`scripts/coordinator/overnight_legs.py`) is stopped, and the
   handoff's `Overnight: stop` line keeps it so; it becomes usable once the
