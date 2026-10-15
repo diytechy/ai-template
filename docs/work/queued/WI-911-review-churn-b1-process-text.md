@@ -7,7 +7,8 @@ specref = "docs/plans/2026-10-11-review-churn/README.md#owner-rulings-2026-10-11
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
-needs = []
+planmode = "single"
+needs = ["~WI-913"]
 +++
 
 ## Context
@@ -178,6 +179,10 @@ rule in the target's own voice and does not copy the plan's reasoning.
 - `RESYNC_PACK.md` carries one entry for the shipped changes (PROCESS.md §3,
   `spine-questions.md`, `reviewer.template.md`, `review_brief.py`), with no
   forced migration.
+- The build starts only after the plan gate (WI-913) has landed; the lane's
+  plan is produced after the claim and passes that gate (S4).
+- The row lands only after the phase-0 baseline manifest (the plan's
+  revision 37; the handoff's row M) is committed on trunk.
 - The bar is green on the landing tip: the smoke tier within its budget,
   `check_trajectory.py --strict` clean, and `trace.py --strict` with no
   finding beyond LLR-292's (B2 fixes that one).
@@ -193,11 +198,25 @@ rule in the target's own voice and does not copy the plan's reasoning.
   names files for the critic to read. No Trust section.
 - **S3:** no promise over an input space. The rubric's anchors are a closed
   list, and the critique brief's registry list is a fixed, named set.
-- **S4:** `none` proposed: one script family (`review_brief.py`'s critique
-  brief, a change a cheap test specifies), no Trust section, no input-space
-  promise; the rest is text.
-- **Architectural delta:** none. No state, domain value, input dependency or
-  boundary is added; the critique brief gains read-only inputs it already
-  has access to.
+- **S4:** `single`. Deliverables 3 and 7 change two interface seams: the
+  critique brief's reading surface, and the reviewer template's severity
+  and convergence contract (IF-099). It builds after the plan gate lands.
+- **Architectural delta:** within scope. The critic's judgement gains new
+  inputs (the architecture and dependency registries, deliverables 2 and 3),
+  and a reviewer's blocking rule gains one (the brief's convergence marking,
+  deliverable 7). Both are carried here; no preparatory refactor is needed.
 - **Dependencies:** no row; no third-party dependency. It lands first in the
   batch: every later row's critique and review runs under it.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-14; three findings):
+
+- **S4, MAJOR: adopted.** `planmode = "single"`, and the S4 answer now
+  reads: "Deliverables 3 and 7 change two interface seams".
+- **Dependencies, MAJOR: adopted in part.** The landing hold is a Done-when
+  bullet: "The row lands only after the phase-0 baseline manifest ... is
+  committed on trunk." No row is filed for the manifest: it is an analysis
+  with no lane (the handoff's row M), committed on trunk before any claim.
+- **Architectural delta, MINOR: adopted.** The delta answer now names the
+  critic's and the reviewer's new inputs as carried within scope.

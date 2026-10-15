@@ -48,6 +48,10 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
   the work lands; red: an empty keep set), with no red tree landed.
 - The adjudicate prompts are amended for acts taken in the sitting
   (`worker.template.md`'s approval-act paragraph moved to WI-849).
+- The managed loop's sittings take their act through the act turn WI-912
+  builds for the coordinator's entry point, from the committed verdict, so a
+  loop sitting no longer ends at its verdict (owner, 2026-10-14, in session:
+  the loop's act turn is built here, not in WI-912).
 - Each spine row the README matrix gives this row (SR-178,
   LLR-144/149/152/161/262/278, TC-143/146/153/257/278, IF-091; LLR-158 and
   TC-218's method moved to WI-849, and this row extends TC-218: a lane flip
