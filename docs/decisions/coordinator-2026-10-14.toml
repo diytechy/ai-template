@@ -103,3 +103,24 @@ alternative = "Split them into their own row under S1, landing before the rebuil
 reversal_cost = "Low: a split row can be filed on trunk before the rebuild, taking deliverable 10 and its tests from the lane's survivors."
 why_not_escalated = "As D-013 for the parser fix: S1 lets independent deliverables stay together when the spec records why; their functions are the ones the adoption's lineage join extends, D-004 builds a dispute ruling's FIX already reviewed in the lane, and the owner may split them (the spec states the order)."
 review = ""
+
+[decision.D-015]
+decided = "P9's lane-mode rule (plan revision 36: a lane claimed headless lands headless, or the attended coordinator re-claims it before committing in it) is read as covering any lane a headless leg marked: its claim, or any commit one of the loop's own writers made in its range under the marker, a sitting's telemetry commit included, since the merge slot's loop-lane window (provenance.loop_lane_window) opens at either. WI-917 states the rule so, and WI-918's re-claim closes either."
+alternative = "Read 'claimed headless' literally, as only a lane whose claim commit carries the trailer, leaving outside the rule a lane claimed attended and then sat in by a headless leg, whose later attended commits the merge slot would still refuse once WI-808 moves landings onto it."
+reversal_cost = "Low before WI-917's build: narrow deliverable 3's rule text. The slot's window would still open at a sitting's commit, so a narrowed rule leaves such a lane unlandable through the slot without a re-claim."
+why_not_escalated = "It follows the merge slot's existing definition of a loop lane rather than adding one, and the ruling's purpose (a lane that spans headless and attended sessions, as WI-798's did, stays landable) needs the wider reading."
+review = ""
+
+[decision.D-016]
+decided = "WI-917's design calls: (Q1) one loop session per overnight run, set once by the launcher through mark_loop_process, so a lane one leg claims and a later leg continues names one session; (Q2) each leg's prompt is the handoff's one attended session prompt, then a fixed headless block (scripts/coordinator/headless-leg.md) that states only the mode, then the kit's loop_provenance_note, so no second headless prompt is copied between handoffs; (Q4) a leg that reaches an owner-held step brings the lane to a safe committed point, records the step and its evidence, files a pending open item where only the owner can decide, moves to the next row, and closes out with Overnight: stop when no row can move; (Q5) every commit carries the trailer by construction for porcelain commits and the kit's writers, by recipe for the archive commit, and by the launcher's after-leg audit for every other route."
+alternative = "A session per leg; a separate headless session prompt carried in each handoff, as legs 01 to 03 used; a leg that stops the whole run at the first owner-held step."
+reversal_cost = "Low before the build: amend deliverables 1 to 3 and re-critique; after it, a launcher and skill edit in a lane."
+why_not_escalated = "Each follows an existing kit contract (mark_loop_process's once-per-run marker, the kit's own trailer note, skill section 5's open-item route) or removes a drift the 2026-10-11 legs showed (leg 03's copied prompt still prescribes narrow rounds); the owner may overrule any one."
+review = ""
+
+[decision.D-017]
+decided = "WI-918's re-claim, how a re-claim clears the loop mark (P9's Q3): an unmarked, empty commit in the lane whose subject is reclaim: <branch> (attended), read by provenance.loop_lane_window as closing the trailer window for the commits after it; a marked process cannot make one through porcelain, a commit with any Loop-Session trailer is not one, and a later marked loop-writer commit re-opens the window. Its authority, the first record that makes a lane less governed, is held to one rung and goes to the owner with WI-918's Trust section."
+alternative = "A second, unmarked claim commit on trunk for the branch (which cannot clear a sitting's mark); or dropping SR-209's loop-lane rule so that no re-claim is needed (which removes the managed loop's guard too)."
+reversal_cost = "Low before WI-918's build: amend its deliverable and Trust section and re-critique. Re-claim commits WI-917's recipe wrote before then stay inert records."
+why_not_escalated = "P9's design is the coordinator's to propose (plan revision 36); the authority it creates is stated in WI-918's Trust section, whose ruling goes to the owner to confirm or overrule before the row is built."
+review = ""
