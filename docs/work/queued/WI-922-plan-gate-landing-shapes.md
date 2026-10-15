@@ -59,10 +59,15 @@ One lane, one landing. The `(Qn)` marks are the calls ruled at filing, below.
 1. **What a commit carries, read once** (`project-trajectory/scripts/plan_gate.py`;
    shipped, RESYNC entry). Every commit the hook runs for is judged by the
    commits git's in-progress state says it brings:
-   - `HEAD..MERGE_HEAD` for a merge finished by commit;
+   - for a merge finished by commit, every commit reachable from any
+     `MERGE_HEAD` tip and not from HEAD, once each: git writes one tip per
+     line, and a multi-tip merge lists several;
    - `HEAD..<tip>` for a squash, as today;
    - the picked commit for a cherry-pick finished by commit;
    - nothing, for any other state.
+
+   A `MERGE_HEAD` that is malformed, or that names a tip git cannot resolve,
+   holds, naming why.
 
    Each carried commit that trunk does not already contain goes through the
    existing rider, oldest first, under deliverable 2's identity order,
@@ -145,7 +150,8 @@ one reader.
   - **Absent.** A close that carries build output with no pass record in its
     tree holds, naming the row.
   - **Unreadable.** A git read or a decode that fails holds, naming why. So
-    does a carried range git cannot list, or a branch listing that fails.
+    does a carried range git cannot list, a branch listing that fails, or a
+    malformed or unresolvable `MERGE_HEAD` tip.
   - **Malformed.** A record outside its grammar, or one binding another row,
     plan or Done-when, holds, saying which.
   - **Unattributed.** A change that carries build output and resolves to no
@@ -169,6 +175,9 @@ This ruling goes to the owner to confirm or overrule (`coordinator-cycle` §1).
   - on trunk, a hand `git merge --no-ff --no-commit` of an unplanned `single`
     lane is held and a planned lane's passes; the same holds on a detached
     trunk checkout;
+  - a hand-finished multi-tip merge whose later tip carries an unplanned
+    build, with no close, is held; a `MERGE_HEAD` naming a tip git cannot
+    resolve is held, naming why;
   - a conflicted cherry-pick of an unplanned lane's build commit onto trunk
     is held;
   - a build commit on a detached HEAD at a `single` lane's commit is held,
@@ -223,8 +232,8 @@ This ruling goes to the owner to confirm or overrule (`coordinator-cycle` §1).
   ruling.
   - **Where the commit is made:** a claim-named branch, any other branch, or
     a detached HEAD.
-  - **What git's in-progress state names:** nothing, `MERGE_HEAD`,
-    `SQUASH_MSG` or `CHERRY_PICK_HEAD`. Any other state (a revert, a rebase
+  - **What git's in-progress state names:** nothing, `MERGE_HEAD` (one tip
+    or several), `SQUASH_MSG` or `CHERRY_PICK_HEAD`. Any other state (a revert, a rebase
     stop that names none of these, an `am` session) names nothing.
   - **What a change's identity resolves to:** a lane, trunk's own, or nothing.
     Nothing, with build output, holds by name: that is the default.
@@ -286,3 +295,19 @@ The owner ruled the drafter's three calls in session, each as recommended
   row neither widens to text-then-act nor changes the shared `squash_commits`
   reader. Whether the walk's other riders (`ruling-sync`, `held-status`) share
   the shape is unchecked; it is an unfiled follow-up in `docs/status.md`.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-15; CHANGES-REQUESTED, one finding):
+
+- **S3, MAJOR: adopted.** The merge arm read `MERGE_HEAD` as one tip, so a
+  hand-finished multi-tip merge carried its later tips past the walk. The
+  arm now reads "every commit reachable from any `MERGE_HEAD` tip and not
+  from HEAD, once each: git writes one tip per line, and a multi-tip merge
+  lists several", and "A `MERGE_HEAD` that is malformed, or that names a tip
+  git cannot resolve, holds, naming why"; the Trust section's unreadable
+  input adds "a malformed or unresolvable `MERGE_HEAD` tip", and S3's axis
+  reads "`MERGE_HEAD` (one tip or several)". The Done-when adds "a
+  hand-finished multi-tip merge whose later tip carries an unplanned build,
+  with no close, is held; a `MERGE_HEAD` naming a tip git cannot resolve is
+  held, naming why".
