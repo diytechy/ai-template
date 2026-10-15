@@ -138,10 +138,13 @@ One lane, one landing.
   - WI-800 (queued) re-homes the store and inherits the primitive.
   - No third-party dependency.
 
-## Calls for the owner at filing
+## Calls ruled at filing
+
+The owner ruled the drafter's one call in session, as recommended
+(2026-10-15); coordinator-2026-10-15 D-004 records the filing.
 
 - **Q1: what a persistent access refusal reads as.**
-  - **(a) Recommended:** held to the deadline, then `StoreBusy`, naming the
+  - **(a) Ruled:** held to the deadline, then `StoreBusy`, naming the
     access refusal. This keeps IF-273's one failure ("raises StoreBusy when
     the lock stays held past `wait`"). Every caller already handles that
     failure safely, and it is `write_atomic`'s no-branch shape. Residue:
@@ -149,11 +152,11 @@ One lane, one landing.
     store lock" for `lease_wait` and then runs unretained, because its line
     does not carry `StoreBusy`'s text. That needs a fault on an untracked
     per-clone directory the same user created, which is improbable.
-  - **(b)** At the deadline, re-raise the `PermissionError` when no attempt
+  - **(b) Not taken:** at the deadline, re-raise the `PermissionError` when no attempt
     found the lock existing. This is more honest about the fault, but it adds
     a deadline-time discriminator. A contended lock whose last attempt hit
     the delete window would then crash at the deadline.
-  - **(c)** Read access denied as held on Windows only, and raise it at once
+  - **(c) Not taken:** read access denied as held on Windows only, and raise it at once
     elsewhere. This adds a platform branch for a reading (a) already makes
     harmless on POSIX.
 - **Considered and not taken: releasing by rename.** Moving the lock's name
