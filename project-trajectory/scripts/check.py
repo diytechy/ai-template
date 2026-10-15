@@ -301,6 +301,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "ruling-sync",
         "text-then-act",
         "done-when-blessed",
+        "plan-gate",
         "assumption-gate",
         "crossing-allocation",
         "interface-allocation",
@@ -1262,6 +1263,19 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
+        # The plan gate (WI-913): in a lane whose claimed row declares
+        # `planmode = "single"`, a commit carrying build output is refused
+        # until a pass record binds the row's plan and Done-when; a commit
+        # writing a pass record is checked against its parent. A squash
+        # landing is judged by the lane commits it carries, and the slot asks
+        # the same of each lane commit, so `--no-verify` lands nothing.
+        (
+            "plan-gate",
+            (),
+            [sys.executable, str(_SCRIPTS / "plan_gate.py")],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
         # The assumption gate (SR-205, SR-206, SR-212): one step per question,
         # each at the rung it can first be answered at, from maturity at the
         # frame to evidence at release. Steps, never stage conjuncts, so the
@@ -1995,15 +2009,11 @@ def _ruling_sync_mode(args):
     sys.exit(1 if refusal else 0)
 
 
-_HEX = frozenset("0123456789abcdef")
-
-
 def _text_then_act_refusal(root="."):
     """The `text-then-act` step's judgement over the staged tree, or None. Off
     git there is no commit to judge. A `git merge --squash` in progress is
-    judged by the commits it folds in, read here off git's own `SQUASH_MSG`
-    (each `commit <id>` header line, newest first), since the two-tree module
-    reads no file.
+    judged by the commits it folds in, read off git's own `SQUASH_MSG` by
+    `kitlib.git.squash_commits`, since the two-tree module reads no file.
 
     Implements: SR-140, LLR-302
     """
@@ -2011,14 +2021,7 @@ def _text_then_act_refusal(root="."):
         return None
     import text_then_act  # a leaf reader of two git trees, sibling of this one
 
-    rel = (_git_out(root, ["rev-parse", "--git-path", "SQUASH_MSG"]) or "").strip()
-    path = Path(root) / rel
-    text = path.read_text(encoding="utf-8") if rel and path.is_file() else ""
-    squashed = [
-        ln[7:]
-        for ln in text.splitlines()
-        if ln.startswith("commit ") and len(ln) >= 47 and set(ln[7:]) <= _HEX
-    ]
+    squashed = _kitgit.squash_commits(root)
     lines = text_then_act.staged_text_then_act_lines(root, squashed)
     if not lines:
         return None

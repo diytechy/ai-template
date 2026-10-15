@@ -104,6 +104,7 @@ Contract IF-153: the `--out` report file. It is the same markdown the run
 """
 
 import argparse
+import posixpath
 import re
 import sys
 from pathlib import Path
@@ -113,6 +114,7 @@ from pathlib import Path
 from kitlib.config import utf8_console as _utf8_console
 from kitlib import dispute as _dispute
 from kitlib import done_when as _done_when
+from kitlib import git as _kitgit
 from kitlib import sitting as _sitting
 from kitlib import spine as _kitspine
 from kitlib.registry import parse_spec_frontmatter, plan_table_rows
@@ -474,7 +476,35 @@ def _finding_key(text):
     return " ".join(text.split())
 
 
-def _ruled_texts(verdict, ids, rid):
+def _tree_text(root, rel, rev):
+    """`rel`'s text in the working tree (`rev` None) or at the commit `rev`,
+    or None when it is absent or cannot be read.
+
+    Implements: SR-236, LLR-069
+    """
+    if rev is not None:
+        return _kitgit.git_out(root, ["show", "{}:{}".format(rev, rel)])
+    path = Path(root) / rel
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+
+def _tree_tomls(root, folder, rev):
+    """The repo-relative `*.toml` files directly in `folder`, in the working
+    tree (`rev` None) or at the commit `rev`.
+
+    Implements: SR-236, LLR-069
+    """
+    if rev is None:
+        found = (Path(root) / folder).glob("*.toml")
+        return sorted(p.relative_to(Path(root)).as_posix() for p in found)
+    out = _kitgit.git_out(root, ["ls-tree", "--name-only", rev, folder + "/"]) or ""
+    return sorted(p for p in out.splitlines() if p.endswith(".toml"))
+
+
+def _ruled_texts(root, verdict, ids, rid, rev=None):
     """The text of the finding `rid` in every dispute findings file
     (`kitlib.dispute.read_findings`) beside `verdict` whose ids, in order,
     are the `ids` its call requested: the files that sitting can have ruled.
@@ -482,16 +512,14 @@ def _ruled_texts(verdict, ids, rid):
     Implements: SR-236, LLR-069
     """
     texts = []
-    for path in sorted(verdict.parent.glob("*.toml")):
-        found, _why = _dispute.read_findings(
-            path.read_text(encoding="utf-8", errors="replace"), path.name
-        )
+    for rel in _tree_tomls(root, posixpath.dirname(verdict), rev):
+        found, _why = _dispute.read_findings(_tree_text(root, rel, rev) or "", rel)
         if found and tuple(f["id"] for f in found["findings"]) == tuple(ids):
             texts += [f["finding"] for f in found["findings"] if f["id"] == rid]
     return texts
 
 
-def _correspondence_problem(path, verdict, ids, rid, fid, text):
+def _correspondence_problem(root, path, ids, rid, fid, text, rev=None):
     """Why the finding `rid` the verdict at `path` ruled is not shown to be
     this review's `fid` (whose clause text is `text`), or None. The repo
     records no link from a verdict to the findings file its sitting read, so
@@ -500,7 +528,7 @@ def _correspondence_problem(path, verdict, ids, rid, fid, text):
 
     Implements: SR-236, LLR-069
     """
-    texts = _ruled_texts(verdict, ids, rid)
+    texts = _ruled_texts(root, path, ids, rid, rev)
     if not texts:
         return (
             "cites {}, beside which no findings file requesting {} records "
@@ -514,7 +542,7 @@ def _correspondence_problem(path, verdict, ids, rid, fid, text):
     return None
 
 
-def ruling_problem(root, cite, fid, text):
+def ruling_problem(root, cite, fid, text, rev=None):
     """Why the dispute verdict `cite` names does not resolve the finding `fid`
     (clause text `text`), or None when it does. `cite` is a `RULING_CITE_RE`
     match: the verdict's path under `root` and, optionally, the sitting's own
@@ -524,21 +552,22 @@ def ruling_problem(root, cite, fid, text):
     owner's to decide - AND whose ruled finding is `fid` itself, as the
     findings file beside the verdict records it (`_correspondence_problem`):
     a dismissal of another finding, or of another round's finding under the
-    same id, resolves nothing.
+    same id, resolves nothing. Read in the working tree, or at the commit
+    `rev` (the plan gate's pass record, judged against its parent).
 
     Implements: SR-236, LLR-069
     """
     path, rid = cite.group("path"), cite.group("id") or fid
-    verdict = Path(root) / path
-    binding = Path(_sitting.requested_path(verdict))
-    if not verdict.is_file() or not binding.is_file():
+    verdict_text = _tree_text(root, path, rev)
+    binding_text = _tree_text(root, _sitting.requested_path(path), rev)
+    if verdict_text is None or binding_text is None:
         return "cites {}, which does not exist with its binding".format(path)
-    bound = _sitting.read_requested(binding.read_text(encoding="utf-8"))
+    bound = _sitting.read_requested(binding_text)
     if bound is None or bound[0] != _dispute.BRIEF:
         return "cites {}, which is not a dispute verdict".format(path)
     if bound[2] != "accepted":
         return "cites {}, whose call has outcome {}".format(path, bound[2])
-    rulings, why = _dispute.parse(verdict.read_text(encoding="utf-8"), bound[1], path)
+    rulings, why = _dispute.parse(verdict_text, bound[1], path)
     if why:
         return "cites a refused verdict: {}".format(why)
     if rid not in rulings:
@@ -547,7 +576,7 @@ def ruling_problem(root, cite, fid, text):
         return "cites {}, which rules {} {}; only a DISMISS resolves a finding".format(
             path, rid, rulings[rid][0]
         )
-    return _correspondence_problem(path, verdict, bound[1], rid, fid, text)
+    return _correspondence_problem(root, path, bound[1], rid, fid, text, rev)
 
 
 def resolution_findings(name, excluded, root, clauses):

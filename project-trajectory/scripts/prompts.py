@@ -135,6 +135,9 @@ ADJUDICATE_COMBINED = "ADJUDICATE-COMBINED"
 # The DISPUTE brief (WI-865): a review finding the lane's builder or
 # coordinator contests, or one at its third round, ruled by the adjudicator.
 ADJUDICATE_DISPUTE = "ADJUDICATE-DISPUTE"
+# The SINGLE-PLAN brief (WI-913): the in-lane planner of a claimed row whose
+# claim copy declares `planmode = "single"`, rendered by `review_brief.py plan`.
+PLAN_SINGLE = "PLAN-SINGLE"
 
 KIT_PROMPTS = {
     WORKER: "worker.template.md",
@@ -149,6 +152,7 @@ KIT_PROMPTS = {
     ADJUDICATE_DONE_WHEN: "adjudicate-done-when.template.md",
     ADJUDICATE_COMBINED: "adjudicate-combined.template.md",
     ADJUDICATE_DISPUTE: "adjudicate-dispute.template.md",
+    PLAN_SINGLE: "plan-single.template.md",
 }
 
 # COMPOSED FRAGMENTS (WI-882): shipped files a brief reads at render time and

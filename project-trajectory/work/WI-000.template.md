@@ -100,8 +100,13 @@ a wall of `= ""`.
 - `priority` (integer, default 0), `exclusive` (semantic mutex keys),
   `est_tokens`, `safety_class`
   (`ordinary|spine|gate|attestation|protected|high-risk|adjudication`) and `planmode`
-  (`dual` opts into dual-plan decomposition) are the scheduler's optional
-  inputs. `safety_class` **fails closed**: absent reads as `unclassified` and is
+  are the scheduler's optional inputs. `planmode` is one of `none`, `single` or
+  `dual` (absent and empty read as `none`): `dual` opts into dual-plan
+  decomposition; `single` plans the claimed row in its lane first, and the
+  commit hook and the merge slot hold any build commit until a pass record
+  under `docs/plans/<id>/` binds the row's plan and Done-when. The value is
+  read from the claim copy, and any other value holds the row's build.
+  `safety_class` **fails closed**: absent reads as `unclassified` and is
   never scheduled, so a repo enables parallelism only after its own audit.
 - `brief` — on a `safety_class = "adjudication"` row only: which adjudicator
   brief the unattended coordinator composes that row's session from

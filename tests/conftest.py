@@ -366,6 +366,11 @@ SLOW_MODULES = frozenset(
         # (a repository per case, git spawned for every read); its in-process
         # render and refusal cases stay in smoke in test_review_brief.py.
         "test_review_brief_git",
+        # WI-913: the plan gate and its filing step on a real trunk and lane
+        # worktree per case (git and the coverage gate spawned); the record
+        # grammar and the planner's brief stay in smoke in test_plan_pass.py.
+        "test_plan_gate",  # 27 tests, ~20 s at -n 2
+        "test_plan_filing",  # 22 tests, ~17 s at -n 2
         "test_verdict_record",  # 1369 s: 56 cases, each on a real git repo (the merge gate's evidence walk)
         "test_consolidate_close",  # 1016 s: the census close end-to-end on real repos and lanes
         "test_gen_open_items",  # 332 s: gen_open_items.py subprocesses over git-committed scaffolds

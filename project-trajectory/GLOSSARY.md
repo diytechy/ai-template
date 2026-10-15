@@ -196,5 +196,10 @@ lane lands as a `--no-ff` merge of its refreshed branch.
 The two products of `PLANNING`: an **implementation plan** leads to `BUILD`; a
 **decomposition** is a rival-plan round (the `plan-dual` kind) yielding
 successor rows. **Today:** the decomposition round exists
-([process-options.md "Dual-plan decomposition"](process-options.md#dual-plan-decomposition));
-the per-item implementation plan is planned.
+([process-options.md "Dual-plan decomposition"](process-options.md#dual-plan-decomposition)),
+and so does the attended per-item implementation plan: a claimed row whose
+claim copy declares `planmode = "single"` plans in its lane under
+`docs/plans/<WI>/`, and a commit hook holds its build until a pass record
+binds that plan (`scripts/plan_gate.py`). **Planned:** the unattended loop's
+own planning step for such a row; until then the loop's build of it is
+refused at the commit like any other.

@@ -169,6 +169,7 @@ from pathlib import Path
 import agent_common as ac
 import bookkeeping
 import coordinator_guard
+import plan_gate
 import score_reviews
 import spec_move
 import text_then_act
@@ -2979,17 +2980,14 @@ def _merge_refusal(root, branch, wi_ids):
     refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
     if refusal:
         return outcomes, refusal
-    refusal = _approval_act_refusal(root, branch)  # owner ruling 6, 2026-10-07
-    if refusal:
-        return outcomes, refusal
-    refusal = _held_status_refusal(root, branch)  # SR-208
-    if refusal:
-        return outcomes, refusal
     refusal = (
-        _loop_trailer_refusal(root, branch)
-        or _ruling_sync_refusal(root, branch)
-        or _text_then_act_refusal(root, branch)
-    )  # SR-209, then the ruling sync (WI-790), then text before act (WI-806)
+        _approval_act_refusal(root, branch)  # owner ruling 6, 2026-10-07
+        or _held_status_refusal(root, branch)  # SR-208
+        or _loop_trailer_refusal(root, branch)  # SR-209
+        or _ruling_sync_refusal(root, branch)  # the ruling sync (WI-790)
+        or _text_then_act_refusal(root, branch)  # text before act (WI-806)
+        or plan_gate.landing_refusal(root, _head(root), branch)  # WI-913
+    )
     if refusal:
         return outcomes, refusal
     refusal = _review_scope_refusal(root, branch)  # S9

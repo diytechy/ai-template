@@ -8299,6 +8299,55 @@ byte-identical.
 **What to do.** Re-copy the file. If your hooks refused on a Mac since
 adopting the probe, they run again. No registry, setting or record changes.
 
+### A `single` row builds only after its in-lane plan passes [since 2025f8419]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `planmode = "single"` now means something. A claimed row
+whose claim copy (its spec under `docs/work/active/<branch>/` at the lane's
+claim base) declares it plans in its lane before it builds: a plan at
+`docs/plans/<id>/plan.md` with one `Plan-WI` table and one
+`DELTA: none|within|beyond` line, the coverage gate, one independent
+critique filed beside it, at most one revision judged by a second critique,
+and at the cap a dispute sitting. A new pre-commit step, `plan-gate`
+(`scripts/plan_gate.py`, in the shipped hook's `--run-steps` floor),
+refuses a commit in that row's lane that changes a path outside the plan's
+record homes until a pass record
+(`docs/plans/<id>/pass.toml`) binds the row's plan bytes and Done-when, and
+checks a commit that writes a pass record against its parent. The merge
+slot asks the same of every lane commit, and a `git merge --squash` landing
+on trunk is judged by the lane commits it carries. Trunk commits, and a lane
+with no `single` row, are never judged. `scripts/review_brief.py` gains
+`plan` (the planner's brief, from the new `prompts/plan-single.template.md`),
+`critique --plan` (the plan critique's brief) and `plan-file` (files each
+critique, at the cap writes the dispute findings file with
+`--dispute-findings`, and with `--pass` writes the pass record). The record's grammar,
+digests and reader live in the new `scripts/kitlib/plan_pass.py`.
+`plan_coverage.ruling_problem` can read a dispute verdict at a commit, and
+`check.py` reads `SQUASH_MSG` through the new `kitlib.git.squash_commits`.
+
+**Kit-owned files — overwrite:** `scripts/plan_gate.py` (new),
+`scripts/kitlib/plan_pass.py` (new), `prompts/plan-single.template.md`
+(new), `scripts/review_brief.py`, `scripts/check.py`, `scripts/integrate.py`,
+`scripts/plan_coverage.py`, `scripts/prompts.py`, `scripts/kitlib/git.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `prompts/README.md`,
+`prompts/CATALOG.md`, `docs/glossary.md`, `docs/work/queued/WI-000-example.md`
+(from the kit's `work/WI-000.template.md`), `hooks/pre-commit` (re-copy it
+to `.githooks/pre-commit`).
+
+**What to do.** Overwrite the files. Add the new glob to your
+`docs/orphans-allow` if it lacks one covering `docs/plans/`:
+`docs/plans/*`, with its reason (the template states it). No migration is
+forced on a repo with no `single` row: nothing changes for absent, empty,
+`none` or `dual`. **A claimed row whose `planmode` is outside that set
+(`none`, `single`, `dual`) is now held**: its lane's commits are refused
+naming the value (a non-string value such as `false` too), so correct any
+such claim copy before you sync. A row you mark `single` and claim after the
+sync builds only after its pass record. **A row already claimed `single`
+whose lane holds build commits** fails the landing walk at each of them once
+the gate is in: rebase those commits onto the plan, critique and pass-record
+commits, or re-cut the lane and plan first.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

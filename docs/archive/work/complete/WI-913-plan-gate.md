@@ -3,13 +3,30 @@ id = "WI-913"
 title = "A row declaring a single plan builds only after its in-lane plan passes the coverage gate and an independent cross-family critique"
 workstream = "process"
 sr_refs = ["SR-146", "SR-154", "SR-235"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#9-planning-need-decided-at-mint-advice-made-binding"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "none"
 needs = []
 +++
+
+## Deliverable
+
+Landed 2026-10-15. A claimed row whose claim copy declares
+`planmode = "single"` now plans in its lane before it builds:
+`review_brief.py plan` and `critique --plan` render the single plan's brief
+and its critique strictly; `plan-file` files at most two critiques and writes
+the pass record, at the cap only behind an accepted dispute DISMISS of every
+blocking finding; and a new `plan-gate` check step, in the shipped hook's
+floor and on the merge slot's lane-commit walk, refuses build output until a
+pass record binds the plan and Done-when digests (`kitlib/plan_pass.py`,
+IF-295). Three full-lane rounds in the trial shape, then sittings 010
+(combined) and 011 (SR-154's return, answered in the lane) and the uncounted
+post-checkpoint gate (012 to 014, APPROVE). Spine: SR-154 amended (the
+single-plan hold under its one shall, owner 2026-10-15), LLR-313 and TC-333
+amended, LLR-337 and TC-367 new; IF-288 and IF-289 amended, IF-295 new.
+Decisions: `docs/decisions/wi-913.toml` D-001 to D-010.
 
 ## Context
 
@@ -327,10 +344,14 @@ This ruling goes to the owner to confirm or overrule (`coordinator-cycle`
   - **Paths a `single` lane may change before its pass record:** the record
     homes and a close of the row. The homes are `docs/plans/<WI>/`;
     `docs/reviews/` (a dispute sitting's findings, verdict and binding);
-    `docs/decisions/`; the session logs under `docs/iteration/`; and the
-    row's own spec under `docs/work/active/<branch>/`. A close is the spec's
-    move out of `active/`, its report under `docs/handbacks/`, and the
-    move's own inbound-link edits, as `handback.close_partial` writes them.
+    `docs/decisions/`; the session logs under `docs/iteration/`; the work
+    branch's log fragments under `docs/log.d/`; and the row's own spec under
+    `docs/work/active/<branch>/`. A close is the spec's move out of
+    `active/`, its report under `docs/handbacks/`, and the move's own
+    inbound-link edits, as `handback.close_partial` writes them. A merge's
+    own changes may also be what the station refresh writes: the compiled
+    `docs/log.md` and the views `trunk_step.regen_writes` lists; outside a
+    merge, those paths stay build output (round 2's 006 F1, decision D-004).
     Any other path is build output and is refused, so a writer the set
     misses fails closed, by name. The builder confirms the set by grep for
     every writer that commits in a lane before its first build, and a test

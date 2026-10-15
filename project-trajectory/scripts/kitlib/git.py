@@ -35,8 +35,16 @@ sync and the overrule sync in `acceptance_record` refuse an unreadable blob.
 """
 
 import subprocess
+from pathlib import Path
 
-__all__ = ["UnreadableBlob", "git_bytes", "git_out", "git_paths", "git_show"]
+__all__ = [
+    "UnreadableBlob",
+    "git_bytes",
+    "git_out",
+    "git_paths",
+    "git_show",
+    "squash_commits",
+]
 
 
 def _git_stdout(root, args, **kwargs):
@@ -152,3 +160,28 @@ def git_show(root, prefix, path):
     if listed is None or listed.strip():
         raise UnreadableBlob(prefix + path)
     return None
+
+
+_HEX = frozenset("0123456789abcdef")
+
+
+def squash_commits(root):
+    """The commits a `git merge --squash` in progress folds in, newest first,
+    read off git's own `SQUASH_MSG` (each `commit <full id>` header line); []
+    when no squash is in progress or the file cannot be read. One reader for
+    every pre-commit step that judges a squash landing by the commits it
+    carries (text then act, the plan gate): the two-tree rules read no file.
+
+    Implements: SR-140, LLR-302
+    """
+    rel = (git_out(root, ["rev-parse", "--git-path", "SQUASH_MSG"]) or "").strip()
+    path = Path(root) / rel
+    try:
+        text = path.read_text(encoding="utf-8") if rel and path.is_file() else ""
+    except (OSError, UnicodeDecodeError):
+        return []
+    return [
+        ln[7:]
+        for ln in text.splitlines()
+        if ln.startswith("commit ") and len(ln) >= 47 and set(ln[7:]) <= _HEX
+    ]

@@ -118,6 +118,49 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   `specref` that merely resolves (coordinator-2026-10-14 D-001); R-F archives
   it at close. Delegate drafting to planner sub-agents writing into scratch,
   and read their Done-when, Trust and Scope answers before filing.
+- **Single plan** (a claimed row whose claim copy declares
+  `planmode = "single"`; SKILL §3 "Plan"), from the lane root. Each record
+  commits alone: the hook's plan-gate step refuses a pass record committed
+  with the critique it cites.
+  1. Brief: `"$PY" "$SCRIPTS/review_brief.py" plan --wi WI-NNN --scratch <dated root> --out <brief>`;
+     launch a fresh Opus sub-agent (Agent tool, `model: "opus"`) given only
+     the brief's path. It writes `<dated root>/WI-NNN-plan.md`; copy it
+     verbatim to `docs/plans/WI-NNN/plan.md` and commit it alone.
+  2. Gate: `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> docs/plans/WI-NNN/plan.md`;
+     only exit 0 goes on. A `DELTA: beyond` plan closes the lane partial.
+  3. Critique:
+     `"$PY" "$SCRIPTS/review_brief.py" critique --plan --wi WI-NNN --sha <plan commit> --rubric docs/rubrics/plan-decomposition.md --scratch <dated root> --out <brief>`
+     (it runs the coverage step itself and refuses a failing plan), then
+     `bash "$TOOLS/sol_review.sh" <lane> <brief> <out>`. Each round has its
+     own verdict path, `WI-NNN-plan-critique-<n>.md`.
+  4. File: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --critique <verdict> --sha <plan commit>`
+     writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone.
+  5. Pass: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --pass`
+     writes `docs/plans/WI-NNN/pass.toml` (refused, writing nothing, unless
+     the critique reads as an APPROVE); commit it alone.
+  6. The one revision: `review_brief.py plan --revise` (its brief carries the
+     committed plan and the critique's findings as claims), commit the
+     revised plan, gate it with
+     `plan_coverage.py --item <spec> --findings docs/plans/WI-NNN/critique-1.md docs/plans/WI-NNN/plan.md`,
+     then steps 3 to 5 again: the second critique's brief is in convergence
+     stance and carries no first verdict, and its render refuses a revision
+     that does not answer the first critique's findings.
+  7. At the cap: never number the findings by hand. A finding's `F#` is its
+     position among ALL the critique's findings (a MAJOR after a MINOR is
+     F2). Write a positions file, one `F#: <position>` line per BLOCKER and
+     MAJOR finding, then
+     `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --dispute-findings docs/reviews/<lane>/NNN-DISPUTE-findings.toml --positions <file>`
+     writes the dispute findings file (below) with those ids and each
+     finding verbatim; a refusal names the ids it expects. Sit it; commit;
+     then `plan-file --wi WI-NNN --pass --dispute <verdict path>`. Anything
+     but an accepted DISMISS of every one is the owner's: close the lane
+     partial.
+  An edited plan or Done-when unbinds the record: remove it, and a fresh
+  critique (the cap still counts) must pass the changed plan.
+  A row claimed `single` whose lane already holds build commits before its
+  pass record fails the landing walk at each of them: rebase those commits
+  onto the plan, critique and pass commits, or re-cut the lane and run the
+  plan step first.
 - **Coverage plan (rework):** from the lane root,
   `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> --findings <round file> <plan>`.
   Dispatch the fix only on exit 0. A finding a dispute sitting dismissed is

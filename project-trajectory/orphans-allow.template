@@ -51,3 +51,9 @@ docs/log.d/*
 # as work is the disposition row intake mints against it, not a doc link.
 # Retained-evidence class, same as docs/archive/specs/*.
 docs/handbacks/*
+
+# A `single` row's plan records (process.md's per-item implementation plan):
+# the plan, each filed critique beside it and the pass record, under
+# `docs/plans/<WI>/` in the lane. Retained evidence the plan gate reads at the
+# commit, never a navigation node: what makes a plan reachable is its row.
+docs/plans/*

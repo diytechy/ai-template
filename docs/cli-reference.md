@@ -576,6 +576,14 @@ _Coverage step adapter: run the dual-plan coverage pre-pass headless and turn_
 | `--root` | repo root (default: .) |
 | `--out` | report file (default: coverage.md) |
 
+### `scripts/plan_gate`
+_plan_gate.py - a `single` row builds only after its plan passes (WI-913)._
+Contracts (interfaces): IF-295
+
+| Option | Help |
+|---|---|
+| `--root` | the checkout (default: cwd) |
+
 ### `scripts/plan_round`
 _The dual-plan round state machine: a pure, side-effect-free library the_
 Contracts (interfaces): IF-058
@@ -642,6 +650,19 @@ Contracts (interfaces): IF-288, IF-289
 | `--rubric` | the scope rubric, repo-relative |
 | `--scratch` | the critic's writable area |
 | `--out` | where to write the brief |
+| `--plan` | critique the row's plan |
+| `--sha` | with --plan: the lane commit holding the plan |
+| `--wi` | the claimed work item to plan |
+| `--scratch` | the planner's writable area |
+| `--out` | where to write the brief |
+| `--revise` | the one revision |
+| `--wi` | the work item whose plan it is |
+| `--critique` | the critic's verdict file to file |
+| `--sha` | the lane commit the critique reviewed |
+| `--pass` | write the pass record |
+| `--dispute` | with --pass at the cap: the dispute verdict |
+| `--dispute-findings` | at the cap: write the dispute findings file here (repo-relative) |
+| `--positions` | with --dispute-findings: one `F#: <position>` per line |
 | `--review` | the reviewer's verdict file |
 | `--sha` | the reviewed commit |
 | `--scope` |  |

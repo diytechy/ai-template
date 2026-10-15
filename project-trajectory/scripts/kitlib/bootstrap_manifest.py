@@ -122,6 +122,11 @@ MAPPING = [
         "prompts/adjudicate-dispute.template.md",
         "SR-146",
     ),
+    (
+        "prompts/plan-single.template.md",
+        "prompts/plan-single.template.md",
+        "SR-146",
+    ),
     # The ONE home of the adjudicator's per-tier questions: the first-approval
     # and amendment briefs compose it at render time (an absent copy refuses
     # them), and the spine-authoring skill points at it.
@@ -360,6 +365,10 @@ MAPPING = [
     # WI-865 added `dispute`: a contested review finding's findings file and
     # verdict grammar; `adjudicate_brief.py`, in this list, imports it.
     ("scripts/kitlib/dispute.py", "scripts/kitlib/dispute.py"),
+    # WI-913 added `plan_pass`: a `single` row's plan records, their grammar,
+    # digests and one reader; `plan_gate.py` and `review_brief.py`, in this
+    # list, import it.
+    ("scripts/kitlib/plan_pass.py", "scripts/kitlib/plan_pass.py"),
     # WI-834 added `shell_line`: the one reading of a shell command line, with
     # the shell's quoting; `coordinator_guard.py`, in this list, imports it.
     ("scripts/kitlib/shell_line.py", "scripts/kitlib/shell_line.py"),
@@ -713,6 +722,9 @@ MAPPING = [
     # An attended launcher's review and critique briefs, rendered from the
     # kit templates, and its review filed as a round file (WI-852).
     ("scripts/review_brief.py", "scripts/review_brief.py"),
+    # The plan gate (WI-913): `check.py`'s plan-gate step runs it, and
+    # `integrate.py` and `review_brief.py` import it unguarded.
+    ("scripts/plan_gate.py", "scripts/plan_gate.py"),
     # WI-545's behavior seams keep the session briefs and declared-policy
     # decisions behind the small coordinator facades that consume them.
     ("scripts/agent_brief.py", "scripts/agent_brief.py"),

@@ -10,6 +10,19 @@ already computes clause coverage and resolves refs; this rubric judges what
 code cannot — are the WIs solvable, is the coverage honest, is the
 decomposition non-redundant?
 
+**Second use: a single plan** (WI-913). The same anchors judge the in-lane
+plan of one claimed work item whose claim copy declares `planmode =
+"single"` (`review_brief.py critique --plan`). There, a plan's `Plan-WI` rows
+are that one work item's build steps, not successor WIs; the goal brief is
+the item's Done-when (its `D#` clauses); and there is one critic, no rival
+plan and no arbiter. Judge each row as a step one build session completes,
+the coverage report (for a first plan, computed over the Done-when alone;
+for a revised plan, over the Done-when and the first critique's finding ids,
+never their text), and the plan's
+`DELTA:` line: does the work item add a state, add a value to a domain, make
+an output depend on a new input, or cross a new boundary, and if so does the
+plan carry the change within its scope?
+
 Every verdict **cites anchor ids**. The critic's verdict line is
 `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`; the arbiter's is
 `VERDICT: SELECT <plan> ports=N`, each port a cited delta

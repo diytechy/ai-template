@@ -74,7 +74,45 @@ design session and a claiming session apart. Claim the whole batch under one
 scoped unpause: a reviewed deletion of `docs/work/pause`, the claims, and a
 byte-identical restore. The steps and the traps are in recipes §2.
 
-## 3. The lane: intent, iterate, checkpoint
+## 3. The lane: plan, intent, iterate, checkpoint
+
+### Plan: a `single` row, before its first build
+
+A row whose claim copy declares `planmode = "single"` plans in its lane
+first; the plan-gate hook step and the merge slot refuse any build commit
+until a pass record under `docs/plans/<WI>/` binds its plan and Done-when.
+The commands are in recipes §1, "Single plan".
+
+1. Render the planner's brief and launch a fresh Claude Opus sub-agent given
+   only its path. It writes only its plan, under the scratch root; commit it
+   verbatim as `docs/plans/<WI>/plan.md`.
+2. Gate it with the coverage step; a failing plan is never critiqued.
+   `DELTA: beyond` is never critiqued either: close the lane partial, and
+   the disposition adjudicator drafts the refactor successor.
+3. A fresh Codex Sol critique, another family than the planner, at medium,
+   from the lane. File its verdict and commit that record alone.
+4. An APPROVE, or a CHANGES-REQUESTED whose findings are all MINOR: write the
+   pass record and commit it alone. Any other: one revision, from the
+   revision brief; it must pass the coverage step over the first critique's
+   findings; then a second, fresh critique in convergence stance, which never
+   sees the first. If that one does not approve, its BLOCKER and MAJOR
+   findings go to one dispute sitting, and only an accepted DISMISS of each
+   lets the pass record be written. A FIX or an ESCALATE goes to the owner:
+   close the lane partial (OI-70), never to the build.
+5. Dispatch the first build only on a committed pass record. The build brief
+   names the accepted plan; the builder reports a change of approach rather
+   than editing the plan, since an edited plan holds the lane until a new
+   critique passes it. An adopted critique recommendation binds the build
+   through the plan; one that changes what the row promises is written into
+   its Done-when or Trust section in the lane, which the Done-when hold below
+   makes a sitting bless before the build. A Done-when edit (not a tick)
+   unbinds the pass record, so adopt it before the critique round meant to
+   pass, which it then consumes; after the second critique, write it into
+   the Trust section or take it to the owner. Reviewers still receive the
+   WI definition.
+
+Never write a critique file by hand: the filing step checks its text, not
+its author.
 
 Run intent, iterate and checkpoint. Draft the connected spine set once,
 iterate code, then reconcile and judge the set against settled code.

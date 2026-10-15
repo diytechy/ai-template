@@ -684,3 +684,21 @@ date = "2026-10-11"
 approved = []
 reattested = ["LLR-270", "TC-267", "TC-329"]
 verdict = "docs/reviews/wi-858/003-ADJUDICATE-5663028.md"
+
+[[act]]
+seq = 113
+date = "2026-10-15"
+approved = []
+reattested = ["LLR-313", "TC-333"]
+
+[[act]]
+seq = 114
+date = "2026-10-15"
+approved = ["LLR-337", "TC-367"]
+reattested = []
+
+[[act]]
+seq = 115
+date = "2026-10-15"
+approved = []
+reattested = ["SR-154", "TC-333"]

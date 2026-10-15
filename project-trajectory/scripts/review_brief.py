@@ -71,13 +71,37 @@ Contract IF-288: the attended launcher's command line, its arguments.
     requests changes, as the lane's next round file
     `docs/reviews/<branch>/NNN-<phase>-<sha7>[-narrow].md`, for a branch whose
     round file `kitlib.verdict.round_file` reads back as that branch's scope
-    and whose directory is not the rollup generator's own.
+    and whose directory is not the rollup generator's own. THE SINGLE PLAN
+    (WI-913): `plan --wi WI-N --scratch DIR --out FILE [--revise] [--root
+    DIR]` writes the shipped single-plan template strictly filled with the
+    work item's spec, its Done-when as `D1..Dn` clauses, the inputs the plan
+    cites and the planner's one output path under DIR; `--revise` adds the
+    committed plan and the latest filed critique's findings. `critique
+    --plan --sha REV ...` writes the critique template over the plan at the
+    commit REV, its spec and the coverage report the coverage gate writes
+    under DIR over the Done-when (the second round also over the first
+    critique's finding ids, which the revised plan must answer), its verdict
+    opening `Reviewed: <REV>`, the second round in convergence stance.
+    `plan-file --wi WI-N --dispute-findings PATH --positions FILE [--root
+    DIR]` writes, at the cap, the dispute findings file PATH from HEAD's
+    filed second critique: each BLOCKER and MAJOR finding under the `F#` the
+    gate reads it by, its text verbatim, and the position FILE declares for
+    it on an `F#: <position>` line, FILE naming exactly those ids.
+    `plan-file --wi WI-N --critique VERDICT --sha REV [--root DIR]` files VERDICT, once it passes
+    the `file` checks against REV (an ancestor of HEAD whose tree holds a
+    plan whose `DELTA:` is `none` or `within`), as the next
+    `docs/plans/<WI>/critique-<n>.md`, at most two; `plan-file --wi WI-N
+    --pass [--dispute VERDICT]` writes `docs/plans/<WI>/pass.toml`
+    (`kitlib.plan_pass`'s grammar) when HEAD holds the latest critique and
+    any dispute verdict as filed and every check of `plan_gate.record_problems`
+    and the coverage gate passes.
 Contract IF-289: the command's exit codes. 0 when the brief is written or the
-    review is filed; 2 when the call is refused (an unfilled template slot, a
-    missing spec, an unreadable or empty named input, a root not on a branch,
-    a revision that is not a commit or a base that is not an ancestor, a branch
-    that is not a review scope or names the rollup generator's directory, or a
-    review that fails the IF-288 checks). A
+    review, critique, dispute findings file or pass record is filed; 2 when the call is refused (an
+    unfilled template slot, a missing spec, plan, critique or Done-when, an
+    unreadable or empty named input, a root not on a branch, a revision that
+    is not a commit or a base that is not an ancestor, a branch that is not a
+    review scope or names the rollup generator's directory, a review that
+    fails the IF-288 checks, or a plan step the IF-288 plan rules refuse). A
     refusal writes no requested brief or review record.
 
 Usage:
@@ -88,12 +112,21 @@ Usage:
     python scripts/review_brief.py critique --wi WI-123 \\
         --rubric docs/rubrics/scope-critique.md --scratch <dir> --out <brief.md>
     python scripts/review_brief.py file --review <verdict.md> --sha <sha> --scope full
+    python scripts/review_brief.py plan --wi WI-123 --scratch <dir> --out <brief.md>
+    python scripts/review_brief.py critique --plan --wi WI-123 --sha <sha> \\
+        --rubric docs/rubrics/plan-decomposition.md --scratch <dir> --out <brief.md>
+    python scripts/review_brief.py plan-file --wi WI-123 --critique <v.md> --sha <sha>
+    python scripts/review_brief.py plan-file --wi WI-123 \\
+        --dispute-findings docs/reviews/<lane>/NNN-DISPUTE-findings.toml --positions <f>
+    python scripts/review_brief.py plan-file --wi WI-123 --pass [--dispute <verdict>]
 """
 
 import argparse
 import dataclasses
 import re
+import subprocess
 import sys
+import tempfile
 import tomllib
 from pathlib import Path
 
@@ -101,8 +134,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import agent_brief  # noqa: E402  (path set above; the script-sibling idiom)
 import agent_common  # noqa: E402
+import plan_coverage  # noqa: E402
+import plan_gate  # noqa: E402
 import prompts  # noqa: E402
 import score_reviews  # noqa: E402
+from kitlib import dispute as kdispute  # noqa: E402
+from kitlib import done_when as kdone  # noqa: E402
+from kitlib import plan_pass  # noqa: E402
+from kitlib.spine import toml_string  # noqa: E402
 from kitlib import verdict as kverdict  # noqa: E402
 from kitlib.config import utf8_console  # noqa: E402
 
@@ -417,6 +456,485 @@ def file_review(root, lane, text, sha, scope, phase="REVIEW-A"):
     return path
 
 
+# --- the single plan (WI-913): the planner's brief, the plan critique, the
+# filing step and its pass record ---------------------------------------------
+
+# What the planner must cite, by the registry that holds it. A path the
+# repository lacks is named as absent, never dropped.
+_PLAN_INPUTS = (
+    ("its SR rows", "docs/requirements/system-requirements.toml"),
+    ("the TCs that verify them", "docs/test/test-cases.toml"),
+    ("the interface registry", "docs/requirements/interfaces.toml"),
+    ("the component registry", "docs/requirements/components.toml"),
+    ("the runtime flows", "docs/runtime-flows.md"),
+)
+# The second critique's stance (owner, 2026-10-14): it judges the revised plan
+# as it stands and never sees the first critique.
+_CONVERGENCE = (
+    "- This is the SECOND and last critique of this plan, after its one "
+    "revision, in the convergence stance: judge the plan as it stands. A new "
+    "finding is BLOCKER or MAJOR only if it is fail-open, data loss or a "
+    "Done-when gap; anything else is MINOR."
+)
+
+
+def _spec_text(root, rel):
+    """The spec's text and its `sr_refs`, or a refusal."""
+    text = _named_file(root, rel, "spec")
+    try:
+        head = text.split("+++", 2)[1] if text.startswith("+++") else ""
+        return text, list(tomllib.loads(head).get("sr_refs") or [])
+    except (IndexError, tomllib.TOMLDecodeError) as exc:
+        raise BriefError("the spec {} has no readable frontmatter: {}".format(rel, exc))
+
+
+def _clause_lines(text, rel):
+    """The Done-when items as the `D1…Dn` clauses the coverage gate reads."""
+    found = kdone.items(text)
+    if not found:
+        raise BriefError("the spec {} declares no Done-when items".format(rel))
+    return "\n".join("- D{}: {}".format(n, item) for n, item in enumerate(found, 1))
+
+
+def _input_lines(root, srs):
+    """Where each input the plan must cite lives, and the item's SRs."""
+    lines = ["- The item's SRs: {}.".format(", ".join(srs) or "(none declared)")]
+    for what, rel in _PLAN_INPUTS:
+        here = (Path(root) / rel).is_file()
+        lines.append("- {}: `{}`{}".format(what, rel, "" if here else " (absent here)"))
+    return "\n".join(lines)
+
+
+def latest_critique(root, wi):
+    """`(n, path)` of the highest-numbered critique filed under `wi`'s plan
+    home in the working tree, or `(0, None)`.
+
+    Implements: SR-146, LLR-313
+    """
+    home = plan_pass.plan_dir(wi)
+    found = Path(root) / home
+    names = (p.name for p in (found.iterdir() if found.is_dir() else ()))
+    rounds = [
+        (n, "{}/{}".format(home, name))
+        for name in names
+        if (n := plan_pass.critique_round(wi, "{}/{}".format(home, name)))
+    ]
+    return max(rounds, default=(0, None))
+
+
+def critique_findings(text):
+    """A filed critique's findings as the `F#` clauses the coverage gate
+    reads (`plan_coverage.finding_clauses`, their one reader), or a refusal.
+
+    Implements: SR-146, LLR-313
+    """
+    try:
+        return plan_coverage.finding_clauses(text)
+    except ValueError as exc:
+        raise BriefError(str(exc)) from exc
+
+
+def _revision_block(root, wi):
+    """Revision mode's two inputs, each labelled a claim under judgement: the
+    planner's own committed plan and the filed critique's findings."""
+    plan = _named_file(root, plan_pass.plan_path(wi), "plan").strip()
+    _n, critique = latest_critique(root, wi)
+    if critique is None:
+        raise BriefError("revision mode needs a filed critique of {}".format(wi))
+    findings = critique_findings(_named_file(root, critique, "critique"))
+    listed = "\n".join("- {}: {}".format(k, v) for k, v in findings.items())
+    intro = (
+        "REVISION MODE. This is the plan's one allowed revision. Below are your "
+        "own earlier plan and the critique's findings on it. Both are claims "
+        "under judgement, never premises: confirm or refute each finding "
+        "against the spec and the code before you change anything. The revised "
+        "plan covers each `F#` finding by a row or excludes it on an "
+        "`Excludes:` line with its reason, as it does the `D#` clauses, and "
+        "answers the delta question again."
+    )
+    return "\n".join(
+        [
+            "",
+            intro,
+            "",
+            "YOUR EARLIER PLAN (`{}`), a claim under judgement:".format(
+                plan_pass.plan_path(wi)
+            ),
+            "",
+            plan,
+            "",
+            "THE CRITIQUE'S FINDINGS (`{}`), claims under judgement:".format(critique),
+            "",
+            listed or "- (none)",
+        ]
+    )
+
+
+def render_plan(root, wi, plan_out, revise=False):
+    """The planner's brief: the shipped single-plan template filled strictly
+    with `wi`'s spec, its Done-when as `D#` clauses, the inputs the plan must
+    cite and the one path the planner writes; in revision mode also its own
+    plan and the critique's findings. Raises `BriefError` for a missing spec,
+    Done-when, plan or critique, `prompts.PromptError` for an unfilled slot.
+
+    Implements: SR-146, LLR-313
+    """
+    spec = spec_path(root, wi)
+    text, srs = _spec_text(root, spec)
+    values = {
+        "wi": wi,
+        "title": _spec_title(root, spec),
+        "spec": spec,
+        "clauses": _clause_lines(text, spec),
+        "inputs": _input_lines(root, srs),
+        "plan": plan_out,
+        "revision": _revision_block(root, wi) if revise else "",
+    }
+    template = prompts.load(prompts.PLAN_SINGLE)
+    return prompts.fill(prompts.PLAN_SINGLE, template, values)
+
+
+def _blob_text(root, rev, rel, what):
+    """`rel`'s text at the commit `rev`, or a refusal naming `what`."""
+    data, why = plan_pass.blob(root, rev, rel)
+    if data is None:
+        tail = ": " + why if why else ""
+        raise BriefError("the {} {} is not at {}{}".format(what, rel, rev[:10], tail))
+    return data.decode("utf-8", "replace")
+
+
+def coverage_run(root, rev, wi, branch, findings=None, out=None):
+    """`(exit code, report lines)` of the coverage gate over `wi`'s spec and
+    plan as the commit `rev` holds them, with a filed critique at `rev` as
+    its `--findings` clauses when one is named: the gate runs on committed
+    bytes, never on a working-tree copy.
+
+    Implements: SR-146, LLR-313
+    """
+    _path, spec, why = kdone.spec_at(root, rev, branch, wi)
+    if spec is None:
+        raise BriefError(
+            "no spec of {} at {}: {}".format(wi, rev[:10], why or "absent")
+        )
+    files = {
+        "spec.md": spec,
+        "plan.md": _blob_text(root, rev, plan_pass.plan_path(wi), "plan"),
+    }
+    if findings:
+        files["findings.md"] = _blob_text(root, rev, findings, "critique")
+    script = Path(__file__).resolve().parent / "plan_coverage.py"
+    with tempfile.TemporaryDirectory() as tmp:
+        for name, text in files.items():
+            Path(tmp, name).write_text(text, encoding="utf-8", newline="\n")
+        argv = [sys.executable, str(script), "--item", str(Path(tmp, "spec.md"))]
+        argv += [str(Path(tmp, "plan.md")), "--root", str(root)]
+        argv += ["--findings", str(Path(tmp, "findings.md"))] if findings else []
+        argv += ["--out", str(out)] if out else []
+        done = subprocess.run(
+            argv, capture_output=True, text=True, encoding="utf-8", errors="replace"
+        )
+    said = done.stdout.splitlines() + done.stderr.splitlines()
+    return done.returncode, [ln for ln in said if ln.startswith("plan_coverage: ")]
+
+
+def _critique_round_to_open(root, wi):
+    """The next critique round of `wi`, refused past the cap."""
+    n = latest_critique(root, wi)[0] + 1
+    if n > plan_pass.MAX_CRITIQUES:
+        raise BriefError(
+            "{} already has its {} critiques: the cap goes to a dispute sitting "
+            "or the owner".format(wi, plan_pass.MAX_CRITIQUES)
+        )
+    return n
+
+
+def _critiqued_plan(root, sha, wi):
+    """The plan at `sha`, refused when absent or when its delta line is
+    missing or `beyond`: such a plan is never critiqued and never passes."""
+    plan = _blob_text(root, sha, plan_pass.plan_path(wi), "plan")
+    value, why = plan_pass.delta(plan)
+    if value not in plan_pass.PASSING_DELTAS:
+        raise BriefError(
+            "the plan is not critiqued: {}".format(
+                why or "its delta is `beyond`: the lane closes partial"
+            )
+        )
+    return plan
+
+
+def _critique_coverage(root, sha, wi, n, report):
+    """Run the coverage gate for critique round `n` over the plan at `sha`,
+    writing its report to `report`, or refuse: over the Done-when, and in the
+    revision round also against the first critique's findings (`plan_coverage
+    --findings`, deliverable 3), so a revision that answers none of them is
+    refused before the critic's one run is spent. The report carries clause
+    ids, never a finding's text, so the second critic still never meets the
+    first verdict.
+
+    Implements: SR-146, LLR-313
+    """
+    branch = agent_common.git(root, "branch", "--show-current")[1].strip()
+    first = _answered(root, sha, wi, n)
+    code, said = coverage_run(root, sha, wi, branch, findings=first, out=report)
+    if code != 0:
+        against = " against the first critique's findings ({})".format(first)
+        raise BriefError(
+            "the plan fails the coverage gate{}:\n{}".format(
+                against if first else "", "\n".join(said)
+            )
+        )
+
+
+def render_plan_critique(root, wi, rubric, sha, scratch):
+    """`(brief, verdict path)` for the plan critique: the shipped critique
+    template over the plan at the lane commit `sha`, read with its spec and
+    the coverage report `plan_coverage.py --item --out` writes over the
+    Done-when (in round two also over the first critique's finding ids, never
+    their text: `_critique_coverage`), judged on `rubric`.
+    The verdict opens `Reviewed: <sha>` and goes to its own path per round.
+    Refuses a missing spec, plan or rubric, a plan whose delta is missing or
+    `beyond`, a round past the cap, and a plan the coverage gate fails.
+
+    Implements: SR-146, LLR-313
+    """
+    spec = spec_path(root, wi)
+    rubric_text = _named_file(root, rubric, "rubric").strip()
+    _critiqued_plan(root, sha, wi)
+    n = _critique_round_to_open(root, wi)
+    base = _posix(scratch).rstrip("/")
+    report = Path("{}/{}-plan-coverage-{}.md".format(base, wi, n))
+    report.parent.mkdir(parents=True, exist_ok=True)
+    _critique_coverage(root, sha, wi, n, report)
+    verdict = "{}/{}-plan-critique-{}.md".format(base, wi, n)
+    lines = [
+        "### Artifact: the implementation plan `{}` of {} — {}, at the lane "
+        "commit `{}`".format(plan_pass.plan_path(wi), wi, _spec_title(root, spec), sha),
+        "Artifact recipe: read the plan as that commit holds it (`git show "
+        "{}:{}`), its work item's spec `{}` in full with its `specref` target, "
+        "and the coverage report below, which the coverage gate computed over "
+        "the Done-when (in a revision round, also over the first critique's "
+        "finding ids, never their text). Judge whether the plan's rows are solvable, cover "
+        "the Done-when honestly and in buildable order, and whether its `DELTA:` "
+        "answer is right: does the work item add a state, add a value to a "
+        "domain, make an output depend on a new input, or cross a new boundary, "
+        "and if so does the plan carry the change? Read no `critique-*.md` "
+        "beside the plan: another critic's verdict is not your "
+        "input.".format(sha, plan_pass.plan_path(wi), spec),
+        "- The verdict file's first line is exactly `Reviewed: {}`.".format(sha),
+    ]
+    lines += [_CONVERGENCE] if n == plan_pass.MAX_CRITIQUES else []
+    lines += ["", "### Coverage report", report.read_text(encoding="utf-8").strip()]
+    lines += ["", "### Rubric: {}".format(rubric), rubric_text]
+    values = {"brief": "\n".join(lines), "verdict": verdict}
+    text = prompts.load(prompts.CRITIQUE)
+    return prompts.fill(prompts.CRITIQUE, text, values), verdict
+
+
+def file_plan_critique(root, wi, text, sha):
+    """File a plan critique as the next `docs/plans/<WI>/critique-<n>.md`;
+    return its path. Refused, writing nothing: a verdict not bound to `sha`
+    (`Reviewed: <sha>` first) or outside the verdict format, a reviewed
+    commit whose tree holds no plan or one whose delta is missing or
+    `beyond`, a round past the cap, and a row already passed.
+
+    Implements: SR-146, SR-235, LLR-313
+    """
+    why = review_refusal(text, sha)
+    if why:
+        raise BriefError("the critique is not filed: " + why)
+    _critiqued_plan(root, sha, wi)
+    if (Path(root) / plan_pass.record_path(wi)).exists():
+        raise BriefError("{} already has a pass record".format(wi))
+    path = Path(root) / plan_pass.critique_path(wi, _critique_round_to_open(root, wi))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8", newline="\n") as fh:
+        fh.write(text.replace("\r\n", "\n"))
+    return path
+
+
+def _committed(root, head, rel, what):
+    """HEAD's bytes of `rel` when the working tree holds no change to it, as
+    git compares them (its line-ending conversion included), else a refusal:
+    the pass form cites only what HEAD holds."""
+    data, why = plan_pass.blob(root, head, rel)
+    changed = agent_common.git(root, "diff", "--quiet", head, "--", rel)[0]
+    if data is None or changed != 0:
+        tail = " ({})".format(why) if why else ""
+        raise BriefError(
+            "HEAD does not hold the {} {} as filed: commit it alone first{}".format(
+                what, rel, tail
+            )
+        )
+    return data
+
+
+def _lane_claim(root, wi):
+    """`(HEAD, branch, claim text)` for the lane, or a refusal."""
+    head = agent_common.git(root, "rev-parse", "HEAD")[1].strip()
+    branch = agent_common.git(root, "branch", "--show-current")[1].strip()
+    base = agent_common.default_base(root)
+    claimed, why = kdone.claim_copy(root, base, branch, wi)
+    if claimed is None:
+        raise BriefError(
+            "{} has no readable claim copy on {}: {}".format(
+                wi, branch, why or "absent"
+            )
+        )
+    return head, branch, claimed
+
+
+def _answered(root, head, wi, n):
+    """The first critique, when the revision critique `n` judges must answer
+    its findings (`plan_coverage.py --findings`), else None: a first plan
+    answers none, and a first critique naming no finding leaves nothing to
+    answer."""
+    if n < 2:
+        return None
+    first = plan_pass.critique_path(wi, 1)
+    text = _blob_text(root, head, first, "critique")
+    return first if score_reviews.parse_verdict(text).findings else None
+
+
+def pass_fields(root, wi, dispute=None):
+    """The pass record's fields HEAD supports, or a refusal: the latest filed
+    critique and any dispute verdict must be in HEAD as filed, every reason
+    `plan_gate.record_problems` gives refuses, and the coverage gate must
+    pass on HEAD's plan (the revision also covering the first critique's
+    findings).
+
+    Implements: SR-146, LLR-313
+    """
+    n, critique = latest_critique(root, wi)
+    if critique is None:
+        raise BriefError("no critique of {} is filed".format(wi))
+    head, branch, claimed = _lane_claim(root, wi)
+    data = _committed(root, head, critique, "critique")
+    first = data.decode("utf-8", "replace").split("\n", 1)[0].removesuffix("\r")
+    plan, delta, _why = plan_pass.plan_digest(root, head, wi)
+    done, _why = plan_pass.done_when_digest(root, head, branch, wi, claimed)
+    fields = dict.fromkeys(plan_pass.FIELDS, "")
+    fields.update(wi=wi, plan=plan or "", done_when=done or "", delta=delta or "")
+    fields.update(critique=critique, critique_digest=plan_pass.bytes_digest(data))
+    fields.update(reviewed=first.removeprefix("Reviewed: ").strip())
+    if dispute:
+        cited = _committed(root, head, dispute, "dispute verdict")
+        fields.update(dispute=dispute, dispute_digest=plan_pass.bytes_digest(cited))
+    problems = plan_gate.record_problems(root, head, fields, branch, wi, claimed)
+    problems += _ruled_findings(root, head, fields, data) if dispute else []
+    first_round = _answered(root, head, wi, n)
+    code, said = coverage_run(root, head, wi, branch, findings=first_round)
+    if code != 0:
+        problems.append("the plan fails the coverage gate: " + "; ".join(said))
+    if problems:
+        raise BriefError("no pass record is written: " + "; ".join(problems))
+    return fields
+
+
+def _ruled_findings(root, head, fields, critique):
+    """Why the dispute verdict's rulings are not shown to be this critique's
+    BLOCKER and MAJOR findings: each `F#` (the coverage gate's numbering) must
+    be the finding the findings file beside the verdict records under that
+    id (`plan_coverage.ruling_problem`, read at HEAD), or [].
+
+    Implements: SR-146, LLR-313
+    """
+    text = critique.decode("utf-8", "replace")
+    clauses = critique_findings(text)
+    out = []
+    for fid in plan_gate.blocking_ids(score_reviews.parse_verdict(text).findings):
+        cite = plan_coverage.RULING_CITE_RE.search(
+            "{}#{}".format(fields["dispute"], fid)
+        )
+        why = "{} is not a dispute verdict path".format(fields["dispute"])
+        why = (
+            plan_coverage.ruling_problem(root, cite, fid, clauses[fid], head)
+            if cite
+            else why
+        )
+        if why:
+            out.append("{}: {}".format(fid, why))
+    return out
+
+
+def dispute_findings(root, wi, positions):
+    """The dispute findings file's text for the cap (`kitlib.dispute`'s
+    shape), or a refusal: ONE OWNER of a finding's number. Each of the filed
+    second critique's BLOCKER and MAJOR findings is written under the `F#`
+    the gate and the filing step read it by (`plan_gate.blocking_ids`: its
+    position among ALL the critique's findings, so a MAJOR after a MINOR is
+    F2), with its text exactly as `critique_findings` gives it. `positions`
+    declares one `F#: <position>` line per blocking finding (the coverage
+    gate's declared-clause shape) and nothing else; the range is the lane's
+    claim base to HEAD. The text reads back through `kitlib.dispute` before
+    it is returned.
+
+    Implements: SR-146, LLR-313
+    """
+    n, critique = latest_critique(root, wi)
+    if n != plan_pass.MAX_CRITIQUES:
+        raise BriefError("a dispute sitting follows only the second critique")
+    head = agent_common.git(root, "rev-parse", "HEAD")[1].strip()
+    text = _committed(root, head, critique, "critique").decode("utf-8", "replace")
+    clauses = critique_findings(text)
+    ids = plan_gate.blocking_ids(score_reviews.parse_verdict(text).findings)
+    try:
+        held = plan_coverage.parse_goal(positions, plan_coverage.FINDING_DECL_RE)
+    except ValueError as exc:
+        raise BriefError(str(exc)) from exc
+    if not ids or list(held) != ids:
+        raise BriefError(
+            "the positions name {}; the second critique's BLOCKER and MAJOR "
+            "findings are {}".format(
+                ", ".join(held) or "none", ", ".join(ids) or "none"
+            )
+        )
+    base = agent_common.default_base(root)
+    if not base:
+        raise BriefError("the lane's claim base cannot be read")
+    lines = ["range = {}".format(toml_string("{}..{}".format(base, head)))]
+    for fid in ids:
+        lines += ["", "[[finding]]", "id = " + toml_string(fid)]
+        lines += ['held_by = "coordinator"', "finding = " + toml_string(clauses[fid])]
+        lines += ["position = " + toml_string(held[fid])]
+    body = "\n".join(lines) + "\n"
+    found, why = kdispute.read_findings(body, "the dispute findings file")
+    if why or [f["finding"] for f in found["findings"]] != [clauses[i] for i in ids]:
+        raise BriefError("the dispute findings file is not written: {}".format(why))
+    return body
+
+
+def write_dispute_findings(root, wi, positions, rel):
+    """Write `dispute_findings` to the repo-relative `rel`, never over an
+    existing file; return its path.
+
+    Implements: SR-146, LLR-313
+    """
+    path = Path(root) / rel
+    if path.exists():
+        raise BriefError("{} already exists".format(rel))
+    body = dispute_findings(root, wi, positions)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8", newline="\n") as fh:
+        fh.write(body)
+    return path
+
+
+def write_pass(root, wi, dispute=None):
+    """Write `wi`'s pass record (`kitlib.plan_pass.render`, the reader's own
+    grammar) from HEAD's evidence; return its path. Refused, writing nothing,
+    for every reason `pass_fields` gives and for a row already passed.
+
+    Implements: SR-146, LLR-313
+    """
+    path = Path(root) / plan_pass.record_path(wi)
+    if path.exists():
+        raise BriefError("{} already has a pass record".format(wi))
+    text = plan_pass.render(pass_fields(root, wi, dispute))
+    with path.open("x", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+    return path
+
+
 def lane_commits(root, base, sha):
     """`(lane, base, sha)` with both revisions resolved to full commit ids:
     the lane is the worktree's branch, and `base` must be an ancestor of `sha`.
@@ -471,11 +989,52 @@ def _cmd_review(args):
 
 
 def _cmd_critique(args):
-    verdict = "{}/{}-scope-critique.md".format(
-        _posix(args.scratch).rstrip("/"), args.wi
-    )
-    _write(args.out, render_critique(args.root, args.wi, args.rubric, verdict))
+    if args.plan:
+        if not args.sha:
+            raise BriefError("a plan critique names the lane commit holding the plan")
+        _lane, _base, sha = lane_commits(args.root, args.sha, args.sha)
+        rendered = render_plan_critique(
+            args.root, args.wi, args.rubric, sha, args.scratch
+        )
+        text, verdict = rendered
+    else:
+        verdict = "{}/{}-scope-critique.md".format(
+            _posix(args.scratch).rstrip("/"), args.wi
+        )
+        text = render_critique(args.root, args.wi, args.rubric, verdict)
+    _write(args.out, text)
     print("review_brief: wrote {}; the critic writes {}".format(args.out, verdict))
+    return 0
+
+
+def _cmd_plan(args):
+    rnd = "-r2" if args.revise else ""
+    scratch = _posix(args.scratch).rstrip("/")
+    plan_out = "{}/{}-plan{}.md".format(scratch, args.wi, rnd)
+    _write(args.out, render_plan(args.root, args.wi, plan_out, args.revise))
+    print("review_brief: wrote {}; the planner writes {}".format(args.out, plan_out))
+    return 0
+
+
+def _cmd_plan_file(args):
+    if args.passed:
+        path = write_pass(args.root, args.wi, args.dispute)
+    elif args.dispute_findings and args.positions:
+        try:
+            held = Path(args.positions).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise BriefError("cannot read {}: {}".format(args.positions, exc)) from exc
+        path = write_dispute_findings(args.root, args.wi, held, args.dispute_findings)
+    elif args.critique and args.sha:
+        _lane, sha, _head = lane_commits(args.root, args.sha, "HEAD")
+        try:
+            text = Path(args.critique).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise BriefError("cannot read {}: {}".format(args.critique, exc)) from exc
+        path = file_plan_critique(args.root, args.wi, text, sha)
+    else:
+        raise BriefError("name a critique and the commit it reviewed, or --pass")
+    print("review_brief: filed {}; commit it alone".format(_posix(path)))
     return 0
 
 
@@ -513,12 +1072,34 @@ def _parser():
     crit.add_argument("--rubric", required=True, help="the scope rubric, repo-relative")
     crit.add_argument("--scratch", required=True, help="the critic's writable area")
     crit.add_argument("--out", required=True, help="where to write the brief")
+    crit.add_argument("--plan", action="store_true", help="critique the row's plan")
+    crit.add_argument("--sha", help="with --plan: the lane commit holding the plan")
+    pln = sub.add_parser("plan", help="render a single row's planner brief")
+    pln.add_argument("--wi", required=True, help="the claimed work item to plan")
+    pln.add_argument("--scratch", required=True, help="the planner's writable area")
+    pln.add_argument("--out", required=True, help="where to write the brief")
+    pln.add_argument("--revise", action="store_true", help="the one revision")
+    pfl = sub.add_parser("plan-file", help="file a plan critique, or the pass")
+    pfl.add_argument("--wi", required=True, help="the work item whose plan it is")
+    pfl.add_argument("--critique", help="the critic's verdict file to file")
+    pfl.add_argument("--sha", help="the lane commit the critique reviewed")
+    pfl.add_argument(
+        "--pass", dest="passed", action="store_true", help="write the pass record"
+    )
+    pfl.add_argument("--dispute", help="with --pass at the cap: the dispute verdict")
+    pfl.add_argument(
+        "--dispute-findings",
+        help="at the cap: write the dispute findings file here (repo-relative)",
+    )
+    pfl.add_argument(
+        "--positions", help="with --dispute-findings: one `F#: <position>` per line"
+    )
     fil = sub.add_parser("file", help="file a review as the lane's next round file")
     fil.add_argument("--review", required=True, help="the reviewer's verdict file")
     fil.add_argument("--sha", required=True, help="the reviewed commit")
     fil.add_argument("--scope", required=True, choices=SCOPES)
     fil.add_argument("--phase", default="REVIEW-A", choices=PHASES)
-    for each in (rev, crit, fil):
+    for each in (rev, crit, fil, pln, pfl):
         each.add_argument(
             "--root", default=".", help="the lane worktree (default: cwd)"
         )
@@ -528,7 +1109,13 @@ def _parser():
 def main(argv=None):
     utf8_console()
     args = _parser().parse_args(argv)
-    run = {"review": _cmd_review, "critique": _cmd_critique, "file": _cmd_file}
+    run = {
+        "review": _cmd_review,
+        "critique": _cmd_critique,
+        "file": _cmd_file,
+        "plan": _cmd_plan,
+        "plan-file": _cmd_plan_file,
+    }
     try:
         return run[args.cmd](args)
     except (BriefError, prompts.PromptError) as exc:
