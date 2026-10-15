@@ -104,6 +104,14 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   coordinator's own uncommitted trunk edits would read as the critic's.
   Several critiques may run at once from that one checkout, each with its own
   scratch directory (2026-10-14).
+  A confirming round runs in convergence stance (owner, 2026-10-14): its
+  brief ends with a round block saying to confirm each adoption (a failed
+  confirmation keeps its original severity) and that a new finding is
+  BLOCKER or MAJOR only if it is fail-open, data loss or a Done-when gap.
+  Copy the block from the last round's `brief.md` until WI-911 puts it in
+  the rubric. A disposition that adds a carrier with authority gives the
+  next round new S2 surface: prefer removing the authority over guarding it
+  (WI-911, rounds 2 to 4).
 - **Filing a row by hand:** bump the mark (`trace.py --bump-ids`) in the
   commit that adds the row. A row whose spec is its own evidence gets a spec
   of record in `docs/specs/WI-NNN.md`, the text moved there, never a
@@ -461,6 +469,11 @@ lane commit being replayed.
 - `git add -A <paths>` aborts entirely if one path is missing. `2>/dev/null`
   hides that, and `staged-divergence` then fails. `components.derived.toml`
   lives under `docs/requirements/`.
+- `ruling-sync` refuses an overrule (`owner = "overruled"`) unless the same
+  commit amends a queued or active row citing the decision as
+  `docs/decisions/<file>.toml#D-NNN`, in that form; a prose citation does
+  not count. Regenerate the views after the commit's last edit: that
+  citation can stale `docs/open-items.html` again (2026-10-14).
 - Specref anchors take plain headings (no backticks or apostrophes), one
   anchor per row.
 

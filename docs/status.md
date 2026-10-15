@@ -25,18 +25,18 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-14-attended-coordinator.md](handoff-2026-10-14-attended-coordinator.md),
+  [handoff-2026-10-14b-attended-coordinator.md](handoff-2026-10-14b-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). Its phase-0
   baseline manifest is recorded, and its first batch is filed on trunk as six
-  rows whose scope critiques were in flight at the handoff; the
+  rows whose scope critiques have all passed, ready for one claim; the
   disposition-adoption row's record-at-close amendment is drafted, not yet
   filed. Two lanes are out, unchanged: the account-homes row owes its
   checkpoint rework, and the disposition-adoption row is reshaped before it
-  resumes. The handoff carries the attended session prompt; how to run
-  reviews under the ruling stays in the previous handoff until the skill says
-  the same.
+  resumes. The handoff carries the attended session prompt and the owner's
+  two newest review rulings; how to run reviews under the ruling stays in the
+  2026-10-11 handoff until the skill says the same.
   The coordinator's procedure lives in the `coordinator-cycle` skill. The
   overnight loop (`scripts/coordinator/overnight_legs.py`) is stopped, and the
   handoff's `Overnight: stop` line keeps it so.
