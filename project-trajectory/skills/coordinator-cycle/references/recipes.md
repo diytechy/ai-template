@@ -79,7 +79,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      self-assessment: a judge's brief carries no claim of the judged party.
   3. Launch `bash "$TOOLS/sol_review.sh" <lane> <brief> <out> [effort]`
      (default medium). Exit 3 means the reviewer changed the lane; inspect
-     before trusting. The launcher uses workspace-write, because a read-only
+     before trusting. Edit nothing in a lane while its reviewer runs: the
+     check counts your own edit too (WI-911, 2026-10-15). The launcher uses workspace-write, because a read-only
      sandbox could not run Python, and checks HEAD and status afterwards.
   4. File it: `"$PY" "$SCRIPTS/review_brief.py" file --review <verdict path> --sha <tip> --scope narrow|full`
      writes `docs/reviews/<lane>/NNN-REVIEW-A-<sha7>[-narrow].md`. It refuses
@@ -117,7 +118,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   of record in `docs/specs/WI-NNN.md`, the text moved there, never a
   `specref` that merely resolves (coordinator-2026-10-14 D-001); R-F archives
   it at close. Delegate drafting to planner sub-agents writing into scratch,
-  and read their Done-when, Trust and Scope answers before filing.
+  and read their Done-when, Trust and Scope answers before filing. Ask a
+  Trust drafter to read the code and report any consumer that fails open:
+  WI-921's found the very step it arms failing open (2026-10-15).
 - **Single plan** (a claimed row whose claim copy declares
   `planmode = "single"`; SKILL §3 "Plan"), from the lane root. Each record
   commits alone: the hook's plan-gate step refuses a pass record committed
@@ -134,7 +137,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `bash "$TOOLS/sol_review.sh" <lane> <brief> <out>`. Each round has its
      own verdict path, `WI-NNN-plan-critique-<n>.md`.
   4. File: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --critique <verdict> --sha <plan commit>`
-     writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone.
+     writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone. The
+     critic may file it first: Sol ran `plan-file` in the lane and tried to
+     commit (WI-911, 2026-10-15; the launcher exits 3). Move its copy
+     aside, file the verdict yourself, and compare the two.
   5. Pass: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --pass`
      writes `docs/plans/WI-NNN/pass.toml` (refused, writing nothing, unless
      the critique reads as an APPROVE); commit it alone.
@@ -144,7 +150,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `plan_coverage.py --item <spec> --findings docs/plans/WI-NNN/critique-1.md docs/plans/WI-NNN/plan.md`,
      then steps 3 to 5 again: the second critique's brief is in convergence
      stance and carries no first verdict, and its render refuses a revision
-     that does not answer the first critique's findings.
+     that does not answer the first critique's findings. Its render names no
+     reading exclusion, though the lane holds `critique-1.md` and a decisions
+     record that summarizes it: append one by hand (those files and
+     `docs/reviews/`), and tell the critic never to file or commit (wi-911
+     D-003).
   7. At the cap: never number the findings by hand. A finding's `F#` is its
      position among ALL the critique's findings (a MAJOR after a MINOR is
      F2). Write a positions file, one `F#: <position>` line per BLOCKER and
@@ -343,7 +353,11 @@ commit of its own, move it to trunk's tip
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
   If the lane recorded an owner overrule in
   `docs/decisions`, land two commits: the squash up to the commit before the
-  close, then the close. Ruling-sync needs an open item citing the overrule.
+  close, then the close. Until WI-921 lands, the hook judges neither
+  commit's Done-when change (the close compares against the first commit's
+  edit, as WI-835's did): stage the full squash, run
+  `"$PY" "$SCRIPTS/integrate.py" done-when-hold`, `git reset --hard HEAD`,
+  then land the two commits. Ruling-sync needs an open item citing the overrule.
 - **Regenerate** with `"$PY" "$SCRIPTS/trunk_step.py" --regen`. By hand, the traps are:
   - pass `--src project-trajectory/scripts` to both `gen_arch_map.py` forms (a
     bare `--contracts-doc` wipes the interface reference);
@@ -602,7 +616,9 @@ lane commit being replayed.
   `review-convergence-addendum.md` too for a convergence round. Its
   reading exclusion names the lane's decisions record beside
   `docs/reviews/`: the record summarizes every earlier finding (wi-913
-  D-009). Give each
+  D-009). A plan critique takes `critique-addendum.md` too, under a
+  one-line preface pointing its anchors at the plan's construction, since
+  the row's scope is settled (wi-911 D-001). Give each
   Claude reviewer only its brief's path plus the lane worktree and the
   interpreter, which the brief does not name, and ask for a two-line reply
   (the verdict path and its VERDICT line). Three reviewers file three

@@ -25,27 +25,28 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-15b-attended-coordinator.md](handoff-2026-10-15b-attended-coordinator.md),
+  [handoff-2026-10-15c-attended-coordinator.md](handoff-2026-10-15c-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). Its phase-0
   baseline manifest is recorded and its first batch is claimed. The plan
-  gate has landed, so a row marked for a single plan now plans in its lane
-  before it builds; the batch's process-text row is the first to plan
-  through it. Two hook-coverage rows are filed (the owner ruled their
-  calls as recommended) and take their scope critiques first: one puts the
-  never-run Done-when hold step in the hook's step floor, with a census of
-  every check step, and one judges the landing shapes the hook misses. The strict-lints lane waits
-  for its sitting until the lanes ahead of it land. The
-  disposition-adoption row's record-at-close amendment is filed and its
-  critique passed; that row is re-cut before it resumes, and the
+  gate has landed, and the batch's process-text row has planned through it:
+  its pass record is committed, so its first build is next. The two
+  hook-coverage rows are filed, critiqued and claimed (both plan in their
+  lanes first): one puts the never-run Done-when hold step in the hook's
+  step floor, with a census of every check step, and fixes that step's
+  two-commit fail-open (owner, 2026-10-15); it lands first, and the
+  process-text row then lands through its hold. The other, the landing
+  shapes the hook misses, lands after the headless marking. The
+  strict-lints lane waits for its sitting until the lanes ahead of it land.
+  The disposition-adoption row is re-cut before it resumes, and the
   account-homes row still owes its checkpoint rework. The headless
   coordinator's marking is filed in two rows: the marking itself, which
   lands right after the verdict/act split, and the merge slot's re-claim
-  reader, which lands before the slot takes coordinator landings. The handoff carries the attended session prompt and the review
-  trial's counts; how to run reviews under the ruling stays in the
-  2026-10-11 handoff, with the recipes' hand-applied addenda, until the
-  skill says the same.
+  reader, which lands before the slot takes coordinator landings. The
+  handoff carries the attended session prompt; how to run reviews under the
+  ruling stays in the 2026-10-11 handoff, with the recipes' hand-applied
+  addenda, until the skill says the same.
   The coordinator's procedure lives in the `coordinator-cycle` skill. The
   overnight loop (`scripts/coordinator/overnight_legs.py`) is stopped, and the
   handoff's `Overnight: stop` line keeps it so; it becomes usable once the
