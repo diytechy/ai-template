@@ -7,7 +7,7 @@ buildtier = "quick"
 safety_class = "ordinary"
 priority = 5
 specref = "docs/specs/WI-923.md"
-planmode = "none"
+planmode = "single"
 needs = []
 +++
 
@@ -117,12 +117,11 @@ One lane, one landing.
   the last. Both platforms are covered: on Windows the refusal clears within
   the release, and on POSIX it is a fault, refused as busy after the wait and
   named.
-- **S4:** `none`. The row has no Trust section. It edits one script family
-  (`session_keep.py`); `coordinator_guard.py` and every other caller are
-  unchanged. It changes one seam's contract text (IF-273). Its input is one
-  call's four outcome classes, each pinned by one deterministic test, so a
-  cheap test fully specifies the diff, and a plan would restate the
-  Done-when.
+- **S4:** `single`. The row promises behaviour over an input space: the
+  exclusive create's four outcome classes, read on Windows and on POSIX
+  (S3). That alone is enough, however cheaply each outcome is tested. The
+  row has no Trust section, edits one script family (`session_keep.py`)
+  and changes one seam's contract text (IF-273).
 - **Architectural delta:** none. No state, domain value, input or boundary is
   added. One more create outcome maps to the existing held state.
 - **B3 and B4:** the reading uses only the create's own answer at that
@@ -165,3 +164,12 @@ The owner ruled the drafter's one call in session, as recommended
   deleter, the stale takeover, and for a person. It adds a second name per
   release. The create-side reading is the one owning boundary, and the
   injected test holds the change to it.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-15; CHANGES-REQUESTED, one finding):
+
+- **S4, MAJOR: adopted.** `planmode = "single"`, and S4 now reads: "The
+  row promises behaviour over an input space: the exclusive create's four
+  outcome classes, read on Windows and on POSIX (S3). That alone is enough,
+  however cheaply each outcome is tested."

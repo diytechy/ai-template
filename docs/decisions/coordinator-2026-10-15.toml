@@ -32,3 +32,10 @@ alternative = "Leave the red as a note in the handoff, unfiled, or ask the owner
 reversal_cost = "Low: a queued row; Q1's answer is spec text the scope critique and the owner can still change before the claim."
 why_not_escalated = "Filing a defect row is the coordinator's; Q1 is recorded with its recommendation for the owner's confirm or overrule, and nothing is built before the scope critique."
 review = ""
+
+[decision.D-005]
+decided = "WI-923's scope critique, round 1 (Codex Sol, medium, at 1f90b23ba, after the owner ruled its Q1 (a) in session): CHANGES-REQUESTED, one MAJOR, adopted. S4's criteria (owner ruling 9) make a row `single` when it promises behaviour over an input space, and the row's S3 makes that promise (the exclusive create's four outcome classes, on Windows and on POSIX), so the drafter's `none` (a cheap test fully specifies the diff) does not stand against the written rule; WI-921's S4 reads the trigger the same way. The row becomes planmode single, its S4 restates the trigger, and a Critique dispositions section quotes the carrying text. A confirming round in convergence stance follows before any claim. Cost: the lane plans before its first build (a planner, a plan critique and a pass record) for a quick-tier defect."
+alternative = "Reject the finding: the input space is a closed enumeration of four outcomes, each pinned by one deterministic test named in the Done-when, so a plan would restate the Done-when."
+reversal_cost = "Low: the row is queued and unclaimed; planmode is one frontmatter line before the claim."
+why_not_escalated = "Applies the owner's S4 criteria as written; a rejection would override the ruled rule for one row."
+review = ""
