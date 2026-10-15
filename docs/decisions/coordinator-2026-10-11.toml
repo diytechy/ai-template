@@ -41,7 +41,8 @@ decided = "WI-902's Trust ruling (its spec's Trust section): the adoption is a o
 alternative = "Let the adjudicator name both the successor and the disposed row; or accept the adoption once at the close and trust it at the sweep."
 reversal_cost = "Low: nothing is built yet."
 why_not_escalated = "The skill routes every Trust ruling to the owner for confirmation or overrule after the fact."
-review = ""
+review = "Owner, 2026-10-14 (the 2026-10-11 handoff's queue row B4, for the re-sit): the adoption carrier (a one-key TOML block in the disposition row's own Dispositions section, written by the adjudicator), the disposed row derived from the title's report path, minting nothing and the consolidation-close refusal stand; \"accepted only while the named row is open, re-read at each consumer\" is replaced by record-at-close: the close validates the adoption once and records it, and the sweep trusts the record. That is two cells, not one (plan revision 36): the adjudicator's adopts block is the request, the close validates it and writes the validated record in the closing commit, and a commit-versus-parent check judges that closing commit. This entry's rejected alternative, accepting the adoption once at the close and trusting it at the sweep, is now the ruling; WI-902's amended spec carries it."
+owner = "overruled"
 
 [decision.D-006]
 decided = "Both rows are claimed on their scope critiques as answered, without a fourth round for WI-902: WI-858's round 3 approved with 0 findings; WI-902's round 3 returned one MINOR (the Trust section omitted consolidate._enacted_supersedes, the historical absorption reader), answered in the spec exactly as the finding allowed (the draft-only reader is preserved and named, and the blanket refusal statement is qualified), with no change of design."

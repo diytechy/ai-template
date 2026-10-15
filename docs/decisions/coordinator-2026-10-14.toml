@@ -61,3 +61,38 @@ alternative = "The critic's remedy as written: a status-only partial act at HEAD
 reversal_cost = "Low before the claim: amend WI-912's S3 Re-runs answer, Trust ruling and Done-when tests, and re-critique."
 why_not_escalated = "Both forms fail closed; refusing serves a state the commit hook's integrity floor may already exclude without adding a resume path for it, and the reachable partial states (an uncommitted flip, or a combined act stopped between its two commits) are handled either way. The confirming critique judges it before the claim."
 review = ""
+
+[decision.D-009]
+decided = "WI-902's lane acts 113 to 117, taken in the lane on 2026-10-11 for the history-reading sweep, do not land: SR-148 (act 113) and the six rows of act 114 (LLR-153, LLR-161, LLR-312, TC-147, TC-156, TC-254) are re-sat at the rebuilt lane's checkpoint and take their acts there, above trunk's top; acts 115, 116 and 117 retire with the replay design they blessed, and LLR-335 and TC-360 are first-approved at the rebuilt checkpoint. Nothing is renumbered, so trunk's next act (WI-914's LLR-292 act) takes seq 113 (the lane record, docs/plans/2026-10-11-review-churn/wi-902-lane-record.md, part (a))."
+alternative = "Keep verdict 006's SR-148 blessing and re-take act 113 from it under WI-912's act turn, provided SR-148's bytes are unchanged; or keep acts 113 and 114 and renumber them above trunk's ledger at the landing."
+reversal_cost = "Low: no act has reached trunk. An overrule re-takes act 113 from verdict 006 at the rebuild, one re-sit fewer."
+why_not_escalated = "The owner ruled the reshape (plan ruling 2) and the B4 row asks the coordinator to decide the lane's acts before the rebuild; retiring lane-only acts loses nothing trunk holds, and the rebuilt checkpoint sits anyway because the code those rows' trace homes cite changes (coordinator-cycle section 4)."
+review = ""
+
+[decision.D-010]
+decided = "WI-902's lane is re-cut from trunk's tip at its rebuild, porting the survivors the lane record lists (kitlib/adoption.py, the section parser, the lineage join, title identity, the handback arms, the prompt, manifest and recipe edits, the tests, the lane's reviews and verdicts as its record, and its decisions record with each entry's fate), and its old tip d3d301216 is archived whole to archive/lanes, instead of rebasing its 48 commits and dropping the five act commits."
+alternative = "Rebase the 48 commits onto trunk, dropping the five act commits, and archive the pre-rebase tip with each dropped act as an extra parent (the lane record's first draft)."
+reversal_cost = "Low: nothing moves until the rebuild, and a rebase can still be chosen then."
+why_not_escalated = "How a lane comes onto trunk is a coordinator mechanic: this harness has no interactive rebase, each replayed registry commit risks the recipes' section 4 conflicts, and most of the 48 commits carry code the reshape deletes or rewrites."
+review = ""
+
+[decision.D-011]
+decided = "WI-902's rebuilt lane keeps the ids LLR-335, TC-360 and IF-294 for its reshaped rows, under the owner's keep-or-mint rule (plan revision 26, with revision 31's cross-reference): the spirit, one rule and one home for the adoption decision shared by its two ends, is retained; every live user (the surviving functions' tags, TC-360's verifies, IF-294's note, LLR-153's citation) already cites them and is rebuilt anyway; trunk never saw the old text; and the lane's verdicts and reviews that quote the old meaning are records, not users. The commit check's new rows are minted above WI-798's lane ids."
+alternative = "Mint new ids for the reshaped LLR, TC and IF rows, retiring LLR-335, TC-360 and IF-294 with their old meaning, and re-tag the survivors."
+reversal_cost = "Low before the rebuild: mint at its spine step instead. After it: a re-tag commit and the new rows' sitting."
+why_not_escalated = "The keep-or-mint rule decides case by case and names its tests (spirit retained, fewer changes); the check that each other user still reads compatibly runs at the rebuilt checkpoint's sitting."
+review = ""
+
+[decision.D-012]
+decided = "WI-902's adoption record is a declared Adopted column of the work-item table (front-matter key adopted), beside Adjudicates and Digests, read by one strict reader, so neither parse_spec nor a converter drops it."
+alternative = "A raw front-matter key read only by the close, the commit check and the sweep: no column-table change, at the risk that parse_spec or a converter drops it."
+reversal_cost = "Low before the rebuild: amend deliverable 2 and the Trust section's record carrier, and re-critique."
+why_not_escalated = "It follows the kit's precedent for a machine-written work-item cell (Adjudicates, Digests); the carrier's authority and failure contract are in the row's Trust section, which goes to the owner with its Trust ruling."
+review = ""
+
+[decision.D-013]
+decided = "WI-902 keeps the Dispositions parser's unpaired-fence refusal (review 015's MAJOR, the lane's D-010) in the same row and landing as the adoption record, as its deliverable 5, rather than splitting it into a row that lands first: the reshape rewrites that parser and its return shape, the refusal's regression is review 015's adoption reproduction, and a split would serialize two mechanism landings on one function."
+alternative = "Split the unpaired-fence refusal into its own row under S1, landing first, since it fixes a silent loss trunk already has for drafts."
+reversal_cost = "Low: a split row can be filed on trunk before the rebuild, taking deliverable 5 and its tests."
+why_not_escalated = "S1 lets independent deliverables stay together when that is recorded in the spec with its reasons; the coordinator records the keep-together, as D-002 did for WI-912's trailer line, for the owner to confirm or overrule (if split, the parser fix lands first)."
+review = ""
