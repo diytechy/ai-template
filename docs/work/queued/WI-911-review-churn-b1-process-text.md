@@ -189,6 +189,42 @@ rule in the target's own voice and does not copy the plan's reasoning.
    `plan_coverage.py --findings` excludes a SUCCESSOR finding citing the
    verdict, as it excludes a DISMISS.
 
+## Trust
+
+Written before the claim, answering the round-4 critique's S2 finding under
+[`PROCESS.md` §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+The ruling goes to the owner to confirm or overrule (coordinator-cycle §1 and
+§5).
+
+- **The carrier.** An accepted dispute verdict, which deliverable 8 lets
+  rule a finding SUCCESSOR: the finding then leaves the coverage gate and the
+  landing's path, and a successor row is filed for it. That widens the
+  authority the verdict holds today through DISMISS, along the same path.
+- **Producer and write route,** unchanged: the coordinator writes the
+  findings file (`NNN-DISPUTE-findings.toml`, the shape `kitlib/dispute.py`
+  declares); `coordinator_adjudicate.py adjudicate --brief dispute` reserves
+  the verdict path and writes its binding as `pending`; the adjudicator
+  writes and commits the verdict; the entry point records the binding
+  `accepted` or `failed`. A failed, timed-out or refused call leaves no
+  accepted binding.
+- **Consumers and rulings.** Each reads a ruling only from a verdict whose
+  binding is `accepted` and which rules every requested finding once
+  (`kitlib/dispute.py`'s one parser, which refuses an unknown ruling).
+  - `project-trajectory/scripts/plan_coverage.py --findings`: excludes a
+    finding cited as SUCCESSOR exactly as it excludes a DISMISS. A cite
+    whose verdict is absent, unreadable, unaccepted, malformed or rules
+    that finding otherwise, or whose findings file records another finding
+    under that id, is refused, so the finding stays to be covered.
+  - The coordinator at the landing (`coordinator-cycle` §4 and its
+    recipes): files one successor row on trunk per SUCCESSOR ruling of an
+    accepted verdict. Without one, nothing is filed and the finding holds
+    the landing.
+  - The dispute brief (`adjudicate-dispute.template.md`, composed by
+    `adjudicate_brief.compose`): text only; it reads no verdict.
+- **What the authority binds to.** The findings file's range and ids and the
+  accepted verdict beside it, as a DISMISS binds today. Every failure leaves
+  the finding open: nothing is excluded, filed or deferred.
+
 ## Done-when
 
 - Every deliverable above is in its target, each citing the ruling it
@@ -222,7 +258,8 @@ rule in the target's own voice and does not copy the plan's reasoning.
   lane's cycle reads, plus the one render change the rubric's artifact line
   needs, and none is useful landed without the others. The verdict/act split
   is independently landable and is WI-912 (needs this row).
-- **S2:** no file gains authority over a hold, an act or a gate. Moving a
+- **S2:** yes, one: deliverable 8 widens the accepted dispute verdict's
+  authority; see `## Trust`. Moving a
   BLOCKER or MAJOR to a successor row is the dispute sitting's ruling alone
   (owner, 2026-10-14, in session), through its existing findings file,
   binding and accepted verdict, whose call is final; SUCCESSOR adds a value
@@ -294,3 +331,14 @@ Trust section):
   MAJOR stays a finding until the sitting rules it SUCCESSOR, which
   deliverable 8 adds. The same ruling overrules
   `docs/decisions/coordinator-2026-10-14.toml#D-006`.
+
+Round 4 (Codex Sol, medium, 2026-10-14, a confirming round in convergence
+stance; one finding):
+
+- **S2, MAJOR (a failed confirmation of round 3's S2 answer): adopted.**
+  SUCCESSOR widens an existing carrier's authority, so the row gains a
+  `## Trust` section for it: "An accepted dispute verdict, which deliverable
+  8 lets rule a finding SUCCESSOR ... That widens the authority the verdict
+  holds today through DISMISS, along the same path", with the producer,
+  each consumer by path and "Every failure leaves the finding open: nothing
+  is excluded, filed or deferred." The S2 answer now points at it.
