@@ -101,11 +101,17 @@ list them.
      zero id and differs from the old one. Per Q1 it keeps only the trunk
      branch.
    - A cheap shell pre-filter asks git whether the update's delta touches
-     `docs/work/active/`. Only then does it resolve the interpreter
-     (`kit-python.sh`) and run the reader. So a checkout, fetch, stash, tag,
-     `pack-refs` or branch creation costs one sh process and spawns no
-     Python. If the pre-filter's own git call fails, the reader runs (deny by
-     default). The pre-filter never decides a hold.
+     `docs/work/active/`. That delta is the reader's own (deliverable 2): from
+     `git merge-base <old> <new>` to the new value, or from an empty base when
+     the old value is the zero id, never from the old value to the new. An
+     amend that drops only a ruling leaves the claim copy's bytes the same in
+     the old and new commits, so an old-to-new delta would never reach the
+     reader. Only when the delta touches `docs/work/active/` does the hook
+     resolve the interpreter (`kit-python.sh`) and run the reader. So a
+     checkout, fetch, stash, tag, `pack-refs` or branch creation costs one sh
+     process and spawns no Python. If either of the pre-filter's git calls
+     fails (the merge base or the delta), the reader runs (deny by default).
+     The pre-filter never decides a hold.
    - Its comment block states the boundary and IF row. It says that
      `--no-verify` does not skip it and that the merge slot asks the same.
      Like `pre-commit`'s header, it says how to disable it.
@@ -189,8 +195,8 @@ list them.
 
 Deliverables 1 to 3 give the same files that WI-921's step trusts authority
 over every move of the trunk reference, not only over a commit that runs
-pre-commit. They add two carriers of their own: git's update lines, and the
-declared trunk name. This is a trust boundary in the sense of
+pre-commit. They add three carriers of their own: git's update lines, the
+declared trunk name, and the inputs of the upstream exemption (Q8). This is a trust boundary in the sense of
 `project-trajectory/PROCESS.md` §3, "When a guard is owed": files on disk,
 another process, and a model's output (the verdict). LLR-307 and LLR-309
 state the reader's rulings. They are cited here, not restated. Every carrier
@@ -215,6 +221,17 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
     current branch, and a resync adds it as a new setting (LLM-applied).
     Failed-write shapes: the key is absent; its value is not a string; it is
     empty; or it names no local branch.
+  - **The upstream exemption's inputs** (Q8). Git writes both: the trunk's
+    upstream configuration (`branch.<trunk>.remote` and
+    `branch.<trunk>.merge`), set by a clone, `push -u` or
+    `branch --set-upstream-to`, and the remote-tracking reference it names,
+    written by `git fetch`. Failed-write shapes the reader must still meet:
+    - no upstream configured for trunk;
+    - configuration git cannot resolve to a remote-tracking reference (a
+      malformed value, or a remote with no fetch refspec);
+    - a tracking reference that is absent or unreadable;
+    - a containment query (`git merge-base --is-ancestor <new> <tracking>`)
+      that exits with anything but 0 or 1.
   - **The hook file and `core.hooksPath`.** Bootstrap and `setup.*` write
     them. Both are opt-in per checkout, as `pre-commit` is (IF-134). A
     checkout without them runs nothing. That stays the stated residue, as it
@@ -225,7 +242,9 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
     `integrate.py done-when-hold` (the stdin mode) → `kitlib/done_when.py`
     (the new update reader) → `lane_hold` → `_wi_hold` → `claim_copy`,
     `spec_at`, `blessing_owed` → `covering` → `_verdicts`
-    (`kitlib/sitting.accepted_at`) and `_rulings`.
+    (`kitlib/sitting.accepted_at`) and `_rulings`. The new reader alone reads
+    the upstream exemption's inputs, before it judges an update; the sh
+    pre-filter never reads them, so the exemption has one home.
   - **Unchanged hold points that share the reader:**
     - `integrate.py` `staged_done_when_refusal` → `staged_hold` (the
       pre-commit step);
@@ -266,6 +285,14 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
   - a state other than `prepared`: exit 0, as above;
   - a reference outside `refs/heads/<trunk>` (Q1), a deletion, or an update
     whose old equals its new: not judged;
+  - the upstream exemption (Q8): an update of trunk is not judged only when
+    git resolves trunk's upstream to a remote-tracking reference and
+    `merge-base --is-ancestor <new> <tracking>` exits 0. Every other outcome
+    grants no exemption: no upstream, configuration git cannot resolve, an
+    absent or unreadable tracking reference, an exit of 1, or any other
+    exit. The update is then judged like any other, and holds where that
+    judgement cannot complete. The exemption never holds by itself, and is
+    never granted by default;
   - a malformed line, or a value that is not an object id: holds;
   - a declared trunk that is absent, malformed, or names no branch: holds,
     but only for a transaction whose delta touches `docs/work/active/`. Any
@@ -315,7 +342,11 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
   - a checkout with no `core.hooksPath`;
   - a repository on a git older than 2.28 that bypasses pre-commit too;
   - a trunk move made by writing the reference file directly, outside git
-    (outside the threat model).
+    (outside the threat model);
+  - a fast-forward to a commit that a remote-tracking reference contains
+    because someone moved that reference by hand (`update-ref`) rather than
+    by `fetch`: the exemption reads git's reference, not how it was written,
+    so it is a deliberate act, like disabling the hook.
 
   The merge slot and the mint still read the merged result.
 
@@ -326,7 +357,9 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
   carries a covering accepted verdict or owner ruling. Each case fails on
   WI-921's hooks alone, before the change. The shapes:
   - an amended trunk close that gains a Done-when edit;
-  - an amend that drops a trunk edit's only ruling;
+  - an amend that drops a trunk edit's only ruling, the claim copy's bytes
+    the same in the old and new commits (only a pre-filter over the
+    reader's merge-base delta reaches the reader here);
   - a cherry-pick and a revert that change a claim copy's Done-when;
   - a rebase that moves trunk;
   - a non-conflicting `git merge` making a merge commit;
@@ -360,7 +393,11 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
   the floor, and passes on 2.28. This is a test of the probe with a version
   string supplied.
 - Per Q8: a trunk fast-forward to a commit fetched from upstream is ruled as
-  the owner chose, and the test pins it.
+  the owner chose, and the test pins it: a fast-forward to a commit trunk's
+  upstream tracking reference contains is not judged; one to a commit it does
+  not contain is judged; and with no upstream configured, an upstream git
+  cannot resolve, or an absent tracking reference, the update is judged. The
+  judged cases carrying an unblessed Done-when change fail before the change.
 - A bootstrapped scaffold carries `.githooks/reference-transaction`, LF and
   executable, and its pre-filter and reader resolve. This repository's
   wrapper delegates to it. `tests/test_dogfood_sync.py` holds the structure.
@@ -558,3 +595,30 @@ The owner ruled all eight calls in session, each as recommended (2026-10-15, the
   `push = "human"`, that is a commit the owner pushed. (c) is a hold that
   does not hold. The reading must fail closed: an upstream git cannot
   resolve is not "contained".
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-15, at `c0dfd1823`; CHANGES-REQUESTED,
+two findings; coordinator-2026-10-15 D-006):
+
+- **S3, MAJOR: adopted.** The pre-filter takes the reader's own delta.
+  Deliverable 1 now reads: "That delta is the reader's own (deliverable 2):
+  from `git merge-base <old> <new>` to the new value, or from an empty base
+  when the old value is the zero id, never from the old value to the new",
+  and "If either of the pre-filter's git calls fails (the merge base or the
+  delta), the reader runs (deny by default)." The Done-when's amend shape now
+  reads: "an amend that drops a trunk edit's only ruling, the claim copy's
+  bytes the same in the old and new commits (only a pre-filter over the
+  reader's merge-base delta reaches the reader here)".
+- **S2, MAJOR: adopted.** The Q8 exemption gets its carrier contract in
+  Trust: "The upstream exemption's inputs" names git as the producer of the
+  upstream configuration and the remote-tracking reference, their write
+  routes and four failed-write shapes; the consumer list names the new reader
+  as the exemption's one home; and the ruling per input reads: "an update of
+  trunk is not judged only when git resolves trunk's upstream to a
+  remote-tracking reference and `merge-base --is-ancestor <new> <tracking>`
+  exits 0. Every other outcome grants no exemption ... The update is then
+  judged like any other, and holds where that judgement cannot complete."
+  The residue list names a tracking reference moved by hand. The Done-when's
+  Q8 item pins the contained, uncontained, unconfigured, unresolvable and
+  absent cases.
