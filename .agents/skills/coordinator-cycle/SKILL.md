@@ -276,7 +276,10 @@ this hold (`project-trajectory/PROCESS.md` §4).
 
 1. **Terra, resumed, reconciles the whole set** against the settled code: the
    accumulated spine change list plus the arms map. Verify, regenerate and
-   commit the reconciled text before composing the sitting.
+   commit the reconciled text before composing the sitting. When the set
+   was drafted at intent, no round proposed row text and no code moved
+   since, omit the turn and record why, after checking mechanically that
+   each changed approved cell keeps its approved text (WI-914, WI-923).
 2. **The closure check passes** before the sitting (`spine-authoring`,
    `references/in-lane.md`: parents, the arms, TC-to-LLR-and-SR, interface
    citations, the strict integrity checks).

@@ -25,18 +25,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-16-attended-coordinator.md](handoff-2026-10-16-attended-coordinator.md),
+  [handoff-2026-10-16b-attended-coordinator.md](handoff-2026-10-16b-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
-  process-text row has landed, so the `coordinator-cycle` skill now carries
-  the review shape and briefs take no hand addenda. The re-scoped
-  hook-coverage rows and the removal rows the audit of contrived guards
-  ordered are filed and critique-clean, waiting for the owner to place
-  them in the queue. The strict-lints lane is next: its rebase onto the
-  landing conflicts in the byte-budget rows, the recipes and RESYNC_PACK.md,
-  and was aborted untouched. The store-lock defect's checkpoint follows it
-  (its stress re-run is recorded). The headless coordinator's marking rows
+  process-text and strict-lints rows have landed, so the
+  `coordinator-cycle` skill carries the review shape and the commit bar
+  runs both strict lints. The owner placed the filed rows in the queue:
+  the plan gate's landing-shapes lane is next, its Done-when blessed and
+  its first build owed, then the removal rows the audit of contrived
+  guards ordered. The headless coordinator's marking rows
   each owe their confirming scope critique before a claim. The
   disposition-adoption row is re-cut before it resumes, and the
   account-homes row still owes its checkpoint rework.
@@ -48,7 +46,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 119 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 121 on trunk. The context guard's hooks are machine-local
   (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -145,7 +143,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   in an SR's acceptance as carrier evidence, against ruling 5's text in
   `spine-questions.md` (to plan item 5's schema lane), and SR-233's
   acceptance states convergence duties its requirement does not (wording,
-  at its next sitting); **owner intake 2026-09-22:** the self-test
+  at its next sitting); from the strict-lints row's gate (wi-914 D-006):
+  the declared bar's budget step takes no `--elapsed`, so each bar runs
+  the smoke tier twice; **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
   `unrecognized arguments: -n`. This depends on the root launchers SN-034/SN-035

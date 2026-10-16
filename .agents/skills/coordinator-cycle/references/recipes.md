@@ -436,6 +436,9 @@ commit of its own, move it to trunk's tip
     (R-E), and never to a log fragment, which compiles away;
   - `"$PY" "$SCRIPTS/spec_move.py" <src> docs/archive/work/complete/<name>.md`, never
     `--archive`;
+  - a spec of record (`specref` naming `docs/specs/WI-NNN.md`) that no
+    open row cites moves with `spec_move.py --archive docs/specs/WI-NNN.md`
+    in the same close, or R-F refuses it (WI-923, 2026-10-16);
   - scrub the id from `status.md`'s hand text in the same commit;
   - keep hand-filed slugs to the handoff's 37-character ceiling; the kit's
     spec writer uses a 30-character title prefix (`wi_convert.SLUG_CHARS`).
@@ -612,9 +615,11 @@ lane commit being replayed.
   gated only on the command's exit code inside `$(...)` committed a red tier
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
-- One timed run serves both halves of the bar: time the smoke run's wall
-  clock and pass it to `check_smoke_budget.py --mode enforce --elapsed
-  <s>`, which otherwise runs the tier again. A wrapper must exit nonzero
+- The declared bar's budget step takes no `--elapsed`, so it runs the
+  tier a second time: a bar costs about two tier runs (about 115 s quiet,
+  2026-10-16; wi-914 D-006 carries it as a follow-up). `--elapsed <s>`
+  serves only a hand wrapper that still runs every `[run] smoke` step
+  and times its own tier run. A wrapper must exit nonzero
   on a red tier or a breach: one that exited 0 let a chained `&& git
   commit` record a 66.2 s reading unmentioned (WI-921's pass record,
   its message amended, 2026-10-15).
