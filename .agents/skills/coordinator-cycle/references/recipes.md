@@ -501,9 +501,14 @@ lane commit being replayed.
 - Re-read every whole cell a splice touches. Spliced sentences have come back
   without a verb.
 - If `apply_patch` cannot match a long one-line cell, use a guarded Python replace:
-  - read and write with `newline=""`;
+  - read and write with `newline=""`, through `open()`: Python 3.11's
+    `Path.read_text` takes no `newline` argument (2026-10-15h);
   - assert each old value occurs once;
   - check with `tomllib` that list cells stay lists.
+- A script that checks registry cells must assert it read rows. The
+  registries are tables keyed by id (`[requirement.SR-234]`), not arrays of
+  tables: a post-rebase per-cell check that iterated arrays read nothing and
+  passed vacuously before it was fixed (2026-10-15h).
 - A single-quoted TOML literal cannot hold an apostrophe. Rewrite the line as
   a JSON-escaped basic string, then assert with `tomllib` that the cell equals
   the verdict and no other cell moved.
