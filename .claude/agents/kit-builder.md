@@ -37,7 +37,8 @@ Standing rules, in addition to the prompt:
   - Run your affected modules and the whole smoke tier at `-n 2`. Do not run
     the full unfiltered suite.
 - **Before you finish:**
-  - Run `check_trajectory.py --strict`, ruff format and ruff check.
+  - Run `check_trajectory.py --strict`, `trace.py --strict`, ruff format and
+    ruff check.
   - Run `check_complexity.py --report`: every touched function must be 15 or
     below.
   - A shipped change needs a RESYNC_PACK entry anchored `[since <lane base>]`.

@@ -230,7 +230,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   reading the function behind it: one cited `handback.py`'s `--no-verify`
   commit as a return-to-queue route, which `close_partial` owns and
   `spec_move.py`'s stale docstring still describes (wi-921 D-013).
-- **Closure checks,** from the lane root:
+- **Closure checks,** from the lane root, both strict lints:
   `"$PY" "$SCRIPTS/trace.py" --strict` and
   `"$PY" "$SCRIPTS/check_trajectory.py" --strict`.
   These operate on the whole repo; neither accepts a row-set filter. Check
@@ -393,8 +393,8 @@ commit of its own, move it to trunk's tip
   Taken on trunk inside the squash, text-then-act refuses it (WI-887,
   2026-10-11). Adding an IF to an approved TC's `Verifies` (the strict gate refuses
   an IF row no TC cites) is traced-only too: the composer refuses an
-  amendment sitting for it, and the re-anchor is the step (WI-902, act 117). Run `trace.py --strict-integrity` on the staged squash: the
-  lane hook does not catch this drift.
+  amendment sitting for it, and the re-anchor is the step (WI-902, act 117). The bar command on the staged squash (below) catches
+  this drift; the lane hook does not.
 - **A return in a sitting holds its whole registry.** A row the sitting
   would bless is not anchored while another row in the same registry is
   returned; rework the returns and re-sit them all together. Move each
@@ -421,10 +421,10 @@ commit of its own, move it to trunk's tip
     bare `--contracts-doc` wipes the interface reference);
   - regenerate `docs/ratify/CURRENT.md` with
     `"$PY" "$SCRIPTS/trace.py" --approve modified --out docs/ratify/CURRENT.md`.
-- **Run `"$PY" "$SCRIPTS/trace.py" --strict` and
-  `"$PY" "$SCRIPTS/check_trajectory.py" --strict` before the landing
-  commit** (ruling 6). The hook runs `check_trajectory`'s non-strict form,
-  so R-F (a closed row's `specref`) passes it. A lane that adds a doc also runs
+- **Run the commit bar, `"$PY" "$SCRIPTS/run_menu.py" smoke`, on the staged
+  squash before the landing commit** (ruling 6). Its strict lints catch what the hook's
+  non-strict forms pass: R-F (a closed row's `specref`) and a traced cell off
+  its anchor. A lane that adds a doc also runs
   `"$PY" "$SCRIPTS/check_docs.py" --root . --strict-orphans`: the orphan check
   runs only in the full suite.
   In a working checkout it also reports the gitignored `docs/test/report.md`
@@ -605,11 +605,12 @@ lane commit being replayed.
 
 ## 6. Commits and hooks
 
-- Run the smoke tier on every commit, docs-only ones included. Read the
-  summary line for `failed` before committing; a chain gated only on the
-  command's exit code inside `$(...)` committed a red tier (2026-10-10). The commit
-  hook does not run it: run `python -m pytest -q -n auto -m smoke` and
-  `python scripts/check_smoke_budget.py --mode enforce` yourself, before a
+- Run the commit bar on every commit, docs-only ones included: the one
+  declared command, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
+  a shell), whose steps are `docs/stack.ini` `[run] smoke`. Read the summary
+  lines for `failed` and for each lint's findings before committing; a chain
+  gated only on the command's exit code inside `$(...)` committed a red tier
+  (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
 - One timed run serves both halves of the bar: time the smoke run's wall
   clock and pass it to `check_smoke_budget.py --mode enforce --elapsed

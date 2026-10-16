@@ -32,9 +32,12 @@ child returned for want of a parent, then a TC for an arm its LLR states).
   - Each row's parent is in the set or already approved.
   - Each TC names its LLR and that LLR's SR.
   - Each interface row the change adds or alters has a citing TC.
-  - `scripts/trace.py --strict-integrity` and
-    `scripts/check_trajectory.py --strict` pass. They check the whole repo,
-    so judge arm coverage separately using the map.
+  - `scripts/check_trajectory.py --strict` passes, and so does
+    `scripts/trace.py --strict` from DevStg-Impl. Below that rung
+    `trace.py --strict-integrity` stands in, because an SR still lacking its
+    LLR or TC is the rung's own open work; that is also why the harness's
+    traceability step starts at DevStg-Impl. They check the whole repo, so
+    judge arm coverage separately using the map.
 - **Judge it in one sitting, top-down.** One combined adjudication (the
   `combined` brief) takes the set's amendments, first approvals and any
   Done-when change together. Keep each kind's verdict lines in its own section

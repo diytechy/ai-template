@@ -57,10 +57,10 @@ that easier to achieve in a real project — or get out of the way.
   enforces it.
 - **Self-test before claiming done.** The per-commit bar means results AND
   seconds, both enforced locally, not just claimed (OI-52 ruling (a),
-  2026-08-23): `python -m pytest -q -n auto -m smoke && python
-  scripts/check_smoke_budget.py --mode enforce`, budgeted at **60 s** wall in
-  [`docs/stack.ini`](docs/stack.ini) — a breach FAILS the bar where it is
-  introduced. **Re-tiered and re-measured 2026-09-27 (WI-652, OI-92 (b)):
+  2026-08-23): one declared command, `run.cmd smoke` (`run_menu.py smoke`
+  from a shell; its steps are [`docs/stack.ini`](docs/stack.ini) `[run]`),
+  its smoke tier budgeted at **60 s** wall — a breach FAILS the bar where it
+  is introduced. **Re-tiered and re-measured 2026-09-27 (WI-652, OI-92 (b)):
   26.4 / 26.4 / 25.7 s over three quiet runs on the 4-core / 8-thread box**,
   where the tier had grown to 188 s; its heavy cases moved to
   `tests/conftest.py` `SLOW_MODULES`, every script family keeping an

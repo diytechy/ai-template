@@ -3,13 +3,36 @@ id = "WI-914"
 title = "Review-churn batch 2: the strict lints run in every build round's commit bar, before every sitting and at every landing, from a clean trunk"
 workstream = "process"
 sr_refs = ["SR-054", "SR-157"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#6-run-the-strict-lints-after-every-build"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "none"
 needs = ["~WI-911"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-16, after its post-checkpoint gate. Both
+strict lints now run after every build, at the closure check and at the
+landing check, and never in the commit hook (the review-churn plan's
+ruling 6):
+
+- `docs/stack.ini` `[run] smoke`, the one declared commit-bar command, runs
+  the smoke tier, `trace.py --strict`, `check_trajectory.py --strict`,
+  `check_docs.py --stale` and then the budget check, last, so a breach under
+  load never hides a lint red; a test pins that order;
+- `CLAUDE.md`, `session-protocol` section 3, the coordinator-cycle recipes,
+  the kit-builder agent and the Terra spine prompt name that command as the
+  bar;
+- `spine-authoring`'s lane reference runs `trace.py --strict` at the closure
+  check from DevStg-Impl, and the coordinator-cycle skill and recipes run
+  the bar on the staged squash at landing;
+- LLR-292's Detail names no unmeasurable term ("this row sets no bound on
+  their count"), ruled CLARITY by sitting 004 and re-attested at act seq
+  120, so `trace.py --strict` reports no finding on trunk.
+
+The RESYNC entry (the closure check) is anchored at the landing's parent.
 
 ## Context
 

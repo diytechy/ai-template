@@ -81,16 +81,20 @@ always true.
 
 ## 3. End green (gates)
 
-Run the real checks and paste the real output — never a green you didn't produce:
+Run the one declared bar command and paste the real output — never a green
+you didn't produce:
 
 ```
-python -m pytest -q -n auto -m smoke
-python scripts/check_smoke_budget.py --mode enforce
-python project-trajectory/scripts/check_docs.py --root . --stale
+run.cmd smoke                                          # Windows launcher
+python project-trajectory/scripts/run_menu.py smoke    # from a shell
 ```
 
-All three must pass before **each** commit — this is the **commit bar**, and it
-means results AND seconds, not results alone (OI-52 ruling (a), 2026-08-23):
+It must pass before **each** commit — this is the **commit bar**. Its steps
+are declared once, in `docs/stack.ini` `[run] smoke`, so a build round's bar
+cannot skip the strict lints it carries (review-churn ruling 6, 2026-10-11;
+they never run in the commit hook). The budget check runs last, so a breach under parallel-lane load never
+hides a lint red. The bar means results AND seconds, not results alone (OI-52
+ruling (a), 2026-08-23):
 `-m smoke` is the fast per-commit tier; `check_smoke_budget.py --mode enforce`
 is what makes the seconds a real bar rather than a claim a worker could read
 "passed" over — it FAILS the commit when the tier's wall time breaches the

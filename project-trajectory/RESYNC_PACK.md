@@ -8479,6 +8479,26 @@ reader of `kitlib.dispute.RULINGS` sees one more value, and
 `plan_coverage.ruling_problem` takes an optional `resolving` keyword whose
 default keeps its DISMISS-only answer.
 
+### A lane's closure check runs `trace.py --strict` from DevStg-Impl [since cc98db557]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `spine-authoring`'s lane reference, "Close the edges
+before the sitting", ran `trace.py --strict-integrity` beside
+`check_trajectory.py --strict`. From DevStg-Impl it runs `trace.py --strict`,
+so an orphan, status or schema finding is caught before a sitting rather
+than by its reviewers. Below that rung `--strict-integrity` stands in,
+because an SR still lacking its LLR or TC is the rung's own open work; the
+harness's traceability step starts at DevStg-Impl for the same reason.
+
+**Kit-owned files — overwrite:**
+`skills/spine-authoring/references/in-lane.md` and every per-agent copy of
+that skill (`bootstrap.py --sync` refreshes them).
+
+**What to do.** Overwrite the file. Prose only: no script, setting or
+registry changes, and nothing needs migrating. A lane past DevStg-Impl whose
+`trace.py --strict` reports a finding clears it before its next sitting.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

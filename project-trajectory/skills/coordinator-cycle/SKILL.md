@@ -346,10 +346,9 @@ Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
    run an uncounted convergence round over the rebased tip.
 2. Keep the adjudicator's act as the lane's last **spine** commit: Status flips
    and the snapshot only, with verdicts committed first. Telemetry may follow.
-3. Squash, regenerate, run `trace.py --strict` and
-   `check_trajectory.py --strict`, close the row, archive the tips, sweep,
-   and close the re-mint citing the act. Every step and its trap is in
-   recipes §3.
+3. Squash, regenerate, run the commit bar on the staged squash, close the
+   row, archive the tips, sweep, and close the re-mint citing the act. Every
+   step and its trap is in recipes §3.
 4. File one successor row on trunk per SUCCESSOR ruling of an accepted
    dispute verdict, from its binding (recipes §3).
 

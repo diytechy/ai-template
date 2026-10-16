@@ -106,6 +106,25 @@ def test_membership_ratchet_bites_past_the_ceiling():
     assert not _within_budget(ceiling + 1, ceiling)  # one past the line: bites
 
 
+def test_the_declared_commit_bar_runs_the_strict_lints_before_its_budget():
+    # WI-914 (review-churn ruling 6): this repo's one declared commit-bar
+    # command, docs/stack.ini [run] smoke, runs the smoke tier, both strict
+    # lints and the docs staleness check, and only then the budget check, so a
+    # breach under load never hides a lint red. A chain that dropped a step or
+    # moved the budget check ahead of the lints would let a build round's bar
+    # skip what review would otherwise spend a round on.
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.read(STACK_INI, encoding="utf-8-sig")
+    steps = [step.strip() for step in cp["run"]["smoke"].split("&&")]
+    assert steps == [
+        "python -m pytest -q -n auto -m smoke",
+        "python project-trajectory/scripts/trace.py --strict",
+        "python project-trajectory/scripts/check_trajectory.py --strict",
+        "python project-trajectory/scripts/check_docs.py --root . --stale",
+        "python scripts/check_smoke_budget.py --mode enforce",
+    ]
+
+
 def test_nested_collection_survives_a_non_utf8_console_byte(tmp_path):
     # M-01 regression (repo review 2026-08-19): a collected module that prints
     # a character during collection — exactly what conftest's own

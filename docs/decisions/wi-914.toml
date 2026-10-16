@@ -1,0 +1,47 @@
+# docs/decisions/wi-914.toml — delegated decisions made in the WI-914 lane (the
+# strict lints after every build, review-churn batch row B2) by the attended
+# coordinator. Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane's review rounds run in the review-churn trial shape (plan revision 37): three full-lane reviewers in parallel, each from its own render and scratch: Codex Sol at medium filed as REVIEW-A, and Claude Fable at medium and Claude Opus at high, both stand-ins for the Gemini reviewer B slot, each filed as REVIEW-B under its own number. Both stand-ins share the builder's and the adjudicator's model family, and Opus shares the builder's model; the decision recording each round names the model behind each REVIEW-B file. The lane starts its count at round one; at most three rounds before the checkpoint."
+alternative = "The plan's norm of two reviewers (Sol and one stand-in), or the coordinator-cycle skill's narrow Sol rounds, which ruling 4 retired."
+reversal_cost = "None for rounds already run; a later round may drop a stand-in."
+why_not_escalated = "The owner ruled the trial for this program (revision 37) and the substitution until WI-815's Gemini route (ruling 7); this record states it for the lane, as the ruling asks."
+review = ""
+
+[decision.D-002]
+decided = "Round 1 (three full-lane reviews of 737ab5c, filed as docs/reviews/wi-914/001-REVIEW-A-737ab5c.md by Codex Sol at medium, 002-REVIEW-B-737ab5c.md by Claude Fable 5.1 at medium and 003-REVIEW-B-737ab5c.md by Claude Opus 5.5 at high) is dispositioned: 001's one MAJOR (LLR-292's approved Detail changed without its re-attestation act) is accepted as the checkpoint's own deliverable, the amendment sitting and its act (spec deliverable 1), and needs no code change; 003's one MINOR (the coordinator-cycle skill's land step 3 still named only check_trajectory.py --strict, while recipes section 3 now runs the commit bar on the staged squash) is fixed in the lane; 002 found none. With no BLOCKER or MAJOR code finding, the lane moves to its checkpoint. Its sitting and act keep landing order: WI-914 lands after WI-913 and WI-911 (the handoff's queue), so it sits after they land and it rebases (coordinator-cycle section 4). Trial tally (accepted findings by reviewer): Sol 1 (MAJOR, the owed act), Opus 1 (MINOR), Fable 0."
+alternative = "A dispute sitting over 001's MAJOR as a timing finding (nobody contests that the act is owed, so there is nothing to rule); or a second review round before the checkpoint (the round had no code BLOCKER or MAJOR)."
+reversal_cost = "Low: a further round can run before the sitting if the owner wants one."
+why_not_escalated = "Ruling 4's review shape sends a round with no BLOCKER or MAJOR code finding to the checkpoint, and the act this finding names is the checkpoint's own step; the skill's section 4 orders the sitting after the lanes ahead land."
+review = ""
+
+[decision.D-003]
+decided = "The lane is rebased onto trunk's tip cc98db557 (pre-rebase tip 58a937342, base aac06695e; rebased tip 1afa752ed) by recipes section 4. Seven files conflicted in the build commit and three in the round-1 commit, each resolved by the table: RESYNC_PACK.md keeps both sides' entries, trunk's first, with the lane's entry re-anchored from the old base aac06695e to cc98db557 (re-checked against the landing's parent at the squash); the byte-budget skill keeps each side's own row, the CLAUDE.md row the lane's (7,991, only the lane changed CLAUDE.md) and the skill's own row restamped to its merged real size (4,507); the coordinator-cycle recipes keep trunk's added disposition and fix-round paragraph beside the lane's 'both strict lints' closure line, and the lane's commit-bar landing sentence keeps trunk's '(ruling 6)' citation; the coordinator-cycle SKILL keeps the lane's land step 3 and trunk's new step 4 (successor rows). The per-agent copies are synced byte-identical. Per-file patch comparison of aac06695e..58a937342 against cc98db557..1afa752ed shows every other file's delta unchanged, code (tests/test_smoke_budget.py), docs/stack.ini and the LLR registry included, so the rebase changed no code and no authored row: no checkpoint repeat and no extra uncounted round is owed beyond the post-checkpoint gate."
+alternative = "Taking either side's whole file (drops the other's entries or rows), or keeping the lane's RESYNC anchor at the old merge base, which is not the landing's parent."
+reversal_cost = "Low: docs-only resolutions in one rebase; the pre-rebase tip stays reachable for the archive."
+why_not_escalated = "Recipes section 4 states each file's rule, and the handoff's queue row 1 names them."
+review = ""
+
+[decision.D-004]
+decided = "The checkpoint omits Terra's reconcile turn. The lane's spine set is one cell, LLR-292's Detail, authored at intent (90655ef59, Terra session 01a13dc3-595d-7a60-9a5d-0481625cb9d9); round 1 proposed no row text, and the only later lane change is the coordinator-cycle skill's land step (prose, not code or a row), so there is nothing to reconcile against. The closure check passed on the rebased tip: trace.py --strict exit 0 and check_trajectory.py --strict clean, each with only the standing advisories (coordinator-2026-10-16 D-001). One combined sitting judges amendment:LLR-292 under SR-054, the TC-305 chain preserved, and its act is the lane's last spine commit."
+alternative = "A Terra reconcile turn over an empty change list (one Codex session for no text)."
+reversal_cost = "Low: a return from the sitting goes to Terra's retained session as usual."
+why_not_escalated = "The coordinator-cycle skill omits spine authoring when no row text is owed beyond what is drafted; this is that case."
+review = ""
+
+[decision.D-005]
+decided = "Checkpoint sitting 004 (docs/reviews/wi-914/004-ADJUDICATE-3c4f796.md) ruled LLR-292's Detail amendment CLARITY, rows=1, and its act re-attested LLR-292 at seq 120 (7d108f3b8), the lane's last spine commit. The convergence map for the gate (the coordinator-cycle skill section 3; revisions 8 and 33), which the reviewers do not read: round 1 accepted two findings, neither with an executable regression test, each mapped to independently checkable evidence. 001-REVIEW-A F1 (MAJOR: LLR-292's approved Detail changed without its re-attestation act) maps to the act itself: docs/archive/last_approved/acts.toml seq 120 re-attests LLR-292 citing verdict 004, and the snapshot's LLR-292 Detail equals the live cell. 003-REVIEW-B F1 (MINOR: the coordinator-cycle skill's land step 3 named only check_trajectory.py --strict) maps to the corrected text at the cited site: land step 3 reads 'run the commit bar on the staged squash' in project-trajectory/skills/coordinator-cycle/SKILL.md and both per-agent copies. The map is complete, so the gate runs: uncounted, convergence stance, over cc98db557..<the tip carrying this record>, three full-lane reviewers in the trial shape (D-001): Codex Sol at medium as REVIEW-A, Claude Fable at medium and Claude Opus at high as REVIEW-B, each from its own render and scratch, with round 1's test set."
+alternative = "A gate without the map (the skill refuses it), or a counted round 2 (round 1 had no BLOCKER or MAJOR code finding, so the checkpoint followed it)."
+reversal_cost = "None: the map records evidence that exists."
+why_not_escalated = "The skill and the revision 33 ruling state the map and the gate's shape."
+review = ""
+
+[decision.D-006]
+decided = "The post-checkpoint gate (uncounted, convergence stance, over cc98db557..a4242c242) approves: 005-REVIEW-A-a4242c2 (Codex Sol, medium) APPROVE with 0 findings; 006-REVIEW-B-a4242c2 (Claude Fable 5.1, medium) APPROVE with 0 findings; 007-REVIEW-B-a4242c2 (Claude Opus 5.5, high) APPROVE with 1 MINOR. Both Claude files stand in for the Gemini reviewer B slot (ruling 7; the trial, revision 37). 007's MINOR is accepted: recipes section 6's second bullet still tells a coordinator to pass one timed run to check_smoke_budget.py --elapsed, while the declared bar (run_menu.py smoke) calls the budget step without --elapsed, so the step runs the tier a second time (observed this session: about 112 s of wall per bar, two tier runs). The MINOR costs no round; the recipe wording is corrected at the coordinator's close-out fold on trunk, and the double run of the tier inside the declared bar is carried to the handoff as a follow-up for the owner to place. The row closes in the lane after the gate; the close touches no code and no spine row. Trial tally for this lane (accepted findings by reviewer, rounds 1 and gate): Sol 1 (MAJOR, the owed act), Opus 2 (MINOR, MINOR), Fable 0."
+alternative = "Fixing the recipe bullet in the lane after the gate (shipped skill text no reviewer would see before landing), or a fix round for a MINOR, which ruling 4 says never costs a round."
+reversal_cost = "Low: a recipe sentence; the follow-up is unfiled."
+why_not_escalated = "Ruling 4 sends a MINOR to the change list or a later row, and the coordinator-cycle skill folds procedural corrections into the recipes at close-out."
+review = ""

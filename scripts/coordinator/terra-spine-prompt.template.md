@@ -30,7 +30,7 @@ From this worktree, in PowerShell:
     & "@PY@" project-trajectory/scripts/trace.py --strict
     & "@PY@" -m pytest -q -p no:cacheprovider -n 2 --basetemp "@WTROOT@/review-tmp/@LANE_SLUG@-terra" tests/test_spine_carrier.py tests/test_trace.py @TESTS@
 
-`trace.py --strict` exits 1 on trunk from LLR-292's "no claim is made that crossing count is minimal"; that one finding is pre-existing. Always pass that literal `--basetemp`; never `$TEMP`.
+Always pass that literal `--basetemp`; never `$TEMP`.
 
 ## Your final message
 1. Every row you added or amended: id, cell, before (quoted, or "new") and after (quoted), and one line on why.

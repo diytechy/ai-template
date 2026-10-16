@@ -30,8 +30,8 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,996 | 2026-09-28 | +4: WI-615 — the partial-search bullet, paid for by three de-duplications |
-| `CLAUDE.md` | **8,500** | 7,977 | 2026-09-27 | +2: WI-652 re-measures the smoke tier on the 4-core box |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,494 | 2026-10-15 | Restamps the PROCESS.md row |
+| `CLAUDE.md` | **8,500** | 7,991 | 2026-10-14 | +14: WI-914 names the one declared commit-bar command |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,507 | 2026-10-16 | Restamps the PROCESS.md and CLAUDE.md rows |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
