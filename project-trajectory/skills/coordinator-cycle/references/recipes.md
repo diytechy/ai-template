@@ -667,9 +667,21 @@ lane commit being replayed.
   in PowerShell first,
   run from a detached worktree in the background, and delete the basetemp
   after recording.
+  Off a claimed branch the suite asserts the trunk-only `docs/stage` in
+  full (`test_this_repo_s_committed_stage_is_current`), so a lane whose
+  close moved the derived stage reads that one red in a detached
+  worktree: re-derive there (`derive_stage.py`) and re-run the test
+  before treating it as a defect (wi-921 D-020).
 - **A smoke budget breach under load:** time the parent commit in the same
   window before charging the breach to the change; record both readings in
-  the commit message and re-measure quiet before landing.
+  the commit message and re-measure quiet before landing. When the
+  owner's own applications load the box and the owner asks, run every
+  local test job (bars, the full suite, Codex launches, the Claude
+  reviewers' pytest) at below-normal priority through a stdlib wrapper
+  (`subprocess.call(cmd, creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)`;
+  Windows children inherit the class), naming Git Bash by its full path
+  (`C:/Program Files/Git/usr/bin/bash.exe`), since Windows resolves a
+  bare `bash` by its own search order (2026-10-15g).
 - **Context:** the boot reading took about a quarter of the window on
   2026-10-14. Delegate long reads to sub-agents and read only their
   summaries and the sections you judge.
@@ -689,6 +701,10 @@ lane commit being replayed.
   (the verdict path and its VERDICT line). Three reviewers file three
   round files, and `plan_coverage.py --findings` takes one, so the builder
   writes one coverage plan per round file (WI-913, 2026-10-15).
+  A Claude reviewer that backgrounds its own pytest can lose the
+  completion notice and stop with no verdict: look for its process (its
+  scratch path in the command line), then resume that reviewer with
+  SendMessage, never a fresh one (WI-921's gate, 2026-10-15g).
 - Unset `MSYS_NO_PATHCONV` in a shell that runs pytest: exported, it
   breaks the shallow-clone tests' `git clone` of a file URI ("'/C:/...'
   does not appear to be a git repository"; WI-913, 2026-10-15).

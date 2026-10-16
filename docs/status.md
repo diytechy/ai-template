@@ -25,21 +25,25 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-15f-attended-coordinator.md](handoff-2026-10-15f-attended-coordinator.md),
+  [handoff-2026-10-15g-attended-coordinator.md](handoff-2026-10-15g-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). Its phase-0
-  baseline manifest is recorded. The two lanes at the head of the queue
-  have finished their counted review rounds. The hook-floor row's checkpoint is sat and its act taken: the owner ruled its open fail-open finding a successor row (the step judges a commit against HEAD, so an amend, a cherry-pick, revert or rebase, a merge commit, a hand fast-forward and a linked-worktree commit are its stated residue), and every amended row is re-attested. Its close in the lane, its uncounted gate and its landing come next; it lands first, and the successor is filed on trunk at that landing. The batch's process-text row has fixed its last round's two
-  shipped-text MINORs; its checkpoint sits after the hook-floor row lands
-  and it rebases, then its gate, and it lands through that row's hold. The
+  baseline manifest is recorded. The hook-floor row has
+  landed, and its owner-ruled successor (the trunk reference-update hold)
+  is filed with its eight filing calls ruled; it owes its scope critique
+  before its claim. The batch's process-text row is next: it rebases onto
+  trunk, then its checkpoint (Terra's reconcile, the closure check, one
+  combined sitting), its uncounted gate and its landing, through the
+  hook-floor row's armed hold. The
   other hook-coverage row, the landing shapes the hook misses, lands after
   the headless marking. The strict-lints lane waits for its sitting until
   the lanes ahead of it land. The disposition-adoption row is re-cut before
   it resumes, and the account-homes row still owes its checkpoint rework.
-  The store-lock defect is claimed: its plan passed the plan gate and its
-  first build round is committed; its spine intent and first full-lane
-  review come next. The headless coordinator's marking is filed in two
+  The store-lock defect's spine intent is committed and its
+  first full-lane round found nothing round-costing, so its checkpoint
+  follows once the lanes ahead of it land, after the coordinator's own
+  stress re-run. The headless coordinator's marking is filed in two
   rows: the marking itself, which lands right after the verdict/act split
   (whose need a discarded sitting this session showed again), and the
   merge slot's re-claim reader, which lands before the slot takes
@@ -55,7 +59,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 115 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 116 on trunk. The context guard's hooks are machine-local
   (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
