@@ -146,7 +146,9 @@ The commands are in recipes §1, "Single plan".
    the Trust section or take it to the owner.
 
 Reviewers receive the WI definition (spec, Done-when, Trust, touched rows),
-never the builder's coverage plan (ruling 4).
+never the builder's rework coverage plan, the Plan-WI table answering a
+round file, kept outside the repository (ruling 4). A committed single plan
+is lane work under review.
 
 Never write a critique file by hand: the filing step checks its text, not
 its author.

@@ -18,3 +18,10 @@ alternative = "Reject WI-929's and WI-930's S4 findings, keeping planmode none f
 reversal_cost = "Low: the rows are queued and unclaimed; each disposition is spec text a confirming round re-reads."
 why_not_escalated = "Each adoption applies the critique's own remedy or the ruled S4 criteria. For the owner: S4 now makes two pure-deletion rows plan before building, which costs a plan step each; whether S4 should exempt a deletion is yours to say."
 review = ""
+
+[decision.D-003]
+decided = "The confirming scope-critique rounds (Codex Sol, medium, from a detached checkout at f637e78c6, in convergence stance) of WI-927, WI-928, WI-929 and WI-930 each return APPROVE, 0 findings: every adoption D-002 recorded is in the spec in the recommended shape. With WI-925, WI-926 and WI-931, which approved at round 1, all seven filed rows are critique-clean and may be claimed in the queue's order, once the owner places the re-scoped hook rows and the removal rows. These were the first critiques rendered after WI-911 landed, so the rubric carries S3, S4, B4 and the confirming round's severity rule itself. The interim critique addendum is no longer appended; each confirming brief appended only its round line, as the landed recipe says. In the same commit the coordinator-cycle skill names the barred coverage plan once (wi-911 D-020's carried MINOR, 017 F1), and the recipes retire the interim addenda and record this session's procedural lessons."
+alternative = "Hold the rows for a third critique of the confirmed specs."
+reversal_cost = "None: the rows stay queued until claimed."
+why_not_escalated = "The rounds confirm adopted dispositions; no ruling changes."
+review = ""

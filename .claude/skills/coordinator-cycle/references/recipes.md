@@ -148,6 +148,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   WI-921's found the very step it arms failing open (2026-10-15). Once the
   owner rules a draft's calls, resume the same drafter with the decision ids
   to fold them into a final copy: it keeps its reading (2026-10-15i).
+  Drafts have come back CRLF: normalize to LF as you place them. A claimed
+  row's revised copy is critiqued from its own detached worktree
+  (`git worktree add --detach`) with the copy placed uncommitted, never in
+  the shared critique checkout (WI-922, 2026-10-16).
 - **Single plan** (a claimed row whose claim copy declares
   `planmode = "single"`; SKILL §3 "Plan"), from the lane root. Each record
   commits alone: the hook's plan-gate step refuses a pass record committed
@@ -458,7 +462,11 @@ commit of its own, move it to trunk's tip
   and its finding holds the landing. Bump the mark as for any hand-filed row
   (§1, "Filing a row by hand").
 - **The re-mint:** close it citing the act once `cmp` shows the registries
-  equal their anchors. Two minted rows are real work and stay open: an
+  equal their anchors. Compare each file under `docs/archive/last_approved/`
+  with its live path (the test registry is `docs/test/test-cases.toml`): a
+  `cmp` against a missing path reads as a difference (2026-10-16). A close
+  committed after the gate, as WI-911's was, lands only when
+  `git diff --stat <gate tip> HEAD` shows no code and no authored spine row. Two minted rows are real work and stay open: an
   observation re-judge whose trigger fired, and a goalposts row.
 - **Review rollup:** restore `docs/reviews/rollup/` to its trunk version before
   committing the lane. `trunk_step.py --regen` writes it on trunk at landing,
@@ -661,7 +669,8 @@ lane commit being replayed.
 - **A lane that changes the reviewer template** is reviewed under
   trunk's: render its briefs with the primary checkout's
   `review_brief.py review --root <lane>` (prompts resolve beside the
-  script), plus the interim addenda (wi-911 D-008, 2026-10-15).
+  script; wi-911 D-008, 2026-10-15). Since WI-911 landed (2026-10-16) the
+  template and the rubric carry what the interim addenda did; append none.
 - **Model not offered on the signed-in account:** `400 ... not supported
   when using Codex with a ChatGPT account` from a current CLI (2026-10-10:
   0.162.x refused `gpt-6.1-sol`) means the account, not the CLI version.
