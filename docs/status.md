@@ -25,25 +25,21 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-15i-attended-coordinator.md](handoff-2026-10-15i-attended-coordinator.md),
+  [handoff-2026-10-16-attended-coordinator.md](handoff-2026-10-16-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
-  process-text row is through its post-checkpoint gate's triage: the one
-  finding is fixed in its lane and its two wording amendments are blessed,
-  so a second uncounted gate, then its landing, come next. The owner
-  re-scoped the hook-coverage rows against the plausibility ruling. The
-  trunk reference-update hold builds no hook, and the landing-shapes row
-  keeps only its requirement amendment and one deletion. The hooks-on-at-launch
-  row splits off the agent CLI's guard hooks. The owner also ruled the
-  removal rows the audit of contrived guards ordered. All of them are filed
-  on trunk, each owing its scope critique. The strict-lints
-  lane, then the store-lock defect's checkpoint
-  (its stress re-run is recorded), follow the process-text row's landing.
-  The headless coordinator's marking rows each owe their confirming scope
-  critique before a claim. The disposition-adoption row is re-cut before it
-  resumes, and the account-homes row still owes its checkpoint rework. How
-  to run reviews until the process-text row lands is in the handoff.
+  process-text row has landed, so the `coordinator-cycle` skill now carries
+  the review shape and briefs take no hand addenda. The re-scoped
+  hook-coverage rows and the removal rows the audit of contrived guards
+  ordered are filed and critique-clean, waiting for the owner to place
+  them in the queue. The strict-lints lane is next: its rebase onto the
+  landing conflicts in the byte-budget rows, the recipes and RESYNC_PACK.md,
+  and was aborted untouched. The store-lock defect's checkpoint follows it
+  (its stress re-run is recorded). The headless coordinator's marking rows
+  each owe their confirming scope critique before a claim. The
+  disposition-adoption row is re-cut before it resumes, and the
+  account-homes row still owes its checkpoint rework.
   The coordinator's procedure lives in the `coordinator-cycle` skill. The
   overnight loop (`scripts/coordinator/overnight_legs.py`) is stopped, and the
   handoff's `Overnight: stop` line keeps it so; it becomes usable once the
@@ -52,7 +48,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 116 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 119 on trunk. The context guard's hooks are machine-local
   (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -144,7 +140,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   residues (§7 items 2/4/5 need a destination); whether the `ruling-sync`
   and `held-status` hook riders share the hand-merge shape the plan gate's
   landing-shapes row closes for itself (text-then-act's is accepted by its
-  approved requirement; owner, 2026-10-15); **owner intake 2026-09-22:** the self-test
+  approved requirement; owner, 2026-10-15); from the process-text row's
+  last gate (wi-911 D-020): PROCESS.md §3 still places a concrete filename
+  in an SR's acceptance as carrier evidence, against ruling 5's text in
+  `spine-questions.md` (to plan item 5's schema lane), and SR-233's
+  acceptance states convergence duties its requirement does not (wording,
+  at its next sitting); **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
   `unrecognized arguments: -n`. This depends on the root launchers SN-034/SN-035
