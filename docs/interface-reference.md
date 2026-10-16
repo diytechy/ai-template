@@ -697,7 +697,7 @@ _The session service's keep operation: adjudicator and loop reviewer session ret
 
 **IF-272** — `primary_out_dir(root)` returns the primary checkout's `out/` directory: the parent of the git common directory when that directory is named `.git`, else `root` itself (git unavailable, or not a repository).
 
-**IF-273** — `dir_lock(directory, wait=10.0)` is an exclusive-file context manager: it creates `directory`, holds `directory/.lock` (created exclusively; one older than two minutes is stale and taken over), yields `directory`, and raises StoreBusy when the lock stays held past `wait`.
+**IF-273** — `dir_lock(directory, wait=10.0)` is an exclusive-file context manager: it creates `directory`, holds `directory/.lock` (created exclusively; one older than two minutes is stale and taken over), yields `directory`, and raises StoreBusy when the lock stays held past `wait`. The exclusive create is read once per attempt. Created, the lock is the caller's. Refused as existing, it is held and the stale rule applies. Refused as access denied (a `PermissionError`, which Windows returns while a holder's delete of the lock is still running), it is held and retried within `wait` like an existing lock. Any other refusal is raised as itself, at once. So an attempt reads the lock as the caller's, as held by an existing lock, or as held by an access refusal, and only the last attempt's reading is kept: past `wait`, StoreBusy names the lock path and, when the last create was refused as access denied, that refusal.
 
 ### `scripts/session_service`
 _The session service: the one path every model call takes (act, keep, record)._

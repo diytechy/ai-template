@@ -35,6 +35,15 @@ Contract IF-273: `dir_lock(directory, wait=10.0)` is an exclusive-file
     context manager: it creates `directory`, holds `directory/.lock` (created
     exclusively; one older than two minutes is stale and taken over), yields
     `directory`, and raises StoreBusy when the lock stays held past `wait`.
+    The exclusive create is read once per attempt. Created, the lock is the
+    caller's. Refused as existing, it is held and the stale rule applies.
+    Refused as access denied (a `PermissionError`, which Windows returns
+    while a holder's delete of the lock is still running), it is held and
+    retried within `wait` like an existing lock. Any other refusal is raised
+    as itself, at once. So an attempt reads the lock as the caller's, as held
+    by an existing lock, or as held by an access refusal, and only the last
+    attempt's reading is kept: past `wait`, StoreBusy names the lock path
+    and, when the last create was refused as access denied, that refusal.
 
 Contract IF-247: the retained-session record, one JSON object per route at
     `out/adjudicator/<FAMILY>-<hash of the route id>.json` under the primary
@@ -291,14 +300,21 @@ def store_lock(root, wait=10.0):
 def dir_lock(directory, wait=10.0):
     """Hold `directory/.lock` for one read-modify-write: the store lock's
     mechanism, shared by every per-clone runtime store under `out/`. Creates
-    the directory; raises StoreBusy past `wait`."""
+    the directory; raises StoreBusy past `wait`.
+
+    A lock file that exists, and a create refused as access denied (Windows
+    refuses so while a holder is still deleting the lock), both mean the
+    lock is held: either is retried until `wait` runs out. Any other refusal
+    of the create is raised at once. StoreBusy's message is the lock path,
+    followed by the access refusal when the last attempt met one."""
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / ".lock"
     deadline = time.monotonic() + wait
-    while not _try_lock(path):
+    while (held := _try_lock(path)) is not None:
         if time.monotonic() >= deadline:
-            raise StoreBusy(str(path))
+            refusal = " (last create refused as access denied: {})".format(held)
+            raise StoreBusy(str(path) + (refusal if held else ""))
         time.sleep(0.05)
     try:
         yield directory
@@ -310,7 +326,10 @@ def dir_lock(directory, wait=10.0):
 
 
 def _try_lock(path):
-    """Create the lock file, clearing a stale one; True when it is ours."""
+    """Create the lock file, clearing a stale one. None when it is ours;
+    otherwise why it is held: "" for an existing lock, or the refusal's own
+    text for a create refused as access denied (IF-273's readings). Any
+    other refusal propagates."""
     try:
         fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
     except FileExistsError:
@@ -319,10 +338,12 @@ def _try_lock(path):
                 path.unlink()
         except OSError:
             pass
-        return False
+        return ""
+    except PermissionError as refused:
+        return "[Errno {}] {}".format(refused.errno, refused.strerror)
     os.write(fd, str(os.getpid()).encode("ascii"))
     os.close(fd)
-    return True
+    return None
 
 
 def _store_path(root, family, route_id, scope=""):

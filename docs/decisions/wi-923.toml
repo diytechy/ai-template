@@ -1,0 +1,48 @@
+# docs/decisions/wi-923.toml — the lane record of WI-923 (the runtime store's
+# lock reads an access-denied create as held, waits, and is refused as busy
+# past the wait instead of crashing), a `single` row planned in its lane.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Build round 1 (the plan's P1 to P3) is committed under the passed plan (pass record 61c6d2afa), with three coordinator calls. (1) The plan critique's one MINOR (critique-1: the plan's DELTA line understates the lock attempt's widened result and the busy message's dependence on the last refusal's kind) changed no plan step: the build brief carried it to the contract text P1 already writes, so the IF-273 paragraph keeps its sentence verbatim and states the three attempt results and that only the last one shapes the busy message. (2) P2's readings in the log fragment are the builder's, labelled as preliminary: its trunk reading imported trunk's scripts from a `git archive` extract of 4c216fd2f rather than the plan's detached worktree (the same code), and the change reading was taken on round 1's code. As the plan says, the coordinator re-runs both readings by the plan's method once the code has settled, before recording them. (3) The builder's two smoke readings breached the 60 s budget (65.2 s, 73.6 s) while three reviewers of another lane loaded the box; the commit's bar is the coordinator's own reading, recorded in its message."
+alternative = "Revise the plan for the MINOR (an edited plan unbinds the pass record and costs a second critique); take the builder's readings as final; or commit on the builder's over-budget readings."
+reversal_cost = "Low: contract text and a log fragment's labelled readings; the re-run replaces the readings before the row closes."
+why_not_escalated = "Each follows the plan and the review shape as written; no owner ruling is touched."
+review = ""
+
+[decision.D-002]
+decided = "Full-lane review round 1 (counted 1, the three-reviewer trial) ran at 24fabf54b over 4c216fd2f..24fabf54b, rendered by trunk's review_brief.py with --root at the lane plus the review addendum (2026-10-15g session). Filed: 001-REVIEW-A-24fabf5 (Codex Sol, medium) CHANGES-REQUESTED, 1 MINOR; 002-REVIEW-B-24fabf5 (Claude Fable, medium, a stand-in for the Gemini slot) APPROVE, no findings; 003-REVIEW-B-24fabf5 (Claude Opus, high, a stand-in, the builder's model) APPROVE, 1 MINOR. Triage: both MINORs are the same procedural item, not a code defect: the amended approved rows (LLR-270's new STORE clause, TC-267 and TC-329) are not yet sat, which P4's checkpoint does with its combined sitting and act, and the Windows stress run is recorded as preliminary, which the coordinator's own P2 re-run by the plan's method settles once the code is final (Opus reports its own run reproducing the trunk and lane contrast, which supports but does not replace that record). No BLOCKER or MAJOR, so the lane's counted rounds are done at one and the checkpoint follows, after the latch: the lanes due to land ahead of this one (WI-921, WI-911, WI-914) land first and this lane rebases. Trial record, round 1: round-costing 0 each; MINORs Sol 1, Fable 0, Opus 1 (the same checkpoint item)."
+alternative = "Treat the checkpoint item as round-costing and run round 2 over unchanged code, or sit the rows now, before the lanes ahead land, and hold the act for the latch."
+reversal_cost = "Low: the checkpoint and the P2 re-run are already planned; nothing in the code changes."
+why_not_escalated = "Round 1 has no round-costing finding; the dispositions follow the review shape and the plan's P2 and P4."
+review = ""
+
+[decision.D-003]
+decided = "The lane is rebased onto trunk's tip b5b9273e1 (pre-rebase tip 6eda84f81, base 4c216fd2f; rebased tip 47318ab85), after WI-921, WI-911 and WI-914 landed (the latch D-002 named). One file conflicted, project-trajectory/RESYNC_PACK.md in the build commit, resolved by recipes section 4: both sides' entries, trunk's first, with the lane's entry re-anchored from the old base 4c216fd2f to b5b9273e1 (re-checked against the landing's parent at the squash). Per-file patch comparison of 4c216fd2f..6eda84f81 against b5b9273e1..47318ab85 shows every other file's delta unchanged, code (session_keep.py and its tests), the LLR and TC registries, the plan records and the reviews included, so the rebase changed no code and no authored row: no checkpoint repeat and no extra uncounted round is owed beyond the post-checkpoint gate."
+alternative = "Taking either side's whole RESYNC_PACK.md, or keeping the lane's anchor at the old base."
+reversal_cost = "Low: one docs resolution; the pre-rebase tip stays reachable for the archive."
+why_not_escalated = "Recipes section 4 states the rule."
+review = ""
+
+[decision.D-004]
+decided = "The checkpoint omits Terra's reconcile turn. The lane's spine set (LLR-270's Detail, TC-267's Verifies and Method, TC-329's Method and Evidence) was authored at intent (eef499dc0) in the lane's retained Terra session; round 1 proposed no row text (D-002), and the only later lane change is the coordinator's stress-run record (a log fragment), so the code is settled against the drafted set. Checked mechanically before composing: in each changed cell of the three approved rows the approved text occurs verbatim, and the three cells that are not plain appends are insertions only (LLR-270's Detail gains the access-denied clause; TC-267's Method gains its opening sentence and its Verifies gains IF-273); TC-267's new expected clause maps to LLR-270's new sentence (the intent record). One combined sitting judges amendment:LLR-270, amendment:TC-267 and amendment:TC-329 under SR-227, and its act is the lane's last spine commit."
+alternative = "A Terra reconcile turn over an empty change list."
+reversal_cost = "Low: a return goes to the lane's retained Terra session."
+why_not_escalated = "The coordinator-cycle skill omits spine authoring when no row text is owed beyond what is drafted."
+review = ""
+
+[decision.D-005]
+decided = "Checkpoint sitting 004 (docs/reviews/wi-923/004-ADJUDICATE-238c2b1.md) ruled the three amendments MEANING, all blessed (LLR-270's Detail, TC-267's Expected and Method, TC-329's Method), and its act re-attested them at seq 121 (25ef8e255), the lane's last spine commit. The convergence map for the gate (the coordinator-cycle skill section 3; revisions 8 and 33), which the reviewers do not read: round 1 accepted two MINORs (001-REVIEW-A F1, Codex Sol; 003-REVIEW-B F1, Claude Opus), the same procedural item (D-002), neither with an executable regression test. Each maps to independently checkable evidence: the unsat amended rows map to docs/archive/last_approved/acts.toml seq 121, re-attesting LLR-270, TC-267 and TC-329 citing verdict 004, with each snapshot row equal to its live row; the preliminary Windows stress run maps to the coordinator's re-run by the plan's method, recorded with fig markers in docs/log.d/WI-923-store-lock-access-denied.md (trunk's code 161 PermissionErrors escaped, exit 1; the change none, exit 0). The code's own fix (an access-denied create read as held) carries its regression tests in tests/test_session_keep.py, which round 1 already ran. The map is complete, so the gate runs: uncounted, convergence stance, over b5b9273e1..<the tip carrying this record>, three full-lane reviewers in the trial shape (Codex Sol at medium as REVIEW-A; Claude Fable at medium and Claude Opus at high as REVIEW-B, each from its own render and scratch), with round 1's nine test files."
+alternative = "A gate without the map (the skill refuses it)."
+reversal_cost = "None: the map records evidence that exists."
+why_not_escalated = "The skill and the revision 33 ruling state the map and the gate's shape."
+review = ""
+
+[decision.D-006]
+decided = "The post-checkpoint gate (uncounted, convergence stance, over b5b9273e1..6ab8b55c9) approves with no findings: 005-REVIEW-A-6ab8b55 (Codex Sol, medium; its own Windows stress run on the tip showed no overlap and no escaped exception), 006-REVIEW-B-6ab8b55 (Claude Fable 5.1, medium) and 007-REVIEW-B-6ab8b55 (Claude Opus 5.5, high), the two Claude files standing in for the Gemini reviewer B slot (ruling 7; the trial, revision 37). The row closes in the lane after the gate: Deliverable before Context, specref emptied, the claim copy moved to docs/archive/work/complete/, and the spec of record docs/specs/WI-923.md archived under docs/archive/specs/ by spec_move.py --archive (R-F: no open row cites it). The close touches no code and no spine row. Trial tally for this lane (accepted findings by reviewer, round 1 and gate): Sol 1 MINOR, Opus 1 MINOR (the same procedural item, D-002), Fable 0; round-costing 0 each."
+alternative = "None: an approving gate with no findings sends the row to its close."
+reversal_cost = "None."
+why_not_escalated = "The coordinator-cycle skill's land step follows an approving gate."
+review = ""

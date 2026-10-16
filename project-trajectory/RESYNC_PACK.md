@@ -8499,6 +8499,32 @@ that skill (`bootstrap.py --sync` refreshes them).
 registry changes, and nothing needs migrating. A lane past DevStg-Impl whose
 `trace.py --strict` reports a finding clears it before its next sitting.
 
+### The store and lease lock reads an access-denied create as held [since b5b9273e1]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/session_keep.py`'s `dir_lock` is the
+exclusive-file lock under the retained-session store
+(`out/adjudicator/.lock`) and the coordinator lease
+(`out/coordinator/.lock`). It now reads a create refused as access denied
+(a `PermissionError`) as the lock held, and retries it within the wait like
+an existing lock. Windows refuses that way while the holder's delete of the
+lock is still running, so under contention that `PermissionError` used to
+escape every caller at random: a retained call's keep, a finished call's
+bookkeeping and release, a keep-warm lease, and a coordinator-guard hook or
+command. A persistent access fault on the lock now ends in `StoreBusy`
+after the wait, its message naming the access refusal beside the lock path,
+instead of in an immediate `PermissionError`; on POSIX that fault is a
+store directory that refuses writes. Any other refusal is raised at once,
+as before.
+
+**Kit-owned files — overwrite:** `scripts/session_keep.py`.
+
+**What to do.** Overwrite the file. No migration is forced: no registry,
+setting or record format changes. Code of your own that catches
+`PermissionError` around `dir_lock` or `store_lock` no longer sees the
+lock's access refusal: it arrives as `StoreBusy`, after the wait.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

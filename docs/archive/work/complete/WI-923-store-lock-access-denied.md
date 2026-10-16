@@ -6,10 +6,35 @@ sr_refs = ["SR-227"]
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 5
-specref = "docs/specs/WI-923.md"
+specref = ""
 planmode = "single"
 needs = []
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-16, after its post-checkpoint gate. A
+runtime-store lock contender that Windows refuses as access denied, while the
+holder is deleting the lock file, no longer crashes:
+
+- `session_keep.dir_lock` reads an access-denied exclusive create as the lock
+  held and retries it within the wait; a lock still held when the wait ends
+  is refused as busy (`StoreBusy`), naming the lock and an access refusal
+  when that was the last; any other create refusal is raised after one
+  attempt. IF-273's contract body states the rule.
+- A second first call whose store-lock create is refused that way, with no
+  lease wait, runs unretained and says why, and the store keeps only the
+  first call's lease.
+- Tests in `tests/test_session_keep.py` pin each case; three fail on trunk's
+  code. The coordinator's Windows stress run (six threads, 10 s) recorded
+  161 escaped `PermissionError`s on trunk's code and none on the change, with
+  no overlap on either.
+- LLR-270's Detail, TC-267's Expected and Method, and TC-329's Method carry
+  the rule; sitting 004 ruled them MEANING, all blessed, and act seq 121
+  re-attests them.
+
+The RESYNC entry is anchored at the landing's parent. The spec of record
+moves to `docs/archive/specs/`.
 
 ## Context
 

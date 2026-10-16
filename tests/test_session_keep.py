@@ -9,7 +9,9 @@ fixtures in `tests/golden/sessions/` (all three LIVE: the claude one
 recorded 2026-09-28, the codex and opencode ones 2026-09-30, WI-541). The store lives under a temporary repository root.
 """
 
+import errno
 import json
+import os
 import threading
 import time
 import tomllib
@@ -575,6 +577,65 @@ def test_the_store_lock_excludes_a_second_holder(tmp_path):
         pass  # free again once released
 
 
+def _refuse_lock_creates(monkeypatch, code, times=None):
+    """Refuse the lock's exclusive create with `code`: the first `times`
+    attempts, or every one when `times` is None. Only a create of a file
+    named `.lock` with `O_EXCL` is touched; a record's temporary file and
+    every marker reach the real `os.open`. Returns the attempts seen, each
+    True when it was refused."""
+    real, attempts = os.open, []
+
+    def refusing(path, flags, *args, **kwargs):
+        if Path(path).name != ".lock" or not flags & os.O_EXCL:
+            return real(path, flags, *args, **kwargs)
+        refuse = times is None or len(attempts) < times
+        attempts.append(refuse)
+        if refuse:
+            raise OSError(code, os.strerror(code), str(path))
+        return real(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(keep.os, "open", refusing)
+    monkeypatch.setattr(keep.time, "sleep", lambda s: None)
+    return attempts
+
+
+def test_a_lock_create_refused_once_as_access_denied_is_retried_and_taken(
+    tmp_path, monkeypatch
+):
+    """Windows refuses the create as access denied while a holder's delete
+    of the lock is still running (WI-923): the lock reads as held, and the
+    next attempt takes it."""
+    attempts = _refuse_lock_creates(monkeypatch, errno.EACCES, times=1)
+    store = tmp_path / "store"
+    with keep.dir_lock(store) as directory:
+        assert (directory / ".lock").exists()
+    assert not (store / ".lock").exists()
+    assert attempts == [True, False]
+
+
+def test_a_lock_create_refused_as_access_denied_past_the_wait_is_busy_and_named(
+    tmp_path, monkeypatch
+):
+    attempts = _refuse_lock_creates(monkeypatch, errno.EACCES)
+    store = tmp_path / "store"
+    with pytest.raises(keep.StoreBusy) as busy:
+        with keep.dir_lock(store, wait=0):
+            pass
+    assert attempts == [True]
+    assert str(store / ".lock") in str(busy.value)
+    assert "access denied" in str(busy.value)
+
+
+def test_any_other_lock_create_refusal_is_raised_at_once(tmp_path, monkeypatch):
+    attempts = _refuse_lock_creates(monkeypatch, errno.ENOSPC, times=1)
+    with pytest.raises(OSError) as refused:
+        with keep.dir_lock(tmp_path / "store"):
+            pass
+    assert not isinstance(refused.value, keep.StoreBusy)
+    assert refused.value.errno == errno.ENOSPC
+    assert attempts == [True]
+
+
 def _lane(tmp_path):
     """A primary checkout at `tmp_path/primary` with one linked lane worktree
     at `tmp_path/lane`, both returned."""
@@ -756,6 +817,27 @@ def test_a_first_mint_that_raises_removes_its_lease_only_record(tmp_path):
     assert not list(keep.store_dir(tmp_path).glob("*.json"))
     assert not list(keep.store_dir(tmp_path).glob("*.mark"))
     assert _keep(tmp_path, ON) is not None  # the route is free again
+
+
+def test_a_first_call_whose_lock_create_is_refused_as_access_denied_runs_unretained(
+    tmp_path, monkeypatch, capsys
+):
+    """The observed path (WI-923): a second first call meeting an access
+    refusal at the store lock retries it, takes the lock, meets the first
+    call's lease and runs unretained, naming why; nothing escapes."""
+    first = _keep(tmp_path, ON)
+    assert first is not None and first.session_id == ""
+    capsys.readouterr()
+    attempts = _refuse_lock_creates(monkeypatch, errno.EACCES, times=1)
+    assert _keep(tmp_path, ON, lease_wait=0) is None
+    assert attempts == [True, False]
+    err = capsys.readouterr().err
+    assert "runs unretained" in err and first.holder in err
+    lease_only = _state(tmp_path)
+    assert lease_only["lease"]["holder"] == first.holder
+    assert "session_id" not in lease_only and "state" not in lease_only
+    assert len(list(keep.store_dir(tmp_path).glob("*.json"))) == 1
+    assert not list(keep.store_dir(tmp_path).glob("*.mark"))
 
 
 def test_at_dial_zero_a_first_call_writes_no_lease(tmp_path):
