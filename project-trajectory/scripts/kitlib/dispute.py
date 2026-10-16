@@ -44,8 +44,14 @@ THE VERDICT: exactly one `RULING:` line per requested finding, each on its own
 physical line (leading indentation aside), and no other `RULING:` line:
 
     RULING: <id> FIX <why, on the same line>
+    RULING: <id> SUCCESSOR <what the successor row must do>
     RULING: <id> DISMISS out-of-scope|refuted|not-worth-cost <why>
     RULING: <id> ESCALATE <why it is high risk>
+
+SUCCESSOR (WI-911; the owner's ruling of 2026-10-14, in session, that only
+the dispute sitting moves a finding to a successor row): the finding is real
+and in scope, but becomes its own row, filed on trunk at the landing from
+this verdict's binding. Like FIX and ESCALATE it takes no reason class.
 
 `parse` is the ONE parser of that verdict. It is judged against the finding
 ids the composed brief REQUESTED (its `DISPUTE: findings=<ids>` line, read by
@@ -70,7 +76,7 @@ __all__ = [
 ]
 
 BRIEF = "dispute"
-RULINGS = ("FIX", "DISMISS", "ESCALATE")
+RULINGS = ("FIX", "SUCCESSOR", "DISMISS", "ESCALATE")
 DISMISS_REASONS = ("out-of-scope", "refuted", "not-worth-cost")
 HELD_BY = ("builder", "coordinator")
 # The verdict's per-finding keyword, and the composed brief's request line.

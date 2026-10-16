@@ -2589,7 +2589,7 @@ notes = "source - consumes no declared seam; pure functions."
 
 [interface.IF-290]
 owner = "scripts/kitlib/dispute"
-requestors = ["scripts/adjudicate_brief", "scripts/plan_coverage"]
+requestors = ["scripts/adjudicate_brief", "scripts/plan_coverage", "scripts/plan_gate", "scripts/review_brief"]
 channel = "call"
 data = "read_findings(text, where); request_line(ids); requested_ids(brief_text); parse(text, requested, where)"
 version = "v1"

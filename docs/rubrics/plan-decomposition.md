@@ -79,3 +79,15 @@ does not beat a 3-row plan for count or prose volume.
 artifact-level dependency behind it (sequencing habit), or an absent edge
 where one WI plainly consumes another's deliverable — either way the DAG lies
 about buildable order.
+
+## Verdict
+
+One `- [BLOCKER|MAJOR|MINOR] <anchor> -> where/why -> the concrete change ->
+@owner` line per finding, each citing an anchor id, then the brief's one
+machine line. Severity is tied to reachability (review-churn item 4): a
+BLOCKER or MAJOR states a defect in the plan that would reasonably cost a build
+or review round in normal use, and a fail-open, data-loss or security path
+counts only when a supported workflow or the kit's own routes reach it; a rare
+or contrived path is MINOR at most, or dismissed under PROCESS.md §6 "Review
+threat model". The second critique of a single plan takes the stricter rule
+its own brief states.

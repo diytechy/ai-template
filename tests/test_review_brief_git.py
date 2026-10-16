@@ -10,6 +10,8 @@ write only their requested file. They spawn git, so this module is registered
 in `tests/conftest.py`'s `SLOW_MODULES`.
 """
 
+import re
+import shlex
 import shutil
 import subprocess
 
@@ -154,3 +156,57 @@ def test_filing_a_review_exits_zero_and_writes_only_the_round_file(git_lane):
         assert status == "?? docs/reviews/wi-900/001-REVIEW-A-{}.md".format(tip[:7])
         _git(root, "checkout", "-q", "--detach")
         _git(root, "branch", "-q", "-D", name)
+
+
+def test_the_reading_scope_never_shows_a_record_of_earlier_findings(git_lane):
+    # WI-911: a convergence round never sees earlier
+    # verdicts (review-churn revision 8). The brief's own diff command keeps
+    # every record that summarizes them out of its output: the review round
+    # files, the lane's decisions record and the plan's filed critiques. A
+    # changed work file is still read.
+    root, base, _tip, _side, out = git_lane
+    records = (
+        "docs/reviews/wi-900/001-REVIEW-A-1111111.md",
+        "docs/decisions/wi-900.toml",
+        "docs/plans/WI-900/critique-1.md",
+        "docs/plans/WI-900/critique-2.md",
+    )
+    for rel in records + ("src/app.py", "docs/plans/WI-900/plan.md"):
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text("F1: an earlier finding\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "records")
+    tip = _git(root, "rev-parse", "HEAD")
+    argv = _review_argv(root, base, tip, out) + ["--stance", "convergence"]
+    assert rb.main(argv) == 0
+    brief = (out / "brief.md").read_text(encoding="utf-8")
+    command = re.search(r"`(git diff {}\.\.\.{} -- [^`]+)`".format(base, tip), brief)
+    assert command, "the brief states no reading-scope command"
+    words = shlex.split(command.group(1))
+    shown = _git(root, *words[1:2], "--name-only", *words[2:]).splitlines()
+    assert "src/app.py" in shown and "docs/plans/WI-900/plan.md" in shown
+    assert [rel for rel in records if rel in shown] == []
+
+
+def test_an_ordinary_review_reads_the_decisions_record(git_lane):
+    # WI-911 (review-churn revision 8): only a convergence round sets the
+    # earlier findings' records aside. An ordinary round's own diff command,
+    # the one a loop reviewer reads too, still shows the delegated-decisions
+    # record it may dissent on and the plan's filed critiques; the round files
+    # stay out of every round.
+    root, base, _tip, _side, out = git_lane
+    kept = ("docs/decisions/wi-900.toml", "docs/plans/WI-900/critique-1.md")
+    for rel in kept + ("docs/reviews/wi-900/001-REVIEW-A-1111111.md", "src/app.py"):
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text("F1: an earlier finding\n", encoding="utf-8")
+    _git(root, "add", "-A")
+    _git(root, "commit", "-q", "-m", "records")
+    tip = _git(root, "rev-parse", "HEAD")
+    assert rb.main(_review_argv(root, base, tip, out)) == 0
+    brief = (out / "brief.md").read_text(encoding="utf-8")
+    command = re.search(r"`(git diff {}\.\.\.{} -- [^`]+)`".format(base, tip), brief)
+    assert command, "the brief states no reading-scope command"
+    words = shlex.split(command.group(1))
+    shown = _git(root, *words[1:2], "--name-only", *words[2:]).splitlines()
+    assert [rel for rel in kept + ("src/app.py",) if rel not in shown] == []
+    assert "docs/reviews/wi-900/001-REVIEW-A-1111111.md" not in shown

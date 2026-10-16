@@ -58,8 +58,10 @@ Findings (exit 1):
     - an `Excludes:` line with no reason, or naming an undeclared clause;
     - an `F#` exclusion whose reason cites a dispute verdict
       (`.../NNN-ADJUDICATE-<sha>.md`, optionally `#<the sitting's id>`) that
-      is not an accepted dispute verdict ruling that finding DISMISS — only a
-      dismissal resolves a finding; a FIX is covered by a row — or whose
+      is not an accepted dispute verdict ruling that finding DISMISS or
+      SUCCESSOR — only a dismissal, or a successor row filed at the landing
+      (WI-911, the owner's ruling of 2026-10-14), resolves a finding; a FIX
+      is covered by a row — or whose
       ruled finding is not shown to be that `F#` finding: every dispute
       findings file beside the verdict requesting the ids its call requested
       must record the ruled finding as the review wrote it (no such file, or
@@ -154,6 +156,12 @@ EXCLUDES_SEP_RE = re.compile(r"\s*[—–]\s*|\s+-\s+|\s+-$")
 RULING_CITE_RE = re.compile(
     r"(?P<path>[\w./\-]*ADJUDICATE-[0-9a-f]+\.md)(?:#(?P<id>[A-Za-z][\w.-]*))?"
 )
+# The rulings that resolve an `F#` exclusion on the rework gate's path
+# (`resolution_findings`): a DISMISS, or a SUCCESSOR, whose finding becomes
+# its own row filed on trunk at the landing (WI-911; the owner's ruling of
+# 2026-10-14, in session, that only the dispute sitting defers a finding).
+# The plan cap's own callers keep `ruling_problem`'s DISMISS-only default.
+RESOLVING = ("DISMISS", "SUCCESSOR")
 # What a hand copy of a finding may change without changing the finding
 # (`_finding_key`): its leading list marker and `[SEVERITY]` tag, and the
 # typographic forms of quotes, dashes and the finding line's arrow.
@@ -542,14 +550,17 @@ def _correspondence_problem(root, path, ids, rid, fid, text, rev=None):
     return None
 
 
-def ruling_problem(root, cite, fid, text, rev=None):
+def ruling_problem(root, cite, fid, text, rev=None, resolving=("DISMISS",)):
     """Why the dispute verdict `cite` names does not resolve the finding `fid`
     (clause text `text`), or None when it does. `cite` is a `RULING_CITE_RE`
     match: the verdict's path under `root` and, optionally, the sitting's own
     id for the finding (default `fid`). It resolves only as a recorded,
     ACCEPTED dispute verdict (its binding beside it) whose ruling of that id is
-    DISMISS - a FIX ruling is work a row covers, and an ESCALATE ruling is the
-    owner's to decide - AND whose ruled finding is `fid` itself, as the
+    one its consumer accepts, `resolving`: DISMISS by default, as the plan cap
+    reads it, and `RESOLVING` on the rework gate's path, which adds SUCCESSOR
+    (WI-911, the owner's ruling of 2026-10-14) - a FIX ruling is work a row
+    covers, and an ESCALATE ruling is the owner's to decide - AND whose ruled
+    finding is `fid` itself, as the
     findings file beside the verdict records it (`_correspondence_problem`):
     a dismissal of another finding, or of another round's finding under the
     same id, resolves nothing. Read in the working tree, or at the commit
@@ -572,17 +583,17 @@ def ruling_problem(root, cite, fid, text, rev=None):
         return "cites a refused verdict: {}".format(why)
     if rid not in rulings:
         return "cites {}, which does not rule {}".format(path, rid)
-    if rulings[rid][0] != "DISMISS":
-        return "cites {}, which rules {} {}; only a DISMISS resolves a finding".format(
-            path, rid, rulings[rid][0]
+    if rulings[rid][0] not in resolving:
+        return "cites {}, which rules {} {}; only {} resolves a finding".format(
+            path, rid, rulings[rid][0], " or ".join("a " + r for r in resolving)
         )
     return _correspondence_problem(root, path, bound[1], rid, fid, text, rev)
 
 
 def resolution_findings(name, excluded, root, clauses):
     """Each `F#` exclusion whose reason cites a dispute verdict that does not
-    resolve it (`ruling_problem`, judged against the clause's text in
-    `clauses`). An exclusion citing no verdict is a plain reasoned exclusion
+    resolve it (`ruling_problem` over `RESOLVING`, judged against the
+    clause's text in `clauses`). An exclusion citing no verdict is a plain reasoned exclusion
     and is left as one.
 
     Implements: SR-236, LLR-069
@@ -590,7 +601,9 @@ def resolution_findings(name, excluded, root, clauses):
     out = []
     for fid, reason in excluded.items():
         cite = RULING_CITE_RE.search(reason) if fid.startswith("F") else None
-        problem = cite and ruling_problem(root, cite, fid, clauses[fid])
+        problem = cite and ruling_problem(
+            root, cite, fid, clauses[fid], resolving=RESOLVING
+        )
         if problem:
             out.append("{}: Excludes: {} {}".format(name, fid, problem))
     return out

@@ -230,6 +230,19 @@ def test_at_the_cap_anything_but_an_accepted_dismissal_is_refused(
     assert not (lane / pp.record_path(WI)).exists()
 
 
+def test_at_the_cap_a_successor_ruling_never_passes(tmp_path):
+    """WI-911: SUCCESSOR resolves a finding on the rework gate only. At the
+    plan cap only an accepted dismissal writes a pass record (SR-154), so a
+    verdict ruling the blocking finding SUCCESSOR writes none."""
+    lane, _sha = cap(tmp_path, "RULING: F1 SUCCESSOR file a row for the test")
+    with pytest.raises(rb.BriefError) as refused:
+        rb.write_pass(lane, WI, VERDICT)
+    said = str(refused.value)
+    assert "rules it SUCCESSOR" in said and "only a DISMISS" in said, said
+    assert "SUCCESSOR resolves" not in said and "or a SUCCESSOR" not in said, said
+    assert not (lane / pp.record_path(WI)).exists()
+
+
 def test_at_the_cap_a_major_after_a_minor_is_disputed_under_its_own_number(tmp_path):
     # Opus REVIEW-B F1 (round 1): a finding's number is its position among
     # ALL the critique's findings, so a MAJOR after a MINOR is F2, and the
@@ -287,6 +300,30 @@ def test_the_plan_critique_renders_over_the_committed_plan_and_its_coverage(tmp_
     assert "Plan decomposition" in brief
 
 
+# The reachability gate every severity site states in one wording, after its
+# own BLOCKER-or-MAJOR clause; its home is PROCESS.md §6 "Review threat model".
+REACH_GATE = (
+    "a fail-open, data-loss or security path counts only when a supported "
+    "workflow or the kit's own routes reach it; a rare or contrived path is "
+    'MINOR at most, or dismissed under PROCESS.md §6 "Review threat model".'
+)
+
+
+def test_the_plan_critique_brief_ties_severity_to_reachability(tmp_path):
+    # WI-911 (review-churn item 4): the live rubric's verdict section carries
+    # the severity rule into the plan critique's brief by render, so no
+    # by-hand addendum is needed once the trial recipe retired.
+    lane, sha = planned(tmp_path)
+    brief, _verdict = rb.render_plan_critique(
+        lane, WI, RUBRIC, sha, str(tmp_path / "s")
+    )
+    flat = " ".join(brief.split())
+    assert (
+        "a BLOCKER or MAJOR states a defect in the plan that would reasonably "
+        "cost a build or review round in normal use, and " + REACH_GATE
+    ) in flat
+
+
 def test_the_second_plan_critique_is_in_convergence_and_never_sees_the_first(tmp_path):
     lane, sha = planned(tmp_path)
     first = critique_text(sha, "CHANGES-REQUESTED", [MAJOR])
@@ -301,6 +338,12 @@ def test_the_second_plan_critique_is_in_convergence_and_never_sees_the_first(tmp
     assert verdict.endswith("WI-950-plan-critique-2.md")
     assert "convergence stance" in brief
     assert "P2 has no test" not in brief
+    # Reachability gates the convergence classes too.
+    assert (
+        "A new finding is BLOCKER or MAJOR only if it is fail-open, data loss or "
+        "a Done-when gap, and a supported workflow or the kit's own routes reach "
+        "it; anything else is MINOR."
+    ) in " ".join(brief.split())
 
 
 def test_the_second_critique_refuses_a_revision_that_misses_a_first_finding(tmp_path):

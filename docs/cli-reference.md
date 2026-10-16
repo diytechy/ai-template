@@ -644,6 +644,7 @@ Contracts (interfaces): IF-288, IF-289
 | `--scratch` | the reviewer's writable area |
 | `--findings` | narrow: the round file this range answers |
 | `--rubric` | a repository review rubric to judge too |
+| `--stance` | convergence: the round confirms fixes (never with --scope narrow) |
 | `--python` | the interpreter to run |
 | `--out` | where to write the brief |
 | `--wi` | the work item whose scope is judged |

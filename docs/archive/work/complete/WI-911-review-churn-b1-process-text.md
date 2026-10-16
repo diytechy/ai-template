@@ -3,13 +3,44 @@ id = "WI-911"
 title = "Review-churn batch 1, text: the review shape, binding pre-claim advice and the rules every later lane runs under"
 workstream = "process"
 sr_refs = ["SR-146", "SR-154", "SR-235"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#owner-rulings-2026-10-11"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-913"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-16, after its second post-checkpoint gate
+approved (016 Sol, 017 Fable, 018 Opus). The review-churn program's rules
+now live in the kit's text, not in hand addenda:
+
+- the `coordinator-cycle` skill and its recipes carry the ruled review
+  shape (no narrow rounds; full-lane reviewers in parallel; at most three
+  counted rounds, then the checkpoint and an uncounted gate in convergence
+  stance; a dispute sitting at the cap; MINORs never cost a round),
+  binding pre-claim dispositions with a confirming round, and S3 and S4;
+- the scope-critique rubric gains S3 (closed coverage, bounded to what
+  supported workflows and the kit's own routes produce), S4 (the planning
+  need), the architectural delta, dependencies, B3 and B4;
+- `review_brief.py` renders the trial shape and the convergence stance
+  itself, including its reading exclusions;
+- `PROCESS.md` section 3 states the record-at-event rule and section 6 the
+  reachability gate on every severity class, with contrived scenarios
+  dismissed;
+- the reviewer template's convergence paragraph bounds a new BLOCKER or
+  MAJOR to a reachable fail-open, data-loss or Done-when gap;
+- `spine-questions.md` restates ruling 5's contract voice, the Terra
+  prompt the same;
+- the dispute sitting may rule a finding SUCCESSOR, which only that sitting
+  can, and never for a convergence-class finding.
+
+The RESYNC entry is anchored at 962921f22. Follow-ups carried at the
+landing (D-020): PROCESS.md section 3's acceptance-evidence bullet against
+ruling 5 (to plan item 5's lane), SR-233's acceptance wording, and the
+skill's name for the barred coverage plan.
 
 ## Context
 
@@ -80,7 +111,9 @@ rule in the target's own voice and does not copy the plan's reasoning.
      round confirms the adopted ones before the claim. A confirming round
      runs in convergence stance (owner, 2026-10-14, in session): it checks
      each adopted disposition, and a new finding blocks the claim only if it
-     is fail-open, data loss or a Done-when gap; any other new finding gets
+     is fail-open, data loss or a Done-when gap that a supported workflow or
+     the kit's own routes reach (owner, 2026-10-15, D-016); any other new
+     finding gets
      its disposition in the spec without another round. A queued row born
      before S3, S4 and the delta question is re-critiqued when it comes up
      for claim, one at a time.
@@ -138,7 +171,8 @@ rule in the target's own voice and does not copy the plan's reasoning.
    - **The verdict section** says every recommendation will be dispositioned
      before the claim, so the critic writes each as one concrete change, and
      that in a confirming round a new finding is BLOCKER or MAJOR only if it
-     is fail-open, data loss or a Done-when gap.
+     is fail-open, data loss or a Done-when gap that a supported workflow or
+     the kit's own routes reach (D-016).
 3. **`review_brief.py`** (a shipped script: RESYNC entry):
    - `critique` names those registries in the brief for the critic to read,
      beside the spec and its `specref` target, with a test that fails without
@@ -166,7 +200,9 @@ rule in the target's own voice and does not copy the plan's reasoning.
    entry):
    - severity tied to reachability (item 4): a BLOCKER or MAJOR states a
      scenario reachable in normal use, or a fail-open, data-loss or security
-     path; a rare or contrived edge is at most MINOR;
+     path that a supported workflow or the kit's own routes reach; a rare or
+     contrived edge is at most MINOR (owner, 2026-10-15: PROCESS.md section 6
+     gains the contrived-scenario dismissal, D-016);
    - item 1's classification clause: an input outside the spec's declared
      set that the change fails closed on is a coverage-extension note; one it
      fails open on stays a finding; the reviewer decides which;

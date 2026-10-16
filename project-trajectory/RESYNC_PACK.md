@@ -8393,6 +8393,92 @@ owner ruling binding the digest, in the tree of the commit that first
 carries the change onto trunk: land the blessing with it, or the commit is
 refused naming the digest and the line to write.
 
+### Reviews gain a convergence stance; a dispute may rule a finding SUCCESSOR [since 962921f22]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.**
+
+- `scripts/review_brief.py review` takes `--stance ordinary|convergence`.
+  `ordinary`, the default, renders the brief as before. `convergence` adds
+  one fixed ROUND FACTS line that marks the round, and a narrow round in
+  that stance is refused (exit 2).
+- `review_brief.py critique` names the registries the critic reads beside
+  the spec: `docs/requirements/components.toml`, `interfaces.toml`,
+  `components.derived.toml`, `docs/runtime-flows.md` and
+  `docs/dependencies.md`, each marked "(absent here)" when your repository
+  lacks it.
+- `prompts/reviewer.template.md` ties severity to reachability: a BLOCKER or
+  MAJOR states a scenario reachable in normal use, and a fail-open,
+  data-loss or security path counts only when a supported workflow or the
+  kit's own routes reach it (next bullet). The reviewer classifies an input outside the spec's
+  declared set: a coverage-extension note when the change fails closed on
+  it, a finding when it fails open. A new convergence-stance paragraph
+  applies only when the round facts carry the stance line. The loop's
+  rounds, whose round facts are empty, never apply it, and the verdict
+  grammar is unchanged. That paragraph tells the reviewer to read no earlier
+  verdict, filed plan critique or lane commit message, and to find pre-fix
+  code through a history command that prints no commit message (`git log -p
+  --format=%h`). It counts a new finding as BLOCKER or MAJOR only when it
+  is a fail-open path, data loss or a Done-when gap that a supported
+  workflow or the kit's own routes reach; any other new finding is MINOR.
+  `review --stance
+  convergence` renders the brief's reading-scope `git diff` with
+  `docs/decisions` and `docs/plans/*/critique-*` also left out, the records
+  that summarize earlier findings; ordinary and loop rounds read them as
+  before.
+- The dispute grammar (`scripts/kitlib/dispute.py`) gains a fourth ruling,
+  `RULING: <id> SUCCESSOR <what the successor row must do>`, for a real
+  finding that becomes its own row, filed on trunk when the lane lands.
+  `prompts/adjudicate-dispute.template.md` offers it, never for a
+  convergence-class finding (fail-open, data loss or a Done-when gap).
+  `scripts/plan_coverage.py --findings` resolves an `F#` exclusion citing an
+  accepted verdict that rules that finding SUCCESSOR, as it resolves a
+  DISMISS. The plan cap still takes only a DISMISS.
+- `prompts/spine-questions.md` §3's first bullet states an LLR's contract
+  in words that survive a refactor, with no implementation carrier in its
+  text. The traced `module` and `code_symbol` cells stay filled and binding.
+  A new §0 bullet, composed into every tier's sitting brief, holds the
+  file-naming rule once: a shipped boundary artifact may be named at the LLR
+  and TC tiers only, and SN and SR rows name no file in any cell, acceptance
+  and rationale included. §1(e) and §2(b) no longer offer a waiver or
+  current-carrier evidence as a home for a name; an approved cell keeps its
+  text until it is amended.
+- `PROCESS.md` §3 gains "Record a decision where it is made", beside "When a
+  guard is owed".
+- `PROCESS.md` §6 "Review threat model" also dismisses a finding whose
+  reproduction needs a contrived, improbable scenario: a hand act the process
+  forbids (rewinding the trunk branch, skipping or disabling a hook,
+  hand-editing a generated view or a ruled record), or ordinary tools run in
+  an order no supported workflow or kit route produces. Reachability gates
+  every severity class: a fail-open, data-loss or security path counts only
+  when a supported workflow or the kit's own routes reach it, a rare or
+  contrived path is MINOR at most or dismissed, and whoever rules a finding
+  re-grades a mislabelled BLOCKER or MAJOR. A spec's promise over an input
+  space reaches only what supported workflows and the kit's own routes
+  produce: hand-edited kit-written state, hand-chosen name aliases and
+  sub-second timing windows lie outside it unless the spec names them. The
+  reviewer brief's severity sentence and the second plan critique's
+  convergence line (`review_brief.py critique --plan`) carry the same gate,
+  and `prompts/adjudicate-dispute.template.md` weighs a scenario's
+  plausibility under §6, a cheap fix for a contrived one still DISMISS. What
+  stays in scope is unchanged. If your own rubrics grade severity or judge
+  a spec's coverage, give them the same gate and bound.
+
+**Kit-owned files — overwrite:** `scripts/review_brief.py`,
+`scripts/kitlib/dispute.py`, `scripts/plan_coverage.py`,
+`prompts/reviewer.template.md`, `prompts/adjudicate-dispute.template.md`,
+`prompts/spine-questions.md`, `prompts/CATALOG.md` (regenerate), and
+`docs/process.md`, from the kit's `PROCESS.md` (§2's class).
+
+**What to do.** Overwrite the files. Nothing is forced: no registry,
+setting, record format or template slot changes, so an override reviewer
+template still renders, and the critique brief names a registry you lack as
+absent rather than refusing. Dispute verdicts written before still parse. A
+reader of `kitlib.dispute.RULINGS` sees one more value, and
+`plan_coverage.ruling_problem` takes an optional `resolving` keyword whose
+default keeps its DISMISS-only answer.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

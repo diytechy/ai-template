@@ -855,6 +855,19 @@ def test_a_dispute_verdict_ruling_every_finding_is_valid_and_bound(
     assert "outcome = accepted" in binding
 
 
+def test_a_dispute_verdict_ruling_a_finding_successor_is_valid_and_bound(
+    tmp_path, monkeypatch, launched, capsys
+):
+    """WI-911: SUCCESSOR is a ruling of the one grammar, so the entry point
+    binds a verdict carrying it `accepted` (the smoke tier's grammar pin)."""
+    text = "RULING: F1 SUCCESSOR file a row for the retry bound\nRULING: R2 FIX real\n"
+    _root, code = _dispute_call(tmp_path, monkeypatch, text)
+    assert code == 0
+    assert "verdict valid" in capsys.readouterr().out
+    binding = Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
+    assert "outcome = accepted" in binding
+
+
 def test_a_dispute_verdict_leaving_a_finding_unruled_fails(
     tmp_path, monkeypatch, launched, capsys
 ):

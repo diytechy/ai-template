@@ -173,6 +173,35 @@ def test_the_revision_brief_asks_the_delta_question_again_and_labels_its_inputs(
     assert "| Plan-WI |" in text
 
 
+# The planner brief's input lines as they render today, one per registry the
+# plan must cite: its label and repo path (WI-911 P6(a)'s pin, written before
+# the input table's structural move so the move is shown not to change them).
+PLANNER_INPUTS = (
+    ("its SR rows", "docs/requirements/system-requirements.toml"),
+    ("the TCs that verify them", "docs/test/test-cases.toml"),
+    ("the interface registry", "docs/requirements/interfaces.toml"),
+    ("the component registry", "docs/requirements/components.toml"),
+    ("the runtime flows", "docs/runtime-flows.md"),
+)
+
+
+def test_the_planner_brief_names_each_input_by_its_registry(tmp_path):
+    root = _lane(tmp_path)
+    held = root / "docs" / "requirements" / "interfaces.toml"
+    held.parent.mkdir(parents=True, exist_ok=True)
+    held.write_text("", encoding="utf-8")
+    lines = rb.render_plan(root, WI, "p.md").splitlines()
+    assert "- The item's SRs: SR-001." in lines
+    for label, rel in PLANNER_INPUTS:
+        line = "- {}: `{}`".format(label, rel)
+        if rel == "docs/requirements/interfaces.toml":
+            assert line in lines
+            assert line + " (absent here)" not in lines
+        else:
+            assert line + " (absent here)" in lines
+    assert sum("(absent here)" in line for line in lines) == 4
+
+
 @pytest.mark.parametrize("missing", ["spec", "plan", "critique"])
 def test_the_planner_brief_refuses_a_missing_input(tmp_path, missing):
     if missing == "spec":

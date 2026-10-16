@@ -16,6 +16,15 @@
      section for a tier a brief judges: there is no fallback text. Text before
      the first `## ` heading is not composed. Keep the section numbers: other
      kit text cites them (e.g. "§2(c)").
+
+     §3's first bullet (WI-911) is ruling 5 of the review-churn plan's owner
+     rulings of 2026-10-11, as revisions 35 and 36 refine it: an LLR in
+     contract voice, no implementation carrier in row text, and the traced
+     `module` and `code_symbol` cells kept filled and binding until the plan's
+     item 5 schema lane removes them. §0's naming rule (WI-911) is ruling 5's
+     file-naming clause, held once where tier_questions composes it into every
+     tier's brief, so an SN or SR sitting reads the same rule as an LLR or TC
+     one; §1(e), §2(b), §2(d) and §3 point at it.
 -->
 
 # The adjudicator's questions, per spine tier
@@ -36,6 +45,13 @@
 - Read the wording as a closed obligation: a "should" that means "must", a
   threshold with no units, an actor left unnamed, an acceptance condition
   nobody could observe. Each is a finding that sends the row back, not a note.
+- **Name only what the row's tier may name.** No row's text names an
+  implementation carrier (a code file, function or symbol). A shipped boundary
+  artifact (a registry, template, config file or launcher) may be named at the
+  LLR and TC tiers only; SN and SR rows name no file in any cell, acceptance and
+  rationale included. An approved cell keeps its approved text verbatim, names
+  included, until it is amended through its authority, and an amendment adds no
+  name the rule forbids.
 
 ## 1. At SN intake — answer these before the need is approved
 <!-- tiers: SN -->
@@ -70,10 +86,9 @@ Questions:
   script being re-carried, and the stakeholder it exists for cannot validate a
   claim about a file they have never opened. Write the observable **condition**
   ("the strict traceability check reports zero orphans") and let the carrier be
-  named where carriers belong. **Where a concrete name is genuinely unavoidable,
-  the waiver goes in `why`** — the SN tier's reason cell, since the need schema
-  carries no `Rationale` — as the same `recorded waiver: <reason>` marker the SR valve uses, with a
-  reason a later reader can argue with. A **declared vocabulary** token (a dial
+  named where carriers belong: no SN cell names a file, `why` included (§0's
+  naming rule), so a carrier the need seems to require is named at the LLR or
+  TC tier, or cited by a registry **id**. A **declared vocabulary** token (a dial
   name, a status word, a flag) is NOT waivable naming and needs no token, because
   it is not a carrier. A **provenance** citation is not a carrier either — and it
   does not belong in the cell at all (§6).
@@ -88,9 +103,9 @@ Questions:
 - **(b) Voice.** SN and SR alike state the delivered capability or the artifact
   **class** ("the delivered harness", "the launchers at the repository root") —
   one rule, two tiers, since the 2026-08-18 directive. The concrete
-  name belongs one tier down — LLR `Module`, TC `Evidence` — or, where acceptance
-  genuinely needs an anchor, as **rewritable current-carrier evidence** or a
-  registry **id**. Acceptance criteria carry the **observable condition and its
+  name belongs one tier down — LLR `Module`, TC `Evidence` — and never in an SR
+  cell, acceptance included (§0's naming rule); where acceptance genuinely needs
+  an anchor, it cites a registry **id**. Acceptance criteria carry the **observable condition and its
   threshold** (Volere's *fit criterion*: an objective measure of the
   requirement's meaning) — *what would be observed and where the pass/fail line
   falls*, while *where and how* it is observed is the TC's.
@@ -192,8 +207,9 @@ Questions:
   about it. A bound is deliberately
   not a cap: a hard cap invites merging two LLRs into one to slip under it,
   hiding the defect the number exists to surface. Clearing one is a **recorded
-  per-row re-stamp** — the waiver token in the tier's reason cell for a named
-  artifact (`Rationale` at SR, `why` at SN), the
+  per-row re-stamp** — the waiver token in the tier's reason cell (`Rationale`
+  at SR, `why` at SN) for an approved cell's kept name (§0), never for a new
+  one, the
   `fan-out re-stamp: <reason>` phrase for fan-out — and the reason must be one a
   later reader can **argue with**. "Accepted" is not a reason.
 - **(d2) Is every absolute's domain really closed?** An absolute ("never",
@@ -215,10 +231,18 @@ Questions:
 ## 3. At LLR and TC
 <!-- tiers: LLR TC -->
 
-- **LLRs name modules and symbols by design.** That is the tier's job; do not
-  launder a concrete name upward into the SR to "keep the LLR abstract", and do
-  not strip it out of the LLR to satisfy a rule that bites one tier up. No
-  `shall` in an LLR — the SR states the obligation, the child decomposes it.
+- **An LLR states its contract in words that survive a refactor.** Its text
+  states the observable obligation: the inputs it takes, the outcome it
+  produces and where it refuses, so a refactor that keeps the behaviour keeps
+  the row true. It names no implementation carrier (a code file, function or
+  symbol), and §0's naming rule says which tiers may name a shipped boundary
+  artifact. Do not launder a concrete name upward
+  into the SR to keep the LLR abstract. The traced `module` and `code_symbol`
+  cells are trace homes, not row text: they stay filled and binding while the
+  schema requires them (`trace.py --strict-schema` requires both;
+  `check_doc_refs --strict` binds the symbol), so never return a row for
+  keeping them. No `shall` in an LLR — the SR states the obligation, the child
+  decomposes it.
 - **A child adds detail.** If the LLR would merely re-word its parent, link
   instead. `trace.py`'s paraphrase advisory is lexical and warns forever; the
   judgement stays yours.

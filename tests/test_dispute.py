@@ -243,6 +243,9 @@ def test_a_well_formed_verdict_is_accepted_and_parsed(tmp_path):
         ("RULING: F1 FIX a\nRULING: R2 FIX b\nRULING: F9 FIX c\n", "F9"),
         ("RULING:\nRULING: F1 FIX a\nRULING: R2 FIX b\n", "names"),
         ("- RULING: F1 FIX a\nRULING: R2 FIX b\n", "unruled"),
+        ("RULING: F1 FIX ok\nRULING: R2 SUCCESSOR\n", "gives no reason"),
+        ("RULING: F1 FIX ok\nRULING: R2 successor file it\n", "not one of"),
+        ("RULING: F1 FIX ok\nRULING: R2 SUCCESSORS file it\n", "not one of"),
     ],
 )
 def test_a_malformed_or_incomplete_verdict_is_refused(tmp_path, text, needle):
@@ -252,6 +255,25 @@ def test_a_malformed_or_incomplete_verdict_is_refused(tmp_path, text, needle):
     verdict = tmp_path / "v.md"
     verdict.write_text(text, encoding="utf-8")
     assert ab.verdict_refusal("dispute", verdict, kinds=("F1", "R2"))
+
+
+def test_a_successor_ruling_is_accepted_and_parsed(tmp_path):
+    """WI-911: the sitting may rule a finding SUCCESSOR, a row of its own filed
+    on trunk at the landing (the owner's ruling of 2026-10-14, in session)."""
+    text = "RULING: F1 SUCCESSOR file a row that bounds the retry loop\n"
+    rulings, why = _dispute().parse(text, ("F1",), "v.md")
+    assert why is None, why
+    assert rulings["F1"] == ("SUCCESSOR", None, "file a row that bounds the retry loop")
+    verdict = tmp_path / "v.md"
+    verdict.write_text(text, encoding="utf-8")
+    assert ab.verdict_refusal("dispute", verdict, kinds=("F1",)) is None
+
+
+def test_an_unknown_ruling_is_refused_naming_the_four_rulings():
+    dispute = _dispute()
+    rulings, why = dispute.parse("RULING: F1 WONTFIX no\n", ("F1",), "v.md")
+    assert rulings is None
+    assert "FIX|SUCCESSOR|DISMISS|ESCALATE" in why, why
 
 
 def test_a_verdict_judged_against_no_requested_findings_is_refused():

@@ -9,6 +9,12 @@
      home, scripts/kitlib/dispute.py; the coordinator's route is the
      coordinator-cycle skill's (this repository's).
 
+     SUCCESSOR (WI-911; the owner's ruling of 2026-10-14, in session, that
+     only the dispute sitting moves a finding to a successor row): a fourth
+     ruling, for a real finding that belongs in its own row, filed on trunk
+     when the lane lands, from this verdict's binding. A convergence-class
+     finding (review-churn plan item 4) is never ruled SUCCESSOR.
+
      Slots (single-brace, strict fill — a missing one refuses):
        {range}     the lane range the findings concern, as the findings file
                    declares it (`<base>..<head>`, resolved by git or refused).
@@ -33,7 +39,7 @@ You are an INDEPENDENT adjudicator launched by the coordinator. A review of a la
 
 {request}
 
-Rule within the scope bound {process_doc} §6 "Review threat model" sets: read that paragraph before you rule, and apply it as written.
+Rule within the scope bound {process_doc} §6 "Review threat model" sets: read that paragraph before you rule, and apply it as written. Weigh how plausible each finding's scenario is under that paragraph, a spec's promise included: whether a supported workflow or the kit's own routes reach it, not only whether the host is compromised or the fix is cheap. A cheap fix for a contrived scenario is still DISMISS.
 
 --- THE LANE RANGE: {range} ---
 {commits}
@@ -44,6 +50,7 @@ Rule within the scope bound {process_doc} §6 "Review threat model" sets: read t
 Method:
 - Judge each finding on the code at the range above, not on either party's account of it. Read the code it names, and where the finding states a reproduction, run it or construct it. Believe nothing you did not observe.
 - FIX when the finding is a real defect within the scope bound and worth its change. Say what the defect is, in one line.
+- SUCCESSOR when the finding is real, within the scope bound and worth its change, but belongs in its own row rather than this lane. Say in one line what that row must do; it is filed on trunk when the lane lands, from this verdict. A convergence-class finding (a fail-open path, data loss or a gap in the work item's Done-when) is never ruled SUCCESSOR: rule it FIX, or ESCALATE it.
 - DISMISS when it is not, naming exactly one reason class:
   - `out-of-scope`: its reproduction needs what the scope bound excludes;
   - `refuted`: you checked it and it does not hold at this range;
@@ -54,6 +61,7 @@ Method:
 Write your verdict to {verdict}. A paragraph of reasoning per finding is welcome; then exactly one machine line per finding named on the `DISPUTE:` line above, each on its own line, each starting with `RULING:`, and no other `RULING:` line:
 
     RULING: <id> FIX <why, on the same line>
+    RULING: <id> SUCCESSOR <what the successor row must do, on the same line>
     RULING: <id> DISMISS out-of-scope|refuted|not-worth-cost <why, on the same line>
     RULING: <id> ESCALATE <the risk, on the same line>
 

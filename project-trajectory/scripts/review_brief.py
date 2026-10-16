@@ -54,15 +54,23 @@ of record in docs/requirements/interfaces.toml).
 
 Contract IF-288: the attended launcher's command line, its arguments.
     `review --wi WI-N --base REV --sha REV --scope narrow|full --tests T...
-    --scratch DIR --out FILE [--findings ROUND] [--rubric RUBRIC] [--python
-    EXE] [--root DIR]` writes one review round's brief to FILE: the shipped
-    reviewer template strictly filled with the work item's spec, the range
-    BASE..SHA (both resolved to full commits on DIR's branch, BASE an ancestor
-    of SHA), the scope, the tests, the scratch area and the verdict path under
-    it. A narrow round names the round file ROUND whose findings it answers; a
-    full-lane round names none. `critique --wi WI-N --rubric RUBRIC --scratch
-    DIR --out FILE [--root DIR]` writes the shipped critique template strictly
-    filled with the work item's spec and RUBRIC. `file --review VERDICT --sha
+    --scratch DIR --out FILE [--findings ROUND] [--rubric RUBRIC] [--stance
+    ordinary|convergence] [--python EXE] [--root DIR]` writes one review
+    round's brief to FILE: the shipped reviewer template strictly filled with
+    the work item's spec, the range BASE..SHA (both resolved to full commits
+    on DIR's branch, BASE an ancestor of SHA), the scope, the tests, the
+    scratch area and the verdict path under it. A narrow round names the round
+    file ROUND whose findings it answers; a full-lane round names none. The
+    stance is `ordinary` by default, which adds nothing; `convergence` adds
+    one fixed ROUND FACTS line after the range line, and its reading-scope
+    command also leaves out `docs/decisions` and `docs/plans/*/critique-*`
+    (WI-911). `critique --wi
+    WI-N --rubric RUBRIC --scratch DIR --out FILE [--root DIR]` writes the
+    shipped critique template strictly filled with the work item's spec,
+    RUBRIC and the registries the critic reads beside the spec, each named by
+    its repo path and marked "(absent here)" when DIR lacks it: the component
+    and interface registries, the derived architecture, the runtime flows and
+    the dependency ledger. `file --review VERDICT --sha
     REV --scope narrow|full [--phase REVIEW-A|REVIEW-B] [--root DIR]` writes
     VERDICT, once it is bound to SHA's full commit (`Reviewed: <sha>` first),
     carries exactly one line whose keyword, in any case, is `VERDICT`, and that
@@ -101,14 +109,18 @@ Contract IF-289: the command's exit codes. 0 when the brief is written or the
     unreadable or empty named input, a root not on a branch, a revision that
     is not a commit or a base that is not an ancestor, a branch that is not a
     review scope or names the rollup generator's directory, a review that
-    fails the IF-288 checks, or a plan step the IF-288 plan rules refuse). A
-    refusal writes no requested brief or review record.
+    fails the IF-288 checks, a review round whose stance is not one of
+    `ordinary` or `convergence`, a narrow round in the convergence stance, a
+    convergence round over a reviewer template whose reading-scope command it
+    cannot narrow, or a plan step the IF-288 plan rules refuse). A refusal writes no
+    requested brief or review record.
 
 Usage:
     python scripts/review_brief.py review --wi WI-123 --base <sha> --sha <sha> \\
         --scope full --scratch <dir> --tests tests/test_a.py --out <brief.md>
     python scripts/review_brief.py review ... --scope narrow \\
         --findings docs/reviews/<lane>/001-REVIEW-A-<sha7>.md
+    python scripts/review_brief.py review ... --scope full --stance convergence
     python scripts/review_brief.py critique --wi WI-123 \\
         --rubric docs/rubrics/scope-critique.md --scratch <dir> --out <brief.md>
     python scripts/review_brief.py file --review <verdict.md> --sha <sha> --scope full
@@ -146,6 +158,23 @@ from kitlib import verdict as kverdict  # noqa: E402
 from kitlib.config import utf8_console  # noqa: E402
 
 SCOPES = ("narrow", "full")
+# A review round's stance (WI-911; review-churn plan revision 8, and ruling 4's
+# convergence round): `ordinary`, the default, renders today's brief, and
+# `convergence` adds `_CONVERGENCE_ROUND`, one fixed ROUND FACTS line that
+# marks the round and points at the reviewer template's convergence stance,
+# restating none of it.
+STANCES = ("ordinary", "convergence")
+_CONVERGENCE_ROUND = "- STANCE: CONVERGENCE. This round runs in the convergence stance: apply the brief's convergence-stance paragraph as written."  # noqa: E501
+# A convergence brief's reading scope (WI-911; revision 8: a convergence
+# round never sees earlier verdicts). Only the convergence
+# render leaves the decisions record and the plan's filed critiques out of the
+# brief's one reading-scope command, beside the round files the template
+# already leaves out; an ordinary or loop reviewer keeps reading them.
+_RECORDS_EXCLUDE = "':(exclude)docs/reviews'"
+_CONVERGENCE_EXCLUDES = (
+    "':(exclude)docs/reviews' ':(exclude)docs/decisions' "
+    "':(exclude)docs/plans/*/critique-*'"
+)
 PHASES = ("REVIEW-A", "REVIEW-B")
 REVIEWS = "docs/reviews"
 _ORDINAL_RE = re.compile(r"^(\d+)-")
@@ -177,6 +206,7 @@ class Round:
     python: str
     findings: str | None = None
     rubric: str | None = None
+    stance: str = "ordinary"
 
     def __post_init__(self):
         if self.scope not in SCOPES:
@@ -193,6 +223,15 @@ class Round:
             )
         if not self.tests:
             raise BriefError("a round names the tests the reviewer runs")
+        if self.stance not in STANCES:
+            raise BriefError(
+                "stance {!r} is not one of {}".format(self.stance, ", ".join(STANCES))
+            )
+        if self.stance == "convergence" and self.scope == "narrow":
+            raise BriefError(
+                "a narrow round is never in the convergence stance: a "
+                "convergence round reviews the full lane"
+            )
 
 
 def _posix(path):
@@ -313,6 +352,8 @@ def round_facts(rnd, spec, verdict, scripts):
         ),
     ]
     lines += _scope_lines(rnd)
+    if rnd.stance == "convergence":
+        lines.append(_CONVERGENCE_ROUND)
     if rnd.rubric:
         lines.append(
             "- This repository's review rubric for this round: `{}`. Judge its "
@@ -330,8 +371,11 @@ def round_facts(rnd, spec, verdict, scripts):
 
 def render_review(root, rnd):
     """`(brief, verdict path)` for one review round: the kit reviewer template
-    filled strictly with the lane's facts. Raises `BriefError` for a missing
-    spec or named file, `prompts.PromptError` for a slot left unfilled.
+    filled strictly with the lane's facts. A convergence round's reading-scope
+    command also leaves out the decisions record and the plan's filed
+    critiques. Raises `BriefError` for a missing spec or named file, or a
+    template whose command a convergence round cannot narrow, and
+    `prompts.PromptError` for a slot left unfilled.
 
     Implements: SR-146, LLR-313
     """
@@ -352,9 +396,16 @@ def render_review(root, rnd):
         "wis": "  - {} — {}".format(rnd.wi, _spec_title(root, spec)),
         "round_facts": round_facts(rnd, spec, verdict, scripts),
     }
-    return prompts.fill(
-        prompts.REVIEWER, prompts.load(prompts.REVIEWER), values
-    ), verdict
+    text = prompts.load(prompts.REVIEWER)
+    if rnd.stance == "convergence":
+        if text.count(_RECORDS_EXCLUDE) != 1:
+            raise BriefError(
+                "the reviewer template's reading-scope command does not carry "
+                "{} exactly once: a convergence brief cannot leave the earlier "
+                "findings' records out of it".format(_RECORDS_EXCLUDE)
+            )
+        text = text.replace(_RECORDS_EXCLUDE, _CONVERGENCE_EXCLUDES)
+    return prompts.fill(prompts.REVIEWER, text, values), verdict
 
 
 def render_critique(root, wi, rubric, verdict):
@@ -376,6 +427,11 @@ def render_critique(root, wi, rubric, verdict):
             "scope, never code. This is attended use: write the verdict to the "
             "assigned path, commit nothing, and the launcher records "
             "it.".format(spec),
+            "Read beside it the registries the rubric's anchors are judged "
+            "against. Each is a registry, never code:",
+        ]
+        + _registry_lines(root, _CRITIQUE_INPUTS)
+        + [
             "",
             "### Rubric: {}".format(rubric),
             rubric_text,
@@ -459,22 +515,34 @@ def file_review(root, lane, text, sha, scope, phase="REVIEW-A"):
 # --- the single plan (WI-913): the planner's brief, the plan critique, the
 # filing step and its pass record ---------------------------------------------
 
-# What the planner must cite, by the registry that holds it. A path the
-# repository lacks is named as absent, never dropped.
-_PLAN_INPUTS = (
-    ("its SR rows", "docs/requirements/system-requirements.toml"),
-    ("the TCs that verify them", "docs/test/test-cases.toml"),
-    ("the interface registry", "docs/requirements/interfaces.toml"),
-    ("the component registry", "docs/requirements/components.toml"),
-    ("the runtime flows", "docs/runtime-flows.md"),
-)
+# The registries a brief names for its reader, each by a label and its repo
+# path. `_registry_lines` is their one renderer: a path the repository lacks
+# is named as absent, never dropped.
+_REGISTRIES = {
+    "srs": ("its SR rows", "docs/requirements/system-requirements.toml"),
+    "tcs": ("the TCs that verify them", "docs/test/test-cases.toml"),
+    "interfaces": ("the interface registry", "docs/requirements/interfaces.toml"),
+    "components": ("the component registry", "docs/requirements/components.toml"),
+    "flows": ("the runtime flows", "docs/runtime-flows.md"),
+    "derived": (
+        "the derived architecture",
+        "docs/requirements/components.derived.toml",
+    ),
+    "dependencies": ("the dependency ledger", "docs/dependencies.md"),
+}
+# What the planner must cite, by the registry that holds it.
+_PLAN_INPUTS = ("srs", "tcs", "interfaces", "components", "flows")
+# What the scope critic reads beside the spec for the coverage, delta and
+# dependency anchors (WI-911; review-churn plan item 12, revision 20).
+_CRITIQUE_INPUTS = ("components", "interfaces", "derived", "flows", "dependencies")
 # The second critique's stance (owner, 2026-10-14): it judges the revised plan
 # as it stands and never sees the first critique.
 _CONVERGENCE = (
     "- This is the SECOND and last critique of this plan, after its one "
     "revision, in the convergence stance: judge the plan as it stands. A new "
     "finding is BLOCKER or MAJOR only if it is fail-open, data loss or a "
-    "Done-when gap; anything else is MINOR."
+    "Done-when gap, and a supported workflow or the kit's own routes reach it; "
+    "anything else is MINOR."
 )
 
 
@@ -496,13 +564,24 @@ def _clause_lines(text, rel):
     return "\n".join("- D{}: {}".format(n, item) for n, item in enumerate(found, 1))
 
 
+def _registry_lines(root, names):
+    """One brief line per registry in `names`, in that order: its label and
+    its repo path, marked "(absent here)" when `root` lacks the file.
+
+    Implements: SR-146, LLR-313
+    """
+    lines = []
+    for name in names:
+        what, rel = _REGISTRIES[name]
+        here = (Path(root) / rel).is_file()
+        lines.append("- {}: `{}`{}".format(what, rel, "" if here else " (absent here)"))
+    return lines
+
+
 def _input_lines(root, srs):
     """Where each input the plan must cite lives, and the item's SRs."""
     lines = ["- The item's SRs: {}.".format(", ".join(srs) or "(none declared)")]
-    for what, rel in _PLAN_INPUTS:
-        here = (Path(root) / rel).is_file()
-        lines.append("- {}: `{}`{}".format(what, rel, "" if here else " (absent here)"))
-    return "\n".join(lines)
+    return "\n".join(lines + _registry_lines(root, _PLAN_INPUTS))
 
 
 def latest_critique(root, wi):
@@ -977,6 +1056,7 @@ def _cmd_review(args):
         python=_posix(args.python),
         findings=args.findings,
         rubric=args.rubric,
+        stance=args.stance,
     )
     text, verdict = render_review(args.root, rnd)
     _write(args.out, text)
@@ -1065,6 +1145,12 @@ def _parser():
     rev.add_argument("--scratch", required=True, help="the reviewer's writable area")
     rev.add_argument("--findings", help="narrow: the round file this range answers")
     rev.add_argument("--rubric", help="a repository review rubric to judge too")
+    rev.add_argument(
+        "--stance",
+        default="ordinary",
+        choices=STANCES,
+        help="convergence: the round confirms fixes (never with --scope narrow)",
+    )
     rev.add_argument("--python", default=sys.executable, help="the interpreter to run")
     rev.add_argument("--out", required=True, help="where to write the brief")
     crit = sub.add_parser("critique", help="render a work item's scope critique")

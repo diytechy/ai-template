@@ -47,8 +47,9 @@ def _lane(tmp_path):
     return tmp_path
 
 
-def _round(scope="full", findings=None, rubric=None):
+def _round(scope="full", findings=None, rubric=None, **stance):
     return rb.Round(
+        **stance,
         wi="WI-900",
         lane="wi-900",
         base=BASE,
@@ -235,6 +236,208 @@ def test_the_scope_critique_carries_ruling_twos_questions_and_its_rubric(tmp_pat
     assert "authority over a hold, an act or a gate" in text
     assert "docs/work/active/wi-900/WI-900-a-lane.md" in text
     assert rb.prompts.slots(text) == set()
+
+
+# The registries the scope critic reads beside the spec (WI-911; review-churn
+# plan item 12, revision 20), each by its repo path.
+CRITIQUE_REGISTRIES = (
+    "docs/requirements/components.toml",
+    "docs/requirements/interfaces.toml",
+    "docs/requirements/components.derived.toml",
+    "docs/runtime-flows.md",
+    "docs/dependencies.md",
+)
+
+
+def test_the_scope_critique_names_the_registries_beside_the_spec(tmp_path):
+    root = _lane(tmp_path)
+    rubric = root / "docs" / "rubric.md"
+    rubric.write_text("# Rubric\n\nS1 - one deliverable.\n", encoding="utf-8")
+    for rel in CRITIQUE_REGISTRIES[:-1]:
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text("x\n", encoding="utf-8")
+    text = rb.render_critique(root, "WI-900", "docs/rubric.md", "C:/scratch/c.md")
+    lines = text.splitlines()
+    for rel in CRITIQUE_REGISTRIES:
+        hits = [line for line in lines if "`{}`".format(rel) in line]
+        assert len(hits) == 1, (rel, hits)
+        absent = "(absent here)" in hits[0]
+        assert absent == (rel == "docs/dependencies.md"), hits[0]
+    assert sum("(absent here)" in line for line in lines) == 1
+    assert "Each is a registry, never code" in text
+    assert rb.prompts.slots(text) == set()
+
+
+CONVERGENCE_LINE = (
+    "- STANCE: CONVERGENCE. This round runs in the convergence stance: apply "
+    "the brief's convergence-stance paragraph as written."
+)
+
+
+def test_a_convergence_round_renders_the_one_fixed_stance_line(tmp_path):
+    text, _v = rb.render_review(_lane(tmp_path), _round(stance="convergence"))
+    assert "\n" not in rb._CONVERGENCE_ROUND
+    assert rb._CONVERGENCE_ROUND == CONVERGENCE_LINE
+    assert text.count(CONVERGENCE_LINE) == 1
+    lines = text.splitlines()
+    at = lines.index(CONVERGENCE_LINE)
+    assert "FULL-LANE" in lines[at - 1]
+    assert (
+        lines.index(
+            "ROUND FACTS (stated by the attended launcher that rendered this brief):"
+        )
+        < at
+    )
+
+
+def test_an_absent_stance_renders_the_ordinary_round(tmp_path, monkeypatch):
+    root = _lane(tmp_path)
+    assert _round().stance == "ordinary"
+    absent, _v = rb.render_review(root, _round())
+    ordinary, _v = rb.render_review(root, _round(stance="ordinary"))
+    assert absent == ordinary
+    assert "STANCE:" not in absent
+    monkeypatch.setattr(
+        rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
+    )
+    argv = ["review", "--root", str(root), "--wi", "WI-900", "--base", BASE]
+    argv += ["--sha", SHA, "--scope", "full", "--scratch", "C:/scratch"]
+    argv += ["--tests", "tests/test_a.py"]
+    out_absent, out_ordinary = tmp_path / "a.md", tmp_path / "o.md"
+    assert rb.main(argv + ["--out", str(out_absent)]) == 0
+    assert rb.main(argv + ["--stance", "ordinary", "--out", str(out_ordinary)]) == 0
+    assert out_absent.read_bytes() == out_ordinary.read_bytes()
+
+
+def test_a_narrow_round_refuses_the_convergence_stance(tmp_path, monkeypatch, capsys):
+    rel = "docs/reviews/wi-900/001-REVIEW-A-1111111.md"
+    with pytest.raises(rb.BriefError, match="convergence"):
+        _round("narrow", findings=rel, stance="convergence")
+    with pytest.raises(rb.BriefError, match="stance 'wild'"):
+        _round(stance="wild")
+    root = _lane(tmp_path)
+    monkeypatch.setattr(
+        rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
+    )
+    out = tmp_path / "brief.md"
+    argv = ["review", "--root", str(root), "--wi", "WI-900", "--base", BASE]
+    argv += ["--sha", SHA, "--scope", "narrow", "--findings", rel]
+    argv += ["--scratch", "C:/scratch", "--tests", "tests/test_a.py"]
+    argv += ["--stance", "convergence", "--out", str(out)]
+    assert rb.main(argv) == 2
+    err = capsys.readouterr().err
+    assert "REFUSED" in err and "convergence" in err, err
+    assert not out.exists()
+    with pytest.raises(SystemExit):
+        rb.main(argv[:-4] + ["--stance", "wild", "--out", str(out)])
+    assert "invalid choice: 'wild'" in capsys.readouterr().err
+    assert not out.exists()
+
+
+def test_a_convergence_brief_carries_the_stance_and_its_marking(tmp_path):
+    root = _lane(tmp_path)
+    paragraph = "CONVERGENCE STANCE, only for a round whose round facts below say"
+    converging, _v = rb.render_review(root, _round(stance="convergence"))
+    ordinary, _v = rb.render_review(root, _round())
+    assert paragraph in converging and CONVERGENCE_LINE in converging
+    assert paragraph in ordinary and CONVERGENCE_LINE not in ordinary
+    # The rendered convergence brief carries the bound on a new finding.
+    bound = (
+        "count a new finding as BLOCKER or MAJOR only when it is a fail-open "
+        "path, data loss or a Done-when gap that a supported workflow or the "
+        "kit's own routes reach, and every other new finding as MINOR"
+    )
+    assert bound in " ".join(converging.split()), bound
+
+
+def _reading_scope(text):
+    """The rendered brief's one reading-scope command."""
+    commands = [
+        line[line.index("`git diff ") :]
+        for line in text.splitlines()
+        if "`git diff " in line
+    ]
+    assert len(commands) == 1, commands
+    return commands[0].split("`")[1]
+
+
+def test_only_a_convergence_brief_leaves_the_decisions_record_and_critiques_out_of_its_reading_scope(
+    tmp_path, monkeypatch
+):
+    # WI-911 (review-churn revision 8): the anchoring rule binds the convergence
+    # round only, so an ordinary (and loop) reviewer's command keeps the
+    # delegated-decisions record and the plan's critiques, and only the
+    # convergence render leaves them out, beside the round files every round
+    # leaves out. A template the convergence render cannot narrow refuses.
+    root = _lane(tmp_path)
+    records = ("':(exclude)docs/decisions'", "':(exclude)docs/plans/*/critique-*'")
+    ordinary = _reading_scope(rb.render_review(root, _round())[0])
+    converging = _reading_scope(rb.render_review(root, _round(stance="convergence"))[0])
+    for command in (ordinary, converging):
+        assert command.count("':(exclude)docs/reviews'") == 1, command
+    assert [r for r in records if r in ordinary] == [], ordinary
+    assert [r for r in records if r not in converging] == [], converging
+    template = rb.prompts.load(rb.prompts.REVIEWER)
+    bare = template.replace(" ':(exclude)docs/reviews'", "")
+    monkeypatch.setattr(rb.prompts, "load", lambda name: bare)
+    with pytest.raises(rb.BriefError, match="exactly once"):
+        rb.render_review(root, _round(stance="convergence"))
+
+
+def test_a_convergence_tagged_finding_files_with_its_count_unchanged(tmp_path):
+    tagged = (
+        "Reviewed: {}\n\nVerified: drove it.\n\n"
+        "- [MAJOR] project-trajectory/scripts/x.py:3 -> wrong -> fix it -> @owner "
+        "convergence-class: yes\n\n"
+        "VERDICT: CHANGES-REQUESTED findings=1\n"
+    ).format(SHA)
+    path = rb.file_review(tmp_path, "wi-900", tagged, SHA, "full", "REVIEW-B")
+    assert path.name == "001-REVIEW-B-abcdef0.md"
+    [(_path, rolled)] = rollup.targets(tmp_path)
+    assert "| 1 | REVIEW-B | `abcdef0` | CHANGES-REQUESTED | 1 |" in rolled
+
+
+def test_the_scope_rubric_names_every_registry_the_critique_brief_renders(tmp_path):
+    # The live rubric's artifact line names each registry the brief renders,
+    # and the rubric declares the anchors the review-churn rulings added.
+    live = (ROOT / "docs" / "rubrics" / "scope-critique.md").read_text(encoding="utf-8")
+    head = live[: live.index("## Intent")]
+    root = _lane(tmp_path)
+    (root / "docs" / "rubric.md").write_text("S1\n", encoding="utf-8")
+    rendered = rb.render_critique(root, "WI-900", "docs/rubric.md", "c.md")
+    for rel in CRITIQUE_REGISTRIES:
+        assert "`{}`".format(rel) in rendered, rel
+        assert "`{}`".format(rel) in head, rel
+    for anchor in ("**S3 —", "**S4 —", "**S5 —", "**S6 —", "**B3 —", "**B4 —"):
+        assert anchor in live, anchor
+    # WI-911 (review-churn item 4): the reachability rule binds every
+    # round's severity, not only a confirming round's.
+    verdict = " ".join(live[live.index("## Verdict") :].split())
+    assert (
+        "In every round, severity is tied to reachability (review-churn item 4): "
+        "a BLOCKER or MAJOR states a defect in the scope that would reasonably "
+        "cost a build or review round in normal use, and a fail-open, data-loss "
+        "or security path counts only when a supported workflow or the kit's "
+        "own routes reach it; a rare or contrived path is MINOR at most, or "
+        'dismissed under PROCESS.md §6 "Review threat model".'
+    ) in verdict
+    # S3 bounds a promise by what supported routes produce, citing the
+    # review threat model, and the critic asks for the bound.
+    s3 = " ".join(live[live.index("**S3 —") : live.index("**S4 —")].split())
+    assert (
+        'A promise reaches only what PROCESS.md §6 "Review threat model" says '
+        "a spec's promise reaches, what supported workflows and the kit's own "
+        "routes produce: hand-edited kit-written state, hand-chosen name "
+        "aliases and sub-second timing windows are outside it unless the spec "
+        "names them as inside, and the spec states its bound in those terms. "
+        "Ask for the bound, never for coverage of the excluded inputs."
+    ) in s3
+    # ...and a confirming round's convergence classes too.
+    assert (
+        "a new finding is BLOCKER or MAJOR only if it is fail-open, data loss or "
+        "a Done-when gap, and a supported workflow or the kit's own routes reach "
+        "it; anything else is MINOR."
+    ) in verdict
 
 
 # --- filing a review as a kit round file -----------------------------------------

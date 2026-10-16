@@ -213,6 +213,11 @@ Stable, zero-padded, never reused.
   consequences: the registries are hand-edited files on disk, so validating
   them is owed; and a model's output is a boundary, so validating structured
   output is owed.
+- **Record a decision where it is made.** A decision a later step depends on
+  is recorded by the step that makes it, in the commit where it is made, and
+  checked against that commit's parent. A later reader trusts the record and
+  never recomputes the decision from history or from current state (owner
+  ruling 2026-10-11).
 - **A structural move is its own commit.** A behaviour-preserving move
   (a rename, an extraction, a file split) lands in a commit that changes no
   behaviour, before the change it enables. Each diff is then reviewable as one
@@ -1011,7 +1016,20 @@ the environment or `PATH` changed by another process mid-call, a tampered OS
 or tool) is out of scope: it is dismissed in one recorded line by whoever
 rules the finding, in the response to the review verdict (and in the
 delegated-decisions record too, when the run keeps one), and never answered
-with code. Forge mode's "bugs and fail-open, not malice"
+with code. A finding whose reproduction needs a contrived, improbable scenario
+is dismissed the same way (owner ruling 2026-10-13): a hand act the process
+forbids (rewinding the trunk branch, skipping or disabling a hook,
+hand-editing a generated view or a ruled record), or ordinary tools run in an
+order no supported workflow or kit route produces. Severity tracks
+plausibility and impact, not ingenuity, and reachability gates every class: a
+fail-open, data-loss or security path counts only when a supported workflow or
+the kit's own routes reach it; a rare or contrived path is MINOR at most, or
+dismissed as above. Whoever rules a finding re-grades a mislabelled BLOCKER
+or MAJOR. A spec's promise over an input space reaches only what supported
+workflows and the kit's own routes produce: hand-edited kit-written state, a
+hand-chosen name alias (case, trailing dots and the like) and a sub-second
+timing window lie outside it unless the spec names them as inside, so a
+finding that needs one is not stated behaviour. Forge mode's "bugs and fail-open, not malice"
 (process-options.md "Parallel work") is the same bound.
 
 Keep `status.md` short so a reviewer can orient cheaply — the *whole file* is

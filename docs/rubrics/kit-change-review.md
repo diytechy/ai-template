@@ -20,9 +20,12 @@ amended SN, SR, LLR and TC cell against PROCESS.md and the code. *Bad:* a row
 stating the inverse of the rule its code implements; earlier waves shipped
 that, and code review missed it.
 
-**K2 — Owner ruling R2.** A requirement (SR) cell never names a concrete
-script, command, file or function. That belongs in acceptance as
-current-carrier evidence, or at the LLR tier.
+**K2 — Owner ruling R2, as review-churn ruling 5 refines it.** No SN or SR
+cell names an implementation carrier (a script, command, file or function),
+acceptance included. Current-carrier evidence lives in the TC rows that verify
+the row, and a shipped boundary artifact (a registry, template, config file or
+launcher) may be named at the LLR and TC tiers only. An approved cell keeps its
+approved text, names included, until it is amended through its authority.
 
 **K3 — Back-links and approved rows.** Each `Implements:` tag names the LLR
 whose `module` is that file, and the function appears in that LLR's

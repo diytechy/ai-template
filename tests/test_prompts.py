@@ -35,6 +35,8 @@ from conftest import KIT, load_script
 
 pr = load_script("prompts")
 plan_briefs = load_script("plan_briefs")
+review_brief = load_script("review_brief")
+adjudicate_brief = load_script("adjudicate_brief")
 
 
 # --- the catalogue ------------------------------------------------------------
@@ -172,6 +174,13 @@ def test_the_reviewer_and_worker_briefs_link_the_guard_rule_and_restate_nothing(
 # adjudicator's dispute brief that rules a contested one (WI-865).
 FINDING_JUDGING_BRIEFS = (pr.REVIEWER, pr.ADJUDICATE_DISPUTE)
 
+# The convergence stance's severity bound on a new finding (WI-911).
+CONVERGENCE_BOUND = (
+    "count a new finding as BLOCKER or MAJOR only when it is a fail-open "
+    "path, data loss or a Done-when gap that a supported workflow or the "
+    "kit's own routes reach, and every other new finding as MINOR"
+)
+
 
 def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing():
     # The review threat model has one home, PROCESS.md §6: a finding whose
@@ -210,6 +219,239 @@ def test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing()
         brief = " ".join(pr.load(key).split())
         for example in examples:
             assert example not in brief, (key, example)
+
+
+def test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_class():
+    # The owner's ruling of 2026-10-13: a contrived, improbable scenario is
+    # dismissed like a contrived host, severity tracks plausibility and
+    # impact, and reachability gates a fail-open, data-loss or security path
+    # as it gates any other; whoever rules a finding re-grades a mislabel.
+    process = (KIT / "PROCESS.md").read_text(encoding="utf-8")
+    start = process.index("**Review threat model.**")
+    paragraph = " ".join(process[start : process.find("\n\n", start)].split())
+    for clause in (
+        "A finding whose reproduction needs a contrived, improbable scenario is "
+        "dismissed the same way (owner ruling 2026-10-13)",
+        "a hand act the process forbids (rewinding the trunk branch, skipping "
+        "or disabling a hook, hand-editing a generated view or a ruled record)",
+        "or ordinary tools run in an order no supported workflow or kit route produces",
+        "Severity tracks plausibility and impact, not ingenuity, and "
+        "reachability gates every class: a fail-open, data-loss or security "
+        "path counts only when a supported workflow or the kit's own routes "
+        "reach it; a rare or contrived path is MINOR at most, or dismissed as "
+        "above.",
+        "Whoever rules a finding re-grades a mislabelled BLOCKER or MAJOR.",
+    ):
+        assert clause in paragraph, clause
+
+
+def test_a_spec_promise_reaches_only_what_supported_routes_produce():
+    # The owner's ruling of 2026-10-15: a spec's promise over an input space
+    # is bounded by what supported workflows and the kit's own routes
+    # produce, stated once in the review threat model; the dispute brief
+    # weighs a scenario's plausibility under it, and a cheap fix for a
+    # contrived scenario is still dismissed.
+    process = (KIT / "PROCESS.md").read_text(encoding="utf-8")
+    start = process.index("**Review threat model.**")
+    paragraph = " ".join(process[start : process.find("\n\n", start)].split())
+    assert (
+        "A spec's promise over an input space reaches only what supported "
+        "workflows and the kit's own routes produce: hand-edited kit-written "
+        "state, a hand-chosen name alias (case, trailing dots and the like) "
+        "and a sub-second timing window lie outside it unless the spec names "
+        "them as inside, so a finding that needs one is not stated behaviour."
+    ) in paragraph
+    dispute = " ".join(pr.load(pr.ADJUDICATE_DISPUTE).split())
+    assert (
+        "Weigh how plausible each finding's scenario is under that paragraph, "
+        "a spec's promise included: whether a supported workflow or the kit's "
+        "own routes reach it, not only whether the host is compromised or the "
+        "fix is cheap. A cheap fix for a contrived scenario is still DISMISS."
+    ) in dispute
+
+
+def test_the_coordinator_skill_gates_the_confirming_round_by_reachability():
+    # The coordinator's own copy of the confirming-round rule carries the same
+    # reachability gate, and its triage step dismisses a contrived scenario
+    # and re-grades a mislabel as the review threat model rules.
+    skill = (KIT / "skills" / "coordinator-cycle" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    flat = " ".join(skill.split())
+    for clause in (
+        "A new finding blocks the claim only if it is fail-open, data loss or a "
+        "Done-when gap, and a supported workflow or the kit's own routes reach "
+        "it;",
+        "compromised or contrived host, or a contrived scenario, in one recorded line",
+        "re-grade a mislabelled BLOCKER or MAJOR there too.",
+    ):
+        assert clause in flat, clause
+
+
+def test_the_dispute_brief_offers_successor_and_never_for_a_convergence_class_finding():
+    # WI-911: the sitting may move a real finding to a row of its own, filed
+    # on trunk at the landing, but never a convergence-class one.
+    text = " ".join(pr.load(pr.ADJUDICATE_DISPUTE).split())
+    assert (
+        "RULING: <id> SUCCESSOR <what the successor row must do, on the same line>"
+        in text
+    )
+    assert (
+        "A convergence-class finding (a fail-open path, data loss or a gap in the "
+        "work item's Done-when) is never ruled SUCCESSOR: rule it FIX, or "
+        "ESCALATE it." in text
+    )
+    assert _RECORD_ID.findall(pr.load(pr.ADJUDICATE_DISPUTE)) == []
+
+
+def test_the_reviewer_brief_ties_severity_to_reachability_and_classifies_out_of_set_inputs():
+    # WI-911 (review-churn rulings 1 and 4): a BLOCKER or MAJOR needs a
+    # reachable scenario, and the reviewer, not the set's author, decides
+    # whether an out-of-set input is a note (fail-closed) or a finding.
+    text = " ".join(pr.load(pr.REVIEWER).split())
+    for clause in (
+        "Tie severity to reachability: a BLOCKER or MAJOR states a scenario "
+        "reachable in normal use, and a fail-open, data-loss or security path "
+        "counts only when a supported workflow or the kit's own routes reach "
+        "it; a rare or contrived path is MINOR at most, or dismissed under "
+        '{process_doc} §6 "Review threat model".',
+        "An input outside the spec's declared set is yours to classify, not "
+        "the set author's: one the change fails closed on is a "
+        "coverage-extension note, written as prose outside the finding lines "
+        "with no severity tag, so it never moves the count; one the change "
+        "fails open on stays a finding at its severity.",
+    ):
+        assert clause in text, clause
+    # Beside the threat-model sentence, restating none of its examples.
+    threat = '§6 "Review threat model" sets. Tie severity to reachability'
+    assert threat in text
+
+
+def test_the_reviewer_brief_states_the_convergence_stance():
+    # WI-911 (revisions 8 and 33): a convergence round reads no earlier
+    # verdict, confirms each fix by its pre-fix-failing test or checkable
+    # evidence, checks Done-when coverage and regressions, and tags each new
+    # BLOCKER or MAJOR; the verdict grammar is unchanged.
+    text = " ".join(pr.load(pr.REVIEWER).split())
+    for clause in (
+        "CONVERGENCE STANCE, only for a round whose round facts below say it "
+        "runs in the convergence stance:",
+        "read no earlier verdict and no record of one (nothing under "
+        "docs/reviews/ or docs/decisions/, no filed plan critique, and no lane "
+        "commit message, since those cite earlier rounds), and find each fix's "
+        "pre-fix code from the diff and its test files' own history, through a "
+        "command that prints no commit message (`git log -p --format=%h "
+        "{trunk}..{head} -- <paths>`, each patch under its short hash alone), "
+        "never from commit subjects;",
+        "confirm each fix through its regression test failing on the pre-fix "
+        "code, or, for a fix with no executable test, through independently "
+        "checkable evidence (the corrected text at the cited site, or an "
+        "inspection record)",
+        "check each Done-when item's coverage, and look for regressions",
+        "end each new BLOCKER or MAJOR finding line with "
+        "`convergence-class: yes` (a fail-open path, data loss or a Done-when "
+        "gap) or `convergence-class: no`",
+        "The tag is advice to the dispute sitting, which alone defers a finding.",
+        "The verdict's grammar, its word and its findings count are unchanged.",
+    ):
+        assert clause in text, clause
+    # A new finding blocks only when it is a reachable convergence class; the
+    # bound sits inside the convergence paragraph, not in the ordinary text.
+    lead = "CONVERGENCE STANCE, only for a round whose round facts below say"
+    assert CONVERGENCE_BOUND in text, CONVERGENCE_BOUND
+    assert text.index(CONVERGENCE_BOUND) > text.index(lead)
+    # A history command that prints commit messages would show the reviewer
+    # the records the same sentence sets aside.
+    assert "`git log -p`" not in text
+    assert len(MACHINE_LINE.findall(pr.load(pr.REVIEWER))) == 1
+    assert pr.load(pr.REVIEWER).count("Write your verdict to") == 1
+
+
+def test_the_convergence_render_excludes_every_record_of_earlier_findings():
+    # WI-911 (review-churn revision 8): the records that
+    # summarize earlier findings are outside a convergence brief's own diff
+    # command, the way the round files are outside every round's, so a
+    # convergence round cannot read them by running it; the template's
+    # command, which ordinary and loop rounds read, keeps the decisions record
+    # and the plan's critiques. The rendered and git-driven arms are in
+    # test_review_brief.py and test_review_brief_git.py.
+    text = pr.load(pr.REVIEWER)
+    command = re.search(r"`(git diff \{trunk\}\.\.\.\{head\} -- [^`]+)`", text)
+    assert command, "the reviewer brief states no reading-scope command"
+    ordinary = command.group(1)
+    records = ("docs/decisions", "docs/plans/*/critique-*")
+    assert ordinary.count(review_brief._RECORDS_EXCLUDE) == 1
+    assert [r for r in records if r in ordinary] == []
+    converging = ordinary.replace(
+        review_brief._RECORDS_EXCLUDE, review_brief._CONVERGENCE_EXCLUDES
+    )
+    for record in ("docs/reviews",) + records:
+        assert "':(exclude){}'".format(record) in converging, record
+
+
+def test_the_llr_questions_ask_for_contract_voice_and_keep_the_trace_cells_binding():
+    # WI-911 (review-churn ruling 5, revisions 35 and 36): section 3 asks for
+    # an LLR's contract, names no implementation carrier, and keeps the
+    # traced cells binding while the schema requires them.
+    home = (KIT / "prompts" / "spine-questions.md").read_text(encoding="utf-8")
+    section = home[home.index("## 3. At LLR and TC") :]
+    flat = " ".join(section.split())
+    assert "LLRs name modules and symbols by design" not in home
+    for clause in (
+        "**An LLR states its contract in words that survive a refactor.**",
+        "the inputs it takes, the outcome it produces and where it refuses",
+        "It names no implementation carrier (a code file, function or symbol), "
+        "and §0's naming rule says which tiers may name a shipped boundary "
+        "artifact.",
+        "Do not launder a concrete name upward into the SR",
+        "they stay filled and binding while the schema requires them "
+        "(`trace.py --strict-schema` requires both; `check_doc_refs --strict` "
+        "binds the symbol), so never return a row for keeping them.",
+        "No `shall` in an LLR",
+    ):
+        assert clause in flat, clause
+    bullet = section[: section.index("- **A child adds detail.**")]
+    assert _RECORD_ID.findall(bullet) == [] and "item 5" not in bullet
+
+
+NAMING_RULE = (
+    "may be named at the LLR and TC tiers only; SN and SR rows name no file in "
+    "any cell, acceptance and rationale included."
+)
+
+
+def test_every_tier_receives_the_one_naming_rule():
+    # WI-911 (review-churn ruling 5): the file-naming
+    # rule is held once, in the every-tier section, so the real composer hands
+    # an SN or SR sitting the same rule as an LLR or TC one, and no tier is
+    # still told to keep a file name in acceptance or behind a waiver.
+    home = (KIT / "prompts" / "spine-questions.md").read_text(encoding="utf-8")
+    flat_home = " ".join(home.split())
+    assert flat_home.count(NAMING_RULE) == 1
+    every_row = flat_home[flat_home.index("## 0. Every row") : flat_home.index("## 1.")]
+    assert NAMING_RULE in every_row
+    for tier in ("SN", "SR", "LLR", "TC"):
+        text, why = adjudicate_brief.tier_questions({tier})
+        assert why is None, why
+        flat = " ".join(text.split())
+        assert NAMING_RULE in flat, tier
+        for stale in ("current-carrier evidence", "the waiver goes in `why`"):
+            assert stale not in flat, (tier, stale)
+
+
+def test_the_record_at_event_rule_has_one_home():
+    # WI-911 (review-churn ruling 2): PROCESS.md §3 states it once, directly
+    # after "When a guard is owed".
+    process = (KIT / "PROCESS.md").read_text(encoding="utf-8")
+    lead = "- **Record a decision where it is made.**"
+    assert process.count(lead) == 1
+    guard = process.index("- **When a guard is owed.**")
+    after = process.index("\n- **", guard + 1)
+    assert process[after + 1 :].startswith(lead)
+    rule = " ".join(process[after:].split("\n- **")[1].split())
+    assert "recorded by the step that makes it, in the commit where it is made" in rule
+    assert "checked against that commit's parent" in rule
+    assert "never recomputes the decision from history or from current state" in rule
 
 
 def test_the_fan_out_rule_has_one_home_and_no_brief_or_skill_restates_it():

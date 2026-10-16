@@ -69,34 +69,51 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   Keep the quoting exactly as shown. The writable root is the review scratch
   root, `$REPO.wt/review-tmp`: on a checkout elsewhere, write that path in
   place of the literal, inside the same quotes.
-- **Sol review: render, launch, file.** Never write a review brief by hand.
-  1. Render from the lane root:
-     `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <sha> --sha <tip> --scope narrow|full --tests <files> --scratch <dated root> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
+- **A review round: render, launch, file** (SKILL Roles and §3; rulings 4
+  and 7, revision 37). Never write a review brief by hand. Every round is
+  full-lane, from the lane's trunk base to its tip, and runs REVIEW-A and
+  REVIEW-B in parallel, each from its own render with its own scratch
+  directory (so its own verdict path and `--basetemp`).
+  1. Render from the lane root, once per reviewer:
+     `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <trunk base> --sha <tip> --scope full --tests <files> --scratch <dated root>/<reviewer> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
      `--tests` takes the files as separate arguments; one quoted string
      renders as a single bogus path in the brief's pytest line.
-     A lane's first review is `--scope full`: `review` refuses a narrow
-     round with no round file to answer. A narrow round adds
-     `--findings <the round file it answers>`; the
-     full-lane gate names none and runs from the lane's trunk base. The brief
-     names the verdict path under the scratch root.
-  2. Append to the brief only what the template cannot know: for a narrow
-     round, that row wording is deferred to the checkpoint; the prior coverage
-     plan, with an unlisted-site probe per class. The template already cites
-     the review threat model (PROCESS.md §6). Never add a builder
-     self-assessment: a judge's brief carries no claim of the judged party.
-  3. Launch `bash "$TOOLS/sol_review.sh" <lane> <brief> <out> [effort]`
+     Counted rounds 1 and 2 pass no `--stance` (the ordinary default). The
+     third counted round, the last the cap allows (ruling 4), the gate over
+     the checkpoint tip, a round over a rebase that changed code or rows, and
+     a review after a fix round the cap's sitting orders each add
+     `--stance convergence`, and each renders only after the convergence map
+     (SKILL §3) is recorded in the lane's decisions. The brief names the
+     verdict path under the scratch directory.
+  2. Append nothing the template states: its reviewer brief carries the
+     threat model (PROCESS.md §6), severity by reachability, the out-of-set
+     classification and, under `--stance convergence`, the convergence
+     stance with its reading exclusion. Never add a builder self-assessment
+     or the builder's coverage plan: a judge's brief carries no claim of the
+     judged party.
+  3. Launch REVIEW-A with `bash "$TOOLS/sol_review.sh" <lane> <brief> <out> [effort]`
      (default medium). Exit 3 means the reviewer changed the lane; inspect
      before trusting. Edit nothing in a lane while its reviewer runs: the
      check counts your own edit too (WI-911, 2026-10-15). The launcher uses workspace-write, because a read-only
      sandbox could not run Python, and checks HEAD and status afterwards.
-  4. File it: `"$PY" "$SCRIPTS/review_brief.py" file --review <verdict path> --sha <tip> --scope narrow|full`
-     writes `docs/reviews/<lane>/NNN-REVIEW-A-<sha7>[-narrow].md`. It refuses
-     a review not opening `Reviewed: <full sha>`, or without exactly one
-     `VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<n>` line whose count
-     matches its findings. It picks `NNN` itself: read the filed name before
-     a commit subject or brief cites the round.
-  - With Codex capacity short, run two lanes' Sol reviews one at a time, so a
-    usage limit takes out at most one review.
+     Launch each Claude REVIEW-B as a sub-agent given only its brief's path
+     plus the lane worktree and the interpreter, which the brief does not
+     name, and ask for a two-line reply (the verdict path and its VERDICT
+     line). Record the stand-in, and during the program's trial the model
+     behind each file, in the lane's decisions. A Claude reviewer that
+     backgrounds its own pytest can lose the completion notice and stop
+     with no verdict: look for its process (its scratch path in the
+     command line), then resume that reviewer with SendMessage, never a
+     fresh one (WI-921's gate, 2026-10-15g).
+  4. File each: `"$PY" "$SCRIPTS/review_brief.py" file --review <verdict path> --sha <tip> --scope full --phase REVIEW-A`
+     (or `--phase REVIEW-B`) writes `docs/reviews/<lane>/NNN-<phase>-<sha7>.md`.
+     It refuses a review not opening `Reviewed: <full sha>`, or without
+     exactly one `VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<n>` line
+     whose count matches its findings. It picks `NNN` itself: read the filed
+     name before a commit subject or brief cites the round. Each round file
+     gets its own coverage plan (`plan_coverage.py --findings` takes one).
+  - With Codex capacity short, run two lanes' REVIEW-A sessions one at a
+    time, so a usage limit takes out at most one review.
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
   add the skill's two scope and trust questions, and send it to a fresh Sol
@@ -115,12 +132,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   coordinator's own uncommitted trunk edits would read as the critic's.
   Several critiques may run at once from that one checkout, each with its own
   scratch directory (2026-10-14).
-  A confirming round runs in convergence stance (owner, 2026-10-14): its
-  brief ends with a round block saying to confirm each adoption (a failed
-  confirmation keeps its original severity) and that a new finding is
-  BLOCKER or MAJOR only if it is fail-open, data loss or a Done-when gap.
-  Copy the block from the last round's `brief.md` until WI-911 puts it in
-  the rubric. A disposition that adds a carrier with authority gives the
+  A confirming round runs in convergence stance (owner, 2026-10-14). The
+  rubric's verdict section states that stance, so append one line to its
+  brief: that it is a confirming round of round N, checking the adopted
+  dispositions the spec records. A disposition that adds a carrier with authority gives the
   next round new S2 surface: prefer removing the authority over guarding it
   (WI-911, rounds 2 to 4).
 - **Filing a row by hand:** bump the mark (`trace.py --bump-ids`) in the
@@ -185,12 +200,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   plan step first.
 - **Coverage plan (rework):** from the lane root,
   `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> --findings <round file> <plan>`.
-  Dispatch the fix only on exit 0. A finding a dispute sitting dismissed is
-  excluded citing that verdict:
-  `Excludes: F2 — dismissed: docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`.
-  The gate refuses a cite that is not an accepted DISMISS of that finding, or
-  whose findings file beside the verdict records another finding under that
-  id. Until WI-878 binds the findings file into the sitting, keep finding ids
+  Dispatch the fix only on exit 0. A finding a dispute sitting dismissed, or
+  ruled SUCCESSOR, is excluded citing that verdict:
+  `Excludes: F2 — dismissed: docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`, or
+  `Excludes: F2 — successor: docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`.
+  The gate refuses a cite that is not an accepted DISMISS or SUCCESSOR of
+  that finding, or whose findings file beside the verdict records another
+  finding under that id. The plan cap takes only a DISMISS. Until WI-878 binds the findings file into the sitting, keep finding ids
   unique within a lane: a second dispute reusing ids refuses a valid
   dismissal.
   Before writing a disposition broader than a finding, read the finding's
@@ -211,7 +227,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   commit as a return-to-queue route, which `close_partial` owns and
   `spec_move.py`'s stale docstring still describes (wi-921 D-013).
 - **Closure checks,** from the lane root:
-  `"$PY" "$SCRIPTS/trace.py" --strict-integrity` and
+  `"$PY" "$SCRIPTS/trace.py" --strict` and
   `"$PY" "$SCRIPTS/check_trajectory.py" --strict`.
   These operate on the whole repo; neither accepts a row-set filter. Check
   the set's parents, TC links, interface citations and arms map separately.
@@ -284,10 +300,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      (a row whose `Brief` is `dispute` and whose `Adjudicates` names the
      findings file, through `adjudicate_brief.compose`).
   3. Run `adjudicate --brief dispute` as above. The verdict rules each
-     finding once: `RULING: <id> FIX|DISMISS <class>|ESCALATE <why>`, the
-     dismissal classes being `out-of-scope`, `refuted` and `not-worth-cost`.
+     finding once: `RULING: <id> FIX|SUCCESSOR|DISMISS <class>|ESCALATE <why>`,
+     the dismissal classes being `out-of-scope`, `refuted` and
+     `not-worth-cost`. A SUCCESSOR's reason says what its row must do; the
+     brief never offers it for a convergence-class finding.
   4. Record each ruling in the response to the review and in the lane's
-     `docs/decisions/<branch>.toml`. An ESCALATE goes to the owner.
+     `docs/decisions/<branch>.toml`. An ESCALATE goes to the owner. A
+     SUCCESSOR is filed on trunk at the landing (§3).
 - **Preview spine mints,** from the lane root:
   `"$PY" "$TOOLS/preview_mint.py" <before> [<after>]`.
   `<before>` is the lane/trunk merge base; `<after>` defaults to HEAD. This
@@ -398,9 +417,10 @@ commit of its own, move it to trunk's tip
     bare `--contracts-doc` wipes the interface reference);
   - regenerate `docs/ratify/CURRENT.md` with
     `"$PY" "$SCRIPTS/trace.py" --approve modified --out docs/ratify/CURRENT.md`.
-- **Run `"$PY" "$SCRIPTS/check_trajectory.py" --strict` before the landing
-  commit.** The hook runs the non-strict form, so R-F (a closed row's
-  `specref`) passes it. A lane that adds a doc also runs
+- **Run `"$PY" "$SCRIPTS/trace.py" --strict` and
+  `"$PY" "$SCRIPTS/check_trajectory.py" --strict` before the landing
+  commit** (ruling 6). The hook runs `check_trajectory`'s non-strict form,
+  so R-F (a closed row's `specref`) passes it. A lane that adds a doc also runs
   `"$PY" "$SCRIPTS/check_docs.py" --root . --strict-orphans`: the orphan check
   runs only in the full suite.
   In a working checkout it also reports the gitignored `docs/test/report.md`
@@ -431,6 +451,12 @@ commit of its own, move it to trunk's tip
   `--merged` names every row the landing closed, or other rows' Dispositions
   are skipped silently. The sweep mints first, and its re-mint takes the next
   WI id: file hand rows after it, or cite them by subject until filed.
+- **Successor rows:** for each SUCCESSOR ruling of an accepted dispute
+  verdict (its `.requested` binding reads `outcome = accepted`), file one row
+  on trunk after the landing, its scope the ruling's reason, citing the
+  verdict by the name read from disk. A verdict not accepted files nothing,
+  and its finding holds the landing. Bump the mark as for any hand-filed row
+  (§1, "Filing a row by hand").
 - **The re-mint:** close it citing the act once `cmp` shows the registries
   equal their anchors. Two minted rows are real work and stay open: an
   observation re-judge whose trigger fired, and a goalposts row.
@@ -645,8 +671,8 @@ lane commit being replayed.
   local (leg 02). While it is not offered, review with `gpt-6-luna` at high
   through `"$TOOLS/luna_review.sh"` (coordinator-2026-10-10 D-017, pending
   the owner) and record the substitution in every lane's decisions record.
-- **Codex usage limit:** wait for the reset the CLI error names. Retain Terra
-  and keep review rounds narrow; observed session counts are not a quota.
+- **Codex usage limit:** wait for the reset the CLI error names. Retain
+  Terra; observed session counts are not a quota.
   Every Codex call runs through the `codex` CLI on `PATH`; the owner switches
   accounts with `codex logout` and `codex login`.
 - **Background or foreground.** In an attended session, start each Codex call
@@ -695,24 +721,6 @@ lane commit being replayed.
   summaries and the sections you judge.
 - The guard's relaunch has had no live verification. Check the current
   handoff and supervise its first unverified use.
-- **Reviews in the trial shape, by hand until WI-911 renders them:** append
-  the scratch root's `review-addendum.md` (severity by reachability, the
-  closed-set classification, the threat model) to every review brief, and
-  `review-convergence-addendum.md` too for a convergence round. Its
-  reading exclusion names the lane's decisions record beside
-  `docs/reviews/`: the record summarizes every earlier finding (wi-913
-  D-009). A plan critique takes `critique-addendum.md` too, under a
-  one-line preface pointing its anchors at the plan's construction, since
-  the row's scope is settled (wi-911 D-001). Give each
-  Claude reviewer only its brief's path plus the lane worktree and the
-  interpreter, which the brief does not name, and ask for a two-line reply
-  (the verdict path and its VERDICT line). Three reviewers file three
-  round files, and `plan_coverage.py --findings` takes one, so the builder
-  writes one coverage plan per round file (WI-913, 2026-10-15).
-  A Claude reviewer that backgrounds its own pytest can lose the
-  completion notice and stop with no verdict: look for its process (its
-  scratch path in the command line), then resume that reviewer with
-  SendMessage, never a fresh one (WI-921's gate, 2026-10-15g).
 - Unset `MSYS_NO_PATHCONV` in a shell that runs pytest: exported, it
   breaks the shallow-clone tests' `git clone` of a file URI ("'/C:/...'
   does not appear to be a git repository"; WI-913, 2026-10-15).
@@ -740,8 +748,8 @@ lane commit being replayed.
   `handback.close_adjudication` (it takes `Path(root).resolve()`, not a
   string).
 - **A trunk edit to a queued row moves the consolidation digest,** and the
-  close refuses as stale. Never re-stamp `digests` by hand; a narrow sitting
-  judges the move and re-stamps it.
+  close refuses as stale. Never re-stamp `digests` by hand; a sitting scoped
+  to that move alone judges it and re-stamps it.
 - **A hand-chosen consolidation cluster:** mint the `consolidate` row with
   `adjudicates` and `digests` (`consolidate.digests`); the composer needs
   every row queued and some mechanical overlap among them.

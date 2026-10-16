@@ -647,11 +647,17 @@ def test_a_dismissal_whose_finding_cannot_be_shown_refuses(tmp_path):
 
 def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
     """A FIX or ESCALATE ruling, an unaccepted call, a ruling of another
-    finding and a missing verdict each refuse the exclusion that cites them."""
+    finding and a missing verdict each refuse the exclusion that cites them.
+    The refusal of a ruling that resolves nothing names the set this gate
+    accepts (WI-911: a DISMISS or a SUCCESSOR)."""
+    accepts = "only a DISMISS or a SUCCESSOR resolves a finding"
     cases = (
         ("RULING: F2 FIX the wording is wrong", "accepted", "F2", "rules F2 FIX"),
+        ("RULING: F2 FIX the wording is wrong", "accepted", "F2", accepts),
         ("RULING: F2 ESCALATE high risk", "accepted", "F2", "rules F2 ESCALATE"),
+        ("RULING: F2 ESCALATE high risk", "accepted", "F2", accepts),
         ("RULING: F2 DISMISS refuted no", "pending", "F2", "outcome pending"),
+        ("RULING: F2 SUCCESSOR file it", "pending", "F2", "outcome pending"),
         ("RULING: F1 DISMISS refuted no", "accepted", "F1", "does not rule F2"),
     )
     for n, (ruling, outcome, kinds, says) in enumerate(cases):
@@ -666,6 +672,54 @@ def test_a_cited_ruling_that_does_not_dismiss_refuses(tmp_path):
     proc = write_single(tmp_path / "absent", plan=plan, findings=REVIEW)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "does not exist" in proc.stdout
+
+
+def test_a_successor_ruling_citing_its_verdict_passes(tmp_path):
+    """WI-911: an accepted verdict ruling the finding SUCCESSOR resolves its
+    exclusion on the rework gate, as a dismissal does: the finding becomes
+    its own row, filed on trunk at the landing."""
+    write_dispute(
+        tmp_path,
+        "RULING: F2 SUCCESSOR file a row that rewords the brief",
+        findings=[findings_toml({"F2": WORDING})],
+    )
+    plan = REWORK_PLAN + "Excludes: F2 — successor: {}#F2\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "- excluded: F2" in proc.stdout, proc.stdout
+
+
+def test_a_successor_ruling_of_another_finding_refuses(tmp_path):
+    """A SUCCESSOR of F1 cited for F2, and another round's F2 ruled SUCCESSOR
+    under the same id, each leave F2 open."""
+    round_one = "- [MINOR] docs/other.md:9 -> an old typo -> fix it -> @owner"
+    cases = (
+        (
+            "other",
+            "RULING: F1 SUCCESSOR a row for the budget\nRULING: F2 FIX stale",
+            "F1;F2",
+            {"F1": LAUNCHER, "F2": WORDING},
+            "#F1",
+            "F1 is not this review's F2",
+        ),
+        (
+            "round",
+            "RULING: F2 SUCCESSOR a row for the typo",
+            "F2",
+            {"F2": round_one},
+            "#F2",
+            "F2 is not this review's F2",
+        ),
+    )
+    for case, ruling, kinds, findings, cite, says in cases:
+        root = tmp_path / case
+        write_dispute(root, ruling, kinds=kinds, findings=[findings_toml(findings)])
+        plan = REWORK_PLAN + "Excludes: F2 — successor: {}{}\n".format(
+            DISPUTE_VERDICT, cite
+        )
+        proc = write_single(root, plan=plan, findings=REVIEW)
+        assert proc.returncode == 1, (case, proc.stdout + proc.stderr)
+        assert says in proc.stdout, (case, proc.stdout)
 
 
 def test_a_real_dispute_verdict_ruling_FIX_refuses_its_exclusion(tmp_path):
