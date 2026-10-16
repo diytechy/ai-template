@@ -130,7 +130,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   it at close. Delegate drafting to planner sub-agents writing into scratch,
   and read their Done-when, Trust and Scope answers before filing. Ask a
   Trust drafter to read the code and report any consumer that fails open:
-  WI-921's found the very step it arms failing open (2026-10-15).
+  WI-921's found the very step it arms failing open (2026-10-15). Once the
+  owner rules a draft's calls, resume the same drafter with the decision ids
+  to fold them into a final copy: it keeps its reading (2026-10-15i).
 - **Single plan** (a claimed row whose claim copy declares
   `planmode = "single"`; SKILL §3 "Plan"), from the lane root. Each record
   commits alone: the hook's plan-gate step refuses a pass record committed
@@ -661,10 +663,11 @@ lane commit being replayed.
   With it set, write every path as `C:/...`, never `/c/...`: `git -C /c/...`
   fails, and a Windows Python writes `/c/x` to `C:\c\x` (a critique
   brief landed in a stray `C:\c\` folder on 2026-10-14).
-- A long Python heredoc that mixes backticks, quotes or backslashes has
+- A long heredoc that mixes backticks, quotes, `$` or backslashes has
   failed in the agent's shell (a parse error, or an escape the shell
-  rewrote). Write such an edit script to the scratch root with the file
-  tool and run it from there (2026-10-14).
+  rewrote), a Python script or plain TOML alike (a decisions append quoting
+  `$a = $b`, 2026-10-15i). Write the text or the edit script to the scratch
+  root with the file tool and append or run it from there (2026-10-14).
 - **Scratch:** one dated root, `$REPO.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
   the root once results are recorded.

@@ -81,3 +81,73 @@ alternative = "Keep every built guard, or remove them in one consolidated row."
 reversal_cost = "Low: nothing is removed yet; each removal row gets its own scope critique."
 why_not_escalated = "They are the owner's rulings."
 review = ""
+
+[decision.D-012]
+decided = "Owner ruling in session (2026-10-15i, the D-010 re-scope walk, asked as a multiple choice with the coordinator's recommendation and ruled as recommended): WI-925 narrows and builds no hook. It keeps Q3's declared trunk key (the linked-worktree gap, which a supported workflow reaches; it forces one adopter line in docs/process.toml), Q5's relink fix (deliverable 7: spec_move's inbound relink inside a claim copy's Done-when is not a Done-when change; the builder reproduces it with a fixture first, and it drops if it does not reproduce) and the four MINORs carried from WI-921's post-checkpoint gate. The reference-transaction hook and its calls Q1, Q2, Q4, Q6, Q7 and Q8 drop. An amend, a cherry-pick, a revert or a rebase onto trunk, a plain git merge of a lane, and a hand fast-forward of trunk become stated residue under PROCESS.md section 6's threat model: each needs a hand act the process forbids or one no landing recipe uses (a landing is one git merge --squash). The coordinator redrafts the queued spec on trunk, and a fresh scope critique under the new language follows before any claim."
+alternative = "Q3 alone, with Q5's relink filed as its own row; keep the row as ruled; or cancel it."
+reversal_cost = "Low: the row is queued and unclaimed, and the dropped hook was never built."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-013]
+decided = "Owner ruling in session (2026-10-15i, the D-010 walk, as recommended): WI-922 narrows to its deliverables 5 (SR-154's single-plan hold read under its own condition, with one shall and every approved word kept) and 6 (the deletion of the _cap_problems branch the filing step makes unreachable). Deliverables 1 to 3 (the carried-commit walk, the identity order and the close-by-content rule) drop. A build commit on a detached HEAD in a lane worktree, a hand git merge --no-ff --no-commit, a squash from an alias branch, a squash after a git stash (recipes section 3 forbids it) and a file-copy landing each need a hand act no landing recipe uses; they become stated residue in the hook comment and IF-295's text. So does D-008's item 3 (a detached-HEAD Done-when change that kitlib/done_when._staged_base judges as nothing), which supersedes D-008's fold of it into WI-922. The one plausible way a lane commit escapes its hook, a checkout with no hooks, is WI-926's. The row is claimed, so its narrowed Done-when is written in its lane and blessed at the SR-154 sitting it already owes; a fresh critique of the narrowed copy runs in the lane before its plan."
+alternative = "Keep the close rule (deliverable 3) as well; cancel WI-922 and refile deliverables 5 and 6 as a new row; or keep it as ruled."
+reversal_cost = "Low: no lane exists, and the dropped deliverables were never built."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-014]
+decided = "Owner ruling in session (2026-10-15i, the D-010 walk, as recommended) on D-008's fail-open row: it is not filed. Item 2 (kitlib/done_when.staged_changes reading a failing rev-parse --is-inside-work-tree as off a work tree) needs git to fail mid-commit. Item 4 (intake's _done_when_drafts skipping a closed spec it cannot read or parse) needs a forbidden hand act on trunk to meet an unparseable closed spec. Both become stated residue. Item 5 (hooks/pre-commit exiting 0 when it cannot find the kit scripts directory, unless privacy is declared) folds into WI-926: a checkout whose hooks cannot find the kit scripts counts as one whose hooks are not on, and WI-926's scope critique settles whether the hook itself stops exiting 0. This supersedes D-008's filing of the row."
+alternative = "File the row for items 2, 4 and 5 as D-008 ruled; or fold item 5 into WI-926 and file item 4 alone."
+reversal_cost = "Low: nothing was filed or built."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-015]
+decided = "Owner rulings in session (2026-10-15i, the D-010 walk, each as recommended) on WI-926's open calls. Call 1: one shipped function holds the hooks-on check; the lane's plan reads the code and names the shared entry if one exists, otherwise each route's entry calls the function first, and a census test pins that every route calls it; the scope critique checks the route list. Call 2: WI-922 is kept beside WI-926, narrowed (D-013). Call 3: a human committing by hand outside any agent route is out of scope, as stated residue: the check guards agent routes; a hookless hand commit is met where it reaches one (the claim and the lease refuse in that checkout, and the landing walk judges each lane commit); and git cannot install a hook at clone. WI-926 also takes D-014's item 5. Its sketch becomes the row's spec text before its scope critique."
+alternative = "Build one shared entry every route is refactored through, or have each route call the check with no plan step; bring human hand commits in scope with a text-only first-run line."
+reversal_cost = "Low: the row is a queued placeholder."
+why_not_escalated = "They are the owner's rulings."
+review = ""
+
+[decision.D-016]
+decided = "Owner rulings in session (2026-10-15i, each as recommended) on the WI-834 removal row D-011 ordered, drafted by a planner after reading the original rationale (the audit's rows, wi-834's decisions and its review and dispute files): env's split-string reading (env -S, --split-string) goes with the grammar forms, the plain env prefix staying because WI-834's Done-when names it; chained assignment ($a = $b = claude) and an operator written against the right-hand side ($r =claude) go with the property, index and typed-array targets, while sitting 017's ordinary capture stays; and D-011's by-construction alternative (refusing model work at the launch point instead of parsing shell text) is not built, because every kit launch point already refuses inside an armed window and the hook stays supervision under WI-834's ruling (f). The coordinator's call on S1: one row, one lane commit per removal in the drafted order (dot invocation before the assignment reading, whose quoted spans it reads), because all four share two modules, two test lists, LLR-300's detail and TC-339's method and expected, and one sitting."
+alternative = "Keep env -S or the chained and spaced-operator forms; build the launch-point refusal as its own row; one row per form."
+reversal_cost = "Low: the row is not yet filed and nothing is removed."
+why_not_escalated = "They are the owner's rulings; the S1 call follows the rubric on shared cells and one sitting."
+review = ""
+
+[decision.D-017]
+decided = "Owner ruling in session (2026-10-15i, as recommended) on WI-852's duplicated-count removal: the planner found WI-852's own check already gone from trunk and the refusal now in the shared machine-line reader (kitlib/sitting.py), where WI-870 moved it for every consumer, adjudication lines included. The refusal is deleted for every consumer, which partly reverses WI-870's Done-when (the audit never graded it): review verdict lines lose nothing, since their exact-form comparison still refuses a repeated field, and an adjudication line that repeats a field reads its last copy, which only a model writing a field twice reaches, the case D-011's premise (agents are trusted to write a verdict line) covers. The coordinator's call on S1: two rows, since the duplicated-count refusal and the rollup branch-name refusal touch different code and hang from different requirements (SR-232, SR-235); the second, filed as drafted, has a hard edge on WI-911, whose LLR-313 and TC-333 cells it amends."
+alternative = "Cancel the first row, leaving WI-870's one shared check; or keep the refusal for adjudication lines only, a per-consumer mode in the shared reader."
+reversal_cost = "Low: neither row is filed."
+why_not_escalated = "It was the owner's ruling; the split follows S1."
+review = ""
+
+[decision.D-018]
+decided = "Owner rulings in session (2026-10-15i, each as recommended) on the WI-881 removal row: run_session's single try/finally stays as the owner of a supervised session, since it also replaced the older interrupt and deadline kills and reverting it would add code back, and only its tests of the sub-second interrupt windows are deleted, with SR-238 stating those windows once as accepted gaps; TreeNotEnded keeps its name as an ordinary OSError subclass, losing only its BaseException status, because WI-895's keep-warm ping catches that type and deleting the class would re-key WI-895's carrier; and wi-881 D-005's PID-reuse check (audit pattern 6, built proactively, not ruled in D-011) is removed in the same row, being the same contrived kill-window class and stopping loudly at the 10 s bound when it would fire. The job object's ordinary kill of the tree (containment, the terminate, the wait on each member, the denied-access raise, the 10 s bound, the kill on a Ctrl-C during the wait) stays. The coordinator's call on S1: one row, the late-spawn removal landing first, since all three amend SR-238, LLR-026 and TC-026 at one sitting."
+alternative = "Revert run_session to its pre-WI-881 shape; delete TreeNotEnded and re-key WI-895's carrier after the open lanes land; keep the PID-reuse check; two rows."
+reversal_cost = "Low: the row is not yet filed."
+why_not_escalated = "They are the owner's rulings; the S1 call follows the shared cells and one sitting."
+review = ""
+
+[decision.D-019]
+decided = "Owner rulings in session (2026-10-15i) on WI-926's full draft. As recommended: the row splits in two under S1, since the git hooks-on check and the agent CLI's guard hooks that D-011 folded in share no input, file, spine row or test; every one of the three shipped git hooks (pre-commit, commit-msg, pre-push) refuses instead of exiting 0 when it cannot find the kit scripts, naming the fixes, while a repository never set up (no core.hooksPath) commits as today; a core.hooksPath that points at a hook manager or at .git/hooks fails the deny-by-default check and every agent route refuses there, named in RESYNC as the forced change (point core.hooksPath at the kit's hooks and call one's own chain from them, WI-925's ruled Q7 convention); and the route check reads core.hooksPath and the hook files only, leaving the scripts lookup to the hook's own refusal. The planner found six agent routes and no shared entry, so under D-015's call 1 each route's entry calls the one check first and a census pins the list. On the split-off guard-hooks row: the first run that installs the required Claude Code hooks is both the coordinator lease's take and dev-setup's readiness check (as recommended); and, overruling the coordinator's recommendation to drop it, the install keeps asking for consent before it writes the hooks, so dev-setup's consent offer is kept rather than deleted with the re-enable path."
+alternative = "Keep one row; fewer hooks refuse; a declared hooks path in docs/process.toml; probe the hook from the route check; install from one route only; drop the consent prompt (the coordinator's recommendation)."
+reversal_cost = "Low: neither row is filed beyond WI-926's placeholder."
+why_not_escalated = "They are the owner's rulings, the consent call an overrule of the coordinator's recommendation."
+review = ""
+
+[decision.D-020]
+decided = "Coordinator calls, recorded for the owner to confirm or overrule, on the WI-925 and WI-922 redrafts after D-012 and D-013. (1) D-008's item 3 (a detached-HEAD Done-when change the done-when-blessed step judges as nothing) is stated in the shipped hook's done-when-blessed entry, the reader it belongs to, as part of the one residue list WI-925 rewrites there; WI-922's lane does not touch that entry. (2) WI-922's own residue (the landing shapes no recipe makes) lives once, in IF-295's contract body in the plan gate, and the hook's plan-gate entry corrects its trunk sentence and points there rather than copying the list; that reads D-013's wording (the hook comment and IF-295's text) as one home with a pointer. (3) WI-922's planner reads S4 as none (no Trust, a deletion and text only); since the plan gate reads the claim copy's mark at the lane's base, the mark changes on trunk, in a frontmatter-only commit, only after the fresh critique of the narrowed copy confirms S4, and before the lane is cut. (4) WI-925 deletes kitlib/done_when.staged_closes, which has no non-test caller since D-013 dropped the reader WI-921 kept it for. (5) WI-925's relink reach beyond the same staged delta (a lane refreshed from trunk, the mint at the row's close) is stated as residue if the reproduction fixture shows it, rather than widening the exact reading."
+alternative = "Copy WI-922's residue list into both places; keep WI-922 single; keep staged_closes; widen the relink reading."
+reversal_cost = "Low: spec text on queued and claimed rows with no lane cut."
+why_not_escalated = "Each applies the owner's D-012 and D-013 rulings and the kit's one-home rule; none changes a ruled call."
+review = ""
+
+[decision.D-021]
+decided = "Owner ruling in session (2026-10-15i, as recommended) on the one call the guard-hooks row's final draft left open after D-019's consent ruling: when the coordinator lease's take runs with no terminal (from an agent's shell tool or a headless leg) and the required Claude Code hooks are absent, so it cannot ask for consent, it refuses, records no holder, and names dev-setup's consent step as the fix; at a terminal it asks. No yes or no is stored: the agent CLI's settings file is the record, and after a no the next run asks again. The row (WI-927 at filing, split from WI-926 under D-019) carries the ruling."
+alternative = "Take the lease with a warning that the guard hooks are missing and how to install them."
+reversal_cost = "Low: the row is not yet filed."
+why_not_escalated = "It was the owner's ruling."
+review = ""
