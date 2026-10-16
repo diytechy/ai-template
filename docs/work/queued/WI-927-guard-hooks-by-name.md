@@ -82,7 +82,7 @@ cannot ask. Deliverable 3 states what it does instead.
    A settings file that does not parse, or whose `hooks` or event values
    are not the expected JSON shapes, is `occupied` with the parse problem
    named. Deny by default: only `none`, `on`, or a consented install from
-   `absent` let a route go on.
+   `absent` that then reads `on` let a route go on.
 2. **The consented install** (shipped: `coordinator_guard.py`, and
    dev-setup's offer in `dev-setup.template.sh` and `dev-setup.template.ps1`,
    with this repository's copies, kept). On `absent`, at an interactive
@@ -102,8 +102,11 @@ cannot ask. Deliverable 3 states what it does instead.
    state before it records a holder.
    - `none` or `on`: it goes on.
    - `occupied`: it refuses, writing nothing (deliverable 4).
-   - `absent` at an interactive terminal: it asks, as in deliverable 2. It
-     goes on after a yes, and refuses after a no.
+   - `absent` at an interactive terminal: it asks, as in deliverable 2.
+     After a yes it reads the settings file again, and goes on only when
+     that re-read reads `on`. The re-read is the construction, not a check
+     of the write's success: a failed or partial write reads otherwise
+     (`## Trust`). It refuses after a no.
    - `absent` without a terminal (the coordinator's shell tool, a headless
      leg): it cannot ask. It refuses the take, records no holder and writes
      nothing. The refusal names how to consent: run dev-setup at a terminal
@@ -129,11 +132,14 @@ cannot ask. Deliverable 3 states what it does instead.
    (deliverable 2) instead of `--enable`. `hooks` without `--enable` stays as
    the read-only report, printing the four states.
 6. **WI-897's instruction.** WI-897's Done-when tells an adopter to re-run
-   `hooks --enable` to pick up a changed matcher. A changed example no
-   longer reaches an `on` install. The adopter removes the guard's groups,
-   and the next first run asks and installs the new ones. The coordinator
-   amends WI-897's queued row on trunk before its claim. This row only
-   records the change in its RESYNC entry.
+   `hooks --enable` to pick up a changed matcher. The state is checked by
+   command name (deliverable 1), so a matcher-only change to the example
+   still reads `on`, and nothing reinstalls the groups. An adopter who
+   wants the new matcher removes the installed guard groups and runs the
+   consented install again: the next first run reads `absent`, asks, and
+   installs the new ones. The coordinator amends WI-897's queued row on
+   trunk before its claim. This row only records the change in its RESYNC
+   entry.
 7. **`RESYNC_PACK.md`**, one entry. It covers:
    - the deleted `--enable`;
    - the consented install at both first runs;
@@ -141,7 +147,9 @@ cannot ask. Deliverable 3 states what it does instead.
      answer;
    - the `occupied` refusal and how an adopter with hooks of their own
      moves them;
-   - how a changed guard group is picked up (deliverable 6).
+   - that a matcher-only change to the guard groups still reads `on`, and
+     that an adopter who wants the new matcher removes the installed guard
+     groups and runs the consented install again (deliverable 6).
 
 ## Trust
 
@@ -158,6 +166,7 @@ a person's answer at a terminal.
     allow-list, and hooks a user adds through its `/hooks` menu) and by
     hand. Failed-write shapes:
     - absent;
+    - unreadable (an OS error on read);
     - not JSON;
     - JSON that is not an object;
     - `hooks` not an object;
@@ -166,7 +175,8 @@ a person's answer at a terminal.
     - a command that is not a string.
   - **`.claude/settings.json.example`**, written by bootstrap from the kit's
     `agent-hooks/claude.settings.json`. Failed-write shapes: absent (read as
-    `none`; nothing is installed, as today); not parseable (`occupied`, named).
+    `none`; nothing is installed, as today); not parseable, or unreadable
+    (an OS error on read): `occupied`, named.
   - **The consent answer.** It is read from an interactive terminal only,
     and only `y` or `Y` at the start is a yes. Anything else is a no:
     another reply, an empty line, end of input, or no terminal at all. The
@@ -181,9 +191,24 @@ a person's answer at a terminal.
   - An absent settings file, or one with no hooks on any guard event, is
     `absent`. It is installed only after a yes.
   - An unparseable or malformed file is `occupied`, and nothing is written.
-  - A take goes on only at `none`, at `on`, or after a yes. Every other
-    case refuses, records no holder, and names how to consent or what to
-    move.
+    An unreadable settings file or example (an OS error on read) is ruled
+    the same way: `occupied`, the file and error named, nothing written.
+  - A take goes on only at `none`, at `on`, or after a yes whose install
+    then reads `on`. Every other case refuses, records no holder, and names
+    how to consent or what to move.
+- **A failed install.** After a yes, the route reads the settings file
+  again (deliverable 3). A write that fails makes that re-read read
+  something other than `on`. Each consumer:
+  - `coordinator_guard.take` refuses, records no holder, and names the file
+    and the error;
+  - dev-setup's readiness check reports it on a `[missing]` line naming the
+    file, the error and the fix (move or repair the file, then run again),
+    counted with the other missing components, and its other steps go on,
+    as today's report lines do. It takes the state only from the hooks
+    reader's printed word when the reader exits 0; a non-zero exit or empty
+    output is reported on the same `[missing]` line with the reader's
+    error, and is never read as `none`;
+  - `coordinator_guard.py hooks` (the report) prints the state it reads.
 - **Residue, stated once** (PROCESS.md §6): a user command whose last words
   are the guard's file name and `hook` reads as the guard's. A guard command
   bound to an interpreter that was later deleted reads `on` and fails when
@@ -222,7 +247,13 @@ a person's answer at a terminal.
   - at `occupied`, it refuses;
   - at an interactive terminal (driven with a pseudo-terminal where the
     platform allows; the plan says how on Windows), it asks, and installs
-    and takes after a yes. It refuses after a no.
+    and takes after a yes. It refuses after a no;
+  - a consented install whose write fails refuses the take, records no
+    holder, and names the file.
+- dev-setup, given a hooks reader that exits non-zero or prints nothing,
+  reports a `[missing]` line naming the error and never reads it as `none`,
+  in both templates. Fails before the change: each maps that case to
+  `none`.
 - An example with no guard groups changes nothing, and both routes go on
   (`test_the_hook_opt_in_with_no_guard_hooks_changes_nothing`, kept with its
   `--enable` call removed).
@@ -269,8 +300,8 @@ a person's answer at a terminal.
   with consent it decides the install.
 - **S3:** a closed space. Each guard event is either empty, exactly the
   guard's command by name, or something else. The consent answer is a yes
-  or anything else. Only `none`, `on`, or a yes from `absent` let a route go
-  on; the rest refuse by default. The promise reaches settings that Claude
+  or anything else. Only `none`, `on`, or a yes from `absent` whose install
+  then reads `on` let a route go on; the rest refuse by default. The promise reaches settings that Claude
   Code, the kit and a user's ordinary edits produce. A user command that
   imitates the guard's name lies outside it (residue).
 - **S4:** `single`. It has a Trust section, and it touches two script
@@ -308,3 +339,38 @@ a person's answer at a terminal.
 - **The take without a terminal, with the hooks absent** (D-021, as
   recommended): it refuses, records no holder, writes nothing, and names
   dev-setup's consent step; at a terminal it asks. No answer is stored.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-16; CHANGES-REQUESTED, two findings):
+
+- **S2, MAJOR: adopted.** A consented install whose write failed or was
+  partial was not ruled, and the take could go on on consent alone.
+  Deliverable 3 now reads "After a yes it reads the settings file again,
+  and goes on only when that re-read reads `on`. The re-read is the
+  construction, not a check of the write's success", and the Trust rulings
+  read "A take goes on only at `none`, at `on`, or after a yes whose
+  install then reads `on`". The Trust failure contract adds "An unreadable
+  settings file or example (an OS error on read) is ruled the same way:
+  `occupied`, the file and error named, nothing written" and "A write that
+  fails makes that re-read read something other than `on`", with each
+  consumer ruled: the
+  take "refuses, records no holder, and names the file and the error";
+  dev-setup's readiness check "reports it on a `[missing]` line naming the
+  file, the error and the fix", and "a non-zero exit or empty output is
+  reported on the same `[missing]` line with the reader's error, and is
+  never read as `none`" (today both templates map a reader failure to
+  `none`); the report "prints the state it reads". The Done-when adds "a
+  consented install whose write fails refuses the take, records no holder,
+  and names the file" and the dev-setup reader-failure case. No residue is
+  added for a partial write: the install already writes through the kit's
+  atomic write, so the re-read sees the old file or the new one.
+- **S3, MAJOR: adopted.** Deliverable 6 said a changed example no longer
+  reaches `on`, while `on` is decided by command name. The name rule wins,
+  as the title and D-011 say "checked by name". Deliverable 6 now reads "a
+  matcher-only change to the example still reads `on`, and nothing
+  reinstalls the groups. An adopter who wants the new matcher removes the
+  installed guard groups and runs the consented install again", and the
+  RESYNC entry's item reads "that a matcher-only change to the guard groups
+  still reads `on`, and that an adopter who wants the new matcher removes
+  the installed guard groups and runs the consented install again".

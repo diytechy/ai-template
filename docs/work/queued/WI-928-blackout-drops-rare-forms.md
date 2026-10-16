@@ -88,11 +88,11 @@ deletes.
    index targets. Those targets are outside the promise, and a reading may
    still catch them.
 5. **The bound, stated once.** `launch_reason`'s docstring lists what the
-   hook reads and states once what it does not read (the residue below). The
-   module docstrings of `shell_line.py` and `coordinator_guard.py` lose
-   their sentences about the removed forms. LLR-300 and TC-339 are amended
-   (Spine). `RESYNC_PACK.md` gets a new entry. The WI-834 entry stays as
-   history.
+   hook reads, and states once the default for any other form and the
+   residue (both in "The bound" below). The module docstrings of
+   `shell_line.py` and `coordinator_guard.py` lose their sentences about
+   the removed forms. LLR-300 and TC-339 are amended (Spine).
+   `RESYNC_PACK.md` gets a new entry. The WI-834 entry stays as history.
 6. **env's split string goes.** Delete `coordinator_guard._split_string` and
    its use in `_past_prefix`, so `env -S`, `-S'...'` and `--split-string`
    are no longer read as more of env's arguments. The plain `env` prefix and
@@ -115,8 +115,11 @@ places:
 - on the right of a PowerShell assignment to a variable, whether plain,
   typed, scoped, a comma list, or a compound operator such as `+=` or `??=`.
 
-It also denies a line it cannot read. **Default: any other form is not read
-and not denied.** The residue, stated in `launch_reason`'s docstring:
+It also denies a line it cannot read. **Default: a form outside this set
+gets no dedicated recognition. It may incidentally match the retained
+reading, and carries no guarantee either way.** The enumerated forms are
+the positive denial promise. The residue, each form under that default,
+stated in `launch_reason`'s docstring:
 - here-document and here-string bodies;
 - property, index and chained assignment targets;
 - dot invocation;
@@ -144,7 +147,8 @@ by-construction alternative, which is not built (D-016).
   > substitutions written in the line or inside double quotes. It reads a
   > PowerShell assignment to a variable as running its right-hand command,
   > while a quoted or variable right-hand value stays data. A form outside
-  > this list is not read and not denied.
+  > this list gets no dedicated recognition: it may incidentally match this
+  > reading, and carries no guarantee either way.
 
   `code_symbol` drops `_invoked`. The rest of the cell is unchanged.
 - **TC-339 (Approved): amended.**
@@ -225,7 +229,8 @@ outside the promise rather than becoming new promises.
   because a removal promises no new behaviour. They pin that the quote-aware
   reading and the ordinary capture survive. None of the removals has a
   behaviour test that fails before the change: what changes is that a rare
-  form is no longer read, and the row deliberately does not pin that.
+  form loses its dedicated recognition, and the row deliberately does not
+  pin that.
 - `launch_reason`'s docstring states the enumerated set, the default and
   the residue, as in "The bound". No other file restates the residue.
 - LLR-300 and TC-339 carry the amended text, judged at the lane's checkpoint
@@ -258,9 +263,9 @@ outside the promise rather than becoming new promises.
   The hook's denial is narrowed, not handed to a file, so the row needs no
   `## Trust` section.
 - **S3, closed coverage.** See "The bound": an enumerated set with a declared
-  default (not read, not denied), over what agents write and kit routes
-  produce, with the residue stated once. Deny-by-default, the
-  by-construction alternative, is not built (D-016).
+  default (no dedicated recognition, no guarantee either way), over what
+  agents write and kit routes produce, with the residue stated once.
+  Deny-by-default, the by-construction alternative, is not built (D-016).
 - **S4, the planning need.** `single`: the row promises behaviour over an
   input space (shell lines), and deliverable 4 leaves the plan a choice
   between two readings.
@@ -297,3 +302,23 @@ The owner's rulings, coordinator-2026-10-15 D-016 (each as recommended):
    under WI-834's ruling (f).
 4. **S1:** one row, one lane commit per removal in the drafted order (dot
    invocation before the assignment reading, whose quoted spans it reads).
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-16; CHANGES-REQUESTED, one finding):
+
+- **S3, MAJOR: adopted.** Deliverable 4 let the retained assignment reading
+  catch property or index targets, while "The bound" and the proposed
+  LLR-300 text said every other form is "not read and not denied". One
+  recognizer-level rule replaces that default everywhere it was stated.
+  "The bound" reads "Default: a form outside this set gets no dedicated
+  recognition. It may incidentally match the retained reading, and carries
+  no guarantee either way." and "The enumerated forms are the positive
+  denial promise. The residue, each form under that default, stated in
+  `launch_reason`'s docstring"; the proposed LLR-300 sentence reads "A form
+  outside this list gets no dedicated recognition: it may incidentally
+  match this reading, and carries no guarantee either way"; deliverable 5's
+  docstring contract "states once the default for any other form and the
+  residue"; S3 reads "a declared default (no dedicated recognition, no
+  guarantee either way)"; and the Done-when reads "a rare form loses its
+  dedicated recognition".

@@ -7,7 +7,7 @@ specref = "docs/decisions/coordinator-2026-10-15.toml"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
-planmode = "none"
+planmode = "single"
 needs = ["WI-911"]
 +++
 
@@ -84,6 +84,13 @@ it back would undo a decision (wi-852 D-006) for no gain.
   comparison. Fails before the change. No behaviour test is added: the only
   behaviour the deletion changes is a hand-named branch's, and a test for it
   would pin the residue.
+- Coverage (S3): the promise over branch names stays a construction: a
+  branch is filed when the round reader reads its round path back as that
+  branch's scope, and refused otherwise. The bound is the branches the
+  kit's routes produce (claim-minted `wi-NNN`). A hand-named branch that
+  collides with a generated directory, in any letter case, is outside it,
+  stated as residue in the RESYNC entry; PROCESS.md section 6 already
+  places hand-chosen name aliases outside every promise.
 - The two rollup test blocks are gone, and both tests still pass with their
   `feature/wi-900` refusals.
 - LLR-313 and TC-333 carry the amended text, judged at the lane's
@@ -106,16 +113,10 @@ it back would undo a decision (wi-852 D-006) for no gain.
 - **S2, authority over a hold, an act or a gate.** None given. Filing
   writes a round file that the merge gate reads as today; this row removes
   one refusal before the write. No `## Trust` section.
-- **S3, closed coverage.** The promise over branch names stays a
-  construction: a branch is filed when the round reader reads its round path
-  back as that branch's scope, and refused otherwise. The bound is the
-  branches the kit's routes produce (claim-minted `wi-NNN`). A hand-named
-  branch that collides with a generated directory, in any letter case, is
-  outside it, stated as residue in the RESYNC entry; PROCESS.md section 6
-  already places hand-chosen name aliases outside every promise.
-- **S4, planning need: `none`.** One script, a deletion, no `## Trust`
-  section. IF-288 and IF-289 are the same command's arguments and exit
-  codes, edited by one clause each. The tests that change are deletions.
+- **S3, closed coverage.** See the Done-when's coverage bullet.
+- **S4, planning need: `single`.** Deliverable 2 changes two interface
+  seams' contracts, IF-288's command input and IF-289's command result,
+  which the ruled S4 criteria make `single`.
 - **S5, architectural delta.** None added. One refusal and one dependency of
   `review_brief` on `kitlib.verdict.ROLLUP_DIR` go away.
 - **S6, dependencies.** `needs = ["WI-911"]`, hard: WI-911 amends LLR-313
@@ -128,3 +129,22 @@ it back would undo a decision (wi-852 D-006) for no gain.
   trunk.
 - **B3.** No consumer re-derives a past decision.
 - **B4.** No owner act or credential in the Done-when.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-16; CHANGES-REQUESTED, two findings):
+
+- **S4, MAJOR: adopted.** The row was filed `planmode = "none"`, yet
+  deliverable 2 changes two interface seams. The front matter now reads
+  `planmode = "single"`, and the S4 answer reads "Deliverable 2 changes two
+  interface seams' contracts, IF-288's command input and IF-289's command
+  result, which the ruled S4 criteria make `single`."
+- **S3, MINOR: adopted.** The coverage construction sat only in Scope
+  answers. It is now one Done-when bullet: "Coverage (S3): the promise over
+  branch names stays a construction: a branch is filed when the round
+  reader reads its round path back as that branch's scope, and refused
+  otherwise. The bound is the branches the kit's routes produce
+  (claim-minted `wi-NNN`). A hand-named branch that collides with a
+  generated directory, in any letter case, is outside it, stated as
+  residue in the RESYNC entry"; Scope answers S3 reads "See the Done-when's
+  coverage bullet."

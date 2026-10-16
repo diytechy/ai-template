@@ -7,7 +7,7 @@ specref = "docs/archive/work/complete/WI-913-plan-gate.md#deliverables"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
-planmode = "single"
+planmode = "none"
 needs = ["WI-913", "~WI-921"]
 +++
 

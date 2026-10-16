@@ -7,7 +7,7 @@ specref = "docs/decisions/coordinator-2026-10-15.toml"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
-planmode = "none"
+planmode = "single"
 needs = ["~WI-912"]
 +++
 
@@ -148,10 +148,10 @@ owner ruled that reversal at filing (coordinator-2026-10-15 D-017).
   keyword, label and fields. The bound: lines written by the kit's reviewer
   and adjudicator routes. A line repeating a declared field is outside it,
   stated as residue.
-- **S4, planning need: `none`.** One module, a deletion, no `## Trust`
-  section, and a cheap test fully specifies it (the inverted reason string
-  fails before the change). It touches one interface's contract text
-  (IF-287) and no second script family's code.
+- **S4, planning need: `single`.** The row promises behaviour over an
+  input space (machine lines: exact-form review lines, adjudication lines,
+  a repeated declared field), which the ruled S4 criteria make `single`.
+  The lane's plan passes the single-plan gate before its first build.
 - **S5, architectural delta.** None added: no state, no domain value, no
   new input, no new boundary. The reader's tuple loses an element.
 - **S6, dependencies.** `needs = ["~WI-912"]`, soft: WI-912's verdict/act
@@ -176,3 +176,15 @@ owner ruled that reversal at filing (coordinator-2026-10-15 D-017).
   its last copy, which only a model writing a field twice reaches. The
   alternatives, cancelling this row or keeping the refusal for adjudication
   lines only, were not taken.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-16; CHANGES-REQUESTED, one finding):
+
+- **S4, MAJOR: adopted.** The row was filed `planmode = "none"`, yet it
+  promises behaviour over machine-line inputs. The front matter now reads
+  `planmode = "single"`, and the S4 answer reads "The row promises
+  behaviour over an input space (machine lines: exact-form review lines,
+  adjudication lines, a repeated declared field), which the ruled S4
+  criteria make `single`. The lane's plan passes the single-plan gate
+  before its first build."
