@@ -95,7 +95,7 @@ As the 2026-10-15g handoff says, with two changes until WI-911 lands:
 | # | Row | Next |
 |---|---|---|
 | 1 | WI-911 | Restore the trunk-only views; the uncounted gate (convergence, three reviewers); then P5 (the rebase if trunk moved, the RESYNC entry re-anchored at the landing's parent, the close in its own commit, the bar and the full suite) and the landing through WI-921's armed hold |
-| 2 | WI-922, WI-925 | The re-scope walk with the owner (D-010), one row at a time, with the audit beside it; then a fresh critique of each under the new language. D-008's fail-open row is decided in the same walk |
+| 2 | WI-922, WI-925, WI-926 | The re-scope walk with the owner (D-010), one row at a time, with the audit beside it; then a fresh critique of each under the new language. D-008's fail-open row is decided in the same walk. WI-926 (filed at close-out, a placeholder at the owner's direction): hooks on by construction, the agent guide plus one deny-by-default check at the entry every agent route passes through; a candidate replacement for WI-922's scope; it owes its scope critique and its open calls |
 | 3 | WI-914 | B2: rebase after WI-911 lands; the checkpoint (the LLR-292 amendment sitting and its act); the uncounted gate; the landing |
 | 4 | WI-923 | After WI-911 and WI-914 land: the rebase, the checkpoint (`amendment:TC-267;amendment:TC-329;amendment:LLR-270` under SR-227), the gate, the landing |
 | 5 onward | as before | WI-912, WI-917, WI-916, WI-915, WI-902 (B4), WI-798, then P1 to P8 with WI-918, then leg 03's rows. WI-917 and WI-918 each owe their confirming scope-critique round before a claim |
