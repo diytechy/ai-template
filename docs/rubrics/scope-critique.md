@@ -59,7 +59,10 @@ that launches a model" with no enumerated set and no default.
 `single` when the row has a `## Trust` section, touches two or more script
 families or interface seams, or promises behaviour over an input space; `dual`
 only on the existing design-shaping applies-when; `none` for a diff a cheap
-test fully specifies. No size threshold.
+test fully specifies, and for a row that only removes code, tests and text,
+adding no code path, even where the criteria above say `single`: the plan
+step checks a construction, and a deletion constructs none (owner,
+2026-10-16). No size threshold.
 
 **S5 — The architectural delta** (item 12, entry point 2). Does the WI add a
 state, add a value to a domain, make an output depend on a new input, or cross

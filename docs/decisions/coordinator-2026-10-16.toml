@@ -25,3 +25,17 @@ alternative = "Hold the rows for a third critique of the confirmed specs."
 reversal_cost = "None: the rows stay queued until claimed."
 why_not_escalated = "The rounds confirm adopted dispositions; no ruling changes."
 review = ""
+
+[decision.D-004]
+decided = "Owner ruling in session (2026-10-16, as recommended) on the queue placement the handoff's row 3 asked for: the removal rows go early. After WI-914 and WI-923 the order is WI-922 (claimed; its narrowed copy goes in at its lane's cut), then the removal rows WI-928, WI-930 and WI-931, then WI-912, then WI-929 (its soft edge on WI-912), then WI-917, WI-916 and WI-915, then the hook rows WI-925, WI-926 and WI-927, then WI-902 (B4), WI-798, P1 to P8 with WI-918, and leg 03's rows. Each changes machinery, so each lands alone (plan revision 37)."
+alternative = "The hook rows early (WI-926 closes a fail-open at route launch), or the program's rows first and all seven after WI-798."
+reversal_cost = "Low: nothing is claimed by this order; the next session re-reads it from the handoff."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-005]
+decided = "Owner ruling in session (2026-10-16, as recommended) on D-002's one question: S4 exempts a pure deletion from the in-lane plan step. A row that only removes code, tests and text, adding no code path, gets planmode none, even where S4's other criteria would make it single: the plan step checks a construction, and a deletion constructs none; its consumers are settled by the scope critique. Applied in this commit: docs/rubrics/scope-critique.md's S4 states the exemption, and WI-929 and WI-930, both pure deletions that round 1's S4 findings made single (D-002), are set to planmode none, their S4 answers citing this ruling. The rubric is this repository's own, not shipped, so the sentence lands directly with the ruling rather than through a lane; no confirming critique round is owed, since the change applies a ruling, not a critique's advice."
+alternative = "Keep S4 as is (both rows pay the plan step), or exempt the two rows as a one-off with S4's text unchanged."
+reversal_cost = "Low: one rubric sentence and two queued rows' planmode."
+why_not_escalated = "It was the owner's ruling."
+review = ""

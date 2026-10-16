@@ -7,7 +7,7 @@ specref = "docs/decisions/coordinator-2026-10-15.toml"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
-planmode = "single"
+planmode = "none"
 needs = ["WI-911"]
 +++
 
@@ -114,9 +114,10 @@ it back would undo a decision (wi-852 D-006) for no gain.
   writes a round file that the merge gate reads as today; this row removes
   one refusal before the write. No `## Trust` section.
 - **S3, closed coverage.** See the Done-when's coverage bullet.
-- **S4, planning need: `single`.** Deliverable 2 changes two interface
-  seams' contracts, IF-288's command input and IF-289's command result,
-  which the ruled S4 criteria make `single`.
+- **S4, planning need: `none`.** The row only removes code, tests and
+  text and adds no code path, which S4 exempts from the plan step (owner,
+  2026-10-16, docs/decisions/coordinator-2026-10-16.toml#D-005). Round 1's `single` finding
+  stands below as history.
 - **S5, architectural delta.** None added. One refusal and one dependency of
   `review_brief` on `kitlib.verdict.ROLLUP_DIR` go away.
 - **S6, dependencies.** `needs = ["WI-911"]`, hard: WI-911 amends LLR-313
