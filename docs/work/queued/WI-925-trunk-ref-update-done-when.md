@@ -285,14 +285,15 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
   - a state other than `prepared`: exit 0, as above;
   - a reference outside `refs/heads/<trunk>` (Q1), a deletion, or an update
     whose old equals its new: not judged;
-  - the upstream exemption (Q8): an update of trunk is not judged only when
-    git resolves trunk's upstream to a remote-tracking reference and
+  - the upstream exemption (Q8): a fast-forward of trunk is not judged only
+    when `merge-base --is-ancestor <old> <new>` exits 0, git resolves trunk's
+    upstream to a remote-tracking reference, and
     `merge-base --is-ancestor <new> <tracking>` exits 0. Every other outcome
-    grants no exemption: no upstream, configuration git cannot resolve, an
-    absent or unreadable tracking reference, an exit of 1, or any other
-    exit. The update is then judged like any other, and holds where that
-    judgement cannot complete. The exemption never holds by itself, and is
-    never granted by default;
+    grants no exemption: an update that is not a fast-forward, no upstream,
+    configuration git cannot resolve, an absent or unreadable tracking
+    reference, an exit of 1, or any other exit. The update is then judged
+    like any other, and holds where that judgement cannot complete. The
+    exemption never holds by itself, and is never granted by default;
   - a malformed line, or a value that is not an object id: holds;
   - a declared trunk that is absent, malformed, or names no branch: holds,
     but only for a transaction whose delta touches `docs/work/active/`. Any
@@ -409,6 +410,9 @@ shapes unchanged. That section is the record, and nothing below re-opens it.
   reading, at the lane's checkpoint. A new IF row states the seam (git
   invokes the hook with a state and update lines; non-zero aborts the
   transaction). The TC rows covering LLR-309 gain the hook-driven cases.
+- `check_trajectory`'s hold-by-rename guidance no longer offers deleting the
+  stranded claim, which the trunk floor refuses; it names a recovery route
+  the floor permits (carried from WI-921's gate; see Context).
 - `RESYNC_PACK.md` carries the entry, anchored at the landing's parent.
 - The bar is green on the landing tip: the smoke tier within its budget (the
   new hook-driven cases go to `SLOW_MODULES` if they cost it),
@@ -582,9 +586,10 @@ The owner ruled all eight calls in session, each as recommended (2026-10-15, the
   - (a) Judge it like any update. A held pull leaves the local trunk behind
     the shared one, until a blessing lands upstream or the owner bypasses the
     hook.
-  - (b) An update of trunk to a commit that trunk's own upstream
-    remote-tracking reference already contains is not judged: the hold is
-    where trunk is made, not where it is synced.
+  - (b) A fast-forward of trunk (its old value an ancestor of the new) to a
+    commit that trunk's own upstream remote-tracking reference already
+    contains is not judged: the hold is where trunk is made, not where it is
+    synced.
   - (c) Judge it, but only warn.
 
   **Ruled (b), as recommended.** Under (a), the local trunk can be stuck behind a remote
@@ -622,3 +627,23 @@ two findings; coordinator-2026-10-15 D-006):
   The residue list names a tracking reference moved by hand. The Done-when's
   Q8 item pins the contained, uncontained, unconfigured, unresolvable and
   absent cases.
+
+Round 2 (Codex Sol, medium, 2026-10-15, at `18cf71e62`, a confirming round in
+convergence stance; CHANGES-REQUESTED, two findings; coordinator-2026-10-15
+D-009). Both round-1 adoptions were confirmed in the recommended shape.
+
+- **S3, MAJOR (new: a strict rewind of trunk judged over an empty delta):
+  dismissed** under the review threat model (PROCESS.md §6), by the owner's
+  ruling in session. It needs a hand rewind of trunk (`reset --hard` or
+  `branch -f` to an ancestor), which no kit route makes (claims, mints, the
+  merge slot and hand landings only move trunk forward) and the program's
+  fix-forward rule forbids. The owner's word fix is adopted instead: Q8 (b)
+  now reads "A fast-forward of trunk (its old value an ancestor of the new)
+  to a commit that trunk's own upstream remote-tracking reference already
+  contains is not judged", and Trust's ruling grants the exemption only when
+  "`merge-base --is-ancestor <old> <new>` exits 0", so a rewind is never
+  exempt.
+- **B1, MINOR: adopted** without a further round. The Done-when gains:
+  "`check_trajectory`'s hold-by-rename guidance no longer offers deleting the
+  stranded claim, which the trunk floor refuses; it names a recovery route
+  the floor permits".

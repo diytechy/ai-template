@@ -46,3 +46,24 @@ alternative = "S2: drop the exemption's authority instead of guarding it (Q8 (a)
 reversal_cost = "Low: the row is queued and unclaimed; the dispositions are spec text the confirming round checks."
 why_not_escalated = "Both adoptions are the reviewer's own remedies, fail closed, and implement the owner's Q8 ruling as worded; the Trust ruling is still routed to the owner to confirm or overrule here."
 review = ""
+
+[decision.D-007]
+decided = "Owner ruling in session (2026-10-15h), asked as a multiple choice with the coordinator's recommendation (WI-925 first): WI-925 (the trunk reference-update hold) and WI-922 (the plan gate's landing shapes), which both edit the shipped commit hook, are built in parallel. Whichever lands second rebases onto the first and takes an uncounted convergence round over the rebase, since that rebase changes code (ruling 4's clarification); the landing order follows readiness under the queue's one-at-a-time rule for mechanism changes."
+alternative = "WI-925 first, with WI-922 rebasing onto its hook when it plans (the coordinator's recommendation), or WI-922 first."
+reversal_cost = "Low: neither lane is cut yet for this work."
+why_not_escalated = "It was the owner's ruling; the handoff named the order as the owner's to set."
+review = ""
+
+[decision.D-008]
+decided = "Owner ruling in session (2026-10-15h), as the coordinator recommended, on the four consumers WI-925's Trust reports as failing open outside its scope: item 3 (kitlib/done_when._staged_base judging nothing for a Done-when change without a close on a detached HEAD, WI-922's identity class) folds into WI-922's scope, written into its spec in its lane with the Done-when change blessed there (WI-922 is claimed, so a trunk edit of its claim copy would be an unblessed Done-when change); items 2 (staged_changes reading a failing work-tree probe as off a work tree), 4 (intake's silent skip of an unreadable closed spec) and 5 (the pre-commit hook's exit 0 when the scripts directory is missing) are filed as one new queued row on trunk, with its own scope critique and dispositions before any claim. Not filed this session: the row is drafted by a planner sub-agent at the next session's filing step."
+alternative = "One row for all four, four rows, or leaving them noted."
+reversal_cost = "Low: nothing is built; the row is not yet filed."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-009]
+decided = "WI-925's scope critique round 2 (Codex Sol, medium, at 18cf71e62, a confirming round in convergence stance): CHANGES-REQUESTED, two findings; both round-1 adoptions confirmed. The new MAJOR (fail-open: a strict rewind of trunk, C2 to C1, judged over an empty merge-base delta, and Q8 (b)'s wording exempting a rewind to a pushed ancestor) is dismissed under the review threat model by the owner's ruling in session: it needs a hand rewind of trunk, which no kit route makes and the program's fix-forward rule forbids. The owner's word fix is adopted: Q8 (b) and Trust's ruling grant the exemption only to a fast-forward (old an ancestor of new). The B1 MINOR (the carried check_trajectory remedy promised in Context with no Done-when item) is adopted as a Done-when item without a further round, as the convergence stance allows for a MINOR. The owner then asked why the threat-model language let a contrived fail-open through; the coordinator found the 2026-10-13 plausibility ruling absent from PROCESS.md section 6 and the severity rule's 'or a fail-open path' exempting fail-opens from reachability, and the owner directed the fix folded into WI-911 (wi-911 D-016) and a read-only audit of past guards built on contrived findings. WI-925 is ready to claim once those land or as the owner orders."
+alternative = "Adopt Sol's remedy (refuse every strict rewind of trunk), or refuse a rewind only while claims are active."
+reversal_cost = "Low: a dismissal adds no spec surface; the wording fix narrows an exemption toward what Q8's heading ruled."
+why_not_escalated = "The owner ruled the dismissal and the wording fix in session."
+review = ""
