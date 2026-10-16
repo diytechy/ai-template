@@ -55,6 +55,12 @@ re-scope walk the owner ordered (coordinator-2026-10-15 D-010).
    judged by the landing walk as today; the check guards the checkout they
    run in, not their commit.
 
+5. **The agent CLI's guard hooks, the same way** (owner, 2026-10-15h,
+   coordinator-2026-10-15 D-011): the required hooks are checked by name;
+   when none are there they are installed on first run; when other hooks
+   occupy the slot the route complains and exits. There is no re-enable
+   path, which replaces the command-level ownership built for one.
+
 ## Done-when (sketch, for the scope critique)
 
 - Each agent route, started in a fixture checkout with no hooks path, a

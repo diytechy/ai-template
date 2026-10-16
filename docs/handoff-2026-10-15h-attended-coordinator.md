@@ -30,13 +30,13 @@ with the owner. The `Overnight: stop` line above keeps
     WI-922 are re-checked in the same walk; nothing is filed yet.
   - wi-911 D-016 and D-017: the stronger dismissal language is folded into
     WI-911 (below).
-- **The audit** (owner-asked, read-only):
-  `C:/Projects/ai-template.wt/review-tmp/2026-10-15d-coord/h/audit-contrived-guards.md`.
+- **The audit** (owner-asked, read-only, kept in the repo as history):
+  [audit-contrived-guards-2026-10-15.md](plans/2026-10-11-review-churn/audit-contrived-guards-2026-10-15.md).
   52 MAJORs accepted with code since 2026-10-08: 15 contrived, 8 unclear, 29
   plausible; every contrived one from Sol; costliest WI-834's shell grammar,
   WI-887's store record shapes, WI-881's interrupt windows, WI-852's alias
   refusal. Nothing is removed; any removal is its own row, after reading the
-  original rationale. Keep the file until the owner has read it.
+  original rationale.
 - **Lanes:**
   - `wi-911` (WI-911, B1 text, `single`), tip `9f35d60ea`, rebased on
     `c0dfd1823` (D-015, no code or row changed). The owner's text fix
@@ -103,8 +103,13 @@ As the 2026-10-15g handoff says, with two changes until WI-911 lands:
 ## For the owner
 
 - **Push** `refactor_again` and `archive/lanes`.
-- **Read the audit** (path above) and say which contrived builds, if any,
-  should become removal rows.
+- **The audit is read and ruled** (coordinator-2026-10-15 D-011; the report
+  now has no UNCLEAR row): the coordinator files one removal row per ruled
+  removal (WI-834's grammar forms, WI-852's duplicated-count and rollup
+  refusals, WI-881's interrupt and late-spawn guards), each after reading
+  the original rationale, with its own scope critique; WI-834's hook
+  re-enabling folds into WI-926; WI-902's two history fixes dissolve with
+  its reshape; WI-858's and WI-921's fixes stay.
 - **Confirm or overrule:**
   - `wi-911.toml` D-015 (the rebase), D-018 (sitting 010's return answered
     through TC-334 rather than LLR-311's SR-Refs).
