@@ -67,3 +67,10 @@ alternative = "The drafted construction: a --run-tier producer writing a per-che
 reversal_cost = "Low: an unbuilt row's design."
 why_not_escalated = "It was the owner's ruling."
 review = ""
+
+[decision.D-010]
+decided = "WI-935's scope critique (Codex Sol, medium, from the detached checkout at 0ab549a15, round 1) approved with no findings, judging S1 to S6 and B1 to B4 and checking the three callers of the timed form's changed exit (the bar's [run] smoke line, CI's smoke-budget job, the harness [step:smoke]); nothing was adopted, so no confirming round is owed. WI-935 joins the row-2 claim batch (WI-928, WI-929, WI-930, WI-931) under the same scoped unpause, since the owner queued it right after that batch (D-006) and its needs are empty; it lands after the batch's rows, alone."
+alternative = "Claim WI-935 under a second unpause once the batch lands."
+reversal_cost = "Low: a claimed row with no commits returns to the queue by a handback."
+why_not_escalated = "The placement is the owner's (D-006); joining the claim batch saves an unpause cycle and changes no landing order."
+review = ""
