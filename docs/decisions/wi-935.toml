@@ -1,0 +1,40 @@
+# docs/decisions/wi-935.toml — delegated decisions made in the WI-935 lane
+# (the commit bar runs the smoke tier once) by the attended coordinator.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane, built at 1c20b6eb6 on trunk's 785b29e11, is rebased onto trunk's 61ee4e165 (WI-930's landing and WI-937's close) before counted round 1, so the round reviews the tip that lands; the rebase replayed cleanly and the three copies of the coordinator recipes stay byte-identical. Its rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7, recorded here as the substitution for every round of this lane), the trial having ended (coordinator-2026-10-16 D-008); at most three counted rounds before the checkpoint. The lane owes no spine, so its checkpoint holds no sitting; the gate over its tip follows the first counted round with no BLOCKER or MAJOR."
+alternative = "Review the pre-rebase tip and run an uncounted round after a later rebase."
+reversal_cost = "None: the pre-rebase tip 1c20b6eb6 stays reachable for the archive."
+why_not_escalated = "The skill's cycle and recipes section 3: a rebase over commits the lane does not change before the review, so the review sees the tip that lands."
+review = ""
+
+[decision.D-002]
+decided = "Counted round 1 (001 Sol APPROVE 0; 002 Opus APPROVE 2 MINOR) raised no BLOCKER or MAJOR, so the checkpoint follows it. Both MINORs are accepted and fixed in the lane before the gate, since each names a second home of a claim this diff corrected in check_smoke_budget.py's docstring and costs one comment edit: 002's first, .github/workflows/test.yml's smoke-budget comment still pointing at the dial question the docstring now records as settled by OI-52 ruling (a); 002's second, docs/stack.ini's [smoke-budget] comment still calling warn mode the local default when the commit bar enforces. The fix round sweeps the same class (a comment restating a claim the diff corrected) across the lane's surface."
+alternative = "Defer both to a successor row; or land with the stale comments."
+reversal_cost = "Low: comment text only."
+why_not_escalated = "MINORs never cost a round (ruling 4); a fix the gate then checks is the cheapest disposition."
+review = ""
+
+[decision.D-003]
+decided = "The fix round for counted round 1's two MINORs (002) ran in two stages on one builder: its coverage plan (P1 test.yml's pointer, P2 the [smoke-budget] seconds comment, P3 the docstring's '(CI-facing)' summary qualifier, a third site of the same class inside the named surface) passed plan_coverage --findings at exit 0 on the coordinator's re-run. Rulings on its stop points: the dated re-stamp entries in docs/stack.ini's [smoke-budget] record are history and stay untouched; P2 may drop the comment's '~5x headroom' sentence, a stale twin the script's docstring already refutes inside the comment P2 rewrites. The spec's deliverable line that test.yml stays as written is amended in the lane by the coordinator, so the spec states the one comment edit; it is a Deliverables line, not the Done-when."
+alternative = "Leave test.yml unchanged and defer 002's first finding to a successor row."
+reversal_cost = "Low: comment text and one spec line."
+why_not_escalated = "Inside the spec's named surface; the gate over the tip reviews it."
+review = ""
+
+[decision.D-004]
+decided = "The convergence map before the gate over the checkpoint tip (revisions 8 and 33). The lane owes no spine, so its checkpoint holds no sitting and no reconcile turn. Both accepted findings are wording defects with no executable test, so each maps to independently checkable evidence, the corrected text at the cited site: 002's first to .github/workflows/test.yml's smoke-budget comment, which now points at the script's docstring for the measurement and states that OI-52 ruling (a) settled the dial; 002's second to docs/stack.ini's [smoke-budget] seconds comment, which now points at the script's docstring for which callers run the check and in which mode. The gate renders in convergence stance from the trunk base 61ee4e165 to the tip, with the same two reviewers and the same stand-in as D-001."
+alternative = "None: the map is what the round produced."
+reversal_cost = "None."
+why_not_escalated = "The skill's convergence map step."
+review = ""
+
+[decision.D-005]
+decided = "The gate over the checkpoint tip 777a53d7b, in convergence stance (003 Sol APPROVE 0; 004 Opus APPROVE 1 MINOR), raised no BLOCKER or MAJOR, so the lane is ready to land. 004's one MINOR (the docstring dates OI-52 ruling (a) 2026-08-23, WI-496's wiring date, while the record's ruled_date is 2026-08-21) is not fixed in the lane: the sentence is the spec's prescribed text, CLAUDE.md and the session-protocol skill attach the same date to the ruling, and a fix after the gate would land a tip the gate did not review. It is deferred to a follow-up that corrects the attribution in all three homes together, carried in status.md's unfiled follow-ups."
+alternative = "Fix the one docstring line and run another uncounted gate."
+reversal_cost = "Low: one date in three prose homes."
+why_not_escalated = "A MINOR goes to the spine change list or a follow-up (ruling 4); no convergence class."
+review = ""

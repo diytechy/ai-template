@@ -3,13 +3,34 @@ id = "WI-935"
 title = "The commit bar runs the smoke tier once: the lints run first, then the budget step's timed run, which now fails on a red tier"
 workstream = "process"
 sr_refs = []
-specref = "docs/decisions/coordinator-2026-10-16.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "none"
 needs = []
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-17, after its post-checkpoint gate:
+
+- The declared commit bar runs both strict lints and the docs staleness
+  check first, then the budget step's timed tier run, which is the bar's
+  only tier run and fails on a red tier or a breach.
+  `tests/test_smoke_budget.py` pins the four steps in order and that exactly
+  one step runs the tier.
+- `scripts/check_smoke_budget.py` reports a red tier with its own exit code
+  and still reports its time; its docstring owns which callers run it and
+  in which mode, and the stale twins in `.github/workflows/test.yml` and
+  `docs/stack.ini` point there.
+- The session-protocol skill and the coordinator recipes say the bar runs
+  the tier once; their copies stay byte-identical.
+- The quiet reading on the lane tip: bar 66.2 s, tier 42.3 s, one pytest
+  session, green (the log fragment), beside the old bar's 112 to 115 s.
+
+The gate's one MINOR, the date attached to OI-52 ruling (a), is a follow-up
+across its three homes (wi-935 D-005).
 
 ## Context
 
@@ -150,8 +171,11 @@ the lints, or on what they write.
      breach.
    - Both skills are `scope: this-repo`, and their per-agent copies stay
      byte-identical.
-   - CLAUDE.md and `.github/workflows/test.yml` stay true as written and are
-     not changed.
+   - CLAUDE.md stays true as written and is not changed.
+   - `.github/workflows/test.yml`'s smoke-budget comment stops pointing at
+     the owner's queued dial question, which the script's docstring now
+     records as settled by OI-52 ruling (a); the rest of the file stays
+     as written.
 
 ## Done-when
 

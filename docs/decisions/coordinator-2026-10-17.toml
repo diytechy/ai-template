@@ -1,0 +1,18 @@
+# docs/decisions/coordinator-2026-10-17.toml — calls the attended coordinator
+# made on trunk on 2026-10-17. Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-930 landed (87ceeafea) on a quiet box the owner gave in session, with its RESYNC entry re-anchored at the squash from the lane's base 785b29e11 to the landing's parent 1a182d154 (recipes section 3), the one token in the landing beyond the gated tip; the lane had first been rebased onto 1a182d154, a docs-only close-out it does not touch, so no post-rebase round was owed. Its re-mint WI-937 closed as already settled by the lane's sitting 003 and act seq 123, the registries byte-equal to their anchors."
+alternative = "Land the entry on the stale anchor, where an adopter stamped after 785b29e11 would never select it."
+reversal_cost = "None: one anchor token."
+why_not_escalated = "Recipes section 3 states the anchor rule."
+review = ""
+
+[decision.D-002]
+decided = "Owner ruling in session (2026-10-17, as recommended): WI-935, gated and ready, lands ahead of WI-928, which still owed its checkpoint sitting and gate, changing the handoff's queue order (coordinator-2026-10-16 D-004 and D-006). Both change machinery and each lands alone; landing WI-935 first makes every later bar cost one tier run instead of two, and WI-928 and WI-931 touch none of its files. Its landing bar is the Done-when's quiet reading, taken on the lane tip and again on the staged squash."
+alternative = "Keep the queue order, WI-935 waiting gated behind WI-928 and WI-931."
+reversal_cost = "None: landing order only."
+why_not_escalated = "It was the owner's ruling."
+review = ""

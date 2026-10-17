@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""WI-281 — the smoke commit bar's wall-clock budget check (CI-facing).
+"""WI-281 — the smoke commit bar's wall-clock budget check.
 
 The per-commit smoke tier (docs/stack.ini [tiers] smoke) must run within the
 seconds budget declared in docs/stack.ini [smoke-budget] — a smoke test answers
 "is it basically alive?", not "re-run most of the full suite". WI-281 split the
 budget in two: the ALWAYS-ON deterministic membership ratchet
 (tests/test_smoke_budget.py) is the machine-independent floor; THIS is the
-wall-clock half. It defaults to `--mode warn` for LOCAL convenience (a breach
-prints a WARNING, exit 0). CI runs it with `--mode enforce` (exit 1 on breach).
+wall-clock half. The default stays `--mode warn`, for a hand run that only
+reports (a breach prints a WARNING, exit 0), while the commit bar, CI and the
+harness `[step:smoke]` run `--mode enforce` (exit 1 on breach).
 
 WHY ENFORCE, RE-ARGUED 2026-08-21 — the previous justification was seven times
 off and had never been re-measured. It read: "startup-dominated, not core-bound
@@ -29,14 +30,17 @@ a breach any more is the diagnosis "a heavy module slipped back in": at 1.0x,
 runner contention alone can cross the line, so a breach says LOOK, not
 RE-TIER. THE BUDGET VALUE DOES NOT MOVE on this measurement — one box is one
 data point, and moving a budget to fit the machine it embarrasses is how a
-budget stops meaning anything. Whether 60 s should be enforced locally, or
-redefined as a CI target, is the owner's dial and is queued (2026-08-21 close,
-Q-3); this docstring records the measurement, not a decision.
+budget stops meaning anything. Whether 60 s is enforced locally, or only as a
+CI target, was settled by OI-52 ruling (a), 2026-08-23: the commit bar
+enforces it locally.
 
 Usage:
-  # time a fresh smoke run and compare (local convenience, or a CI lane):
+  # run the smoke tier once, time it and compare; the commit bar's last step,
+  # CI's smoke-budget job and the harness [step:smoke] call this form, and a
+  # red tier exits with its own exit code:
   python scripts/check_smoke_budget.py [--mode warn|enforce]
-  # evaluate an already-measured elapsed time (CI times the step, feeds it here):
+  # evaluate an already-measured elapsed time, for a hand wrapper that ran and
+  # timed the tier itself (this form runs nothing):
   python scripts/check_smoke_budget.py --elapsed 42.5 [--mode warn|enforce]
 
 Stdlib-only, cross-platform (a meta-repo dev/CI tool, like scripts/dev-setup).
@@ -129,23 +133,30 @@ def main(argv=None):
     budget = declared_seconds(cp)
 
     if args.elapsed is not None:
-        elapsed = args.elapsed
-    else:
-        cmd = smoke_argv(cp)
-        print("timing: " + " ".join(shlex.quote(c) for c in cmd))
-        start = time.perf_counter()
-        proc = subprocess.run(cmd, cwd=str(ROOT))
-        elapsed = time.perf_counter() - start
-        if proc.returncode != 0:
-            # A red smoke tier is a separate failure from a slow one; surface it
-            # but do not let a broken run masquerade as a budget verdict.
-            print(
-                "note: smoke tier exited {} (test failures are not a budget "
-                "breach; fix them separately)".format(proc.returncode),
-                file=sys.stderr,
-            )
+        return evaluate(args.elapsed, budget, args.mode)
+    elapsed, tier_code = _time_the_tier(cp)
+    verdict = evaluate(elapsed, budget, args.mode)
+    # A red tier fails this form in both modes with the tier's own exit code,
+    # since this timed run is the commit bar's only tier run; the budget line
+    # above still reports its time, and any breach message beside it.
+    return tier_code if tier_code != 0 else verdict
 
-    return evaluate(elapsed, budget, args.mode)
+
+def _time_the_tier(cp):
+    """Run the declared smoke tier once and return (wall seconds, its exit
+    code), noting a red tier so the cause of a nonzero exit is printed."""
+    cmd = smoke_argv(cp)
+    print("timing: " + " ".join(shlex.quote(c) for c in cmd), flush=True)
+    start = time.perf_counter()
+    proc = subprocess.run(cmd, cwd=str(ROOT))
+    elapsed = time.perf_counter() - start
+    if proc.returncode != 0:
+        print(
+            "note: smoke tier exited {} (test failures are not a budget "
+            "breach; fix them separately)".format(proc.returncode),
+            file=sys.stderr,
+        )
+    return elapsed, proc.returncode
 
 
 if __name__ == "__main__":

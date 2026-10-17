@@ -1,11 +1,13 @@
 """WI-281 — the smoke wall-clock budget check (scripts/check_smoke_budget.py).
 
-Exercises the CI-facing wall-clock half of the smoke budget via `--elapsed` (no
-real suite run, so this stays a fast smoke test): the warn-first default reports
-but never fails; `--mode enforce` fails only on breach. The always-on
+Exercises the wall-clock half of the smoke budget without a real suite run, so
+this stays a fast smoke test: via `--elapsed`, the warn default reports but
+never fails and `--mode enforce` fails only on breach; in process, the timed
+form runs a stand-in tier and exits with a red tier's own code. The always-on
 deterministic half is tests/test_smoke_budget.py.
 """
 
+import importlib.util
 import subprocess
 import sys
 
@@ -56,3 +58,51 @@ def test_reads_declared_budget_from_stack_ini():
     budget = int(float(cp["smoke-budget"]["seconds"]))
     proc = _run("--elapsed", "1")
     assert "{}s budget".format(budget) in proc.stdout, proc.stdout
+
+
+def _load_script():
+    spec = importlib.util.spec_from_file_location("check_smoke_budget", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _stand_in_tier(monkeypatch, exit_code, budget=None):
+    """The script with a trivial interpreter command as its smoke tier, and
+    optionally a stood-in budget, so `main` times a run that costs nothing."""
+    module = _load_script()
+    tier = [sys.executable, "-c", "import sys; sys.exit({})".format(exit_code)]
+    monkeypatch.setattr(module, "smoke_argv", lambda cp: tier)
+    if budget is not None:
+        monkeypatch.setattr(module, "declared_seconds", lambda cp: budget)
+    return module
+
+
+def test_a_red_tier_exits_with_its_own_code_and_still_reports_its_time(
+    monkeypatch, capsys
+):
+    module = _stand_in_tier(monkeypatch, 3)
+    for mode in ("warn", "enforce"):
+        assert module.main(["--mode", mode]) == 3, mode
+        out, err = capsys.readouterr()
+        assert "smoke wall-clock budget:" in out, mode
+        assert "note: smoke tier exited 3" in err, mode
+
+
+def test_a_green_tier_within_budget_exits_zero(monkeypatch, capsys):
+    module = _stand_in_tier(monkeypatch, 0)
+    assert module.main(["--mode", "enforce"]) == 0
+    out, err = capsys.readouterr()
+    assert "-> within" in out
+    assert "note: smoke tier exited" not in err
+
+
+def test_a_red_tier_over_budget_reports_both_and_exits_with_its_code(
+    monkeypatch, capsys
+):
+    module = _stand_in_tier(monkeypatch, 4, budget=0.0)
+    assert module.main(["--mode", "enforce"]) == 4
+    out, err = capsys.readouterr()
+    assert "-> OVER" in out
+    assert "FAIL (enforce):" in err
+    assert "note: smoke tier exited 4" in err

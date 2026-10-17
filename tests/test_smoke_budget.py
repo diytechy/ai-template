@@ -8,9 +8,9 @@ because a wall-clock assert is machine-/core-count-dependent and flaky:
   * this DETERMINISTIC ratchet budgets what does not vary by machine — smoke-tier
     MEMBERSHIP (the collected-count) — and BITES when the tier grows back toward
     the full suite (the regression this exists to catch);
-  * the noisy wall-clock check lives in scripts/check_smoke_budget.py: its local
-    default is report-only `--mode warn`, while CI deliberately invokes
-    `--mode enforce` to fail a budget breach. It is not a hard assert here.
+  * the noisy wall-clock check lives in scripts/check_smoke_budget.py, which
+    the commit bar and CI both run with `--mode enforce` to fail a budget
+    breach. It is not a hard assert here.
 
 This is a growth SENSOR with headroom (the test_dashboard_size_budget idiom), not
 an exact freeze: new in-process unit tests SHOULD accrue into the bar (that is
@@ -107,22 +107,28 @@ def test_membership_ratchet_bites_past_the_ceiling():
 
 
 def test_the_declared_commit_bar_runs_the_strict_lints_before_its_budget():
-    # WI-914 (review-churn ruling 6): this repo's one declared commit-bar
-    # command, docs/stack.ini [run] smoke, runs the smoke tier, both strict
-    # lints and the docs staleness check, and only then the budget check, so a
-    # breach under load never hides a lint red. A chain that dropped a step or
-    # moved the budget check ahead of the lints would let a build round's bar
-    # skip what review would otherwise spend a round on.
+    # This repo's one declared commit-bar command, docs/stack.ini [run] smoke,
+    # runs both strict lints and the docs staleness check first, then the
+    # budget check, whose own timed run is the bar's only smoke-tier run. A
+    # lint red stops the bar before the tier runs, and a breach under load
+    # never hides a lint red. A chain that dropped a step, moved the budget
+    # check ahead of the lints, or ran the tier a second time would let a build
+    # round's bar skip a check or pay for the tier twice.
     cp = configparser.ConfigParser(interpolation=None)
     cp.read(STACK_INI, encoding="utf-8-sig")
     steps = [step.strip() for step in cp["run"]["smoke"].split("&&")]
     assert steps == [
-        "python -m pytest -q -n auto -m smoke",
         "python project-trajectory/scripts/trace.py --strict",
         "python project-trajectory/scripts/check_trajectory.py --strict",
         "python project-trajectory/scripts/check_docs.py --root . --stale",
         "python scripts/check_smoke_budget.py --mode enforce",
     ]
+    tier_steps = [
+        step
+        for step in steps
+        if "pytest" in step or step.startswith("python scripts/check_smoke_budget.py")
+    ]
+    assert tier_steps == [steps[-1]]
 
 
 def test_nested_collection_survives_a_non_utf8_console_byte(tmp_path):

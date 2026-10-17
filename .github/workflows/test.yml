@@ -102,7 +102,7 @@ jobs:
   # the DIAGNOSIS: at this ratio runner contention alone can cross the line, so
   # read the breach as "look", not as "re-tier a module". The budget VALUE is
   # not moved to fit any box (see scripts/check_smoke_budget.py for the full
-  # measurement, and the owner's queued dial question). One lane: this is a
+  # measurement; OI-52 ruling (a) settled the dial). One lane: this is a
   # timing signal, not a portability check.
   smoke-budget:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository

@@ -633,11 +633,11 @@ lane commit being replayed.
   gated only on the command's exit code inside `$(...)` committed a red tier
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
-- The declared bar's budget step takes no `--elapsed`, so it runs the
-  tier a second time: a bar costs about two tier runs (about 115 s quiet,
-  2026-10-16; wi-914 D-006 carries it as a follow-up). `--elapsed <s>`
-  serves only a hand wrapper that still runs every `[run] smoke` step
-  and times its own tier run. A wrapper must exit nonzero
+- The declared bar runs the tier once: the lints run first, then the
+  budget step's timed run, which exits with the tier's own code on a red
+  tier and 1 on a breach. `--elapsed <s>` serves only a hand wrapper that
+  still runs every `[run] smoke` step and times its own tier run. A
+  wrapper must exit nonzero
   on a red tier or a breach: one that exited 0 let a chained `&& git
   commit` record a 66.2 s reading unmentioned (WI-921's pass record,
   its message amended, 2026-10-15).
