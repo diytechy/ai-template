@@ -8577,6 +8577,37 @@ blackout window (`[policies] blackout`). Nothing needs migrating: no
 registry, setting or record format changes. The WI-834 entry above stays as
 history.
 
+### The session kill drops its launch-window and late-spawn guards [since 3a11f46f0]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/agent_session.py` keeps the ordinary deadline and
+interruption kill: on POSIX it signals the session's process group, on
+Windows it terminates the session's job, and on both it returns only once
+the tree has ended, or raises `agent_session.TreeNotEnded` naming what
+survived. Two guards on that kill are gone. A coordinator interruption that
+lands while a session is still being launched no longer ends the session's
+tree before it propagates. The Windows kill no longer closes the job to new
+processes first, so it no longer refuses a process started during the kill.
+`TreeNotEnded` is an `OSError` again, as it was before it derived from
+`BaseException`, so an `except OSError` or `except Exception` around a
+session catches a failed tree end again.
+
+**Residue.** Two windows lie outside the guarantee, each sub-second and on
+no supported workflow's ordinary path: an interruption while the session is
+still being launched, before the coordinator supervises it, which can leave
+a running child; and a process that joins the session job while the kill
+takes its member list, which is terminated with the job but can still be
+ending, for milliseconds, when the coordinator continues.
+
+**Kit-owned files — overwrite:** `scripts/agent_session.py`.
+
+**What to do.** Overwrite the file. No migration is forced: no registry,
+setting or record format changes. If your own tooling wraps a session in
+`except OSError` or `except Exception`, that handler catches a failed tree
+end again: let it stop the run rather than continue. A handler that follows
+the earlier advice (catch `BaseException` and re-raise) keeps working.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

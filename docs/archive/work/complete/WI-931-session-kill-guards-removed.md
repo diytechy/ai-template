@@ -3,13 +3,33 @@ id = "WI-931"
 title = "The session kill drops its launch-window and late-spawn guards; the job object's kill of the tree stays"
 workstream = "process"
 sr_refs = ["SR-238"]
-specref = "docs/plans/2026-10-11-review-churn/audit-contrived-guards-2026-10-15.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = []
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-17, after its post-checkpoint gate:
+
+- `_end_launch`, `_end_suspended`, `_close_job`, its job-limit structure
+  and prototype, and the PID-reuse check `_in_job` are gone from
+  `agent_session.py`; `_spawn_session` catches `OSError` only, and
+  `TreeNotEnded` is an `OSError` again.
+- The job object's ordinary kill of the tree stays: containment, the
+  terminate, the member snapshot and wait, the raise for a member the kill
+  cannot open, the 10 s bound, the POSIX group kill, and `run_session`'s
+  one `finally` ending the tree at a deadline or an interruption.
+- The six tests and five helpers the deliverables table names are deleted
+  from `tests/test_session_stdin.py`; the kept ordinary-kill tests pass
+  unchanged on Windows and on Linux (the plan's P0 and P7 legs), and
+  `test_a_tree_not_ended_within_the_bound_raises` asserts the `OSError`.
+- SR-238, LLR-026 and TC-026 carry the amended text: sitting 003 blessed
+  all three, and act seq 125 re-attests them.
+- `RESYNC_PACK.md` carries the entry, anchored at the landing's parent.
 
 ## Context
 

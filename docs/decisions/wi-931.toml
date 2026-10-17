@@ -1,0 +1,68 @@
+# docs/decisions/wi-931.toml — delegated decisions made in the WI-931 lane (the
+# session-kill guards built for contrived findings are removed) by the attended
+# coordinator. Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane was cut at trunk's a278cb206 (the claimed branch had no commits of its own, recipes section 2) and, once its first plan critique was filed against the commit it reviewed (db45cd9b9), rebased onto trunk's 785b29e11 before the revision, so the revision and the build start from the tip that carries WI-922's plan-gate change. A first rebase taken before the filing orphaned the reviewed commit and the filing refused it; the lane was reset to db45cd9b9 (identical content), filed, then rebased. Its review rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7, recorded as the substitution each round), the trial having ended (coordinator-2026-10-16 D-008); at most three counted rounds before the checkpoint."
+alternative = "Keep the lane on a278cb206 and rebase only before the landing gate."
+reversal_cost = "None: the rebased commits carry the same bytes."
+why_not_escalated = "Recipes section 3: rebase before the gate; earlier is cheaper, since no code has been built."
+review = ""
+
+[decision.D-002]
+decided = "Owner ruling in session (2026-10-17, as recommended): the Done-when's POSIX evidence (the kept ordinary-kill tests pass unchanged on POSIX before and after the change) is produced on this workstation's WSL Ubuntu distro (Python 3.12.3, pytest 7.4.4, git 2.43; nothing installed). The coordinator clones the repository into WSL's own filesystem and runs the kept selection serially (no xdist there) at the claim base and at the implementation tip, recording both results with their platform skips. Linux meets the Done-when's 'POSIX'; macOS is left to CI after the owner's push. The plan's one revision names this route, answering critique 1's MAJOR."
+alternative = "The owner pushes the lane (and a branch at its base) for CI's Linux and macOS jobs; or the owner amends the Done-when to drop the POSIX before-and-after clause."
+reversal_cost = "Low: CI evidence can be added after a push without changing the row."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-003]
+decided = "The lane, built through P3 (8b2b4870a) on trunk's 785b29e11, is rebased onto trunk's 61ee4e165 (WI-930's landing and WI-937's close) before P5, so the spine amendments are authored on trunk's current registries. The rebase replayed cleanly; a per-cell comparison shows the lane then differed from trunk only in its trace cells (LLR-026 code_symbol, TC-026 evidence)."
+alternative = "Author P5 on the old base and rebase before the rounds."
+reversal_cost = "None: the pre-rebase tip 8b2b4870a stays reachable for the archive."
+why_not_escalated = "Recipes section 4: rebase, never merge-refresh, a lane before its spine rows land."
+review = ""
+
+[decision.D-004]
+decided = "P5's LLR-026 detail keeps one approved clause beyond the spec's literal fourth substitution: 'A failure to end the tree, or to show that it ended, raises the named tree-end error; an ordinary launch error still returns the session error.' The original sentence joined that clause to the tree-end error by a semicolon, so replacing the sentence whole dropped it. The substitution targets the claim that no ordinary handler converts the error; the launch-error obligation is still met (P4's census keeps the launch conversion), and TC-026's new Expected, the spec's own text, still asserts it, so without the clause the sitting would meet an expectation no requirement in the set states. The lane's retained GPT Terra session made the edit; the other five cells equal the spec's text, checked mechanically after joining its wrapped lines."
+alternative = "The spec's literal text, leaving TC-026 expecting what no requirement states for the sitting to return."
+reversal_cost = "Low: one clause in one cell, judged at the checkpoint sitting."
+why_not_escalated = "A retention inside the spec's meaning, which the sitting judges as wording (as wi-930 D-002)."
+review = ""
+
+[decision.D-005]
+decided = "The lane, built through P6 (4e6b1318f) on trunk's 61ee4e165, is rebased onto trunk's 2b2350add (WI-928's landing and WI-938's close) before counted round 1, so the round reviews the tip that lands. One conflict, in RESYNC_PACK.md, keeps both entries, trunk's first (recipes section 4); a per-cell comparison over the five spine registries (1030 rows read) shows the rebased lane equals trunk plus its own changes (SR-238, LLR-026, TC-026), and the lane's code and test diff is unchanged apart from blob-index and hunk-offset lines. Trunk's project-trajectory/ and tests/ moved under the base (WI-935, WI-928), so P8's check 2 moved it: P0's two legs re-ran at the new base 2b2350add (Windows from a detached scratch checkout, the lane worktree holding the change; Linux in the WSL clone) and P7's two legs at the new tip 0f6b2747f, all four matching the plan's table, with the module runs (258 passed) and complexity (unchanged). The coverage figure measured at 4e6b1318f stands, since the rebase changed none of agent_session.py or its test modules. P8's four records and its verdict line are in the lane's log fragment, the claim-base records at 785b29e11 kept above them as history, and check 3 records the one deletion beyond the plan's three things (the module's import subprocess)."
+alternative = "Review the pre-rebase tip, then re-run P7 and P8 after a post-rebase round; or re-measure coverage over the subset."
+reversal_cost = "None: the pre-rebase tip 4e6b1318f stays reachable for the archive."
+why_not_escalated = "The plan's P7 and P8 state when the legs re-run; recipes sections 3 and 4."
+review = ""
+
+[decision.D-006]
+decided = "Counted round 1 over 2b2350add..916ee762f, from two full-lane reviewers in parallel: 001 Codex Sol at medium (REVIEW-A), CHANGES-REQUESTED with one MAJOR; 002 Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7), APPROVE with two MINORs. 001's finding (F1: the amended SR-238, LLR-026 and TC-026 carry no sitting or act in the range) is accepted and re-graded: it names no code defect, and its remedy, the checkpoint sitting judging the three amendments with its act, is the cycle's next step, which follows a counted round with no BLOCKER or MAJOR code finding (SKILL section 3: row wording and sittings are deferred to the checkpoint). So the round costs no fix round. 002's F1 (a 104-character line in the comment the lane edited at agent_session.py's supervision block) is fixed by the coordinator, openly: the seven-line comment is reflowed to the module's width (77 at most), its words asserted identical before and after, so the change is whitespace inside one comment. 002's F2 (the RESYNC entry anchored at the lane's previous base 61ee4e165) is answered at the landing, which anchors the entry at its own parent (recipes section 3). Sol's two test_agent_loop.py failures reproduce at the base in its sandbox and are not this range's; my P7 module run at 0f6b2747f read 258 passed. The reflow moves TIP, so P7's two legs re-run at the new tip and P8's records follow it."
+alternative = "Send 001's F1 to a dispute sitting; or dispatch a builder for the reflow, or leave it as a follow-up in status.md's unfiled list."
+reversal_cost = "Low: one comment's line breaks."
+why_not_escalated = "SKILL section 3 (triage; MINORs never cost a round); the plan's P7 rule on a moved TIP."
+review = ""
+
+[decision.D-007]
+decided = "The checkpoint omits the Terra reconcile turn: the set was drafted at intent (P5, 96f58e5f9), round 1 proposed no row text, and the three registries are byte-unchanged from that intent commit to the round-1 tip, whose only code change since intent is a comment reflowed with its words unchanged; P5's cells were checked mechanically against the spec's dictated text at intent (D-004 records the one approved clause kept). The closure check's strict lints ran clean on the round-1 tip's tree. One combined sitting (003, from the lane over 4dbd3bd78) judged SR-238, LLR-026 and TC-026 as amendments, SR-026 in scope as the chain LLR-026 also serves: all three MEANING and blessed, re-attested by act seq 125 (dfa037efa), no Dispositions drafted. P7's two legs re-ran at the round-1 tip 4dbd3bd78 (Windows from a detached scratch worktree, since the lane worktree was in use by the sitting; Linux in the WSL clone), both matching the plan's table, and P8's renewed records and verdict line are in the fragment."
+alternative = "Run the reconcile turn anyway on unchanged rows."
+reversal_cost = "None: the sitting judged the rows as they stand."
+why_not_escalated = "The skill's checkpoint step 1 (omit when drafted at intent, no proposed row text and no code moved, recorded after the mechanical check)."
+review = ""
+
+[decision.D-008]
+decided = "The convergence map before the gate over the checkpoint tip (revisions 8 and 33), for round 1's accepted findings: 001's F1 (the amended rows carried no sitting or act) maps to sitting 003's verdict and act seq 125 (an inspection record: the verdict file and the acts ledger); 002's F1 (the 104-character comment line) maps to the corrected text at run_session's supervision comment (inspection: every line 77 characters or fewer, its words identical before and after); 002's F2 (the RESYNC anchor) maps to the landing's anchor check, outside the gate's range. No accepted finding fixed a behaviour, so none owes a regression test. The gate renders in convergence stance from trunk's 2b2350add to the tip, with the same two reviewers and the same stand-in as D-001."
+alternative = "None: the map is what the round produced."
+reversal_cost = "None."
+why_not_escalated = "The skill's convergence map step."
+review = ""
+
+[decision.D-009]
+decided = "The gate over the checkpoint tip 07bbfafcc, in convergence stance after the convergence map (D-008), from the same two reviewers and the same stand-in as D-001: 004 Codex Sol APPROVE with no findings; 005 Claude Opus (high) APPROVE with one MINOR. Its finding (SR-238's acceptance clause that a process joining the session job later in the kill is terminated with the job has no verifying TC clause, the late-spawn test having been deleted by the spec) is spine wording that only a later sitting can change, so fixing it here would move the tip off the gated one: it goes to status.md's unfiled follow-ups (recipes section 3, wi-935 D-005), to be taken at SR-238's next sitting, either keeping the fact only in the rationale's residue or naming its verification in TC-026. The lane is ready to land on a quiet reading the owner gives; at the landing its RESYNC entry is re-anchored at the landing's parent (002's F2) and the pre-rebase tip 4e6b1318f is archived beside the rebased tip."
+alternative = "Amend SR-238 and TC-026 in the lane now, owing another sitting and gate."
+reversal_cost = "None: a wording follow-up."
+why_not_escalated = "Recipes section 3: a gate MINOR whose fix would move the tip is a follow-up."
+review = ""

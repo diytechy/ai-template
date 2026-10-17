@@ -11,7 +11,6 @@ it and sees EOF — never an interactive wait.
 
 import json
 import os
-import subprocess
 import sys
 import time
 import types
@@ -516,6 +515,7 @@ def test_a_tree_not_ended_within_the_bound_raises(tmp_path, monkeypatch):
         t0 = time.time()
         with pytest.raises(agent_session.TreeNotEnded) as raised:
             agent_session._kill_tree(proc)
+        assert isinstance(raised.value, OSError), type(raised.value).__mro__
         assert time.time() - t0 < 5
         assert proc.returncode is not None, "the direct child was not reaped"
     finally:
@@ -530,271 +530,14 @@ def test_a_tree_not_ended_within_the_bound_raises(tmp_path, monkeypatch):
     assert expected in str(raised.value) and "0.3s" in str(raised.value)
 
 
-def _marker_child(tmp_path, delay):
-    """argv of a child that writes a marker after `delay` seconds, and the
-    marker's path: a marker present later means the child outlived the
-    session that should have ended it."""
-    marker = tmp_path / "outlived.txt"
-    code = "import time; time.sleep({}); open(r'{}', 'w').write('ran')".format(
-        delay, marker
-    )
-    return [sys.executable, "-c", code], marker
-
-
-@pytest.mark.skipif(os.name != "nt", reason="the resume step is Windows")
-def test_an_interruption_after_the_resume_ends_the_launching_child(
-    tmp_path, monkeypatch
-):
-    # WI-881 gate review 006 F1: a KeyboardInterrupt landing in the launch
-    # stage, after the real resume, used to escape _spawn_session (it caught
-    # OSError only) and leave the running child behind. The launch boundary
-    # now owns the child and its job until it hands the child back.
-    _, ntdll = agent_session._win32()
-    real_resume = ntdll.NtResumeProcess
-
-    def resume_then_interrupt(handle):
-        real_resume(handle)
-        raise KeyboardInterrupt
-
-    monkeypatch.setattr(ntdll, "NtResumeProcess", resume_then_interrupt)
-    argv, marker = _marker_child(tmp_path, 1.0)
-    with pytest.raises(KeyboardInterrupt):
-        agent_session.run_session(argv, tmp_path, 30)
-    monkeypatch.undo()
-    time.sleep(2.0)
-    assert not marker.exists(), "the child outlived the interrupted launch"
-
-
-def _session_outcome(argv, tmp_path):
-    """run_session's outcome as (returned result or None, raised or None),
-    so a test can tell a returned session-error tuple from a raise."""
-    try:
-        return agent_session.run_session(argv, tmp_path, 30), None
-    except BaseException as exc:  # the test inspects what escaped
-        return None, exc
-
-
-@pytest.mark.skipif(os.name != "nt", reason="the resume step is Windows")
-def test_an_interrupted_launch_whose_tree_cannot_be_verified_raises(
-    tmp_path, monkeypatch
-):
-    # WI-881 narrow review 007 F1: the launch cleanup that follows an
-    # interruption could not open the job's members to wait on them, and the
-    # resulting OSError met run_session's launch-error conversion, so the
-    # coordinator got an ordinary session-error tuple instead of a stop. A
-    # failure to end the tree is now TreeNotEnded, which no `except OSError`
-    # matches; the interruption stays visible as its context.
-    k32, ntdll = agent_session._win32()
-    real_resume, real_open = ntdll.NtResumeProcess, k32.OpenProcess
-
-    def resume_then_interrupt(handle):
-        real_resume(handle)
-        raise KeyboardInterrupt
-
-    def deny_member_waits(access, inherit, pid):
-        if access == agent_session._MEMBER_ACCESS:
-            import ctypes
-
-            ctypes.set_last_error(5)  # ERROR_ACCESS_DENIED
-            return None
-        return real_open(access, inherit, pid)
-
-    monkeypatch.setattr(ntdll, "NtResumeProcess", resume_then_interrupt)
-    monkeypatch.setattr(k32, "OpenProcess", deny_member_waits)
-    argv, marker = _marker_child(tmp_path, 1.0)
-    result, raised = _session_outcome(argv, tmp_path)
-    monkeypatch.undo()
-    assert result is None, "returned {!r} instead of raising".format(result)
-    assert type(raised).__name__ == "TreeNotEnded", repr(raised)
-    assert not isinstance(raised, Exception), "an `except Exception` would catch it"
-    chain, link = [], raised
-    while link is not None:
-        chain.append(type(link).__name__)
-        link = link.__cause__ or link.__context__
-    assert "KeyboardInterrupt" in chain, "the interruption was lost: {}".format(chain)
-    time.sleep(1.5)
-    assert not marker.exists(), "the job was not terminated"
-
-
-@pytest.mark.skipif(os.name != "nt", reason="job containment is Windows")
-def test_a_launch_cleanup_that_cannot_terminate_raises(tmp_path, monkeypatch):
-    # WI-881 narrow review 007 F1: containment fails after the child is in
-    # its job (the resume fails), and the cleanup cannot terminate the job.
-    # That is a tree that may still hold a writer, not an ordinary launch
-    # error, so run_session raises rather than returning a session result.
-    k32, ntdll = agent_session._win32()
-    real_terminate = k32.TerminateJobObject
-    jobs = []
-
-    def resume_fails(handle):
-        return 0xC0000001  # STATUS_UNSUCCESSFUL
-
-    def terminate_fails(job, code):
-        import ctypes
-
-        jobs.append(job)
-        ctypes.set_last_error(5)  # ERROR_ACCESS_DENIED
-        return 0
-
-    monkeypatch.setattr(ntdll, "NtResumeProcess", resume_fails)
-    monkeypatch.setattr(k32, "TerminateJobObject", terminate_fails)
-    result, raised = _session_outcome(
-        [sys.executable, "-c", "import time; time.sleep(30)"], tmp_path
-    )
-    monkeypatch.undo()
-    try:
-        assert result is None, "returned {!r} instead of raising".format(result)
-        assert type(raised).__name__ == "TreeNotEnded", repr(raised)
-    finally:
-        for job in jobs[:1]:  # hygiene: end the suspended child for real
-            real_terminate(job, 1)
-        del raised
-
-
 def test_an_ordinary_launch_error_still_returns_the_session_error(tmp_path):
-    # WI-881 round 5: only a failure to end the tree escapes as TreeNotEnded.
-    # A launch that never created a child (a missing executable) is still the
-    # ordinary, recoverable session-error result.
+    # A launch that never created a child (a missing executable) returns
+    # the ordinary session-error result.
     code, output, timed_out = agent_session.run_session(
         ["wi881-no-such-agent-cli"], tmp_path, 30
     )
     assert (code, timed_out) == (-1, False)
     assert output.startswith("coordinator: session error: "), output
-
-
-@pytest.mark.skipif(os.name != "nt", reason="job containment is Windows")
-def test_an_interruption_before_the_job_ends_the_suspended_child(tmp_path, monkeypatch):
-    # WI-881 gate review 006 F1: an interrupt before the child is in its job
-    # finds it still suspended and outside any job; the launch boundary kills
-    # and reaps it rather than leaving a suspended process behind.
-    seen = []
-
-    def interrupt_before_containment(proc):
-        seen.append(_Watched(proc.pid))
-        raise KeyboardInterrupt
-
-    monkeypatch.setattr(agent_session, "_contain_in_job", interrupt_before_containment)
-    try:
-        with pytest.raises(KeyboardInterrupt):
-            agent_session.run_session(
-                [sys.executable, "-c", "import time; time.sleep(30)"], tmp_path, 30
-            )
-        monkeypatch.undo()
-        assert len(seen) == 1
-        assert seen[0].exited_within(0), "the suspended child was left behind"
-    finally:
-        for proc in seen:
-            proc.reap()
-
-
-class _InterruptingThread(agent_session.threading.Thread):
-    """A Thread whose start() starts it, then raises KeyboardInterrupt in the
-    starting thread: an interrupt landing in run_session's I/O setup."""
-
-    def start(self):
-        super().start()
-        raise KeyboardInterrupt
-
-
-@pytest.mark.parametrize("stage", ["io-setup", "deadline-handoff"])
-def test_an_interruption_in_supervision_ends_the_child(tmp_path, monkeypatch, stage):
-    # WI-881 gate review 006 F1, after the launch: an interrupt landing while
-    # run_session starts its I/O threads, or as the waiter hands back its
-    # deadline verdict, used to fall outside every handler and leave the
-    # child running. One owner now ends the tree on every path but a natural
-    # exit. Both platforms.
-    if stage == "io-setup":
-        monkeypatch.setattr(
-            agent_session,
-            "threading",
-            types.SimpleNamespace(Thread=_InterruptingThread),
-        )
-    else:
-        real_wait = agent_session._wait_for_exit
-
-        def wait_then_interrupt(*args):
-            real_wait(*args)
-            raise KeyboardInterrupt
-
-        monkeypatch.setattr(agent_session, "_wait_for_exit", wait_then_interrupt)
-    argv, marker = _marker_child(tmp_path, 1.5)
-    with pytest.raises(KeyboardInterrupt):
-        agent_session.run_session(argv, tmp_path, 1)
-    monkeypatch.undo()
-    time.sleep(2.0)
-    assert not marker.exists(), "the child outlived the interrupted session"
-
-
-# A session that, once told GO, spawns a burst of children and then reports
-# how many the job refused and the pid of each it admitted.
-LATE_SPAWNER = """
-import subprocess, sys
-print('READY', flush=True)
-sys.stdin.readline()
-admitted, refused = [], 0
-for _ in range(32):
-    try:
-        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
-        admitted.append(child.pid)
-    except OSError:
-        refused += 1
-print(refused, *admitted, flush=True)
-sys.stdin.readline()
-"""
-
-
-def _late_spawn_round(real_open, monkeypatch):
-    """One round: a READY session spawns its burst inside the kill's snapshot
-    step, so its children enter the job after any snapshot taken before that
-    point. Returns (refused, the admitted children as _Watched)."""
-    proc = agent_session._spawn_session(
-        [sys.executable, "-c", LATE_SPAWNER],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        text=True,
-    )
-    report, admitted = [], []
-
-    def snapshot_while_spawning(*args):
-        members = real_open(*args)
-        proc.stdin.write("GO\n")
-        proc.stdin.flush()
-        report.extend(int(n) for n in proc.stdout.readline().split())
-        # Held from before the terminate, so a pid cannot be reused under it.
-        admitted.extend(_Watched(pid) for pid in report[1:])
-        return members
-
-    try:
-        assert proc.stdout.readline().strip() == "READY"
-        monkeypatch.setattr(agent_session, "_open_job_members", snapshot_while_spawning)
-        agent_session._kill_tree(proc)
-    finally:
-        monkeypatch.setattr(agent_session, "_open_job_members", real_open)
-        proc.stdin.close()
-        proc.stdout.close()
-    assert len(report) >= 1, "the session never reported its burst"
-    return report[0], admitted
-
-
-@pytest.mark.skipif(os.name != "nt", reason="the job snapshot is Windows")
-def test_a_member_spawned_during_the_kill_has_ended_when_it_returns(monkeypatch):
-    # WI-881 narrow review 002 F1 (D-004): a session still spawning while the
-    # kill runs lands members after the kill's snapshot, and the kill must not
-    # return while one of them is unsignalled. The burst is released inside
-    # the snapshot step, so every round lands the kill mid-spawn. The kill
-    # either kept the job from admitting them or waited for them. Before the
-    # fix about 5 rounds in 12 returned early (measured 2026-10-10), so
-    # 12 rounds; a fixed kill refuses each burst at once and stays fast.
-    real_open = agent_session._open_job_members
-    for _ in range(12):
-        refused, admitted = _late_spawn_round(real_open, monkeypatch)
-        try:
-            alive = [w.pid for w in admitted if not w.exited_within(0)]
-            assert not alive, "the kill returned beside members {}".format(alive)
-            assert refused + len(admitted) == 32
-        finally:
-            for w in admitted:
-                w.reap()
 
 
 @pytest.mark.skipif(os.name != "nt", reason="the job snapshot is Windows")

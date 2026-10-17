@@ -30,3 +30,17 @@ alternative = "Hold every commit until the box is quiet; or commit docs-only cha
 reversal_cost = "None: readings only."
 why_not_escalated = "It was the owner's ruling."
 review = ""
+
+[decision.D-005]
+decided = "Owner direction in session (2026-10-17c), asked whether the box was quiet for WI-931's landing reading: 'It may not be quite, but run it anyways, it sounds like the bar needs to be relaxed. The smoke test time check is to ensure smoke tests do not take an egregious amount of time, but an occupied machine isn't an excuse to avoid them. It can just be documented, and if it's due to CPU load that's okay.' So a landing no longer waits for a quiet box: its bar runs on the box as it is, on the staged squash, beside its parent's reading taken in the same window (D-004's pairing), and the landing commit records both. A breach whose reading stays close to its parent's (the tier running the same tests, the gap a few seconds, as D-004's pairs ran within 9 s) is load and does not hold the landing; a reading well above its parent's, or a tier that grew, is charged to the change as before, and every test must still pass. WI-931's landing is the first: the staged squash read 60.5 s (over by 0.5 s) beside its parent's 58.7 s, the two runs concurrent at below-normal priority, both 2623 passed and 2 skipped, against a quiet 46.7 s for the same tier at WI-928's landing. This replaces D-004's clause that landings wait for a quiet reading the owner gives, and coordinator-2026-10-16 D-012's landing clause; the below-normal priority stays. Changing the budget step itself (the owner's 'the bar needs to be relaxed') is not built or filed here: the coordinator asks the owner whether a row should make the step judge load."
+alternative = "Hold WI-931's landing for a quiet reading the owner gives, as D-004 and D-012 had it."
+reversal_cost = "None: the readings are recorded with each landing, and a quiet re-measure can follow."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-006]
+decided = "WI-931 lands on the box as it is (D-005), with its RESYNC entry re-anchored at the squash from 61ee4e165 to the landing's parent 3a11f46f0 (wi-931 002's F2; recipes section 3), the one token in the landing beyond the gated tip. The lane was first rebased from bb3acd1e2 onto 3a11f46f0, the docs-only close-out, which touches none of its files; the rebased lane diff is byte-identical to the gated one, so no post-rebase round is owed. The archive commit takes the rebased tip 86b88f2d9 and the pre-rebase tips the verdicts cite: bb3acd1e2 (reaching the round-1, sitting and gate shas), 4e6b1318f, 8b2b4870a (reaching critique 2's 7a4e14ce8) and db45cd9b9 (critique 1's). The Done-when's modules on the staged squash (test_session_stdin, test_session_keep): 196 passed."
+alternative = "Land the entry on the stale anchor; or run an uncounted convergence round over the rebased tip."
+reversal_cost = "None: one anchor token; the archive keeps every cited tip reachable."
+why_not_escalated = "Recipes section 3 states the anchor, archive and re-mint rules; SKILL section 4 owes a post-rebase round only when the rebase changes code or rows."
+review = ""

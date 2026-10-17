@@ -233,30 +233,21 @@ _JOB_BASIC_ACCOUNTING = 1
 _JOB_PROCESS_ID_LIST = 3
 _JOB_PID_CAPACITY = 4096
 _SYNCHRONIZE = 0x00100000
-# What the kill opens a member with: SYNCHRONIZE to wait on it, and
-# PROCESS_QUERY_LIMITED_INFORMATION for IsProcessInJob. OpenProcess fails with
-# ERROR_INVALID_PARAMETER for a pid that no longer exists.
-_MEMBER_ACCESS = _SYNCHRONIZE | 0x1000
+# What the kill opens a member with: SYNCHRONIZE to wait on it. OpenProcess
+# fails with ERROR_INVALID_PARAMETER for a pid that no longer exists.
+_MEMBER_ACCESS = _SYNCHRONIZE
 _ERROR_INVALID_PARAMETER = 87
-# SetInformationJobObject's JobObjectBasicLimitInformation class and
-# JOB_OBJECT_LIMIT_ACTIVE_PROCESS: the kill closes the job to new members.
-_JOB_BASIC_LIMIT = 2
-_JOB_LIMIT_ACTIVE_PROCESS = 0x00000008
 # SR-238's stated bound: after the kill, _kill_tree waits this many seconds at
 # most for the session's process group (POSIX) or job (Windows) to empty, then
 # raises instead of letting the coordinator continue beside a survivor.
 _TREE_END_SECONDS = 10.0
 
 
-class TreeNotEnded(BaseException):
+class TreeNotEnded(OSError):
     """A session's process tree could not be ended, or could not be shown to
     have ended, within _TREE_END_SECONDS. A writer may still be running, so
-    the run must stop. It derives from BaseException, not Exception, for the
-    reason KeyboardInterrupt and SystemExit do: no ordinary `except OSError`
-    or `except Exception` may read it as a recoverable error. run_session's
-    launch-error conversion, in particular, must never turn it into a session
-    result (WI-881 narrow review 007). The machinery's own OSError is kept as
-    its cause.
+    the run must stop; callers let it propagate. The machinery's own OSError
+    is kept as its cause.
 
     Implements: SR-238, LLR-026
     """
@@ -288,23 +279,6 @@ class _JobPidList(ctypes.Structure):
     ]
 
 
-class _JobBasicLimit(ctypes.Structure):
-    """JOBOBJECT_BASIC_LIMIT_INFORMATION; the kill sets only its
-    active-process limit."""
-
-    _fields_ = [
-        ("PerProcessUserTimeLimit", ctypes.c_int64),
-        ("PerJobUserTimeLimit", ctypes.c_int64),
-        ("LimitFlags", ctypes.c_uint32),
-        ("MinimumWorkingSetSize", ctypes.c_size_t),
-        ("MaximumWorkingSetSize", ctypes.c_size_t),
-        ("ActiveProcessLimit", ctypes.c_uint32),
-        ("Affinity", ctypes.c_size_t),
-        ("PriorityClass", ctypes.c_uint32),
-        ("SchedulingClass", ctypes.c_uint32),
-    ]
-
-
 @functools.lru_cache(maxsize=None)
 def _win32():
     """kernel32 and ntdll with the prototypes the job calls need, declared
@@ -331,19 +305,6 @@ def _win32():
         wintypes.DWORD,
         ctypes.POINTER(wintypes.DWORD),
     ]
-    k32.SetInformationJobObject.restype = wintypes.BOOL
-    k32.SetInformationJobObject.argtypes = [
-        wintypes.HANDLE,
-        ctypes.c_int,
-        ctypes.c_void_p,
-        wintypes.DWORD,
-    ]
-    k32.IsProcessInJob.restype = wintypes.BOOL
-    k32.IsProcessInJob.argtypes = [
-        wintypes.HANDLE,
-        wintypes.HANDLE,
-        ctypes.POINTER(ctypes.c_int),  # a BOOL out-parameter
-    ]
     k32.WaitForSingleObject.restype = wintypes.DWORD
     k32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
     k32.CloseHandle.argtypes = [wintypes.HANDLE]
@@ -356,8 +317,7 @@ def _win32():
 def _contain_in_job(proc):
     """Windows: put the SUSPENDED session child in a fresh job object, then
     resume it. The job is published on `proc.session_job` as soon as the
-    child is in it, BEFORE the resume, so whoever ends a failed launch can end
-    the job (WI-881 gate review 006). The job handle closes when `proc` is
+    child is in it, BEFORE the resume. The job handle closes when `proc` is
     collected; the job carries no kill-on-close limit, so closing it never
     ends a session. NtResumeProcess resumes the child because Popen does not
     keep its primary thread's handle. Raises OSError when any step fails.
@@ -390,14 +350,8 @@ def _spawn_session(argv, **popen_kwargs):
     otherwise survive the direct child's kill and keep editing the worktree
     the coordinator hands to the next session. POSIX: the child leads a new
     session and process group. Windows: the child is born suspended, contained
-    in its own job object, then resumed (_contain_in_job). This boundary owns
-    the child, and on Windows its job, until it returns `proc`: on ANY
-    exception (a containment OSError, or a KeyboardInterrupt or SystemExit
-    landing mid-launch) it ends and reaps what it owns, then re-raises, so an
-    interrupted launch never leaves a running child behind (WI-881 gate
-    review 006). A child that cannot be contained is ended before it runs. A
-    cleanup that cannot end the child raises TreeNotEnded in place of the
-    exception in flight, which stays in its chain (narrow review 007).
+    in its own job object, then resumed (_contain_in_job); a child that cannot
+    be contained is killed before it ever runs and the OSError propagates.
 
     Implements: SR-026, LLR-026
     """
@@ -406,47 +360,11 @@ def _spawn_session(argv, **popen_kwargs):
     proc = subprocess.Popen(argv, creationflags=_CREATE_SUSPENDED, **popen_kwargs)
     try:
         _contain_in_job(proc)
-    except BaseException:
-        _end_launch(proc)
+    except OSError:
+        with proc:  # closes the pipes and reaps the never-run child
+            proc.kill()
         raise
     return proc
-
-
-def _end_launch(proc):
-    """Windows: end and reap a child whose launch did not complete, then close
-    its pipes. A child not yet in a job is still suspended and has never run,
-    so killing it is enough; once it is in its job (published before the
-    resume), the whole job is ended with _kill_tree. Not `with proc`:
-    Popen.__exit__ waits without a bound on any exception but
-    KeyboardInterrupt.
-
-    Implements: SR-238, LLR-026
-    """
-    try:
-        if getattr(proc, "session_job", None) is None:
-            _end_suspended(proc)
-        else:
-            _kill_tree(proc)
-    finally:
-        for stream in (proc.stdin, proc.stdout, proc.stderr):
-            if stream:
-                stream.close()
-
-
-def _end_suspended(proc):
-    """Windows: kill and reap a launch's child that is not yet in its job: it
-    is still suspended and has never run. A kill that fails, or a child not
-    gone within _TREE_END_SECONDS, raises TreeNotEnded.
-
-    Implements: SR-238, LLR-026
-    """
-    try:
-        proc.kill()
-        proc.wait(timeout=_TREE_END_SECONDS)
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise TreeNotEnded(
-            "the suspended session child {} was not ended: {}".format(proc.pid, exc)
-        ) from exc
 
 
 def _kill_tree(proc):
@@ -455,17 +373,16 @@ def _kill_tree(proc):
     grandchild (cmd.exe -> node), and a survivor keeps editing the worktree
     the coordinator is about to hand to the next session (repo-review
     2026-07-21 H-2). `proc` comes from _spawn_session. POSIX: the child leads
-    its own process group, so SIGKILL the group. Windows: close the job every
-    descendant was born into to new members, take a handle on each member,
-    then terminate the job, which reaches an orphaned grandchild too
-    (_terminate_job); the handles are closed once the wait ends or raises.
+    its own process group, so SIGKILL the group. Windows: take a handle on
+    each member of the job every descendant was born into, then terminate the
+    job, which reaches an orphaned grandchild too (_terminate_job); the
+    handles are closed once the wait ends or raises.
     It replaced `taskkill /F /T`, which on a 2026-10-08 Windows build waited
     about 60 s and then failed without killing anything (WI-881). Then wait
     (D-003): the direct child is reaped and the group or job polled until it
     is empty. A tree not empty within _TREE_END_SECONDS, or any failure of the
     kill machinery, raises TreeNotEnded naming the survivor and the cause, so
-    the coordinator stops instead of continuing beside it. This is the one
-    place where such an OSError is classified (WI-881 narrow review 007).
+    the coordinator stops instead of continuing beside it.
     A descendant that left the group, or a process started outside the job on
     the session's behalf, is not reached (D-002).
 
@@ -510,25 +427,20 @@ def _end_group_tree(proc):
 
 
 def _terminate_job(job, members):
-    """Windows: close the job to new members, open every member into
-    `members`, then terminate the job (D-004). The order is the guarantee.
-    Once the active-process limit is set the job admits no process, so the
-    member list that follows is complete. A member that left the list
-    earlier did so by its own exit, and was signalled by then (measured
-    2026-10-10). The job terminate is what takes members off the list before
-    they are signalled, which is why the handles are taken before it: the
-    job's active-process count reaches zero a few milliseconds before a
-    terminated process is signalled. The terminate runs even when an earlier
-    step fails, and that error then raises. A live member the kill could not
-    open makes it raise after the terminate, naming the pid, because the kill
-    cannot wait on it (S3).
+    """Windows: open every member into `members`, then terminate the job.
+    The job terminate is what takes members off the list before they are
+    signalled, which is why the handles are taken before it: the job's
+    active-process count reaches zero a few milliseconds before a terminated
+    process is signalled. The terminate runs even when an earlier step fails,
+    and that error then raises. A live member the kill could not open makes
+    it raise after the terminate, naming the pid, because the kill cannot
+    wait on it (S3).
 
     Implements: SR-238, LLR-026
     """
     k32, _ = _win32()
     unopened = []
     try:
-        _close_job(job)
         _open_job_members(job, members, unopened)
     finally:
         terminated = k32.TerminateJobObject(job, 1)
@@ -543,29 +455,10 @@ def _terminate_job(job, members):
         )
 
 
-def _close_job(job):
-    """Windows: set the job's active-process limit to 1, so the job admits no
-    new process; a creation it refuses fails before the process runs. The
-    processes already in the job are left running.
-
-    Implements: SR-238, LLR-026
-    """
-    k32, _ = _win32()
-    limit = _JobBasicLimit()
-    limit.LimitFlags = _JOB_LIMIT_ACTIVE_PROCESS
-    limit.ActiveProcessLimit = 1
-    if not k32.SetInformationJobObject(
-        job, _JOB_BASIC_LIMIT, ctypes.byref(limit), ctypes.sizeof(limit)
-    ):
-        raise ctypes.WinError(ctypes.get_last_error())
-
-
 def _open_job_members(job, handles, unopened):
     """Windows: append a handle on every process now in the job to `handles`,
     and append `(pid, error)` to `unopened` for each live member that could
-    not be opened. A pid that no longer exists is skipped. A handle whose
-    process is no longer in the job (a reused pid, or a member that already
-    left by its own exit) is closed and dropped (D-005).
+    not be opened. A pid that no longer exists is skipped.
 
     Implements: SR-238, LLR-026
     """
@@ -583,21 +476,6 @@ def _open_job_members(job, handles, unopened):
                 unopened.append((pid, error))
             continue
         handles.append(handle)  # owned by the caller from here, even on a raise
-        if not _in_job(handle, job):
-            handles.pop()
-            k32.CloseHandle(handle)
-
-
-def _in_job(handle, job):
-    """Windows: whether the process behind `handle` is in `job`.
-
-    Implements: SR-238, LLR-026
-    """
-    k32, _ = _win32()
-    inside = ctypes.c_int()
-    if not k32.IsProcessInJob(handle, job, ctypes.byref(inside)):
-        raise ctypes.WinError(ctypes.get_last_error())
-    return bool(inside.value)
 
 
 def _close_handles(handles):
@@ -924,8 +802,6 @@ def run_session(
     # waiter can kill a session that has gone silent without waiting for the
     # wall deadline. A one-element list, not a bare float: the pump thread
     # rebinding a closure-captured float would be invisible to the waiter.
-    # Set up before the launch, so nothing runs between the launch handing
-    # back the child and the `try` that owns it.
     lines, last_line, natural_exit = [], [time.time()], False
     try:
         _validate_prompt_transport(argv, stdin_input, env=env)
@@ -944,13 +820,13 @@ def run_session(
         )
     except (OSError, ValueError) as exc:
         return -1, "coordinator: session error: {}".format(exc), False
-    # From here run_session owns the child (WI-881 gate review 006). The
-    # `finally` is the one place the tree is ended after launch: at a deadline,
-    # on an interruption, or when the I/O setup fails, but never after a
-    # natural exit. TWO deadlines (C3): `timeout` bounds the WALL and
-    # `idle_timeout` bounds SILENCE. A child that stops emitting used to be
-    # discovered only at the wall; two silent hangs on 2026-08-30 each went
-    # quiet minutes in and burned a 7200 s wall slot.
+    # From here run_session supervises the child. The `finally` is the one
+    # place the tree is ended: at a deadline, on an interruption, or when the
+    # I/O setup fails, but never after a natural exit. TWO deadlines (C3):
+    # `timeout` bounds the WALL and `idle_timeout` bounds SILENCE. A child
+    # that stops emitting used to be discovered only at the wall; two silent
+    # hangs on 2026-08-30 each went quiet minutes in and burned a 7200 s wall
+    # slot.
     try:
         pump = _start_session_io(proc, lines, last_line, on_line, stdin_input)
         killed, killed_kind = _wait_for_exit(proc, timeout, idle_timeout, last_line)
