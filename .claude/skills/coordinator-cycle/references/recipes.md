@@ -65,6 +65,15 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     `--add-dir` on the review scratch root (`$REPO.wt/review-tmp`) and
     `--skip-git-repo-check`. It exits 3 if HEAD moved.
   - Note the `session id:` line in its log.
+  - `mkprompt.py` takes `LANE=<branch>` (`wi-912`), never the worktree
+    path, which builds a broken `--basetemp` (`C:-Projects-...`).
+  - Launched through `lowprio.py` with Git's `usr/bin/bash.exe`, the
+    script's bash exited 127 after about ten minutes while `codex exec`
+    ran on, orphaned, and wrote its `-o` report when it finished: wait on
+    the codex process (`tasklist`), never relaunch. A resumed turn ran
+    cleanly with `lowprio.py` launching the vendored `codex.exe` directly
+    (under the npm `@openai/codex` package's `vendor/` folder), which keeps
+    the `-c` quoting intact (WI-912, 2026-10-17).
 - **Terra, resumed.** Run this from the lane directory; `resume` takes no `-s`
   or `-C`:
   `codex exec resume <session id> -m gpt-5.6-terra -c model_reasoning_effort="medium" -c 'windows.sandbox="unelevated"' -c 'sandbox_mode="workspace-write"' -c 'sandbox_workspace_write.writable_roots=["C:/Projects/ai-template.wt/review-tmp"]' --skip-git-repo-check -o <out> - < <prompt>`
@@ -677,6 +686,15 @@ lane commit being replayed.
   the page's baseline line goes stale on its own (2026-10-14). Regenerate it
   (`gen_open_items.py`) and include it; the long list of deferral warnings
   above the refusal is standing noise from old fragments.
+- A lane commit that edits a prompt template carries the regenerated
+  `project-trajectory/prompts/CATALOG.md`: the hook's `prompt-catalog`
+  step refuses a stale catalogue on a lane commit and `staged-divergence`
+  an unstaged regeneration, whatever a plan says about regenerating it
+  only at the landing (wi-912 D-003).
+- A build stage that adds a module owes its component before its
+  commit: `check_trajectory.py --strict` errors until an LLR names the
+  module's CMP, so Terra's intent rows for that stage ride the stage's
+  commit, and the rest of the set follows the round (wi-912 D-003).
 - `skills-sync` drift: run `"$PY" "$SCRIPTS/bootstrap.py" --dest . --sync`
   in every lane commit that touches a kit skill.
 - Redirect each commit's output to a file: the pre-commit hook prints about
@@ -744,6 +762,9 @@ lane commit being replayed.
   rewrote), a Python script or plain TOML alike (a decisions append quoting
   `$a = $b`, 2026-10-15i). Write the text or the edit script to the scratch
   root with the file tool and append or run it from there (2026-10-14).
+  The shell has also rewritten `\n` and `\1` inside heredoc Python, in a
+  builder's test strings and in a coordinator's log edit (WI-912,
+  2026-10-17): tell every builder the same.
 - **Scratch:** one dated root, `$REPO.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
   the root once results are recorded.
@@ -767,9 +788,13 @@ lane commit being replayed.
   (`C:/Program Files/Git/usr/bin/bash.exe`), since Windows resolves a
   bare `bash` by its own search order (2026-10-15g). The wrapper resolves
   its program with `shutil.which`: a bare `codex` (an npm `.cmd` shim) is
-  not found by `CreateProcess` (2026-10-16d). Under that load every bar
-  reading breaches, so a landing waits for a quiet reading the owner
-  gives (coordinator-2026-10-16 D-012, D-013). Your own parallel `-n auto`
+  not found by `CreateProcess` (2026-10-16d). A landing no longer waits
+  for a quiet box (owner, coordinator-2026-10-17 D-005): take the staged
+  squash's reading beside its parent's in one window and record both in
+  the landing commit. A breach close to the parent's reading on the same
+  tier is load and holds nothing; one well above it, or a tier that
+  grew, is the change's (WI-912's stage 2 read 26 s over its parent until
+  its new module moved to `SLOW_MODULES`, wi-912 D-004). Your own parallel `-n auto`
   jobs (a builder's module runs, the full suite) push a lane bar to
   78 to 82 s: take lane bars between them, or re-take one quiet before
   its commit (2026-10-17).

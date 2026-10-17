@@ -25,14 +25,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-17b-attended-coordinator.md](handoff-2026-10-17b-attended-coordinator.md),
+  [handoff-2026-10-17c-attended-coordinator.md](handoff-2026-10-17c-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
   process-text, strict-lints and plan-gate landing-shapes rows have
   landed, and the reviewer trial has ended: each round runs two reviewers,
-  Sol and Opus. The adjudication-split row's plan has passed and its first
-  build is next.
+  Sol and Opus. The adjudication-split row's first build round and its
+  change set at intent are committed in its lane; its first counted review
+  round is next (the handoff's state). A landing's bar now runs on the box
+  as it is, read beside its parent's (owner, 2026-10-17).
   The headless coordinator's marking rows are critique-confirmed and wait
   for the rows they need. The
   disposition-adoption row is re-cut before it resumes, and the
