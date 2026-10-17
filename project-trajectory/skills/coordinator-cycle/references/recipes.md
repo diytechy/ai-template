@@ -96,11 +96,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      before trusting. Edit nothing in a lane while its reviewer runs: the
      check counts your own edit too (WI-911, 2026-10-15). The launcher uses workspace-write, because a read-only
      sandbox could not run Python, and checks HEAD and status afterwards.
-     Launch each Claude REVIEW-B as a sub-agent given only its brief's path
+     Launch the Claude REVIEW-B as a sub-agent given only its brief's path
      plus the lane worktree and the interpreter, which the brief does not
      name, and ask for a two-line reply (the verdict path and its VERDICT
-     line). Record the stand-in, and during the program's trial the model
-     behind each file, in the lane's decisions. A Claude reviewer that
+     line). Pass the Agent tool's `model: "opus"` and `effort: "high"`: a
+     prompt saying "work at high effort" does not set it (2026-10-16c).
+     Record the stand-in in the lane's decisions. A Claude reviewer that
      backgrounds its own pytest can lose the completion notice and stop
      with no verdict: look for its process (its scratch path in the
      command line), then resume that reviewer with SendMessage, never a

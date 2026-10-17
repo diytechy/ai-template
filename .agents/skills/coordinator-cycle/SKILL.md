@@ -34,7 +34,7 @@ reconstruct the chain.
 | Build | the `kit-builder` agent (Claude Opus, medium) | one per round; leaves its change uncommitted |
 | Spine author | GPT Terra (`gpt-5.6-terra`, medium) | **one retained session per lane**, resumed each turn |
 | Code review, REVIEW-A | Codex 6.1 Sol (`gpt-6.1-sol`, medium) | **fresh per review**, beside REVIEW-B |
-| Code review, REVIEW-B | another family or model than REVIEW-A: a Claude stand-in sub-agent until WI-815's Gemini route has one verified launch | **fresh per review**, given only its brief's path |
+| Code review, REVIEW-B | another family or model than REVIEW-A: a Claude Opus (high) stand-in sub-agent until WI-815's Gemini route has one verified launch | **fresh per review**, given only its brief's path |
 | Scope and plan critique | Codex 6.1 Sol (`gpt-6.1-sol`, medium) | **fresh per critique**, one critic |
 | Adjudication | a retained Claude Opus home, via `coordinator_adjudicate.py` from the lane | the entry point retains it; never a subagent |
 
@@ -44,20 +44,18 @@ adjudicator never drafts the text it judges. Its ruling on a dispute is final.
 
 The review shape follows the review-churn plan's owner rulings of 2026-10-11
 (`docs/plans/2026-10-11-review-churn/README.md`, "Owner rulings, 2026-10-11"),
-cited below by ruling or revision number (rulings 4 and 7, revisions 6 to 8,
-33 and 37):
+cited below by ruling or revision number (rulings 4 and 7, revisions 6 to 8
+and 33):
 
-- There are no narrow rounds. Each round runs the full-lane reviewers in
+- There are no narrow rounds. Each round runs the two full-lane reviewers in
   parallel, each from its own `review_brief.py review --scope full` render
   with its own `--scratch`, so each has its own verdict path and its own
   `--basetemp`.
 - A Claude REVIEW-B is recorded as a substitution in the lane's decisions
-  each time it stands in (ruling 7).
-- **The program's third-reviewer trial** (revision 37): during the
-  review-churn program two Claude reviewers stand in, both filing REVIEW-B,
-  each under its own number. The lane's decisions name the model behind each
-  file and which reviewer raised each accepted finding. Nothing is built for
-  a third slot.
+  each time it stands in (ruling 7). The owner chose Claude Opus at high for
+  the slot when the program's three-reviewer trial ended (revision 37's
+  trial; coordinator-2026-10-16 D-008): it caught what Sol missed, while the
+  second stand-in's unique catches never changed a round.
 
 ## 1. Before the claim: settle scope and trust where the row is born
 

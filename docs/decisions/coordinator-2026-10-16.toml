@@ -39,3 +39,31 @@ alternative = "Keep S4 as is (both rows pay the plan step), or exempt the two ro
 reversal_cost = "Low: one rubric sentence and two queued rows' planmode."
 why_not_escalated = "It was the owner's ruling."
 review = ""
+
+[decision.D-006]
+decided = "Owner ruling in session (2026-10-16c, as recommended), on the handoff's follow-up: the declared commit bar's budget step takes no --elapsed, so every bar runs the smoke tier twice (wi-914 D-006). A row is filed now, with its scope critique, and queued right after the handoff's row 2 batch (WI-928, WI-929, WI-930, WI-931). It changes the commit bar, so it lands alone."
+alternative = "File it after the hook rows (row 6), or not at all."
+reversal_cost = "Low: a queue position."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-007]
+decided = "WI-929 joins the handoff's row 2 batch, claimed under the same scoped unpause as WI-928, WI-930 and WI-931, as the handoff allows (its one edge, ~WI-912, is soft, and a batch carries only soft edges, recipes section 2). It still lands after WI-912 (the handoff's row 4); claiming it now saves a second unpause cycle. Every row in the batch passed its scope critique and confirming round (D-003)."
+alternative = "Claim WI-929 under its own unpause once WI-912 lands."
+reversal_cost = "Low: a claimed row with no commits returns to the queue by a handback."
+why_not_escalated = "The handoff leaves the choice to the coordinator, and the landing order is unchanged."
+review = ""
+
+[decision.D-008]
+decided = "Owner ruling in session (2026-10-16c, as recommended): the review-churn program's three-reviewer trial (plan revision 37) ends. From the next round on, each round runs two full-lane reviewers, the norm of ruling 4: Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7). Claude Fable drops. The tally over the five trial lanes (wi-911, wi-913, wi-914, wi-921, wi-923; 126 findings), each defect counted once per lane: unique catches Sol 9, Fable 14 (all MINOR), Opus 32; round-costing accepted findings Sol 5, Fable 0, Opus 3 (all unique to Opus); dismissed or refuted Sol 0, Fable 2, Opus 1. By the owner's measure (a reviewer stays only if it catches what the others miss), Fable's unique catches never changed a round, while Opus's included three MAJORs the others missed; the same-model concern did not show as leniency. The tally's records disagree with the 2026-10-16b handoff on one point: Sol's 'round-costing 1 (the owed act)' forced no fix round (wi-914 D-002)."
+alternative = "Keep three reviewers for the program; Sol and Fable; or more lanes before deciding."
+reversal_cost = "Low: a later lane may add a reviewer back."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-009]
+decided = "Owner ruling in session (2026-10-16c, as recommended), on the bar follow-up's construction (D-006): the declared bar runs the strict lints and the docs check first, and the budget step last, whose own timed tier run is the bar's only tier run; the timed form exits nonzero on a red tier rather than printing a note. No record, no new state and no Trust section. A breach still never hides a lint red, since the lints run before the budget; a lint red now stops the bar before the tier runs, the mirror of today's order."
+alternative = "The drafted construction: a --run-tier producer writing a per-checkout timing record that a --from-record judge reads and deletes, with a Trust section over the record."
+reversal_cost = "Low: an unbuilt row's design."
+why_not_escalated = "It was the owner's ruling."
+review = ""
