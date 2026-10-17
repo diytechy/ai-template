@@ -144,18 +144,6 @@ def test_filing_a_review_exits_zero_and_writes_only_the_round_file(git_lane):
     assert rb.main(argv + ["--sha", "HEAD", "--scope", "full"]) == 2
     status = _git(root, "status", "--porcelain", "--untracked-files=all")
     assert status == "?? docs/reviews/wi-900/001-REVIEW-A-{}.md".format(tip[:7])
-    # A branch named for the rollup generator's own directory refuses too, in
-    # any case: the generator owns that directory and prunes what it did not
-    # write, and a case-insensitive filesystem makes `Rollup` the same one.
-    # Each branch is deleted before the next, since a case-insensitive ref
-    # store cannot hold `rollup` and `Rollup` side by side.
-    for name in ("rollup", "Rollup", "ROLLUP"):
-        _git(root, "checkout", "-q", "-b", name)
-        assert rb.main(argv + ["--sha", "HEAD", "--scope", "full"]) == 2
-        status = _git(root, "status", "--porcelain", "--untracked-files=all")
-        assert status == "?? docs/reviews/wi-900/001-REVIEW-A-{}.md".format(tip[:7])
-        _git(root, "checkout", "-q", "--detach")
-        _git(root, "branch", "-q", "-D", name)
 
 
 def test_the_reading_scope_never_shows_a_record_of_earlier_findings(git_lane):

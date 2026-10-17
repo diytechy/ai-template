@@ -8525,6 +8525,32 @@ setting or record format changes. Code of your own that catches
 `PermissionError` around `dir_lock` or `store_lock` no longer sees the
 lock's access refusal: it arrives as `StoreBusy`, after the wait.
 
+### Filing a review no longer refuses a branch named for the rollup's directory [since 1a182d154]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `scripts/review_brief.py`'s `file` command (its
+`file_review`) no longer refuses a branch whose name, in any letter case,
+is the verdict rollup generator's own directory under `docs/reviews/`. The
+other branch-name refusal stays: a branch the round reader cannot read
+back as one review scope, such as `feature/x`, is still refused with exit
+2 and files nothing. Only a hand-named branch reaches the change: the
+kit's routes file reviews from claim-minted `wi-NNN` branches, which never
+collide with a generated directory.
+
+**Residue.** A hand-named branch that collides with a generated directory
+(the rollup's, in any letter case) is outside what filing promises: it
+files there, and the rollup generator may prune what it did not write.
+Filing promises only that a branch is filed when the round reader reads
+its round path back as that branch's scope, and refused otherwise;
+hand-chosen name aliases sit outside every promise (PROCESS.md section 6).
+
+**Kit-owned files — overwrite:** `scripts/review_brief.py`.
+
+**What to do.** Overwrite the file. Nothing migrates: no registry, setting
+or record format changes, and no adopter setting changes. File reviews
+from the branches your claims mint, not from a hand-named branch.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

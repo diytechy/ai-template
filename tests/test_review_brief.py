@@ -477,11 +477,6 @@ def test_a_filed_coordinator_review_appears_in_the_rollup(tmp_path):
             rb.file_review(tmp_path, "wi-900", bad, SHA, "full")
     with pytest.raises(rb.BriefError, match="feature/wi-900"):
         rb.file_review(tmp_path, "feature/wi-900", approve, SHA, "full")
-    # Nor is the rollup generator's own directory a lane, in any case: on a
-    # case-insensitive filesystem `Rollup` is the directory it prunes.
-    for lane in ("rollup", "Rollup", "ROLLUP"):
-        with pytest.raises(rb.BriefError, match="rollup generator"):
-            rb.file_review(tmp_path, lane, approve, SHA, "full")
     assert sorted(p.name for p in (tmp_path / "docs" / "reviews").iterdir()) == [
         "wi-900"
     ]

@@ -1,0 +1,34 @@
+# docs/decisions/wi-930.toml — delegated decisions made in the WI-930 lane
+# (filing a review no longer refuses a branch named for the rollup generator's
+# directory) by the attended coordinator. Format:
+# project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane is cut at trunk's 785b29e11 (the claimed branch had no commits of its own, recipes section 2). Its review rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7, recorded here as the substitution for every round of this lane), the trial having ended (coordinator-2026-10-16 D-008); at most three counted rounds before the checkpoint. Counted round 1 (001 Sol, 002 Opus, both at 3f68c5425) approved with no findings, so the checkpoint follows it."
+alternative = "A second counted round before the checkpoint."
+reversal_cost = "None: a later round may still be run."
+why_not_escalated = "The skill's cycle: the checkpoint follows the first counted round with no BLOCKER or MAJOR."
+review = ""
+
+[decision.D-002]
+decided = "TC-333's expected cell takes one word beyond the spec's literal deletion: removing 'and a lane whose scope is the rollup generator's own directory' left its list ending ', a lane branch the round reader cannot read as a review scope, are refused', so a resumed turn of the lane's Terra session gave the list's last item the 'and' the deletion removed (', and a lane branch ... scope are refused'). The meaning is the spec's; the checkpoint sitting judges the wording."
+alternative = "Keep the literal deletion's broken list for the sitting to return."
+reversal_cost = "Low: one word in one cell."
+why_not_escalated = "A grammar repair inside a deletion the spec rules; the sitting judges it."
+review = ""
+
+[decision.D-003]
+decided = "At the checkpoint the Terra reconcile turn is omitted: the change set was drafted at intent (3f68c5425), no round proposed row text (both reviews approved with no findings, and the builder's spine change list proposes none), and no code moved since. The amendments are the spec's deletions, checked against the diff: each changed approved cell differs from its approved text only by the ruled spans and D-002's one word."
+alternative = "Run a reconcile turn with nothing to reconcile."
+reversal_cost = "None."
+why_not_escalated = "The skill's checkpoint step 1 names this omission (WI-914, WI-923)."
+review = ""
+
+[decision.D-004]
+decided = "The convergence map before the gate over the checkpoint tip is empty: counted round 1 (001, 002) raised no finding and no dispute sat, so no accepted finding needs a regression test or independently checkable evidence mapped (revisions 8 and 33). Sitting 003 blessed LLR-313 and TC-333 as MEANING and re-attested them (its act, ce6ba764f). The gate renders in convergence stance from the trunk base 785b29e11 to the checkpoint tip, with the same two reviewers and the same stand-in as D-001; trunk has not moved since the cut, so no rebase is owed before it."
+alternative = "None: the map is what the rounds produced."
+reversal_cost = "None."
+why_not_escalated = "The skill's convergence map step."
+review = ""

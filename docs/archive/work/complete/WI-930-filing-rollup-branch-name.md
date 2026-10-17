@@ -3,13 +3,30 @@ id = "WI-930"
 title = "Filing a review no longer refuses a branch named for the rollup generator's directory"
 workstream = "process"
 sr_refs = ["SR-235"]
-specref = "docs/decisions/coordinator-2026-10-15.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "none"
 needs = ["WI-911"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-16, after its post-checkpoint gate:
+
+- `review_brief.file_review` no longer compares the round directory with
+  `kverdict.ROLLUP_DIR`: the refusal, its comment and its `BriefError` are
+  deleted, and nothing replaces them. The other branch-name refusal, a
+  branch the round reader cannot read back as one review scope, stays.
+- IF-288's and IF-289's docstring clauses on the rollup generator's
+  directory are gone, and the interface reference is regenerated.
+- The rollup blocks of `tests/test_review_brief.py` and
+  `tests/test_review_brief_git.py` are deleted, nothing inverted; both tests
+  pass with their `feature/wi-900` refusals.
+- LLR-313 and TC-333 carry the amended text: sitting 003 blessed both as
+  MEANING, and act seq 123 re-attests them.
+- `RESYNC_PACK.md` carries the entry, anchored at the landing's parent.
 
 ## Context
 

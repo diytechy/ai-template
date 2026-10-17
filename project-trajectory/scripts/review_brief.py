@@ -78,9 +78,9 @@ Contract IF-288: the attended launcher's command line, its arguments.
     with a count that matches its finding lines, and names a finding when it
     requests changes, as the lane's next round file
     `docs/reviews/<branch>/NNN-<phase>-<sha7>[-narrow].md`, for a branch whose
-    round file `kitlib.verdict.round_file` reads back as that branch's scope
-    and whose directory is not the rollup generator's own. THE SINGLE PLAN
-    (WI-913): `plan --wi WI-N --scratch DIR --out FILE [--revise] [--root
+    round file `kitlib.verdict.round_file` reads back as that branch's scope.
+    THE SINGLE PLAN (WI-913):
+    `plan --wi WI-N --scratch DIR --out FILE [--revise] [--root
     DIR]` writes the shipped single-plan template strictly filled with the
     work item's spec, its Done-when as `D1..Dn` clauses, the inputs the plan
     cites and the planner's one output path under DIR; `--revise` adds the
@@ -108,9 +108,9 @@ Contract IF-289: the command's exit codes. 0 when the brief is written or the
     unfilled template slot, a missing spec, plan, critique or Done-when, an
     unreadable or empty named input, a root not on a branch, a revision that
     is not a commit or a base that is not an ancestor, a branch that is not a
-    review scope or names the rollup generator's directory, a review that
-    fails the IF-288 checks, a review round whose stance is not one of
-    `ordinary` or `convergence`, a narrow round in the convergence stance, a
+    review scope, a review that fails the IF-288 checks, a review round whose
+    stance is not one of `ordinary` or `convergence`, a narrow round in the
+    convergence stance, a
     convergence round over a reviewer template whose reading-scope command it
     cannot narrow, or a plan step the IF-288 plan rules refuse). A refusal writes no
     requested brief or review record.
@@ -495,16 +495,6 @@ def file_review(root, lane, text, sha, scope, phase="REVIEW-A"):
             "the review is not filed: branch {!r} is not a review scope the "
             "round reader reads (docs/reviews/<scope>/ is one directory "
             "level)".format(lane)
-        )
-    # The rollup generator owns its directory and prunes what it did not write.
-    # Compared casefolded on every platform: a directory that collides with it
-    # on any supported filesystem (Windows and macOS fold case) is the
-    # generator's, wherever the commit is later checked out.
-    home = path.parent.relative_to(Path(root)).as_posix()
-    if home.casefold() == kverdict.ROLLUP_DIR.casefold():
-        raise BriefError(
-            "the review is not filed: branch {!r} names the rollup generator's "
-            "own directory {}".format(lane, kverdict.ROLLUP_DIR)
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x", encoding="utf-8", newline="\n") as fh:
