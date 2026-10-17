@@ -919,47 +919,49 @@ LAUNCH_TOOLS = {"Agent": "a new subagent", "SendMessage": "a message to a subage
 SHELL_TOOLS = {"Bash": "posix", "PowerShell": "powershell"}
 _ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # A PowerShell assignment operator (`=` `+=` `-=` `*=` `/=` `%=` `??=`). An
-# assignment is recognised by its operator, never by its target's shape, so
-# property, index, typed, scoped and any other target form is covered (round
-# 016 F1 and round 018 F1, decision D-020).
+# assignment is recognised by its operator.
 _PS_OPERATOR = re.compile(r"(?:[-+*/%]|\?\?)?=")
 _EXECUTABLE_SUFFIXES = (".exe", ".cmd", ".bat", ".com", ".ps1")
-# Option words of `timeout` and `env` that take the next word as their value
-# (env's split string is read by `_split_string`).
+# Option words of `timeout` and `env` that take the next word as their value.
 _OPTION_ARGS = {
     "timeout": frozenset({"-s", "-k", "--signal", "--kill-after"}),
     "env": frozenset({"-u", "-C", "--unset", "--chdir"}),
 }
-# Shell grammar words that stand before a command and are never one, each
-# mapped to its shape (round 028 F1, decision D-025): the option words it
-# takes, and the openers before which one word is its NAME. Bash's
-# `time [-p] [--] pipeline`; `coproc [NAME] compound-command`, the NAME
-# taken before every compound-command opener (round 030 F1, D-026; the
-# reader splits at `(`, so `coproc NAME ( ... )` reads NAME and its body as
-# its own simple command), and `coproc` before a simple command.
-_NO_SHAPE = (frozenset(), frozenset())
-_GRAMMAR_WORDS = {
-    "time": (frozenset({"-p", "--"}), frozenset()),
-    "coproc": (
-        frozenset(),
-        frozenset({"{", "while", "until", "if", "for", "select", "case", "[[", "(("}),
-    ),
-    **dict.fromkeys(
-        ("!", "{", "}", "if", "then", "else", "elif", "do", "while", "until"),
-        _NO_SHAPE,
-    ),
-}
+# Shell reserved words that stand before a command and are never one.
+_RESERVED_WORDS = frozenset(
+    {"!", "{", "}", "if", "then", "else", "elif", "do", "while", "until", "time"}
+)
 
 
 def launch_reason(root, payload):
     """What a main session's tool call would launch, or None: a new `Agent`
-    call, a `SendMessage`, or a `Bash` or `PowerShell` command naming a model
-    CLI as any command word (`command_words`, read with that shell's
-    quoting). The CLI names are the executables of `docs/agents.toml`'s
-    `cmd_template` cells (`model_clis`), never a hand-kept list. A command
-    line the hook cannot read is refused too, naming why (decision D-010 in
-    docs/decisions/wi-834.toml). Script wrappers are not inspected: a
-    coordinator launch script calls `window-check` itself.
+    call, a `SendMessage`, or a `Bash` or `PowerShell` command line (read
+    with that shell's quoting, `command_words`) whose model-CLI command word
+    stands in one of these places:
+
+    - at the start of a simple command;
+    - after `VAR=value` words;
+    - after the `timeout` and `env` prefixes with their options;
+    - after the shell's reserved words (`if`, `then`, `do`, `time` ...);
+    - across `&&`, `||`, `;`, `|` and newlines;
+    - after PowerShell's `&`;
+    - in a `$(...)` or backtick substitution written in the line or inside
+      double quotes;
+    - on the right of a PowerShell assignment to a variable, whether plain,
+      typed, scoped, a comma list, or a compound operator such as `+=` or
+      `??=`.
+
+    A command line the hook cannot read is refused too, naming why (decision
+    D-010 in docs/decisions/wi-834.toml). A form outside this set gets no
+    dedicated recognition: it may incidentally match the retained reading,
+    and carries no guarantee either way. The residue, each form under that
+    default: here-document and here-string bodies; property, index and
+    chained assignment targets; dot invocation; options of reserved words;
+    env's split string; `coproc`; and wrapper commands such as `sh -c`,
+    `iex`, `Start-Process` and script files (a coordinator launch script
+    calls `window-check` itself). The CLI names are the executables of
+    `docs/agents.toml`'s `cmd_template` cells (`model_clis`), never a
+    hand-kept list.
 
     Implements: SR-229, LLR-300
     """
@@ -1018,15 +1020,16 @@ def command_name(word):
 def command_words(command, dialect="posix"):
     """The command word of every simple command of a shell command line
     (`kitlib.shell_line.segments`, the one reading of it), read past
-    `VAR=value` assignments, the shell's grammar words and the `timeout` and
-    `env` prefixes (with their options, `timeout`'s duration and env's split
-    string). Raises `shell_line.Unreadable`. Scripts are not read into.
+    `VAR=value` assignments, the shell's reserved words and the `timeout`
+    and `env` prefixes (with their options and `timeout`'s duration). Raises
+    `shell_line.Unreadable`. Scripts are not read into. What the hook reads,
+    and what it does not, is stated once in `launch_reason`.
 
     Implements: SR-229, LLR-300
     """
     found = shell_line.segments(command, dialect)
     if dialect == "powershell":
-        found = [_invoked(_assigned(words)) for words in found]
+        found = [_assigned(words) for words in found]
     names = (_segment_command(words) for words in found)
     return [name for name in names if name]
 
@@ -1034,11 +1037,11 @@ def command_words(command, dialect="posix"):
 def _assigned(words):
     """A PowerShell statement's words past a leading assignment: the
     right-hand side, read as a command (`$r = claude -p x` runs `claude`), or
-    none when it opens with a value (a quoted string, or a variable that is
-    not itself an assignment). A statement is an assignment when its first
-    word is unquoted and starts with `$` or `[` and an unquoted assignment
-    operator follows (standalone, or written against a word); any other
-    statement's words are returned unchanged.
+    none when it opens with a value (a quoted string or a variable). A
+    statement is an assignment when its first word is unquoted and starts
+    with `$` or `[` and an unquoted assignment operator follows before any
+    quoted piece of its word; any other statement's words are returned
+    unchanged.
 
     Implements: SR-229, LLR-300
     """
@@ -1052,117 +1055,59 @@ def _assigned(words):
     return words
 
 
-def _invoked(words):
-    """A PowerShell statement's words past a leading dot invocation operator:
-    an unquoted `.` word, like `&` (a boundary the reader already splits
-    at), makes the next word the command (`. claude -p x`). A quoted `'.'`
-    is data. Wrappers that take a command as an argument stay outside the
-    coverage (round 024 F1, dispute 025, decision D-024).
-
-    Implements: SR-229, LLR-300
-    """
-    if words and words[0] == "." and not words[0].spans:
-        return words[1:]
-    return words
-
-
 def _operator_end(word):
-    """Where the first assignment operator in `word` none of whose characters
-    was quoted ends, or None: `$h['answer']=x` holds one, `$h['a=b']` none."""
-    for found in _PS_OPERATOR.finditer(word):
-        if not any(word.quoted(i) for i in range(found.start(), found.end())):
-            return found.end()
+    """Where the first assignment operator in `word` ends, when it ends at or
+    before the word's first quoted piece, else None: `$r='x'` holds one,
+    `'a=b'` none."""
+    found = _PS_OPERATOR.search(word)
+    if found and (word.quote_start is None or found.end() <= word.quote_start):
+        return found.end()
     return None
 
 
 def _tail(word, at):
-    """`word` from offset `at`, its quoted spans kept."""
+    """`word` from offset `at`, where its first quoted piece starts kept."""
     tail = shell_line.Word(word[at:])
-    tail.spans = tuple(
-        (max(start - at, 0), end - at)
-        for start, end in word.spans
-        if end > at or start >= at
-    )
+    if word.quote_start is not None:
+        tail.quote_start = word.quote_start - at
     return tail
 
 
 def _right_hand(head, after):
     """An assignment's right-hand side as a command: `head` (the part written
-    against the operator, when any) then `after`. None when it opens with a
-    quoted string, or with a variable that is not itself an assignment (a
-    chained `$a = $b = claude` runs `claude`)."""
+    against the operator, when any) then `after`. Empty when it opens with a
+    quoted string or a variable, a value rather than a command."""
     words = ([head] if head else []) + after
-    if not words or words[0].opens_quoted:
+    if not words or words[0].opens_quoted or words[0].startswith("$"):
         return []
-    if words[0].startswith("$"):
-        chained = _assigned(words)
-        return [] if chained is words else chained
     return words
 
 
 def _segment_command(words):
     """The command one simple command's words run, past assignments,
-    grammar words with their shapes (`_past_grammar`) and prefixes."""
+    reserved words and prefixes."""
     i = 0
     while i < len(words):
         name = command_name(words[i])
-        if name in _GRAMMAR_WORDS:
-            i = _past_grammar(words, i, name)
-        elif _ASSIGNMENT.match(words[i]) or not name:
+        if name in _RESERVED_WORDS or _ASSIGNMENT.match(words[i]) or not name:
             i += 1
         elif name in _OPTION_ARGS:
-            i, split = _past_prefix(words, i + 1, name)
-            if split is not None:
-                return _segment_command(["env"] + split + words[i:])
+            i = _past_prefix(words, i + 1, name)
         else:
             return name
     return None
 
 
-def _past_grammar(words, i, name):
-    """The index past the grammar word `name` at `i` and the words its
-    declared shape (`_GRAMMAR_WORDS`) gives it: its options, then a NAME
-    when the word after that opens a compound command (`coproc NAME {`)."""
-    options, name_before = _GRAMMAR_WORDS[name]
-    i += 1
-    while i < len(words) and words[i] in options:
-        i += 1
-    if i + 1 < len(words) and words[i + 1] in name_before:
-        i += 1
-    return i
-
-
 def _past_prefix(words, i, prefix):
-    """`(index, split)`: the index past `prefix`'s options (and `timeout`'s
-    duration), or past env's split string with that string's words."""
+    """The index past `prefix`'s options (and `timeout`'s duration)."""
     while i < len(words) and words[i].startswith("-"):
         if words[i] == "--":
             i += 1
             break
-        split = _split_string(words, i) if prefix == "env" else None
-        if split is not None:
-            return split
         i += 2 if words[i] in _OPTION_ARGS[prefix] else 1
     if prefix == "timeout" and i < len(words):
         i += 1  # the duration
-    return i, None
-
-
-def _split_string(words, i):
-    """`env -S STRING` (`-SSTRING`, `--split-string[=]STRING`): the index
-    past it and STRING's words, which env reads as more of its own
-    arguments; else None."""
-    word = words[i]
-    if word in ("-S", "--split-string"):
-        string, i = (words[i + 1] if i + 1 < len(words) else ""), i + 2
-    elif word.startswith("--split-string="):
-        string, i = word.partition("=")[2], i + 1
-    elif word.startswith("-S"):
-        string, i = word[2:], i + 1
-    else:
-        return None
-    found = shell_line.segments(string)
-    return i, (found[0] if found else [])
+    return i
 
 
 def blackout_session_end(root, payload):

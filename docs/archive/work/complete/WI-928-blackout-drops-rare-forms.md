@@ -3,13 +3,32 @@ id = "WI-928"
 title = "The blackout hook stops reading the rare shell forms built for contrived findings, and keeps its quote-aware reading"
 workstream = "process"
 sr_refs = ["SR-237", "SR-229"]
-specref = "docs/plans/2026-10-11-review-churn/audit-contrived-guards-2026-10-15.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = []
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-17, after its post-checkpoint gate:
+
+- Dot invocation, the grammar table for `time -p` and `coproc`, the
+  expandable here-body reader, the per-character quoted spans with the
+  chained-assignment recursion, and env's split string are gone from
+  `coordinator_guard.py` and `kitlib/shell_line.py`; `_segment_command`
+  skips one flat frozenset of reserved words, `time` in it and `coproc`
+  not.
+- The quote-aware reading and the ordinary PowerShell capture stay, pinned
+  by the kept `tests/test_blackout_window.py` cases; the removed forms'
+  pins are deleted, none inverted.
+- `launch_reason`'s docstring states the enumerated set, the default and
+  the residue once.
+- LLR-300 and TC-339 carry the amended text: sitting 003 blessed both as
+  MEANING, and act seq 124 re-attests them.
+- `RESYNC_PACK.md` carries the entry, anchored at the landing's parent.
 
 ## Context
 

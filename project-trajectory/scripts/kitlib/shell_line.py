@@ -4,11 +4,11 @@ of its words, with the shell's own quoting.
 WHY THIS EXISTS (WI-834, REVIEW-A F1). The coordinator guard's hook decides,
 inside the blackout window, whether a main session's `Bash` or `PowerShell`
 call starts a model CLI. It read the line with regexes that ignored quoting:
-`FOO="two words" claude -p x` read the command `words`, `env -S 'claude -p
-x'` read none, and `echo 'pause; claude notes'` split at the quoted `;`. A
-command line is another process's input (the agent CLI's shell tool), so it is
-read once, here, the way its shell reads it, and the guard consumes only the
-words this returns. Pure functions over text: no file, no process.
+`FOO="two words" claude -p x` read the command `words`, and `echo 'pause;
+claude notes'` split at the quoted `;`. A command line is another process's
+input (the agent CLI's shell tool), so it is read once, here, the way its
+shell reads it, and the guard consumes only the words this returns. Pure
+functions over text: no file, no process.
 
 What it reads, per dialect:
 
@@ -16,27 +16,20 @@ What it reads, per dialect:
     backslash escapes only `$`, a backtick, `"`, `\\` and a newline, and
     substitutions act), backslash escapes, `$'...'`, comments, the operators
     `&&`, `||`, `;;`, `|&`, `;`, `|`, `&`, `(`, `)` and newlines as command
-    boundaries, redirections with their targets, and here-document bodies
-    (to their delimiter line);
+    boundaries, redirections with their targets, and here-document bodies,
+    passed over as data to their delimiter line;
   * `powershell` (the PowerShell tool): single quotes with a doubled quote
     inside, double quotes with backtick escapes and doubled quotes, backtick
-    escapes, `@'...'@` and `@"..."@` here-strings, comments, the same
-    operators plus `{` and `}` as boundaries, and redirections.
+    escapes, `@'...'@` and `@"..."@` here-strings (both data), comments, the
+    same operators plus `{` and `}` as boundaries, and redirections.
 
 In both, the command lines nested in `$(...)` (and POSIX backticks) are read
-too and appended as further commands. A body the shell expands (a
-here-document whose delimiter is unquoted, a `@"..."@` here-string) is read
-the way the shell reads it: its substitutions are read, its escapes act and
-its quotes are literal characters (REVIEW-A round 2, F1). A body the shell
-keeps literal (a delimiter with any quote or backslash in it, a `@'...'@`
-here-string) is data and is not read. A quoted operator is part of its word,
+too and appended as further commands. A quoted operator is part of its word,
 never a boundary.
 
-Each word is a `Word`: its text, plus `spans`, the offsets of every quoted
-piece in it, so every character is known to be quoted or not. The text alone
-cannot tell PowerShell's `$r = 'claude'` (a value) from `$r = claude` (a
-command), nor the operator in `$h['answer']=claude` from the `=` in
-`$h['k=v']`; the spans can (round 016 F1, decision D-020; round 020 O1).
+Each word is a `Word`: its text plus `quote_start`, where its first quoted
+piece starts, which tells PowerShell's `$r = 'claude'` (a value) from
+`$r = claude` (a command).
 
 A line it cannot read (an unclosed quote, substitution or here-string) raises
 `Unreadable`; the caller decides what that means (the guard refuses it inside
@@ -64,25 +57,20 @@ _HERE_STRING = re.compile(r"@(['\"])\r?\n")
 
 
 class Word(str):
-    """One word's text, quotes and escapes removed. `spans` holds the
-    half-open `(start, end)` offsets of each quoted piece in it (a quote, a
-    `$'...'` or a here-string), in order; a character is quoted when a span
-    holds it.
+    """One word's text, quotes and escapes removed. `quote_start` is the
+    offset where its first quoted piece (a quote, a `$'...'` or a
+    here-string) starts, or None when it has none.
 
     Implements: SR-229, LLR-300
     """
 
-    spans = ()
-
-    def quoted(self, i):
-        """Whether the character at offset `i` was quoted."""
-        return any(start <= i < end for start, end in self.spans)
+    quote_start = None
 
     @property
     def opens_quoted(self):
         """Whether the word begins with a quoted piece (an empty `''`
         included): in PowerShell, a value rather than a command."""
-        return bool(self.spans) and self.spans[0][0] == 0
+        return self.quote_start == 0
 
 
 class Unreadable(ValueError):
@@ -178,70 +166,44 @@ class _Scanner:
         over where its line ends."""
         self.i = match.end()
         self._blank()
-        start = self.i
         target = self._word()
         if self.posix and match.group(1) in ("<<", "<<-"):
-            # Any quote or backslash in the delimiter keeps the body literal.
-            literal = any(q in self.text[start : self.i] for q in "'\"\\")
-            self._heredocs.append((target, match.group(1) == "<<-", literal))
+            self._heredocs.append((target, match.group(1) == "<<-"))
         return ("redirect", match.group())
 
     def _heredoc_bodies(self):
-        """Past the bodies of the here-documents the ended line opened; a
-        body whose delimiter is unquoted is read for its substitutions."""
-        for delimiter, tabs, literal in self._heredocs:
-            body = self._heredoc_body(delimiter, tabs)
-            if not literal:
-                self.nested.extend(_Scanner(body, self.dialect)._expansions())
+        """Past the bodies of the here-documents the ended line opened."""
+        for delimiter, tabs in self._heredocs:
+            self._heredoc_body(delimiter, tabs)
         self._heredocs = []
 
     def _heredoc_body(self, delimiter, tabs):
-        """One here-document body, to its delimiter line (or the end of the
-        text), `<<-`'s leading tabs removed. The body is found before it is
-        read, as the shell finds it."""
-        t, lines = self.text, []
+        """Past one here-document body, to just after its delimiter line (or
+        to the end of the text), `<<-`'s leading tabs removed before the
+        delimiter is matched. The body is data: nothing of it is kept."""
+        t = self.text
         while self.i < len(t):
             end = t.find("\n", self.i)
             end = len(t) if end < 0 else end
             line = t[self.i : end].rstrip("\r")
             self.i = min(end + 1, len(t))
-            line = line.lstrip("\t") if tabs else line
-            if line == delimiter:
-                break
-            lines.append(line)
-        return "\n".join(lines)
-
-    def _expansions(self):
-        """The command lines of the substitutions in an expandable body: the
-        whole text read as the shell expands a here-document or a `@"`
-        here-string, where an escape and `$(...)` (and a POSIX backtick) act
-        and a quote is a literal character. Raises `Unreadable`."""
-        t = self.text
-        while self.i < len(t):
-            if t[self.i] == self.escape:
-                self.i += 2
-            elif t.startswith("$(", self.i):
-                self._substitution()
-            elif self.posix and t[self.i] == "`":
-                self._backtick()
-            else:
-                self.i += 1
-        return self.nested
+            if (line.lstrip("\t") if tabs else line) == delimiter:
+                return
 
     def _word(self):
         """One word, its quotes and escapes removed, as a `Word` that keeps
-        the span of each quoted piece."""
-        parts, spans, size = [], [], 0
+        where its first quoted piece starts."""
+        parts, start, size = [], None, 0
         ends = _WORD_END[self.dialect]
         while self.i < len(self.text) and self.text[self.i] not in ends:
             quoted = self._opens_quote()
+            if quoted and start is None:
+                start = size
             piece = self._piece()
-            if quoted:
-                spans.append((size, size + len(piece)))
             parts.append(piece)
             size += len(piece)
         word = Word("".join(parts))
-        word.spans = tuple(spans)
+        word.quote_start = start
         return word
 
     def _opens_quote(self):
@@ -347,13 +309,10 @@ class _Scanner:
         return j
 
     def _here_string(self):
-        """A PowerShell here-string, `@'` or `@"` to its closing line; a `@"`
-        body is read for its substitutions."""
+        """A PowerShell here-string, `@'` or `@"` to its closing line."""
         quote = self.text[self.i + 1]
         end = self.text.find("\n" + quote + "@", self.i + 2)
         if end < 0:
             raise Unreadable("an unclosed @{} here-string".format(quote))
         body, self.i = self.text[self.i + 2 : end], end + 3
-        if quote == '"':
-            self.nested.extend(_Scanner(body, self.dialect)._expansions())
         return body.strip("\r\n")

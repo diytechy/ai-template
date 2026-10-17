@@ -1,0 +1,47 @@
+# docs/decisions/wi-928.toml — delegated decisions made in the WI-928 lane (the
+# blackout hook drops the rare shell forms built for contrived findings) by the
+# attended coordinator. Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane is cut at trunk's a278cb206 (the claimed branch had no commits of its own, recipes section 2). Its review rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7, recorded as the substitution each round), the trial having ended (coordinator-2026-10-16 D-008); at most three counted rounds before the checkpoint. The single plan (a fresh Opus planner at medium, committed verbatim at 879760993, DELTA none, coverage 7/7) took one critique (Codex Sol, medium): CHANGES-REQUESTED with one MINOR, which reads as an APPROVE, so the pass record is written. The MINOR (B4: P8's RESYNC entry depends on P6's bound, not P7's row edits; P9 should wait on P7 and P8) is adopted through the build brief, which orders P8 after P6 and P9 after P7 and P8, without editing the plan (an edit unbinds the record)."
+alternative = "Revise the plan for a sequencing-only MINOR, costing a second critique."
+reversal_cost = "None: build order only."
+why_not_escalated = "The skill's plan step: an all-MINOR critique passes; the reviewer shape applies the owner's ruling."
+review = ""
+
+[decision.D-002]
+decided = "The lane, built through 3e10cad94 on trunk's 785b29e11, is rebased onto trunk's 61ee4e165 (WI-930's landing and WI-937's close) before counted round 1, so the round reviews the tip that lands. One conflict, in RESYNC_PACK.md, keeps both entries, trunk's first (recipes section 4); a per-cell comparison with trunk's registries shows the lane changes only LLR-300 (detail, code_symbol) and TC-339 (expected, method), with no CR bytes. The rebased tip 548fd3053 read green below normal priority (2620 passed; both strict lints clean; budget 46.3 s vs 60 s). The builder's two notes for the reviewers (no pin on plain time before a model CLI; _heredoc_body's return value unused) are kept out of both briefs, since a judge's brief carries no claim of the judged party (recipes section 1); the coordinator raises them at triage if no reviewer does."
+alternative = "Review the pre-rebase tip and run an uncounted convergence round after the rebase; or append the builder's notes to the briefs."
+reversal_cost = "None: the pre-rebase tip 3e10cad94 stays reachable for the archive."
+why_not_escalated = "Recipes sections 1, 3 and 4."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 (001 Sol APPROVE 0; 002 Opus APPROVE 5 MINOR) raised no BLOCKER or MAJOR, so the checkpoint follows it. 002's findings, in order: F1 (the RESYNC entry anchored at 785b29e11, older than the entry above it) is answered at the landing, which anchors the entry at its own parent (recipes section 3); F2 (no remaining pin on plain time before a model CLI), F3 (_heredoc_body still builds and returns a body its one caller discards) and F4 (a 120-column docstring line in shell_line.py and _assigned's docstring broken mid-sentence) go to the builder as one fix round before the checkpoint, F2 and F3 being the builder's own two notes, which the reviewer found independently; F5 (in LLR-300's detail, the kept 'window_check exits nonzero inside it' now reads with the reading as its antecedent) goes to the spine change list for the checkpoint's reconcile turn, matching the plan's own flag on 'it'."
+alternative = "Defer F2 to F4 to a successor row; or land F1's anchor in the lane now."
+reversal_cost = "Low: a test pin, a dead-code removal and docstring wrapping."
+why_not_escalated = "MINORs never cost a round (ruling 4); each fix is inside the spec's surface."
+review = ""
+
+[decision.D-004]
+decided = "The checkpoint's reconcile turn (the lane's retained GPT Terra session) changes one phrase: LLR-300's kept 'window_check exits nonzero inside it.' becomes '... inside an armed window.', the noun the cell itself uses earlier ('While a window is armed'), answering 002's fifth finding. Its checks of LLR-300 (detail, code_symbol) and TC-339 (method, expected, evidence) against the settled code pass: the fix round's eleven kept-form pins sit inside TC-339's described reading, so no other cell moves. The coordinator's word diff shows only that phrase changed, LF only. The combined sitting judges LLR-300 and TC-339 as amendments."
+alternative = "Leave the antecedent for the sitting to return."
+reversal_cost = "Low: one phrase in one cell."
+why_not_escalated = "The skill's checkpoint step 1; the sitting judges the wording."
+review = ""
+
+[decision.D-005]
+decided = "Sitting 003 blessed LLR-300 and TC-339 as MEANING and re-attested them (its act, 62eb15881). The convergence map before the gate over the checkpoint tip (revisions 8 and 33), for round 1's accepted findings (002): F2 maps to the eleven kept-form pins in tests/test_blackout_window.py's QUOTED_DENIED, each denied before the fix round, with the builder's recorded red run (the time pin fails with time dropped from the reserved set, the file restored byte-identical); F3 to the corrected _heredoc_body in kitlib/shell_line.py, which only advances past the body (inspection); F4 to the two rewrapped docstrings (inspection); F5 to LLR-300's amended phrase, blessed at sitting 003; F1 to the landing's anchor check, which the coordinator makes at the squash (the entry anchored at the landing's parent), outside the gate's range. The gate renders in convergence stance from trunk's 8c72559ed (the lane rebased onto WI-935's landing, which touches none of its files, before the gate) to the tip, with the same two reviewers and the same stand-in as D-001."
+alternative = "None: the map is what the round produced."
+reversal_cost = "None."
+why_not_escalated = "The skill's convergence map step."
+review = ""
+
+[decision.D-006]
+decided = "The gate over the checkpoint tip c34dd2067, in convergence stance (004 Sol APPROVE 0; 005 Opus APPROVE 1 MINOR), raised no BLOCKER or MAJOR, so the lane is ready to land. 005's one MINOR is round 1's first finding again (the RESYNC entry anchored at 785b29e11), already answered by the landing, which anchors the entry at its own parent (D-003, D-005); nothing changes in the lane."
+alternative = "Re-anchor in the lane now, at a sha the landing would move again."
+reversal_cost = "None."
+why_not_escalated = "Recipes section 3 states the anchor rule."
+review = ""

@@ -8551,6 +8551,32 @@ hand-chosen name aliases sit outside every promise (PROCESS.md section 6).
 or record format changes, and no adopter setting changes. File reviews
 from the branches your claims mint, not from a hand-named branch.
 
+### The blackout hook stops recognising rare shell forms [since a4691ac23]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Inside an armed blackout window, the coordinator guard's
+hook still reads a main session's `Bash` or `PowerShell` line with that
+shell's quoting, so a quoted mention of a model CLI stays allowed, and it
+still denies the forms agents write: a model CLI as a simple command's word
+(past assignments, the `timeout` and `env` prefixes and the shell's reserved
+words), across the chain operators, after PowerShell's `&`, in a
+substitution, and as an ordinary PowerShell capture such as
+`$r = claude -p x`. It no longer gives dedicated recognition to rare shell
+forms that no agent writes and no kit route produces. The set it reads, the
+default for any other form, and the forms left under that default are
+stated once, in `launch_reason`'s docstring in `scripts/coordinator_guard.py`.
+Every kit-owned launch point still refuses model work inside the window on
+its own, before any shell text is read.
+
+**Kit-owned files — overwrite:** `scripts/coordinator_guard.py` and
+`scripts/kitlib/shell_line.py`.
+
+**What to do.** Overwrite both files. The change shows only once you arm a
+blackout window (`[policies] blackout`). Nothing needs migrating: no
+registry, setting or record format changes. The WI-834 entry above stays as
+history.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
