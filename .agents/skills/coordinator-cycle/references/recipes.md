@@ -92,7 +92,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      classification and, under `--stance convergence`, the convergence
      stance with its reading exclusion. Never add a builder self-assessment
      or the builder's coverage plan: a judge's brief carries no claim of the
-     judged party.
+     judged party. A handoff's builder notes "for the reviewers" stay out
+     too: raise them at triage if the round does not (the reviewer found
+     both on its own, wi-928 D-002).
   3. Launch REVIEW-A with `bash "$TOOLS/sol_review.sh" <lane> <brief> <out> [effort]`
      (default medium). Exit 3 means the reviewer changed the lane; inspect
      before trusting. Edit nothing in a lane while its reviewer runs: the
@@ -476,6 +478,9 @@ commit of its own, move it to trunk's tip
   verdict by the name read from disk. A verdict not accepted files nothing,
   and its finding holds the landing. Bump the mark as for any hand-filed row
   (§1, "Filing a row by hand").
+- **A gate MINOR** whose fix would move the tip off the gated one, or
+  whose wording lives in homes outside the lane, is a follow-up in
+  status.md's unfiled list, never a fix after the gate (wi-935 D-005).
 - **The re-mint:** close it citing the act once `cmp` shows the registries
   equal their anchors. Compare each file under `docs/archive/last_approved/`
   with its live path (the test registry is `docs/test/test-cases.toml`): a
@@ -615,7 +620,10 @@ lane commit being replayed.
   sentence of an LLR or SR in the set. A reconcile dropped two obligations
   the tests carried (a tick does not unbind a record; the second critique
   never meets the first verdict), which a sitting returns as a TC
-  expecting what no requirement states (WI-913, 2026-10-15).
+  expecting what no requirement states (WI-913, 2026-10-15). Check it
+  at intent too: a spec-dictated replacement of a sentence whose
+  semicolon joined a second clause dropped an obligation the new TC
+  text still expected (wi-931 D-004, 2026-10-17).
 - An acceptance clause must be stated by its requirement: sitting 010
   returned SR-154 for a clause no requirement sentence made. Run
   `trace.py --strict` on a return's rework before its re-sit: the
@@ -752,7 +760,13 @@ lane commit being replayed.
   its program with `shutil.which`: a bare `codex` (an npm `.cmd` shim) is
   not found by `CreateProcess` (2026-10-16d). Under that load every bar
   reading breaches, so a landing waits for a quiet reading the owner
-  gives (coordinator-2026-10-16 D-012, D-013).
+  gives (coordinator-2026-10-16 D-012, D-013). Your own parallel `-n auto`
+  jobs (a builder's module runs, the full suite) push a lane bar to
+  78 to 82 s: take lane bars between them, or re-take one quiet before
+  its commit (2026-10-17).
+- Never grep the whole scratch root: its basetemps hold gigabytes, and
+  a recursive search there outran the tool's two-minute cap
+  (2026-10-17).
 - **POSIX evidence on this workstation** (owner, wi-931 D-002): WSL's
   Ubuntu distro (Python 3.12, pytest 7.4, no xdist; nothing installed).
   Clone into WSL's own filesystem (`git clone /mnt/c/Projects/ai-template
