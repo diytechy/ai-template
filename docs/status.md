@@ -25,16 +25,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-16b-attended-coordinator.md](handoff-2026-10-16b-attended-coordinator.md),
+  [handoff-2026-10-16c-attended-coordinator.md](handoff-2026-10-16c-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
-  process-text and strict-lints rows have landed, so the
-  `coordinator-cycle` skill carries the review shape and the commit bar
-  runs both strict lints. The owner placed the filed rows in the queue:
-  the plan gate's landing-shapes lane is next, its Done-when blessed and
-  its first build owed, then the removal rows the audit of contrived
-  guards ordered. The headless coordinator's marking rows
+  process-text, strict-lints and plan-gate landing-shapes rows have
+  landed, and the reviewer trial has ended: each round runs two reviewers,
+  Sol and Opus. The removal rows the audit of contrived guards ordered are
+  claimed, with the row that makes the bar run the smoke tier once: the
+  blackout row's plan has passed and its first build is next, and the
+  session-kill row's plan owes its one revision. The headless coordinator's marking rows
   each owe their confirming scope critique before a claim. The
   disposition-adoption row is re-cut before it resumes, and the
   account-homes row still owes its checkpoint rework.
@@ -46,7 +46,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 121 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 122 on trunk. The context guard's hooks are machine-local
   (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -57,9 +57,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      then the lane in flight (claimed, on its branch; the handoff names its
      returns), then the phase-1 rows.
      Review rule (owner, 2026-10-11, superseding 2026-10-07): no narrow rounds.
-     Each round runs full-lane reviewers in parallel, three during this
-     program as a trial (Codex Sol, Claude Fable, Claude Opus; two is the
-     norm), at most three rounds, with a dispute sitting at the cap; the
+     Each round runs two full-lane reviewers in parallel (Codex Sol and
+     Claude Opus; the three-reviewer trial ended 2026-10-16), at most three rounds, with a dispute sitting at the cap; the
      handoff states the rest. Review threat model (owner,
      2026-10-08, PROCESS.md §6): a finding that needs a compromised or
      contrived host is dismissed in one recorded line; a contested or
@@ -136,16 +135,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `uncovered=0`); the archived [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md)
   findings; the [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)
   residues (§7 items 2/4/5 need a destination); whether the `ruling-sync`
-  and `held-status` hook riders share the hand-merge shape the plan gate's
-  landing-shapes row closes for itself (text-then-act's is accepted by its
+  and `held-status` hook riders share the hand-merge shapes the plan gate's
+  contract now states as residue (text-then-act's is accepted by its
   approved requirement; owner, 2026-10-15); from the process-text row's
   last gate (wi-911 D-020): PROCESS.md §3 still places a concrete filename
   in an SR's acceptance as carrier evidence, against ruling 5's text in
   `spine-questions.md` (to plan item 5's schema lane), and SR-233's
   acceptance states convergence duties its requirement does not (wording,
-  at its next sitting); from the strict-lints row's gate (wi-914 D-006):
-  the declared bar's budget step takes no `--elapsed`, so each bar runs
-  the smoke tier twice; **owner intake 2026-09-22:** the self-test
+  at its next sitting); from the landing-shapes row's first round (wi-922
+  D-005): LLR-337's rationale reads wider than the residue the plan gate's
+  contract states (wording, at its next sitting); **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
   `unrecognized arguments: -n`. This depends on the root launchers SN-034/SN-035
@@ -163,7 +162,7 @@ _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` —
 - **Open items** _(the pending rows of [requirements/open-items.toml](requirements/open-items.toml) a queued work item cites; each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
   - **OI-98** — The owner must perform the re-sync from 2026-10-03 and rule this item to release WI-684. _(holds WI-684)_
   - **OI-105** — When the owner's FreeLLMAPI router is running, name its endpoint and the models to pin, and confirm it holds a one-model chain per pinned id, so the FreeLLMAPI route row can ship and take its one live call. _(holds WI-795)_
-- **Decisions to review:** 480 — [open-items.html](open-items.html#decisions-to-review)
+- **Decisions to review:** 481 — [open-items.html](open-items.html#decisions-to-review)
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
   - **WI-920** — re-judge TC-055: declared trigger fired [sha256:5bdf43dafa30] at merge b803dd0
   - **WI-851** `P5` — Held-rung spine rows are protected by state: the registry, the snapshot and the dial

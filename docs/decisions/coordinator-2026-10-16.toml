@@ -74,3 +74,10 @@ alternative = "Claim WI-935 under a second unpause once the batch lands."
 reversal_cost = "Low: a claimed row with no commits returns to the queue by a handback."
 why_not_escalated = "The placement is the owner's (D-006); joining the claim batch saves an unpause cycle and changes no landing order."
 review = ""
+
+[decision.D-011]
+decided = "Owner ruling in session (2026-10-16c, as recommended): the session prompt the new handoff carries is copied verbatim except one line of step 4, whose roles named the ended trial's three reviewers; it now reads 'Codex Sol (medium) and Claude Opus (high) review in parallel (coordinator-2026-10-16 D-008; the handoff's \"How to run reviews now\")'. Every other word is unchanged."
+alternative = "Copy the prompt verbatim, leaving the handoff's review section to override it."
+reversal_cost = "None: one line of the next prompt."
+why_not_escalated = "It was the owner's ruling."
+review = ""

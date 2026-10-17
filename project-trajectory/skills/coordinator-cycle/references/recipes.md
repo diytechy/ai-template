@@ -52,7 +52,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   A plan that orders its commits (a pin, then a structural move alone,
   then the rest) is built in stages: the builder stops after each, you
   verify and commit, and SendMessage resumes the same builder (WI-911,
-  2026-10-15).
+  2026-10-15). A blank line ends a `Contract IF-NNN:` body for the
+  interface reference, so text added to a contract continues the body
+  without one (wi-922 D-003).
 - **Terra, first turn:**
   `bash "$TOOLS/terra_author.sh" <lane> <prompt> <out> [effort]`.
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
@@ -360,9 +362,14 @@ commit of its own, move it to trunk's tip
   them keeps the final range to authored work. Normal claimed work branches
   skip these freshness gates in `check.py`; this is a hand-path convention,
   not a requirement imposed by every lane commit's hook. Keep the lane's
-  module-size stamp (`linecounts` in `tests/test_module_size_ratchet.py`).
+  module-size stamp (`linecounts` in `tests/test_module_size_ratchet.py`),
+  and any view the lane's Done-when names: WI-922 kept the interface
+  reference its Done-when required fresh (wi-922 D-006).
 - **Rebase, even when trunk moved only by the pause restore.** Text-then-act
-  exempts a squash only of a tip that contains HEAD. Conflicts: §4.
+  exempts a squash only of a tip that contains HEAD. Conflicts: §4. When
+  trunk moved only by commits the lane does not touch, rebase before the
+  gate: the gate then reviews the tip that lands, and no post-rebase round
+  is owed (WI-922, 2026-10-16c).
 - **Complexity on the merged tree:**
   - Run `"$PY" "$SCRIPTS/check_complexity.py" --mode enforce`.
   - A module pushed past 1000 SLOC is decomposed, never bumped.
@@ -528,6 +535,9 @@ lane commit being replayed.
 
 ## 5. Spine-cell edits (brief Terra with these)
 
+- Delete the lane's `<lane>-terra` basetemp before each Terra turn: an
+  interrupted run left it locked, and Terra's pytest could not start
+  (WinError 183; WI-922, 2026-10-16c). Re-run its checks yourself.
 - Write UTF-8 only, with LF line endings. Terra has left CRLF and cp1252
   dashes; normalize before any snapshot. On 2026-10-10 every Terra turn
   rewrote whole registries CRLF: count `
