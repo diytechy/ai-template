@@ -56,6 +56,15 @@ Contract IF-295: the plan gate's step, as a command.
     with each hold (the row held, and the remedy) or `ok`, and exits 1 when
     any commit is held, else 0. It reads git and the lane's records and
     writes nothing. `check.py` runs it as the built-in `plan-gate` step.
+    It judges a commit made on a branch named for a claim folder and, on a
+    squash landing, each carried lane commit that such a branch contains. It
+    does not judge a build commit made on a detached HEAD in a lane worktree,
+    a lane merged into trunk by hand (a merge finished by commit, or one git
+    commits itself, for which git runs no pre-commit hook), a squash whose
+    commits only an alias branch contains, a squash after `git stash` has
+    removed the squash message, or a landing made by copying files. No
+    landing recipe makes any of these; under process.md §6, "Review threat
+    model", they are residue.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
@@ -370,7 +379,13 @@ def blocking_ids(findings):
 def _cap_problems(root, at, fields, findings):
     """A critique that does not read as an APPROVE passes only as the second
     one, at the cap, whose every BLOCKER and MAJOR finding the cited accepted
-    dispute verdict rules DISMISS. An empty dispute set authorizes nothing.
+    dispute verdict rules DISMISS.
+
+    The set of BLOCKER and MAJOR findings is never empty here. The only
+    caller, `_critique_problems`, first refuses a CHANGES-REQUESTED that names
+    no finding (`kitlib.verdict.filing_refusal`) and reads one whose findings
+    are all MINOR as an APPROVE (`kitlib.verdict.effective_verdict`), and a
+    finding's severity is always BLOCKER, MAJOR or MINOR.
 
     Implements: SR-154, LLR-337
     """
@@ -383,11 +398,6 @@ def _cap_problems(root, at, fields, findings):
             "fresh critique judges the revision"
         ]
     blocking = blocking_ids(findings)
-    if not blocking:
-        return [
-            "the second critique does not approve and has no BLOCKER or MAJOR "
-            "finding to dispute: the lane closes partial for the owner"
-        ]
     if not fields["dispute"]:
         return [
             "the second critique's BLOCKER and MAJOR findings go to one "

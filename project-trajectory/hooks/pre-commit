@@ -302,9 +302,12 @@ fi
 #                        build output is refused until a pass record under
 #                        docs/plans/<WI>/ binds the row's plan and Done-when,
 #                        and a commit writing a pass record is checked against
-#                        its parent. Trunk, and a lane with no such row, are
-#                        never judged. The merge slot asks the same of each
-#                        lane commit.
+#                        its parent. On trunk, a `git merge --squash` landing
+#                        is judged by each lane commit it carries; trunk's own
+#                        commits, and a lane with no such row, are never
+#                        judged. The shapes no landing recipe makes are listed
+#                        in IF-295's contract, in plan_gate.py. The merge slot
+#                        asks the same of each lane commit.
 #    When a step reports STALE, regenerate in dependency order — okf ->
 #    trajectory (the dashboard consumes the bundle); the gate marker via
 #    spine_rules.py and the stage marker via derive_stage.py, then the status

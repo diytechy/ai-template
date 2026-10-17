@@ -1,0 +1,62 @@
+# docs/decisions/wi-922.toml — delegated decisions made in the WI-922 lane (SR-154's
+# single-plan hold, the plan gate's unreachable cap branch, and the landing
+# shapes it does not judge) by the attended coordinator. Format:
+# project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane's review rounds run in the review-churn trial shape (plan revision 37): three full-lane reviewers in parallel, each from its own render and scratch: Codex Sol at medium filed as REVIEW-A, and Claude Fable at medium and Claude Opus at high, both stand-ins for the Gemini reviewer B slot (ruling 7), each filed as REVIEW-B under its own number. Both stand-ins share the builder's and the adjudicator's model family, and Opus shares the builder's model; the decision recording each round names the model behind each REVIEW-B file. The lane starts its count at round one; at most three rounds before the checkpoint."
+alternative = "The plan's norm of two reviewers (Sol and one stand-in)."
+reversal_cost = "None for rounds already run; a later round may drop a stand-in."
+why_not_escalated = "The owner ruled the trial for this program (revision 37) and the substitution until WI-815's Gemini route (ruling 7)."
+review = ""
+
+[decision.D-002]
+decided = "The lane is cut at trunk's tip f0ff66cc4 (the claimed branch had no commits of its own, so it was moved there, recipes section 2), and the row's narrowed copy replaces its claim copy: the 2026-10-15i redraft (title, Context, Deliverables, Spine rows, Done-when, Scope answers, Calls ruled at filing and Critique dispositions), whose round-1 scope critique, run from its own detached checkout carrying the copy, approved with no findings and S4 at none (coordinator-2026-10-16 D-001 and D-002). The copy changes the Done-when, so the Done-when hold binds before any build: an early done-when sitting judges the copy's exact text first (the coordinator-cycle skill section 3), and SR-154's amendment (deliverable 1) is authored and sat at the lane's checkpoint as the Spine rows section states. planmode stays none, so no plan step precedes the build."
+alternative = "Sitting the Done-when together with SR-154 at the checkpoint (the hold forbids a build before a verdict binds the Done-when), or building against the unblessed copy."
+reversal_cost = "Low: the copy is one committed file; a returned Done-when goes back to its drafter's text."
+why_not_escalated = "The owner's filing rulings and the critique settled the copy; the hold and the sitting order are the skill's."
+review = ""
+
+[decision.D-003]
+decided = "Deliverable 3's residue text continues IF-295's contract body with no blank line before it, rather than standing as its own paragraph as the spec words it: gen_arch_map's contract-body reader ends a body at a blank line, so a separate paragraph would sit outside the body and never reach the interface reference. The text is the spec's proposed wording verbatim, and the Done-when ('IF-295's contract body in plan_gate.py carries the residue list') is met. The builder found no dogfooded hook copy (.githooks/pre-commit runs the shipped hook), no test pinning the hook's text, and no complexity-baseline row for plan_gate.py."
+alternative = "A separate paragraph, which drops the residue out of the generated interface reference; or changing the contract-body reader, outside the spec's surface."
+reversal_cost = "None: one docstring's line breaks."
+why_not_escalated = "A format-forced layout of text the spec states and the Done-when names; no meaning changes."
+review = ""
+
+[decision.D-004]
+decided = "The owner ended the three-reviewer trial in session (2026-10-16c, coordinator-2026-10-16 D-008): from this lane's first round on, each round runs two full-lane reviewers in parallel, Codex Sol at medium filed as REVIEW-A and Claude Opus at high filed as REVIEW-B, the stand-in for the Gemini reviewer B slot (ruling 7). This supersedes D-001's trial shape; no round had run under it. Opus shares the builder's model, recorded as the substitution each round. The count starts at round one, at most three rounds before the checkpoint."
+alternative = "D-001's three reviewers."
+reversal_cost = "None: no round had run."
+why_not_escalated = "It applies the owner's ruling."
+review = ""
+
+[decision.D-005]
+decided = "Counted round 1 (tip cba1d96aa): 002-REVIEW-A (Codex Sol, medium) APPROVE with no findings; 003-REVIEW-B (Claude Opus, high, the Gemini slot's stand-in under ruling 7, recorded as the substitution) APPROVE with two MINOR findings. No BLOCKER or MAJOR, so the counted rounds end at one and the checkpoint follows. F1 (plan_gate.py, IF-295's residue clause 'a commit made on a detached HEAD' overstates: staged_lines judges a squash landing's carried lane commits whatever the branch) is confirmed on the code path (staged_lines computes the squash lines before and regardless of the branch check) and accepted: this lane wrote the clause, so the builder narrows it to the spec Context's own residue, a build commit made on a detached HEAD in a lane worktree, and regenerates the interface reference; a MINOR costs no round. F2 (LLR-337's rationale, 'a skipped hook, rebase, merge or landing cannot turn an unreviewed plan into build output', now reads wider than the residue IF-295 states) is accepted as wording and deferred to LLR-337's next sitting, listed among status.md's unfiled follow-ups: the blessed Done-when pins LLR-337 unchanged, and amending its rationale here would change the Done-when for a MINOR, as with SR-233's rationale follow-up (wi-911 D-020)."
+alternative = "Amend LLR-337's rationale in this lane, changing the Done-when and adding a done-when kind to the checkpoint sitting; or send F1 to a successor row."
+reversal_cost = "Low: one docstring clause; F2 stays a listed follow-up."
+why_not_escalated = "MINOR triage is the coordinator's (the skill section 3); neither finding is convergence-class."
+review = ""
+
+[decision.D-006]
+decided = "The checkpoint. Terra's reconcile turn is omitted: the set was drafted at intent (cba1d96aa, SR-154's one moved phrase), the only row text a round proposed (round 1's F2, LLR-337's rationale) is deferred out of the lane (D-005), and the code that moved since intent is IF-295's residue clause, a docstring, with no trace cell, symbol or tag changed; the amended cell was checked mechanically against the approved text (old minus the moved phrase equals new minus it; one shall; every other cell unchanged). The closure check passed (trace.py --strict and check_trajectory.py --strict clean at b35809891). Combined sitting 004 (docs/reviews/wi-922/004-ADJUDICATE-b358098.md) ruled SR-154 CLARITY, identical obligation, and re-attested it: act seq 122 (12ed8fa4c). The lane keeps docs/interface-reference.md, the one trunk-only view it carries, rather than restoring it before the gate (recipes section 3): the blessed Done-when names the regenerated reference and a clean interface-reference check, so restoring it would leave the lane's reference stale against its own contract body; the landing's regen rewrites it from the same body."
+alternative = "A Terra reconcile turn with nothing to carry; restoring the interface reference to trunk's copy before the gate."
+reversal_cost = "None."
+why_not_escalated = "The skill's checkpoint step allows the omission on these conditions; the view's handling follows the Done-when."
+review = ""
+
+[decision.D-007]
+decided = "The convergence map for the gate over the checkpoint tip (recorded here, which the reviewers do not read). Every accepted finding, with its evidence: round 1's 003-REVIEW-B F1 (MINOR, IF-295's residue clause overstated a detached HEAD) has no executable test, since the text describes what the gate does not judge; its evidence is the corrected text at the cited site, project-trajectory/scripts/plan_gate.py, IF-295's contract body, 'It does not judge a build commit made on a detached HEAD in a lane worktree', checkable against staged_lines, which computes a squash landing's carried-commit lines regardless of the branch. Round 1's 003-REVIEW-B F2 (MINOR, LLR-337's rationale) is deferred out of the lane (D-005) and has no fix to map. 002-REVIEW-A had no findings. The map is complete, so the gate may render. The gate runs two reviewers, Sol at medium (REVIEW-A) and Opus at high (REVIEW-B, the stand-in, D-004), uncounted, in convergence stance."
+alternative = "None: the skill requires the map before a convergence round."
+reversal_cost = "None."
+why_not_escalated = "The skill's procedure."
+review = ""
+
+[decision.D-008]
+decided = "The gate over the checkpoint tip, after the rebase onto trunk's a278cb206 (no conflict; the rebase changed no code or authored row, and the act seq 122 has no duplicate), uncounted, in convergence stance after D-007's map: 005-REVIEW-A (Codex Sol, medium) APPROVE with one MINOR; 006-REVIEW-B (Claude Opus, high, the stand-in) APPROVE with no findings. The MINOR (rubric K4 asks a RESYNC_PACK entry for a shipped-file change, against the spec's no-entry clause) is dismissed: the blessed Done-when rules that no entry is owed, since the change alters no behaviour a supported route reaches and the hook and plan_gate.py are kit-owned files a resync overwrites; K4 retires with WI-916, whose presence check requires an entry for every shipped change from its landing on, so the class is settled there. The lane lands. Reviewer tally for this lane: round 1 Sol 0, Opus 2 MINOR (F1 fixed, F2 deferred); gate Sol 1 MINOR (dismissed), Opus 0; no round-costing finding."
+alternative = "Add a RESYNC entry against the blessed Done-when, which would change it and owe another sitting."
+reversal_cost = "Low: an entry could be added by a later row if wanted."
+why_not_escalated = "MINOR triage is the coordinator's; the Done-when the sitting blessed already rules the question."
+review = ""
