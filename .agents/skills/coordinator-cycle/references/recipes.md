@@ -174,7 +174,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone. The
      critic may file it first: Sol ran `plan-file` in the lane and tried to
      commit (WI-911, 2026-10-15; the launcher exits 3). Move its copy
-     aside, file the verdict yourself, and compare the two.
+     aside, file the verdict yourself, and compare the two. Never rebase
+     the lane between a critique's verdict and its filing: filing needs
+     the reviewed commit to be an ancestor of HEAD, so a rebase orphans it
+     and the filing refuses. Reset to the pre-rebase tip, file, then
+     rebase (wi-931 D-001, 2026-10-16d).
   5. Pass: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --pass`
      writes `docs/plans/WI-NNN/pass.toml` (refused, writing nothing, unless
      the critique reads as an APPROVE); commit it alone.
@@ -549,7 +553,10 @@ lane commit being replayed.
 '` loses the pattern and counts every line, which read
   as a CRLF rewrite on 2026-10-10 (c) when the files were LF.
 - Re-read every whole cell a splice touches. Spliced sentences have come back
-  without a verb.
+  without a verb, and a deletion the spec dictates has left a list without
+  its "and"; repair it in the same retained session and record it (wi-930
+  D-002). To compare a Terra copy with a spec block, strip the spec's `> `
+  blockquote markers first (WI-928, 2026-10-16d).
 - If `apply_patch` cannot match a long one-line cell, use a guarded Python replace:
   - read and write with `newline=""`, through `open()`: Python 3.11's
     `Path.read_text` takes no `newline` argument (2026-10-15h);
@@ -741,7 +748,17 @@ lane commit being replayed.
   (`subprocess.call(cmd, creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)`;
   Windows children inherit the class), naming Git Bash by its full path
   (`C:/Program Files/Git/usr/bin/bash.exe`), since Windows resolves a
-  bare `bash` by its own search order (2026-10-15g).
+  bare `bash` by its own search order (2026-10-15g). The wrapper resolves
+  its program with `shutil.which`: a bare `codex` (an npm `.cmd` shim) is
+  not found by `CreateProcess` (2026-10-16d). Under that load every bar
+  reading breaches, so a landing waits for a quiet reading the owner
+  gives (coordinator-2026-10-16 D-012, D-013).
+- **POSIX evidence on this workstation** (owner, wi-931 D-002): WSL's
+  Ubuntu distro (Python 3.12, pytest 7.4, no xdist; nothing installed).
+  Clone into WSL's own filesystem (`git clone /mnt/c/Projects/ai-template
+  ~/<lane>-posix`, about a minute), check out detached, run serially. From
+  Git Bash, prefix a `wsl.exe` call that passes a `/mnt/c/...` path with
+  `MSYS_NO_PATHCONV=1`, or the path is rewritten.
 - **Context:** the boot reading took about a quarter of the window on
   2026-10-14. Delegate long reads to sub-agents and read only their
   summaries and the sections you judge.

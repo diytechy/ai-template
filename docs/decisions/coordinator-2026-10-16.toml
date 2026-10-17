@@ -81,3 +81,18 @@ alternative = "Copy the prompt verbatim, leaving the handoff's review section to
 reversal_cost = "None: one line of the next prompt."
 why_not_escalated = "It was the owner's ruling."
 review = ""
+
+
+[decision.D-012]
+decided = "Owner ruling in session (2026-10-16d): every local test job (commit bars, test runs, Codex launches, the Claude reviewers' pytest) runs at below-normal priority through a stdlib wrapper (recipes section 7, the 2026-10-15g recipe), because the owner's own applications load the workstation (the builders measured about 62 to 73% CPU with no test running). Every bar reading this session was over the 60 s budget (67 to 131 s, the trunk-base parent itself 131.4 s in the same window). Lane commits carry the recorded breach with the window's parent reading; a landing still needs a quiet reading within budget, so it waits for a quiet moment the owner gives."
+alternative = "The owner quiets the box on request before each landing; or the box is declared quiet and lanes are serialized."
+reversal_cost = "None: priority is per run."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-013]
+decided = "No lane lands this session. WI-930 reached its gate (round 1 approved by both reviewers, sitting 003 blessed its two amendments and took its act), and WI-928, WI-931 and WI-935 are committed mid-cycle, but a landing's bar must read within the 60 s budget and no reading on this box did, at either priority. Each lane is left committed with its next step named in the handoff; the landings run in a session with a quiet box, one at a time, the machinery rows alone. WI-930 moves to the head of the queue: it is ready to land and its in-lane act (sitting 003) was taken first, so landing it first keeps the acts in landing order."
+alternative = "Land on a breached reading, or re-stamp the budget to fit the box."
+reversal_cost = "Low: the lanes land as they are once a quiet reading is taken."
+why_not_escalated = "CLAUDE.md's bar: a breach fails the bar, and the budget is not moved to fit one box."
+review = ""
