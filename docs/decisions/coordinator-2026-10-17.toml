@@ -16,3 +16,17 @@ alternative = "Keep the queue order, WI-935 waiting gated behind WI-928 and WI-9
 reversal_cost = "None: landing order only."
 why_not_escalated = "It was the owner's ruling."
 review = ""
+
+[decision.D-003]
+decided = "WI-928 landed (01a50050e) on a quiet box the owner gave in session, with its RESYNC entry re-anchored at the squash from the lane's base 785b29e11 to the landing's parent a4691ac23 (wi-928 D-003, D-006; recipes section 3), the one token in the landing beyond the gated tip. The lane had first been rebased from 8c72559ed onto a4691ac23, the docs-only close-out, which touches none of its files; the rebased lane diff is byte-identical to the gated one, so no post-rebase round was owed. The archive commit takes the rebased tip and the four pre-rebase tips the verdicts cite (de8b10ce0, 548fd3053, f82bcbe1e, 3e10cad94). Its re-mint WI-938 closed as already settled by the lane's sitting 003 and act seq 124, the system, low-level and test registries byte-equal to their anchors; components.toml and interfaces.toml differ from their snapshots as they did before the landing, untouched by it."
+alternative = "Land the entry on the stale anchor; or run an uncounted convergence round over the rebased tip."
+reversal_cost = "None: one anchor token; the archive keeps every cited tip reachable."
+why_not_escalated = "Recipes section 3 states the anchor, archive and re-mint rules; SKILL section 4 owes a post-rebase round only when the rebase changes code or rows."
+review = ""
+
+[decision.D-004]
+decided = "Owner ruling in session (2026-10-17b): with the owner's own test runs loading the box (a lane bar's smoke tier read 1832 s at below-normal priority), lane commits follow coordinator-2026-10-16 D-012 as is: each commit's bar is read beside a parent reading taken in the same window, and the commit carries both. The coordinator offered waiting for a quiet box, or committing docs-only changes without the parent reading. Readings this session ran 140 to 287 s per pair, each change reading within 9 s of its parent's or below it; landings still wait for a quiet reading the owner gives. The scope critiques' confirming rounds for the two headless-marking rows ran from the shared detached checkout beside the lanes' reviews, both APPROVE with no findings, recorded in their specs' dispositions."
+alternative = "Hold every commit until the box is quiet; or commit docs-only changes on their green tests and lints with the breach alone."
+reversal_cost = "None: readings only."
+why_not_escalated = "It was the owner's ruling."
+review = ""

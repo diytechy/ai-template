@@ -117,6 +117,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      whose count matches its findings. It picks `NNN` itself: read the filed
      name before a commit subject or brief cites the round. Each round file
      gets its own coverage plan (`plan_coverage.py --findings` takes one).
+  - A round finding that the lane's amended rows carry no sitting or act
+    yet names no code defect: its remedy is the checkpoint sitting, the
+    cycle's next step. Re-grade it in the lane's decisions; it costs no
+    fix round, and the convergence map points it at the sitting's verdict
+    and act (wi-931 D-006, D-008).
   - With Codex capacity short, run two lanes' REVIEW-A sessions one at a
     time, so a usage limit takes out at most one review.
 - **Scope critique:** render
@@ -137,6 +142,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   coordinator's own uncommitted trunk edits would read as the critic's.
   Several critiques may run at once from that one checkout, each with its own
   scratch directory (2026-10-14).
+  The rendered brief tells a critic in coordinator use to commit its
+  verdict: append a line naming the verdict path and saying to commit
+  nothing and change no file in the checkout. Confirming rounds can run
+  there beside a lane's reviews (2026-10-17b).
   A confirming round runs in convergence stance (owner, 2026-10-14). The
   rubric's verdict section states that stance, so append one line to its
   brief: that it is a confirming round of round N, checking the adopted
@@ -764,6 +773,10 @@ lane commit being replayed.
   jobs (a builder's module runs, the full suite) push a lane bar to
   78 to 82 s: take lane bars between them, or re-take one quiet before
   its commit (2026-10-17).
+  The owner kept D-012's rule under far heavier load (readings of 140 to
+  1832 s, 2026-10-17b): take a commit's reading and its parent's side by
+  side, the parent in a detached scratch worktree at the lane's HEAD, so
+  the pair shares one window.
 - Never grep the whole scratch root: its basetemps hold gigabytes, and
   a recursive search there outran the tool's two-minute cap
   (2026-10-17).
@@ -773,6 +786,10 @@ lane commit being replayed.
   ~/<lane>-posix`, about a minute), check out detached, run serially. From
   Git Bash, prefix a `wsl.exe` call that passes a `/mnt/c/...` path with
   `MSYS_NO_PATHCONV=1`, or the path is rewritten.
+  A record that names its checkout's HEAD (a plan's platform legs) can
+  run from a detached scratch worktree at the recorded sha, which leaves
+  the lane worktree free for a sitting whose commits would move its HEAD
+  mid-run (wi-931 D-007).
 - **Context:** the boot reading took about a quarter of the window on
   2026-10-14. Delegate long reads to sub-agents and read only their
   summaries and the sections you judge.

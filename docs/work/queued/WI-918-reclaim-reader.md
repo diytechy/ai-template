@@ -283,3 +283,8 @@ Round 1 (Codex Sol, medium, 2026-10-14; CHANGES-REQUESTED, one finding):
   two parents, does not close the window and is itself refused by the
   trailer rung, naming it". The owning check is the one reader,
   `provenance.loop_lane_window`.
+
+Round 2 (Codex Sol, medium, 2026-10-17, the confirming round, in
+convergence stance): APPROVE, no findings. Round 1's adoption, the
+re-claim validated against its commit's parent at every read, is carried
+by the spec text it quotes, so the row may be claimed once WI-917 is done.

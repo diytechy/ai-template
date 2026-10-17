@@ -438,3 +438,8 @@ Round 1 (Codex Sol, medium, 2026-10-14; CHANGES-REQUESTED, two findings):
   never reads a failed or unparseable read as an empty range". The Done-when
   adds "a git read that fails during the audit or `check-lane` stops the run
   or refuses the landing; it is never read as an empty range".
+
+Round 2 (Codex Sol, medium, 2026-10-17, the confirming round, in
+convergence stance): APPROVE, no findings. Both round-1 adoptions, S3's
+pre-landing `check-lane` refusal and S2's Trust section, are carried by
+the spec text they quote, so the row may be claimed once WI-912 is done.
