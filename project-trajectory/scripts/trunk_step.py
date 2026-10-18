@@ -78,11 +78,12 @@ Contract IF-155: the argv surface of the trunk step. `--root` (default the cwd)
 """
 
 import argparse
-import configparser
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+from kitlib.config import STACK_INI, StackIniError, read_stack_ini
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
@@ -366,20 +367,15 @@ def compile_log(root, dry_run=False):
 
 
 def _profile(root):
-    """`docs/stack.ini` parsed, or None. check.py's parser settings verbatim
-    (`interpolation=None` so a `%` in a value needs no escaping; utf-8-sig for a
-    Notepad BOM). A malformed profile is a loud failure there; here it degrades to
+    """`docs/stack.ini` parsed, or None. The parse is
+    `kitlib.config.read_stack_ini`'s, the one check.py reads through. A
+    malformed or unreadable profile is a loud failure there; here it degrades to
     the built-in defaults rather than blocking a regen on a file this step does
     not own."""
-    path = Path(root) / "docs" / "stack.ini"
-    if not path.exists():
-        return None
-    cp = configparser.ConfigParser(interpolation=None)
     try:
-        cp.read_string(path.read_text(encoding="utf-8-sig", errors="replace"))
-    except configparser.Error:
+        return read_stack_ini(Path(root) / STACK_INI)
+    except StackIniError:
         return None
-    return cp
 
 
 def _pget(profile, section, option, fallback):

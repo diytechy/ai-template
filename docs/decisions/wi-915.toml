@@ -1,0 +1,48 @@
+# docs/decisions/wi-915.toml — delegated decisions made in the WI-915 lane
+# (docs/stack.ini is parsed in one place, and each of its readers keeps its
+# own key case) by the attended coordinator.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane is cut at trunk's 6533a2331 (the claimed branch had no commits of its own, recipes section 2), claimed under the session's first scoped unpause (coordinator-2026-10-17 D-008). The row is claimed planmode single, so the lane planned first: a fresh Claude Opus planner wrote the plan from review_brief.py plan's brief alone (DELTA none), committed verbatim; critique 1 (Codex Sol, medium) asked for changes with one MAJOR (the exact-size ratchet fails a refactor commit whose re-stamps follow it), the one revision (a fresh Opus planner, from the revise brief) put the re-stamps inside the refactor commit, and critique 2 in convergence stance approved it with no findings; the pass record binds it. The plan fixes the commit shape, so the build runs in two stages on one builder (Claude Opus at medium, the kit-builder agent): stage 1, P0 and P1, the build-start holds and the characterization test on the unrefactored code (117 cells; the 17 the ruled read changes move are strict expected failures, and --runxfail fails exactly those 17), committed here; stage 2, P2 to P9, the one refactor commit with P8's re-stamps inside it. Stage 2 is left to the next session, so no build is uncommitted at this session's close. tests/test_stack_profile.py is in SLOW_MODULES, so the smoke tier's membership is unchanged; the bar pair (242.5 s here, 166.4 s for the parent) was taken while the full suite loaded the box, and its difference is load. Review rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the ruling-7 stand-in; coordinator-2026-10-16 D-008). The row changes how the kit's scripts read their profile, so it lands alone."
+alternative = "Release stage 2 now and close out with a builder mid-refactor."
+reversal_cost = "None: stage 1 is a test-only commit."
+why_not_escalated = "The skill's plan step and the plan's own commit shape."
+review = ""
+
+[decision.D-002]
+decided = "This session rebased the lane onto trunk's c58293d54 (clean; the pre-rebase tip 1699ccf82 is archived at landing); trunk's drift added no stack.ini reader, and the stage-1 base readings re-read unchanged at the new base (13 ConfigParser sites; ratchets check 1307, trace 3776, integrate 1551, agent_common 1053; dupes census 2/2/32). A fresh builder (Claude Opus at medium, the kit-builder agent) built stage 2, plan rows P2 to P9, as one refactor change with P8's re-stamps inside it: trace.py 3776 to 3775, check.py 1307 to 1298, integrate.py 1551 to 1548; agent_common.py and the dupes census did not move. The 17 ruled cells now pass and their strict expected-failure marks are gone. P10's unchanged-surface check is clean (no registry diff, no Contract line added or removed, every touched script's --help byte-identical, the CLI and interface references up to date, the 13 function names kept). Two items left as they are: read_stack_ini is named in no LLR's code_symbol, since the spec owes no row change and the function carries Implements: SR-007 as its ruling sets; and kitlib/evidence.py's docstring claim that it imports no sibling was already untrue before this row (it imports .observation) and is outside the spec's surface, so it goes to status.md's unfiled follow-ups. The builder's two bar runs read 80.9 s and 59.1 s on the finished tree."
+alternative = "Name read_stack_ini in an LLR's code_symbol, a row change the spec does not owe."
+reversal_cost = "One commit; the characterization test pins every reader's outcome."
+why_not_escalated = "The accepted plan's own stage; the two leftovers are a traced-only choice the spec rules and a pre-existing wording residue."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 over f9db4185a: Codex Sol at medium (REVIEW-A, 001) APPROVE with 0 findings; Claude Opus at high (REVIEW-B, 002, the ruling-7 stand-in for the Gemini slot) APPROVE with 2 MINOR. F1: kitlib/evidence.py's docstring says the module imports no sibling, which was untrue before the row and this diff makes more so (it adds the config import); D-002 had deferred it as pre-existing, but the diff extends it, so it is the lane's. F2: in run_menu.py and trunk_step.py the new kitlib.config import sits between the console-guard comment and the import that comment describes. No BLOCKER or MAJOR, so the checkpoint follows; the row owes no spine rows (P10), so it holds no sitting. Both MINORs are wording in the lane's own diff and are fixed before the gate, each mapped in the convergence map to its corrected text; that fix is the next session's first step in this lane (this session closed out at its context budget)."
+alternative = "Leave both to status.md's follow-ups; rejected because the diff itself introduced or extended each."
+reversal_cost = "Two comment edits."
+why_not_escalated = "The skill's triage step; MINORs inside the lane's own diff."
+review = ""
+
+[decision.D-004]
+decided = "Round 1's two MINORs are fixed by the coordinator, as D-003 scoped them (two comment edits in the lane's own diff): F1, kitlib/evidence.py's docstring now says its only sibling imports are config and observation and that nothing either imports reaches stage (checked: config imports ladder, observation imports spine, spine imports config; none imports stage), so the one-way dependency the paragraph argues still holds; F2, in run_menu.py and trunk_step.py the new kitlib.config import moves above the console-guard comment, which again sits directly over the utf8_console import it describes. The lane was then rebased onto trunk's 2268a9a8c, cleanly (the pre-rebase tip fd95c3ff7 is archived at landing beside 1699ccf82), and its RESYNC_PACK entry re-anchored at the new base (check_resync: OK). Convergence map for the gate (revisions 8 and 33): both accepted findings are wording with no executable test, so each maps to independently checkable evidence, the corrected text at its cited site: F1 to the docstring paragraph opening 'THE SPLIT WITH stage.py' in kitlib/evidence.py, F2 to the import block after 'from pathlib import Path' in run_menu.py and in trunk_step.py. No other finding was accepted, so the map is complete. The row owes no spine rows and no sitting, so the gate follows directly."
+alternative = "Dispatch a builder for two comment edits."
+reversal_cost = "Two comment edits."
+why_not_escalated = "D-003 scoped both fixes; the skill's convergence-map rule."
+review = ""
+
+[decision.D-005]
+decided = "The gate over 6305676bc, uncounted and in convergence stance after D-004's map: Codex Sol at medium (REVIEW-A) APPROVE with 0 findings, and Claude Opus at high (REVIEW-B, the ruling-7 stand-in for the Gemini slot) APPROVE with 0 findings. The row owes no sitting and no act, so the lane is ready to land; it lands after WI-942, alone, as a change to machinery the cycle runs on (the bar reads docs/stack.ini through the reader this row consolidates)."
+alternative = "None: both reviewers approved."
+reversal_cost = "None."
+why_not_escalated = "The skill's gate and landing steps."
+review = ""
+
+[decision.D-006]
+decided = "Landing. WI-942 landed first (5790639d4, its re-mint closed at 7c0242c9e); it changed only the merge slot's approval floor, which a coordinator hand landing never runs, so nothing in the cycle had to run through it before this landing. The lane was rebased onto 7c0242c9e (pre-rebase tip 8db2e043c, archived with fd95c3ff7 and 1699ccf82): RESYNC_PACK conflicted twice, resolved per the rebase table (trunk's WI-942 entry first, then this lane's, keeping the replayed re-anchor), and the lane's diff outside RESYNC_PACK is byte-identical before and after, so the rebase changed no code and no row and no post-rebase round is owed. The entry is re-anchored at the landing's parent, 7c0242c9e, in the staged squash (check_resync reads it there). Done-when greps on the squash: one ConfigParser( line, in kitlib/config.py, and no other file imports configparser."
+alternative = "Re-anchor in a lane commit first, one more bar run for a one-line change."
+reversal_cost = "None."
+why_not_escalated = "The skill's landing steps and the recipes' rebase table."
+review = ""

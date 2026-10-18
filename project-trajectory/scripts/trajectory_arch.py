@@ -17,7 +17,6 @@ module performs no writes and exposes no command-line entry point.
 """
 
 import ast
-import configparser
 import re
 import sys
 from pathlib import Path
@@ -1231,21 +1230,17 @@ def knowledge_packs(root):
 
 
 def _stack_ini_get(root, section, option):
-    """ONE lenient docs/stack.ini read (absent file / broken profile / missing
-    option all → None), shared by `_arch_scan_profile` and `_tests_dir` so the
-    idiom has a single home here — check.py owns the loud parse of the same
-    profile."""
-    ini = root / "docs" / "stack.ini"
-    if not ini.exists():
-        return None
-    cp = configparser.ConfigParser(interpolation=None)
+    """ONE lenient docs/stack.ini read (absent file / unreadable or broken
+    profile / missing option all → None), shared by `_arch_scan_profile` and
+    `_tests_dir` so the idiom has a single home here — check.py owns the loud
+    reading of the same profile, and `kitlib.config.read_stack_ini` the parse."""
     try:
-        cp.read_string(ini.read_text(encoding="utf-8", errors="replace"))
-        if cp.has_option(section, option):
-            return cp.get(section, option).strip()
-    except configparser.Error:
-        pass
-    return None
+        cp = _kitconfig.read_stack_ini(Path(root) / _kitconfig.STACK_INI)
+    except _kitconfig.StackIniError:
+        return None
+    if cp is None or not cp.has_option(section, option):
+        return None
+    return cp.get(section, option).strip()
 
 
 def _arch_scan_profile(root):

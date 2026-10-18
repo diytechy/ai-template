@@ -180,7 +180,6 @@ Contract IF-233: `--tests-for MODULE` prints, one per line and sorted, the test
 """
 
 import argparse
-import configparser
 import csv
 import io
 import datetime
@@ -192,7 +191,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
-from kitlib.config import assumption_gate_enabled
+from kitlib.config import assumption_gate_enabled, read_stack_ini
 from kitlib.config import utf8_console as _utf8_console
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
@@ -6379,9 +6378,9 @@ def _cmd_tests_for(docs, wanted):
         print("trace: --tests-for {!r} names {}".format(wanted, why), file=sys.stderr)
         return 2 if matched else 1
     tcs = spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
-    cp = configparser.ConfigParser(interpolation=None)
-    cp.read(docs / "stack.ini", encoding="utf-8-sig")  # an absent file reads empty
-    test_root = cp.get("paths", "tests", fallback="").strip() or "tests"
+    cp = read_stack_ini(docs / "stack.ini")  # an unreadable profile raises
+    declared = cp.get("paths", "tests", fallback="") if cp is not None else ""
+    test_root = declared.strip() or "tests"
     for path in _spine.module_tests(llrs, tcs, matched[0], test_root):
         print(path)
     return 0

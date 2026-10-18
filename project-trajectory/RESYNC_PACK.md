@@ -8697,6 +8697,42 @@ ruled by no accepted verdict is still refused.
 **What to do.** Overwrite the file. Nothing migrates: no registry, setting
 or record format changes.
 
+### `docs/stack.ini` is read through one reader [since 7c0242c9e]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `docs/stack.ini` is parsed in one place,
+`read_stack_ini` in `scripts/kitlib/config.py`, and every kit script that
+read the file reads it through that function. Each reader keeps its key
+case, its defaults and its failure rule. No setting, key or format changes.
+
+**Read changes.** Two, and both make the readers agree:
+
+- A byte-order mark and a stray non-UTF-8 byte now read the same way
+  everywhere, as `check.py` already read them: the mark is accepted and the
+  byte reads as U+FFFD. With a mark, the coordinator's `[agent-loop]` dials,
+  the `sym:` reference tier's and the architecture scan's `[paths] src` and
+  `[arch-map] mode`, and `run_menu.py`'s `[run]` capabilities are now read;
+  they read as nothing, as the defaults, or as a malformed file before. With
+  a stray byte, the `[agent-loop]` dials, `run_menu.py`'s capabilities and
+  `trace.py --tests-for`'s `[paths] tests` are now read; they read as nothing
+  or crashed before.
+- A path that exists but cannot be read, such as a directory named
+  `docs/stack.ini`, is treated as a malformed file. `check.py` and
+  `run_menu.py` exit naming it "malformed", the lenient readers (the
+  reference tier, the architecture scan and the trunk step's regen) fall to
+  their defaults, and `trace.py --tests-for` raises. Before, most of them
+  crashed.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/config.py`, `scripts/check.py`,
+`scripts/agent_common.py`, `scripts/agent_policy.py`,
+`scripts/check_doc_refs.py`, `scripts/integrate.py`,
+`scripts/kitlib/evidence.py`, `scripts/run_menu.py`, `scripts/trace.py`,
+`scripts/trajectory_arch.py` and `scripts/trunk_step.py`.
+
+**What to do.** Overwrite the files. Nothing migrates: no registry, setting
+or record format changes, and nothing in your `docs/stack.ini` changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

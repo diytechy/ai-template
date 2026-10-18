@@ -10,6 +10,7 @@ the test step, and a profile naming a missing binary hits the run_step guard.
 """
 
 import configparser
+import functools
 import importlib.util
 import os
 import subprocess
@@ -474,3 +475,562 @@ def test_non_python_stack_seeds_files_mode_and_starts_fresh(tmp_path):
     assert not (dest / "docs" / "architecture.md").exists()
     chk = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=dest)
     assert chk.returncode == 0, chk.stdout + chk.stderr
+
+
+# --- Every reader of docs/stack.ini keeps its outcome (WI-915) -----------------
+# Thirteen functions read the profile, all through `kitlib.config`'s one
+# reader. Each is driven here through its real entry point over the same nine
+# input classes, and its outcome is pinned: its key case, its defaults and its
+# failure rule. `today` is the outcome each site gave before the shared reader;
+# `ruled` holds the cells a ruled read change moved, with their outcome now
+# (Q1: one decode rule, UTF-8 with an optional BOM and a stray byte read as
+# U+FFFD; Q2: a path that exists but cannot be read is an error, denied by
+# default). A site that ends on an uncaught error is pinned to raise, never to
+# a particular exception type.
+
+_CLASSES = (
+    "absent",
+    "empty",
+    "valid",
+    "bom",
+    "stray",
+    "parse",
+    "upper",
+    "twin",
+    "directory",
+)
+_STRAY = b"[notes]\ntext = caf\xff\n"  # one non-UTF-8 byte inside a value
+_RAISES = ("raises",)
+_RAISES_VALUE_ERROR = ("raises", "ValueError")
+_EXIT = ("exit", "is malformed")
+_Q1 = "Q1: one decode rule, the BOM accepted and a stray byte replaced"
+_Q2 = "Q2: a path that exists but cannot be read is the error outcome"
+
+
+@functools.lru_cache(maxsize=None)
+def _script(name):
+    """One import per kit script for the whole grid, not one per cell."""
+    return load_script(name)
+
+
+_TESTS_FOR_LLRS = """[design.LLR-001]
+sr_refs = ["SR-001"]
+module = "src/m.py"
+status = "Approved"
+"""
+_TESTS_FOR_TCS = """[test.TC-001]
+verifies = ["LLR-001"]
+tier = "Smoke"
+evidence = "tests/test_m.py; spec/test_m.py"
+status = "Approved"
+"""
+
+
+def _value(outcome):
+    return ("value", outcome)
+
+
+def _parsed(cp, section, option):
+    """A parsed profile as a comparable value: None when the site returned
+    none, else the one option the site's callers read from it."""
+    return None if cp is None else ("parsed", cp.get(section, option, fallback=None))
+
+
+def _drive(call, value_error_is_the_contract=False):
+    """The site's outcome: its value, its "is malformed" exit, or a raise."""
+    try:
+        return _value(call())
+    except SystemExit as exc:
+        code = str(exc.code)
+        return ("exit", "is malformed") if "is malformed" in code else ("exit", code)
+    except Exception as exc:  # noqa: BLE001 - the outcome under test is "raises"
+        if value_error_is_the_contract and isinstance(exc, ValueError):
+            return _RAISES_VALUE_ERROR
+        return _RAISES
+
+
+def _write_class(ini, cls, site):
+    ini.parent.mkdir(parents=True, exist_ok=True)
+    if cls == "absent":
+        return
+    if cls == "directory":
+        ini.mkdir()
+        return
+    text = {
+        "empty": "",
+        "valid": site["valid"],
+        "bom": site["valid"],
+        "stray": site["valid"],
+        "parse": "a line before any section header\n" + site["valid"],
+        "upper": site["upper"],
+        "twin": site["twin"],
+    }[cls]
+    data = text.encode("utf-8")
+    if cls == "bom":
+        data = b"\xef\xbb\xbf" + data
+    if cls == "stray":
+        data += _STRAY
+    ini.write_bytes(data)
+
+
+def _smoke_budget_module():
+    spec = importlib.util.spec_from_file_location(
+        "check_smoke_budget_under_test", ROOT / "scripts" / "check_smoke_budget.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _tests_for(docs):
+    """`trace._cmd_tests_for` over a one-row spine whose case names a test
+    under `tests/` and one under `spec/`: the printed path is the test root."""
+    import contextlib
+    import io
+
+    trace = _script("trace")
+    (docs / "requirements").mkdir(parents=True, exist_ok=True)
+    (docs / "test").mkdir(parents=True, exist_ok=True)
+    (docs / "requirements" / "low-level-requirements.toml").write_text(
+        _TESTS_FOR_LLRS, encoding="utf-8"
+    )
+    (docs / "test" / "test-cases.toml").write_text(_TESTS_FOR_TCS, encoding="utf-8")
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        rc = trace._cmd_tests_for(docs, "src/m.py")
+    return rc, out.getvalue().splitlines()
+
+
+def _sites():
+    """Each site: its driver, its three file texts, and its outcome per class
+    (`ruled` maps a class to its new outcome and the ruled change's reason)."""
+    paths_src = ("[paths]\nsrc = lib\n", "[paths]\nSRC = lib\n")
+    paths_twin = "[paths]\nsrc = lib\nSRC = other\n"
+    scan = "[arch-map]\nmode = files\n"
+    gen = (
+        "[generated]\ndocs/stage = stage\n",
+        "[generated]\nPROJECT_STATE.html = html\n",
+        "[generated]\nreadme.md = md\nREADME.md = md\n",
+    )
+    lib = _value(("parsed", "lib"))
+    scan_v, scan_d = _value(("lib", "files")), _value(("src", "symbols"))
+    return [
+        {
+            "name": "check.load_profile",
+            "call": lambda root, ini, mp: _parsed(
+                _script("check").load_profile(ini), "paths", "src"
+            ),
+            "valid": paths_src[0],
+            "upper": paths_src[1],
+            "twin": paths_twin,
+            "today": {
+                "absent": _value(None),
+                "empty": _value(("parsed", None)),
+                "valid": lib,
+                "bom": lib,
+                "stray": lib,
+                "parse": _EXIT,
+                "upper": lib,
+                "twin": _EXIT,
+                "directory": _RAISES,
+            },
+            "ruled": {"directory": (_EXIT, _Q2)},
+        },
+        {
+            "name": "check._generated_census",
+            "call": lambda root, ini, mp: _script("check")._generated_census(root),
+            "valid": gen[0],
+            "upper": gen[1],
+            "twin": gen[2],
+            "today": {
+                "absent": _value([]),
+                "empty": _value([]),
+                "valid": _value(["docs/stage"]),
+                "bom": _value(["docs/stage"]),
+                "stray": _value(["docs/stage"]),
+                "parse": _value([]),
+                "upper": _value(["PROJECT_STATE.html"]),
+                "twin": _value(["readme.md", "README.md"]),
+                "directory": _value([]),
+            },
+            "ruled": {},
+        },
+        {
+            "name": "agent_common._declared_test_command",
+            "call": lambda root, ini, mp: _script(
+                "agent_common"
+            )._declared_test_command(ini, py="PY"),
+            "value_error_is_the_contract": True,
+            "valid": "[product]\ntest = pytest -q\n",
+            "upper": "[product]\nTEST = pytest -q\n",
+            "twin": "[product]\ntest = pytest -q\nTEST = other\n",
+            "today": {
+                "absent": _RAISES_VALUE_ERROR,
+                "empty": _value(None),
+                "valid": _value(["pytest", "-q"]),
+                "bom": _value(["pytest", "-q"]),
+                "stray": _value(["pytest", "-q"]),
+                "parse": _RAISES_VALUE_ERROR,
+                "upper": _value(["pytest", "-q"]),
+                "twin": _RAISES_VALUE_ERROR,
+                "directory": _RAISES_VALUE_ERROR,
+            },
+            "ruled": {},
+        },
+        {
+            "name": "agent_policy.read_agent_loop_config",
+            "call": lambda root, ini, mp: _script(
+                "agent_policy"
+            ).read_agent_loop_config(ini.parent),
+            "valid": "[agent-loop]\njobs = 2\n",
+            "upper": "[agent-loop]\nJOBS = 2\n",
+            "twin": "[agent-loop]\njobs = 2\nJOBS = 3\n",
+            "today": {
+                "absent": _value({}),
+                "empty": _value({}),
+                "valid": _value({"jobs": "2"}),
+                "bom": _value({}),
+                "stray": _value({}),
+                "parse": _value({}),
+                "upper": _value({"jobs": "2"}),
+                "twin": _value({}),
+                "directory": _value({}),
+            },
+            "ruled": {
+                "bom": (_value({"jobs": "2"}), _Q1),
+                "stray": (_value({"jobs": "2"}), _Q1),
+            },
+        },
+        {
+            "name": "check_doc_refs._scan_profile",
+            "call": lambda root, ini, mp: _script("check_doc_refs")._scan_profile(root),
+            "valid": paths_src[0] + scan,
+            "upper": paths_src[1] + scan,
+            "twin": paths_twin + scan,
+            "today": {
+                "absent": scan_d,
+                "empty": scan_d,
+                "valid": scan_v,
+                "bom": scan_d,
+                "stray": scan_v,
+                "parse": scan_d,
+                "upper": scan_v,
+                "twin": scan_d,
+                "directory": _RAISES,
+            },
+            "ruled": {"bom": (scan_v, _Q1), "directory": (scan_d, _Q2)},
+        },
+        {
+            "name": "check_dupes_census._load_baseline",
+            "call": lambda root, ini, mp: _script("check_dupes_census")._load_baseline(
+                root
+            ),
+            "valid": "[dupes-census]\ngroups = 2\ncopies = 2\nlines = 32\n",
+            "upper": "[dupes-census]\nGROUPS = 2\ncopies = 2\nlines = 32\n",
+            "twin": "[dupes-census]\ngroups = 2\nGROUPS = 3\ncopies = 2\nlines = 32\n",
+            "today": {
+                "absent": _value(None),
+                "empty": _value(None),
+                "valid": _value((2, 2, 32)),
+                "bom": _RAISES,
+                "stray": _RAISES,
+                "parse": _RAISES,
+                "upper": _value((2, 2, 32)),
+                "twin": _RAISES,
+                "directory": _value(None),
+            },
+            "ruled": {
+                "bom": (_value((2, 2, 32)), _Q1),
+                "stray": (_value((2, 2, 32)), _Q1),
+                "directory": (_RAISES, _Q2),
+            },
+        },
+        {
+            "name": "integrate._generated_table",
+            "call": lambda root, ini, mp: _script("integrate")._generated_table(root),
+            "valid": gen[0],
+            "upper": gen[1],
+            "twin": gen[2],
+            "today": {
+                "absent": _value({}),
+                "empty": _value({}),
+                "valid": _value({"docs/stage": "stage"}),
+                "bom": _value({"docs/stage": "stage"}),
+                "stray": _value({"docs/stage": "stage"}),
+                "parse": _value({}),
+                "upper": _value({"PROJECT_STATE.html": "html"}),
+                "twin": _value({"readme.md": "md", "README.md": "md"}),
+                "directory": _value({}),
+            },
+            "ruled": {},
+        },
+        {
+            "name": "kitlib.evidence.source_paths",
+            "call": lambda root, ini, mp: [
+                declared for declared, _path in _kit_evidence().source_paths(root)
+            ],
+            "valid": "[paths]\nsrc = lib\ntests = tests\n",
+            "upper": "[paths]\nSRC = lib\ntests = tests\n",
+            "twin": "[paths]\nsrc = lib\nSRC = other\ntests = tests\n",
+            "today": {
+                "absent": _value([]),
+                "empty": _value([]),
+                "valid": _value(["lib", "tests"]),
+                "bom": _value(["lib", "tests"]),
+                "stray": _value(["lib", "tests"]),
+                "parse": _value([]),
+                "upper": _value(["lib", "tests"]),
+                "twin": _value([]),
+                "directory": _value([]),
+            },
+            "ruled": {},
+        },
+        {
+            "name": "run_menu.load_capabilities",
+            "call": lambda root, ini, mp: _script("run_menu").load_capabilities(ini),
+            "valid": "[run]\nserve = python -m app\n",
+            "upper": "[run]\nServe = python -m app\n",
+            "twin": "[run]\nserve = python -m app\nServe = python -m other\n",
+            "today": {
+                "absent": _value([]),
+                "empty": _value([]),
+                "valid": _value([("serve", "python -m app", "")]),
+                "bom": _EXIT,
+                "stray": _RAISES,
+                "parse": _EXIT,
+                "upper": _value([("Serve", "python -m app", "")]),
+                "twin": _value(
+                    [
+                        ("serve", "python -m app", ""),
+                        ("Serve", "python -m other", ""),
+                    ]
+                ),
+                "directory": _RAISES,
+            },
+            "ruled": {
+                "bom": (_value([("serve", "python -m app", "")]), _Q1),
+                "stray": (_value([("serve", "python -m app", "")]), _Q1),
+                "directory": (_EXIT, _Q2),
+            },
+        },
+        {
+            "name": "trace._cmd_tests_for",
+            "call": lambda root, ini, mp: _tests_for(ini.parent),
+            "valid": "[paths]\ntests = spec\n",
+            "upper": "[paths]\nTESTS = spec\n",
+            "twin": "[paths]\ntests = spec\nTESTS = other\n",
+            "today": {
+                "absent": _value((0, ["tests/test_m.py"])),
+                "empty": _value((0, ["tests/test_m.py"])),
+                "valid": _value((0, ["spec/test_m.py"])),
+                "bom": _value((0, ["spec/test_m.py"])),
+                "stray": _RAISES,
+                "parse": _RAISES,
+                "upper": _value((0, ["spec/test_m.py"])),
+                "twin": _RAISES,
+                "directory": _value((0, ["tests/test_m.py"])),
+            },
+            "ruled": {
+                "stray": (_value((0, ["spec/test_m.py"])), _Q1),
+                "directory": (_RAISES, _Q2),
+            },
+        },
+        {
+            "name": "trajectory_arch._stack_ini_get",
+            "call": lambda root, ini, mp: _script("trajectory_arch")._arch_scan_profile(
+                root
+            ),
+            "valid": paths_src[0] + scan,
+            "upper": paths_src[1] + scan,
+            "twin": paths_twin + scan,
+            "today": {
+                "absent": scan_d,
+                "empty": scan_d,
+                "valid": scan_v,
+                "bom": scan_d,
+                "stray": scan_v,
+                "parse": scan_d,
+                "upper": scan_v,
+                "twin": scan_d,
+                "directory": _RAISES,
+            },
+            "ruled": {"bom": (scan_v, _Q1), "directory": (scan_d, _Q2)},
+        },
+        {
+            "name": "trunk_step._profile",
+            "call": lambda root, ini, mp: _parsed(
+                _script("trunk_step")._profile(root), "paths", "src"
+            ),
+            "valid": paths_src[0],
+            "upper": paths_src[1],
+            "twin": paths_twin,
+            "today": {
+                "absent": _value(None),
+                "empty": _value(("parsed", None)),
+                "valid": lib,
+                "bom": lib,
+                "stray": lib,
+                "parse": _value(None),
+                "upper": lib,
+                "twin": _value(None),
+                "directory": _RAISES,
+            },
+            "ruled": {"directory": (_value(None), _Q2)},
+        },
+        {
+            "name": "check_smoke_budget._profile",
+            "call": _smoke_budget_seconds,
+            "valid": "[smoke-budget]\nseconds = 60\n",
+            "upper": "[smoke-budget]\nSECONDS = 60\n",
+            "twin": "[smoke-budget]\nseconds = 60\nSECONDS = 70\n",
+            "today": {
+                "absent": _RAISES,
+                "empty": _RAISES,
+                "valid": _value(60.0),
+                "bom": _value(60.0),
+                "stray": _RAISES,
+                "parse": _RAISES,
+                "upper": _value(60.0),
+                "twin": _RAISES,
+                "directory": _RAISES,
+            },
+            "ruled": {"stray": (_value(60.0), _Q1)},
+        },
+    ]
+
+
+def _kit_evidence():
+    from kitlib import evidence
+
+    return evidence
+
+
+def _smoke_budget_seconds(root, ini, monkeypatch):
+    budget = _smoke_budget_module()
+    monkeypatch.setattr(budget, "STACK_INI", ini)
+    return budget.declared_seconds(budget._profile())
+
+
+def _cells():
+    for site in _sites():
+        for cls in _CLASSES:
+            yield pytest.param(site, cls, id="{}-{}".format(site["name"], cls))
+
+
+@pytest.mark.parametrize("site, cls", list(_cells()))
+def test_each_stack_ini_reader_keeps_its_outcome(site, cls, tmp_path, monkeypatch):
+    root = tmp_path / "repo"
+    ini = root / "docs" / "stack.ini"
+    _write_class(ini, cls, site)
+    want = site["ruled"][cls][0] if cls in site["ruled"] else site["today"][cls]
+    got = _drive(
+        lambda: site["call"](root, ini, monkeypatch),
+        site.get("value_error_is_the_contract", False),
+    )
+    assert got == want
+
+
+def test_the_ruled_read_changes_move_exactly_seventeen_cells():
+    # Seventeen cells moved under Q1 and Q2, every site states all nine
+    # classes, and no cell is an expected failure any more.
+    ruled = [(s["name"], c) for s in _sites() for c in s["ruled"]]
+    assert len(ruled) == 17, ruled
+    assert all(set(s["today"]) == set(_CLASSES) for s in _sites())
+    assert not [p for p in _cells() if p.marks], "a cell is still marked"
+
+
+# --- The one reader ------------------------------------------------------------
+
+
+def _kit_config():
+    from kitlib import config
+
+    return config
+
+
+def _ini(tmp_path, data):
+    path = tmp_path / "stack.ini"
+    path.write_bytes(data if isinstance(data, bytes) else data.encode("utf-8"))
+    return path
+
+
+def test_the_reader_answers_none_for_an_absent_path(tmp_path):
+    assert _kit_config().read_stack_ini(tmp_path / "stack.ini") is None
+
+
+def test_the_reader_folds_keys_unless_told_not_to(tmp_path):
+    config = _kit_config()
+    folded = config.read_stack_ini(_ini(tmp_path, "[paths]\nSRC = lib\n"))
+    assert folded.get("paths", "src") == "lib"
+    path = _ini(tmp_path, "[generated]\nPROJECT_STATE.html = html\n")
+    as_written = config.read_stack_ini(path, fold_keys=False)
+    assert as_written.options("generated") == ["PROJECT_STATE.html"]
+
+
+def test_the_reader_accepts_a_bom_and_replaces_a_stray_byte(tmp_path):
+    path = _ini(tmp_path, b"\xef\xbb\xbf[notes]\ntext = caf\xff\n")
+    profile = _kit_config().read_stack_ini(path)
+    assert profile.get("notes", "text") == "caf�"
+
+
+def test_the_reader_keeps_percent_and_inline_semicolons_literal(tmp_path):
+    profile = _kit_config().read_stack_ini(_ini(tmp_path, "[x]\na = 50% ; note\n"))
+    assert profile.get("x", "a") == "50% ; note"
+
+
+def test_the_reader_inherits_default_keys(tmp_path):
+    path = _ini(tmp_path, "[DEFAULT]\nshared = yes\n[paths]\nsrc = lib\n")
+    assert _kit_config().read_stack_ini(path).get("paths", "shared") == "yes"
+
+
+def test_a_parse_error_is_the_one_error_and_names_the_file(tmp_path):
+    config = _kit_config()
+    path = _ini(tmp_path, "a line before any section header\n")
+    with pytest.raises(config.StackIniError) as caught:
+        config.read_stack_ini(path)
+    assert repr(str(path)) in str(caught.value)  # the parser quotes the name
+
+
+def test_a_directory_at_the_path_is_the_one_error(tmp_path):
+    config = _kit_config()
+    path = tmp_path / "stack.ini"
+    path.mkdir()
+    with pytest.raises(config.StackIniError):
+        config.read_stack_ini(path)
+
+
+def test_a_duplicate_key_is_the_one_error_only_when_folded(tmp_path):
+    config = _kit_config()
+    path = _ini(tmp_path, "[run]\nserve = a\nServe = b\n")
+    with pytest.raises(config.StackIniError):
+        config.read_stack_ini(path)
+    assert config.read_stack_ini(path, fold_keys=False).options("run") == [
+        "serve",
+        "Serve",
+    ]
+
+
+def test_the_stack_ini_parse_is_one_home():
+    # The parser and its options are named in the reader's module and nowhere
+    # else under the kit's scripts or this repo's own tools, so a fourteenth
+    # parse fails here rather than waiting for the next census.
+    home = (SCRIPTS / "kitlib" / "config.py").resolve()
+    tokens = (
+        "ConfigParser(",
+        "import configparser",
+        "from configparser",
+        "interpolation=None",
+        "optionxform",
+    )
+    offenders = []
+    for tree in (SCRIPTS, ROOT / "scripts"):
+        for path in sorted(tree.rglob("*.py")):
+            if path.resolve() == home:
+                continue
+            text = path.read_text(encoding="utf-8")
+            offenders += [
+                "{}: {}".format(path.relative_to(ROOT).as_posix(), tok)
+                for tok in tokens
+                if tok in text
+            ]
+    assert offenders == []

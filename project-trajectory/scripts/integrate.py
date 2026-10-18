@@ -177,6 +177,7 @@ import score_reviews
 import spec_move
 import text_then_act
 from kitlib import authority as _kitauthority
+from kitlib import config as _kitconfig
 from kitlib import decisions as kdecisions
 from kitlib import provenance as _kitprovenance
 from kitlib import registry as kregistry
@@ -3203,21 +3204,16 @@ def _generated_table(root):
     A row's value is `<kind> [| <BEGIN> | <END>]`; only the kind is kept,
     because a marker pair narrows which REGION a regenerator rewrites, not
     which path is declared."""
-    import configparser
-
-    ini = root / "docs" / "stack.ini"
-    if not ini.exists():
-        return {}
-    cp = configparser.ConfigParser(interpolation=None)
-    # Keys are PATHS: configparser's default optionxform lowercases, which
-    # would make PROJECT_STATE.html unmatchable and red the audit on the very
-    # bookkeeping it exists to permit.
-    cp.optionxform = str
+    # Keys are PATHS, read as written: folding them would make
+    # PROJECT_STATE.html unmatchable and red the audit on the very bookkeeping
+    # it exists to permit.
     try:
-        cp.read_string(ini.read_text(encoding="utf-8-sig", errors="replace"))
-    except (configparser.Error, OSError):
+        cp = _kitconfig.read_stack_ini(
+            Path(root) / _kitconfig.STACK_INI, fold_keys=False
+        )
+    except _kitconfig.StackIniError:
         return {}
-    if not cp.has_section("generated"):
+    if cp is None or not cp.has_section("generated"):
         return {}
     return {
         key.strip(): (value or "").split("|")[0].strip()

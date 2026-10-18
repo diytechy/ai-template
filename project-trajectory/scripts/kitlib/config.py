@@ -36,6 +36,7 @@ Making them adapters over one rule is what the pins were standing in for: the
 copies can no longer disagree, so drift is UNREPRESENTABLE rather than detected.
 """
 
+import configparser
 import sys
 import tomllib
 
@@ -49,13 +50,60 @@ __all__ = [
     "process_check_text",
     "read_declared",
     "read_declared_lower",
+    "read_stack_ini",
     "read_toml_text",
     "reviewer_dials",
     "utf8_console",
     "step_paths",
     "RETIRED_STAGE_ALIASES",
+    "STACK_INI",
+    "StackIniError",
     "step_threshold",
 ]
+
+# The declared product toolchain's one named location, repo-relative and in
+# POSIX form. Each site keeps its own constant's name and type, derived from it.
+STACK_INI = "docs/stack.ini"
+
+
+class StackIniError(Exception):
+    """`docs/stack.ini` exists but could not be read or parsed. The message is
+    the parser's or the OS's, and names the file. Deliberately not a
+    `ValueError`, so no reader's broad `except` catches it by accident: each
+    one maps it onto the outcome it already has for a malformed file."""
+
+
+def read_stack_ini(path, *, fold_keys=True):
+    """The one parse of `docs/stack.ini`: the parsed profile, or None when the
+    path names no file.
+
+    The parse options, stated here and nowhere else: interpolation is off, so
+    a `%` in a value is literal; `=` and `:` both delimit a key; `#` and `;`
+    comment whole lines only, so `src = lib ; note` reads `lib ; note`; a
+    duplicate section or key is an error; a `[DEFAULT]` section's keys appear
+    in every section; and keys are folded to lower case unless `fold_keys` is
+    false, for a section keyed by paths or names. The bytes are UTF-8 with an
+    optional byte-order mark, and a stray byte reads as U+FFFD.
+
+    No cache, no defaults and no value checks: each call reads the file, and
+    each reader keeps its own defaults and failure direction. Anything that is
+    neither absent nor parsed (a directory or unreadable file at the path, any
+    parse error) raises `StackIniError`.
+
+    Implements: SR-007
+    """
+    path = Path(path)
+    if not path.exists():
+        return None
+    cp = configparser.ConfigParser(interpolation=None)
+    if not fold_keys:
+        cp.optionxform = str
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        cp.read_string(text, source=str(path))
+    except (configparser.Error, OSError) as exc:
+        raise StackIniError(str(exc)) from exc
+    return cp
 
 
 def read_toml_text(text):

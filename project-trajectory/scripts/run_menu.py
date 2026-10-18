@@ -84,13 +84,14 @@ Contract IF-158: the exit code the launchers hand back as their own. A launched
 """
 
 import argparse
-import configparser
 import os
 import shlex
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from kitlib.config import STACK_INI, StackIniError, read_stack_ini
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
@@ -99,27 +100,23 @@ from kitlib.config import utf8_console as _utf8_console
 # The declared toolchain, read at repo root when present (the launchers cd there
 # first). Same file check.py reads; this script only ever touches its [run]
 # section, which check.py ignores.
-DEFAULT_STACK_INI = Path("docs/stack.ini")
+DEFAULT_STACK_INI = Path(STACK_INI)
 
 
 def load_capabilities(path):
     """Parse the `[run]` section of a stack.ini into an ordered list of
     (name, command, desc). Returns [] when the file or section is absent/empty.
 
-    Declaration order is preserved (configparser is insertion-ordered), key case
-    is preserved (a capability may be `Serve`), and `interpolation=None` keeps a
-    literal `%`/`{}` in a command untouched. A malformed profile fails LOUDLY —
-    a typo can't quietly hide a capability. A `<name>.desc` with no matching
-    `<name> =` command, or a command with an empty value, is ignored."""
-    if not path.exists():
-        return []
-    cp = configparser.ConfigParser(interpolation=None)
-    cp.optionxform = str  # preserve capability-name case
+    Declaration order is preserved and key case is preserved (a capability may
+    be `Serve`); the parse is `kitlib.config.read_stack_ini`'s. A malformed or
+    unreadable profile fails LOUDLY — a typo can't quietly hide a capability. A
+    `<name>.desc` with no matching `<name> =` command, or a command with an
+    empty value, is ignored."""
     try:
-        cp.read_string(path.read_text(encoding="utf-8"), source=str(path))
-    except configparser.Error as exc:
+        cp = read_stack_ini(path, fold_keys=False)
+    except StackIniError as exc:
         sys.exit("run_menu: {} is malformed: {}".format(path, exc))
-    if not cp.has_section("run"):
+    if cp is None or not cp.has_section("run"):
         return []
     descs = {}
     commands = []

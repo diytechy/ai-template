@@ -152,7 +152,6 @@ Contract IF-197: the loop provenance floor a commit-msg hook consumes as an
 """
 
 import argparse
-import configparser
 import importlib.util
 import os
 import shlex
@@ -166,6 +165,9 @@ from pathlib import Path
 # aliased to the module-local name so no call site changes.
 from kitlib.config import (
     RETIRED_STAGE_ALIASES,
+    STACK_INI,
+    StackIniError,
+    read_stack_ini,
     step_paths,
     step_threshold as _step_threshold,
     _LEGACY_GATES_WARNED as _LEGACY_GATES_WARNED,
@@ -218,7 +220,7 @@ INTERFACE_REFERENCE_DOC = "docs/interface-reference.md"
 COVERAGE_THRESHOLD = 80  # line-coverage %, enforced at full/release (process.md)
 
 # The declared product toolchain (Thread 30), read at repo root when present.
-PROFILE_FILE = Path("docs/stack.ini")
+PROFILE_FILE = Path(STACK_INI)
 
 # Built-in Python-reference commands, used when docs/stack.ini is absent (or for
 # any section/key it doesn't override). {py}/{src}/{tests}/{coverage} expand the
@@ -312,24 +314,16 @@ BUILTIN_STEP_NAMES = frozenset(
 
 def load_profile(path=PROFILE_FILE):
     """Parse the declared product toolchain (docs/stack.ini) if present, else
-    None. A malformed profile fails LOUDLY — never silently ignored — so a typo
-    can't quietly drop the format/lint/test gate. `interpolation=None` keeps the
-    command values literal (a `%` in a command needs no escaping).
+    None. A malformed or unreadable profile fails LOUDLY — never silently
+    ignored — so a typo can't quietly drop the format/lint/test gate. The parse
+    options are `kitlib.config.read_stack_ini`'s.
 
     Implements: SR-007, LLR-007, LLR-008
     """
-    if not path.exists():
-        return None
-    cp = configparser.ConfigParser(interpolation=None)
     try:
-        # utf-8-sig + replace: a Notepad BOM must not surface as a confusing
-        # configparser "malformed" error, and a stray byte degrades (C8).
-        cp.read_string(
-            path.read_text(encoding="utf-8-sig", errors="replace"), source=str(path)
-        )
-    except configparser.Error as exc:
+        return read_stack_ini(path)
+    except StackIniError as exc:
         sys.exit("check: {} is malformed: {}".format(path, exc))
-    return cp
 
 
 def _has(profile, section, option):
@@ -1671,21 +1665,16 @@ def _generated_census(root="."):
     the day a tenth artifact is declared — the one real cost the ruling names
     against option (b), paid off by reading rather than restating.
 
-    Keys are PATHS, so `optionxform = str`: configparser's default lowercasing
-    would make `PROJECT_STATE.html` unmatchable — the same read, for the same
-    reason, as integrate.py's `_generated_paths`. An absent or malformed profile
-    declares nothing: this is a detector, and one that crashed on a file every
-    other step tolerates would be a worse failure than the one it reports."""
-    ini = Path(root) / "docs" / "stack.ini"
-    if not ini.exists():
-        return []
-    cp = configparser.ConfigParser(interpolation=None)
-    cp.optionxform = str
+    Keys are PATHS, so they are read as written: folding them would make
+    `PROJECT_STATE.html` unmatchable — the same read, for the same reason, as
+    integrate.py's `_generated_paths`. An absent or malformed profile declares
+    nothing: this is a detector, and one that crashed on a file every other
+    step tolerates would be a worse failure than the one it reports."""
     try:
-        cp.read_string(ini.read_text(encoding="utf-8-sig", errors="replace"))
-    except (configparser.Error, OSError):
+        cp = read_stack_ini(Path(root) / STACK_INI, fold_keys=False)
+    except StackIniError:
         return []
-    if not cp.has_section("generated"):
+    if cp is None or not cp.has_section("generated"):
         return []
     return [k.strip() for k in cp.options("generated") if k.strip()]
 

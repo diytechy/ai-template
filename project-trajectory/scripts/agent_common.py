@@ -512,16 +512,16 @@ def _declared_test_command(ini, py=None):
     stackless profile → the caller legitimately skips); otherwise the argv —
     possibly [] for a declared-but-empty command, which the caller treats as a
     misconfiguration, not a skip (WI-285: a declared-but-unread key must not
-    silently pass). Raises ValueError on an unreadable profile. `{py}` is `py`
-    when given (the integrator points it at the repo's floor-satisfying .venv —
-    WI-286), else this process's own interpreter."""
-    import configparser
-
-    cp = configparser.ConfigParser(interpolation=None)
+    silently pass). Raises ValueError, naming the file, on an absent or
+    unreadable profile; the parse is `kitlib.config.read_stack_ini`'s. `{py}` is
+    `py` when given (the integrator points it at the repo's floor-satisfying
+    .venv — WI-286), else this process's own interpreter."""
     try:
-        cp.read_string(Path(ini).read_text(encoding="utf-8-sig", errors="replace"))
-    except (configparser.Error, OSError) as exc:
+        cp = _kitconfig.read_stack_ini(ini)
+    except _kitconfig.StackIniError as exc:
         raise ValueError(str(exc)) from exc
+    if cp is None:
+        raise ValueError("{}: no such file".format(ini))
     if cp.has_section("product") and cp.has_option("product", "test"):
         subs = {
             "py": py or sys.executable,

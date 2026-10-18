@@ -96,10 +96,11 @@ Contract IF-087: the scanned-surface pair, offered so a sibling doc lint agrees
 
 import argparse
 import ast
-import configparser
 import re
 import sys
 from pathlib import Path
+
+from kitlib.config import STACK_INI, StackIniError, read_stack_ini
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
@@ -277,21 +278,19 @@ def doc_files(root):
 
 def _scan_profile(root):
     """`([paths] src, [arch-map] mode)` read leniently from docs/stack.ini —
-    an absent or broken profile degrades to ("src", "symbols"). A small
-    stable loader duplicated per the F5 convention (check_trajectory holds
-    its own private twin)."""
-    ini = root / "docs" / "stack.ini"
+    an absent, unreadable or broken profile degrades to ("src", "symbols").
+    The parse is `kitlib.config.read_stack_ini`'s; the defaults are this
+    reader's own (check_trajectory holds its own private twin)."""
     src, mode = "src", "symbols"
-    if ini.exists():
-        cp = configparser.ConfigParser(interpolation=None)
-        try:
-            cp.read_string(ini.read_text(encoding="utf-8", errors="replace"))
-            if cp.has_option("paths", "src"):
-                src = cp.get("paths", "src").strip() or "src"
-            if cp.has_option("arch-map", "mode"):
-                mode = cp.get("arch-map", "mode").strip() or "symbols"
-        except configparser.Error:
-            pass
+    try:
+        cp = read_stack_ini(Path(root) / STACK_INI)
+    except StackIniError:
+        cp = None
+    if cp is not None:
+        if cp.has_option("paths", "src"):
+            src = cp.get("paths", "src").strip() or "src"
+        if cp.has_option("arch-map", "mode"):
+            mode = cp.get("arch-map", "mode").strip() or "symbols"
     return src, mode
 
 

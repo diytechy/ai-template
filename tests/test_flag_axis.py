@@ -12,6 +12,8 @@ two or more boolean parameters, and a call site passing a boolean literal
 positionally, where the reader cannot tell what `True` switches.
 """
 
+import configparser
+
 import pytest
 from conftest import load_script
 
@@ -198,7 +200,7 @@ def test_a_module_at_its_stamped_row_reports_nothing(fa, cr, tmp_path, monkeypat
 
 
 def test_declared_gating_the_flag_axis_gates_nothing_and_says_so(cr):
-    profile = cr.check.configparser.ConfigParser()
+    profile = configparser.ConfigParser()
     profile.read_string("[readability]\nmeasures = flag-axis\ngating = flag-axis\n")
     measures, gating, problems = cr.declared_measures(profile)
     assert measures == ["flag-axis"] and gating == [], (measures, gating)

@@ -47,7 +47,6 @@ Stdlib-only, cross-platform (a meta-repo dev/CI tool, like scripts/dev-setup).
 """
 
 import argparse
-import configparser
 import os
 import shlex
 import subprocess
@@ -56,15 +55,17 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-STACK_INI = ROOT / "docs" / "stack.ini"
+sys.path.insert(0, str(ROOT / "project-trajectory/scripts"))
+from kitlib import config as _kitconfig  # noqa: E402
+
+STACK_INI = ROOT / _kitconfig.STACK_INI
 
 
 def _profile():
-    # Mirror check.py's parser: interpolation=None keeps command values literal
-    # (a `%` needs no escaping), utf-8-sig tolerates a Notepad BOM.
-    cp = configparser.ConfigParser(interpolation=None)
-    cp.read(STACK_INI, encoding="utf-8-sig")
-    return cp
+    # The parse is kitlib.config.read_stack_ini's, the one check.py reads
+    # through. An absent profile reads None, and an unreadable or malformed
+    # one raises: the budget has no default to fall back to.
+    return _kitconfig.read_stack_ini(STACK_INI)
 
 
 def declared_seconds(cp):

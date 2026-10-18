@@ -35,16 +35,16 @@ Implements: SR-182, LLR-195
 
 import argparse
 import ast
-import configparser
 import hashlib
 import sys
 from pathlib import Path
 
+from kitlib import config as _kitconfig
 from kitlib.config import utf8_console as _utf8_console
 
 PYCACHE = "__pycache__"
 MIN_BODY_LINES = 4
-STACK_INI = "docs/stack.ini"
+STACK_INI = _kitconfig.STACK_INI
 SECTION = "dupes-census"
 
 
@@ -90,10 +90,10 @@ def measure(scripts_dir):
 
 def _load_baseline(root):
     """`(groups, copies, lines)` from `docs/stack.ini` `[dupes-census]`, or
-    `None` when no baseline is stamped yet (a fresh/scaffolded repo)."""
-    cp = configparser.ConfigParser(interpolation=None)
-    cp.read(Path(root) / STACK_INI, encoding="utf-8")
-    if not cp.has_section(SECTION):
+    `None` when no baseline is stamped yet (a fresh/scaffolded repo). A
+    profile that exists but cannot be read or parsed raises."""
+    cp = _kitconfig.read_stack_ini(Path(root) / STACK_INI)
+    if cp is None or not cp.has_section(SECTION):
         return None
     return (
         cp.getint(SECTION, "groups"),

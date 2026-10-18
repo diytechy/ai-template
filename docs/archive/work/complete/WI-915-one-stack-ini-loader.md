@@ -3,13 +3,31 @@ id = "WI-915"
 title = "docs/stack.ini is parsed in one place, and each of its readers keeps its own key case, defaults and failure rule"
 workstream = "process"
 sr_refs = ["SR-007", "SR-166"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#10-one-configuration-file-in-toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-913"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-18, after its gate:
+
+- `docs/stack.ini` is parsed in one place: `kitlib/config.py`'s reader holds
+  the one `ConfigParser(` and the parse options, and each of the 13 readers
+  keeps its own key case, defaults and failure rule through it; no other
+  script imports `configparser`. A characterization test, committed first
+  on the unrefactored code, pins every reader's outcome and passes after.
+- No function name, `Implements:` tag, requirement, test-case or interface
+  row moved; the module-size ratchet is re-stamped inside the lane.
+- `RESYNC_PACK.md` carries the entry, anchored at the landing's parent.
+- Reviews: counted round 1 (001-REVIEW-A-f9db418 APPROVE 0,
+  002-REVIEW-B-f9db418 APPROVE 2 MINOR, both fixed before the gate) and the
+  gate in convergence stance (003-REVIEW-A-6305676 and 004-REVIEW-B-6305676,
+  each APPROVE 0). No spine rows and no sitting were owed. Decisions:
+  `docs/decisions/wi-915.toml` D-001 to D-006.
 
 ## Context
 

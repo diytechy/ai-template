@@ -1395,17 +1395,13 @@ def read_agent_loop_config(docs):
     ``CLI flag > AGENT_* env > declared file > built-in default`` that
     ``agent_loop.main`` applies (so a one-dial owner change edits ONE file, not
     the same value in three launchers)."""
-    import configparser
-
-    cp = configparser.ConfigParser(interpolation=None)
     try:
-        # An absent file -> cp.read returns [] (no exception); a present but
-        # malformed/non-UTF-8 file degrades to {} rather than crashing the loop.
-        if not cp.read(str(Path(docs) / "stack.ini"), encoding="utf-8"):
-            return {}
-    except (configparser.Error, OSError, ValueError, UnicodeDecodeError):
+        # An absent file reads None; an unreadable or malformed one degrades to
+        # {} rather than crashing the loop.
+        cp = _kitconfig.read_stack_ini(Path(docs) / "stack.ini")
+    except _kitconfig.StackIniError:
         return {}
-    if not cp.has_section("agent-loop"):
+    if cp is None or not cp.has_section("agent-loop"):
         return {}
     out = {}
     for key in AGENT_LOOP_DIALS:

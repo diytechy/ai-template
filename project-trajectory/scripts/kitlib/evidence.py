@@ -41,21 +41,23 @@ and quietly outlived its tree — and the honest sentence is that one, not
 "unforgeable".
 
 THE SPLIT WITH `stage.py`, and why the composition lives THERE. This module is
-pure file-and-path work and imports no sibling. The BINDING is a fold over the
-spine registries too, and the spine's declared input list is `stage.py`'s — so
-`stage.evidence_binding` composes the two and `stage.evidence_passed` is the
-verdict every consumer calls. The dependency runs one way only (`stage` imports
-`evidence`), which is what keeps the package free of a cycle.
+pure file-and-path work. Its only sibling imports are `config` and
+`observation`, and nothing either of them imports reaches `stage`. The BINDING
+is a fold over the spine registries too, and the spine's declared input list is
+`stage.py`'s — so `stage.evidence_binding` composes the two and
+`stage.evidence_passed` is the verdict every consumer calls. The dependency runs
+one way only (`stage` imports `evidence`), which is what keeps the package free
+of a cycle.
 """
 
-import configparser
 from pathlib import Path
 
+from .config import STACK_INI, StackIniError, read_stack_ini
 from .observation import OBSERVATIONS_DIR
 
 # --- THE FILES ----------------------------------------------------------------
 EVIDENCE_FILE = "docs/test/evidence"
-STACK_FILE = "docs/stack.ini"
+STACK_FILE = STACK_INI
 
 # THE TIERS A WHOLE-SUITE CLAIM MAY CARRY. `smoke` is deliberately absent: it is
 # a declared SUBSET (docs/stack.ini `[tiers]`), so a green smoke run is not the
@@ -89,10 +91,9 @@ def source_paths(root):
     stack = Path(root) / STACK_FILE
     if not stack.is_file():
         return []
-    cp = configparser.ConfigParser(interpolation=None)
     try:
-        cp.read_string(stack.read_text(encoding="utf-8-sig", errors="replace"))
-    except (configparser.Error, OSError):
+        cp = read_stack_ini(stack)
+    except StackIniError:
         return []
     out = []
     for option in ("src", "tests"):
