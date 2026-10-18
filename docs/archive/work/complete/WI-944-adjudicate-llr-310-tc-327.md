@@ -2,12 +2,23 @@
 id = "WI-944"
 title = "adjudicate: LLR-310, TC-327 - approved/routed cell(s) amended on merged trunk 1b4d9d7..e45ed5a (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-specref = "docs/requirements/low-level-requirements.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-310", "TC-327"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second
+sitting is held (the re-mint trap, S11 plan section 4.2; owner-agreed
+close, 2026-10-03). WI-929's in-lane checkpoint sitting
+`docs/reviews/wi-929/003-ADJUDICATE-1a07afc.md` blessed LLR-310 and TC-327
+as MEANING+BLESS, and the lane's act turn took act seq 128, which
+re-attested both. At the landing e45ed5a75 the low-level and test
+registries are byte-equal to their approved snapshots under
+docs/archive/last_approved/.
 
 ## Context
 
