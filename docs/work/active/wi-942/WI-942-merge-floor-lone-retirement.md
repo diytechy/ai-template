@@ -151,7 +151,7 @@ gate (LLR-278's WIDENED and WITHOUT ITS ANCHOR checks). This row changes how
 the gate reads one part of that input: a re-attested id that the head no
 longer holds now authorizes its registry's copy. Written before the claim,
 under
-[`PROCESS.md` §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+[`PROCESS.md` §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producer.** The act's snapshot write: `intake.py snapshot --reattests
   <ids>`, the command the act turn lists for a retirement
