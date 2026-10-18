@@ -1,0 +1,40 @@
+# docs/decisions/wi-929.toml — delegated decisions made in the WI-929 lane (the
+# shared machine-line reader stops refusing a repeated field) by the attended
+# coordinator. Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane is cut at trunk's cd6ba3160 (the claimed branch had no commits of its own, recipes section 2) and rebased onto fc0d9f7d4 before its first review, trunk having moved only by the scoped unpause, four claims and the restore, which the lane does not touch. The row is planmode none (owner, coordinator-2026-10-16 D-005: a row that only removes code, tests and text skips the plan step), so build round 1 (Claude Opus at medium, the kit-builder agent) built Deliverables 1, 2, 3 and 5, and the lane's retained GPT Terra session (medium) authored Deliverable 4's two amendments at intent exactly as the spec dictates. Review rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7, recorded as the substitution each round; coordinator-2026-10-16 D-008), each at below-normal priority, at most three counted rounds before the checkpoint. The row changes the shared machine-line reader the review filing and the merge gate consume, machinery the cycle runs on, so it lands alone."
+alternative = "A plan step the owner's ruling exempts this row from."
+reversal_cost = "None: the lane is new."
+why_not_escalated = "The spec's S4 answer and the owner's ruling it cites; the queue's landing rules."
+review = ""
+
+[decision.D-002]
+decided = "Counted round 1, full-lane from fc0d9f7d4 to c2612832c, no stance: 001-REVIEW-A Codex Sol (medium) APPROVE, 0 findings; 002-REVIEW-B Claude Opus (high), the stand-in for the Gemini slot under ruling 7, APPROVE, 1 MINOR. Both were given only their rendered briefs. Triage under the threat model: 002 F1 (MINOR, the RESYNC entry is anchored at the lane's first base cd6ba3160, five bookkeeping commits before its rebased base) is accepted and answered by the landing step, which re-anchors the entry at the landing's parent (recipes section 3, RESYNC; wi-912 D-013's precedent), so it costs no round and no lane edit that a later rebase would stale again. No BLOCKER or MAJOR, so the counted rounds end at one and the checkpoint follows."
+alternative = "Re-anchor in the lane at fc0d9f7d4 now, which the trunk filings this session move again before the landing."
+reversal_cost = "None: one anchor token at the squash."
+why_not_escalated = "Recipes section 3 states the anchor rule; a MINOR costs no round."
+review = ""
+
+[decision.D-003]
+decided = "Checkpoint: the reconcile turn is omitted. The set was drafted at intent from the spec's dictated text, no round proposed row text, and no code moved since the intent commit; the intent set was checked mechanically with tomllib (only LLR-310 detail and rationale and TC-327 method and expected changed, each approved cell keeping its approved text minus the dictated deletions). The closure check passes: TC-327 cites LLR-310 and SR-232, both strict lints are clean on the tip, and the arms map (the coordinator's scratch) maps each outcome and refusal of LLR-310's two changed sentences to a TC clause. One combined sitting judges the two amendments (amendment:LLR-310; amendment:TC-327), SR scope SR-232, with the arms map appended."
+alternative = "A reconcile turn with nothing to reconcile."
+reversal_cost = "Low: a return would resume the lane's Terra session."
+why_not_escalated = "The coordinator-cycle skill's checkpoint step 1 states when the turn is omitted (WI-914, WI-923)."
+review = ""
+
+[decision.D-004]
+decided = "Sitting 003 (combined, amendment kind) blessed both amendments, LLR-310 and TC-327, [MEANING+BLESS]. Before the act turn the lane was rebased onto trunk's 1b4d9d7af (trunk had moved only by the WI-942 and WI-943 filing, which the lane does not touch), and both judged rows at the verdict's commit 18e8500e1 equal the rebased tip's. The act turn re-attested both (act seq 128, 5e4133930; act: complete). Convergence map for the gate: the one accepted finding, round 1's 002 F1 (MINOR, the RESYNC anchor), has no executable test; its fix is the landing's re-anchor of the entry at the landing's parent, independently checkable by reading the anchor token in the landing commit (D-002). No other finding was accepted, so the map is complete and the gate over the checkpoint tip renders in convergence stance: Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the Gemini-slot stand-in), uncounted, from 1b4d9d7af to the tip."
+alternative = "Re-anchor in the lane before the gate, which only the landing's parent can fix for good."
+reversal_cost = "None."
+why_not_escalated = "The coordinator-cycle skill's convergence-map and act-turn steps."
+review = ""
+
+[decision.D-005]
+decided = "The gate over the checkpoint tip 6d852f18e, full-lane from 1b4d9d7af, convergence stance, uncounted, after D-004's map: 004-REVIEW-A Codex Sol (medium) APPROVE, 0 findings; 005-REVIEW-B Claude Opus (high), the stand-in for the Gemini slot under ruling 7, APPROVE, 0 findings. Each was given only its rendered brief. The lane closes in its lane after the gate (its Deliverable written, its specref emptied, its spec moved to the archive), a commit that changes no code and no authored spine row, and lands alone as one squash, its RESYNC entry re-anchored at the landing's parent (D-002)."
+alternative = "None: no finding is open."
+reversal_cost = "None."
+why_not_escalated = "The coordinator-cycle skill's gate and landing steps."
+review = ""

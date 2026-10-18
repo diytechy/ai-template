@@ -34,8 +34,7 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     holds both consume; `requested_path`/`render_requested`/`read_requested`
     are the binding of a sitting's requested kinds beside its verdict;
     `write_binding` is its one writer and `accepted`/`accepted_at` the one
-    reader every consumer of a verdict goes through (round 11); every machine
-    line naming a declared field twice is refused (WI-870). `review_line(text)`
+    reader every consumer of a verdict goes through (round 11). `review_line(text)`
     is the ONE reader of a review round's `VERDICT:` line, which the attended
     filing boundary and the merge gate's round reader both consume. Pure
     functions over text, except `write_binding` (one file) and `accepted_at`
@@ -311,27 +310,19 @@ def _keyword_lines(text, keyword):
 
 
 def _machine_line(tokens, fields):
-    """`(label, {field: value}, [repeated fields])` for one keyword line's
-    tokens: its first token, each `field=value` token naming a declared field,
-    and every declared field named by more than one token (WI-870: a repeated
-    field is ambiguous, so no copy of it is read)."""
+    """`(label, {field: value})` for one keyword line's tokens: its first
+    token, and each `field=value` token naming a declared field."""
     pairs = [t.partition("=") for t in tokens[1:]]
-    named = [k for k, sep, _v in pairs if sep]
     values = {k: v for k, sep, v in pairs if sep and v and k in fields}
-    repeated = [f for f in fields if named.count(f) > 1]
-    return (tokens[0] if tokens else ""), values, repeated
+    return (tokens[0] if tokens else ""), values
 
 
-def _incomplete(grammar, label, values, repeated, where):
+def _incomplete(grammar, label, values, where):
     """Why one parsed keyword line is not complete, or None."""
     keyword, labels, fields = grammar
     if label not in labels:
         return "{} says `{}: {}` - its label is not one of {}".format(
             where, keyword, label or "(nothing)", "|".join(labels)
-        )
-    if repeated:
-        return "{} says `{}: {}` with {} more than once".format(
-            where, keyword, label, ", ".join(repeated)
         )
     missing = [f for f in fields if f not in values]
     if missing:
@@ -344,14 +335,14 @@ def _incomplete(grammar, label, values, repeated, where):
 def _machine_lines(grammar, text, where):
     """`([(label, {field: value})], refusal)`: every `grammar` keyword line in
     `text` parsed from its own physical line, and why ANY of them is not
-    complete (no line at all, a bare keyword, a label outside the enum, a
-    declared field named twice, or a missing `field=value` token), or None."""
+    complete (no line at all, a bare keyword, a label outside the enum, or a
+    missing `field=value` token), or None."""
     keyword, _labels, fields = grammar
     parsed = [_machine_line(t, fields) for t in _keyword_lines(text, keyword)]
     if not parsed:
         return [], "{} carries no `{}:` machine line".format(where, keyword)
     refusals = (_incomplete(grammar, *line, where) for line in parsed)
-    return [line[:2] for line in parsed], next((r for r in refusals if r), None)
+    return parsed, next((r for r in refusals if r), None)
 
 
 # A review round's verdict line (WI-870): keyword, labels, fields. Not a sitting
@@ -378,9 +369,9 @@ def review_line(text, where="it"):
     """THE ONE READER of a review round's verdict line (WI-870): `((label,
     count), None)`, or `(None, refusal)`. Exactly one physical line of `text`
     may name the `VERDICT` keyword, in any case; it is read by the shared
-    per-line reader (a label of the enum, `findings` present and named once),
-    and must then be exactly `VERDICT: <label> findings=<digits>`, with nothing
-    else on it. The attended filing boundary refuses to file what this
+    per-line reader (a label of the enum, `findings` present), and must then
+    be exactly `VERDICT: <label> findings=<digits>`; that exact-form comparison
+    refuses anything else on the line. The attended filing boundary refuses to file what this
     refuses, and the merge gate reads it as no verdict.
 
     Implements: SR-232, LLR-310

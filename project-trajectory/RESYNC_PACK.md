@@ -8656,6 +8656,29 @@ and nothing in the loop takes the act. The loop's act turn is built in
 WI-809; keep the managed loop paused until it lands. WI-801, which replaces
 `coordinator_adjudicate.py` with `ask`, carries the `act` command with it.
 
+### The machine-line reader stops refusing a repeated field [since 1b4d9d7af]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The shared machine-line reader in
+`scripts/kitlib/sitting.py` no longer refuses a line that names a declared
+field twice. A review round's verdict line still refuses a repeated count:
+`VERDICT: APPROVE findings=7 findings=0` is not the exact form
+`VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<digits>`, so filing refuses
+it and the merge gate reads it as no verdict, as before. Only the refusal's
+wording changes, from naming the field "more than once" to "not exactly"
+the canonical form.
+
+**Residue.** An adjudication verdict's machine line has no exact-form
+check: a line that repeats a declared field, such as
+`OUTCOME: PARTIAL successors=7 successors=0`, now reads its last copy.
+Only an adjudicator writing the same field twice on one line reaches it.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/sitting.py`.
+
+**What to do.** Overwrite the file. Nothing migrates: no registry, setting
+or record format changes, and no adopter setting changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

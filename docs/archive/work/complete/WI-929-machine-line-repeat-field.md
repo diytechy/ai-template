@@ -3,13 +3,32 @@ id = "WI-929"
 title = "The shared machine-line reader stops refusing a repeated field; the review verdict line's exact-form check already refuses one"
 workstream = "process"
 sr_refs = ["SR-232"]
-specref = "docs/decisions/coordinator-2026-10-15.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "none"
 needs = ["~WI-912"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-17, after its post-checkpoint gate:
+
+- The shared machine-line reader no longer refuses a repeated field: the
+  per-line parse returns a label and its values, and the completeness check
+  takes no repeated-fields argument. No replacement check was added.
+- The review verdict line loses nothing: its exact-form comparison refuses
+  `findings=7 findings=0` as "is not exactly" the canonical form, and the
+  merge gate still reads it as no verdict (the gate's malformed-line test
+  passes unchanged). An adjudication machine line that repeats a declared
+  field reads its last copy: stated residue, in LLR-310's rationale and the
+  RESYNC entry.
+- IF-287's sentence on a field named twice is deleted, and the interface
+  reference is regenerated.
+- LLR-310 and TC-327 carry the amended text: sitting 003 blessed both
+  (MEANING+BLESS), and act seq 128 re-attests them. TC-083 is unchanged.
+- One RESYNC entry; nothing migrates and no adopter setting changes.
 
 ## Context
 
