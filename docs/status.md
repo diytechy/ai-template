@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-18c-attended-coordinator.md](handoff-2026-10-18c-attended-coordinator.md),
+  [handoff-2026-10-18d-attended-coordinator.md](handoff-2026-10-18d-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
@@ -195,6 +195,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   identity; a spec move rewrites the moved spec's own relative links, so a
   row whose Done-when holds one reads as changed at its own close; and the
   dispatcher may keep looping on a worker that refuses at preflight;
+  from the guard-hooks row's second fix (wi-927 D-009): bootstrap's setup
+  prompt reads a NUL stdin as a terminal on Windows (harmless: it takes the
+  default); nothing checks an LLR's code_symbol entries back against the
+  tags, and trace.py does not compare a TC's `verifies` with an LLR's
+  `test_refs` (so `--strict` missed a back-link gap); the occupied fix text
+  also prints for an unparseable settings file or a broken shipped example;
+  a crashed hooks reader's `[missing]` line carries only its traceback;
+  from the trunk-by-name row's stage 2 (wi-925 D-004): a claim relinks
+  other claim copies too, through plumbing the hook never sees (P9 states
+  it or the residue list does);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on

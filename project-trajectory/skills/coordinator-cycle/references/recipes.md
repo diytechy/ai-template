@@ -699,7 +699,13 @@ lane commit being replayed.
   guarded replace, keep its addition, and record it (wi-911 D-007,
   2026-10-15).
 - An interface row names no file in any cell; a "No tie-back" note belongs
-  only to a row with an `external:` party.
+  only to a row with an `external:` party. Until item 11's migration, its
+  `owner`, `consumers` and `requestors` hold `scripts/<module>` ids (IF-286's
+  form): brief that form, or Terra strips the prefix (wi-926 D-003). Terra's
+  template edits registries only, so an intent turn whose plan edits
+  `docs/runtime-flows.md` says so in its addendum, and a new IF's
+  `Contract IF-NNN:` body is added in the code by the builder or you before
+  the commit (wi-926 D-002).
 - Before composing a sitting, match each TC `expected` clause to a
   sentence of an LLR or SR in the set. A reconcile dropped two obligations
   the tests carried (a tick does not unbind a record; the second critique
@@ -734,8 +740,9 @@ lane commit being replayed.
   commit` record a 66.2 s reading unmentioned (WI-921's pass record,
   its message amended, 2026-10-15).
 - Time a breach's parent in a detached scratch worktree at the lane's
-  HEAD (`git worktree add --detach <scratch>/parent-wt HEAD`, removed
-  after), never by stashing an uncommitted build, and record both
+  HEAD (`git -C <lane> worktree add --detach <scratch>/parent-wt <lane
+  sha>`, removed after; run from the primary checkout, `HEAD` names
+  trunk's tip, 2026-10-18d), never by stashing an uncommitted build, and record both
   readings. Three reviewers running their suites in parallel took a
   parent to 86 s (2026-10-15): re-measure quiet before the landing.
 - A build whose in-process tests take the smoke tier past `max-tests`
@@ -874,6 +881,12 @@ lane commit being replayed.
   pairs instead; a commit that changes code or tests, or grows the tier,
   and every landing, still takes its own pair (coordinator-2026-10-17
   D-011, 2026-10-17e).
+- The declared bar passes no `--basetemp`, so it uses pytest's default
+  numbered folders, which keep only the newest three: with four or more
+  pytest runs at once, a new run's start deletes the oldest run's folder
+  and that bar dies mid-tier with no summary line (a lane and parent
+  pair beside two builders, 2026-10-18d). Re-run it, and take bar pairs
+  while at most one other pytest run is live.
 - Never grep the whole scratch root: its basetemps hold gigabytes, and
   a recursive search there outran the tool's two-minute cap
   (2026-10-17). Never grep `tests/test_module_size_ratchet.py` with a
