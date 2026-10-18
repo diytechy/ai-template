@@ -72,3 +72,10 @@ alternative = "Admit unmarked MEANING acts under verdicts bound before WI-912's 
 reversal_cost = "Low: a spec clause, critiqued before the claim."
 why_not_escalated = "The owner's standing rules decide it; the drafter recommended the same."
 review = ""
+
+[decision.D-011]
+decided = "The smoke budget read OVER on every commit this session (65 to 169 s against 60 s), with the owner's applications, builders, reviewers and sittings loading the box. Every same-window pair taken read the parent as high or higher (70.1 vs 66.8, 74.7 vs 74.9, 90.4 vs 81.5, 65.9 vs 75.3, 68.4 vs 68.5, 85.9 vs 123.5, 140.7 vs 137.4, 108.6 vs 114.3 s). After the first pairs, a commit that changed only records (decisions, review files, a queued or closed spec, generated views) recorded its own reading and cited those pairs instead of timing its parent again; every commit that changed code or tests or grew the tier, and the landing, still took its own pair. Folded into the recipes' bar-on-a-loaded-box note."
+alternative = "Time the parent for every commit, about two and a half minutes of loaded wall time each, on commits whose content cannot move the tier."
+reversal_cost = "Low: one recipe sentence; the queued CPU-time budget row (owner, D-007) retires the pairing altogether."
+why_not_escalated = "It applies D-005's own test (a breach the change cannot have caused is load) to commits that touch no test or code; it is recorded for the owner to confirm or overrule."
+review = ""

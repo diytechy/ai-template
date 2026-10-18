@@ -388,3 +388,7 @@ after.
 - **No grandfathering** (owner, docs/decisions/coordinator-2026-10-17.toml#D-010):
   an unmarked MEANING ruling authorizes no act, whenever it was sat. Lanes
   in flight re-sit: WI-902 by its reshape, WI-798 by recipes §3 item 5.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-17): APPROVE, no findings.

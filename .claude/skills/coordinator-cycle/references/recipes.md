@@ -353,7 +353,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
    and cites the owner's authorization.
 3. Confirm HEAD moved. `claim` reads the **working-tree** pause.
 4. Run `"$PY" "$SCRIPTS/integrate.py" claim --wi WI-NNN --branch wi-NNN`
-   for each row. Branch names are single-segment.
+   for each row. Branch names are single-segment. A claim that exits 127
+   with an empty log never launched (two of four did, 2026-10-17e):
+   retry it, and read `git log` for its claim commit.
 5. Restore the pause byte-identical in the next commit, again with the
    regenerated `docs/open-items.html`, even if a claim failed.
 
@@ -469,6 +471,11 @@ commit of its own, move it to trunk's tip
   never by forging the file. Cite
   the lane's SOUND full-lane review in the command's description: the
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
+  The squash's hook judges text-then-act, held-status and ruling-sync, but
+  never the merge slot's approval-act floor, so on this path the act
+  turn's verdict-derived command is the only guard until the one-landing
+  row moves coordinator landings onto the slot (coordinator-2026-10-17
+  D-009).
   If the lane recorded an owner overrule in
   `docs/decisions`, land two commits: the squash up to the commit before the
   close, then the close. The hook judges the first commit's Done-when change
@@ -831,7 +838,12 @@ lane commit being replayed.
   The owner kept D-012's rule under far heavier load (readings of 140 to
   1832 s, 2026-10-17b): take a commit's reading and its parent's side by
   side, the parent in a detached scratch worktree at the lane's HEAD, so
-  the pair shares one window.
+  the pair shares one window. A commit that changes only records
+  (decisions, review files, a queued or closed spec, generated views)
+  records its own reading and cites the session's latest same-window
+  pairs instead; a commit that changes code or tests, or grows the tier,
+  and every landing, still takes its own pair (coordinator-2026-10-17
+  D-011, 2026-10-17e).
 - Never grep the whole scratch root: its basetemps hold gigabytes, and
   a recursive search there outran the tool's two-minute cap
   (2026-10-17).
