@@ -51,3 +51,10 @@ alternative = "The load-scaled wall budget; a row with the design left open; or 
 reversal_cost = "Low: a queued row, critiqued before its claim."
 why_not_escalated = "It was the owner's ruling."
 review = ""
+
+[decision.D-008]
+decided = "Owner ruling in session (2026-10-17e), asked before the session's first claim: the next scoped unpause claims WI-917, WI-925, WI-926 and WI-927 now, so WI-917's single-plan step runs while WI-929 is in review; the two merge-floor rows owed from wi-912 D-008 and D-009 are claimed under a second scoped unpause later this session, once filed and confirmed at their scope critique. The four carry no edges among themselves, and their hard needs (WI-912, WI-921) are done."
+alternative = "One unpause for all six once the two new rows are confirmed; or WI-917 alone now and the rest in one later unpause."
+reversal_cost = "Low: a claim is returned to the queue by its own handback."
+why_not_escalated = "It was the owner's ruling."
+review = ""
