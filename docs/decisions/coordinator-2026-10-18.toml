@@ -1,0 +1,26 @@
+# docs/decisions/coordinator-2026-10-18.toml — delegated calls the attended
+# coordinator made on trunk in the 2026-10-18a session.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-917 changed only the overnight launcher, its headless block and the coordinator-cycle skill's headless section, which the attended cycle does not run through. The machinery rule (revision 37: the next machinery lane lands only after the cycle has run through the last one's changed step) therefore holds no later attended landing behind it; its changed step is first exercised by the first headless run, which stays the owner's call."
+alternative = "Hold every later landing until a headless leg has run, which the owner has not yet released."
+reversal_cost = "Low: no later landing has relied on it yet."
+why_not_escalated = "The rule's own text names the cycle's changed step; the attended cycle has none here."
+review = ""
+
+[decision.D-002]
+decided = "WI-943's build is held until WI-942 lands. WI-943 soft-needs WI-942, and both change the merge slot's reading of an acted row (WI-942's lane_acted_set, WI-943's MEANING authorization beside it), so building WI-943 on WI-942's landing avoids a cross-lane rebase through the same functions. WI-943's plan, critique (APPROVE, 0 findings) and pass record are committed in its lane."
+alternative = "Build both at once and resolve the overlap at WI-943's rebase."
+reversal_cost = "Low: the lane is planned and passed; its build can start at any time."
+why_not_escalated = "Landing order and lane scheduling are the coordinator's; the row's soft need names the order."
+review = ""
+
+[decision.D-003]
+decided = "WI-925's and WI-926's second plan critiques (Codex Sol, medium, convergence stance) each returned CHANGES-REQUESTED with one MAJOR, at the plan cap. WI-925: the relink remap recognizes only an active-folder deletion paired with a closed work item's addition, not a standalone spec archived in the same staged delta, which deliverable 3 and D8 promise. WI-926: the new shipped kitlib module has no step registering it in the bootstrap manifest's MAPPING, so a fresh scaffold would receive importers without it (an existing scaffold test, test_the_common_package_ships_complete, asserts the package ships whole). By the skill's plan step 4 each goes to one dispute sitting, and only an accepted DISMISS lets a pass record be written; a FIX, SUCCESSOR or ESCALATE goes to the owner and the lane closes partial. Both sittings are left to the next session, which this session's context budget could not carry through to a verdict; each lane holds at its filed second critique with no build."
+alternative = "Sit both now and close out mid-sitting, or ask the owner to rule the findings directly, which the plan cap's procedure reserves for after the sitting."
+reversal_cost = "None: the lanes hold, unbuilt."
+why_not_escalated = "The skill's plan step names the dispute sitting as the next step; nothing has yet reached the owner."
+review = ""

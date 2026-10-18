@@ -46,6 +46,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   `.ruff_cache` its ruff run leaves in the tree: one under
   `project-trajectory/scripts/` reddened `test_mapping_purpose` in the smoke
   tier (WI-798, 2026-10-11).
+  A brief derived from another lane's by text substitution keeps that
+  lane's spec filename: `ls` the spec path each derived brief names
+  before its launch (one builder found the right spec on its own;
+  2026-10-18a).
   Brief a hook's coverage as reading the command word the
   way the shell grammar does, from a list you give; a brief asking for every
   form that gets past the hook was cut off by a safety classifier (WI-834).
@@ -189,7 +193,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `"$PY" "$SCRIPTS/review_brief.py" critique --plan --wi WI-NNN --sha <plan commit> --rubric docs/rubrics/plan-decomposition.md --scratch <dated root> --out <brief>`
      (it runs the coverage step itself and refuses a failing plan), then
      `bash "$TOOLS/sol_review.sh" <lane> <brief> <out>`. Each round has its
-     own verdict path, `WI-NNN-plan-critique-<n>.md`.
+     own verdict path, `WI-NNN-plan-critique-<n>.md`. Append one line to
+     every critique brief naming that path and saying to commit nothing,
+     run no `plan-file` and change no file in the checkout: with it, eleven
+     plan critiques left their lanes untouched (2026-10-18a). Several
+     lanes' plans, critiques and records run in parallel, each from its
+     own lane, its records committed alone behind its own bar.
   4. File: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --critique <verdict> --sha <plan commit>`
      writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone. The
      critic may file it first: Sol ran `plan-file` in the lane and tried to
@@ -854,7 +863,10 @@ lane commit being replayed.
   D-011, 2026-10-17e).
 - Never grep the whole scratch root: its basetemps hold gigabytes, and
   a recursive search there outran the tool's two-minute cap
-  (2026-10-17).
+  (2026-10-17). Never grep `tests/test_module_size_ratchet.py` with a
+  pattern its notes may hold: each stamp's history is one line tens of
+  kilobytes long, and one hit spent about ten thousand tokens of
+  context (2026-10-18a).
 - **POSIX evidence on this workstation** (owner, wi-931 D-002): WSL's
   Ubuntu distro (Python 3.12, pytest 7.4, no xdist; nothing installed).
   Clone into WSL's own filesystem (`git clone /mnt/c/Projects/ai-template
