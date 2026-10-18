@@ -46,6 +46,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   `.ruff_cache` its ruff run leaves in the tree: one under
   `project-trajectory/scripts/` reddened `test_mapping_purpose` in the smoke
   tier (WI-798, 2026-10-11).
+  Tell every builder never to fold parametrized cases into one looping
+  test to stay under the smoke tier's `max-tests`: in-process growth
+  re-stamps the ceiling instead (wi-927 D-002). Two lanes carrying the
+  same re-stamp hunk, byte for byte, merge cleanly (2026-10-18b).
   A brief derived from another lane's by text substitution keeps that
   lane's spec filename: `ls` the spec path each derived brief names
   before its launch (one builder found the right spec on its own;
@@ -228,7 +232,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      MAJOR finding, then
      `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --dispute-findings docs/reviews/<lane>/NNN-DISPUTE-findings.toml --positions <file>`
      writes the dispute findings file (below) with those ids and each
-     finding verbatim; a refusal names the ids it expects. Sit it; commit;
+     finding verbatim; a refusal names the ids it expects. The positions
+     are the coordinator's (`held_by = "coordinator"`): when nothing is
+     contested, say so, and that the cap routes it, taking no side.
+     Two lanes' sittings have run in parallel (2026-10-18b). Sit it; commit;
      then `plan-file --wi WI-NNN --pass --dispute <verdict path>`. Anything
      but an accepted DISMISS of every one is the owner's: close the lane
      partial.
@@ -579,7 +586,7 @@ lane commit being replayed.
 | Generated views | `git checkout --ours`, continue, regenerate once at the end |
 | Registries | resolve per table using this replay's base/ours/theirs (`git show :1:<path>`, `:2:<path>`, `:3:<path>`); keep independent changes from both sides and judge same-row conflicts; never take the whole file `--ours` |
 | `docs/id-watermark` | `--ours`, then `"$PY" "$SCRIPTS/trace.py" --bump-ids`; preserve any higher mark for retired lane ids |
-| RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces |
+| RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces; then re-anchor the lane's own entry at its new base, since the bar's `check_resync` step refuses an entry anchored elsewhere (WI-916, 2026-10-18b) |
 | Byte-budget skill rows | each side's own row |
 | `stack.ini`, size-ratchet notes | both sides' notes |
 | Smoke-ceiling restamp | trunk's note plus the lane's count; restamp only past the ceiling |

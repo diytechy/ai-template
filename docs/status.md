@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-18a-attended-coordinator.md](handoff-2026-10-18a-attended-coordinator.md),
+  [handoff-2026-10-18b-attended-coordinator.md](handoff-2026-10-18b-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
@@ -37,6 +37,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   landed through it. A landing's bar
   runs on the box as it is, read beside its parent's (owner, 2026-10-17);
   a CPU-time smoke budget is queued after the batch (owner, 2026-10-17).
+  The re-sync entry check is in the commit bar: a lane rebased onto a
+  newer trunk re-anchors its own RESYNC entry at its new base.
   The headless coordinator's marking row has landed, and its re-claim
   reader row is ready. The two merge-slot rows are claimed; their
   coordinator-landing gap is the one-landing row's
@@ -178,7 +180,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   deleted inside one leg, and a merge's non-first-parent commits on trunk,
   sit outside the audit's binding (state it in the launcher); and the
   launcher's claim reader copies the merge slot's, whose failed claim log
-  reads as unclaimed (one checked claim reader for both); **owner intake 2026-09-22:** the self-test
+  reads as unclaimed (one checked claim reader for both); from the re-sync
+  check's gate (wi-916 D-008): the enforcement audit's row and the
+  check's docstrings say a retitled entry counts zero, where one keeping
+  its old anchor is refused by the anchor rule, and a lost landed heading
+  that cancels a valid added entry is refused with the plain no-entry
+  reason, naming neither (wording, and a clearer message); **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
   `unrecognized arguments: -n`. This depends on the root launchers SN-034/SN-035
