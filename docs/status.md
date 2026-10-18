@@ -25,16 +25,18 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-17c-attended-coordinator.md](handoff-2026-10-17c-attended-coordinator.md),
+  [handoff-2026-10-17d-attended-coordinator.md](handoff-2026-10-17d-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
   process-text, strict-lints and plan-gate landing-shapes rows have
   landed, and the reviewer trial has ended: each round runs two reviewers,
-  Sol and Opus. The adjudication-split row's first build round and its
-  change set at intent are committed in its lane; its first counted review
-  round is next (the handoff's state). A landing's bar now runs on the box
-  as it is, read beside its parent's (owner, 2026-10-17).
+  Sol and Opus. The adjudication split has landed: a checkpoint sitting
+  now ends at its committed verdict, and its act is a later turn
+  (`coordinator_adjudicate.py act`), which its own lane ran once live. The
+  next lane in the queue is the machine-line reader row. A landing's bar
+  runs on the box as it is, read beside its parent's (owner, 2026-10-17);
+  a CPU-time smoke budget is queued after the batch (owner, 2026-10-17).
   The headless coordinator's marking rows are critique-confirmed and wait
   for the rows they need. The
   disposition-adoption row is re-cut before it resumes, and the
@@ -152,7 +154,20 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   from the session-kill row's gate (wi-931 D-009): SR-238's acceptance
   clause on a process that joins the session job late in the kill has no
   verifying TC clause (wording, at its next sitting: keep it in the
-  rationale's residue, or name its verification in TC-026); **owner intake 2026-09-22:** the self-test
+  rationale's residue, or name its verification in TC-026); from the
+  adjudication split's lane (wi-912 D-008, D-009, D-013): two rows to file
+  on trunk, for the merge slot, where a re-attestation is judged before it
+  merges: (a) it authorizes a MEANING re-attestation only for a row the
+  verdict blesses, and (b) it admits a retirement whose registry carries no
+  other act in the branch, which it now refuses as a widened copy, and (b)
+  lands before the first lane whose sitting retires a row alone in its
+  registry; the intake module's minted first-approval and amendment rows'
+  Context still tells the judging session to act in-turn (to the row that
+  builds the loop route's act turn); the judging composer's first-approval
+  comments still describe the removed `--approves` slot; LLR-167's detail
+  still says its tiers come from that walk, and an "it" in its addition
+  lacks a referent, and SR-231's new act-turn sentences sit outside its one
+  `shall` (wording, at their next sitting); **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
   `unrecognized arguments: -n`. This depends on the root launchers SN-034/SN-035

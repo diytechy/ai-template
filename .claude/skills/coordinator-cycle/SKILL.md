@@ -199,7 +199,10 @@ Each round:
    contested finding to a dispute sitting (step 7). Only a BLOCKER or a MAJOR
    costs a round; a MINOR goes to the spine change list or a successor row,
    and so does a reviewer's coverage-extension note (ruling 1), which carries
-   no severity.
+   no severity. A fail-closed refusal of an input the cycle's own procedure
+   produces, which the earlier route served, is a regression graded by its
+   reach, not a coverage-extension note (owner, wi-912 D-008: a retirement
+   the checkpoint carries into scope).
 5. **A coverage plan before any fix**, one per round file. The builder's
    first answer to a round file is a `Plan-WI` table, one row per finding
    `F#` (F1..Fn in the order written): its class, every site of the class
