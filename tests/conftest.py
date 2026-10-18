@@ -417,6 +417,8 @@ SLOW_MODULES = frozenset(
         "test_done_when_blessing",  # 82 tests, 142.4 s: tmp git repos and lane worktrees per case, one pytest subprocess
         "test_text_then_act",  # 20 tests, 71.3 s: a tmp git repo per case driven through integrate and check.py
         "test_dispute",  # 34 tests, 10.9 s: `git init` and commits per case for the dispute brief
+        # WI-917: the overnight-leg launcher on real repositories.
+        "test_overnight_legs_git",  # a tmp git repo per case and stub `claude` legs; its in-process pin is test_overnight_legs
     }
 )
 

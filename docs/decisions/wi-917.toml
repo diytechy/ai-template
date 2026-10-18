@@ -1,0 +1,41 @@
+# docs/decisions/wi-917.toml — delegated decisions made in the WI-917 lane (a
+# headless coordinator leg is a marked autonomous run, and every commit it
+# makes carries the run's Loop-Session trailer) by the attended coordinator.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane is cut at trunk's fc0d9f7d4 (the claimed branch had no commits of its own, recipes section 2), claimed under the session's first scoped unpause (coordinator-2026-10-17 D-008). The row is claimed planmode single, so the lane planned first: a fresh Claude Opus planner wrote the plan from review_brief.py plan's brief alone (DELTA within; plan_coverage passes, 21 clauses), committed verbatim; one Codex Sol critique at medium approved it with no findings, and the pass record binds it. The plan builds in three stages on one builder (P2 with P3, then P4, then P5), each verified and committed by the coordinator before the next is released. Review rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the stand-in for the Gemini slot under ruling 7, recorded as the substitution each round; coordinator-2026-10-16 D-008), at most three counted rounds before the checkpoint. The row changes the overnight launcher the coordinator's headless legs run on, so it lands alone, after WI-929."
+alternative = "Build without the plan step, which the plan-gate hook step and the merge slot refuse."
+reversal_cost = "None: the lane is new."
+why_not_escalated = "The skill's plan step and the queue's landing rules."
+review = ""
+
+[decision.D-002]
+decided = "Plan decision 4, recorded as the plan asks: the overnight launcher resolves claude with shutil.which and pipes each leg's prompt on stdin (UTF-8), never in argv, with the rest of the argv unchanged and no env= passed, so the leg inherits the marked environment. On Windows a bare name reaches only an .exe through CreateProcess, and a which-resolved batch shim given a multi-line prompt in argv would cross cmd.exe, which re-parses it; stdin is the route IF-041 and IF-064 already state for every shipped launch template. The owner's install (claude.exe) keeps working. The stage-1 tests run a stub claude from a PATH holding only the stub's folder and git's, so the real CLI is never reached; the POSIX /bin/sh stub is unexercised on this Windows box and is left to the full suite's CI legs."
+alternative = "Keep the prompt in argv and launch by bare name, which the Done-when's stub on PATH cannot reach on Windows."
+reversal_cost = "Low: one launch call in a coordinator tool that is not shipped."
+why_not_escalated = "The accepted plan's decision 4, which binds the build."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 after the rebase onto trunk's 6533a2331 (clean; the three coordinator-cycle skill copies kept both sides' edits and stay byte-identical; strict lints clean and the tier green at the rebased tip b6878a31c, 2695 passed): Codex Sol at medium (REVIEW-A, 001) APPROVE with 0 findings, and Claude Opus at high (REVIEW-B, 002, the stand-in for the Gemini slot under ruling 7, launched with the Agent tool's effort high; coordinator-2026-10-16 D-008) APPROVE with 3 MINOR. No BLOCKER or MAJOR, so the checkpoint follows round 1. MINORs cost no round and none is fixed in the lane. F1 (pre_leg re-derives trunk from the primary checkout's HEAD at every leg, so a leg that leaves that checkout on another branch has the next audit judge it as trunk) and F2 (a ref created and deleted inside one leg, and a merge's non-first-parent commits on trunk, sit outside the two-snapshot binding) are each reachable only off procedure, as the reviewer states, and go to docs/status.md's unfiled follow-ups at the landing. F3 (lane_claimed is a second copy of the slot's integrate._loop_claimed, the newest claim of a branch on trunk's first-parent line) is confirmed: the two read the same claim grammar. Its remedy ties the copy to WI-918, but WI-918's spec lists the claim-grammar readers as not its consumers (the re-claim subject carries no claim suffix), so WI-918 does not change them; the finding goes to the unfiled follow-ups with the reviewer's note outside the finding lines, that the slot's copy reads a failed claim log as unclaimed while the launcher's fails closed, as one consolidation: one checked claim reader both call."
+alternative = "Fix the three MINORs in the lane, which the review shape gives no round for (only a BLOCKER or MAJOR costs one); or write F3 into WI-918's spec, whose re-claim reader is provenance.loop_lane_window and never the claim grammar."
+reversal_cost = "Low: each follow-up can be filed as a row at any time."
+why_not_escalated = "The review shape (ruling 4: MINORs never cost a round) and the skill's triage step place MINORs; the reach of F1 and F2 is the reviewer's own reading."
+review = ""
+
+[decision.D-004]
+decided = "The checkpoint owes no spine set: the lane adds and amends no row (its spec's S5; neither reviewer found a row-text change), so there is no Terra turn, no closure-check set and no sitting. The convergence map for the gate is empty: no finding was accepted for a fix in the lane. Trunk moved after round 1 only by the second scoped unpause (d4347c821, the claims 51d81ab64 and 553b724eb, the byte-identical restore f4c33e461), which this lane does not touch, so the lane rebases before the gate and the gate reviews the tip that lands (recipes section 3; WI-922, 2026-10-16c); no post-rebase round is owed."
+alternative = "Run the gate on the round-1 tip and rebase after it, which would owe an uncounted round over the rebased tip."
+reversal_cost = "None."
+why_not_escalated = "The skill's checkpoint and landing steps."
+review = ""
+
+[decision.D-005]
+decided = "The gate over the checkpoint tip 53758d9e8, uncounted and in convergence stance (empty convergence map, D-004): Codex Sol at medium (REVIEW-A, 003) APPROVE with 0 findings, and Claude Opus at high (REVIEW-B, 004, the ruling-7 stand-in) APPROVE with 1 MINOR, which is round 1's F1 found again on its own: pre_leg re-reads trunk from the primary checkout's HEAD before every leg. It is a gate MINOR whose fix would move the tip off the gated one, so it goes to docs/status.md's unfiled follow-ups (recipes section 3; wi-935 D-005), with round 1's F2 and F3. The reviewer's coverage-extension note, outside the finding lines, joins them: a leg that rewinds archive/lanes to an older tip passes the audit, since the plan requires descent of trunk alone and a rewind adds no commit. Because the headless legs wait on this row and then on the owner's go, the follow-up names F1 and the archive descent as the two to weigh before the first headless run. The row closes in its lane: its Deliverable written before its Context, its specref emptied, its spec moved to the archive; no code and no authored spine row changes after the gate."
+alternative = "Fix F1 in the lane after the gate, which moves the tip off the gated one and owes another gate."
+reversal_cost = "Low: the follow-up can be filed as a row before any headless run."
+why_not_escalated = "The review shape (MINORs cost no round) and the recipes' gate-MINOR rule; the first headless run stays the owner's call."
+review = ""

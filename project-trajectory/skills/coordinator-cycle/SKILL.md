@@ -387,6 +387,94 @@ The handoff links the one it replaces, points here for procedure, and holds
 state only: what landed, what is open, what the owner owes, and the session
 prompt. It carries no cycle, recipe or "corrections learned" section.
 
+## 7. Headless legs
+
+This section is the headless procedure's one home. It carries the review-churn
+plan's revisions 35 ("The coordinator role") and 36 ("Headless coordinator
+legs are marked now"), the owner's 2026-10-14 split ruling (WI-918 takes the
+merge slot's reading of the re-claim), and
+`docs/decisions/coordinator-2026-10-14.toml` D-015 (the lane-mode reading) and
+D-016 (the design calls).
+
+**A headless leg is an autonomous run.** The overnight launcher
+(`scripts/coordinator/overnight_legs.py`) marks the run once, before its first
+leg: one loop session per run, inherited by every leg and every process a leg
+starts. Every leg's prompt is the handoff's session prompt, then the
+[headless block](../../../scripts/coordinator/headless-leg.md), then the kit's
+provenance line naming the session. After each leg the launcher audits every
+ref the leg moved and stops the run, naming the commit or the read, when one
+fails its rule.
+
+**The trailer on every commit:**
+
+- Every commit message ends with the provenance line, inside its final trailer
+  block. That includes the landing's message file and an amended message (the
+  last trailer wins), and the `archive/lanes` `commit-tree -F` message, the
+  one plumbing commit the coordinator writes itself (recipes §3).
+- The kit's own writers (claim, mint, handback, telemetry, the merge slot) add
+  the trailer themselves, and the adjudicator gets it from its brief's
+  provenance line (WI-912).
+- A step the marker refuses is never re-run unmarked or past a hook.
+
+**Foreground only:**
+
+- Every command runs in the foreground, with an explicit timeout up to the
+  launcher's raised shell cap (recipes §7, "Background or foreground").
+- Every Agent call passes `run_in_background: false`.
+- Every builder, reviewer and planner is told to run its commands in the
+  foreground.
+
+**Owner-held steps.** A leg never takes a step only the owner can take:
+
+- an act the marker refuses (a status move on a held rung);
+- an ESCALATE ruling;
+- an open item's ruling;
+- a Done-when item that needs an owner act or credential;
+- a push or a merge to main.
+
+Any other step the session prompt's Never list or §5 reserves to the owner is
+treated the same way. For each such step, the leg:
+
+1. brings the lane to a safe committed point;
+2. records the step and its evidence (the verdict, the rows, the command) in
+   the lane's decisions record and under the new handoff's "For the owner";
+3. turns a decision only the owner can make into a pending open item that the
+   row's `needs` cites (§5, unchanged);
+4. moves to the next row.
+
+When no row can move without the owner, the leg closes out with the
+`Overnight: stop` line in the new handoff. A Codex limit is answered with a
+`Resume-not-before:` line, as the launcher reads it.
+
+**The lane-mode rule** (D-015). A lane that a headless leg marked lands
+headless: by its claim, or by a commit one of the loop's own writers made in
+its range under the marker, a sitting's telemetry commit included. Otherwise
+the attended coordinator re-claims it before its own first commit there, its
+sittings' verdict and act commits included.
+
+**The re-claim.** This step is the re-claim subject's one home until WI-918
+moves it into the kit's provenance module.
+
+- The attended, unmarked coordinator writes an empty commit in the lane with
+  the subject `reclaim: <branch> (attended)` and no trailer:
+  `git commit --allow-empty -m "reclaim: <branch> (attended)"`.
+- A missed re-claim is placed before the first attended commit. Create the
+  re-claim on the last headless commit, then replay the attended commits onto
+  it: `git commit-tree <last-headless>^{tree} -p <last-headless> -m
+  "reclaim: <branch> (attended)"`, then `git rebase --onto <reclaim>
+  <last-headless> <branch>`. A replay keeps each message and never reaches the
+  commit floor.
+- Until WI-918 lands, nothing reads that commit, and nothing needs to:
+  coordinator landings are hand squashes, which never run the merge slot's
+  trailer rung.
+
+**A leg's landing.** A leg squashes a lane only after
+`"$PY" "$TOOLS/overnight_legs.py" check-lane <lane>` exits 0; exit 3 names
+the first refused commit or the read that failed, and that lane is not
+landed. Until WI-918 lands, a leg leaves a lane holding a re-claim to the
+attended session: the lane rule does not read re-claims yet, so the lane's
+attended commits would refuse the check.
+
 ## Never
 
 Owner-reserved acts and standing prohibitions:

@@ -3,13 +3,39 @@ id = "WI-917"
 title = "A headless coordinator leg is a marked autonomous run, and every commit it makes carries the run's Loop-Session trailer"
 workstream = "process"
 sr_refs = ["SR-209", "SR-208"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#owner-rulings-2026-10-11"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-912"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-18, after its post-checkpoint gate:
+
+- The overnight launcher marks its run once, before any leg: it reads the
+  headless block, keeps a well-formed inherited loop marker or replaces a
+  malformed one, and logs the session. Each leg inherits the marked
+  environment and gets the session prompt, then the block, then the
+  provenance line, on stdin, through a CLI resolved with `shutil.which`.
+  An absent, unreadable or empty block, or an empty provenance line, ends
+  the run before any leg.
+- After each leg the launcher audits every ref the leg moved: trunk's and
+  `archive/lanes`' first-parent additions must carry the run's own
+  `Loop-Session` trailer and trunk must not rewind; any other created or
+  moved branch is judged by the merge slot's lane rule. A git read that
+  fails stops the run and is never read as an empty range. `check-lane`
+  judges a lane by the same rule before a leg's squash.
+- The headless block (`scripts/coordinator/headless-leg.md`) states the
+  marker check, the trailer on every commit, foreground-only operation and
+  the owner-held steps; the `coordinator-cycle` skill gains section 7,
+  "Headless legs", with the lane-mode rule and its attended re-claim, and
+  the recipes point at it. The three skill copies are byte-identical.
+- No spine row is added or amended, so no sitting and no act; the skill is
+  `scope: this-repo` and the launcher is not a kit component, so no RESYNC
+  entry. Round 1's three MINORs go to the unfiled follow-ups (D-003).
 
 ## Context
 

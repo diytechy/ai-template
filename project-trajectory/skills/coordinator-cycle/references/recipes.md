@@ -37,7 +37,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   it never produced, and one read a check's exit code through `tail`
   (WI-921, 2026-10-15). Tell every builder that a comment it writes, code or
   test, never cites a review round or finding number: the convergence round
-  reads the diff and must not see earlier findings (wi-911 D-014). In a headless leg, tell every builder to run its
+  reads the diff and must not see earlier findings (wi-911 D-014). In a headless leg (SKILL §7), tell every builder to run its
   commands in the foreground: one that backgrounded its pytest run returned
   "waiting" with no result (WI-902, 2026-10-11). Resume it with SendMessage;
   its report then arrives as a task notification while you keep working.
@@ -296,7 +296,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `compose_lane: REFUSED` line leaves no brief, and an append then makes
      a brief of the append alone, which the sitting will judge (WI-894,
      2026-10-10). Chain the append and the launch on the composer with `&&`.
-  4. Run it in the background (a headless leg: foreground, §7), because a
+  4. Run it in the background (a headless leg: foreground, SKILL §7), because a
      call can outlast the 10-minute tool cap:
      `"$PY" -u "$SCRIPTS/coordinator_adjudicate.py" adjudicate --brief-file <brief> --brief <class> --wi WI-NNN --verdict <path>`
   5. Read the exit code:
@@ -316,7 +316,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      delete a record or a marker.
   7. The adjudicator commits its verdict, and the sitting ends there. The
      entry point records the outcome beside it and commits the telemetry. The
-     verdict's act is a later act turn, after the rebase (§3).
+     verdict's act is a later act turn, after the rebase (§3). In a headless
+     leg these commits carry the run's trailer: the adjudicator's from its
+     brief's provenance line, the telemetry from the kit's writer (SKILL §7).
 - **Dispute sitting,** from the lane root:
   1. Write the findings file beside the verdict it will get,
      `docs/reviews/<lane>/NNN-DISPUTE-findings.toml`, in the shape
@@ -464,7 +466,9 @@ commit of its own, move it to trunk's tip
   returned; rework the returns and re-sit them all together. Move each
   answered verdict's `## Dispositions` under another heading in the lane,
   or the landing sweep mints the rework rows.
-- **Squash** on trunk with `git merge --squash <lane>`, one per lane. Never
+- **Squash** on trunk with `git merge --squash <lane>`, one per lane. In a
+  headless leg, first run `"$PY" "$TOOLS/overnight_legs.py" check-lane <lane>`
+  and squash only on exit 0 (SKILL §7). Never
   `git stash` between the squash and its commit: the stash's reset deletes
   `.git/SQUASH_MSG`, and `text-then-act` then refuses the landing as an
   unsquashed act. Recover by `git reset --hard HEAD` and redoing the squash,
@@ -522,7 +526,8 @@ commit of its own, move it to trunk's tip
   add a `-p <discarded-act>` for each discarded act. Record its output id,
   then run `git update-ref refs/heads/archive/lanes <new-archive-commit> <old-archive-tip>`.
   Verify the parents with `git show -s --format=%P archive/lanes` before
-  treating the lane as archived.
+  treating the lane as archived. In a headless leg the `-F` message ends with
+  the run's provenance line as its trailer (SKILL §7).
 - **Sweep:** `"$PY" "$SCRIPTS/intake.py" sweep --merged "WI-a;WI-b" --branch <lane> --before <trunk before> --after <landing>`.
   `--merged` names every row the landing closed, or other rows' Dispositions
   are skipped silently. The sweep mints first, and its re-mint takes the next
@@ -551,7 +556,9 @@ commit of its own, move it to trunk's tip
   the entry point names a verdict after the lane tip at launch, and an amend
   to correct a landing's message is refused by the open-items freshness
   check. Write each to a file and use `git commit -F <file>`. Never
-  reuse a message file across a lane act and a trunk landing.
+  reuse a message file across a lane act and a trunk landing. In a headless
+  leg each message file ends with the run's provenance line inside its final
+  trailer block (SKILL §7).
 
 ## 4. Rebasing
 
@@ -784,7 +791,8 @@ lane commit being replayed.
   as its own background command; one started in a detached subshell sends no
   notification. A headless leg (`claude -p`, the overnight launcher
   `"$TOOLS/overnight_legs.py"`) kills its background tasks when it exits, so
-  it runs everything in the foreground under the raised shell cap.
+  it runs everything in the foreground under the raised shell cap. The
+  headless procedure is SKILL §7.
   Launch each background call as its own command: in `A=… && (x) & (y) &`
   only the first subshell sees `A`.
 - The agent harness sets `NoDefaultCurrentDirectoryInExePath=1`, so a Windows
