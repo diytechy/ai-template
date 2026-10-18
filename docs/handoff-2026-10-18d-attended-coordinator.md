@@ -77,21 +77,31 @@ only its rendered brief.
 ## The queue
 
 The owner's order (coordinator-2026-10-16 D-004, D-006; coordinator-2026-10-17
-D-002, D-008). Each row changes machinery, so each lands alone.
+D-002, D-008), reordered toward headless runs (coordinator-2026-10-18 D-004).
+Each row changes machinery, so each lands alone.
 
 | # | Row | Next |
 |---|---|---|
 | 1 | WI-927 | Checkpoint (F3, SR-229, the count question), sitting, map, gate, rebase, act, land |
 | 2 | WI-943 | Closure check, sitting, map, gate, rebase, act, land |
-| 3 | WI-925 | Stage 3: Terra's P9, P10; counted round 1 |
-| 4 | WI-926 | Counted round 1 |
-| 5 onward | As before | WI-918, WI-902 (B4), WI-798, then P1 to P8, then leg 03's rows; WI-940 after the batch |
+| 3 | Gate: the launcher row | File it on trunk first (its scope: D-004's list, from status.md's launcher follow-ups), scope critique and dispositions, then claim with WI-918 under one scoped unpause; build beside rows 1 and 2 |
+| 4 | Gate: WI-918 | Re-critique if its spec predates S3 and S4, claim with row 3, build; land rows 3 and 4 after rows 1 and 2, ahead of WI-925 and WI-926 |
+| 5 | Clear the stop | The session that lands the second gate row writes its handoff without `Overnight: stop`; the owner starts `scripts/coordinator/overnight_legs.py` |
+| 6 | WI-925 | Stage 3: Terra's P9, P10; counted round 1 |
+| 7 | WI-926 | Counted round 1 |
+| 8 onward | As before | WI-902 (B4), WI-798, then P1 to P8, then leg 03's rows; WI-940 after the batch |
+
+From row 5 on the queue runs in headless legs (the `coordinator-cycle`
+skill's section 7); a leg brings an owner-held step to a safe point and
+lists it under the next handoff's "For the owner".
 
 ## For the owner
 
 - **Push** `refactor_again` and `archive/lanes`.
-- **Decide before the first headless run:** status.md's two launcher
-  follow-ups from WI-917's rounds (unchanged).
+- **Toward headless runs** (your direction, coordinator-2026-10-18 D-004):
+  the launcher follow-ups become queue row 3 and land with WI-918 before
+  the stop line clears; you start the launcher once a handoff carries no
+  `Overnight: stop`.
 - **Confirm or overrule:** wi-925 D-001 to D-004 (D-002, high-risk, holds
   the two calls you answered in session: the plan gate's undeclared-trunk
   arm, and this repository's trunk name); wi-927 D-008, D-009; wi-943 D-003

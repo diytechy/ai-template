@@ -24,3 +24,10 @@ alternative = "Sit both now and close out mid-sitting, or ask the owner to rule 
 reversal_cost = "None: the lanes hold, unbuilt."
 why_not_escalated = "The skill's plan step names the dispute sitting as the next step; nothing has yet reached the owner."
 review = ""
+
+[decision.D-004]
+decided = "Owner direction, 2026-10-18 (attended, in session): orient the queue toward headless runs so the handoff's Overnight: stop line can be cleared and the rest of the queue continues overnight. The coordinator records it as a reorder and a gate. The gate rows: WI-918 (the merge slot reads an attended re-claim, without which a leg must hand every attended-claimed lane back) and one new row filed on trunk for the overnight launcher's follow-ups that status.md lists before the first headless run (bind trunk once per run, not re-read from the primary checkout before every leg; refuse a leg that rewinds archive/lanes, if the audit does not already; and, if the scope critique keeps them, one checked claim reader shared with the merge slot and a stated binding for a ref created and deleted inside one leg). Order: WI-927 and WI-943, already at their checkpoints, land first; the two gate rows are claimed in the next scoped unpause, built beside them, and land next, ahead of WI-925 and WI-926. When both gate rows have landed, the session that lands the second writes its handoff without the Overnight: stop line, and the owner starts the launcher. From then on the queue runs in headless legs under the coordinator-cycle skill's section 7, which supersedes the 2026-10-11 line that this program's coordination runs interactively; owner-held steps still go to the owner through each new handoff."
+alternative = "Land all four in-flight lanes attended first, then the gate rows; it delays the first headless run by those lanes' remaining sessions."
+reversal_cost = "Low: a queue order and a handoff line."
+why_not_escalated = "The owner's own direction; the coordinator only orders the gate rows."
+review = ""
