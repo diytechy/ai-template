@@ -640,3 +640,9 @@ reasons.
 - **Kept as Trust text, not a refusal:** the stated binding for a ref
   created and deleted inside one leg, and for a merge's non-first-parent
   commits on trunk (deliverable 3).
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-18; the spec as filed, its calls ruled):
+APPROVE, no findings. Nothing to adopt, so no confirming round is owed and
+the row may be claimed.
