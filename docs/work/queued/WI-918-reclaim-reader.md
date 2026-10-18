@@ -138,8 +138,9 @@ after it re-opens the window, and no other rung reads it. A re-claim written
 under WI-917's recipe before this row landed is read exactly as one written
 after.
 
-**Consumers and rulings** (grep over `project-trajectory/scripts` for
-`loop_lane_window`, `_loop_window` and the re-claim subject):
+**Consumers and rulings** (grep over `project-trajectory/scripts` and
+`scripts/coordinator` for `loop_lane_window`, `_loop_window` and the
+re-claim subject):
 
 - **The trailer rung**, `integrate._loop_trailer_refusal` via `_loop_window`.
   It judges the commits inside an open window. A re-claim that is absent or
@@ -153,6 +154,14 @@ after.
   `_loop_window` (unchanged). A lane with any loop mark is judged whole,
   re-claimed or not. WI-851 replaces this rung with a state rule that judges
   every lane alike, and WI-808 needs WI-851.
+- **The overnight launcher's lane audit**, `overnight_legs.lane_refusal`
+  in `scripts/coordinator/`, which serves each leg's audit and the
+  `check-lane` command (added at the claim, coordinator-2026-10-18 D-005,
+  C4). It reads a lane's window through the same reader, so it reads a
+  re-claim exactly as the trailer rung does, from the same commit records
+  (parents and tree included). A record git cannot read stops the run,
+  naming it, as the audit's other reads do; it never reads as an
+  unjudged lane.
 - **Not consumers, checked:**
   - `agent_common.claim_base`, `integrate._loop_claimed` and
     `integrate._abandoned_claim` read the claim grammar, which the re-claim
@@ -183,6 +192,12 @@ after.
   - a re-claim whose subject was written literally by WI-917's recipe,
     before this row landed, is read the same way as one composed by
     `reclaim_subject`.
+- **The launcher reads a re-claim as the slot does**
+  (`tests/test_overnight_legs_git.py`; coordinator-2026-10-18 D-005, C4):
+  `overnight_legs.py check-lane` passes a lane claimed under the marker,
+  re-claimed, then committed in without a trailer, and refuses the same
+  commit placed before the re-claim, exactly as the trailer rung judges
+  them. It fails before the change, where the launcher reads no re-claim.
 - The change's trace rows are authored and sat at the lane's checkpoint:
   SR-209's acceptance, LLR-248, TC-242 and IF-194 are amended, and the act is
   taken through WI-912's act turn.
@@ -288,3 +303,9 @@ Round 2 (Codex Sol, medium, 2026-10-17, the confirming round, in
 convergence stance): APPROVE, no findings. Round 1's adoption, the
 re-claim validated against its commit's parent at every read, is carried
 by the spec text it quotes, so the row may be claimed once WI-917 is done.
+
+At the claim (owner, 2026-10-18, in session; coordinator-2026-10-18 D-005,
+C4): the overnight launcher's lane audit, which calls the same lane-window
+reader, joins the Trust section's consumers, reading a re-claim exactly as
+the trailer rung does, and the Done-when gains its test. A confirming round
+checks this amendment before the claim.
