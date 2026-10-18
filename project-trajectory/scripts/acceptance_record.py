@@ -977,8 +977,9 @@ def backed_act_refusal(root, base, head, acted, delta):
     why a lane's approval acts may not merge, or None. Every act must be backed
     by an ACCEPTED verdict among the bindings the branch carries that judged
     that act's own rows: each row it flips or mints approved ruled APPROVE in a
-    first-approval part, each row it re-attests ruled MEANING or CLARITY in an
-    amendment part. It replaces "is every claimed spec of the adjudication
+    first-approval part, each row it re-attests ruled CLARITY, or MEANING with
+    the bless mark, in an amendment part (the one reader,
+    `kitlib.sitting.judged_rows`). It replaces "is every claimed spec of the adjudication
     kind?" as the test of who may act: the act is an independent
     adjudicator's, taken in the authoring lane or on trunk.
 

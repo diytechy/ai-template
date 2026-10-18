@@ -8805,6 +8805,30 @@ had merged the guard's commands into a group holding a hook of its own now
 reads `occupied`: move that hook out as in item 4. A tool of yours that
 called `hooks --enable` calls `hooks --offer` at a terminal instead.
 
+### The merge slot admits a MEANING re-attestation only under the bless mark [since 7c59c67d1]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The merge slot now refuses an act re-attesting a row whose
+accepted amendment verdict rules it plain `[MEANING]` ("I would not bless
+it"), or tags it `[MEANING+BLESS]` and another way. Only a `[CLARITY]` row,
+or a row marked `[MEANING+BLESS]` alone, authorizes a re-attestation, through
+the backing check and through a named verdict alike, and a combined act
+carrying one unauthorized row is refused whole. The refusal names the row and
+says to re-sit it. The act brief's derivation reads the same rows through the
+same reader, so what it lists is unchanged. A held rung still re-attests only
+a CLARITY row.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/sitting.py`,
+`scripts/adjudicate_act.py`, `scripts/acceptance_record.py` and
+`PROCESS_OPTIONS.md`.
+
+**What to do.** Overwrite the files. Nothing migrates, and no setting
+changes. A loop lane in flight whose sitting re-attested a MEANING row in its
+own turn, before your resync to the entry "The sitting ends at its verdict;
+its act is a later turn", carries a verdict without bless marks: the slot
+refuses its branch until those rows are re-sat.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

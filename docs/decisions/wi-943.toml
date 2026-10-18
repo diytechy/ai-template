@@ -1,0 +1,62 @@
+# docs/decisions/wi-943.toml — delegated decisions made in the WI-943 lane
+# (the merge slot authorizes a MEANING re-attestation only for a row its
+# verdict marks blessed) by the attended coordinator.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane, planned single (its plan, one Codex Sol critique at medium approving it with no findings, and the pass record, all from the 2026-10-18a session), waited for WI-942's landing as its row's ordering requires (coordinator-2026-10-18 D-002), then was rebased onto trunk's b120c4722, which carries WI-942 and WI-915, cleanly (pre-rebase tip 9b168865a, archived at landing). Build round 1 (a Claude Opus builder at medium, the kit-builder agent) built the plan's P1, P2 and P3 and P5's RESYNC_PACK entry, anchored at the lane's base: kitlib/sitting.judged_rows admits an amendment's MEANING row only under its MEANING+BLESS mark, its two refusals' remedies say so, adjudicate_act's authorized set filters through it, IF-287's contract sentence is in its docstring, and PROCESS_OPTIONS and the three recipe copies gain the clause (byte-budget-guard re-stamped: PROCESS_OPTIONS +70 bytes). Nine new tests failed on the unchanged code as the builder reported. The builder kept uncovered_refusal's 'is judged by no accepted verdict' line, which two admission tests pin and the plan keeps. It left TC-278's and TC-368's evidence cells to P4, Terra's intent turn, as the plan assigns, with its spine change list in the session's scratch; it also noted the held-rung policy's two homes, already a status.md follow-up, untouched. The coordinator re-ran the targeted modules (278 passed) and the bar."
+alternative = "Have the builder fill the two evidence cells now, which the plan gives to P4."
+reversal_cost = "None: P4 follows before any review round."
+why_not_escalated = "The skill's build step and the plan's own row split."
+review = ""
+
+[decision.D-002]
+decided = "P4, the intent set, is GPT Terra's (gpt-5.6-terra at medium; the lane's retained session 01a15016-4f89-7593-a7f8-6b9726508484): LLR-310's three edits, LLR-278's two, LLR-338's last sentence replaced, TC-278's method, expected and evidence, and TC-368's evidence (the two act-side tests, which Terra placed there, not in TC-278, since they test the one reader and the act derivation; the sitting rules on it). The approved phrases these edits replace are the ones the spec's deliverable 4 names for replacement ('MEANING or CLARITY', 'judge each row'), which this change makes untrue, so the cells are not amendments by addition; the coordinator checked mechanically that only these cells changed, that the spec's quoted old phrases are gone and that no touched file holds a CR byte. Terra's own pytest run failed on locked basetemp files (WinError 32) after an over-long first run, so the coordinator ran the spine and act modules (114 passed, 1 skipped) and the bar. The rows stay Approved and unjudged until the checkpoint sitting."
+alternative = "Force amendment by addition, which would leave the replaced sentences contradicting the added ones."
+reversal_cost = "Low: unjudged until the checkpoint."
+why_not_escalated = "The plan's P4 and the spec's deliverable 4."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 over 2a37a5c04: Codex Sol at medium (REVIEW-A, 001) CHANGES-REQUESTED with 1 MINOR; Claude Opus at high (REVIEW-B, 002, the ruling-7 stand-in for the Gemini slot) APPROVE with 2 MINOR. No BLOCKER or MAJOR, so no fix round is owed and the checkpoint follows. Triage: REVIEW-A F1 and REVIEW-B F1 part 1 are one defect: sitting.py's row line still reads 'judged by no accepted verdict' where deliverable 1 names 'authorized by no accepted verdict', which is untrue of the case this lane adds (a plain-MEANING row is judged, but unblessed). REVIEW-B F1 part 2: the bless-mark remedy is appended to every refusal, so one over a first-approval row alone, or over a verdict not accepted, tells the operator to re-sit for a mark that is not involved. Both are message wording in deliverable 1's own reader, cheap, and inside the lane's surface, so the builder fixes them before the checkpoint, where the gate reviews them: the row line reads 'authorized by', the remedy sentence is added only when an unauthorized row is an amendment, and the one pinned first-approval wording assertion follows. REVIEW-B F2 (MINOR, for clarity): TC-278's method and expected keep 'judge each row' where the amended LLR-278 reads 'authorize ... in the same way'; it goes to the spine change list for Terra's reconcile at the checkpoint."
+alternative = "Send the wording MINORs to a successor row; rejected because deliverable 1 names the wording and the fix is a few lines in the lane's own reader."
+reversal_cost = "Low."
+why_not_escalated = "The skill's triage step: a MINOR costs no round."
+review = ""
+
+[decision.D-004]
+decided = "The round-1 MINOR fix, before the checkpoint, in two stages on one Claude Opus builder (medium). Stage 1 confirmed all three findings on the real refusal path and wrote one coverage plan per round file; the coordinator re-ran both gates (plan_coverage exit 0, 12 and 13 clauses) and ruled the builder's three questions: the second pinned assertion (test_integrate_admission's unbacked ledger-only approval) changes with the first; the headline and the unaccepted remedy are reworded too, keeping the 'no ACCEPTED verdict' substring a pin asserts; and in unaccepted_refusal the bless sentence goes only where an accepted named verdict leaves an amendment row unauthorized. Stage 2: sitting.py's row line reads 'is authorized by no accepted verdict', the headline 'no ACCEPTED verdict in this branch authorizes', and the bless-mark remedy is appended only for a refused amendment row; the strengthened tests failed on 3d525d2bd (7 failed) and pass now, and the affected modules pass (172). No spine cell changed; REVIEW-B F2 (TC-278's wording) stays with the checkpoint's reconcile. The existing RESYNC entry already names sitting.py, and the change only rewords its refusal."
+alternative = "Leave the remedy appended to every refusal, as deliverable 1's text could be read."
+reversal_cost = "Low."
+why_not_escalated = "The skill's two-stage fix and the triage in D-003."
+review = ""
+
+[decision.D-005]
+decided = "The checkpoint's reconcile, by GPT Terra resumed in the lane's retained session (01a15016-4f89-7593-a7f8-6b9726508484), against the settled code at df5d65c29: TC-278's method and expected read 'authorize each row its act re-attests in the same way' and 'authorizes each row it re-attests in the same way' where they read 'judge', matching the amended LLR-278 (REVIEW-B F2). No other cell changed: no row in the set states the refusal's wording or when the bless remedy is given. Next: the closure check, then one combined sitting over LLR-310, LLR-278, LLR-338 and TC-278 (amendments) and TC-368's evidence (traced), then the gate in convergence stance after the convergence map."
+alternative = "Leave TC-278's general sentence and rely on its added method sentence."
+reversal_cost = "Low: unjudged until the sitting."
+why_not_escalated = "The skill's checkpoint step 1."
+review = ""
+
+[decision.D-006]
+decided = "The checkpoint sitting and the convergence map before the gate. The closure check passed at f01e04ce4: trace.py --strict and check_trajectory.py --strict clean; the set check found only LLR-278, LLR-310, LLR-338 and TC-278 changed in text (their replaced approved phrases are the ones the spec's deliverable 4 names, D-002) and TC-278 and TC-368 in evidence (traced), each TC citing its LLRs' SRs, and no CR byte. One combined sitting (docs/reviews/wi-943/003-ADJUDICATE-f01e04c.md, accepted) blessed all four amendments, MEANING+BLESS, with no return, and found the two act-side tests correctly under TC-368. The convergence map, every accepted finding of counted round 1 (D-003): REVIEW-A F1 and REVIEW-B F1 part 1 (the row line read 'judged by' where the case reads 'authorized by'), by tests/test_snapshot_readers.py::test_a_released_plain_MEANING_reattestation_is_refused_naming_the_row_and_the_mark and test_a_combined_act_carrying_a_plain_MEANING_reattestation_is_refused_whole, strengthened in df5d65c29 and failing on the pre-fix 3d525d2bd (D-004: 7 failed); REVIEW-B F1 part 2 (the bless-mark remedy on every refusal), by tests/test_integrate_admission.py::test_an_unbacked_ledger_only_approval_is_refused_by_name (a first-approval refusal carries no remedy) and tests/test_snapshot_readers.py::test_a_released_tier_act_naming_an_unaccepted_verdict_is_refused, in the same pre-fix run; REVIEW-B F2 (TC-278's 'judge' wording), no executable test, by independently checkable evidence: the corrected text in TC-278's method and expected at f01e04ce4, which sitting 003 blessed. Every accepted finding maps, so the gate may render. The gate runs now over the lane's tip, from its base b120c4722, in convergence stance, beside WI-927's checkpoint: trunk has moved since only by docs commits, and WI-927 lands first by the queue, so this lane rebases once, after that landing, before its act. Neither lane touches the other's code or rows, so that rebase owes no further round unless its resolution changes this lane's code or rows, which is checked then."
+alternative = "Rebase now, gate, then rebase again after WI-927 lands; rejected as two rebases for one landing. Or hold the gate until WI-927 lands; rejected as serial for no gain, since the two lanes are disjoint."
+reversal_cost = "Low: an uncounted round over the rebased tip if the rebase changes this lane's code or rows."
+why_not_escalated = "The skill's checkpoint and gate steps; the landing order is the owner's (coordinator-2026-10-18 D-004)."
+review = ""
+
+[decision.D-007]
+decided = "The gate over the checkpoint tip 7c8cb0802, uncounted, in convergence stance after D-006's map, from the lane's base b120c4722: Codex Sol at medium (REVIEW-A, 004) APPROVE with no findings; Claude Opus at high (REVIEW-B, 005, the ruling-7 stand-in for the Gemini slot) APPROVE with 2 MINOR. No BLOCKER or MAJOR, so no dispute sitting is owed and the lane goes to its rebase and act. Both MINORs would move the tip off the gated one, so each is a follow-up in status.md's unfiled list, never a fix after the gate (recipes section 3, wi-935 D-005): F1, adjudicate_act.py's module docstring still calls the merge slot's checks unchanged where they now read the same judged_rows reader (wording); F2, TC-278's method claims the two-way-tagged refusal through a named verdict as well as through the backing check, and its evidence covers only the backing check (add a named-verdict case to the two-ways test, or narrow the sentence)."
+alternative = "Fix both before landing and re-gate; rejected because a MINOR costs no round and the fix would move the tip off the gated one."
+reversal_cost = "Low."
+why_not_escalated = "The skill's gate step; MINORs go to follow-ups."
+review = ""
+
+[decision.D-008]
+decided = "The rebase, the act and the close. The lane was rebased onto trunk's 75fcd00be (pre-rebase tip 51c08ad2a, archived at landing beside the earlier 9b168865a); the one conflict was RESYNC_PACK.md, resolved with both sides' entries, trunk's first, and this lane's entry re-anchored at its new base. Every file's patch id is unchanged across the rebase but RESYNC_PACK.md's, whose added and removed lines are identical once the anchor is normalized, so no post-rebase round is owed. The rows sitting 003 judged (LLR-278, LLR-310, LLR-338 and TC-278, and TC-368's traced evidence) are unchanged between the verdict's commit 7389c9125 and the rebased tip, read with tomllib (five rows read). Both strict lints were clean at the rebased tip. The act turn re-attested LLR-278, TC-278, LLR-338 and LLR-310 (41415f566). The row closes in the lane, its Deliverable summary placed before its Context; trunk then moved only by the gate rows' scoped unpause and claims (docs commits), so the landing rebases once more and re-anchors the entry at the landing's parent in the staged squash, as the recipes say."
+alternative = "None considered."
+reversal_cost = "Low."
+why_not_escalated = "The skill's landing steps."
+review = ""

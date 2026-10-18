@@ -481,7 +481,8 @@ driving it:
 1. The merge slot REFUSES a branch whose spine delta flips a `Status` into
    `Approved`/`Founded`, mints a row already claiming one, records one
    approved in its act ledger, or re-attests one, unless every such act is backed by an accepted verdict among the branch's
-   bindings that judged that act's own rows; it names each unbacked act and
+   bindings that judged that act's own rows (a meaning row's re-attestation
+   only by a verdict that blesses it); it names each unbacked act and
    why. The copies must match the acts: each flip carries its registry's copy,
    and a copy of a registry no act moved is refused (WIDENED). It reads
    the same two-tree spine diff the amendment trigger already reads, so a row

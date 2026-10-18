@@ -34,7 +34,11 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     holds both consume; `requested_path`/`render_requested`/`read_requested`
     are the binding of a sitting's requested kinds beside its verdict;
     `write_binding` is its one writer and `accepted`/`accepted_at` the one
-    reader every consumer of a verdict goes through (round 11). `review_line(text)`
+    reader every consumer of a verdict goes through (round 11);
+    `judged_rows(parsed)` is the ONE reader of the rows an accepted verdict
+    authorizes an act on - an APPROVE row, a CLARITY row, and a MEANING row
+    only with its bless mark - which the merge's backing checks and the act
+    assembler both read. `review_line(text)`
     is the ONE reader of a review round's `VERDICT:` line, which the attended
     filing boundary and the merge gate's round reader both consume. Pure
     functions over text, except `write_binding` (one file) and `accepted_at`
@@ -45,7 +49,7 @@ import re
 
 from .git import git_out
 from .registry import adjudicates_tokens
-from .verdict import row_rulings
+from .verdict import blessed_rows, row_rulings
 
 __all__ = [
     "SITTING",
@@ -76,6 +80,7 @@ __all__ = [
     "accepted",
     "accepted_part",
     "accepted_at",
+    "judged_rows",
     "unaccepted_refusal",
     "REVIEWS",
     "branch_verdicts",
@@ -592,28 +597,44 @@ def accepted_at(root, rev, verdict_path):
 
 
 # The rulings that authorize each kind's act on a row: a first approval's
-# APPROVE flips it, an amendment's MEANING or CLARITY re-attests it (the
-# held-rung CLARITY-only rule is acceptance_record's, on top of this).
+# APPROVE flips it, an amendment's CLARITY re-attests it, and so does its
+# MEANING, but only on a row the part marks `[MEANING+BLESS]` (`judged_rows`).
+# The held-rung CLARITY-only rule is acceptance_record's, on top of this.
 _AUTHORIZING = {"first-approval": ("APPROVE",), "amendment": ("MEANING", "CLARITY")}
+# The sentence a refusal carries when an amendment row it names is
+# unauthorized; a refusal naming no such row omits it.
+_BLESS_REMEDY = (
+    "An amendment's MEANING row authorizes a re-attestation only when its "
+    "verdict marks it `[MEANING+BLESS]`: re-sit that row."
+)
 
 
 def judged_rows(parsed):
-    """`{(kind, row)}` an accepted parsed verdict (`accepted`) judged in a way
-    that authorizes that kind's act on the row.
+    """`{(kind, row)}` an accepted parsed verdict (`accepted`) rules in a way
+    that authorizes that kind's act on the row: the ONE reader of what an
+    accepted verdict authorizes an act on, which the merge's backing checks
+    and the act assembler both read. An APPROVE row, a CLARITY row, and an
+    amendment's MEANING row only when its part marks it blessed
+    (`kitlib.verdict.blessed_rows`, which reads a row tagged two ways as
+    unblessed).
 
     Implements: SR-232, LLR-310
     """
-    return {
-        (kind, rid)
-        for kind, part in (parsed or {}).items()
-        for rid, ruling in part[3].items()
-        if ruling in _AUTHORIZING.get(kind, ())
-    }
+    out = set()
+    for kind, part in (parsed or {}).items():
+        blessed = blessed_rows(part[2]) if kind == "amendment" else frozenset()
+        out |= {
+            (kind, rid)
+            for rid, ruling in part[3].items()
+            if ruling in _AUTHORIZING.get(kind, ())
+            and (ruling != "MEANING" or rid in blessed)
+        }
+    return out
 
 
 def _named_line(root, rev, act):
     """The refusal line for one act naming a verdict, or None: the verdict is
-    not accepted, or it does not judge a row the act re-attests."""
+    not accepted, or it does not authorize a row the act re-attests."""
     verdict = str(act["verdict"]).strip()
     parsed = accepted_at(root, rev, verdict)
     if not parsed:
@@ -623,15 +644,15 @@ def _named_line(root, rev, act):
     unjudged = [r for r in rows if ("amendment", r) not in judged]
     if not unjudged:
         return None
-    return "  {} (does not judge {})".format(verdict, ", ".join(unjudged))
+    return "  {} (does not authorize {})".format(verdict, ", ".join(unjudged))
 
 
 def unaccepted_refusal(root, rev, acts):
     """Why a merge must refuse the approval acts it adds, or None: EVERY act
     that names a verdict must name one `accepted_at` reads as accepted at
-    `rev` AND that judges each row the act re-attests (round 16). An act naming
-    no verdict is `uncovered_refusal`'s; acts already on trunk are never
-    passed here.
+    `rev` AND that authorizes each row the act re-attests (`judged_rows`;
+    round 16). An act naming no verdict is `uncovered_refusal`'s; acts
+    already on trunk are never passed here.
 
     Implements: SR-232, LLR-310
     """
@@ -639,14 +660,16 @@ def unaccepted_refusal(root, rev, acts):
     lines = [line for line in (_named_line(root, rev, act) for act in named) if line]
     if not lines:
         return None
+    # Only an accepted verdict's "(does not authorize ...)" line names an
+    # amendment row a mark could authorize; an unaccepted verdict's does not.
+    unmarked = any(" (does not authorize " in line for line in lines)
     return (
         "the adjudication's act names a verdict no route recorded ACCEPTED, or "
-        "one that does not judge the rows it re-attests; nothing was merged:\n"
-        "{}\nRemedy: re-sit the adjudication through the loop or the "
+        "one that does not authorize the rows it re-attests; nothing was "
+        "merged:\n{}\nRemedy: re-sit the adjudication through the loop or the "
         "coordinator's entry point, which records its outcome beside the "
-        "verdict, and name the accepted verdict that judged those rows.".format(
-            "\n".join(lines)
-        )
+        "verdict, and name the accepted verdict that authorizes those "
+        "rows.{}".format("\n".join(lines), " " + _BLESS_REMEDY if unmarked else "")
     )
 
 
@@ -674,11 +697,13 @@ def uncovered_refusal(root, base, rev, acts):
     """Why a merge must refuse the approval acts it adds, or None, WHETHER OR
     NOT an act names a verdict (WI-841 rounds 14, 16): every ROW an added act
     flips must be ruled APPROVE in a first-approval part, and every row it
-    re-attests ruled MEANING or CLARITY in an amendment part, of an ACCEPTED
+    re-attests ruled CLARITY, or MEANING with the bless mark, in an amendment
+    part (`judged_rows`), of an ACCEPTED
     verdict (`accepted_at`) among the bindings this branch carries
     (`branch_verdicts`), single-kind or combined. An act's authority is the
     judgement of ITS rows: an accepted verdict over other rows authorizes
-    nothing here. Each unjudged row is named with its kind.
+    nothing here. Each unauthorized row is named with its kind,
+    and the bless-mark remedy follows only when one is an amendment row.
 
     Implements: SR-232, LLR-310
     """
@@ -697,15 +722,17 @@ def uncovered_refusal(root, base, rev, acts):
     missing = [(kind, rid) for kind, rid in needed if (kind, rid) not in judged]
     if not missing:
         return None
+    amended = any(kind == "amendment" for kind, _rid in missing)
     return (
         "the adjudication's act takes rows no ACCEPTED verdict in this branch "
-        "judged (an act's authority is the judgement of its own rows, named "
-        "or not); nothing was merged:\n{}\nRemedy: re-sit the adjudication of "
-        "those rows through the loop or the coordinator's entry point, whose "
-        "binding records it accepted.".format(
+        "authorizes (an act's authority is the judgement of its own rows, "
+        "named or not); nothing was merged:\n{}\nRemedy: re-sit the "
+        "adjudication of those rows through the loop or the coordinator's "
+        "entry point, whose binding records it accepted.{}".format(
             "\n".join(
-                "  {} ({}) is judged by no accepted verdict".format(r, k)
+                "  {} ({}) is authorized by no accepted verdict".format(r, k)
                 for k, r in missing
-            )
+            ),
+            " " + _BLESS_REMEDY if amended else "",
         )
     )

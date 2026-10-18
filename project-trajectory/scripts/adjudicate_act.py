@@ -14,7 +14,7 @@ adjudicator, run fresh where retention lapsed; revision 36: the split reaches
 the shipped briefs and the coordinator's entry point). Q1 of
 coordinator-2026-10-14 D-003 makes the act turn an adjudicator turn with its
 own brief, since OI-45 (b) keeps scripted approval retired; Q2 makes a MEANING
-row's blessing a typed mark on the verdict (`kitlib.verdict.blessed_rows`).
+row's blessing a typed mark on the verdict, `[MEANING+BLESS]`.
 
 THE CARRIER. The verdict and the binding beside it, as committed at the lane's
 HEAD, read through `kitlib.sitting.accepted_at`, the one reader every consumer
@@ -28,16 +28,16 @@ ruling 6, 2026-10-07), and `intake.py snapshot --verdict` still records the
 verdict a held-rung re-attestation names.
 
 WHAT THE VERDICT AUTHORIZES. Exactly the rows each accepted part rules to
-authorize them. A first-approval part's APPROVE flips a row, on a released
-rung only (a dial the owner tightened after the sitting binds the act it has
-not yet authorized). An amendment part's CLARITY re-attests a row, naming the
+authorize them, read through `kitlib.sitting.judged_rows`, the one reader the
+merge's backing check also reads, so the two cannot disagree. A first-approval
+part's APPROVE flips a row, on a released rung only (a dial the owner
+tightened after the sitting binds the act it has not yet authorized). An amendment part's CLARITY re-attests a row, naming the
 verdict on a held rung; its MEANING re-attests only on a released rung and
 only with the bless mark. A RETURN row, an unmarked or held MEANING row, a
 Done-when part and every brief class but amendment, first-approval and
 combined owe no act. The dial is read at the act, from the committed tree, and
 each rung's arm is `intake.adjudication_action`'s answer (the held-rung
-policy's one home, which the judging composer reads too); the bless mark is
-the one condition added here.
+policy's one home, which the judging composer reads too).
 
 OWED, TAKEN OR INCONSISTENT: judged at a revision, never the working tree. A
 first approval is owed while the row's committed status is below Approved,
@@ -98,7 +98,6 @@ import prompts
 from kitlib import authority as kauthority
 from kitlib import sitting as ksitting
 from kitlib import spine as kspine
-from kitlib import verdict as kverdict
 from kitlib.git import git_out
 
 # The brief classes whose verdict can authorize an act: the one home of the
@@ -184,38 +183,41 @@ def _held(dial, rid):
     return kauthority.holds_under(dial, kauthority.rung_for(tier[0])) if tier else True
 
 
-def _arm(ruling, held, blessed):
-    """The act one row's ruling owes on its rung: "approve", "reattest" or
-    None. The rung's arm is `intake.adjudication_action`'s answer, the held-rung
-    policy's one home, never restated here: "recommend" owes no act, "reattest"
-    is the re-attest a held CLARITY row owes, and "flip" is the act itself,
-    a flip for an APPROVE row and a re-attest for an amendment row. The bless
-    mark is the one condition this module adds: a MEANING row is re-attested
-    only when the verdict blesses it. A RETURN row, or any ruling that is
-    not an approval or an amendment ruling, owes none.
+def _arm(ruling, held):
+    """The act one authorized row's ruling owes on its rung: "approve",
+    "reattest" or None. The rung's arm is `intake.adjudication_action`'s
+    answer, the held-rung policy's one home, never restated here: "recommend"
+    owes no act, "reattest" is the re-attest a held CLARITY row owes, and
+    "flip" is the act itself, a flip for an APPROVE row and a re-attest for an
+    amendment row. A RETURN row, or any ruling that is not an approval or an
+    amendment ruling, owes none.
 
     Implements: SR-231, SR-232, LLR-338"""
     if ruling not in ("APPROVE", "CLARITY", "MEANING"):
         return None
-    action = intake.adjudication_action(held, ruling)
-    if action == "recommend" or (ruling == "MEANING" and not blessed):
+    if intake.adjudication_action(held, ruling) == "recommend":
         return None
     return "approve" if ruling == "APPROVE" else "reattest"
 
 
 def _authorized(parts, dial):
     """`[(act, row id, held)]` every accepted part authorizes, `act` being
-    "approve" or "reattest", amendment first.
+    "approve" or "reattest", amendment first, in verdict order within a kind.
+    Which rows a part authorizes is `kitlib.sitting.judged_rows`'s answer (a
+    MEANING row only with its bless mark), the reader the merge's backing
+    check also reads; each such row's act is `_arm`'s.
 
     Implements: SR-231, SR-232, LLR-338"""
+    judged = ksitting.judged_rows(parts)
     out = []
     for kind in ("amendment", "first-approval"):
         if kind not in parts:
             continue
-        blessed = kverdict.blessed_rows(parts[kind][2])
         for rid, ruling in parts[kind][3].items():
+            if (kind, rid) not in judged:
+                continue
             held = _held(dial, rid)
-            act = _arm(ruling, held, rid in blessed)
+            act = _arm(ruling, held)
             if act:
                 out.append((act, rid, held))
     return out

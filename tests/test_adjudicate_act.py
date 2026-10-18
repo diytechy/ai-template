@@ -13,12 +13,19 @@ binding, the registries, their recorded copies and the dial at a revision, so
 an in-memory fake would test a reader the module does not have.
 """
 
+import inspect
 import shlex
 import shutil
 import subprocess
 
 import pytest
-from conftest import env_gate_skipif, load_script, pin_autocrlf, set_process_key
+from conftest import (
+    SCRIPTS,
+    env_gate_skipif,
+    load_script,
+    pin_autocrlf,
+    set_process_key,
+)
 
 act = load_script("adjudicate_act")
 baseline_snapshot = load_script("baseline_snapshot")
@@ -196,6 +203,49 @@ def test_a_row_tagged_both_ways_is_not_blessed():
         )
         assert kverdict.row_rulings(text, "amendment") == {"SR-001": "MEANING"}
         assert kverdict.blessed_rows(text) == frozenset(), other
+
+
+def _parsed(text, brief):
+    """`text` read through the one reader of an accepted verdict."""
+    binding = ksitting.render_requested(brief, (brief,), "accepted")
+    return ksitting.accepted(text, binding)
+
+
+def test_judged_rows_admits_an_amendment_MEANING_row_only_with_its_bless_mark():
+    amendment = _parsed(
+        "- [MEANING] SR-001 Requirement -> a -> b -> differs\n"
+        "- [MEANING+BLESS] SR-002 Requirement -> a -> b -> differs\n"
+        "- [CLARITY] SR-003 Requirement -> a -> a -> same\n"
+        "- [MEANING+BLESS] SR-004 Requirement -> a -> b -> differs\n"
+        "- [CLARITY] SR-004 Rationale -> a -> a -> why\n"
+        "- [MEANING+BLESS] SR-005 Requirement -> a -> b -> differs\n"
+        "- [MEANING] SR-005 Rationale -> a -> b -> why\n\n"
+        "VERDICT: MEANING rows=5\n",
+        "amendment",
+    )
+    assert ksitting.judged_rows(amendment) == {
+        ("amendment", "SR-002"),
+        ("amendment", "SR-003"),
+    }
+    first = _parsed(
+        "- [APPROVE] LLR-002 -> sub -> chain holds -> ready\n"
+        "- [RETURN] TC-002 -> sub -> no evidence -> not ready\n\n"
+        "OUTCOME: RETURN rows=2\n",
+        "first-approval",
+    )
+    assert ksitting.judged_rows(first) == {("first-approval", "LLR-002")}
+
+
+def test_the_bless_mark_has_one_reader_shared_by_the_merge_and_the_act():
+    holders = {
+        p.relative_to(SCRIPTS).as_posix()
+        for p in SCRIPTS.rglob("*.py")
+        if "__pycache__" not in p.parts
+        and "blessed_rows" in p.read_text(encoding="utf-8")
+    }
+    assert holders == {"kitlib/verdict.py", "kitlib/sitting.py"}, holders
+    assert "blessed" not in inspect.signature(act._arm).parameters
+    assert "judged_rows" in ksitting.__all__
 
 
 # --- the assembler's refusals (the Trust section's inputs) -------------------
@@ -676,9 +726,10 @@ def test_a_verdict_path_outside_the_root_is_refused(tmp_path):
 
 
 def test_each_rows_act_arm_follows_the_adjudication_action_policy_on_every_rung():
-    # Every (held, ruling) pair the verdict grammar admits, with and without
-    # the bless mark: the assembler's arm is read from
-    # `intake.adjudication_action`, so a change there moves both together.
+    # Every (held, ruling) pair the verdict grammar admits: the assembler's arm
+    # is read from `intake.adjudication_action`, so a change there moves both
+    # together. The bless mark is not the arm's: it is read with the verdict
+    # text, through `kitlib.sitting.judged_rows`, below.
     intake = load_script("intake")
     rulings = {
         word
@@ -688,15 +739,26 @@ def test_each_rows_act_arm_follows_the_adjudication_action_policy_on_every_rung(
     assert rulings == {"MEANING", "CLARITY", "APPROVE", "RETURN"}
     for held in (True, False):
         for ruling in sorted(rulings):
-            for blessed in (True, False):
-                policy = intake.adjudication_action(held, ruling)
-                arm = act._arm(ruling, held, blessed)
-                case = (held, ruling, blessed, policy, arm)
-                if ruling == "RETURN" or policy == "recommend":
-                    assert arm is None, case
-                elif ruling == "MEANING" and not blessed:
-                    assert arm is None, case
-                elif ruling == "APPROVE":
-                    assert arm == "approve", case
-                else:
-                    assert arm == "reattest", case
+            policy = intake.adjudication_action(held, ruling)
+            arm = act._arm(ruling, held)
+            case = (held, ruling, policy, arm)
+            if ruling == "RETURN" or policy == "recommend":
+                assert arm is None, case
+            elif ruling == "APPROVE":
+                assert arm == "approve", case
+            else:
+                assert arm == "reattest", case
+    # With and without the bless mark, on each rung: only a marked MEANING row
+    # is re-attested, and only where the rung is released.
+    parts = _parsed(
+        "- [MEANING] SR-001 Requirement -> a -> b -> differs\n"
+        "- [MEANING+BLESS] LLR-001 Detail -> a -> b -> differs\n"
+        "- [CLARITY] TC-001 Method -> a -> a -> same\n\n"
+        "VERDICT: MEANING rows=3\n",
+        "amendment",
+    )
+    assert act._authorized(parts, "DevStg-Needs") == [
+        ("reattest", "LLR-001", False),
+        ("reattest", "TC-001", False),
+    ]
+    assert act._authorized(parts, "DevStg-Release") == [("reattest", "TC-001", True)]

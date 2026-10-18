@@ -3,13 +3,38 @@ id = "WI-943"
 title = "The merge slot authorizes a MEANING re-attestation only for a row its verdict marks blessed, through the one reader the act derivation also reads"
 workstream = "process"
 sr_refs = ["SR-232", "SR-178"]
-specref = "docs/decisions/wi-912.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-929", "~WI-942"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-18, after its gate and act:
+
+- The merge slot authorizes a MEANING re-attestation only for a row its
+  accepted amendment verdict marks `[MEANING+BLESS]` alone. A plain
+  `[MEANING]` row, or one tagged both ways, is refused, through the backing
+  check and through a named verdict alike, and a combined act carrying one
+  such row is refused whole. The refusal names the row as authorized by no
+  accepted verdict; only a refused amendment row carries the remedy to re-sit
+  it for the mark. A held rung still re-attests only a CLARITY row.
+- One reader, `kitlib/sitting.judged_rows`, serves both the slot and the act
+  brief's derivation in `adjudicate_act.py`, so an act lists exactly the rows
+  the slot admits. `PROCESS_OPTIONS.md` and the coordinator recipes state the
+  clause.
+- Spine: LLR-278, LLR-310, LLR-338 and TC-278 amended and re-attested
+  (sitting 003-ADJUDICATE-f01e04c, all MEANING+BLESS); TC-278's and TC-368's
+  evidence extended (traced). `RESYNC_PACK.md` carries the entry, anchored at
+  the landing's parent.
+- Reviews: counted round 1 (001-REVIEW-A CHANGES-REQUESTED 1 MINOR,
+  002-REVIEW-B APPROVE 2 MINOR; the wording fixed before the checkpoint) and
+  the gate in convergence stance (004-REVIEW-A APPROVE 0, 005-REVIEW-B
+  APPROVE 2 MINOR, to status.md's follow-ups). Decisions:
+  `docs/decisions/wi-943.toml` D-001 to D-008.
 
 ## Context
 

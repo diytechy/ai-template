@@ -566,7 +566,9 @@ def _unbacked(tmp_path, name, verdict):
     assert refusal is not None
     assert "APPROVAL ACT" in refusal
     assert "SR-001 flipped Drafted -> Approved" in refusal  # names the act
-    assert "SR-001 (first-approval) is judged by no accepted verdict" in refusal
+    assert "SR-001 (first-approval) is authorized by no accepted verdict" in refusal
+    # No amendment row is refused, so the bless-mark remedy does not apply.
+    assert "[MEANING+BLESS]" not in refusal
     return refusal
 
 
@@ -921,7 +923,8 @@ def test_an_unbacked_ledger_only_approval_is_refused_by_name(tmp_path):
     # The same act judged by a verdict over other rows backs nothing.
     root = _ledger_lane(tmp_path / "c", flip=False, verdict_rows=["SR-001"])
     refusal = integ._approval_act_refusal(root, "wi-401")
-    assert refusal and "SR-002 (first-approval) is judged by no accepted" in refusal
+    assert refusal and "SR-002 (first-approval) is authorized by no accepted" in refusal
+    assert "[MEANING+BLESS]" not in refusal
 
 
 def test_a_lane_that_mints_a_row_born_approved_is_refused(tmp_path):

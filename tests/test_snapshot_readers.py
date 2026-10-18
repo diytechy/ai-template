@@ -321,24 +321,30 @@ _KIND_LINES = {
 
 
 def _bind_branch(
-    root, rows, outcome="accepted", name="000-ADJUDICATE-x.md", returned=()
+    root, rows, outcome="accepted", name="000-ADJUDICATE-x.md", returned=(), tags=None
 ):
     """Write the adjudication verdict, and its binding recording `outcome`,
     that a route leaves in the lane before the act it authorises. `rows` maps
     each kind to the rows its section JUDGES - an amendment section rules them
     CLARITY, a first-approval section APPROVE - since every row an added act
     flips or re-attests must be judged so by an accepted verdict in the branch
-    (round 16). One kind is a single-kind verdict; several, one sitting."""
+    (round 16). One kind is a single-kind verdict; several, one sitting.
+    `tags` maps a row id to the tags its lines carry instead, one line each
+    (`["MEANING+BLESS", "CLARITY"]` tags the row two ways)."""
     kinds = tuple(k for k in ("amendment", "first-approval") if k in rows)
     tag = {"amendment": "CLARITY", "first-approval": "APPROVE"}
 
-    def part(kind):
+    def row_tags(kind, rid):
         # A row in `returned` is ruled RETURN in the first-approval section.
+        if tags and rid in tags:
+            return tags[rid]
+        return ["RETURN" if rid in returned else tag[kind]]
+
+    def part(kind):
         lines = "".join(
-            "- [{}] {} -> judged -> judged -> same\n".format(
-                "RETURN" if rid in returned else tag[kind], rid
-            )
+            "- [{}] {} -> judged -> judged -> same\n".format(word, rid)
             for rid in rows[kind]
+            for word in row_tags(kind, rid)
         )
         return "{}\n{}\n".format(lines, _KIND_LINES[kind])
 
@@ -356,7 +362,7 @@ def _bind_branch(
 
 
 def _amendment_act(
-    root, reattests, held=False, verdict=None, binding=None, judged=None
+    root, reattests, held=False, verdict=None, binding=None, judged=None, tags=None
 ):
     """Amend two approved rows, commit that as the merge base, then take the
     act re-attesting `reattests` as the head; returns (base, head). `held`
@@ -386,7 +392,7 @@ def _amendment_act(
             binding, encoding="utf-8"
         )
     if verdict is None:
-        _bind_branch(root, {"amendment": sorted(judged or reattests)})
+        _bind_branch(root, {"amendment": sorted(judged or reattests)}, tags=tags)
     SNAP.copy_live(
         root,
         reattests=frozenset(reattests),
@@ -529,6 +535,61 @@ def test_a_held_rung_row_ruled_both_ways_reads_MEANING_and_is_refused(scaffold):
     base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
     refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
     assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
+
+
+# --- a released rung's MEANING re-attestation needs the bless mark (TC-278) ---
+
+_SCOPES = pytest.mark.parametrize("metas", [_AMENDMENT, []], ids=["scoped", "unscoped"])
+
+
+@_SCOPES
+def test_a_released_plain_MEANING_reattestation_is_refused_naming_the_row_and_the_mark(
+    scaffold, metas
+):
+    """An amendment verdict ruling a row plain MEANING says the adjudicator
+    would not bless its new text, so it authorizes no re-attestation of it,
+    whether or not the lane is scoped to that amendment."""
+    base, head = _amendment_act(scaffold, {"SR-001"}, tags={"SR-001": ["MEANING"]})
+    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
+    assert "SR-001 (amendment) is authorized by no accepted verdict" in refusal, refusal
+    assert "[MEANING+BLESS]" in refusal, refusal
+
+
+@_SCOPES
+def test_a_released_MEANING_BLESS_reattestation_merges(scaffold, metas):
+    tags = {"SR-001": ["MEANING+BLESS"]}
+    base, head = _amendment_act(scaffold, {"SR-001"}, tags=tags)
+    assert AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head) is None
+
+
+@pytest.mark.parametrize(
+    "tags",
+    [["MEANING+BLESS", "CLARITY"], ["MEANING+BLESS", "MEANING"]],
+    ids=["bless-and-clarity", "bless-and-meaning"],
+)
+def test_a_released_row_tagged_two_ways_is_refused(scaffold, tags):
+    base, head = _amendment_act(scaffold, {"SR-001"}, tags={"SR-001": tags})
+    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
+    assert refusal and "SR-001 (amendment)" in refusal, refusal
+
+
+def test_a_named_verdict_ruling_the_row_plain_MEANING_is_refused_naming_the_verdict(
+    scaffold,
+):
+    text = "- [MEANING] SR-001 title -> moved\n\nVERDICT: MEANING rows=1\n"
+    base, head = _amendment_act(scaffold, {"SR-001"}, verdict=text)
+    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
+    assert refusal and _VERDICT in refusal, refusal
+    assert "does not authorize SR-001" in refusal, refusal
+    assert "[MEANING+BLESS]" in refusal, refusal
+
+
+def test_a_named_verdict_blessing_the_row_merges(scaffold):
+    text = "- [MEANING+BLESS] SR-001 title -> moved\n\nVERDICT: MEANING rows=1\n"
+    base, head = _amendment_act(scaffold, {"SR-001"}, verdict=text)
+    assert (
+        AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head) is None
+    )
 
 
 # --- a retirement alone in its registry (TC-278) ------------------------------
@@ -738,7 +799,7 @@ def test_each_tiers_missing_cell_is_named(label, cell):
         assert spine.missing_cell_findings(tiers) == []
 
 
-def _mixed_act(root, approve_scope, amend_scope, metas=None):
+def _mixed_act(root, approve_scope, amend_scope, metas=None, amend_tag="CLARITY"):
     """Batch B's shape (act seq 4 of this repository's ledger): one act that
     carries a Drafted row into approval AND re-attests an amended approved
     row, claimed by a first-approval row and an amendment row together, or by
@@ -760,7 +821,11 @@ def _mixed_act(root, approve_scope, amend_scope, metas=None):
     _rewrite(
         root, SR_REL, 'status = "Drafted"\nphase = 1', 'status = "Approved"\nphase = 1'
     )
-    _bind_branch(root, {"amendment": ["SR-001"], "first-approval": ["SR-002"]})
+    _bind_branch(
+        root,
+        {"amendment": ["SR-001"], "first-approval": ["SR-002"]},
+        tags={"SR-001": [amend_tag]},
+    )
     SNAP.copy_live(root, approves={SR_REL: "WI-681"}, reattests={"SR-001"})
     head = _commit(run_git, "the one act: approve SR-002, re-attest SR-001")
     metas = metas or [
@@ -779,6 +844,22 @@ def test_a_mixed_approval_and_reattestation_act_merges(scaffold):
 def test_a_mixed_act_reattesting_outside_its_amendment_scope_is_refused(scaffold):
     refusal = _mixed_act(scaffold, ["SR-002"], ["SR-009"])
     assert refusal and "SR-001 re-attested OUTSIDE" in refusal, refusal
+
+
+def test_a_combined_act_carrying_a_plain_MEANING_reattestation_is_refused_whole(
+    scaffold,
+):
+    """The first approval is backed, the re-attestation is not: the merge
+    takes nothing of the act, and names only the unauthorized row."""
+    refusal = _mixed_act(scaffold, ["SR-002"], ["SR-001"], amend_tag="MEANING")
+    assert refusal and "SR-001 (amendment)" in refusal, refusal
+    assert "SR-002 (first-approval)" not in refusal, refusal
+    assert "[MEANING+BLESS]" in refusal, refusal
+
+
+def test_a_combined_act_with_a_blessed_reattestation_merges(scaffold):
+    refusal = _mixed_act(scaffold, ["SR-002"], ["SR-001"], amend_tag="MEANING+BLESS")
+    assert refusal is None, refusal
 
 
 def _combined(tokens):
@@ -1140,6 +1221,8 @@ def test_a_released_tier_act_naming_an_unaccepted_verdict_is_refused(scaffold):
     metas = _combined(["amendment:SR-001", "done-when:WI-900"])
     refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
     assert refusal and "ACCEPTED" in refusal and _VERDICT in refusal, refusal
+    # The verdict is not accepted at all, so no bless mark is involved.
+    assert "[MEANING+BLESS]" not in refusal, refusal
 
 
 def _rejected_mixed_act(root, name_verdict):

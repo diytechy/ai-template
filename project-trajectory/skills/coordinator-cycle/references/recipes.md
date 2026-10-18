@@ -458,6 +458,9 @@ commit of its own, move it to trunk's tip
      two commits re-runs with only its first-approval act.
   5. A lane in flight when WI-912 landed: a verdict sat before it whose act is
      still owed carries no bless marks, so re-sit it, recorded as a decision.
+     An act a lane already took from such a verdict on a MEANING row is not
+     authorized either: the merge slot refuses it, so re-sit the row before
+     the landing.
 
   The act brief lists its own `--reattests` and `--approves` rows: CLARITY
   rows, a MEANING row the verdict marks `[MEANING+BLESS]` on a released rung,
