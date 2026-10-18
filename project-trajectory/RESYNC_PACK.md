@@ -8733,6 +8733,78 @@ case, its defaults and its failure rule. No setting, key or format changes.
 **What to do.** Overwrite the files. Nothing migrates: no registry, setting
 or record format changes, and nothing in your `docs/stack.ini` changes.
 
+### The coordinator's guard hooks are checked by name, installed with consent, and never re-enabled [since 45dfc9611]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The coordinator guard's Claude Code hooks are read by name
+and never share their slot. The slot is the `hooks` entry, in the
+machine-local `.claude/settings.local.json`, of each event the inert
+`.claude/settings.json.example` gives a guard group; every other event and key
+in that file is left alone. The reading answers one of four words: `none` (the
+example registers no guard group), `absent` (no guard event holds a hook), `on`
+(each guard event holds exactly the guard's own command: the guard script's
+file name and its `hook` subcommand, whatever the interpreter word) or
+`occupied` (anything else, a file that does not parse or cannot be read
+included). Five things change for you.
+
+1. **`hooks --enable` is gone.** `coordinator_guard.py hooks --example E`
+   stays the read-only report and now prints the four words; it exits 1 at
+   `occupied`, naming the file, what is in the way and the fix. The parser
+   refuses `--enable`. Nothing merges the guard's groups beside other hooks
+   any more.
+2. **The install is consented, at both first runs.** From `absent`, at an
+   interactive terminal, dev-setup's offer (`hooks --offer`, which the
+   shipped dev-setup now calls) and the coordinator lease's `take` ask
+   `Write the coordinator's Claude Code hooks into the machine-local
+   .claude/settings.local.json? [y/N]`. A yes writes the example's guard
+   groups, each bound to the interpreter that runs the install, keeps every
+   other key and event, and reads the file again: only a re-read of `on`
+   counts as installed. An install that fails, or whose re-read is not
+   `on`, names the file, the error and the fix (move or repair that file,
+   then run again): the take refuses with that text and records no holder,
+   and the offer prints it on its `[missing]` line. A no writes nothing and
+   is not stored, so the next first run asks again. A take that installs
+   prints that the hooks guard sessions started from then on; a running
+   session usually picks the edit up itself, and its `/hooks` menu shows
+   whether it has.
+3. **The take refuses while the hooks are absent and nobody can answer.** A
+   take run without a terminal (the coordinator's own shell tool, a headless
+   leg) at `absent` records no holder and writes nothing. To consent, run
+   dev-setup at a terminal (the bare `run`, or its install tier,
+   `--baseline` / `-Baseline`), answer yes, then take again. A take at `none`
+   or `on` goes on as before.
+4. **`occupied` refuses on both routes.** The take refuses and writes
+   nothing; dev-setup's readiness report prints the same complaint on a
+   `[missing]` line, counted with the other missing components, and its other
+   steps go on. A hooks reader that fails or prints nothing is reported the
+   same way, never read as `none`. If you keep hooks of your own on a guard
+   event in `.claude/settings.local.json`, move them to another settings
+   file (your user `~/.claude/settings.json`, say) or remove them, then run
+   again; the guard's groups then install from `absent`.
+5. **A matcher-only change to the guard groups still reads `on`.** The state
+   is read by command name, so a newer example whose guard groups differ only
+   in their matchers installs nothing new. To take the new groups, remove the
+   installed guard groups from `.claude/settings.local.json` and run the
+   consented install again: the next first run reads `absent`, asks, and
+   writes the new ones. WI-897's instruction to re-run `hooks --enable` for a
+   changed matcher is replaced by this step.
+
+**Kit-owned files — overwrite:** `scripts/coordinator_guard.py`,
+`scripts/kitlib/guard_hooks.py` and `scripts/kitlib/bootstrap_manifest.py`
+(a comment only). **Merge by hand** (you may have filled them):
+`scripts/dev-setup.sh` and `scripts/dev-setup.ps1`, from
+`dev-setup.template.sh` and `dev-setup.template.ps1`: the four-word readiness
+report, its `[missing]` line, and the offer that calls `hooks --offer` and
+prints a failed install's text on its own `[missing]` line.
+
+**What to do.** Overwrite the kit-owned files and merge the dev-setup
+changes. Nothing migrates: no registry, setting or record format changes.
+A machine whose installed guard groups read `on` stays `on`. A machine that
+had merged the guard's commands into a group holding a hook of its own now
+reads `occupied`: move that hook out as in item 4. A tool of yours that
+called `hooks --enable` calls `hooks --offer` at a terminal instead.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

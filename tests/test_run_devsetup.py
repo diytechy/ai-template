@@ -354,12 +354,11 @@ def test_an_installed_hook_denies_with_an_older_python_first(scaffold_root, tmp_
         toml.read_text(encoding="utf-8"),
     )
     toml.write_text(text, encoding="utf-8")
-    enabled = run_py(
-        [root / "scripts" / "coordinator_guard.py", "--root", root, "hooks"]
-        + ["--example", example, "--enable"],
-        cwd=root,
+    # The write a yes leads to, bound to this interpreter.
+    assert (
+        load_script("coordinator_guard").guard_hooks.install_hooks(root, example).word
+        == "on"
     )
-    assert enabled.stdout.strip() == "on", enabled.stdout + enabled.stderr
     local = json.loads((root / ".claude" / "settings.local.json").read_text("utf-8"))
     (group,) = local["hooks"]["PreToolUse"]  # only the guard's group is installed
     command = group["hooks"][0]["command"]
@@ -817,6 +816,7 @@ def test_a_denial_changes_no_configuration_or_credential(scaffold_root, tmp_path
         text=True,
     ).stdout
     _retention(scaffold_root, 55)
+    fake = _with_fake_claude(tmp_path)
     master, slave = pty.openpty()
     try:
         proc = subprocess.Popen(
@@ -825,7 +825,7 @@ def test_a_denial_changes_no_configuration_or_credential(scaffold_root, tmp_path
             stdin=slave,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            env=_devsetup_env(PATH=_with_fake_claude(tmp_path)),
+            env=_devsetup_env(PATH=fake),
         )
         os.write(master, b"n\n" * 20)
         out, _ = proc.communicate(timeout=180)
@@ -837,6 +837,14 @@ def test_a_denial_changes_no_configuration_or_credential(scaffold_root, tmp_path
     assert "setup-token" in text and "skipped the token step" in text
     assert "skipped the coordinator hooks" in text
     assert not (scaffold_root / ".claude" / "settings.json").exists()
+    assert not (scaffold_root / ".claude" / "settings.local.json").exists()
+    # Nothing was recorded, so the next run asks again.
+    code, again = _at_a_terminal(
+        scaffold_root, ["--for-run", "--python", sys.executable], b"n\n" * 20, fake
+    )
+    assert code == 0, again
+    assert "Write the coordinator's Claude Code hooks" in again, again
+    assert "skipped the coordinator hooks" in again, again
     assert not (scaffold_root / ".claude" / "settings.local.json").exists()
     after = subprocess.run(
         ["git", "config", "--list", "--local"],
@@ -1128,7 +1136,10 @@ def test_this_repos_readiness_report_names_the_hooks_opt_in(family):
         x for x in proc.stdout.splitlines() if "coordinator Claude Code hooks" in x
     ]
     assert len(lines) == 1, proc.stdout
-    assert "[ok]" in lines[0] or "opt-in" in lines[0], lines[0]
+    if "[missing]" in lines[0]:  # occupied: the fix follows the line
+        assert "move those hooks to another settings file" in proc.stdout
+    else:
+        assert "[ok]" in lines[0] or "offered by" in lines[0], lines[0]
 
 
 def _with_fake_claude(tmp_path):
@@ -1144,57 +1155,575 @@ def _with_fake_claude(tmp_path):
     return str(fakebin) + os.pathsep + os.environ.get("PATH", "")
 
 
-def test_the_hooks_command_reports_and_switches_on(scaffold_root, tmp_path):
+def test_the_hooks_command_reports_each_state_and_writes_nothing(tmp_path):
+    """The read-only report, as a subprocess: absent (no file is created),
+    on, occupied (exit 1, the event named on stderr) and none; the file's
+    bytes never change across report runs."""
     root = tmp_path / "repo"
     (root / ".claude").mkdir(parents=True)
     example = root / ".claude" / "settings.json.example"
     shutil.copyfile(KIT / "agent-hooks" / "claude.settings.json", example)
+    local = root / ".claude" / "settings.local.json"
 
-    def hooks(*extra):
+    def hooks(source=example):
         proc = run_py(
-            [
-                SCRIPTS / "coordinator_guard.py",
-                "--root",
-                root,
-                "hooks",
-                "--example",
-                example,
-                *extra,
-            ],
+            [SCRIPTS / "coordinator_guard.py", "--root", root, "hooks"]
+            + ["--example", source],
             cwd=root,
         )
-        assert proc.returncode == 0, proc.stdout + proc.stderr
-        return proc.stdout.strip()
+        return proc.returncode, proc.stdout.strip(), proc.stderr
 
-    assert hooks() == "off"
-    assert hooks("--enable") == "on"
-    assert hooks("--enable") == "on"  # a re-run changes nothing
-    assert not (root / ".claude" / "settings.json").exists()  # the committed file
-    local = root / ".claude" / "settings.local.json"
-    settings = json.loads(local.read_text("utf-8"))
-    bound = '"{}" '.format(Path(sys.executable).as_posix())
-    commands = [
-        hook["command"]
-        for groups in settings["hooks"].values()
-        for group in groups
-        for hook in group["hooks"]
-    ]
-    assert commands and all(c.startswith(bound) for c in commands), commands
-    assert set(settings["hooks"]) == {
-        "SessionStart",
-        "UserPromptSubmit",
-        "PreToolUse",
-        "PostToolUse",
-        "PostToolUseFailure",
-        "Stop",
-        "PreCompact",
-        "SessionEnd",
-    }
-    assert all(
-        "coordinator_guard.py" in json.dumps(groups)
-        for groups in settings["hooks"].values()
+    assert hooks()[:2] == (0, "absent")
+    assert not local.exists()
+    assert (
+        load_script("coordinator_guard").guard_hooks.install_hooks(root, example).word
+        == "on"
     )
-    assert "subagent_gate" not in json.dumps(settings)  # only the guard's
+    before = local.read_bytes()
+    assert hooks()[:2] == (0, "on")
+    assert local.read_bytes() == before
+    settings = json.loads(before)
+    settings["hooks"]["Stop"].append({"hooks": [{"command": "echo mine"}]})
+    local.write_text(json.dumps(settings), encoding="utf-8")
+    before = local.read_bytes()
+    code, word, err = hooks()
+    assert (code, word) == (1, "occupied")
+    assert "Stop" in err and "echo mine" in err, err
+    plain = tmp_path / "plain.example"
+    plain.write_text('{"hooks": {"Stop": [{"hooks": [{"command": "x"}]}]}}', "utf-8")
+    assert hooks(plain)[:2] == (0, "none")
+    assert local.read_bytes() == before
+    assert not (root / ".claude" / "settings.json").exists()
+
+
+# The stand-in hooks reader of a dev-setup copy: one that fails with an
+# error, and one that exits 0 printing nothing.
+FAILING_READERS = {
+    "fails": "import sys\nsys.stderr.write('boom-927\\n')\nsys.exit(1)\n",
+    "silent": "",
+}
+# Each dev-setup copy: (its source, where its hooks reader lives, its check).
+DEVSETUP_COPIES = {
+    "template-sh": ("scaffold", "scripts/dev-setup.sh", "scripts", "--check"),
+    "template-ps1": ("scaffold", "scripts/dev-setup.ps1", "scripts", "-Check"),
+    "root-sh": (
+        "root",
+        "scripts/dev-setup.sh",
+        "project-trajectory/scripts",
+        "--check",
+    ),
+    "root-ps1": (
+        "root",
+        "scripts/dev-setup.ps1",
+        "project-trajectory/scripts",
+        "-Check",
+    ),
+}
+
+
+def _python_shims(tmp_path):
+    """A PATH whose first directory runs this interpreter as `python3` and
+    `python`, so each copy's runtime search finds a floor-passing one."""
+    shims = tmp_path / "shims"
+    shims.mkdir(exist_ok=True)
+    for name in ("python3", "python"):
+        shim = shims / name
+        shim.write_text(
+            '#!/bin/sh\nexec "{}" "$@"\n'.format(Path(sys.executable).as_posix()),
+            encoding="utf-8",
+        )
+        shim.chmod(0o755)
+        (shims / (name + ".cmd")).write_text(
+            '@"{}" %*\r\n'.format(sys.executable), encoding="utf-8"
+        )
+    return str(shims) + os.pathsep + os.environ.get("PATH", "")
+
+
+def _check_copy(scaffold_root, tmp_path, copy, reader):
+    """Run one dev-setup copy's check in a scratch tree whose hooks reader is
+    `reader`'s source; returns its stdout."""
+    source, script, readers, flag = DEVSETUP_COPIES[copy]
+    if script.endswith(".ps1"):
+        if not WINDOWS:
+            pytest.skip("the PowerShell dev-setup on Windows")
+        argv = [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]
+    else:
+        argv = [_sh()]
+    root = tmp_path / "repo"
+    for directory in (readers, "scripts", ".claude"):
+        (root / directory).mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(
+        KIT / "agent-hooks" / "claude.settings.json",
+        root / ".claude" / "settings.json.example",
+    )
+    origin = scaffold_root if source == "scaffold" else ROOT
+    shutil.copyfile(origin / script, root / script)
+    (root / readers / "coordinator_guard.py").write_text(reader, encoding="utf-8")
+    proc = subprocess.run(
+        argv + [script, flag],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        input="",
+        env=_devsetup_env(PATH=_python_shims(tmp_path)),
+        timeout=180,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return proc.stdout
+
+
+def _missing_count(out):
+    found = re.search(r"(\d+) component\(s\) missing", out)
+    return int(found.group(1)) if found else None
+
+
+@pytest.mark.parametrize("reader", list(FAILING_READERS))
+@pytest.mark.parametrize("copy", list(DEVSETUP_COPIES))
+def test_a_failing_or_silent_hooks_reader_is_reported_missing_never_none(
+    scaffold_root, tmp_path, copy, reader
+):
+    """A hooks reader that exits non-zero, or exits 0 printing nothing, is one
+    `[missing]` line naming its error (or that it printed nothing), counted
+    with the other missing components where the copy counts them; it is never
+    read as none, which prints no line."""
+    out = _check_copy(scaffold_root, tmp_path, copy, FAILING_READERS[reader])
+    lines = [x for x in out.splitlines() if "coordinator Claude Code hooks" in x]
+    assert len(lines) == 1, out
+    assert lines[0].lstrip().startswith("[missing]"), lines[0]
+    named = "boom-927" if reader == "fails" else "printed nothing"
+    assert named in lines[0], lines[0]
+    counted = _missing_count(out)
+    if counted is not None:
+        on = _check_copy(scaffold_root, tmp_path, copy, "print('on')\n")
+        assert counted == _missing_count(on) + 1, (out, on)
+
+
+def _hooks_scaffold(scaffold_root, dest, settings=None):
+    """A copy of the scaffold at `dest` with the kit's example in place and
+    the machine-local settings `settings` (None: no file; a str: its text)."""
+    shutil.copytree(
+        scaffold_root, dest, ignore=shutil.ignore_patterns(".git"), dirs_exist_ok=True
+    )
+    example = dest / ".claude" / "settings.json.example"
+    example.parent.mkdir(exist_ok=True)
+    shutil.copyfile(KIT / "agent-hooks" / "claude.settings.json", example)
+    local = dest / ".claude" / "settings.local.json"
+    if local.exists():
+        local.unlink()
+    if settings is not None:
+        text = settings if isinstance(settings, str) else json.dumps(settings)
+        local.write_text(text, encoding="utf-8")
+    return local
+
+
+ABSENT_SETTINGS = {
+    "no file": None,
+    "an empty object": {},
+    "permissions only": {"permissions": {"allow": ["Bash(git status)"]}},
+}
+GUARD_EVENTS = {
+    "SessionStart",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "PostToolUseFailure",
+    "Stop",
+    "PreCompact",
+    "SessionEnd",
+}
+
+
+def _assert_installed(local, before, out):
+    """Every guard event holds one group bound to this interpreter, and the
+    keys that were there before are kept."""
+    assert "Switched on the coordinator hooks" in out, out
+    settings = json.loads(local.read_text(encoding="utf-8"))
+    assert set(settings["hooks"]) == GUARD_EVENTS, settings
+    bound = '"{}" '.format(Path(sys.executable).as_posix())
+    for event in GUARD_EVENTS:
+        ((entry,),) = [group["hooks"] for group in settings["hooks"][event]]
+        assert entry["command"].startswith(bound), entry
+    assert settings.get("permissions") == (before or {}).get("permissions")
+
+
+@pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
+@pytest.mark.parametrize("before", list(ABSENT_SETTINGS))
+def test_at_a_terminal_a_yes_installs_every_guard_group_keeping_other_keys(
+    scaffold_root, tmp_path, before
+):
+    """The bare run's offer at a terminal: a yes writes every guard group,
+    bound to the handed interpreter, keeping every other key."""
+    root = tmp_path / "scaffold"
+    local = _hooks_scaffold(scaffold_root, root, ABSENT_SETTINGS[before])
+    code, out = _at_a_terminal(
+        root, ["--for-run", "--python", sys.executable], b"y\n" + b"n\n" * 20
+    )
+    assert code == 0, out
+    assert "Write the coordinator's Claude Code hooks" in out, out
+    _assert_installed(local, ABSENT_SETTINGS[before], out)
+
+
+ASKED = b"Write the coordinator's Claude Code hooks"
+
+
+def _read_until(master, wanted, seconds):
+    """Everything the terminal `master` shows until `wanted` appears, end of
+    output, or `seconds` pass."""
+    import select
+    import time
+
+    seen, end = b"", time.monotonic() + seconds
+    while wanted not in seen and time.monotonic() < end:
+        ready, _, _ = select.select([master], [], [], 0.2)
+        if not ready:
+            continue
+        try:
+            chunk = os.read(master, 4096)
+        except OSError:  # the child closed the terminal
+            break
+        if not chunk:
+            break
+        seen += chunk
+    return seen
+
+
+def _on_one_terminal(argv, cwd, env, answers):
+    """`argv` run with stdin, stdout and stderr all on one pseudo-terminal, as
+    a person runs it. Returns what the terminal showed before the consent
+    question's answer was typed, its exit code, and the whole output; the
+    answers are typed only once the question is on the terminal."""
+    import pty
+
+    master, slave = pty.openpty()
+    proc = subprocess.Popen(
+        argv, cwd=str(cwd), stdin=slave, stdout=slave, stderr=slave, env=env
+    )
+    os.close(slave)
+    try:
+        before = _read_until(master, ASKED, 120)
+        if ASKED in before:
+            os.write(master, answers)
+        after = _read_until(master, b"\0never\0", 60) if ASKED in before else b""
+        if proc.poll() is None:
+            proc.kill()
+        code = proc.wait(timeout=60)
+    finally:
+        os.close(master)
+    return (
+        before.decode("utf-8", "replace"),
+        code,
+        (before + after).decode("utf-8", "replace"),
+    )
+
+
+@pytest.mark.skipif(WINDOWS, reason="a real terminal needs a pseudo-terminal")
+def test_at_a_real_terminal_the_offer_shows_its_question_before_the_answer(
+    scaffold_root, tmp_path
+):
+    """The bare run's offer with every stream on the terminal: the consent
+    question is on the screen before anything is typed, and the yes then
+    installs."""
+    root = tmp_path / "scaffold"
+    local = _hooks_scaffold(scaffold_root, root)
+    before, code, out = _on_one_terminal(
+        [_sh(), "scripts/dev-setup.sh", "--for-run", "--python", sys.executable],
+        root,
+        _devsetup_env(),
+        b"y\n" + b"n\n" * 20,
+    )
+    assert ASKED.decode() in before, out
+    assert code == 0, out
+    _assert_installed(local, None, out)
+
+
+@pytest.mark.skipif(WINDOWS, reason="a real terminal needs a pseudo-terminal")
+def test_at_a_real_terminal_the_take_shows_its_question_before_the_answer(tmp_path):
+    """The lease take with every stream on the terminal: the consent question
+    is on the screen before anything is typed, and the yes then takes."""
+    root, local = _take_root(tmp_path, "y")
+    before, code, out = _on_one_terminal(
+        [sys.executable, str(SCRIPTS / "coordinator_guard.py"), "--root", str(root)]
+        + ["take", "--session", TAKER],
+        root,
+        _devsetup_env(),
+        b"y\n",
+    )
+    assert ASKED.decode() in before, out
+    _assert_taken(root, local, "y", code, out)
+
+
+@pytest.mark.skipif(not WINDOWS, reason="a real Windows console")
+@pytest.mark.parametrize("before", list(ABSENT_SETTINGS))
+@pytest.mark.parametrize("family", ["root", "template"])
+def test_at_a_windows_console_a_yes_installs_every_guard_group_keeping_other_keys(
+    scaffold_root, tmp_path, family, before
+):
+    """The same offer through each Windows dev-setup at a real console."""
+    script, local, path = _console_tree(
+        scaffold_root, tmp_path, family, ABSENT_SETTINGS[before]
+    )
+    args = ["-ForRun", "-Python", "'{}'".format(sys.executable)]
+    code, out = _at_a_console(script, args, "y\r" + "n\r" * 20, path, tmp_path)
+    assert code == 0, out
+    _assert_installed(local, ABSENT_SETTINGS[before], out)
+
+
+def _console_tree(scaffold_root, tmp_path, family, settings):
+    """A tree for one Windows dev-setup family holding the kit's example and
+    the machine-local `settings` (None: no file); returns its dev-setup.ps1,
+    the settings path, and a PATH on which both agent CLIs are present, so
+    neither is offered."""
+    fakebin = tmp_path / "clis"
+    fakebin.mkdir()
+    for cli in ("claude", "codex"):
+        (fakebin / (cli + ".cmd")).write_text("@echo off\r\n", encoding="utf-8")
+    path = str(fakebin) + os.pathsep + os.environ.get("PATH", "")
+    if family == "root":
+        tree = tmp_path / "repo"
+        (tree / "scripts").mkdir(parents=True)
+        shutil.copyfile(
+            ROOT / "scripts" / "dev-setup.ps1", tree / "scripts" / "dev-setup.ps1"
+        )
+        shutil.copytree(
+            SCRIPTS,
+            tree / "project-trajectory" / "scripts",
+            ignore=shutil.ignore_patterns("__pycache__"),
+        )
+        local = tree / ".claude" / "settings.local.json"
+        (tree / ".claude").mkdir(exist_ok=True)
+        shutil.copyfile(
+            KIT / "agent-hooks" / "claude.settings.json",
+            tree / ".claude" / "settings.json.example",
+        )
+        if settings is not None:
+            local.write_text(json.dumps(settings), encoding="utf-8")
+    else:  # the template runs from its working directory, the console's
+        tree = tmp_path
+        local = _hooks_scaffold(scaffold_root, tree, settings)
+    return tree / "scripts" / "dev-setup.ps1", local, path
+
+
+def _assert_failed_install_named(local, before, out):
+    """The offer's `[missing]` line names the settings file, the error and
+    the fix, and the file keeps its bytes."""
+    lines = [x for x in out.splitlines() if "[missing] coordinator Claude Code" in x]
+    assert len(lines) == 1, out
+    for part in ("settings.local.json", "could not be written", "move or repair"):
+        assert part in lines[0], lines[0]
+    assert local.read_bytes() == before
+
+
+@pytest.mark.skipif(not WINDOWS, reason="a real Windows console")
+@pytest.mark.parametrize("family", ["root", "template"])
+def test_at_a_windows_console_a_failed_install_names_the_file_error_and_fix(
+    scaffold_root, tmp_path, family
+):
+    """A yes whose write fails (a read-only settings file) leaves the file as
+    it was, and the offer's `[missing]` line says what to do."""
+    import stat
+
+    script, local, path = _console_tree(
+        scaffold_root, tmp_path, family, ABSENT_SETTINGS["permissions only"]
+    )
+    before = local.read_bytes()
+    os.chmod(local, stat.S_IREAD)
+    try:
+        args = ["-ForRun", "-Python", "'{}'".format(sys.executable)]
+        code, out = _at_a_console(script, args, "y\r" + "n\r" * 20, path, tmp_path)
+    finally:
+        os.chmod(local, stat.S_IREAD | stat.S_IWRITE)
+    assert code == 0, out
+    _assert_failed_install_named(local, before, out)
+
+
+@pytest.mark.skipif(WINDOWS, reason="a real terminal needs a pseudo-terminal")
+@pytest.mark.skipif(
+    hasattr(os, "geteuid") and os.geteuid() == 0, reason="root writes anywhere"
+)
+def test_at_a_real_terminal_a_failed_install_names_the_file_error_and_fix(
+    scaffold_root, tmp_path
+):
+    """The sh offer, with a yes whose write fails (the settings folder is
+    read-only): the file keeps its bytes and the `[missing]` line says what
+    to do."""
+    import stat
+
+    root = tmp_path / "scaffold"
+    local = _hooks_scaffold(scaffold_root, root, ABSENT_SETTINGS["permissions only"])
+    before = local.read_bytes()
+    os.chmod(local.parent, stat.S_IREAD | stat.S_IEXEC)
+    try:
+        _asked, code, out = _on_one_terminal(
+            [_sh(), "scripts/dev-setup.sh", "--for-run", "--python", sys.executable],
+            root,
+            _devsetup_env(),
+            b"y\n" + b"n\n" * 20,
+        )
+    finally:
+        os.chmod(local.parent, stat.S_IRWXU)
+    assert code == 0, out
+    _assert_failed_install_named(local, before, out)
+
+
+TAKER = "c0c0c0c0-0000-4000-8000-0000000009a7"
+
+
+def _take_root(tmp_path, answer):
+    """A scratch repository holding the kit's example and no machine-local
+    settings, one per answer; returns it and its settings path."""
+    root = tmp_path / ("repo-" + answer)
+    (root / ".claude").mkdir(parents=True)
+    shutil.copyfile(
+        KIT / "agent-hooks" / "claude.settings.json",
+        root / ".claude" / "settings.json.example",
+    )
+    return root, root / ".claude" / "settings.local.json"
+
+
+def _assert_taken(root, local, answer, code, out):
+    """A yes installs the hooks and takes the lease; a no refuses, writing
+    and recording nothing."""
+    guard = load_script("coordinator_guard")
+    holder = guard._load(guard.lease_dir(root)).get("holder")
+    assert "Write the coordinator's Claude Code hooks" in out, out
+    if answer == "y":
+        assert code == 0, out
+        assert holder == TAKER
+        example = root / ".claude" / "settings.json.example"
+        assert guard.guard_hooks.hooks_state(root, example).word == "on"
+    else:
+        assert code == 1, out
+        assert holder is None and not local.exists(), out
+
+
+@pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
+@pytest.mark.parametrize("answer", ["y", "n"])
+def test_the_cli_take_at_a_pseudo_terminal_asks_and_installs(tmp_path, answer):
+    import pty
+
+    root, local = _take_root(tmp_path, answer)
+    env = _devsetup_env()
+    master, slave = pty.openpty()
+    try:
+        proc = subprocess.Popen(
+            [sys.executable, str(SCRIPTS / "coordinator_guard.py"), "--root", str(root)]
+            + ["take", "--session", TAKER],
+            cwd=str(root),
+            stdin=slave,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            env=env,
+        )
+        os.write(master, (answer + "\n").encode("ascii"))
+        out, _ = proc.communicate(timeout=120)
+    finally:
+        os.close(master)
+        os.close(slave)
+    _assert_taken(root, local, answer, proc.returncode, out.decode("utf-8", "replace"))
+
+
+@pytest.mark.skipif(not WINDOWS, reason="a real Windows console")
+@pytest.mark.parametrize("answer", ["y", "n"])
+def test_the_cli_take_at_a_windows_console_asks_and_installs(tmp_path, answer):
+    root, local = _take_root(tmp_path, answer)
+    args = ["'{}'".format(SCRIPTS / "coordinator_guard.py"), "--root"]
+    args += ["'{}'".format(root), "take", "--session", TAKER]
+    code, out = _at_a_console(
+        sys.executable, args, answer + "\r", os.environ.get("PATH", ""), tmp_path
+    )
+    _assert_taken(root, local, answer, code, out)
+
+
+@pytest.mark.skipif(WINDOWS, reason="a consent prompt needs a pseudo-terminal")
+def test_an_on_file_is_unchanged_and_not_offered_at_a_terminal(scaffold_root, tmp_path):
+    """A file already holding the guard's groups by name is never offered,
+    asked about or rewritten."""
+    root = tmp_path / "scaffold"
+    local = _hooks_scaffold(scaffold_root, root)
+    guard = load_script("coordinator_guard")
+    assert (
+        guard.guard_hooks.install_hooks(
+            root, root / ".claude" / "settings.json.example"
+        ).word
+        == "on"
+    )
+    before = local.read_bytes()
+    code, out = _at_a_terminal(
+        root, ["--for-run", "--python", sys.executable], b"n\n" * 20
+    )
+    assert code == 0, out
+    assert "Write the coordinator's" not in out, out
+    assert "[ok]      coordinator Claude Code hooks" in out, out
+    assert local.read_bytes() == before
+
+
+def _occupied(shape):
+    """The machine-local settings text of one occupied shape over the kit's
+    example: the example's own bare-`python` guard groups, changed."""
+    example = json.loads(
+        (KIT / "agent-hooks" / "claude.settings.json").read_text(encoding="utf-8")
+    )
+    groups = load_script("coordinator_guard").guard_hooks.guard_groups(example)
+    settings = {"hooks": json.loads(json.dumps(groups))}
+    hooks = settings["hooks"]
+    if shape == "mixed":
+        hooks["PreToolUse"][0]["hooks"].insert(0, {"command": "echo user-927"})
+        return json.dumps(settings), ("PreToolUse", "echo user-927")
+    if shape == "second group":
+        hooks["Stop"].append({"hooks": [{"command": "echo user-927"}]})
+        return json.dumps(settings), ("Stop", "echo user-927")
+    if shape == "missing event":
+        del hooks["SessionEnd"]
+        return json.dumps(settings), ("SessionEnd", "missing")
+    return "{not json", ("does not parse",)
+
+
+OCCUPIED_SHAPES = ["mixed", "second group", "missing event", "unparseable"]
+
+
+@pytest.mark.parametrize("shape", OCCUPIED_SHAPES)
+def test_an_occupied_slot_is_reported_and_never_offered(scaffold_root, tmp_path, shape):
+    """Occupied: the check reports one `[missing]` naming the events and
+    commands in the way and the fix, writes nothing and goes on to its later
+    sections; at a terminal, nothing is offered."""
+    root = tmp_path / "scaffold"
+    text, named = _occupied(shape)
+    local = _hooks_scaffold(scaffold_root, root, text)
+    before = local.read_bytes()
+    runs = [[_sh(), "scripts/dev-setup.sh", "--check"]]
+    if WINDOWS:
+        runs.append(
+            [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass"]
+            + ["-File", "scripts/dev-setup.ps1", "-Check"]
+        )
+    outs = []
+    for argv in runs:
+        proc = subprocess.run(
+            argv,
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            input="",
+            env=_devsetup_env(PATH=_python_shims(tmp_path)),
+            timeout=180,
+        )
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        outs.append(proc.stdout)
+    if not WINDOWS:
+        code, out = _at_a_terminal(
+            root, ["--for-run", "--python", sys.executable], b"n\n" * 20
+        )
+        assert code == 0, out
+        outs.append(out)
+    for out in outs:
+        lines = [x for x in out.splitlines() if "coordinator Claude Code hooks" in x]
+        assert len(lines) == 1 and "[missing]" in lines[0], out
+        tail = out[out.index(lines[0]) :]
+        assert all(part in tail for part in named), out
+        assert "move those hooks to another settings file" in tail, out
+        assert "Write the coordinator's" not in out, out
+        assert "Product toolchain" in tail, out
+    assert local.read_bytes() == before
 
 
 # --- this repo's own run: its actions menu after the check -----------------------

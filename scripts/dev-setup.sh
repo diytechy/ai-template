@@ -225,37 +225,45 @@ case "$SIGNIN" in
   missing) echo "  [missing] retained adjudicator sign-in  — run --install (or a bare run) for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file" ;;
   *) echo "  [unknown] retained adjudicator sign-in  — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" ;;
 esac
-# The coordinator's Claude Code hooks (WI-880, owner ruling 2026-10-10): this
-# repository commits none. The guard's machine-local opt-in merges the hook
-# groups of the inert .claude/settings.json.example into
-# .claude/settings.local.json, each bound to the interpreter that runs it; a
-# machine that has not opted in runs no guard hooks. Read through the guard's
-# own report when a runtime exists.
+# The coordinator's Claude Code hooks: this repository commits none. The
+# guard writes the hook groups of the inert .claude/settings.json.example into
+# .claude/settings.local.json only with consent, each bound to the interpreter
+# that runs it; a machine that has not installed them runs no guard hooks.
+# Read through the guard's own report when a runtime exists: none, absent, on
+# or occupied; a reader that fails or prints nothing is reported missing.
 HOOKS_EXAMPLE=.claude/settings.json.example
 HOOKS="none"
 if [ -n "$PY" ] && [ -f "$HOOKS_EXAMPLE" ]; then
-  HOOKS=$("$PY" project-trajectory/scripts/coordinator_guard.py --root . hooks --example "$HOOKS_EXAMPLE" 2>/dev/null) || HOOKS="none"
+  HOOKS_STATUS=0
+  HOOKS=$("$PY" project-trajectory/scripts/coordinator_guard.py --root . hooks --example "$HOOKS_EXAMPLE" 2>&1) || HOOKS_STATUS=$?
+  case "$HOOKS_STATUS:$HOOKS" in
+    0:on | 0:absent | 0:none) ;;
+    *)
+      HOOKS_ERR=${HOOKS:-the hooks reader printed nothing}
+      HOOKS="failed"
+      ;;
+  esac
 fi
 case "$HOOKS" in
   on) echo "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" ;;
-  off) echo "  [note]    coordinator Claude Code hooks are off — the machine-local opt-in, offered by --install and a bare run" ;;
+  absent) echo "  [note]    coordinator Claude Code hooks are not installed — the machine-local opt-in, offered by --install and a bare run" ;;
+  failed) echo "  [missing] coordinator Claude Code hooks: $HOOKS_ERR" ;;
 esac
-# Switching them on, consented: the opt-in runs on this script's runtime, the
-# floor-resolved interpreter its hooks are then bound to.
+# Installing them, consented, at a terminal only: the guard asks and writes
+# them on this script's runtime, the floor-resolved interpreter its hooks are
+# then bound to (stdout and stdin stay the terminal's; stderr names a refusal).
 offer_hooks() {
-  [ "$HOOKS" = "off" ] || return 0
-  printf "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N] "
-  read -r ans || ans=""
-  case "$ans" in
-    [Yy]*)
-      if "$PY" project-trajectory/scripts/coordinator_guard.py --root . hooks --example "$HOOKS_EXAMPLE" --enable >/dev/null; then
-        echo "  Switched on the coordinator hooks in .claude/settings.local.json."
-      else
-        echo "  [warn] the opt-in could not write .claude/settings.local.json; the hooks stay off."
-      fi
-      ;;
-    *) echo "  Skipped the coordinator hooks; nothing was changed." ;;
-  esac
+  { [ "$HOOKS" = "absent" ] && interactive; } || return 0
+  exec 3>&1
+  HOOKS_ERR=$("$PY" project-trajectory/scripts/coordinator_guard.py --root . hooks --example "$HOOKS_EXAMPLE" --offer 2>&1 1>&3 3>&-) || {
+    exec 3>&-
+    echo "  [missing] coordinator Claude Code hooks: ${HOOKS_ERR:-the install failed and printed nothing}"
+    return 0
+  }
+  exec 3>&-
+  HOOKS=$("$PY" project-trajectory/scripts/coordinator_guard.py --root . hooks --example "$HOOKS_EXAMPLE" 2>/dev/null) || HOOKS="failed"
+  [ "$HOOKS" = "on" ] && echo "  Switched on the coordinator hooks in .claude/settings.local.json."
+  return 0
 }
 
 # The one-time long-lived token step (WI-846's), consented; shown only while

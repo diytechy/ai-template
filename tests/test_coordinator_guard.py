@@ -18,6 +18,8 @@ in test_coordinator_guard_e2e.py.
 
 import ast
 import json
+import os
+import sys
 import threading
 from pathlib import Path
 
@@ -1143,6 +1145,347 @@ def test_the_guard_hooks_are_this_repos_opt_in_not_its_tracked_settings():
         assert entry["command"].endswith(
             'project-trajectory/scripts/coordinator_guard.py" hook'
         )
+
+
+# --- the guard hooks' four-state reading ------------------------------------------
+
+KIT_EXAMPLE = SCRIPTS.parent / "agent-hooks" / "claude.settings.json"
+USER_AUDIT = {"type": "command", "command": "echo user-audit-notification"}
+
+
+def _hooks_lib():
+    from kitlib import guard_hooks
+
+    return guard_hooks
+
+
+def _example():
+    return json.loads(KIT_EXAMPLE.read_text("utf-8"))
+
+
+def _installed(interpreter=None, **changes):
+    """Settings holding the example's guard groups (bound when `interpreter`
+    is given), with `changes` applied per event: a callable edits that
+    event's group list in place, None deletes the event."""
+    lib = _hooks_lib()
+    groups = json.loads(json.dumps(lib.guard_groups(_example())))
+    if interpreter:
+        groups = {e: [lib.bind(g, interpreter) for g in gs] for e, gs in groups.items()}
+    for event, change in changes.items():
+        if change is None:
+            del groups[event]
+        else:
+            change(groups[event])
+    return {"permissions": {"allow": ["Bash(git status)"]}, "hooks": groups}
+
+
+NO_FILE = object()  # READINGS' settings when there is no file: the reader's ABSENT
+
+
+def _beside_the_guard(groups):
+    groups[0]["hooks"].insert(0, dict(USER_AUDIT))
+
+
+def _a_second_group(groups):
+    groups.append({"hooks": [dict(USER_AUDIT)]})
+
+
+def _a_matcher(groups):
+    groups[0]["matcher"] = "Bash"
+
+
+READINGS = {
+    "no guard group": (
+        {"hooks": {"Stop": [{"hooks": [USER_AUDIT]}]}},
+        None,
+        "none",
+        (),
+    ),
+    "absent file": (None, NO_FILE, "absent", ()),
+    "empty object": (None, {}, "absent", ()),
+    "permissions only": (None, {"permissions": {"allow": []}}, "absent", ()),
+    "events as []": (
+        None,
+        {"hooks": {"Stop": [], "PreToolUse": [], "Notification": [{"hooks": []}]}},
+        "absent",
+        (),
+    ),
+    "bare python": (None, _installed(), "on", ()),
+    "bound path": (None, _installed("C:/x/python.exe"), "on", ()),
+    "changed matcher": (None, _installed(PreToolUse=_a_matcher), "on", ()),
+    "mixed PreToolUse group": (
+        None,
+        _installed(PreToolUse=_beside_the_guard),
+        "occupied",
+        ("PreToolUse", "echo user-audit-notification"),
+    ),
+    "two groups on Stop": (
+        None,
+        _installed(Stop=_a_second_group),
+        "occupied",
+        ("Stop", "2 hook groups", "echo user-audit-notification"),
+    ),
+    "SessionEnd missing": (
+        None,
+        _installed(SessionEnd=None),
+        "occupied",
+        ("SessionEnd", "missing"),
+    ),
+    "unparseable": (
+        None,
+        "Expecting value: line 1 column 1 (char 0)",
+        "occupied",
+        ("Expecting value",),
+    ),
+    "zero-byte file": (None, "", "occupied", ("does not parse",)),
+    "not an object": (None, [], "occupied", ("not a JSON object",)),
+    "a null document": (None, None, "occupied", ("not a JSON object",)),
+    "a null event": (
+        None,
+        {"hooks": {"PreToolUse": None}},
+        "occupied",
+        ("PreToolUse", "not a list"),
+    ),
+    "hooks a list": (None, {"hooks": []}, "occupied", ("`hooks`",)),
+    "an event a dict": (None, {"hooks": {"Stop": {}}}, "occupied", ("Stop",)),
+    "a group without hooks": (
+        None,
+        {"hooks": {"PreCompact": [{"matcher": "x"}]}},
+        "occupied",
+        ("PreCompact", "no `hooks` list"),
+    ),
+    "a command 7": (
+        None,
+        {"hooks": {"SessionStart": [{"hooks": [{"command": 7}]}]}},
+        "occupied",
+        ("SessionStart", "not a string"),
+    ),
+    "unreadable example": (
+        "PermissionError: denied",
+        None,
+        "occupied",
+        ("example", "PermissionError: denied"),
+    ),
+}
+
+
+def _read(lib, case):
+    """`READINGS[case]` read: a string example or settings is a `Problem`
+    with that text ("" a zero-byte file's parse failure), and `NO_FILE` is
+    the reader's own value for no file; None is a parsed JSON null."""
+    example, settings, _, _ = READINGS[case]
+    example = _example() if example is None else example
+    if isinstance(example, str):
+        example = lib.Problem(example)
+    if settings is NO_FILE:
+        settings = lib.ABSENT
+    elif isinstance(settings, str):
+        settings = lib.Problem(settings or "the file does not parse: it is empty")
+    return lib.read_state(example, settings)
+
+
+@pytest.mark.parametrize("case", list(READINGS))
+def test_the_hooks_reading_is_none_absent_on_or_occupied(case):
+    """The guard events are the example's; each holds nothing, exactly the
+    guard's own command by name, or something else (named)."""
+    lib = _hooks_lib()
+    _, _, word, named = READINGS[case]
+    reading = _read(lib, case)
+    text = "\n".join(reading.problems)
+    assert (reading.word, bool(text)) == (word, word == "occupied")
+    assert all(part in text for part in named), text
+    if word == "occupied":
+        refusal = lib.refusal_text(Path("x/.claude/settings.local.json"), reading)
+        assert "settings.local.json" in refusal
+        assert all(problem in refusal for problem in reading.problems)
+        assert "move those hooks to another settings file" in refusal
+        assert "remove them, then run again" in refusal
+
+
+def test_a_user_command_ending_in_the_guards_name_reads_as_the_guards():
+    """The stated residue: a command whose last words are the guard's file
+    name and `hook` is read as the guard's, whatever comes before; a command
+    that only names the guard's file, or ends otherwise, is not."""
+    lib = _hooks_lib()
+    assert lib.is_guard_command('python "${X}/scripts/coordinator_guard.py" hook')
+    assert lib.is_guard_command(
+        '"C:/a b/python.exe" "C:/a b/coordinator_guard.py" hook'
+    )
+    assert lib.is_guard_command(r"py C:\kit\scripts\coordinator_guard.py hook")
+    assert lib.is_guard_command(
+        "sh -c 'echo hi' && python my/coordinator_guard.py hook"
+    )
+    assert not lib.is_guard_command("ruff check scripts/coordinator_guard.py")
+    assert not lib.is_guard_command("python coordinator_guard.py hook --dry")
+    assert not lib.is_guard_command("coordinator_guard.py hook")
+    assert not lib.is_guard_command("python other_guard.py hook")
+    assert not lib.is_guard_command(7)
+
+
+# --- the take reads the guard hooks first ------------------------------------------
+
+
+def _with_example(root):
+    """`root` given the kit's inert example; returns its machine-local
+    settings path (absent until written)."""
+    example = root / ".claude" / "settings.json.example"
+    example.parent.mkdir(parents=True, exist_ok=True)
+    example.write_bytes(KIT_EXAMPLE.read_bytes())
+    return root / ".claude" / "settings.local.json"
+
+
+def _no_holder(root):
+    directory = guard.lease_dir(root)
+    assert guard._load(directory) == {}
+    assert not (directory / "events.jsonl").exists()
+
+
+def test_with_the_hooks_absent_and_no_terminal_the_take_refuses_naming_dev_setup(root):
+    local = _with_example(root)
+    refusal = guard.take(root, COORD, ask=None)
+    assert isinstance(refusal, str)
+    for part in ("dev-setup", "the bare `run`", "answer yes", "settings.local.json"):
+        assert part in refusal, refusal
+    _no_holder(root)
+    assert not local.exists()
+
+
+@pytest.mark.parametrize("state", ["on", "none"])
+def test_the_take_goes_on_at_on_and_at_none(root, state):
+    if state == "on":
+        local = _with_example(root)
+        lib = _hooks_lib()
+        assert (
+            lib.install_hooks(root, local.with_name("settings.json.example")).word
+            == "on"
+        )
+    assert guard.take(root, COORD, ask=_never_asked) is None
+    assert guard._load(guard.lease_dir(root))["holder"] == COORD
+
+
+def _never_asked(prompt):
+    raise AssertionError("asked: " + prompt)
+
+
+def test_an_occupied_slot_refuses_the_take(root):
+    local = _with_example(root)
+    local.write_text(json.dumps(_installed(PreToolUse=_beside_the_guard)), "utf-8")
+    before = local.read_bytes()
+    refusal = guard.take(root, COORD, ask=_never_asked)
+    assert isinstance(refusal, str)
+    for part in ("settings.local.json", "PreToolUse", "echo user-audit-notification"):
+        assert part in refusal, refusal
+    _no_holder(root)
+    assert local.read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "text, named",
+    [
+        ("null", ("not a JSON object",)),
+        ('{"hooks": {"PreToolUse": null}}', ("PreToolUse", "not a list")),
+    ],
+)
+def test_a_json_null_in_the_settings_refuses_the_take_and_is_never_asked(
+    root, text, named
+):
+    """A null document, or a null guard event, is a malformed file, not an
+    absent one: the take refuses naming it, asks nothing, records no holder,
+    and leaves the file byte for byte."""
+    local = _with_example(root)
+    local.write_text(text, "utf-8")
+    before = local.read_bytes()
+    refusal = guard.take(root, COORD, ask=_never_asked)
+    assert isinstance(refusal, str)
+    assert "settings.local.json" in refusal, refusal
+    assert all(part in refusal for part in named), refusal
+    _no_holder(root)
+    assert local.read_bytes() == before
+
+
+@pytest.mark.parametrize("answer", ["y", "n"])
+def test_at_a_terminal_the_take_asks_installs_and_takes_after_a_yes_and_refuses_after_a_no(
+    root, capsys, answer
+):
+    local = _with_example(root)
+    asked = []
+
+    def ask(prompt):
+        asked.append(prompt)
+        return answer
+
+    result = guard.take(root, COORD, ask=ask)
+    assert len(asked) == 1 and "Write the coordinator's" in asked[0]
+    if answer == "y":
+        assert result is None
+        assert guard._load(guard.lease_dir(root))["holder"] == COORD
+        example = local.with_name("settings.json.example")
+        assert _hooks_lib().hooks_state(root, example).word == "on"
+        assert "sessions started from now on" in capsys.readouterr().out
+    else:
+        assert isinstance(result, str) and "answer yes" in result, result
+        _no_holder(root)
+        assert not local.exists()
+
+
+def _raises_disk_full(path, text):
+    raise OSError("disk full")
+
+
+def _writes_a_partial_file(path, text):
+    Path(path).write_text("{", encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "write, named",
+    [(_raises_disk_full, "disk full"), (_writes_a_partial_file, "does not parse")],
+)
+def test_a_consented_install_whose_write_fails_refuses_the_take(
+    root, monkeypatch, write, named
+):
+    _with_example(root)
+    monkeypatch.setattr(_hooks_lib(), "write_atomic", write)
+    refusal = guard.take(root, COORD, ask=lambda prompt: "y")
+    assert isinstance(refusal, str)
+    assert "settings.local.json" in refusal and named in refusal, refusal
+    assert "move or repair that file, then run again" in refusal, refusal
+    _no_holder(root)
+
+
+def test_a_failed_offer_names_the_file_the_error_and_the_fix(root, monkeypatch, capsys):
+    """`hooks --offer` after a yes whose write fails exits 1 with the file,
+    the error and the fix on stderr, the text every dev-setup offer prints
+    on its `[missing]` line."""
+    local = _with_example(root)
+    monkeypatch.setattr(_hooks_lib(), "write_atomic", _raises_disk_full)
+    monkeypatch.setattr(guard, "_terminal_ask", lambda: lambda prompt: "y")
+    example = local.with_name("settings.json.example")
+    argv = ["--root", str(root), "hooks", "--example", str(example), "--offer"]
+    assert guard.main(argv) == 1
+    err = capsys.readouterr().err
+    for part in ("settings.local.json", "disk full", "move or repair that file"):
+        assert part in err, err
+    assert not local.exists()
+
+
+def test_a_stdin_on_the_null_device_is_no_terminal(monkeypatch):
+    """The null device is a character device, which Windows `isatty` reads as
+    a terminal; an agent's shell tool hands it to a child. Nobody can be
+    asked there."""
+    monkeypatch.delenv("CI", raising=False)
+    with open(os.devnull, encoding="utf-8") as null:
+        monkeypatch.setattr(sys, "stdin", null)
+        assert guard._terminal_ask() is None
+
+
+def test_guard_hooks_holds_no_merge_or_ownership_code():
+    """The slot is never shared, so nothing merges beside another hook and
+    nothing owns commands inside a shared group; nothing re-enables."""
+    lib = _hooks_lib()
+    for name in ("merged", "command_shapes", "_owns", "_without_guard"):
+        assert not hasattr(lib, name), name
+    for name in ("enable_hooks", "_guard_plan"):
+        assert not hasattr(guard, name), name
 
 
 def test_end_to_end_dry_run(root, tx, tmp_path, monkeypatch):

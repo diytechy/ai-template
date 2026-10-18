@@ -1029,32 +1029,25 @@ def example(tmp_path):
     return path
 
 
-# The guard group as the opt-in installs it: run by the interpreter the
-# opt-in itself runs on, never a bare `python` (round 016 F2, decision D-019).
-BOUND_GROUP = {
-    "hooks": [
-        {
-            "type": "command",
-            "command": '"{}" "${{CLAUDE_PROJECT_DIR}}/scripts/coordinator_guard.py" hook'.format(
-                Path(sys.executable).as_posix()
-            ),
-        }
-    ]
-}
+def _guard_cli(root, source, *extra):
+    return guard.main(["--root", str(root), "hooks", "--example", str(source), *extra])
 
 
-def test_the_hook_opt_in_merges_and_keeps_existing_hooks(tmp_path):
-    """The opt-in writes the machine-local settings file, binding each guard
-    hook to this interpreter; it keeps the hooks already there, a re-run
-    changes nothing, and the committed project settings are left alone. It
-    owns the guard's commands, not whole groups (round 018 F2): a user
-    command beside a guard command in one group keeps its place and its
-    group's matcher, and only the guard's command moves to the bound group."""
+def _never_asked(prompt):
+    raise AssertionError("asked: " + prompt)
+
+
+def test_a_user_command_beside_the_guards_reads_occupied_and_nothing_is_written(
+    tmp_path, capsys
+):
+    """The slot is never shared: a user command beside the guard's in one
+    group, and a user command that merely names the guard's file, make the
+    guard events occupied. The install is never asked, writes nothing, and
+    the report exits 1 naming the commands; the committed settings are left
+    alone."""
     root = tmp_path / "repo"
     local = root / ".claude" / "settings.local.json"
     local.parent.mkdir(parents=True)
-    # The example's own bare-`python` guard command is the guard's; a user
-    # command that merely names the guard's file is not (round 020 O2).
     stale = dict(GUARD_GROUP["hooks"][0])
     user = {"type": "command", "command": "echo user-audit-notification"}
     lint = {
@@ -1067,22 +1060,77 @@ def test_the_hook_opt_in_merges_and_keeps_existing_hooks(tmp_path):
         "x": 1,
     }
     local.write_text(json.dumps(mine), encoding="utf-8")
+    before = local.read_bytes()
     shared = root / ".claude" / "settings.json"
     shared.write_text('{"hooks": {}}', encoding="utf-8")
     source = example(tmp_path)
-    assert guard.hooks_state(root, source) == "off"
-    guard.enable_hooks(root, source)
-    guard.enable_hooks(root, source)  # idempotent
-    merged = json.loads(local.read_text(encoding="utf-8"))
-    assert merged["x"] == 1
-    assert merged["hooks"]["PreToolUse"] == [
-        mine["hooks"]["PreToolUse"][0],
-        {"matcher": "Bash", "hooks": [user, lint]},
-        BOUND_GROUP,
-    ]
-    assert merged["hooks"]["SessionEnd"] == [BOUND_GROUP]
-    assert guard.hooks_state(root, source) == "on"
+    reading = guard.guard_hooks.hooks_state(root, source)
+    assert reading.word == "occupied"
+    text = "\n".join(reading.problems)
+    assert "echo user-audit-notification" in text
+    assert "ruff check project-trajectory/scripts/coordinator_guard.py" in text
+    refusal = guard.guard_hooks.consent_install(root, source, _never_asked)
+    assert isinstance(refusal, str) and "settings.local.json" in refusal
+    assert "echo user-audit-notification" in refusal
+    assert local.read_bytes() == before
+    capsys.readouterr()
+    assert _guard_cli(root, source) == 1
+    out = capsys.readouterr()
+    assert out.out.strip() == "occupied"
+    assert "echo user-audit-notification" in out.err
+    assert "move those hooks to another settings file" in out.err
+    assert local.read_bytes() == before
     assert shared.read_text(encoding="utf-8") == '{"hooks": {}}'
+
+
+def _second_group(settings):
+    settings["hooks"]["SessionEnd"].append({"hooks": [{"command": "echo mine"}]})
+    return json.dumps(settings)
+
+
+def _missing_event(settings):
+    del settings["hooks"]["SessionEnd"]
+    return json.dumps(settings)
+
+
+def _null_event(settings):
+    settings["hooks"]["PreToolUse"] = None
+    return json.dumps(settings)
+
+
+OCCUPIED = {
+    "a second group": (_second_group, ("SessionEnd", "2 hook groups", "echo mine")),
+    "a missing event": (_missing_event, ("SessionEnd", "missing")),
+    "an unparseable file": (lambda _: "{not json", ("does not parse",)),
+    "a null document": (lambda _: "null", ("not a JSON object",)),
+    "a null event": (_null_event, ("PreToolUse", "not a list")),
+}
+
+
+@pytest.mark.parametrize("route", ["consent_install", "cli"])
+@pytest.mark.parametrize("shape", list(OCCUPIED))
+def test_each_occupied_shape_refuses_and_writes_nothing(tmp_path, capsys, shape, route):
+    """A second group on a guard event, a guard event missing while the
+    others are installed, and a file that does not parse: each refuses at
+    the install and at the report, names what is in the way, and leaves the
+    file byte for byte as it was."""
+    root = tmp_path / "repo"
+    local = root / ".claude" / "settings.local.json"
+    local.parent.mkdir(parents=True)
+    source = example(tmp_path)
+    installed = {"hooks": {"PreToolUse": [GUARD_GROUP], "SessionEnd": [GUARD_GROUP]}}
+    make, named = OCCUPIED[shape]
+    local.write_text(make(json.loads(json.dumps(installed))), encoding="utf-8")
+    before = local.read_bytes()
+    if route == "consent_install":
+        text = guard.guard_hooks.consent_install(root, source, _never_asked)
+        assert isinstance(text, str), text
+    else:
+        assert _guard_cli(root, source) == 1
+        text = capsys.readouterr().err
+    assert "settings.local.json" in text
+    assert all(part in text for part in named), text
+    assert local.read_bytes() == before
 
 
 def test_the_hook_opt_in_with_no_guard_hooks_changes_nothing(tmp_path, capsys):
@@ -1090,9 +1138,116 @@ def test_the_hook_opt_in_with_no_guard_hooks_changes_nothing(tmp_path, capsys):
     root.mkdir()
     source = tmp_path / "plain.example"
     source.write_text('{"hooks": {"Stop": [{"hooks": [{"command": "x"}]}]}}', "utf-8")
-    assert (
-        guard.main(["--root", str(root), "hooks", "--example", str(source), "--enable"])
-        == 0
-    )
+    assert _guard_cli(root, source) == 0
     assert capsys.readouterr().out.strip() == "none"
     assert not (root / ".claude").exists()
+    assert guard.take(root, COORD) is None
+    assert guard._load(guard.lease_dir(root))["holder"] == COORD
+
+
+def test_the_hooks_command_refuses_enable(tmp_path):
+    """There is no re-enable path: the report's parser refuses `--enable`."""
+    with pytest.raises(SystemExit) as raised:
+        _guard_cli(tmp_path, example(tmp_path), "--enable")
+    assert raised.value.code == 2
+
+
+def _yes(prompt):
+    assert "Write the coordinator's Claude Code hooks" in prompt
+    return "y"
+
+
+ABSENT = {
+    "no file": None,
+    "an empty object": {},
+    "other keys and events": {
+        "permissions": {"allow": ["Bash(git status)"]},
+        "hooks": {"Notification": [{"hooks": [{"command": "notify-me"}]}]},
+    },
+}
+GUARD_EVENTS = {
+    "SessionStart",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "PostToolUseFailure",
+    "Stop",
+    "PreCompact",
+    "SessionEnd",
+}
+
+
+def _kit_example(tmp_path):
+    source = tmp_path / "settings.json.example"
+    kit = Path(guard.__file__).resolve().parent.parent / "agent-hooks"
+    source.write_bytes((kit / "claude.settings.json").read_bytes())
+    return source
+
+
+@pytest.mark.parametrize("before", list(ABSENT))
+def test_an_absent_install_binds_every_group_and_keeps_other_keys(tmp_path, before):
+    """From absent, a yes writes each guard event one group, bound to this
+    interpreter; every other key and event is kept, and the reading is on."""
+    root = tmp_path / "repo"
+    local = root / ".claude" / "settings.local.json"
+    if ABSENT[before] is not None:
+        local.parent.mkdir(parents=True)
+        local.write_text(json.dumps(ABSENT[before]), encoding="utf-8")
+    source = _kit_example(tmp_path)
+    reading = guard.guard_hooks.consent_install(root, source, _yes)
+    assert reading.word == "on", reading
+    settings = json.loads(local.read_text(encoding="utf-8"))
+    hooks = settings["hooks"]
+    assert GUARD_EVENTS <= set(hooks)
+    bound = '"{}" '.format(Path(sys.executable).as_posix())
+    for event in GUARD_EVENTS:
+        ((entry,),) = [group["hooks"] for group in hooks[event]]
+        assert entry["command"].startswith(bound), entry
+    kept = ABSENT[before] or {}
+    assert settings.get("permissions") == kept.get("permissions")
+    notification = kept.get("hooks", {}).get("Notification")
+    assert hooks.get("Notification") == notification
+    assert not (root / ".claude" / "settings.json").exists()
+
+
+@pytest.mark.parametrize("answer", ["n", "", "eof"])
+def test_a_declined_or_empty_or_eof_answer_writes_nothing_and_asks_again(
+    tmp_path, answer
+):
+    root = tmp_path / "repo"
+    root.mkdir()
+    source = _kit_example(tmp_path)
+    asked = []
+
+    def ask(prompt):
+        asked.append(prompt)
+        if answer == "eof":
+            raise EOFError
+        return answer
+
+    for _ in range(2):
+        reading = guard.guard_hooks.consent_install(root, source, ask)
+        assert reading.word == "absent", reading
+    assert len(asked) == 2
+    assert not (root / ".claude").exists()
+
+
+@pytest.mark.parametrize("bound", [True, False])
+def test_an_on_file_is_left_byte_for_byte_and_nothing_is_asked(tmp_path, bound):
+    """A file already holding the guard's groups, by name, whether bound to
+    an interpreter path or run by the example's bare `python`, reads on and
+    is never rewritten or asked about."""
+    root = tmp_path / "repo"
+    source = _kit_example(tmp_path)
+    local = root / ".claude" / "settings.local.json"
+    if bound:
+        assert guard.guard_hooks.consent_install(root, source, _yes).word == "on"
+    else:
+        local.parent.mkdir(parents=True)
+        example_settings = json.loads(source.read_text(encoding="utf-8"))
+        groups = guard.guard_hooks.guard_groups(example_settings)
+        local.write_text(json.dumps({"hooks": groups}), encoding="utf-8")
+    before = local.read_bytes()
+    assert guard.guard_hooks.consent_install(root, source, _never_asked).word == "on"
+    assert guard.guard_hooks.install_hooks(root, source).word == "on"
+    assert local.read_bytes() == before

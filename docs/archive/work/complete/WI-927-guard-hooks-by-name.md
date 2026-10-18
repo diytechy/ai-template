@@ -3,13 +3,37 @@ id = "WI-927"
 title = "The coordinator's Claude Code guard hooks are checked by name, installed with consent when none are there, and refused when other hooks hold their events, with no re-enable path"
 workstream = "process"
 sr_refs = ["SR-032", "SR-229"]
-specref = "docs/specs/WI-927.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = []
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-18, after its gate and act:
+
+- The coordinator guard's Claude Code hooks are read by name, in one of four
+  states (none, absent, on, occupied), over the shipped example and the
+  machine-local settings; the install moved whole into `kitlib/guard_hooks.py`
+  and merges nothing: a slot holding anything but the guard's own groups is
+  occupied and never written.
+- At absent, dev-setup's offer (both shells, both platforms) and the lease
+  take install the guard groups only after a terminal yes, bound to the
+  running interpreter, and go on only when a re-read reads on. Without a
+  terminal the take refuses naming the consent step; a failed install
+  refuses naming the file, the error and the fix. `hooks --enable` is gone.
+- Spine: LLR-300, LLR-322 and TC-345 amended and re-attested (sitting
+  005-ADJUDICATE-65a3405, all MEANING+BLESS); IF-280's data drops
+  `[--enable]`; SR-229 unchanged on the sitting's reading. `RESYNC_PACK.md`
+  carries the entry, anchored at the landing's parent.
+- Reviews: counted round 1 (001-REVIEW-A, 002-REVIEW-B: 2 MAJOR, fixed),
+  counted round 2 (003-REVIEW-A, 004-REVIEW-B: MINORs only, fixed before the
+  checkpoint) and the gate in convergence stance (006-REVIEW-A APPROVE 0,
+  007-REVIEW-B APPROVE 5 MINOR, to status.md's follow-ups). POSIX evidence
+  in WSL. Decisions: `docs/decisions/wi-927.toml` D-001 to D-013.
 
 ## Context
 
@@ -201,14 +225,21 @@ a person's answer at a terminal.
   something other than `on`. Each consumer:
   - `coordinator_guard.take` refuses, records no holder, and names the file
     and the error;
-  - dev-setup's readiness check reports it on a `[missing]` line naming the
-    file, the error and the fix (move or repair the file, then run again),
-    counted with the other missing components, and its other steps go on,
-    as today's report lines do. It takes the state only from the hooks
-    reader's printed word when the reader exits 0; a non-zero exit or empty
-    output is reported on the same `[missing]` line with the reader's
-    error, and is never read as `none`;
+  - dev-setup's offer reports it on a `[missing]` line naming the file,
+    the error and the fix (move or repair the file, then run again), and its
+    other steps go on, as today's report lines do. That line is not added to
+    the readiness report's count, which is taken before the offer runs. The
+    readiness report takes the state only from the hooks reader's printed
+    word when the reader exits 0; a non-zero exit or empty output is
+    reported on a `[missing]` line with the reader's error, counted with the
+    other missing components, and is never read as `none` (wi-927 D-010);
   - `coordinator_guard.py hooks` (the report) prints the state it reads.
+- **The Done-when's ratchet line, read** (wi-927 D-010):
+  `kitlib/guard_hooks.py` stays below the module-size ratchet's threshold,
+  so the ratchet holds no entry for it that could shrink. The line is met
+  when the module holds no merge or ownership code and no ratchet entry is
+  added for it. The Done-when text stays as filed: an edit to it would
+  unbind the plan's pass record.
 - **Residue, stated once** (PROCESS.md §6): a user command whose last words
   are the guard's file name and `hook` reads as the guard's. A guard command
   bound to an interpreter that was later deleted reads `on` and fails when

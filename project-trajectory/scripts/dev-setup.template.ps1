@@ -201,19 +201,45 @@ switch ($signin) {
     default { Write-Host "  [unknown] retained adjudicator sign-in - could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" }
 }
 
-# The coordinator's Claude Code hooks (WI-834): shipped inert in
-# .claude/settings.json.example and switched on only with consent, merged into
-# the machine-local .claude/settings.local.json beside any hooks already there,
-# each bound to the interpreter that runs the opt-in (never the committed
-# .claude/settings.json: the bound path is this machine's).
-$hooksExample = ".claude/settings.json.example"
-$hooks = "none"
-if ($pybin -and (Test-Path $hooksExample)) {
-    $hooks = KitReading @("scripts/coordinator_guard.py", "--root", ".", "hooks", "--example", $hooksExample)
-    if (-not $hooks) { $hooks = "none" }
+# The coordinator's Claude Code hooks: shipped inert in
+# .claude/settings.json.example and written only with consent into the
+# machine-local .claude/settings.local.json, each bound to the interpreter that
+# runs the install (never the committed .claude/settings.json: the bound path
+# is this machine's). The guard's reader prints none, absent, on or occupied;
+# its exit code and stderr are kept (KitReading keeps stdout only), so a
+# reader that fails or prints nothing is reported missing, never none.
+function HooksReading($argList) {
+    $ErrorActionPreference = "Continue"
+    $out = @(); $err = @()
+    try {
+        & $pybin -X utf8 @argList 2>&1 | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) { $err += $_.ToString() } else { $out += [string]$_ }
+        }
+        $code = $LASTEXITCODE
+    } catch { return @{ Word = "failed"; Err = $_.Exception.Message } }
+    $word = (($out | Out-String).Trim())
+    if (($code -eq 0) -and (@("on", "absent", "none") -contains $word)) { return @{ Word = $word; Err = "" } }
+    $text = (($err -join "`n").Trim())
+    if (-not $text) { $text = if ($word) { $word } else { "the hooks reader printed nothing" } }
+    return @{ Word = "failed"; Err = $text }
 }
-if ($hooks -eq "on") { Write-Host "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" }
-elseif ($hooks -eq "off") { Write-Host "  [note]    coordinator Claude Code hooks are off - opt-in, offered by -Baseline and a bare run" }
+$hooksExample = ".claude/settings.json.example"
+$hooksArgs = @("scripts/coordinator_guard.py", "--root", ".", "hooks", "--example", $hooksExample)
+$hooks = "none"
+$hooksErr = ""
+if ($pybin -and (Test-Path $hooksExample)) {
+    $reading = HooksReading $hooksArgs
+    $hooks = $reading.Word
+    $hooksErr = $reading.Err
+}
+switch ($hooks) {
+    "on" { Write-Host "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" }
+    "absent" { Write-Host "  [note]    coordinator Claude Code hooks are not installed - opt-in, offered by -Baseline and a bare run" }
+    "failed" {
+        Write-Host "  [missing] coordinator Claude Code hooks: $hooksErr"
+        $script:missing++
+    }
+}
 
 Write-Host ""
 if (Test-Path ".venv") { Write-Host "Product toolchain: .venv present (run scripts/setup.ps1 to refresh)." }
@@ -246,14 +272,32 @@ function OfferSignin {
     } else { Write-Host "  - skipped the token step; nothing was changed" }
 }
 
-# Switching the coordinator's hooks on, consented (WI-834).
+# Installing the coordinator's hooks, consented: the guard asks the question
+# at this console and writes them only after a yes. Only its stderr is
+# captured, to name a refusal on the [missing] line; stdin and stdout stay the
+# console's, so the question shows (the arguments hold no spaces).
 function OfferHooks {
-    if (-not (($hooks -eq "off") -and (Interactive))) { return }
-    $ans = Read-Host "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N]"
-    if ($ans -match '^[Yy]') {
-        $null = KitReading @("scripts/coordinator_guard.py", "--root", ".", "hooks", "--example", $hooksExample, "--enable")
+    if (-not (($hooks -eq "absent") -and (Interactive))) { return }
+    $guard = New-Object System.Diagnostics.ProcessStartInfo $pybin
+    $guard.Arguments = (@("-X", "utf8") + $hooksArgs + @("--offer")) -join " "
+    $guard.UseShellExecute = $false
+    $guard.WorkingDirectory = (Get-Location).ProviderPath
+    $guard.RedirectStandardError = $true
+    $guard.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+    try {
+        $proc = [System.Diagnostics.Process]::Start($guard)
+        $err = $proc.StandardError.ReadToEnd().Trim()
+        $proc.WaitForExit()
+        $code = $proc.ExitCode
+    } catch { $code = 1; $err = $_.Exception.Message }
+    if ($code -ne 0) {
+        if (-not $err) { $err = "the install failed and printed nothing" }
+        Write-Host "  [missing] coordinator Claude Code hooks: $err"
+        return
+    }
+    if ((HooksReading $hooksArgs).Word -eq "on") {
         Write-Host "  Switched on the coordinator hooks in .claude/settings.local.json."
-    } else { Write-Host "  - skipped the coordinator hooks; nothing was changed" }
+    }
 }
 
 # --- -Baseline / -Full / -ForRun: consent-first offers -------------------------

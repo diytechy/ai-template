@@ -115,14 +115,35 @@ def test_a_lane_worktree_shares_the_primary_checkouts_lease(tmp_path):
     assert "held by session " + COORD in refusal
 
 
-def _guard_cli(root, *args, session=COORD):
+def _guard_cli(root, *args, session=COORD, env=None):
     return subprocess.run(
         [sys.executable, str(SCRIPTS / "coordinator_guard.py"), "--root", str(root)]
         + list(args),
+        stdin=subprocess.DEVNULL,  # the null device: nobody can be asked
         capture_output=True,
         encoding="utf-8",
-        env=_env(**{guard.SESSION_ENV: session}),
+        env=env or _env(**{guard.SESSION_ENV: session}),
     )
+
+
+def test_the_cli_take_with_the_hooks_absent_and_no_terminal_refuses(tmp_path):
+    """Without a terminal the take cannot ask: with the guard hooks absent it
+    exits 1 naming dev-setup's consent step, and records and writes nothing.
+    Its stdin is the null device, as an agent's shell tool gives it, and CI is
+    unset, so only the terminal test can refuse the question."""
+    root = make_root(tmp_path)
+    example = root / ".claude" / "settings.json.example"
+    example.parent.mkdir(parents=True)
+    shutil.copyfile(SCRIPTS.parent / "agent-hooks" / "claude.settings.json", example)
+    env = _env(**{guard.SESSION_ENV: COORD})
+    env.pop("CI", None)
+    taken = _guard_cli(root, "take", env=env)
+    assert taken.returncode == 1, taken.stdout + taken.stderr
+    assert "no terminal can consent" in taken.stderr, taken.stderr
+    assert "dev-setup" in taken.stderr and "answer yes" in taken.stderr
+    assert "Write the coordinator's" not in taken.stdout, taken.stdout
+    assert guard._load(guard.lease_dir(root)) == {}
+    assert not (root / ".claude" / "settings.local.json").exists()
 
 
 def test_the_guard_cli_takes_requests_releases_and_clears(tmp_path):

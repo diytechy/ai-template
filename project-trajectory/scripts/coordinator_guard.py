@@ -31,8 +31,10 @@ lanes, and compaction then degrades it. This module is the whole guard:
   the declared blackout window every claim is refused, the main session's
   launches are denied, it is told to close down, and no relaunch is requested
   or launched, whatever the context guard's dial says;
-- **the hooks opt-in** (`hooks_state`, `enable_hooks`): dev-setup's consented
-  switch from the inert hook config to the project settings.
+- **the hooks install** (`hooks_state`, `install_hooks`, `consent_install`):
+  the guard hooks read by name as none, absent, on or occupied, written from
+  the inert hook config into the machine-local settings only from absent and
+  only after a terminal yes; occupied refuses and writes nothing.
 
 SHIPPED OFF. At `[coordinator] context_guard_pct = 0` the context guard's
 entry points return before reading or writing its state: claims behave as
@@ -111,16 +113,20 @@ Contract IF-280: the command line is `coordinator_guard.py [--root ROOT]`
     `release --reason R`, `clear --reason R`,
     `request-relaunch --handoff H [--session S]`,
     `handback --handoff H [--session S]`, `window-check`, or
-    `hooks --example E [--enable]`, which prints `none`, `on` or `off` for
-    the guard hooks the inert config E registers against the machine-local
-    `.claude/settings.local.json`, merging them in first with `--enable`,
-    each bound to the interpreter the command runs on.
+    `hooks --example E [--offer]`, which prints `none`, `absent`, `on` or
+    `occupied` for the guard hooks the inert config E registers against the
+    machine-local `.claude/settings.local.json`; with `--offer` it instead
+    asks at a terminal and, from `absent` after a yes, writes them, each bound
+    to the interpreter the command runs on, printing only the skip line after
+    a no.
 
 Contract IF-281: the command line's exit code is 0 on success and 1 on a
     refusal, whose reason goes to stderr after "coordinator guard: "; a
     usage error exits 2; `hook` always exits 0. `window-check` exits 1 inside
-    the blackout window and 0 outside it; `hooks` exits 1 only when a
-    settings file does not parse.
+    the blackout window and 0 outside it; `hooks` exits 1 at `occupied`
+    (an unreadable or unparseable file included), naming the file, what is
+    in the way and the fix, and `hooks --offer` also on no terminal or an
+    install whose re-read is not `on`.
 
 Runtime state (internal, no seam: only this module reads or writes it, and
     every other reader goes through IF-271): `out/coordinator/` under the
@@ -457,14 +463,20 @@ def _holder_line(lease):
     return "session {} (taken {})".format(lease.get("holder"), lease.get("taken_at"))
 
 
-def take(root, session_id, transcript=None):
+def take(root, session_id, transcript=None, ask=None):
     """The explicit take: record `session_id` as the coordinator when no
-    session holds the lease. Returns None, or the refusal.
+    session holds the lease. It first reads the guard hooks, before the lock
+    so no lock is held while a person is asked (`ask`, None without a
+    terminal): it goes on only at none or on, or after a consented install
+    that reads on. Returns None, or the refusal.
 
     Implements: SR-229, LLR-300
     """
     if not session_id:
         return "no session id: run it from the session, or pass --session"
+    refusal = _hooks_admission(root, ask)
+    if refusal:
+        return refusal
     with session_keep.dir_lock(lease_dir(root)) as directory:
         lease = _load(directory)
         if lease.get("holder") == session_id:
@@ -1474,81 +1486,110 @@ def exec_claude(prompt_file, run=subprocess.call):
     return run(["claude", prompt])
 
 
-# --- the hooks opt-in (WI-834 part D) ----------------------------------------------
+# --- the guard hooks: read by name, installed only with consent ---------------------
+
+SKIPPED = "  - skipped the coordinator hooks; nothing was changed"
+DECLINED = (
+    "the coordinator's Claude Code guard hooks are not installed in {}, and the "
+    "take needs them: take again and answer yes, or install them with dev-setup "
+    "at a terminal."
+)
+NEXT_SESSION = (
+    "coordinator guard: the hooks guard Claude Code sessions started from now on; "
+    "a running session usually picks up the settings edit itself, and its /hooks "
+    "menu shows whether it has: if not, restart it."
+)
 
 
-def _read_json(path):
-    """A JSON object from `path`: {} when absent; ValueError when unreadable."""
-    path = Path(path)
-    if not path.exists():
-        return {}
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError("{} is not a JSON object".format(path))
-    return data
+def _hooks_admission(root, ask):
+    """The take's hooks reading, before any lock: None to go on (none, on, or
+    on after a consented install, which prints the next-session caveat), else
+    the refusal: occupied, absent with no terminal or after a no, or an
+    install that did not read on.
 
-
-def _local_settings(root):
-    """The machine-local Claude Code settings the opt-in writes: their hook
-    commands name this machine's interpreter, so they never go in the
-    committed `.claude/settings.json` (decision D-019)."""
-    return Path(root) / ".claude" / "settings.local.json"
-
-
-def _guard_plan(example, interpreter):
-    """`(wanted, shapes)`: the inert example's guard hook groups bound to
-    `interpreter` (`{event: [group, ...]}`), and the guard's own command
-    shapes, the one definition of what the opt-in owns (`kitlib.guard_hooks`)."""
-    found = guard_hooks.guard_groups(_read_json(example))
-    wanted = {
-        e: [guard_hooks.bind(g, interpreter) for g in gs] for e, gs in found.items()
-    }
-    return wanted, guard_hooks.command_shapes(found)
-
-
-def hooks_state(root, example, interpreter=None):
-    """`none` when the inert config `example` registers no guard hook, `on`
-    when the machine-local settings already are what switching on would make
-    them (`kitlib.guard_hooks.merged`, bound to `interpreter`, this process's own by default),
-    else `off`.
-
-    Implements: SR-229, LLR-300
+    Implements: SR-032, LLR-322
     """
-    wanted, shapes = _guard_plan(example, interpreter or sys.executable)
-    if not wanted:
-        return "none"
-    live = _read_json(_local_settings(root)).get("hooks") or {}
-    return "on" if guard_hooks.merged(live, wanted, shapes) == live else "off"
+    example = Path(root) / ".claude" / "settings.json.example"
+    was = guard_hooks.hooks_state(root, example).word
+    result = guard_hooks.consent_install(root, example, ask)
+    if isinstance(result, str):
+        return result
+    if result.word == "absent":
+        return DECLINED.format(guard_hooks.local_settings(root))
+    if was == "absent":
+        print(NEXT_SESSION)
+    return None
 
 
-def enable_hooks(root, example, interpreter=None):
-    """Switch the coordinator's hooks on: every guard hook group the inert
-    config `example` registers, bound to `interpreter` (this process's own
-    by default: the floor-resolved one dev-setup runs this on), is merged
-    into the machine-local `.claude/settings.local.json` (`guard_hooks.merged`: only
-    the guard's own commands are replaced; every other command, group and
-    setting is kept). The committed `.claude/settings.json` is never
-    written. Idempotent.
+def _terminal_ask():
+    """`_ask_on_stdout` when stdin is a terminal and CI is unset (dev-setup's
+    own `interactive` test), else None: nobody can be asked.
 
-    Implements: SR-229, LLR-300
+    Implements: SR-032, LLR-322
     """
-    path = _local_settings(root)
-    settings = _read_json(path)
-    wanted, shapes = _guard_plan(example, interpreter or sys.executable)
-    settings["hooks"] = guard_hooks.merged(settings.get("hooks") or {}, wanted, shapes)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    write_atomic(path, json.dumps(settings, indent=2) + "\n")
+    stdin = sys.stdin
+    if stdin is not None and _is_terminal(stdin) and not os.environ.get("CI"):
+        return _ask_on_stdout
+    return None
 
 
-def _hooks_main(root, example, enable):
-    """`hooks`: print `none`, `on` or `off`, switching them on first with
-    `--enable` (a `none` example changes nothing)."""
+def _is_terminal(stream):
+    """Whether `stream` is a person's terminal. On Windows `isatty` is true for
+    any character device, the NUL an agent's shell tool hands a child
+    included, so there the stream must also be a real console, as the
+    PowerShell offer's `[Console]::IsInputRedirected` reads it.
+
+    Implements: SR-032, LLR-322
+    """
+    if not stream.isatty():
+        return False
+    if os.name != "nt":
+        return True
+    import ctypes
+    import msvcrt
+
     try:
-        if enable and hooks_state(root, example) == "off":
-            enable_hooks(root, example)
-        print(hooks_state(root, example))
-    except ValueError as exc:
-        return "the hook settings do not parse: {}".format(exc)
+        handle = msvcrt.get_osfhandle(stream.fileno())
+    except (OSError, ValueError):
+        return False
+    mode = ctypes.c_uint32()
+    kernel32 = ctypes.windll.kernel32
+    return bool(kernel32.GetConsoleMode(ctypes.c_void_p(handle), ctypes.byref(mode)))
+
+
+def _ask_on_stdout(question):
+    """The answer to `question`, written to stdout and flushed before one line
+    of stdin is read; end of input raises EOFError, a no. Stdout, because
+    every route keeps it on the terminal (the sh offer captures stderr), and
+    `input` writes its prompt to stderr when stdin and stdout are terminals.
+
+    Implements: SR-032, LLR-322
+    """
+    sys.stdout.write(question)
+    sys.stdout.flush()
+    line = sys.stdin.readline()
+    if not line:
+        raise EOFError
+    return line.rstrip("\r\n")
+
+
+def _hooks_main(root, example, offer):
+    """`hooks`: print the state's word, exiting 1 with the complaint at
+    occupied; with `--offer`, the consented install instead, printing only
+    the skip line after a no.
+
+    Implements: SR-032, LLR-322
+    """
+    if offer:
+        result = guard_hooks.consent_install(root, example, _terminal_ask())
+        if isinstance(result, guard_hooks.Reading) and result.word == "absent":
+            print(SKIPPED)
+        return result if isinstance(result, str) else 0
+    reading = guard_hooks.hooks_state(root, example)
+    print(reading.word)
+    if reading.word == "occupied":
+        local = guard_hooks.local_settings(root)
+        return guard_hooks.refusal_text(local, reading)
     return 0
 
 
@@ -1611,10 +1652,12 @@ def _parser():
         help="exit 1 inside the blackout window (a coordinator launch script's check)",
     )
     p = sub.add_parser(
-        "hooks", help="report, or switch on, the coordinator's Claude Code hooks"
+        "hooks", help="report, or install with consent, the coordinator's hooks"
     )
     p.add_argument("--example", required=True, help="the inert hook config")
-    p.add_argument("--enable", action="store_true")
+    p.add_argument(
+        "--offer", action="store_true", help="ask at a terminal, then install"
+    )
     return parser
 
 
@@ -1630,14 +1673,14 @@ def main(argv=None):
     actions = {
         "hook": lambda: _hook_main(root),
         "status": lambda: _status(root),
-        "take": lambda: take(root, session, args.transcript),
+        "take": lambda: take(root, session, args.transcript, _terminal_ask()),
         "release": lambda: release(root, args.reason),
         "clear": lambda: clear(root, args.reason),
         "request-relaunch": lambda: request_relaunch(root, args.handoff, session),
         "handback": lambda: hand_back(root, args.handoff, session),
         "exec-claude": lambda: exec_claude(args.prompt_file),
         "window-check": lambda: window_check(root),
-        "hooks": lambda: _hooks_main(root, args.example, args.enable),
+        "hooks": lambda: _hooks_main(root, args.example, args.offer),
     }
     result = actions[args.cmd]()
     if isinstance(result, str):

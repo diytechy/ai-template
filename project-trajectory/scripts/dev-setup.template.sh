@@ -242,18 +242,31 @@ case "$SIGNIN" in
   *) say "  [unknown] retained adjudicator sign-in — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" ;;
 esac
 
-# The coordinator's Claude Code hooks (WI-834): shipped inert in
-# .claude/settings.json.example and switched on only with consent, merged into
-# the machine-local .claude/settings.local.json beside any hooks already there,
-# each bound to the interpreter that runs the opt-in (never the committed
-# .claude/settings.json: the bound path is this machine's).
+# The coordinator's Claude Code hooks: shipped inert in
+# .claude/settings.json.example and written only with consent into the
+# machine-local .claude/settings.local.json, each bound to the interpreter that
+# runs the install (never the committed .claude/settings.json: the bound path
+# is this machine's). The guard's reader prints none, absent, on or occupied;
+# a reader that fails or prints nothing is reported missing, never none.
 HOOKS="none"
 if [ -n "$PYBIN" ] && [ -f .claude/settings.json.example ]; then
-  HOOKS=$("$PYBIN" scripts/coordinator_guard.py --root . hooks --example .claude/settings.json.example 2>/dev/null) || HOOKS="none"
+  HOOKS_STATUS=0
+  HOOKS=$("$PYBIN" scripts/coordinator_guard.py --root . hooks --example .claude/settings.json.example 2>&1) || HOOKS_STATUS=$?
+  case "$HOOKS_STATUS:$HOOKS" in
+    0:on | 0:absent | 0:none) ;;
+    *)
+      HOOKS_ERR=${HOOKS:-the hooks reader printed nothing}
+      HOOKS="failed"
+      ;;
+  esac
 fi
 case "$HOOKS" in
   on) say "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" ;;
-  off) say "  [note]    coordinator Claude Code hooks are off — opt-in, offered by --baseline and a bare run" ;;
+  absent) say "  [note]    coordinator Claude Code hooks are not installed — opt-in, offered by --baseline and a bare run" ;;
+  failed)
+    say "  [missing] coordinator Claude Code hooks: $HOOKS_ERR"
+    missing=$((missing + 1))
+    ;;
 esac
 
 say
@@ -294,18 +307,21 @@ offer_signin() {
   esac
 }
 
-# Switching the coordinator's hooks on, consented (WI-834).
+# Installing the coordinator's hooks, consented: the guard asks the question
+# at this terminal and writes them only after a yes (stdout and stdin stay the
+# terminal's; its stderr is kept to name a refusal).
 offer_hooks() {
-  { [ "$HOOKS" = "off" ] && interactive; } || return 0
-  printf "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N] "
-  read -r ans || ans=""
-  case "$ans" in
-    [Yy]*)
-      "$PYBIN" scripts/coordinator_guard.py --root . hooks --example .claude/settings.json.example --enable >/dev/null &&
-        say "  Switched on the coordinator hooks in .claude/settings.local.json."
-      ;;
-    *) say "  - skipped the coordinator hooks; nothing was changed" ;;
-  esac
+  { [ "$HOOKS" = "absent" ] && interactive; } || return 0
+  exec 3>&1
+  HOOKS_ERR=$("$PYBIN" scripts/coordinator_guard.py --root . hooks --example .claude/settings.json.example --offer 2>&1 1>&3 3>&-) || {
+    exec 3>&-
+    say "  [missing] coordinator Claude Code hooks: ${HOOKS_ERR:-the install failed and printed nothing}"
+    return 0
+  }
+  exec 3>&-
+  HOOKS=$("$PYBIN" scripts/coordinator_guard.py --root . hooks --example .claude/settings.json.example 2>/dev/null) || HOOKS="failed"
+  [ "$HOOKS" = "on" ] && say "  Switched on the coordinator hooks in .claude/settings.local.json."
+  return 0
 }
 
 # --- --baseline / --full / --for-run: consent-first offers ----------------------

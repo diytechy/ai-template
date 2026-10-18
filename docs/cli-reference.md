@@ -340,7 +340,7 @@ Contracts (interfaces): IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280, 
 | `--session` |  |
 | `--prompt-file` |  |
 | `--example` | the inert hook config |
-| `--enable` |  |
+| `--offer` | ask at a terminal, then install |
 | `--reason` |  |
 
 ### `scripts/derive_stage`

@@ -194,34 +194,68 @@ try {
         "missing" { Write-Host "  [missing] retained adjudicator sign-in  — run -Install (or a bare run) for the one-time 'claude setup-token' step, keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file" }
         default { Write-Host "  [unknown] retained adjudicator sign-in  — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" }
     }
-    # The coordinator's Claude Code hooks (WI-880, owner ruling 2026-10-10):
-    # this repository commits none. The guard's machine-local opt-in merges the
-    # hook groups of the inert .claude/settings.json.example into
-    # .claude/settings.local.json, each bound to the interpreter that runs it;
-    # a machine that has not opted in runs no guard hooks. Read through the
-    # guard's own report when a runtime exists.
-    $hooksExample = ".claude/settings.json.example"
-    $hooks = "none"
-    if ($py -and (Test-Path $hooksExample)) {
+    # The coordinator's Claude Code hooks: this repository commits none. The
+    # guard writes the hook groups of the inert .claude/settings.json.example
+    # into .claude/settings.local.json only with consent, each bound to the
+    # interpreter that runs it; a machine that has not installed them runs no
+    # guard hooks. Read through the guard's own report when a runtime exists:
+    # none, absent, on or occupied, its exit code and stderr kept, so a reader
+    # that fails or prints nothing is reported missing, never none.
+    function HooksReading([string[]]$argList) {
+        $ErrorActionPreference = "Continue"
+        $out = @(); $err = @()
         try {
-            $hooks = ((& $py @pyArgs -X utf8 project-trajectory/scripts/coordinator_guard.py --root . hooks --example $hooksExample 2>$null) | Out-String).Trim()
-        } catch { $hooks = "none" }
+            & $py @pyArgs -X utf8 @argList 2>&1 | ForEach-Object {
+                if ($_ -is [System.Management.Automation.ErrorRecord]) { $err += $_.ToString() } else { $out += [string]$_ }
+            }
+            $code = $LASTEXITCODE
+        } catch { return @{ Word = "failed"; Err = $_.Exception.Message } }
+        $word = (($out | Out-String).Trim())
+        if (($code -eq 0) -and (@("on", "absent", "none") -contains $word)) { return @{ Word = $word; Err = "" } }
+        $text = (($err -join "`n").Trim())
+        if (-not $text) { $text = if ($word) { $word } else { "the hooks reader printed nothing" } }
+        return @{ Word = "failed"; Err = $text }
+    }
+    $hooksExample = ".claude/settings.json.example"
+    $hooksArgs = @("project-trajectory/scripts/coordinator_guard.py", "--root", ".", "hooks", "--example", $hooksExample)
+    $hooks = "none"
+    $hooksErr = ""
+    if ($py -and (Test-Path $hooksExample)) {
+        $reading = HooksReading $hooksArgs
+        $hooks = $reading.Word
+        $hooksErr = $reading.Err
     }
     switch ($hooks) {
         "on" { Write-Host "  [ok]      coordinator Claude Code hooks (.claude/settings.local.json)" }
-        "off" { Write-Host "  [note]    coordinator Claude Code hooks are off - the machine-local opt-in, offered by -Install and a bare run" }
+        "absent" { Write-Host "  [note]    coordinator Claude Code hooks are not installed - the machine-local opt-in, offered by -Install and a bare run" }
+        "failed" { Write-Host "  [missing] coordinator Claude Code hooks: $hooksErr" }
     }
-    # Switching them on, consented: the opt-in runs on this script's runtime,
-    # the floor-resolved interpreter its hooks are then bound to.
+    # Installing them, consented, at a console only: the guard asks and writes
+    # them on this script's runtime, the floor-resolved interpreter its hooks
+    # are then bound to. Only its stderr is captured, to name a refusal on the
+    # [missing] line; stdin and stdout stay the console's, so the question
+    # shows (the arguments hold no spaces).
     function Offer-Hooks {
-        if ($hooks -ne "off") { return }
-        $a = Read-Host "Switch on the coordinator's Claude Code hooks (merged into the machine-local .claude/settings.local.json, keeping any hooks already there)? [y/N]"
-        if ($a -match '^[Yy]') {
-            & $py @pyArgs -X utf8 project-trajectory/scripts/coordinator_guard.py --root . hooks --example $hooksExample --enable | Out-Null
-            if ($LASTEXITCODE -eq 0) { Write-Host "  Switched on the coordinator hooks in .claude/settings.local.json." }
-            else { Write-Host "  [warn] the opt-in could not write .claude/settings.local.json; the hooks stay off." }
-        } else {
-            Write-Host "  Skipped the coordinator hooks; nothing was changed."
+        if (-not (($hooks -eq "absent") -and (Interactive))) { return }
+        $guard = New-Object System.Diagnostics.ProcessStartInfo $py
+        $guard.Arguments = (@($pyArgs) + @("-X", "utf8") + $hooksArgs + @("--offer")) -join " "
+        $guard.UseShellExecute = $false
+        $guard.WorkingDirectory = (Get-Location).ProviderPath
+        $guard.RedirectStandardError = $true
+        $guard.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+        try {
+            $proc = [System.Diagnostics.Process]::Start($guard)
+            $err = $proc.StandardError.ReadToEnd().Trim()
+            $proc.WaitForExit()
+            $code = $proc.ExitCode
+        } catch { $code = 1; $err = $_.Exception.Message }
+        if ($code -ne 0) {
+            if (-not $err) { $err = "the install failed and printed nothing" }
+            Write-Host "  [missing] coordinator Claude Code hooks: $err"
+            return
+        }
+        if ((HooksReading $hooksArgs).Word -eq "on") {
+            Write-Host "  Switched on the coordinator hooks in .claude/settings.local.json."
         }
     }
 
