@@ -122,7 +122,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      name, and ask for a two-line reply (the verdict path and its VERDICT
      line). Pass the Agent tool's `model: "opus"` and `effort: "high"`: a
      prompt saying "work at high effort" does not set it (2026-10-16c).
-     Record the stand-in in the lane's decisions. A Claude reviewer that
+     Record the stand-in in the lane's decisions. Create each reviewer's
+     scratch directory before the launch: Sol's first pytest run failed on
+     a missing basetemp parent (2026-10-18c). A Claude reviewer that
      backgrounds its own pytest can lose the completion notice and stop
      with no verdict: look for its process (its scratch path in the
      command line), then resume that reviewer with SendMessage, never a
@@ -138,7 +140,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     yet names no code defect: its remedy is the checkpoint sitting, the
     cycle's next step. Re-grade it in the lane's decisions; it costs no
     fix round, and the convergence map points it at the sitting's verdict
-    and act (wi-931 D-006, D-008).
+    and act (wi-931 D-006, D-008). So is a gate finding that an accepted
+    sitting's act is still owed: the act turn follows the gate (wi-942
+    D-005).
   - With Codex capacity short, run two lanes' REVIEW-A sessions one at a
     time, so a usage limit takes out at most one review.
 - **Scope critique:** render
@@ -533,6 +537,9 @@ commit of its own, move it to trunk's tip
 - **RESYNC:** anchor the entry at the landing's parent, never at a lane-only
   sha. Fold a fix round's entry into its parent entry, and flag forced
   migrations.
+  The bar's `check_resync` refuses every commit of a lane rebased past
+  WI-916 until its entry exists, so a plan step that writes the entry
+  later moves into the first commit after the rebase (wi-927 D-005).
 - **Archive the tips** to `archive/lanes`, adding the pre-rebase tip the
   verdicts cite (and any discarded act) as extra parents. Archive commits
   carry the empty tree, `4b825dc642cb6eb9a060e54bf8d69288fbee4904`. Read the
@@ -875,6 +882,10 @@ lane commit being replayed.
   context (2026-10-18a).
 - **POSIX evidence on this workstation** (owner, wi-931 D-002): WSL's
   Ubuntu distro (Python 3.12, pytest 7.4, no xdist; nothing installed).
+  Name it, `wsl.exe -d Ubuntu`: the default distro here is
+  `podman-machine-default`, which has no git. Run the same modules at
+  the lane's base in the same clone, so a red the base shares is not
+  charged to the lane (two `run.command` cases, 2026-10-18c).
   Clone into WSL's own filesystem (`git clone /mnt/c/Projects/ai-template
   ~/<lane>-posix`, about a minute), check out detached, run serially. From
   Git Bash, prefix a `wsl.exe` call that passes a `/mnt/c/...` path with

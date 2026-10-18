@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-18b-attended-coordinator.md](handoff-2026-10-18b-attended-coordinator.md),
+  [handoff-2026-10-18c-attended-coordinator.md](handoff-2026-10-18c-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
@@ -54,7 +54,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 128 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 129 on trunk. The context guard's hooks are machine-local
   (opted in through dev-setup or `coordinator_guard.py hooks --enable`; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -185,7 +185,17 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   check's docstrings say a retitled entry counts zero, where one keeping
   its old anchor is refused by the anchor rule, and a lost landed heading
   that cancels a valid added entry is refused with the plain no-entry
-  reason, naming neither (wording, and a clearer message); **owner intake 2026-09-22:** the self-test
+  reason, naming neither (wording, and a clearer message); from the guard-hooks row's
+  fix round (wi-927 D-007): a shipped coordinator-hook example holding JSON
+  null reads none, which its Trust section does not rule; from the same
+  lane's POSIX run: two `run.command` cases in the dev-setup tests fail on
+  POSIX at trunk itself (a bare run's check order and interpreter); from
+  the trunk-by-name row's build (wi-925, not yet committed): the overnight
+  launcher keeps its own trunk reader, a second home for the trunk's
+  identity; a spec move rewrites the moved spec's own relative links, so a
+  row whose Done-when holds one reads as changed at its own close; and the
+  dispatcher may keep looping on a worker that refuses at preflight;
+  **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
   `unrecognized arguments: -n`. This depends on the root launchers SN-034/SN-035
