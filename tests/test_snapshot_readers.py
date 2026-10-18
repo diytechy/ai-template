@@ -531,6 +531,102 @@ def test_a_held_rung_row_ruled_both_ways_reads_MEANING_and_is_refused(scaffold):
     assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
 
 
+# --- a retirement alone in its registry (TC-278) ------------------------------
+
+
+def _retirement_act(root, held=False, judged=("SR-002",), beside=False):
+    """Seed two approved rows (the merge base), delete SR-002 from the live
+    registry, rule `judged` CLARITY in an accepted amendment verdict, then
+    take the act re-attesting SR-002 alone. SR-001 stays untouched, so the
+    registry holds an approved row but no other act, unless `beside` amends
+    SR-001 afterwards and takes a second act re-attesting it. Returns (base,
+    head, the paths the retirement act's snapshot write copied)."""
+    run_git = _git(root)
+    if not held:
+        _release(root)
+    _append(root, SR_REL, _SR.format(rid="SR-001", title="row one"))
+    _append(root, SR_REL, _SR.format(rid="SR-002", title="row two"))
+    SNAP.copy_live(root, seed=True)
+    base = _commit(run_git, "seed")
+    _rewrite(root, SR_REL, _SR.format(rid="SR-002", title="row two"), "")
+    _commit(run_git, "retire SR-002")
+    _bind_branch(root, {"amendment": list(judged)})
+    written = SNAP.copy_live(root, reattests=frozenset({"SR-002"}))
+    head = _commit(run_git, "the retirement act")
+    if beside:
+        _rewrite(root, SR_REL, '"row one"', '"row one, amended"')
+        _commit(run_git, "amend SR-001")
+        SNAP.copy_live(root, reattests=frozenset({"SR-001"}))
+        head = _commit(run_git, "the re-attestation beside the retirement")
+    return base, head, written
+
+
+_RETIRE = [("WI-900.md", {"brief": "amendment", "adjudicates": ["SR-002"]})]
+
+
+def test_a_retirement_alone_in_its_registry_merges(scaffold):
+    """A retired row's re-attestation authorizes its own registry's copy, so
+    an act whose registry carries no other act is not WIDENED, on a lane
+    scoped to the amendment and on an unscoped lane alike."""
+    base, head, _written = _retirement_act(scaffold)
+    for metas in (_RETIRE, []):
+        refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
+        assert refusal is None, refusal
+
+
+def test_the_acted_set_names_a_retired_rows_registry(scaffold):
+    """The acted set places a retired row in the registry its id's tier
+    names, though the head no longer holds the row."""
+    base, head, written = _retirement_act(scaffold)
+    assert written == ["docs/archive/last_approved/" + SR_REL], written
+    acted = AR.lane_acted_set(
+        scaffold, base, head, AR.approval_delta(scaffold, base, head)
+    )[0]
+    assert acted == {"approve": {}, "reattest": {"SR-002": SR_REL}}, acted
+
+
+def test_a_retirement_beside_another_act_in_its_registry_merges(scaffold):
+    """A retired row's re-attestation authorizes its registry's copy whether
+    or not another act moved that registry: beside a second act re-attesting
+    another row of the same registry, both ruled by the accepted verdict and
+    inside the amendment scope, the merge is admitted."""
+    base, head, _written = _retirement_act(
+        scaffold, judged=("SR-001", "SR-002"), beside=True
+    )
+    acted = AR.lane_acted_set(
+        scaffold, base, head, AR.approval_delta(scaffold, base, head)
+    )[0]
+    assert acted == {
+        "approve": {},
+        "reattest": {"SR-001": SR_REL, "SR-002": SR_REL},
+    }, acted
+    both = [("WI-900.md", {"brief": "amendment", "adjudicates": ["SR-001", "SR-002"]})]
+    for metas in (both, []):
+        refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
+        assert refusal is None, refusal
+
+
+def test_a_lone_retirement_on_a_held_rung_is_refused_by_row(scaffold):
+    base, head, _written = _retirement_act(scaffold, held=True)
+    refusal = AR.merge_approval_refusal(scaffold, base, head, _RETIRE, trunk=head)
+    assert refusal and "SR-002 is below approval (or absent) at the act" in refusal, (
+        refusal
+    )
+
+
+def test_a_retirement_outside_the_amendment_scope_is_refused(scaffold):
+    base, head, _written = _retirement_act(scaffold)
+    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
+    assert refusal and "SR-002 re-attested OUTSIDE" in refusal, refusal
+
+
+def test_a_retirement_no_accepted_verdict_rules_is_refused(scaffold):
+    base, head, _written = _retirement_act(scaffold, judged=("SR-001",))
+    refusal = AR.merge_approval_refusal(scaffold, base, head, _RETIRE, trunk=head)
+    assert refusal and "no ACCEPTED verdict" in refusal and "SR-002" in refusal, refusal
+    assert "WIDENED" not in refusal, refusal
+
+
 def test_the_scripts_under_test_are_the_scaffolds_copies(scaffold):
     """The scaffold runs its own copies of the kit's scripts; a stale copy would
     make every CLI assertion above test old code."""

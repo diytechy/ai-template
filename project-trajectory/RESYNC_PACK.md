@@ -8679,6 +8679,24 @@ Only an adjudicator writing the same field twice on one line reaches it.
 **What to do.** Overwrite the file. Nothing migrates: no registry, setting
 or record format changes, and no adopter setting changes.
 
+### The merge slot admits a retirement alone in its registry [since 2268a9a8c]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The merge slot's acted set now places each row the act
+ledger names in the registry its id's tier names, whether or not the live
+registry still holds the row. A retirement (an Approved row the lane deleted,
+re-attested by the act) therefore authorizes its own registry's copy, so a
+retirement whose registry carries no other act in the branch is no longer
+refused as `snapshot WIDENED ... without an approved row`. A retirement on a
+held rung is still refused by row, and one outside the amendment scope or
+ruled by no accepted verdict is still refused.
+
+**Kit-owned files — overwrite:** `scripts/acceptance_record.py`.
+
+**What to do.** Overwrite the file. Nothing migrates: no registry, setting
+or record format changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

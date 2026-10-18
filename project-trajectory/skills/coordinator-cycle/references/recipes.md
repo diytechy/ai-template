@@ -455,9 +455,8 @@ commit of its own, move it to trunk's tip
   names the verdict with `--verdict`. A row the verdict rules CLARITY that
   the lane deleted (a retired row) is listed in `--reattests` until its
   recorded copy drops it; on a held rung it owes no act (removing a held row
-  is the owner's); and the merge slot still refuses a retirement whose
-  registry carries no other act in the branch (a residue left to a follow-up
-  row). A first approval of a row absent at HEAD is refused as inconsistent.
+  is the owner's). A first approval of a row absent at HEAD is refused as
+  inconsistent.
   The act turn takes one act per kind of judgement, in the combined brief's
   order: the amendment act
   (`--reattests`) first, then the first-approval act (`--approves`). A

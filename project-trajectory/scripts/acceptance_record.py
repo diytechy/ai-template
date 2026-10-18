@@ -824,23 +824,13 @@ def _registry_identity(path):
     return next(hits, path)
 
 
-def _registries_holding(root, head, ids):
-    """`{row id: approval-act registry}` for each of `ids` some approval-act
-    registry holds at `head`; an id none holds is absent.
-
-    Implements: SR-178, LLR-278"""
-    found = {}
-    for rel, col in APPROVAL_ACT_CSVS if ids else ():
-        for rid in set(ids) & set(_spine_rows_at(root, head + ":", rel, col)):
-            found.setdefault(rid, rel)
-    return found
-
-
 def lane_acted_set(root, base, head, delta):
     """THE ONE DERIVATION OF A LANE'S ACTED SET (WI-849, Sol r3): `(acted,
     refusal)`, `acted` being `{"approve": {row id: registry}, "reattest": {row
     id: registry}}` - every row the lane approved or re-attested, with the
-    registry that holds it. Approvals are the delta's live Status transitions
+    registry its id's tier names (a live flip: the registry the two-tree walk
+    reports), present at the head or not, so a retired row authorizes its own
+    registry's copy. Approvals are the delta's live Status transitions
     (a flip or a row born approved) AND the `approved` rows of the act-ledger
     entries the branch added (`_added_acts`), which name rows the snapshot
     writer carried into approval with no live flip - a row live-approved at
@@ -860,9 +850,11 @@ def lane_acted_set(root, base, head, delta):
         return {"approve": {}, "reattest": {}}, refusal
     approve = {act["id"]: act["registry"] for act in acts}
     ledger = {str(r) for a in added for r in a.get("approved") or []} - set(approve)
-    held = _registries_holding(root, head, ledger | reattested)
-    approve.update({rid: held.get(rid) for rid in ledger})
-    return {"approve": approve, "reattest": {r: held.get(r) for r in reattested}}, None
+    approve.update({rid: _tier_of(rid)[0] for rid in ledger})
+    return {
+        "approve": approve,
+        "reattest": {r: _tier_of(r)[0] for r in reattested},
+    }, None
 
 
 def _copy_lines(acted, snapshot_files):

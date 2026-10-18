@@ -1,0 +1,41 @@
+# docs/decisions/wi-942.toml — delegated decisions made in the WI-942 lane
+# (the merge slot reads an acted row's registry from its id, so a
+# retirement alone in its registry merges) by the attended coordinator.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane is cut at trunk's 396ff9f44 (the claimed branch had no commits of its own, recipes section 2), claimed under the session's second scoped unpause (coordinator-2026-10-17 D-008). The row is claimed planmode single, so the lane planned first: a fresh Claude Opus planner wrote the plan from review_brief.py plan's brief alone (DELTA none), committed verbatim; one Codex Sol critique at medium approved it with no findings, and the pass record binds it. Build round 1 (Claude Opus at medium, the kit-builder agent) built P1, P2, P3 and P5; P4, the row text of LLR-278 (detail) and TC-278 (method and expected), is GPT Terra's intent turn, next session. The builder kept the trace cells current, as its brief allows: LLR-278's code_symbol drops the deleted _registries_holding, and TC-278's evidence names the five new tests; both are amended approved rows, so the checkpoint sitting judges them with P4's text. The build brief named WI-916's spec file by a text-substitution slip; the builder worked from the lane's own spec, which the plan cites (the recipes now say to check a derived brief's spec path). The first same-window bar pair read 899.9 s here against the parent's 127.4 s on an identical tier while the full suite ran; re-taken back to back it read 99.4 s against 120.3 s, so the spike was load. Review rounds run two full-lane reviewers in parallel, Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B, the ruling-7 stand-in; coordinator-2026-10-16 D-008). The row changes the merge slot's floor, so it lands alone, before plan item 14's retirement lane."
+alternative = "Leave the trace cells to Terra's turn, which would leave the strict lints reading a deleted symbol on the build commit."
+reversal_cost = "Low: the cells are traced-only and judged at the checkpoint."
+why_not_escalated = "The skill's plan, build and bar-pair steps."
+review = ""
+
+[decision.D-002]
+decided = "The lane was rebased onto trunk's c58293d54 (clean; the pre-rebase tip 0bfb35933 is archived at landing; the three coordinator-cycle recipe copies stay byte-identical). The RESYNC_PACK entry the build wrote is anchored at the old base and is re-anchored at the landing's parent. Terra's intent turn (gpt-5.6-terra at medium, retained session 01a14f75-8736-7403-965e-df606cf33d56) authored the plan's P4 by addition: LLR-278's detail gains the plan's insertion before its clause's colon, and TC-278's method and expected each gain the plan's appended sentences; it confirmed the builder's two traced cells and returned the arms map (every added clause has an arm among the five new tests). The coordinator checked mechanically that each changed cell keeps its approved text verbatim apart from the named insertion, that no other cell of either registry moved and that neither file holds a CR byte. Terra's sandbox cut its focused pytest run short, so the coordinator ran it: 127 passed, 1 skipped. Both rows stay Approved; the checkpoint sitting judges the two amendments after the counted rounds."
+alternative = "Re-run Terra's pytest in its own session, which its sandbox had already cut short once."
+reversal_cost = "None: the set is unjudged until the checkpoint."
+why_not_escalated = "The skill's intent step; the text is the accepted plan's own."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 over b2c3dcccf: Codex Sol at medium (REVIEW-A, 001) APPROVE with 0 findings; Claude Opus at high (REVIEW-B, 002, the ruling-7 stand-in for the Gemini slot) APPROVE with 1 MINOR. F1: TC-278's added expected sentence says a retired row's re-attestation authorizes its own registry's copy whether or not another act moved that registry, but no test in its evidence drives a retirement beside another act in the same registry at the merge floor (rubric K1). No BLOCKER or MAJOR, so the checkpoint follows. F1 is answered in the lane before the checkpoint by its first remedy: one floor test of a retirement beside another approval act on a row of the same registry, merging, added to TC-278's evidence (traced), so the accepted plan's text stands and is evidenced. With no row text changed by a round and no production code moved since intent, Terra's reconcile turn is omitted (the skill's checkpoint step 1), after the mechanical check that each changed approved cell keeps its approved text."
+alternative = "Narrow the sentence to the lone case, a row-text change away from the accepted plan's text."
+reversal_cost = "One test."
+why_not_escalated = "The skill's triage step; a MINOR answered by its own first remedy inside the lane."
+review = ""
+
+[decision.D-004]
+decided = "The lane was rebased onto trunk's 2268a9a8c, cleanly (the pre-rebase tip e844e698d is archived at landing beside 0bfb35933; the verdict's commit cae872910 is now 684c06446). The unchanged-rows check compared LLR-278 and TC-278 at cae872910 with the rebased tip, parsed with tomllib: both unchanged, so the verdict's MEANING+BLESS stands and no row is re-sat. The RESYNC_PACK entry is re-anchored at the new base (check_resync: OK, anchored at 2268a9a8c). The three coordinator-cycle recipe copies stay byte-identical. Convergence map for the gate (revisions 8 and 33): round 1 accepted one finding, REVIEW-B's F1 (a MINOR, a coverage gap: no floor test drove a retirement beside another act in the same registry). It names no code defect, so it maps to independently checkable evidence: the floor test test_a_retirement_beside_another_act_in_its_registry_merges in tests/test_snapshot_readers.py, which TC-278's evidence cell names, added at 86ffa7397 before the sitting. No other finding was accepted, so the map is complete and the gate may render in convergence stance."
+alternative = "Re-sit LLR-278 and TC-278 after the rebase, which the unchanged-rows check makes unnecessary."
+reversal_cost = "None: a re-sit stays available if the gate finds a row defect."
+why_not_escalated = "The skill's landing steps 1 and 2 and the convergence-map rule."
+review = ""
+
+[decision.D-005]
+decided = "The gate over dae9c2bda, uncounted and in convergence stance after D-004's map: Codex Sol at medium (REVIEW-A, 004) CHANGES-REQUESTED with 1 MAJOR; Claude Opus at high (REVIEW-B, 005, the ruling-7 stand-in for the Gemini slot) APPROVE with 1 MINOR. Both name the same condition: LLR-278's detail and TC-278's method and expected are amended while the lane carries no amendment act, so their recorded copies still hold the approved text. Sol tags it convergence-class yes; Opus grades it fail-closed. It names no code or row-text defect: the checkpoint sitting already ruled both rows MEANING+BLESS on a released rung (003-ADJUDICATE-86ffa73.md, accepted), and the cycle takes that verdict's act turn after the gate, as the lane's last spine commit (the skill's section 4, steps 1 and 2). So the MAJOR is re-graded here, as the recipes direct for a round finding whose remedy is the cycle's next step (wi-931 D-006, D-008): it costs no fix round and goes to no dispute sitting, and its evidence is the act turn's commit, which re-attests LLR-278 and TC-278 before the landing. The landing is held until that act is committed and the registries equal their anchors."
+alternative = "Send Sol's MAJOR to a dispute sitting, whose only possible remedy is the act turn the cycle takes next anyway."
+reversal_cost = "Low: if the act turn fails, the landing stays held and the finding stands."
+why_not_escalated = "The recipes' re-grade rule for a finding whose remedy is the cycle's next step; the act authority is the accepted verdict, not this decision."
+review = ""

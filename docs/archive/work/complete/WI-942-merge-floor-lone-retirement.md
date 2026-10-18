@@ -3,13 +3,37 @@ id = "WI-942"
 title = "The merge slot reads an acted row's registry from its id, so a retirement alone in its registry is no longer refused as a widened copy"
 workstream = "process"
 sr_refs = ["SR-207", "SR-178"]
-specref = "docs/decisions/wi-912.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = []
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-18, after its post-checkpoint gate and act:
+
+- The merge slot's acted set places each row the act ledger names in the
+  registry its id's tier names, whether or not the live registry still
+  holds the row, so a retirement alone in its registry (an Approved row the
+  lane deleted, re-attested by the act) authorizes its own registry's copy
+  and merges; a held-rung retirement is still refused by row, and one
+  outside the amendment scope or ruled by no accepted verdict is still
+  refused. `_registries_holding` is gone from `acceptance_record.py`.
+- The recipes sentence naming the residue is gone; the three skill copies
+  are byte-identical.
+- LLR-278's detail and TC-278's method and expected carry the plan's text,
+  added at intent; TC-278's evidence names the six new tests. The
+  checkpoint sitting (`docs/reviews/wi-942/003-ADJUDICATE-86ffa73.md`)
+  ruled both MEANING+BLESS, and the act turn re-attested both.
+- `RESYNC_PACK.md` carries the entry, anchored at the landing's parent.
+- Reviews: counted round 1 (001-REVIEW-A-b2c3dcc APPROVE 0,
+  002-REVIEW-B-b2c3dcc APPROVE 1 MINOR, answered by a floor test) and the
+  gate in convergence stance (004-REVIEW-A-dae9c2b, 005-REVIEW-B-dae9c2b:
+  both named the act still owed, which the act turn answered; wi-942
+  D-005). Decisions: `docs/decisions/wi-942.toml` D-001 to D-005.
 
 ## Context
 

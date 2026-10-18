@@ -780,3 +780,9 @@ seq = 128
 date = "2026-10-17"
 approved = []
 reattested = ["LLR-310", "TC-327"]
+
+[[act]]
+seq = 129
+date = "2026-10-18"
+approved = []
+reattested = ["LLR-278", "TC-278"]
