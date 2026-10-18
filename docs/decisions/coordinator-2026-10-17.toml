@@ -58,3 +58,17 @@ alternative = "One unpause for all six once the two new rows are confirmed; or W
 reversal_cost = "Low: a claim is returned to the queue by its own handback."
 why_not_escalated = "It was the owner's ruling."
 review = ""
+
+[decision.D-009]
+decided = "Owner ruling in session (2026-10-17e), at the filing of the two merge-floor rows wi-912 D-008 and D-009 owed (WI-942, a retirement alone in its registry; WI-943, a MEANING re-attestation only for a blessed row). Their drafter found, and the coordinator confirmed, that the coordinator's hand landing (git merge --squash, then the commit) runs no approval-act reader: merge_approval_refusal runs only in integrate.py integrate, and the hook's squash steps are text-then-act, held-status and ruling-sync. So both rows correct the rule the merge slot enforces on the loop's path, not on the path this repository lands by. The owner chose to leave the gap to queued WI-808 (one landing per lane on both paths), which moves the coordinator's landings onto the operation that runs the floor; each spec states the gap as residue, and WI-942 still lands ahead of plan item 14's retirement lane."
+alternative = "File a third row adding a hook step that runs the floor over a squash landing's lane range (the drafter's recommendation), later retired by WI-808; or widen WI-943 to include that step."
+reversal_cost = "Low: the hook-step row can still be filed if WI-808 slips."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-010]
+decided = "WI-943's second filing call, settled without asking by the owner's standing rules (fix a single point of failure and never add a fallback or legacy path, 2026-10-03; enforce at the commit, not history, 2026-10-03): an unmarked MEANING ruling authorizes no act at the merge slot whenever its verdict was sat. A verdict sat before WI-912 landed carries no bless marks, so a lane in flight re-sits those rows: WI-902 through its planned reshape, which re-judges or retires acts 113 to 117 before it rebases; WI-798 through recipes section 3's act-turn item 5; adopters through the row's RESYNC entry. No open lane needs a history-keyed exemption."
+alternative = "Admit unmarked MEANING acts under verdicts bound before WI-912's landing commit: a legacy path keyed on history."
+reversal_cost = "Low: a spec clause, critiqued before the claim."
+why_not_escalated = "The owner's standing rules decide it; the drafter recommended the same."
+review = ""
