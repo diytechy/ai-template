@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-18d-attended-coordinator.md](handoff-2026-10-18d-attended-coordinator.md),
+  [handoff-2026-10-18e-attended-coordinator.md](handoff-2026-10-18e-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
@@ -39,8 +39,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   a CPU-time smoke budget is queued after the batch (owner, 2026-10-17).
   The re-sync entry check is in the commit bar: a lane rebased onto a
   newer trunk re-anchors its own RESYNC entry at its new base.
-  The headless coordinator's marking row has landed, and its re-claim
-  reader row is ready. The two merge-slot rows are claimed; their
+  The headless coordinator's marking row has landed, and the guard-hooks
+  row has landed. The re-claim reader row and the launcher's follow-ups
+  row are both critiqued and ready to claim. The bless-mark row is gated
+  and waits only for its rebase, act and landing. The two merge-slot rows are claimed; their
   coordinator-landing gap is the one-landing row's
   (owner, 2026-10-17). The
   disposition-adoption row is re-cut before it resumes, and the
@@ -51,7 +53,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (2026-10-18, coordinator-2026-10-18 D-004) that the queue turn toward
   headless runs: the re-claim reader row and the launcher's follow-ups
   row (filed on trunk, its calls ruled; D-005) are its gate rows, landing after
-  the two lanes at their checkpoints; the session that lands the second
+  the bless-mark lane; the session that lands the second
   writes its handoff without the stop line, the owner starts the launcher,
   and the rest of the queue runs in headless legs.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or

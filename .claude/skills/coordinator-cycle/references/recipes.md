@@ -245,6 +245,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      partial.
   An edited plan or Done-when unbinds the record: remove it, and a fresh
   critique (the cap still counts) must pass the changed plan.
+  So a checkpoint item a handoff or spine change list calls a Done-when
+  amendment, on a `single` row whose pass record stands, goes to the
+  Trust section instead: once the Done-when digest moves, the plan gate
+  refuses every later commit outside the record homes, the reconcile's
+  registry edits, the act and a rebase's RESYNC re-anchor included
+  (wi-927 D-010).
   A row claimed `single` whose lane already holds build commits before its
   pass record fails the landing walk at each of them: rebase those commits
   onto the plan, critique and pass commits, or re-cut the lane and run the
@@ -530,7 +536,10 @@ commit of its own, move it to trunk's tip
     `--archive`;
   - a spec of record (`specref` naming `docs/specs/WI-NNN.md`) that no
     open row cites moves with `spec_move.py --archive docs/specs/WI-NNN.md`
-    in the same close, or R-F refuses it (WI-923, 2026-10-16);
+    in the same close, or R-F refuses it (WI-923, 2026-10-16); the move
+    relinks every spec that links it, another open lane's spec of
+    record included, so expect that lane's rebase to meet the relink
+    (WI-926's, at WI-927's close, 2026-10-18e);
   - scrub the id from `status.md`'s hand text in the same commit;
   - keep hand-filed slugs to the handoff's 37-character ceiling; the kit's
     spec writer uses a 30-character title prefix (`wi_convert.SLUG_CHARS`).
@@ -540,6 +549,9 @@ commit of its own, move it to trunk's tip
   The bar's `check_resync` refuses every commit of a lane rebased past
   WI-916 until its entry exists, so a plan step that writes the entry
   later moves into the first commit after the rebase (wi-927 D-005).
+  A last rebase onto a trunk that moved only by docs commits replays
+  cleanly and leaves the entry at the old base: re-anchor it in the
+  staged squash on trunk, at the landing's parent (WI-927, 2026-10-18e).
 - **Archive the tips** to `archive/lanes`, adding the pre-rebase tip the
   verdicts cite (and any discarded act) as extra parents. Archive commits
   carry the empty tree, `4b825dc642cb6eb9a060e54bf8d69288fbee4904`. Read the
@@ -612,6 +624,10 @@ lane commit being replayed.
   --strict` lists them as spent with no retirement record until their own
   lanes land. Record the floor in the lane's decisions; never retire them
   (WI-913 D-004).
+- Show that a rebase changed no lane code or row by comparing
+  `git diff <old base> <old tip> | git patch-id --stable` with the same
+  over the new base and tip: equal ids owe no post-rebase round, and the
+  judged rows still get their unchanged-rows check (wi-927 D-013).
 - Acts collide too: check `acts.toml` after every rebase for duplicate act
   seqs (the skill's §4 latches sittings to avoid them).
 - A registry cell's line can carry leading whitespace (` detail = "...`):
@@ -900,6 +916,11 @@ lane commit being replayed.
   `podman-machine-default`, which has no git. Run the same modules at
   the lane's base in the same clone, so a red the base shares is not
   charged to the lane (two `run.command` cases, 2026-10-18c).
+  To confirm that a fix's regression test fails on the pre-fix code on
+  POSIX, check out the pre-fix scripts over today's tests in the WSL
+  clone (`git checkout <pre-fix> -- project-trajectory scripts`), run the
+  test, then restore (`git checkout FETCH_HEAD -- .`); a test that passes
+  on both is a pin, not the convergence map's evidence (wi-927 D-011).
   Clone into WSL's own filesystem (`git clone /mnt/c/Projects/ai-template
   ~/<lane>-posix`, about a minute), check out detached, run serially. From
   Git Bash, prefix a `wsl.exe` call that passes a `/mnt/c/...` path with
