@@ -881,12 +881,13 @@ lane commit being replayed.
   pairs instead; a commit that changes code or tests, or grows the tier,
   and every landing, still takes its own pair (coordinator-2026-10-17
   D-011, 2026-10-17e).
-- The declared bar passes no `--basetemp`, so it uses pytest's default
-  numbered folders, which keep only the newest three: with four or more
-  pytest runs at once, a new run's start deletes the oldest run's folder
-  and that bar dies mid-tier with no summary line (a lane and parent
-  pair beside two builders, 2026-10-18d). Re-run it, and take bar pairs
-  while at most one other pytest run is live.
+- A bar that stops mid-tier with no summary line was terminated, not
+  failed: a test error still prints a summary, and pytest locks a live
+  run's default basetemp, so concurrent runs do not prune each other
+  (checked on pytest 9.1.1). A lane and parent pair died that way beside
+  two builders on 2026-10-18d, cause unknown. Write every bar to a fresh
+  log path so the dead run's output survives, re-run it, and file a
+  defect row with the kept log if it recurs.
 - Never grep the whole scratch root: its basetemps hold gigabytes, and
   a recursive search there outran the tool's two-minute cap
   (2026-10-17). Never grep `tests/test_module_size_ratchet.py` with a

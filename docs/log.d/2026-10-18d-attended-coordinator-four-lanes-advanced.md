@@ -26,9 +26,10 @@ ends committed with a clean tree.
   Terra's intent set was committed with build round 1 (D-001, D-003).
 - **Bars:** every commit's smoke tier was over budget under the box's load,
   and each commit that changed code read beside its parent's in the same
-  window (lane and parent within a few seconds every time). Two bars that
-  ran beside two builders died mid-tier, because pytest's default basetemp
-  keeps only three folders; both were re-run.
+  window (lane and parent within a few seconds every time). One lane and
+  parent pair, run beside two builders, was terminated mid-tier with no
+  summary line, cause unknown (its logs were overwritten by the re-run);
+  both were re-run.
 - **Full suite:** not re-run; no trunk code changed.
 - **Procedure folded into the recipes:**
   - an IF row's owner and requestors hold `scripts/<module>` ids until the
@@ -36,4 +37,5 @@ ends committed with a clean tree.
   - Terra's template excludes the flows file, and it cannot write a new
     IF's contract body;
   - a parent worktree is cut at the lane's sha;
-  - take bar pairs while at most one other pytest run is live.
+  - a bar that stops with no summary line was terminated: keep its log,
+    re-run, and file a defect row if it recurs.
