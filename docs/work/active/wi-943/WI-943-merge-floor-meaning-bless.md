@@ -210,7 +210,7 @@ act (owner ruling 6; WI-841; WI-912's Trust section). This row moves one
 part of that authority: on a released rung, an amendment verdict now
 authorizes a MEANING re-attestation only through its bless mark. Written
 before the claim, under
-[`PROCESS.md` §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+[`PROCESS.md` §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producer.** The judging turn writes the input: an adjudicator session
   launched from the lane by `coordinator_adjudicate.py adjudicate`, or by the
