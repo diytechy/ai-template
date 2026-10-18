@@ -7,8 +7,10 @@
      what one could hold. This brief COMPOSES them: each section below is the
      kind's own shipped brief, composed by the kind's own assembler over the
      ids this row's `Adjudicates` cell scopes to it (`<kind>:<id>` tokens), so
-     each section keeps its own grammar and its own acts, and text-then-act
-     still applies to every act a section owes. A section that cannot be
+     each section keeps its own grammar. The sitting ends at its committed
+     verdict: the acts its sections authorize are a later act turn taken
+     from that verdict (WI-912; revisions 32 and 36 of the review-churn
+     plan), text before act. A section that cannot be
      composed refuses the whole sitting (all-or-nothing). A RETURNED item is
      re-sat alone: the next sitting names only the returned ids.
 
@@ -22,7 +24,7 @@
        {wi}        this adjudication row's own id, for the result trailer.
 -->
 
-You are an INDEPENDENT adjudicator holding ONE sitting for a lane checkpoint. It composes several judgements, each in its own section below. Each section is a complete brief for its kind: answer each one exactly as its section asks, with its own machine line, and take each act a section owes in its own reviewed commit, text before act.
+You are an INDEPENDENT adjudicator holding ONE sitting for a lane checkpoint. It composes several judgements, each in its own section below. Each section is a complete brief for its kind: answer each one exactly as its section asks, with its own machine line. The sitting ends at its committed verdict: the acts its sections authorize are a later act turn taken from that verdict.
 
 Write ONE verdict file at {verdict}, with one heading per section, spelled exactly `## <kind>` (for this sitting: {kinds}). Under each heading write that section's verdict lines and its machine line, and nothing for another kind. A section that asks for a `## Dispositions` draft takes it under its own heading.
 
@@ -30,6 +32,6 @@ End the file with exactly one machine line naming every section you judged:
 
     SITTING: JUDGED kinds={kinds}
 
-Each section below says to commit its verdict file: commit this ONE file once, after every section is written, ending that commit with the trailer `WI: {wi}`; then take each act a section owes.
+Each section below says to commit its verdict file: commit this ONE file once, after every section is written, ending that commit with the trailer `WI: {wi}`, and stop there.
 
 {sections}

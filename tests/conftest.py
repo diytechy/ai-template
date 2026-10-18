@@ -287,6 +287,7 @@ SLOW_MODULES = frozenset(
         "test_baseline_snapshot",  # 40 tests, 31.3 s: `scaffold` + repeated trace.py/intake.py run_py subprocesses
         "test_selection_at_or_above",  # 16 tests, 26.8 s: `scaffold` + derive_stage.py/check.py subprocesses
         "test_adjudicate_brief",  # 48 tests, 24.9 s: real git repos + agent_loop.py driven as a subprocess (test_agent_loop_review's class)
+        "test_coordinator_act",  # WI-912: 39 cases, 48.0 s at -n 2 (3 to 6 s each): real git lanes + the act turn through a stub adjudicator; the tier read 26 s over its parent in one window; test_adjudicate_act keeps the family's in-process pin
         "test_intake",  # 26 tests, 23.5 s: a real `git init`/commit repo built per test (test_handback's class)
         # Nothing here is deleted or weakened: all five still run in full at
         # slice/phase close and in CI. Re-stamped seconds/max-tests together

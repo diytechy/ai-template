@@ -8608,6 +8608,54 @@ setting or record format changes. If your own tooling wraps a session in
 end again: let it stop the run rather than continue. A handler that follows
 the earlier advice (catch `BaseException` and re-raise) keeps working.
 
+### The sitting ends at its verdict; its act is a later turn [since 702ce8511]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** An adjudication sitting now judges only. The
+first-approval, amendment and combined briefs end at the committed verdict:
+they no longer tell the session to flip a `Status`, take the
+`intake.py snapshot` copy or re-attest, and the first-approval brief loses
+its `{registries}` and `{approves_rows}` slots. The act is a later
+adjudicator turn, composed from the verdict and its binding as committed at
+the lane's HEAD by the new act brief (`prompts/adjudicate-act.template.md`,
+key `ADJUDICATE-ACT`) and its assembler, `scripts/adjudicate_act.py`. That
+assembler lists only the acts still owed and refuses a verdict that is not
+accepted, owes no act, or judged a row in a state no act explains. The
+amendment verdict gains a bless mark, `- [MEANING+BLESS] <row-id> ...`: a
+MEANING row is re-attested only with it, and only on a released rung; an
+unmarked MEANING row is not re-anchored. `scripts/coordinator_adjudicate.py`
+gains an `act --verdict PATH --wi WI-N` command, which runs only from a clean
+claimed lane and succeeds only when nothing the verdict authorizes is left
+owed and nothing was written under `docs/reviews/`. Under the loop marker,
+every prompt the entry point launches now ends with the loop's
+`Loop-Session` instruction. `PROCESS_OPTIONS.md` "Who performs the approval
+act" states the split.
+
+**Kit-owned files — overwrite:** `prompts/adjudicate-first-approval.template.md`,
+`prompts/adjudicate-amendment.template.md`,
+`prompts/adjudicate-combined.template.md`,
+`prompts/adjudicate-act.template.md` (new), `prompts/README.md`,
+`prompts/CATALOG.md` (regenerate),
+`scripts/adjudicate_brief.py`,
+`scripts/adjudicate_act.py` (new), `scripts/coordinator_adjudicate.py`,
+`scripts/prompts.py`, `scripts/kitlib/verdict.py`,
+`scripts/kitlib/bootstrap_manifest.py` and `PROCESS_OPTIONS.md`.
+
+**What to do.** Overwrite the files. No migration is forced: no registry,
+setting or record format changes. A retained adjudicator session drains once,
+on its next call, because the act brief joins the governing identity of the
+retained classes that can act. A verdict you sat before upgrading whose act
+is still owed carries no bless marks: re-sit it, then take its act with
+`act`. An operator override of the first-approval brief under
+`--prompt-map` that still names `{registries}` or `{approves_rows}` now
+refuses to compose: drop those slots.
+
+**The loop's route has no act turn yet.** Its sittings end at their verdict,
+and nothing in the loop takes the act. The loop's act turn is built in
+WI-809; keep the managed loop paused until it lands. WI-801, which replaces
+`coordinator_adjudicate.py` with `ask`, carries the `act` command with it.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

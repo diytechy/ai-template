@@ -109,6 +109,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import adjudicate_act
 import agent_brief
 import agent_common as ac
 import baseline_snapshot
@@ -914,11 +915,14 @@ def _aftermath(root, tiers):
 
 # The aftermath's wording per dial arm. The ARM each verdict takes on a held
 # rung is `intake.adjudication_action`'s answer, read above, never restated.
+# The sitting ends at its committed verdict (WI-912, revisions 32 and 36): the
+# act is a later act turn, so each arm says what the verdict must record for
+# that act, never an act of its own.
 _RELEASED_AFTERMATH = (
     "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
-    "authority has RELEASED, so a CLARITY verdict, and a MEANING verdict you "
-    "would bless, is re-attested BY YOU, in this session, in its own reviewed "
-    "commit: name each such row in `--reattests`."
+    "authority has RELEASED, so a CLARITY row is re-attested by the later act "
+    "turn, and so is a MEANING row you mark `[MEANING+BLESS]`; a row you mark "
+    "plain `[MEANING]` is not re-anchored."
 )
 _HELD_AFTERMATH = (
     "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
@@ -926,11 +930,9 @@ _HELD_AFTERMATH = (
     "verdict on them {}."
 )
 _HELD_ARMS = {
-    "reattest": "is re-attested BY YOU as a judgement act, in its own reviewed "
-    "commit, naming the verdict that ruled it: `python scripts/intake.py "
-    "snapshot --reattests <ROW-ID>[,<ROW-ID>...] --verdict <your verdict "
-    "file>`; the act ledger records the verdict and the owner's surface lists "
-    "the act for audit",
+    "reattest": "is re-attested by the later act turn as a judgement act, "
+    "naming this verdict; the act ledger records the verdict and the owner's "
+    "surface lists the act for audit",
     "recommend": "stops at your verdict and the signature is the owner's — "
     "recommend it to the owner and do not re-anchor it",
 }
@@ -1053,7 +1055,7 @@ def _render_assumption_cases(root, reg, scope, registries):
 
 
 def first_approval_values(root, row):
-    """`({chain, baseline, registries}, None)` for the spine rows a lane
+    """`({chain, baseline, questions}, None)` for the spine rows a lane
     authored `Drafted` and did not approve, or `(None, reason)`.
 
     THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, in the authoring lane or
@@ -1137,11 +1139,11 @@ def first_approval_values(root, row):
     dropped entirely. If nothing survives, this REFUSES: a brief whose every row
     belongs to the owner or to another act is not this arm's question.
 
-    `{registries}` is the `--approves REGISTRY=REF` argument the approving
-    commit owes, derived from the registries the RELEASED rows live in.
-    Building it here rather than leaving it to the session is the difference
-    between an act that records its own scope and one that names whatever the
-    session remembered to type.
+    The registries the RELEASED rows live in are still walked, for the tiers
+    whose questions `{questions}` carries. The act's `--approves` argument is
+    no longer derived here: the sitting ends at its committed verdict, and the
+    later act turn derives it from the rows that verdict APPROVES
+    (`adjudicate_act`, WI-912).
 
     Implements: SR-146, LLR-167
     """
@@ -1209,44 +1211,25 @@ def first_approval_values(root, row):
     questions, why = tier_questions(_judged_tiers(registries))
     if questions is None:
         return None, why
-    wi_id = (row.get("WI-ID") or "").strip()
     # Each registry the act would copy, with the commit that last wrote ITS
     # copy rather than the directory's newest write (another registry's copy).
     baseline = (
         "{}, each registry this act copies as last written:\n{}\nApproving "
-        "these rows moves it for the registries you flip and for no others "
-        "(WI-571), so an off-spine census computed against it survives your "
-        "act.".format(
+        "these rows moves it for the registries the act flips rows in and for "
+        "no others (WI-571), so an off-spine census computed against it "
+        "survives the act.".format(
             baseline_snapshot.SNAPSHOT_DIR,
             _copy_stamp_lines(root, sorted(registries)),
         )
         if baseline_snapshot.exists(root)
-        else "{} does not exist yet — your act is this repo's FIRST signing, "
-        "and `--seed` is what creates it.".format(baseline_snapshot.SNAPSHOT_DIR)
+        else "{} does not exist yet — approving these rows would be this "
+        "repo's FIRST signing, which `--seed` creates.".format(
+            baseline_snapshot.SNAPSHOT_DIR
+        )
     )
     return {
         "chain": "\n".join(lines),
         "baseline": baseline,
-        # No empty fallback: `registries` is non-empty exactly when `lines` is,
-        # and an empty `lines` refused above. The placeholder that used to sit
-        # here ("(no registry — nothing here is Drafted)") described a state the
-        # refusal now makes unreachable — and rendering it would have been rule
-        # 2's failure, a `--approves` slot filled with prose.
-        "registries": baseline_snapshot.format_approves(
-            {rel: wi_id or "this adjudication" for rel in registries}
-        ),
-        # WHICH ROWS EACH TOKEN COVERS. The argument above is written for an
-        # ALL-APPROVE verdict, which the template blesses this session not to
-        # give ("a MIXED batch is normal"). Naming a registry whose rows were
-        # all returned re-anchors text nobody approved, and the merge slot
-        # refuses it as WIDENED — so the drop rule needs the mapping, derived
-        # here rather than left to the session to reconstruct from row kinds.
-        "approves_rows": "\n".join(
-            "    - `{}={}` covers {}".format(
-                rel, wi_id or "this adjudication", ", ".join(rids)
-            )
-            for rel, rids in registries.items()
-        ),
         # The questions for the tiers of the rows marked as this session's,
         # from the one home (`tier_questions`).
         "questions": questions,
@@ -1855,7 +1838,26 @@ def governing_templates(classes, prompt_templates=None, role="ADJUDICATE"):
     # governs them whether or not their template is overridden.
     if set(classes or ()) & set(QUESTION_BRIEFS):
         paths.append(QUESTIONS_HOME)
+    _add_act_template(classes, prompt_templates, paths, texts)
     return paths, texts
+
+
+def _add_act_template(classes, prompt_templates, paths, texts):
+    """The act brief's identity, added when `classes` holds an actable class
+    (`adjudicate_act.ACTABLE`, the set's one home: the classes whose verdict
+    the act turn takes): the act turn is launched on the session that retains
+    the verdict's class, so an edit to the act brief, or its override, drains
+    it like any other retained template's.
+
+    Implements: SR-227, LLR-305"""
+    if not set(classes or ()) & set(adjudicate_act.ACTABLE):
+        return
+    key = prompts.ADJUDICATE_ACT
+    override = (prompt_templates or {}).get(key)
+    if override:
+        texts.append(override)
+    else:
+        paths.append(prompts.template_path(key))
 
 
 def compose(root, row, verdict_path, prompt_templates=None):

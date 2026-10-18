@@ -1,0 +1,20 @@
+Reviewed: 324787db5aaf94ee298590d9d3fc566a7773bd47
+
+### INDEPENDENT PLAN CRITIC — Plan decomposition — Round 1 — 2026-10-17
+
+Reviewer provenance: fresh non-author Codex session, invoked as the independent critic for the coordinator's WI-912 plan critique round 1. This session did not produce the plan. No provider session id was supplied. The assigned review record is this file; no separate human-chosen reviewer was supplied. No implementer session notes, docs/status.md, docs/log.md, adjacent critique files, or implementer self-assessments were consulted. The WI spec was read in full as required, including its embedded spec-critique dispositions; those dispositions were not treated as findings or evidence of plan quality.
+
+Artifact recipe: read the plan and the complete WI spec through git show at the Reviewed revision, followed the specref to docs/plans/2026-10-11-review-churn/README.md §16, and inspected the supplied coverage report. This is a text artifact, inspected directly; no image proxy was needed.
+
+Rubric: docs/rubrics/plan-decomposition.md at the Reviewed revision (WI-190, including WI-913's single-plan use). Intent sources at that revision: docs/work/active/wi-912/WI-912-verdict-act-split.md, its specref §16 (particularly revisions 31, 32 and 36), docs/requirements/system-requirements.toml SR-231/SR-146/SR-232/SR-209, and their parents SN-025/SN-005/SN-029 in docs/requirements/stakeholder-needs.toml.
+
+Rubric derivation check, before scoring: the anchors independently cover this artifact's obligations. DevStg-Tests and B2 require substantive coverage of the verdict-only sitting, accepted-verdict authority, recovery partition, retained/fresh execution, provenance, trace amendments and landing checks; DevStg-Reqs requires executable steps; DevStg-Impl/B3 separate the deliverables; G4/B4 judge buildable order; B1 judges the introduced assembler seam. The explicit DELTA question covers the inter-turn pending-act state, new command/prompt/mark domains, committed-verdict input and new module boundary. These tests of the plan derive from the scoped intent and Done-when, rather than copying permissive TC assertions. No additional B# anchor is needed.
+
+Transfer caveat: the supporting debate/selection evidence comes from QA, math and code with objective verifiers; it does not benchmark plan artifacts. Two-planner reconciliation for plan quality remains an open research gap. This rubric is an extrapolation, not a proven instrument.
+
+Anchor coverage: judged DevStg-Reqs, DevStg-Tests, DevStg-Impl, G4, B1, B2, B3 and B4. DevStg-Tests/B2: D1-D7 have substantive deliverables and checks, with no silent exclusion. DevStg-Impl/B3: the repeated D1/D2 citations divide grammar, template, derivation, launch and provenance work; D3 divides trace authoring from the actual checkpoint; D4 divides synchronization from landing verification. These are distinct deliverables, and P2 explicitly assigns its shared template edit to P5. G4/B4: the declared order carries the replacement brief and assembler into the launcher, then trace/checkpoint/landing verification. B1: the proposed assembler consumes existing readers and distinguishes its accepted-verdict-to-act contract from IF-115's judging composition and outcome recording. DELTA: within is justified; P2-P8 carry each identified change. DevStg-Reqs has the minor recipe defect below; the other rows name deliverables and checkable completion conditions.
+
+Findings:
+- [MINOR] DevStg-Reqs -> plan.md, P11 detailed step 1: its concrete `coordinator_adjudicate.py adjudicate --brief combined --wi WI-912 --verdict ...` command omits `--brief-file`, which the existing parser requires. P6 adds an act command but does not remove this requirement from adjudicate. Consequently the checkpoint recipe refuses at argument parsing instead of consuming the combined brief composed immediately beforehand. This is a local recipe correction, not a missing capability or a build-round defect -> name the composed brief's output path and pass `--brief-file <that path>` in P11's judging command -> @planner
+
+VERDICT: CHANGES-REQUESTED findings=1

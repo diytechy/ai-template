@@ -228,3 +228,41 @@ sequenceDiagram
     end
     Keep->>Win: keep-warm tick: inside? (no ping), else retire a stale session first
 ```
+
+### Flow 6 — The coordinator's judging turn and act turn (SR-231, SR-232, SR-209, LLR-306, LLR-338)
+
+A judging turn reserves and binds a verdict, launches its judging brief,
+commits and accepts the verdict, then stops. After the lane has rebased and
+the coordinator has confirmed the judged rows are unchanged, a later act turn
+derives only the remaining authorized work from that committed verdict.
+
+```mermaid
+sequenceDiagram
+    participant Coord as coordinator adjudication entry
+    participant Lane as claimed clean lane
+    participant Verdict as committed verdict and binding
+    participant Keep as retained adjudicator plan
+    participant Agent as adjudicator session
+    participant Records as approved-row records
+    Coord->>Lane: confirm the judging lane claim (SR-231)
+    Coord->>Verdict: reserve path and bind the judging brief (LLR-306)
+    Coord->>Agent: launch judging brief
+    Agent->>Verdict: commit verdict
+    Coord->>Verdict: validate and record accepted verdict
+    Note over Coord,Verdict: The judging turn stops here.
+    Coord->>Lane: confirm lane claim and no uncommitted change (SR-231/LLR-306)
+    Coord->>Verdict: read accepted verdict and binding at HEAD (LLR-338)
+    alt verdict is unaccepted, owes no act, or has an unexplained row state
+        Coord-->>Lane: refuse before launch, naming the input
+    else later act is owed
+        Coord->>Keep: plan by the verdict's bound class (LLR-338)
+        Coord->>Agent: launch complete act brief; append loop provenance when marked (SR-209)
+        Agent->>Records: take amendment act, then first-approval act
+        Coord->>Verdict: re-derive owed work and inspect verdict-record changes
+        alt call succeeded, nothing owed, and verdict records unchanged
+            Coord-->>Lane: complete
+        else work remains or verdict records changed
+            Coord-->>Lane: fail after launch, naming the remaining condition
+        end
+    end
+```

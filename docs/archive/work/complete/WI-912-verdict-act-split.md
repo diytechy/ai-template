@@ -3,13 +3,41 @@ id = "WI-912"
 title = "An adjudication sitting ends at its committed verdict, and its act is a later adjudicator turn taken from that verdict"
 workstream = "process"
 sr_refs = ["SR-231", "SR-146", "SR-232", "SR-209"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#16-one-mint-across-parallel-lanes"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-911", "~WI-913"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-17, after its post-checkpoint gate:
+
+- The three judging briefs (first approval, amendment, combined) and the
+  composer's aftermath arms order no act: a sitting ends at its committed
+  verdict, and its amendment verdict marks a row it blesses
+  `[MEANING+BLESS]`, read by one reader in `kitlib.verdict`.
+- `adjudicate_act.py` derives, from a verdict accepted at a revision, every
+  act it authorizes that the committed tree does not yet carry: APPROVE
+  flips and CLARITY or blessed MEANING re-attestations, each row's arm read
+  from the one held-rung act policy, a retirement owed while the snapshot
+  copy holds the row and none on a held rung; every other state refuses,
+  naming the row.
+- `coordinator_adjudicate.py act` takes that act as a later adjudicator
+  turn from the lane, reserving no verdict and writing no binding, and
+  reports success only when nothing listed is left owed and nothing under
+  `docs/reviews/` changed; every launched prompt carries the loop
+  provenance line under the marker.
+- The act brief is a shipped prompt; `PROCESS_OPTIONS.md`, the
+  coordinator-cycle skill and its recipes describe the split; one RESYNC
+  entry, no forced migration, stating that the loop's route has no act turn
+  until its own row lands.
+- This lane's checkpoint ran in the new shape: sitting
+  005-ADJUDICATE-6735c68 judged the set (ten amendments blessed, LLR-338
+  and TC-368 approved), the lane rebased, and the act turn took acts 126
+  and 127.
 
 ## Context
 
@@ -262,8 +290,17 @@ slot's bound today, unchanged here.
     whole-registry copy carries Drafted rows), and taken when the row is
     Approved and its snapshot copy equals its committed text. A re-attest of
     an Approved row is taken when the copy equals the row's committed text,
-    and owed otherwise. Any other state, such as an Approved row without an
-    equal copy at a first approval, or a re-attest of a row below Approved,
+    and owed otherwise. A re-attest of a row absent from the committed tree
+    is a retirement: owed while the row's snapshot copy still holds it,
+    named in `--reattests` like any re-attest, and taken once the copy no
+    longer holds it (owner, 2026-10-17, at the triage of the first counted
+    review round). On a held rung a retirement owes no act: removing a held
+    row is the owner's, since the held rung lets an adjudication re-attest
+    only an amended row. The merge slot's own refusal of a retirement whose
+    registry carries no other act in the branch predates this row and is
+    left to a follow-up row. Any other state, such as an Approved row without an
+    equal copy at a first approval, a first approval of a row absent from
+    the committed tree, or a re-attest of a row below Approved,
     is inconsistent: it is refused before the launch, naming the row, and
     never counted as taken. The act turn also refuses a lane with
     uncommitted changes before the launch, naming the paths. So an act

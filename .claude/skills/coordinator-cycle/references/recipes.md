@@ -314,8 +314,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      next locked read; an absent or unreadable record means no retained
      session is known, and a malformed one is no record. Never edit or
      delete a record or a marker.
-  7. The adjudicator commits its verdict and its act. The entry point commits
-     the telemetry.
+  7. The adjudicator commits its verdict, and the sitting ends there. The
+     entry point records the outcome beside it and commits the telemetry. The
+     verdict's act is a later act turn, after the rebase (§3).
 - **Dispute sitting,** from the lane root:
   1. Write the findings file beside the verdict it will get,
      `docs/reviews/<lane>/NNN-DISPUTE-findings.toml`, in the shape
@@ -401,15 +402,44 @@ commit of its own, move it to trunk's tip
     commit that moved it (the hook refuses a stale row), in the tab-separated
     `docs/complexity-baseline`. Never run a full `--restamp`: it rewrites every
     row's line count and writes any row that grew.
-- **The adjudicator's act** (last spine commit; session telemetry may follow):
-  1. Stash the act files.
-  2. Commit the verdicts.
-  3. Pop the stash.
-  4. Commit the act: Status flips and the snapshot only.
+- **The act turn** (last spine commit; session telemetry may follow), from
+  the lane root, after the rebase:
+  1. Before the rebase, note the commit that added the verdict. After it,
+     compare each judged row at that commit (`git show <verdict
+     commit>:<registry>`) with the same row at the rebased tip. A changed or
+     renumbered row is re-sat; never act on it.
+  2. Run it in the background, as the sitting ran:
+     `"$PY" -u "$SCRIPTS/coordinator_adjudicate.py" act --verdict <path> --wi WI-NNN`.
+     It composes the act brief from the verdict and its binding as committed
+     at HEAD and launches it on the retained session where the dial retains
+     the verdict's class, else fresh. It writes no verdict and no binding.
+  3. Read the exit code:
+     - 0: every act the verdict authorizes is committed;
+     - 1: the call failed, an act is still owed (printed), or the call wrote
+       under `docs/reviews/`;
+     - 2: refused before launch: not a lane, uncommitted changes (named), a
+       verdict not accepted at HEAD, one that owes no act (a re-run after a
+       completed act), or a judged row in a state no act explains (named);
+     - 7: as for `adjudicate`.
+  4. An act that stopped between its flip and its snapshot leaves the flip
+     uncommitted, and the next `act` refuses the lane as dirty. Discard the
+     named paths (`git checkout -- <paths>`), record that as a decision, and
+     re-run: it lists the whole act again. A combined act stopped between its
+     two commits re-runs with only its first-approval act.
+  5. A lane in flight when WI-912 landed: a verdict sat before it whose act is
+     still owed carries no bless marks, so re-sit it, recorded as a decision.
 
-  Name CLARITY rows and retired rows in `--reattests`. For held-rung CLARITY
-  re-attests, pass `--verdict <path>` naming the ruling. Take one act per kind
-  of judgement, in the combined brief's order: the amendment act
+  The act brief lists its own `--reattests` and `--approves` rows: CLARITY
+  rows, a MEANING row the verdict marks `[MEANING+BLESS]` on a released rung,
+  and APPROVE rows on a released rung; on a held rung a CLARITY re-attest
+  names the verdict with `--verdict`. A row the verdict rules CLARITY that
+  the lane deleted (a retired row) is listed in `--reattests` until its
+  recorded copy drops it; on a held rung it owes no act (removing a held row
+  is the owner's); and the merge slot still refuses a retirement whose
+  registry carries no other act in the branch (a residue left to a follow-up
+  row). A first approval of a row absent at HEAD is refused as inconsistent.
+  The act turn takes one act per kind of judgement, in the combined brief's
+  order: the amendment act
   (`--reattests`) first, then the first-approval act (`--approves`). A
   first-approval copy is refused while an approved row in its registry still
   drifts unattested, and the amendment act clears that drift first. The old

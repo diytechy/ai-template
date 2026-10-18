@@ -104,7 +104,8 @@ KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 PROMPTS = KIT / "prompts"
 
 # The kit prompts that are NOT dual-plan hats: the session-engine briefs, and
-# the nine adjudicator briefs the adjudication routes compose. Key -> filename.
+# the nine adjudicator briefs the adjudication routes compose, and the act
+# brief a committed verdict's act turn is composed from. Key -> filename.
 #
 # A key is also a `--prompt-map` phase key wherever the loop honours an
 # override. `WORKER` deliberately is NOT honoured there (`route_session`: "the
@@ -135,6 +136,10 @@ ADJUDICATE_COMBINED = "ADJUDICATE-COMBINED"
 # The DISPUTE brief (WI-865): a review finding the lane's builder or
 # coordinator contests, or one at its third round, ruled by the adjudicator.
 ADJUDICATE_DISPUTE = "ADJUDICATE-DISPUTE"
+# The ACT brief (WI-912): the later adjudicator turn that takes the act a
+# committed verdict authorizes, composed by `adjudicate_act.py`. Not a judging
+# class, so it is in no brief table of `adjudicate_brief`.
+ADJUDICATE_ACT = "ADJUDICATE-ACT"
 # The SINGLE-PLAN brief (WI-913): the in-lane planner of a claimed row whose
 # claim copy declares `planmode = "single"`, rendered by `review_brief.py plan`.
 PLAN_SINGLE = "PLAN-SINGLE"
@@ -152,6 +157,7 @@ KIT_PROMPTS = {
     ADJUDICATE_DONE_WHEN: "adjudicate-done-when.template.md",
     ADJUDICATE_COMBINED: "adjudicate-combined.template.md",
     ADJUDICATE_DISPUTE: "adjudicate-dispute.template.md",
+    ADJUDICATE_ACT: "adjudicate-act.template.md",
     PLAN_SINGLE: "plan-single.template.md",
 }
 

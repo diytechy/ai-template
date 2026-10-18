@@ -11,9 +11,16 @@ loop uses (`session_service.AdjudicationRequest`, `adjudication_keep`, which
 also derives the governing template identity), and the launch and the
 session log by `session_service.call`.
 
+A sitting ends at its committed verdict, and its act is a later adjudicator
+turn taken from that verdict (WI-912; revisions 31, 32 and 36 of the
+review-churn plan): `adjudicate` runs the judging turn, `act` the act turn,
+which `adjudicate_act` composes from the verdict accepted at the lane's HEAD.
+Under the loop marker every prompt either command launches ends with the
+loop's `Loop-Session` instruction.
+
 TEMPORARY. WI-801's `ask` becomes the one launcher for the loop and the
 coordinator alike; it deletes this entry point and moves its callers and
-tests to its adjudicate kind.
+tests to its adjudicate kind, and it must carry the `act` command with them.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
@@ -36,6 +43,14 @@ Contract IF-283: the coordinator's adjudication command line, its arguments.
     `docs/agents.toml` named on `docs/agents-enabled`, as an ADJUDICATE call
     of brief class CLASS for WI-N, retained where the `[adjudicator]` dial
     covers it, and writes and commits the call's session log.
+    `act --verdict PATH --wi WI-N [--route ID] [--root DIR] [--timeout
+    SECONDS]` runs only from a lane, as `adjudicate` does, with no
+    uncommitted change in it: it composes the act brief from the verdict at
+    PATH (repo-relative) and its binding as committed at the lane's HEAD,
+    launches it on the route as an ADJUDICATE call for WI-N, retained where
+    the `[adjudicator]` dial retains the verdict's bound class and fresh
+    otherwise, and writes and commits the call's session log. It reserves no
+    verdict path, writes no binding and records no outcome.
     `signin [--family F] [--root DIR] [--retained]` prints the sign-in
     probe's reading for family F (default ANTHROPIC), creating nothing and
     making no model call; for ANTHROPIC the reading is whether the long-lived
@@ -51,7 +66,14 @@ Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     decoded, a PATH that exists or cannot be reserved, or a launch the
     blackout window refuses (the session service admits only an
     adjudication of a work item whose claim is active there); and 7 (needs a human) when the retained launch is refused
-    because its dedicated CLI home is not signed in. `signin` exits 0.
+    because its dedicated CLI home is not signed in. `act` exits 0 only when
+    the call succeeded, HEAD then carries in full every act the verdict
+    authorizes, and nothing under docs/reviews/ changed; 1 otherwise after a
+    launch; 2, before anything launches, for a root that is not a lane, an
+    unusable route, a lane with uncommitted changes, a verdict that is not
+    accepted at HEAD, owes no act or judged a row in a state no act explains,
+    or a launch the blackout window refuses; and 7 as `adjudicate`. `signin`
+    exits 0.
 
 Contract IF-285: the command's stdout readings. `adjudicate` prints the
     call's keep, its exit, and, for a call that SUCCEEDED
@@ -59,7 +81,10 @@ Contract IF-285: the command's stdout readings. `adjudicate` prints the
     error result the CLI reported), the verdict file at PATH with its
     validity under the brief class's grammar, or that the verdict is missing
     when the call left its reservation empty; any other call prints that it
-    failed and that its verdict is not read. `signin` prints the sign-in probe's reading: `signed-in`,
+    failed and that its verdict is not read. `act` prints its keep and exit,
+    then the acts still owed at HEAD after the call, the paths it changed
+    under docs/reviews/, or `act: complete`; a refusal prints `act: refused:`
+    and why, naming the uncommitted paths or the inconsistent row. `signin` prints the sign-in probe's reading: `signed-in`,
     `missing` or `unknown`, or `off` under `--retained` with retention off.
 
 Run with Python 3.11+:  python scripts/coordinator_adjudicate.py adjudicate \\
@@ -73,19 +98,24 @@ import sys
 from pathlib import Path
 
 try:
+    import adjudicate_act
     import adjudicate_brief
+    import agent_brief
     import agent_common
     import agent_route
     import integrate
     import session_service
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import adjudicate_act
     import adjudicate_brief
+    import agent_brief
     import agent_common
     import agent_route
     import integrate
     import session_service
 from kitlib.config import utf8_console
+from kitlib.git import git_out
 
 # The coordinator's adjudicator: the strong Anthropic route (owner, 2026-10-05).
 # Implements: SR-231, LLR-306
@@ -276,6 +306,45 @@ def _timed(outcome):
     return " (timed out)" if outcome.timed_out else ""
 
 
+def _launched(prompt):
+    """The prompt as the entry point launches it: under the loop marker, with
+    the loop's `Loop-Session` instruction appended
+    (`agent_brief.loop_provenance_note`, "" without the marker), so one
+    construction covers every prompt either command launches (WI-912, Q4).
+
+    Implements: SR-209, LLR-306
+    """
+    return prompt + agent_brief.loop_provenance_note()
+
+
+def _call(root, row, request, kept, prompt):
+    """Launch `prompt` (as `_launched` makes it) on the route as the request's
+    adjudication call under `kept`, and record its session log; raises
+    BlackoutRefused as `session_service.call` does.
+
+    Implements: SR-231, LLR-306
+    """
+    return session_service.call(
+        session_service.Call(
+            root=root,
+            role=request.role,
+            template=row.cmd_template,
+            model=row.model or row.id,
+            prompt=_launched(prompt),
+            provider=row.family,
+            tier=row.tier,
+            route_id=row.id,
+            source_event="coordinator",
+            attribution={"wi": request.wi},
+            env=session_service.route_env(row),
+            timeout=request.deadline,
+            idle_timeout=IDLE_TIMEOUT,
+            keep=kept,
+            wi=request.wi,
+        )
+    )
+
+
 def adjudicate(args):
     """Compose the request, plan the keep, launch and record, report.
 
@@ -286,7 +355,6 @@ def adjudicate(args):
     if why:
         print("adjudicate: refused: {}".format(why))
         return agent_common.EXIT_PREFLIGHT
-    env = session_service.route_env(row)
     request = session_service.AdjudicationRequest(
         root=root,
         brief=args.brief,
@@ -302,25 +370,7 @@ def adjudicate(args):
         return agent_common.EXIT_NEEDS_HUMAN
     print(_keep_line(kept))
     try:
-        outcome = session_service.call(
-            session_service.Call(
-                root=root,
-                role=request.role,
-                template=row.cmd_template,
-                model=row.model or row.id,
-                prompt=prompt,
-                provider=row.family,
-                tier=row.tier,
-                route_id=row.id,
-                source_event="coordinator",
-                attribution={"wi": args.wi},
-                env=env,
-                timeout=args.timeout,
-                idle_timeout=IDLE_TIMEOUT,
-                keep=kept,
-                wi=args.wi,
-            )
-        )
+        outcome = _call(root, row, request, kept, prompt)
     except session_service.BlackoutRefused as refused:
         _release(args.verdict)
         print("adjudicate: refused: {}".format(refused))
@@ -335,6 +385,109 @@ def adjudicate(args):
         root, args.verdict, args.brief, kinds, call_ok, args.wi
     )
     return code
+
+
+# The verdict records an act turn may not write (WI-912).
+REVIEWS = adjudicate_brief.ksitting.REVIEWS
+
+
+def _status_paths(root, *pathspec):
+    """The paths `git status` reports changed or untracked under `root`
+    (limited to `pathspec`), or None when git cannot say."""
+    args = ["status", "--porcelain", "--untracked-files=all"]
+    out = git_out(root, args + (["--", *pathspec] if pathspec else []))
+    if out is None:
+        return None
+    return [line[3:] for line in out.splitlines() if line.strip()]
+
+
+def _act_inputs(root, args):
+    """`(row, brief, prompt, None)` when the act turn may launch, else
+    `(None, None, None, why)`: a lane root, an enabled route, a lane with no
+    uncommitted change, and the act brief composed from the verdict accepted
+    at HEAD (`adjudicate_act.compose_act`), which refuses a verdict that is
+    not accepted there, owes no act, or judged a row in a state no act
+    explains.
+
+    Implements: SR-231, LLR-306
+    """
+    why = lane_refusal(root)
+    row, prompt = None, None
+    if why is None:
+        row, why = resolve_route(root, args.route)
+    if why is None:
+        dirty = _status_paths(root)
+        if dirty is None:
+            why = "git cannot read the status of {}".format(root)
+        elif dirty:
+            why = "the lane has uncommitted changes: {}".format(", ".join(dirty))
+    if why is None:
+        prompt, why = adjudicate_act.compose_act(root, args.verdict, args.wi)
+    if why:
+        return None, None, None, why
+    return row, adjudicate_act.bound_brief(root, args.verdict), prompt, None
+
+
+def _reviews_written(root, before):
+    """The paths under docs/reviews/ changed since the commit `before`,
+    committed or not."""
+    committed = git_out(root, ["diff", "--name-only", before, "HEAD", "--", REVIEWS])
+    working = _status_paths(root, REVIEWS) or []
+    return sorted(set((committed or "").split()) | set(working))
+
+
+def _act_report(root, args, outcome, before):
+    """Print the act call's exit and what it left; 0 only when the call
+    succeeded, nothing the verdict authorizes is left owed at HEAD, and
+    nothing under docs/reviews/ changed, else 1.
+
+    Implements: SR-231, LLR-306
+    """
+    print("act: exit {}{}".format(outcome.code, _timed(outcome)))
+    call_ok = session_service.call_succeeded(outcome)
+    if not call_ok:
+        print("act: the call failed")
+    left = adjudicate_act.left_owed(root, args.verdict)
+    if left:
+        print("act: owed after the call: {}".format(left))
+    written = _reviews_written(root, before)
+    if written:
+        print("act: wrote under docs/reviews: {}".format(", ".join(written)))
+    if call_ok and not left and not written:
+        print("act: complete")
+        return 0
+    return 1
+
+
+def act(args):
+    """Take the act a committed, accepted verdict authorizes: compose the act
+    brief from it at HEAD, plan the keep by the verdict's bound class, launch,
+    and report whether the act is complete. Reserves no verdict path, writes
+    no binding and records no outcome (WI-912).
+
+    Implements: SR-231, LLR-306
+    """
+    root = Path(args.root).resolve()
+    row, brief, prompt, why = _act_inputs(root, args)
+    if why:
+        print("act: refused: {}".format(why))
+        return agent_common.EXIT_PREFLIGHT
+    request = session_service.AdjudicationRequest(
+        root=root, brief=brief, route=row, wi=args.wi, deadline=args.timeout
+    )
+    try:
+        kept = session_service.adjudication_keep(request)
+    except session_service.SigninRefused as refused:
+        print("act: {}".format(refused))
+        return agent_common.EXIT_NEEDS_HUMAN
+    print(_keep_line(kept))
+    before = (git_out(root, ["rev-parse", "HEAD"]) or "").strip()
+    try:
+        outcome = _call(root, row, request, kept, prompt)
+    except session_service.BlackoutRefused as refused:
+        print("act: refused: {}".format(refused))
+        return agent_common.EXIT_PREFLIGHT
+    return _act_report(root, args, outcome, before)
 
 
 def signin(args):
@@ -371,6 +524,15 @@ def _parser():
     run.add_argument("--route", default=DEFAULT_ROUTE)
     run.add_argument("--timeout", type=int, default=session_service.DEFAULT_DEADLINE)
     run.set_defaults(handler=adjudicate)
+    take = sub.add_parser(
+        "act", help="take the act a committed, accepted verdict authorizes"
+    )
+    take.add_argument("--root", default=".")
+    take.add_argument("--verdict", required=True)
+    take.add_argument("--wi", required=True)
+    take.add_argument("--route", default=DEFAULT_ROUTE)
+    take.add_argument("--timeout", type=int, default=session_service.DEFAULT_DEADLINE)
+    take.set_defaults(handler=act)
     probe = sub.add_parser(
         "signin",
         help="read a dedicated home's sign-in; Claude's is its long-lived token, "

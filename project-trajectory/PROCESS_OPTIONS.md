@@ -473,8 +473,8 @@ driving it:
 | Amends spine text | Yes — any cell, on any row, `Approved` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
 | Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its accepted verdict over exactly those rows, in the authoring lane or on trunk. |
 | Writes `docs/archive/last_approved/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
-| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; on a released rung a *meaning* verdict is followed by its own re-attestation in the same session, on a held rung the row goes to the owner. |
-| Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. |
+| Judges a post-approval amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-attests a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the owner. |
+| Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. A verdict may be sat at any time; its act keeps landing order (WI-912). |
 
 **How it is held.** Three mechanisms, none of them a new detector:
 

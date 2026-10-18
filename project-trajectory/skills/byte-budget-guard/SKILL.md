@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,996 | 2026-09-28 | +4: WI-615 — the partial-search bullet, paid for by three de-duplications |
 | `CLAUDE.md` | **8,500** | 7,991 | 2026-10-14 | +14: WI-914 names the one declared commit-bar command |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,507 | 2026-10-16 | Restamps the PROCESS.md and CLAUDE.md rows |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,503 | 2026-10-17 | Restamps the PROCESS_OPTIONS.md row |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 97,946 | 2026-10-15 | **+1,340** WI-911: §3 records a decision where it is made; §6 bounds contrived scenarios and promises |
-| `project-trajectory/PROCESS_OPTIONS.md` | 199,296 | 2026-10-09 | **+876** WI-834: the blackout window on every route |
+| `project-trajectory/PROCESS_OPTIONS.md` | 199,426 | 2026-10-17 | **+130** WI-912: the amendment act is a later act turn |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

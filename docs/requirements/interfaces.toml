@@ -1123,9 +1123,9 @@ notes = """No tie-back: the argv comes IN from the adopter's own session (a clai
 
 [interface.IF-175]
 owner = "scripts/kitlib/verdict"
-requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record"]
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record", "scripts/adjudicate_act"]
 channel = "call"
-data = "tree/governing identity; branch rounds/trailers; full review scope and filing check; policy owed phases; trailer parser; row rulings; review scope kinds full|narrow|final (format_scope(..., stage)); final gates only in persisted-final-reviewer mode"
+data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1261,9 +1261,9 @@ notes = """sink — the census consumes the validator's one orphan/status engine
 
 [interface.IF-090]
 owner = "scripts/intake"
-requestors = ["scripts/integrate", "scripts/dispatch", "scripts/agent_loop"]
+requestors = ["scripts/integrate", "scripts/dispatch", "scripts/agent_loop", "scripts/adjudicate_act", "scripts/adjudicate_brief"]
 channel = "call"
-data = "intake_after_merge (integrate) · mint_gap_rows (dispatch) · context_block (agent_loop, advisory)"
+data = "merge intake, gap minting, advisory context, and adjudication-action policy"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1506,9 +1506,9 @@ notes = """cross-component crossing declared per the architecture rule. Existenc
 [interface.IF-113]
 rationale = """The loader's both-ways strictness is load-bearing here rather than merely tidy: a judge's brief whose evidence section is thin reads as an investigation that was run and found nothing, so there is deliberately no partially-filled path across this seam."""
 owner = "scripts/prompts"
-requestors = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief", "scripts/adjudicate_act"]
 channel = "call"
-data = "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-RED-TC · ADJUDICATE-DONE-WHEN · ADJUDICATE-COMBINED · PROMPTS / SPINE_QUESTIONS"
+data = "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-RED-TC · ADJUDICATE-DONE-WHEN · ADJUDICATE-COMBINED · ADJUDICATE-ACT · PROMPTS / SPINE_QUESTIONS"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1534,7 +1534,7 @@ data = "compose(...) -> text | reason; record_outcome(...) -> (accepted | failed
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names all eight shipped briefs with an assembler; `conflict` is retired, with its missing derivation named in the module header."""
+notes = "intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names all eight shipped briefs with an assembler; `conflict` is retired, with its missing derivation named in the module header. The judging composer derives no approval-registry token; the act brief joins the retained identity of actable classes."
 
 [interface.IF-117]
 owner = "scripts/gen_arch_map"
@@ -1609,9 +1609,9 @@ status = "Drafted"
 
 [interface.IF-124]
 owner = "scripts/baseline_snapshot"
-requestors = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief", "scripts/adjudicate_act"]
 channel = "call"
-data = "exists, stamp and SNAPSHOT_DIR"
+data = "exists, stamp, SNAPSHOT_DIR, SNAPSHOT_TIERS and format_approves"
 carried_by = "IF-123"
 version = "v1"
 status = "Drafted"
@@ -1916,7 +1916,7 @@ notes = """source - provenance consumes no other module's surface; its one input
 [interface.IF-195]
 rationale = "Every reader that asks whether a dial holds a rung - the loop's writers, the pre-commit step, the merge slot and the history check - asks it here, so the rung tables, the comparison and the reading of the dial itself cannot differ between them. The live readers read the dial committed in a tree they name, with each legacy spelling translated the one way the coordinator translates it and nothing printed; the history reader reads each past commit's dial with no translation, which only ever reports more. None of them reaches a coordinator primitive to ask a question about a string, a table and a tree."
 owner = "scripts/kitlib/authority"
-requestors = ["scripts/acceptance_record", "scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate"]
+requestors = ["scripts/acceptance_record", "scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate", "scripts/adjudicate_act"]
 channel = "call"
 data = "APPROVAL_RUNGS, SPINE_APPROVAL_RUNGS; rung_for -> rung|None; read_dial -> (rung, legacy); dial_at -> rung; dial_from_config -> rung; holds_under -> bool"
 version = "v1"
@@ -1927,9 +1927,9 @@ notes = "source - authority consumes the ladder vocabulary and one git read: the
 [interface.IF-196]
 rationale = """Which status cells a delta moves, and whether a dial holds them, is one judgement read from four places: the loop's writers before they commit, the pre-commit step over a session's staged tree, the merge slot over a lane's range, and the history check over each past commit. Drawing it beside the two-tree spine walk it reuses keeps one comparison basis for all four, and keeps the universe of watched registries declared apart from the rung map, so a registry the map does not name reads as held rather than as absent."""
 owner = "scripts/acceptance_record"
-requestors = ["scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate"]
+requestors = ["scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate", "scripts/adjudicate_act"]
 channel = "call"
-data = "staged_, merge_, pending_, committed_status_moves -> [{registry, id, before, after}]; held_status_lines, held_status_refusal(dial, moves)"
+data = "staged_, merge_, pending_, committed_status_moves -> [{registry, id, before, after}]; rows_at; held_status_lines, held_status_refusal(dial, moves)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2318,7 +2318,7 @@ notes = """source - the module launches nothing and writes no log; its only effe
 
 [interface.IF-260]
 owner = "scripts/agent_brief"
-requestors = ["scripts/agent_loop", "scripts/adjudicate_brief"]
+requestors = ["scripts/agent_loop", "scripts/adjudicate_brief", "scripts/coordinator_adjudicate"]
 channel = "call"
 data = "brief constructors, prompt routing, guardrails payload selection, and assignment-facing lane evidence"
 version = "v1"
@@ -2529,14 +2529,14 @@ data = "AdjudicationRequest(route, scope); prepare_launch -> Prepared; cli_versi
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "source - the request is planned but not launched here; a retained dedicated-home reading other than signed-in raises before a lease or home is created."
+notes = "source - the request is planned but not launched here; a retained dedicated-home reading other than signed-in raises before a lease or home is created. The act turn is a second request from scripts/coordinator_adjudicate and uses its verdict-bound brief class."
 
 [interface.IF-283]
 rationale = "The coordinator needs one declared argument surface for an adjudication it starts outside the loop, so the caller, parser and command contract agree on which inputs are admissible."
 owner = "scripts/coordinator_adjudicate"
 requestors = ["external:coordinator"]
 channel = "cli"
-data = "Adjudication CLI; signin --retained reports off without probing when retention is off; adjudicate carries wi and releases a blackout refusal; see Contract IF-283."
+data = "adjudicate and act command lines; act --verdict PATH --wi WI-N [--route ID] [--root DIR] [--timeout SECONDS]; signin --retained"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2548,7 +2548,7 @@ rationale = "The coordinator needs a result surface distinct from command argume
 owner = "scripts/coordinator_adjudicate"
 consumers = ["external:coordinator"]
 channel = "exit-code"
-data = "adjudicate: 0 valid, accepted | 1 failed/timed out/reported error result/missing/invalid, recorded failed | 2 pre-launch or blackout refusal | 7 sign-in refusal; signin: 0"
+data = "adjudicate: 0 valid|1 failed|2 pre-launch/blackout refusal|7 sign-in; act: 0 complete|1 after launch|2 pre-launch/blackout refusal|7 sign-in; signin: 0"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2559,7 +2559,7 @@ rationale = "The coordinator needs the command's human-readable operational read
 owner = "scripts/coordinator_adjudicate"
 consumers = ["external:coordinator"]
 channel = "stdout"
-data = "Adjudication stdout includes the sign-in reading, blackout refusal, and call outcome; see Contract IF-285 in the owner module."
+data = "adjudicate and act readings: keep, exit and refusal; act also reports owed-after, verdict-record writes or complete; see Contract IF-285."
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2579,9 +2579,9 @@ notes = "source - this seam reads version-control trees and review or decision r
 [interface.IF-287]
 rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
 owner = "scripts/kitlib/sitting"
-requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage"]
+requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act"]
 channel = "call"
-data = "claim_scope(meta) -> (brief, {kind: [ids]}, [malformed]); bounds_acts(meta); malformed_refusal(metas); review_line(text) -> ((APPROVE|CHANGES-REQUESTED, findings), refusal)"
+data = "verdict binding/path and accepted-verdict grammar; combined-scope and review-verdict readers"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2663,3 +2663,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = "Reads the staged commit and its parent records; writes nothing."
+
+[interface.IF-296]
+rationale = "The coordinator needs one fail-closed derivation of the later act so it cannot construct a partial brief or reinterpret a committed verdict."
+owner = "scripts/adjudicate_act"
+requestors = ["scripts/coordinator_adjudicate", "scripts/adjudicate_brief"]
+channel = "call"
+data = "ACTABLE; owed_acts, left_owed, bound_brief, amendment retires; act_values and compose_act return complete acts, values or brief, or reason"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "intra-component: the owner reads committed verdict, registry, record and dial state and writes nothing."

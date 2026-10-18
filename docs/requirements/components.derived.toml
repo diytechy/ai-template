@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 303
-seam_rows = 244
+design_rows = 304
+seam_rows = 245
 requirements_placed = 125
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -407,6 +407,7 @@ seam_boundary_refs = [
   "IF-287",
   "IF-290",
   "IF-295",
+  "IF-296",
 ]
 
 [component_view.CMP-007]
@@ -766,6 +767,7 @@ llr_refs = [
   "LLR-318",
   "LLR-319",
   "LLR-337",
+  "LLR-338",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -784,6 +786,7 @@ modules = [
   "project-trajectory/prompts/adjudicate-dispute.template.md",
   "project-trajectory/prompts/reviewer.template.md",
   "project-trajectory/scripts/acceptance_record.py",
+  "project-trajectory/scripts/adjudicate_act.py",
   "project-trajectory/scripts/adjudicate_brief.py",
   "project-trajectory/scripts/agent_brief.py",
   "project-trajectory/scripts/agent_common.py",
@@ -898,6 +901,7 @@ seam_internal_refs = [
   "IF-290",
   "IF-291",
   "IF-295",
+  "IF-296",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -1249,6 +1253,7 @@ seam_boundary_refs = [
   "IF-255",
   "IF-256",
   "IF-257",
+  "IF-260",
   "IF-264",
   "IF-270",
   "IF-271",
@@ -1268,6 +1273,7 @@ seam_boundary_refs = [
   "IF-291",
   "IF-292",
   "IF-293",
+  "IF-296",
 ]
 
 [unplaced]

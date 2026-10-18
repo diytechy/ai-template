@@ -21,6 +21,7 @@ sessions this loop launches, so it belongs where a diff shows it.**
 | `adjudicate-done-when.template.md` | a lane's Done-when that differs from the one it was claimed with | yes |
 | `adjudicate-combined.template.md` | one lane checkpoint's pending in-lane judgements, one section per kind | yes |
 | `adjudicate-dispute.template.md` | a review finding the lane contests, or one at its third round, ruled by the adjudicator | yes |
+| `adjudicate-act.template.md` | the later adjudicator turn that takes the act a committed verdict authorizes (`scripts/adjudicate_act.py`) | yes (`ADJUDICATE-ACT`) |
 | `plan-single.template.md` | the in-lane planner of a claimed row whose claim copy declares `planmode = "single"` (`scripts/review_brief.py plan`) | yes (`PLAN-SINGLE`) |
 
 `spine-questions.md` is not a brief: it is the one home of the questions an

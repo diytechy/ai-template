@@ -396,8 +396,6 @@ def _fake_spine_assemblers(monkeypatch):
         return {
             "chain": "- TC TC-1 [AWAITING FIRST APPROVAL]",
             "baseline": "B",
-            "registries": "R",
-            "approves_rows": "   - R covers TC-1",
             "questions": "Q",
         }, None
 

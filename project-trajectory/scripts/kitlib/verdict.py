@@ -151,6 +151,8 @@ from .station import (
 __all__ = [
     "verdict_rulings",
     "row_rulings",
+    "blessed_rows",
+    "BLESS_TAG",
     "ROW_RULINGS",
     "RECORD_PREFIXES",
     "REVIEW_PHASES",
@@ -1461,8 +1463,16 @@ def branch_trailers(root, branch, base):
 # a verdict's text, beside this module's other verdict readers.
 # Each sitting kind's row tags, and the ruling that wins when a row is tagged
 # both ways (its brief's fail-toward rule): the ONE row reader of a verdict.
+# The amendment's `- [MEANING+BLESS]` tag is the bless mark (WI-912, Q2 of
+# coordinator-2026-10-14 D-003): a MEANING row whose new text the adjudicator
+# would bless. It reads MEANING here, so every reader of the rulings is
+# unchanged; `blessed_rows` is the one reader of the mark itself.
+BLESS_TAG = "- [MEANING+BLESS]"
 ROW_RULINGS = {
-    "amendment": ({"- [MEANING]": "MEANING", "- [CLARITY]": "CLARITY"}, "MEANING"),
+    "amendment": (
+        {"- [MEANING]": "MEANING", "- [CLARITY]": "CLARITY", BLESS_TAG: "MEANING"},
+        "MEANING",
+    ),
     "first-approval": ({"- [APPROVE]": "APPROVE", "- [RETURN]": "RETURN"}, "RETURN"),
 }
 
@@ -1491,6 +1501,24 @@ def row_rulings(text, kind):
         if ruled and out.get(ruled[1]) != wins:
             out[ruled[1]] = ruled[0]
     return out
+
+
+def blessed_rows(text):
+    """The row ids an amendment verdict part marks `- [MEANING+BLESS]`: the
+    MEANING rows whose new text the adjudicator would bless (WI-912, Q2 of
+    coordinator-2026-10-14 D-003). An absent mark reads as not blessed, and so
+    does a row that is also tagged plain `[MEANING]` or `[CLARITY]`: a row
+    ruled two ways fails toward no act.
+
+    Implements: SR-232, LLR-310"""
+    tags, _wins = ROW_RULINGS["amendment"]
+    blessed, other = set(), set()
+    for line in (text or "").splitlines():
+        ruled = _ruled_row(line, tags)
+        if ruled:
+            mark = line.strip().startswith(BLESS_TAG)
+            (blessed if mark else other).add(ruled[1])
+    return frozenset(blessed - other)
 
 
 def verdict_rulings(text):

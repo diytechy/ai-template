@@ -281,9 +281,12 @@ this hold (`project-trajectory/PROCESS.md` §4).
 2. **The closure check passes** before the sitting (`spine-authoring`,
    `references/in-lane.md`: parents, the arms, TC-to-LLR-and-SR, interface
    citations, the strict integrity checks).
-3. **One combined sitting** (`--brief combined`) judges every amendment, first
-   approval and Done-when change together, top-down (recipes §1). Carry retired
-   rows into scope explicitly. A parent's return carries its children; have
+3. **One combined sitting** (`coordinator_adjudicate.py adjudicate
+   --brief-file <composed brief> --brief combined`) judges every amendment,
+   first approval and Done-when change together, top-down (recipes §1). The
+   sitting ends at its committed verdict; its act is the later act turn (§4).
+   Carry retired rows into scope explicitly. A parent's return carries its
+   children; have
    the verdict distinguish children returned only for their chain. Route returns:
    - spine text goes to Terra;
    - code goes to the builder;
@@ -326,11 +329,16 @@ them where reasonable, and the spawner's bounds hold for each one:
 
 ## 4. Land
 
-Parallel lanes are normal; adjudication is a latched event. Sit a lane's acts
-only after the lanes ahead of it have landed and it has rebased, so its acts
-and the id watermark pull up as each lane lands. A lane that took acts on an
-older base gets duplicate act seqs on rebase, and git applies the later act
-commits cleanly. Lanes that take acts land one at a time.
+Parallel lanes are normal; adjudication is a latched event. A lane's verdicts
+may be sat at any time; its acts keep landing order (revisions 31 and 32).
+Take a lane's act turn only after the lanes ahead of it have landed and it has
+rebased, so its acts and the id watermark pull up as each lane lands. A lane
+that took acts on an older base gets duplicate act seqs on rebase, and git
+applies the later act commits cleanly. Lanes that take acts land one at a time.
+Before the act turn, check that the rows the verdict judged are unchanged since
+it judged them: the rows at the verdict's own commit, before the rebase,
+against the rebased tip. A renumbered row counts as changed; re-sit any changed
+row (recipes §3).
 
 Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
 
@@ -345,8 +353,10 @@ Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
 1. Rebase onto current trunk before the final act. Use recipes §3–§4; if the
    rebase changes code or authored rows, repeat the affected checkpoint and
    run an uncounted convergence round over the rebased tip.
-2. Keep the adjudicator's act as the lane's last **spine** commit: Status flips
-   and the snapshot only, with verdicts committed first. Telemetry may follow.
+2. After the rebase and the unchanged-rows check, take the act turn,
+   `coordinator_adjudicate.py act --verdict <path> --wi WI-NNN` (recipes §3).
+   Its act is the lane's last **spine** commit: Status flips and the snapshot
+   only, with verdicts committed first. Telemetry may follow.
 3. Squash, regenerate, run the commit bar on the staged squash, close the
    row, archive the tips, sweep, and close the re-mint citing the act. Every
    step and its trap is in recipes §3.

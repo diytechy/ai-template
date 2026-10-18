@@ -122,6 +122,13 @@ MAPPING = [
         "prompts/adjudicate-dispute.template.md",
         "SR-146",
     ),
+    # The act brief (WI-912): the later adjudicator turn that takes the act a
+    # committed verdict authorizes; `scripts/adjudicate_act.py` fills it.
+    (
+        "prompts/adjudicate-act.template.md",
+        "prompts/adjudicate-act.template.md",
+        "SR-146",
+    ),
     (
         "prompts/plan-single.template.md",
         "prompts/plan-single.template.md",
@@ -548,6 +555,9 @@ MAPPING = [
     # ADJUDICATE session composes from the worker assignment, which is
     # the WI-424 defect this ships to close.
     ("scripts/adjudicate_brief.py", "scripts/adjudicate_brief.py"),
+    # The act assembler (WI-912): derives the act a committed verdict still
+    # owes and fills the act brief; the coordinator's entry point imports it.
+    ("scripts/adjudicate_act.py", "scripts/adjudicate_act.py"),
     ("scripts/plan_coverage_step.py", "scripts/plan_coverage_step.py"),
     ("scripts/plan_artifacts.py", "scripts/plan_artifacts.py"),
     # The work-item registry's CSV <-> spec-folder converter (§2 of

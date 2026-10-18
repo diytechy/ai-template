@@ -344,13 +344,17 @@ def test_the_loop_composes_the_same_keep_request_as_before(
             "wi": "WI-7",
             "rows": {},
             # ...and the tier questions' home, which the amendment brief
-            # composes (WI-854).
+            # composes (WI-854), and the act brief, which the act turn of a
+            # retained amendment verdict is launched with (WI-912).
             "template_paths": [
                 prompts.template_path(key)
                 for key in shipped
                 if not (override and key == "ADJUDICATE-DISPOSITION")
             ]
-            + [cli.adjudicate_brief.QUESTIONS_HOME],
+            + [
+                cli.adjudicate_brief.QUESTIONS_HOME,
+                prompts.template_path("ADJUDICATE-ACT"),
+            ],
             "template_texts": [override] if override else [],
             "lease_seconds": (timeout or 7200) + 300,
         }
@@ -373,11 +377,28 @@ def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_templa
     assert paths == [
         ab.prompts.template_path("ADJUDICATE-AMENDMENT"),
         ab.QUESTIONS_HOME,
+        ab.prompts.template_path("ADJUDICATE-ACT"),
     ]
     assert texts == ["an override"]
     assert ab.governing_templates(["red-tc"])[0] == [
         ab.prompts.template_path("ADJUDICATE-RED-TC")
     ]
+
+
+def test_the_identity_covers_the_act_brief_for_an_actable_retained_class():
+    """WI-912: the act turn is launched on the session that retains the
+    verdict's class, so the act brief governs every actable retained class,
+    and an edit to it drains a retained session as any retained template's
+    does; an operator override under its key counts by its text."""
+    ab = cli.adjudicate_brief
+    act_path = ab.prompts.template_path(ab.prompts.ADJUDICATE_ACT)
+    for cls in ("amendment", "first-approval", "combined"):
+        assert act_path in ab.governing_templates([cls])[0], cls
+    assert act_path not in ab.governing_templates(["red-tc", "disposition"])[0]
+    paths, texts = ab.governing_templates(
+        ["amendment"], {ab.prompts.ADJUDICATE_ACT: "an act override"}
+    )
+    assert act_path not in paths and "an act override" in texts
 
 
 # --- the sign-in probe (TC-323) ----------------------------------------------------

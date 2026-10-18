@@ -317,6 +317,11 @@ Contracts (interfaces): IF-283, IF-284, IF-285
 | `--route` |  |
 | `--timeout` |  |
 | `--root` |  |
+| `--verdict` |  |
+| `--wi` |  |
+| `--route` |  |
+| `--timeout` |  |
+| `--root` |  |
 | `--family` |  |
 | `--retained` | read `off` while the [adjudicator] dial leaves retention off |
 

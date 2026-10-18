@@ -223,6 +223,29 @@ def test_the_catalogue_lists_every_shipped_prompt_with_its_digest():
         assert digest in text
 
 
+def test_the_act_brief_is_a_shipped_prompt_with_strict_slots():
+    # WI-912: a sitting's act is a later adjudicator turn with its own brief.
+    # The act brief is a shipped, catalogued prompt like the judging briefs,
+    # and its fill is strict: a slot left unfilled refuses rather than
+    # sending a half-filled act.
+    key = prompts.ADJUDICATE_ACT
+    assert prompts.KIT_PROMPTS[key] == "adjudicate-act.template.md"
+    text = prompts.load(key)
+    assert prompts.slots(text) == {
+        "verdict",
+        "wi",
+        "amendment_act",
+        "approval_act",
+        "registries",
+        "approves_rows",
+    }
+    values = dict.fromkeys(prompts.slots(text), "x")
+    assert not prompts.slots(prompts.fill(key, text, values))
+    del values["approval_act"]
+    with pytest.raises(prompts.PromptError):
+        prompts.fill(key, text, values)
+
+
 def test_the_catalogue_on_disk_is_FRESH():
     # A generated artifact nobody regenerates is a document that lies, and a
     # lying catalogue is worse than none: it invites the operator to conclude

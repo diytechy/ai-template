@@ -31,6 +31,7 @@
                    whose rows are shown, so the session is told whether the
                    re-attestation is its own act or the owner's rather than
                    working it out from a dial it would have to go read.
+                   It says which mark each verdict owes; it orders no act.
        {questions} the judging questions for the tiers of the rows listed,
                    composed at render time from the one home the kit ships
                    (prompts/spine-questions.md, the sections whose tiers
@@ -50,6 +51,16 @@
      itself. Who acts is settled once, in PROCESS.md §4 and process-options
      "Who performs the approval act": the approval act — and re-attestation IS
      one — is the adjudicator's, never the authoring session's.
+
+     THIS SITTING ENDS AT ITS COMMITTED VERDICT (WI-912; revisions 32 and 36
+     of the review-churn plan). The re-attestation each verdict authorizes is
+     a later adjudicator turn taken from that verdict and composed from the
+     act brief (prompts/adjudicate-act.template.md). So the verdict records
+     what the act needs: CLARITY re-anchors the row; a MEANING row's new text
+     the judge would bless is marked `[MEANING+BLESS]` (the bless mark, Q2 of
+     coordinator-2026-10-14 D-003, read by kitlib.verdict.blessed_rows) and is
+     re-attested only on a released rung; a plain `[MEANING]` row is not
+     re-anchored.
 
      WHAT IS DELIBERATELY ABSENT: the amending session's own notes, its commit
      message, docs/log.md, and any self-assessment. WI-418 measured what
@@ -88,7 +99,9 @@ Whether a `MEANING` row's new text is one you would bless — or recommend to th
 
 Write your verdict to {verdict}. One line per amended row, in the log.md block format:
 
-    - [MEANING|CLARITY] <row-id> <cell> -> the obligation before -> the obligation after -> why they are (not) the same
+    - [MEANING|MEANING+BLESS|CLARITY] <row-id> <cell> -> the obligation before -> the obligation after -> why they are (not) the same
+
+`[MEANING+BLESS]` is a MEANING row whose new text you would bless; `[MEANING]` is one you would not. Mark a row one way only: a row tagged both ways reads as MEANING and is not blessed.
 
 Then exactly one machine line:
 
@@ -96,13 +109,13 @@ Then exactly one machine line:
 
 `CLARITY` only when EVERY row you were shown is clarity. Commit that verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
 
-THEN, AND ONLY AFTER THAT VERDICT IS RECORDED, the aftermath. Every row you judged still reads as approved text that drifted from its anchor until an act re-anchors it, so each verdict owes one:
+Your verdict is this turn's whole output: stop once it is committed. Every row you judged still reads as approved text that drifted from its anchor until an act re-anchors it, and that act is a later act turn taken from your committed verdict, so each row line says what the act needs:
 
-- A `CLARITY` row keeps its attestation: the owner's signature still describes it. Re-anchor it so the record stops drifting — name it in the act's `--reattests`. Where the rung is one the repo's declared gate authority has RELEASED, that is all. Where the dial still HOLDS the rung for a human, the re-attestation is still yours, as a judgement act that names the verdict that ruled it — add `--verdict <your verdict file>` — so the act ledger records it and the owner's surface lists it for audit. The merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
-- A `MEANING` row's attestation is now a false claim, and it owes a fresh one. Where the rung is RELEASED, the re-attestation is yours: name each row you would bless in `--reattests`. If a row's new text is NOT one you would bless, do not re-anchor it: draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge. Where the dial HOLDS the rung, stop at the verdict and recommend the row to the owner: the row surfaces on the owner's approval brief and the signature is theirs.
+- A `CLARITY` row keeps its attestation: the owner's signature still describes it. The later act turn re-anchors it so the record stops drifting. Where the dial still HOLDS the rung for a human, that act names your verdict, so the act ledger records it and the owner's surface lists it for audit; the merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
+- A `MEANING` row's attestation is now a false claim, and it owes a fresh one. Where the rung is RELEASED, mark each row whose new text you would bless `[MEANING+BLESS]`: the later act turn re-attests exactly those. If a row's new text is NOT one you would bless, mark it `[MEANING]` and draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge. Where the dial HOLDS the rung, stop at the verdict and recommend the row to the owner: the row surfaces on the owner's approval brief and the signature is theirs.
 - Never approve a first draft on a held rung. A held rung's `Drafted` row is the owner's alone.
 
-Take the act in its own reviewed commit, separate from the verdict: leave each row's `Status` at `Approved` and run `python scripts/intake.py snapshot --reattests <ROW-ID>[,<ROW-ID>...]`, naming exactly the rows that are yours to re-anchor. Without that copy the record of what was blessed does not move. The copy is refused while any OTHER row in those registries carries drifted approved text, and naming a registry with `--approves` does not clear it: that row is another act's to judge, so do not add it to `--reattests` — stop and report the refusal. A MEANING row on a held rung refuses the copy the same way and holds the CLARITY rows that share its registry until the owner signs; leave them unanchored and say so in your report, so the coordinator puts them in the same sitting as the MEANING row.
+A MEANING row on a held rung refuses the copy and holds the CLARITY rows that share its registry until the owner signs; say so in your verdict, so the coordinator puts them in the same sitting as the MEANING row.
 
 {aftermath}
 
