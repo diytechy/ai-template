@@ -183,6 +183,24 @@ under
   - **Unchanged refusals.** An unreadable snapshot delta is refused by
     `approval_delta`. A ledger that does not parse at the base or the head
     is refused, naming it (`reattested_between`).
+  - **An absent ledger** (`docs/archive/last_approved/acts.toml`) reads as
+    no entries, as does one git cannot show; only a ledger that does not
+    parse is refused. Absent at the base (a base before the first snapshot
+    act, or a record older than the ledger), it is an empty prior act set,
+    so every entry at the head counts as this branch's and is judged for
+    scope, backing and copy. Absent at the head while the base holds it (the
+    branch deleted it), the branch adds no act: a registry copy beside the
+    deletion is refused, and the deletion alone is refused on an unscoped
+    lane but admitted on a scope-bound one, because the copy check skips the
+    record's own files (the ledger and its README). That admission fails
+    open, before and after this row; no kit route deletes the ledger. Absent
+    at both, the ledger is not read and the branch adds no act.
+  - **A changed copy no ledger entry authorizes** is judged by the copy
+    check alone. Only a live flip into approval (or a row born approved) in
+    that registry, itself backed by an accepted verdict, authorizes it;
+    otherwise it is WIDENED on a scope-bound lane and refused as an act no
+    accepted verdict backs on an unscoped lane. This row places only the ids
+    that added entries name, so none of these cases changes.
   - **An id of a tier the approval walk does not cover** (a non-string or
     misspelt id included) names no registry, so its copy is refused as
     WIDENED.
@@ -200,7 +218,7 @@ under
   - **Tighter, not looser.** A ledger-only approval of a row absent at the
     head now owes its registry's copy (WITHOUT ITS ANCHOR) where today it
     owes none.
-  - **No consumer fails open.** Today's defect fails closed.
+  - **No consumer fails open on a retirement.** Today's defect fails closed.
   - **Residue** (docs/decisions/coordinator-2026-10-17.toml#D-009): the
     coordinator's squash landing runs no approval-act reader until WI-808
     lands. WI-808 moves those landings onto the operation the loop uses,
@@ -291,3 +309,27 @@ after.
   WI-808 owns it, and no hook-step row is filed. It is stated once, as
   residue in `## Trust`, Ruling; this row stays ahead of item 14's
   retirement lane regardless.
+
+## Critique dispositions
+
+Round 1 (Codex Sol, medium, 2026-10-17; CHANGES-REQUESTED, one finding):
+
+- **S2, MINOR: adopted.** The Trust section's Ruling now reads: "**An absent
+  ledger** (`docs/archive/last_approved/acts.toml`) reads as no entries, as
+  does one git cannot show; only a ledger that does not parse is refused.
+  Absent at the base (a base before the first snapshot act, or a record
+  older than the ledger), it is an empty prior act set, so every entry at
+  the head counts as this branch's and is judged for scope, backing and
+  copy. Absent at the head while the base holds it (the branch deleted it),
+  the branch adds no act: a registry copy beside the deletion is refused,
+  and the deletion alone is refused on an unscoped lane but admitted on a
+  scope-bound one, because the copy check skips the record's own files (the
+  ledger and its README). That admission fails open, before and after this
+  row; no kit route deletes the ledger. Absent at both, the ledger is not
+  read and the branch adds no act." and "**A changed copy no ledger entry
+  authorizes** is judged by the copy check alone. Only a live flip into
+  approval (or a row born approved) in that registry, itself backed by an
+  accepted verdict, authorizes it; otherwise it is WIDENED on a scope-bound
+  lane and refused as an act no accepted verdict backs on an unscoped lane.
+  This row places only the ids that added entries name, so none of these
+  cases changes."
