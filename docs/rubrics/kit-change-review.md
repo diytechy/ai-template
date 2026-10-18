@@ -32,8 +32,5 @@ whose `module` is that file, and the function appears in that LLR's
 `code_symbol`. An approved row changes only where the spec grants it, and no
 Status flips.
 
-**K4 — Shipping.** A change to a shipped file has a `RESYNC_PACK.md` entry
-anchored `[since <sha>]` at a trunk commit.
-
 **B1 — A finding stated as a guess.** Report a finding as a claim confirmed by
 reading or running the code, never as a guess.

@@ -8684,8 +8684,10 @@ or record format changes, and no adopter setting changes.
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
 inside the owner's own development sphere, and the LLM does the judgement work
 under every design — so investing in what it reads beats investing in selectors
-(the proportionality doctrine, SN-012). The honest cost is that nothing enforces
-"a kit change that needed an entry got one": the obligation holds by attention.
+(the proportionality doctrine, SN-012). Since WI-916 this repo's commit bar
+refuses a change to a shipped kit file unless the change adds a §3/§4 entry
+anchored at its trunk base: the entry's presence and its anchor are held, and
+whether the entry says enough stays with review.
 
 **The promotion trigger, named so it is a decision rather than a drift:**
 

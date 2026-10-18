@@ -108,8 +108,8 @@ def test_membership_ratchet_bites_past_the_ceiling():
 
 def test_the_declared_commit_bar_runs_the_strict_lints_before_its_budget():
     # This repo's one declared commit-bar command, docs/stack.ini [run] smoke,
-    # runs both strict lints and the docs staleness check first, then the
-    # budget check, whose own timed run is the bar's only smoke-tier run. A
+    # runs both strict lints, the docs staleness check and the RESYNC entry
+    # check first, then the budget check, whose own timed run is the bar's only smoke-tier run. A
     # lint red stops the bar before the tier runs, and a breach under load
     # never hides a lint red. A chain that dropped a step, moved the budget
     # check ahead of the lints, or ran the tier a second time would let a build
@@ -121,6 +121,7 @@ def test_the_declared_commit_bar_runs_the_strict_lints_before_its_budget():
         "python project-trajectory/scripts/trace.py --strict",
         "python project-trajectory/scripts/check_trajectory.py --strict",
         "python project-trajectory/scripts/check_docs.py --root . --stale",
+        "python scripts/check_resync.py",
         "python scripts/check_smoke_budget.py --mode enforce",
     ]
     tier_steps = [

@@ -3,13 +3,40 @@ id = "WI-916"
 title = "A change to a shipped kit file passes the commit bar only when it adds its re-sync entry, anchored at its trunk base"
 workstream = "process"
 sr_refs = ["SR-036"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#6-run-the-strict-lints-after-every-build"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-914", "~WI-913"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-18, after its post-checkpoint gate:
+
+- `scripts/check_resync.py`, this repo's tooling and untraced, judges the
+  change from its trunk base to the working tree, untracked files included.
+  A change to a shipped kit path (closed by the one delivery inventory, deny
+  by default for an unclassified kit path, read at the base and in the
+  working tree) passes only when the pack's net count of new entries is at
+  least one: its added headings that match the one entry grammar and anchor
+  at the base, less the base's entry headings the working tree no longer
+  holds. An edited landed entry (re-anchored or retitled) adds none. An
+  absent or unreadable pack, an unresolvable base or an uncomputable
+  inventory refuses, with its reason; a console that cannot encode a
+  heading still prints every reason.
+- The entry grammar's one home is the check; `tests/test_resync_pack.py`
+  imports it.
+- `docs/stack.ini` `[run] smoke` runs it after the strict lints and before
+  the budget check; the pre-commit hook is unchanged. The smoke ceiling is
+  re-stamped to 2825 (wi-916 D-004).
+- K4 is retired from the kit-change rubric; `RESYNC_PACK.md` section 5 and the
+  enforcement audit say what the check holds and what stays with review.
+- Reviews: counted rounds 1 and 2 and the gate, two reviewers each (Codex
+  Sol and Claude Opus); round 1's F1 a Done-when gap fixed in a fix round,
+  every accepted finding mapped before the gate (decisions D-003 to D-008).
+  The gate's two MINORs are status.md follow-ups.
 
 ## Context
 
@@ -139,7 +166,7 @@ Round 2 (Codex Sol, medium, 2026-10-14, the first confirming round; one
 finding):
 
 - **S2, MINOR: adopted.** The citation is now a link, "[`PROCESS.md` §3,
-  "When a guard is owed"](../../queued/...)", as the rubric's S2 asks ("linked, not
+  "When a guard is owed"](../../../work/queued/...)", as the rubric's S2 asks ("linked, not
   restated"). Round 1's reason for plain text was wrong: `spec_move.py`
   re-relativises a moved spec's own links (WI-353), so the link survives the
   claim.

@@ -21,8 +21,10 @@ what `tests/test_old_kit_resync.py` measures end to end for the procedure, and
 what a reviewer reads for the rest. These tests hold the SHAPE.
 """
 
+import importlib.util
 import re
 import subprocess
+from pathlib import Path
 
 from conftest import KIT, ROOT, load_script, skip_without_env_gates
 
@@ -31,15 +33,22 @@ PACK = KIT / "RESYNC_PACK.md"
 # The entry grammar, and the whole reason the format looks like this: a heading
 # that carries its anchor is checkable with a regex and liftable into a registry
 # row without re-reading the prose under it. `pre-<sha>` is the honest escape for
-# a change whose landing commit predates the earliest recoverable history.
-ENTRY_RE = re.compile(r"^### (?P<title>.+) \[since (?P<sha>(?:pre-)?[0-9a-f]{7,40})\]$")
+# a change whose landing commit predates the earliest recoverable history. Its
+# one home is the commit bar's RESYNC entry check, which reads the same grammar.
+#
 # A change that has NOT LANDED has no SHA, and inventing one would defeat the
 # whole discipline — so a reserved placeholder is the one anchor-free heading
 # shape the entry sections admit. It is a DRAFTING state only: the anchor check
 # below skips it (an unanchored reservation is a backlog finding, not a grammar
 # one) and `test_no_reserved_placeholder_survives_a_commit` then holds the
 # backlog at zero, so the exemption cannot become a hiding place.
-RESERVED_PREFIX = "### Reserved:"
+_grammar_spec = importlib.util.spec_from_file_location(
+    "check_resync", ROOT / "scripts" / "check_resync.py"
+)
+_grammar = importlib.util.module_from_spec(_grammar_spec)
+_grammar_spec.loader.exec_module(_grammar)
+ENTRY_RE = _grammar.ENTRY_RE
+RESERVED_PREFIX = _grammar.RESERVED_PREFIX
 
 
 def _pack_text():
@@ -205,6 +214,24 @@ def test_bite_the_grammar_rejects_a_planted_unanchored_entry():
     assert not ENTRY_RE.match("### A change (2026-08)")
     assert not ENTRY_RE.match("### A change [since WI-426]")
     assert not ENTRY_RE.match("### A change [since 704ffd0d] and more")
+
+
+def test_the_entry_grammar_has_one_home():
+    """The commit bar's RESYNC entry check and these shape tests read one grammar.
+
+    The check owns it; this module imports it, so a change to the grammar
+    cannot leave the bar and the shape tests disagreeing about what an entry is.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "check_resync_home", ROOT / "scripts" / "check_resync.py"
+    )
+    owner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(owner)
+    assert ENTRY_RE.pattern == owner.ENTRY_RE.pattern
+    assert RESERVED_PREFIX == owner.RESERVED_PREFIX
+    source = Path(__file__).read_text(encoding="utf-8")
+    token = "re." + "compile("
+    assert token not in source, "the entry grammar is defined here again"
 
 
 def test_every_anchor_names_a_commit_that_really_exists():
