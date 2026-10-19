@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-18e-attended-coordinator.md](handoff-2026-10-18e-attended-coordinator.md),
+  [handoff-2026-10-18f-attended-coordinator.md](handoff-2026-10-18f-attended-coordinator.md),
   run **attended**, with the owner. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
@@ -41,8 +41,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   newer trunk re-anchors its own RESYNC entry at its new base.
   The headless coordinator's marking row has landed, and the guard-hooks
   row has landed, and so has the bless-mark row. The re-claim reader row
-  and the launcher's follow-ups row are claimed, each planning in its lane
-  first. The two merge-slot rows are claimed; their
+  and the launcher's follow-ups row are claimed, planned and built: the
+  re-claim reader is through its first round, its checkpoint next, and the
+  launcher's follow-ups row has one build stage left. The two merge-slot rows are claimed; their
   coordinator-landing gap is the one-landing row's
   (owner, 2026-10-17). The
   disposition-adoption row is re-cut before it resumes, and the

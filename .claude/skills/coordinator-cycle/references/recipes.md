@@ -60,11 +60,15 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   A plan that orders its commits (a pin, then a structural move alone,
   then the rest) is built in stages: the builder stops after each, you
   verify and commit, and SendMessage resumes the same builder (WI-911,
-  2026-10-15). A blank line ends a `Contract IF-NNN:` body for the
+  2026-10-15). A stage that changes a shared signature before the stage
+  that moves its callers has a red bar alone: commit the two stages
+  together, never bridge them with a default (wi-918 D-001). A blank line ends a `Contract IF-NNN:` body for the
   interface reference, so text added to a contract continues the body
   without one (wi-922 D-003).
 - **Terra, first turn:**
   `bash "$TOOLS/terra_author.sh" <lane> <prompt> <out> [effort]`.
+  - A single plan that places the spine turn at the checkpoint owes no
+    intent turn: Terra's first turn is the checkpoint's (wi-918 D-002).
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
     the intent or checkpoint instructions from the skill. Its default brief
     does not request a whole subtree or arms map.
@@ -218,7 +222,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      rebase (wi-931 D-001, 2026-10-16d).
   5. Pass: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --pass`
      writes `docs/plans/WI-NNN/pass.toml` (refused, writing nothing, unless
-     the critique reads as an APPROVE); commit it alone.
+     the critique reads as an APPROVE); commit it alone. A CHANGES-REQUESTED
+     whose findings are all MINOR reads as one (`plan_gate`, through
+     `kitlib.verdict.effective_verdict`): the pass follows, the plan
+     unedited (wi-918 D-001).
   6. The one revision: `review_brief.py plan --revise` (its brief carries the
      committed plan and the critique's findings as claims), commit the
      revised plan, gate it with
@@ -386,6 +393,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
    retry it, and read `git log` for its claim commit.
 5. Restore the pause byte-identical in the next commit, again with the
    regenerated `docs/open-items.html`, even if a claim failed.
+
+The claims may go in while another lane's act turn runs in its own
+worktree, so the new lanes' planners start sooner; that lane then rebases
+once more over the docs-only commits before it lands (2026-10-18f).
 
 A claim moves the row's spec from `queued/` to `active/<branch>/`, so any
 other row whose `specref` names that queued path stops resolving (R-E) the
