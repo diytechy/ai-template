@@ -64,7 +64,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   A plan that orders its commits (a pin, then a structural move alone,
   then the rest) is built in stages: the builder stops after each, you
   verify and commit, and SendMessage resumes the same builder (WI-911,
-  2026-10-15). A stage that changes a shared signature before the stage
+  2026-10-15). In a headless leg the resumed builder runs in the
+  background and reports only while the leg's turn still runs: wait in
+  the foreground on the file it writes last (its bar log, then its
+  spine change list), never end the turn on it (wi-925 D-008).
+  A stage that changes a shared signature before the stage
   that moves its callers has a red bar alone: commit the two stages
   together, never bridge them with a default (wi-918 D-001). A blank line ends a `Contract IF-NNN:` body for the
   interface reference, so text added to a contract continues the body
@@ -147,7 +151,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      It refuses a review not opening `Reviewed: <full sha>`, or without
      exactly one `VERDICT: <APPROVE|CHANGES-REQUESTED> findings=<n>` line
      whose count matches its findings. It picks `NNN` itself: read the filed
-     name before a commit subject or brief cites the round. Each round file
+     name before a commit subject or brief cites the round. A verdict
+     quoting a fixture's markdown link files a broken link, which
+     `check_docs` reds in the bar: make that link a code span in the
+     scratch verdict (backticks only), delete the filed copy and
+     re-file (wi-925 D-011). Each round file
      gets its own coverage plan (`plan_coverage.py --findings` takes one).
   - A round finding that the lane's amended rows carry no sitting or act
     yet names no code defect: its remedy is the checkpoint sitting, the
@@ -758,7 +766,14 @@ lane commit being replayed.
 - Check an intent or reconcile set mechanically before committing it: in
   each changed cell of an approved row the approved text must occur
   verbatim (old within new, read with `tomllib`; judge a tier or list
-  cell by hand). Terra reworded two approved phrases in SR-233 while
+  cell by hand). Compare with the row at the lane's trunk base,
+  sentence by sentence, not with HEAD: a lane-added sentence may be
+  rewritten, an approved one may not (wi-925 D-009). Terra follows a
+  plan's literal text: it dropped from an IF data cell a function the
+  owner still serves to a requestor, and restated in an approved row a
+  sentence its new row already states. Check each changed IF data
+  cell against its requestors' calls, and each new sentence for a
+  second home (wi-925 D-006). Terra reworded two approved phrases in SR-233 while
   reporting every approved text kept: restore the approved bytes by a
   guarded replace, keep its addition, and record it (wi-911 D-007,
   2026-10-15).
