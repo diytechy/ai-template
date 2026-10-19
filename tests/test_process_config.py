@@ -247,6 +247,15 @@ def test_a_wrong_typed_dial_is_refused_not_defaulted(tmp_path):
     assert any("review_rounds" in r and "expected int" in r for r in refusals)
 
 
+def test_a_non_string_trunk_is_refused_by_the_config_check(tmp_path):
+    # The trunk reader refuses a bare `trunk = 1` only on the routes that read
+    # the trunk; the config check refuses it at every guarded entry point,
+    # naming the key and the type, as for every dial.
+    write_toml(tmp_path, "[policies]\ntrunk = 1\n")
+    refusals = ac.config_conflicts(tmp_path / "docs")
+    assert any("trunk" in r and "expected str" in r for r in refusals), refusals
+
+
 def test_a_clean_config_refuses_nothing(tmp_path):
     shutil.copy(KIT / "process.toml.template", _docs(tmp_path) / "process.toml")
     assert ac.config_conflicts(tmp_path / "docs") == []
@@ -344,6 +353,7 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
         "privacy_review": "require",
         "guardrails": "off",
         "blackout": "09:00-17:00",
+        "trunk": "main",
     }
     for name in ("gate-policy", "push-policy", "review-policy", "privacy-check"):
         assert not (tmp_path / "docs" / name).exists(), name

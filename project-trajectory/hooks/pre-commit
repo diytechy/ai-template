@@ -273,30 +273,60 @@ fi
 #                        committer, a direct trunk commit included; a squash
 #                        landing passes when each commit it squashes does. The
 #                        merge slot asks the same of each lane commit.
-#      - done-when-blessed  reads the index too (WI-841, WI-921): it refuses a
-#                        staged close whose changed Done-when no accepted
-#                        verdict or owner ruling in the index binds, and a
-#                        trunk commit that changes a claim copy's Done-when
-#                        unblessed, judged against its parent. A read it
-#                        cannot complete (the index delta, the current
-#                        branch) holds, naming why. A lane's commit that
-#                        edits its own Done-when is never refused. The merge
-#                        slot asks the same of the branch. Two residues fail
-#                        closed: the kit has no route that returns a claimed
-#                        spec to the queue, so a hand return or re-cut of a
-#                        claim copy committed on trunk is held, and no
-#                        blessing releases it; and in a single checkout the
-#                        trunk is read as the current branch, so a Done-when
-#                        change on a branch not named for its claim is judged
-#                        as trunk's and held. One residue fails open (owner
-#                        ruling, 2026-10-15): the step compares against HEAD,
-#                        so an amend is judged against the commit it
-#                        replaces, and a cherry-pick, revert, rebase, a
-#                        non-conflicting merge commit (git runs no pre-commit
-#                        hook for it) or a hand fast-forward onto trunk is
-#                        not judged at all; the
-#                        landing sweep's mint flags an uncovered Done-when
-#                        change after the fact.
+#      - done-when-blessed  reads the index too (WI-841, WI-921, WI-925): it
+#                        refuses a staged close whose changed Done-when no
+#                        accepted verdict or owner ruling in the index binds,
+#                        and a trunk commit that changes a claim copy's
+#                        Done-when unblessed. A read it cannot complete (the
+#                        index delta, the current branch) holds, naming why.
+#                        A lane's commit that edits its own Done-when is
+#                        never refused, and a claim copy rewritten only by
+#                        the inbound relink of a spec move in the same commit
+#                        is not a change. The merge slot asks the same of the
+#                        branch. THE PROMISE: over the supported routes onto
+#                        trunk (an ordinary commit, the squash landing, a
+#                        hand close), a trunk commit is judged against its
+#                        parent, on the declared trunk (docs/process.toml
+#                        [policies] trunk), in any worktree. THE RESIDUE,
+#                        stated once here under PROCESS.md section 6's threat
+#                        model. Seven routes fail open:
+#                          1. an amend of a trunk commit is judged against
+#                             the commit it replaces;
+#                          2. a cherry-pick, a revert or a rebase onto trunk
+#                             runs no pre-commit hook;
+#                          3. a plain `git merge` of a lane that makes a
+#                             merge commit runs no pre-commit hook (the
+#                             merge slot judges its own merge before it
+#                             merges);
+#                          4. a hand fast-forward of trunk makes no commit;
+#                          5. if git fails mid-commit when the step asks
+#                             whether it is in a work tree, the step reads
+#                             "off a work tree" and judges nothing;
+#                          6. the merge-time mint skips, without a word, a
+#                             closed spec it cannot read or parse, which
+#                             needs a forbidden hand act on trunk;
+#                          7. on a detached HEAD, a Done-when change that
+#                             closes nothing is not judged.
+#                        The landing sweep's mint flags an uncovered
+#                        Done-when change after the fact. Two shapes fail
+#                        closed:
+#                          1. no route returns a claimed spec to the queue,
+#                             so a hand return or re-cut of a claim copy on
+#                             trunk is held, and no blessing releases it;
+#                          2. a spec move's relink that reaches a claim copy
+#                             outside the same commit reads as a change: an
+#                             existing lane's merge slot is held once another
+#                             row's landing relinks trunk's copy, and so is a
+#                             build hold read against the claim commit after
+#                             the lane takes that copy in; at the row's own
+#                             close the mint asks for the done-when
+#                             adjudication. A claim's own relink is one more
+#                             source: the claim commits through plumbing, so
+#                             no hook judges the claim copy it rewrites (only
+#                             the ritual's byte-exact relink, which the
+#                             exemption above, reading only a close's move,
+#                             would not pass), and its later reach is held as
+#                             above. An owner ruling releases each.
 #      - plan-gate       reads the index too (WI-913): in a lane whose claimed
 #                        row declares `planmode = "single"`, a commit carrying
 #                        build output is refused until a pass record under

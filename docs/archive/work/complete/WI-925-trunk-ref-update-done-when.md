@@ -3,13 +3,51 @@ id = "WI-925"
 title = "The trunk is the branch the repository declares by name, and a spec move's own link redirect inside a claim copy's Done-when is not a Done-when change"
 workstream = "process"
 sr_refs = ["SR-156", "SR-170", "SR-137"]
-specref = "docs/archive/work/complete/WI-921-hook-floor-done-when-census.md#trust"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-921", "~WI-911"]
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-19, after its gate and act, in a headless
+leg:
+
+- The trunk is one declared name, `trunk` under `[policies]` in
+  `docs/process.toml`, read by `agent_common.trunk_name` in any worktree; its
+  fallbacks are gone, and an absent, non-string, empty or non-local value is
+  refused naming the line. Every reader that judges or writes against the
+  trunk refuses in turn (the worker preflight, the review, dispute and
+  adjudication briefs, the reviewer's trunk slot, the rollup write, the
+  partial close, the plan gate on a claimed lane, and the staged
+  `done-when-blessed` step whenever a claim-copy change is listed); the step
+  selection runs every opted-in step and the readability report skips naming
+  the line. `default_base` is the merge base with the declared trunk. A
+  scaffold writes the line from the branch it is scaffolded on, into a
+  config the same run created. This repository declares `refactor_again`.
+- A spec move's own relink is not a Done-when change: a claim copy's lone
+  modification whose bytes are exactly the inbound relink of another
+  specification's move into a terminal home in the same staged change, read
+  by one shared stage (`spec_move.exact_relink`), which the claim
+  recognizer, the plan gate and the staged reader all call.
+  `staged_closes` is gone. The shipped hook's `done-when-blessed` comment
+  states the promise and the one residue list, a claim's own relink
+  included; the hold-by-rename finding names a recovery the trunk floor
+  permits.
+- Spine: new LLR-339 and TC-369, approved; LLR-307, LLR-208, LLR-337,
+  TC-325, TC-206 and TC-367 amended (sitting 004-ADJUDICATE-6c9ac8f, all
+  MEANING+BLESS), re-attested and approved by its act; IF-179, IF-189 and
+  IF-286 aligned. `RESYNC_PACK.md` carries the entry, a forced migration,
+  anchored at the landing's parent.
+- Reviews: the single plan's two critiques and the cap's dispute sitting
+  (001-ADJUDICATE-20a6044, DISMISS); counted round 1 (002-REVIEW-A, 2 MINOR;
+  003-REVIEW-B, 1 MAJOR re-graded to the checkpoint and 6 MINOR) and the
+  gate in convergence stance (005-REVIEW-A, 2 MINOR; 006-REVIEW-B, APPROVE
+  with 2 MINOR, to status.md's follow-ups). Decisions:
+  `docs/decisions/wi-925.toml` D-001 to D-011.
 
 ## Context
 

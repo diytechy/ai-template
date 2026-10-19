@@ -24,6 +24,7 @@ import pytest
 from conftest import (
     KIT,
     SCRIPTS,
+    declare_trunk,
     env_gate_skipif,
     hook_check_lines,
     load_script,
@@ -97,6 +98,7 @@ def _init(root):
     ):
         _git(root, "config", key, value)
     _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(root)
 
 
 def _trunk(tmp_path, spec=SPEC):
@@ -241,7 +243,7 @@ def test_a_hand_close_into_any_terminal_home_is_held(tmp_path, dest):
     there is the ordinary one and must be held like the legacy home."""
     _trunk_root, lane = _lane(tmp_path)
     _stage_close(lane, dest)
-    assert kdone.staged_closes(lane) == ([(BRANCH, WI)], None)
+    assert kdone.staged_changes(lane) == ([("close", BRANCH, WI)], None)
     assert integrate.staged_done_when_refusal(lane)
 
 
@@ -1041,6 +1043,7 @@ def _entry_point_call(lane, monkeypatch, code, timed_out, text, result=""):
 
     cli = load_script("coordinator_adjudicate")
     _write(lane, "docs/process.toml", "[adjudicator]\ncontext_reset_pct = 0\n")
+    declare_trunk(lane)
     _write(lane, "docs/agents.toml", _AGENTS)
     _write(lane, "docs/agents-enabled", ROUTE + "\n")
     _write(lane, "brief.md", "judge the Done-when")
@@ -1469,7 +1472,7 @@ def test_a_two_commit_landing_is_held_at_its_first_commit_until_blessed(
     assert integrate.staged_done_when_refusal(trunk) is None
     _git(trunk, "commit", "-qm", "squash: WI-007 up to its close")
     _stage_close(trunk)
-    assert kdone.staged_closes(trunk) == ([(BRANCH, WI)], None)
+    assert kdone.staged_changes(trunk) == ([("close", BRANCH, WI)], None)
     assert integrate.staged_done_when_refusal(trunk) is None
 
 
@@ -1619,3 +1622,283 @@ def test_the_scaffold_hooks_floor_resolves_and_passes_on_a_clean_tree(scaffold):
         [scaffold / "scripts" / "check.py", "--run-steps", ",".join(floor)], scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+# --- WI-925: a spec move's inbound relink inside another claim's Done-when ---
+
+spec_move = load_script("spec_move")
+
+_X, _Y = "WI-801", "WI-802"
+_X_ACTIVE = "docs/work/active/wi-x/WI-801-x.md"
+_Y_ACTIVE = "docs/work/active/wi-y/WI-802-y.md"
+_X_CLOSED = "docs/archive/work/complete/WI-801-x.md"
+_Y_CLOSED = "docs/archive/work/complete/WI-802-y.md"
+_Y_ITEM = "- Y ships after [X](../wi-x/WI-801-x.md) lands.\n"
+
+
+def _row_spec(wi_id, items):
+    return (
+        '+++\nid = "{}"\ntitle = "Row"\nworkstream = "ws"\n'
+        'sr_refs = ["SR-001"]\nsafety_class = "ordinary"\n+++\n\n'
+        "## Context\n\nA row.\n\n## Done-when\n\n{}".format(wi_id, items)
+    )
+
+
+def _two_claims(tmp_path):
+    """`main` with X claimed under `active/wi-x/` and Y under `active/wi-y/`,
+    each in its own claim commit; Y's Done-when links X's spec. Returns
+    `(trunk, y_claim)`, the latter Y's claim commit."""
+    root = _trunk(tmp_path)
+    _write(root, _X_ACTIVE, _row_spec(_X, "- X renders.\n"))
+    _commit(root, "claim: {} -> active/wi-x (bookkeeping)".format(_X))
+    _write(root, _Y_ACTIVE, _row_spec(_Y, _Y_ITEM))
+    y_claim = _commit(root, "claim: {} -> active/wi-y (bookkeeping)".format(_Y))
+    return root, y_claim
+
+
+def _close_by_ritual(root, src, dest):
+    """Close a row the ritual way (`spec_move.move_spec`, which relinks every
+    inbound link) in the worktree `root`, and commit it."""
+    touched, refusal = spec_move.move_spec(root, src, dest)
+    assert refusal is None, refusal
+    return touched, _commit(root, "close " + src.rpartition("/")[2])
+
+
+def _x_closed_in_its_lane(tmp_path, trunk):
+    """X's lane cut from `main` as a linked worktree, closed by the ritual.
+    Returns the lane root."""
+    lane = tmp_path / "lane-x"
+    _git(trunk, "worktree", "add", "-q", "-b", "wi-x", str(lane))
+    touched, _sha = _close_by_ritual(lane, _X_ACTIVE, _X_CLOSED)
+    assert _Y_ACTIVE in touched, touched
+    return lane
+
+
+def test_a_squash_landing_that_relinks_another_claims_done_when_link_is_not_held(
+    tmp_path,
+):
+    """X's lane closes X through `spec_move`, which rewrites the link inside
+    Y's claim copy; landing that lane by the squash recipe stages Y's copy as
+    modified on trunk. Its staged bytes are exactly the inbound relink of
+    X's move, which the same delta carries, so it is not a Done-when change
+    and the landing is not held."""
+    trunk, _y_claim = _two_claims(tmp_path)
+    _x_closed_in_its_lane(tmp_path, trunk)
+    _git(trunk, "merge", "--squash", "wi-x")
+    assert integrate.staged_done_when_refusal(trunk) is None
+
+
+def test_a_relink_with_no_move_in_the_same_delta_is_still_a_change(tmp_path):
+    """Y's copy staged on trunk with the relinked bytes alone, X's spec not
+    moved in the same delta: there is no move for the relink to belong to,
+    so it is a Done-when change, held naming Y."""
+    trunk, _y_claim = _two_claims(tmp_path)
+    lane = _x_closed_in_its_lane(tmp_path, trunk)
+    relinked = (lane / _Y_ACTIVE).read_bytes()
+    (trunk / _Y_ACTIVE).write_bytes(relinked)
+    _git(trunk, "add", "--", _Y_ACTIVE)
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and held.startswith(_Y + ":"), held
+
+
+def test_a_squash_landing_with_a_real_edit_beside_the_relink_is_held(tmp_path):
+    """The same landing with Y's Done-when item reworded on trunk beside the
+    relink: a real edit, held naming Y."""
+    trunk, _y_claim = _two_claims(tmp_path)
+    _x_closed_in_its_lane(tmp_path, trunk)
+    _git(trunk, "merge", "--squash", "wi-x")
+    relinked = (trunk / _Y_ACTIVE).read_text(encoding="utf-8")
+    _write(trunk, _Y_ACTIVE, relinked.replace("Y ships after", "Y may ship before"))
+    _git(trunk, "add", "-A")
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and _Y in held, held
+
+
+def test_a_relink_reaching_an_existing_lanes_claim_copy_across_the_landing(
+    tmp_path,
+):
+    """The reach beyond the same staged delta, on ONE history of Y's lane,
+    cut before X lands so its tip still carries Y's original link:
+
+    * `y_claim` is Y's claim commit on `main`, `y_fork` the lane's fork
+      point, `y_tip0` its first work commit (original link);
+    * `x_land` is X's squash landing on `main` (Y's trunk copy relinked);
+    * `y_tip1` is the lane after it merges trunk in (relinked), the tree
+      `integrate.refresh` builds before its trunk step and bar, which do not
+      touch a claim copy: its first step is `git merge --no-ff --no-commit`
+      of trunk;
+    * `y_land` is Y's own squash landing after its ritual close.
+
+    Probes, each pinned to what the code does:
+
+    (ii) before Y refreshes: the merge slot compares trunk's copy at
+    `x_land` (relinked) with the lane tip `y_tip0` (original) and HOLDS; the
+    build hold compares `y_fork` with `y_tip0` (both original) and does not;
+    (i) after the refresh: the build hold at the merge base (`x_land`)
+    compares two relinked copies and does not hold, at `y_claim` it compares
+    the original with the relinked copy and HOLDS; the merge slot compares
+    `x_land` with `y_tip1` (both relinked) and does not hold;
+    (iii) when Y closes: the mint compares trunk's copy at `x_land`
+    (relinked) with the closed copy, whose own link the ritual rebased to its
+    new folder, and MINTS the goalposts row; the direct read of the pair
+    (`y_claim`'s copy, the closed copy) owes a blessing too.
+    """
+    trunk, y_claim = _two_claims(tmp_path)
+    lane_y = tmp_path / "lane-y"
+    _git(trunk, "worktree", "add", "-q", "-b", "wi-y", str(lane_y))
+    _write(lane_y, "src/y.txt", "y\n")
+    y_tip0 = _commit(lane_y, "work on Y")
+    y_fork = _git(lane_y, "merge-base", "wi-y", "main")
+    assert "../wi-x/WI-801-x.md" in (lane_y / _Y_ACTIVE).read_text(encoding="utf-8")
+
+    _x_closed_in_its_lane(tmp_path, trunk)
+    _git(trunk, "merge", "--squash", "wi-x")
+    _git(trunk, "commit", "-q", "--no-verify", "-m", "squash: land wi-x")
+    x_land = _git(trunk, "rev-parse", "HEAD")
+    assert _git(lane_y, "rev-parse", "HEAD") == y_tip0
+
+    # (ii) the un-refreshed lane
+    slot = integrate._done_when_refusal(trunk, "wi-y", [_Y])
+    assert slot and _Y in slot, slot
+    assert kdone.lane_hold(lane_y, "HEAD", y_fork, "wi-y", [_Y]) is None
+
+    # Y refreshes: trunk merged in, as the station refresh's first step does
+    _git(lane_y, "merge", "--no-ff", "--no-edit", "main")
+    y_tip1 = _git(lane_y, "rev-parse", "HEAD")
+    assert y_tip1 != y_tip0
+    base = _git(lane_y, "merge-base", "wi-y", "main")
+    assert base == x_land
+
+    # (i) the refreshed lane
+    assert kdone.lane_hold(lane_y, "HEAD", base, "wi-y", [_Y]) is None
+    held = kdone.lane_hold(lane_y, "HEAD", y_claim, "wi-y", [_Y])
+    assert held and _Y in held, held
+    assert integrate._done_when_refusal(trunk, "wi-y", [_Y]) is None
+
+    # (iii) Y closes and lands
+    _close_by_ritual(lane_y, _Y_ACTIVE, _Y_CLOSED)
+    _git(trunk, "merge", "--squash", "wi-y")
+    _git(trunk, "commit", "-q", "--no-verify", "-m", "squash: land wi-y")
+    y_land = _git(trunk, "rev-parse", "HEAD")
+    closed = (trunk / _Y_CLOSED).read_text(encoding="utf-8")
+    assert "](WI-801-x.md)" in closed, closed
+    minted, refusal = intake.intake_after_merge(
+        trunk, x_land, y_land, {_Y: "merged"}, "wi-y"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1, minted
+    body = (trunk / minted[0][1]).read_text(encoding="utf-8")
+    assert 'brief = "done-when"' in body and _Y in body, body
+    at_claim = kdone.claimed_text(trunk, y_claim, "wi-y", _Y)
+    assert kdone.blessing_owed(trunk, y_land, _Y, at_claim, closed) is not None
+
+
+# --- WI-925: the trunk is the declared branch, in any worktree -----------------
+
+handback = load_script("handback")
+plan_gate = load_script("plan_gate")
+rollup = load_script("gen_verdict_rollup")
+
+
+@pytest.mark.parametrize("blessing", ("verdict", "ruling"))
+def test_a_linked_worktree_on_the_declared_trunk_holds_an_unblessed_done_when_change(
+    tmp_path, blessing
+):
+    """The primary checkout sits on `side`; a linked worktree is on `main`,
+    the declared trunk. A trunk commit there that changes a claim copy's
+    Done-when and closes nothing is judged as trunk's, and held until its own
+    index carries a covering verdict or ruling."""
+    trunk = _trunk(tmp_path)
+    _git(trunk, "checkout", "-q", "-b", "side")
+    on_trunk = tmp_path / "on-trunk"
+    _git(trunk, "worktree", "add", "-q", str(on_trunk), "main")
+    _write(on_trunk, _ACTIVE_REL, _spec(NARROWED))
+    _git(on_trunk, "add", "-A")
+    held = integrate.staged_done_when_refusal(on_trunk)
+    assert held and _digest() in held, held
+    _stage_blessing(on_trunk, blessing)
+    assert integrate.staged_done_when_refusal(on_trunk) is None
+
+
+def test_a_single_checkout_on_a_branch_not_named_for_its_claim_does_not_judge_a_non_close_change(
+    tmp_path,
+):
+    """A single checkout switched to `side`, a branch no claim is named for:
+    it is not the declared trunk, so a Done-when change that closes nothing
+    is not judged there."""
+    trunk = _trunk(tmp_path)
+    _git(trunk, "checkout", "-q", "-b", "side")
+    _write(trunk, _ACTIVE_REL, _spec(NARROWED))
+    _git(trunk, "add", "-A")
+    assert integrate.staged_done_when_refusal(trunk) is None
+
+
+_UNDECLARED = {
+    "absent": None,
+    "not a string": "[policies]\ntrunk = 1\n",
+    "empty": '[policies]\ntrunk = ""\n',
+    "no such branch": '[policies]\ntrunk = "nosuch"\n',
+}
+
+
+def _undeclare(root, shape):
+    path = root / "docs" / "process.toml"
+    if _UNDECLARED[shape] is None:
+        path.unlink()
+    else:
+        path.write_text(_UNDECLARED[shape], encoding="utf-8", newline="\n")
+
+
+@pytest.mark.parametrize("shape", sorted(_UNDECLARED))
+def test_an_undeclared_trunk_refuses_each_caller_naming_the_key(
+    tmp_path, capsys, shape
+):
+    """With the trunk's line absent, not a string, empty or naming no local
+    branch, every route that reads the trunk refuses in turn, naming it: the
+    done-when step on a claim-copy change, the worker preflight, the
+    reviewer's brief, the rollup write and an adjudication row's close."""
+    import argparse
+
+    key = "[policies] trunk"
+    trunk = _trunk(tmp_path)
+    _undeclare(trunk, shape)
+    # A hand close on trunk lists a claim-copy change too, so it asks for
+    # the trunk like any other: the close is refused naming the key.
+    _stage_close(trunk)
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and key in held, held
+    _git(trunk, "reset", "-q", "--", "docs/work")
+    _write(trunk, _ACTIVE_REL, _spec(NARROWED))
+    _git(trunk, "add", "--", _ACTIVE_REL)
+    held = integrate.staged_done_when_refusal(trunk)
+    assert held and key in held, held
+
+    args = argparse.Namespace(wi=WI, train=BRANCH, base=None, rework=None)
+    capsys.readouterr()
+    assert agent_loop.build_worker_assignment(args, trunk) == (
+        None,
+        agent_loop.EXIT_PREFLIGHT,
+    )
+    assert key in capsys.readouterr().err
+
+    with pytest.raises(agent_loop.prompts.PromptError, match=r"\[policies\] trunk"):
+        agent_loop.reviewer_prompt(
+            {}, "REVIEW-A", "v.md", root=trunk, worker=None, base="a" * 40, sha="b" * 40
+        )
+
+    assert rollup.main(["--root", str(trunk)]) == 2
+    assert key in capsys.readouterr().err
+
+    refusal = handback._machine_line_refusal(trunk, trunk, BRANCH, {}, [], "here")
+    assert refusal and key in refusal, refusal
+
+
+def test_a_commit_touching_no_claim_copy_is_not_refused_over_the_key(tmp_path):
+    """With no trunk declared, a trunk commit that changes no claim copy asks
+    for no trunk: neither the done-when step nor the plan gate refuses it."""
+    trunk = _trunk(tmp_path)
+    _undeclare(trunk, "absent")
+    _write(trunk, "notes.txt", "a note\n")
+    _git(trunk, "add", "--", "notes.txt")
+    assert integrate.staged_done_when_refusal(trunk) is None
+    assert plan_gate.staged_lines(trunk) == []

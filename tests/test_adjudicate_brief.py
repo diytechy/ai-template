@@ -33,6 +33,7 @@ import sys
 
 import pytest
 from conftest import (
+    declare_trunk,
     env_gate_skipif,
     load_script,
     pin_autocrlf,
@@ -554,7 +555,11 @@ sys.exit(0)
 
 def _session(tmp_path, repo, wi, verdict_line):
     """Run the real loop against the fake CLI on a claimed train branch;
-    return `(proc, prompts_text, control_dir)`."""
+    return `(proc, prompts_text, control_dir)`. The branch the repository is
+    on is declared its trunk before the train branch is cut from it."""
+    declare_trunk(repo, _git(repo, "symbolic-ref", "--short", "HEAD").strip())
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "declare the trunk")
     _git(repo, "checkout", "-q", "-b", "llm/train/t1")
     ctl = tmp_path / "ctl"
     ctl.mkdir()

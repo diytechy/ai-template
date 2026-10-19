@@ -11,7 +11,14 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, pin_autocrlf, run_py, write_wi_registry
+from conftest import (
+    SCRIPTS,
+    declare_trunk,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    write_wi_registry,
+)
 
 agent_loop = load_script("agent_loop")
 
@@ -234,6 +241,8 @@ def managed_repo(tmp_path):
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
@@ -284,11 +293,16 @@ def managed_repo(tmp_path):
 def _commit_config(repo):
     # A worker's DONE is judged from committed evidence + a CLEAN tree
     # (WI-210), so the fixture/test config written after the seed commit
-    # must be committed before the worker starts.
+    # must be committed before the worker starts. The config is the lane's
+    # starting point, not its work, so the declared trunk moves up to it: the
+    # lane's integration base is its merge base with the trunk.
     subprocess.run(["git", "-C", str(repo), "add", "-A"], capture_output=True)
     subprocess.run(
         ["git", "-C", str(repo), "commit", "-q", "-m", "test config", "--allow-empty"],
         capture_output=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(repo), "branch", "-f", "main", "HEAD"], capture_output=True
     )
 
 
@@ -804,6 +818,8 @@ def _winstay_repo(tmp_path):
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
@@ -1028,7 +1044,7 @@ def test_reviewer_prompt_renders_trunk_and_process_doc_slots(managed_repo):
     rev_block = prompts.split("=== revb ===\n", 1)[1].split("\n=== ", 1)[0]
     assert "{trunk}" not in rev_block and "{process_doc}" not in rev_block
     # The reading scope ends at the REVIEWED commit, not a moving HEAD (WI-884).
-    assert re.search(r"git diff llm/train/t1\.\.\.[0-9a-f]{40} ", rev_block)
+    assert re.search(r"git diff main\.\.\.[0-9a-f]{40} ", rev_block)
     assert "':(exclude)docs/iteration'" in rev_block
     assert "project-trajectory/PROCESS.md" in rev_block
     # Round 2: the script directory is the same hazard — this fixture has no
@@ -1054,7 +1070,7 @@ def test_reviewer_prompt_names_the_rows_under_review(managed_repo):
     # Naming the rows must not narrow the READING scope, which is still the
     # diff — the redaction and the three-dot range are untouched.
     # The reading scope ends at the REVIEWED commit, not a moving HEAD (WI-884).
-    assert re.search(r"git diff llm/train/t1\.\.\.[0-9a-f]{40} ", rev_block)
+    assert re.search(r"git diff main\.\.\.[0-9a-f]{40} ", rev_block)
     assert "stays the diff itself" in rev_block
 
 
@@ -1166,17 +1182,20 @@ def test_review_owed_survives_a_failed_marker_write(managed_repo, tmp_path):
     assert kinds2[boundary] == "review", kinds2
 
 
-def test_default_base_reads_the_claim_record_after_a_single_checkout_resume(tmp_path):
-    # The claim commit is already durable Git evidence.  A linked lane reaches
-    # it through merge-base; after that worktree is gone and the primary
-    # checkout has switched to the lane branch, it must still be the evidence
-    # boundary rather than the branch tip.
+def test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume(
+    tmp_path,
+):
+    # The lane's integration base is its merge base with the DECLARED trunk,
+    # in a linked worktree and, after that worktree is gone and the primary
+    # checkout has switched to the lane branch, in the single checkout too:
+    # the lane branch is never read as the trunk, so the range never collapses.
     import subprocess as _sp
 
     trunk = tmp_path / "trunk"
     trunk.mkdir()
     _git(trunk, "init", "-q", "-b", "main")
     pin_autocrlf(trunk)
+    declare_trunk(trunk)
     _git(trunk, "config", "user.email", "t@example.com")
     _git(trunk, "config", "user.name", "T")
     (trunk / "seed.txt").write_text("seed\n", encoding="utf-8")
@@ -1192,7 +1211,6 @@ def test_default_base_reads_the_claim_record_after_a_single_checkout_resume(tmp_
     queued_spec.rename(claim_spec)
     _git(trunk, "add", "-A")
     _git(trunk, "commit", "-q", "-m", "claim: WI-1 -> active/wi-1 (bookkeeping)")
-    claim = _git(trunk, "rev-parse", "HEAD")
     lane = tmp_path / "lane"
     _sp.run(
         ["git", "-C", str(trunk), "worktree", "add", "-q", "-b", "wi-1", str(lane)],
@@ -1235,31 +1253,32 @@ def test_default_base_reads_the_claim_record_after_a_single_checkout_resume(tmp_
         capture_output=True,
     )
     _git(trunk, "checkout", "-q", "wi-1")
-    # The single checkout: trunk can no longer be told from the current branch
-    # (merge-base would collapse to HEAD), so the durable claim is the boundary.
-    assert al.default_base(trunk) == claim
+    # The single checkout: the declared trunk is still `main`, so the boundary
+    # is the same merge base, and trunk's WI-777 closure stays out of range.
+    assert al.default_base(trunk) == trunk_tip
     built, _blocked = al.train_evidence(trunk, al.default_base(trunk))
     assert "WI-1" in built
-    worker = {"train": "wi-1", "assigned": ["WI-1"], "base": claim, "rework": ""}
+    assert "WI-777" not in built
+    worker = {"train": "wi-1", "assigned": ["WI-1"], "base": trunk_tip, "rework": ""}
     assert al.worker_endstate(trunk, worker, False, False, 0)[0] == al.EXIT_DONE
     ac = load_script("agent_common")
     assert ac.stale_terminal_assignment(trunk, "WI-1", {"Status": "done"}) is False
 
 
-def test_default_base_refuses_an_unreadable_claim_history(monkeypatch):
+def test_default_base_lets_an_undeclared_trunk_refusal_through(tmp_path):
+    # With no trunk declared there is no integration base to compute, and
+    # nothing is guessed from the branch the checkout is on.
     ac = load_script("agent_common")
-
-    def unreadable_claim_history(_root, *args):
-        if args == ("worktree", "list", "--porcelain"):
-            return 0, ""  # no linked worktree: trunk IS the current branch
-        if args == ("branch", "--show-current"):
-            return 0, "wi-1"
-        if args[:2] == ("log", "--first-parent"):
-            return 1, "fatal: unreadable object"
-        raise AssertionError(args)
-
-    monkeypatch.setattr(ac, "git", unreadable_claim_history)
-    assert ac.default_base("repo") is None
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    _git(repo, "config", "user.email", "t@example.com")
+    _git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    with pytest.raises(ac.TrunkUndeclared, match=r"\[policies\] trunk"):
+        ac.default_base(repo)
 
 
 # --- WI: MINOR-only refusals do not block routing (measured 2026-09-03/04) ----
@@ -1467,6 +1486,8 @@ def _claimed_lane(tmp_path, closed_text):
     repo.mkdir()
     _git(repo, "init", "-q")
     pin_autocrlf(repo)
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     active = repo / "docs" / "work" / "active" / "t1" / "WI-201-scoped.md"

@@ -1,0 +1,19 @@
+Reviewed: 31a5d0915f4b7a1601ae13788011226010c7a978
+
+## Independent plan critique — WI-925 — 2026-10-18
+
+Reviewer: Codex, this invocation's fresh non-author critic session. No provider session id was supplied. Coordinator recording route: the assigned scratch verdict file only; no filing command or commit.
+
+Artifact inspected: `docs/plans/WI-925/plan.md`, read directly with `git show` at the reviewed commit. This is a text artifact; no render or image proxy was needed. The supplied coverage report was assessed against the plan and spec, rather than treated as proof of semantic coverage. No implementer session notes, status/log files, self-assessments, or prior critique files were read.
+
+Rubric: `docs/rubrics/plan-decomposition.md` at the reviewed commit, blob `4f183eb6aa17a459c9b0741391791d03a8f76293`. Intent sources: the full `docs/work/active/wi-925/WI-925-trunk-ref-update-done-when.md`, its specref `docs/archive/work/complete/WI-921-hook-floor-done-when-census.md#trust`, SR-156/SR-170/SR-137 in `docs/requirements/system-requirements.toml`, and their SN-027/SN-008/SN-025/SN-010/SN-028 parents in `docs/requirements/stakeholder-needs.toml`, all at the reviewed commit. Existing IF-179, IF-189, IF-261 and IF-286 and the relevant readers were inspected to assess the proposed seams and fixture comparisons.
+
+Rubric adequacy checked before scoring: DevStg-Tests and B2 require actual coverage of the written goal, including the fail-closed trunk identity, single policy home, and relink exception's narrow bound; DevStg-Reqs, DevStg-Impl, G4 and B1/B3/B4 independently judge implementability, seams, duplication and order. This derives the judgment from the intent and Done-when rather than a permissive TC. No additional numbered anchor is needed for the defect found here.
+
+Anchors judged: DevStg-Reqs, DevStg-Tests, DevStg-Impl, G4, B1, B2, B3 and B4. The rows otherwise name concrete deliverables and checks; the D1/D4/D8/D18 overlaps have distinct declared responsibilities; the excluded TCs remain in the full suite with defensible exclusions from focused changes. Existing seams are consumed or amended. The reproduction-first and shared-stage-before-new-caller order is sound. `DELTA: within` correctly carries the declared-name domain/input change through schema, bootstrap, reader, consumers, interfaces and migration; the existing policy-read and staged-byte boundaries remain the architectural routes. The finding below concerns the semantic coverage of the C2 reproduction, not an additional scope demand.
+
+Transfer caveat: the debate/selection evidence comes from QA, math and code with objective verifiers; plan-artifact quality and two-planner reconciliation have not been benchmarked. This rubric is an extrapolation, not a proven instrument.
+
+- [MAJOR] DevStg-Tests/B2 -> `docs/plans/WI-925/plan.md`, P0's C2 probes (i) and (ii): the recipe cuts `wi-y` from `main` only after X's landing, then asks for the merge-slot comparison on `wi-y` "before a refresh". That lane already contains the landing's relinked Y copy, so it cannot exercise the written C2 case of an existing lane receiving or disagreeing with the later trunk relink. `lane_hold` reads its claim copy at the supplied base; with both sides seeded after the relink, a passing comparison can be recorded as evidence that the promised reach was checked when it was never constructed. This leaves deliverable 3's explicit C2 probe obligation uncovered and would require fixture rework in a normal review -> Cut Y's lane while Y still has its original link, before X lands; retain that lane and its actual base/tip across X's squash landing, probe the merge slot before refreshing Y, then refresh Y and probe its lane hold, and carry that same history into Y's later close/mint comparison. Record and pin each observed outcome without widening the ruled same-delta fix -> @planner
+
+VERDICT: CHANGES-REQUESTED findings=1

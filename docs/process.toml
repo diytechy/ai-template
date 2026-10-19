@@ -229,6 +229,13 @@ guardrails = "off"
 # 2026-10-05, WI-834), and every new session but a wrap-up adjudication of an
 # active claim. Restore the value to re-arm.
 blackout = ""
+# The integration branch (trunk) by name: the branch every lane is cut from
+# and lands on. Every reader that needs the trunk reads this line, in any
+# worktree; nothing guesses it from the branch a checkout is on. Absent,
+# empty, not a string, or naming no local branch, each of those readers
+# refuses and names this line. Move it in the same commit that moves the
+# trunk.
+trunk = "refactor_again"
 
 [checks]
 # Closed WIs between observation judgements; case MinWorkItems may raise it.

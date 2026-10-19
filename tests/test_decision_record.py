@@ -27,7 +27,7 @@ import sys
 import tomllib
 
 import pytest
-from conftest import KIT, ROOT, SCRIPTS, load_script
+from conftest import KIT, ROOT, SCRIPTS, load_script, trunk_repo
 
 if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
     sys.path.insert(0, str(SCRIPTS))
@@ -353,6 +353,7 @@ def test_a_review_session_is_not_handed_the_note(tmp_path):
     # A reviewer closes nothing: its brief is composed apart from the fork that
     # carries the note, whatever the dial says.
     _dial(tmp_path, '"record"')
+    trunk_repo(tmp_path)
     slots = "{trunk}{head}{process_doc}{scripts}{wis}{round_facts}"
     text = al.reviewer_prompt(
         {"REVIEW-A": "REVIEW {verdict}" + slots},

@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 
-from conftest import KIT, ROOT
+from conftest import KIT, ROOT, declare_trunk
 
 SCRIPT = ROOT / "scripts" / "check_resync.py"
 _spec = importlib.util.spec_from_file_location("check_resync", SCRIPT)
@@ -243,6 +243,7 @@ def _repo(tmp_path):
     _write(tmp_path, "project-trajectory/scripts/bootstrap.py", STUB)
     _write(tmp_path, "project-trajectory/tool.py", "VALUE = 1\n")
     _pack(tmp_path, OLD)
+    declare_trunk(tmp_path, "trunk")
     _git(tmp_path, "add", ".")
     _git(tmp_path, "commit", "-qm", "base")
     return tmp_path, _git(tmp_path, "rev-parse", "HEAD")

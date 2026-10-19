@@ -8875,6 +8875,96 @@ held-status rung, never a person's lane. Before, it read as unclaimed.
 **What to do.** Overwrite the files. Nothing migrates: no registry, setting
 or record format changes, and every lane whose claim log reads is read as
 before. The slot refuses only where git cannot read the claim log.
+### The trunk is declared by name; a spec move's relink is not a Done-when change [since 8d64910f2]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The integration branch (trunk) is now one declared name,
+`trunk` under `[policies]` in `docs/process.toml`, and every reader that
+needs the trunk reads that line, in any worktree. Before, the kit guessed
+it: the branch the primary checkout was on, then the current branch. So a
+linked worktree on the real trunk, while the primary checkout sat on another
+branch, was read as off trunk, and a single checkout switched to a lane
+branch was read as the trunk. `agent_common.trunk_name(root)` takes no
+`worker` argument any more and raises `agent_common.TrunkUndeclared` when the
+line is absent, not a string, empty, or names no local branch; the config
+check refuses a non-string value like any other dial.
+
+`agent_common.default_base(root)` no longer reads the claim record. It is the
+merge base of HEAD with the declared trunk, in a single checkout as in a
+linked worktree (HEAD on an unrelated history, None on an unborn HEAD). A
+single checkout switched to its lane branch now reads its lane's range from
+the fork point, not from the claim commit. A new
+`agent_common.worker_base(root, given)` is the worker preflight's base.
+
+A fresh scaffold writes the line from the branch it is scaffolded on (the
+branch git will create, in an unborn repository); a destination that is no
+git repository, or sits on a detached HEAD, keeps the template's `main` and
+prints a NOTE naming the line.
+
+A spec move's own relink is no longer a Done-when change. When a close
+moves a spec, `spec_move` rewrites every inbound link, including a link
+inside another claimed row's claim copy, and the `done-when-blessed` step
+read the rewritten target as a reworded item, so a squash landing or a hand
+close on trunk was held over a change nobody made. Now a claim copy's lone
+modification whose staged bytes are exactly the inbound relink of a spec
+move out of `active/` that the same commit carries is not a change; a real
+edit beside the relink, an unreadable blob or bytes that are not UTF-8 still
+are. The one exact reading is `spec_move.exact_relink(old, new, rel, remap)`,
+which the claim recognizer, the plan gate and the staged reader all call;
+`kitlib.done_when.staged_hold` takes it as a fifth, injected argument
+(`relinked`). A relink that reaches a claim copy outside the same commit (an
+existing lane's merge slot after another row's landing, or the mint at that
+row's close) still reads as a change, and an owner ruling releases it.
+
+`kitlib.done_when.staged_closes` is gone: it had no kit caller. Read
+`staged_changes(root)` and keep the entries whose kind is `"close"`.
+
+The shipped pre-commit hook's `done-when-blessed` comment now states the
+promise (over an ordinary commit, the squash landing and a hand close, a
+trunk commit is judged against its parent, on the declared trunk, in any
+worktree) and the one residue list, which replaces the residue paragraph of
+the WI-921 entry above: seven routes fail open and two shapes fail closed,
+each named there. The second closed shape also takes in a claim's own
+relink of another row's claim copy: the claim commits through plumbing, so
+no hook judges it, and its later reach is held. The single-checkout shape is gone from it, closed
+by the declared trunk.
+
+`check_trajectory`'s hold-by-rename finding no longer offers deleting the
+stranded claim, which the trunk floor holds; it names restoring the branch
+ref at the claim commit, a partial close and its landing.
+
+**Kit-owned files — overwrite:** `process.toml.template` (reference only:
+see What to do), `hooks/pre-commit` (re-copy it to
+`.githooks/pre-commit`), `scripts/agent_common.py`,
+`scripts/agent_policy.py`, `scripts/bootstrap.py`, `scripts/agent_brief.py`,
+`scripts/agent_loop.py`, `scripts/review_brief.py`,
+`scripts/adjudicate_brief.py`, `scripts/gen_verdict_rollup.py`,
+`scripts/handback.py`, `scripts/integrate.py`, `scripts/plan_gate.py`,
+`scripts/check.py`, `scripts/check_readability.py`,
+`scripts/check_trajectory.py`, `scripts/spec_move.py` and
+`scripts/kitlib/done_when.py`. They are a set (§2.3): each reader calls
+`trunk_name` or `default_base` and handles `TrunkUndeclared`, and
+`integrate.py` and `plan_gate.py` call `spec_move.exact_relink`, which
+`integrate.py` hands to `kitlib/done_when.py`.
+
+**What to do — a forced migration.** Add the line to `docs/process.toml`,
+under `[policies]`:
+
+```toml
+trunk = "<your integration branch>"
+```
+
+`docs/process.toml` is never replaced; this is a new setting you take. Until
+the line is there, these routes refuse and name it: the worker preflight,
+the review and dispute briefs, the adjudicator's brief, the reviewer's
+brief, the rollup write, an adjudication row's close, the plan gate on a
+claimed lane, and the `done-when-blessed` step on a commit that changes a
+claim copy. A commit that changes no claim copy is never refused over the
+line. Two readers degrade instead of refusing: on a claimed lane with
+nothing staged, the path-triggered step selection runs every opted-in step,
+and the readability report skips each measure, naming the line.
+Move the line in the same commit that moves your trunk.
 
 ## 5. Promotion: when this pack stops being prose
 

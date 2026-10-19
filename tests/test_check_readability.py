@@ -19,7 +19,14 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import SCRIPTS, load_script, pin_autocrlf, run_py, skip_without_env_gates
+from conftest import (
+    SCRIPTS,
+    declare_trunk,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    skip_without_env_gates,
+)
 
 TANGLED = """def tangled(a, b, c, d):
     for x in a:
@@ -88,6 +95,7 @@ def make_repo(root, profile=None):
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")
     _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(root)
     _write(root / "docs" / "stack.ini", _profile() if profile is None else profile)
     _write(root / "src" / "mod.py", TANGLED + "\n\n" + OTHER)
     cc = load_script("check_complexity")
@@ -273,6 +281,30 @@ def test_on_a_claimed_branch_the_change_is_read_from_the_merge_base(
     assert len(worse) == 1 and "src/mod.py::tangled" in worse[0], lines
     assert not [line for line in lines if "::other" in line], lines
     assert "merge base {} to HEAD".format(base[:10]) in lines[-1], lines
+
+
+@pytest.mark.parametrize("gating", ["", "complexity"])
+def test_an_undeclared_trunk_on_a_claimed_lane_skips_naming_the_declaration(
+    tmp_path, cr, capsys, gating
+):
+    # A claimed lane whose trunk line is gone: the lane's base cannot be read,
+    # so each measure is a SKIP that names the declaration to add, never an
+    # unreadable history, and the exit stays 0 (no worsening was measured).
+    trunk = make_repo(tmp_path / "trunk", _profile(gating=gating))
+    _write(trunk / "docs" / "work" / "active" / "lane" / "WI-001-x.md", "claim\n")
+    _git(trunk, "add", "-A")
+    _git(trunk, "commit", "-qm", "claim: WI-001 -> active/lane (bookkeeping)")
+    lane = tmp_path / "lane"
+    _git(trunk, "worktree", "add", "-q", "-b", "lane", str(lane))
+    stage_module(lane, TANGLED_WORSE)
+    _git(lane, "commit", "-qm", "raise tangled")
+    (lane / "docs" / "process.toml").unlink()
+    code, lines = drive(cr, lane, capsys)
+    assert code == 0, lines
+    skip = [line for line in lines if "SKIP" in line]
+    assert len(skip) == 1, lines
+    assert "complexity" in skip[0] and "[policies] trunk" in skip[0], skip
+    assert "claim history" not in skip[0], skip
 
 
 @pytest.mark.parametrize("gating", ["", "complexity"])

@@ -11,6 +11,7 @@ import sys
 
 import pytest
 from conftest import (
+    declare_trunk,
     SCRIPTS,
     load_script,
     pin_autocrlf,
@@ -181,6 +182,8 @@ def critique_repo(tmp_path):
 
     _git(repo, "init")
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")

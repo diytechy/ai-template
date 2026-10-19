@@ -47,6 +47,7 @@ import subprocess
 
 from conftest import (
     SCRIPTS,
+    declare_trunk,
     load_script,
     make_minimal_project,
     pin_autocrlf,
@@ -129,6 +130,7 @@ def git_repo(root, branch="main"):
     # make that commit touch an undeclared path — which RULING-6's audit reads,
     # correctly, as a non-merge trunk commit touching product paths.
     write_watermark(root, WI=401)
+    declare_trunk(root, branch)
     _commit(root, "seed", when=T_BASE)
     return root
 

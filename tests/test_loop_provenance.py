@@ -44,6 +44,7 @@ import pytest
 from conftest import (
     ROOT,
     SCRIPTS,
+    declare_trunk,
     env_gate_skipif,
     load_script,
     pin_autocrlf,
@@ -304,6 +305,8 @@ def _loop_repo(tmp_path):
     ):
         _git(repo, *args)
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
     _git(repo, "checkout", "-q", "-b", "llm/train/t1")

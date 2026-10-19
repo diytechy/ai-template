@@ -31,7 +31,7 @@ carries is never read):
     `docs/log.d/`, the row's own spec under `docs/work/active/<branch>/`, a
     close of the row (the spec's move out of `active/`, its report under
     `docs/handbacks/`, and the move's own inbound-link edits,
-    `spec_move.expected_relink`, byte-exact), and, as a merge's own changes,
+    `spec_move.exact_relink`, byte-exact), and, as a merge's own changes,
     what the station refresh writes: the compiled `docs/log.md` and the
     views `trunk_step.regen_writes` lists;
   * a commit that adds or changes a pass record is checked against its
@@ -134,24 +134,6 @@ def _own_changes(root, rev, parents):
     return own or {}, None
 
 
-def _relinked(root, rev, parent, rel, remap):
-    """Is the change to `rel` exactly the inbound-link redirect a close's
-    spec move writes (`spec_move.expected_relink`), byte for byte?
-
-    Implements: SR-154, LLR-337
-    """
-    before, _w1 = plan_pass.blob(root, parent, rel)
-    after, _w2 = plan_pass.blob(root, rev, rel)
-    if before is None or after is None:
-        return False
-    try:
-        text = before.decode("utf-8")
-        want = spec_move.expected_relink(text, rel.rpartition("/")[0], remap)
-        return want != text and want.encode("utf-8") == after
-    except UnicodeDecodeError:
-        return False
-
-
 def _close_homes(own, branch, wi):
     """`(paths, remap)` a close of `wi` in this commit may write besides its
     spec: the closed copy and its report, and the remap its inbound-link
@@ -227,7 +209,12 @@ def build_paths(root, rev, parents, own, branch, claimed):
         if _regenerated(path, parents):
             continue
         relink = remap and status == "M" and path.endswith(".md")
-        if relink and _relinked(root, rev, parents[0], path, remap):
+        if relink and spec_move.exact_relink(
+            plan_pass.blob(root, parents[0], path)[0],
+            plan_pass.blob(root, rev, path)[0],
+            path,
+            remap,
+        ):
             continue
         out.append(path)
     return out
@@ -590,14 +577,24 @@ def _unattributed_squash(root, head, tip):
 
 def _claim_base(root, branch):
     """The lane's claim base: its integration base, or HEAD when that cannot
-    be read and the lane holds no claim folder (trunk). None holds.
+    be read and the lane holds no claim folder (trunk). None holds. With the
+    trunk undeclared, a branch whose HEAD holds no claim folder is judged
+    against HEAD, so a commit there is not refused over a key it does not
+    need; any other branch raises `agent_common.TrunkUndeclared`, for the
+    caller to hold naming the line.
 
     Implements: SR-154, LLR-337
     """
-    base = agent_common.default_base(root)
+    folder = "docs/work/active/{}/".format(branch)
+    try:
+        base = agent_common.default_base(root)
+    except agent_common.TrunkUndeclared:
+        listed = _kitgit.git_out(root, ["ls-tree", "--name-only", "HEAD", "--", folder])
+        if listed == "":
+            return "HEAD"
+        raise
     if base:
         return base
-    folder = "docs/work/active/{}/".format(branch)
     listed = _kitgit.git_out(root, ["ls-tree", "--name-only", "HEAD", "--", folder])
     return "HEAD" if listed == "" else None
 
@@ -623,7 +620,10 @@ def staged_lines(root):
     branch = (_kitgit.git_out(root, ["branch", "--show-current"]) or "").strip()
     if branch:
         parents = [head] + ([merging] if merging else [])
-        base = _claim_base(root, branch)
+        try:
+            base = _claim_base(root, branch)
+        except agent_common.TrunkUndeclared as exc:
+            return lines + [str(exc)]
         lines += commit_lines(root, None, parents, branch, base, deep=True)
     return lines
 

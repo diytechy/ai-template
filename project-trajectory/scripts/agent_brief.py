@@ -517,8 +517,8 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, *, root, worker, base
     refresh never re-feeds the reviewer trunk's own merged work.
 
     C7 (docs/plans/2026-08-30-stall-guard-plan.md): the brief's reading scope
-    renders per repo — `{trunk}` (the primary checkout's branch, the
-    integration trunk), `{process_doc}` (docs/process.md where bootstrap
+    renders per repo — `{trunk}` (the declared integration trunk; an
+    undeclared one raises `prompts.PromptError` naming the line), `{process_doc}` (docs/process.md where bootstrap
     materialized one; this meta-repo's masters live under project-trajectory/,
     so a literal would be right downstream and wrong here) and `{scripts}`
     (the kit scripts' directory, the same hazard) are SLOTS. An
@@ -541,9 +541,13 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, *, root, worker, base
     Implements: SR-154, LLR-045
     """
     base_text = review_template(prompt_templates, phase)
+    try:
+        trunk = trunk_name(root)
+    except agent_common.TrunkUndeclared as exc:
+        raise prompts.PromptError(str(exc)) from exc
     values = {
         "verdict": str(verdict_path),
-        "trunk": trunk_name(root, worker),
+        "trunk": trunk,
         "head": sha,
         "process_doc": process_doc_path(root),
         "scripts": scripts_dir(root),
@@ -1187,11 +1191,11 @@ def review_owed_by_evidence(root, worker, required=1):
     here to read either way; `[]` means read it and nothing is owed; a list
     names the phases. They were one falsey value, and a caller that reads "the
     evidence owes nothing" off a scan that never saw the evidence is not
-    reading evidence at all: `default_base` merge-bases to HEAD whenever the
-    primary checkout IS the lane branch (its own docstring says so — a
-    single-checkout attended run), so on a RESUMED run of that shape the range
-    is empty, every assigned WI reads unbuilt, and a genuinely parked round
-    answered "nothing owed" (found by the unfiltered suite at REVIEW-A round
+    reading evidence at all: `default_base` once merge-based to HEAD whenever
+    the primary checkout WAS the lane branch (a single-checkout attended run,
+    before the trunk was declared by name), so on a RESUMED run of that shape
+    the range was empty, every assigned WI read unbuilt, and a genuinely parked
+    round answered "nothing owed" (found by the unfiltered suite at REVIEW-A round
     034, five commits after the round-033 rework that introduced it).
 
     This is round 033 finding 2's own antidote applied one level down. That

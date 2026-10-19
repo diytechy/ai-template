@@ -40,9 +40,12 @@ DECISION is split out of each traversal (`_redirected_link_target` /
 `_rebased_link_target`) — the C901 lesson WI-288 paid for at complexity 11.
 
 `expected_relink` is the pure oracle of the inbound half: what a file WOULD say
-after the redirect. `integrate._abandoned_claim` uses it to recognise the
-relink writes inside a crashed claim's one commit without loosening its
-conviction to "any .md edit".
+after the redirect. `exact_relink` is the one exact reading over it, bytes
+against bytes: `integrate._abandoned_claim` uses it to recognise the relink
+writes inside a crashed claim's one commit without loosening its conviction
+to "any .md edit", the plan gate to excuse a close's own relinks, and the
+staged Done-when reader to tell a spec move's relink of a claim copy from a
+change to it.
 
 Stdlib only; Windows+POSIX (all link math is `posixpath`, I/O is `pathlib`).
 
@@ -295,6 +298,33 @@ def expected_relink(text, doc_dir, remap):
     return rewrite_text(
         text, lambda target: _redirected_link_target(target, doc_dir, remap)
     )
+
+
+def exact_relink(old, new, rel, remap):
+    """Are the bytes `new` of the markdown file `rel` EXACTLY the inbound
+    redirect this ritual writes into its bytes `old` for `remap`, and is that
+    redirect a real rewrite? The one exact reading of a relink, shared by
+    every caller that excuses one (the claim recognizer, the plan gate's
+    close homes, the staged Done-when reader).
+
+    Bytes in, so nothing is stripped or EOL-folded before the compare: `old`
+    is decoded strictly and the expectation re-encoded, and the ritual keeps
+    line endings (`newline=""`), so a CRLF file still matches. False when
+    either side is None (unreadable or absent), when `old` is not UTF-8
+    (`_rewrite_md_links` skips such a file, so a change to it is not the
+    ritual's write), and when the redirect would leave `old` as it is (the
+    ritual writes only a file it changes; an empty `remap` changes nothing).
+
+    Implements: SR-156, LLR-145
+    """
+    if old is None or new is None:
+        return False
+    try:
+        text = old.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+    want = expected_relink(text, posixpath.dirname(rel), remap)
+    return want != text and want.encode("utf-8") == new
 
 
 def expected_rebase(text, old_dir, new_dir):

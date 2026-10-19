@@ -230,17 +230,22 @@ def _off_trunk_refusal(root):
     round 005): the generator returned 0 and wrote `docs/reviews/rollup/` in a
     claimed lane, and the work-branch freshness stand-down then hid the write.
     A direct write is refused when the checkout is on a branch other than the
-    trunk (`agent_common.trunk_name`: the primary checkout's branch); the
-    station's refresh runs the trunk step INSIDE the lane worktree, so that
-    one caller says so with `--trunk-step`. `--check` never writes and is
-    never refused. A single-checkout repo is its own trunk, so nothing changes
-    for an attended run or a test fixture."""
+    declared trunk (`agent_common.trunk_name`), in any worktree; the station's
+    refresh runs the trunk step INSIDE the lane worktree, so that one caller
+    says so with `--trunk-step`. `--check` never writes and is never refused.
+    A detached HEAD is not refused and asks for no trunk; an undeclared trunk
+    refuses the write, naming the line to add."""
     import agent_common as ac  # a sibling reader; deferred so --check pays nothing
 
     _c, cur = ac.git(root, "branch", "--show-current")
     cur = cur.strip()
-    trunk = ac.trunk_name(root)
-    if not cur or cur == trunk:
+    if not cur:
+        return ""
+    try:
+        trunk = ac.trunk_name(root)
+    except ac.TrunkUndeclared as exc:
+        return "gen_verdict_rollup: REFUSED — {}".format(exc)
+    if cur == trunk:
         return ""
     return (
         "gen_verdict_rollup: REFUSED — {} is a work branch (trunk is {}); the "

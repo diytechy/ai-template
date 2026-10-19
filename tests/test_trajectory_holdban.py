@@ -144,6 +144,20 @@ def test_renamed_ref_is_named_and_warns_then_gates(tmp_path):
     assert rs.returncode == 1
 
 
+def test_the_finding_names_a_recovery_the_trunk_floor_permits(tmp_path):
+    """Deleting the stranded claim copy on trunk is a commit the trunk floor
+    holds and no blessing releases, so the finding no longer offers it. It
+    names the route the kit supports: restore the branch ref at the claim
+    commit, then close the lane PARTIAL and land that close."""
+    run_git = _init_repo(tmp_path)
+    run_git("branch", "-m", ACTIVE_BRANCH, ACTIVE_BRANCH + "-HELD-for-owner-verdict")
+    (finding,) = check_trajectory.holdbyrename_findings(tmp_path)
+    assert "delete the stranded claim" not in finding
+    assert "git branch {} <sha>".format(ACTIVE_BRANCH) in finding
+    assert "-> active/{} (bookkeeping)".format(ACTIVE_BRANCH) in finding
+    assert "PARTIAL" in finding and "merge slot" in finding
+
+
 def test_meta_repo_source_is_importable():
     # The detector ships in the traced product, not only the fixture copy.
     assert hasattr(check_trajectory, "holdbyrename_findings")

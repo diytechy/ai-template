@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import ROOT, load_script
+from conftest import ROOT, load_script, trunk_repo
 
 svc = load_script("session_service")
 keep = load_script("session_keep")
@@ -2126,6 +2126,7 @@ def test_an_edited_shipped_reviewer_template_reaches_the_next_rounds_brief(
     al = load_script("agent_loop")
     ab = load_script("adjudicate_brief")
     template = _shipped_reviewer(tmp_path, monkeypatch, al.agent_brief)
+    trunk_repo(tmp_path)
 
     def one_round():
         body, _scope = al.agent_brief.review_round_brief(

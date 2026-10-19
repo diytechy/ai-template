@@ -46,10 +46,10 @@ Contract IF-065: the shared coordinator primitives the session engine and the
     this layer adds a home without changing a public surface.
 Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     change is read from by the per-change readability report: the merge base of
-    HEAD with the trunk in a linked worktree, the durable claim commit when the
-    checkout is the lane branch itself, HEAD for a manual lane with no claim
-    record, and None when a claimed history cannot be read — which the caller
-    treats as an unreadable change rather than an empty one.
+    HEAD with the declared trunk, in a single checkout as in a linked worktree;
+    HEAD on an unrelated history, None on an unborn HEAD — which the caller
+    treats as an unreadable change rather than an empty one; and
+    `TrunkUndeclared` when the trunk's declaration cannot be read.
 Contract IF-224: `human_approves_spine(docs, registry)`, read by the owner's
     approval brief to set apart the owing chains the human-approval dial
     releases to an adjudicator: True (held) for a spine registry whose rung the
@@ -1120,27 +1120,49 @@ def head_sha(root):
     return out if code == 0 and out else None
 
 
-def trunk_name(root, worker=None):
-    """The integration trunk's NAME: the branch the PRIMARY checkout is on
-    (`git worktree list --porcelain`, first block — a lane runs in a linked
-    worktree while the primary holds trunk). Falls back to the current branch
-    (a repo with no linked worktrees), then to the worker's base sha — the
-    review brief's slot never renders empty.
+class TrunkUndeclared(ValueError):
+    """The trunk's declaration cannot be read as one local branch's name: THE
+    refusal every trunk reader raises or reports, its `str` the message each
+    caller prints. It names the line and what to write there."""
+
+
+_TRUNK_KEY = "docs/process.toml [policies] trunk"
+
+
+def _trunk_refusal(shape):
+    return TrunkUndeclared(
+        "{} {}: declare the integration branch by name, one line under "
+        '[policies]: trunk = "<your integration branch>"'.format(_TRUNK_KEY, shape)
+    )
+
+
+def trunk_name(root):
+    """The integration trunk's NAME: the branch `docs/process.toml [policies]
+    trunk` declares, in any worktree, or `TrunkUndeclared`. Absent (a file that
+    does not parse included), not a string, empty, or naming no
+    `refs/heads/<name>`, each is refused, naming the line to add; nothing is
+    guessed from the branch a checkout is on.
 
     HERE RATHER THAN IN `agent_loop` because two readers need it and they must
     not disagree: the loop composes the review brief and picks a worker's
     integration base with it, and the worker PREFLIGHT below asks the same
     question to tell a row THIS branch closed from one that was terminal before
-    the lane began."""
-    code, out = git(root, "worktree", "list", "--porcelain")
-    if code == 0 and out.strip():
-        for line in out.split("\n\n", 1)[0].splitlines():
-            if line.startswith("branch refs/heads/"):
-                return line[len("branch refs/heads/") :].strip()
-    _c, cur = git(root, "branch", "--show-current")
-    if cur.strip():
-        return cur.strip()
-    return (worker or {}).get("base", "") or "HEAD"
+    the lane began.
+
+    Implements: SR-156, LLR-339
+    """
+    policies = agent_policy.process_config(Path(root) / "docs").get("policies")
+    name = policies.get("trunk") if isinstance(policies, dict) else None
+    if name is None:
+        raise _trunk_refusal("is absent")
+    if not isinstance(name, str):
+        raise _trunk_refusal("is not a string ({!r})".format(name))
+    if not name.strip():
+        raise _trunk_refusal("is empty")
+    code, _out = git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + name)
+    if code != 0:
+        raise _trunk_refusal("names {!r}, which is no local branch".format(name))
+    return name
 
 
 def claim_subject(wi_ids, branch):
@@ -1195,8 +1217,7 @@ def claim_base(root, branch=None):
     full-lane review to (WI-884), read from trunk by branch name.
 
     Returns ``(base, readable)``.  `base is None` means this is a manual or
-    pre-claim worker and lets `default_base` retain its merge-base compatibility
-    fallback.  `readable is False` means Git could name the branch but could
+    pre-claim worker.  `readable is False` means Git could name the branch but could
     not read its history; that is deliberately distinct so the caller does not
     silently turn an unreadable claim into an empty HEAD..HEAD evidence range.
     """
@@ -1270,28 +1291,40 @@ def loop_claimed(root, branch, trunk_tip):
 
 
 def default_base(root):
-    """The integration base a worker assumes when --base is not given.
+    """The integration base a worker assumes when --base is not given: the
+    merge base of HEAD with the declared trunk, in a single checkout as in a
+    linked worktree. The `base..HEAD` evidence readers walk without
+    --first-parent, so after the lane merges trunk in only that boundary keeps
+    trunk's own commits, and their `WI:` trailers, out of this lane's evidence.
+    With no merge base (an unrelated history) it is HEAD, None only on an
+    unborn HEAD; an undeclared trunk raises `TrunkUndeclared`.
 
-    A lane in a LINKED worktree keeps the merge-base of HEAD with the trunk
-    (the primary checkout's branch): the `base..HEAD` evidence readers walk
-    without --first-parent, so after the lane merges trunk in only that
-    boundary keeps trunk's own commits — and their `WI:` trailers — out of
-    this lane's evidence. The durable claim commit is the boundary only when
-    trunk cannot be told from the current branch (an attended single checkout
-    that has switched to the lane branch, where the merge-base collapses to
-    HEAD and the range would read empty). A manual or old claim with no record
-    falls through to HEAD; an unreadable claimed history fails closed (None)
-    rather than handing every reader an empty range.
+    Implements: SR-156, LLR-339
     """
     trunk = trunk_name(root)
-    if trunk == git(root, "branch", "--show-current")[1].strip():
-        claimed, readable = claim_base(root)
-        if claimed or not readable:
-            return claimed  # None here = unreadable claim history: fail closed
     code, out = git(root, "merge-base", trunk, "HEAD")
     if code == 0 and out.strip():
         return out.strip()
     return head_sha(root)
+
+
+def worker_base(root, given=None):
+    """`(base, None)`: the integration base a worker builds from, `given` (its
+    --base) when non-blank, else `default_base`; or `(None, why)` when there is
+    none, an undeclared trunk's refusal or an unborn HEAD named in `why`.
+
+    Implements: SR-156, LLR-339
+    """
+    try:
+        base = (given or "").strip() or default_base(root)
+    except TrunkUndeclared as exc:
+        return None, str(exc)
+    if not base:
+        return None, (
+            "no resolvable --base (no HEAD commit) — a worker builds from an "
+            "integration base; commit first."
+        )
+    return base, None
 
 
 def working_tree_dirty(root):
@@ -2037,11 +2070,14 @@ def stale_terminal_assignment(root, wid, row):
     refuses.
 
     Fails toward the REFUSAL at every unreadable step (no branch, git silent, an
-    unborn HEAD): a preflight that cannot prove the lane closed the row keeps
-    the guard it had."""
+    unborn HEAD, an undeclared trunk): a preflight that cannot prove the lane
+    closed the row keeps the guard it had."""
     if (row.get("Status") or "").strip().lower() not in TERMINAL_STATUSES:
         return False
-    base = default_base(root)
+    try:
+        base = default_base(root)
+    except TrunkUndeclared:
+        return True
     if not base:
         return True
     built, _blocked = train_evidence(root, base)

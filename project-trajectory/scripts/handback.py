@@ -664,7 +664,9 @@ def _lane_verdict(root, wt, branch):
     <trunk>...<branch> -- docs/reviews/`), not from a path only `agent_loop`
     knows: the close is handed `(root, branch)` and nothing else. The newest by
     name wins, which is the ordering `agent_loop.fresh_verdict_path` builds into
-    the filename (session number, then the implementer's HEAD sha)."""
+    the filename (session number, then the implementer's HEAD sha). An
+    undeclared trunk raises `agent_common.TrunkUndeclared`, which the caller
+    reports as the close's refusal."""
     trunk = ac.trunk_name(root)
     code, out = ac.git(
         root,
@@ -702,8 +704,13 @@ def _machine_line_refusal(root, wt, branch, record, absorbed, where):
     A lane with no readable verdict file is NOT refused here: `close_adjudication`
     is called only on a worker's EXIT_DONE, where `agent_loop.worker_endstate`
     has already gated on the verdict, and re-deriving that precondition from a
-    git range would turn a fixture or a hand close into a false refusal."""
-    path = _lane_verdict(root, wt, branch)
+    git range would turn a fixture or a hand close into a false refusal. An
+    undeclared trunk IS refused, naming the line to add: with no trunk to
+    diff against, "no verdict file" would be a reading never made."""
+    try:
+        path = _lane_verdict(root, wt, branch)
+    except ac.TrunkUndeclared as exc:
+        return str(exc)
     if path is None:
         return None
     parsed = consolidate.parse_machine_line(path.read_text(encoding="utf-8"))

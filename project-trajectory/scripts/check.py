@@ -1506,7 +1506,10 @@ def changed_paths(root):
     if names == b"" and _work_branch(root):
         import agent_common
 
-        base = agent_common.default_base(root)
+        try:
+            base = agent_common.default_base(root)
+        except agent_common.TrunkUndeclared:
+            base = None  # changes unknown: every opted-in step runs
         names = (
             _kitgit.git_bytes(root, ["diff", base, "HEAD", *flags]) if base else None
         )

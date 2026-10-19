@@ -16,7 +16,7 @@ import shutil
 import subprocess
 
 import pytest
-from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
+from conftest import SCRIPTS, declare_trunk, load_script, pin_autocrlf, run_py
 
 gate = load_script("plan_gate")
 rb = load_script("review_brief")
@@ -86,6 +86,7 @@ def make_trunk(tmp_path, mode="single", extra=()):
         git(trunk, "config", key, value)
     git(trunk, "config", "commit.gpgsign", "false")
     write(trunk, "README.md", "r\n")
+    declare_trunk(trunk)
     write(trunk, SPEC_REL, SPEC.format(mode=mode))
     for rel, text in extra:
         write(trunk, rel, text)
@@ -564,3 +565,34 @@ def test_trunk_commits_and_a_lane_with_no_single_row_are_not_judged(tmp_path):
     assert build(trunk) == []
     _trunk, lane = make_lane(tmp_path / "dual", mode="dual")
     assert build(lane) == []
+
+
+# --- the trunk undeclared -------------------------------------------------------
+
+
+def test_a_claimed_single_lane_with_the_trunk_undeclared_gets_one_hold_naming_it(
+    tmp_path,
+):
+    # The lane's claim base needs the trunk: with its line gone, the build is
+    # held by one line naming the declaration, not judged against a guess.
+    _trunk, lane = make_lane(tmp_path)
+    (lane / "docs" / "process.toml").unlink()
+    write(lane, "src/app.py", "x = 1\n")
+    git(lane, "add", "--", "src/app.py")
+    (line,) = gate.staged_lines(lane)
+    assert "[policies] trunk" in line, line
+
+
+def test_a_branch_holding_no_claim_folder_is_judged_at_head_with_the_trunk_undeclared(
+    tmp_path,
+):
+    # A branch whose HEAD holds no claim folder needs no trunk: it is judged
+    # at HEAD, and the answer equals the one the declared trunk gives.
+    trunk, _lane = make_lane(tmp_path)
+    side = tmp_path / "side"
+    git(trunk, "worktree", "add", "-q", "-b", "side", str(side))
+    write(side, "src/app.py", "x = 1\n")
+    git(side, "add", "--", "src/app.py")
+    declared = gate.staged_lines(side)
+    (side / "docs" / "process.toml").unlink()
+    assert gate.staged_lines(side) == declared == []

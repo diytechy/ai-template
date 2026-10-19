@@ -1831,11 +1831,11 @@ notes = """The consolidation's spine digest (§1.3 of the 2026-09-02 restructure
 owner = "scripts/agent_common"
 requestors = ["scripts/gen_verdict_rollup"]
 channel = "call"
-data = "git(root, *argv) -> (code, out); trunk_name(root) -> the primary checkout's branch"
+data = "git(root, *argv) -> (code, out); trunk_name(root) -> the declared trunk's name, or raises TrunkUndeclared naming the key"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """The rollup generator's off-trunk refusal (7ea3cce7, LLR-208's exclusive-writer clause enforced) asks agent_common which branch is the trunk — the one home for that question, shared with the loop's brief composer and the worker preflight — instead of re-deriving it from `git worktree list` a second time. The import is deferred into the refusal so `--check` pays nothing. Declared 2026-09-05 by the supervising session after the DevStg-Impl gate's cross-component ERROR."""
+notes = """The rollup generator's off-trunk refusal (7ea3cce7, LLR-208's exclusive-writer clause enforced) asks agent_common which branch is the trunk — the one home for that question, shared with the loop's brief composer and the worker preflight — instead of deriving a second answer. The import is deferred into the refusal so `--check` pays nothing. Declared 2026-09-05 by the supervising session after the DevStg-Impl gate's cross-component ERROR."""
 
 [interface.IF-180]
 rationale = """The frame and need-tier rules are a pure join layer beside the coherence rules, so the checker composes them and stays their only caller; drawing the seam here keeps the checker growing by composition lines alone while the rules stay testable on in-memory rows."""
@@ -1885,7 +1885,7 @@ rationale = """On a claimed branch the change under review is everything since t
 owner = "scripts/agent_common"
 requestors = ["scripts/check_readability"]
 channel = "call"
-data = "default_base(root) -> the integration base a claimed branch's change is read from, or None when its claim history is unreadable"
+data = "default_base(root) -> the merge base of HEAD with the declared trunk (HEAD on an unrelated history, None on an unborn HEAD), or raises TrunkUndeclared naming the key"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2574,7 +2574,7 @@ data = "Done-when blessing, cover, hold and closure schema; see Contract IF-286 
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "source - this seam reads version-control trees and review or decision records; callers decide the transition they hold."
+notes = "source - this seam reads version-control trees and review or decision records; its staged hold accepts an injected relink oracle, and callers decide the transition they hold."
 
 [interface.IF-287]
 rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."

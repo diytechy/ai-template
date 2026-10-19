@@ -39,7 +39,7 @@ from typing import NamedTuple
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "project-trajectory/scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from agent_common import default_base  # noqa: E402
+from agent_common import TrunkUndeclared, default_base  # noqa: E402
 from check_changed import changed_paths  # noqa: E402
 from kitlib.config import utf8_console  # noqa: E402
 
@@ -297,7 +297,12 @@ def main(argv=None):
     args = parser.parse_args(argv)
     utf8_console()
     root = Path(args.root).resolve()
-    refusals, summary = run(root, default_base(root))
+    try:
+        base = default_base(root)
+    except TrunkUndeclared as exc:
+        print("check_resync: REFUSED base: {}".format(exc))
+        return 1
+    refusals, summary = run(root, base)
     for subject, reason in refusals:
         print("check_resync: REFUSED {}: {}".format(subject, reason))
     if refusals:

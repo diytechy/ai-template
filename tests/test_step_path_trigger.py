@@ -98,6 +98,25 @@ def test_lane_range_or_unknown(monkeypatch, base, raw, expected):
     assert check.changed_paths(Path(".")) == expected
 
 
+def test_an_undeclared_trunk_reads_as_unknown_and_runs_every_opted_in_step(
+    monkeypatch,
+):
+    # On a claimed lane whose trunk is undeclared, the lane's change cannot be
+    # read, so it is unknown: a path-triggered step runs below its rung rather
+    # than being dropped.
+    import agent_common
+
+    def undeclared(root):
+        raise agent_common.TrunkUndeclared("docs/process.toml [policies] trunk")
+
+    monkeypatch.setattr(check, "_work_branch", lambda root: True)
+    monkeypatch.setattr(agent_common, "default_base", undeclared)
+    monkeypatch.setattr(check._kitgit, "git_bytes", lambda root, args: b"")
+    changes = check.changed_paths(Path("."))
+    assert changes is None
+    assert selected(monkeypatch, changes)
+
+
 @pytest.mark.parametrize(
     "changes,stage,expected",
     [

@@ -1491,9 +1491,11 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     root = rounds_repo(tmp_path)
     add_round(root, 3)
     _git(root, "checkout", "-q", "wi-401")
+    # The checkout is the lane branch, never the declared trunk, so each write
+    # here is the trunk step's own invocation, the one writer allowed off it.
 
     assert gen.main(["--root", str(root), "--check"]) == 1  # absent is stale
-    assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--trunk-step"]) == 0
     rollup = root / "docs" / "reviews" / "rollup" / "wi-401.md"
     assert "REVIEW-A" in rollup.read_text(encoding="utf-8")
     # The gate never reads it, and the file says so where a human will see it.
@@ -1514,7 +1516,7 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     # under a misleading instruction. The generator OWNS the directory now, so
     # what matters is not that STALE is reported but that regenerating clears
     # it.
-    assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--trunk-step"]) == 0
     assert gen.main(["--root", str(root), "--check"]) == 0
 
     # THE FLAT PRE-TRAIN LAYOUT, which `round_file` supports and the DIRECTORY
@@ -1524,7 +1526,7 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     flat = root / "docs" / "reviews" / "004-REVIEW-A-abc1234.md"
     flat.write_text(APPROVE, encoding="utf-8", newline="\n")
     assert gen.main(["--root", str(root), "--check"]) == 1
-    assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--trunk-step"]) == 0
     flat_rollup = root / "docs" / "reviews" / "rollup" / (gen.FLAT_SCOPE + ".md")
     assert "004-REVIEW-A-abc1234.md" in flat_rollup.read_text(encoding="utf-8")
     assert gen.main(["--root", str(root), "--check"]) == 0
@@ -1535,17 +1537,17 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     clashing.parent.mkdir(parents=True, exist_ok=True)
     clashing.write_text(APPROVE, encoding="utf-8", newline="\n")
     assert gen.main(["--root", str(root), "--check"]) == 1
-    assert gen.main(["--root", str(root)]) == 1
+    assert gen.main(["--root", str(root), "--trunk-step"]) == 1
     clashing.unlink()
     flat.unlink()
-    assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--trunk-step"]) == 0
     assert not flat_rollup.exists(), "a retired scope's rollup is pruned"
 
     assert gen.main(["--root", str(root), "--check"]) == 0
     retired = root / "docs" / "reviews" / "rollup" / "wi-999.md"
     retired.write_text("# a scope that no longer exists\n", encoding="utf-8")
     assert gen.main(["--root", str(root), "--check"]) == 1, "an extra is stale"
-    assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--trunk-step"]) == 0
     assert not retired.exists(), (
         "the regenerator the failure message names must be able to clear it"
     )
@@ -1558,35 +1560,43 @@ def test_the_rollup_is_generated_and_its_check_has_two_answers(tmp_path):
     nested.parent.mkdir()
     nested.write_text("# stale nested output\n", encoding="utf-8")
     assert gen.main(["--root", str(root), "--check"]) == 1
-    assert gen.main(["--root", str(root)]) == 0
+    assert gen.main(["--root", str(root), "--trunk-step"]) == 0
     assert not nested.exists(), "the generator prunes stale outputs recursively"
     assert gen.main(["--root", str(root), "--check"]) == 0
 
 
-def test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can(tmp_path):
+def test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can(tmp_path, capsys):
     # LLR-208's exclusive-writer clause, DRIVEN in the shape that broke it
     # (WI-590 round 005, 2026-09-04): in a LINKED worktree on a claimed branch
     # the generator wrote `docs/reviews/rollup/` and returned 0, and the
     # work-branch freshness stand-down then hid the write. The refusal keys on
-    # the primary checkout's branch (`agent_common.trunk_name`), so a
-    # single-checkout repo — the fixture above, an attended run — is its own
-    # trunk and keeps writing; `--check` never writes and is never refused; the
+    # the declared trunk (`agent_common.trunk_name`), in any worktree: with the
+    # primary checkout switched to another branch, a linked worktree on the
+    # trunk still writes. `--check` never writes and is never refused; the
     # trunk step's own invocation (`--trunk-step`, which the station's refresh
     # runs INSIDE the lane worktree) is the one writer allowed off the trunk.
     gen = load_script("gen_verdict_rollup")
     root = rounds_repo(tmp_path)
     add_round(root, 3)
     lane = tmp_path / "lane"
+    on_trunk = tmp_path / "on-trunk"
     _git(root, "worktree", "add", "-q", str(lane), "wi-401")
+    _git(root, "checkout", "-q", "-b", "side")
+    _git(root, "worktree", "add", "-q", str(on_trunk), "main")
     try:
         rollup = lane / "docs" / "reviews" / "rollup" / "wi-401.md"
+        capsys.readouterr()
         assert gen.main(["--root", str(lane)]) == 2
+        assert "trunk is main" in capsys.readouterr().err
         assert not rollup.exists(), "a work branch wrote the rollup"
         assert gen.main(["--root", str(lane), "--check"]) == 1  # absent, unrefused
         assert gen.main(["--root", str(lane), "--trunk-step"]) == 0
         assert rollup.exists()
+        assert gen.main(["--root", str(on_trunk)]) == 0
+        assert "REFUSED" not in capsys.readouterr().err
     finally:
         _git(root, "worktree", "remove", "--force", str(lane))
+        _git(root, "worktree", "remove", "--force", str(on_trunk))
 
 
 def test_the_coordinator_lands_the_trailer_on_the_round_s_own_commit(tmp_path, capsys):

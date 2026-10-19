@@ -1564,7 +1564,11 @@ def _subject_claim(root, wi_id):
     for path in listing.splitlines() if code == 0 else ():
         matched = _ACTIVE_SPEC_RE.match(path)
         if matched and matched.group(2) == wi_id:
-            base = ac.default_base(root) or ""
+            try:
+                base = ac.default_base(root) or ""
+            except ac.TrunkUndeclared as exc:
+                why = "{}'s claim at the lane's base cannot be briefed: {}"
+                return None, why.format(wi_id, exc), None
             return _claim_at(root, base, matched.group(1), wi_id, "the lane's base")
     code, added = ac.git(
         root,

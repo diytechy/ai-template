@@ -20,6 +20,8 @@ silently relaid to LF (the WI-234/WI-337 lesson).
 
 import subprocess
 
+import pytest
+
 from conftest import SCRIPTS, load_script, pin_autocrlf, run_py, skip_without_env_gates
 
 sm = load_script("spec_move")
@@ -321,6 +323,47 @@ def test_expected_relink_is_the_pure_oracle_of_the_inbound_half(tmp_path):
     assert sm.expected_relink("plain [x](other.md)\n", "docs", remap) == (
         "plain [x](other.md)\n"
     )
+
+
+_REMAP = {"docs/work/active/wi-x/WI-801-x.md": "docs/archive/work/complete/WI-801-x.md"}
+_HOLDER = "docs/work/active/wi-y/WI-802-y.md"
+_LINKED = "- Y ships after [X](../wi-x/WI-801-x.md) lands.\n"
+_RELINKED = "- Y ships after [X](../../../archive/work/complete/WI-801-x.md) lands.\n"
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "expected"),
+    (
+        pytest.param(_LINKED.encode(), _RELINKED.encode(), True, id="relink"),
+        pytest.param(
+            _LINKED.replace("\n", "\r\n").encode(),
+            _RELINKED.replace("\n", "\r\n").encode(),
+            True,
+            id="crlf-relink",
+        ),
+        pytest.param(
+            b"\xff" + _LINKED.encode(),
+            b"\xff" + _RELINKED.encode(),
+            False,
+            id="non-utf8",
+        ),
+        pytest.param(
+            b"- no link here\n", b"- no link here\n", False, id="empty-rewrite"
+        ),
+        pytest.param(
+            _LINKED.encode(), _RELINKED.encode() + b" ", False, id="one-extra-byte"
+        ),
+        pytest.param(None, _RELINKED.encode(), False, id="unreadable-old"),
+        pytest.param(_LINKED.encode(), None, False, id="unreadable-new"),
+    ),
+)
+def test_exact_relink_is_the_rituals_bytes_and_nothing_else(old, new, expected):
+    """`exact_relink` is the one exact reading of a relink: the new bytes are
+    the ritual's inbound redirect of the old bytes, byte for byte and a real
+    rewrite. A CRLF file still matches (the ritual keeps line endings); a
+    parent that is not UTF-8, a redirect that changes nothing, one byte more
+    than the ritual writes, or a side that cannot be read is no relink."""
+    assert sm.exact_relink(old, new, _HOLDER, _REMAP) is expected
 
 
 # --- the CLI (the worker's by-hand close and archival moves) --------------------

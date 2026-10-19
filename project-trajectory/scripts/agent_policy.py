@@ -145,6 +145,11 @@ PROCESS_ONLY_KEYS = {
     # would read as an unjudged history nobody is made to look at, so the
     # guarded entry points refuse it here.
     ("checks", "test_first_since"): "str",
+    # The integration branch by name (WI-925). The trunk reader refuses an
+    # absent, non-string, empty or unknown name itself (`agent_common.trunk_name`),
+    # but only on the routes that read the trunk; typed here, a bare
+    # `trunk = 1` is refused at every guarded entry point, like every dial.
+    ("policies", "trunk"): "str",
 }
 
 # Dials whose value must also fall in a RANGE. Out of range is refused rather

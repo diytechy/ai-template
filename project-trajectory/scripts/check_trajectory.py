@@ -2555,7 +2555,8 @@ def holdbyrename_findings(root):
     finding has no false-positive class: a lane mid-work always has its ref, and
     a closed lane has moved its specs out of `active/` — the only ref-less
     active claim is a rename-hold or a stranded leftover, both of which OI-70
-    resolves by closing the lane.
+    resolves by closing the lane (never by deleting the claim copy on trunk,
+    which the trunk floor holds and no blessing releases).
 
     WARN at the commit bar, ERROR under `--strict` (the DevStg-Impl gate) — the
     warn-plain / error-under-strict tier the rest of this module's promotable
@@ -2581,13 +2582,15 @@ def holdbyrename_findings(root):
             is None
         ):
             out.append(
-                "hold-by-rename: claim directory {}/active/{}/ has no matching "
-                "branch ref refs/heads/{} — a lane parked by renaming its ref is "
-                "BANNED (OI-70): close it PARTIAL through the kit's own path (the "
-                "handback report; nothing else), or delete the stranded claim. "
-                "As it stands the scheduler reads this lane ready off the claim "
-                "while the dispatcher can never resume it".format(
-                    WI_WORK, branch, branch
+                "hold-by-rename: claim directory {w}/active/{b}/ has no matching "
+                "branch ref refs/heads/{b} — a lane parked by renaming its ref is "
+                "BANNED (OI-70): restore the ref (rename it back, or `git branch "
+                "{b} <sha>` at the claim commit, whose subject ends `-> active/{b} "
+                "(bookkeeping)`), close the lane PARTIAL through the kit's own "
+                "path (the handback report) and land that close through the merge "
+                "slot. As it stands the scheduler reads this lane ready off the "
+                "claim while the dispatcher can never resume it".format(
+                    w=WI_WORK, b=branch
                 )
             )
     return out

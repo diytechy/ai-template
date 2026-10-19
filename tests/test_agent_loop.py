@@ -20,6 +20,7 @@ import sys
 
 import pytest
 from conftest import (
+    declare_trunk,
     SCRIPTS,
     augment_env,
     load_script,
@@ -210,6 +211,8 @@ def loop_repo(tmp_path):
     )
     _git(repo, "init")
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
@@ -1022,11 +1025,12 @@ def test_zero_commit_repo_is_guarded(tmp_path):
     )
     (ctl / "actions.txt").write_text("commit commit", encoding="utf-8")
     proc = _loop(repo, template, "--max-iterations", "2")
-    # A worker has no integration base on an unborn HEAD: the guard is a
-    # controlled fail-closed preflight refusal, never a crash.
+    # A worker has no integration base on an unborn HEAD, which holds no
+    # trunk branch to name: the guard is a controlled fail-closed preflight
+    # refusal naming the trunk's line, never a crash.
     assert proc.returncode == 2, proc.stdout + proc.stderr
     assert "Traceback" not in proc.stdout + proc.stderr
-    assert "no HEAD commit" in proc.stderr
+    assert "[policies] trunk" in proc.stderr
 
 
 def test_dirty_tree_at_start_injects_reconcile_and_logs(loop_repo):

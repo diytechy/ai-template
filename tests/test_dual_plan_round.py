@@ -21,6 +21,7 @@ import sys
 from conftest import (
     SCRIPTS,
     augment_env,
+    declare_trunk,
     load_script,
     pin_autocrlf,
     run_py,
@@ -149,6 +150,13 @@ def make_fixture(tmp_path, plan_mode="dual"):
         ["git", "init", "-q"], cwd=str(root), check=True, capture_output=True
     )
     pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
+    subprocess.run(
+        ["git", "symbolic-ref", "HEAD", "refs/heads/main"],
+        cwd=str(root),
+        check=True,
+        capture_output=True,
+    )
+    declare_trunk(root)
     git_id = [
         "git",
         "-c",

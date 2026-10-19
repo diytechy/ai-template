@@ -109,7 +109,8 @@ def _range_and_rev(root):
     cannot be read. The claimed-branch question is the harness's own
     (`check._work_branch`) and the base is the loop's own integration base
     (`agent_common.default_base`), so this report cannot disagree with either
-    about which branch it is on or where its work began."""
+    about which branch it is on or where its work began. An undeclared trunk
+    raises `agent_common.TrunkUndeclared`, for the report to name."""
     if not check._work_branch(root):
         return ["--cached"], "", "index against HEAD"
     import agent_common  # IF-189; deferred so the trunk path loads none of it
@@ -122,7 +123,10 @@ def _range_and_rev(root):
 
 def changed_parts(root):
     """The change under review as a `Change`, or None when it cannot be read
-    (no git, no repository, an unreadable claim history).
+    (no git, no repository, an unreadable claim history). On a claimed
+    branch whose trunk is undeclared, `agent_common.TrunkUndeclared` passes
+    through, so the report names the declaration rather than a cause it
+    did not have.
 
     The change is the index against HEAD, or merge base to tip on a claimed
     branch. Paths come from `--name-only -z`, which git never quotes, and are
@@ -346,12 +350,18 @@ def worsened_findings(findings, gating, label):
 
 def _report(root, measures, gating):
     """Measure the change and print the report; the exit code."""
-    change = changed_parts(root)
+    why = "(no git repository, or an unreadable claim history)"
+    try:
+        change = changed_parts(root)
+    # `agent_common.TrunkUndeclared`, read off the module `_range_and_rev`
+    # imported before raising it, so the trunk path still loads none of it.
+    except getattr(sys.modules.get("agent_common"), "TrunkUndeclared", ()) as exc:
+        change, why = None, "({})".format(exc)
     if change is None:
         for name in measures:
             print(
                 "readability: SKIP - {} not evaluated: the change cannot be read "
-                "(no git repository, or an unreadable claim history)".format(name)
+                "{}".format(name, why)
             )
         return 0
     if not change.parts:

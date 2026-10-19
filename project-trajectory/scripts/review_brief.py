@@ -841,7 +841,10 @@ def _lane_claim(root, wi):
     """`(HEAD, branch, claim text)` for the lane, or a refusal."""
     head = agent_common.git(root, "rev-parse", "HEAD")[1].strip()
     branch = agent_common.git(root, "branch", "--show-current")[1].strip()
-    base = agent_common.default_base(root)
+    try:
+        base = agent_common.default_base(root)
+    except agent_common.TrunkUndeclared as exc:
+        raise BriefError(str(exc)) from exc
     claimed, why = kdone.claim_copy(root, base, branch, wi)
     if claimed is None:
         raise BriefError(
@@ -957,7 +960,10 @@ def dispute_findings(root, wi, positions):
                 ", ".join(held) or "none", ", ".join(ids) or "none"
             )
         )
-    base = agent_common.default_base(root)
+    try:
+        base = agent_common.default_base(root)
+    except agent_common.TrunkUndeclared as exc:
+        raise BriefError(str(exc)) from exc
     if not base:
         raise BriefError("the lane's claim base cannot be read")
     lines = ["range = {}".format(toml_string("{}..{}".format(base, head)))]

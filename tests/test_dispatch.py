@@ -45,6 +45,7 @@ import subprocess
 
 from conftest import (
     SCRIPTS,
+    declare_trunk,
     disable_blackout,
     env_gate_skipif,
     load_script,
@@ -112,6 +113,7 @@ def git_repo(root, branch="main"):
     # same stock-scaffold finding tests/test_integrate.py records).
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
     write_watermark(root, WI=401)
+    declare_trunk(root, branch)
     _commit(root, "seed", when=T_BASE)
     return root
 

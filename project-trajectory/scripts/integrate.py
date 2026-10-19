@@ -548,20 +548,13 @@ def _relinked_exactly(root, tip, remap, paths):
     not decode as UTF-8 convicts too: `_rewrite_md_links` SKIPS such a file,
     so a modification to it cannot be the ritual's write. `remap` is the
     commit's own src->dest move pairs — one entry per batched spec (WI-381),
-    re-derived by the caller from the A/D records themselves."""
-    if not remap:
-        return False
+    re-derived by the caller from the A/D records themselves. The reading
+    itself is the one shared stage, `spec_move.exact_relink`; an empty remap
+    rewrites nothing, so it excuses nothing."""
     for path in paths:
         old = _blob_bytes(root, "{}^1:{}".format(tip, path))
         new = _blob_bytes(root, "{}:{}".format(tip, path))
-        if old is None or new is None:
-            return False
-        try:
-            old_text = old.decode("utf-8")
-        except UnicodeDecodeError:
-            return False
-        doc_dir = path.rsplit("/", 1)[0] if "/" in path else ""
-        if spec_move.expected_relink(old_text, doc_dir, remap).encode("utf-8") != new:
+        if not spec_move.exact_relink(old, new, path, remap):
             return False
     return True
 
@@ -2947,16 +2940,24 @@ def staged_done_when_refusal(root):
     verdict or ruling in the index binds it; an index delta or a current
     branch git cannot read holds too. The reader is
     `kitlib.done_when.staged_hold`; this hands it what `agent_common` owns,
-    each read only for a listed change. A refusal string, or None.
+    each read only for a listed change, so a commit that changes no claim copy
+    never asks for the trunk, and the one exact relink reading
+    (`spec_move.exact_relink`), so a spec move's own relink of a claim copy is
+    not a change. An undeclared trunk refuses, naming the line to add. A
+    refusal string, or None.
 
     Implements: SR-156, LLR-309
     """
-    return kdone.staged_hold(
-        root,
-        lambda: ac.git(root, "branch", "--show-current"),
-        lambda: ac.trunk_name(root),
-        lambda: ac.default_base(root),
-    )
+    try:
+        return kdone.staged_hold(
+            root,
+            lambda: ac.git(root, "branch", "--show-current"),
+            lambda: ac.trunk_name(root),
+            lambda: ac.default_base(root),
+            spec_move.exact_relink,
+        )
+    except ac.TrunkUndeclared as exc:
+        return str(exc)
 
 
 def _merge_refusal(root, branch, wi_ids):

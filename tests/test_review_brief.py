@@ -21,7 +21,7 @@ git repository in test_review_brief_git.py, which is slow-tier (it spawns git).
 from pathlib import Path
 
 import pytest
-from conftest import ROOT, load_script
+from conftest import ROOT, load_script, trunk_repo
 
 rb = load_script("review_brief")
 rollup = load_script("gen_verdict_rollup")
@@ -165,8 +165,9 @@ def test_the_loop_full_lane_brief_states_its_range_and_binding(tmp_path):
     # WI-884: the loop's full-lane round states the whole lane from the claim
     # base, reads the reviewed commit (never `HEAD`), and asks for the
     # `Reviewed:` opener the gate's filing check requires.
+    root = trunk_repo(tmp_path)
     text = agent_brief.reviewer_prompt(
-        {}, "REVIEW-A", "v.md", root=tmp_path, worker=None, base=BASE, sha=SHA
+        {}, "REVIEW-A", "v.md", root=root, worker=None, base=BASE, sha=SHA
     )
     assert "{round_facts}" not in text and "...HEAD" not in text
     assert agent_brief.full_scope_line(BASE, SHA) in text
@@ -557,3 +558,25 @@ def test_the_critique_render_refuses_a_missing_spec(tmp_path):
     rubric.write_text("# Rubric\n\nS1 - one.\n", encoding="utf-8")
     with pytest.raises(rb.BriefError, match="no spec for WI-901"):
         rb.render_critique(root, "WI-901", "docs/rubric.md", "C:/scratch/c.md")
+
+
+def test_the_reviewer_prompts_trunk_slot_renders_the_declared_name(tmp_path):
+    # WI-925: in a linked worktree on a lane, with the primary checkout on
+    # `side` and the trunk declared as `main`, the brief's reading scope is
+    # read against `main`, never against the branch a checkout is on.
+    import subprocess
+
+    root = trunk_repo(tmp_path / "repo")
+    lane = tmp_path / "lane"
+
+    def git(where, *args):
+        subprocess.run(
+            ["git", "-C", str(where), *args], check=True, capture_output=True
+        )
+
+    git(root, "checkout", "-q", "-b", "side")
+    git(root, "worktree", "add", "-q", "-b", "wi-900", str(lane), "main")
+    text = agent_brief.reviewer_prompt(
+        {}, "REVIEW-A", "v.md", root=lane, worker=None, base=BASE, sha=SHA
+    )
+    assert "git diff main...{}".format(SHA) in text, text

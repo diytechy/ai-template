@@ -825,6 +825,50 @@ def test_readme_never_overwritten(tmp_path):
     assert text == "my project's own readme"
 
 
+def _git_at(root, *args):
+    subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+
+def test_a_scaffold_declares_the_branch_it_was_scaffolded_on(tmp_path):
+    # WI-925: the trunk is one declared name, written at scaffold from the
+    # branch being scaffolded on. An unborn repository names the branch git
+    # creates at the first commit; a repository with history names its
+    # branch; a destination that is no repository keeps the template's value
+    # and says which line to set.
+    unborn = tmp_path / "unborn"
+    unborn.mkdir()
+    _git_at(unborn, "init", "-q")
+    _git_at(unborn, "symbolic-ref", "HEAD", "refs/heads/trunk-x")
+    born = tmp_path / "born"
+    born.mkdir()
+    _git_at(born, "init", "-q")
+    pin_autocrlf(born)
+    _git_at(born, "symbolic-ref", "HEAD", "refs/heads/dev")
+    (born / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git_at(born, "add", "seed.txt")
+    _git_at(
+        born,
+        "-c",
+        "user.email=t@example.com",
+        "-c",
+        "user.name=T",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-qm",
+        "seed",
+    )
+    for dest, branch in ((unborn, "trunk-x"), (born, "dev")):
+        proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        assert process_key(dest, "policies", "trunk") == branch, dest
+    plain = tmp_path / "plain"
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", plain], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert process_key(plain, "policies", "trunk") == "main"
+    assert "NOTE: docs/process.toml [policies] trunk" in proc.stdout, proc.stdout
+
+
 def test_resync_never_reruns_the_scaffold_initializers(tmp_path):
     # Re-sync against an adopted repo must not re-run the fresh-scaffold
     # generator initialization (initialize_generated_docs gates on this run
@@ -894,6 +938,7 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
         "privacy_review": "require",
         "guardrails": "off",
         "blackout": "12:00-12:00",
+        "trunk": "main",
     }
     # WI-432: the six check-enablement toggles are dials here too, folded in by
     # the 2026-08-11 overturn of WI-423 — every one VISIBLE, and every one at

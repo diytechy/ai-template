@@ -993,7 +993,58 @@ def set_process_key(root, section, key, value, *, seed=True):
         with path.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write(text)
         disable_blackout(root)
-    return load_script("bootstrap").set_process_key(root, section, key, value)
+    # `add_if_missing`: a fixture that declared its trunk first holds the
+    # minimal file `declare_trunk` writes, which carries no other dial.
+    return load_script("bootstrap").set_process_key(
+        root, section, key, value, add_if_missing=True
+    )
+
+
+def declare_trunk(root, branch="main"):
+    """Declare `branch` as the fixture repository's trunk (`[policies] trunk`),
+    the one line every trunk reader needs (WI-925). A repository with no
+    `docs/process.toml` gets the minimal file holding that line alone, so a
+    fixture gains no other dial; an existing file has the line set in place
+    through bootstrap's own writer. The caller commits the file with its seed."""
+    path = Path(root) / "docs" / "process.toml"
+    if not path.is_file():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write('[policies]\ntrunk = "{}"\n'.format(branch))
+        return "set"
+    return load_script("bootstrap").set_process_key(
+        root, "policies", "trunk", branch, add_if_missing=True
+    )
+
+
+def trunk_repo(root, branch="main"):
+    """Make `root` a git repository on `branch` whose one commit declares
+    `branch` as its trunk (`declare_trunk`), for a test whose subject reads
+    the trunk's name but builds no history of its own. Returns `root`."""
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+
+    def git(*args):
+        subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
+
+    git("init", "-q")
+    git("symbolic-ref", "HEAD", "refs/heads/" + branch)
+    declare_trunk(root, branch)
+    git("add", "docs/process.toml")
+    git(
+        "-c",
+        "user.email=t@example.com",
+        "-c",
+        "user.name=T",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "--no-verify",
+        "-m",
+        "declare the trunk",
+    )
+    return root
 
 
 # --- WI-428/WI-433: a test scaffold must not inherit a LIVE policy window -----

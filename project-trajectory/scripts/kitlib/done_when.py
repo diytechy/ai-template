@@ -75,17 +75,26 @@ Contract IF-286: a Done-when change's blessing. `digest(wi_id, claimed,
     the covering entry, for the merge-time mint); `lane_hold(root, rev,
     base, branch, wi_ids)` is the hold reason for a lane's tree, or None. An
     unreadable tree reads as uncovered: the hold fails closed.
-    `staged_hold(root, current_branch, trunk_name, lane_base)` is the hold
-    for the commit being made (WI-921): each claim-copy change its index
-    delta carries (`classify_delta`: any entry but a lone `A`) is judged by
-    `lane_hold` - on the claim's own branch only a close, against the lane's
-    integration base; on trunk every change, close or not, against HEAD,
-    the commit's parent; elsewhere a close, against HEAD. An index delta
-    or a current branch git cannot read holds, naming why; off a git work
-    tree nothing is judged. `staged_closes(root)` is `(closes, why)`, so no
-    caller reads an unreadable delta as no close. Every path the reader
-    classifies or looks up is read losslessly (`kitlib.git.git_paths`), so a
-    path git would quote is judged like any other.
+    `staged_hold(root, current_branch, trunk_name, lane_base, relinked)` is
+    the hold for the commit being made (WI-921): each claim-copy change its
+    index delta carries (`classify_delta`: any entry but a lone `A`) is
+    judged by `lane_hold` - on the claim's own branch only a close, against
+    the lane's integration base; on trunk every change, close or not,
+    against HEAD, the commit's parent; elsewhere a close, against HEAD. The
+    trunk is asked for once whenever a change is listed, so an undeclared
+    trunk refuses every listed change, and never for a delta listing none. One
+    change is not a change (WI-925): a claim copy's lone modification whose
+    staged bytes are exactly the inbound relink of the spec moves out of
+    `active/` the same delta carries, as the injected `relinked(old, new,
+    path, remap)` oracle reads it (the caller passes
+    `spec_move.exact_relink`; this module imports no script); a real edit
+    beside the relink, an unreadable blob or bytes that are not UTF-8 stay
+    a change. An index delta or a current branch git cannot read holds,
+    naming why; off a git work tree nothing is judged. `staged_changes(root)`
+    is `(changes, why)`, so no caller reads an unreadable delta as no
+    change. Every path the reader classifies or looks up is read losslessly
+    (`kitlib.git.git_paths`), so a path git would quote is judged like any
+    other.
 """
 
 import hashlib
@@ -94,7 +103,7 @@ import tomllib
 
 from . import decisions as kdecisions
 from . import sitting as _kitsitting
-from .git import git_out, git_paths
+from .git import git_bytes, git_out, git_paths
 from .registry import done_when_section
 
 __all__ = [
@@ -115,7 +124,6 @@ __all__ = [
     "lane_hold",
     "classify_delta",
     "staged_changes",
-    "staged_closes",
     "staged_hold",
 ]
 
@@ -554,12 +562,12 @@ def classify_delta(entries):
     )
 
 
-def staged_changes(root):
-    """`(changes, why)`: `classify_delta` over the index delta of the commit
-    being made. Off a git work tree no commit is being made, so `([], None)`;
-    a delta git cannot list is `([], why)`, never read as no change. The
-    delta is read losslessly (`git_paths`: NUL-delimited, unquoted), so a
-    claim copy whose path git would quote is classified like any other.
+def _staged_delta(root):
+    """`(entries, why)`: the `(status, path)` entries of the index delta of
+    the commit being made (`git diff --cached --name-status --no-renames`),
+    read losslessly (`git_paths`: NUL-delimited, unquoted). Off a git work
+    tree no commit is being made, so `([], None)`; a delta git cannot list
+    is `([], why)`.
 
     Implements: SR-156, LLR-307
     """
@@ -568,58 +576,116 @@ def staged_changes(root):
     delta = git_paths(root, ["diff", "--cached", "--name-status", "--no-renames"])
     if delta is None:
         return [], _DELTA_UNREADABLE
-    return classify_delta(zip(delta[0::2], delta[1::2])), None
+    return list(zip(delta[0::2], delta[1::2])), None
 
 
-def staged_closes(root):
-    """`([(branch, wi_id)], why)`: each spec the index moves out of
-    `active/<branch>/` into a closed folder - a close being committed - and
-    the reason the delta cannot be read (None when it reads), so no caller
-    reads an unreadable delta as no close.
+def staged_changes(root):
+    """`(changes, why)`: `classify_delta` over the index delta of the commit
+    being made. Off a git work tree no commit is being made, so `([], None)`;
+    a delta git cannot list is `([], why)`, never read as no change. The
+    delta is read losslessly, so a claim copy whose path git would quote is
+    classified like any other.
 
     Implements: SR-156, LLR-307
     """
-    found, why = staged_changes(root)
-    return [(branch, wi_id) for kind, branch, wi_id in found if kind == "close"], why
+    entries, why = _staged_delta(root)
+    return classify_delta(entries), why
 
 
-def _staged_base(kind, branch, current, trunk_name, lane_base):
+def _relink_remap(entries):
+    """`{active path: closed path}` for each spec an index delta moves out of
+    `active/<branch>/`: a `D` of the spec there and exactly one `A` of the
+    same work item's spec under a closed folder. The moves whose inbound
+    relink the same delta may carry.
+
+    Implements: SR-156, LLR-307
+    """
+    gone, landed = {}, {}
+    for status, path in entries:
+        active = _ACTIVE_SPEC_RE.match(path)
+        closed = _CLOSED_SPEC_RE.match(path)
+        if active and status.startswith("D"):
+            gone[path] = active.group(2)
+        elif closed and status.startswith("A"):
+            landed.setdefault(closed.group(1), []).append(path)
+    return {
+        src: landed[wi_id][0]
+        for src, wi_id in gone.items()
+        if len(landed.get(wi_id, ())) == 1
+    }
+
+
+def _only_relinked(root, entries, branch, wi_id, relinked):
+    """Is the staged change of `wi_id`'s claim copy under `active/<branch>/`
+    exactly the inbound relink of the moves the same delta carries
+    (`_relink_remap`)? Only for a lone `M` of one path, read from HEAD and
+    the index as raw bytes and judged by the injected `relinked` oracle;
+    any other shape, or no move, is a change.
+
+    Implements: SR-156, LLR-307
+    """
+    remap = _relink_remap(entries)
+    mine = [
+        (status, path)
+        for status, path in entries
+        if (m := _ACTIVE_SPEC_RE.match(path)) and m.groups() == (branch, wi_id)
+    ]
+    if not remap or len(mine) != 1 or not mine[0][0].startswith("M"):
+        return False
+    path = mine[0][1]
+    old = git_bytes(root, ["show", "HEAD:" + path])
+    new = git_bytes(root, ["show", ":" + path])
+    return relinked(old, new, path, remap)
+
+
+def _staged_base(kind, branch, current, trunk, lane_base):
     """`(rev,)`, the revision one staged claim-copy change is judged against,
     or `()` when it is not judged. On the claim's own branch (asked first)
-    only a close is judged, against the lane's integration base; on trunk
-    every change is judged against HEAD, the commit's parent; elsewhere (a
-    detached HEAD, an alias branch) a close is judged against HEAD.
+    only a close is judged, against the lane's integration base; on `trunk`,
+    the declared trunk's name, every change is judged against HEAD, the
+    commit's parent; elsewhere (a detached HEAD, an alias branch) a close is
+    judged against HEAD.
 
     Implements: SR-156, LLR-307
     """
     if current and branch == current:
         return (lane_base(),) if kind == "close" else ()
-    if kind == "close" or (current and current == trunk_name()):
+    if kind == "close" or (current and current == trunk):
         return ("HEAD",)
     return ()
 
 
-def staged_hold(root, current_branch, trunk_name, lane_base):
+def staged_hold(root, current_branch, trunk_name, lane_base, relinked):
     """THE HAND-CLOSE POINT'S READER: the hold for the commit being made, or
-    None. Each staged claim-copy change `staged_changes` lists is judged by
-    `lane_hold` against the revision `_staged_base` picks. The readers are
+    None. Each staged claim-copy change `classify_delta` lists is judged by
+    `lane_hold` against the revision `_staged_base` picks, except a change
+    that is only a spec move's relink (`_only_relinked`, through the
+    injected `relinked(old, new, path, remap)` oracle). The readers are
     called only for a listed change: `current_branch()` is git's
     `(returncode, text)` for `branch --show-current`, `trunk_name()` the
-    trunk's name, `lane_base()` the lane's integration base (None reads as
-    no revision, so it holds). A delta or a branch git cannot read holds,
+    trunk's name, asked once for every listed change whatever its kind (so
+    an undeclared trunk refuses a close too), `lane_base()` the lane's
+    integration base (None reads as no revision, so it holds). A delta or a branch git cannot read holds,
     naming why.
 
     Implements: SR-156, LLR-307
     """
-    found, why = staged_changes(root)
+    entries, why = _staged_delta(root)
+    found = [
+        (kind, branch, wi_id)
+        for kind, branch, wi_id in classify_delta(entries)
+        if kind != "change"
+        or not _only_relinked(root, entries, branch, wi_id, relinked)
+    ]
     if why or not found:
         return why
     code, current = current_branch()
     if code != 0:
         return _BRANCH_UNREADABLE.format(current.strip() or "exit {}".format(code))
     current = current.strip()
+    trunk = trunk_name()
     reasons = []
     for kind, branch, wi_id in found:
-        for base in _staged_base(kind, branch, current, trunk_name, lane_base):
+        for base in _staged_base(kind, branch, current, trunk, lane_base):
             reasons.append(lane_hold(root, None, base, branch, [wi_id]))
     return "\n".join(r for r in reasons if r) or None

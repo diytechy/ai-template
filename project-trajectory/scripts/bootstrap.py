@@ -2632,6 +2632,45 @@ def materialize_agent_layer_phase(dest, plan, outcome):
         )
 
 
+_TRUNK_NOTE = (
+    "docs/process.toml [policies] trunk keeps the template's value: {} is no git "
+    "repository on a branch; set the line to your integration branch, "
+    'trunk = "<branch>", before any route that reads the trunk runs'
+)
+
+
+def declare_scaffold_trunk(dest, dry_run, created):
+    """Write `[policies] trunk` from the branch `dest` is on, into a
+    docs/process.toml this run `created` only: an adopter's file is never
+    rewritten (a re-sync takes the line as a new setting). `symbolic-ref`
+    names the branch even in an unborn repository, which is the branch git
+    creates at the first commit. Only `dest`'s own repository counts (a `.git`
+    entry at its root), so a scaffold inside another checkout never takes that
+    one's branch. With no repository there, or a detached HEAD, the template's
+    value stays and one NOTE names the line to set. `dry_run` prints and
+    writes nothing.
+
+    Implements: SR-156, LLR-339
+    """
+    if PROCESS_TOML_REL not in created:
+        return
+    name = ""
+    if (Path(dest) / ".git").exists():
+        proc = subprocess.run(
+            ["git", "-C", str(dest), "symbolic-ref", "--short", "-q", "HEAD"],
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        name = proc.stdout.strip() if proc.returncode == 0 else ""
+    if not name:
+        print("  NOTE: " + _TRUNK_NOTE.format(dest))
+        return
+    if not dry_run:
+        set_process_key(dest, "policies", "trunk", name)
+    print("  trunk: {}".format(name))
+
+
 def apply_declared_policies(dest, plan, outcome):
     """The three declared authorities: a non-default level overwrites the key
     docs/process.toml just scaffolded (SN-028) and says so.
@@ -2646,6 +2685,8 @@ def apply_declared_policies(dest, plan, outcome):
         print("  migrated into docs/process.toml (SN-028): {}".format(rel))
     for note in notes:
         print("  NOTE: {}".format(note))
+
+    declare_scaffold_trunk(dest, plan.dry_run, outcome.created)
 
     # A declared non-default gate authority overwrites the scaffolded default
     # and lays down the deviation-register skeleton for the level.

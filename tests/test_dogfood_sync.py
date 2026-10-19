@@ -236,6 +236,14 @@ def test_process_toml_declares_the_templates_keys_section_by_section():
         assert sorted(live[section]) == sorted(tmpl[section]), section
 
 
+def test_the_policy_home_declares_the_trunk_as_a_string():
+    # The trunk's name is one declared line every trunk reader reads (WI-925):
+    # the template ships it and this repo declares its own, both a string.
+    for rel in ("project-trajectory/process.toml.template", "docs/process.toml"):
+        data = tomllib.loads((ROOT / rel).read_text("utf-8"))
+        assert isinstance(data.get("policies", {}).get("trunk"), str), rel
+
+
 def test_dev_setup_carries_no_engine_line_to_pin():
     # dev-setup is a bespoke meta-repo rewrite, not a launcher: it invokes no
     # agent_loop engine, so the engine-line pin correctly does not apply. This

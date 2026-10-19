@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 304
+design_rows = 305
 seam_rows = 245
 requirements_placed = 125
 requirements_unplaced = 6
@@ -768,6 +768,7 @@ llr_refs = [
   "LLR-319",
   "LLR-337",
   "LLR-338",
+  "LLR-339",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -795,6 +796,7 @@ modules = [
   "project-trajectory/scripts/agent_route.py",
   "project-trajectory/scripts/agent_session.py",
   "project-trajectory/scripts/bookkeeping.py",
+  "project-trajectory/scripts/bootstrap.py",
   "project-trajectory/scripts/census.py",
   "project-trajectory/scripts/check.py",
   "project-trajectory/scripts/check_trajectory.py",
@@ -915,12 +917,15 @@ seam_boundary_refs = [
   "IF-011",
   "IF-012",
   "IF-013",
+  "IF-014",
   "IF-015",
   "IF-018",
   "IF-022",
   "IF-023",
   "IF-034",
+  "IF-035",
   "IF-037",
+  "IF-039",
   "IF-040",
   "IF-041",
   "IF-045",
@@ -1003,6 +1008,7 @@ seam_boundary_refs = [
   "IF-244",
   "IF-253",
   "IF-254",
+  "IF-262",
   "IF-263",
   "IF-265",
   "IF-267",

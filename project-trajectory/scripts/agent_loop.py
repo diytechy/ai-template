@@ -1365,16 +1365,11 @@ def build_worker_assignment(args, root):
                 file=sys.stderr,
             )
             return None, EXIT_PREFLIGHT
-        base = (args.base or "").strip() or default_base(root)
+        base, why = agent_common.worker_base(root, args.base)
         if not base:
-            # An unreadable claim record or unborn HEAD has no integration
-            # base to build evidence against — fail closed, never crash.
-            print(
-                "agent_loop: no resolvable --base (claim history unreadable "
-                "or no HEAD commit) — a worker builds from an integration "
-                "base; repair history or commit first.",
-                file=sys.stderr,
-            )
+            # An undeclared trunk or an unborn HEAD has no integration base to
+            # build evidence against — fail closed, never crash.
+            print("agent_loop: {}".format(why), file=sys.stderr)
             return None, EXIT_PREFLIGHT
         code, _ = git(root, "rev-parse", "--verify", "--quiet", base + "^{commit}")
         if code != 0:
@@ -3135,9 +3130,10 @@ def resume_owed_round(root, setup, st, rp_int, iter_dir):
 
     WHICH INCLUDES ITS `base`, and that is not a relapse. Making the evidence
     the only trigger exposed the case where there is no evidence to trigger on:
-    `default_base` merge-bases to HEAD when the primary checkout is the lane
-    branch, so a resumed run of that shape scans an EMPTY range and
-    `review_owed_by_evidence` cannot say (it answers None). Answering "nothing
+    `default_base` once merge-based to HEAD when the primary checkout was the
+    lane branch (before the trunk was declared by name), so a resumed run of
+    that shape scanned an EMPTY range and `review_owed_by_evidence` cannot say
+    (it answers None) for any range that holds no train trailer. Answering "nothing
     owed" for it dropped a genuinely parked round and ran another BUILD — the
     C2 contract inverted, red on this branch for five commits and invisible to
     the smoke tier (REVIEW-A round 034). The marker's `base` field re-points

@@ -26,7 +26,13 @@ make the mint refuse its own successor.
 
 import subprocess
 
-from conftest import env_gate_skipif, load_script, pin_autocrlf, skip_without_env_gates
+from conftest import (
+    declare_trunk,
+    env_gate_skipif,
+    load_script,
+    pin_autocrlf,
+    skip_without_env_gates,
+)
 
 pytestmark = env_gate_skipif("git")
 
@@ -92,6 +98,7 @@ def cluster_repo(tmp_path, extra_rows=()):
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")
     _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(root)
     (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
     (root / "docs").mkdir(parents=True, exist_ok=True)
     (root / trace.WATERMARK).write_text(

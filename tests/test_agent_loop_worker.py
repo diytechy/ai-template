@@ -32,6 +32,7 @@ import sys
 
 import pytest
 from conftest import (
+    declare_trunk,
     env_gate_skipif,
     SCRIPTS,
     load_script,
@@ -95,6 +96,8 @@ def _make_train_repo(tmp_path, train="t1", wis=("WI-201",)):
     repo.mkdir()
     _git(repo, "init")
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     rows = [
@@ -525,6 +528,9 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "wire managed routing")
+    # The wiring is the lane's starting point, not its work: the declared
+    # trunk moves up to it, so the lane's integration base sits after it.
+    _git(repo, "branch", "-f", "main", "HEAD")
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
 
@@ -658,6 +664,8 @@ def _train_repo(tmp_path, train="t1", assigned=("WI-201",)):
     repo.mkdir()
     _git(repo, "init")
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
+    declare_trunk(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
@@ -782,12 +790,12 @@ def test_build_worker_assignment_refuses_an_unreadable_default_base(
 ):
     al = load_script("agent_loop")
     repo, _base, _worker = _train_repo(tmp_path)
-    monkeypatch.setattr(al, "default_base", lambda _root: None)
+    monkeypatch.setattr(al.agent_common, "default_base", lambda _root: None)
     args = argparse.Namespace(wi="WI-201", train="t1", base=None, rework=None)
     worker, err = al.build_worker_assignment(args, repo)
     assert worker is None
     assert err == al.EXIT_PREFLIGHT
-    assert "claim history unreadable" in capsys.readouterr().err
+    assert "no resolvable --base" in capsys.readouterr().err
 
 
 @env_gate_skipif("git")
@@ -986,14 +994,15 @@ def test_a_row_this_branch_closed_is_not_a_stale_assignment(tmp_path):
 
 @env_gate_skipif("git")
 def test_a_single_checkout_worker_keeps_the_terminal_refusal(tmp_path):
-    # The compatibility half. A manual worker has no claim record, so its
-    # single-checkout default keeps the merge-base fallback (HEAD) and a
-    # terminal row still refuses. A claimed branch is covered separately by
-    # the durable-base regression.
+    # The single-checkout half. With the trunk declared, a worker in a single
+    # checkout on its lane branch reads the same base a linked lane does, the
+    # merge base with the trunk: the row this branch closed is not stale, and
+    # a row terminal for any other reason still refuses.
     ac = load_script("agent_common")
-    repo, _base = _make_train_repo(tmp_path)
+    repo, base = _make_train_repo(tmp_path)
     (repo / "work.txt").write_text("built\n", encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "build WI-201\n\nWI: WI-201")
-    assert ac.default_base(repo) == _git(repo, "rev-parse", "HEAD")
-    assert ac.stale_terminal_assignment(repo, "WI-201", {"Status": "done"}) is True
+    assert ac.default_base(repo) == base
+    assert ac.stale_terminal_assignment(repo, "WI-201", {"Status": "done"}) is False
+    assert ac.stale_terminal_assignment(repo, "WI-200", {"Status": "done"}) is True

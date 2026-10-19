@@ -230,6 +230,13 @@ guardrails = "off"
 # The window is half-open `[start, end)`: `12:00-19:00` blocks 12:00 through
 # 18:59 and releases at 19:00. A start after its end wraps past midnight.
 blackout = "12:00-12:00"
+# The integration branch (trunk) by name: the branch every lane is cut from
+# and lands on. Every reader that needs the trunk reads this line, in any
+# worktree; nothing guesses it from the branch a checkout is on. Absent,
+# empty, not a string, or naming no local branch, each of those readers
+# refuses and names this line. bootstrap.py writes it from the branch it
+# scaffolds on.
+trunk = "main"
 
 [checks]
 # Closed WIs between observation judgements; case MinWorkItems may raise it.
