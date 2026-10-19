@@ -504,7 +504,9 @@ commit of its own, move it to trunk's tip
   would bless is not anchored while another row in the same registry is
   returned; rework the returns and re-sit them all together. Move each
   answered verdict's `## Dispositions` under another heading in the lane,
-  or the landing sweep mints the rework rows.
+  or the landing sweep mints the rework rows. The rename may precede the act:
+  the binding records the brief, kinds and outcome, not the verdict's digest
+  (wi-918, 2026-10-18g).
 - **Squash** on trunk with `git merge --squash <lane>`, one per lane. In a
   headless leg, first run `"$PY" "$TOOLS/overnight_legs.py" check-lane <lane>`
   and squash only on exit 0 (SKILL §7). Never
@@ -638,6 +640,14 @@ lane commit being replayed.
   --strict` lists them as spent with no retirement record until their own
   lanes land. Record the floor in the lane's decisions; never retire them
   (WI-913 D-004).
+- A lane whose spine set amends rows another open lane is amending, or
+  whose code edits the same functions, waits for that lane's landing and
+  rebases onto it before its spine turn and first round. Its text then
+  amends what the sitting approved, and the round reviews the tip that
+  lands (wi-946 D-006). Conflicts across several replayed commits can go to
+  a kit-builder briefed to keep both sides' behaviour and stop on any
+  semantic choice; read the resolved functions and re-run the bar yourself
+  (wi-946 D-007).
 - Show that a rebase changed no lane code or row by comparing
   `git diff <old base> <old tip> | git patch-id --stable` with the same
   over the new base and tip: equal ids owe no post-rebase round, and the
@@ -690,8 +700,15 @@ lane commit being replayed.
   the verdict and no other cell moved.
 - A TC citing an LLR also cites that LLR's SR, or `registry-integrity`
   refuses the commit.
-- Keep an IF Data cell to 160 characters, with the definition in the owner's
-  contract body.
+- Keep an IF Data cell short, with the definition in the owner's contract
+  body. `trace.py`'s 160-character data rule is a warn-first advisory that
+  14 rows exceed: never fold names into brace or other shorthand to fit it,
+  which hides them from a search (wi-918 D-008).
+- A TC states only what the rows it verifies state. A method sentence on
+  this repository's unshipped tooling (the overnight launcher) was returned
+  at the sitting: its evidence absent, and no verified row stating it. A
+  Done-when item about such tooling stays pinned by its own test and
+  recorded in the lane's log (wi-918 sitting 003).
 - Reuse the declared external parties (`external:agent CLI`). An `external:`
   IF row tied to no frame crossing joins the frame test's untied pin with a
   "No tie-back" reason.
