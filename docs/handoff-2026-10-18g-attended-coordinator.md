@@ -31,8 +31,9 @@ with the owner. The `Overnight: stop` line above keeps
     reconcile only if the fix moves row text, the closure check, one
     combined sitting of `amendment:LLR-248;amendment:TC-242`, SR scope
     SR-209), the gate in convergence stance, the act, close, land. Its
-    landing is the second gate row's: that session writes its handoff
-    without `Overnight: stop`.
+    landing is the second gate row's: that session lands no other lane,
+    closes out right after it, and writes its handoff without
+    `Overnight: stop` (owner, coordinator-2026-10-18 D-006).
   - `wi-918` landed; its branch and worktree remain, archived.
   - `wi-925` at `81d271c6d` and `wi-926` at `d15adb2de`, unchanged: as the
     2026-10-18e handoff says (stage 3 next; counted round 1 next).
@@ -68,14 +69,19 @@ Each row changes machinery, so each lands alone.
 | # | Row | Next |
 |---|---|---|
 | 1 | WI-946 | Rebase over the close-out; the D-009 wording fix; the convergence map; the checkpoint (sitting of LLR-248 and TC-242); the gate; act; close; land |
-| 2 | Clear the stop | The session that lands WI-946 writes its handoff without `Overnight: stop`; the owner starts `scripts/coordinator/overnight_legs.py` |
+| 2 | Clear the stop | The session that lands WI-946 closes out right after it, landing no other lane (D-006): its handoff drops `Overnight: stop`, and the owner starts `scripts/coordinator/overnight_legs.py` |
 | 3 | WI-925 | Stage 3: Terra's P9, P10; counted round 1 |
 | 4 | WI-926 | Counted round 1 |
 | 5 onward | As before | WI-897 (amend its queued row first, per WI-927's plan deliverable 6), WI-902 (B4), WI-798, then P1 to P8, then leg 03's rows; WI-940 after the batch |
 
-From row 2 on the queue runs in headless legs (the `coordinator-cycle`
+After row 2 the queue runs in headless legs (the `coordinator-cycle`
 skill's section 7); a leg brings an owner-held step to a safe point and
-lists it under the next handoff's "For the owner".
+lists it under the next handoff's "For the owner". A leg continues the
+lanes claimed attended (rows 3 onward) as they stand, with no re-claim:
+its first loop-writer commit opens the lane's trailer window, the attended
+commits before it stay exempt, and `check-lane` passes them at landing
+(D-006). The next machinery lane lands only after a headless leg has run
+under WI-946's launcher (the skill's landing rule).
 
 ## For the owner
 

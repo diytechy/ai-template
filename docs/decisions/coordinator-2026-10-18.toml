@@ -38,3 +38,10 @@ alternative = "C1: split the shared claim reader into its own row (the coordinat
 reversal_cost = "Medium for C1: a shipped reader and its spine amendments; low for the rest."
 why_not_escalated = "C1, C3, C4 and C5 are the owner's rulings in session; C2 is an implementation choice that removes a second home."
 review = ""
+
+[decision.D-006]
+decided = "Owner direction, 2026-10-18 (attended, in session, after the 2026-10-18g close-out), on the coordinator's recommendation: the next attended session lands WI-946, the second gate row of D-004, and closes out right after it, landing no other lane; its handoff drops Overnight: stop and the owner starts the overnight launcher. The owner's condition was that the headless legs can pick up the lanes already claimed attended, which the coordinator checked against the coordinator-cycle skill's section 7: the lane-mode rule asks for a re-claim only when an attended session takes over a lane a leg marked; a leg continuing an attended lane needs none, since its first loop-writer commit (a sitting's telemetry, say) opens the lane's trailer window, every leg commit carries the trailer, and the attended commits before the window stay exempt, so check-lane passes the lane at landing. Why stop at WI-946: the other open lanes are mid-cycle (WI-925 at stage 3, WI-926 before round 1, WI-798 owing its checkpoint rework, WI-902 to be re-cut), and the machinery rule lands the next machinery lane only after the cycle has run through WI-946's changed step, the launcher, which a headless run first exercises."
+alternative = "Land every open lane attended before the first headless run; rejected, several sessions of work the legs exist for, and the machinery rule holds the next machinery lane behind a launcher run anyway. Or let the session advance other lanes without landing them; not chosen, to keep the hand-over point simple."
+reversal_cost = "Low: a handoff line."
+why_not_escalated = "The owner's own direction."
+review = ""
