@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-19a-attended-coordinator.md](handoff-2026-10-19a-attended-coordinator.md),
+  [handoff-2026-10-19b-attended-coordinator.md](handoff-2026-10-19b-attended-coordinator.md),
   run in **headless legs** once the owner starts the overnight launcher (the
   handoff carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):

@@ -633,6 +633,7 @@ lane commit being replayed.
 | Byte-budget skill rows | each side's own row |
 | `stack.ini`, size-ratchet notes | both sides' notes |
 | Smoke-ceiling restamp | trunk's note plus the lane's count; restamp only past the ceiling |
+| Module-size ratchet | per hunk: trunk's note plus the lane's count, the lane's reason kept; never `--ours` the whole file, which also drops the lane's stamps outside the conflict (2026-10-19b) |
 
 - **At a trunk squash,** use `"$PY" "$TOOLS/toml_merge3.py" <branch> <registries...>`
   for registry conflicts; compare parsed tables even after a clean line-merge.
@@ -671,6 +672,13 @@ lane commit being replayed.
 - Validate a union of appended TOML rows per cell: the result equals ours
   plus theirs-minus-base, read from the three index stages. A line union has
   dropped shared tail cells; restore any missing cell from trunk's stage.
+- After a rebase, time the smoke tier beside trunk's tip in adjacent runs:
+  trunk's new tests can take the lane's fixtures, so a lane that read at
+  its parent's on its old base can read well above trunk's (wi-926 D-004).
+  Run trunk's and the lane's changed test modules on the rebased lane too:
+  the smoke tier skips the slow ones, where trunk's new tests meet the
+  lane's new refusals. A failure the pre-rebase tip shares is the lane's,
+  for its next build round (wi-926 D-005).
 - Launch no review until the rebase has finished. A rebase stopped on
   generated-file conflicts leaves the lane mid-rebase: take `--ours`,
   regenerate, continue, then render the brief at the real tip.
