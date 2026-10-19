@@ -3,13 +3,43 @@ id = "WI-946"
 title = "The overnight launcher judges every leg against the trunk it bound at run start and refuses a leg that moves the checkout off it or rewinds or deletes archive/lanes, and a lane claim git cannot read is a refusal at the merge slot and the launcher alike"
 workstream = "process"
 sr_refs = ["SR-209"]
-specref = "docs/archive/work/complete/WI-917-headless-leg-marking.md#trust"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-917", "~WI-918"]
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-19, after its gate and act:
+
+- The overnight launcher binds trunk once per run, through the kit's trunk
+  reader, and logs it; a reader that refuses stops the run before any leg.
+  Every leg is judged against that bound trunk: a pre-leg snapshot without
+  it, or a leg that leaves the primary checkout detached, on another branch
+  or unreadable, stops the run. Trunk and `archive/lanes` are judged by one
+  descent rule: a ref present before a leg that is gone after it, or no
+  longer descends from its pre-leg tip, stops the run naming the old tip.
+  `check-lane` reads trunk through the kit's reader, and a refusal reads as
+  "cannot judge".
+- One checked claim reader, `agent_common.loop_claimed`, serves the merge
+  slot and the launcher alike: a claim log git cannot read, or a record in
+  it with no separator or commit id, is a refusal naming the read, never an
+  unclaimed lane, at the slot's trailer and held-status rungs and at the
+  launcher's audit. The launcher's docstring states the run's bound and the
+  orders the trunk reader's fallback admits until the trunk-by-name row; the
+  coordinator-cycle skill's headless section names the run's bound trunk.
+- Spine: LLR-248's detail and code_symbol and TC-242's method and expected
+  amended by addition (sitting 003-ADJUDICATE-8b630c5, both MEANING+BLESS),
+  re-attested by act 134; IF-065's data names the reader. `RESYNC_PACK.md`
+  carries the entry, anchored at the landing's parent.
+- Reviews: the single plan's critique-1 (APPROVE, 0 findings); counted
+  round 1 (001-REVIEW-A APPROVE 0, 002-REVIEW-B APPROVE 1 MINOR, fixed in
+  wording before the checkpoint) and the gate in convergence stance
+  (004-REVIEW-A APPROVE 0, 005-REVIEW-B APPROVE 1 MINOR, to status.md's
+  follow-ups). Decisions: `docs/decisions/wi-946.toml` D-001 to D-012.
 
 ## Context
 
@@ -221,7 +251,12 @@ Nothing here releases anything a run or the slot would otherwise refuse.
   - **WI-925** makes it the name `docs/process.toml` declares, and has it
     raise `TrunkUndeclared` on every other shape.
   - **Failed shapes:** the reader raises; or it returns a name no local
-    branch holds.
+    branch holds; or, with the primary checkout detached, its fallback names
+    the `--repo` checkout's current branch. For `check-lane` run at a lane's
+    worktree, that is the judged lane itself: a name that resolves but is
+    not trunk, so `check-lane` judges an empty range and passes. That order
+    is off procedure, it is not guarded in this row (decision D-009 records
+    why), and WI-925's declared name ends it.
 - **The checkout's branch:** whatever last switched the primary checkout.
   Under the procedure, nothing does: lanes live in their own worktrees, and a
   landing's squash runs on trunk.
@@ -284,10 +319,17 @@ Nothing here releases anything a run or the slot would otherwise refuse.
   included) passes it. The owner-held steps belong to the procedure (skill
   §7), not to the audit.
 - **Until WI-925, `check-lane`** reads trunk at its own run: the branch the
-  primary checkout is on at that moment. One sequence escapes it: a leg
-  switches the primary checkout, runs `check-lane`, and switches back before
-  its squash. No supported workflow produces that order (PROCESS.md §6).
-  WI-925's declared name closes it.
+  primary checkout is on at that moment, or, when the primary checkout is
+  detached, the current branch of the `--repo` checkout. Two orders escape
+  it:
+  - a leg switches the primary checkout, runs `check-lane`, and switches
+    back before its squash;
+  - a leg detaches the primary checkout and runs `check-lane` with `--repo`
+    at a lane's worktree, where trunk reads as the lane itself, the range
+    is empty, and the lane passes.
+
+  No supported workflow produces either order (PROCESS.md §6). WI-925's
+  declared name ends both.
 
 **Consumers and rulings.** Found by grep:
 
@@ -339,6 +381,9 @@ held, which also stops it.
   `check-lane` exits 3 with "cannot judge", printing why. It judges from
   that branch's tip.
 - An unreadable claim is also exit 3, "cannot judge", naming the read.
+- The detached-primary shape under **The trunk's name** above is not one of
+  these: its name resolves, so `check-lane` judges the lane from its own tip
+  and passes. It is off procedure and not guarded here (decision D-009).
 
 **The merge slot's rungs** (`project-trajectory/scripts/integrate.py`).
 

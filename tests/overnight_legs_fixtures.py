@@ -86,6 +86,7 @@ leg = done + 1
 
 
 OTHER = "20250101T000000Z-0a0b0c"
+TRUNK = "refs/heads/main"
 LANE = "refs/heads/wi-1"
 ARCHIVE = "refs/heads/archive/lanes"
 
@@ -147,6 +148,14 @@ def drop_lane_parent():
     path.unlink()
 
 
+def archive_reset_unrelated():
+    # The archive moved to a marked commit off trunk's tip: it does not
+    # descend from the archive's old tip, and its one new commit is marked.
+    parent = git("rev-parse", "HEAD")
+    sha = git("commit-tree", parent + "^{tree}", "-p", parent, "-m", marked("archive reset"))
+    git("update-ref", ARCHIVE, sha)
+
+
 ACTIONS = {
     "handoff": handoff,
     "trunk_unmarked": lambda: trunk("unmarked trunk work"),
@@ -164,6 +173,11 @@ ACTIONS = {
     ),
     "replay_lane": replay_lane,
     "drop_lane_parent": drop_lane_parent,
+    "checkout_elsewhere": lambda: git("checkout", "-q", "-b", "elsewhere"),
+    "main_unmarked": lambda: plumb(TRUNK, "unmarked trunk work"),
+    "archive_rewind": lambda: git("update-ref", ARCHIVE, ARCHIVE + "~1"),
+    "archive_reset_unrelated": archive_reset_unrelated,
+    "archive_delete": lambda: git("update-ref", "-d", ARCHIVE),
 }
 plan = json.loads(os.environ.get("STUB_PLAN", "[]"))
 for name in (plan[leg - 1] if leg <= len(plan) else ["handoff"]):

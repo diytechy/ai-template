@@ -1,0 +1,50 @@
+Reviewed: be1bd397ca161dbf138e1e3a0027b8d0a889ff42
+
+Verified: Independently hunted fail-open trunk/claim judgments, archive history loss, and refusal regressions, in that order. Reviewed the scoped code/test/documentation diff, WI-946 in full, its WI-917 Trust target, PROCESS sections 3/5/6, the cited registry rows and related historical obligations, and rubric K1/K2/K3/B1. Real-git launcher flows and merge-slot rungs exercised the changed behavior. No lane defect found. The prescribed tests returned 127 passed and one unchanged telemetry-hook failure; the base's identical function and test reproduce that failure. Strict trajectory and integrity checks passed. The worktree remains clean at the reviewed commit. This is a code/requirement review, not the later checkpoint's amendment attestation.
+
+Commands:
+
+- `git rev-parse HEAD` -> `be1bd397ca161dbf138e1e3a0027b8d0a889ff42` before testing and at completion.
+- `git diff e57e647d2d4fc9773af5bf74a1ebd92f38cf9482...be1bd397ca161dbf138e1e3a0027b8d0a889ff42 --stat -- . ':(exclude)docs/iteration' ':(exclude)docs/reviews' ':(exclude)docs/log.md' ':(exclude)docs/log.d' ':(exclude)PROJECT_STATE.html' ':(exclude)docs/open-items.html' ':(exclude)docs/stage'`, followed by scoped path diffs -> reviewed shipped functions, tests, skill copies, registry amendments and RESYNC entry. Builder session notes and self-assessments were not used.
+- `Get-Content` on CLAUDE.md, the antidote/session-protocol/coordinator-cycle skills, WI-946, the WI-917 Trust target, the review rubric, PROCESS sections 3/5/6, the lane plan/pass record, selected source/test slices, and status/policy slices; `rg -n` for symbols and cited rows -> governing text and relevant callers inspected. One PowerShell `rg` invocation using `docs/requirements/*.toml` was rejected as an invalid filename pattern; explicit-file and selected TOML-row reads supplied the registry evidence.
+- Selected-row Python/TOML comparison against `git show e57e647d2:...` -> SR registry unchanged; LLR-248 changes only code_symbol/detail, TC-242 only method/expected, IF-065 only data; statuses unchanged. All three coordinator-cycle skill copies are byte-identical. Related SR-209 rows swept: LLR-247, LLR-248, LLR-306, TC-242 and TC-321.
+- `git log --format=%h e57e647d2d4fc9773af5bf74a1ebd92f38cf9482..be1bd397ca161dbf138e1e3a0027b8d0a889ff42 -- project-trajectory/scripts/agent_common.py scripts/coordinator/overnight_legs.py` -> function-change history identified without commit messages.
+- With `GIT_CEILING_DIRECTORIES=C:/Projects/ai-template.wt/review-tmp/2026-10-18g` and `PYTHONDONTWRITEBYTECODE=1`: `C:/Projects/ai-template/.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n 2 --basetemp C:/Projects/ai-template.wt/review-tmp/2026-10-18g/r1-946-sol/wi-946 tests/test_loop_provenance.py tests/test_overnight_legs.py tests/test_overnight_legs_git.py` -> `1 failed, 127 passed in 203.81s (0:03:23)`. Sole failure: `test_a_refused_telemetry_commit_is_reported`, expected hook refusal but received `None`.
+- `C:/Projects/ai-template/.venv/Scripts/python.exe project-trajectory/scripts/check_trajectory.py --strict` -> `check_trajectory: clean (946 work item(s), 832 done (88%), 30 cancelled, graph acyclic).`
+- `C:/Projects/ai-template/.venv/Scripts/python.exe project-trajectory/scripts/trace.py --strict-integrity | Select-Object -Last 1` -> `Traceability: SN=31 SR=131 LLR=304 TC=318 orphans=0 integrity=0 verified-mechanized=124 verified-demonstrated=6 verified-attested=0 drafts=1 budgets=4 budget-findings=0 components=4 component-findings=0 interfaces=245 interface-findings=0 ac-advisories=1 paraphrase-advisories=3. Report -> docs\test\report.md`.
+- `C:/Projects/ai-template/.venv/Scripts/python.exe C:/Projects/ai-template.wt/review-tmp/2026-10-18g/r1-946-sol/red_before.py` -> `9 failed in 52.86s`. The current behavioral tests were run with the launcher's complete base source and the merge slot's base `_loop_window`/`_loop_claimed` functions, obtained with `git show`. Failures are behavioral assertions: unreadable claims pass both rungs; off-trunk checkout runs leg two; trunk is not bound; refusing kit reader is ignored; archive rewind/reset/deletion pass; check-lane in its linked worktree passes an unmarked commit. No API-signature failures were counted as evidence. Output: red-before.txt.
+- `C:/Projects/ai-template/.venv/Scripts/python.exe C:/Projects/ai-template.wt/review-tmp/2026-10-18g/r1-946-sol/malformed_before.py` -> `2 failed in 11.30s`. Both malformed claim-record regressions fail at the refusal assertion with the actual base merge-slot functions. Output: malformed-before.txt.
+- `C:/Projects/ai-template/.venv/Scripts/python.exe C:/Projects/ai-template.wt/review-tmp/2026-10-18g/r1-946-sol/baseline_probe.py` -> `commit_telemetry: identical to base`; `test_a_refused_telemetry_commit_is_reported: identical to base`; `1 failed in 4.03s`, same `AssertionError: None`. This isolates the prescribed run's sole failure using the base function and test without switching or editing the checkout. Output: baseline-telemetry.txt.
+- `git diff --quiet`, `git status --short` -> exit 0 and no entries. No commit made.
+
+Done-when coverage:
+
+| Spec item | Independent evidence |
+| --- | --- |
+| Deliverables 1-5 | Function diff, real-git flows and in-process pins: one trunk bind, checkout comparison, shared descent owner, declared audit bound, synced skill clause, shared checked claim reader. |
+| Checkout left off trunk; no next leg | `test_a_leg_that_leaves_the_primary_checkout_off_trunk_stops_the_run`; checkout state matrix covers another branch, detached, unreadable and unparseable HEAD before and after a leg. Refused commit is reported before checkout refusal. |
+| Bind once, log name, delete local reader | `test_the_run_binds_trunk_once_and_logs_it` and in-process bind test. |
+| Refusing trunk reader; absent local trunk | Real-git refusing-reader and absent-name tests; in-process snapshot test. |
+| check-lane in lane worktree | `test_check_lane_from_the_lanes_own_worktree_judges_from_the_kits_trunk`; additional reader-refusal and unresolved-name tests. |
+| Archive rewind, unrelated reset, deletion | Three real-git parameter cases; in-process non-descent/deletion pins. |
+| Archive append/create and checked reads | Existing/created marked archive passes, created unmarked archive refuses; failed descent and claim reads name their commands. Existing lane provenance/re-claim regressions remain passing. |
+| Bound-trunk log tips; smoke pins | Real-git and in-process log-tip tests; each new rule has an in-process pin. Real-git module remains in SLOW_MODULES; no conftest membership change. |
+| Unreadable claim at both slot rungs; nothing merged | New real-git claim-only lane tests call both rungs and integrate_one; unchanged HEAD asserted. |
+| Unparseable claim records | Both no-NUL and invalid-SHA cases refuse through both slot rungs; launcher has its own audit pin. |
+| Readable claim behavior and one reader | Six readable-history cases; removed `_loop_claimed`/`lane_claimed`; both callers invoke agent_common.loop_claimed. |
+| Docstrings and skill copies | Text inspection against Trust; three skill files byte-identical. Standalone strict-orphan checker not run under this round's restricted instrument list. |
+| LLR-248, TC-242, IF-065; retain SR-209 | Scoped cell comparison and semantic decisions below. Later checkpoint re-attestation remains required; this review does not substitute for its authority. |
+| RESYNC and module-size baselines | One entry anchored at e57e647d2, naming both shipped files and no migration; exact baseline changes inspected. |
+| Plan after claim and plan gate | Committed plan and machine pass record inspected; no critique/self-assessment relied upon. Independent plan-gate replay not performed. |
+| Landing bar | Prescribed targeted tests and strict trajectory/integrity checks executed once. Full suite, smoke budget, and trace --strict were not run, as directed by the round facts. The unchanged telemetry failure is recorded above; a completely green landing bar is not claimed. |
+
+Semantic counterpart decisions (PROCESS section 5; rubric K1-K3):
+
+- Changed LLR-248 versus unchanged SR-209: retain SR-209 and its acceptance/approval. Refusing an unreadable ownership record prevents an unknown lane from receiving the person's-lane exemption; it implements the existing provenance obligation rather than changing it. The prior fail-open reader was the unsuitable design; replacing its failure outcome at the shared owning boundary is a design correction, not a workaround preserving that failure. Enduring marker, trailer-window and re-claim tests remain present and passed.
+- Changed TC-242 versus LLR-248: carry the unreadable-claim scenario and expected refusal into TC-242, as this diff does. Retain TC-242's other verification clauses and its LLR-247/IF-194/IF-197 counterparts: marker propagation, trailer grammar and existing writer/window contracts retain their meaning. The amendment adds a failure outcome, without replacing their behavioral tests.
+- Changed IF-065 versus its provider and integrate consumer: carry loop_claimed into IF-065 data and the provider's contract docstring; integrate consumes it through `_loop_window`, whose refusal reaches both rungs. Retain IF-179: trunk_name's API and current primary-checkout semantics are unchanged; the launcher is a non-kit caller. No new kit component interface is required for that caller.
+- No new SN/SR/TC rows or decomposition are introduced. Existing SR-209 children retain distinct purposes: LLR-247 owns marker/trailer grammar, LLR-248 owns writer/floor/merge application, and LLR-306 owns attributed coordinator adjudication. TC-242 verifies provenance and TC-321 verifies the coordinator call/act route. Further splitting those retained obligations adds no independent decision or verification purpose for this amendment. No new contradiction, overlap or limit conflict was found in the related rows.
+
+Findings: none.
+
+VERDICT: APPROVE findings=0

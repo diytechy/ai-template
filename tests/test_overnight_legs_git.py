@@ -12,6 +12,7 @@ with the run's trailer. Its in-process pin is `test_overnight_legs`.
 import sys
 
 import agent_brief
+import agent_common
 import coordinator_guard
 import pytest
 from kitlib import provenance
@@ -131,6 +132,8 @@ def head(repo):
     [
         (["trunk_unmarked", "handoff"], "unmarked trunk work"),
         (["trunk_foreign", "handoff"], "foreign trunk work"),
+        # A pin for the archive: one the leg creates is judged over the
+        # commits no pre-leg branch reaches, as before.
         (["archive_unmarked", "handoff"], "unmarked archive record"),
         (["rewind", "handoff"], "pre-leg tip"),
     ],
@@ -249,7 +252,146 @@ def test_a_git_read_that_fails_after_a_leg_stops_the_run_and_check_lane_refuses(
 def test_a_leg_whose_commits_all_carry_the_runs_trailer_runs_the_next_leg(
     ol, tmp_path, monkeypatch
 ):
+    # A pin for the archive too: a marked archive the leg creates passes.
     plan = [["claim_marked", "lane_marked", "lane_marked", "archive_marked", "handoff"]]
     code, records, _repo = run_two_legs(ol, tmp_path, monkeypatch, plan)
     assert code == 0 and len(records) == 2
     assert "wi-1" in run_log(ol)
+
+
+# --- the trunk the run binds, and the checkout held to it ----------------------
+
+
+def stops(ol):
+    return [line for line in run_log(ol).splitlines() if "stop:" in line]
+
+
+def test_a_leg_that_leaves_the_primary_checkout_off_trunk_stops_the_run(
+    ol, tmp_path, monkeypatch
+):
+    plan = [["checkout_elsewhere", "handoff"], ["main_unmarked", "handoff"]]
+    code, records, _repo = run_two_legs(ol, tmp_path, monkeypatch, plan)
+    assert code == 3 and len(records) == 1
+    assert "elsewhere" in stops(ol)[-1]
+
+
+def test_the_run_binds_trunk_once_and_logs_it(ol, tmp_path, monkeypatch):
+    calls = []
+    real = agent_common.trunk_name
+
+    def counted(repo, *args, **kwargs):
+        calls.append(repo)
+        return real(repo, *args, **kwargs)
+
+    monkeypatch.setattr(agent_common, "trunk_name", counted)
+    code, records, _repo = run_two_legs(ol, tmp_path, monkeypatch)
+    assert code == 0 and len(records) == 2
+    assert len(calls) == 1
+    assert "run trunk main" in run_log(ol)
+    assert not hasattr(ol, "trunk_name")
+
+
+def test_a_refusing_trunk_reader_stops_the_run_before_any_leg(
+    ol, tmp_path, monkeypatch
+):
+    def refusing(repo, *args, **kwargs):
+        raise ValueError("trunk undeclared: probe")
+
+    monkeypatch.setattr(agent_common, "trunk_name", refusing)
+    code, records, _repo = run_two_legs(ol, tmp_path, monkeypatch)
+    assert code == 2 and records == []
+    assert "trunk undeclared: probe" in stops(ol)[-1]
+
+
+def test_a_bound_name_no_local_branch_holds_stops_before_the_leg(
+    ol, tmp_path, monkeypatch
+):
+    # A pin: the kit reader's last resort, "HEAD", names no local branch, and
+    # the run stops before the leg, as a detached checkout stopped it before.
+    monkeypatch.setattr(agent_common, "trunk_name", lambda repo, *a, **k: "HEAD")
+    code, records, _repo = run_two_legs(ol, tmp_path, monkeypatch)
+    assert code == 3 and records == []
+    assert "refs/heads/HEAD" in stops(ol)[-1]
+
+
+def archive_two(repo):
+    """Two `archive/lanes` commits on trunk's tip, written before the run."""
+    from integrate_fixtures import _git
+
+    parent = head(repo)
+    for n in (1, 2):
+        message = "archive record {}".format(n)
+        sha = _git(repo, "commit-tree", parent + "^{tree}", "-p", parent, "-m", message)
+        parent = sha.strip()
+    _git(repo, "update-ref", "refs/heads/archive/lanes", parent)
+
+
+def archive_tip(repo):
+    from integrate_fixtures import _git
+
+    return _git(repo, "rev-parse", "refs/heads/archive/lanes").strip()
+
+
+@pytest.mark.parametrize(
+    "action", ["archive_rewind", "archive_reset_unrelated", "archive_delete"]
+)
+def test_a_leg_that_rewinds_resets_or_deletes_archive_lanes_stops_the_run(
+    ol, tmp_path, monkeypatch, action
+):
+    tips = []
+
+    def setup(repo):
+        archive_two(repo)
+        tips.append(archive_tip(repo))
+
+    code, records, _repo = run_two_legs(
+        ol, tmp_path, monkeypatch, [[action, "handoff"]], setup=setup
+    )
+    assert code == 3 and len(records) == 1
+    assert tips[0][:10] in stops(ol)[-1]
+
+
+def test_a_marked_archive_commit_on_an_existing_archive_runs_the_next_leg(
+    ol, tmp_path, monkeypatch
+):
+    # A pin: an archive that descends, by a marked commit, passes.
+    plan = [["archive_marked", "handoff"]]
+    code, records, _repo = run_two_legs(
+        ol, tmp_path, monkeypatch, plan, setup=archive_two
+    )
+    assert code == 0 and len(records) == 2
+    assert "archive/lanes 1 commit(s)" in run_log(ol)
+
+
+def test_check_lane_from_the_lanes_own_worktree_judges_from_the_kits_trunk(
+    ol, tmp_path, capsys
+):
+    from integrate_fixtures import _git
+
+    repo = handoff_repo(tmp_path / "repo")
+    marked_lane(repo)
+    lane = tmp_path / "lane"
+    _git(repo, "worktree", "add", "-q", str(lane), "wi-1")
+    code, out = check_lane(ol, lane, capsys)
+    assert code == 3
+    assert "lane work 2" in out
+
+
+def test_the_leg_log_line_names_the_bound_trunks_pre_and_post_leg_tips(
+    ol, tmp_path, monkeypatch
+):
+    # A pin on real git: the checkout stays on trunk here, so the line read
+    # the same tips before the change.
+    from integrate_fixtures import _git
+
+    tips = []
+    code, records, repo = run_two_legs(
+        ol, tmp_path, monkeypatch, setup=lambda repo: tips.append(head(repo))
+    )
+    assert code == 0 and len(records) == 2
+    after = _git(
+        repo, "log", "--format=%H", "--fixed-strings", "--grep=handoff: leg 1", "main"
+    ).split()
+    assert len(after) == 1
+    line = "leg 1 exit 0; trunk {} -> {}".format(tips[0][:8], after[0][:8])
+    assert line in run_log(ol)

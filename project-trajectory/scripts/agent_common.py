@@ -34,7 +34,10 @@ Contract IF-065: the shared coordinator primitives the session engine and the
     process shares one lock namespace and `acquire_lock` / `release_lock` cannot
     disagree about what is held; the worker-assignment primitives
     (`WI_TOKEN_RE`, `sanitize_train`, `parse_wi_list`, `load_wi_registry`,
-    `train_evidence`); `parse_map`; `preflight`, the launchability refusal; and
+    `train_evidence`); `loop_claimed`, the one reader of whether the loop
+    claimed a lane, which the integrator's merge slot reads a lane's claim
+    through and which answers a claim log it cannot read as unreadable, never
+    unclaimed; `parse_map`; `preflight`, the launchability refusal; and
     the session-log family — every log through one shared writer, with
     planner/probe/interactive launches through one durable invocation boundary,
     the regenerated iteration index and telemetry commit — with the generated
@@ -1221,6 +1224,49 @@ def claim_base(root, branch=None):
         if valid_move:
             return sha, True
     return None, True
+
+
+_CLAIM_SHA_RE = re.compile(r"[0-9a-f]{40}(?:[0-9a-f]{24})?")
+
+
+def loop_claimed(root, branch, trunk_tip):
+    """Did the LOOP claim `branch`? `(claimed, unreadable)`.
+
+    Claimed when the claim commit on `trunk_tip`'s first-parent line - the
+    newest whose subject is the claim grammar for this branch - carries a
+    well-formed `Loop-Session` trailer, which the claim writes under the loop
+    marker and never otherwise (SR-209): `(True, None)`. No such claim, or a
+    newest claim with no trailer or a malformed one: `(False, None)`.
+
+    A claim log git cannot read, or a record in it with no commit id, is
+    UNREADABLE, never unclaimed: `(None, why)`, where `why` names the read.
+    It is the one reader of a lane's claim, and every caller refuses on an
+    unreadable answer.
+
+    Implements: SR-209, LLR-248
+    """
+    suffix = " -> active/{} (bookkeeping)".format(branch)
+    grep = ("--first-parent", "--fixed-strings", "--grep=" + suffix)
+    args = ("log", *grep, "--format=%H%x00%B%x1e", trunk_tip)
+    code, out = git(root, *args)
+    if code != 0:
+        detail = out.strip().splitlines()
+        return None, "git {} failed (exit {}){}".format(
+            " ".join(args), code, ": " + detail[0] if detail else ""
+        )
+    for record in out.split("\x1e"):
+        record = record.lstrip("\r\n")
+        if not record.strip():
+            continue
+        sha, nul, message = record.partition("\x00")
+        if not nul or not _CLAIM_SHA_RE.fullmatch(sha):
+            return None, "unparseable record {!r} from git {}".format(
+                record[:60], " ".join(args)
+            )
+        subject = (message.strip().splitlines() or [""])[0]
+        if subject.startswith("claim: ") and subject.endswith(suffix):
+            return _kitprovenance.parse_loop_trailer(message) is not None, None
+    return False, None
 
 
 def default_base(root):

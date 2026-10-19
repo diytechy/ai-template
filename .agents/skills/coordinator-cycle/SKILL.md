@@ -403,7 +403,9 @@ starts. Every leg's prompt is the handoff's session prompt, then the
 [headless block](../../../scripts/coordinator/headless-leg.md), then the kit's
 provenance line naming the session. After each leg the launcher audits every
 ref the leg moved and stops the run, naming the commit or the read, when one
-fails its rule.
+fails its rule. It judges every leg against the trunk it bound at run start,
+and stops the run when a leg leaves the primary checkout on any other branch:
+a leg's work stays in lane worktrees.
 
 **The trailer on every commit:**
 

@@ -40,6 +40,7 @@ import stat
 import subprocess
 import sys
 
+import pytest
 from conftest import (
     ROOT,
     SCRIPTS,
@@ -689,6 +690,132 @@ def test_the_reclaim_subject_is_no_loop_writer_subject_and_no_claim_subject():
         assert not provenance.loop_writer_commit(_trailered(subject), branch)
         assert not subject.startswith("claim: ")
         assert not subject.endswith(" -> active/{} (bookkeeping)".format(branch))
+
+
+# --- TC-242: a claim log git cannot read is a refusal, never a person's lane ---
+
+CLAIM_SUFFIX = " -> active/wi-401 (bookkeeping)"
+
+
+def _claim_only_lane(tmp_path, monkeypatch):
+    """A lane whose only loop mark is its claim: claimed under the marker, then
+    an unmarked commit and an unmarked close, and no loop-writer commit. Read
+    without its claim, it is a person's lane."""
+    root = claim_repo(tmp_path)
+    monkeypatch.setenv(MARK, SESSION)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    monkeypatch.delenv(MARK, raising=False)
+    _git(root, "checkout", "-q", "wi-401")
+    (root / "a.txt").write_text("a\n", encoding="utf-8", newline="\n")
+    _commit(root, "WI-401: unmarked build", when=T_CODE)
+    (root / "docs" / "work" / "complete").mkdir(parents=True, exist_ok=True)
+    src = "docs/work/active/wi-401/WI-401-widget.md"
+    _git(root, "mv", src, "docs/work/complete/WI-401-widget.md")
+    _commit(root, "close: WI-401 -> complete", when=T_VERDICT)
+    _git(root, "checkout", "-q", "main")
+    return root
+
+
+def _claim_read_answers(monkeypatch, answer):
+    """Answer the claim reader's log read alone with `answer`: a `log` whose
+    grep is wi-401's claim suffix and whose format is not `claim_base`'s
+    `%H%x09%s`. Every other git call runs for real."""
+    real = ac.git
+
+    def git(root, *args):
+        claim_read = (
+            args[:1] == ("log",)
+            and "--grep=" + CLAIM_SUFFIX in args
+            and "--format=%H%x09%s" not in args
+        )
+        return answer if claim_read else real(root, *args)
+
+    monkeypatch.setattr(ac, "git", git)
+
+
+def test_an_unreadable_claim_log_is_refused_by_the_trailer_rung_naming_the_read(
+    tmp_path, monkeypatch
+):
+    root = _claim_only_lane(tmp_path, monkeypatch)
+    head = _rev(root, "HEAD")
+    _claim_read_answers(monkeypatch, (128, "fatal: bad object"))
+    refusal = integ._loop_trailer_refusal(root, "wi-401")
+    assert refusal and "--grep" in refusal and "nothing was merged" in refusal
+    assert "exit 128" in refusal and "fatal: bad object" in refusal
+    merged = integ.integrate_one(root, "wi-401", "smoke")
+    assert merged and "--grep" in merged, merged
+    assert _rev(root, "HEAD") == head  # nothing merged
+
+
+def test_an_unreadable_claim_log_is_refused_by_the_held_status_rung(
+    tmp_path, monkeypatch
+):
+    root = _claim_only_lane(tmp_path, monkeypatch)
+    _claim_read_answers(monkeypatch, (128, "fatal: bad object"))
+    refusal = integ._held_status_refusal(root, "wi-401")
+    assert refusal and "--grep" in refusal and "nothing was merged" in refusal
+
+
+@pytest.mark.parametrize(
+    "out",
+    [
+        "no-sha-record\x1e",
+        "not-a-sha\x00claim: WI-401" + CLAIM_SUFFIX + "\x1e",
+    ],
+    ids=["no-nul", "not-a-sha"],
+)
+def test_an_unparseable_claim_record_is_unreadable_never_unclaimed(
+    tmp_path, monkeypatch, out
+):
+    root = _claim_only_lane(tmp_path, monkeypatch)
+    _claim_read_answers(monkeypatch, (0, out))
+    claimed, why = ac.loop_claimed(root, "wi-401", _rev(root, "HEAD"))
+    assert claimed is None and "unparseable" in why
+    for rung in (integ._loop_trailer_refusal, integ._held_status_refusal):
+        refusal = rung(root, "wi-401")
+        assert refusal and "unparseable" in refusal and "nothing was merged" in refusal
+
+
+def _claim_history(tmp_path, messages):
+    """A trunk whose first-parent line holds `messages`, oldest first."""
+    git_repo(tmp_path)
+    for n, message in enumerate(messages):
+        (tmp_path / "f{}.txt".format(n)).write_text(str(n), encoding="utf-8")
+        _commit(tmp_path, message, when=T_CODE + n)
+    return tmp_path
+
+
+CLAIM_401 = "claim: WI-401" + CLAIM_SUFFIX
+CLAIM_402 = "claim: WI-402 -> active/wi-402 (bookkeeping)"
+READABLE_LOGS = {
+    "a marked newest claim": ([_trailered(CLAIM_401)], True),
+    "an unmarked newest claim": ([CLAIM_401], False),
+    "a malformed-trailer newest claim": (
+        [CLAIM_401 + "\n\nLoop-Session: not a session!"],
+        False,
+    ),
+    "an older marked claim under a newer unmarked one": (
+        [_trailered(CLAIM_401), CLAIM_401],
+        False,
+    ),
+    "no claim": (["unrelated work"], False),
+    "another branch's marked claim": ([_trailered(CLAIM_402)], False),
+}
+
+
+@pytest.mark.parametrize("case", sorted(READABLE_LOGS))
+def test_the_claim_reader_answers_as_before_on_a_readable_log(tmp_path, case):
+    # A pin: on a readable log the reading is the slot's as it stood.
+    messages, claimed = READABLE_LOGS[case]
+    root = _claim_history(tmp_path, messages)
+    assert ac.loop_claimed(root, "wi-401", _rev(root, "HEAD")) == (claimed, None)
+
+
+def test_the_slot_and_the_launcher_share_one_claim_reader():
+    from overnight_legs_fixtures import load_launcher
+
+    assert not hasattr(integ, "_loop_claimed")
+    assert not hasattr(load_launcher(), "lane_claimed")
 
 
 # --- TC-242: every loop writer's message carries the trailer -------------------

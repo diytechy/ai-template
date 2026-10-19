@@ -8856,6 +8856,26 @@ range to its tree; `integrate.py` reads both in its one lane `git log`.
 carries a re-claim, so every window reads as before. A caller of your own of
 `loop_lane_window`, if any, passes the new record shape and the boundary map.
 
+### The merge slot reads a lane's claim through one checked reader [since cab3b2a76]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The merge slot reads whether the loop claimed a lane
+through one reader, `loop_claimed` in `scripts/agent_common.py`, beside the
+claim grammar's other readers. Its reading is unchanged: the newest claim
+commit for the branch on trunk's first-parent line, claimed when it carries
+a well-formed `Loop-Session` trailer. Its failure rule changes: a claim log
+git cannot read, or a record in it that cannot be parsed, is a refusal
+("nothing was merged", naming the read) from the slot's trailer rung and its
+held-status rung, never a person's lane. Before, it read as unclaimed.
+
+**Kit-owned files — overwrite:** `scripts/agent_common.py` and
+`scripts/integrate.py`.
+
+**What to do.** Overwrite the files. Nothing migrates: no registry, setting
+or record format changes, and every lane whose claim log reads is read as
+before. The slot refuses only where git cannot read the claim log.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

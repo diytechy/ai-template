@@ -33,22 +33,39 @@ D-015 and D-016):
     which names the session (D-016 Q2). It is piped to the agent CLI on stdin,
     the route the kit's own launches take, and the CLI is resolved on PATH.
 
+A run's trunk is bound once (coordinator-2026-10-18 D-004 and D-005): before
+the first leg the launcher reads the trunk's name through the kit's one trunk
+reader (`agent_common.trunk_name`) and logs it (`run trunk <name>`). Every leg
+in the run is judged against that bound trunk, whatever branch the checkout is
+on: the checkout's branch is only compared with it, never read as trunk.
+
 Stops (never retries blindly):
   - before any leg, exit 2: the headless block is absent, unreadable or
-    empty; the provenance note is empty; no `claude` resolves on PATH;
+    empty; the provenance note is empty; no `claude` resolves on PATH; the
+    trunk reader refuses (the run prints its message);
   - the newest handoff carries the line `Overnight: stop` (queue drained, or
     nothing can move without the owner);
-  - exit 3, the audit (WI-917's Trust section): the launcher snapshots every
-    local branch immediately before a leg and again after it exits, then
-    judges trunk (it must still descend from its pre-leg tip, and every commit
-    the leg added to its first-parent line must carry this run's trailer),
-    then `archive/lanes` the same way, then every other branch the leg created
-    or moved, over its range from trunk, by the merge slot's own lane rule
-    (`provenance.loop_lane_window`, then the trailer check inside the window,
+  - exit 3, before a leg: the snapshot does not hold the bound trunk, or the
+    checkout is not on it (its HEAD is detached, unreadable or unparseable,
+    or names another branch);
+  - exit 3, the audit (WI-917's Trust section, as WI-946 amends it): the
+    launcher snapshots every local branch immediately before a leg and again
+    after it exits, then judges the bound trunk (it must still resolve and
+    descend from its pre-leg tip, and every commit the leg added to its
+    first-parent line must carry this run's trailer), then `archive/lanes` by
+    the same rule, except that it may be created (absent before, it reads
+    `absent`, or, created, is judged over the commits no pre-leg branch
+    reaches), then every other branch the leg created or moved, over its range
+    from trunk, by the merge slot's own lane rule (the claim read through the
+    kit's one claim reader, `agent_common.loop_claimed`, then
+    `provenance.loop_lane_window`, then the trailer check inside the window,
     which accepts any well-formed session; an attended re-claim closes the
     window as at the slot, read from the same commit records, parents and
-    trees included, D-005 C4). A refused commit, or a git read
-    that fails or cannot be parsed, stops the run naming the commit or the
+    trees included, D-005 C4), then the checkout, which must still be on the
+    bound trunk. A refused commit, a claim the reader cannot read, an
+    `archive/lanes` that no longer resolves or no longer descends from its
+    pre-leg tip, a checkout off the bound trunk, or a git read that fails or
+    cannot be parsed, stops the run naming the commit, the pre-leg tip or the
     read; a branch the leg deleted is logged, not judged. Nothing is repaired,
     skipped or re-ordered;
   - a leg exits non-zero, or leaves the coordinator lease held, or adds no
@@ -57,17 +74,42 @@ Stops (never retries blindly):
 A handoff line `Resume-not-before: <ISO local time>` (a Codex plan limit,
 say) makes the loop wait until then before the next leg.
 
+**The bound.** The audit judges what the two snapshots can see, and they
+cannot see a branch created and deleted inside one leg, or any ref outside
+`refs/heads/` (tags, `refs/stash`, notes). Such commits reach a judged ref in
+only three ways: as a first-parent commit of trunk or `archive/lanes`, which
+the audit judges; as a commit of a branch the leg created or moved, which the
+lane rule judges; or as a merge's non-first-parent commits. Those, on trunk's
+or `archive/lanes`' first-parent line, are judged by no rule: the archive's
+extra parents are lane tips, by the landing recipe, and a lane merged onto
+trunk is off procedure while landings are squashes after `check-lane` (once
+WI-808 puts landings on the merge slot, its trailer rung judges the lane it
+merges). The audit judges provenance only, not which branches a leg may
+move: a marked commit on a branch the lane rule reads as a person's (`main`
+included) passes it, and the owner-held steps belong to the procedure (the
+coordinator-cycle skill's headless-leg section), not to the audit. Until
+WI-925 declares the trunk's name, `check-lane` reads trunk at its own run as
+the branch the primary checkout is on at that moment, or, when the primary
+checkout is detached, as the current branch of the `--repo` checkout, so two
+orders escape it. A leg switches the primary checkout, runs `check-lane`, and
+switches back before its squash; or a leg detaches the primary checkout and
+runs `check-lane` with `--repo` at a lane's worktree, where trunk reads as
+the lane itself, the range is empty, and the lane passes. No supported
+workflow produces either order (PROCESS.md §6). WI-925's declared name ends
+both.
+
     python overnight_legs.py [--repo <checkout>] [--max-legs 6] [--dry-run]
     python overnight_legs.py check-lane <branch> [--repo <checkout>]
 
 `check-lane` runs the same lane rule over one branch at its tip, from the tip
-of the branch the checkout's HEAD names, and sets no marker: exit 0, or 3
-printing the first refused commit or the failed read (an unresolvable branch
-is a failed read). It reads a re-claim exactly as the merge slot's trailer
-rung does: an empty, unmarked commit under the lane's re-claim subject exempts
-the commits after it until a loop writer marks the lane again. A headless leg runs it before it squashes a lane, so a lane
-holding an unmarked commit is not landed (the coordinator-cycle skill's
-headless-leg section).
+of the trunk the kit's trunk reader names at its own run, and sets no marker:
+exit 0, or 3 printing the first refused commit, the failed read (an
+unresolvable branch is a failed read) or the trunk reader's refusal ("cannot
+judge"). It reads a re-claim exactly as the merge slot's trailer rung does: an
+empty, unmarked commit under the lane's re-claim subject exempts the commits
+after it until a loop writer marks the lane again. A headless leg runs it
+before it squashes a lane, so a lane holding an unmarked commit is not landed
+(the coordinator-cycle skill's headless-leg section).
 
 The checkout defaults to the one holding this script, and the logs go to
 `overnight-logs` in its sibling `.wt` folder (`layout.py`).
@@ -142,10 +184,10 @@ def leg_prompt(session_prompt, block, note):
     return session_prompt + "\n\n" + block.strip() + note
 
 
-def prepare_run():
-    """Read the block, mark the run, compose the note and resolve the agent
-    CLI, in that order; (block, note, claude, session), or None after logging
-    the stop."""
+def prepare_run(repo):
+    """Read the block, mark the run, compose the note, resolve the agent CLI
+    and bind the run's trunk, in that order; (block, note, claude, session,
+    the trunk's ref), or None after logging the stop."""
     block, reason = read_block(HEADLESS_BLOCK)
     if block is None:
         log("stop: the headless block {} is {}".format(HEADLESS_BLOCK, reason))
@@ -164,7 +206,25 @@ def prepare_run():
     if not claude:
         log("stop: no `claude` agent CLI resolves on PATH")
         return None
-    return block, note, claude, session
+    trunk = bind_trunk(repo)
+    if trunk is None:
+        return None
+    return block, note, claude, session, trunk
+
+
+def bind_trunk(repo):
+    """The run's trunk, read once through the kit's one trunk reader and
+    logged; every leg is judged against it (coordinator-2026-10-18 D-004 and
+    D-005 C2). Its ref, or None after logging the reader's refusal."""
+    import agent_common  # the kit's trunk reader
+
+    try:
+        name = agent_common.trunk_name(repo)
+    except ValueError as exc:
+        log("stop: trunk: {}".format(exc))
+        return None
+    log("run trunk {}".format(name))
+    return HEADS + name
 
 
 def run_leg(cmd, prompt, repo, out):
@@ -225,15 +285,19 @@ def log_records(repo, *args):
     return commits
 
 
-def trunk_name(repo):
-    """The branch the checkout's HEAD names; a detached HEAD cannot be judged."""
+def checkout_refusal(repo, trunk_ref):
+    """The checkout must be on the run's trunk (coordinator-2026-10-18 D-005
+    C3): its branch is compared with the bound name, never read as trunk.
+    AuditStop naming what was read: a detached, unparseable or unreadable
+    HEAD, or another branch."""
     code, out = read(repo, "symbolic-ref", "-q", "HEAD", answers=(0, 1))
     ref = out.strip()
     if code == 1:
-        raise AuditStop("the checkout's HEAD is detached, so trunk cannot be judged")
+        raise AuditStop("the checkout's HEAD is detached, not on the run's trunk {}".format(trunk_ref))
     if not ref.startswith(HEADS):
-        raise AuditStop("unparseable trunk name {!r} from git symbolic-ref".format(ref))
-    return ref
+        raise AuditStop("unparseable branch {!r} from git symbolic-ref".format(ref))
+    if ref != trunk_ref:
+        raise AuditStop("the checkout is on {}, not on the run's trunk {}".format(ref, trunk_ref))
 
 
 def snapshot(repo):
@@ -248,9 +312,14 @@ def snapshot(repo):
     return refs
 
 
-def pre_leg(repo):
-    """The binding read immediately before a leg: (trunk's ref, the snapshot)."""
-    return trunk_name(repo), snapshot(repo)
+def pre_leg(repo, trunk_ref):
+    """The binding read immediately before a leg: the snapshot, which must
+    hold the run's trunk, with the checkout on it."""
+    refs = snapshot(repo)
+    if trunk_ref not in refs:
+        raise AuditStop("the run's trunk {} does not resolve before the leg".format(trunk_ref))
+    checkout_refusal(repo, trunk_ref)
+    return refs
 
 
 def judge(commits, session, where):
@@ -264,42 +333,31 @@ def judge(commits, session, where):
     return len(commits)
 
 
-def judge_trunk(repo, ref, pre, post, session):
-    """Trunk still descends from its pre-leg tip, and every commit the leg
-    added to its first-parent line names the run's session."""
+def judge_descent(repo, ref, pre, post, session, may_create):
+    """The rule trunk and `archive/lanes` share (coordinator-2026-10-18 D-004
+    and D-005 C5): a ref present before the leg must still resolve after it
+    and descend from its pre-leg tip, and every commit the leg added to its
+    first-parent line names the run's session. Only the archive `may_create`:
+    absent before, it reads `absent`, or, created, is judged over the commits
+    no pre-leg branch reaches. A summary of what was judged, or AuditStop."""
+    where = ref if may_create else "trunk " + ref
     before, after = pre.get(ref), post.get(ref)
-    if before is None or after is None:
-        raise AuditStop("trunk {} does not resolve {} the leg".format(ref, "before" if before is None else "after"))
-    code, _out = read(repo, "merge-base", "--is-ancestor", before, after, answers=(0, 1))
-    if code == 1:
-        raise AuditStop("trunk {} no longer descends from its pre-leg tip {}".format(ref, before[:10]))
-    return judge(log_records(repo, "--first-parent", "{}..{}".format(before, after)), session, "trunk " + ref)
-
-
-def judge_archive(repo, pre, post, session):
-    """Every commit the leg added to `archive/lanes`' first-parent line names
-    the run's session; a summary of what was judged."""
-    before, after = pre.get(ARCHIVE), post.get(ARCHIVE)
-    if after is None:
-        return "deleted (logged, not judged)" if before else "absent"
-    if after == before:
-        return "unmoved"
-    span = ["{}..{}".format(before, after)] if before else [after, "--not", *sorted(set(pre.values()))]
-    return "{} commit(s)".format(judge(log_records(repo, "--first-parent", *span), session, ARCHIVE))
-
-
-def lane_claimed(repo, branch, trunk_tip):
-    """The merge slot's reading: the newest claim of `branch` on trunk's
-    first-parent line carries a well-formed trailer."""
-    from kitlib import provenance
-
-    suffix = " -> active/{} (bookkeeping)".format(branch)
-    grep = ("--first-parent", "--fixed-strings", "--grep=" + suffix, trunk_tip)
-    for _sha, message in log_records(repo, *grep):
-        subject = (message.strip().splitlines() or [""])[0]
-        if subject.startswith("claim: ") and subject.endswith(suffix):
-            return provenance.parse_loop_trailer(message) is not None
-    return False
+    if before is None:
+        if not may_create:
+            raise AuditStop("{} does not resolve before the leg".format(where))
+        if after is None:
+            return "absent"
+        span = [after, "--not", *sorted(set(pre.values()))]
+    else:
+        if after is None:
+            raise AuditStop("{} does not resolve after the leg; its pre-leg tip was {}".format(where, before[:10]))
+        if after == before:
+            return "unmoved"
+        code, _out = read(repo, "merge-base", "--is-ancestor", before, after, answers=(0, 1))
+        if code == 1:
+            raise AuditStop("{} no longer descends from its pre-leg tip {}".format(where, before[:10]))
+        span = ["{}..{}".format(before, after)]
+    return "{} commit(s)".format(judge(log_records(repo, "--first-parent", *span), session, where))
 
 
 LANE_FORMAT = "--format=%m%x00%H%x00%P%x00%T%x00%B%x1e"
@@ -333,11 +391,17 @@ def lane_refusal(repo, branch, trunk_tip):
     """The merge slot's lane rule over `branch`'s range from `trunk_tip`:
     (the first refusal or None, the window's size, None for a person's lane).
     Any well-formed session passes, as at the slot, and an attended re-claim
-    closes the window as it does there (D-005 C4)."""
+    closes the window as it does there (D-005 C4). The claim is read through
+    the kit's one claim reader, `agent_common.loop_claimed`, the slot's own;
+    a claim it cannot read is AuditStop naming the read."""
+    import agent_common
     from kitlib import provenance
 
     commits, boundary = lane_records(repo, trunk_tip, branch)
-    window = provenance.loop_lane_window(commits, lane_claimed(repo, branch, trunk_tip), branch, boundary)
+    claimed, unreadable = agent_common.loop_claimed(repo, branch, trunk_tip)
+    if unreadable:
+        raise AuditStop(unreadable)
+    window = provenance.loop_lane_window(commits, claimed, branch, boundary)
     for sha, message, *_shape in window or ():
         refusal = provenance.loop_trailer_refusal(message)
         if refusal:
@@ -347,12 +411,14 @@ def lane_refusal(repo, branch, trunk_tip):
 
 def audit(repo, trunk_ref, pre, session):
     """Judge what a leg did, from the snapshot before it and one taken now:
-    trunk, then `archive/lanes`, then every other branch the leg created or
-    moved. A summary line, or AuditStop at the first refusal or failed read."""
+    the run's trunk, then `archive/lanes`, then every other branch the leg
+    created or moved, then the checkout, which must still be on the run's
+    trunk. (A summary line, the post-leg snapshot), or AuditStop at the first
+    refusal or failed read."""
     post = snapshot(repo)
     parts = [
-        "trunk {} commit(s)".format(judge_trunk(repo, trunk_ref, pre, post, session)),
-        "archive/lanes {}".format(judge_archive(repo, pre, post, session)),
+        "trunk {}".format(judge_descent(repo, trunk_ref, pre, post, session, may_create=False)),
+        "archive/lanes {}".format(judge_descent(repo, ARCHIVE, pre, post, session, may_create=True)),
     ]
     for ref in sorted(post):
         if ref in (trunk_ref, ARCHIVE) or pre.get(ref) == post[ref]:
@@ -364,15 +430,21 @@ def audit(repo, trunk_ref, pre, session):
     deleted = sorted(ref[len(HEADS):] for ref in pre if ref not in post)
     if deleted:
         parts.append("deleted, not judged: " + ", ".join(deleted))
-    return "; ".join(parts)
+    checkout_refusal(repo, trunk_ref)
+    return "; ".join(parts), post
 
 
 def check_lane(repo, branch):
     """`check-lane`: the lane rule over `branch` at its tip now, from the tip
-    of the branch the checkout's HEAD names. 0, or 3 printing the first
-    refused commit or the failed read."""
+    of the trunk the kit's trunk reader names. 0, or 3 printing the first
+    refused commit, the failed read, or the reader's refusal."""
+    import agent_common  # the kit's trunk reader
+
     try:
-        trunk_ref = trunk_name(repo)
+        try:
+            trunk_ref = HEADS + agent_common.trunk_name(repo)
+        except ValueError as exc:
+            raise AuditStop("trunk: {}".format(exc)) from exc
         _code, tip = read(repo, "rev-parse", "--verify", trunk_ref + "^{commit}")
         read(repo, "rev-parse", "--verify", HEADS + branch + "^{commit}")
         if not SHA_RE.fullmatch(tip.strip()):
@@ -398,23 +470,23 @@ def check_lane_main(argv):
     return check_lane(repo, args.branch)
 
 
-def run_and_audit(repo, leg, cmd, prompt, out, session):
-    """Run one leg between the two ref snapshots and audit it; 3 to stop the
-    run, else None. The audit comes first after the leg exits, so a refused
-    commit is named whatever else the leg did."""
+def run_and_audit(repo, leg, cmd, prompt, out, session, trunk_ref):
+    """Run one leg between the two ref snapshots and audit it against the
+    run's trunk; 3 to stop the run, else None. The audit comes first after the
+    leg exits, so a refused commit is named whatever else the leg did."""
     try:
-        trunk_ref, pre = pre_leg(repo)
+        pre = pre_leg(repo, trunk_ref)
     except AuditStop as exc:
         log("stop: before leg {}: {}".format(leg, exc))
         return 3
     code = run_leg(cmd, prompt, repo, out)
     try:
-        log("leg {} audit: {}".format(leg, audit(repo, trunk_ref, pre, session)))
+        summary, post = audit(repo, trunk_ref, pre, session)
     except AuditStop as exc:
         log("stop: leg {} audit: {}".format(leg, exc))
         return 3
-    log("leg {} exit {}; trunk {} -> {}".format(
-        leg, code, pre.get(trunk_ref, "")[:8], git(repo, "rev-parse", "HEAD")[:8]))
+    log("leg {} audit: {}".format(leg, summary))
+    log("leg {} exit {}; trunk {} -> {}".format(leg, code, pre[trunk_ref][:8], post[trunk_ref][:8]))
     if code != 0:
         log("stop: leg {} exited {}".format(leg, code))
         return 3
@@ -436,10 +508,10 @@ def main(argv=None):
     sys.path.insert(0, str(repo / "project-trajectory" / "scripts"))
     import coordinator_guard  # the kit's own session-prompt reader
 
-    prepared = prepare_run()
+    prepared = prepare_run(repo)
     if prepared is None:
         return 2
-    block, note, claude, session = prepared
+    block, note, claude, session, trunk_ref = prepared
     for leg in range(1, args.max_legs + 1):
         handoff = newest_handoff(repo)
         if handoff is None or not handoff.is_file():
@@ -484,7 +556,7 @@ def main(argv=None):
             log("dry run: would run {} -p --model {} with <{} chars> on stdin".format(
                 claude, args.model, len(prompt)))
             return 0
-        stop = run_and_audit(repo, leg, cmd, prompt, out, session)
+        stop = run_and_audit(repo, leg, cmd, prompt, out, session, trunk_ref)
         if stop is not None:
             return stop
         after = newest_handoff(repo)

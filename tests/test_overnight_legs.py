@@ -13,6 +13,7 @@ import shutil
 import sys
 
 import agent_brief
+import agent_common
 import pytest
 from conftest import KIT
 from kitlib import provenance
@@ -24,11 +25,24 @@ WELL_FORMED = "20260101T000000Z-abcdef"
 
 @pytest.fixture
 def ol(tmp_path, monkeypatch):
-    """The launcher, logging under `tmp_path`, with `sys.path` restored."""
+    """The launcher, logging under `tmp_path`, with `sys.path` restored. The
+    kit's shared readers it calls answer from the same fake: the trunk reader
+    names `main`, and `agent_common.git` runs through the launcher's
+    `run_git`, in `git()`'s own `(code, out)` shape."""
     monkeypatch.setattr(sys, "path", list(sys.path))
     module = load_launcher()
     monkeypatch.setattr(module, "LOGDIR", tmp_path / "logs")
     monkeypatch.setattr(module, "lease_holder", lambda repo: None)
+    monkeypatch.setattr(agent_common, "trunk_name", lambda repo: "main")
+
+    def kit_git(root, *args):
+        code, out, err = module.run_git(root, list(args))
+        out, err = (out or "").strip(), (err or "").strip()
+        if code != 0 and err:
+            out = out + "\n" + err if out else err
+        return code, out
+
+    monkeypatch.setattr(agent_common, "git", kit_git)
     return module
 
 
@@ -185,6 +199,7 @@ class FakeGit:
             "name": ok(TRUNK + "\n"),
             "snapshot": ok(snapshot_out({TRUNK: B, ARCHIVE: D, "refs/heads/wi-1": L})),
             "descent": ok(),
+            "archive-descent": ok(),
             "trunk": ok(records((B, marked("handoff: leg 1")))),
             "archive": ok(records((D, marked("archive record")))),
             "lane": ok(lane_log((L, marked("lane work")))),
@@ -200,6 +215,8 @@ class FakeGit:
             simple = {"symbolic-ref": "name", "for-each-ref": "snapshot"}
             if args[0] == "rev-parse":
                 return "trunk-tip" if TRUNK in " ".join(args) else "resolve"
+            if args[0] == "merge-base" and C in args:
+                return "archive-descent"
             return simple.get(args[0], "descent")
         if any(a.startswith("--grep") for a in args):
             return "claim"
@@ -214,8 +231,9 @@ class FakeGit:
 def audit_with(ol, monkeypatch, pre=PRE, **answers):
     """Run the snapshot before a leg and the audit after it over FakeGit."""
     monkeypatch.setattr(ol, "run_git", FakeGit(**answers), raising=False)
-    trunk_ref, _snapshot = ol.pre_leg("repo")
-    return ol.audit("repo", trunk_ref, pre, WELL_FORMED)
+    ol.pre_leg("repo", TRUNK)
+    summary, _post = ol.audit("repo", TRUNK, pre, WELL_FORMED)
+    return summary
 
 
 @pytest.mark.parametrize(
@@ -227,6 +245,8 @@ def audit_with(ol, monkeypatch, pre=PRE, **answers):
         ("trunk", "{}..{}".format(A, B)),
         ("archive", "{}..{}".format(C, D)),
         ("lane", "{}..refs/heads/wi-1".format(B)),
+        # A pin: the claim is read through the kit's shared claim reader, and
+        # a failed read stops the audit, as the launcher's own copy did.
         ("claim", "--grep"),
     ],
 )
@@ -273,6 +293,7 @@ def test_unparseable_read_output_stops_the_run(ol, monkeypatch, answers):
     [
         ({"resolve": (128, "", "fatal: no such ref")}, "wi-1"),
         ({"lane": FAILED}, "{}..refs/heads/wi-1".format(B)),
+        # A pin: the shared claim reader's failed read refuses the landing.
         ({"claim": FAILED}, "--grep"),
     ],
 )
@@ -282,12 +303,139 @@ def test_check_lane_refuses_when_a_read_fails(ol, monkeypatch, capsys, answers, 
     assert named in capsys.readouterr().out
 
 
+CHECKOUT_CASES = {
+    "another branch": (ok("refs/heads/elsewhere\n"), "elsewhere"),
+    "detached": ((1, "", ""), "detached"),
+    "unparseable": (ok("garbage\n"), "unparseable"),
+    "failed read": (FAILED, "symbolic-ref"),
+}
+
+
+@pytest.mark.parametrize("case", sorted(CHECKOUT_CASES))
+def test_the_checkout_must_stay_on_the_bound_trunk(ol, monkeypatch, case):
+    answer, named = CHECKOUT_CASES[case]
+    monkeypatch.setattr(ol, "run_git", FakeGit(name=answer), raising=False)
+    with pytest.raises(Exception) as before:
+        ol.pre_leg("repo", TRUNK)
+    with pytest.raises(Exception) as after:
+        ol.audit("repo", TRUNK, PRE, WELL_FORMED)
+    for stop in (before.value, after.value):
+        assert type(stop).__name__ == "AuditStop"
+        assert named in str(stop)
+
+
+def test_the_audit_names_a_refused_commit_before_the_checkout(ol, monkeypatch):
+    fake = FakeGit(
+        name=ok("refs/heads/elsewhere\n"),
+        trunk=ok(records((B, "unmarked trunk work"))),
+    )
+    monkeypatch.setattr(ol, "run_git", fake, raising=False)
+    with pytest.raises(Exception) as stop:
+        ol.audit("repo", TRUNK, PRE, WELL_FORMED)
+    assert B[:10] in str(stop.value) and "elsewhere" not in str(stop.value)
+
+
+def test_a_snapshot_without_the_bound_trunk_stops_before_the_leg(ol, monkeypatch):
+    # A pin: a trunk no local branch holds was a stop before the leg already.
+    fake = FakeGit(snapshot=ok(snapshot_out({ARCHIVE: D})))
+    monkeypatch.setattr(ol, "run_git", fake, raising=False)
+    with pytest.raises(Exception) as stop:
+        ol.pre_leg("repo", TRUNK)
+    assert type(stop.value).__name__ == "AuditStop" and TRUNK in str(stop.value)
+
+
+def ready_to_run(ol, tmp_path, monkeypatch):
+    """Everything `prepare_run` reads before the bind resolves, and the log
+    folder `main` makes."""
+    ol.LOGDIR.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv(LOOP_SESSION_ENV, WELL_FORMED)
+    monkeypatch.setattr(shutil, "which", lambda name, *a, **k: str(tmp_path / name))
+
+
+def test_the_bind_reads_trunk_once_and_logs_it(ol, tmp_path, monkeypatch):
+    ready_to_run(ol, tmp_path, monkeypatch)
+    calls = []
+    monkeypatch.setattr(
+        agent_common, "trunk_name", lambda repo: calls.append(repo) or "main"
+    )
+    prepared = ol.prepare_run(tmp_path)
+    assert prepared[-1] == TRUNK and calls == [tmp_path]
+    assert "run trunk main" in log_text(ol)
+
+
+def test_a_value_error_from_the_trunk_reader_stops_the_run(ol, tmp_path, monkeypatch):
+    ready_to_run(ol, tmp_path, monkeypatch)
+
+    def refusing(repo):
+        raise ValueError("trunk undeclared: probe")
+
+    monkeypatch.setattr(agent_common, "trunk_name", refusing)
+    calls = []
+    monkeypatch.setattr(ol, "newest_handoff", unreached(calls))
+    assert ol.main(["--repo", str(tmp_path)]) == 2
+    assert "trunk undeclared: probe" in log_text(ol) and calls == []
+
+
+def test_check_lane_cannot_judge_when_the_trunk_reader_refuses(ol, monkeypatch, capsys):
+    def refusing(repo):
+        raise ValueError("trunk undeclared: probe")
+
+    monkeypatch.setattr(agent_common, "trunk_name", refusing)
+    monkeypatch.setattr(ol, "run_git", FakeGit(), raising=False)
+    assert ol.check_lane("repo", "wi-1") == 3
+    out = capsys.readouterr().out
+    assert "cannot judge" in out and "trunk undeclared: probe" in out
+
+
+def test_check_lane_cannot_judge_when_the_trunk_reader_names_no_branch(
+    ol, monkeypatch, capsys
+):
+    fake = FakeGit()
+
+    def run_git(repo, args):
+        if args[0] == "rev-parse" and "refs/heads/nosuch^{commit}" in args:
+            return 128, "", "fatal: Needed a single revision"
+        return fake(repo, args)
+
+    monkeypatch.setattr(agent_common, "trunk_name", lambda repo: "nosuch")
+    monkeypatch.setattr(ol, "run_git", run_git, raising=False)
+    assert ol.check_lane("repo", "wi-1") == 3
+    out = capsys.readouterr().out
+    assert "cannot judge" in out and "refs/heads/nosuch" in out
+
+
+def test_the_leg_log_line_prints_the_bound_trunks_tips(ol, tmp_path, monkeypatch):
+    fake = FakeGit()
+    snapshots = [ok(snapshot_out(PRE))]
+
+    def run_git(repo, args):
+        if args[0] == "for-each-ref" and snapshots:
+            return snapshots.pop(0)
+        return fake(repo, args)
+
+    monkeypatch.setattr(ol, "run_git", run_git, raising=False)
+    monkeypatch.setattr(ol, "run_leg", lambda *args: 0)
+    ol.LOGDIR.mkdir(parents=True)
+    out = tmp_path / "leg.log"
+    assert ol.run_and_audit("repo", 1, ["claude"], "p", out, WELL_FORMED, TRUNK) is None
+    assert "leg 1 exit 0; trunk {} -> {}".format(A[:8], B[:8]) in log_text(ol)
+
+
+def test_an_unparseable_claim_record_stops_the_audit(ol, monkeypatch):
+    with pytest.raises(Exception) as stop:
+        audit_with(ol, monkeypatch, claim=ok("not-a-sha\x00claim\n\x1e\n"))
+    assert type(stop.value).__name__ == "AuditStop"
+    assert "unparseable" in str(stop.value) and "--grep" in str(stop.value)
+
+
 @pytest.mark.parametrize(
     "pre, answers, named",
     [
         (PRE, {"trunk": ok(records((B, "unmarked trunk work")))}, B[:10]),
         (PRE, {"trunk": ok(records((B, marked("foreign", OTHER))))}, B[:10]),
         (PRE, {"descent": (1, "", "")}, A[:10]),
+        # A pin: an archive the leg creates is judged over the commits no
+        # pre-leg branch reaches, as before.
         (
             {TRUNK: A},
             {"archive": ok(records((D, "unmarked archive record")))},
@@ -303,6 +451,30 @@ def test_the_trunk_rule_refuses_an_unmarked_or_foreign_commit_and_a_rewind(
         audit_with(ol, monkeypatch, pre=pre, **answers)
     assert type(stop.value).__name__ == "AuditStop"
     assert named in str(stop.value)
+
+
+ARCHIVE_GONE = ok(snapshot_out({TRUNK: B, "refs/heads/wi-1": L}))
+
+
+@pytest.mark.parametrize(
+    "answers",
+    [{"archive-descent": (1, "", "")}, {"snapshot": ARCHIVE_GONE}],
+    ids=["not-descending", "deleted"],
+)
+def test_the_archive_must_descend_from_its_pre_leg_tip(ol, monkeypatch, answers):
+    with pytest.raises(Exception) as stop:
+        audit_with(ol, monkeypatch, **answers)
+    assert type(stop.value).__name__ == "AuditStop"
+    assert ARCHIVE in str(stop.value) and C[:10] in str(stop.value)
+
+
+def test_a_failed_archive_descent_read_stops_the_run_naming_it(ol, monkeypatch):
+    # A pin, per the spec's list: a failed read is a stop, as every read's is.
+    with pytest.raises(Exception) as stop:
+        audit_with(ol, monkeypatch, **{"archive-descent": FAILED})
+    assert type(stop.value).__name__ == "AuditStop"
+    assert "merge-base" in str(stop.value) and "exit 128" in str(stop.value)
+    assert C in str(stop.value)
 
 
 LANE_CASES = {

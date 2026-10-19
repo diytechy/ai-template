@@ -1230,21 +1230,6 @@ def _approval_act_refusal(root, branch):
     return judge(root, base.strip(), branch, metas, trunk=head)
 
 
-def _loop_claimed(root, branch):
-    """Did the LOOP claim `branch`? True when the claim commit on trunk's
-    first-parent line - the newest whose subject is the claim grammar for this
-    branch - carries a well-formed `Loop-Session` trailer, which the claim
-    writes under the loop marker and never otherwise (SR-209)."""
-    suffix = " -> active/{} (bookkeeping)".format(branch)
-    grep = ("--first-parent", "--fixed-strings", "--grep=" + suffix)
-    code, out = ac.git(root, "log", *grep, "--format=%B%x1e", _head(root))
-    for message in (out if code == 0 else "").split("\x1e"):
-        subject = (message.strip().splitlines() or [""])[0]
-        if subject.startswith("claim: ") and subject.endswith(suffix):
-            return _kitprovenance.parse_loop_trailer(message) is not None
-    return False
-
-
 # The mark that makes a lane the loop's: a commit one of its own writers made.
 _marked_loop_writer = _kitprovenance.loop_writer_commit
 
@@ -1262,7 +1247,9 @@ def _loop_window(root, branch):
     against its parent's tree. `--boundary` lists the range's outside parents
     too, so a re-claim whose parent is on trunk is checked the same way. The
     held-status rung judges any loop lane WHOLE. A range git cannot read is a
-    refusal: unread commits are not a person's."""
+    refusal: unread commits are not a person's. So is a claim git cannot read
+    (`agent_common.loop_claimed`, the one claim reader): an unread claim is
+    not a person's lane either."""
     code, out = ac.git(
         root,
         "log",
@@ -1288,7 +1275,14 @@ def _loop_window(root, branch):
             boundary[sha] = tree
         elif sha:
             commits.append((sha, message, tuple(parents.split()), tree))
-    claimed = _loop_claimed(root, branch)
+    claimed, unreadable = ac.loop_claimed(root, branch, _head(root))
+    if unreadable:
+        return (
+            None,
+            "cannot read {}'s claim to check its provenance; nothing was merged:\n{}".format(
+                branch, unreadable
+            ),
+        )
     window = _kitprovenance.loop_lane_window(commits, claimed, branch, boundary)
     return window, None
 
@@ -1428,7 +1422,8 @@ def _loop_trailer_refusal(root, branch):
     in a lane a person claimed and the loop later built, are exempt
     (`_loop_window`). Any well-formed session is accepted: a lane can span
     runs, and no record of a run's sessions exists to check against. A
-    person's own lane is never judged.
+    person's own lane is never judged. A lane whose range or claim git cannot
+    read is refused, naming the read: unread is never a person's lane.
 
     Implements: SR-209, LLR-248
     """
