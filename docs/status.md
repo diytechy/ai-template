@@ -25,8 +25,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-18g-attended-coordinator.md](handoff-2026-10-18g-attended-coordinator.md),
-  run **attended**, with the owner. The owner ruled the review-churn program
+  [handoff-2026-10-19a-attended-coordinator.md](handoff-2026-10-19a-attended-coordinator.md),
+  run in **headless legs** once the owner starts the overnight launcher (the
+  handoff carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
   process-text, strict-lints and plan-gate landing-shapes rows have
@@ -46,14 +47,14 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (owner, 2026-10-17). The
   disposition-adoption row is re-cut before it resumes, and the
   account-homes row still owes its checkpoint rework.
-  The coordinator's procedure lives in the `coordinator-cycle` skill. The
-  overnight loop (`scripts/coordinator/overnight_legs.py`) is stopped, and the
-  handoff's `Overnight: stop` line keeps it so. The owner directed
-  (2026-10-18, coordinator-2026-10-18 D-004) that the queue turn toward
-  headless runs: the re-claim reader row and the launcher's follow-ups
-  row are its gate rows, both landed; the session that lands the second
-  writes its handoff without the stop line, the owner starts the launcher,
-  and the rest of the queue runs in headless legs.
+  The coordinator's procedure lives in the `coordinator-cycle` skill, its
+  headless legs in its section 7. The owner directed (2026-10-18,
+  coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
+  runs: its two gate rows, the re-claim reader row and the launcher's
+  follow-ups row, have landed, so the handoff carries no stop line, the owner
+  starts the overnight launcher (`scripts/coordinator/overnight_legs.py`),
+  and the rest of the queue runs in headless legs, continuing the lanes
+  claimed attended with no re-claim.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change

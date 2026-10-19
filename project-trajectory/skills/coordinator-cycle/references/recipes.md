@@ -54,6 +54,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   lane's spec filename: `ls` the spec path each derived brief names
   before its launch (one builder found the right spec on its own;
   2026-10-18a).
+  A wording fix's brief names every site that states the text, found
+  by grep: a builder held to the two sites a finding named left the
+  spec's own copy of the same bound contradicting them, and flagged it
+  (wi-946 D-010).
   Brief a hook's coverage as reading the command word the
   way the shell grammar does, from a list you give; a brief asking for every
   form that gets past the hook was cut off by a safety classifier (WI-834).
@@ -132,7 +136,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      backgrounds its own pytest can lose the completion notice and stop
      with no verdict: look for its process (its scratch path in the
      command line), then resume that reviewer with SendMessage, never a
-     fresh one (WI-921's gate, 2026-10-15g).
+     fresh one (WI-921's gate, 2026-10-15g). A Sol launch whose sandboxed
+     shell never returns runs no command and writes no verdict (its
+     output says the review was blocked): probe the same launcher with a
+     one-command prompt (`git rev-parse HEAD`), then relaunch fresh on
+     the same brief, and file nothing from the failed one (wi-946
+     D-012).
   4. File each: `"$PY" "$SCRIPTS/review_brief.py" file --review <verdict path> --sha <tip> --scope full --phase REVIEW-A`
      (or `--phase REVIEW-B`) writes `docs/reviews/<lane>/NNN-<phase>-<sha7>.md`.
      It refuses a review not opening `Reviewed: <full sha>`, or without
@@ -792,6 +801,10 @@ lane commit being replayed.
   trunk's tip, 2026-10-18d), never by stashing an uncommitted build, and record both
   readings. Three reviewers running their suites in parallel took a
   parent to 86 s (2026-10-15): re-measure quiet before the landing.
+  A parent from before the lane's RESYNC re-anchor stops its bar at
+  `check_resync`, before the tier runs: time its tier alone with
+  `"$PY" scripts/check_smoke_budget.py --mode enforce` in the same
+  scratch worktree (WI-946's fix commit, 2026-10-18h).
 - A build whose in-process tests take the smoke tier past `max-tests`
   re-stamps the ceiling in that commit, with its reason, fig line and a
   decision, not at the landing: a red bar is not left standing (wi-911
