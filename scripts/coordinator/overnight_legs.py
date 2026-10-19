@@ -45,7 +45,9 @@ Stops (never retries blindly):
     then `archive/lanes` the same way, then every other branch the leg created
     or moved, over its range from trunk, by the merge slot's own lane rule
     (`provenance.loop_lane_window`, then the trailer check inside the window,
-    which accepts any well-formed session). A refused commit, or a git read
+    which accepts any well-formed session; an attended re-claim closes the
+    window as at the slot, read from the same commit records, parents and
+    trees included, D-005 C4). A refused commit, or a git read
     that fails or cannot be parsed, stops the run naming the commit or the
     read; a branch the leg deleted is logged, not judged. Nothing is repaired,
     skipped or re-ordered;
@@ -61,7 +63,9 @@ say) makes the loop wait until then before the next leg.
 `check-lane` runs the same lane rule over one branch at its tip, from the tip
 of the branch the checkout's HEAD names, and sets no marker: exit 0, or 3
 printing the first refused commit or the failed read (an unresolvable branch
-is a failed read). A headless leg runs it before it squashes a lane, so a lane
+is a failed read). It reads a re-claim exactly as the merge slot's trailer
+rung does: an empty, unmarked commit under the lane's re-claim subject exempts
+the commits after it until a loop writer marks the lane again. A headless leg runs it before it squashes a lane, so a lane
 holding an unmarked commit is not landed (the coordinator-cycle skill's
 headless-leg section).
 
@@ -298,15 +302,43 @@ def lane_claimed(repo, branch, trunk_tip):
     return False
 
 
+LANE_FORMAT = "--format=%m%x00%H%x00%P%x00%T%x00%B%x1e"
+
+
+def lane_records(repo, trunk_tip, branch):
+    """The merge slot's lane read: `branch`'s `(sha, message, parents, tree)`
+    records from `trunk_tip`, oldest first, and {sha: tree} for each parent
+    outside the range (`--boundary`), which the re-claim's empty-tree check
+    reads. A record missing a field, with a sha that is not one, or with a
+    mark other than `-`, `>` or none stops the audit, naming it."""
+    span = "{}..{}{}".format(trunk_tip, HEADS, branch)
+    _code, out = read(repo, "log", "--reverse", "--topo-order", "--boundary", LANE_FORMAT, span)
+    commits, boundary = [], {}
+    for record in out.split("\x1e"):
+        record = record.lstrip("\r\n")
+        if not record.strip():
+            continue
+        fields = record.split("\x00", 4)
+        if len(fields) != 5 or fields[0] not in ("-", ">", "") or not SHA_RE.fullmatch(fields[1]):
+            raise AuditStop("unparseable record {!r} from git log {}".format(record[:60], span))
+        mark, sha, parents, tree, message = fields
+        if mark == "-":
+            boundary[sha] = tree
+        else:
+            commits.append((sha, message, tuple(parents.split()), tree))
+    return commits, boundary
+
+
 def lane_refusal(repo, branch, trunk_tip):
     """The merge slot's lane rule over `branch`'s range from `trunk_tip`:
     (the first refusal or None, the window's size, None for a person's lane).
-    Any well-formed session passes, as at the slot."""
+    Any well-formed session passes, as at the slot, and an attended re-claim
+    closes the window as it does there (D-005 C4)."""
     from kitlib import provenance
 
-    commits = log_records(repo, "--reverse", "--topo-order", "{}..{}{}".format(trunk_tip, HEADS, branch))
-    window = provenance.loop_lane_window(commits, lane_claimed(repo, branch, trunk_tip), branch)
-    for sha, message in window or ():
+    commits, boundary = lane_records(repo, trunk_tip, branch)
+    window = provenance.loop_lane_window(commits, lane_claimed(repo, branch, trunk_tip), branch, boundary)
+    for sha, message, *_shape in window or ():
         refusal = provenance.loop_trailer_refusal(message)
         if refusal:
             return "lane {} holds {} - {}".format(branch, sha[:10], refusal), len(window)

@@ -1254,17 +1254,22 @@ def _loop_window(root, branch):
 
     `window` is None for a PERSON's lane - claimed without the trailer, and no
     commit in its range made by one of the loop's own writers - which neither
-    slot rung judges. Otherwise it is the `(sha, message)` pairs, oldest first,
-    the trailer rung judges (`provenance.loop_lane_window`): the whole range
-    for a lane the loop claimed, else the range from its first marked
-    loop-writer commit on. The held-status rung judges any loop lane WHOLE. A
-    range git cannot read is a refusal: unread commits are not a person's."""
+    slot rung judges. Otherwise it is the `(sha, message, parents, tree)`
+    records, oldest first, the trailer rung judges
+    (`provenance.loop_lane_window`): those inside the open window, which opens
+    at the loop's claim or a marked loop-writer commit and closes at the
+    attended coordinator's re-claim (D-017), an empty unmarked commit checked
+    against its parent's tree. `--boundary` lists the range's outside parents
+    too, so a re-claim whose parent is on trunk is checked the same way. The
+    held-status rung judges any loop lane WHOLE. A range git cannot read is a
+    refusal: unread commits are not a person's."""
     code, out = ac.git(
         root,
         "log",
         "--reverse",
         "--topo-order",
-        "--format=%H%x00%B%x1e",
+        "--boundary",
+        "--format=%m%x00%H%x00%P%x00%T%x00%B%x1e",
         _head(root) + ".." + branch,
     )
     if code != 0:
@@ -1274,13 +1279,18 @@ def _loop_window(root, branch):
                 branch, ac._failure_tail(out)
             ),
         )
-    commits = []
+    commits, boundary = [], {}
     for record in out.split("\x1e"):
-        sha, _nul, message = record.strip().partition("\x00")
-        if sha:
-            commits.append((sha, message))
+        mark, sha, parents, tree, message = (
+            record.strip().split("\x00", 4) + [""] * 4
+        )[:5]
+        if mark == "-":
+            boundary[sha] = tree
+        elif sha:
+            commits.append((sha, message, tuple(parents.split()), tree))
     claimed = _loop_claimed(root, branch)
-    return _kitprovenance.loop_lane_window(commits, claimed, branch), None
+    window = _kitprovenance.loop_lane_window(commits, claimed, branch, boundary)
+    return window, None
 
 
 def _held_status_refusal(root, branch):
@@ -1298,10 +1308,13 @@ def _held_status_refusal(root, branch):
     the loop's own writers made in it, carries the trailer) whoever runs the
     slot, and over the whole range with no migration window: a change a person
     made before the loop took the lane over lands through the loop's merge all
-    the same. A person's own lane is not governed. The dial is the one
-    COMMITTED on trunk (`kitlib.authority.dial_at`), never the lane's own tree,
-    which could have released itself, and never the trunk checkout's working
-    file.
+    the same. A re-claimed lane is judged whole too: the attended
+    coordinator's re-claim (D-017) closes the trailer rung's window only,
+    until WI-851 replaces this rung's loop-lane reading with a rule that
+    judges every lane alike. A person's own lane is not governed. The dial
+    is the one COMMITTED on trunk (`kitlib.authority.dial_at`), never the
+    lane's own tree, which could have released itself, and never the trunk
+    checkout's working file.
 
     Implements: SR-208, LLR-246
     """
@@ -1404,9 +1417,15 @@ def _loop_trailer_refusal(root, branch):
     trailer, whoever runs the slot: the slot sees commits, not processes, and
     it is the one place the floor always runs, because the commit-msg hook is
     opt-in per checkout and plumbing and `--no-verify` commits never reach it.
-    A person's commit inside a loop lane is refused too; it belongs in the
-    person's own lane. The commits before the lane's first marked loop-writer
-    commit, in a lane a person claimed and the loop later built, are exempt
+    A person's commit inside a loop lane is refused too, unless it follows
+    the lane's re-claim (D-017): it belongs in the person's own lane, or after
+    the attended coordinator's empty, unmarked re-claim, until a loop writer
+    marks the lane again. A commit that carries the re-claim's subject but not
+    its shape - a trailer, another branch's name, a changed tree or a second
+    parent - is no re-claim: it is judged like any other commit in the open
+    window, refused here by name when its trailer is absent or malformed, and
+    with a well-formed trailer it passes but closes nothing. The commits before the lane's first marked loop-writer commit,
+    in a lane a person claimed and the loop later built, are exempt
     (`_loop_window`). Any well-formed session is accepted: a lane can span
     runs, and no record of a run's sessions exists to check against. A
     person's own lane is never judged.
@@ -1414,7 +1433,7 @@ def _loop_trailer_refusal(root, branch):
     Implements: SR-209, LLR-248
     """
     window, refusal = _loop_window(root, branch)
-    for sha, message in window or ():
+    for sha, message, *_shape in window or ():
         refusal = _kitprovenance.loop_trailer_refusal(message)
         if refusal:
             return "{} holds {} - {}; nothing was merged".format(

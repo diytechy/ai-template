@@ -1903,11 +1903,11 @@ component = "CMP-006"
 notes = """source - assumption_rules consumes nothing but the row vocabulary it reads from kitlib.spine: rows in, findings out, with no I/O, no git and no filesystem."""
 
 [interface.IF-194]
-rationale = "A loop commit can be told apart from a person's only if every one says it is the loop's, and every floor that checks it and every reader that relies on it must agree on the words: the trailer key, the session grammar, which trailer counts, the name of the marker a loop-started process carries, and which commits mark a lane as the loop's. One vocabulary module below every writer, floor and reader keeps a writer from emitting a trailer a floor calls malformed, keeps the merge slot and the writers agreeing on what a loop writer's commit looks like, and keeps the history check reading the mark the writers wrote."
+rationale = "A loop commit can be told apart from a person's only if every one says it is the loop's, and every floor that checks it and every reader that relies on it must agree on the words: the trailer key, the session grammar, which trailer counts, the name of the marker a loop-started process carries, and which commits mark a lane as the loop's and which attended record closes it. One vocabulary module below every writer, floor and reader keeps a writer from emitting a trailer a floor calls malformed, keeps the merge slot and the writers agreeing on what a loop writer's commit looks like, and keeps the history check reading the mark the writers wrote."
 owner = "scripts/kitlib/provenance"
 requestors = ["scripts/agent_common", "scripts/agent_loop", "scripts/bookkeeping", "scripts/check", "scripts/check_trajectory", "scripts/dispatch", "scripts/handback", "scripts/integrate"]
 channel = "call"
-data = "LOOP_TRAILER, LOOP_SESSION_ENV; format/parse_loop_trailer, loop_trailer_refusal, loop_writer_commit, loop_lane_window; mark_loop_process, with_loop_trailer"
+data = "LOOP_TRAILER/LOOP_SESSION_ENV;format/parse_loop_trailer, loop_{trailer_refusal,writer_commit,lane_window}, reclaim_subject; mark_loop_process, with_loop_trailer"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

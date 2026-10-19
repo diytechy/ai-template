@@ -17,6 +17,10 @@ chain rather than four features:
     re-checks every commit in a lane's range (plumbing and --no-verify commits
     never reach a hook, and hooks are opt-in per checkout); the commit-msg hook
     half lives in tests/test_pre_commit_hook.py beside its siblings;
+  * the attended RE-CLAIM, which closes a loop lane's trailer window for the
+    commits after it only when it is empty, unmarked and names the lane, and
+    which a later loop-writer commit re-opens; the held-status rung still
+    judges a re-claimed lane whole;
   * every loop writer's message carrying the trailer — the claim, the refresh,
     the merge, the mint's bookkeeping commit, the handback close and the
     telemetry commit — and a refused telemetry commit reported, not swallowed;
@@ -470,6 +474,221 @@ def test_a_lane_the_loop_later_builds_is_judged_from_its_first_marked_loop_commi
     refusal = integ._loop_trailer_refusal(root, "wi-401")
     assert refusal and "a person's commit inside the loop's lane" in refusal
     assert "plumbing: the unmarked write" not in refusal  # the window's own
+
+
+# --- TC-242: an attended re-claim closes a loop lane's trailer window ---------
+# The attended coordinator's first commit in a lane a headless leg marked is
+# an empty, unmarked commit whose subject names the lane in the re-claim form.
+# The trailer rung judges no commit after it, until a loop writer marks the
+# lane again; every other rung judges the lane as before.
+
+RECLAIM = "reclaim: wi-401 (attended)"  # the literal the recipe once wrote
+
+
+def _lane(home, monkeypatch, loop=True, trunk=None):
+    """WI-401 claimed (under the marker when `loop`) and checked out on its
+    lane, the marker gone again. `trunk` writes files committed on trunk
+    before the claim."""
+    home.mkdir(parents=True, exist_ok=True)
+    root = claim_repo(home)
+    if trunk:
+        trunk(root)
+        _commit(root, "the trunk's own files", when=T_BASE)
+    if loop:
+        monkeypatch.setenv(MARK, SESSION)
+    assert integ.claim(root, "WI-401", "wi-401") == 0
+    monkeypatch.delenv(MARK, raising=False)
+    _git(root, "checkout", "-q", "wi-401")
+    return root
+
+
+def _work(root, message, name="work.txt"):
+    """A file-changing porcelain commit on the lane; returns its sha."""
+    path = root / name
+    path.write_text(message + "\n", encoding="utf-8", newline="\n")
+    _commit(root, message)
+    return _rev(root, "HEAD")
+
+
+def _reclaim(root, message=None):
+    """A re-claim written the way the recipe writes it: unmarked and empty."""
+    subject = provenance.reclaim_subject("wi-401")
+    _git(root, "commit", "-q", "--allow-empty", "-m", message or subject)
+    return _rev(root, "HEAD")
+
+
+def _judged(root):
+    """The trailer rung's answer on the lane, read from trunk."""
+    _git(root, "checkout", "-q", "main")
+    return integ._loop_trailer_refusal(root, "wi-401")
+
+
+def _refused_naming(refusal, subject, sha):
+    assert refusal and subject in refusal and sha[:10] in refusal, refusal
+
+
+def test_a_reclaim_closes_a_marked_claims_window_for_the_commits_after_it(
+    tmp_path, monkeypatch
+):
+    root = _lane(tmp_path / "after", monkeypatch)
+    _reclaim(root)
+    _work(root, "an attended commit")
+    assert _judged(root) is None
+
+    root = _lane(tmp_path / "before", monkeypatch)
+    sha = _work(root, "an attended commit")
+    _reclaim(root)
+    _refused_naming(_judged(root), "an attended commit", sha)
+
+
+def test_a_lane_marked_by_a_sitting_is_judged_from_its_telemetry_and_a_reclaim_clears_it(
+    tmp_path, monkeypatch
+):
+    root = _lane(tmp_path / "open", monkeypatch, loop=False)
+    _loop_writer_commit(root, T_LATER)
+    sha = _work(root, "an attended commit")
+    _refused_naming(_judged(root), "an attended commit", sha)
+
+    root = _lane(tmp_path / "closed", monkeypatch, loop=False)
+    _loop_writer_commit(root, T_LATER)
+    _reclaim(root)
+    _work(root, "an attended commit")
+    assert _judged(root) is None
+
+
+def test_a_reclaim_carrying_a_trailer_or_naming_another_branch_is_not_one(
+    tmp_path, monkeypatch
+):
+    subject = provenance.reclaim_subject("wi-401")
+    # A well-formed trailer: the forged re-claim passes the rung itself, and
+    # the window stays open for the commit after it.
+    root = _lane(tmp_path / "trailered", monkeypatch)
+    _reclaim(root, _trailered(subject))
+    sha = _work(root, "an attended commit")
+    _refused_naming(_judged(root), "an attended commit", sha)
+    # A malformed trailer, empty or outside the session grammar: a trailer
+    # all the same, so the re-claim itself is refused, malformed.
+    for name, value in (("empty", ""), ("grammar", "not/a/session")):
+        root = _lane(tmp_path / name, monkeypatch)
+        sha = _reclaim(root, "{}\n\nLoop-Session: {}".format(subject, value))
+        _work(root, "an attended commit")
+        refusal = _judged(root)
+        _refused_naming(refusal, subject, sha)
+        assert "malformed" in refusal, refusal
+    # Another branch's subject: refused itself, for carrying no trailer.
+    root = _lane(tmp_path / "other", monkeypatch)
+    sha = _reclaim(root, provenance.reclaim_subject("wi-999"))
+    _work(root, "an attended commit")
+    refusal = _judged(root)
+    _refused_naming(refusal, "reclaim: wi-999 (attended)", sha)
+    assert "no Loop-Session trailer" in refusal, refusal
+    # The control: the genuine re-claim admits the commit after it.
+    root = _lane(tmp_path / "genuine", monkeypatch)
+    _reclaim(root)
+    _work(root, "an attended commit")
+    assert _judged(root) is None
+
+
+def test_a_reclaim_subject_on_a_commit_that_changes_the_tree_or_merges_is_refused_naming_it(
+    tmp_path, monkeypatch
+):
+    subject = provenance.reclaim_subject("wi-401")
+    root = _lane(tmp_path / "changed", monkeypatch)
+    forged = _work(root, subject, name="forged.txt")
+    after = _work(root, "an attended commit")
+    _refused_naming(_judged(root), subject, forged)
+    window, _refusal = integ._loop_window(root, "wi-401")
+    assert after in [record[0] for record in window]  # the window stayed open
+
+    root = _lane(tmp_path / "merge", monkeypatch)
+    # Two parents, the tree its first parent's: the second is an older trunk
+    # commit, so the merge brings nothing into the lane's range.
+    tree = _rev(root, "HEAD^{tree}")
+    forged = _git(
+        root, "commit-tree", tree, "-p", "HEAD", "-p", "main~1", "-m", subject
+    ).strip()
+    assert len(_git(root, "rev-list", "--parents", "-1", forged).split()) == 3
+    _git(root, "reset", "-q", "--hard", forged)
+    after = _work(root, "an attended commit")
+    _refused_naming(_judged(root), subject, forged)
+    window, _refusal = integ._loop_window(root, "wi-401")
+    assert after in [record[0] for record in window]
+
+    root = _lane(tmp_path / "genuine", monkeypatch)
+    _reclaim(root)
+    _work(root, "an attended commit")
+    assert _judged(root) is None
+
+
+def test_a_marked_loop_writer_commit_after_a_reclaim_reopens_the_window(
+    tmp_path, monkeypatch
+):
+    root = _lane(tmp_path / "reopened", monkeypatch)
+    _reclaim(root)
+    _loop_writer_commit(root, T_LATER)
+    sha = _work(root, "an attended commit")
+    _refused_naming(_judged(root), "an attended commit", sha)
+
+    root = _lane(tmp_path / "closed", monkeypatch)
+    _reclaim(root)
+    _work(root, "an attended commit")
+    assert _judged(root) is None
+
+
+def _held_frame(root):
+    _write(root, POLICY, _dial("DevStg-Boundary"))
+    _write(root, FRAME, _rows("boundary", B_01="Drafted"))
+
+
+def test_a_lane_never_marked_stays_a_persons_and_the_held_status_rung_judges_a_reclaimed_lane_whole(
+    tmp_path, monkeypatch
+):
+    root = _lane(tmp_path / "person", monkeypatch, loop=False)
+    _reclaim(root)
+    _work(root, "an attended commit")
+    assert _judged(root) is None
+    assert integ._loop_window(root, "wi-401") == (None, None)
+    assert integ._held_status_refusal(root, "wi-401") is None
+
+    root = _lane(tmp_path / "held", monkeypatch, trunk=_held_frame)
+    _reclaim(root)
+    _write(root, FRAME, _rows("boundary", B_01="Approved"))
+    _commit(root, "an attended commit moving a held status")
+    assert _judged(root) is None
+    refusal = integ._held_status_refusal(root, "wi-401")
+    for word in ("external", "B-01", "DevStg-Boundary"):
+        assert refusal and word in refusal, (word, refusal)
+
+
+def test_a_reclaim_written_literally_by_wi_917s_recipe_is_read_as_a_composed_one(
+    tmp_path, monkeypatch
+):
+    assert provenance.reclaim_subject("wi-401") == RECLAIM
+    for name, message in (("literal", RECLAIM), ("composed", None)):
+        root = _lane(tmp_path / name, monkeypatch)
+        _reclaim(root, message)
+        _work(root, "an attended commit")
+        assert _judged(root) is None, name
+
+    # The missed re-claim, replayed: the re-claim is written on the last
+    # headless commit and the attended commit rebased onto it.
+    root = _lane(tmp_path / "replay", monkeypatch)
+    _loop_writer_commit(root, T_LATER)
+    last = _rev(root, "HEAD")
+    sha = _work(root, "an attended commit")
+    _refused_naming(_judged(root), "an attended commit", sha)
+    tree = _rev(root, last + "^{tree}")
+    reclaim = _git(root, "commit-tree", tree, "-p", last, "-m", RECLAIM).strip()
+    _git(root, "rebase", "-q", "--onto", reclaim, last, "wi-401")
+    assert _judged(root) is None
+
+
+def test_the_reclaim_subject_is_no_loop_writer_subject_and_no_claim_subject():
+    for branch in ("wi-401", "main", "lane.x"):
+        subject = provenance.reclaim_subject(branch)
+        assert not provenance.loop_writer_commit(_trailered(subject), branch)
+        assert not subject.startswith("claim: ")
+        assert not subject.endswith(" -> active/{} (bookkeeping)".format(branch))
 
 
 # --- TC-242: every loop writer's message carries the trailer -------------------

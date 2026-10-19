@@ -38,7 +38,23 @@ lane is judged, and a person's commit there must carry the trailer or move to
 the person's own lane; the commits BEFORE the lane's first marked loop-writer
 commit (a lane a person claimed and started, which the loop later built) are
 exempt from the trailer rule alone, since nothing then could have marked them.
-A forged loop-writer subject only makes a lane MORE governed.
+
+A RE-CLAIM closes that window again (revision 36 of the review-churn plan's
+rulings, "Headless coordinator legs are marked now"; D-015 and D-017 of
+docs/decisions/coordinator-2026-10-14.toml): a lane a headless leg marked
+lands headless, or the attended coordinator re-claims it before its own first
+commit there. The re-claim is an empty commit in the lane - exactly one
+parent, and the parent's tree - whose subject is `reclaim_subject(branch)` and
+which carries no `Loop-Session` trailer at all. The commits after it are
+exempt from the trailer rule until a loop-writer commit marks the lane again;
+the commits before it stay judged, and the held-status rule still judges the
+lane whole. A forged loop-writer subject still only makes a lane MORE
+governed; the re-claim is the one record that makes a lane less governed, so
+it is held to that one rule, to the commits after it, and to a shape checked
+against its parent at every read. Where the commit-msg hook runs (hooks are
+opt-in per checkout), a marked process cannot write a trailerless commit
+through porcelain, because that hook refuses it; and a commit with the
+trailer is never a re-claim, whatever wrote it.
 
 VALID MEANS PRESENT AND WELL-FORMED. A trailer is a self-assertion, and there
 is no record of the sessions a run started to check one against; at the slot,
@@ -71,11 +87,15 @@ Contract IF-194: the loop's provenance vocabulary, by importer. `LOOP_TRAILER`
     given or the marker is set, and unchanged otherwise.
     `loop_writer_commit(message, branch)` is True when the message carries a
     well-formed trailer and a subject one of the loop's own writers composes
-    (`LOOP_WRITER_SUBJECTS`) for `branch`; `loop_lane_window(commits, claimed,
-    branch)` takes a lane's `(sha, message)` pairs oldest first and whether its
-    claim carries the trailer, and returns None for a person's lane or the
-    pairs the trailer rule judges: all of them for a lane the loop claimed,
-    else those from the first loop-writer commit on.
+    (`LOOP_WRITER_SUBJECTS`) for `branch`; `reclaim_subject(branch)` composes
+    the attended re-claim's subject, `reclaim: <branch> (attended)`;
+    `loop_lane_window(commits, claimed, branch, boundary)` takes a lane's
+    `(sha, message, parents, tree)` records oldest first, whether its claim
+    carries the trailer, and a map of each parent outside the range to its
+    tree, and returns None for a lane never marked or the records the trailer
+    rule judges: those inside the open window, which opens at a loop claim or
+    a loop-writer commit and closes at a re-claim (one parent, an unchanged
+    tree, this branch's subject, no `Loop-Session` trailer).
 """
 
 import os
@@ -227,26 +247,64 @@ def loop_writer_commit(message, branch):
     )
 
 
-def loop_lane_window(commits, claimed, branch):
-    """The lane commits the trailer rule judges, or None for a person's lane.
+def reclaim_subject(branch):
+    """The subject of the attended coordinator's re-claim of `branch`: this is
+    its one home, which the coordinator-cycle recipe calls when it writes one.
+    It carries no claim suffix, so no claim reader matches it, and it matches
+    no `LOOP_WRITER_SUBJECTS` pattern, so it never marks a lane.
 
-    `commits` are the lane's `(sha, message)` pairs, OLDEST FIRST; `claimed` is
-    whether the lane's claim commit carries the trailer. A lane the loop
-    claimed is judged whole. Otherwise the first loop-writer commit in the range
-    makes the lane the loop's from there on, and what came before it is the
-    window a person worked in before the loop took the lane over: exempt from
-    the trailer rule only (the held-status rule judges such a lane whole). No
-    loop-writer commit at all: a person's lane, None.
+    Implements: SR-209, LLR-248
+    """
+    return "reclaim: {} (attended)".format(branch)
+
+
+def _reclaim(record, branch, trees):
+    """Is this lane record `branch`'s re-claim? Deny by default: all four must
+    hold, its tree checked against its parent's at every read (D-017).
+
+    Implements: SR-209, LLR-248
+    """
+    _sha, message, parents, tree = record
+    return (
+        len(parents) == 1
+        and parents[0] in trees
+        and trees[parents[0]] == tree
+        and _subject(message) == reclaim_subject(branch)
+        and _last_loop_value(message) is None
+    )
+
+
+def loop_lane_window(commits, claimed, branch, boundary):
+    """The lane records the trailer rule judges, or None for a person's lane.
+
+    `commits` are the lane's `(sha, message, parents, tree)` records, OLDEST
+    FIRST, `parents` a tuple of shas; `boundary` maps each parent outside the
+    range to its tree; `claimed` is whether the lane's claim commit carries the
+    trailer. The window is open from the claim when the loop claimed the lane,
+    and opens at each loop-writer commit; what came before the first mark is
+    the window a person worked in before the loop took the lane over, exempt
+    from the trailer rule only (the held-status rule judges such a lane whole).
+    A re-claim met while the window is open closes it, and is not judged
+    itself; the commits after it are exempt until a loop writer marks the lane
+    again. No mark at all: a person's lane, None. A lane ever marked returns a
+    list, possibly empty.
 
     Implements: SR-209, LLR-248
     """
     commits = list(commits)
-    if claimed:
-        return commits
-    for i, (_sha, message) in enumerate(commits):
-        if loop_writer_commit(message, branch):
-            return commits[i:]
-    return None
+    trees = dict(boundary)
+    trees.update((record[0], record[3]) for record in commits)
+    marked = is_open = bool(claimed)
+    window = []
+    for record in commits:
+        if loop_writer_commit(record[1], branch):
+            marked = is_open = True
+        elif is_open and _reclaim(record, branch, trees):
+            is_open = False
+            continue
+        if is_open:
+            window.append(record)
+    return window if marked else None
 
 
 def loop_session(environ=None):

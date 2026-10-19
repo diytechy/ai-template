@@ -133,6 +133,7 @@ ARCHIVE = "refs/heads/archive/lanes"
 PRE = {TRUNK: A, ARCHIVE: C}
 OTHER = "20250101T000000Z-0a0b0c"
 CLAIM = "claim: WI-1 -> active/wi-1 (bookkeeping)"
+RECLAIM = "reclaim: wi-1 (attended)"  # the re-claim subject the kit composes
 
 
 def marked(subject, session=WELL_FORMED):
@@ -142,6 +143,26 @@ def marked(subject, session=WELL_FORMED):
 def records(*commits):
     """`git log --format=%H%x00%B%x1e` output for `(sha, message)` pairs."""
     return "".join("{}\x00{}\n\x1e\n".format(sha, msg) for sha, msg in commits)
+
+
+TREE_B = "5" * 40  # the tree of trunk's tip B, the lane's boundary parent
+EMPTY = "empty"  # a lane commit whose tree is its parent's
+
+
+def lane_log(*commits):
+    """The lane read's `git log --boundary` output for `(sha, message)` or
+    `(sha, message, EMPTY)` commits on one line of descent from trunk's tip B:
+    B is the boundary record, each commit's parent is the one before it, and
+    each commit's tree is its own unless it is EMPTY."""
+    out = ["-\x00{}\x00\x00{}\x00trunk tip\n\x1e\n".format(B, TREE_B)]
+    parent, parent_tree = B, TREE_B
+    for sha, message, *empty in commits:
+        tree = parent_tree if empty else "e" + sha[1:]
+        out.append(
+            ">\x00{}\x00{}\x00{}\x00{}\n\x1e\n".format(sha, parent, tree, message)
+        )
+        parent, parent_tree = sha, tree
+    return "".join(out)
 
 
 def snapshot_out(refs):
@@ -166,7 +187,7 @@ class FakeGit:
             "descent": ok(),
             "trunk": ok(records((B, marked("handoff: leg 1")))),
             "archive": ok(records((D, marked("archive record")))),
-            "lane": ok(records((L, marked("lane work")))),
+            "lane": ok(lane_log((L, marked("lane work")))),
             "claim": ok(records((B, marked(CLAIM)))),
             "resolve": ok(L + "\n"),
             "trunk-tip": ok(B + "\n"),
@@ -230,7 +251,15 @@ def test_a_failed_range_read_is_never_an_empty_range(ol, monkeypatch):
     [
         {"snapshot": ok("abc123 refs/heads/main\n")},
         {"lane": ok("not-a-sha\x00lane work\n\x1e\n")},
+        {
+            "lane": ok(
+                ">\x00not-a-sha\x00{}\x00{}\x00lane work\n\x1e\n".format(B, TREE_B)
+            )
+        },
+        {"lane": ok("?\x00{}\x00{}\x00{}\x00lane work\n\x1e\n".format(L, B, TREE_B))},
+        {"lane": ok(">\x00{}\x00{}\x00lane work\n\x1e\n".format(L, B))},
     ],
+    ids=["snapshot", "lane-old-shape", "lane-sha", "lane-mark", "lane-fields"],
 )
 def test_unparseable_read_output_stops_the_run(ol, monkeypatch, answers):
     with pytest.raises(Exception) as stop:
@@ -306,13 +335,25 @@ LANE_CASES = {
         1,
     ),
     "a person's lane passes": (CLAIM, [(X, "a person's work")], None, None),
+    "a re-claim closes the window": (
+        marked(CLAIM),
+        [(X, RECLAIM, EMPTY), (Y, "unmarked lane work")],
+        None,
+        0,
+    ),
+    "a re-claim that changes the tree is refused": (
+        marked(CLAIM),
+        [(X, RECLAIM), (Y, "unmarked lane work")],
+        X[:10],
+        2,
+    ),
 }
 
 
 @pytest.mark.parametrize("case", sorted(LANE_CASES))
 def test_the_lane_rule_is_the_merge_slots(ol, monkeypatch, case):
     claim, commits, named, window = LANE_CASES[case]
-    fake = FakeGit(lane=ok(records(*commits)), claim=ok(records((B, claim))))
+    fake = FakeGit(lane=ok(lane_log(*commits)), claim=ok(records((B, claim))))
     monkeypatch.setattr(ol, "run_git", fake, raising=False)
     refusal, size = ol.lane_refusal("repo", "wi-1", B)
     assert size == window

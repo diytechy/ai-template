@@ -8829,6 +8829,33 @@ own turn, before your resync to the entry "The sitting ends at its verdict;
 its act is a later turn", carries a verdict without bless marks: the slot
 refuses its branch until those rows are re-sat.
 
+### The merge slot reads an attended re-claim in a loop lane [since 0b009febd]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The merge slot's trailer rung judges a loop lane's commits
+inside a window. The window opens, as before, at a claim made under the loop
+marker or at a marked commit one of the loop's own writers made in the lane.
+It now also closes at an attended re-claim: an empty commit in the lane
+(exactly one parent, and that parent's tree) whose subject is
+`reclaim: <branch> (attended)` and which carries no `Loop-Session` trailer at
+all. The commits after a re-claim are exempt from the trailer rung until a
+loop-writer commit marks the lane again. A commit under that subject that is
+not empty, has two parents, names another branch or carries any trailer is no
+re-claim, and the rung judges it like any other. The held-status rung still
+judges a re-claimed lane whole. `kitlib/provenance.py` gains
+`reclaim_subject(branch)`, the subject's one composer, and
+`loop_lane_window(commits, claimed, branch, boundary)` now takes
+`(sha, message, parents, tree)` records and a map of each parent outside the
+range to its tree; `integrate.py` reads both in its one lane `git log`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/provenance.py`,
+`scripts/integrate.py`.
+
+**What to do.** Overwrite the files. Nothing migrates: no lane of yours
+carries a re-claim, so every window reads as before. A caller of your own of
+`loop_lane_window`, if any, passes the new record shape and the boundary map.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

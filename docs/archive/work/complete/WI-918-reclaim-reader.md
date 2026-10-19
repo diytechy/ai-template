@@ -3,13 +3,42 @@ id = "WI-918"
 title = "An unmarked re-claim commit closes a loop lane's trailer window, so the merge slot reads the attended commits after it as a person's"
 workstream = "process"
 sr_refs = ["SR-209"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#owner-rulings-2026-10-11"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-917"]
 +++
+
+## Deliverable
+
+Closed in its lane on 2026-10-18, after its gate and acts:
+
+- An attended re-claim closes a loop lane's trailer window: an empty commit
+  in the lane (one parent, that parent's tree) whose subject names the lane
+  in the re-claim form and which carries no `Loop-Session` trailer at all.
+  The merge slot's trailer rung judges no commit after it until a marked
+  loop-writer commit re-opens the window; a commit under the subject that
+  fails any condition is judged like any other, and the held-status rung
+  still judges a re-claimed lane whole. `kitlib/provenance.py` gains
+  `reclaim_subject`, the subject's one composer, and `loop_lane_window` reads
+  `(sha, message, parents, tree)` records with a boundary-tree map, read by
+  `integrate.py` in its one lane log and by this repository's overnight
+  launcher alike. The coordinator-cycle skill composes the re-claim through
+  that composer.
+- Spine: SR-209's acceptance, LLR-248's detail and TC-242's method and
+  expected amended (sittings 003-ADJUDICATE-9a1765d, SR-209 and LLR-248
+  MEANING+BLESS with TC-242 returned for one sentence, and
+  004-ADJUDICATE-58d4799, TC-242 MEANING+BLESS), re-attested by acts 132 and
+  133; IF-194's rationale and data amended. `RESYNC_PACK.md` carries the
+  entry, anchored at the landing's parent.
+- Reviews: the single plan's critique-1 (one MINOR, read as an APPROVE);
+  counted round 1 (001-REVIEW-A CHANGES-REQUESTED 1 MINOR, 002-REVIEW-B
+  APPROVE 1 MINOR; the wording fixed before the checkpoint) and the gate in
+  convergence stance (005-REVIEW-A APPROVE 0, 006-REVIEW-B APPROVE 3 MINOR,
+  to status.md's follow-ups). Decisions: `docs/decisions/wi-918.toml` D-001
+  to D-008.
 
 ## Context
 

@@ -21,6 +21,7 @@ from overnight_legs_fixtures import (
     LOOP_SESSION_ENV,
     OTHER_SESSION,
     handoff_repo,
+    lane_commit,
     lane_setup,
     leg_records,
     load_launcher,
@@ -179,6 +180,38 @@ def test_check_lane_refuses_a_marked_lane_holding_an_unmarked_commit_before_the_
     code, out = check_lane(ol, repo, capsys)
     assert code == 3
     assert "lane work 2" in out
+
+
+@pytest.mark.parametrize(
+    "order, code",
+    [(("reclaim", "work"), 0), (("work", "reclaim"), 3)],
+    ids=["after-the-reclaim", "before-the-reclaim"],
+)
+def test_check_lane_reads_a_reclaim_as_the_merge_slot_does(
+    ol, tmp_path, capsys, order, code
+):
+    # A lane claimed under the marker, then the attended re-claim (an empty,
+    # unmarked commit under the lane's re-claim subject) and an unmarked
+    # commit: after the re-claim the commit is exempt, before it the commit is
+    # refused by name, and the merge slot's trailer rung agrees on the same
+    # repository.
+    from integrate_fixtures import integ
+
+    repo = handoff_repo(tmp_path / "repo")
+    lane_setup(repo, WELL_FORMED, [WELL_FORMED])
+    messages = {
+        "reclaim": provenance.reclaim_subject("wi-1"),
+        "work": "lane work 2",
+    }
+    for step in order:
+        lane_commit(repo, messages[step])
+    got, out = check_lane(ol, repo, capsys)
+    slot = integ._loop_trailer_refusal(repo, "wi-1")
+    assert got == code, out
+    if code:
+        assert "lane work 2" in out and slot and "lane work 2" in slot, slot
+    else:
+        assert slot is None
 
 
 @pytest.mark.parametrize(

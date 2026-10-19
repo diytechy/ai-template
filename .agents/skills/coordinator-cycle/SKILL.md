@@ -452,28 +452,37 @@ its range under the marker, a sitting's telemetry commit included. Otherwise
 the attended coordinator re-claims it before its own first commit there, its
 sittings' verdict and act commits included.
 
-**The re-claim.** This step is the re-claim subject's one home until WI-918
-moves it into the kit's provenance module.
+**The re-claim.** The subject's one home is the kit's provenance module,
+`kitlib.provenance.reclaim_subject`; the recipe composes it there and never
+writes it by hand.
 
+- Compose the subject (`$PY` and `$SCRIPTS` as in the recipes' section 0):
+
+  ```bash
+  SUBJ=$("$PY" -c "import sys; sys.path.insert(0, '$SCRIPTS'); from kitlib.provenance import reclaim_subject; print(reclaim_subject('<branch>'))")
+  ```
 - The attended, unmarked coordinator writes an empty commit in the lane with
-  the subject `reclaim: <branch> (attended)` and no trailer:
-  `git commit --allow-empty -m "reclaim: <branch> (attended)"`.
+  that subject and no trailer: `git commit --allow-empty -m "$SUBJ"`.
 - A missed re-claim is placed before the first attended commit. Create the
   re-claim on the last headless commit, then replay the attended commits onto
-  it: `git commit-tree <last-headless>^{tree} -p <last-headless> -m
-  "reclaim: <branch> (attended)"`, then `git rebase --onto <reclaim>
-  <last-headless> <branch>`. A replay keeps each message and never reaches the
-  commit floor.
-- Until WI-918 lands, nothing reads that commit, and nothing needs to:
-  coordinator landings are hand squashes, which never run the merge slot's
-  trailer rung.
+  it: `git commit-tree <last-headless>^{tree} -p <last-headless> -m "$SUBJ"`,
+  then `git rebase --onto <reclaim> <last-headless> <branch>`. A replay keeps
+  each message and never reaches the commit floor.
+- The merge slot's trailer rung and `check-lane` read the re-claim alike
+  (D-017): it closes the lane's trailer window for the commits after it, only
+  when it is empty (one parent, that parent's tree) and carries no
+  `Loop-Session` trailer at all, and a later loop-writer commit re-opens the
+  window. A commit under the subject that is not empty or carries a trailer
+  is no re-claim: it is judged like any other commit in the open window,
+  refused by name when its trailer is absent or malformed, and with a
+  well-formed trailer it passes but closes nothing. The commits before a
+  re-claim stay judged, and the held-status rung judges the lane whole.
 
 **A leg's landing.** A leg squashes a lane only after
 `"$PY" "$TOOLS/overnight_legs.py" check-lane <lane>` exits 0; exit 3 names
 the first refused commit or the read that failed, and that lane is not
-landed. Until WI-918 lands, a leg leaves a lane holding a re-claim to the
-attended session: the lane rule does not read re-claims yet, so the lane's
-attended commits would refuse the check.
+landed. A lane holding a re-claim may land once `check-lane` passes: the
+check reads the re-claim as the merge slot does.
 
 ## Never
 
