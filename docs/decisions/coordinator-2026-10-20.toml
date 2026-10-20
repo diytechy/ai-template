@@ -1,0 +1,20 @@
+# docs/decisions/coordinator-2026-10-20.toml — delegated calls the
+# coordinator made on trunk on 2026-10-20 (headless leg 05 of loop session
+# 20261019T185432Z-8e4f05).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "Queue row P1 (review-churn item 13's review gate) is filed on trunk as four rows, split at birth on independent deliverables (ruling 3): WI-955, the text (TC-first in lanes, the reviewer's test-adequacy and duplication questions); WI-956, the one tree-bound bar attestation (grammar, verifier and producer, the landing refresh moved onto it); WI-957, the coordinator's review-render refusal; WI-958, the loop's review-draw refusal with the red-round cap as a partial close. They land in that order. A planner sub-agent drafted them from plan item 13 and the code; the scope critique judges each before its claim. Each specref names plan item 13's section, as WI-914 named its plan item."
+alternative = "File P1 as one row, as the queue text names it."
+reversal_cost = "Low: four queued rows, unclaimed; a merge is a spec edit before any claim."
+why_not_escalated = "Ruling 3 and the coordinator-cycle skill's section 1 make the split the coordinator's call at filing; the scope critique's S1 judges it."
+review = ""
+
+[decision.D-002]
+decided = "WI-956 declares the review bar in one new required key in docs/stack.ini (beside the [run] commit bar it names, until item 10's one-file migration moves both into docs/process.toml), shipped in the template with the kit's commit bar. An adopter running the loop must declare it: the RESYNC entry adds it with the shipped value, and a review dispatch refuses until it is declared. This forces a downstream migration (CLAUDE.md: flag it). The alternative, reading [run] smoke or check.py when the key is absent, is a fallback path the owner's 2026-10-03 rule forbids."
+alternative = "Derive the review bar from an existing declaration, with no new key."
+reversal_cost = "Medium once WI-956 lands (a RESYNC entry and adopters' declarations); low before its claim (a spec edit)."
+why_not_escalated = "A design call inside a ruled item (item 13, revision 35) with no owner-only act; flagged high-risk so the owner sees the migration first under Decisions to review."
+review = ""
