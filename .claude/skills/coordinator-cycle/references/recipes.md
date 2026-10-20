@@ -265,7 +265,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      writes the dispute findings file (below) with those ids and each
      finding verbatim; a refusal names the ids it expects. The positions
      are the coordinator's (`held_by = "coordinator"`): when nothing is
-     contested, say so, and that the cap routes it, taking no side.
+     contested, say so, and that the cap routes it, taking no side. The
+     text after the colon is that statement, filed verbatim as the
+     finding's `position`; a bare number there files as the position
+     (wi-902, 2026-10-20).
      Two lanes' sittings have run in parallel (2026-10-18b). Sit it; commit;
      then `plan-file --wi WI-NNN --pass --dispute <verdict path>`. Anything
      but an accepted DISMISS of every one is the owner's: close the lane
@@ -1034,7 +1037,16 @@ lane commit being replayed.
   reason, fields)` (a `str` root raises), from the primary checkout; then
   land the lane, re-home every open row that hard-depends on the closed one
   (`check_trajectory` names them as dead-dep), and sweep, which mints the
-  disposition row.
+  disposition row. `fields` names every lane commit in `keep_commits` or
+  `discard_commits` (`git rev-list --reverse <base>..<lane>`). When no row
+  carries the closed row's scope yet, the landing softens each such edge
+  to `~WI-NNN`, recorded as a decision, and the successor takes the hard
+  edge once minted (coordinator-2026-10-19 D-004).
+- **Re-cut a lane instead of a long rebase** (coordinator-2026-10-14
+  D-010): archive the old tip whole to `archive/lanes` first, then
+  `git -C <lane worktree> reset --hard <trunk tip>` on a clean worktree.
+  `check-lane` reads the empty range as a person's lane, and the overnight
+  launcher's audit passes the moved ref (wi-902, 2026-10-20).
 - **Re-sit a closed consolidation by rewinding its lane.** The entry point
   refuses a sitting on a row no longer under `active/`. Reset the lane to
   before the close (archive the discarded commits), re-sit, then re-run

@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-19d-leg02-coordinator.md](handoff-2026-10-19d-leg02-coordinator.md),
+  [handoff-2026-10-20a-leg03-coordinator.md](handoff-2026-10-20a-leg03-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -44,10 +44,14 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   row has landed, and so have the bless-mark row, the re-claim reader
   row, the launcher's follow-ups row, the trunk-by-name row (the trunk
   is now the branch `docs/process.toml` declares) and the hooks-on row
-  (every agent route refuses a checkout whose commit hooks are not on). The two merge-slot rows are claimed; their
+  (every agent route refuses a checkout whose commit hooks are not on),
+  and the guard hook's per-call cost row (its PreToolUse group runs only
+  for the launch and shell tools). The two merge-slot rows are claimed; their
   coordinator-landing gap is the one-landing row's
   (owner, 2026-10-17). The
-  disposition-adoption row is re-cut before it resumes, and the
+  disposition-adoption row was re-cut and closed partial at its rebuild's
+  plan cap: the cap's sitting ruled a FIX, which is the owner's to route,
+  and its minted disposition row waits on that choice. The
   account-homes row still owes its checkpoint rework.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
   headless legs in its section 7. The owner directed (2026-10-18,
@@ -61,7 +65,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 139 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 140 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -253,6 +257,14 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   loop lane whose claim record cannot be read", where an unread claim
   cannot show the lane is the loop's (wording, "a lane", at its next
   sitting);
+  from the guard hook cost row's gate (wi-897 D-007): IF-261 (the policy
+  file's readers) still names only `scripts/agent_common` as requestor,
+  while `session_keep` and `coordinator_guard` now read it directly, and
+  `agent_policy`'s contract text still says `agent_common` re-exports it
+  (add the two requestors at the row's next touch); and the traced-only
+  re-anchor recipe names the sitting that last anchored each registry as
+  the refresh's ref, where the snapshot README's rule reads as asking for
+  the lane's own WI or no entry (wording, in the recipe or the README);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
