@@ -76,7 +76,7 @@ amendment does not carry it.
 ## Trust
 
 The trailer gates the merge slot today and review dispatch after WI-957
-and WI-958. Written under [PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+and WI-958. Written under [PROCESS.md §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producer:** the one producer (deliverable 3), called by `integrate.py
   refresh` and `integrate.py attest`. A failed write is: a red bar (no
@@ -166,7 +166,7 @@ Each named test fails on the code before the change.
 ## Calls ruled at filing
 
 - **A new required key forces a migration**
-  ([coordinator-2026-10-20 D-002](../../decisions/coordinator-2026-10-20.toml),
+  ([coordinator-2026-10-20 D-002](../../../decisions/coordinator-2026-10-20.toml),
   delegated, high-risk, for the owner to confirm or overrule). Adopters
   running the loop get a review dispatch that refuses until the review
   bar's key is declared; the RESYNC entry adds it with the shipped value.
