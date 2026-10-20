@@ -24,6 +24,9 @@ Standing rules, in addition to the prompt:
   - Never edit an approved row's cells beyond the grant, and never flip a Status.
     If an approved row is wrong or impossible as written, stop that part and
     report it.
+  - Search for an existing home before creating a file or function, and
+    name the nearest existing home you considered in your final message
+    (`PROCESS.md` §3, "Consolidate, don't duplicate").
   - Owner ruling R2: a requirement (SR) cell never names a concrete script,
     command, file or function.
   - Tag each new function `Implements: <SR>, <LLR>` with the LLR whose `module` is

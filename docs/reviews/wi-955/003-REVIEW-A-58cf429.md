@@ -1,0 +1,28 @@
+Reviewed: 58cf429512acccae0d82961e07d529392abedfa5
+
+Verified: Hunted procedural fail-open first (building before TC authoring, accepting inadequate test evidence), then conflicting or silently omitted instructions. Reviewed the full scoped authored diff, WI-955 and its item-13 specref/owner rulings, PROCESS sections 3–7, cited SR-146/SN-007 rows, and rubric K1–K3/B1. The revised order, three evidence classes, exception disposition and checkpoint reconciliation are coherent. No requirement rows or approval statuses changed. Changed reviewer/worker templates retain SR-146 as their counterpart: its strict-fill/catalogue/audit obligation remains applicable without amendment; prompt slots remain unchanged and the catalogue is fresh. The spine-authoring and coordinator copies match. No unsuitable LLR workaround or decomposition was introduced. No findings.
+
+Commands:
+- `git rev-parse HEAD` — 58cf429512acccae0d82961e07d529392abedfa5.
+- `Get-Content` on CLAUDE.md, antidote/coordinator-cycle skills, WI-955, kit-change-review rubric, the Terra template and relevant PROCESS/plan/registry ranges; `rg` searches for cited IDs, policy clauses, test/renderer/catalogue and RESYNC entry points — requirement and implementation reading completed; implementer session notes and verdict records were not read.
+- `git diff --stat 72c81fcdb3144109c8505cf7cb4c5e4f56ad7a80...58cf429512acccae0d82961e07d529392abedfa5 -- . <brief exclusions>`; scoped `git diff` reads (duplicated skill copies compared by hashes; process records omitted); `git diff --quiet 72c81fcd...58cf4295 -- docs/requirements docs/test`; `git diff --numstat 72c81fcd...58cf4295 -- .agents .claude/skills` — authored changes reviewed; no requirement/test-registry changes.
+- `$env:GIT_CEILING_DIRECTORIES = 'C:/Projects/ai-template.wt/review-tmp/2026-10-20c-leg05/r955-2'; & 'C:/Projects/ai-template/.venv/Scripts/python.exe' -m pytest -q -p no:cacheprovider -n 2 --basetemp 'C:/Projects/ai-template.wt/review-tmp/2026-10-20c-leg05/r955-2/A/wi-955' 'tests/test_prompts.py' 'tests/test_review_brief.py' 'tests/test_agent_loop_review.py'` — 142 passed in 112.73s (0:01:52).
+- `& 'C:/Projects/ai-template/.venv/Scripts/python.exe' 'project-trajectory/scripts/check_trajectory.py' --strict` — check_trajectory: clean (955 work item(s), 841 done (88%), 30 cancelled, graph acyclic).
+- `& 'C:/Projects/ai-template/.venv/Scripts/python.exe' 'project-trajectory/scripts/trace.py' --strict-integrity | Select-Object -Last 1` — Traceability: SN=31 SR=132 LLR=307 TC=326 orphans=0 integrity=0 verified-mechanized=125 verified-demonstrated=6 verified-attested=0 drafts=1 budgets=4 budget-findings=0 components=4 component-findings=0 interfaces=246 interface-findings=0 ac-advisories=1 paraphrase-advisories=2.
+- `Get-FileHash` for coordinator SKILL.md, coordinator recipes.md and spine-authoring in-lane.md across .agents, .claude and project-trajectory — each corresponding group byte-identical.
+- `& 'C:/Projects/ai-template/.venv/Scripts/python.exe' project-trajectory/scripts/gen_prompt_catalog.py --check` — gen_prompt_catalog: fresh (14 prompts).
+- Inline Python via `& 'C:/Projects/ai-template/.venv/Scripts/python.exe' -`: `check_resync.run(Path.cwd(), '72c81fcdb3144109c8505cf7cb4c5e4f56ad7a80')` — check_resync: OK, 3 shipped path(s) changed; entry anchored at 72c81fcdb3144109c8505cf7cb4c5e4f56ad7a80.
+- Inline Python via `& 'C:/Projects/ai-template/.venv/Scripts/python.exe' -`: extracted seven base-version text assets with `git show` into review scratch; ran current order, Terra-intent, builder-home and rendered-review tests against those assets — Pre-fix evidence: 4/4 changed assertions reject base content; rendered brief exercised. Each failed with AssertionError, not an import/collection error.
+- `git status --short` — empty.
+
+Done-when coverage:
+- TC-first order and all three evidence classes: test_a_lane_writes_its_tc_rows_and_tests_before_its_code; independently inspected the strict mark/removal, assertion-only red, disposition, grandfathering and removal of the old exemption. test_the_terra_brief_has_an_intent_form_before_build_round_1 also covers the producer brief.
+- in-lane order and matching skill copies: the order test plus matching SHA-256 hashes across all three copies of each changed skill artifact.
+- All three adequacy questions and duplication question: test_reviewer_prompt_asks_the_test_adequacy_and_duplication_questions drives the deployed agent-loop prompt; test_a_rendered_review_brief_carries_the_kit_clauses_and_the_lane_facts drives render_review. Both pass. The rendered test rejects the base reviewer template.
+- Both builder briefs: test_both_builder_briefs_search_before_minting_a_file_or_function passes and rejects base content. Direct text assertions fit these prose obligations; deleting the mandated search/home instruction is a plausible wrong implementation they detect.
+- Catalogue and RESYNC: both independent checks pass.
+- Landing checks: the launcher's prescribed replacement bar passes (142 tests and strict trajectory); strict-integrity reports zero orphans/integrity errors. Full smoke/commit bar and trace --strict were not rerun, per this round's restricted instrument instructions; this is no claim to a later landing attestation.
+
+The added test functions serve distinct verification purposes: procedural text/order, Terra's two-turn contract and slot preservation, both builder briefs, deployed loop dispatch, and attended rendering. The latter two exercise different supported routes. No new product file/function duplication was introduced. Existing behavioral regression tests remain intact; no test was weakened.
+
+VERDICT: APPROVE findings=0

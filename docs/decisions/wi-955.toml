@@ -1,0 +1,47 @@
+# docs/decisions/wi-955.toml — delegated calls the coordinator made in the
+# wi-955 lane (headless leg 05 of loop session 20261019T185432Z-8e4f05).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Counted round 1's REVIEW-B is a Claude Opus (high) stand-in sub-agent, given only its rendered brief, beside Codex Sol (medium) as REVIEW-A (ruling 7; coordinator-2026-10-16 D-008: Opus at high holds the slot until WI-815's Gemini route has a verified launch). The lane changes the reviewer template, so both briefs render from the primary checkout's review_brief.py with --root on the lane (recipes section 7), under trunk's template."
+alternative = "Render from the lane's own template."
+reversal_cost = "None: the round is recorded."
+why_not_escalated = "Standing rulings name the stand-in and the render route."
+review = ""
+
+[decision.D-002]
+decided = "This lane keeps the order it was claimed under (build, then review), not the TC-first order it introduces: it adds no spine rows, and its tests pin text. Round 1's findings are triaged: REVIEW-B's MAJOR (scripts/coordinator/terra-spine-prompt.template.md still assumes the code exists and a builder's change list, so an intent turn before build round 1 meets a false premise and two rules it cannot meet) is confirmed by reading the template and accepted as in scope, since the template is the coordinator cycle's own tool for the step this row moves. The three MINORs (the checkpoint's dead omission clause, in-lane.md's 'Write the row text' lead, the order pin in test_prompts.py) are cheap text and test fixes on the same surface and ride the same fix round, each a row of its coverage plan."
+alternative = "Send the MINORs to a successor row."
+reversal_cost = "Low."
+why_not_escalated = "Triage is the coordinator's (coordinator-cycle section 3, step 4)."
+review = ""
+
+[decision.D-003]
+decided = "The fix round after counted round 1 ran on one fresh kit-builder in two stages inside one dispatch: it wrote the coverage plan and gated it (plan_coverage.py --findings, exit 0) before changing anything, then applied it. The coordinator re-ran the gate (OK, 10 clauses) and the bar on the result before committing. A separate release step between the stages was skipped because the plan's stop points held nothing outside the spec's surface."
+alternative = "Stop the builder after stage 1 and release stage 2 with SendMessage (recipes section 1)."
+reversal_cost = "None: the gate ran before any change, and was re-run."
+why_not_escalated = "A procedural call within the coverage-plan rule, which still bound the fix."
+review = ""
+
+[decision.D-004]
+decided = "Counted round 2 (REVIEW-A Codex Sol APPROVE 0; REVIEW-B Claude Opus high stand-in APPROVE with three MINORs) has no BLOCKER or MAJOR, so the checkpoint follows. The lane adds no spine rows, amends no row text and changes no Done-when, so its checkpoint owes no Terra turn and no sitting (coordinator-cycle section 3: traced-only updates owe none). The three MINORs are text on the lane's own surface (the Terra brief's check_doc_refs parenthetical, recipes section 6's wi-912 D-003 sentence that the new order makes stale, the home of a characterization test's adequacy witness); they are fixed in one text stage before the uncounted gate over the checkpoint tip, which reviews them under the convergence map, rather than sent to a successor row."
+alternative = "Send the three MINORs to a successor row."
+reversal_cost = "Low."
+why_not_escalated = "Triage is the coordinator's; a MINOR never costs a counted round."
+review = ""
+
+[decision.D-005]
+decided = "Convergence map before the uncounted gate over the checkpoint tip (bbcb09401), every accepted finding to a test that fails on its pre-fix text. Round 1 (002): F1, the Terra brief's intent form -> tests/test_prompts.py::test_the_terra_brief_has_an_intent_form_before_build_round_1 (red on the pre-fix template: 'At the intent turn ... no code, tests or docs are built yet'); F2, the checkpoint's omission clause -> test_a_lane_writes_its_tc_rows_and_tests_before_its_code (its gone-list holds the old clause; red 'was drafted at intent, no round proposed row text'); F3, in-lane.md's lead -> the same test's pin of 'Amend the row text against settled code'; F4, the step order -> the same test's index-order assertion and its gone-list entry 'The builder builds the first round'. Round 2 (004): F1, the check_doc_refs clause -> test_the_terra_brief_has_an_intent_form_before_build_round_1 (red on the old clause); F2, recipes section 6's stale sentence -> test_a_lane_writes_its_tc_rows_and_tests_before_its_code (red 'The intent set, committed before build round 1, already names it', and 'the rest of the set follows the round' gone); F3, the adequacy witness's home -> the same test (red on the extended sentence). The map is complete, so the gate renders in convergence stance."
+alternative = "None: the gate does not start without a full map."
+reversal_cost = "None."
+why_not_escalated = "Revisions 8 and 33 make the map the coordinator's."
+review = ""
+
+[decision.D-006]
+decided = "The uncounted gate over the checkpoint tip a35b83044 (convergence stance, after the map D-005) reads APPROVE 0 from both reviewers (005-REVIEW-A, Codex Sol; 006-REVIEW-B, Claude Opus high stand-in). The lane lands. It changes the reviewer template, the coordinator cycle's Intent order and the Terra brief, the machinery every later lane's review and spine turn runs on, so it lands alone, and WI-956, claimed before it landed, rebases onto it and runs its spine turn on the new intent form."
+alternative = "None."
+reversal_cost = "A defect is fixed forward (revision 37)."
+why_not_escalated = "The cycle's landing rule."
+review = ""

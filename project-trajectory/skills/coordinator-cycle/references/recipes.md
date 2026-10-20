@@ -75,11 +75,14 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   without one (wi-922 D-003).
 - **Terra, first turn:**
   `bash "$TOOLS/terra_author.sh" <lane> <prompt> <out> [effort]`.
-  - A single plan that places the spine turn at the checkpoint owes no
-    intent turn: Terra's first turn is the checkpoint's (wi-918 D-002).
+  - Terra's first turn is the intent turn, TC rows included, before build
+    round 1; a `single` row takes it after its pass record (SKILL §3,
+    "Intent").
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
     the intent or checkpoint instructions from the skill. Its default brief
-    does not request a whole subtree or arms map.
+    does not request a whole subtree or arms map. At the intent turn fill
+    `CHANGES=none` and leave `TESTS=` empty: no build has run, so there is
+    no change list and no lane test yet.
   - The script runs `codex exec -m gpt-5.6-terra` at medium with the
     unelevated sandbox, workspace-write,
     `--add-dir` on the review scratch root (`$REPO.wt/review-tmp`) and
@@ -885,8 +888,8 @@ lane commit being replayed.
   only at the landing (wi-912 D-003).
 - A build stage that adds a module owes its component before its
   commit: `check_trajectory.py --strict` errors until an LLR names the
-  module's CMP, so Terra's intent rows for that stage ride the stage's
-  commit, and the rest of the set follows the round (wi-912 D-003).
+  module's CMP (wi-912 D-003). The intent set, committed before build
+  round 1, already names it.
 - `skills-sync` drift: run `"$PY" "$SCRIPTS/bootstrap.py" --dest . --sync`
   in every lane commit that touches a kit skill.
 - Redirect each commit's output to a file: the pre-commit hook prints about

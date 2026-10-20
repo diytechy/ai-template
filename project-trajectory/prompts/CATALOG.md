@@ -31,8 +31,8 @@ is a refusal rather than a silently empty instruction.
 | `ADJUDICATE-REJUDGE` | [adjudicate-rejudge.template.md](adjudicate-rejudge.template.md) | `sha256:5a1e40710449` | `{case}`, `{reason}`, `{tc}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:66976e43c582` | `{brief}`, `{verdict}` |
 | `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:46b8f19d14de` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
-| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:9c67180ecb1e` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
-| `WORKER` | [worker.template.md](worker.template.md) | `sha256:820901734494` | `{assignment_block}`, `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
+| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:e125a41b7023` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
+| `WORKER` | [worker.template.md](worker.template.md) | `sha256:5be716251f58` | `{assignment_block}`, `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 ## Composed fragments
 

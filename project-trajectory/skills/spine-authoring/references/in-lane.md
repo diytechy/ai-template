@@ -16,10 +16,15 @@ child returned for want of a parent, then a TC for an arm its LLR states).
   the anchor down (SRs, LLRs, TCs and interface rows) and each approved row
   whose text the change makes untrue. New rows stay `Drafted`; interface rows
   carry no approval status. Leave existing statuses unchanged while authoring.
+- **Author it before the build.** TC rows are authored with their LLRs before
+  the build, so the build's first deliverable is the tests they name. Their
+  trace fields (TC `Evidence`, LLR `Module` and symbols) name the tests and
+  symbols the build will create, and bind when the set is reconciled. Row
+  text is still reconciled and judged against settled code, as below.
 - **Map the arms.** For each LLR, list what it states (each outcome, refusal
   and exemption) and the TC clause that verifies each. Structural checks do
   not establish this coverage.
-- **Write the row text against settled code.** While the code is still
+- **Amend the row text against settled code.** While the code is still
   changing, keep only the trace fields current (`Implements:`, LLR `Module`
   and symbols, TC `Evidence`) and list the row-text changes the code implies.
   Write and judge them once the code stops moving: each text change made

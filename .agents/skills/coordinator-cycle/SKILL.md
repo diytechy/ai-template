@@ -160,13 +160,36 @@ Done-when change are owed; traced-only updates owe no sitting.
 
 ### Intent: once, at the start
 
-1. The builder builds the first round. Re-run its claimed results yourself,
+Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
+"DevStg-Impl — Implementation (test-first)").
+
+1. Dispatch Terra once to author the **whole change set**, TC rows included,
+   before build round 1 (for a `single` row, after its pass record), from
+   the anchor down, plus the arms map (`spine-authoring`,
+   `references/in-lane.md`). Keep new spine rows `Drafted` and existing
+   statuses unchanged; interface rows have no approval status. Verify and
+   commit the set without a sitting yet. These rows give the builder the
+   tests to write and reviewers the obligations the code is meant to meet.
+2. Build round 1's first deliverable is the tests, committed alone before
+   the code, each under one evidence class (plan item 13's typed evidence):
+   - **New or corrected executable behaviour:** a strict expected assertion
+     failure (Python:
+     `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`).
+     Its red reaches the test's own assertion, never an import error; a
+     stub is the builder's choice. The code commit removes the marks.
+   - **Characterization of already-correct behaviour:** unmarked, with a
+     stated adequacy witness, the wrong implementation it would catch,
+     written in the test itself (its docstring or a comment).
+   - **An Inspection, Analysis or Attest TC:** the independently checkable
+     evidence its declared method names, as the TC row states it.
+
+   A test that fits none is named, with its disposition, in the lane's
+   decisions record before the code commit.
+3. The builder then builds the code. Re-run its claimed results yourself,
    then verify, regenerate and commit.
-2. Dispatch Terra once to author the **whole change set**, from the anchor
-   down, plus the arms map (`spine-authoring`, `references/in-lane.md`). Keep
-   new spine rows `Drafted` and existing statuses unchanged; interface rows
-   have no approval status. Verify and commit the set without a sitting yet.
-   These rows give reviewers the obligations the code is meant to meet.
+
+A lane claimed before this order landed keeps the order it started with;
+record that as a decision in its decisions record.
 
 ### Iterate: code only, in counted full rounds
 
@@ -278,9 +301,10 @@ this hold (`project-trajectory/PROCESS.md` §4).
 1. **Terra, resumed, reconciles the whole set** against the settled code: the
    accumulated spine change list plus the arms map. Verify, regenerate and
    commit the reconciled text before composing the sitting. When the set
-   was drafted at intent, no round proposed row text and no code moved
-   since, omit the turn and record why, after checking mechanically that
-   each changed approved cell keeps its approved text (WI-914, WI-923).
+   was reconciled at an earlier checkpoint and since then no round proposed
+   row text and no code moved, omit the turn and record why, after checking
+   mechanically that each changed approved cell keeps its approved text
+   (WI-914, WI-923).
 2. **The closure check passes** before the sitting (`spine-authoring`,
    `references/in-lane.md`: parents, the arms, TC-to-LLR-and-SR, interface
    citations, the strict integrity checks).

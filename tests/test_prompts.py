@@ -31,7 +31,7 @@ driven in test_prompts_driven.py.
 import re
 
 import pytest
-from conftest import KIT, load_script
+from conftest import KIT, ROOT, load_script
 
 pr = load_script("prompts")
 plan_briefs = load_script("plan_briefs")
@@ -286,6 +286,122 @@ def test_the_coordinator_skill_gates_the_confirming_round_by_reachability():
         "re-grade a mislabelled BLOCKER or MAJOR there too.",
     ):
         assert clause in flat, clause
+
+
+def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
+    # WI-955: Terra's change set, TC rows included, precedes build round 1,
+    # whose first deliverable is the tests under one evidence class each; the
+    # old order (rows after the first build, a single plan owing no intent
+    # turn) is gone from the skill and its recipes, and the spine-authoring
+    # reference states the same order.
+    cycle = KIT / "skills" / "coordinator-cycle"
+    skill = " ".join(
+        word
+        for name in ("SKILL.md", "references/recipes.md")
+        for word in (cycle / name).read_text(encoding="utf-8").split()
+    )
+    for clause in (
+        "TC rows included, before build round 1",
+        "Build round 1's first deliverable is the tests, committed alone before "
+        "the code",
+        "@pytest.mark.xfail(strict=True, raises=(AssertionError, "
+        "pytest.fail.Exception))",
+        "The code commit removes the marks",
+        "with a stated adequacy witness, the wrong implementation it would "
+        "catch, written in the test itself (its docstring or a comment)",
+        "The intent set, committed before build round 1, already names it",
+        "the independently checkable evidence its declared method names",
+        "A test that fits none is named, with its disposition, in the lane's "
+        "decisions record before the code commit.",
+    ):
+        assert clause in skill, clause
+    for gone in (
+        "after the first build",
+        "owes no intent turn",
+        "wi-918 D-002",
+        "The builder builds the first round",
+        "was drafted at intent, no round proposed row text",
+        "the rest of the set follows the round",
+    ):
+        assert gone not in skill, gone
+    # The order is the point: Terra's set, then the tests, then the code.
+    assert (
+        skill.index("Dispatch Terra once to author the **whole change set**")
+        < skill.index("Build round 1's first deliverable")
+        < skill.index("The builder then builds the code")
+    )
+    in_lane = " ".join(
+        (KIT / "skills" / "spine-authoring" / "references" / "in-lane.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+    assert "TC rows are authored with their LLRs before the build" in in_lane
+    assert "the tests and symbols the build will create" in in_lane
+    assert "Write the row text against settled code" not in in_lane
+    assert in_lane.index("**Author it before the build.**") < in_lane.index(
+        "**Amend the row text against settled code.**"
+    )
+
+
+def test_the_terra_brief_has_an_intent_form_before_build_round_1():
+    # The spine author's brief serves the intent turn, before any build, as
+    # well as the checkpoint: at intent it presumes no built code, no change
+    # list and no diff, and its trace fields name what the build will create.
+    # The checkpoint form keeps its slots, so its fill is unchanged.
+    path = ROOT / "scripts" / "coordinator" / "terra-spine-prompt.template.md"
+    text = path.read_text(encoding="utf-8")
+    brief = " ".join(text.split())
+    for clause in (
+        "At the intent turn (the change list below reads `none`), before build "
+        "round 1, no code, tests or docs are built yet",
+        "There is no builder's change list and no code diff to read",
+        "At a checkpoint turn, a Claude Opus builder has built the code, tests "
+        "and docs in this lane",
+        "At intent, a test-case row's evidence and an LLR's `code_symbol` name "
+        "the tests and symbols the build will create",
+        "they bind at the checkpoint's reconcile",
+        "At a checkpoint, a test-case row's evidence names test functions that exist",
+        "`check_doc_refs --strict` binds the symbol and fails on a row none of "
+        "whose symbols exists yet, so an intent set binds by the checkpoint's "
+        "reconcile",
+    ):
+        assert clause in brief, clause
+    assert "A Claude Opus builder has built the code" not in brief
+    assert "only WARNs on a symbol not yet written" not in brief
+    slots = set(re.findall(r"@([A-Z_]+)@", text))
+    assert slots == {
+        "WI",
+        "LANE",
+        "BASE",
+        "SPEC",
+        "CHANGES",
+        "WTROOT",
+        "PY",
+        "LANE_SLUG",
+        "TESTS",
+    }
+    recipes = " ".join(
+        (KIT / "skills" / "coordinator-cycle" / "references" / "recipes.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+    assert "At the intent turn fill `CHANGES=none`" in recipes
+
+
+def test_both_builder_briefs_search_before_minting_a_file_or_function():
+    # WI-955: the producer side of the reviewer's duplication question.
+    sentence = (
+        "Search for an existing home before creating a file or function, and "
+        "name the nearest existing home you considered"
+    )
+    worker = " ".join(pr.load(pr.WORKER).split())
+    builder = " ".join(
+        (ROOT / ".claude" / "agents" / "kit-builder.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+    assert sentence in worker
+    assert sentence in builder
 
 
 def test_the_dispute_brief_offers_successor_and_never_for_a_convergence_class_finding():

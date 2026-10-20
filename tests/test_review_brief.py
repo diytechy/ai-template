@@ -72,6 +72,15 @@ def test_a_rendered_review_brief_carries_the_kit_clauses_and_the_lane_facts(tmp_
     assert "worst failure classes THIS change admits" in text
     assert "cannot be made UNREPRESENTABLE instead" in text
     assert '§6 "Review threat model"' in text
+    # The test-adequacy questions and the duplication question (WI-955).
+    for question in (
+        "does it drive the interface the requirement names, not handler source?",
+        "would it fail on a plausible wrong implementation?",
+        "is each Done-when item covered?",
+        "Of each new file and function, ask whether it repeats, exactly or in "
+        "intent, something that already exists",
+    ):
+        assert question in text, question
     # The lane's facts, as fill values.
     # One source for every range the brief states: the reviewed commit.
     assert "git diff {}...{} --".format(BASE, SHA) in text

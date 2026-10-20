@@ -9227,6 +9227,38 @@ yours), `agents.template.toml` (reference: your `docs/agents.toml` is yours),
    stays unverified (printed) until its login-isolation check passes and its
    `verified` cell is set.
 
+### Test cases come before the code; reviewers judge test strength and duplication [since 72c81fcdb]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Prompt and skill text only.
+
+- **The reviewer brief asks four more questions** beside its Done-when
+  mapping. For each test the diff adds or changes: does it drive the
+  interface the requirement names, not handler source; would it fail on a
+  plausible wrong implementation; is each Done-when item covered. Of each
+  new file and function: does it repeat, exactly or in intent, something
+  that already exists (`process.md` §3, "Consolidate, don't duplicate").
+  The template's slots are unchanged.
+- **The worker brief** tells the build session to search for an existing
+  home before creating a file or function and to name the nearest one it
+  considered in its log fragment.
+- **`spine-authoring`'s in-lane reference** states the order: TC rows are
+  authored with their LLRs before the build, so the build's first
+  deliverable is the tests they name. Their trace fields name the tests
+  and symbols the build will create and bind when the set is reconciled;
+  row text is still amended and judged against settled code.
+
+**Kit-owned files — overwrite:** `prompts/reviewer.template.md`,
+`prompts/worker.template.md`, `prompts/CATALOG.md`,
+`skills/spine-authoring/references/in-lane.md`, and
+`skills/coordinator-cycle/` (a `scope: this-repo` skill; only if you
+vendored it).
+
+**What to do.** Overwrite the files. A repository that overrides the
+reviewer brief with `--prompt-map` keeps its own file; add the questions to
+it if you want them. No registry, setting or record format changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

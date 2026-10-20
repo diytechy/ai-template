@@ -3,13 +3,38 @@ id = "WI-955"
 title = "Test cases come first in a lane, and reviewers judge each new test's strength and each new file's duplication"
 workstream = "process"
 sr_refs = ["SR-146"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "none"
 needs = []
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-20, after its gate, in a headless leg:
+
+- The coordinator cycle's Intent step puts Terra's change set, TC rows
+  included, before build round 1, and makes round 1's first deliverable
+  the tests, committed alone, each under one evidence class: a strict
+  expected assertion failure for new or corrected behaviour (its mark
+  removed in the code commit), an unmarked characterization test with its
+  adequacy witness written in the test, or an Inspection, Analysis or
+  Attest TC's declared evidence; a test fitting none is dispositioned by
+  name in the lane's decisions record. The checkpoint's omission clause
+  and recipes section 6 read the new order.
+- The spine-authoring skill's `references/in-lane.md` authors the set
+  before the build and amends row text against settled code at the
+  checkpoint; Terra's spine brief (`scripts/coordinator/terra-spine-prompt.template.md`)
+  gains an intent form beside its unchanged checkpoint form.
+- The reviewer template asks the three test-adequacy questions and the
+  duplication question; the worker brief and the kit-builder agent tell a
+  builder to search for an existing home before creating a file or
+  function. `prompts/CATALOG.md` regenerated; one RESYNC entry anchored at
+  72c81fcdb.
+- Pins in `tests/test_prompts.py`, `tests/test_review_brief.py` and
+  `tests/test_agent_loop_review.py`. No spine row changed.
 
 ## Context
 
