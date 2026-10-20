@@ -3,7 +3,7 @@
 # 20261019T185432Z-8e4f05).
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = []
+high_risk = ["D-003"]
 
 [decision.D-001]
 decided = "WI-897's queued row is amended on trunk before its claim, as WI-927's plan deliverable 6 directs: its Context, its Done-when item (2) and its RESYNC item named `coordinator_guard.py hooks --enable`, which WI-927 removed. They now name the consented install (`hooks --offer`, as dev-setup's offer and the take at a terminal run it), and the RESYNC item states WI-927's reading: the guard state is read by command name, so a matcher-only change still reads `on`, and an adopter who wants the new matcher removes the installed guard groups and runs the consented install again. Nothing else in the row changes; its scope critique (the row predates S3, S4 and S5, so it is re-critiqued at its claim, one row at a time) judges the rest, including its stale 'Review bar: A' line."
@@ -17,4 +17,11 @@ decided = "Headless leg 02 lands WI-926 and closes out at about 30 percent of it
 alternative = "Start WI-897's scope critique in this leg and hand it over mid-critique."
 reversal_cost = "None."
 why_not_escalated = "The session prompt's close-out rule and revision 37's machinery rule."
+review = ""
+
+[decision.D-003]
+decided = "WI-897's scope critique, round 1 (Codex Sol, medium; four MAJORs), is dispositioned in its spec before the claim: a Trust section that keeps WI-927's carriers and failure rulings unchanged and adds none (the row adds no reader); Context's provisional rationale replaced by a settled event and tool contract (the guard's PreToolUse runs for exactly Agent, SendMessage, Bash and PowerShell; PostToolUse and PostToolUseFailure stay unmatched, so for any other tool the latch and its instruction move after the call, and nothing that refuses moves); planmode single; the stale review-bar line deleted. Two parts are rejected with reasons in the spec: a new ruling for a malformed example (WI-927 rules it; the JSON-null gap stays a filed follow-up, named as residue) and restating the review shape in the row. The Trust section's rulings are routed to the owner to confirm or overrule (coordinator-cycle section 1)."
+alternative = "Rule the malformed-example gap inside this row, widening a hook-cost row into WI-927's reader."
+reversal_cost = "Low: the row is unclaimed until the confirming round passes; an overrule amends the queued spec."
+why_not_escalated = "Ruling 9 makes the dispositions the coordinator's; the Trust ruling goes to the owner as a decision to confirm, and the row is not held on it."
 review = ""
