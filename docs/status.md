@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-20b-leg04-coordinator.md](handoff-2026-10-20b-leg04-coordinator.md),
+  [handoff-2026-10-20c-leg05-coordinator.md](handoff-2026-10-20c-leg05-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -53,7 +53,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   plan cap: the cap's sitting ruled a FIX, which is the owner's to route,
   and its minted disposition row waits on that choice. The
   account-homes row has landed: the adjudicator runs on its declared
-  token account through a qualified entry.
+  token account through a qualified entry. The review gate's queue row is
+  filed as four rows: its text row (test cases before the code in a lane)
+  and its attestation row (one tree-bound bar attestation, and the
+  `attest` verb) have landed; the coordinator's and the loop's review
+  refusals are next, in that order.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
   headless legs in its section 7. The owner directed (2026-10-18,
   coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
@@ -66,7 +70,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 142 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 143 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -279,6 +283,20 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   row's next touch); and SR-227 still binds its credential clause to a
   family with a dedicated home (the owner's wording, at its next
   amendment);
+  from the attestation row's rounds and gate (wi-956 D-002, D-004, D-006,
+  D-010): `attest`'s review-bar step puts the interpreter's directory first
+  on PATH with only the Windows half of the run menu's interpreter rule
+  (one home for that rule, moved into kitlib, which both read); the named
+  tests step appends pytest's `--basetemp` to whatever `[product] test`
+  declares, so a non-pytest adopter's `attest --tests` is red (the
+  spec's own mandate; the owner's call: a declared placeholder, or a
+  pytest-only note in the template); LLR-247's traced `code_symbol` gained
+  `append_trailer` without the spec naming that amendment (wording);
+  `handback.py`'s lane resolution repeats the primary-checkout refusal
+  `_lane_off_trunk` now owns; and several `git status --porcelain` reads
+  (`integrate.py` `_worktree_dirt`, two in `agent_common.py`, one in
+  `bootstrap.py`) do not pin `--untracked-files`, so a user's
+  `status.showUntrackedFiles = no` hides untracked files from them;
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on

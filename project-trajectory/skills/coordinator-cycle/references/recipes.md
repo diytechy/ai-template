@@ -78,6 +78,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   - Terra's first turn is the intent turn, TC rows included, before build
     round 1; a `single` row takes it after its pass record (SKILL §3,
     "Intent").
+  - Terra's own pytest check has failed on a basetemp lock at every turn
+    (wi-956 D-001, D-007): run its spine tests yourself with the bar, and
+    normalize its CRLF writes to LF before the commit.
   - Fill `"$TOOLS/terra-spine-prompt.template.md"` with `mkprompt.py`, then add
     the intent or checkpoint instructions from the skill. Its default brief
     does not request a whole subtree or arms map. At the intent turn fill
@@ -319,6 +322,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   reading the function behind it: one cited `handback.py`'s `--no-verify`
   commit as a return-to-queue route, which `close_partial` owns and
   `spec_move.py`'s stale docstring still describes (wi-921 D-013).
+  In a headless leg, where a resumed builder reports only in the
+  background, one fresh builder may run both stages in one dispatch: it
+  gates every plan to exit 0 before changing anything, and you re-run
+  each gate before the commit (wi-955 D-003, wi-956 D-003). Never number
+  a round file's findings in the brief: tell the builder to read the
+  gate's positional ids from the file (a hand count ran one high, wi-956
+  D-003).
 - **Closure checks,** from the lane root, both strict lints:
   `"$PY" "$SCRIPTS/trace.py" --strict` and
   `"$PY" "$SCRIPTS/check_trajectory.py" --strict`.
