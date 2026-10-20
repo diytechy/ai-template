@@ -190,3 +190,5 @@ findings=3):
   section gains "The config's other failed inputs", and the shipped `3` is
   read only for an absent table or key; the Done-when gains "The config's
   failed inputs".
+
+Confirming round (Codex Sol, medium, convergence stance, 2026-10-20): APPROVE, findings=0; the dispositions above are confirmed.

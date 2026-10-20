@@ -121,3 +121,5 @@ findings=2):
   Removing the authority is preferred over guarding it (recipes §1).
 - **MINOR, S3 (the consumer's input bound): adopted.** The Trust section
   gains "The bound", in PROCESS.md §6's terms.
+
+Confirming round (Codex Sol, medium, convergence stance, 2026-10-20): APPROVE, findings=0; the dispositions above are confirmed.
