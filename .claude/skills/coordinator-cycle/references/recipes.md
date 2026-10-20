@@ -85,6 +85,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     `--add-dir` on the review scratch root (`$REPO.wt/review-tmp`) and
     `--skip-git-repo-check`. It exits 3 if HEAD moved.
   - Note the `session id:` line in its log.
+  - Record that session id in the lane's decisions at the first turn: a
+    lane resumed days later found it only in `~/.codex/sessions/<date>/`,
+    by its `cwd` and model (wi-798, 2026-10-20).
   - `mkprompt.py` takes `LANE=<branch>` (`wi-912`), never the worktree
     path, which builds a broken `--basetemp` (`C:-Projects-...`).
   - Launched through `lowprio.py` with Git's `usr/bin/bash.exe`, the
@@ -533,7 +536,14 @@ commit of its own, move it to trunk's tip
   or the landing sweep mints the rework rows. The rename may precede the act:
   the binding records the brief, kinds and outcome, not the verdict's digest
   (wi-918, 2026-10-18g).
-- **Squash** on trunk with `git merge --squash <lane>`, one per lane. In a
+  Re-sitting only the returned rows leaves the set judged across several
+  verdicts, none of which authorizes the whole act: once the re-sits
+  bless everything, one combined sitting over the whole set at the gated
+  tip authorizes the act turn (wi-798 D-023).
+- **Squash** on trunk with `git merge --squash <lane>`, one per lane.
+  Run `git status` in the primary checkout first: a Claude reviewer's
+  probe once left a stray file at its root through a redirect from its
+  default working directory (wi-798, 2026-10-20). In a
   headless leg, first run `"$PY" "$TOOLS/overnight_legs.py" check-lane <lane>`
   and squash only on exit 0 (SKILL §7). Never
   `git stash` between the squash and its commit: the stash's reset deletes
@@ -675,6 +685,14 @@ lane commit being replayed.
   a kit-builder briefed to keep both sides' behaviour and stop on any
   semantic choice; read the resolved functions and re-run the bar yourself
   (wi-946 D-007).
+- A long-stale lane continued by rebase (WI-798, 245 commits): a clean
+  auto-merge can drop the lane's behaviour where trunk moved a call into a
+  new shared helper (git kept the lane's computed account environment, and
+  trunk's helper ignored it). After the replay, read each function both
+  sides touched for a value computed and never used, and run the lane's
+  tests against trunk's new commands. A trunk command the lane's design
+  must govern (the act turn under the account) is a semantic call,
+  recorded as a decision (wi-798 D-010).
 - Show that a rebase changed no lane code or row by comparing
   `git diff <old base> <old tip> | git patch-id --stable` with the same
   over the new base and tip: equal ids owe no post-rebase round, and the

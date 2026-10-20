@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-20a-leg03-coordinator.md](handoff-2026-10-20a-leg03-coordinator.md),
+  [handoff-2026-10-20b-leg04-coordinator.md](handoff-2026-10-20b-leg04-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -66,7 +66,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 140 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 142 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -266,6 +266,19 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   re-anchor recipe names the sitting that last anchored each registry as
   the refresh's ref, where the snapshot README's rule reads as asking for
   the lane's own WI or no entry (wording, in the recipe or the README);
+  from the account-homes row's gate (wi-798 D-024): IF-246 and IF-282
+  list a `route_runner(entry)` the session service does not define, and
+  IF-044 omits the route module's `route_runner(template, model)`; IF-248's
+  notes still say the keep module creates account homes; the row's
+  Implements tags name SR-222 beside LLR-336, which traces to SR-154 and
+  SR-227 only; LLR-305's compose_env sentence reads unconditional, where
+  the withholding applies under a declared account; `docs/process.toml`'s
+  adjudicator comment says the loop draws the unqualified route, where a
+  heterogeneity-filtered draw or a win-stay pin picks the weight-0
+  adjudicator entry when the ambient Opus route cools (wording, at each
+  row's next touch); and SR-227 still binds its credential clause to a
+  family with a dedicated home (the owner's wording, at its next
+  amendment);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
