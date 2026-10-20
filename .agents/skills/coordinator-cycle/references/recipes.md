@@ -109,6 +109,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <trunk base> --sha <tip> --scope full --tests <files> --scratch <dated root>/<reviewer> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
      `--tests` takes the files as separate arguments; one quoted string
      renders as a single bogus path in the brief's pytest line.
+     A red the tip already shows (a known failing test) is fixed in a build
+     stage before the round, so the round reviews a green tip (item 13;
+     wi-926 D-007).
      Counted rounds 1 and 2 pass no `--stance` (the ordinary default). The
      third counted round, the last the cap allows (ruling 4), the gate over
      the checkpoint tip, a round over a rebase that changed code or rows, and
@@ -321,7 +324,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `"amendment:LLR-123;first-approval:SR-234;first-approval:LLR-345;first-approval:TC-456;done-when:WI-NNN"`.
      Include only kinds actually owed (`amendment`, `first-approval`,
      `done-when`); `<srs>` is the semicolon-joined SR scope. A checkpoint is
-     always `combined`, even when only amendments are owed: sitting 010,
+     always `combined`, even when only amendments are owed, and so is a
+     returned row's re-sit (`first-approval:TC-370` alone, wi-926 D-012): sitting 010,
      composed as the single-kind `amendment` class, came back with a
      `## amendment` section the one verdict parser refuses for a single-kind
      brief, after its act was committed, and was discarded (wi-921 D-018).
@@ -680,6 +684,11 @@ lane commit being replayed.
 - Validate a union of appended TOML rows per cell: the result equals ours
   plus theirs-minus-base, read from the three index stages. A line union has
   dropped shared tail cells; restore any missing cell from trunk's stage.
+  A keep-both script resolving two new rows' hunk never dedupes a line
+  across the sides: identical cells (`tier = "Full"`) belong to both rows,
+  and a dedupe meant for import lists dropped three of TC-370's (wi-926
+  D-006). Run `ruff format` on each resolved Python file: a joined import
+  line reds the hook's format step.
 - After a rebase, time the smoke tier beside trunk's tip in adjacent runs:
   trunk's new tests can take the lane's fixtures, so a lane that read at
   its parent's on its old base can read well above trunk's (wi-926 D-004).
@@ -763,6 +772,10 @@ lane commit being replayed.
   and append the new text in contract voice. Told only to restate the
   builder's function names, it rewrote LLR-313's whole Detail and TC-333's
   Expected and dropped approved obligations (WI-913, 2026-10-14).
+- Check that every spine item the Done-when names moved its cell at
+  intent, by diffing the cell against the lane's trunk base: an intent
+  turn reported SR-019's acceptance amended and never applied it, which
+  round 1 caught as a MAJOR (wi-926 D-009).
 - Check an intent or reconcile set mechanically before committing it: in
   each changed cell of an approved row the approved text must occur
   verbatim (old within new, read with `tomllib`; judge a tier or list

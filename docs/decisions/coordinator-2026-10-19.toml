@@ -1,0 +1,20 @@
+# docs/decisions/coordinator-2026-10-19.toml — delegated calls the
+# coordinator made on trunk on 2026-10-19 (headless leg 02 of loop session
+# 20261019T185432Z-8e4f05).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-897's queued row is amended on trunk before its claim, as WI-927's plan deliverable 6 directs: its Context, its Done-when item (2) and its RESYNC item named `coordinator_guard.py hooks --enable`, which WI-927 removed. They now name the consented install (`hooks --offer`, as dev-setup's offer and the take at a terminal run it), and the RESYNC item states WI-927's reading: the guard state is read by command name, so a matcher-only change still reads `on`, and an adopter who wants the new matcher removes the installed guard groups and runs the consented install again. Nothing else in the row changes; its scope critique (the row predates S3, S4 and S5, so it is re-critiqued at its claim, one row at a time) judges the rest, including its stale 'Review bar: A' line."
+alternative = "Leave the amendment to the scope critique's dispositions."
+reversal_cost = "Low: a queued row, unclaimed."
+why_not_escalated = "WI-927's plan deliverable 6 and its landed RESYNC entry name this exact amendment as the coordinator's, before the claim."
+review = ""
+
+[decision.D-002]
+decided = "Headless leg 02 lands WI-926 and closes out at about 30 percent of its window, without taking the next row's scope critique and claim: WI-926 changed the start of every agent route (claim, refresh, merge slot, take, session launch, bookkeeping commit), the machinery the cycle runs on, so the next machinery landing waits until the cycle has run through it (revision 37), and the next row's critique, confirming round, scoped unpause and claim do not fit before the close-out line together with the full suite owed for this leg's code change."
+alternative = "Start WI-897's scope critique in this leg and hand it over mid-critique."
+reversal_cost = "None."
+why_not_escalated = "The session prompt's close-out rule and revision 37's machinery rule."
+review = ""

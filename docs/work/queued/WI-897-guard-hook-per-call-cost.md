@@ -37,8 +37,9 @@ pure refactor:
    `"matcher": "Agent|SendMessage|Bash|PowerShell"`, exactly the keys of
    `LAUNCH_TOOLS` and `SHELL_TOOLS`; a test pins the two equal, so a tool added
    to either cannot be silently left unmatched. `guard_hooks.bind`
-   copies the group whole, so `coordinator_guard.py hooks --enable` carries the
-   matcher into the machine-local settings. PreToolUse's only job there is
+   copies the group whole, so the consented install (`hooks --offer`, as
+   dev-setup's offer and the take at a terminal run it) carries the matcher
+   into the machine-local settings it writes. PreToolUse's only job there is
    WI-834's blackout denial, and these are the tools `launch_reason` can deny.
 
    Rationale to confirm before building (2): `PreToolUse` is also in
@@ -58,8 +59,8 @@ to measure on this box).
 - (1) A test pins the hook's no-op path as not importing `agent_common` or
   `agent_route` (for example, a subprocess hook call that then checks
   `sys.modules`). The existing coordinator-guard tests pass unchanged.
-- (2) The example's guard PreToolUse group carries the matcher, and
-  `hooks --enable` writes it. A blackout denial still fires for each tool in
+- (2) The example's guard PreToolUse group carries the matcher, and the
+  consented install writes it into settings that hold no guard group. A blackout denial still fires for each tool in
   WI-834's list, and the WI-822 claim-boundary fixture still refuses.
   `tests/test_dogfood_sync.py` and `tests/test_run_devsetup.py` pass.
 - Re-measure a no-op hook call before and after on a quiet box and record both
@@ -67,5 +68,9 @@ to measure on this box).
 - LLR-300 and IF-274 are amended if (2) makes them untrue (they state which
   events the guard runs on); traced cells otherwise.
 - Review bar: A (one cross-family REVIEW-A).
-- RESYNC_PACK: an entry for (2) anchored at a trunk commit. An adopter re-runs
-  `coordinator_guard.py hooks --enable` to pick up the matcher.
+- RESYNC_PACK: an entry for (2) anchored at a trunk commit. The guard state is
+  read by command name, so a matcher-only change still reads `on` and nothing
+  reinstalls the groups: an adopter who wants the new matcher removes the
+  installed guard groups from the machine-local settings and runs the
+  consented install again (the next first run reads `absent`, asks, and
+  installs the new ones). `hooks --enable` no longer exists (WI-927).
