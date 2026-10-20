@@ -134,6 +134,8 @@ SLOW_MODULES = frozenset(
         "test_integrate_admission",  # what the slot admits: outcome/mint/verdict/bar
         "test_integrate_station",  # the station protocol, refresh + merge slot
         "test_integrate_unload",  # the §5.6 branch + worker-worktree unload
+        "test_integrate_attest",  # WI-956: the attest route on station repos and lane worktrees
+        "test_bar_attestation",  # WI-956: the Bar-Green grammar and peel, a real git repo per case
         "test_dispatch",  # the dispatch loop: real git repos + the real bar (WI-374/WI-381)
         # The two lane closes: real claims (so the real trunk_step --regen
         # subprocess), real lane worktrees, real reverts — the same heavy class

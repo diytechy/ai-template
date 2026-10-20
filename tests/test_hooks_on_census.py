@@ -2,7 +2,7 @@
 
 Every agent route refuses to start in a checkout whose commit hooks are not on,
 and it asks `kitlib.commit_hooks.hooks_refusal` before any other kit call.
-`ROUTES` is the reviewed declaration of those entries: the six shipped routes
+`ROUTES` is the reviewed declaration of those entries: the seven shipped routes
 and this repository's headless-leg launcher. Each entry names the calls it may
 make before the check (its argument parsing, its root resolution), and the
 census asserts that the first call outside that preamble is the check, handed
@@ -37,6 +37,7 @@ ROUTES = (
     (SCRIPTS / "bookkeeping.py", "commit", "root", ROOT_PATH),
     (SCRIPTS / "integrate.py", "refresh", "root", ()),
     (SCRIPTS / "integrate.py", "integrate", "root", ()),
+    (SCRIPTS / "integrate.py", "attest", "root", ()),
     (SCRIPTS / "coordinator_guard.py", "take", "root", ()),
     (
         LEGS,
@@ -146,9 +147,9 @@ def test_each_route_calls_the_check_first(route):
     assert judge(_function(path, name), root_expr, preamble) is None
 
 
-def test_the_census_lists_the_six_routes_and_the_legs_launcher():
-    assert len(ROUTES) == 7
-    assert len({_route_id(r) for r in ROUTES}) == 7
+def test_the_census_lists_the_seven_routes_and_the_legs_launcher():
+    assert len(ROUTES) == 8
+    assert len({_route_id(r) for r in ROUTES}) == 8
 
 
 def _check_index(fn):

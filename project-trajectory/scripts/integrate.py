@@ -27,7 +27,7 @@ moved its specs into, read back by `branch_outcomes` off the same move that made
 the branch finished - so a merge queue that reads the outcome cannot disagree
 with the tree it is merging.
 
-Four operations here; the two lane closes that are NOT a merge (`hand_back`,
+Five operations here; the two lane closes that are NOT a merge (`hand_back`,
 `quarantine`) live in the sibling handback.py:
 
   claim      the §2.3 claim protocol, step 1+2: move a queued spec to
@@ -85,6 +85,14 @@ Four operations here; the two lane closes that are NOT a merge (`hand_back`,
              always-on form would flag attended serial work (RULING-8's
              workers=1 flow) — widening the scope is an owner ruling, not
              this script's call.
+  attest     a build round's own record of green (WI-956): in the lane
+             worktree, refuse a worktree that holds work the index does not,
+             run the review bar declared at docs/stack.ini `[bars] review`
+             and then the round's named tests, and commit the staged work (or
+             an empty commit on the tip) carrying a `bar=review` attestation,
+             through the one producer the refresh commits through. A
+             `review` attestation is never peeled and never makes a branch
+             merge-ready.
 
 Fail-closed by construction, against the dispatcher's recorded fail-open: a
 missing docs/stack.ini, an absent or EMPTY [product] test declaration, or
@@ -92,7 +100,8 @@ any SKIP in the bar's own report is a REFUSAL, never a pass — exit 0 alone
 is not evidence the bar ran (the `bar_failures: 0` lesson, §4.4 of the
 Phase 4 inventory). The bar is attested to a TREE, and the attestation NAMES
 that tree: the refresh commit carries `Bar-Green: tree=<sha> work=<sha>
-<summary>`, and the slot re-derives both names from git before it merges. A
+bar=landing tests=none <summary>` (`bar=no-bar` on the adjudication arm), and
+the slot re-derives both names from git before it merges. A
 message alone would prove nothing — amend, rebase, cherry-pick and copy all
 carry words onto content nobody barred — so the trailer is checked, never
 read. That closes ACCIDENT, not INTENT: a lane that deliberately names the
@@ -119,7 +128,11 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     off-frontier row. The owner's notes (the owner-only paths) are never
     rewritten: the move's relink passes them by, so they are never a path the
     claim must write and never a reason it refuses.
-    `refresh` runs the station refresh on a claimed branch. `integrate` is the
+    `refresh` runs the station refresh on a claimed branch. `attest` commits a
+    lane's staged work carrying a `review` attestation, refusing before any
+    bar runs on missing hooks, an undeclared review bar or a worktree that
+    holds work the index does not, and committing nothing on a red bar or a
+    named test's red. `integrate` is the
     serial fail-closed merge queue: a `--no-ff` merge onto a candidate
     worktree, the trunk step folded in, then the DECLARED bar on the composed
     tree — a missing or empty declaration, or any SKIP in it, refuses — and
@@ -138,7 +151,9 @@ Contract IF-080: this module's CLI is the local integration seam, and each
 Contract IF-154: the argv surface, one required subcommand deep. `--root`
     (default the cwd) precedes the subcommand; `claim` requires `--wi` (one id,
     or several `;`-separated) and `--branch`; `refresh` requires `--branch` and
-    takes `--tier` (default `all`, the full gate bar); `integrate` takes
+    takes `--tier` (default `all`, the full gate bar); `attest` requires
+    `--branch` and `--bar review` and takes `--tests` (the named test paths)
+    and `--message-file`; `integrate` takes
     `--tier` alone and drains every finished claimed branch there is;
     `done-when-hold` takes nothing and judges the index; `audit`
     requires `--since`, the window's base revision. Nothing here accepts a
@@ -166,6 +181,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import tomllib
 from pathlib import Path
 
@@ -184,6 +200,7 @@ from kitlib import provenance as _kitprovenance
 from kitlib import registry as kregistry
 from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
+from kitlib.git import git_out
 from kitlib.station import (
     BAR_GREEN,
     OUTCOME_DIRS,
@@ -1695,10 +1712,10 @@ def lane_worktree(root, branch):
     unload GCs it after the merge, so the creation owns no teardown of its own.
 
     The MAIN checkout can be that holder (attended serial work), and this
-    function still returns it - but `refresh` refuses that case outright, since
-    a main checkout sitting on the branch means the repo has no trunk checked
-    out to merge in. The refusal lives there rather than here because the
-    worker has no such problem.
+    function still returns it - but `refresh` and `attest` refuse that case
+    outright (`_lane_off_trunk`), since a main checkout sitting on the branch
+    means the repo has no trunk checked out. The refusal lives there rather
+    than here because the worker has no such problem.
     """
     holder, _is_primary = _worktree_holding(root, branch)
     if holder is not None:
@@ -1756,16 +1773,29 @@ def _declared_bar_or_refusal(root):
         return "no [product] test declaration - the required bar is undeclared"
     if argv == []:
         return "[product] test is declared but EMPTY - a misconfiguration, not a skip"
+    return _harness_floor_refusal(root)
+
+
+def _harness_floor_refusal(root):
+    """The harness floor's refusal for a bar about to run on `root`'s
+    interpreter, or None: the one rung the refresh's and the slot's bar
+    declaration check and `attest`'s preflight share, so no route records a
+    green run on an interpreter the floor rejects (see
+    `agent_common.harness_floor_failures` for when it arms).
+
+    Implements: SR-156, LLR-207
+    """
     floor = ac.harness_floor_failures(root)
     if floor:
         return "the harness floor REFUSES this bar run: " + floor[0]
     return None
 
 
-def _run(argv, cwd):
+def _run(argv, cwd, **kw):
     """One captured child run: (returncode, stdout+stderr folded). The single
-    subprocess seam for the bar and the trunk step, so the capture keywords
-    have one home in this file."""
+    subprocess seam for the bars and the trunk step, so the capture keywords
+    have one home in this file; `kw` carries the review bar's `shell` and
+    `env`."""
     proc = subprocess.run(
         argv,
         cwd=str(cwd),
@@ -1774,6 +1804,7 @@ def _run(argv, cwd):
         encoding="utf-8",
         errors="replace",
         stdin=subprocess.DEVNULL,
+        **kw,
     )
     out = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
     return proc.returncode, out
@@ -2481,6 +2512,35 @@ def _shed_residue(wt, baseline, baseline_dirs):
             directory = directory.parent
 
 
+def _lane_off_trunk(root, branch):
+    """The lane worktree a route commits `branch` in while the trunk stays
+    checked out: `(path, None)`, or `(None, refusal)`. `refresh` and `attest`
+    resolve their lane here, and only here.
+
+    Trunk is "whatever the main checkout has out", so a main checkout sitting
+    ON the branch makes trunk BE the branch: a refresh would merge the branch
+    into itself and attest a composition that never happened, and an attest
+    would move the trunk outside the merge slot. Both refuse rather than
+    resolve trunk some other way - there is no trunk to resolve while nothing
+    has it checked out. Otherwise the lane is `lane_worktree`'s, added at the
+    lane home when nothing holds the branch.
+
+    Implements: SR-156, LLR-207
+    """
+    holder, is_primary = _worktree_holding(root, branch)
+    if is_primary:
+        return None, (
+            "the MAIN checkout at {} has {} checked out, so this repo has no "
+            "trunk checked out - a lane's commits are made in a lane worktree, "
+            "never on the branch the main checkout holds (a refresh there would "
+            "merge the branch into itself). Switch it back (git -C {} checkout "
+            "<trunk>) and re-run: a lane worktree is added automatically.".format(
+                holder, branch, holder
+            )
+        )
+    return lane_worktree(root, branch)
+
+
 def _refresh_preflight(root, branch):
     """Everything that must hold before the refresh sequence may start:
     `(lane worktree, work tip sha, None)`, or `(None, None, refusal)`.
@@ -2494,25 +2554,7 @@ def _refresh_preflight(root, branch):
     refusal = _declared_bar_or_refusal(root)
     if refusal:
         return None, None, refusal
-    holder, is_primary = _worktree_holding(root, branch)
-    if is_primary:
-        # Trunk is "whatever the main checkout has out", so a main checkout
-        # sitting ON the branch makes trunk BE the branch: the refresh would
-        # merge the branch into itself, report "refreshed onto trunk <its own
-        # sha>" and attest a composition that never happened (REVIEW-A round 1,
-        # driven). Refuse instead of resolving trunk some other way - there is
-        # no trunk to resolve while nothing has it checked out.
-        return (
-            None,
-            None,
-            "the MAIN checkout at {} has {} checked out, so this repo has no "
-            "trunk checked out to merge IN - refreshing there would merge the "
-            "branch into itself. Switch it back (git -C {} checkout <trunk>) "
-            "and re-run: a lane worktree is added automatically.".format(
-                holder, branch, holder
-            ),
-        )
-    wt, err = lane_worktree(root, branch)
+    wt, err = _lane_off_trunk(root, branch)
     if err:
         return None, None, "cannot refresh {}: {}".format(branch, err)
     if ac.working_tree_dirty(wt):
@@ -2728,59 +2770,37 @@ def refresh(root, branch, tier):
     code, out = _run_trunk_step(wt, root)
     if code != 0:
         return undo("the trunk step failed on the refreshed tree", out)
-    # STAGE, then bar, then commit the staged index. The bar is the last thing
-    # to touch this tree, and a declared bar is the adopter's command: staging
-    # first means whatever it writes (a coverage report, a cache) can never be
-    # swept into the attested commit by an `add -A` that ran after it. The
-    # committed tree is therefore exactly the tree the bar was handed.
+    # STAGE, then bar, then commit the staged index, through the one producer
+    # `attest` also commits through. The bar is the last thing to touch this
+    # tree, and a declared bar is the adopter's command: staging first means
+    # whatever it writes (a coverage report, a cache) can never be swept into
+    # the attested commit by an `add -A` that ran after it.
     ac.git(wt, "add", "-A")
-    ok, bar_out, summary = _refresh_bar(wt, root, tier, skip_bar, bar_gate)
-    _shed_residue(wt, baseline, baseline_dirs)
-    if not ok:
-        return undo(
-            "the bar is RED on the refreshed tree ({}) - fix it on the branch, "
-            "then refresh again".format(summary),
-            bar_out,
-        )
-    # The tree the bar was just handed, named BEFORE the commit that carries the
-    # name. `write-tree` writes the index - the same index `commit` will use -
-    # so the value is knowable in advance and is not a prediction. Anything that
-    # changes the tree afterwards (an amend, a rebase, a hook that rewrites a
-    # file) leaves the trailer describing a tree that is no longer there, and
-    # the self-check below refuses rather than shipping a false attestation.
-    code, tree = ac.git(wt, "write-tree")
-    if code != 0 or not tree.strip():
-        return undo("could not name the barred tree (git write-tree failed)", tree)
-    code, out = ac.git(
+    _sha, refused = _attest_commit(
         wt,
-        "commit",
-        "--allow-empty",
-        "-m",
-        # Under the loop marker the refresh is a loop commit and carries the
-        # provenance trailer, in the same trailer block as `Bar-Green:`.
-        _kitprovenance.with_loop_trailer(
-            "{}{}\n\nThe §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n§5.2 regeneration folded on, and the declared bar run on THIS tree. The\ntrailer NAMES what it attests - the tree the bar saw and the work commit it\nsits on - so the merge slot verifies both against git instead of trusting a\nmessage. A --no-ff merge of a branch that contains trunk reproduces this\ntree byte for byte, which is why no second bar is owed at the slot.\n\n{} tree={} work={} {}".format(
-                kverdict.refresh_subject(branch),
-                trunk[:10],
-                BAR_GREEN,
-                tree.strip(),
-                work_tip,
-                summary,
-            )
+        root,
+        branch,
+        bar="no-bar" if skip_bar else "landing",
+        tests=(),
+        run_bar=lambda: _refresh_bar(wt, root, tier, skip_bar, bar_gate),
+        message="{}{}\n\n{}".format(
+            kverdict.refresh_subject(branch), trunk[:10], _REFRESH_BODY
         ),
     )
-    if code != 0:
-        return undo("the refresh commit was refused by its own floor", out)
-    if refresh_attestation(root, branch) is None:
-        # Fail CLOSED on our own output: an attestation this script cannot
-        # verify is worth less than none at all, because the slot would refuse
-        # it later with a far more confusing message.
+    if refused:
+        return undo(*refused)
+    _shed_residue(wt, baseline, baseline_dirs)  # the trunk step's residue too
+    attested = refresh_attestation(root, branch)
+    if attested is None:
+        # Fail CLOSED on our own output: the producer verified the line, and
+        # this is the refresh-subject half, so the slot never meets a refresh
+        # commit it would refuse with a far more confusing message.
         return undo(
-            "the refresh commit does not verify as its own attestation - the "
-            "committed tree or parent is not the one the bar saw (a rewriting "
-            "commit hook?); nothing is attested and the branch is restored",
-            out,
+            "the refresh commit does not verify as a refresh attestation; "
+            "nothing is attested and the branch is restored",
+            "",
         )
+    summary = attested[1]
     sha = _head(wt)
     print(
         "integrate: refreshed {} onto trunk {} - {} @ {}".format(
@@ -2788,6 +2808,19 @@ def refresh(root, branch, tier):
         )
     )
     return sha, None
+
+
+# The refresh commit's body, under its `refresh: <branch> onto trunk <sha>`
+# subject and above the `Bar-Green:` line the producer appends.
+_REFRESH_BODY = (
+    "The §A2 station refresh: trunk merged in, the §5.1 fragment compile and\n"
+    "§5.2 regeneration folded on, and the declared bar run on THIS tree. The\n"
+    "trailer NAMES what it attests - the tree the bar saw, the work commit it\n"
+    "sits on and the bar it ran - so the merge slot verifies them against git\n"
+    "instead of trusting a message. A --no-ff merge of a branch that contains\n"
+    "trunk reproduces this tree byte for byte, which is why no second bar is\n"
+    "owed at the slot."
+)
 
 
 def _refresh_bar(wt, root, tier, skip_bar, bar_gate):
@@ -2806,6 +2839,296 @@ def _refresh_bar(wt, root, tier, skip_bar, bar_gate):
     return _run_bar(wt, root, tier, bar_gate)
 
 
+def _attest_commit(wt, root, branch, bar, tests, run_bar, message):
+    """The one producer of a `Bar-Green:` attestation: `(sha, None)`, or
+    `(None, (reason, output))` with nothing committed. `refresh` calls it for
+    `landing` / `no-bar` and `attest` for `review` (PROCESS.md §3, 0->A->B).
+
+    The caller has staged the tree and guarantees the worktree equals the
+    index. The index is written as a tree BEFORE the bar runs, so the record
+    names the tree the bar was handed, not whatever the bar leaves: `run_bar()`
+    runs the named bar and answers `(ok, output, summary)`, the residue it
+    leaves is shed, and a bar that moved the index or the worktree off that
+    tree (a formatter rewriting a tracked file, a step staging its own edit)
+    is refused, naming what moved. On a red bar or any refusal the index is set
+    back to that tree. Green and unmoved, the line names that tree, the tip it
+    sits on, the bar and the digest of `tests`, appended to the message's
+    trailer block. The commit then has to verify as that attestation, so a
+    hook that refuses the commit or rewrites its tree leaves no false record:
+    the tip is restored and the index set back too. The refresh's harder undo
+    (the lane back at its work commit) stays the refresh's.
+
+    Implements: SR-156, LLR-207
+    """
+    code, tip = ac.git(wt, "rev-parse", "HEAD")
+    code2, tree = ac.git(wt, "write-tree")
+    if code or code2 or not tree.strip():
+        return None, ("could not name the staged tree or its parent", tip + tree)
+    tip, tree, digest = tip.strip(), tree.strip(), kverdict.tests_digest(tests)
+    baseline = ignored_files(wt)
+    baseline_dirs = existing_directories(wt)
+    ok, out, summary = run_bar()
+    _shed_residue(wt, baseline, baseline_dirs)
+    refusal = _bar_refusal(wt, tree, bar, ok, summary)
+    if refusal:
+        ac.git(wt, "read-tree", tree)
+        return None, (refusal, out)
+    line = kverdict.format_bar_green(tree, tip, bar, digest, summary)
+    code, out = ac.git(
+        wt,
+        "commit",
+        "--allow-empty",
+        "-m",
+        # Under the loop marker the commit carries the provenance trailer, in
+        # the same trailer block as `Bar-Green:`.
+        _kitprovenance.with_loop_trailer(_kitprovenance.append_trailer(message, line)),
+    )
+    if code != 0:
+        ac.git(wt, "read-tree", tree)
+        return None, ("the {} commit was refused by its own floor".format(bar), out)
+    attested = kverdict.bar_attestation(root, branch)
+    if attested is None or (attested.bar, attested.tree, attested.tests) != (
+        bar,
+        tree,
+        digest,
+    ):
+        ac.git(wt, "reset", "--soft", tip)
+        ac.git(wt, "read-tree", tree)
+        return None, (
+            "the {} commit does not verify as its own attestation - the "
+            "committed tree or parent is not the one the bar saw (a rewriting "
+            "commit hook?); nothing is attested and the branch is "
+            "restored".format(bar),
+            out,
+        )
+    return _head(wt), None
+
+
+def _bar_refusal(wt, tree, bar, ok, summary):
+    """Why the bar's run attests nothing, or None: a red bar, or a bar that
+    left the index or the worktree off the staged `tree` it was handed, naming
+    the paths that moved.
+
+    Implements: SR-156, LLR-207
+    """
+    if not ok:
+        tree_word, route = (
+            ("staged", "attest") if bar == "review" else ("refreshed", "refresh")
+        )
+        return "the bar is RED on the {} tree ({}) - fix it on the branch, then {} again".format(
+            tree_word, summary, route
+        )
+    staged = git_out(wt, ["diff", "--cached", "--name-only", "-z", tree])
+    unstaged = _unstaged_dirt(wt)
+    if staged is None or unstaged is None:
+        return "git could not compare the tree after the bar with {}".format(tree)
+    moved = sorted({p for p in staged.split("\0") if p} | set(unstaged))
+    if not moved:
+        return None
+    return (
+        "the bar moved the tree it was run on (the index or the worktree no "
+        "longer matches {}: {}) - nothing is attested; the index is set back to "
+        "the staged tree".format(tree[:10], ", ".join(moved))
+    )
+
+
+def _review_bar_command(wt):
+    """The review bar's declared shell line, `[bars] review` in the lane
+    checkout's `docs/stack.ini` - the declaration the staged tree carries, so
+    the record binds the bar that tree declares: `(command, None)` or
+    `(None, refusal)`.
+
+    Its one reader, through the one parse of the file. There is no default and
+    no fallback to another bar: an absent file, section or key, an empty
+    value, or a file that does not parse refuses, naming the file, the key and
+    the cause (D-002).
+
+    Implements: SR-156, LLR-207
+    """
+    try:
+        cp = _kitconfig.read_stack_ini(wt / "docs" / "stack.ini")
+    except _kitconfig.StackIniError as exc:
+        cp, cause = None, "it cannot be read ({})".format(exc)
+    else:
+        cause = "the file is absent"
+    if cp is not None:
+        command = cp.get("bars", "review", fallback="").strip()
+        if command:
+            return command, None
+        cause = "the section or key is absent, or its value empty"
+    return None, (
+        "the review bar is undeclared in {}: docs/stack.ini [bars] review - {}. "
+        "Declare the command a review attestation runs; there is no "
+        "default".format(wt, cause)
+    )
+
+
+def _unstaged_dirt(wt):
+    """The paths in `wt` the index does not hold: a tracked change not staged,
+    or an untracked file git does not ignore. Empty when the worktree equals
+    the index (ignored files are not listed, so they never count); None when
+    git could not answer.
+
+    Implements: SR-156, LLR-207
+    """
+    # Untracked files pinned to `all`: a `status.showUntrackedFiles=no` setting
+    # must not hide a file the bar would see.
+    out = git_out(wt, ["status", "--porcelain", "-z", "--untracked-files=all"])
+    if out is None:
+        return None
+    dirt, entries = [], iter(out.split("\0"))
+    for entry in entries:
+        if len(entry) < 4:
+            continue
+        if entry[0] in "RC":
+            next(entries, None)  # a rename's or copy's source path
+        if entry[1] != " ":
+            dirt.append(entry[3:])
+    return dirt
+
+
+def _run_review_bar(wt, root, command, tests, branch):
+    """The review bar, then the named tests: `(ok, output, summary)`.
+
+    The declared shell line runs in the lane worktree with the harness
+    interpreter's directory first on PATH, so its `python` is the harness's
+    (the rule `run_menu` states for `[run]` lines). Green, the named tests run
+    through the lane checkout's `[product] test` (the staged tree's
+    declaration, as the bar is) with their paths appended and a `--basetemp`
+    of this lane's own, outside the worktree. The interpreter stays the
+    primary checkout's. Green is exit 0 for each step.
+
+    Implements: SR-156, LLR-207
+    """
+    py = ac.harness_python(root)
+    env = dict(os.environ)
+    env["PATH"] = os.path.dirname(py) + os.pathsep + env.get("PATH", "")
+    code, out = _run(command, wt, shell=True, env=env)
+    if code != 0:
+        return False, out, "review bar exit {}".format(code)
+    if not tests:
+        return True, out, "review bar PASS (0 named tests)"
+    try:
+        argv = ac._declared_test_command(wt / "docs" / "stack.ini", py=py)
+    except ValueError as exc:
+        return False, str(exc), "the named tests cannot run"
+    if not argv:
+        return False, out, "the named tests cannot run: no [product] test"
+    basetemp = Path(tempfile.gettempdir()) / "{}-attest-{}".format(
+        root.name, branch.replace("/", "-")
+    )
+    code, named = _run(argv + list(tests) + ["--basetemp=" + str(basetemp)], wt)
+    if code != 0:
+        return False, out + named, "named tests exit {}".format(code)
+    return True, out + named, "review bar PASS ({} named tests)".format(len(tests))
+
+
+def _attest_message(branch, message_file):
+    """The attest commit's message: `(text, None)`, or `(None, refusal)`.
+
+    `message_file` is an operator-supplied path, so a missing, unreadable or
+    non-UTF-8 file is a refusal naming it, never a raise; a message carrying
+    the label is refused too, since the producer writes the one line.
+
+    Implements: SR-156, LLR-207
+    """
+    if message_file is None:
+        return "attest: {} bar=review".format(branch), None
+    try:
+        text = Path(message_file).read_text(encoding="utf-8").rstrip()
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, "the message file {} cannot be read ({})".format(message_file, exc)
+    if any(line.startswith(BAR_GREEN) for line in text.splitlines()):
+        return None, (
+            "the message file carries a {} line - the producer writes the one "
+            "attestation line".format(BAR_GREEN)
+        )
+    return text, None
+
+
+def _attest_preflight(root, branch, bar, message_file):
+    """Everything `attest` refuses before any bar runs: `(lane worktree,
+    review bar command, commit message, None)`, or a refusal last.
+
+    The lane comes through the refresh's boundary (`_lane_off_trunk`), and the
+    review bar is read from that lane's checkout once it is known to equal the
+    index, so the declaration read is the staged one.
+
+    Implements: SR-156, LLR-207
+    """
+    if bar != "review":
+        return (
+            None,
+            None,
+            None,
+            (
+                "attest writes only the review bar (`landing` and `no-bar` are "
+                "the refresh's)"
+            ),
+        )
+    wt, refusal = _lane_off_trunk(root, branch)
+    refusal = refusal or _harness_floor_refusal(root)
+    if refusal:
+        return None, None, None, refusal
+    dirt = _unstaged_dirt(wt)
+    if dirt is None or dirt:
+        return (
+            None,
+            None,
+            None,
+            (
+                "the worktree {} holds work the index does not ({}) - the bar runs "
+                "on the index as staged; stage or remove it first".format(
+                    wt, ", ".join(dirt) if dirt else "git status failed"
+                )
+            ),
+        )
+    command, refusal = _review_bar_command(wt)
+    if refusal:
+        return None, None, None, refusal
+    message, refusal = _attest_message(branch, message_file)
+    if refusal:
+        return None, None, None, refusal
+    return wt, command, message, None
+
+
+def attest(root, branch, bar, tests, message_file=None):
+    """`integrate.py attest`: commit the lane's staged work (or, with nothing
+    staged, an empty commit on the tip) carrying a `review` attestation.
+    Returns `(sha, None)` or `(None, refusal)`, like `refresh`.
+
+    The commit hooks first, then the lane worktree (the refresh's boundary,
+    which refuses the branch the main checkout holds), a clean worktree, the
+    review bar the lane declares and the message, all before anything runs.
+    Then the shared producer runs the review bar and the named `tests`, and commits
+    only when both are green. Every refusal leaves the branch and the index
+    as they were.
+
+    Implements: SR-156, LLR-207
+    """
+    hooks_off = _kitcommit_hooks.hooks_refusal(root)
+    if hooks_off:
+        return None, "attest REFUSED for {} - {}".format(branch, hooks_off)
+    wt, command, message, refusal = _attest_preflight(root, branch, bar, message_file)
+    if refusal:
+        return None, "attest REFUSED for {} - {}".format(branch, refusal)
+    sha, refused = _attest_commit(
+        wt,
+        root,
+        branch,
+        bar=bar,
+        tests=list(tests),
+        run_bar=lambda: _run_review_bar(wt, root, command, tests, branch),
+        message=message,
+    )
+    if refused:
+        return None, "attest REFUSED for {} - {}:\n{}".format(
+            branch, refused[0], ac._failure_tail(refused[1])
+        )
+    print("integrate: attested {} - review bar @ {}".format(branch, sha[:10]))
+    return sha, None
+
+
 def _merge_ready(root, branch):
     """`(ready, why)` - may `branch` enter the merge queue? (§A2)
 
@@ -2819,6 +3142,12 @@ def _merge_ready(root, branch):
         return False, "trunk {} is not an ancestor of it".format(_head(root)[:10])
     attested = refresh_attestation(root, branch)
     if attested is None:
+        found = kverdict.bar_attestation(root, branch)
+        if found is not None and found.bar not in kverdict.LANDING_BARS:
+            return False, (
+                "its tip carries a verified `{}` {} attestation; the merge slot "
+                "requires `landing` or `no-bar`".format(found.bar, BAR_GREEN)
+            )
         return False, (
             "its tip is not a verified refresh commit - no {} trailer naming "
             "this exact tree and parent".format(BAR_GREEN)
@@ -3327,6 +3656,13 @@ def main(argv=None):
         default="all",
         help="declared bar tier for the refresh bar (default: all - the full gate bar)",
     )
+    p_att = sub.add_parser(
+        "attest", help="commit the staged work carrying a review bar attestation"
+    )
+    p_att.add_argument("--branch", required=True)
+    p_att.add_argument("--bar", required=True, choices=["review"])
+    p_att.add_argument("--tests", nargs="*", default=[])
+    p_att.add_argument("--message-file")
     p_int = sub.add_parser("integrate", help="the merge slot")
     p_int.add_argument(
         "--tier",
@@ -3349,6 +3685,11 @@ def main(argv=None):
         return claim(root, wi_ids, args.branch)
     if args.op == "refresh":
         _sha, refusal = refresh(root, args.branch, args.tier)
+        return fail(refusal) if refusal else 0
+    if args.op == "attest":
+        _sha, refusal = attest(
+            root, args.branch, args.bar, args.tests, args.message_file
+        )
         return fail(refusal) if refusal else 0
     if args.op == "integrate":
         return integrate(root, args.tier)

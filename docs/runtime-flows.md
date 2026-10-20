@@ -186,12 +186,12 @@ sequenceDiagram
         end
         Disp->>Lane: spawn the refresh — mechanical, no agent
         Lane->>Lane: merge trunk in, then trunk_step, then the check.py bar
-        Lane->>Lane: commit a Bar-Green trailer naming the tree it barred and its work parent
+        Lane->>Lane: commit a Bar-Green trailer naming the landing bar (or no-bar), the tree it barred and its work parent
         alt refresh red
             Note over Disp,Hand: a branch asserting DONE stops the run; one that merges<br/>nothing is quarantined once (code reverted, diff kept<br/>as a bar-inert patch) and refreshed again
         else refresh green
             Disp->>Slot: merge this lane's branch only — the slot is sub-second
-            Slot->>Slot: is trunk already an ancestor, and does the tip attest its OWN tree?
+            Slot->>Slot: is trunk already an ancestor, and does the tip attest its OWN tree for the landing bar?
             Slot->>Slot: merge --no-ff, ff trunk, unload, audit
             Slot->>Intake: post-merge arm, still inside the held slot (LLR-154)
             Intake-->>Slot: rows the merge forces, as ONE bookkeeping commit on trunk (LLR-153)

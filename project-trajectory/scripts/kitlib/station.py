@@ -63,9 +63,9 @@ Contract IF-093: the terminal-outcome vocabulary as CONSTANTS a render may
     status directory to the outcome it asserts — `complete` -> MERGED,
     `cancelled` -> CANCELLED, `partial` -> PARTIAL — and only those three: the
     open folders are absent on purpose, so a lane closing into one names no
-    outcome and the merge slot refuses it. `BAR_GREEN` is the refresh
-    attestation's git-trailer label. Constants only — no call into a service, no
-    write — and the module depends on nothing else in `scripts/`, which is what
+    outcome and the merge slot refuses it. `BAR_GREEN` is the one attestation
+    label the refresh and `attest` share. Constants only — no call into a
+    service, no write — and the module depends on nothing else in `scripts/`, which is what
     lets a view read the vocabulary without importing the coordinator that
     claims lanes, merges branches and moves specs. It is the same table the
     merge slot classifies a finished lane by, so the picture and the decision
@@ -124,7 +124,8 @@ OUTCOME_DIRS = MappingProxyType(
     }
 )
 
-#: The bar's attestation, carried as a git trailer in the refresh commit, NAMING
+#: The one attestation label the refresh and `attest` share, carried as a git
+#: trailer in the commit each writes, NAMING
 #: the tree and the work commit it attests so both can be checked against git.
 #: (`verdict.refresh_attestation` is why the names are the whole point: a
 #: message alone rides through amend, rebase and cherry-pick onto trees nobody

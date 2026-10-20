@@ -339,11 +339,21 @@ def mark_loop_process(environ=None):
 def with_loop_trailer(message, session=None):
     """`message` with the trailer appended to its trailer block, when `session`
     is given or the marker is set; unchanged otherwise, which is a person's
-    commit. An existing block is EXTENDED, never followed by a new paragraph,
-    because git reads only the last paragraph's trailers."""
+    commit. The block is extended through `append_trailer`."""
     session = session or loop_session()
     if not session:
         return message
+    return append_trailer(message, format_loop_trailer(session))
+
+
+def append_trailer(message, line):
+    """`message` with the trailer `line` appended to its final trailer block.
+    An existing block is EXTENDED, never followed by a new paragraph, because
+    git reads only the last paragraph's trailers; without one, the line opens
+    a block of its own. The one joiner for a trailer a kit writer appends.
+
+    Implements: SR-209, LLR-247
+    """
     text = str(message).rstrip("\n")
     joiner = "\n" if _trailer_block(text) else "\n\n"
-    return text + joiner + format_loop_trailer(session)
+    return text + joiner + line

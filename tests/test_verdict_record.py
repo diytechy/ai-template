@@ -873,8 +873,9 @@ def _refresh_commit(root, branch, when):
         "--amend",
         "--no-edit",
         "-m",
-        "{}0123456789\n\nBar-Green: tree={} work={} bar green".format(
-            kv.refresh_subject(branch), tree, work
+        "{}0123456789\n\n{}".format(
+            kv.refresh_subject(branch),
+            kv.format_bar_green(tree, work, "landing", "none", "bar green"),
         ),
     )
     assert kv.refresh_attestation(root, branch) == (work, "bar green")

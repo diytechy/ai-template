@@ -22,7 +22,7 @@ from integrate_fixtures import (
     integ,
 )
 from overnight_legs_fixtures import handoff_repo, load_launcher
-from test_integrate_station import _lane, _order, station_repo
+from test_integrate_station import _lane, _order, attest_repo, station_repo
 
 svc = load_script("session_service")
 guard = load_script("coordinator_guard")
@@ -202,6 +202,24 @@ def test_refresh_refuses_a_hookless_checkout(tmp_path):
     assert refusal.startswith("refresh REFUSED for wi-401 - ") and SETUP in refusal
     assert _rev(root, "wi-401") == tip
     assert _order(_lane(root, "wi-401")) == []
+
+
+def test_attest_refuses_a_hookless_checkout(tmp_path):
+    # The attest fixture declares the review bar and a green stub harness, so
+    # with the hooks on this attest runs its bar and commits the staged file;
+    # with them off it refuses before the bar, leaving branch and index.
+    root = attest_repo(tmp_path)
+    wt = _lane(root, "wi-401")
+    (wt / "staged.txt").write_text("staged\n", encoding="utf-8", newline="\n")
+    _git(wt, "add", "staged.txt")
+    tip, index = _rev(root, "wi-401"), _git(wt, "write-tree").strip()
+    hooks_off(root)
+    sha, refusal = integ.attest(root, "wi-401", "review", ["tests/test_widget.py"])
+    assert sha is None, "the attest ran and committed {}".format(sha)
+    assert refusal and SETUP in refusal, refusal
+    assert _rev(root, "wi-401") == tip
+    assert _git(wt, "write-tree").strip() == index
+    assert _order(wt) == []
 
 
 def test_merge_slot_refuses_a_hookless_checkout(tmp_path, capsys):

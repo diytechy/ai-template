@@ -1,0 +1,7 @@
+range = "72c81fcdb3144109c8505cf7cb4c5e4f56ad7a80..39c6a4828c3a7771b9f65a4c002a9813523ac933"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = "[MAJOR] DevStg-Tests / B2 -> P2, `refresh_attestation` and `test_governing_rev_never_peels_a_review_attestation`: the plan leaves `governing_rev` unchanged and tests only a review commit carrying a work change. At the reviewed revision, after `_peel_target` declines a review commit, `governing_rev` still walks to its parent whenever their non-record identities match. P5 explicitly supports an empty review attestation, so `refresh -> empty attest --bar review -> governing_rev` reaches the landing refresh underneath and peels it. Even without a refresh underneath, the returned revision can be the parent rather than the verified review commit. Narrowing the refresh recognizer alone therefore does not deliver the Done-when that `governing_rev` never peel a verified review attestation; this is a supported-route Done-when gap under the convergence rule -> Carry explicit review-attestation stopping semantics into P2's governing walk and add cases for an empty review carrier both above ordinary work and above a verified landing refresh, asserting that `governing_rev` returns the review commit and does not reach the refresh beneath it -> @WI-956 implementer"
+position = "Nothing is contested: the coordinator takes no side on this finding, and the plan cap routes it to this sitting."

@@ -1,0 +1,75 @@
+# docs/decisions/wi-956.toml — delegated calls the coordinator made in the
+# wi-956 lane (headless leg 05 of loop session 20261019T185432Z-8e4f05).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The lane, claimed before WI-955 landed, rebased onto WI-955's landing (be80354d9) after its plan pass record and runs the order WI-955 introduced, which its committed plan already states: P1, Terra's intent turn (the new intent form of the spine brief), authors the change set before any code. Terra's retained session for this lane is 01a15a45-4eda-7532-b31b-02f2f4f1d8fb (gpt-5.6-terra, medium). Its set amends LLR-207 (module, code_symbol, detail) and TC-205, TC-132 and TC-370 (method and evidence), all naming the tests and symbols the build will create; it adds no row and no derived SR. Its files came back with CRLF line endings, normalized to LF before the commit; it could not run its pytest check (a basetemp file lock), so the coordinator ran it (76 passed, 1 skipped) with the commit bar."
+alternative = "Keep the old order (build, then Terra), as a lane claimed before the order landed may."
+reversal_cost = "Low: the rows are Drafted amendments, judged at the checkpoint."
+why_not_escalated = "The plan's step order binds the build (coordinator-cycle section 3, Plan)."
+review = ""
+
+[decision.D-002]
+decided = "Counted round 1 (the lane's count starts at zero here) ran REVIEW-A Codex Sol (medium) and REVIEW-B a Claude Opus (high) stand-in sub-agent given only its brief (ruling 7; coordinator-2026-10-16 D-008). Triage of 003-REVIEW-A and 004-REVIEW-B: REVIEW-A's MAJOR (attest reads [bars] review and [product] test from the primary checkout, not the selected lane's tree, so a verified review record can attest a bar other than the one the attested tree declares) is accepted: the attestation is tree-bound, so the bar it names is the one that tree declares. REVIEW-B's MAJOR (the IF-173, IF-080, IF-154, IF-022 and IF-175 data cells unamended) and REVIEW-A's first MINOR (the same cells) name no code defect: their remedy is the checkpoint's reconcile and sitting, already on the spine change list, so they are re-graded there and cost no fix round (wi-931 D-006). REVIEW-A's TC-132 wording MINOR and REVIEW-B's LLR-207/TC-132 back-link MINOR go to the spine change list too. REVIEW-B's code MINORs ride the fix round: _unstaged_dirt pins --untracked-files, attest resolves its lane through the boundary refresh uses (refusing the branch the primary checkout holds), an unreadable --message-file is a named refusal, and station.py's two BAR_GREEN docstrings name the shared label. REVIEW-B's MINOR on the pytest-only --basetemp in the named-tests step is the spec's own mandate (Deliverable 4) and an adopter-facing choice: it goes to status.md's follow-ups for the owner, not built here."
+alternative = "Send every MINOR to a successor row."
+reversal_cost = "Low."
+why_not_escalated = "Triage is the coordinator's (coordinator-cycle section 3, step 4)."
+review = ""
+
+[decision.D-003]
+decided = "Fix round 1 ran on one fresh kit-builder in two stages inside one dispatch (coverage plans gated to exit 0 before any change, then the fix), as wi-955 D-003; the coordinator re-ran both gates and the bar. The brief misnumbered 004's findings from F3 on (one higher than the gate's positional ids); the builder built and excluded by content under the gate's ids, which the coverage plans and this record use."
+alternative = "Re-issue the brief with corrected ids."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-004]
+decided = "Counted round 2 (005-REVIEW-A Codex Sol, 006-REVIEW-B Claude Opus high stand-in), triage. Accepted for fix round 2: 005 F1 MAJOR (the shared producer takes its tree only after the bar runs, so a bar that edits or stages files attests content the tests never saw, and a red bar can leave a changed index: build it as 'the producer writes the staged tree before the bar, refuses when the index or worktree differs from it after the bar, and on any red or refusal restores the index to that tree'); 006 F1 MAJOR (the Bar-Green line is appended as a new paragraph, so a message file's own trailer block stops being git's last paragraph and %(trailers:key=WI) reads nothing: append it inside the final trailer block, as kitlib.provenance's trailer writer does); 006 F3 (attest runs the harness floor refusal refresh runs, through one shared rung); 006 F6 (delete the emptied NOT_BUILT scaffolding); 006 F7 (docs/stack.ini's [bars] review names the run menu's smoke action, one home for the command). Re-graded to the checkpoint (row text, no code defect; wi-931 D-006): 006 F2 MAJOR and 005 F2 (the interface data cells, as D-002), 005 F3 and 006 F5 (TC-132's and LLR-207's links and detail), 005 F4 (LLR-207's and TC-205's peel wording against the identity walk), 006 F8 (TC-132's before-the-bar clause). 006 F4 (the PATH prefix repeats run_menu's interpreter-directory rule; one home needs a kitlib move of run_menu's helper, outside the spec's surface) goes to status.md's follow-ups. Round 3 is the cap's last counted round and runs in convergence stance after the map."
+alternative = "Hold the interface MAJOR as a code finding."
+reversal_cost = "Low."
+why_not_escalated = "Triage is the coordinator's."
+review = ""
+
+[decision.D-005]
+decided = "Convergence map before counted round 3 (the cap's last, convergence stance) over ca983e30f; each accepted finding to a test seen red at its assertion on the pre-fix code, or to inspectable text. 003 F1 (declarations read outside the lane) -> tests/test_integrate_attest.py::test_attest_runs_the_declarations_staged_in_the_lane_not_the_primarys and the five test_attest_refuses_a_missing_review_bar_key_naming_it cases, now staged in the lane. 004 F2 (untracked files) -> test_attest_counts_untracked_files_whatever_status_shows. 004 F4 (the primary checkout's branch) -> test_attest_refuses_the_branch_the_main_checkout_holds. 004 F5 (unreadable message file) -> test_an_unreadable_message_file_is_a_named_refusal[missing|not-utf8] (red at the raise, the defect itself). 004 F7 (station docstrings) -> inspection: the BAR_GREEN constant's and the label's texts in project-trajectory/scripts/kitlib/station.py name the label refresh and attest share. 005 F1 (the tree after the bar) -> test_a_bar_that_edits_a_tracked_file_attests_nothing[attest|refresh] and test_a_bar_that_stages_an_edit_leaves_the_index_as_staged[red|green]. 006 F1 (the trailer block) -> test_the_attestation_joins_a_message_files_trailer_block. 006 F3 (harness floor) -> test_attest_refuses_below_the_harness_floor_before_the_bar. 006 F6 (dead scaffolding) -> inspection: tests/test_hooks_on_census.py holds no NOT_BUILT or _route_params. 006 F7 (two homes for the command) -> inspection: docs/stack.ini's [bars] review reads `python project-trajectory/scripts/run_menu.py smoke`. The re-graded findings point at the checkpoint's sitting (D-002, D-004). The map is complete."
+alternative = "None: the round does not start without a full map."
+reversal_cost = "None."
+why_not_escalated = "Revisions 8 and 33 make the map the coordinator's."
+review = ""
+
+[decision.D-006]
+decided = "Counted round 3, the cap's last, in convergence stance (007-REVIEW-A Codex Sol: three MINORs; 008-REVIEW-B Claude Opus high stand-in: six MINORs) has no BLOCKER or MAJOR, so the checkpoint follows. Its row-text MINORs (the interface data cells; LLR-247's code_symbol gaining append_trailer; TC-132's before-the-bar clause and its LLR-207 link; the attest contract's statement in LLR-207's detail) join the spine change list for Terra's checkpoint reconcile and the combined sitting. 008's RESYNC wording MINOR (the producer now also refuses a bar that leaves an unignored untracked file, such as a report) is fixed in the checkpoint's text with the reconcile, in the RESYNC entry only. 008's POSIX PATH MINOR joins round 2's same-class finding in status.md's follow-ups (one home for run_menu's interpreter-directory rule, outside the spec's surface)."
+alternative = "A fourth round."
+reversal_cost = "Low."
+why_not_escalated = "Ruling 4: the checkpoint follows a round with no BLOCKER or MAJOR."
+review = ""
+
+[decision.D-007]
+decided = "Checkpoint step 1: Terra, resumed on its lane session, reconciled the whole set against the settled code: LLR-207 (detail, code_symbol, test_refs), LLR-247's code_symbol (append_trailer, traced only), TC-132 (method, verifies gains LLR-207, expected), TC-205 (the peel against the identity walk), and the IF-022, IF-080, IF-154, IF-173, IF-175 and IF-194 data cells. Its files came back CRLF, normalized to LF; its pytest subset was blocked by a basetemp lock again, so the coordinator ran it with the bar. The coordinator applied round 3's RESYNC wording MINOR itself, openly, as one added sentence in the entry (a bar leaving an unignored untracked file is refused too; ignore its path), a text fix with no code."
+alternative = "Route the RESYNC sentence through the builder."
+reversal_cost = "None."
+why_not_escalated = "A byte-exact text fix the coordinator may apply and record (coordinator-cycle section 3, Checkpoint step 3)."
+review = ""
+
+[decision.D-008]
+decided = "Sitting 009 (combined, amendment) blessed TC-205 and TC-132 and returned LLR-207: its detail did not state what the tests= digest is a digest of, and three possessives had dropped. Terra, resumed, stated the digest's contract (checked against tests_digest), restored the possessives and corrected TC-205's stale tier count, as the verdict's disposition asked; the disposition is answered in the lane, so its heading moves off Dispositions (no sweep mint). The whole set (LLR-207, TC-205, TC-132) then re-sits in one combined sitting at the new tip, so one verdict authorizes the act (wi-798 D-023)."
+alternative = "Re-sit LLR-207 alone, as the verdict suggests, leaving the act split across two verdicts."
+reversal_cost = "Low."
+why_not_escalated = "The recipes' re-sit rule."
+review = ""
+
+[decision.D-009]
+decided = "Convergence map before the uncounted gate over the checkpoint tip: D-005's map stands for every code finding (no code moved since round 3's tip fc168c5ef but the RESYNC entry's text); round 3's RESYNC MINOR maps to inspection, the entry's sentence 'So does a bar that leaves a new untracked file Git does not ignore (a junit or coverage report): add its path to .gitignore.' in project-trajectory/RESYNC_PACK.md; the row-text findings of rounds 1 to 3 map to sitting 010's blessings (LLR-207, TC-205, TC-132) and to the reconciled traced cells (LLR-247, TC-370, the six interface data cells). The map is complete. The trunk-only views are untouched in the lane."
+alternative = "None."
+reversal_cost = "None."
+why_not_escalated = "Revisions 8 and 33."
+review = ""
+
+[decision.D-010]
+decided = "The gate over the checkpoint tip 35663832e (convergence stance) reads 011-REVIEW-A Codex Sol APPROVE 0 and 012-REVIEW-B Claude Opus high stand-in CHANGES-REQUESTED with two MINORs and no BLOCKER or MAJOR. Both are follow-ups, never fixes after the gate (wi-935 D-005): the PATH prefix's missing POSIX half joins rounds 2 and 3's same-class finding in status.md's follow-ups (one home for run_menu's interpreter-directory rule, in kitlib); LLR-247's traced code_symbol cell (append_trailer) is not named in the spec's Records deliverable (wording, at the row's next touch). The lane takes its act turn and lands."
+alternative = "A fix round after the gate."
+reversal_cost = "Low."
+why_not_escalated = "The cycle's gate rule."
+review = ""

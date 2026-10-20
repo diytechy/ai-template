@@ -530,6 +530,10 @@ Contracts (interfaces): IF-080, IF-154, IF-173
 | `--branch` |  |
 | `--branch` |  |
 | `--tier` | declared bar tier for the refresh bar (default: all - the full gate bar) |
+| `--branch` |  |
+| `--bar` |  |
+| `--tests` |  |
+| `--message-file` |  |
 | `--tier` | declared bar tier for an in-slot refresh (default: all - the full gate bar) |
 | `--since` | the window's base revision |
 

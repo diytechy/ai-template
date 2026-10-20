@@ -3,13 +3,42 @@ id = "WI-956"
 title = "One tree-bound bar attestation names the bar it attests: one grammar and one verifier for a build commit and the landing refresh, written only by a producer that ran that bar"
 workstream = "process"
 sr_refs = ["SR-156"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 buildtier = "high"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-955"]
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-20, after its gate, in a headless leg:
+
+- One `Bar-Green:` grammar carrying `bar=<review|landing|no-bar>` and
+  `tests=<digest|none>`, one verifier (`kitlib/verdict.py`
+  `bar_attestation`, the commit's own tree and first parent, exactly one
+  column-0 line) and one tests digest; `refresh_attestation` recognizes
+  only a verified `landing` or `no-bar` refresh, so a `review` record is
+  never peeled and never makes a lane merge-ready. The old trailer without
+  `bar=` is not read.
+- One producer (`integrate.py` `_attest_commit`) for the refresh and the
+  new `integrate.py attest` verb: it fixes the staged tree before the bar,
+  refuses a red bar or one that moves the index or worktree, restores the
+  index on every failed write, and joins the line to the message's trailer
+  block (`kitlib/provenance.py` `append_trailer`, shared with the loop
+  trailer).
+- `attest` refuses before the bar when hooks are off, on the branch the
+  primary checkout holds, on a dirty worktree (untracked files included),
+  below the harness floor, on an undeclared or empty `[bars] review`, and
+  on an unreadable message or one carrying the label; it reads the review
+  bar and `[product] test` from the attested lane's own declarations.
+- `[bars] review` declared in `stack.ini.template` (the kit's commit bar)
+  and here (the run menu's smoke action), with no default (D-002 of
+  coordinator-2026-10-20, a forced migration in the RESYNC entry).
+- Spine: LLR-207, TC-205 and TC-132 amended and re-attested (sitting 010,
+  act); LLR-247's and TC-370's traced cells and six interface data cells
+  reconciled.
 
 ## Context
 

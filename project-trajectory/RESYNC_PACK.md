@@ -9259,6 +9259,43 @@ vendored it).
 reviewer brief with `--prompt-map` keeps its own file; add the questions to
 it if you want them. No registry, setting or record format changes.
 
+### The Bar-Green attestation names its bar; `integrate.py attest` and `[bars] review` [since be80354d9]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The `Bar-Green:` trailer has one grammar and one verifier
+for every attestation: `Bar-Green: tree=<sha> work=<sha> bar=<review|landing|no-bar>
+tests=<digest|none> <summary>`, exactly one line at column 0. The station
+refresh writes `bar=landing` (`bar=no-bar` on the adjudication arm) through
+the one producer a new verb, `integrate.py attest`, also commits through: a
+build round's own `review` record of green, written after the declared review
+bar and the named tests pass. Only `landing` and `no-bar` are peeled or make a
+lane merge-ready. The old trailer without `bar=` is not read. The producer
+names the staged tree before the bar runs and refuses, naming the paths, when
+the bar leaves the index or the worktree off that tree, so a bar that rewrites
+or stages files (a formatter run in fix mode) now refuses the refresh and
+`attest` instead of attesting a tree it did not test. So does a bar that
+leaves a new untracked file Git does not ignore (a junit or coverage report):
+add its path to `.gitignore`. The line joins the
+message's own trailer block, so a message's `WI:` trailer stays readable.
+
+**What to do.**
+
+1. A lane whose tip is an old-grammar refresh commit is no longer peeled:
+   reset it to that commit's `work=` sha, then refresh again. The drain also
+   re-refreshes a lane that is not merge-ready.
+2. Add `[bars] review` to `docs/stack.ini` with the shipped value
+   (`python scripts/check.py --jobs 0 --tier smoke`) or your own commit bar
+   (a `[run]` action named through the run menu keeps one home for it).
+   Without it `attest` refuses, naming the key; there is no default. `attest`
+   reads this key and `[product] test` from the lane checkout it commits,
+   so a lane carries the declaration its record attests.
+
+**Kit-owned files — overwrite:** `scripts/integrate.py`,
+`scripts/kitlib/verdict.py`, `scripts/kitlib/station.py`,
+`scripts/kitlib/provenance.py`, `stack.ini.template`,
+`prompts/worker.template.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

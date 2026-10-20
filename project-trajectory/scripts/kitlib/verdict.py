@@ -139,6 +139,7 @@ Contract IF-175: the verdict record, as functions two independent readers call
 import hashlib
 import os
 import re
+from typing import NamedTuple
 
 from .config import FINAL_PERSISTED, reviewer_dials
 from .git import git_bytes, git_out
@@ -168,6 +169,12 @@ __all__ = [
     "tree_identity",
     "refresh_subject",
     "refresh_attestation",
+    "BAR_NAMES",
+    "LANDING_BARS",
+    "BarAttestation",
+    "tests_digest",
+    "format_bar_green",
+    "bar_attestation",
     "mechanical_close_attestation",
     "work_tip",
     "governing_rev",
@@ -409,12 +416,28 @@ def tree_identity(root, rev):
 # --- the rev the identity is measured at --------------------------------------
 
 
-# The station's refresh attestation, VERIFIED against git. The label comes from
-# `station` so the writer (`integrate.refresh`) and this verifier share one
-# spelling rather than two literals that must agree.
+# The `Bar-Green:` attestation, VERIFIED against git. The label comes from
+# `station` so the writer (`format_bar_green`) and this verifier share one
+# spelling rather than two literals that must agree. The bar set is closed:
+# `review` is a build round's record of green, `landing` and `no-bar` are the
+# station refresh's (the adjudication arm runs no bar and says so).
+BAR_NAMES = ("review", "landing", "no-bar")
+LANDING_BARS = ("landing", "no-bar")
 _ATTEST_RE = re.compile(
-    r"^{}\s+tree=([0-9a-f]{{40}})\s+work=([0-9a-f]{{40}})\s+(\S.*)$".format(BAR_GREEN)
+    r"^{}\s+tree=([0-9a-f]{{40}})\s+work=([0-9a-f]{{40}})\s+bar=(\S+)"
+    r"\s+tests=([0-9a-f]{{64}}|none)(?:\s+(\S.*))?$".format(BAR_GREEN)
 )
+
+
+class BarAttestation(NamedTuple):
+    """The verified fields of one `Bar-Green:` line."""
+
+    tree: str
+    work: str
+    bar: str
+    tests: str
+    summary: str
+
 
 # How far back `work_tip` will peel refresh commits. The disposable-commit rule
 # means at most ONE can ever sit on the tip, so this is a guard against a
@@ -439,11 +462,15 @@ def refresh_attestation(root, branch, rev=None):
     barred (REVIEW-A round 1, driven both ways - a forged trailer on an
     ordinary work commit, and `commit --amend` adding a file to a real one).
 
-    So the trailer NAMES what it attests and all three names are verified
-    against git:
+    So the trailer NAMES what it attests, and `bar_attestation` verifies it
+    against git (the grammar and its one writer are `format_bar_green`'s):
 
-        Bar-Green: tree=<40 hex> work=<40 hex> <bar summary>
+        Bar-Green: tree=<40 hex> work=<40 hex> bar=<review|landing|no-bar> tests=<64 hex|none> <summary>
 
+      * `bar=` must be `landing` or `no-bar` here: a `review` attestation is a
+        build round's record of green, never a refresh, so it is never peeled
+        and never satisfies the merge slot. The old line without `bar=` is not
+        read at all.
       * `tree=` must equal the commit's OWN tree. This is the load-bearing one:
         no edit that changes content can keep it, because the tree sha IS the
         content. `git write-tree` is what lets the refresh know the value
@@ -478,19 +505,79 @@ def refresh_attestation(root, branch, rev=None):
     lines = message.splitlines()
     if not lines or not lines[0].strip().startswith(refresh_subject(branch)):
         return None
-    matched = None
-    for line in lines:
-        matched = _ATTEST_RE.match(line.strip())
-        if matched:
-            break
-    if not matched:
+    attested = bar_attestation(root, rev)
+    if attested is None or attested.bar not in LANDING_BARS:
+        return None  # a `review` attestation is never a refresh, so never peeled
+    return attested.work, attested.summary
+
+
+def tests_digest(paths):
+    """The digest of a set of named test paths: `none` for the empty set, else
+    the SHA-256 of the sorted, de-duplicated paths, one per line. A path is
+    normalised (a backslash to `/`, a leading `./` dropped) so one set has one digest
+    whatever its order or spelling. One home, so the producer that writes it and
+    any reader that compares it compute the same value.
+
+    Implements: SR-156, LLR-207
+    """
+    normalized = set()
+    for path in paths or ():
+        text = str(path).replace("\\", "/")
+        while text.startswith("./"):
+            text = text[2:]
+        normalized.add(text)
+    if not normalized:
+        return "none"
+    joined = "\n".join(sorted(normalized)) + "\n"
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
+
+def format_bar_green(tree, work, bar, tests, summary):
+    """The one writer of the `Bar-Green:` line:
+
+        Bar-Green: tree=<40 hex> work=<40 hex> bar=<bar> tests=<64 hex|none> <summary>
+
+    It raises on a bar outside `BAR_NAMES`, so the writer cannot emit a line
+    the verifier refuses.
+
+    Implements: SR-156, LLR-207
+    """
+    if bar not in BAR_NAMES:
+        raise ValueError("unknown bar {!r}; the set is {}".format(bar, BAR_NAMES))
+    return "{} tree={} work={} bar={} tests={} {}".format(
+        BAR_GREEN, tree, work, bar, tests, summary
+    ).rstrip()
+
+
+def bar_attestation(root, rev):
+    """The verified fields of `rev`'s `Bar-Green:` attestation as a
+    `BarAttestation`, or None.
+
+    An attestation is the message's ONE line starting with the label at column
+    0 (a quoted or indented line is a quotation, two lines attest no single
+    bar), matching the grammar in full, naming a bar in `BAR_NAMES`, and whose
+    `tree=` and `work=` are `rev`'s own tree and first parent. An unreadable
+    commit, or the old grammar without `bar=`, is not one: no legacy path.
+
+    Implements: SR-156, LLR-207
+    """
+    message = git_out(root, ["log", "-1", "--format=%B", rev])
+    if not message:
         return None
-    tree, work, summary = matched.group(1), matched.group(2), matched.group(3)
-    if _rev(root, rev + "^{tree}") != tree:
+    labelled = [line for line in message.splitlines() if line.startswith(BAR_GREEN)]
+    if len(labelled) != 1:
+        return None
+    matched = _ATTEST_RE.match(labelled[0])
+    if not matched or matched.group(3) not in BAR_NAMES:
+        return None
+    attested = BarAttestation(
+        *matched.group(1, 2, 3, 4), (matched.group(5) or "").strip()
+    )
+    if _rev(root, rev + "^{tree}") != attested.tree:
         return None  # the message rode onto a tree it does not describe
-    if _rev(root, rev + "^1") != work:
+    if _rev(root, rev + "^1") != attested.work:
         return None  # ...or onto a different parent than the one it names
-    return work, summary.strip()
+    return attested
 
 
 # The one non-record tree the MACHINERY itself moves. See

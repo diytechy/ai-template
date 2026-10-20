@@ -48,7 +48,9 @@ fd, so an in-process call would leak a held descriptor into the rest of the
 suite.
 """
 
+import inspect
 import re
+import sys
 
 from conftest import SCRIPTS, env_gate_skipif, run_py
 from integrate_fixtures import (
@@ -68,6 +70,11 @@ from integrate_fixtures import (
     scaffolded_closed_branch,
     write_spec,
 )
+
+if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
+    sys.path.insert(0, str(SCRIPTS))
+
+from kitlib import verdict as kv  # noqa: E402
 
 pytestmark = env_gate_skipif("git")
 
@@ -128,6 +135,8 @@ print("RESULT: FAIL (1 step(s) failed)")
 sys.exit(1)
 """
 
+STATION_STACK_INI = "[product]\ntest = {py} -m pytest -q\n"
+
 
 def station_repo(
     tmp_path,
@@ -135,6 +144,8 @@ def station_repo(
     policy="0",
     dest="complete",
     product=True,
+    stack_ini=STATION_STACK_INI,
+    extra_scripts=None,
     **spec_kw,
 ):
     """A trunk with WI-401 claimed onto `wi-401` and CLOSED, plus a stub harness.
@@ -145,14 +156,16 @@ def station_repo(
     shapes the claimed spec (the WI-388 bar/no-bar tests declare `bar=` or
     `safety=` on it); `product=False` closes the lane WITHOUT the product
     file, the pure-registry shape an honest adjudication lane has.
+    `stack_ini` is the declared profile and `extra_scripts` maps further
+    `scripts/` stubs to their source, both committed before the claim so the
+    trunk and the lane carry the same ones (the attest tests declare the
+    review bar and a recording `[product] test` this way).
     """
     root = claim_repo(tmp_path, **spec_kw)
     (root / ".gitignore").write_text(
         "out/\nbar-cache/\n", encoding="utf-8", newline="\n"
     )
-    (root / "docs" / "stack.ini").write_text(
-        "[product]\ntest = {py} -m pytest -q\n", encoding="utf-8", newline="\n"
-    )
+    (root / "docs" / "stack.ini").write_text(stack_ini, encoding="utf-8", newline="\n")
     declare_generated(root)
     (root / "docs" / "review-policy").write_text(
         policy + "\n", encoding="utf-8", newline="\n"
@@ -163,6 +176,8 @@ def station_repo(
         STUB_TRUNK_STEP, encoding="utf-8", newline="\n"
     )
     (scripts / "check.py").write_text(check_src, encoding="utf-8", newline="\n")
+    for name, src in (extra_scripts or {}).items():
+        (scripts / name).write_text(src, encoding="utf-8", newline="\n")
     _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
     close_branch(root, "wi-401", dest=dest, product=product)
@@ -196,6 +211,49 @@ def close_branch(
         (wt / extra[0]).write_text(extra[1], encoding="utf-8", newline="\n")
     _commit(wt, "{}: build + close".format(wi), when=T_VERDICT)
     return wt
+
+
+# The `attest` route's harness (WI-956). The review bar is declared the way the
+# shipped template declares it, so the station's recording `check.py` stub is
+# what it runs, and `[product] test` is a stub that records the named tests it
+# was handed: their order in `harness-order.txt` beside the bar's, and their
+# exact argv in `named-args.json`, both OUTSIDE the worktree for the reason
+# `STUB_TRUNK_STEP` states.
+ATTEST_STACK_INI = (
+    "[product]\ntest = {py} scripts/named_tests.py\n"
+    "[bars]\nreview = python scripts/check.py --jobs 0 --tier smoke\n"
+)
+
+STUB_NAMED_TESTS = """import json
+import pathlib
+import sys
+
+pathlib.Path("..", "harness-order.txt").open("a", encoding="utf-8").write(
+    "named\\n"
+)
+pathlib.Path("..", "named-args.json").write_text(
+    json.dumps(sys.argv[1:]), encoding="utf-8"
+)
+sys.exit({code})
+"""
+STUB_NAMED_TESTS_GREEN = STUB_NAMED_TESTS.format(code=0)
+STUB_NAMED_TESTS_RED = STUB_NAMED_TESTS.format(code=1)
+
+
+def attest_repo(
+    tmp_path,
+    check_src=STUB_CHECK_GREEN,
+    named_src=STUB_NAMED_TESTS_GREEN,
+    stack_ini=ATTEST_STACK_INI,
+):
+    """`station_repo` with the review bar declared and the named-test stub in
+    the harness: the closed `wi-401` lane an `attest` call commits on."""
+    return station_repo(
+        tmp_path,
+        check_src=check_src,
+        stack_ini=stack_ini,
+        extra_scripts={"named_tests.py": named_src},
+    )
 
 
 def _lane(root, branch):
@@ -427,14 +485,9 @@ def test_a_malformed_bar_value_refuses_the_refresh(tmp_path):
     assert "bar" in refusal and "G9" in refusal
 
 
-def test_an_adjudication_lane_runs_no_bar(tmp_path):
-    # WI-388 (1): adjudication runs NO BAR (§A5.2) — its outputs are Status
-    # cells and the work registry, nothing a product bar can speak to. The
-    # refresh still merges trunk in and runs the trunk step, still commits a
-    # verified Bar-Green attestation (the slot's contract), but the check
-    # harness is never invoked and the summary says so. `product=False`: the
-    # lane's delta is the pure registry shape the kind's premise names — a
-    # spine Status edit rides along and stays inside the scope rung.
+def _adjudication_station(tmp_path):
+    """A closed adjudication lane whose delta is the pure registry shape the
+    kind's premise names: a spine Status edit, no product file."""
     root = station_repo(tmp_path, safety="adjudication", product=False)
     wt = _lane(root, "wi-401")
     (wt / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
@@ -446,6 +499,18 @@ def test_an_adjudication_lane_runs_no_bar(tmp_path):
         newline="\n",
     )
     _commit(wt, "WI-401: the Status-cell judgement", when=T_LATER)
+    return root, wt
+
+
+def test_an_adjudication_lane_runs_no_bar(tmp_path):
+    # WI-388 (1): adjudication runs NO BAR (§A5.2) — its outputs are Status
+    # cells and the work registry, nothing a product bar can speak to. The
+    # refresh still merges trunk in and runs the trunk step, still commits a
+    # verified Bar-Green attestation (the slot's contract), but the check
+    # harness is never invoked and the summary says so. `product=False`: the
+    # lane's delta is the pure registry shape the kind's premise names — a
+    # spine Status edit rides along and stays inside the scope rung.
+    root, wt = _adjudication_station(tmp_path)
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     assert _order(wt) == ["trunk_step"], "the bar must not run for adjudication"
@@ -728,8 +793,9 @@ def test_the_refresh_cli_is_the_lane_side_entry_point(tmp_path):
 # of the four tests below is that exploit, kept as the regression.
 
 
-FORGED_TRAILER = "Bar-Green: tree={t} work={w} bar PASS (2 steps, tier all)".format(
-    t="0" * 40, w="1" * 40
+FORGED_TRAILER = (
+    "Bar-Green: tree={t} work={w} bar=landing tests=none "
+    "bar PASS (2 steps, tier all)".format(t="0" * 40, w="1" * 40)
 )
 
 
@@ -920,7 +986,9 @@ def test_a_deliberately_forged_attestation_is_a_STATED_limit_not_a_defence(tmp_p
         "commit",
         "-qm",
         "refresh: wi-401 onto trunk deadbeef01\n\n"
-        "Bar-Green: tree={} work={} bar PASS (99 steps, tier all)".format(tree, parent),
+        + kv.format_bar_green(
+            tree, parent, "landing", "none", "bar PASS (99 steps, tier all)"
+        ),
     )
 
     assert integ.refresh_attestation(root, "wi-401") == (
@@ -1249,3 +1317,77 @@ def test_the_generated_table_reads_kinds_and_prefixes_not_a_second_copy(tmp_path
         integ._declared_generated_kind("tests/test_module_size_ratchet.py", table)
         in integ._HAND_STAMPED_GENERATED_KINDS
     )
+
+
+# --- the named bar and the one producer (WI-956) ------------------------------
+#
+# The refresh's `Bar-Green:` line names the bar it ran (`landing`, or `no-bar`
+# on the adjudication arm), and it is written through the one producer the
+# `attest` route also commits through.
+
+
+def _producer_spy(monkeypatch):
+    """Wrap `integrate._attest_commit`; return the list of bars its calls name,
+    in call order. The real producer still runs underneath."""
+    real = integ._attest_commit
+    bars = []
+
+    def spy(*args, **kwargs):
+        bars.append(inspect.signature(real).bind(*args, **kwargs).arguments["bar"])
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(integ, "_attest_commit", spy)
+    return bars
+
+
+def test_the_refresh_trailer_names_the_landing_bar(tmp_path):
+    # A refresh that ran the declared bar attests the `landing` bar, with no
+    # named tests, on its own tree and first parent.
+    root = station_repo(tmp_path)
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    attested = kv.bar_attestation(root, sha)
+    assert attested is not None, _git(root, "log", "-1", "--format=%B", sha)
+    assert (attested.bar, attested.tests) == ("landing", "none")
+    assert attested.tree == _rev(root, sha + "^{tree}")
+    assert attested.work == _rev(root, sha + "^1")
+
+
+def test_the_adjudication_refresh_names_no_bar(tmp_path):
+    # The adjudication arm runs no bar (§A5.2), and its attestation says so in
+    # the bar field rather than only in the free-text summary.
+    root, _wt = _adjudication_station(tmp_path)
+    sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    attested = kv.bar_attestation(root, sha)
+    assert attested is not None, _git(root, "log", "-1", "--format=%B", sha)
+    assert (attested.bar, attested.tests) == ("no-bar", "none")
+
+
+def test_the_refresh_commits_through_the_shared_producer(tmp_path, monkeypatch):
+    # Both refresh arms reach the one producer and name their bar to it, so
+    # the refresh keeps no commit-and-verify block of its own.
+    bars = _producer_spy(monkeypatch)
+    landing = tmp_path / "landing"
+    landing.mkdir()
+    root = station_repo(landing)
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    adjudication = tmp_path / "adjudication"
+    adjudication.mkdir()
+    root, _wt = _adjudication_station(adjudication)
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert bars == ["landing", "no-bar"]
+
+
+def test_the_refresh_and_attest_commit_through_one_producer(tmp_path, monkeypatch):
+    # The two routes that write an attestation share one producer: `attest`
+    # names `review` to it, and the refresh that follows names `landing`.
+    bars = _producer_spy(monkeypatch)
+    root = attest_repo(tmp_path)
+    _sha, refusal = integ.attest(root, "wi-401", "review", ["tests/test_widget.py"])
+    assert refusal is None, refusal
+    _sha, refusal = integ.refresh(root, "wi-401", "smoke")
+    assert refusal is None, refusal
+    assert bars == ["review", "landing"]

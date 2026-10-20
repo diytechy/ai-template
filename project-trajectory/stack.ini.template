@@ -242,6 +242,18 @@ lanes = 2
 # iso = ./build_iso.sh
 # iso.desc = build the bootable ISO and launch the burner
 
+# --- The review bar (a build round's record of green) ------------------------
+# `integrate.py attest` runs this command on a lane's staged work before it
+# commits the work carrying a `Bar-Green: ... bar=review` attestation, then the
+# round's named tests through [product] test. A full SHELL line, run in the
+# lane worktree; its `python` is the harness interpreter (a directory whose
+# `python` is it comes first on PATH, as for [run]). There is NO default: an
+# absent section or key, or an empty value, makes `attest` refuse. Shipped as
+# the kit's commit bar; set it to your own if you declare one (e.g. a [run]
+# line).
+[bars]
+review = python scripts/check.py --jobs 0 --tier smoke
+
 # --- Project-specific gate steps ---------------------------------------------
 # Add gates your DOMAIN needs (duplicate-code, license-lint, capability or
 # dataflow integrity, …) as `[step:<name>]` sections — check.py runs them
