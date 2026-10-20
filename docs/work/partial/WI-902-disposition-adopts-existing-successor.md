@@ -42,7 +42,7 @@ the result in its own commit, a commit-versus-parent check judges that
 commit, and the sweep trusts the record. The coordinator settled the lane's
 acts 113–117, its decisions D-001 to D-010 and its spine rows under this
 shape before the rebuild, in the lane record
-([wi-902-lane-record.md](../../../plans/2026-10-11-review-churn/wi-902-lane-record.md)),
+([wi-902-lane-record.md](../../plans/2026-10-11-review-churn/wi-902-lane-record.md)),
 with five calls recorded as `docs/decisions/coordinator-2026-10-14.toml`
 D-009 to D-013: no act of 113–117 lands; the lane is re-cut from trunk's tip
 and the survivors are ported; LLR-335, TC-360 and IF-294 keep their ids; the

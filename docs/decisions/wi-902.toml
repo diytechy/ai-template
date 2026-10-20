@@ -1,0 +1,17 @@
+# docs/decisions/wi-902.toml — delegated decisions made in the WI-902 lane
+# (a disposition can name an already-filed successor), re-cut from trunk's
+# tip on 2026-10-20 in headless leg 03 of loop session
+# 20261019T185432Z-8e4f05. The old lane's D-001 to D-010 stay in its archived
+# tip d3d301216 (archive/lanes), with each entry's fate in the lane record
+# docs/plans/2026-10-11-review-churn/wi-902-lane-record.md; this record
+# continues their numbering.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-011"]
+
+[decision.D-011]
+decided = "The rebuild's single plan stopped at the plan cap, so the lane closes partial for the owner (coordinator-cycle section 3, Plan, step 4; OI-70: never park it claimed). The lane was re-cut from trunk's tip 41375927d and its old tip d3d301216 archived whole (coordinator-2026-10-14 D-010). A fresh Claude Opus planner wrote the plan (e02a9bc15); critique 1 (Codex Sol, medium) asked for changes with one MAJOR, the counted review rounds ordered after the checkpoint sitting; the one revision answered it (dd9b23f72; plan_coverage --findings passes); critique 2, in convergence stance at the cap, asked for changes with one MAJOR (critique-2.md): P5's record check accepts a close only through the mechanical-close attestor, which refuses any path outside docs/work/, so a genuine close whose spec_move relinks an inbound link in a review, plan or log file is refused at the slot and the hook with no supported recovery. The cap's dispute sitting (016-ADJUDICATE-7ffa12c.md, on findings 016-DISPUTE-findings.toml, the coordinator holding no position) ruled F1 FIX: give record admission a close test that admits the close's exact inbound relinks through spec_move's shared relink reading, keep the record/request, parent-tree and close-shape validation and the peel unchanged, and add the real-close regression. At the plan cap only an accepted DISMISS lets the pass record be written, and a FIX goes to the owner, never to the build. The owner's choice: let a third plan revision take the ruling (a third critique the cap does not provide), or rule another route. Every lane commit is a record (the plan, its revision, both critiques, the findings file, the verdict and its telemetry), so all are kept."
+alternative = "Revise the plan a second time and critique it again past the cap."
+reversal_cost = "Low: the specs move to partial/ and the sweep mints the disposition row; the plan, critiques and verdict stay on trunk as the successor's inputs."
+why_not_escalated = "The skill routes it to the owner by this close; the disposition row and the handoff carry the choice."
+review = ""

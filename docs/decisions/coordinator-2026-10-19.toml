@@ -3,7 +3,7 @@
 # 20261019T185432Z-8e4f05).
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-003"]
+high_risk = ["D-003", "D-004"]
 
 [decision.D-001]
 decided = "WI-897's queued row is amended on trunk before its claim, as WI-927's plan deliverable 6 directs: its Context, its Done-when item (2) and its RESYNC item named `coordinator_guard.py hooks --enable`, which WI-927 removed. They now name the consented install (`hooks --offer`, as dev-setup's offer and the take at a terminal run it), and the RESYNC item states WI-927's reading: the guard state is read by command name, so a matcher-only change still reads `on`, and an adopter who wants the new matcher removes the installed guard groups and runs the consented install again. Nothing else in the row changes; its scope critique (the row predates S3, S4 and S5, so it is re-critiqued at its claim, one row at a time) judges the rest, including its stale 'Review bar: A' line."
@@ -24,4 +24,11 @@ decided = "WI-897's scope critique, round 1 (Codex Sol, medium; four MAJORs), is
 alternative = "Rule the malformed-example gap inside this row, widening a hook-cost row into WI-927's reader."
 reversal_cost = "Low: the row is unclaimed until the confirming round passes; an overrule amends the queued spec."
 why_not_escalated = "Ruling 9 makes the dispositions the coordinator's; the Trust ruling goes to the owner as a decision to confirm, and the row is not held on it."
+review = ""
+
+[decision.D-004]
+decided = "WI-902's partial close lands as a records-only lane (its plan, both critiques, the cap's FIX verdict 016-ADJUDICATE-7ffa12c.md, its decision D-011 and the close report), and WI-810's hard edge on WI-902, which check_trajectory refuses as a dead dependency on a terminal row, becomes the soft edge ~WI-902 in the landing commit. No row carries WI-902's scope yet: the landing's sweep mints the disposition row, and its successor, once drafted and minted, takes WI-810's hard edge in place of the soft one. WI-810 cannot start before then anyway: it also hard-needs WI-809, WI-821, WI-851, WI-852 and WI-856, all open."
+alternative = "Hold the landing until the successor exists, leaving the lane claimed past its close (OI-70 forbids parking it)."
+reversal_cost = "Low: one needs cell, re-pointed when the successor is minted."
+why_not_escalated = "The recipes' close-partial step (re-home every open row that hard-depends on the closed one); the successor's hard edge is recorded in the handoff for the next session."
 review = ""

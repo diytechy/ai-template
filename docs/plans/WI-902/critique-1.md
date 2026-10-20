@@ -1,0 +1,21 @@
+Reviewed: e02a9bc15e7ed30b1c1db64ed00bf6d8068004f7
+
+## 2026-10-20 — WI-902 independent plan critique, round 1
+
+Fresh non-author session: Codex independent critic, invoked for this plan's first critique by the coordinator. This session did not produce the plan. No provider session id was supplied. Recording route: the invocation's assigned scratch verdict file; no commit or checkout changes.
+
+Artifact: `docs/plans/WI-902/plan.md`, read directly with `git show` at the reviewed commit. This is a textual artifact, inspected directly; no render or description proxy was needed. Implementer session notes, `docs/status.md`, `docs/log.md`, and neighboring plan critiques were not consulted.
+
+Rubric: `docs/rubrics/plan-decomposition.md`, revision held at the reviewed commit (WI-190 rubric with WI-913 single-plan use). Intent sources, at that same revision: the full `docs/work/active/wi-902/WI-902-disposition-adopts-existing-successor.md`; its specref, `docs/plans/2026-10-11-review-churn/README.md#2-record-the-decision-at-its-event-checked-at-the-commit`; SR-148 and SR-220 in `docs/requirements/system-requirements.toml`; their parent needs SN-006, SN-008, SN-010, SN-025, SN-027 and SN-029 in `docs/requirements/stakeholder-needs.toml`. The supplied 23-clause coverage report was judged against the actual deliverables. Existing interface definitions and the coordinator-cycle review/checkpoint procedure were inspected to resolve seam and ordering questions.
+
+Rubric derivation check: sufficient for this plan review. DevStg-Tests and B2 require substantive coverage of the successor obligation, recorded validation, commit enforcement, replay behavior and consolidation exclusion; they do not substitute passing existing TCs for those obligations. DevStg-Reqs, DevStg-Impl, G4 and B1–B4 additionally test whether that coverage can be built in distinct, ordered steps. The single-plan delta question explicitly reaches the new record domain and changed input dependencies. No missing anchor is proposed.
+
+Anchors judged: DevStg-Reqs, DevStg-Tests, DevStg-Impl, G4, B1, B2, B3 and B4. The implementation steps identify deliverables and checkable outcomes. D1–D23 have substantive coverage; the excluded selection/census tests have reasons consistent with the scoped changes. Parser, close, record, sweep, documentation and adjudication overlaps have real split reasons, including P8 authoring versus P10 adjudication. The proposed pure adoption and git-backed record seams have distinct owners and do not duplicate the cited existing interfaces. No padding or hollow clause citation was found. G4/B4 fail on the checkpoint/review dependency below.
+
+Architectural delta: `DELTA: within` is justified. P1/P3 carry the new grammar and record domain; P4/P5/P6 carry the request-to-close, parent-tree validation and record-to-sweep dependencies. The existing git boundary is reused. No additional state-machine state is required by this specification.
+
+Transfer caveat: the protocol's debate/selection evidence comes from QA, math and code with objective verifiers; it has not been benchmarked on plan artifacts, and reconciliation evaluated for plan quality remains an open research gap. This rubric is a supported extrapolation, not a proven instrument.
+
+- [MAJOR] G4/B4 -> `plan.md`, the P10/P11 predecessor edge and their detailed sections: P10 performs the checkpoint's combined sitting, while P11 depends on P10 and only then runs the counted full review rounds. The checkpoint consumes code settled by those rounds: coordinator-cycle §3 explicitly places counted rounds before the checkpoint and the gate after it. Saying P11 follows the skill's shape does not resolve the opposite order in the table. Following the declared order exposes the already-judged spine to ordinary review fixes and reasonably costs another reconciliation/sitting round. -> Split P11's pre-checkpoint bar and counted review/fix rounds from its post-checkpoint gate and landing. Put the former before P10, reconcile P8's authored intent against their settled code before the sitting, and keep the final gate, rebase/unchanged-row checks, act and landing in their prescribed later order; update the predecessor cells and detailed sections consistently. -> @planner
+
+VERDICT: CHANGES-REQUESTED findings=1
