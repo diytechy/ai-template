@@ -101,6 +101,20 @@ and WI-958. Written under [PROCESS.md §3, "When a guard is owed"](../../../proj
   commit's own git tree and first parent, the bar name and the tests digest.
   The bound is `refresh_attestation`'s, unchanged: it defeats accident, not
   intent (PROCESS.md §6).
+- **The review bar's declaration** (deliverable 4) decides which command
+  may produce a `review` attestation, so it carries authority too.
+  - *Producer:* a person or agent, editing `docs/stack.ini` by hand in a
+    reviewed commit; a re-sync adds it with the shipped value. A failed
+    write is a missing key, an empty value, or a file that does not parse.
+  - *Reader:* one, through `kitlib/config.py`'s `read_stack_ini` (the one
+    parse of the file), called by the shared producer before it runs any
+    bar. No other consumer reads the key: the verifier reads only the
+    trailer's bar name.
+  - *Ruling:* an absent file, section or key, an empty or whitespace-only
+    value, or a file `read_stack_ini` cannot read or parse: the producer
+    refuses before running anything, naming the file, the key and the
+    cause, and writes no commit. There is no default and no fallback to
+    `[run] smoke` or `check.py` (D-002).
 
 ## Done-when
 
@@ -160,3 +174,15 @@ Each named test fails on the code before the change.
   absent would be a fallback path (owner, 2026-10-03). The key's home is
   `docs/stack.ini`, beside the `[run]` commit bar it names, until item 10's
   one-file migration moves both into `docs/process.toml`.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, 2026-10-20; CHANGES-REQUESTED,
+findings=1):
+
+- **MINOR, S2 (the review-bar key's Trust contract): adopted.** The Trust
+  section gains "The review bar's declaration": its producer and failed-write
+  forms, its one reader (`read_stack_ini`, called by the shared producer),
+  and "an absent file, section or key, an empty or whitespace-only value, or
+  a file `read_stack_ini` cannot read or parse: the producer refuses before
+  running anything".

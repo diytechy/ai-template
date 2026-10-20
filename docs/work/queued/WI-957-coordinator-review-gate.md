@@ -66,6 +66,11 @@ producer and the full consumer list. This row's ruling, at its one consumer:
 - **Verified for another bar** (`landing`, `no-bar`) **or another test
   set**: refused, naming both digests.
 - The render never runs the bar itself.
+- **The bound** (PROCESS.md §6, "Review threat model"): the promise covers
+  the tips and test lists the kit's own routes produce (`integrate.py
+  attest`, the refresh, the record commits the cycle makes above an
+  attested tip). A hand-edited trailer, a hand-chosen alias for a test
+  path and sub-second timing windows are outside it.
 
 ## Done-when
 
@@ -100,5 +105,19 @@ Each named test fails on the code before the change.
 - **Machinery landing alone.** From its landing, every coordinator review
   render refuses an unattested tip, this lane's own rounds included
   (rendered from the lane's copy). The `attest` recipe lands in the same
-  commit as the refusal. If the lane's gate is wrong, render from trunk's
-  copy and record it as a decision.
+  commit as the refusal. If the lane's gate is wrong, the defect is fixed
+  forward in the lane with a regression test (revision 37); no review
+  renders through another copy of the script to step around it.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, 2026-10-20; CHANGES-REQUESTED,
+findings=2):
+
+- **MAJOR, S2/S3 (rendering from trunk's copy bypasses the gate):
+  adopted by removing the route.** "Machinery landing alone" now reads "the
+  defect is fixed forward in the lane with a regression test (revision 37);
+  no review renders through another copy of the script to step around it".
+  Removing the authority is preferred over guarding it (recipes §1).
+- **MINOR, S3 (the consumer's input bound): adopted.** The Trust section
+  gains "The bound", in PROCESS.md §6's terms.

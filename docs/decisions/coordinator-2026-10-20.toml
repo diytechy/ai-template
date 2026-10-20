@@ -18,3 +18,10 @@ alternative = "Derive the review bar from an existing declaration, with no new k
 reversal_cost = "Medium once WI-956 lands (a RESYNC entry and adopters' declarations); low before its claim (a spec edit)."
 why_not_escalated = "A design call inside a ruled item (item 13, revision 35) with no owner-only act; flagged high-risk so the owner sees the migration first under Decisions to review."
 review = ""
+
+[decision.D-003]
+decided = "The four rows' scope critiques, round 1 (Codex Sol, medium; WI-955 1 MAJOR 1 MINOR, WI-956 1 MINOR, WI-957 1 MAJOR 1 MINOR, WI-958 2 MAJOR 1 MINOR), are dispositioned in each spec's Critique dispositions section before any claim. All are adopted but one part: WI-958's hard edge on queue row P4 is rejected, because P4 is not filed, a needs cell cannot cite an unfiled row, and the loop stays paused until P4 lands either way, so P4's own spec carries this gate across the batch's retirement. WI-957's trunk-copy render route is removed rather than guarded. WI-958's red-round record is keyed by the refused build commit's sha, so a crash neither loses nor repeats a red. The Trust rulings (WI-956's review-bar declaration, WI-957's bound, WI-958's config and count record) go to the owner to confirm or overrule (coordinator-cycle section 1); no row is held on them."
+alternative = "File P4 now and give WI-958 its hard edge."
+reversal_cost = "Low: four queued rows, unclaimed."
+why_not_escalated = "Ruling 9 makes the dispositions the coordinator's; the confirming round checks them."
+review = ""

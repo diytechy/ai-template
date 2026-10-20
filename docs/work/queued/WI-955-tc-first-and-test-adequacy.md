@@ -48,12 +48,20 @@ text changes: this row moves procedure and prompt text only.
    byte-identical).
    - "Intent" reorders: Terra authors the change set, TC rows included,
      before build round 1 (after the plan pass record, for a `single` row).
-   - Build round 1's first deliverable is the failing tests, committed alone
-     before the code: each new test marked as a strict expected assertion
-     failure (Python: `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`),
-     the marks removed in the code commit. A red must reach the test's own
-     assertion, not an import error (plan item 13, revision 17); a stub is
-     the builder's choice.
+   - Build round 1's first deliverable is the tests, committed alone before
+     the code, each under one evidence class from item 13's typed-evidence
+     contract (plan item 13, "typed evidence", revision 16):
+     - **new or corrected executable behaviour:** marked as a strict
+       expected assertion failure (Python: `@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))`),
+       the marks removed in the code commit. A red must reach the test's own
+       assertion, not an import error (revision 17); a stub is the
+       builder's choice;
+     - **characterization of already-correct behaviour:** unmarked, with a
+       stated adequacy witness (what wrong implementation it would catch);
+     - **Inspection, Analysis or Attest TCs:** their declared method's
+       independently checkable evidence, as the TC row states it.
+     A test that fits none of the three is named in the lane's decisions
+     record with its disposition before the code commit.
    - The recipe line "owes no intent turn" (wi-918 D-002) is replaced.
    - Lanes claimed before this lands keep their order, recorded as a
      decision.
@@ -82,17 +90,23 @@ text changes: this row moves procedure and prompt text only.
 ## Done-when
 
 - The coordinator-cycle skill's §3 places Terra's change-set turn, TC rows
-  included, before build round 1, and names the failing-test commit as round
-  1's first deliverable with the strict mark and its removal. No text in the
-  skill or its recipes keeps "after the first build" or the wi-918 D-002
-  exemption.
+  included, before build round 1, and names the test commit as round 1's
+  first deliverable under the three evidence classes of Deliverable 1 (the
+  strict mark and its removal for new or corrected behaviour, the adequacy
+  witness for characterization, the declared method's evidence for
+  Inspection, Analysis or Attest), with the recorded disposition for a test
+  that fits none. No text in the skill or its recipes keeps "after the
+  first build" or the wi-918 D-002 exemption.
 - `in-lane.md` states the order; both `spine-authoring` copies and both
   `coordinator-cycle` copies are byte-identical.
 - A test pins each of the three adequacy questions and the duplication
   question in the reviewer template (`tests/test_agent_loop_review.py`'s
   substring pattern), and a rendered `review_brief.py review` brief carries
   them.
-- A test pins the builder's duplication sentence in `worker.template.md`.
+- Both builder briefs, `.claude/agents/kit-builder.md` and
+  `prompts/worker.template.md`, tell the builder to search before
+  creating a file or function and to name the nearest existing home it
+  considered; a test pins the sentence in each.
 - `prompts/CATALOG.md` is fresh; the RESYNC entry check passes.
 - On the landing tip, the commit bar is green, `check_trajectory.py
   --strict` and `trace.py --strict` clean.
@@ -103,11 +117,29 @@ text changes: this row moves procedure and prompt text only.
   (WI-955 to WI-958): no dependency, and every later P1 lane then runs
   TC-first.
 - **S2.** None. No file gains authority.
-- **S3.** Not applicable: no input space.
+- **S3.** The one input space is a new test's evidence class, closed by
+  Deliverable 1's three classes; a test outside them is dispositioned
+  by name in the lane's decisions record, never left to default.
 - **S4.** `none`: text and pinning tests only, no code path.
 - **S5.** No delta. The reviewer template's slots are unchanged.
 - **S6.** None. B2 (WI-914) landed on 2026-10-16.
 - **B1.** Deliverable 4's builder half is not in the queue text; it is
   listed because it is the producer side of the reviewer's question and no
-  other row owns it. Drop it if the critique rules it out.
+  other row owns it. The critique kept it and asked for its Done-when item.
 - **B4.** No owner act.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, 2026-10-20; CHANGES-REQUESTED,
+findings=2):
+
+- **MAJOR, S3 (the blanket strict-mark rule): adopted.** Deliverable 1 now
+  reads "each under one evidence class from item 13's typed-evidence
+  contract", naming the three classes, and the Done-when's first item names
+  them; S3 states the closed set and the named disposition for a test
+  outside it.
+- **MINOR, B1 (the kit-builder half had no Done-when item): adopted.** The
+  Done-when item now reads "Both builder briefs, `.claude/agents/kit-builder.md`
+  and `prompts/worker.template.md`, tell the builder to search before
+  creating a file or function and to name the nearest existing home it
+  considered".
