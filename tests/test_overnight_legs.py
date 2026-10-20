@@ -2,9 +2,11 @@
 this repository's own tooling): the run's marker, the leg prompt's
 composition and the refusals before any leg.
 
-No git and no process is spawned here: the handoff reader, the lease reader
-and the agent CLI's resolution are replaced. The real-repository cases, with
-stub legs, are in `test_overnight_legs_git.py`.
+No git and no process is spawned here: the handoff reader, the lease reader,
+the commit-hooks reader and the agent CLI's resolution are replaced. The
+hooks reader's own refusal and admission over a real checkout are pinned in
+`test_hooks_on_routes.py`; the real-repository cases, with stub legs, are in
+`test_overnight_legs_git.py`.
 """
 
 import os
@@ -16,7 +18,7 @@ import agent_brief
 import agent_common
 import pytest
 from conftest import KIT
-from kitlib import provenance
+from kitlib import commit_hooks, provenance
 
 from overnight_legs_fixtures import BLOCK, LOOP_SESSION_ENV, handoff_text, load_launcher
 
@@ -26,13 +28,15 @@ WELL_FORMED = "20260101T000000Z-abcdef"
 @pytest.fixture
 def ol(tmp_path, monkeypatch):
     """The launcher, logging under `tmp_path`, with `sys.path` restored. The
-    kit's shared readers it calls answer from the same fake: the trunk reader
-    names `main`, and `agent_common.git` runs through the launcher's
-    `run_git`, in `git()`'s own `(code, out)` shape."""
+    kit's shared readers it calls answer from the same fake: the hooks reader
+    reads the hooks on, the trunk reader names `main`, and `agent_common.git`
+    runs through the launcher's `run_git`, in `git()`'s own `(code, out)`
+    shape."""
     monkeypatch.setattr(sys, "path", list(sys.path))
     module = load_launcher()
     monkeypatch.setattr(module, "LOGDIR", tmp_path / "logs")
     monkeypatch.setattr(module, "lease_holder", lambda repo: None)
+    monkeypatch.setattr(commit_hooks, "hooks_refusal", lambda repo: None)
     monkeypatch.setattr(agent_common, "trunk_name", lambda repo: "main")
 
     def kit_git(root, *args):

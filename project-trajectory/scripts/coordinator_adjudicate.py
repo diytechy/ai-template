@@ -320,7 +320,7 @@ def _launched(prompt):
 def _call(root, row, request, kept, prompt):
     """Launch `prompt` (as `_launched` makes it) on the route as the request's
     adjudication call under `kept`, and record its session log; raises
-    BlackoutRefused as `session_service.call` does.
+    BlackoutRefused or HooksOffRefused as `session_service.call` does.
 
     Implements: SR-231, LLR-306
     """
@@ -371,7 +371,10 @@ def adjudicate(args):
     print(_keep_line(kept))
     try:
         outcome = _call(root, row, request, kept, prompt)
-    except session_service.BlackoutRefused as refused:
+    except (
+        session_service.BlackoutRefused,
+        session_service.HooksOffRefused,
+    ) as refused:
         _release(args.verdict)
         print("adjudicate: refused: {}".format(refused))
         return agent_common.EXIT_PREFLIGHT
@@ -484,7 +487,10 @@ def act(args):
     before = (git_out(root, ["rev-parse", "HEAD"]) or "").strip()
     try:
         outcome = _call(root, row, request, kept, prompt)
-    except session_service.BlackoutRefused as refused:
+    except (
+        session_service.BlackoutRefused,
+        session_service.HooksOffRefused,
+    ) as refused:
         print("act: refused: {}".format(refused))
         return agent_common.EXIT_PREFLIGHT
     return _act_report(root, args, outcome, before)

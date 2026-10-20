@@ -177,6 +177,7 @@ import score_reviews
 import spec_move
 import text_then_act
 from kitlib import authority as _kitauthority
+from kitlib import commit_hooks as _kitcommit_hooks
 from kitlib import config as _kitconfig
 from kitlib import decisions as kdecisions
 from kitlib import provenance as _kitprovenance
@@ -796,6 +797,11 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
 
     Implements: SR-156, SR-229, LLR-140, LLR-151, LLR-300
     """
+    # The commit hooks are on before any rung (WI-926): a hookless claim takes
+    # no lock, cuts no branch and moves no spec.
+    hooks_off = _kitcommit_hooks.hooks_refusal(root)
+    if hooks_off is not None:
+        return fail(hooks_off)
     wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     # The ladder runs BEFORE the lock: the lock protects the WRITES, and the
     # reads it leaves outside cannot race a live dispatcher, because a live
@@ -2684,10 +2690,16 @@ def refresh(root, branch, tier):
     runs it INSIDE the slot for any branch that arrives un-refreshed or stale,
     which is the pessimistic sequence and is why that sequence never rots.
     """
-    # The claimed rows' say over the bar (WI-388): the adjudication no-bar arm
+    # The commit hooks are on before anything is read (WI-926). Then the
+    # claimed rows' say over the bar (WI-388): the adjudication no-bar arm
     # and the `bar` strictness pin, both read before anything runs so a
     # malformed key refuses with the lane untouched.
-    skip_bar, bar_gate, refusal = _lane_bar_directives(root, branch)
+    hooks_off = _kitcommit_hooks.hooks_refusal(root)
+    skip_bar, bar_gate, refusal = (
+        _lane_bar_directives(root, branch)
+        if hooks_off is None
+        else (False, None, hooks_off)
+    )
     if refusal:
         return None, "refresh REFUSED for {} - {}".format(branch, refusal)
 
@@ -3150,6 +3162,11 @@ def integrate(root, tier, branches=None):
     # dispatcher's tick-top check and resume and done detection read past them:
     # the owner's scratchpad is never a lane's deliverable, the merge touches
     # no path it names, and a mid-edit note must not stop the loop.
+    # The commit hooks are on before all of that (WI-926): a hookless
+    # checkout never takes the slot.
+    hooks_off = _kitcommit_hooks.hooks_refusal(root)
+    if hooks_off is not None:
+        return fail(hooks_off)
     if ac.substantive_working_tree_dirty(root):
         return fail("the trunk working tree is dirty - the queue needs a clean trunk")
     lock_err = _slot(root)

@@ -1,0 +1,7 @@
+range = "c58293d5443a881585864be3491f6e0cd0c749c0..1bf2896b4206d67f126f46cbc359d13e74674274"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = "[MAJOR] DevStg-Tests -> P3's new shipped kitlib/commit_hooks.py and P5-P7's importing routes have no step to register that module in project-trajectory/scripts/kitlib/bootstrap_manifest.py::MAPPING. At the Reviewed revision, that manifest explicitly enumerates every kitlib module, and bootstrap.py::_copy_mapping copies those entries rather than discovering new modules. A normal fresh scaffold therefore receives the changed routes without their new dependency: launch fails to import instead of producing the required setup refusal, and hooks-on launches cannot run as today (D1/D2; SR-113's delivered setup context). P12's RESYNC entry does not repair bootstrap delivery, and P13's general full-suite bar only discovers the omitted work. Add the source/destination manifest entry to P3's deliverable, maintain the scaffold inventory pins, and explicitly verify tests/test_bootstrap.py::test_the_common_package_ships_complete plus a scaffolded route's hooks-off refusal and hooks-on passing path -> @WI-926-implementer"
+position = "Not contested on its facts. The coordinator holds no position for or against the finding: it routes it here because the plan cap requires one dispute sitting for each open BLOCKER or MAJOR of the second plan critique, and only an accepted DISMISS lets the pass record be written (the coordinator-cycle skill, plan step 4)."

@@ -383,6 +383,11 @@ MAPPING = [
     # name as none, absent, on or occupied, and their consented install from
     # absent; `coordinator_guard.py`, in this list, imports it.
     ("scripts/kitlib/guard_hooks.py", "scripts/kitlib/guard_hooks.py"),
+    # WI-926 added `commit_hooks`: whether a checkout's commit hooks are on,
+    # the check every agent route calls first; `agent_loop.py`,
+    # `session_service.py`, `bookkeeping.py`, `integrate.py` and
+    # `coordinator_guard.py`, all in this list, import it.
+    ("scripts/kitlib/commit_hooks.py", "scripts/kitlib/commit_hooks.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each

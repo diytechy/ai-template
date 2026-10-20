@@ -22,6 +22,7 @@ from conftest import (
     SCRIPTS,
     augment_env,
     declare_trunk,
+    hooks_on,
     load_script,
     pin_autocrlf,
     run_py,
@@ -157,6 +158,7 @@ def make_fixture(tmp_path, plan_mode="dual"):
         capture_output=True,
     )
     declare_trunk(root)
+    hooks_on(root)  # every route refuses a checkout without hooks
     git_id = [
         "git",
         "-c",

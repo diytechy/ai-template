@@ -18,7 +18,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 79 changed, 83 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-667, WI-671, WI-672, WI-677, WI-678, WI-679, WI-688, WI-746, WI-747, WI-748, WI-771, WI-774, WI-790, WI-791, WI-803, WI-818, WI-822, WI-834, WI-835, WI-838, WI-841, WI-842, WI-846, WI-849, WI-852, WI-853, WI-858, WI-865, WI-870, WI-882, WI-884, WI-887, WI-888, WI-892, WI-911, WI-912, WI-913, WI-918, WI-925, WI-927, WI-946.
+- `docs/requirements/interfaces.toml` — 79 changed, 84 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-667, WI-671, WI-672, WI-677, WI-678, WI-679, WI-688, WI-746, WI-747, WI-748, WI-771, WI-774, WI-790, WI-791, WI-803, WI-818, WI-822, WI-834, WI-835, WI-838, WI-841, WI-842, WI-846, WI-849, WI-852, WI-853, WI-858, WI-865, WI-870, WI-882, WI-884, WI-887, WI-888, WI-892, WI-911, WI-912, WI-913, WI-918, WI-925, WI-927, WI-946.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -128,6 +128,7 @@ record runs through the live registry first.
 - SR-019 — Pre-commit hook floor: The pre-commit hook shall run the integrity + secrets floor on every commit, agent-neutrally — a LOCAL floor, bypassable by the session (git commit --no-verify), so it discharges "no unchecked write enters governed state" only as a PAIR with the hosted re-run of the same bar (SR-151/SR-152), never alone.
 - SR-020 — Pre-push hook outgoing scan: The pre-push hook shall scan the outgoing commit range and block a push that publishes a secret or (under privacy-check) a private identity.
 - SR-209 — Every commit the loop makes carries a checked provenance trailer: When a commit is made from a process the unattended loop started, or is merged in a lane the loop owns from the point the loop took that lane over, the delivered commit floor shall refuse it unless it carries a valid provenance trailer naming the loop and its session.
+- SR-240 — Commit-floor activation before agent routes: Where a checkout's commit floor is inactive, the delivered agent routes shall refuse to start and name the applicable repair that activates the floor.
 
 **Serving.**
 

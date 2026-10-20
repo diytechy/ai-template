@@ -41,7 +41,8 @@ def _git(root, *args):
 def draining(tmp_path):
     """A real git repo whose coordinator lease is held and latched."""
     root = make_root(tmp_path)
-    _git(root, "init", "-q", "-b", "main")
+    # `make_root` made the repository, hooks on; the branch is named here.
+    _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "t")
     (root / "docs" / "work").mkdir(parents=True)
@@ -97,7 +98,8 @@ def test_a_wrapper_importing_integrate_is_refused(draining, tmp_path):
 
 def test_a_lane_worktree_shares_the_primary_checkouts_lease(tmp_path):
     root = make_root(tmp_path)
-    _git(root, "init", "-q", "-b", "main")
+    # `make_root` made the repository, hooks on; the branch is named here.
+    _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "t")
     _git(root, "add", "-A")

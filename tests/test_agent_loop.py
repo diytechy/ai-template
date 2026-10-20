@@ -21,6 +21,7 @@ import sys
 import pytest
 from conftest import (
     declare_trunk,
+    hooks_on,
     SCRIPTS,
     augment_env,
     load_script,
@@ -210,6 +211,7 @@ def loop_repo(tmp_path):
         ],
     )
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)
@@ -1010,6 +1012,7 @@ def test_zero_commit_repo_is_guarded(tmp_path):
     )
     assert _git_ok.returncode == 0
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
+    hooks_on(repo)  # every route refuses a checkout without hooks
     subprocess.run(["git", "-C", str(repo), "config", "user.email", "l@e.com"])
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "L"])
     subprocess.run(
@@ -1071,6 +1074,7 @@ def test_working_tree_dirty_counts_renames_and_untracked(tmp_path):
     repo = tmp_path / "r"
     repo.mkdir()
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
@@ -1091,6 +1095,7 @@ def _git_repo(tmp_path):
     repo = tmp_path / "r"
     repo.mkdir()
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
@@ -1163,6 +1168,7 @@ def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
     repo = tmp_path / "r"
     repo.mkdir()
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
@@ -1315,7 +1321,7 @@ def test_telemetry_commit_is_best_effort_when_the_hook_vetoes(loop_repo):
     # the loop keeps going. Simulate with a hook that always fails; noop sessions
     # never make a work commit, so only the telemetry commit meets the veto.
     repo, ctl, template = loop_repo
-    hook = repo / ".git" / "hooks" / "pre-commit"
+    hook = repo / ".githooks" / "pre-commit"  # the hooks `hooks_on` turned on
     hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
     hook.chmod(0o755)
     (ctl / "actions.txt").write_text("noop noop", encoding="utf-8")

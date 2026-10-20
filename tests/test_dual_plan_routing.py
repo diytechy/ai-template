@@ -15,10 +15,12 @@ The kit's own DP-001 ran a plain-text, routing-off template, so neither fired in
 the kit's tests — this file closes that coverage gap.
 """
 
-from conftest import load_script
+from conftest import hooked_checkout, load_script
 import json
 import datetime
 from types import SimpleNamespace
+
+import pytest
 
 al = load_script("agent_loop")
 # The dual-plan runner lives in plan_runner.py (WI-218 slice C); _dp_session
@@ -27,6 +29,14 @@ pr = load_script("plan_runner")
 pb = load_script("plan_briefs")
 
 
+@pytest.fixture
+def hooked(tmp_path):
+    """`tmp_path` as a checkout whose commit hooks are on: the session
+    service refuses a launch anywhere else."""
+    return hooked_checkout(tmp_path)
+
+
+@pytest.mark.usefixtures("hooked")
 def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypatch):
     common = pr.session_service.agent_common
     docs = tmp_path / "docs"
@@ -61,6 +71,7 @@ def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypa
     assert all(path.name in index for path in (old, worker, planner))
 
 
+@pytest.mark.usefixtures("hooked")
 def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
     tmp_path, monkeypatch
 ):
@@ -179,6 +190,7 @@ def test_dp_routes_pages_when_enable_list_present_but_registry_broken(tmp_path):
 # --- Bug 2: _dp_session reduces a json/stream-json transcript to result text ---
 
 
+@pytest.mark.usefixtures("hooked")
 def test_dp_session_reduces_stream_json_to_result_text(tmp_path, monkeypatch):
     transcript = (
         '{"type":"assistant","message":"thinking out loud"}\n'
@@ -192,6 +204,7 @@ def test_dp_session_reduces_stream_json_to_result_text(tmp_path, monkeypatch):
     assert output == "P1 | the real plan text"
 
 
+@pytest.mark.usefixtures("hooked")
 def test_dp_session_passes_plain_text_through(tmp_path, monkeypatch):
     monkeypatch.setattr(
         pr.session_service,
@@ -203,6 +216,7 @@ def test_dp_session_passes_plain_text_through(tmp_path, monkeypatch):
     assert output == "P1 | plan\nP2 | plan\n"
 
 
+@pytest.mark.usefixtures("hooked")
 def test_dp_session_failed_session_is_not_reduced(tmp_path, monkeypatch):
     # A failed session keeps its raw output (ok False); no result reduction.
     monkeypatch.setattr(

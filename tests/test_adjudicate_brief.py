@@ -34,6 +34,7 @@ import sys
 import pytest
 from conftest import (
     declare_trunk,
+    hooks_on,
     env_gate_skipif,
     load_script,
     pin_autocrlf,
@@ -66,6 +67,7 @@ def _repo(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")

@@ -26,6 +26,7 @@ from conftest import (
     KIT,
     ROOT,
     SCRIPTS,
+    hooked_checkout,
     load_script,
     older_only_path,
     run_py,
@@ -409,6 +410,7 @@ def _emitted_guard_commands(guard, root, tmp_path):
     record["message"] = {"role": "assistant", "model": "m", "usage": usage}
     transcript = tmp_path / "coord.jsonl"
     transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
+    hooked_checkout(root)  # the take refuses a checkout without hooks
     assert guard.take(root, session, str(transcript)) is None
     payload = {"hook_event_name": "PostToolUse", "session_id": session}
     payload.update(cwd=str(root), transcript_path=str(transcript))
@@ -1571,7 +1573,8 @@ TAKER = "c0c0c0c0-0000-4000-8000-0000000009a7"
 def _take_root(tmp_path, answer):
     """A scratch repository holding the kit's example and no machine-local
     settings, one per answer; returns it and its settings path."""
-    root = tmp_path / ("repo-" + answer)
+    # the take refuses a checkout without hooks
+    root = hooked_checkout(tmp_path / ("repo-" + answer))
     (root / ".claude").mkdir(parents=True)
     shutil.copyfile(
         KIT / "agent-hooks" / "claude.settings.json",

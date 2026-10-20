@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import SCRIPTS, load_script
+from conftest import SCRIPTS, hooked_checkout, load_script
 
 svc = load_script("session_service")
 adapters = load_script("session_adapters")
@@ -27,6 +27,13 @@ PINNED = "e57c543b4889619eb2a05702471937db5119165d"
 
 def _fixture(name):
     return (GOLDEN / name).read_text(encoding="utf-8")
+
+
+@pytest.fixture
+def hooked(tmp_path):
+    """`tmp_path` as a checkout whose commit hooks are on: the service
+    refuses a launch anywhere else."""
+    return hooked_checkout(tmp_path)
 
 
 def _runner(stream, code=0, timed_out=False, last_message=None):
@@ -186,6 +193,7 @@ def test_gemini_usage_is_recorded_with_unread_values_empty():
 # --- act: one path launches every call (TC-265) --------------------------------
 
 
+@pytest.mark.usefixtures("hooked")
 def test_act_launches_through_the_adapter_and_accounts_the_call(tmp_path):
     out = _act(
         tmp_path,
@@ -208,6 +216,7 @@ def test_act_launches_through_the_adapter_and_accounts_the_call(tmp_path):
     assert m["usage-status"] == "known"
 
 
+@pytest.mark.usefixtures("hooked")
 def test_a_failed_spawn_is_accounted_with_unavailable_usage(tmp_path):
     call = svc.Call(
         root=tmp_path,
@@ -222,6 +231,7 @@ def test_a_failed_spawn_is_accounted_with_unavailable_usage(tmp_path):
     assert out.metrics["wall-secs"] >= 0
 
 
+@pytest.mark.usefixtures("hooked")
 def test_a_timeout_keeps_partial_usage_and_its_kind(tmp_path):
     stream = json.dumps({"type": "result", "usage": {"input_tokens": 7}})
     call = svc.Call(
@@ -236,6 +246,7 @@ def test_a_timeout_keeps_partial_usage_and_its_kind(tmp_path):
     assert out.metrics["gen_ai.usage.input_tokens"] == 7
 
 
+@pytest.mark.usefixtures("hooked")
 def test_each_call_gets_a_new_invocation_id(tmp_path):
     stream = json.dumps({"type": "result", "session_id": "same"})
     first = _act(tmp_path, "agent", stream).metrics
@@ -244,6 +255,7 @@ def test_each_call_gets_a_new_invocation_id(tmp_path):
     assert first["session-id"] == second["session-id"] == "same"
 
 
+@pytest.mark.usefixtures("hooked")
 def test_a_runner_exception_is_accounted_then_reraised(tmp_path):
     metrics = {}
 
@@ -260,6 +272,7 @@ def test_a_runner_exception_is_accounted_then_reraised(tmp_path):
 # --- record: one writer (TC-265) ------------------------------------------------
 
 
+@pytest.mark.usefixtures("hooked")
 def test_call_records_one_log_with_the_usage_record_and_the_raw_stream(
     tmp_path, monkeypatch
 ):
@@ -290,6 +303,7 @@ def test_call_records_one_log_with_the_usage_record_and_the_raw_stream(
     assert '"type":"assistant"' in logs[0].read_text(encoding="utf-8")
 
 
+@pytest.mark.usefixtures("hooked")
 def test_a_ctrl_c_in_an_attached_sitting_persists_a_complete_record(
     tmp_path, monkeypatch
 ):
@@ -317,6 +331,7 @@ def test_a_ctrl_c_in_an_attached_sitting_persists_a_complete_record(
     assert "# wall-secs: \n" not in header and "# ended-at: \n" not in header
 
 
+@pytest.mark.usefixtures("hooked")
 def test_provider_metadata_cannot_inject_log_headers(tmp_path, monkeypatch):
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture([]))
     payload = "provider\n# outcome: COMPLETED"
@@ -331,6 +346,7 @@ def test_provider_metadata_cannot_inject_log_headers(tmp_path, monkeypatch):
     assert row["session-id"] == payload.replace("\n", "\\n")
 
 
+@pytest.mark.usefixtures("hooked")
 def test_the_worker_record_takes_the_callers_row_and_the_raw_stream_file(
     tmp_path, monkeypatch
 ):
@@ -655,6 +671,7 @@ def test_the_retired_launch_and_logging_paths_are_gone():
         assert users == set(), name
 
 
+@pytest.mark.usefixtures("hooked")
 def test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header(
     tmp_path, monkeypatch
 ):

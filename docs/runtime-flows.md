@@ -79,7 +79,7 @@ sequenceDiagram
     participant Worker as agent_loop --wi (lane subprocess)
     participant Agent as agent CLI
     Launcher->>Loop: run --root .
-    Loop->>Loop: preflight — git repo? agent CLI? privacy author? (SR-027/LLR-027)
+    Loop->>Loop: preflight — commit hooks on? git repo? agent CLI? privacy author? (SR-240/LLR-340; SR-027/LLR-027)
     alt broken footing
         Loop-->>Launcher: typed nonzero exit (EXIT_PREFLIGHT), never hangs
     else ok
@@ -130,6 +130,9 @@ sequenceDiagram
     participant Priv as check_privacy.py
     participant Policy as docs/process.toml
     Dev->>Hook: staged diff / outgoing range
+    alt kit scripts directory unavailable
+        Hook-->>Dev: REFUSE; name the repair steps (SR-019/LLR-019, SR-020/LLR-020)
+    else kit scripts directory found
     Hook->>Priv: scan (always-on secrets floor, SR-017/LLR-017)
     Priv->>Policy: read declared toggle (SR-031/LLR-031 shared parse)
     alt privacy_check true
@@ -140,6 +143,7 @@ sequenceDiagram
         Hook-->>Dev: BLOCK before it publishes
     else clean
         Hook-->>Dev: allow
+    end
     end
 ```
 
@@ -168,7 +172,8 @@ sequenceDiagram
         alt an exclusive kind is on the frontier
             Note over Disp: THE SPINE BARRIER — admission stops outright;<br/>the batch admits alone, sole toucher of trunk
         else free lane and parallel work
-            Disp->>Slot: claim, dispatch lock held (LLR-151)
+            Disp->>Slot: claim, dispatch lock held (LLR-140/LLR-151)
+            Note over Disp,Slot: inactive commit hooks refuse before the coordinator guard<br/>and dispatch lock (SR-240/LLR-340)
             Slot-->>Disp: spec to active/&lt;branch&gt;/ on a trunk commit, branch cut from it
             Disp->>Lane: spawn the worker subprocess on the lane worktree
         end

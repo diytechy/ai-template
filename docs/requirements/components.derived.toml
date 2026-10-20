@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 305
-seam_rows = 245
-requirements_placed = 125
+design_rows = 306
+seam_rows = 246
+requirements_placed = 126
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -408,6 +408,7 @@ seam_boundary_refs = [
   "IF-290",
   "IF-295",
   "IF-296",
+  "IF-297",
 ]
 
 [component_view.CMP-007]
@@ -652,6 +653,7 @@ sr_refs = [
   "SR-237",
   "SR-238",
   "SR-239",
+  "SR-240",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -769,6 +771,7 @@ llr_refs = [
   "LLR-337",
   "LLR-338",
   "LLR-339",
+  "LLR-340",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -811,6 +814,7 @@ modules = [
   "project-trajectory/scripts/intake.py",
   "project-trajectory/scripts/integrate.py",
   "project-trajectory/scripts/kitlib/authority.py",
+  "project-trajectory/scripts/kitlib/commit_hooks.py",
   "project-trajectory/scripts/kitlib/config.py",
   "project-trajectory/scripts/kitlib/decisions.py",
   "project-trajectory/scripts/kitlib/dispute.py",
@@ -846,6 +850,7 @@ modules = [
   "project-trajectory/scripts/trunk_step.py",
   "scripts/coordinator-relaunch.cmd",
   "scripts/coordinator-relaunch.sh",
+  "scripts/coordinator/overnight_legs.py",
 ]
 seam_internal_refs = [
   "IF-009",
@@ -904,6 +909,7 @@ seam_internal_refs = [
   "IF-291",
   "IF-295",
   "IF-296",
+  "IF-297",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -1280,6 +1286,7 @@ seam_boundary_refs = [
   "IF-292",
   "IF-293",
   "IF-296",
+  "IF-297",
 ]
 
 [unplaced]

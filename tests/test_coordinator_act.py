@@ -23,7 +23,7 @@ import shlex
 import subprocess
 
 import pytest
-from conftest import load_script, pin_autocrlf, set_process_key
+from conftest import hooks_on, load_script, pin_autocrlf, set_process_key
 
 import test_adjudicate_act as taa
 
@@ -97,6 +97,7 @@ def _lane(tmp_path, dial="DevStg-Needs", retained=True):
     primary, lane = tmp_path / "primary", tmp_path / "lane"
     primary.mkdir(parents=True)
     _git(primary, "init", "-q", "-b", "trunk")
+    hooks_on(primary)  # every route refuses a checkout without hooks
     pin_autocrlf(primary)
     _git(primary, "config", "user.email", "loop@example.com")
     _git(primary, "config", "user.name", "Loop Test")

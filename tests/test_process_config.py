@@ -50,6 +50,9 @@ def test_declared_policy_surface_is_reexported_from_its_behavior_module():
 
 
 HOOK = KIT / "hooks" / "pre-commit"
+# The one live pure-sh privacy reader (SR-137's sh row): pre-push reads the
+# policy; pre-commit and commit-msg refuse outright without the kit scripts.
+READER_HOOK = KIT / "hooks" / "pre-push"
 
 
 def write_toml(root, text):
@@ -61,7 +64,7 @@ def write_toml(root, text):
 
 
 def sh_privacy_declared_true(root):
-    """The SHIPPED hook's own `privacy_declared_true`, run as sh.
+    """The SHIPPED pre-push hook's own `privacy_declared_true`, run as sh.
 
     Sourced out of the real hook rather than re-implemented: a guard that
     carries its own copy of the thing under test can only ever agree with
@@ -78,9 +81,9 @@ def sh_privacy_declared_true(root):
         # shipped reader failed OPEN on a trailing-comment decoy. A guard that
         # carries its own copy of the thing under test can only agree with
         # itself.
-        + _extract_function(HOOK, "_ptoml_body")
-        + _extract_function(HOOK, "privacy_declared_true")
-        + _extract_function(HOOK, "process_declares")
+        + _extract_function(READER_HOOK, "_ptoml_body")
+        + _extract_function(READER_HOOK, "privacy_declared_true")
+        + _extract_function(READER_HOOK, "process_declares")
         + "if privacy_declared_true; then echo TRUE; else echo FALSE; fi\n"
     )
     proc = subprocess.run(
@@ -214,7 +217,7 @@ def test_the_shipped_template_and_this_repos_own_file_pass_the_shape_check():
 def test_both_hooks_carry_the_same_reader_byte_for_byte():
     # pre-commit and commit-msg gate two boundaries of the same commit; a
     # divergence between their copies would gate one and not the other.
-    for fn in ("privacy_declared_true", "process_declares", "mixed_config_refusal"):
+    for fn in ("process_declares", "mixed_config_refusal"):
         a = _extract_function(HOOK, fn)
         b = _extract_function(KIT / "hooks" / "commit-msg", fn)
         assert a == b, fn

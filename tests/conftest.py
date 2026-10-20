@@ -419,6 +419,8 @@ SLOW_MODULES = frozenset(
         "test_dispute",  # 34 tests, 10.9 s: `git init` and commits per case for the dispute brief
         # WI-917: the overnight-leg launcher on real repositories.
         "test_overnight_legs_git",  # a tmp git repo per case and stub `claude` legs; its in-process pin is test_overnight_legs
+        # WI-926: every agent route on a real repository with its hooks off.
+        "test_hooks_on_routes",  # a tmp git repo per route case; its in-process pin is test_commit_hooks
     }
 )
 
@@ -494,6 +496,116 @@ def pin_autocrlf(root):
         check=True,
         capture_output=True,
     )
+
+
+# --- Commit hooks on, in a fixture repo ---------------------------------------
+# Every agent route refuses to start in a checkout whose commit hooks are not
+# on (`kitlib.commit_hooks.hooks_refusal`), and nothing turns that check off.
+# So a fixture that drives a route turns the hooks on the way a set-up
+# checkout has them: `core.hooksPath` naming the repo's `.githooks`, with
+# `pre-commit` and `commit-msg` there. The hooks it writes are stubs that exit
+# 0, so the real floor never runs on a fixture's own commits.
+STUB_HOOK = "#!/bin/sh\nexit 0\n"
+STUB_HOOK_NAMES = ("pre-commit", "commit-msg")
+
+
+def hooks_on(root):
+    """Turn the commit hooks on in the fixture repo at `root`, leaving its
+    `git status` exactly as it was.
+
+    `core.hooksPath` is set to the ABSOLUTE `.githooks` path, so a linked
+    worktree of `root` reads "on" without carrying the stubs. A stub that
+    replaces a tracked hook is marked `--skip-worktree`; an untracked stub is
+    listed in `.git/info/exclude`. Call it after `git init` and before the
+    first commit a route makes."""
+    root = Path(root)
+    git = shutil.which("git")
+
+    def run(*args):
+        return subprocess.run(
+            [git, "-C", str(root), *args], capture_output=True, text=True
+        )
+
+    hooks = root / ".githooks"
+    hooks.mkdir(exist_ok=True)
+    # A main worktree's git dir is `.git` itself, read without a spawn; a repo
+    # with no index tracks nothing. Each git spawn here runs per fixture.
+    git_dir = root / ".git"
+    if git_dir.is_dir():
+        exclude = git_dir / "info" / "exclude"
+        has_index = (git_dir / "index").exists()
+    else:
+        exclude = Path(run("rev-parse", "--git-path", "info/exclude").stdout.strip())
+        exclude = exclude if exclude.is_absolute() else root / exclude
+        has_index = True
+    tracked = (
+        set(run("ls-files", "--", ".githooks").stdout.split()) if has_index else set()
+    )
+    for name in STUB_HOOK_NAMES:
+        hook = hooks / name
+        with hook.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write(STUB_HOOK)
+        hook.chmod(0o755)
+        if ".githooks/" + name in tracked:
+            run("update-index", "--skip-worktree", "--", ".githooks/" + name)
+        else:
+            exclude.parent.mkdir(parents=True, exist_ok=True)
+            with exclude.open("a", encoding="utf-8", newline="\n") as fh:
+                fh.write("/.githooks/{}\n".format(name))
+    _set_hooks_path(git_dir, hooks, run)
+    return root
+
+
+def _set_hooks_path(git_dir, hooks, run):
+    """Set `core.hooksPath` to `hooks`, absolute. A main worktree's config
+    holding no hooks path yet gets the line appended, as a second `[core]`
+    section git reads as one, with no spawn; any other runs `git config`,
+    which replaces a value already set."""
+    config = git_dir / "config"
+    if git_dir.is_dir() and "hookspath" not in config.read_text("utf-8").lower():
+        with config.open("a", encoding="utf-8", newline="\n") as fh:
+            fh.write('[core]\n\thooksPath = "{}"\n'.format(hooks.resolve().as_posix()))
+        return
+    proc = run("config", "core.hooksPath", str(hooks.resolve()))
+    assert proc.returncode == 0, proc.stderr
+
+
+# One `git init` per test process, copied into each hooked checkout: a spawn
+# per fixture roughly doubled the modules that build one for every test.
+_HOOKED_TEMPLATE = {}
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _hooked_template_home(tmp_path_factory):
+    """Where `hooked_checkout` builds its one template repository, under the
+    session's base temp directory; nothing is built until a test asks."""
+    _HOOKED_TEMPLATE["factory"] = tmp_path_factory
+
+
+def _hooked_template_git_dir():
+    """The `.git` of a freshly `git init`-ed repository, built once."""
+    if "git_dir" not in _HOOKED_TEMPLATE:
+        home = _HOOKED_TEMPLATE["factory"].mktemp("hooked-template")
+        proc = subprocess.run(
+            [shutil.which("git"), "init", "-q", "--template=", str(home)],
+            capture_output=True,
+            text=True,
+        )
+        assert proc.returncode == 0, proc.stderr
+        _HOOKED_TEMPLATE["git_dir"] = home / ".git"
+    return _HOOKED_TEMPLATE["git_dir"]
+
+
+def hooked_checkout(root):
+    """`root` made a git repository with its commit hooks on: for a fixture
+    that drives a route over a plain directory, which no route starts in.
+    The repository is a copy of one `git init` made once per test process;
+    a `root` that is already a repository is kept as it is."""
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    if not (root / ".git").exists():
+        shutil.copytree(_hooked_template_git_dir(), root / ".git")
+    return hooks_on(root)
 
 
 # --- The interpreter-floor preflight -----------------------------------------

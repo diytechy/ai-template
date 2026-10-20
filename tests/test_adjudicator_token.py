@@ -21,6 +21,7 @@ import os
 import sys
 
 import pytest
+from conftest import hooked_checkout
 
 import test_coordinator_adjudicate as coord
 import test_session_keep as sk
@@ -31,6 +32,13 @@ TOKEN_FILE = "AGENT_CLAUDE_TOKEN_FILE"
 
 # Every retained launch here prepares with a resolvable runner (WI-846).
 pytestmark = pytest.mark.usefixtures("retained_runners")
+
+
+@pytest.fixture(autouse=True)
+def _hooks_on(tmp_path):
+    """`tmp_path` is the checkout the session service launches in, so its
+    commit hooks are on: the service refuses a launch anywhere else."""
+    hooked_checkout(tmp_path)
 
 
 def _token_file(tmp_path, monkeypatch, text=CANARY):

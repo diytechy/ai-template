@@ -44,6 +44,7 @@ import os
 import subprocess
 
 from conftest import (
+    hooks_on,
     SCRIPTS,
     declare_trunk,
     disable_blackout,
@@ -102,6 +103,7 @@ def _commit(root, message, when=None):
 def git_repo(root, branch="main"):
     skip_without_env_gates("git")
     _git(root, "init", "-q")
+    hooks_on(root)  # every route refuses a checkout without hooks
     pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
@@ -714,6 +716,7 @@ def scaffold_with_queued_wi(tmp_path, bar=None):
     write_spec(repo, "queued", "WI-401", specref="docs/log.md", bar=bar)
     record_ids(repo)  # WI-401 is an ALLOCATED id; the mark must cover it
     _git(repo, "init", "-q")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "t@example.com")
     _git(repo, "config", "user.name", "T")

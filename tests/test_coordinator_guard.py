@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import ROOT, SCRIPTS, load_script
+from conftest import ROOT, SCRIPTS, hooked_checkout, load_script
 
 RECORDED = Path(__file__).parent / "fixtures" / "coordinator_guard"
 REAL_COMPACTION = RECORDED / "compaction-manual-2.1.289.jsonl"
@@ -110,7 +110,7 @@ def make_root(tmp_path, pct=50, window=WINDOW):
         ),
         encoding="utf-8",
     )
-    return root
+    return hooked_checkout(root)  # the take refuses a checkout without hooks
 
 
 @pytest.fixture

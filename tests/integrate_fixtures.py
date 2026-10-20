@@ -48,6 +48,7 @@ import subprocess
 from conftest import (
     SCRIPTS,
     declare_trunk,
+    hooks_on,
     load_script,
     make_minimal_project,
     pin_autocrlf,
@@ -123,6 +124,7 @@ def git_repo(root, branch="main"):
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")
     pin_autocrlf(root)
+    hooks_on(root)  # every route refuses a checkout whose hooks are not on
     _git(root, "symbolic-ref", "HEAD", "refs/heads/" + branch)
     (root / "seed.txt").write_text("seed\n", encoding="utf-8", newline="\n")
     # Repo furniture, seeded BEFORE any claim: `trace._read_marks` refuses an
@@ -424,6 +426,9 @@ def scaffolded_closed_branch(tmp_path):
     _git(repo, "config", "user.name", "T")
     _git(repo, "config", "commit.gpgsign", "false")
     _commit(repo, "seed: the scaffolded project", when=T_BASE)
+    # The seed tracks the real hooks; turning them on swaps in skip-worktree
+    # stubs, so the claim below starts and the real floor never runs here.
+    hooks_on(repo)
 
     # 1. claim -> the trunk bookkeeping commit + the branch cut.
     proc = run_py(

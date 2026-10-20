@@ -71,6 +71,9 @@ that easier to achieve in a real project — or get out of the way.
   runs the full bar declared for its current stage in the merge slot. The
   unfiltered suite bootstraps a temp scaffold and exercises every script
   end-to-end. Paste the real output; never report a green you didn't produce.
+  Commit hooks are on before any work (`core.hooksPath` at `.githooks`, which
+  dev-setup sets); every agent route refuses without them, and no commit
+  bypasses them.
   (Commit bar vs gate bar, and what the smoke tier drops: the
   `session-protocol` skill §3.)
 - **Edit conservatively.** This is a foundation many projects inherit; prefer the

@@ -46,6 +46,7 @@ from conftest import (
     SCRIPTS,
     declare_trunk,
     env_gate_skipif,
+    hooks_on,
     load_script,
     pin_autocrlf,
     run_py,
@@ -307,6 +308,7 @@ def _loop_repo(tmp_path):
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)
+    hooks_on(repo)  # every route refuses a checkout without hooks
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
     _git(repo, "checkout", "-q", "-b", "llm/train/t1")

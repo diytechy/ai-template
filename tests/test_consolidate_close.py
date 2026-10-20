@@ -29,6 +29,7 @@ import subprocess
 from conftest import (
     declare_trunk,
     env_gate_skipif,
+    hooks_on,
     load_script,
     pin_autocrlf,
     skip_without_env_gates,
@@ -94,6 +95,7 @@ def cluster_repo(tmp_path, extra_rows=()):
     root.mkdir()
     _git(root.parent, "init", "-q", str(root))
     pin_autocrlf(root)
+    hooks_on(root)  # every route refuses a checkout without hooks
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")

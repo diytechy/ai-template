@@ -108,7 +108,8 @@ def test_pre_push_honors_kit_scripts_dir(repo):
     # secrets floor at the push boundary too — not just pre-commit. Relocate the
     # harness and point the env var at it: a key in the outgoing range still
     # blocks (scripts found via the override); without the var, scripts/ is
-    # absent at the root so the floor can't run and the push would slip through.
+    # absent at the root so the floor can't run, and the push is REFUSED with
+    # the one scripts-lookup refusal every kit hook prints (WI-926).
     root, base, _head = repo
     shutil.move(str(root / "scripts"), str(root / "harness_scripts"))
     key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"  # split so this line isn't a match
@@ -133,8 +134,12 @@ def test_pre_push_honors_kit_scripts_dir(repo):
     blocked = run(with_override=True)
     assert blocked.returncode != 0, blocked.stdout + blocked.stderr
     assert "secrets floor" in blocked.stderr
-    slipped = run(with_override=False)  # harness unfindable -> floor skips, exit 0
-    assert slipped.returncode == 0, slipped.stdout + slipped.stderr
+    refused = run(with_override=False)  # harness unfindable -> refused
+    assert refused.returncode != 0, refused.stdout + refused.stderr
+    assert "cannot find the kit scripts dir" in refused.stderr, refused.stderr
+    assert "REFUSING" in refused.stderr, refused.stderr
+    assert "KIT_SCRIPTS_DIR in the delegating wrapper" in refused.stderr
+    assert "git config --unset core.hooksPath" in refused.stderr
 
 
 def test_privacy_off_is_inert(repo):

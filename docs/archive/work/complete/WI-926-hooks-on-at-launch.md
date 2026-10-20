@@ -3,13 +3,42 @@ id = "WI-926"
 title = "Every agent route refuses to start in a checkout whose commit hooks are not on, and a commit hook that cannot find the kit scripts refuses instead of skipping"
 workstream = "process"
 sr_refs = ["SR-019", "SR-113"]
-specref = "docs/specs/WI-926.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = []
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-19, after its gate and acts, in a headless
+leg:
+
+- Every agent route asks one check first, the commit-floor activation
+  contract (`kitlib/commit_hooks.py`, IF-297), and refuses to start when the
+  checkout's commit hooks are not on: the loop's launch, the session
+  service's launch (a `HooksOffRefused` the blackout wait never waits out),
+  the trunk bookkeeping commit, the claim, the refresh, the merge slot, the
+  coordinator lease's take and the overnight launcher. "On" means git's
+  hooks directory is this worktree's or the main worktree's `.githooks`
+  with both commit hooks runnable; each other cause is refused naming the
+  cause and its repair (activation, restoring a missing hook, or the mode
+  bit), and nothing turns the check off. A census pins each route's first
+  call.
+- The three shipped hooks refuse, naming the repair, when they cannot find
+  the kit scripts directory, where two exited 0 and skipped; the
+  privacy-declared and loop-marked special cases became that one refusal.
+- The agent guide and its template carry the hooks-on line; the shipped
+  README's pre-push row and RESYNC_PACK.md's entry state the forced change.
+- Spine: SR-240, LLR-340 and TC-370 approved (sittings 004 and 005, acts 137
+  to 139); SR-019, SR-020, LLR-019, LLR-020, LLR-140 and LLR-300 amended and
+  blessed; IF-297 added, IF-186 and IF-246 amended (Drafted).
+- Reviews (docs/reviews/wi-926/): the single plan's critiques and the cap's
+  sitting 001; counted round 1, 002-REVIEW-A-204938f and 003-REVIEW-B-204938f;
+  the gate in convergence stance, 006-REVIEW-A-edb8b98 and
+  007-REVIEW-B-edb8b98. Decisions: docs/decisions/wi-926.toml D-001 to D-014.
 
 ## Context
 

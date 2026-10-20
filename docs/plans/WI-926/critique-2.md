@@ -1,0 +1,17 @@
+Reviewed: 94805b4c4964a0089da3898389ec14fa1d5ead9a
+
+## 2026-10-18 — WI-926 independent plan critique, round 2
+
+Reviewer provenance: fresh non-author Codex critic session invoked by the coordinator for this second, final convergence review. No provider session id was supplied. This session did not produce the plan. No earlier verdict, decision record, review record, implementer session note, docs/status.md or docs/log.md was read. The plan's embedded account of the earlier critique was not used as independent evidence.
+
+Artifact: docs/plans/WI-926/plan.md at the Reviewed revision, read directly with git show. Scope and intent: docs/work/active/wi-926/WI-926-hooks-on-at-launch.md in full and its specref docs/specs/WI-926.md at that revision; SN-001, SN-005 and SN-009 in docs/requirements/stakeholder-needs.toml; SR-019 and SR-113 in docs/requirements/system-requirements.toml. Coverage input: the invocation's 21/21 D1-D18/F1-F3 report. No implementation tests were run: the artifact under judgment is the plan.
+
+Rubric: docs/rubrics/plan-decomposition.md at 94805b4c4964a0089da3898389ec14fa1d5ead9a, including its single-plan use and this invocation's convergence severity rule. Adequacy checked before scoring: DevStg-Tests and B2 independently require substantive coverage of the written intent, including agent-neutral refusal and usable delivered setup; DevStg-Reqs, DevStg-Impl, G4, B1, B3 and B4 cover solvability, scope seams and build order. This is not acceptance against a permissive TC alone; no additional numbered anchor is needed for the finding below.
+
+Transfer caveat: the debate/selection evidence comes from QA, math and code with objective verifiers; it does not benchmark plan artifacts, and reconciliation evaluated for plan quality remains an open research gap. This rubric is an extrapolation, not a proven instrument.
+
+Anchors judged: DevStg-Reqs, DevStg-Tests, DevStg-Impl, G4, B1, B2, B3, B4. The rows name concrete deliverables and checks. The reported overlaps mostly separate implementation, test support and registry updates, with an explicit P5-P8 commit slice. DELTA: within is supported: the plan carries the new configuration input and check boundary, plus the expanded refusal domains of IF-186 and IF-246. The stated successor-install exclusion matches the declared post-check hand-act residue. The remaining coverage defect is the delivery boundary below.
+
+- [MAJOR] DevStg-Tests -> P3's new shipped kitlib/commit_hooks.py and P5-P7's importing routes have no step to register that module in project-trajectory/scripts/kitlib/bootstrap_manifest.py::MAPPING. At the Reviewed revision, that manifest explicitly enumerates every kitlib module, and bootstrap.py::_copy_mapping copies those entries rather than discovering new modules. A normal fresh scaffold therefore receives the changed routes without their new dependency: launch fails to import instead of producing the required setup refusal, and hooks-on launches cannot run as today (D1/D2; SR-113's delivered setup context). P12's RESYNC entry does not repair bootstrap delivery, and P13's general full-suite bar only discovers the omitted work. Add the source/destination manifest entry to P3's deliverable, maintain the scaffold inventory pins, and explicitly verify tests/test_bootstrap.py::test_the_common_package_ships_complete plus a scaffolded route's hooks-off refusal and hooks-on passing path -> @WI-926-implementer
+
+VERDICT: CHANGES-REQUESTED findings=1

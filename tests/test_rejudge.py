@@ -25,6 +25,7 @@ import pytest
 from conftest import (
     SCRIPTS,
     env_gate_skipif,
+    hooks_on,
     load_script,
     pin_autocrlf,
     run_py,
@@ -118,6 +119,7 @@ def git_repo(tmp_path):
     root.mkdir(parents=True)
     _git(root, "init", "-q")
     pin_autocrlf(root)
+    hooks_on(root)  # every route refuses a checkout without hooks
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")

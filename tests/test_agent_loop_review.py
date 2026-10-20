@@ -14,6 +14,7 @@ import pytest
 from conftest import (
     SCRIPTS,
     declare_trunk,
+    hooks_on,
     load_script,
     pin_autocrlf,
     run_py,
@@ -240,6 +241,7 @@ def managed_repo(tmp_path):
     write_wi_registry(repo, [_wi_201_row("medium")])
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)
@@ -817,6 +819,7 @@ def _winstay_repo(tmp_path):
     write_wi_registry(repo, [_wi_201_row("medium")])
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)
@@ -1194,6 +1197,7 @@ def test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume(
     trunk = tmp_path / "trunk"
     trunk.mkdir()
     _git(trunk, "init", "-q", "-b", "main")
+    hooks_on(trunk)  # every route refuses a checkout without hooks
     pin_autocrlf(trunk)
     declare_trunk(trunk)
     _git(trunk, "config", "user.email", "t@example.com")
@@ -1485,6 +1489,7 @@ def _claimed_lane(tmp_path, closed_text):
     repo = tmp_path / "lane"
     repo.mkdir()
     _git(repo, "init", "-q")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)
@@ -1560,6 +1565,7 @@ def test_a_failed_stash_stops_for_a_human_and_redraws_nothing(
     repo = tmp_path / "lane"
     repo.mkdir()
     _git(repo, "init", "-q")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")

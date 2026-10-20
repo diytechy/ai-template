@@ -318,8 +318,9 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
     # meta-repo, under project-trajectory/scripts/) points the shipped hook via
     # KIT_SCRIPTS_DIR, so one hook fits any layout. Positive: an explicit override
     # to the real dir runs green (the override branch produces a working
-    # SCRIPTS_DIR); negative: a bogus override skips CLEARLY (a wrong override must
-    # never silently pass as if the tree were clean).
+    # SCRIPTS_DIR); negative: a bogus override with no scripts/ to fall back on
+    # REFUSES the commit and names the fixes (WI-926: a hook that cannot find
+    # the kit scripts checks nothing, so it must never pass the commit).
     skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
@@ -335,6 +336,7 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
     )
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
+    shutil.move(str(scaffold / "scripts"), str(scaffold / "moved_scripts"))
     bad = subprocess.run(
         [sh, HOOK],
         cwd=str(scaffold),
@@ -342,8 +344,72 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
         text=True,
         env=dict(os.environ, KIT_SCRIPTS_DIR="nope-not-here"),
     )
-    assert bad.returncode == 0, bad.stdout + bad.stderr  # skip, not crash
-    assert "cannot find" in bad.stderr.lower(), bad.stderr
+    assert bad.returncode != 0, bad.stdout + bad.stderr
+    _assert_names_the_scripts_refusal(bad.stderr)
+
+
+def _assert_names_the_scripts_refusal(stderr):
+    """The one scripts-lookup refusal every kit hook prints: the cause and
+    the three fixes."""
+    low = stderr.lower()
+    assert "cannot find the kit scripts dir" in low, stderr
+    assert "refusing" in low, stderr
+    assert "KIT_SCRIPTS_DIR in the delegating wrapper" in stderr, stderr
+    assert "re-run" in low and "bootstrap" in low, stderr
+    assert "git config --unset core.hooksPath" in stderr, stderr
+
+
+def _run_hook_without_scripts(scaffold, hook, env_extra=None):
+    sh = shutil.which("sh")
+    (scaffold / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
+    args = [sh, hook] + (["MSG.txt"] if hook.endswith("commit-msg") else [])
+    env = dict(os.environ, KIT_SCRIPTS_DIR="nope-not-here", **(env_extra or {}))
+    return subprocess.run(
+        args, cwd=str(scaffold), capture_output=True, text=True, env=env
+    )
+
+
+def _scaffold_without_scripts(scaffold):
+    make_minimal_project(scaffold)
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
+    shutil.move(str(scaffold / "scripts"), str(scaffold / "moved_scripts"))
+
+
+@pytest.mark.parametrize("hook", [HOOK, ".githooks/commit-msg"])
+def test_each_hook_refuses_when_the_kit_scripts_cannot_be_found(scaffold, hook):
+    # SR-019 (WI-926): a bogus KIT_SCRIPTS_DIR and no scripts/ to fall back on
+    # leave the hook nothing to run, so it refuses, naming the cause and the
+    # fixes, instead of exiting 0 with the floor skipped.
+    skip_without_env_gates("posix-shell", "git")
+    _scaffold_without_scripts(scaffold)
+    proc = _run_hook_without_scripts(scaffold, hook)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    _assert_names_the_scripts_refusal(proc.stderr)
+
+
+@pytest.mark.parametrize(
+    "hook, case",
+    [
+        (HOOK, "privacy"),
+        (".githooks/commit-msg", "privacy"),
+        (".githooks/commit-msg", "loop"),
+    ],
+)
+def test_privacy_and_loop_commits_get_the_same_scripts_refusal(scaffold, hook, case):
+    # The special cases that refused alone (a declared privacy policy, a
+    # loop-marked commit) are one refusal now: the same text as any commit.
+    skip_without_env_gates("posix-shell", "git")
+    _scaffold_without_scripts(scaffold)
+    env_extra = {}
+    if case == "privacy":
+        set_process_key(scaffold, "policies", "privacy_check", True)
+    else:
+        env_extra["KIT_LOOP_SESSION"] = "loop-session-probe"
+    proc = _run_hook_without_scripts(scaffold, hook, env_extra)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    _assert_names_the_scripts_refusal(proc.stderr)
+    assert "FAILING CLOSED" not in proc.stderr, proc.stderr
 
 
 def test_hook_refuses_clearly_when_no_working_python3(scaffold):

@@ -117,7 +117,9 @@ Contract IF-186: the shared trunk bookkeeping commit, by importer.
     `commit(root, scope, write, message, *, label, before_advance=None)` returns
     `(sha, None)` once trunk has advanced to a commit holding exactly the paths
     the step changed inside its scope plus the regeneration, or `(None,
-    refusal)` with the reason named: a dirty in-scope path (nothing written), a
+    refusal)` with the reason named: an inactive commit floor, the checkout's
+    commit hooks not on (`kitlib.commit_hooks`; refused first, nothing read or
+    written), a dirty in-scope path (nothing written), a
     refusal from `scope`, `write` or `before_advance`, a failed regeneration, a
     git failure, an in-scope path edited in the checkout or a trunk that moved
     while the step or `before_advance` ran (nothing installed), or - under the loop marker - a
@@ -153,6 +155,7 @@ from pathlib import Path
 
 import agent_common as ac
 import trunk_step
+from kitlib import commit_hooks
 from kitlib import provenance as _kitprovenance
 
 # Where `trunk_step.py` is found. A module attribute rather than a literal in
@@ -182,6 +185,9 @@ def commit(root, scope, write, message, *, label, before_advance=None):
     Implements: SR-156, LLR-151
     """
     root = Path(root)
+    hooks_off = commit_hooks.hooks_refusal(root)
+    if hooks_off is not None:
+        return None, "{} cannot start: {}".format(label, hooks_off)
     try:
         head = _checked(root, "rev-parse", "--verify", "HEAD", why="no HEAD").strip()
     except _Refused as exc:

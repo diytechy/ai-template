@@ -154,14 +154,14 @@ try:
     import agent_common
     import agent_route
     import session_keep
-    from kitlib import guard_hooks, shell_line
+    from kitlib import commit_hooks, guard_hooks, shell_line
     from kitlib.observation import write_atomic
 except ImportError:  # pragma: no cover - in-process import from elsewhere
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import agent_common
     import agent_route
     import session_keep
-    from kitlib import guard_hooks, shell_line
+    from kitlib import commit_hooks, guard_hooks, shell_line
     from kitlib.observation import write_atomic
 
 SECTION = "coordinator"
@@ -465,13 +465,17 @@ def _holder_line(lease):
 
 def take(root, session_id, transcript=None, ask=None):
     """The explicit take: record `session_id` as the coordinator when no
-    session holds the lease. It first reads the guard hooks, before the lock
-    so no lock is held while a person is asked (`ask`, None without a
-    terminal): it goes on only at none or on, or after a consented install
-    that reads on. Returns None, or the refusal.
+    session holds the lease. A checkout whose commit hooks are not on is
+    refused first, and records no holder. It then reads the guard hooks,
+    before the lock so no lock is held while a person is asked (`ask`, None
+    without a terminal): it goes on only at none or on, or after a consented
+    install that reads on. Returns None, or the refusal.
 
     Implements: SR-229, LLR-300
     """
+    hooks_off = commit_hooks.hooks_refusal(root)
+    if hooks_off is not None:
+        return hooks_off
     if not session_id:
         return "no session id: run it from the session, or pass --session"
     refusal = _hooks_admission(root, ask)

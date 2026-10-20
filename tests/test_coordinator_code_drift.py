@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import load_script
+from conftest import hooked_checkout, load_script
 
 
 def test_script_fingerprint_moves_with_python_source_only(tmp_path):
@@ -137,6 +137,7 @@ def test_unknown_launch_identity_refuses_coordinator_modes_before_setup(
     monkeypatch, capsys, tmp_path, args
 ):
     al = load_script("agent_loop")
+    hooked_checkout(tmp_path)  # the hooks are on, so the identity is what refuses
     monkeypatch.setattr(al.agent_common, "LAUNCHED_SCRIPTS_FINGERPRINT", None)
     monkeypatch.setattr(al, "parse_args", lambda: args)
     monkeypatch.setattr(al, "_resolve_root", lambda _args: (tmp_path, None))

@@ -23,7 +23,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import ROOT, load_script
+from conftest import ROOT, hooks_on, load_script
 
 cli = load_script("coordinator_adjudicate")
 svc = cli.session_service
@@ -96,6 +96,7 @@ def _lane(base, branch="wi-1"):
     primary, lane = base / "primary", base / "lane"
     primary.mkdir(parents=True)
     _git(primary, "init", "-b", "trunk")
+    hooks_on(primary)  # every route refuses a checkout without hooks
     (primary / "README").write_text("x\n", encoding="utf-8")
     _git(primary, "add", "README")
     _git(primary, "commit", "-m", "base")

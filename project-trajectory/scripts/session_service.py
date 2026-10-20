@@ -62,7 +62,13 @@ Contract IF-246: the session service's call surface. `Call` is the data a role
     launched, for every call but one whose role is ADJUDICATE and whose `wi`
     has an active claim in the primary checkout's registry; a refused
     retained call's lease is released. `through_blackout(launch)` is the
-    loop's handling: it waits the window out and retries the launch.
+    loop's handling: it waits the window out and retries the launch. In a
+    checkout whose commit floor is inactive (its commit hooks are not on,
+    `kitlib.commit_hooks`), `act`, and so `call`, raises `HooksOffRefused`
+    first, for every call, the same way: before anything is built,
+    accounted, recorded or launched, a refused retained call's lease
+    released; it is not a `BlackoutRefused`, so `through_blackout` does not
+    wait it out.
 
 Contract IF-282: the adjudication request and the sign-in probe, the surface
     the loop's route and the coordinator's entry point share.
@@ -153,6 +159,7 @@ try:
     import agent_session
     import session_adapters
     import session_keep
+    from kitlib import commit_hooks
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import adjudicate_brief
@@ -161,6 +168,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_session
     import session_adapters
     import session_keep
+    from kitlib import commit_hooks
 
 # The headless launch. Bound here so a test replaces the launch of every call
 # in one place (`monkeypatch.setattr(session_service, "run_session", ...)`).
@@ -361,15 +369,18 @@ def _timeout_kind(timed_out):
 
 
 def act(call, metrics=None):
-    """Launch one call and account it; see Contract IF-246. Inside the
-    blackout window a call the window does not admit (`launch_refusal`)
-    raises BlackoutRefused before anything is built, accounted or launched,
-    and a retained call's lease is released first (`keep_release`, which
-    does not raise on store-lock contention).
+    """Launch one call and account it; see Contract IF-246. In a checkout
+    whose commit hooks are not on (`kitlib.commit_hooks`), a call raises
+    HooksOffRefused, and inside the blackout window a call the window does
+    not admit (`launch_refusal`) raises BlackoutRefused: either before
+    anything is built, accounted or launched, and a retained call's lease is
+    released first (`keep_release`, which does not raise on store-lock
+    contention).
 
     Implements: SR-222, SR-229, LLR-269
     """
-    refused = launch_refusal(call)
+    hooks_off = commit_hooks.hooks_refusal(call.root)
+    refused = _refused_launch(call, hooks_off)
     if refused is not None:
         if call.keep is not None:
             session_keep.keep_release(call.root, call.keep)
@@ -475,6 +486,31 @@ class BlackoutRefused(Exception):
                 window, end.strftime("%Y-%m-%d %H:%M"), role or "model"
             )
         )
+
+
+# --- the commit hooks at the launch boundary (WI-926) -------------------------
+
+
+class HooksOffRefused(Exception):
+    """A launch refused because the checkout's commit hooks are not on,
+    carrying the check's refusal text. Not a BlackoutRefused: there is no
+    window to wait out, so `through_blackout` lets it propagate and every
+    route reports it.
+
+    Implements: SR-240, LLR-340
+    """
+
+
+def _refused_launch(call, hooks_off):
+    """The refusal `act` raises, or None: a HooksOffRefused carrying the
+    commit-hooks check's text `hooks_off` when it is not None, else the
+    blackout window's answer (`launch_refusal`).
+
+    Implements: SR-240, LLR-340
+    """
+    if hooks_off is not None:
+        return HooksOffRefused("session service: " + hooks_off)
+    return launch_refusal(call)
 
 
 def claim_active(root, wi):

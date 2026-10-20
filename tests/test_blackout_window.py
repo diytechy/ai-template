@@ -17,7 +17,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import load_script
+from conftest import hooked_checkout, hooks_on, load_script
 
 guard = load_script("coordinator_guard")
 integ = load_script("integrate")
@@ -74,7 +74,7 @@ def root(tmp_path, clock):
     root = tmp_path / "repo"
     write_policy(root)
     (root / "docs" / "agents.toml").write_text(AGENTS, encoding="utf-8")
-    return root
+    return hooked_checkout(root)  # every route refuses a checkout without hooks
 
 
 def at(docs, t):
@@ -616,6 +616,7 @@ def test_the_window_check_subcommand_exits_nonzero_inside(root, clock, capsys):
 
 
 def _held(root, tmp_path):
+    hooked_checkout(root)  # the take refuses a checkout without hooks
     transcript = tmp_path / "coord.jsonl"
     transcript.write_text("", encoding="utf-8")
     assert guard.take(root, COORD, str(transcript)) is None
@@ -731,6 +732,7 @@ def paused_lane(tmp_path, clock):
     primary, lane = tmp_path / "primary", tmp_path / "lane"
     primary.mkdir()
     _git(primary, "init", "-b", "trunk")
+    hooks_on(primary)  # every route refuses a checkout without hooks
     active_claim(primary)
     _git(primary, "add", "docs")
     _git(primary, "commit", "-m", "claim: WI-7")
@@ -1134,8 +1136,8 @@ def test_each_occupied_shape_refuses_and_writes_nothing(tmp_path, capsys, shape,
 
 
 def test_the_hook_opt_in_with_no_guard_hooks_changes_nothing(tmp_path, capsys):
-    root = tmp_path / "repo"
-    root.mkdir()
+    # the take refuses a checkout without hooks
+    root = hooked_checkout(tmp_path / "repo")
     source = tmp_path / "plain.example"
     source.write_text('{"hooks": {"Stop": [{"hooks": [{"command": "x"}]}]}}', "utf-8")
     assert _guard_cli(root, source) == 0

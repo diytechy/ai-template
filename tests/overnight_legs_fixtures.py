@@ -215,7 +215,7 @@ def trailed(subject, session):
 
 
 def stub_claude(tmp_path, monkeypatch, plan=None):
-    """Put the stub `claude` first on a PATH holding only it and git, and
+    """Put the stub `claude` first on a PATH holding only it, git and sh, and
     return the path of the JSON-lines record file its legs append to."""
     bindir = tmp_path / "stub-bin"
     bindir.mkdir()
@@ -234,7 +234,10 @@ def stub_claude(tmp_path, monkeypatch, plan=None):
         )
         shim.chmod(0o755)
     gitdir = str(Path(shutil.which("git")).parent)
-    path = os.pathsep.join([str(bindir), gitdir])
+    # The fixture checkout's commit hooks are on, and git runs them through
+    # sh, so the shell's directory joins git's.
+    shdir = str(Path(shutil.which("sh")).parent)
+    path = os.pathsep.join([str(bindir), gitdir, shdir])
     assert Path(shutil.which("claude", path=path)).parent == bindir
     monkeypatch.setenv("PATH", path)
     records = tmp_path / "legs.jsonl"

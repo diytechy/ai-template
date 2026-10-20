@@ -81,9 +81,13 @@ reported as `skipped (exists)` — resolve each by hand:
   → check` ladder. A pure library deletes the launchers and describes usage.
 - **Pre-commit hook** — `setup.{sh,ps1}` set `git config core.hooksPath
   .githooks`, which **overrides** any existing `.git/hooks` or hook manager
-  (husky, pre-commit-framework). If you already have hooks, either call
-  `.githooks/pre-commit` from your existing hook chain or skip the wiring —
-  CI remains the enforcement of record.
+  (husky, pre-commit-framework). If you already have hooks, keep
+  `core.hooksPath` at `.githooks` and call your own chain from the kit's
+  hooks. Skipping the wiring is open only to a repository that runs none of
+  the kit's agent routes: each of them (the loop, the session service, the
+  claim and bookkeeping commits, the refresh, the merge slot, the
+  coordinator lease) refuses to start in a checkout whose commit hooks are
+  not on. CI remains the enforcement of record.
 - **`scripts/dev-setup.*` roles** — the workstation script declares one
   **role** per contributor kind over a shared baseline; the default provisions
   every role, `--profile <role>` narrows to one. Fill the `ROLES` list (sh) /

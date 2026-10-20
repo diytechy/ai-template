@@ -9,7 +9,14 @@ import csv
 import subprocess
 import sys
 
-from conftest import SCRIPTS, pin_autocrlf, run_py, write_wi_registry, declare_trunk
+from conftest import (
+    SCRIPTS,
+    hooks_on,
+    pin_autocrlf,
+    run_py,
+    write_wi_registry,
+    declare_trunk,
+)
 
 # The fake agent: record the value of AGENT_TEST_ENV_MARKER it was launched with
 # (or a sentinel when absent), commit one build, then write DONE to terminate.
@@ -72,6 +79,7 @@ def _make_repo(tmp_path, env_cell):
     )
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)

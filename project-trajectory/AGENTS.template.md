@@ -44,26 +44,26 @@ the ladder, and the ID scheme. The short version needed every session:
   Tests · Impl · Release. You are IN one; a human signs three rung boundaries,
   per `docs/process.toml` and process.md §4. Never self-advance; log it.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
-  lint, tests, coverage, traceability, flow checks and map freshness at or
-  above the derived stage (`docs/stage`); `--tier smoke` is the fast subset.
-  Never report a result you didn't run — paste the real output.
-- **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
-  concurrent ones) are authored Mermaid sequence diagrams in
-  [docs/runtime-flows.md](docs/runtime-flows.md), kept current
-  with the LLRs (`scripts/check_flows.py` enforces; §3).
+  lint, tests, coverage, traceability, flows and freshness at or above the
+  derived stage (`docs/stage`); `--tier smoke` is the fast subset. Never
+  report a result you didn't run: paste the real output.
+- **Behavior is reviewed as diagrams, not rows:** runtime flows are Mermaid
+  sequence diagrams in [docs/runtime-flows.md](docs/runtime-flows.md), kept
+  current with the LLRs (`scripts/check_flows.py` enforces; §3).
 - **Versioned releases:** `DevStg-Release` adds the `release` tier and
   `scripts/gen_release_checklist.py`.
 - **The code map is derived from the source AST**: per-module summary and
   public symbols with `Implements:` back-links, rendered live in
-  `PROJECT_STATE.html`'s How-SW tab. **Read it to
-  find where a capability lives before searching the tree**;
-  `scripts/gen_arch_map.py --doc` can also splice it here — never hand-edit
-  between `GENERATED` markers; never commit exported diagrams.
+  `PROJECT_STATE.html`'s How-SW tab. **Read it to find where a capability
+  lives before searching the tree**; `scripts/gen_arch_map.py --doc` splices
+  it here: never hand-edit between `GENERATED` markers or commit exported
+  diagrams.
 - **Start each session** with *Current State* in
   [docs/status.md](docs/status.md); end each turn by updating it (stage, what
-  changed, next action). **Commit early and often** — small and green per
-  logical step. Pushing follows the `push` dial (default: the human
-  publishes). End with a clean tree.
+  changed, next action). **Commit hooks on before any work** (`sh
+  scripts/setup.sh`, or `scripts\setup.ps1`); never bypass them.
+  **Commit early and often**, small and green per step; the `push` dial says
+  who publishes (default: human). End with a clean tree.
 
 ## Code we want (readability for humans *and* agents)
 
@@ -99,7 +99,7 @@ public-symbol docstrings** into the index agents read first:
   invariant it upholds ("pure core — no I/O").
 - **Every public symbol: a docstring** — purpose, the *meaning* (and units) of
   parameters and return, failure modes; `Implements: SR-/LLR-` per the dial
-  above, into the map.
+  above.
 - **Explain the *why* at every non-obvious point:** the algorithm/order/
   constant choice, the edge case a branch guards, the invariant that must
   hold. Comment the surprising, not the obvious.

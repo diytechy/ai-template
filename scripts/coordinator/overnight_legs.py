@@ -40,6 +40,9 @@ in the run is judged against that bound trunk, whatever branch the checkout is
 on: the checkout's branch is only compared with it, never read as trunk.
 
 Stops (never retries blindly):
+  - before anything else, exit 2 with the reason on stderr and no log
+    directory made: the checkout's commit hooks are not on (the kit's
+    `commit_hooks.hooks_refusal`);
   - before any leg, exit 2: the headless block is absent, unreadable or
     empty; the provenance note is empty; no `claude` resolves on PATH; the
     trunk reader refuses (the run prints its message);
@@ -504,8 +507,17 @@ def main(argv=None):
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     repo = Path(args.repo).resolve()
-    LOGDIR.mkdir(parents=True, exist_ok=True)
     sys.path.insert(0, str(repo / "project-trajectory" / "scripts"))
+    from kitlib import commit_hooks
+
+    # The commit hooks are on before any leg (WI-926), checked before the log
+    # directory exists: a refusal goes to stderr, so a first launch refuses
+    # cleanly instead of failing to open a log it never made.
+    refusal = commit_hooks.hooks_refusal(repo)
+    if refusal is not None:
+        print("stop: " + refusal, file=sys.stderr)
+        return 2
+    LOGDIR.mkdir(parents=True, exist_ok=True)
     import coordinator_guard  # the kit's own session-prompt reader
 
     prepared = prepare_run(repo)

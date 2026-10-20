@@ -12,6 +12,7 @@ import sys
 import pytest
 from conftest import (
     declare_trunk,
+    hooks_on,
     SCRIPTS,
     load_script,
     pin_autocrlf,
@@ -181,6 +182,7 @@ def critique_repo(tmp_path):
     (repo / "docs" / "rubrics" / "render.md").write_text(RUBRIC, encoding="utf-8")
 
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)

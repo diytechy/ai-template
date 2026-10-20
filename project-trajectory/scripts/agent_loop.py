@@ -206,6 +206,10 @@ from kitlib import done_when as kdone
 # run, and the trailer line every session it starts is told to write.
 from kitlib import provenance as kprovenance
 
+# Whether this checkout's commit hooks are on (WI-926): `main` asks first,
+# before the lock, and a hookless checkout never starts the loop.
+from kitlib import commit_hooks as kcommit_hooks
+
 # The delegated-decisions record (SR-225): the note a delegated session is
 # handed when the dial asks its run for a record.
 
@@ -3886,21 +3890,25 @@ def run_loop(ctx):
 def main():
     _utf8_console()
     args = parse_args()
+    root, code = _resolve_root(args)
+    if code is not None:
+        return code
+    # The commit hooks are on before any work (WI-926): the first call after
+    # the root is known, so a hookless checkout takes no lock and runs nothing.
+    # Then the launch's source identity (OI-85).
+    refusal = kcommit_hooks.hooks_refusal(root) or (
+        "source identity unavailable; fix readability and relaunch."
+        if agent_common.LAUNCHED_SCRIPTS_FINGERPRINT is None
+        else None
+    )
+    if refusal is not None:
+        print("agent_loop: preflight failed — " + refusal, file=sys.stderr)
+        return EXIT_PREFLIGHT
     if not args.interactive:
         # The loop marker, once per run, in this process's own environment
         # (SR-209): every session and subprocess this run starts inherits it,
         # and a worker launched by the dispatcher keeps the run's session.
         kprovenance.mark_loop_process()
-    root, code = _resolve_root(args)
-    if code is not None:
-        return code
-    if agent_common.LAUNCHED_SCRIPTS_FINGERPRINT is None:
-        print(
-            "agent_loop: preflight failed — source identity unavailable; "
-            "fix readability and relaunch.",
-            file=sys.stderr,
-        )
-        return EXIT_PREFLIGHT
     docs = root / "docs"
 
     # The session dials, resolved ONCE from the single declared home

@@ -36,6 +36,7 @@ import subprocess
 import sys
 
 from conftest import (
+    hooks_on,
     SCRIPTS,
     env_gate_skipif,
     load_script,
@@ -111,6 +112,7 @@ def claimed_repo(tmp_path, wid="WI-401", branch="wi-401", extra=()):
     root = tmp_path / "repo"
     root.mkdir()
     _git(root.parent, "init", "-q", str(root))
+    hooks_on(root)  # every route refuses a checkout without hooks
     pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
@@ -547,6 +549,7 @@ def adjudication_repo(
     root = tmp_path / "repo"
     root.mkdir()
     _git(root.parent, "init", "-q", str(root))
+    hooks_on(root)  # every route refuses a checkout without hooks
     pin_autocrlf(root)
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
@@ -731,6 +734,7 @@ def batch_repo(tmp_path, branch="wi-401", wids=("WI-401", "WI-402")):
     root = tmp_path / "repo"
     root.mkdir()
     _git(root.parent, "init", "-q", str(root))
+    hooks_on(root)  # every route refuses a checkout without hooks
     pin_autocrlf(root)
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")

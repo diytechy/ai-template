@@ -9,7 +9,7 @@ classify_outcome ladder.
 """
 
 import pytest
-from conftest import load_script
+from conftest import hooked_checkout, hooks_on, load_script
 
 
 # =============================================================================
@@ -441,6 +441,7 @@ def _probe_ctx(tmp_path, rows):
     import types
 
     al = load_script("agent_loop")
+    hooked_checkout(tmp_path)  # a probe is a launch: the hooks are on
     registry = {}
     for rid, family, answer in rows:
         tmpl = json.dumps([sys.executable, "-c", _PROBE_ANSWERS[answer]])
@@ -514,6 +515,7 @@ def test_probe_metrics_are_attributed_and_committed(
     import subprocess
 
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    hooks_on(tmp_path)  # every route refuses a checkout without hooks
     subprocess.run(
         ["git", "-C", str(tmp_path), "config", "user.name", "Test"], check=True
     )

@@ -17,12 +17,20 @@ import types
 
 import pytest
 
-from conftest import load_script
+from conftest import hooked_checkout, load_script
 
 al = load_script("agent_loop")
 adapters = load_script("session_adapters")
 service = load_script("session_service")
 agent_session = al.agent_session
+
+
+@pytest.fixture
+def hooked(tmp_path):
+    """`tmp_path` as a checkout whose commit hooks are on: the session
+    service refuses a launch anywhere else."""
+    return hooked_checkout(tmp_path)
+
 
 # Cross-platform fake CLI: echo whatever arrived on stdin, bracketed, so a test
 # can prove the prompt was delivered there (and only there).
@@ -181,6 +189,7 @@ def test_codex_lastmsg_read_reads_then_deletes(tmp_path):
     assert adapters._codex_lastmsg_read(str(tmp_path / "nope.txt")) == ""
 
 
+@pytest.mark.usefixtures("hooked")
 def test_codex_session_reads_last_message_not_transcript(tmp_path):
     # A fake codex that echoes GARBAGE to stdout (as real codex echoes the prompt)
     # but writes the CLEAN result to its --output-last-message file. The session
@@ -231,6 +240,7 @@ def test_codex_session_reads_last_message_not_transcript(tmp_path):
 # --- --interactive with a no-{prompt} template (review-17c H1) ----------------
 
 
+@pytest.mark.usefixtures("hooked")
 def test_run_interactive_pipes_prompt_via_stdin(tmp_path):
     # A no-{prompt} interactive template (the registry's default form after
     # WI-217, reachable via the --interactive-cmd -> AGENT_CMD_INTERACTIVE ->
@@ -275,6 +285,7 @@ def test_attached_interactive_runner_inherits_stdio(monkeypatch, tmp_path):
     assert calls == [(["agent"], {"cwd": str(tmp_path)})]
 
 
+@pytest.mark.usefixtures("hooked")
 def test_interactive_launch_error_is_recorded_then_raised(tmp_path):
     args = types.SimpleNamespace(
         interactive_cmd="definitely-missing-interactive-agent", model="m5"

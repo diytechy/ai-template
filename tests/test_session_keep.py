@@ -45,6 +45,15 @@ ON = keep.KeepConfig(context_reset_pct=50, keepwarm_minutes=50)
 
 
 @pytest.fixture(autouse=True)
+def _hooks_on(monkeypatch):
+    """The commit-hooks reader reads every checkout's hooks on, so a call
+    launches: the session service refuses a launch anywhere else. The
+    reader's own refusal and admission over a real checkout are pinned in
+    tests/test_commit_hooks.py and tests/test_hooks_on_routes.py."""
+    monkeypatch.setattr(svc.commit_hooks, "hooks_refusal", lambda root: None)
+
+
+@pytest.fixture(autouse=True)
 def _claude_token(monkeypatch, tmp_path):
     """A canary long-lived token for the retained Claude home (WI-846), so a
     planned keep or a keep-warm ping launches; tests/test_adjudicator_token.py

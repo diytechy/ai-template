@@ -41,28 +41,14 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # commit through this hook at all (the interpreter step below refuses), so the
 # check holds wherever the hook runs.
 
-# Fail-closed guard for the skip below (M-42): a declared privacy policy must
-# never be skipped silently. The one skip left is a missing kit scripts dir
-# (a missing interpreter refuses outright, WI-880), and it would also skip the
-# secrets/privacy scans — so when docs/privacy-check reads `true`, parse it in
-# pure sh (the pre-push hook's pattern) and REFUSE the skip.
-#   SN-028 re-key: the policy's home is now docs/process.toml, and THIS parse
-# is the reason every value there is written one `key = value` per line — a
-# first-line parse cannot read a TOML file, but a KEYED match can.
-#
-# TWO GRAMMARS READ ONE FILE, so the read below is deliberately asymmetric.
-# `tomllib` understands far more than a `grep -E` can follow, and every shape
-# only one of them sees is a silent flip of a security gate. So:
-#   * the DECLARED test is BROAD — any `privacy_check =` occurrence on a
-#     non-comment line, whatever precedes it;
-#   * the OFF test is NARROW — only a value that is provably `false`;
-#   * anything in between reads ON. FAIL CLOSED: a key we cannot prove is off
-#     is on, which is loud, and the alternative is the M-42 failure itself.
-# `agent_common.process_shape_findings` refuses the shapes this cannot follow
-# (dotted keys, inline tables, multi-line strings, the key under the wrong
-# section), and tests/test_process_config.py drives this exact function
-# against `tomllib` over a table of adversarial files. POSIX ERE only — no \s,
-# no -P, no -o.
+# No step of this hook is ever skipped: a missing interpreter refuses
+# (WI-880), and so does a missing kit scripts dir (below; WI-926), whatever
+# the privacy policy says. The pure-sh read of docs/process.toml here exists
+# for the mixed-config refusal only. SN-028 re-key: every value there is
+# written one `key = value` per line so a KEYED match can read it; the
+# privacy reader's asymmetric grammar (broad "declared", narrow "off", fail
+# closed in between) now lives at hooks/pre-push, its one live sh reader.
+# POSIX ERE only — no \s, no -P, no -o.
 #
 # A MIXED config (both homes live) refuses outright rather than picking one:
 # the Python readers do the same, and "which file wins" is not a question a
@@ -104,17 +90,6 @@ mixed_config_refusal() {
   return 0
 }
 
-privacy_declared_true() {
-  ptoml="$REPO_ROOT/docs/process.toml"
-  if process_declares "$ptoml" privacy_check; then
-    _ptoml_body "$ptoml" | grep -Eq '(^|[^A-Za-z0-9_])privacy_check[[:space:]]*=[[:space:]]*false([[:space:]]|#|$)' && return 1
-    return 0
-  fi
-  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
-  p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
-  [ "$p" = "true" ]
-}
-
 if mixed_config_refusal "pre-commit"; then exit 1; fi
 
 # The ONE interpreter every step below runs on, resolved once, here, by the
@@ -144,15 +119,15 @@ if [ -z "$SCRIPTS_DIR" ]; then
     fi
   done
 fi
+# A hook that cannot find the kit scripts checks nothing, so it refuses the
+# commit rather than skip the floor (WI-926). A repo never set up has no
+# core.hooksPath, so git never runs this hook there.
 if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
-  if privacy_declared_true; then
-    echo "pre-commit: docs/privacy-check is true but the kit scripts dir cannot" >&2
-    echo "  be found (KIT_SCRIPTS_DIR or scripts/), so the secrets/privacy scans" >&2
-    echo "  cannot run — refusing to skip them. FAILING CLOSED." >&2
-    exit 1
-  fi
-  echo "pre-commit: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/) under $REPO_ROOT; skipping process checks." >&2
-  exit 0
+  echo "pre-commit: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/)" >&2
+  echo "  under $REPO_ROOT, so the commit floor cannot run. REFUSING the commit." >&2
+  echo "  Fix one of: set KIT_SCRIPTS_DIR in the delegating wrapper; re-run" >&2
+  echo "  bootstrap; or turn the hooks off: git config --unset core.hooksPath" >&2
+  exit 1
 fi
 
 # 1. The batched freshness/integrity floor — ONE interpreter spawn running the

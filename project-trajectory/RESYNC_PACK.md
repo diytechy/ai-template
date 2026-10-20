@@ -8966,6 +8966,61 @@ nothing staged, the path-triggered step selection runs every opted-in step,
 and the readability report skips each measure, naming the line.
 Move the line in the same commit that moves your trunk.
 
+### Agent routes refuse a checkout whose commit hooks are not on; the hooks stop skipping [since 5245ac82c]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Two things.
+
+- Every agent route asks one new check first, `kitlib/commit_hooks.py`'s
+  `hooks_refusal(root)`, and refuses to start when the checkout's commit
+  hooks are not on. The routes are the loop's launch (`agent_loop.py`), the
+  session service's launch (`session_service.act`, a new `HooksOffRefused`
+  that the blackout wait never waits out), the trunk bookkeeping commit
+  (`bookkeeping.commit`), the claim, the refresh and the merge slot
+  (`integrate.py`), and the coordinator lease's take
+  (`coordinator_guard.py`). "On" means git's hooks directory is the
+  `.githooks` at the top of this worktree or of the main worktree, with
+  `pre-commit` and `commit-msg` there (executable on POSIX). Anything else
+  is "not on", and nothing turns the check off.
+- The three shipped hooks (`hooks/pre-commit`, `hooks/commit-msg`,
+  `hooks/pre-push`) refuse, exit 1, when they cannot find the kit scripts
+  directory, where `pre-commit` and `commit-msg` exited 0 and skipped. The
+  privacy-declared and loop-marked special cases become that one refusal.
+  `pre-push`'s privacy read moves into a `privacy_declared_true` function,
+  unchanged in what it reads.
+
+**Forced change.** An adopter whose agent routes run with `core.hooksPath`
+unset, or pointed at a hook manager's directory or at `.git/hooks`, now gets
+a refusal from every route. A checkout whose hooks cannot find the kit
+scripts now refuses commits instead of skipping them.
+
+**Kit-owned files — overwrite:** `hooks/pre-commit`, `hooks/commit-msg`,
+`hooks/pre-push`, `scripts/kitlib/commit_hooks.py` (new),
+`scripts/kitlib/bootstrap_manifest.py`, `scripts/agent_loop.py`,
+`scripts/session_service.py`, `scripts/coordinator_adjudicate.py`,
+`scripts/bookkeeping.py`, `scripts/integrate.py`,
+`scripts/coordinator_guard.py`, `README.md`,
+`skills/byte-budget-guard/SKILL.md` (a `scope: this-repo` skill; only if
+you vendored it).
+
+**Adopter-merged files:** `AGENTS.md` gains one line, from
+`AGENTS.template.md`: commit hooks on before any work, never bypassed. The
+"skip the wiring" option in `ADOPTING.md` is withdrawn for any repository
+that runs the kit's agent routes.
+
+**What to do.** Overwrite the kit-owned files and merge the guide line.
+Then make the hooks on in every checkout an agent route runs in: run
+`sh scripts/setup.sh` (Windows: `scripts\setup.ps1`; a repository without
+them: its dev-setup), or `git config core.hooksPath .githooks`. A refusal
+names the repair for its cause: a missing hook is restored
+(`git checkout -- .githooks`, or re-run bootstrap), and a hook without its
+mode bit is made executable (`chmod +x`, and `git update-index --chmod=+x`).
+If you used a hook manager, point `core.hooksPath` at the kit's hooks and
+call your own chain from them. A delegating wrapper whose kit scripts live
+elsewhere sets `KIT_SCRIPTS_DIR`.
+No registry, setting or record format changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -33,6 +33,7 @@ import sys
 import pytest
 from conftest import (
     declare_trunk,
+    hooks_on,
     env_gate_skipif,
     SCRIPTS,
     load_script,
@@ -95,6 +96,7 @@ def _make_train_repo(tmp_path, train="t1", wis=("WI-201",)):
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)
@@ -663,6 +665,7 @@ def _train_repo(tmp_path, train="t1", assigned=("WI-201",)):
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
+    hooks_on(repo)  # every route refuses a checkout without hooks
     pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "symbolic-ref", "HEAD", "refs/heads/main")
     declare_trunk(repo)

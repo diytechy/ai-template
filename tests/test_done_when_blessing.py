@@ -22,6 +22,7 @@ import sys
 
 import pytest
 from conftest import (
+    hooks_on,
     KIT,
     SCRIPTS,
     declare_trunk,
@@ -108,6 +109,7 @@ def _trunk(tmp_path, spec=SPEC):
     root = tmp_path / "trunk"
     root.mkdir(parents=True)
     _init(root)
+    hooks_on(root)  # every route refuses a checkout without hooks
     _write(root, "seed.txt", "seed\n")
     _write(root, "docs/stack.ini", "[generated]\nPROJECT_STATE.html = trajectory\n")
     _write(
