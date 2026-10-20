@@ -10,6 +10,7 @@ test_run_devsetup.py.
 
 import datetime
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -603,6 +604,45 @@ def test_session_start_and_the_monitored_events_tell_the_close_down(root):
     assert [t is not None for t in told] == (
         [True] + [False] * (guard.REMINDER_EVERY - 1) + [True]
     )
+
+
+KIT_SETTINGS = (
+    Path(guard.__file__).resolve().parent.parent
+    / "agent-hooks"
+    / "claude.settings.json"
+)
+
+
+def _pre_tool_use_matcher(settings):
+    """The matcher of the guard's one PreToolUse group in `settings`."""
+    (group,) = guard.guard_hooks.guard_groups(settings)["PreToolUse"]
+    return group.get("matcher")
+
+
+def test_every_denied_launch_reaches_the_pre_tool_use_matcher():
+    """Each tool a blackout denial names still runs the guard before its
+    call: a full match also matches under an unanchored reading."""
+    matcher = _pre_tool_use_matcher(json.loads(KIT_SETTINGS.read_text("utf-8")))
+    assert matcher, "the guard's PreToolUse group carries no matcher"
+    missed = [
+        p["tool_name"] for p in DENIED if not re.fullmatch(matcher, p["tool_name"])
+    ]
+    assert missed == []
+
+
+@pytest.mark.parametrize("event", ["PostToolUse", "PostToolUseFailure"])
+def test_a_tool_outside_the_matcher_hears_the_close_down_after_the_call(root, event):
+    """Inside the window, with the guard off, a tool the matcher leaves out
+    is told the close-down at its post-call event, at the reminder cadence,
+    and nothing is denied."""
+    read = ev(event, tool_name="Read", tool_input={"file_path": "x"})
+    told = [guard.hook(read, root, env={}) for _ in range(guard.REMINDER_EVERY + 1)]
+    assert [t is not None for t in told] == (
+        [True] + [False] * (guard.REMINDER_EVERY - 1) + [True]
+    )
+    for out in filter(None, told):
+        assert "BLACKOUT WINDOW" in out["hookSpecificOutput"]["additionalContext"]
+        assert "permissionDecision" not in out["hookSpecificOutput"]
 
 
 def test_the_window_check_subcommand_exits_nonzero_inside(root, clock, capsys):
@@ -1210,6 +1250,26 @@ def test_an_absent_install_binds_every_group_and_keeps_other_keys(tmp_path, befo
     notification = kept.get("hooks", {}).get("Notification")
     assert hooks.get("Notification") == notification
     assert not (root / ".claude" / "settings.json").exists()
+
+
+@pytest.mark.parametrize("before", ["no file", "permissions only"])
+def test_the_consented_install_writes_the_pre_tool_use_matcher(tmp_path, before):
+    """Settings holding no guard group take the example's PreToolUse matcher
+    from a yes, and the post-call groups stay unmatched."""
+    root = tmp_path / "repo"
+    local = root / ".claude" / "settings.local.json"
+    if before == "permissions only":
+        local.parent.mkdir(parents=True)
+        local.write_text(json.dumps({"permissions": {"allow": []}}), encoding="utf-8")
+    source = _kit_example(tmp_path)
+    reading = guard.guard_hooks.consent_install(root, source, _yes)
+    assert reading.word == "on", reading
+    written = json.loads(local.read_text(encoding="utf-8"))
+    wanted = _pre_tool_use_matcher(json.loads(source.read_text(encoding="utf-8")))
+    assert wanted and _pre_tool_use_matcher(written) == wanted
+    for event in ("PostToolUse", "PostToolUseFailure"):
+        (group,) = guard.guard_hooks.guard_groups(written)[event]
+        assert "matcher" not in group, (event, group)
 
 
 @pytest.mark.parametrize("answer", ["n", "", "eof"])

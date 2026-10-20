@@ -37,7 +37,8 @@ it. Like every hook, it is *supervision, not security* — a model that can edit
 files can remove it.
 
 `claude.settings.json` also registers **the coordinator guard's hooks**
-(`scripts/coordinator_guard.py hook`, on every event the guard reads). Two
+(`scripts/coordinator_guard.py hook`, on every event the guard reads; its
+PreToolUse group runs only for the launch and shell tools). Two
 things act through them: the context guard (`[coordinator]
 context_guard_pct`, shipped `0`, off) and the blackout window (`[policies]
 blackout`), inside which the guard denies a coordinator session's new

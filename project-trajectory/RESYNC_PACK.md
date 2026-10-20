@@ -9021,6 +9021,55 @@ call your own chain from them. A delegating wrapper whose kit scripts live
 elsewhere sets `KIT_SCRIPTS_DIR`.
 No registry, setting or record format changes.
 
+### The coordinator guard's hook costs less per tool call [since 9f934456f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The coordinator guard's hook ran on every tool call, twice.
+Two things make it cheaper.
+
+1. **Its PreToolUse group runs for four tools only.** The guard's PreToolUse
+   group in `agent-hooks/claude.settings.json` carries
+   `"matcher": "Agent|SendMessage|Bash|PowerShell"`, exactly the tools a
+   blackout denial can refuse. Its PostToolUse and PostToolUseFailure
+   groups, and the other events, stay unmatched. For a call to any other
+   tool, the context measurement that latches drain mode, and the latch
+   instruction it injects, come at that call's PostToolUse (or
+   PostToolUseFailure when the call fails), after the call instead of before
+   it; the drain and close-down reminders count only the events the hook
+   receives, so their every-twentieth cadence spans more tool calls. Nothing
+   that refuses moves: the four tools still reach the hook before they run,
+   and a claim's own reading still refuses a claim with no hook run.
+2. **A call with nothing to do imports less.**
+   `scripts/coordinator_guard.py` reads its dials and the blackout window
+   from `agent_policy` and loads the agent launcher's modules
+   (`agent_common`, `agent_route`) only when a shell tool inside an open
+   blackout window has to be read, and the command-line parser only for a
+   command other than the hook's own `hook` or `--root R hook`.
+   `scripts/session_keep.py`, whose lock the hook takes, reads the same
+   dials and window from `agent_policy` and finds the primary checkout
+   through `kitlib/git.py`, so it no longer imports `agent_common`. One edge
+   follows the store's stated contract: where git cannot be run at all, the
+   store now falls back to the checkout's own `out/` instead of raising.
+   Every answer the hook gives, and every command line, is unchanged.
+
+**Kit-owned files — overwrite:** `scripts/coordinator_guard.py`,
+`scripts/session_keep.py`, `agent-hooks/README.md` and
+`agent-hooks/claude.settings.json` (re-copy it as
+`.claude/settings.json.example`).
+
+**What to do.** Overwrite the files. The guard state is read by command
+name, so an install made before this change still reads `on` and nothing
+reinstalls its groups. To take the new matcher, remove the installed guard
+groups from `.claude/settings.local.json` and run the consented install
+again: the next first run (dev-setup at a terminal, `coordinator_guard.py
+hooks --example .claude/settings.json.example --offer`, or the coordinator
+lease's take) reads `absent`, asks, and installs the new ones; restart the
+Claude Code session or open `/hooks` to load them. `hooks --enable` no
+longer exists. An older, unmatched group keeps working: it runs the guard on
+every tool, which costs time and refuses nothing it should not. No registry,
+setting or record format changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

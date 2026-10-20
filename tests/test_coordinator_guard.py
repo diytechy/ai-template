@@ -19,6 +19,7 @@ in test_coordinator_guard_e2e.py.
 import ast
 import json
 import os
+import re
 import sys
 import threading
 from pathlib import Path
@@ -517,6 +518,25 @@ def test_the_instruction_comes_once_at_the_latch_then_bounded_reminders(
     said = [o["hookSpecificOutput"]["additionalContext"] for o in outs if o]
     assert [bool(o) for o in outs] == [False, False, True] * 3
     assert all(s.startswith("COORDINATOR CONTEXT GUARD reminder") for s in said)
+    assert [e["event"] for e in events(root)].count("latch") == 1
+
+
+@pytest.mark.parametrize("event", ["PostToolUse", "PostToolUseFailure"])
+def test_a_tool_outside_the_matcher_latches_at_its_post_tool_event(root, tx, event):
+    """A tool the PreToolUse matcher leaves out runs no guard before the call,
+    so its call's PostToolUse (or PostToolUseFailure) is where the context is
+    measured and the latch instruction injected."""
+    matcher = _guard_matcher(KIT_EXAMPLE)
+    assert matcher and re.search(matcher, "Read") is None
+    held(root, tx)
+    tx.reply(500)
+    read = {"tool_name": "Read", "tool_input": {"file_path": "x"}}
+    out = guard.hook(ev(event, transcript=tx.path, **read), root, env={})
+    assert out["hookSpecificOutput"]["hookEventName"] == event
+    assert out["hookSpecificOutput"]["additionalContext"].startswith(
+        "COORDINATOR CONTEXT GUARD: this session's context reached"
+    )
+    assert guard._load(guard.lease_dir(root))["draining"] is True
     assert [e["event"] for e in events(root)].count("latch") == 1
 
 
@@ -1177,6 +1197,38 @@ def _installed(interpreter=None, **changes):
         else:
             change(groups[event])
     return {"permissions": {"allow": ["Bash(git status)"]}, "hooks": groups}
+
+
+def _guard_matcher(example_path):
+    """The matcher of the guard's one PreToolUse group in `example_path`,
+    after asserting that no other guard group carries one."""
+    found = _hooks_lib().guard_groups(json.loads(example_path.read_text("utf-8")))
+    (pre,) = found["PreToolUse"]
+    for event, groups in found.items():
+        for group in groups:
+            if group is not pre:
+                assert "matcher" not in group, (event, group)
+    return pre.get("matcher")
+
+
+@pytest.mark.parametrize(
+    "example_path",
+    [KIT_EXAMPLE, ROOT / ".claude" / "settings.json.example"],
+    ids=["kit", "this-repo"],
+)
+def test_the_pre_tool_use_matcher_names_exactly_the_launch_and_shell_tools(
+    example_path,
+):
+    """The guard runs before a call only for the tools it can deny: the
+    matcher's alternatives are exactly the two tool tables' keys, so a tool
+    added to either cannot be left unmatched. PostToolUse, PostToolUseFailure
+    and every other guard group stay unmatched."""
+    matcher = _guard_matcher(example_path)
+    assert matcher, "the guard's PreToolUse group carries no matcher"
+    names = matcher.split("|")
+    assert all(re.fullmatch(r"[A-Za-z]+", n) for n in names), names
+    assert len(names) == len(set(names)), names
+    assert set(names) == set(guard.LAUNCH_TOOLS) | set(guard.SHELL_TOOLS)
 
 
 NO_FILE = object()  # READINGS' settings when there is no file: the reader's ABSENT

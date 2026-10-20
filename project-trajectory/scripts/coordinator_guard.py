@@ -139,7 +139,6 @@ Runtime state (internal, no seam: only this module reads or writes it, and
     renaming it; the directory lock serializes every read-modify-write.
 """
 
-import argparse
 import json
 import os
 import re
@@ -151,15 +150,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
-    import agent_common
-    import agent_route
+    import agent_policy
     import session_keep
     from kitlib import commit_hooks, guard_hooks, shell_line
     from kitlib.observation import write_atomic
 except ImportError:  # pragma: no cover - in-process import from elsewhere
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import agent_common
-    import agent_route
+    import agent_policy
     import session_keep
     from kitlib import commit_hooks, guard_hooks, shell_line
     from kitlib.observation import write_atomic
@@ -272,7 +269,7 @@ def guard_config(root):
 
     Implements: SR-229, LLR-300
     """
-    table = agent_common.process_config(Path(root) / "docs").get(SECTION)
+    table = agent_policy.process_config(Path(root) / "docs").get(SECTION)
     table = table if isinstance(table, dict) else {}
     threshold = _int_dial(table.get("context_guard_pct"), 0, 100) or 0
     window = _int_dial(table.get("context_window_tokens"), 1, 10**9)
@@ -568,13 +565,13 @@ def latch_reading(directory, lease, cfg):
 
 def window_refusal(root):
     """The blackout window's claim refusal, or None: inside the window
-    (`agent_common.blackout_at`, read at this call) every claim is refused,
+    (`agent_policy.blackout_at`, read at this call) every claim is refused,
     naming the window's UTC end, on every route, the live dispatcher's
     included, whatever the context guard's dial says.
 
     Implements: SR-229, LLR-300
     """
-    blackout = agent_common.blackout_at(Path(root) / "docs")
+    blackout = agent_policy.blackout_at(Path(root) / "docs")
     if not blackout.inside:
         return None
     return (
@@ -797,7 +794,7 @@ def hook(payload, root, env=None, launch=None):
     cfg = guard_config(root)
     if not isinstance(payload, dict):
         return None
-    blackout = agent_common.blackout_at(Path(root) / "docs")
+    blackout = agent_policy.blackout_at(Path(root) / "docs")
     if blackout.inside:
         return on_blackout(root, cfg, payload, blackout, env)
     if not cfg.enabled:
@@ -1007,6 +1004,11 @@ def model_clis(root):
 
     Implements: SR-229, LLR-300
     """
+    # Imported here, not at module level: only a shell tool inside an open
+    # window reaches this, and a hook call with nothing to do pays for neither.
+    import agent_common
+    import agent_route
+
     rows, _errors = agent_route.load_registry(Path(root) / "docs" / "agents.toml")
     names = set()
     for row in rows.values():
@@ -1158,7 +1160,7 @@ def window_check(root):
 
     Implements: SR-229, LLR-300
     """
-    blackout = agent_common.blackout_at(Path(root) / "docs")
+    blackout = agent_policy.blackout_at(Path(root) / "docs")
     if not blackout.inside:
         return None
     return "the blackout window {} UTC is open until {} UTC; no model starts".format(
@@ -1630,6 +1632,8 @@ def _status(root):
 
 
 def _parser():
+    import argparse
+
     parser = argparse.ArgumentParser(description="The coordinator context guard.")
     parser.add_argument(
         "--root", default=None, help="repo root (default: CLAUDE_PROJECT_DIR, else .)"
@@ -1665,14 +1669,35 @@ def _parser():
     return parser
 
 
-def main(argv=None):
-    """The guard's command line: dispatch one operation and map a refusal to
-    exit 1 with its reason on stderr.
+def _root(arg):
+    """The repo root a command acts on: `--root`, else `CLAUDE_PROJECT_DIR`,
+    else the working directory.
 
     Implements: SR-230, LLR-301
     """
+    return Path(arg or os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
+
+
+def main(argv=None):
+    """The guard's command line: dispatch one operation and map a refusal to
+    exit 1 with its reason on stderr. The hook's own command lines, `hook`
+    and `--root R hook`, go straight to the hook without building the parser,
+    since the hook runs on every tool call; every other command line, and any
+    other spelling of those, goes through the parser.
+
+    Implements: SR-230, LLR-301
+    """
+    argv = sys.argv[1:] if argv is None else list(argv)
+    rooted = (
+        len(argv) == 3
+        and argv[0] == "--root"
+        and argv[2] == "hook"
+        and not argv[1].startswith("-")
+    )
+    if argv == ["hook"] or rooted:
+        return _hook_main(_root(argv[1] if rooted else None))
     args = _parser().parse_args(argv)
-    root = Path(args.root or os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
+    root = _root(args.root)
     session = getattr(args, "session", None) or os.environ.get(SESSION_ENV)
     actions = {
         "hook": lambda: _hook_main(root),

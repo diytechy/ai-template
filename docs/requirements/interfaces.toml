@@ -955,7 +955,7 @@ status = "Drafted"
 
 [interface.IF-065]
 owner = "scripts/agent_common"
-requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/session_service", "scripts/session_keep"]
+requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/session_service"]
 channel = "call"
 data = "END_STATES, git, head_sha, acquire_lock, release_lock, preflight, parse_map, process_config, load_wi_registry, substantive_working_tree_dirty, write_session_log, commit_telemetry, loop_claimed"
 version = "v1"

@@ -20,8 +20,8 @@ loop's review rounds ride the same layer under their own dial (WI-887,
 (`review_retention`), and the final reviewer is fresh unless `[reviewer]
 final_reviewer` is `persisted`.
 
-Stdlib only, Python 3.11+, Windows/POSIX. It imports `agent_common` (the
-policy-file reader and git); `session_service` imports it.
+Stdlib only, Python 3.11+, Windows/POSIX. It imports `agent_policy` (the
+policy-file reader) and `kitlib.git`; `session_service` imports it.
 
 Contracts: IF-247, IF-248, IF-272, IF-273 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
@@ -145,12 +145,13 @@ from typing import NamedTuple
 from pathlib import Path
 
 try:
-    import agent_common
+    import agent_policy
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import agent_common
+    import agent_policy
 
 from kitlib import config as kconfig
+from kitlib import git as kgit
 from kitlib import verdict as kverdict
 
 STATE_ACTIVE = "active"
@@ -218,7 +219,7 @@ def keep_config(root):
 
     Implements: SR-227, LLR-270
     """
-    table = agent_common.process_config(Path(root) / "docs").get("adjudicator")
+    table = agent_policy.process_config(Path(root) / "docs").get("adjudicator")
     table = table if isinstance(table, dict) else {}
     default = KeepConfig()
     retain = table.get("retain_for")
@@ -263,10 +264,10 @@ def primary_out_dir(root):
     """
     key = os.path.abspath(root)
     if key not in _COMMON_DIR:
-        code, out = agent_common.git(
-            root, "rev-parse", "--path-format=absolute", "--git-common-dir"
+        out = kgit.git_out(
+            root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]
         )
-        _COMMON_DIR[key] = Path(out.strip()) if code == 0 and out.strip() else None
+        _COMMON_DIR[key] = Path(out.strip()) if out and out.strip() else None
     common = _COMMON_DIR[key]
     base = common.parent if common is not None and common.name == ".git" else root
     return Path(base) / "out"
@@ -1153,7 +1154,7 @@ def _retire(record, reason):
 def retire_after_blackout(root, record):
     """Retire a live session (active or draining) whose last use is before
     the end of the most recent blackout window that ended at or before now
-    (`agent_common.blackout_at`), or that records no last use: its prompt
+    (`agent_policy.blackout_at`), or that records no last use: its prompt
     cache did not outlive the window, so resuming it would replay the whole
     transcript uncached, which costs more than a fresh session reading only
     its brief. The reset reason is `blackout`, and it overrides a draining
@@ -1167,7 +1168,7 @@ def retire_after_blackout(root, record):
         return False
     if record.get("state") not in (STATE_ACTIVE, STATE_DRAINING):
         return False
-    last_end = agent_common.blackout_at(Path(root) / "docs").last_end_epoch
+    last_end = agent_policy.blackout_at(Path(root) / "docs").last_end_epoch
     used = record.get("last_used_epoch")
     if last_end is None or (isinstance(used, (int, float)) and used >= last_end):
         return False
@@ -1711,7 +1712,7 @@ def _warm_candidates(root, cfg, now, work_pending, routes):
 
     Implements: SR-227, LLR-270
     """
-    if agent_common.blackout_at(Path(root) / "docs").inside:
+    if agent_policy.blackout_at(Path(root) / "docs").inside:
         return []
     due = due_routes(root, cfg, now, work_pending)
     return [r for r in due if routes is None or r in routes]

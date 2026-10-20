@@ -24,6 +24,7 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "Agent|SendMessage|Bash|PowerShell",
         "hooks": [
           {
             "type": "command",

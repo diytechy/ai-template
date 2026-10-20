@@ -1,0 +1,55 @@
+# docs/decisions/wi-897.toml — delegated decisions made in the WI-897 lane
+# (the coordinator guard's hook costs less per tool call) by the coordinator,
+# in headless leg 03 of loop session 20261019T185432Z-8e4f05.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "The row was claimed headless (79a7db5dd) after its scope critique's round 1 was dispositioned on trunk (42900e2cd) and its confirming round read APPROVE 0 (880317cb5), so the lane lands headless (the coordinator-cycle skill's lane-mode rule). It is planmode single: a fresh Claude Opus planner wrote the plan (4d4374a80), critique 1 (Codex Sol, medium) read APPROVE 0 (47d00cbe5), and the pass record binds it (79abe7f07). The kit-builder (Claude Opus, medium) built it in the plan's two code stages, each a fresh foreground builder whose results the coordinator re-ran before committing (af36f2982, 8905a23c5); the coordinator took P7's after-measurement beside the base (04bf571c8). Review rounds run two full-lane reviewers in parallel: Codex Sol at medium (REVIEW-A) and Claude Opus at high (REVIEW-B), the ruling-7 stand-in for the Gemini slot (coordinator-2026-10-16 D-008), recorded here as that substitution. The row changes the guard hook every coordinator tool call runs, machinery the cycle runs on, so it lands alone."
+alternative = "Resume one builder across both stages with SendMessage, which in a headless leg runs in the background."
+reversal_cost = "None."
+why_not_escalated = "The skill's claim, plan and build steps; recipes section 1 on staged builds in a headless leg."
+review = ""
+
+[decision.D-002]
+decided = "Counted round 1 (001-REVIEW-A-04bf571.md: CHANGES-REQUESTED, one MAJOR and one MINOR; 002-REVIEW-B-04bf571.md: APPROVE, two MINORs) has no BLOCKER or MAJOR code finding, so the checkpoint follows it. REVIEW-A's MAJOR (the Done-when's checkpoint item unfinished: no decisions record of the four-row reading, no TC evidence for the new tests) names no code defect: its remedy is the checkpoint, the cycle's next step, which the plan's P8 places after the rounds. It is re-graded here and costs no fix round (recipes section 1; wi-931 D-006, D-008). REVIEW-B's second MINOR says the same and calls it legitimately deferred. The two IF-065 MINORs (REVIEW-A's second, REVIEW-B's first) are answered at the checkpoint: the plan's P8 drops scripts/session_keep from IF-065's requestors."
+alternative = "Count REVIEW-A's MAJOR and run a fix round before the checkpoint."
+reversal_cost = "Low: the gate over the checkpoint tip reviews the checkpoint's record in full."
+why_not_escalated = "The recipes' rule for a round finding whose remedy is the checkpoint; no code defect is named."
+review = ""
+
+[decision.D-003]
+decided = "The checkpoint's reading (plan P8; the Done-when's item) of the four rows against Context's event and tool contract finds no sentence the matcher makes untrue, so no row text is amended. LLR-300: it claims no measurement before every tool call; 'Only the holder's own hook payload on the holder's transcript is measured' stays true of each event the hook receives; the blackout denial list (Agent, SendMessage, Bash/PowerShell model-CLI words and unreadable lines) is exactly the matcher's four tools; and the close-down 'at that session's first monitored event in the window and every twentieth thereafter' counts the events the hook receives, which stays true while spanning more calls. IF-274: its stdin fields, with tool_name and tool_input on PreToolUse, stay true of each payload that arrives; that fewer arrive is the contract's tool set. IF-275: the denial for exactly the launch forms stays true, since the four tools still reach PreToolUse. IF-281: hook always exits 0, unchanged. Also read with no change: docs/runtime-flows.md Flow 5 (its hook denies Agent, SendMessage and a model CLI, all inside the matcher), CMP-008, SR-229, and TC-339's method and expected (the cadence counts monitored events). Only traced cells move: the new tests join TC-316, TC-317, TC-339 and TC-345's evidence as P8 maps them, IF-065 (Drafted) drops scripts/session_keep from its requestors, and stage 1 added _root to LLR-301's code_symbol. So Terra's reconcile turn is omitted (no round proposed row text, and the reading owes none), and no sitting is owed: a traced-only update owes none (coordinator-cycle section 3)."
+alternative = "Brief Terra to reconcile and sit LLR-300 and the three interfaces anyway."
+reversal_cost = "Low: the gate reads the rows beside the code, and a sitting can follow if it finds an untrue sentence."
+why_not_escalated = "The Done-when names the reading as the lane's checkpoint and its record as this file."
+review = ""
+
+[decision.D-004]
+decided = "Two behaviours stage 1 changed outside the hook's import list, as the plan's P3 and delta answer state. (1) session_keep.primary_out_dir asks kitlib.git for the common git directory, so where git cannot run at all the store falls back to root/out, where agent_common.git raised FileNotFoundError: this aligns the code with IF-272's stated contract ('else root itself (git unavailable, or not a repository)'). (2) The policy-file reads (keep_config, guard_config, the blackout window) go through agent_policy, which agent_common only re-exported; the values are the same."
+alternative = "Keep agent_common in session_keep and defer it there instead."
+reversal_cost = "Low."
+why_not_escalated = "The accepted plan's P3, within the spec's named surface."
+review = ""
+
+[decision.D-005]
+decided = "The convergence map for the gate over the checkpoint tip. No accepted finding has an executable regression test: each is a record or registry fix, confirmed by independently checkable evidence at its site (revision 33). 001 F1 and 002 F2 (the checkpoint item): this file's D-003 and the TC evidence cells of TC-316, TC-317, TC-339 and TC-345 in docs/test/test-cases.toml, each naming the new tests. 001 F2 and 002 F1 (IF-065): the requestors cell of IF-065 in docs/requirements/interfaces.toml, without scripts/session_keep, and session_keep.py importing no agent_common."
+alternative = "None: a convergence round renders only after its map."
+reversal_cost = "None."
+why_not_escalated = "The skill's convergence map step."
+review = ""
+
+[decision.D-006]
+decided = "The lane re-anchors the two approved registries whose traced cells it moved, as its last spine commit (recipes section 3; WI-902's act 117, WI-887's act 111): stage 1 added _root to LLR-301's code_symbol, and the checkpoint added the new tests to TC-316, TC-317, TC-339 and TC-345's evidence. No approved text moved, so the refresh re-attests nothing: intake.py snapshot --approves names the sittings that last anchored each registry, WI-926's 004-ADJUDICATE-fb6c77e.md (low-level requirements) and 005-ADJUDICATE-ac2e5ea.md (test cases), as act seq 140. Both snapshots now equal their live registries byte for byte."
+alternative = "Re-anchor inside the trunk squash, which text-then-act refuses (WI-887)."
+reversal_cost = "Low: a later lane's act supersedes the copy."
+why_not_escalated = "The recipes' re-anchor step; no status moves and no held rung is touched."
+review = ""
+
+[decision.D-007]
+decided = "The gate over the checkpoint tip 6e6efb949, uncounted and in convergence stance after D-005's map: 003-REVIEW-A-6e6efb9.md (Codex Sol, medium) APPROVE 0; 004-REVIEW-B-6e6efb9.md (Claude Opus, high, the stand-in) APPROVE with two MINORs. Neither is fixed after the gate, since a fix would move the tip off the gated one (wi-935 D-005); both go to status.md's unfiled follow-ups at the landing. (1) The re-anchor's ref names WI-926's sittings, as the recipe directs (the sitting that last anchored each registry; WI-902's act 117 named its own sitting the same way), where the reviewer reads the snapshot README's rule as asking for the lane's own WI or no entry: the recipe and the README's line read differently, a wording follow-up for the recipe or the README. (2) IF-261 (agent_policy's process-config readers) still lists only scripts/agent_common as requestor, while session_keep and coordinator_guard now call agent_policy.process_config directly, and agent_policy's contract text still says agent_common re-exports it: IF-261 is Drafted, so adding the two requestors is a registry follow-up at the row's next touch."
+alternative = "Fix both after the gate and re-run it."
+reversal_cost = "Low."
+why_not_escalated = "Gate MINORs go to the unfiled follow-ups (recipes section 3)."
+review = ""

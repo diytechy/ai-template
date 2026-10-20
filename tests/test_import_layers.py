@@ -388,9 +388,16 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # integrate imports the new module at module level (acceptance_record is
     # already loaded through agent_policy), so it adds no deferred edge.
     # text_then_act imports acceptance_record one way, so no cycle grew.
-    assert 14 <= deferred <= 33, (
+    # RE-STAMPED 33 -> 35 (2026-10-19, WI-897): coordinator_guard ->
+    # agent_common and coordinator_guard -> agent_route move from module level
+    # into `model_clis`, their one user. The guard's hook runs on every tool
+    # call, and a call with nothing to do paid about 75 ms importing them; only
+    # a shell tool inside an open blackout window reaches `model_clis`. The
+    # same two edges existed before at module level, so no cycle or layer edge
+    # grew. Reason in docs/log.d/WI-897-guard-hook-per-call-cost.md.
+    assert 14 <= deferred <= 35, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..33 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..35 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

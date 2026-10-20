@@ -3,13 +3,44 @@ id = "WI-897"
 title = "The coordinator guard's hook costs less per tool call: a narrowed PreToolUse matcher and deferred imports"
 workstream = "process"
 sr_refs = ["SR-229"]
-specref = "project-trajectory/scripts/coordinator_guard.py"
+specref = ""
 buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 planmode = "single"
 needs = []
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-20, after its gate, in a headless leg:
+
+- The guard's hook imports less on a call with nothing to do:
+  `coordinator_guard.py` loads `agent_common` and `agent_route` only where
+  a shell tool's model-CLI reading needs them, and `argparse` only off the
+  hook's own command line; `session_keep.py`, whose lock the hook takes,
+  reads the policy file through `agent_policy` and the common git directory
+  through `kitlib.git`. A test pins both no-op paths (guard off; not the
+  holder) as importing none of the three. A no-op call measured about 55
+  ms cheaper per process on a loaded box (lane log).
+- The guard's PreToolUse group in the kit's example and this repository's
+  carries `"matcher": "Agent|SendMessage|Bash|PowerShell"`, pinned equal to
+  the launch and shell tool tables, and the consented install writes it;
+  every other guard group stays unmatched. For any other tool the context
+  measurement and its latch instruction come at the call's PostToolUse or
+  PostToolUseFailure, pinned for `Read`; nothing that refuses moved.
+- RESYNC_PACK.md's entry, anchored at this landing's parent, tells an
+  adopter to remove the installed guard groups and run the consented
+  install again to take the new matcher.
+- Spine: traced cells only. The checkpoint read LLR-300, IF-274, IF-275 and
+  IF-281 true under the event and tool contract; the new tests joined
+  TC-316, TC-317, TC-339 and TC-345's evidence, `_root` joined LLR-301's
+  code_symbol, and IF-065 (Drafted) dropped `scripts/session_keep`; the
+  lane re-anchored both snapshots (act 140), re-attesting nothing.
+- Reviews (docs/reviews/wi-897/): the single plan's critique 1 (APPROVE 0);
+  counted round 1, 001-REVIEW-A-04bf571 and 002-REVIEW-B-04bf571; the gate
+  in convergence stance, 003-REVIEW-A-6e6efb9 and 004-REVIEW-B-6e6efb9.
+  Decisions: docs/decisions/wi-897.toml D-001 to D-007.
 
 ## Context
 

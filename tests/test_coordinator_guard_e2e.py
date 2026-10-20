@@ -224,6 +224,48 @@ def test_the_hook_cli_reads_stdin_and_prints_its_output(draining, tmp_path):
     )
 
 
+_IMPORT_PROBE = """
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import coordinator_guard
+code = coordinator_guard.main(["--root", sys.argv[2], "hook"])
+heavy = [m for m in ("agent_common", "agent_route", "argparse") if m in sys.modules]
+print(json.dumps({"exit": code, "heavy": heavy}))
+"""
+
+
+@pytest.mark.parametrize("case", ["off", "not-holder"])
+def test_the_no_op_hook_imports_no_route_or_cli_module(case, tmp_path):
+    """A hook call with nothing to do (the shipped default, or a guard-on call
+    from a session that does not hold the lease) loads neither the agent
+    launcher's modules nor the command-line parser: the hook runs on every
+    tool call, so what it imports is paid on every call."""
+    root = make_root(tmp_path, pct=0 if case == "off" else 50)
+    tx = Transcript(tmp_path / "coord.jsonl")
+    tx.user()
+    tx.reply(100)
+    if case == "not-holder":
+        assert guard.take(root, OTHER, str(tmp_path / "other.jsonl")) is None
+    payload = {
+        "hook_event_name": "PostToolUse",
+        "session_id": COORD,
+        "transcript_path": str(tx.path),
+        "tool_name": "Read",
+        "tool_input": {"file_path": "x"},
+    }
+    proc = subprocess.run(
+        [sys.executable, "-c", _IMPORT_PROBE, str(SCRIPTS), str(root)],
+        input=json.dumps(payload),
+        capture_output=True,
+        encoding="utf-8",
+        env=_env(),
+    )
+    assert proc.returncode == 0 and proc.stderr == "", proc.stderr
+    lines = proc.stdout.splitlines()
+    assert len(lines) == 1, proc.stdout  # the hook itself printed nothing
+    assert json.loads(lines[0]) == {"exit": 0, "heavy": []}
+
+
 def test_close_out_git_operations_pass_while_draining(draining, tmp_path):
     """A verification worktree and its removal, a landing (squash), an
     archive ref, and the scoped-unpause restore all run while latched."""
