@@ -262,6 +262,38 @@ def test_scaffold_hats_roster_is_readable_by_the_scaffolded_reader(scaffold):
     assert block != hats.NO_HATS and "listens for:" in block
 
 
+def test_scaffold_agents_registry_loads_with_its_commented_account(scaffold):
+    """WI-798: the bootstrap copies agents.template.toml to docs/agents.toml,
+    and the registry the scaffold receives loads with no error, declares no
+    account (the one account example ships commented, so an adopter's routing
+    is unchanged until they opt in) and names no qualified entry. Uncommented,
+    that example is a token account the adjudicator's default entry runs on,
+    and it loads as one."""
+    agent_route = load_script("agent_route")
+    path = scaffold / "docs" / "agents.toml"
+    registry, errors = agent_route.load_registry(path)
+    assert errors == [] and len(registry) >= 1
+    assert registry.accounts == {}
+    text = path.read_text(encoding="utf-8")
+    for line in (
+        "[account.ADJUDICATOR]",
+        "cli = ",
+        "notes = ",
+        "token_file_variable = ",
+    ):
+        assert "\n#" + line in text, line
+        text = text.replace("\n#" + line, "\n" + line, 1)
+    path.write_text(text, encoding="utf-8")
+    registry, errors = agent_route.load_registry(path)
+    assert errors == []
+    account = registry.accounts["ADJUDICATOR"]
+    assert (account.cli, account.token_file_variable) == (
+        "claude",
+        "AGENT_CLAUDE_TOKEN_FILE",
+    )
+    assert not account.unverified  # a token account: outside the isolation check
+
+
 def test_scaffold_stack_ini_seeds_the_lanes_dial(scaffold):
     # WI-381 (§A4.3, ruled): the TEMPLATE seeds lanes = 2 so a fresh scaffold
     # exercises the barrier/merge-slot/refresh machinery for real — while the

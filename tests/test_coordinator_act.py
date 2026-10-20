@@ -37,6 +37,10 @@ from kitlib import sitting as ksitting  # noqa: E402
 pytestmark = pytest.mark.usefixtures("retained_runners")
 
 ROUTE = "ANTHROPIC-OPUS-STRONG"
+# The adjudicator's entry (WI-798): the route on the declared token account
+# ADJUDICATOR, whose table names the OI-110 (b) token variable.
+ACCOUNT = "ADJUDICATOR"
+ENTRY = ROUTE + "@" + ACCOUNT
 TEMPLATE = "claude -p --model {model} --output-format stream-json --verbose"
 AGENTS = """[agent.ANTHROPIC-OPUS-STRONG]
 family = "ANTHROPIC"
@@ -55,6 +59,11 @@ tier = "medium"
 cmd_template = "{template}"
 env = ""
 notes = "a row the enable-list does not name"
+
+[account.ADJUDICATOR]
+cli = "claude"
+notes = "the adjudicator's token account"
+token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"
 """.replace("{template}", TEMPLATE)
 VERDICT = taa.VERDICT
 WI = "WI-9"
@@ -109,7 +118,7 @@ def _lane(tmp_path, dial="DevStg-Needs", retained=True):
     taa._write(lane, taa.LLRS, taa.SPINE_LLRS)
     taa._write(lane, taa.TCS, taa.SPINE_TCS)
     taa._write(lane, "docs/agents.toml", AGENTS)
-    taa._write(lane, "docs/agents-enabled", ROUTE + "\n")
+    taa._write(lane, "docs/agents-enabled", ENTRY + "\n")
     set_process_key(lane, "attestation", "human_approval_through", dial)
     _dial(lane, retained)
     baseline_snapshot.copy_live(lane, seed=True)
@@ -231,23 +240,26 @@ def nothing(lane, prompt):
 @pytest.fixture
 def launched(monkeypatch, tmp_path):
     """The launch replaced by the stub adjudicator; `seen["act"]` is what it
-    does with each delivered prompt, `seen["prompts"]` what it received."""
-    seen = {"prompts": [], "act": full}
+    does with each delivered prompt, `seen["prompts"]` what it received, and
+    `seen["argv"]` / `seen["env"]` each launch's command and environment."""
+    seen = {"prompts": [], "argv": [], "env": [], "act": full}
     token = tmp_path / "token" / "claude-token"
     token.parent.mkdir()
     token.write_text("canary-token", encoding="utf-8")
-    monkeypatch.setenv(svc.TOKEN_VARIABLES["ANTHROPIC"][0], str(token))
+    monkeypatch.setenv("AGENT_CLAUDE_TOKEN_FILE", str(token))
     monkeypatch.delenv(kprovenance.LOOP_SESSION_ENV, raising=False)
 
     def run(argv, root, timeout, **kw):
         prompt = kw.get("stdin_input") or ""
         seen["prompts"].append(prompt)
+        seen["argv"].append(list(argv))
+        seen["env"].append(kw.get("env"))
         seen["act"](seen["lane"], prompt)
         return 0, _stream(), False
 
     monkeypatch.setattr(svc, "run_session", run)
     monkeypatch.setattr(svc, "cli_version", lambda *a, **k: "")
-    monkeypatch.setattr(svc, "signin_status", lambda root, family: "signed-in")
+    monkeypatch.setattr(svc, "signin_status", lambda root, account, **k: "signed-in")
     return seen
 
 
@@ -468,6 +480,43 @@ def test_the_act_turn_writes_no_binding_and_reserves_no_path(tmp_path, launched)
     assert _git(lane, "ls-files", "docs/reviews") == before
     assert _git(lane, "show", "HEAD:" + ksitting.requested_path(VERDICT)) == binding
     assert not _git(lane, "status", "--porcelain", "--untracked-files=all")
+
+
+# --- the act turn's account (WI-798) ----------------------------------------
+
+# An ambient credential the declared token account must not launch beside.
+AMBIENT_KEY = "ANTHROPIC_API_KEY"
+
+
+@pytest.mark.parametrize("retained", [True, False], ids=["kept", "fresh"])
+def test_an_act_turn_on_the_default_entry_launches_under_its_accounts_environment(
+    tmp_path, launched, monkeypatch, retained
+):
+    monkeypatch.setenv(AMBIENT_KEY, "canary-ambient-key")
+    _primary, lane = _amendment(tmp_path, retained=retained)
+    assert _act(launched, lane) == 0
+    (env,) = launched["env"]
+    # the account's own composed environment, never the route's bare one
+    assert env is not None
+    assert env["CLAUDE_CODE_OAUTH_TOKEN"] == "canary-token"
+    assert env["CLAUDE_CONFIG_DIR"] == str(svc.session_keep.account_home(ACCOUNT))
+    assert AMBIENT_KEY not in env
+
+
+def test_an_act_turn_resumes_the_session_its_sitting_keyed_under_the_entrys_account(
+    tmp_path, launched, capsys
+):
+    _primary, lane = _amendment(tmp_path)
+    launched["act"] = nothing
+    _launch(launched, lane, "amendment", 1)  # the sitting mints the session
+    _commit(lane, "the sitting's records")
+    launched["act"] = full
+    assert _act(launched, lane) == 0
+    sitting, act_turn = launched["argv"]
+    minted = sitting[sitting.index("--session-id") + 1]
+    assert act_turn[act_turn.index("--resume") + 1] == minted
+    out = capsys.readouterr().out
+    assert "keep: resuming {}".format(minted) in out, out
 
 
 # --- the trailer line (Q4) --------------------------------------------------

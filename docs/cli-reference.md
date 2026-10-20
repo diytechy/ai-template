@@ -314,15 +314,15 @@ Contracts (interfaces): IF-283, IF-284, IF-285
 | `--brief` |  |
 | `--wi` |  |
 | `--verdict` |  |
-| `--route` |  |
+| `--route` | the enabled entry: a registry id, or ROUTE@ACCOUNT |
 | `--timeout` |  |
 | `--root` |  |
 | `--verdict` |  |
 | `--wi` |  |
-| `--route` |  |
+| `--route` | the enabled entry: a registry id, or ROUTE@ACCOUNT |
 | `--timeout` |  |
 | `--root` |  |
-| `--family` |  |
+| `--route` | the enabled entry whose account is read (default: the adjudicator's) |
 | `--retained` | read `off` while the [adjudicator] dial leaves retention off |
 
 ### `scripts/coordinator_guard`

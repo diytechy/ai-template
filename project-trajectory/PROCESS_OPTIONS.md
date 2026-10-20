@@ -1028,10 +1028,11 @@ behavior**, so a fresh scaffold pays nothing.
   / `codex exec` / `gemini -p`) and **vendors no model catalog** — richer data is
   a documented pointer to the maintained community registries (models.dev
   `api.json`; LiteLLM's model-prices JSON), never a copy.
-- **Account rows and router rows are just more pairs.** A **second paid plan**
-  with one provider = a **second pair row** with a distinct id (suffix style,
-  `…-ACCT2`), the *same* `Family`, and its own `Env` account selector — so its
-  quota pool cools independently by construction. A **third-party router** = a
+- **Accounts are tables; router rows are just more pairs.** A **second paid
+  plan** with one provider = an `[account.<ID>]` table (its `cli`, an optional
+  `env`, a home outside every checkout) named by a qualified enable-list entry
+  `ROUTE@ACCOUNT`, never a duplicated row; each entry cools on its own. A
+  **third-party router** = a
   pair row whose `Env` points its CLI at the router (`ANTHROPIC_BASE_URL`); it
   shares the native model's `Family`, so it is **not** a diverse reviewer from
   its native sibling (a router is access, not identity). Two safety notes carried

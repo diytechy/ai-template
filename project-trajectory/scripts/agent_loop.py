@@ -467,7 +467,7 @@ class RoutingState:
         self.critique_srs = critique_srs
         self.critique_max = critique_max
         # --- managed-routing / reviewer-dispatch state (S8) ---
-        self.cooldowns = {}  # model id -> epoch it is available again
+        self.cooldowns = {}  # enabled entry -> epoch it is available again
         self.review_queue = []  # the pending review phases for the current round
         # WI-884: the (reviewed sha, round files) a CHANGES-REQUESTED round left,
         # which makes the next round NARROW; None draws the full lane.
@@ -508,8 +508,8 @@ class RoutingState:
         self.stall = 0  # consecutive non-committing BUILD-side sessions
         self.errors = 0  # consecutive ERROR sessions (agent unavailable)
         self.review_draw_failures = 0  # consecutive failed REVIEW/CRITIQUE draws
-        # C4: routes with an unclean history this run (cooled after an
-        # ERROR/TIMEOUT/limit/garble) — the pre-dispatch probe list. A route
+        # C4: entries with an unclean history this run (cooled after an
+        # ERROR/TIMEOUT/limit/garble) — the pre-dispatch probe list. An entry
         # with a clean history is never probed (recovery aid, not a tax).
         self.suspect_routes = set()
         # C5: a relaxed (same-family) reviewer draw served the current round.
@@ -578,16 +578,16 @@ class RoutingState:
         tier). Called only on the non-review BUILD/"" condition, as today."""
         self.last_impl_tier = tier
 
-    def cool(self, route_id, now, seconds=None):
-        """Put a route on cooldown (per-model backoff): the parsed rate-limit
-        wait when given, else the configured default. C4: a cooled route is a
-        SUSPECT — before the next real session is spent on it, it must answer
-        the pre-dispatch liveness probe (select_with_probe)."""
-        if route_id:
-            self.suspect_routes.add(route_id)
+    def cool(self, entry, now, seconds=None):
+        """Put an enabled entry on cooldown (per-entry backoff): the parsed
+        rate-limit wait when given, else the configured default. C4: a cooled
+        entry is a SUSPECT — before the next real session is spent on it, it
+        must answer the pre-dispatch liveness probe (select_with_probe)."""
+        if entry:
+            self.suspect_routes.add(entry)
         agent_route.cool(
             self.cooldowns,
-            route_id,
+            entry,
             now,
             seconds if seconds is not None else self.cooldown_seconds,
         )
@@ -1301,8 +1301,8 @@ def map_preflight(
             failures.append("agents.toml: {}".format(e))
         for e in enable_errors:
             failures.append("agents-enabled: {}".format(e))
-        for mid in enabled:
-            m = registry[mid]  # resolve_enabled guarantees the id is in the registry
+        for entry in enabled:
+            m = registry[agent_route.entry_route(entry)]  # resolve_enabled: a row
             try:
                 exe, installed = launcher_exe(m.cmd_template)
                 if not installed:
@@ -1310,11 +1310,11 @@ def map_preflight(
                     # surface it at the earliest failure point (WI-109).
                     failures.append(
                         "agents.toml [{}]: CmdTemplate CLI {!r} is not on "
-                        "PATH.{}".format(mid, exe, " — " + m.notes if m.notes else "")
+                        "PATH.{}".format(m.id, exe, " — " + m.notes if m.notes else "")
                     )
             except (ValueError, IndexError) as exc:
                 failures.append(
-                    "agents.toml [{}]: cannot parse CmdTemplate: {}".format(mid, exc)
+                    "agents.toml [{}]: cannot parse CmdTemplate: {}".format(m.id, exc)
                 )
         for ph, tier in sorted(tier_map.items()):
             # normalize_tier: the legacy `weak` value stays a valid tier-map entry.
@@ -1325,10 +1325,12 @@ def map_preflight(
                     )
                 )
         for ph, mid in sorted(prefer_map.items()):
-            if not ph or not mid or not agent_route.ID_RE.match(mid):
+            if not ph or not mid or not agent_route.ENTRY_RE.match(mid):
                 failures.append(
                     "prefer-map [{}]: {!r} is not a valid agent id".format(ph, mid)
                 )
+        unverified = agent_route.unverified_lines(registry, enabled)  # printed
+        sys.stderr.write("".join("agent_loop: preflight: %s\n" % x for x in unverified))
     elif reg_errors:
         # A malformed registry in a repo NOT using routing is only a warning —
         # the layer is off, so it changes nothing (never-breaking).
@@ -1691,13 +1693,12 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     review_scope = ""  # WI-884: a review round's scope, for its session log
     hold = None  # a declared adjudicator brief that could not be composed
     brief_key = ""  # the adjudicator brief this session was composed from
-    route_id = None  # the selected registry id (managed mode)
+    entry = route_id = None  # the drawn entry and its registry id (managed)
     route_family = None  # the selected pair row's Family (identity, not route)
     route_tier = ""  # the selected row's Tier; "" off the managed path
     # The launch environment: None = inherit the ambient env (today's exact
-    # call); a pair row's Env is merged over os.environ below. This is how a
-    # router (ANTHROPIC_BASE_URL), a second account (CLAUDE_CONFIG_DIR /
-    # CODEX_HOME), or an API key (GEMINI_API_KEY) is selected declaratively.
+    # call); the drawn entry's is composed below by the one rule (WI-798):
+    # the row's Env, then its account's env and home variables.
     session_env = None
     if managed:
         phase, is_review, is_critique = st.pick_phase()
@@ -1738,20 +1739,21 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # Win-stay first -> it takes precedence over the static phase pin; both
         # only pin an id that survives the tier/heterogeneity pool filter.
         preferred_ids = list(winstay_pref) + list(phase_pin)
-        route_id, reason, route_stop = draw_session_route(
+        entry, reason, route_stop = draw_session_route(
             ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
         )
         if route_stop is not None:
             return route_stop
+        route_id = agent_route.entry_route(entry)
         m = registry[route_id]
         model = m.model or route_id
         route_family, route_tier = m.family, m.tier
         tmpl = m.cmd_template or template
-        row_env = agent_route.parse_env(m.env)
-        if row_env:
-            # Only a declared Env changes the launch env — an empty Env keeps
-            # the inherited environment exactly (session_env stays None).
-            session_env = {**os.environ, **row_env}
+        try:  # the one launch-environment rule: route env, account env, home
+            session_env = session_service.entry_env(root, registry, entry)
+        except session_service.SigninRefused as refused:
+            stop_banner(status_path, SIGNIN_HOLD, str(refused))
+            return EXIT_NEEDS_HUMAN
         if not is_review and (phase == "BUILD" or phase == ""):
             st.note_build_tier(tier)
         # A worker's verdict filename names the exact reviewed code HEAD
@@ -1851,6 +1853,8 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # — the ADJUDICATE validation arm's whole trigger, and a typed field
         # rather than a re-derivation from the phase, which cannot say WHICH.
         "brief": brief_key,
+        # The drawn entry keys this session's cooldown; route_id reads its row.
+        "entry": entry,
         "route_id": route_id,
         "route_family": route_family,
         "route_tier": route_tier,
@@ -1865,7 +1869,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     }
 
 
-def adjudication_bookkeeping(plan, worker, st, managed, route_id, now, root=None):
+def adjudication_bookkeeping(plan, worker, st, managed, entry, now, root=None):
     """Record whether an ADJUDICATE session actually RULED. A no-op for every
     other session (the guard is here rather than at the call site so
     `session_bookkeeping` gains no branch for it).
@@ -1900,11 +1904,11 @@ def adjudication_bookkeeping(plan, worker, st, managed, route_id, now, root=None
     if not owed:
         return
     print("adjudicate [{}]: not complete — {}".format(plan["brief"], owed))
-    if managed and route_id:
-        # The unparseable-review-verdict shape: cool the model and let the next
+    if managed and entry:
+        # The unparseable-review-verdict shape: cool the entry and let the next
         # session re-route, rather than re-asking the one that just failed to
         # answer in the required form.
-        st.cool(route_id, now)
+        st.cool(entry, now)
 
 
 @dataclass(frozen=True)
@@ -1959,13 +1963,13 @@ def apply_page_consequence(ctx, cons, title, detail):
     return None
 
 
-def reroute_rate_limited(st, route_id, reset_hint, now):
-    """Generalize the rate-limit backoff PER-MODEL: cool this model and
+def reroute_rate_limited(st, entry, reset_hint, now):
+    """Generalize the rate-limit backoff PER ENTRY: cool this entry and
     re-route to another available one next iteration. select() pages if none is
     left rather than dropping to a weaker tier (no silent swap)."""
     wait = seconds_until_reset(reset_hint) or st.cooldown_seconds
-    st.cool(route_id, now, wait)
-    print("route: {} rate-limited; cooled ~{}s, re-routing".format(route_id, int(wait)))
+    st.cool(entry, now, wait)
+    print("route: {} rate-limited; cooled ~{}s, re-routing".format(entry, int(wait)))
     return "reroute"
 
 
@@ -1990,7 +1994,7 @@ def absorb_review_verdict(root, st, plan, outcome, now):
     # ONE failure arm, because there was only ever one CONSEQUENCE: the two
     # cases differ in what to SAY, and they had the cool/draw-failure/re-route
     # in duplicate — a rule kept in two copies is a rule that drifts.
-    st.cool(route_id, now)
+    st.cool(plan["entry"], now)
     st.note_review_draw_failure()  # C1/C2: a failed draw, not a build stall
     print("route: {} review [{}] {}; cooled, re-routing".format(route_id, phase, why))
 
@@ -2208,7 +2212,7 @@ def critique_bookkeeping(ctx, plan, outcome, now):
     if v is None:
         # No verdict written (errored/stalled): cool + re-critique next pass
         # (the stall guard backstops a critic that never writes one).
-        st.cool(route_id, now)
+        st.cool(plan["entry"], now)
         print(
             "critique: {} wrote no verdict ({}); cooled, re-critiquing".format(
                 route_id, outcome
@@ -2232,7 +2236,7 @@ def critique_bookkeeping(ctx, plan, outcome, now):
         # record_critique_verdict's else branch — scope reset, queue cleared,
         # silently approved (repo-review 2026-07-21 H-1; the WI-243 "fail
         # closed" lesson one layer down).
-        st.cool(route_id, now)
+        st.cool(plan["entry"], now)
         print(
             "critique: {} verdict file has no parseable VERDICT line; "
             "cooled, re-critiquing".format(route_id)
@@ -2384,14 +2388,15 @@ def schedule_critique_round(ctx, commits):
     )
 
 
-def report_cooled_model(ctx, route_id, outcome, code):
+def report_cooled_model(ctx, entry, outcome, code):
     """Say WHY the pool is shrinking, at the moment it shrinks — the WAITING/no-verdict siblings already do; this path
     was silent. The row's Notes carries the actionable hint (auth/install), and
-    the session log holds the full transcript (WI-109)."""
-    note = ctx.registry[route_id].notes
+    the session log holds the full transcript (WI-109). The cooled entry is
+    named, account and all (WI-798)."""
+    note = ctx.registry[agent_route.entry_route(entry)].notes
     print(
         "route: {} session outcome={} (exit {}); cooled ~{}s, re-routing{}".format(
-            route_id,
+            entry,
             outcome,
             code,
             int(ctx.run.routing.cooldown_seconds),
@@ -2421,11 +2426,10 @@ def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
     Returns an int exit code when a page ends the run (`schedule_review_round`
     refused to draw a round on an unchanged tree), else None."""
     st = ctx.run.routing
-    route_id = plan["route_id"]
     phase = plan["phase"]
     if outcome in ("ERROR", "TIMEOUT"):
-        st.cool(route_id, now)
-        report_cooled_model(ctx, route_id, outcome, code)
+        st.cool(plan["entry"], now)
+        report_cooled_model(ctx, plan["entry"], outcome, code)
         return
     if outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
         return committed_build_rounds(ctx, plan, commits, after, wi_label)
@@ -2469,14 +2473,14 @@ def session_bookkeeping(
     # adjudication row gets its brief on BOTH routing paths, so it owes its
     # verdict on both — unlike everything below, which is managed-only.
     adjudication_bookkeeping(
-        plan, ctx.worker, st, ctx.managed, plan["route_id"], now, ctx.root
+        plan, ctx.worker, st, ctx.managed, plan["entry"], now, ctx.root
     )
     # --- managed routing / reviewer dispatch bookkeeping (S8) -------------
     # All of this is gated on managed mode; the legacy path never enters it.
     if not ctx.managed:
         return None
     if outcome == "WAITING":
-        return reroute_rate_limited(st, plan["route_id"], reset_hint, now)
+        return reroute_rate_limited(st, plan["entry"], reset_hint, now)
     if plan["is_review"] or plan["is_critique"]:
         failed, stop = judging_session_integrity(ctx, plan, commits, session, now)
         if failed:
@@ -2578,7 +2582,7 @@ def judging_session_integrity(ctx, plan, commits, session, now):
             "them".format(left, failure),
         )
         return True, EXIT_NEEDS_HUMAN
-    st.cool(plan["route_id"], now)
+    st.cool(plan["entry"], now)
     if plan["is_review"]:
         st.note_review_draw_failure()
     print(
@@ -2668,7 +2672,7 @@ def resolve_idle_timeout(args):
     return idle if idle and idle > 0 else None
 
 
-SIGNIN_HOLD = "NEEDS-HUMAN — the retained adjudicator's CLI home is not signed in"
+SIGNIN_HOLD = "NEEDS-HUMAN — the drawn entry's account cannot authenticate"
 
 
 def review_keep_scope(ctx, plan):
@@ -2702,7 +2706,7 @@ def adjudication_keep(ctx, plan, wi):
     coordinator's entry point uses, with the operator's loaded overrides, or
     a review round's once-resolved templates (`review_keep_templates`); the
     governing inputs it derives include every retained class's template. It
-    raises SigninRefused when the dedicated home is not signed in.
+    raises SigninRefused when the entry's account cannot authenticate.
 
     Implements: SR-227, LLR-270
     """
@@ -2712,6 +2716,7 @@ def adjudication_keep(ctx, plan, wi):
             role=plan["phase"],
             brief=plan.get("brief") or "",
             route=ctx.registry.get(plan["route_id"]),
+            account=agent_route.account_of(ctx.registry, plan.get("entry") or ""),
             wi=wi or "",
             prompt_templates=review_keep_templates(ctx, plan),
             deadline=ctx.args.session_timeout,
@@ -2725,8 +2730,8 @@ def launch_session(ctx, plan, wi=None):
     `Outcome`: the service launches it, reads its result, and times it on its
     own clock, so a duration exists even when the session dies before
     emitting JSON (spawn failure, timeout, crash). The loop hands over only
-    the route's data and the console renderer. A retained adjudication whose
-    dedicated home is not signed in launches nothing: the run stops needing
+    the route's data and the console renderer. A launch whose account
+    cannot authenticate launches nothing: the run stops needing
     a human (EXIT_NEEDS_HUMAN is returned in place of an Outcome). A launch
     the blackout window refuses waits the window out and is retried
     (`session_service.through_blackout`); the call carries its work item, so
@@ -2901,15 +2906,19 @@ def rate_limit_wait(args, reset_hint):
 PROBE_PROMPT = "Reply with the single word OK"
 
 
-def probe_route(row, root, wall=30):
+def probe_route(row, root, wall=30, account=None):
     """(ok, transcript) for one C4 liveness probe: the row's CmdTemplate run
     VERBATIM (a template defect must be caught by the probe, not by a burned
     draw — the doubled --dir incident, 2026-08-30) with the fixed prompt and a
     30 s wall. `ok` means the session exited 0 inside the wall and the result
     carries the word OK. A probe the blackout window refuses waits the window
-    out and is retried (`session_service.through_blackout`)."""
-    row_env = agent_route.parse_env(row.env)
-    env = {**os.environ, **row_env} if row_env else None
+    out and is retried (`session_service.through_blackout`). It runs under
+    the one launch-environment rule for `account` (None: the ambient login);
+    a probe that rule refuses fails with the refusal."""
+    try:
+        env = session_service.launch_env(root, row, account)
+    except session_service.SigninRefused as refused:
+        return False, str(refused)
     asked = session_service.Call(
         root=root,
         role="PROBE",
@@ -2937,7 +2946,7 @@ def probe_route(row, root, wall=30):
 def select_with_probe(
     ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
 ):
-    """agent_route.select + the C4 pre-dispatch probe: a route whose history
+    """agent_route.select + the C4 pre-dispatch probe: an entry whose history
     this run is UNCLEAN (it was cooled — ERROR, TIMEOUT, rate limit, garbled
     verdict) must answer a 30 s OK probe on its own CmdTemplate before a real
     session is spent on it; a failing probe cools the route with the reason
@@ -2945,7 +2954,7 @@ def select_with_probe(
     draw moves on. A route with a clean history is never probed — the probe
     is a recovery aid, not a tax. Bounded by the pool size."""
     for _ in range(len(ctx.enabled) + 1):
-        route_id, reason = agent_route.select(
+        entry, reason = agent_route.select(
             ctx.enabled,
             ctx.registry,
             tier,
@@ -2957,19 +2966,21 @@ def select_with_probe(
             agent_route.phase_weights(ctx.weight_map, phase),
             phase_draw_ordinal(ctx.draw_iter_dirs, phase),
         )
-        if route_id is None or route_id not in st.suspect_routes:
-            return route_id, reason
-        ok, transcript = probe_route(ctx.registry[route_id], ctx.root)
+        if entry is None or entry not in st.suspect_routes:
+            return entry, reason
+        row = ctx.registry[agent_route.entry_route(entry)]
+        account = agent_route.account_of(ctx.registry, entry)
+        ok, transcript = probe_route(row, ctx.root, account=account)
         if ok:
-            st.suspect_routes.discard(route_id)
-            return route_id, reason + " (probe OK)"
+            st.suspect_routes.discard(entry)
+            return entry, reason + " (probe OK)"
         hit = LIMIT_RE.search("\n".join(transcript.splitlines()[-15:]))
         why = "limit" if hit else "unreachable"
         wait = seconds_until_reset(hit.group(1)) if hit else None
-        st.cool(route_id, now, wait)
+        st.cool(entry, now, wait)
         print(
             "probe [{}]: {}, cooled ~{}s".format(
-                route_id, why, int(wait if wait else st.cooldown_seconds)
+                entry, why, int(wait if wait else st.cooldown_seconds)
             )
         )
     return None, "every candidate failed its liveness probe"
@@ -2984,7 +2995,7 @@ def draw_session_route(
     (heterogeneity dropped, recorded by the caller off the typed family fact);
     and, when nothing is routable at all for a worker's review, the REVIEW
     OWED park — never a NEEDS-HUMAN page the dispatcher would turn into a
-    handback of finished work. Returns `(route_id, reason, exit_code)`; a
+    handback of finished work. Returns `(entry, reason, exit_code)`; a
     non-None exit_code ends the run (the banner is already written). A review
     round's keep scope is settled here (`session_keep.review_retention`,
     WI-887): a retained round prefers its scope's live route and keeps its
@@ -3003,18 +3014,18 @@ def draw_session_route(
         else None
     )
     preferred_ids = list(kept.pin) + list(preferred_ids)
-    route_id, reason = select_with_probe(
+    entry, reason = select_with_probe(
         ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
     )
     # Log the routing decision BEFORE launch (the no-silent-swap rule).
     print("route [{}]: {}".format(phase or "—", reason))
-    if route_id is None and is_review:
-        route_id, reason = select_with_probe(
+    if entry is None and is_review:
+        entry, reason = select_with_probe(
             ctx, st, phase, tier, set(), False, preferred_ids, now
         )
-        if route_id is not None:
+        if entry is not None:
             print("route [{}]: heterogeneity RELAXED — {}".format(phase or "—", reason))
-    if route_id is None and is_review and ctx.worker:
+    if entry is None and is_review and ctx.worker:
         st.note_review_draw_failure()
         write_review_owed(
             ctx.root, ctx.worker, st, "no routable reviewer ({})".format(reason)
@@ -3028,7 +3039,7 @@ def draw_session_route(
             + agent_route.pool_context(ctx.enabled, ctx.registry, st.cooldowns, now),
         )
         return None, reason, EXIT_REVIEW_OWED
-    if route_id is None:
+    if entry is None:
         # Every enabled model at the preferred tier-or-stronger is cooling
         # down or none is enabled: page rather than drop to a weaker tier.
         # (A worker never writes run-state — its exit code is the page; the
@@ -3042,7 +3053,7 @@ def draw_session_route(
             + agent_route.pool_context(ctx.enabled, ctx.registry, st.cooldowns, now),
         )
         return None, reason, EXIT_NEEDS_HUMAN
-    return route_id, reason, None
+    return entry, reason, None
 
 
 def review_owed_marker(root):
@@ -3194,9 +3205,8 @@ def review_owed_stop(ctx):
     st = ctx.run.routing
     if not st.review_queue or st.review_draw_failures < max(1, ctx.args.stall_limit):
         return None
-    families = sorted(
-        {ctx.registry[m].family for m in ctx.enabled if m in ctx.registry}
-    )
+    rows = [ctx.registry.get(agent_route.entry_route(e)) for e in ctx.enabled]
+    families = sorted({m.family for m in rows if m is not None})
     detail = "{} draw(s) failed on {}".format(
         st.review_draw_failures, ",".join(families) or "(no enabled family)"
     )
@@ -3536,9 +3546,12 @@ def resolve_routing_setup(docs):
     the agents-enabled heading — the file is the consent surface, never
     silently ignored."""
     registry, reg_errors = agent_route.load_registry(docs / "agents.toml")
-    enabled_entries, annot_errors = agent_route.load_enabled_entries(
-        docs / "agents-enabled"
-    )
+    try:
+        enabled_entries, annot_errors = agent_route.load_enabled_entries(
+            docs / "agents-enabled"
+        )
+    except agent_route.EnabledUnreadable as exc:  # never routing off (WI-798)
+        enabled_entries, annot_errors = [], [str(exc)]
     raw_enabled = [token for token, _weights in enabled_entries]
     # Version-less tokens resolve to concrete pair-row ids (exact-id, else newest
     # in the Family-Model line).
@@ -3553,7 +3566,7 @@ def resolve_routing_setup(docs):
     )
     return RoutingSetup(
         registry=registry,
-        managed=bool(raw_enabled),
+        managed=bool(raw_enabled or annot_errors),
         enabled=enabled,
         weight_map=weight_map,
         reg_errors=reg_errors,
@@ -3680,7 +3693,7 @@ def possible_session_models(args, model_map, routing):
     if routing.managed:
         models |= {
             (routing.registry[mid].model or mid)
-            for mid in routing.enabled
+            for mid in map(agent_route.entry_route, routing.enabled)
             if mid in routing.registry
         }
     return models

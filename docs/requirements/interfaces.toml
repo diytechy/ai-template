@@ -777,9 +777,9 @@ status = "Drafted"
 
 [interface.IF-044]
 owner = "scripts/agent_route"
-requestors = ["scripts/agent_loop", "scripts/session_service"]
+requestors = ["scripts/agent_loop", "scripts/session_service", "scripts/plan_runner", "scripts/coordinator_adjudicate"]
 channel = "call"
-data = "select() -> the chosen row plus its reason; load_registry(path) -> {id: row}, errors; parse_env(cell) -> {name: value}; tiers strong · medium · quick"
+data = "resolve_enabled(tokens, registry) -> enabled entries, errors; resolve_entry(token, registry) -> entry or why; account_of(registry, entry) -> Account or None; load_enabled_entries raises EnabledUnreadable; select() -> entry, reason; entry_route(entry) -> registry id; load_registry(path) -> rows, errors"
 version = "v1"
 status = "Drafted"
 
@@ -787,7 +787,7 @@ status = "Drafted"
 owner = "docs/agents.toml"
 consumers = ["scripts/agent_route"]
 channel = "file"
-data = "Id, Family, Model, Version, Tier, CmdTemplate, Env, Notes; Tier: strong | medium | quick"
+data = "route rows: Id, Family, Model, Version, Tier, CmdTemplate, Env, Notes; account tables: cli, notes, optional env, token_file_variable and verified; Tier: strong | medium | quick"
 version = "v1"
 status = "Drafted"
 notes = """FAN-OUT IS NOT 1: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves."""
@@ -796,7 +796,7 @@ notes = """FAN-OUT IS NOT 1: agent_route is the sole reader of the pair-row MODE
 owner = "docs/agents-enabled"
 consumers = ["scripts/agent_route", "scripts/dispatch"]
 channel = "file"
-data = "one registry id per line in preference order, optional <PHASE>=<weight> annotations; presence turns managed routing on"
+data = "one entry per line in preference order (a registry id, optionally ROUTE@ACCOUNT), optional <PHASE>=<weight> annotations; presence turns routing on; an existing unreadable file is an error"
 version = "v1"
 status = "Drafted"
 
@@ -1905,7 +1905,7 @@ notes = """source - assumption_rules consumes nothing but the row vocabulary it 
 [interface.IF-194]
 rationale = "A loop commit can be told apart from a person's only if every one says it is the loop's, and every floor that checks it and every reader that relies on it must agree on the words: the trailer key, the session grammar, which trailer counts, the name of the marker a loop-started process carries, and which commits mark a lane as the loop's and which attended record closes it. One vocabulary module below every writer, floor and reader keeps a writer from emitting a trailer a floor calls malformed, keeps the merge slot and the writers agreeing on what a loop writer's commit looks like, and keeps the history check reading the mark the writers wrote."
 owner = "scripts/kitlib/provenance"
-requestors = ["scripts/agent_common", "scripts/agent_loop", "scripts/bookkeeping", "scripts/check", "scripts/check_trajectory", "scripts/dispatch", "scripts/handback", "scripts/integrate"]
+requestors = ["scripts/agent_common", "scripts/agent_loop", "scripts/bookkeeping", "scripts/check", "scripts/check_trajectory", "scripts/dispatch", "scripts/handback", "scripts/integrate", "scripts/session_service"]
 channel = "call"
 data = "LOOP_TRAILER/LOOP_SESSION_ENV;format/parse_loop_trailer, loop_{trailer_refusal,writer_commit,lane_window}, reclaim_subject; mark_loop_process, with_loop_trailer"
 version = "v1"
@@ -2275,9 +2275,9 @@ notes = """No tie-back: the argv comes in from the adopter's own session, and th
 [interface.IF-245]
 rationale = """Each provider runner differs in the flags that make it emit structured output, where its final text is, which events carry its usage and how full its context is. Scattered through the launching roles those differences drift apart, so one module answers them per runner and the session layer imports it."""
 owner = "scripts/session_adapters"
-requestors = ["scripts/session_service"]
+requestors = ["scripts/session_service", "scripts/agent_route"]
 channel = "call"
-data = "USAGE_KEYS, OTEL_SEMCONV; adapter_for(argv) -> adapter; adapter.prepare, final_text, raw_usage, usage, context"
+data = "USAGE_KEYS, OTEL_SEMCONV; adapter_for(argv) -> adapter; adapter methods; HOME_VARIABLES, TOKEN_VARIABLES; cli_named(executable), home_env(cli, home)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2288,7 +2288,7 @@ rationale = """Every role that makes a model call needs the same launch, account
 owner = "scripts/session_service"
 requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch"]
 channel = "call"
-data = "Call (including wi), Outcome; act/call -> Outcome or BlackoutRefused or HooksOffRefused; through_blackout(launch) -> Outcome; record -> path; call_succeeded(outcome) -> bool; keep plan, version and warmer"
+data = "Call (including wi), Outcome; act/call -> Outcome or BlackoutRefused or HooksOffRefused; through_blackout(launch) -> Outcome; record -> path; call_succeeded(outcome) -> bool; keep plan, version, warmer and route_runner(entry)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2299,7 +2299,7 @@ rationale = """A retained adjudicator session must outlive the lane worktree who
 owner = "scripts/session_keep"
 consumers = ["scripts/agent_loop", "scripts/dispatch"]
 channel = "file"
-data = "out/adjudicator/<FAMILY>-<hash of route id, or route id NUL scope>.json; .mark JSON: identity, publisher, session/generation, kind, payload"
+data = "out/adjudicator/<FAMILY>-<hash of route id, NUL scope, NUL account>.json; identity family, route_id, account, scope; missing account is not its own; .mark carries that identity"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2314,7 +2314,7 @@ data = "KeepConfig; keep_for; keep_bookkeep; keep_release; keep_abandon; take_wa
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - the module launches nothing and writes no log; its only effects are the retained-session records and the store lock under out/adjudicator, and the dedicated CLI home directories it creates there."""
+notes = """source - the module launches nothing and writes no log; its only effects are the retained-session records and the store lock under out/adjudicator, and the account home directories it creates there."""
 
 [interface.IF-260]
 owner = "scripts/agent_brief"
@@ -2391,6 +2391,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-007"
 rationale = "The hook must select opted-in sensors without inheriting the full gate plan or copying its selection logic."
+
 [interface.IF-269]
 owner = "scripts/observation_cadence"
 requestors = ["scripts/rejudge", "scripts/check_trajectory"]
@@ -2487,6 +2488,7 @@ status = "Drafted"
 component = "CMP-008"
 
 rationale = "Both platform launchers set one successor-token environment surface, so SessionStart takes exactly the token its holder issued."
+
 [interface.IF-279]
 owner = "scripts/coordinator_guard"
 consumers = ["scripts/coordinator-relaunch.cmd", "scripts/coordinator-relaunch.sh"]
@@ -2497,6 +2499,7 @@ status = "Drafted"
 component = "CMP-008"
 
 rationale = "The guard launches both platform helpers through one argument shape, so root, prompt and token remain aligned with their consumers."
+
 [interface.IF-280]
 owner = "scripts/coordinator_guard"
 requestors = ["external:agent CLI"]
@@ -2525,18 +2528,18 @@ rationale = "The loop and coordinator need one request shape for the retention p
 owner = "scripts/session_service"
 requestors = ["scripts/agent_loop", "scripts/coordinator_adjudicate"]
 channel = "call"
-data = "AdjudicationRequest(route, scope); prepare_launch -> Prepared; cli_version(Prepared); compose_env; probe_env; refuse_competing; launch_credential; SigninRefused"
+data = "AdjudicationRequest(route, scope, account); route_runner(entry); prepare_launch(root, row, account) -> Prepared; launch_env/entry_env; cli_version; compose_env; probe_env; refuse_competing; launch_credential(account); signin_status(root, account); require_signin"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "source - the request is planned but not launched here; a retained dedicated-home reading other than signed-in raises before a lease or home is created. The act turn is a second request from scripts/coordinator_adjudicate and uses its verdict-bound brief class."
+notes = "source - the request is planned but not launched here; a retained account-home reading other than signed-in raises before a lease or home is created. The act turn is a second request from scripts/coordinator_adjudicate and uses its verdict-bound brief class."
 
 [interface.IF-283]
 rationale = "The coordinator needs one declared argument surface for an adjudication it starts outside the loop, so the caller, parser and command contract agree on which inputs are admissible."
 owner = "scripts/coordinator_adjudicate"
 requestors = ["external:coordinator"]
 channel = "cli"
-data = "adjudicate and act command lines; act --verdict PATH --wi WI-N [--route ID] [--root DIR] [--timeout SECONDS]; signin --retained"
+data = "adjudicate and act command lines; --route names an enabled entry (default ANTHROPIC-OPUS-STRONG@ADJUDICATOR); act --verdict PATH --wi WI-N [--route ID] [--root DIR] [--timeout SECONDS]; signin reads that entry account; --retained reports off without probing when retention is off; adjudicate carries wi"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2548,7 +2551,7 @@ rationale = "The coordinator needs a result surface distinct from command argume
 owner = "scripts/coordinator_adjudicate"
 consumers = ["external:coordinator"]
 channel = "exit-code"
-data = "adjudicate: 0 valid|1 failed|2 pre-launch/blackout refusal|7 sign-in; act: 0 complete|1 after launch|2 pre-launch/blackout refusal|7 sign-in; signin: 0"
+data = "adjudicate: 0 valid|1 failed|2 pre-launch/blackout refusal|7 account authentication, account-home, or launch-environment; act: 0 complete|1 after launch|2 pre-launch/blackout refusal|7 sign-in; signin: 0"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2559,7 +2562,7 @@ rationale = "The coordinator needs the command's human-readable operational read
 owner = "scripts/coordinator_adjudicate"
 consumers = ["external:coordinator"]
 channel = "stdout"
-data = "adjudicate and act readings: keep, exit and refusal; act also reports owed-after, verdict-record writes or complete; see Contract IF-285."
+data = "adjudicate and act readings: keep, exit and refusal; act also reports owed-after, verdict-record writes or complete; stdout includes sign-in reading (account and token/login kind, ambient, retained-off, or unresolved), blackout refusal, and call outcome; see Contract IF-285."
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

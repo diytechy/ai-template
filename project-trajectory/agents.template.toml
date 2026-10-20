@@ -45,10 +45,42 @@ model = "example"
 version = "0"
 tier = "quick"
 cmd_template = "your-cli -p {prompt}"
-env = """KEY=value;KEY2=value2 - merged over the inherited environment at launch (the router / second-account / API-key selector). Absent = the ambient environment, which is the default behaviour."""
+env = """KEY=value;KEY2=value2 - merged over the inherited environment at launch (the router / API-key selector; a second account is an [account.<ID>] table below). Absent = the ambient environment, which is the default behaviour."""
 notes = """placeholder row (ends in -000, ignored) - copy a real row above and edit; Windows batch shims must use stdin instead of {prompt}"""
 
-# Second account = a second PAIR row (distinct id => independent cooldown; same Family). Claude/Codex config dirs are token-isolated, so concurrent account rows are safe:
-# ANTHROPIC-OPUS-4.8-ACCT2,ANTHROPIC,opus,4.8,strong,claude -p --model {model} --output-format json,CLAUDE_CONFIG_DIR=~/.claude-work,second paid plan (Codex: CODEX_HOME - --profile alone shares one auth.json). Gemini OAuth accounts share one creds file and race on refresh: use GEMINI_API_KEY or serialize.
+# ACCOUNTS (WI-798): a second account of one CLI is an `[account.<ID>]` table
+# plus a qualified enable-list entry `ROUTE@ACCOUNT`, never a duplicated row.
+# <ID> names the account's home directory, so it is portable: [A-Z0-9][A-Z0-9-]*
+# (no dot) and not a Windows device name (CON, PRN, AUX, NUL, COM0-9, LPT0-9).
+#   cli                  claude | codex | opencode | gemini: the CLI it signs into
+#   notes                free text
+#   env                  optional KEY=value;KEY2=value2, composed AFTER the route's
+#                        env; a name both declare is refused, and it never names
+#                        the CLI's home variable
+#   token_file_variable  optional (claude only): the environment VARIABLE naming
+#                        the file that holds the account's long-lived token
+#                        (`claude setup-token`); never a path
+#   verified             "<YYYY-MM-DD> <cli version>" once the login-isolation
+#                        check passed; absent or empty on a login-authenticated
+#                        claude account = UNVERIFIED, printed (never refused)
+# The account's home is <user config dir>/project-trajectory/accounts/<ID>/
+# (%APPDATA% on Windows; $XDG_CONFIG_HOME, else ~/.config, on POSIX), outside
+# every checkout and shared by every repository on the box. A login account's
+# home is yours to provision (e.g. with CODEX_HOME set to "<home>", run
+# `codex login`); the kit
+# creates only a token account's home, empty, and never reads, moves, copies or
+# deletes what a CLI writes there. An unqualified entry runs under your own
+# ambient login, with the route's env, exactly as before.
+# The example is the coordinator's adjudicator. coordinator_adjudicate.py's
+# default entry is ANTHROPIC-OPUS-STRONG@ADJUDICATOR, and an entry's route side
+# must be a row of this registry, which ships no ANTHROPIC-OPUS-STRONG row. So
+# uncomment the table, name <your strong Anthropic route's id>@ADJUDICATOR on
+# docs/agents-enabled and pass that entry to the coordinator with --route (or
+# declare your route under the id ANTHROPIC-OPUS-STRONG, which the default
+# names), and set the variable to your token file (dev-setup).
+#[account.ADJUDICATOR]
+#cli = "claude"
+#notes = "the coordinator's adjudicator, on a long-lived token (claude setup-token)"
+#token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"
 # Router = a PAIR row with an Env selector; SAME Family (a router is access, not identity) so it is NOT a diverse reviewer from its native sibling:
 # ANTHROPIC-OPUS-4.8-ROUTER,ANTHROPIC,opus,4.8,strong,claude -p --model {model} --output-format json,ANTHROPIC_BASE_URL=https://your-router.example,pin LiteLLM off the known-malicious PyPI builds 1.82.7/1.82.8

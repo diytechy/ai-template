@@ -55,13 +55,24 @@ def _hooks_on(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _claude_token(monkeypatch, tmp_path):
-    """A canary long-lived token for the retained Claude home (WI-846), so a
-    planned keep or a keep-warm ping launches; tests/test_adjudicator_token.py
-    tests the token itself."""
+    """A canary long-lived token for a token account (WI-846, re-pointed at
+    the account by WI-798: the token binds to the declared account whose
+    `token_file_variable` names this variable, never to a family), so a
+    planned keep or a keep-warm ping on such an account launches;
+    tests/test_adjudicator_token.py tests the token itself."""
     token = tmp_path / "token" / "claude-token"
     token.parent.mkdir()
     token.write_text("canary-token", encoding="utf-8")
-    monkeypatch.setenv(svc.TOKEN_VARIABLES["ANTHROPIC"][0], str(token))
+    monkeypatch.setenv("AGENT_CLAUDE_TOKEN_FILE", str(token))
+
+
+@pytest.fixture(autouse=True)
+def _codex_home(monkeypatch, tmp_path):
+    """The ambient codex home an unqualified codex route reads its rollouts
+    under (WI-798: an ambient entry has no kit-held home), a temporary one so
+    no test writes beside the repository; a test that needs another sets its
+    own."""
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path / "codex-home"))
 
 
 def _fixture(name):
@@ -103,6 +114,14 @@ ROUTE_ROWS = "".join(
     )
     for family, template in TEMPLATES.items()
 )
+# The token account a retained Claude launch authenticates on (WI-846's token,
+# bound to a declared account by WI-798: its `token_file_variable` names the
+# variable the `_claude_token` fixture sets).
+TOKEN_ACCOUNT = "TOKACCT"
+ROUTE_ROWS += (
+    '[account.TOKACCT]\ncli = "claude"\nnotes = "test token account"\n'
+    'token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"\n'
+)
 
 
 def _route(tmp_path, family="ANTHROPIC", route_id=None):
@@ -116,21 +135,38 @@ def _route(tmp_path, family="ANTHROPIC", route_id=None):
     return rows.get(route_id or family + "-ROUTE")
 
 
-def _prepared(tmp_path, family="ANTHROPIC", route_id=None):
+def _account(tmp_path, account):
+    """The declared account `account` of the test's registry, or None (the
+    ambient login) for none."""
+    if not account:
+        return None
+    registry = Path(tmp_path) / "docs" / "agents.toml"
+    _route(tmp_path)  # the registry, written unless the test wrote its own
+    return svc.agent_route.load_registry(registry)[0].accounts[account]
+
+
+def _prepared(tmp_path, family="ANTHROPIC", route_id=None, account=""):
     """The validated launch every retained Keep carries (WI-846): one helper,
     so a test builds its Keeps the way the session service does, from the
-    selected row."""
-    return svc.prepare_launch(tmp_path, _route(tmp_path, family, route_id))
+    selected row and account (WI-798; "" the ambient login)."""
+    row = _route(tmp_path, family, route_id)
+    return svc.prepare_launch(tmp_path, row, _account(tmp_path, account))
 
 
 def _warm_prepare(tmp_path):
-    """`take_warm_lease`'s `prepare` for a test's ANTHROPIC route."""
-    return lambda route_id: (_prepared(tmp_path, route_id=route_id), "")
+    """`take_warm_lease`'s `prepare` for a test's ANTHROPIC route and its
+    entry's account ("" the ambient login)."""
+    return lambda route_id, account: (
+        _prepared(tmp_path, route_id=route_id, account=account),
+        "",
+    )
 
 
-def _keep(tmp_path, cfg, family="ANTHROPIC", wi="WI-1", brief="disposition", **kw):
+def _keep(
+    tmp_path, cfg, family="ANTHROPIC", wi="WI-1", brief="disposition", account="", **kw
+):
     kw.setdefault("lease_wait", 0)
-    kw.setdefault("prepared", _prepared(tmp_path, family))
+    kw.setdefault("prepared", _prepared(tmp_path, family, account=account))
     return keep.keep_for(
         tmp_path,
         cfg,
@@ -139,6 +175,7 @@ def _keep(tmp_path, cfg, family="ANTHROPIC", wi="WI-1", brief="disposition", **k
         family=family,
         route_id=family + "-ROUTE",
         wi=wi,
+        account=account,
         **kw,
     )
 
@@ -305,15 +342,27 @@ def test_codex_resume_drops_a_working_directory_and_ephemeral_flag():
 
 
 def test_a_retained_codex_route_runs_under_its_dedicated_home_and_reads_occupancy(
-    tmp_path,
+    tmp_path, monkeypatch
 ):
-    """The route-level path: a retained codex adjudication launches with the
-    dedicated CODEX_HOME the owner ruled for retention, and its occupancy is
-    read from the rollout under that home."""
+    """The route-level path: a retained codex adjudication on a codex ACCOUNT
+    launches with that account's CODEX_HOME (WI-798, re-pointed from the
+    retired per-family home), and its occupancy is read from the rollout
+    under that home."""
     thread = "01a0f5b5-ff52-73c1-b233-c11dd3defd4d"
-    kept = _keep(tmp_path, ON, "OPENAI")
-    home = Path(kept.home_env["CODEX_HOME"])
-    assert home.is_dir() and home.parent.parent == keep.store_dir(tmp_path)
+    config = tmp_path / "user-config"
+    monkeypatch.setenv("APPDATA" if os.name == "nt" else "XDG_CONFIG_HOME", str(config))
+    home = config / "project-trajectory" / "accounts" / "CODEX1"
+    home.mkdir(parents=True)  # a login account's home: the person provisions it
+    _route(tmp_path)
+    with (tmp_path / "docs" / "agents.toml").open("a", encoding="utf-8") as handle:
+        handle.write('[account.CODEX1]\ncli = "codex"\nnotes = "test"\n')
+    registry = svc.agent_route.load_registry(tmp_path / "docs" / "agents.toml")[0]
+    prepared = svc.prepare_launch(
+        tmp_path, registry["OPENAI-ROUTE"], registry.accounts["CODEX1"]
+    )
+    kept = _keep(tmp_path, ON, "OPENAI", prepared=prepared, account="CODEX1")
+    assert kept.home_env["CODEX_HOME"] == str(home)
+    assert not (keep.store_dir(tmp_path) / "home").exists()  # no family home
     day = home / "sessions" / "2026" / "09" / "30"
     day.mkdir(parents=True)
     (day / "rollout-2026-09-30T23-25-40-{}.jsonl".format(thread)).write_text(
@@ -330,7 +379,11 @@ def test_a_retained_codex_route_runs_under_its_dedicated_home_and_reads_occupanc
     )
     assert envs[0]["CODEX_HOME"] == str(home)
     assert out.metrics["context-used"] == 15224
-    assert keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE")["pct"] == 6
+    assert (
+        keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE", account="CODEX1")["pct"]
+        == 6
+    )
+    assert keep.store_load(tmp_path, "OPENAI", "OPENAI-ROUTE") is None
 
 
 def test_an_unretained_codex_call_reads_occupancy_under_the_inherited_home(
@@ -387,8 +440,8 @@ def _adjudicate(tmp_path, cfg, stream, wi="WI-1", code=0, timed_out=False, **kw)
     )
 
 
-def _state(tmp_path):
-    return keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE")
+def _state(tmp_path, account=""):
+    return keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", account=account)
 
 
 def _rows(**statuses):
@@ -517,7 +570,7 @@ def test_the_runner_version_is_read_for_a_retained_launch(tmp_path, monkeypatch)
 
     _prepared(tmp_path)  # the route's registry row
     monkeypatch.setattr(svc.subprocess, "run", fake_run)
-    monkeypatch.setattr(svc, "signin_status", lambda root, family: "signed-in")
+    monkeypatch.setattr(svc, "signin_status", lambda *a, **k: "signed-in")
     kept = svc.plan_keep(
         tmp_path,
         ON,
@@ -551,7 +604,7 @@ def test_the_loop_folds_the_adjudication_template_into_the_governing_inputs(
     al = load_script("agent_loop")
     monkeypatch.setattr(svc, "cli_version", lambda *a, **k: "")
     monkeypatch.setattr(
-        al.session_service, "signin_status", lambda root, family: "signed-in"
+        al.session_service, "signin_status", lambda *a, **k: "signed-in"
     )
     _prepared(tmp_path)  # the route's registry row
     (tmp_path / "docs" / "process.toml").write_text(
@@ -882,10 +935,11 @@ def test_keep_warmer_excludes_a_route_whose_argv_is_refused(tmp_path, monkeypatc
             "GEMINI-ROUTE": _Row("GEMINI", "gemini -p {prompt}"),
             "ANTHROPIC-ROUTE": _Row("ANTHROPIC"),
         },
+        entries=["GEMINI-ROUTE", "ANTHROPIC-ROUTE"],
     )
     assert isinstance(warmer, svc.KeepWarmer)
-    assert "GEMINI-ROUTE" not in warmer.routes
-    assert "ANTHROPIC-ROUTE" in warmer.routes
+    assert ("GEMINI-ROUTE", "") not in warmer.routes
+    assert ("ANTHROPIC-ROUTE", "") in warmer.routes
 
 
 def test_keep_warm_is_due_only_for_an_active_anthropic_session_with_work():
@@ -919,6 +973,7 @@ def test_keep_warm_pings_only_a_route_whose_adapter_bounds_one_turn(tmp_path):
         tmp_path,
         ON,
         {"ANTHROPIC-ROUTE": _Row("ANTHROPIC", "opencode run -m anthropic/model")},
+        entries=["ANTHROPIC-ROUTE"],
         runner=_launch(_claude_stream(11), seen=seen),
         clock=lambda: 10**10,
         dirty=lambda: False,
@@ -937,11 +992,17 @@ def test_keep_warm_pings_only_a_route_whose_adapter_bounds_one_turn(tmp_path):
     assert argv[argv.index("--max-turns") + 1] == "1"
 
 
-def _warmer(tmp_path, runner, dirty=lambda: False):
+def _warmer(tmp_path, runner, dirty=lambda: False, account=""):
+    """A warmer over the test's ANTHROPIC route, on `account`'s entry ("" the
+    ambient login's)."""
+    registry = svc.agent_route.Registry({"ANTHROPIC-ROUTE": _Row("ANTHROPIC")})
+    if account:
+        registry.accounts[account] = _account(tmp_path, account)
     return svc.KeepWarmer(
         tmp_path,
         ON,
-        {"ANTHROPIC-ROUTE": _Row("ANTHROPIC")},
+        registry,
+        entries=[svc.agent_route.entry_of("ANTHROPIC-ROUTE", account)],
         runner=runner,
         clock=lambda: 10**10,
         dirty=dirty,
@@ -1043,10 +1104,14 @@ def test_the_dispatcher_builds_its_warmer_from_the_routing_registry(tmp_path):
         'env = "CLAUDE_CODE_EFFORT_LEVEL=high"\nnotes = ""\n',
         encoding="utf-8",
     )
+    (tmp_path / "docs" / "agents-enabled").write_text(
+        "ANTHROPIC-ROUTE\n", encoding="utf-8"
+    )
     warmer = svc.keep_warmer(tmp_path, ON)
     row = warmer.registry["ANTHROPIC-ROUTE"]
     assert row.cmd_template == "claude -p --model {model}"
-    assert svc.route_env(row)["CLAUDE_CODE_EFFORT_LEVEL"] == "high"
+    assert warmer.routes == {("ANTHROPIC-ROUTE", "")}  # the enabled entry
+    assert svc.launch_env(tmp_path, row)["CLAUDE_CODE_EFFORT_LEVEL"] == "high"
 
 
 # --- round 3: lineage, shutdown, tombstone, the real dirty read -------------------
@@ -1225,6 +1290,7 @@ def test_the_warmer_reads_the_trunk_through_the_shared_dirty_check(tmp_path):
         tmp_path,
         ON,
         {"ANTHROPIC-ROUTE": _Row("ANTHROPIC")},
+        entries=["ANTHROPIC-ROUTE"],
         runner=_launch(_claude_stream(11)),
         clock=lambda: 10**10,
     )
@@ -1341,7 +1407,7 @@ def test_codex_rollout_prompt_drop_labels_inference(tmp_path, monkeypatch):
 
 def test_codex_reported_rollout_compaction_takes_precedence(tmp_path):
     retained = _keep(tmp_path, ON, family="OPENAI")
-    home = Path(retained.home_env["CODEX_HOME"])
+    home = Path(os.environ["CODEX_HOME"])
     thread = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[0])["thread_id"]
     rollout = _fixture("codex-rollout.jsonl")
     # The fixture lacks compacted: inline envelope variant with the observed
@@ -1382,7 +1448,7 @@ def test_codex_reported_replaces_inferred_and_holds_on_new_drop(tmp_path):
     assert out.metrics["compaction-source"] == "inferred"
     _codex_rollout(tmp_path, [35911, 15717])
     retained = _keep(tmp_path, ON, family="OPENAI")
-    home = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    home = Path(os.environ["CODEX_HOME"]) / "sessions"
     thread = json.loads(_fixture("codex-exec-json.jsonl").splitlines()[0])["thread_id"]
     rollout = home / f"rollout-test-{thread}.jsonl"
     entry = json.loads(_fixture("codex-rollout.jsonl").splitlines()[0])
@@ -1430,7 +1496,7 @@ def test_codex_equal_prompt_is_not_compaction(tmp_path):
 
 def test_codex_rollout_request_drop_is_inferred_without_reported_entry(tmp_path):
     retained = _keep(tmp_path, ON, family="OPENAI")
-    home = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    home = Path(os.environ["CODEX_HOME"]) / "sessions"
     home.mkdir(parents=True, exist_ok=True)
     events = [json.loads(ln) for ln in _fixture("codex-rollout.jsonl").splitlines()]
     requests = [e for e in events if e.get("payload", {}).get("type") == "token_count"]
@@ -1461,7 +1527,7 @@ def test_codex_legacy_record_learns_running_total_before_inference(tmp_path):
 
 def test_codex_unrelated_rollout_cannot_report_compaction(tmp_path):
     retained = _keep(tmp_path, ON, family="OPENAI")
-    day = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    day = Path(os.environ["CODEX_HOME"]) / "sessions"
     day.mkdir(parents=True, exist_ok=True)
     entry = json.loads(_fixture("codex-rollout.jsonl").splitlines()[0])
     entry.update(type="compacted", payload={"replacement_history": []})
@@ -1481,8 +1547,8 @@ def test_codex_multiple_exec_totals_without_rollout_cannot_infer(tmp_path):
 
 def _codex_rollout(root, prompts):
     # Inline token_count variants of the live rollout, in request order.
-    retained = _keep(root, ON, family="OPENAI")
-    home = Path(retained.home_env["CODEX_HOME"]) / "sessions"
+    _keep(root, ON, family="OPENAI")  # takes the lease the rollout read folds
+    home = Path(os.environ["CODEX_HOME"]) / "sessions"
     with keep.store_lock(root):
         record = keep.store_load(root, "OPENAI", "OPENAI-ROUTE")
         if record:
@@ -1635,8 +1701,10 @@ def test_the_empty_scope_keeps_the_adjudicators_file_name(tmp_path):
     path = keep.store_dir(tmp_path) / "ANTHROPIC-{}.json".format(key)
     assert keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE") == path
     assert keep._store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) != path
-    # A record written before scopes existed (no `scope` key) still loads:
-    # a full record as its writer wrote it, every session field present.
+    # A record with no `scope` key loads under the empty scope: a full record
+    # as its writer writes it, every session field present. One written
+    # before accounts (no `account` key, WI-798) is not its own at that same
+    # name, so the next launch mints once.
     path.parent.mkdir(parents=True)
     old = {
         "family": "ANTHROPIC",
@@ -1650,7 +1718,10 @@ def test_the_empty_scope_keeps_the_adjudicators_file_name(tmp_path):
         "reset_reason": "",
     }
     path.write_text(json.dumps(old), encoding="utf-8")
-    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE") == old
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE") is None
+    current = dict(old, account="")
+    path.write_text(json.dumps(current), encoding="utf-8")
+    assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE") == current
     assert keep.store_load(tmp_path, "ANTHROPIC", "ANTHROPIC-ROUTE", LANE_A) is None
 
 
@@ -2326,7 +2397,12 @@ def test_a_malformed_lease_is_no_record_on_every_variant(tmp_path, case, variant
     lease = dict(MALFORMED_LEASES[case], until=time.time() + 3600)
     if case == "until-string":
         lease["until"] = "soon"
-    record = {"family": "ANTHROPIC", "route_id": "ANTHROPIC-ROUTE", "scope": LANE_A}
+    record = {
+        "family": "ANTHROPIC",
+        "route_id": "ANTHROPIC-ROUTE",
+        "account": "",
+        "scope": LANE_A,
+    }
     if variant == "retired-first":
         record.update(state="retired", reset_reason="lease expired unreleased")
     good = dict(record, lease={"holder": "review-a:x", "until": 1.5})
@@ -2468,7 +2544,7 @@ def test_a_keep_warm_ping_under_contention_leaves_no_lease_and_stays_warm(
     record = _locked_read(tmp_path).record
     assert "lease" not in record and record["state"] == "active"
     assert record["pct"] == 11
-    assert keep.due_routes(tmp_path, ON, 10**10, True) == ["ANTHROPIC-ROUTE"]
+    assert keep.due_routes(tmp_path, ON, 10**10, True) == [("ANTHROPIC-ROUTE", "")]
 
 
 def test_a_release_marker_never_makes_keep_warm_skip_the_record(tmp_path, short_apply):
@@ -2479,7 +2555,7 @@ def test_a_release_marker_never_makes_keep_warm_skip_the_record(tmp_path, short_
     with keep.store_lock(tmp_path):
         keep.keep_release(tmp_path, held)
     assert len(_markers(tmp_path)) == 1  # pending
-    assert keep.due_routes(tmp_path, ON, 10**10, True) == ["ANTHROPIC-ROUTE"]
+    assert keep.due_routes(tmp_path, ON, 10**10, True) == [("ANTHROPIC-ROUTE", "")]
     ping, reason = keep.take_warm_lease(
         tmp_path,
         ON,
@@ -2594,7 +2670,7 @@ def test_a_malformed_marker_is_deleted_with_one_line_and_read_as_absent(
     before = _state(tmp_path)
     bad = _marker_path(tmp_path, "0123456789abcdef")
     bad.write_text("{not json", encoding="utf-8")
-    assert keep.due_routes(tmp_path, ON, 10**10, True) == ["ANTHROPIC-ROUTE"]
+    assert keep.due_routes(tmp_path, ON, 10**10, True) == [("ANTHROPIC-ROUTE", "")]
     assert bad.exists()  # a lockless reader never deletes
     capsys.readouterr()
     assert _locked_read(tmp_path).record == before

@@ -1,7 +1,10 @@
-"""The retained Claude home's long-lived token, and an auth failure that keeps the session.
+"""A token account's long-lived token, and an auth failure that keeps the session.
 
-WI-846. The retained adjudicator's dedicated Claude home authenticates with
-the owner's long-lived token (`claude setup-token`). The token FILE's path is
+WI-846, re-pointed by WI-798. The retained adjudicator's Claude account
+authenticates with the owner's long-lived token (`claude setup-token`): the
+token binds to one declared TOKEN ACCOUNT, whose `token_file_variable` names
+the variable locating its file, never to a family, and it launches under that
+account's own home (outside the checkout, created empty by the kit). The token FILE's path is
 read at each retained launch from a declared environment variable (OI-110
 (b), 2026-10-08: nothing about the path is tracked), and the token reaches
 the CLI only through the variable the CLI reads it from. An unset variable, or
@@ -28,6 +31,8 @@ import test_session_keep as sk
 
 CANARY = "sk-ant-oat01-CANARY-846-never-logged"  # a fake token shaped like a real one; privacy-ok
 TOKEN_FILE = "AGENT_CLAUDE_TOKEN_FILE"
+TOK = sk.TOKEN_ACCOUNT  # the declared token account these launches run on
+ENTRY = "ANTHROPIC-ROUTE@" + TOK
 
 
 # Every retained launch here prepares with a resolvable runner (WI-846).
@@ -116,7 +121,8 @@ def test_the_token_is_read_at_launch_and_never_logged(tmp_path, monkeypatch, cap
     printed = capsys.readouterr()
     assert CANARY not in printed.out + printed.err
     assert CANARY not in repr(commits)
-    assert CANARY not in _files_text(tmp_path / "repo")  # logs, records, home
+    home = coord.keep.account_home(coord.ACCOUNT)
+    assert CANARY not in _files_text(tmp_path / "repo", home)  # logs, records, home
     assert coord._state(root)["state"] == "active"
 
 
@@ -139,16 +145,21 @@ def test_a_token_that_cannot_be_read_refuses_before_launch(
     assert "dev-setup" in out and "setup-token" in out and TOKEN_FILE in out
     assert str(tmp_path) not in out  # the variable is named, never its path
     assert launched == []
-    assert not (coord.keep.store_dir(root) / "home").exists()
+    assert not (coord.keep.store_dir(root) / "home").exists()  # no family home
+    assert not coord.keep.account_home(coord.ACCOUNT).exists()  # nor its own yet
     assert coord._state(root) is None  # no lease taken, nothing recorded
 
 
 def test_the_claude_probe_reads_the_token_file_and_runs_nothing(tmp_path, monkeypatch):
     ran = []
 
+    account = coord.cli.agent_route.Account(
+        coord.ACCOUNT, "claude", token_file_variable=TOKEN_FILE
+    )
+
     def probe(root):
         return coord.svc.signin_status(
-            root, "ANTHROPIC", run=lambda argv, env: ran.append(argv)
+            root, account, run=lambda argv, env: ran.append(argv)
         )
 
     assert probe(tmp_path) == "missing"  # unset reads as not signed in
@@ -158,21 +169,24 @@ def test_the_claude_probe_reads_the_token_file_and_runs_nothing(tmp_path, monkey
     assert probe(tmp_path) == "signed-in"  # no home needed: the token is all
     assert ran == []  # no status command, no model call
     assert not coord.keep.store_dir(tmp_path).exists()  # nothing created
+    assert not coord.keep.account_home(coord.ACCOUNT).exists()
 
 
 def test_a_keep_warm_ping_passes_the_token_or_skips_and_keeps_the_session(
     tmp_path, monkeypatch
 ):
     _token_file(tmp_path, monkeypatch, text=PLAIN)
-    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10))
-    minted = sk._state(tmp_path)["session_id"]
+    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
+    minted = sk._state(tmp_path, TOK)["session_id"]
     monkeypatch.delenv(TOKEN_FILE, raising=False)
     envs = []
-    warmer = sk._warmer(tmp_path, sk._launch(sk._claude_stream(11), envs=envs))
+    warmer = sk._warmer(
+        tmp_path, sk._launch(sk._claude_stream(11), envs=envs), account=TOK
+    )
     lines = warmer.tick(work_pending=True)
     assert len(lines) == 1 and "keep-warm: skipped" in lines[0]
     assert "dev-setup" in lines[0] and warmer.thread is None and envs == []
-    record = sk._state(tmp_path)
+    record = sk._state(tmp_path, TOK)
     assert record["session_id"] == minted and record["state"] == "active"
     assert "lease" not in record  # released, nothing retired
     _token_file(tmp_path, monkeypatch)
@@ -189,23 +203,33 @@ def test_an_auth_failure_records_the_call_failed_and_keeps_the_session(
     tmp_path, monkeypatch
 ):
     _token_file(tmp_path, monkeypatch, text=PLAIN)
-    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10))
-    before = sk._state(tmp_path)
+    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
+    before = sk._state(tmp_path, TOK)
     outcome = sk._adjudicate(
-        tmp_path, sk.ON, _auth_failed_stream(before["session_id"]), wi="WI-2", code=1
+        tmp_path,
+        sk.ON,
+        _auth_failed_stream(before["session_id"]),
+        wi="WI-2",
+        code=1,
+        account=TOK,
     )
     assert not sk.svc.call_succeeded(outcome)  # recorded failed
     assert outcome.metrics["reset-reason"] == ""
     assert outcome.metrics["session-gen"] == before["generation"]
-    assert sk._state(tmp_path) == before  # as it was: no retire, no WI-2
-    assert sk._keep(tmp_path, sk.ON, wi="WI-3").session_id == before["session_id"]
+    assert sk._state(tmp_path, TOK) == before  # as it was: no retire, no WI-2
+    assert (
+        sk._keep(tmp_path, sk.ON, wi="WI-3", account=TOK).session_id
+        == before["session_id"]
+    )
 
 
 def test_an_auth_failure_on_a_first_mint_leaves_no_record(tmp_path, monkeypatch):
     _token_file(tmp_path, monkeypatch, text=PLAIN)
-    outcome = sk._adjudicate(tmp_path, sk.ON, _auth_failed_stream(), code=1)
+    outcome = sk._adjudicate(
+        tmp_path, sk.ON, _auth_failed_stream(), code=1, account=TOK
+    )
     assert not sk.svc.call_succeeded(outcome)
-    assert sk._state(tmp_path) is None  # the lease-only record is gone
+    assert sk._state(tmp_path, TOK) is None  # the lease-only record is gone
 
 
 def test_another_failure_still_retires_the_session(tmp_path, monkeypatch):
@@ -213,10 +237,10 @@ def test_another_failure_still_retires_the_session(tmp_path, monkeypatch):
     2026-10-06 OAuth-refresh failure was tagged `server_error`, and that, like
     any other failure, still retires it."""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
-    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10))
+    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
     stream = _auth_failed_stream().replace("authentication_failed", "server_error")
-    sk._adjudicate(tmp_path, sk.ON, stream, code=1)
-    assert sk._state(tmp_path)["state"] == "retired"
+    sk._adjudicate(tmp_path, sk.ON, stream, code=1, account=TOK)
+    assert sk._state(tmp_path, TOK)["state"] == "retired"
     assert sk.adapters.auth_failed(_auth_failed_stream())
     assert not sk.adapters.auth_failed(stream)
 
@@ -248,6 +272,7 @@ def _plan(tmp_path, monkeypatch, template=None, env=None):
         brief="disposition",
         wi="WI-1",
         lease_wait=0,
+        account=sk._account(tmp_path, TOK),
     )
 
 
@@ -282,7 +307,7 @@ def test_a_route_declaring_a_competing_credential_is_refused_before_launch(
     with pytest.raises(sk.svc.SigninRefused) as refused:
         _plan(tmp_path, monkeypatch)
     assert declared in str(refused.value) and "dev-setup" in str(refused.value)
-    assert sk._state(tmp_path) is None  # no lease, nothing recorded
+    assert sk._state(tmp_path, TOK) is None  # no lease, nothing recorded
 
 
 def test_an_echoed_token_is_redacted_from_every_sink(tmp_path, monkeypatch):
@@ -327,7 +352,21 @@ tier = "strong"
 cmd_template = "{template}"
 env = "{env}"
 notes = "test row"
+
+[account.TOKACCT]
+cli = "claude"
+notes = "test token account"
+token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"
 """
+
+
+def _token_registry(rows):
+    """A warmer's registry snapshot: `rows` and the declared token account."""
+    registry = sk.svc.agent_route.Registry(rows)
+    registry.accounts[TOK] = sk.svc.agent_route.Account(
+        TOK, "claude", token_file_variable=TOKEN_FILE
+    )
+    return registry
 
 
 def _registry(tmp_path, env="", template=None):
@@ -344,14 +383,15 @@ def _registry(tmp_path, env="", template=None):
 def test_the_name_key_folds_case_on_windows_semantics_only(tmp_path, monkeypatch):
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     _registry(tmp_path, env="Anthropic_Api_Key=declared")
-    monkeypatch.setattr(sk.svc, "_CASE_INSENSITIVE", False)
-    assert sk.svc._name_key("Anthropic_Api_Key") == "Anthropic_Api_Key"
-    monkeypatch.setattr(sk.svc, "_CASE_INSENSITIVE", True)
-    assert sk.svc._name_key("Anthropic_Api_Key") == "ANTHROPIC_API_KEY"
+    rule = sk.svc.agent_route  # the one home of the name rule
+    monkeypatch.setattr(rule, "_CASE_INSENSITIVE", False)
+    assert rule.env_name_key("Anthropic_Api_Key") == "Anthropic_Api_Key"
+    monkeypatch.setattr(rule, "_CASE_INSENSITIVE", True)
+    assert rule.env_name_key("Anthropic_Api_Key") == "ANTHROPIC_API_KEY"
     with pytest.raises(sk.svc.SigninRefused) as refused:
         _plan(tmp_path, monkeypatch)
     assert "Anthropic_Api_Key" in str(refused.value)
-    assert sk._state(tmp_path) is None
+    assert sk._state(tmp_path, TOK) is None
     prepared = sk.svc.Prepared(
         family="ANTHROPIC",
         template="t",
@@ -361,6 +401,9 @@ def test_the_name_key_folds_case_on_windows_semantics_only(tmp_path, monkeypatch
         declared={},
         credential={"T": "x"},
         home={},
+        account=sk.svc.agent_route.Account(
+            "TOKACCT", "claude", token_file_variable="T_FILE"
+        ),
     )
     composed = sk.svc.compose_env(
         {"anthropic_api_key": "ambient", "Path": "p"}, prepared
@@ -375,22 +418,25 @@ def test_a_route_declaring_the_ambient_value_is_still_refused(tmp_path, monkeypa
     with pytest.raises(sk.svc.SigninRefused) as refused:
         _plan(tmp_path, monkeypatch)
     assert "ANTHROPIC_API_KEY" in str(refused.value)
-    assert sk._state(tmp_path) is None
+    assert sk._state(tmp_path, TOK) is None
 
 
 def test_keep_warm_with_a_bare_route_is_refused_before_any_lease(tmp_path, monkeypatch):
     _token_file(tmp_path, monkeypatch, text=PLAIN)
-    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10))
+    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
     _registry(tmp_path, template=sk.TEMPLATES["ANTHROPIC"] + " --bare")
     seen = []
     warmer = sk.svc.KeepWarmer(
         tmp_path,
         sk.ON,
-        {
-            "ANTHROPIC-ROUTE": sk._Row(
-                "ANTHROPIC", sk.TEMPLATES["ANTHROPIC"] + " --bare"
-            )
-        },
+        _token_registry(
+            {
+                "ANTHROPIC-ROUTE": sk._Row(
+                    "ANTHROPIC", sk.TEMPLATES["ANTHROPIC"] + " --bare"
+                )
+            }
+        ),
+        entries=[ENTRY],
         runner=sk._launch(sk._claude_stream(11), seen=seen),
         clock=lambda: 10**10,
         dirty=lambda: False,
@@ -398,7 +444,7 @@ def test_keep_warm_with_a_bare_route_is_refused_before_any_lease(tmp_path, monke
     lines = warmer.tick(work_pending=True)
     assert len(lines) == 1 and "--bare" in lines[0] and "skipped" in lines[0]
     assert warmer.thread is None and seen == []
-    record = sk._state(tmp_path)
+    record = sk._state(tmp_path, TOK)
     assert "lease" not in record and record["state"] == "active"
     markers = list(sk.keep.store_dir(tmp_path).glob("*" + sk.keep.MARKER_SUFFIX))
     assert markers == []  # nothing to release: no lease was taken
@@ -414,13 +460,14 @@ def test_a_keep_warm_ping_launches_one_route_snapshot(tmp_path, monkeypatch):
     mix with the changed row."""
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     _registry(tmp_path, env="ANTHROPIC_BASE_URL=https://old.invalid")
-    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10))
+    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)
     seen, envs = [], []
     selected = sk.svc.agent_route.load_registry(tmp_path / "docs" / "agents.toml")[0]
     warmer = sk.svc.KeepWarmer(
         tmp_path,
         sk.ON,
         selected,
+        entries=[ENTRY],
         runner=sk._launch(sk._claude_stream(11), seen=seen, envs=envs),
         clock=lambda: 10**10,
         dirty=lambda: False,
@@ -443,7 +490,7 @@ def test_a_retained_call_launches_its_prepared_route_not_the_callers(
 ):
     _token_file(tmp_path, monkeypatch, text=PLAIN)
     _registry(tmp_path)
-    kept = sk._keep(tmp_path, sk.ON)
+    kept = sk._keep(tmp_path, sk.ON, account=TOK)
     seen = []
     call = sk._call(
         tmp_path, "ANTHROPIC", kept, sk._launch(sk._claude_stream(10), seen=seen)
@@ -483,6 +530,7 @@ def _selected(tmp_path, monkeypatch, row_text):
         "brief": "disposition",
         "route_family": "ANTHROPIC",
         "route_id": "ANTHROPIC-ROUTE",
+        "entry": ENTRY,  # the loop drew the token account's entry
         "tmpl": sk.TEMPLATES["ANTHROPIC"],
         "session_env": None,
     }
@@ -546,7 +594,7 @@ def test_the_version_probe_runs_under_the_prepared_environment(tmp_path, monkeyp
 
 def test_keep_warm_never_warms_a_record_of_another_family(tmp_path, monkeypatch):
     _token_file(tmp_path, monkeypatch, text=PLAIN)
-    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10))  # an ANTHROPIC session
+    sk._adjudicate(tmp_path, sk.ON, sk._claude_stream(10), account=TOK)  # ANTHROPIC
     _registry(tmp_path)
     (tmp_path / "docs" / "agents.toml").write_text(
         _row_text(family="OPENAI"), encoding="utf-8"
@@ -557,7 +605,8 @@ def test_keep_warm_never_warms_a_record_of_another_family(tmp_path, monkeypatch)
     warmer = sk.svc.KeepWarmer(
         tmp_path,
         sk.ON,
-        {"ANTHROPIC-ROUTE": row},
+        _token_registry({"ANTHROPIC-ROUTE": row}),
+        entries=[ENTRY],
         runner=sk._launch(sk._claude_stream(11), seen=seen),
         clock=lambda: 10**10,
         dirty=lambda: False,
@@ -565,7 +614,7 @@ def test_keep_warm_never_warms_a_record_of_another_family(tmp_path, monkeypatch)
     lines = warmer.tick(work_pending=True)
     assert len(lines) == 1 and "skipped" in lines[0] and "OPENAI" in lines[0]
     assert seen == [] and warmer.thread is None
-    assert "lease" not in sk._state(tmp_path)  # skipped before any lease
+    assert "lease" not in sk._state(tmp_path, TOK)  # skipped before any lease
 
 
 # --- round 6 (Sol r5): the probe and the launch share one prepared executable -----
@@ -610,8 +659,9 @@ def _row_with_path(tmp_path, path):
     )
 
 
-def _plan_real(tmp_path, wi="WI-1"):
-    """Plan a retained keep with the REAL version probe."""
+def _plan_real(tmp_path, wi="WI-1", account=TOK):
+    """Plan a retained keep with the REAL version probe, on `account`'s entry
+    (None: the ambient login)."""
     return sk.svc.plan_keep(
         tmp_path,
         sk.ON,
@@ -620,6 +670,7 @@ def _plan_real(tmp_path, wi="WI-1"):
         brief="disposition",
         wi=wi,
         lease_wait=0,
+        account=sk._account(tmp_path, account),
     )
 
 
@@ -638,13 +689,13 @@ def test_the_probe_and_the_launch_run_the_one_prepared_executable(
     assert os.path.normcase(kept.prepared.executable) == os.path.normcase(str(new))
     outcome = sk.svc.act(sk._call(tmp_path, "ANTHROPIC", kept, sk.svc.run_session))
     assert "RUNNER-new" in outcome.stream and "RUNNER-old" not in outcome.stream
-    assert sk._state(tmp_path)["cli_version"] == "new"
-    minted = sk._state(tmp_path)["session_id"]
+    assert sk._state(tmp_path, TOK)["cli_version"] == "new"
+    minted = sk._state(tmp_path, TOK)["session_id"]
     # Changing only the ambient PATH changes neither call's runner.
     monkeypatch.setenv("PATH", str(tmp_path / "other") + os.pathsep + ambient)
     nxt = _plan_real(tmp_path, wi="WI-2")
     assert nxt.cli_version == "new" and nxt.session_id == minted != ""
-    assert sk._state(tmp_path)["state"] == "active"
+    assert sk._state(tmp_path, TOK)["state"] == "active"
     sk.keep.keep_release(tmp_path, nxt)
 
 
@@ -665,8 +716,9 @@ def test_the_version_probe_never_receives_the_credential(tmp_path, monkeypatch):
     kept = _plan_real(tmp_path)
     monkeypatch.setattr(sk.svc.subprocess, "run", real_run)
     assert len(probed) == 1 and probed[0] is not None
-    keys = {sk.svc._name_key(k) for k in probed[0]}
-    assert sk.svc._name_key("CLAUDE_CODE_OAUTH_TOKEN") not in keys
+    key = sk.svc.agent_route.env_name_key
+    keys = {key(k) for k in probed[0]}
+    assert key("CLAUDE_CODE_OAUTH_TOKEN") not in keys
     assert kept.cli_version.startswith("v1") and PLAIN not in kept.cli_version
     envs = []
     sk.svc.act(
@@ -675,7 +727,7 @@ def test_the_version_probe_never_receives_the_credential(tmp_path, monkeypatch):
         )
     )
     assert envs[0]["CLAUDE_CODE_OAUTH_TOKEN"] == PLAIN  # the launch still has it
-    assert PLAIN not in sk._state(tmp_path)["cli_version"]
+    assert PLAIN not in sk._state(tmp_path, TOK)["cli_version"]
     assert PLAIN not in _files_text(tmp_path)
 
 
@@ -694,12 +746,14 @@ def test_a_runner_not_on_the_launch_path_is_refused_before_any_lease(
             .replace(sk.TEMPLATES["ANTHROPIC"], template),
             encoding="utf-8",
         )
+    # An unclaimed runner names no CLI an account could sign into (WI-798), so
+    # the runner rule is pinned on the ambient entry, which resolves it alone.
     with pytest.raises(sk.svc.SigninRefused) as refused:
-        _plan_real(tmp_path)
+        _plan_real(tmp_path, account=None)
     message = str(refused.value)
     assert "no-such-runner-846" in message
     assert ("declared PATH" if declared else "ambient PATH") in message
-    assert sk._state(tmp_path) is None  # no lease, nothing recorded
+    assert sk._state(tmp_path, TOK) is None  # no lease, nothing recorded
 
 
 def test_the_runner_resolves_after_the_template_substitution(tmp_path, monkeypatch):
@@ -711,7 +765,9 @@ def test_the_runner_resolves_after_the_template_substitution(tmp_path, monkeypat
         "claude", (tmp_path / "runners").as_posix() + "/{model}/" + runner.name, 1
     )
     _registry(tmp_path, template=template)
-    prepared = sk.svc.prepare_launch(tmp_path, sk._route(tmp_path))
+    prepared = sk.svc.prepare_launch(
+        tmp_path, sk._route(tmp_path), sk._account(tmp_path, TOK)
+    )
     assert os.path.normcase(prepared.executable) == os.path.normcase(str(runner))
 
 

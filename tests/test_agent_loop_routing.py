@@ -593,3 +593,49 @@ def test_a_committing_design_check_arms_the_review_round_itself(monkeypatch):
     assert st.next_phase == "BUILD"
     assert st.last_impl_family == "OPENAI"
     assert st.last_impl_wi == "WI-401"
+
+
+# --- WI-798: the loop's cooldowns key on the selected entry ----------------- #
+# The session plan carries the drawn entry beside the route id it selects; a
+# cooldown and a probe suspect key on the entry, a registry read on the route.
+# `ROUTE@ACCOUNT` is a qualified entry whose key differs from its route (unit
+# (b) pinned this with a stand-in; units (a)+(c) made it real).
+
+
+def test_a_failed_session_cools_its_entry_not_its_route_id(capsys):
+    from types import SimpleNamespace
+
+    al = load_script("agent_loop")
+    st = _rs()
+    row = al.agent_route.Model("PROV-1", "FA", "m", "1", "medium", "x {prompt}")
+    ctx = SimpleNamespace(run=SimpleNamespace(routing=st), registry={"PROV-1": row})
+    plan = {"entry": "PROV-1@W", "route_id": "PROV-1", "phase": "BUILD"}
+    al.build_bookkeeping(ctx, plan, "ERROR", 1, "", "", "WI-1", 0.0)
+    assert set(st.cooldowns) == {"PROV-1@W"}
+    assert st.suspect_routes == {"PROV-1@W"}
+    # the cooled entry is named, account and all
+    assert "route: PROV-1@W session outcome=ERROR" in capsys.readouterr().out
+
+
+def test_select_with_probe_returns_and_clears_the_entry(tmp_path, monkeypatch):
+    ctx, al = _probe_ctx(tmp_path, [("A", "FA", "ok")])
+    accounts = {"W": al.agent_route.Account("W", "claude")}
+    ctx.registry = al.agent_route.Registry(ctx.registry, accounts)
+    ctx.enabled = ["A@W"]
+    probed = []
+    monkeypatch.setattr(
+        al,
+        "probe_route",
+        lambda row, root, wall=30, account=None: (
+            probed.append((row.id, account.id)) or (True, "OK")
+        ),
+    )
+    st = _rs()
+    st.suspect_routes.add("A@W")
+    entry, reason = al.select_with_probe(
+        ctx, st, "REVIEW-A", "medium", set(), False, (), 0.0
+    )
+    assert entry == "A@W", reason
+    assert reason.endswith("(probe OK)")
+    assert st.suspect_routes == set()
+    assert probed == [("A", "W")]  # the probe ran on the entry's account

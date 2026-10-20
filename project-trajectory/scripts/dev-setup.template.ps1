@@ -171,13 +171,14 @@ if ($tier -eq "full") {
     Report "IDE (VS Code 'code')" (Have "code") "install an editor; run again with -Full to add extensions"
 }
 
-# The retained adjudicator's sign-in (WI-834): with [adjudicator] retention on,
-# a retained Claude launch runs under its own dedicated home and authenticates
-# with the long-lived token in the file AGENT_CLAUDE_TOKEN_FILE names (WI-846),
-# refused before launch without one. Read through the kit's own readers (the
-# retention dial and the sign-in probe, coordinator_adjudicate.py signin
-# -retained) when a Python runtime exists, else unknown; reported only while
-# retention is on. dev-setup never reads, stores or prints the token.
+# The retained adjudicator's sign-in (WI-834, WI-798): with [adjudicator]
+# retention on, the adjudicator's entry runs under its declared account: a token
+# account authenticates with the long-lived token in the file its
+# token_file_variable names (WI-846), a login account with its own home. Read
+# through the kit's own readers (the retention dial and the sign-in probe,
+# coordinator_adjudicate.py signin --retained, which prints the account, its
+# kind and its reading) when a Python runtime exists, else unknown; reported
+# only while retention is on. dev-setup never reads, stores or prints the token.
 function KitReading($argList) {
     if (-not $pybin) { return "" }
     # `-X utf8` first: the `py` launcher then runs the interpreter the probe
@@ -187,18 +188,44 @@ function KitReading($argList) {
     return (($out | Out-String).Trim())
 }
 $signin = "unknown"
+$line = ""
 if ($pybin) {
     $line = KitReading @("scripts/coordinator_adjudicate.py", "signin", "--retained", "--root", ".")
-    if ($line -match '^signin \[ANTHROPIC\]: (\S+)$') { $signin = $Matches[1] }
 }
-switch ($signin) {
-    "off" { }
-    "signed-in" { Write-Host "  [ok]      retained adjudicator sign-in (AGENT_CLAUDE_TOKEN_FILE)" }
-    "missing" {
-        Write-Host "  [missing] retained adjudicator sign-in - run 'claude setup-token' once (offered by -Baseline and a bare run), keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
-        $script:missing++
+$signinKind = ""; $signinAccount = ""; $signinVar = ""; $signinHint = ""; $signinUnverified = $false; $signinWhy = ""
+$signinText = $line
+if ($signinText -match '(?m)^signin \[([^\]]*)\] ([a-z]+): ([a-z-]+)') {
+    $signinAccount = $Matches[1]; $signinKind = $Matches[2]; $signin = $Matches[3]
+}
+if ($signinText -match '(?m)^signin \[[^\]]*\]: token_file_variable ([^\r\n]+)') { $signinVar = $Matches[1] }
+if ($signinText -match '(?m)^signin \[[^\]]*\]: provision it yourself: ([^\r\n]+)') { $signinHint = $Matches[1] }
+if ($signinText -match '(?m)^signin \[[^\]]*\] unresolved: [a-z-]+ \((.*)\)\s*$') { $signinWhy = $Matches[1] }
+if ($signinText -match '\(unverified\)') { $signinUnverified = $true }
+switch ("${signinKind}:${signin}") {
+    { $signin -eq "off" } { break }
+    { $signinKind -eq "ambient" } { Write-Host "  [ok]      retained adjudicator sign-in (its entry runs on your own login; no account declared)"; break }
+    "token:signed-in" { Write-Host "  [ok]      retained adjudicator sign-in (account $signinAccount, its token file)"; break }
+    "login:signed-in" {
+        if ($signinUnverified) { Write-Host "  [ok]      retained adjudicator sign-in (account $signinAccount, its own home) - UNVERIFIED: its login-isolation check has not passed" }
+        else { Write-Host "  [ok]      retained adjudicator sign-in (account $signinAccount, its own home)" }
+        break
     }
-    default { Write-Host "  [unknown] retained adjudicator sign-in - could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" }
+    "token:missing" {
+        Write-Host "  [missing] retained adjudicator sign-in (account $signinAccount) - run 'claude setup-token' once (offered by -Baseline and a bare run), keep the token in a file outside the repository, and set $(if ($signinVar) { $signinVar } else { "the variable its token_file_variable names" }) to that file"
+        $script:missing++
+        break
+    }
+    "login:missing" {
+        Write-Host "  [missing] retained adjudicator sign-in (account $signinAccount) - sign it in yourself under its own home: $signinHint (nothing here runs it)"
+        $script:missing++
+        break
+    }
+    { $signinKind -eq "unresolved" } {
+        Write-Host "  [missing] retained adjudicator sign-in - its entry does not resolve ($(if ($signinWhy) { $signinWhy } else { 'no reason given' })): declare the adjudicator's account in docs/agents.toml and add its qualified entry to docs/agents-enabled, as RESYNC_PACK's accounts entry says, or run coordinator_adjudicate.py with --route <your entry>"
+        $script:missing++
+        break
+    }
+    default { Write-Host "  [unknown] retained adjudicator sign-in - could not be read (it needs a Python 3.11+ runtime to read the retention dial and the adjudicator's account)" }
 }
 
 # The coordinator's Claude Code hooks: shipped inert in
@@ -253,22 +280,25 @@ if ($tier -eq "check") {
 }
 
 # The one-time long-lived token step (WI-846's, shown only while retention is
-# on and the token is missing), consented. `claude setup-token` prints the
-# token once; the person keeps it in a file outside the repository and points
-# AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
+# on and a TOKEN account's token is missing; a login account is named its
+# provisioning command above and offered nothing), consented. `claude
+# setup-token` prints the token once; the person keeps it in a file outside the
+# repository and points the account's token_file_variable at that file.
+# Nothing here reads the token.
+$signinVarName = if ($signinVar) { $signinVar } else { "its token_file_variable" }
 function OfferSignin {
-    if (-not (($signin -eq "missing") -and (Have "claude") -and (Interactive))) { return }
+    if (-not (($signinKind -eq "token") -and ($signin -eq "missing") -and (Have "claude") -and (Interactive))) { return }
     Write-Host ""
-    Write-Host "The retained adjudicator runs Claude under its own dedicated home, which signs"
+    Write-Host "The retained adjudicator runs Claude on its token account $signinAccount, which signs"
     Write-Host "in with a long-lived token. The one-time 'claude setup-token' step mints that"
     Write-Host "token; you keep it in a file outside this repository, at the location you set"
-    Write-Host "AGENT_CLAUDE_TOKEN_FILE to. Your normal 'claude' login and every other"
+    Write-Host "$signinVarName to. Your normal 'claude' login and every other"
     Write-Host "repository are left alone, and declining changes no configuration or credential."
     $ans = Read-Host "Run 'claude setup-token' now? [y/N]"
     if ($ans -match '^[Yy]') {
         & claude setup-token
         Write-Host "  Keep the printed token in a file outside this repository, then set"
-        Write-Host "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. setx AGENT_CLAUDE_TOKEN_FILE <path>)."
+        Write-Host "  $signinVarName to that file's path (e.g. setx $signinVarName <path>)."
     } else { Write-Host "  - skipped the token step; nothing was changed" }
 }
 

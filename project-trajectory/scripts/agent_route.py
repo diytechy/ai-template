@@ -21,9 +21,14 @@ per (model x route) pair.
         launch; **empty Env = the ambient environment = today's behavior**).
       * `Tier in {strong,medium,quick}` (legacy `weak` reads as `quick` —
         never-breaking). **One row = one (model x route) pair** —
-        the table itself IS the allow matrix (no `Serves` patterns). A second
-        account or a router service is a *second pair row* (distinct id, same
-        Family, its own Env) — so its cooldown is independent by construction.
+        the table itself IS the allow matrix (no `Serves` patterns). A router
+        service is a *second pair row* (distinct id, same Family, its own Env).
+      * ACCOUNTS (WI-798) are `[account.<ID>]` tables beside the rows: `cli`
+        (one of IF-245's), `notes`, an optional `env` (composed after the
+        route's), an optional `token_file_variable` (the variable naming the
+        account's long-lived token file, never a path) and `verified`. A
+        second account is an account table and a qualified enable-list entry
+        (`ROUTE@ACCOUNT`), never a duplicated row; each entry cools on its own.
     The id is a join key, **never parsed** — the columns are the machine truth;
     the id charset is uppercase + digits + hyphen + dot so dated snapshots and
     `-PREVIEW` tags are valid. `Provider` is retired: a legacy registry with a
@@ -31,9 +36,10 @@ per (model x route) pair.
     No vendored catalog: richer data lives in the maintained community
     registries (models.dev `api.json`; LiteLLM's model-prices JSON) — a
     documented pointer, not a copy.
-  - `docs/agents-enabled` is the ENABLE-LIST — the ids (or version-less tokens)
-    this repo may use, in **preference order**, one per line (`#` comments
-    allowed). It is the consent surface: routing selects only from this pool,
+  - `docs/agents-enabled` is the ENABLE-LIST — the ids (or version-less tokens),
+    each optionally qualified `@ACCOUNT`, this repo may use, in **preference
+    order**, one per line (`#` comments allowed); an unqualified entry runs
+    under the person's ambient login. It is the consent surface: routing selects only from this pool,
     and its **presence** is what turns on managed routing at all. Absent
     enable-list -> the loop keeps today's single `AGENT_CMD`/`AGENT_MODEL`
     behavior, so a fresh scaffold pays nothing (no silent model swap: consent =
@@ -71,10 +77,13 @@ of record in docs/requirements/interfaces.toml).
 
 Contract IF-044: model routing as a PURE selection library the coordinator calls.
     `load_registry` reads the declared pair-row model registry and
-    `load_enabled` / `load_enabled_entries` the enable-list; `resolve_token` and
-    `resolve_enabled` turn those tokens into registry rows; `parse_env` turns a
-    row's `Env` cell into the environment a launch merges over its own;
-    `select` returns the chosen row TOGETHER WITH ITS REASON as data;
+    `load_enabled` / `load_enabled_entries` the enable-list (one that exists
+    but cannot be read raises `EnabledUnreadable`); `resolve_enabled` turns
+    those tokens into enabled entries (`ROUTE` or `ROUTE@ACCOUNT`), and
+    `entry_route` / `account_of` name the row and the account an entry
+    selects; `parse_env` turns a row's `Env` cell into the environment a
+    launch merges over its own; `select` returns the chosen entry TOGETHER
+    WITH ITS REASON as data;
     `escalate` and `failure_action` return the declared next move; `cool` and
     `available` carry the cooldown. Nothing here launches a session, writes a
     file or touches git — the coordinator owns every launch, which is what
@@ -90,6 +99,7 @@ import io
 import os
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
@@ -107,10 +117,16 @@ from kitlib import spine as _spine
 # siblings, ADOPTING.md §6). The model registry joined that carrier in the
 # batch-2 sweep (repo-lock §8.1), so `agents.toml` is the destination name and
 # `agents.csv` still resolves for a repo that has not migrated.
+# `agent_session` is the launcher's template reader, whose parse `route_runner`
+# shares; it imports the standard library only.
 try:
+    import agent_session
+    import session_adapters
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import agent_session
+    import session_adapters
     import spine_carrier
 
 # Tier strength, ascending. Selection never picks a WEAKER tier than requested
@@ -224,6 +240,210 @@ class Model:
         self.notes = notes
 
 
+class Registry(dict):
+    """The loaded registry: `{route id: Model}`, and its declared `accounts`
+    (`{account id: Account}`), read in the same one parse (WI-798). A plain
+    dict reads as a registry that declares no account.
+
+    Implements: SR-222, LLR-336
+    """
+
+    def __init__(self, rows=(), accounts=None):
+        super().__init__(rows)
+        self.accounts = dict(accounts or {})
+
+
+class Account:
+    """One `[account.<ID>]` table (WI-798): the CLI it signs into, its notes,
+    its own declared environment (an Env cell, composed after the route's),
+    the environment VARIABLE naming its long-lived token file when it
+    authenticates with one ("" for a login account; OI-110 (b): never a path),
+    and its login-isolation reading `verified` ("<date> <cli version>", empty
+    until the check passes). Its home is derived from the id alone.
+
+    Implements: SR-222, LLR-336
+    """
+
+    __slots__ = ("id", "cli", "notes", "env", "token_file_variable", "verified")
+
+    def __init__(self, id, cli, notes="", env="", token_file_variable="", verified=""):
+        self.id = id
+        self.cli = cli
+        self.notes = notes
+        self.env = env
+        self.token_file_variable = token_file_variable
+        self.verified = verified
+
+    @property
+    def unverified(self):
+        """Whether this is a login-authenticated Claude account whose
+        login-isolation check has not passed (an empty `verified`): it is
+        printed as unverified, never refused (D-011). A token account is
+        outside the question, its token outranking any login.
+
+        Implements: SR-222, LLR-336
+        """
+        return (
+            self.cli == "claude" and not self.token_file_variable and not self.verified
+        )
+
+
+ACCOUNT_KEYS = ("cli", "notes", "env", "token_file_variable", "verified")
+# An environment variable name, as a token locator must be one.
+_VARIABLE_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
+# `verified`: empty, or the date the check passed and the CLI version it ran.
+_VERIFIED_RE = re.compile(r"\d{4}-\d{2}-\d{2} \S+\Z")
+# An account id names its home directory, so it is portable: no dot (Windows
+# strips a trailing one and reads `NAME.EXT` as the device NAME) and not a
+# Windows device name. Upper-case only, so two ids never fold to one name.
+ACCOUNT_ID_RE = re.compile(r"[A-Z0-9][A-Z0-9-]*\Z")
+_WINDOWS_DEVICES = re.compile(r"(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9])\Z")
+
+
+# Windows resolves environment variable names case-insensitively, POSIX does
+# not (`env_name_key`, the one rule every comparison of names uses, here and
+# in a launch environment).
+# Implements: SR-222, LLR-336
+_CASE_INSENSITIVE = os.name == "nt"
+
+
+def env_name_key(name):
+    """An environment variable name as the platform resolves it
+    (`_CASE_INSENSITIVE`): Windows folds case, POSIX does not; the rule every
+    name comparison of the registry and of a launch environment uses.
+
+    Implements: SR-222, LLR-336
+    """
+    return name.upper() if _CASE_INSENSITIVE else name
+
+
+def route_runner(template, model):
+    """The runner a command template launches: its first token by the
+    launcher's own parse (`agent_session.split_cmd`, the shell-string or
+    JSON-array form) after the argv substitution (`agent_session.substitute`),
+    or "" when the template is empty or that parse refuses it. The one reading
+    of a template's runner: the launch resolves what it returns, and the CLI
+    a route launches is read from it.
+
+    Implements: SR-222, LLR-336
+    """
+    try:
+        first = agent_session.split_cmd(template or "")[:1]
+    except ValueError:
+        return ""
+    return agent_session.substitute(first[0], model, "") if first else ""
+
+
+def route_cli(row):
+    """The CLI a route row launches (`session_adapters.cli_named` over its
+    runner, `route_runner`), or "" when it names none of IF-245's CLIs.
+
+    Implements: SR-222, LLR-336
+    """
+    return session_adapters.cli_named(route_runner(row.cmd_template, row.model))
+
+
+def _account_problem(aid, cells):
+    """Why one account table is malformed, or "" (WI-798's Trust: a bad id
+    (outside `ACCOUNT_ID_RE`, or a Windows device name), an unknown key, a
+    non-string value, a missing or unknown `cli`, an env declaring its own
+    CLI's home variable, a token locator that is not a variable name or that
+    its CLI cannot carry, or a malformed `verified`). The schema (the id, the
+    keys, every value a string) is decided first, so no later check reads a
+    value of the wrong type.
+
+    Implements: SR-222, LLR-336
+    """
+    if not isinstance(cells, dict):
+        return "is not a table"
+    unknown = sorted(set(cells) - set(ACCOUNT_KEYS))
+    bad_type = [k for k in ACCOUNT_KEYS if k in cells and not isinstance(cells[k], str)]
+    schema = (
+        (
+            not ACCOUNT_ID_RE.match(aid) or _WINDOWS_DEVICES.match(aid),
+            "has an id outside [A-Z0-9][A-Z0-9-]* or is a Windows device name",
+        ),
+        (unknown, "has unknown key(s) {}".format(", ".join(unknown))),
+        (bad_type, "has non-string value(s) for {}".format(", ".join(bad_type))),
+    )
+    why = next((why for bad, why in schema if bad), "")
+    if why:
+        return why
+    cli = cells.get("cli", "")
+    homes = {env_name_key(v) for v in session_adapters.HOME_VARIABLES.get(cli, ())}
+    declared = parse_env(cells.get("env", ""))
+    token = cells.get("token_file_variable", "")
+    checks = (
+        (not cli, "is missing `cli`"),
+        (
+            cli not in session_adapters.HOME_VARIABLES,
+            "names cli {!r}, outside {}".format(
+                cli, "|".join(session_adapters.HOME_VARIABLES)
+            ),
+        ),
+        (
+            [k for k in declared if env_name_key(k) in homes],
+            "declares its own CLI's home variable in `env`",
+        ),
+        (
+            token and not _VARIABLE_RE.match(token),
+            "token_file_variable {!r} is not a variable name".format(token),
+        ),
+        (
+            token and cli not in session_adapters.TOKEN_VARIABLES,
+            "cli {!r} carries no long-lived token".format(cli),
+        ),
+        (
+            cells.get("verified") and not _VERIFIED_RE.match(cells["verified"]),
+            'verified {!r} is not "<YYYY-MM-DD> <cli version>"'.format(
+                cells.get("verified")
+            ),
+        ),
+    )
+    return next((why for bad, why in checks if bad), "")
+
+
+def _load_accounts(text, name):
+    """`({id: Account}, errors)` from a TOML registry's `[account.<ID>]`
+    tables. A malformed table is an error naming it and is dropped, so an
+    Account is built only from a table whose values are all strings; so is
+    every table naming a `token_file_variable` another also names, as the
+    platform resolves the name (`env_name_key`). A CSV
+    registry, or a TOML text with no account table, declares none.
+
+    Implements: SR-222, LLR-336
+    """
+    try:
+        tables = tomllib.loads(text).get("account") or {}
+    except tomllib.TOMLDecodeError:
+        return {}, []  # load_registry already reports the unparseable file
+    accounts, errors = {}, []
+    if not isinstance(tables, dict):
+        return {}, ["{}: `account` is not a table of accounts".format(name)]
+    for aid, cells in tables.items():
+        why = _account_problem(aid, cells)
+        if why:
+            errors.append("{}: [account.{}] {}".format(name, aid, why))
+            continue
+        accounts[aid] = Account(aid, **{k: cells.get(k, "") for k in ACCOUNT_KEYS})
+    named = [
+        env_name_key(a.token_file_variable)
+        for a in accounts.values()
+        if a.token_file_variable
+    ]
+    for aid in [
+        a.id
+        for a in accounts.values()
+        if named.count(env_name_key(a.token_file_variable)) > 1
+    ]:
+        errors.append(
+            "{}: [account.{}] names token_file_variable {} another account also "
+            "names".format(name, aid, accounts[aid].token_file_variable)
+        )
+        del accounts[aid]
+    return accounts, errors
+
+
 # The safe shape for a Model cell: letters/digits plus . _ : - / (router ids
 # like `org/model` and `us.anthropic....` stay legal). Anything else — quotes,
 # spaces, %, &, | … — is refused at load (see the check in load_registry).
@@ -278,10 +498,13 @@ def _rows_from_csv(text, name):
 
 
 def load_registry(path):
-    """Parse the model registry into {id: Model}, plus a list of error strings
-    for malformed rows (a duplicate/invalid id, an out-of-vocabulary tier, a
-    short row). Absent file -> ({}, []) so the caller degrades to today's
-    behavior. utf-8/errors=replace so a stray byte degrades, never crashes.
+    """Parse the model registry into a `Registry` ({id: Model} and its
+    declared `accounts`), plus a list of error strings for malformed rows (a
+    duplicate/invalid id, an out-of-vocabulary tier, a short row) and
+    malformed account tables (`_load_accounts`, each dropped). Absent file ->
+    ({}, []) so the caller degrades to today's behavior; an empty file
+    declares no rows and no accounts. utf-8/errors=replace so a stray byte
+    degrades, never crashes.
 
     `path` may name either carrier; `spine_carrier.resolve` returns whichever
     is live and REFUSES both at once, so a half-finished migration cannot leave
@@ -290,27 +513,28 @@ def load_registry(path):
     which under managed routing reads as a consent decision rather than a
     broken file — a page the human never gets.
 
-    Implements: SR-154, LLR-044
+    Implements: SR-154, SR-222, LLR-044, LLR-336
     """
     live = spine_carrier.resolve(Path(path))
     if live is None:
-        return {}, []
-    models, errors = {}, []
+        return Registry(), []
+    models, errors = Registry(), []
     try:
         text = live.read_text(encoding="utf-8", errors="replace")
     except OSError as exc:
-        return {}, ["cannot read {}: {}".format(live, exc)]
+        return Registry(), ["cannot read {}: {}".format(live, exc)]
     if live.suffix == ".toml":
         rows = spine_carrier.rows_seq_from_text(text, "Id", ".toml")
         if rows is None:
-            return {}, [
+            return Registry(), [
                 "{}: does not parse as TOML — refusing to report an unreadable "
                 "registry as an empty pool".format(live.name)
             ]
+        models.accounts, errors = _load_accounts(text, live.name)
     else:
         rows, errors = _rows_from_csv(text, live.name)
         if errors:
-            return {}, errors
+            return Registry(), errors
 
     def cell(row, name):
         return str(row.get(name) or "").strip()
@@ -498,25 +722,171 @@ def resolve_token(token, registry, tag_rank=None):
 
 
 def resolve_enabled(enabled, registry, tag_rank=None):
-    """Resolve the ordered enable-list to concrete registry ids, preserving
-    preference order and de-duplicating. Returns (ids, errors); an unresolvable
-    token becomes an error string (surfaced in the managed preflight).
+    """Resolve the ordered enable-list to its ENTRIES, preserving preference
+    order and de-duplicating. Returns (entries, errors); an unresolvable token
+    or a malformed qualifier becomes an error string naming the line
+    (surfaced in the managed preflight), never stripped to the unqualified
+    entry. An entry is the identity every consumer carries from here (see
+    `entry_route`): an unqualified entry's key is the concrete registry id
+    its token resolves to, a qualified one's is `ROUTE@ACCOUNT`
+    (`resolve_entry`).
 
-    Implements: SR-154, LLR-044
+    Implements: SR-154, SR-222, LLR-044, LLR-336
     """
     resolved, errors, seen = [], [], set()
     for tok in enabled:
-        rid, reason = resolve_token(tok, registry, tag_rank)
-        if rid is None:
-            errors.append(
-                "{!r} is not a row in docs/agents.toml and does not resolve "
-                "to one ({})".format(tok, reason)
-            )
+        entry, error = resolve_entry(tok, registry, tag_rank)
+        if error:
+            errors.append(error)
             continue
-        if rid not in seen:
-            seen.add(rid)
-            resolved.append(rid)
+        if entry not in seen:
+            seen.add(entry)
+            resolved.append(entry)
     return resolved, errors
+
+
+def resolve_entry(token, registry, tag_rank=None):
+    """`(entry, None)` for one enable-list token, else `(None, why)` naming
+    the token. `ROUTE` resolves as `resolve_token` does; `ROUTE@ACCOUNT`
+    resolves its route the same way and is refused (WI-798's Trust) when a
+    side is empty, the line holds more than one `@`, the account is not
+    declared, its `cli` is not the route's CLI, the route's env declares that
+    CLI's home variable, or the route's env and the account's declare one
+    name, so neither side silently wins.
+
+    Implements: SR-222, LLR-336
+    """
+    route_tok, at, aid = (token or "").strip().partition("@")
+    if at and (not route_tok or not aid or "@" in aid):
+        return (
+            None,
+            "{!r}: a qualifier is ROUTE@ACCOUNT, one `@`, both sides set".format(token),
+        )
+    rid, reason = resolve_token(route_tok, registry, tag_rank)
+    if rid is None:
+        return None, (
+            "{!r} is not a row in docs/agents.toml and does not resolve "
+            "to one ({})".format(token, reason)
+        )
+    if not at:
+        return rid, None
+    why = qualifier_problem(
+        registry[rid], getattr(registry, "accounts", {}).get(aid), aid
+    )
+    return (None, "{!r}: {}".format(token, why)) if why else (entry_of(rid, aid), None)
+
+
+def qualifier_problem(row, account, aid):
+    """Why `row` cannot run under the account `aid` (`account`, None when it
+    is not declared), or "": the qualifier and conflict rules of
+    `resolve_entry`, also re-checked by the launch environment.
+
+    Implements: SR-222, LLR-336
+    """
+    if account is None:
+        return "account {} is not declared in docs/agents.toml".format(aid)
+    cli = route_cli(row)
+    if account.cli != cli:
+        return "account {} signs into {}, but route {} launches {}".format(
+            aid, account.cli, row.id, cli or "no known CLI"
+        )
+    route_env = {env_name_key(k): k for k in parse_env(row.env)}
+    homes = [
+        v for v in session_adapters.HOME_VARIABLES[cli] if env_name_key(v) in route_env
+    ]
+    if homes:
+        return "route {} declares {} in its env, which account {}'s home sets".format(
+            row.id, ", ".join(homes), aid
+        )
+    both = [
+        route_env[k]
+        for k in map(env_name_key, parse_env(account.env))
+        if k in route_env
+    ]
+    if both:
+        return "route {} and account {} both declare {} in their env".format(
+            row.id, aid, ", ".join(both)
+        )
+    return ""
+
+
+def entry_of(route_id, account=""):
+    """The entry key of `route_id` under `account`: the route id itself for
+    the person's ambient login (no account), else `ROUTE@ACCOUNT`.
+
+    Implements: SR-222, LLR-336
+    """
+    return "{}@{}".format(route_id, account) if account else route_id
+
+
+def entry_route(entry):
+    """The registry route id an enabled ENTRY selects. The entry, not the
+    bare route id, is the identity that selection, preference and cooldowns
+    carry: `resolve_enabled` produces the entries once, `select`,
+    `winstay_preferred_ids` and the planner pair return them, and
+    `available`/`cool` key cooldowns on them. A registry row is read only
+    through this function, never by taking an entry for its route id. An
+    unqualified entry's key is its route id; `ROUTE@ACCOUNT` selects ROUTE.
+
+    Implements: SR-154, SR-222, LLR-044, LLR-336
+    """
+    return entry.partition("@")[0]
+
+
+def entry_account(entry):
+    """The account an enabled entry runs under, "" for the ambient login.
+
+    Implements: SR-222, LLR-336
+    """
+    return entry.partition("@")[2]
+
+
+def account_of(registry, entry):
+    """The declared `Account` an entry runs under, or None for an ambient
+    (unqualified) entry. A qualified entry resolved by `resolve_entry` always
+    names a declared account; one that does not raises LookupError, never
+    reading as the ambient login.
+
+    Implements: SR-222, LLR-336
+    """
+    aid = entry_account(entry)
+    if not aid:
+        return None
+    found = getattr(registry, "accounts", {}).get(aid)
+    if found is None:
+        raise LookupError("{}: account {} is not declared".format(entry, aid))
+    return found
+
+
+# The grammar of an enable-list entry as a preference may name it: a registry
+# id, optionally qualified `@ACCOUNT` (both sides the id charset).
+ENTRY_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]*(@[A-Z0-9][A-Z0-9.\-]*)?$")
+
+
+def unverified_lines(registry, enabled):
+    """One line per enabled entry whose account is unverified
+    (`Account.unverified`): what preflight prints, never a refusal (D-011).
+
+    Implements: SR-222, LLR-336
+    """
+    lines = []
+    for entry in enabled:
+        account = account_of(registry, entry)
+        if account is not None and account.unverified:
+            lines.append(
+                "{}: account {} is UNVERIFIED — a Claude login other than the "
+                "ambient one whose login-isolation check has not passed "
+                "(`verified` is empty)".format(entry, account.id)
+            )
+    return lines
+
+
+def _row_of(registry, entry):
+    """The registry row `entry` selects, or None when it names none.
+
+    Implements: SR-154, LLR-044
+    """
+    return registry.get(entry_route(entry))
 
 
 def _parse_enabled_line(line):
@@ -572,16 +942,35 @@ def _parse_enabled_line(line):
     return token, weights, None
 
 
+class EnabledUnreadable(OSError):
+    """docs/agents-enabled exists but cannot be read. Never read as absent
+    (WI-798, D-012): absent means routing off, and reading an unreadable
+    consent surface that way would drop a consented run onto the
+    single-model path. Every caller refuses on it.
+
+    Implements: SR-222, LLR-336
+    """
+
+
 def load_enabled_entries(path):
     """Parse docs/agents-enabled into ordered (token, {phase: weight}) entries
     plus a list of malformed-annotation errors, each naming the offending line
-    (WI-236). Absent/empty file -> ([], []). This is the annotation-aware read;
-    `load_enabled` wraps it for callers that only need the ids."""
+    (WI-236). Absent/empty file -> ([], []); a file that exists but cannot be
+    read raises EnabledUnreadable. This is the annotation-aware read;
+    `load_enabled` wraps it for callers that only need the ids.
+
+    Implements: SR-222, LLR-336
+    """
     path = Path(path)
     try:
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    except OSError:
+    except FileNotFoundError:
         return [], []
+    except OSError as exc:
+        raise EnabledUnreadable(
+            "{} exists but cannot be read ({}); it is the consent surface, so "
+            "routing is neither on nor off until it reads".format(path, exc)
+        ) from exc
     entries, errors = [], []
     for ln in lines:
         stripped = ln.strip()
@@ -605,7 +994,7 @@ def load_enabled(path):
 
 
 def resolved_weights(entries, registry, tag_rank=None):
-    """Map each resolved registry id to its {phase: weight} from parsed enable-list
+    """Map each resolved entry (`resolve_enabled`'s key) to its {phase: weight} from parsed enable-list
     `entries` [(token, weights)] (WI-236). Returns (weight_map, errors). An
     unannotated or unresolvable token contributes nothing (unresolvable tokens are
     already reported by resolve_enabled). A CONFLICTING redeclaration of the same
@@ -617,7 +1006,7 @@ def resolved_weights(entries, registry, tag_rank=None):
     for _token, weights in entries:
         if not weights:
             continue
-        rid, _reason = resolve_token(_token, registry, tag_rank)
+        rid, _error = resolve_entry(_token, registry, tag_rank)
         if rid is None:
             continue
         if rid in out:
@@ -640,17 +1029,18 @@ def phase_weights(weight_map, phase):
     return {rid: wm[key] for rid, wm in (weight_map or {}).items() if key in wm}
 
 
-def available(cooldowns, model_id, now):
-    """True when `model_id` is not cooling down. `cooldowns` maps id -> the epoch
-    it is available again (the generalized rate-limit backoff, per-model)."""
-    until = (cooldowns or {}).get(model_id)
+def available(cooldowns, entry, now):
+    """True when `entry` is not cooling down. `cooldowns` maps an enabled entry
+    -> the epoch it is available again (the generalized rate-limit backoff,
+    per entry, so two entries of one route cool independently)."""
+    until = (cooldowns or {}).get(entry)
     return until is None or until <= now
 
 
-def cool(cooldowns, model_id, now, seconds):
-    """Put `model_id` on cooldown until now+seconds (its limit is probably
+def cool(cooldowns, entry, now, seconds):
+    """Put `entry` on cooldown until now+seconds (its limit is probably
     exhausted, or its session failed to start / stalled). In-place on the dict."""
-    cooldowns[model_id] = now + max(0, seconds)
+    cooldowns[entry] = now + max(0, seconds)
 
 
 def _weighted_rotation(candidates, weights, counter):
@@ -700,7 +1090,7 @@ def _pick(avail, registry, exclude, prefer_different, preferred_ids, weights, co
     pool = avail
     suffix = ""
     if prefer_different:
-        different = [mid for mid in avail if registry[mid].family not in exclude]
+        different = [e for e in avail if _row_of(registry, e).family not in exclude]
         if different:
             pool = different
         else:
@@ -728,11 +1118,12 @@ def select(
     weights=None,
     counter=0,
 ):
-    """Pick a model id from the enabled pool, or None. Returns (id, reason) — the
-    reason is the line the coordinator LOGS before launch (no silent swap).
+    """Pick an enabled entry from the pool, or None. Returns (entry, reason) —
+    the reason is the line the coordinator LOGS before launch (no silent swap).
 
     Rules, in order:
-      - Only enabled ids that exist in the registry and are not cooling down.
+      - Only enabled entries whose route is a registry row and that are not
+        cooling down.
       - Walk from `tier` UP to strong; never select a weaker tier than asked.
       - A `preferred_ids` pin (AGENT_PREFER_MAP) wins its phase outright when it
         is legal; unknown, disabled, wrong-tier, cooling, or heterogeneity-barred
@@ -760,11 +1151,11 @@ def select(
     for ti in range(start, len(TIER_ORDER)):
         this_tier = TIER_ORDER[ti]
         avail = [
-            mid
-            for mid in enabled
-            if mid in registry
-            and registry[mid].tier == this_tier
-            and available(cooldowns, mid, now)
+            e
+            for e in enabled
+            if (m := _row_of(registry, e)) is not None
+            and m.tier == this_tier
+            and available(cooldowns, e, now)
         ]
         if not avail:
             continue
@@ -782,7 +1173,7 @@ def select(
 def winstay_preferred_ids(next_primary, enabled, registry, cooldowns=None, now=0.0):
     """Resolve a win-stay `next_primary` (the reviewer FAMILY `escalate` returns
     when the last round's margin cleared the bar) into the enabled model ids of
-    that family, for use as `select()`'s `preferred_ids` — this is how the
+    that family's entries, for use as `select()`'s `preferred_ids` — this is how the
     documented win-stay policy actually biases the next draw (WI-264, M-34).
 
     Fail-open by contract (the 2026-07-21 author-identity lesson — dormant policy
@@ -800,32 +1191,35 @@ def winstay_preferred_ids(next_primary, enabled, registry, cooldowns=None, now=0
         return ()
     cooldowns = cooldowns or {}
     return tuple(
-        mid
-        for mid in enabled
-        if mid in registry
-        and registry[mid].family == fam
-        and available(cooldowns, mid, now)
+        e
+        for e in enabled
+        if (m := _row_of(registry, e)) is not None
+        and m.family == fam
+        and available(cooldowns, e, now)
     )
 
 
 def pool_context(enabled, registry, cooldowns=None, now=0.0):
-    """The enabled pool, one line per row, for a page-human/failure banner:
-    id, tier + Family, cooling-vs-available state, and the row's `Notes` cell.
+    """The enabled pool, one line per entry, for a page-human/failure banner:
+    the entry, its row's tier + Family, the entry's cooling-vs-available
+    state, and the row's `Notes` cell.
     Notes is the declared home for the provider's install/sign-in hint (e.g.
     `sign in: opencode auth login`), so an exhausted pool tells the human what
     to actually DO — the kit itself stays provider-neutral. Lenient: an enabled
     id missing from the registry (can't happen past preflight) still renders."""
     cooldowns = cooldowns or {}
     lines = ["enabled pool (docs/agents-enabled x docs/agents.toml):"]
-    for mid in enabled:
-        m = registry.get(mid)
+    for entry in enabled:
+        m = _row_of(registry, entry)
         if m is None:
-            lines.append("  - {} (not in docs/agents.toml)".format(mid))
+            lines.append("  - {} (not in docs/agents.toml)".format(entry))
             continue
-        wait = cooldowns.get(mid, 0.0) - now
+        wait = cooldowns.get(entry, 0.0) - now
         state = "cooling ~{}s".format(int(wait)) if wait > 0 else "available"
         note = " — {}".format(m.notes) if m.notes else ""
-        lines.append("  - {} [{}, {}] {}{}".format(mid, m.tier, m.family, state, note))
+        lines.append(
+            "  - {} [{}, {}] {}{}".format(entry, m.tier, m.family, state, note)
+        )
     return "\n".join(lines)
 
 
@@ -1036,23 +1430,32 @@ PAIR_NO_RESPONDER = (
 
 
 class PlannerSession:
-    """One planner-hat session selection — a routed (model x route) pick for a
-    hat. FRESHNESS is object identity: the coordinator relies on each returned
-    session being a NEW instance (never the failed one reused) so a relaunch
-    starts from clean context. Two same-family sessions are two DISTINCT objects
-    that may share a `model_id` — independent runs, weaker corroboration."""
+    """One planner-hat session selection — the enabled entry routed to a hat,
+    with `model_id` the registry route that entry selects. FRESHNESS is object
+    identity: the coordinator relies on each returned session being a NEW
+    instance (never the failed one reused) so a relaunch starts from clean
+    context. Two same-family sessions are two DISTINCT objects that may share
+    an entry — independent runs, weaker corroboration."""
 
-    __slots__ = ("hat", "model_id", "family", "tier")
+    __slots__ = ("hat", "entry", "family", "tier")
 
-    def __init__(self, hat, model_id, family, tier):
+    def __init__(self, hat, entry, family, tier):
         self.hat = hat
-        self.model_id = model_id
+        self.entry = entry
         self.family = family
         self.tier = tier
 
+    @property
+    def model_id(self):
+        """The registry route this session's entry selects.
+
+        Implements: SR-155, LLR-072
+        """
+        return entry_route(self.entry)
+
     def __repr__(self):  # for round-artifact / test readability
-        return "PlannerSession(hat={!r}, model_id={!r}, family={!r}, tier={!r})".format(
-            self.hat, self.model_id, self.family, self.tier
+        return "PlannerSession(hat={!r}, entry={!r}, family={!r}, tier={!r})".format(
+            self.hat, self.entry, self.family, self.tier
         )
 
 
@@ -1076,15 +1479,15 @@ class PlannerPair:
         )
 
 
-def _session(hat, model_id, registry, requested_tier):
-    """Build a fresh PlannerSession for `model_id`, reading its Family + the
+def _session(hat, entry, registry, requested_tier):
+    """Build a fresh PlannerSession for `entry`, reading its Family + the
     row's actual tier from the registry (a tier bump means the row's tier, not
     the requested one). A missing row degrades to the requested tier / empty
     family rather than crashing a walk-away run."""
-    m = registry.get(model_id)
+    m = _row_of(registry, entry)
     fam = m.family if m is not None else ""
     tier = m.tier if m is not None else requested_tier
-    return PlannerSession(hat, model_id, fam, tier)
+    return PlannerSession(hat, entry, fam, tier)
 
 
 def planner_pair(
@@ -1190,9 +1593,9 @@ def planner_fallback(
     # the pool entirely this round (select()'s exclude_families only DEPRIORITIZES
     # a family — it would still degrade back to it, which is exactly wrong here).
     responding = [
-        mid
-        for mid in enabled
-        if mid in registry and registry[mid].family != failed_family
+        e
+        for e in enabled
+        if (m := _row_of(registry, e)) is not None and m.family != failed_family
     ]
     resp_id, resp_reason = select(
         responding,
@@ -1219,6 +1622,21 @@ def planner_fallback(
         )
     )
     return PlannerPair((a, b), PAIR_RUNTIME_FALLBACK, True, detail)
+
+
+def _print_pool(raw_enabled, enabled, registry):
+    """`--list`: the enabled pool, one entry per line, then each unverified
+    account's line (printed, never refused; WI-798).
+
+    Implements: SR-222, LLR-336
+    """
+    if not raw_enabled:
+        print("(no enable-list — routing off; today's AGENT_CMD/AGENT_MODEL behavior)")
+    for entry in enabled:
+        m = registry[entry_route(entry)]
+        print("{:40} {:7} {}".format(entry, m.tier, m.family))
+    for line in unverified_lines(registry, enabled):
+        print("agent_route: {}".format(line))
 
 
 def main(argv=None):
@@ -1255,20 +1673,18 @@ def main(argv=None):
     for e in errors:
         print("agent_route: {}".format(e), file=sys.stderr)
     tag_rank = load_tag_rank(args.registry)
-    raw_enabled = load_enabled(args.enabled)
+    try:
+        raw_enabled = load_enabled(args.enabled)
+    except EnabledUnreadable as exc:
+        print("agent_route: agents-enabled: {}".format(exc), file=sys.stderr)
+        return 1
     # Resolve version-less tokens to concrete ids (exact-id/newest-in-line).
     enabled, enable_errors = resolve_enabled(raw_enabled, registry, tag_rank)
     for e in enable_errors:
         print("agent_route: agents-enabled: {}".format(e), file=sys.stderr)
 
     if args.list:
-        if not raw_enabled:
-            print(
-                "(no enable-list — routing off; today's AGENT_CMD/AGENT_MODEL behavior)"
-            )
-        for mid in enabled:
-            m = registry[mid]
-            print("{:32} {:7} {}".format(m.id, m.tier, m.family))
+        _print_pool(raw_enabled, enabled, registry)
         return 1 if (errors or enable_errors) else 0
 
     if args.select:

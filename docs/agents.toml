@@ -13,11 +13,15 @@
 #     `{prompt}` takes the prompt on stdin; `env` is a `KEY=value` list merged over
 #     the inherited environment, where empty means the ambient environment; `notes`
 #     is the failure-context text echoed at a missing-CLI or cooldown page. The
-#     table IS the allow matrix: a second account or router is a second pair row
-#     with its own id and its own independent cooldown. The id is a join key and is
-#     never parsed, and a legacy `Provider` column reads as `family`. The
-#     selectable pool is this registry composed against the ordered enable-list
-#     file; an absent enable-list turns managed routing off.
+#     table IS the allow matrix: a router is a second pair row with its own id. A
+#     second account is an `[account.<ID>]` table (`cli`, `notes`, an optional
+#     `env`, an optional `token_file_variable`, `verified`) named by a qualified
+#     enable-list entry `ROUTE@ACCOUNT`; every entry cools on its own. An
+#     account id names the account's home, so it is `[A-Z0-9][A-Z0-9-]*` and
+#     never a Windows device name, and its fields are strings. The route id is
+#     a join key and is never parsed, and a legacy `Provider` column reads as
+#     `family`. The selectable pool is this registry composed against the
+#     ordered enable-list file; an absent enable-list turns managed routing off.
 
 [agent.ANTHROPIC-FABLE]
 family = "ANTHROPIC"
@@ -87,6 +91,41 @@ version = "5.6"
 tier = "quick"
 cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
 notes = """GPT-5.6 fast/affordable (Luna); provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login. Owner directive 2026-09-01: -c model_reasoning_effort=medium pinned (see OPENAI-SOL notes)"""
+
+# ACCOUNTS (WI-798): a second account of one CLI is an `[account.<ID>]` table
+# plus a qualified enable-list entry `ROUTE@ACCOUNT`, never a duplicated row.
+# <ID> names the account's home directory, so it is portable: [A-Z0-9][A-Z0-9-]*
+# (no dot) and not a Windows device name (CON, PRN, AUX, NUL, COM0-9, LPT0-9).
+#   cli                  claude | codex | opencode | gemini: the CLI it signs into
+#   notes                free text
+#   env                  optional KEY=value;KEY2=value2, composed AFTER the route's
+#                        env; a name both declare is refused, and it never names
+#                        the CLI's home variable
+#   token_file_variable  optional (claude only): the environment VARIABLE naming
+#                        the file that holds the account's long-lived token
+#                        (`claude setup-token`); never a path
+#   verified             "<YYYY-MM-DD> <cli version>" once the login-isolation
+#                        check passed; absent or empty on a login-authenticated
+#                        claude account = UNVERIFIED, printed (never refused)
+# The account's home is <user config dir>/project-trajectory/accounts/<ID>/
+# (%APPDATA% on Windows; $XDG_CONFIG_HOME, else ~/.config, on POSIX), outside
+# every checkout and shared by every repository on the box. A login account's
+# home is yours to provision (e.g. with CODEX_HOME set to "<home>", run
+# `codex login`); the kit
+# creates only a token account's home, empty, and never reads, moves, copies or
+# deletes what a CLI writes there. An unqualified entry runs under your own
+# ambient login, with the route's env, exactly as before.
+#
+# This repository's one account (WI-798): the coordinator's adjudicator, the
+# default entry of coordinator_adjudicate.py (ANTHROPIC-OPUS-STRONG@ADJUDICATOR,
+# named on docs/agents-enabled). It authenticates with the owner's long-lived
+# token, so it is outside the login-isolation question (`verified` stays absent);
+# the token binds to this account only.
+
+[account.ADJUDICATOR]
+cli = "claude"
+notes = """the coordinator's adjudicator, on the owner's long-lived token (OI-110 (b)): the file the AGENT_CLAUDE_TOKEN_FILE environment variable names, set as dev-setup says; its home is created empty by the kit, and the retired per-family home (out/adjudicator/home/anthropic) is left in place and never read"""
+token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"
 
 # OPENCODE family (owner directive 2026-07-19): Kimi K3 + Grok 4.6 via the OpenCode CLI (opencode.ai / sst-opencode - the ACTIVE mid-2026 project; NOT the legacy opencode-ai Go TUI). ENABLED 2026-07-19 (both ids in docs/agents-enabled) after the three enablement gates all passed: CLI installed, STDIN contract verified, auth live. Web-verified 2026-07-19 (opus research session): both models GA 2026-07-16. PATHWAY-TESTED 2026-07-19 on the installed CLI (1.17.18): STDIN prompt delivery VERIFIED by differential probe (piped stdin proceeds to session start; empty stdin errors "must provide a message" - the WI-216/217 contract holds, templates stay {prompt}-free); --auto exists as a GLOBAL flag (not under run --help; --dangerously-skip-permissions does NOT exist on this build); the models catalog is AUTH-GATED so the kimi/grok slugs below remain research-sourced until keys exist. AUTH VERIFIED 2026-07-19 (owner ran `opencode auth login`, provider = the OpenCode Go gateway): live one-token probes returned PONG from BOTH models via piped stdin - auth, slug, stdin CONTENT fidelity, and clean final-text-only stdout all confirmed end-to-end; Model cells use the auth-unlocked catalog slugs (opencode-go/...). The OpenAI oauth credential in opencode remains invalidated (unused - OPENAI routes via codex). NOTE: in this CLI `-p` is the basic-auth PASSWORD, not the prompt. Tier slots follow routing intent (Opus-at-medium precedent): KIMI=strong (the owner's judge/CRITIQUE draw), GROK=medium (reviewer pool leg). RE-CHECKED 2026-09-30 (WI-541) on the installed 1.18.29: STDIN prompt delivery holds (a piped prompt ran a live two-step session on opencode-go/kimi-k3 and answered; empty stdin still errors "You must provide a message or a command"); --auto is still a GLOBAL flag (in `opencode --help`, not run's); `run --format json` emits a step_start/tool_use/step_finish/text event stream whose last text event is the answer; auth works (the run succeeded). The Grok route was not re-run. No route disabled; the version is recorded, not bumped over a failure.
 

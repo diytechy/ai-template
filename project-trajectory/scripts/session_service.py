@@ -52,7 +52,7 @@ Contract IF-246: the session service's call surface. `Call` is the data a role
     path. `call(call)` is `act` then `record` with the standard row, recording
     even when the launch raised, and returns the `Outcome`. A call with a
     `keep` (from `plan_keep`) launches in its retained session's resume or
-    mint form under its dedicated CLI home, is bookkept into that session's
+    mint form under its account's home (none for an ambient entry), is bookkept into that session's
     record, and retires it if its launch raises; `one_turn` bounds the call to
     one turn where the runner can. `KeepWarmer`, built by `keep_warmer(root,
     cfg)` only when the dial and keep-warm are on, is the dispatcher's
@@ -76,35 +76,52 @@ Contract IF-282: the adjudication request and the sign-in probe, the surface
     (the registry row the caller SELECTED; None: no route), the work item
     `wi`, `role` (default ADJUDICATE), the operator's `prompt_templates`
     overrides (None: the shipped templates), the call's wall `deadline`
-    in seconds (None: 7200), and the `scope` a loop review round is kept under
-    ("" for an adjudication; WI-887). `adjudication_keep(request)` returns the
+    in seconds (None: 7200), the `scope` a loop review round is kept under
+    ("" for an adjudication; WI-887), and the `account` its entry names
+    (None: the ambient login; WI-798). `adjudication_keep(request)` returns the
     Keep the call launches under, or None where the `[adjudicator]` dial (or,
     for a review round, the `[reviewer]` dial) does not cover it; its lease is the deadline plus 300 s, and its governing
     template identity covers the templates of every class the dial retains,
     so switching between retained classes does not drain the session, or,
     for a review round, the reviewer template its brief is built from.
-    `signin_status(root, family, run=None)` returns `signed-in`, `missing` or
-    `unknown` for the family's dedicated CLI home, with no model call and
-    nothing created. A family in `TOKEN_VARIABLES` (ANTHROPIC) reads its
-    long-lived token: signed-in exactly when the file its declared
-    environment variable `AGENT_CLAUDE_TOKEN_FILE` names is present, readable
-    and not empty, and missing otherwise, an unset variable included; nothing
-    runs. Any other family with a dedicated home: an absent home is missing;
-    otherwise its status command (`codex login status`) runs under it, and
-    only its documented answers read signed-in or missing; any other answer,
-    a failure or a timeout is unknown. `launch_credential(family)` returns
-    `{CLAUDE_CODE_OAUTH_TOKEN: token}`, read at that launch from the declared
-    file (`{}` for a family without a token), or raises `SigninRefused`. A
-    covered call whose family has a dedicated home and does not read
-    `signed-in` raises `SigninRefused` before any lease is taken or home
-    created. Every retained launch, an adjudication on either route or a
-    keep-warm ping, is prepared by `prepare_launch(root, row)` from the
-    registry row its caller SELECTED (the loop's from the registry it drew
-    from, the coordinator's resolved row, the warmer's own); the registry is
-    not read again. It returns a `Prepared` launch from that one snapshot (its
+    `signin_status(root, account, row=None, env=None, run=None)` reads an
+    account's readiness from its own source only, with no model call and
+    nothing created (WI-798): `ambient` for an ambient entry (no account; no
+    kit-held home and no sign-in gate); for a token account (one declaring a
+    `token_file_variable`, OI-110 (b)) `signed-in` exactly when the file that
+    variable names is present, readable and not empty, else `missing` (an
+    unset variable included), nothing run; for a login account `missing`
+    when its home is absent, else its CLI's status command (`claude auth
+    status`, `codex login status`) run under the launch's composed
+    environment less the credential, only its documented answers reading
+    `signed-in` or `missing`, any other answer, failure or timeout
+    `unknown`. `launch_credential(account)` returns `{<the CLI's token
+    variable>: token}` (claude `CLAUDE_CODE_OAUTH_TOKEN`), read at that
+    launch from the account's declared file (`{}` for an ambient entry or a
+    login account), or raises `SigninRefused`. A covered call whose account
+    does not read `signed-in` raises `SigninRefused` before any lease is
+    taken. THE ONE LAUNCH-ENVIRONMENT RULE (`_launch_parts`, composed once per
+    call): the ambient environment, then the route's declared env, then the
+    account's declared env, then the account home's variables
+    (`session_adapters.home_env` over `session_keep.account_home`), then the
+    credential; a name both the route's and the account's env declare, or a
+    route env declaring its CLI's home variable under an account, is refused
+    before launch. Every launch site takes it: an unretained launch through
+    `launch_env(root, row, account)` / `entry_env(root, registry, entry)`,
+    a retained one through `prepare_launch`, and the version and sign-in
+    probes and keep-warm through the prepared launch. The kit creates a
+    token account's home, empty, never a login account's: an absent login
+    home refuses the launch naming the command that provisions it
+    (`provision_command`). Every retained launch, an adjudication on either
+    route or a keep-warm ping, is prepared by `prepare_launch(root, row,
+    account)` from the registry row and account its caller SELECTED (the
+    loop's from the registry it drew from, the coordinator's resolved entry,
+    the warmer's own); the registry is not read again. It returns a
+    `Prepared` launch from that one snapshot (its
     family, template, model and tier, which the call launches and is
-    accounted as; its own declared pairs, never a merged environment; the
-    credential; the home; and the ONE executable, an absolute path resolved
+    accounted as; the route's and the account's declared pairs, never a
+    merged environment; the credential; the account home; and the ONE
+    executable, an absolute path resolved
     there once on the `PATH` of the composed launch environment, a name with
     a directory part taken against the root). The runner-version probe
     (`cli_version(prepared)`) and the launch both run that executable and
@@ -114,16 +131,22 @@ Contract IF-282: the adjudication request and the sign-in probe, the surface
     `SigninRefused` when the runner does not resolve on that `PATH`
     (`RUNNER_REFUSAL`, naming the runner and whether the `PATH` is the
     route's declared one or the ambient one), when the token cannot be read,
-    or when the route declares a `COMPETING_CREDENTIALS` source (any value;
-    names compared by `_name_key`, case-insensitively on Windows) or carries
-    `--bare` (`refuse_competing`). A token refusal names dev-setup and the
+    or when the route or the declared account declares a source its CLI
+    ranks above the account's own (`COMPETING_CREDENTIALS[cli]`, any value;
+    names compared by `agent_route.env_name_key`, case-insensitively on
+    Windows) or a token account's template carries `--bare`
+    (`refuse_competing`). A token refusal names dev-setup and the
     variable or the conflict, never the path or the token; nothing signs in,
-    nothing is stripped silently, and nothing falls back to OAuth, a fresh
-    session or
-    the default home. `compose_env(ambient, prepared)` is the launch's
+    nothing is stripped silently, and nothing falls back to OAuth, the
+    ambient login, a fresh session or another account's home.
+    `compose_env(ambient, prepared)` is a retained launch's
     environment, and `call.env` is not consulted: the ambient environment
-    less every name the launch sets and every `COMPETING_CREDENTIALS` source
-    (by `_name_key`), then the declared pairs, the home and the token, the
+    less every name the launch sets and, under a declared account, every
+    source its CLI ranks above the account's own home or token
+    (`COMPETING_CREDENTIALS[cli]`, by `agent_route.env_name_key`; an ambient
+    entry withholds none), or, for a CLI whose sources are open-ended
+    (opencode), only its declared base (`BASE_ENVIRONMENT[cli]`) and the
+    kit's own names (`KIT_INHERITED`), then the route's and the account's declared pairs, the home and the token, the
     launch's one environment credential. The redaction removes every
     verbatim occurrence of the credential's exact value from each physical
     output line and from the captured stream, before the result, the usage,
@@ -141,6 +164,7 @@ Contract IF-282: the adjudication request and the sign-in probe, the surface
 """
 
 import atexit
+import json
 import os
 import re
 import shutil
@@ -160,6 +184,7 @@ try:
     import session_adapters
     import session_keep
     from kitlib import commit_hooks
+    from kitlib import provenance
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import adjudicate_brief
@@ -169,6 +194,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import session_adapters
     import session_keep
     from kitlib import commit_hooks
+    from kitlib import provenance
 
 # The headless launch. Bound here so a test replaces the launch of every call
 # in one place (`monkeypatch.setattr(session_service, "run_session", ...)`).
@@ -305,15 +331,21 @@ def _launch_env(call):
     return compose_env(os.environ, call.keep.prepared)
 
 
-def _redactor(keep):
+def _redactor(keep, env=None):
     """The function that removes the exact value of every credential this
     launch carries from a text, so whatever the launched process echoes never
     reaches a renderer, log, record or result; the identity when the launch
-    carries none. Exact values, not credential shapes.
+    carries none. A retained launch's credential is its prepared one; an
+    unretained launch's is any token variable (`session_adapters.
+    TOKEN_VARIABLES`) its environment `env` sets, as a token account's does.
+    Exact values, not credential shapes.
 
     Implements: SR-227, LLR-305
     """
-    values = [v for v in (keep.prepared.credential.values() if keep else ()) if v]
+    values = list(keep.prepared.credential.values()) if keep else []
+    names = session_adapters.TOKEN_VARIABLES.values()
+    values += [env[name] for name in names if keep is None and env and name in env]
+    values = [v for v in values if v]
 
     def redact(text):
         for value in values:
@@ -401,7 +433,7 @@ def act(call, metrics=None):
     if call.one_turn:
         argv = adapter.one_turn(argv)
     env = _launch_env(call)
-    redact = _redactor(call.keep)
+    redact = _redactor(call.keep, env)
     metrics.update(_identity(call))
     started = time.monotonic()
     try:
@@ -698,26 +730,28 @@ def cli_version(prepared):
     return lines[0] if proc.returncode == 0 and lines else ""
 
 
-def plan_keep(root, cfg, *, route, role, brief, scope="", **kw):
+def plan_keep(root, cfg, *, route, role, brief, scope="", account=None, **kw):
     """The Keep an adjudication, or a loop review round under `scope`
     (WI-887), launches under, or None: `session_keep.keep_for` with the
     runner's version read first, and only when the keep operation covers the
     call, so the off dial launches nothing extra. `route` is the
-    registry row the caller SELECTED (None: no route). A covered call is
-    refused first, before any lease or home exists, unless its launch
-    prepares from that row (`prepare_launch`) and its family's home is signed
-    in (`require_signin`). The runner's version is probed from the prepared
-    launch (its executable, its environment less the credential), and the
-    Keep carries the prepared launch: the selected row is what is planned
-    for, probed, launched and accounted.
+    registry row the caller SELECTED (None: no route) and `account` the
+    declared account its entry names (None: the ambient login). A covered
+    call is refused first, before any lease exists, unless its launch
+    prepares from that row and account (`prepare_launch`) and its account
+    reads signed in (`require_signin`). The runner's version is probed from
+    the prepared launch (its executable, its environment less the
+    credential), and the Keep carries the prepared launch and is keyed by the
+    account: the selected entry is what is planned for, probed, launched and
+    accounted.
 
-    Implements: SR-227, LLR-270
+    Implements: SR-222, SR-227, LLR-270, LLR-336
     """
     route_id = getattr(route, "id", "") or ""
     if route is None or not session_keep.applies(cfg, role, brief, route_id, scope):
         return None
-    prepared = prepare_launch(root, route)
-    require_signin(root, prepared.family)
+    prepared = prepare_launch(root, route, account)
+    require_signin(root, prepared)
     return session_keep.keep_for(
         root,
         cfg,
@@ -728,6 +762,7 @@ def plan_keep(root, cfg, *, route, role, brief, scope="", **kw):
         cli_version=cli_version(prepared),
         prepared=prepared,
         scope=scope,
+        account=account.id if account is not None else "",
         **kw,
     )
 
@@ -744,8 +779,9 @@ class AdjudicationRequest:
     work item, the operator's `prompt_templates` overrides (keyed by prompt
     key; None or empty: the shipped templates), and the call's wall
     `deadline` in seconds (None: the default session wall), which the lease
-    outlives, and the `scope` a loop review round is kept under ("" for an
-    adjudication; WI-887). The governing template identity is not the
+    outlives, the `scope` a loop review round is kept under ("" for an
+    adjudication; WI-887), and the `account` the selected entry names (an
+    `agent_route.Account`; None: the person's ambient login; WI-798). The governing template identity is not the
     caller's to compose: the keep derives it from the dial's retained set,
     or a review round's own reviewer template (`adjudication_keep`).
 
@@ -760,6 +796,7 @@ class AdjudicationRequest:
     prompt_templates: object = None
     deadline: object = None
     scope: str = ""
+    account: object = None
 
 
 # The session wall a request with no deadline is bounded by, and how long the
@@ -792,6 +829,7 @@ def adjudication_keep(request):
         role=request.role,
         brief=request.brief,
         scope=request.scope,
+        account=request.account,
         wi=request.wi,
         rows=agent_common.load_wi_registry(request.root),
         template_paths=paths,
@@ -805,12 +843,15 @@ def adjudication_keep(request):
 SIGNED_IN = "signed-in"
 SIGNIN_MISSING = "missing"
 SIGNIN_UNKNOWN = "unknown"
+SIGNIN_AMBIENT = "ambient"
 SIGNIN_TIMEOUT = 60
 
 
 class SigninRefused(Exception):
-    """A retained launch refused before it starts: its family's dedicated CLI
-    home is not signed in, or the probe could not tell.
+    """A launch refused before it starts: its account cannot authenticate (a
+    token that cannot be read, a login home that is absent or does not read
+    signed in), its environment conflicts, its account home cannot be placed,
+    or its runner does not resolve.
 
     Implements: SR-227, LLR-305
     """
@@ -844,52 +885,217 @@ _CODEX_WARNING = "WARNING: proceeding, even though we could not create PATH alia
 _CODEX_SIGNED_IN = re.compile(r"Logged in using \S.*")
 
 
-# Each family's status command, which reads the home and calls no model, and
-# its reader. A family with a dedicated home and no row here, or in
-# TOKEN_VARIABLES, probes unknown.
-# Implements: SR-227, LLR-305
+def _claude_signin(code, text):
+    """`claude auth status` (2.1.296) answers with exactly one JSON object
+    whose `loggedIn` is a boolean: true at exit 0, false at exit 1 (an empty
+    home read `"loggedIn": false` at exit 1, the ambient login `true` at exit
+    0, on this box 2026-10-11). Anything else is unknown.
+
+    Implements: SR-222, LLR-336
+    """
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return SIGNIN_UNKNOWN
+    logged = data.get("loggedIn") if isinstance(data, dict) else None
+    if code == 0 and logged is True:
+        return SIGNED_IN
+    if code == 1 and logged is False:
+        return SIGNIN_MISSING
+    return SIGNIN_UNKNOWN
+
+
+# Each CLI's status command, which reads the home and calls no model, and its
+# reader. A login account of a CLI with no row here probes unknown.
+# Implements: SR-222, LLR-336
 SIGNIN_PROBES = {
-    "OPENAI": (("codex", "login", "status"), _codex_signin),
+    "codex": (("codex", "login", "status"), _codex_signin),
+    "claude": (("claude", "auth", "status"), _claude_signin),
+}
+
+# Each CLI's sign-in command, which a person runs under the account home's
+# variables to provision a login account (`provision_command`). The kit never
+# runs it.
+# Implements: SR-222, LLR-336
+LOGIN_COMMANDS = {
+    "claude": "claude auth login",
+    "codex": "codex login",
+    "opencode": "opencode auth login",
+    "gemini": "gemini",
 }
 
 
-# The families whose dedicated home authenticates with a long-lived token, and
-# for each the declared environment variable naming the token FILE (OI-110
-# (b), 2026-10-08: nothing about its path is tracked; dev-setup tells the owner,
-# or an adopter, to set it) and the variable the CLI reads the token from in
-# headless use (`claude setup-token`, 2.1.289: "Use this token by setting:
-# export CLAUDE_CODE_OAUTH_TOKEN=<token>"). Such a home is never signed in
-# interactively, so its probe is the token file alone.
+def provision_command(account):
+    """How a person signs `account` in under its own home, in prose: each
+    home variable with its value quoted, then the sign-in command
+    (`with CODEX_HOME set to "<home>", run `codex login``), or "" when its
+    home cannot be placed. It holds no shell syntax, so it reads the same to
+    every shell; the one text the refusals, the `signin` command and
+    dev-setup show. Never run by the kit.
+
+    Implements: SR-222, LLR-336
+    """
+    home = session_keep.account_home(account.id)
+    if home is None:
+        return ""
+    pairs = session_adapters.home_env(account.cli, home)
+    variables = " and ".join('{} set to "{}"'.format(k, v) for k, v in pairs.items())
+    login = LOGIN_COMMANDS.get(account.cli, account.cli)
+    return "with {}, run `{}`".format(variables, login)
+
+
+# Per CLI, the environment credential sources it ranks ABOVE the credential a
+# declared account selects (the login in the account's own home, or its
+# long-lived token). A qualified launch, and its probes, leave every one out
+# of the environment they inherit and carry only the account's own source
+# (`_compose`); an account or a qualified route env that declares one is
+# refused (`refuse_competing`). An ambient entry is untouched. Sources:
+# - claude: the cloud-provider switches, then the bearer token and the API
+#   key, which `-p` always uses when present (code.claude.com/docs/en/
+#   authentication, "Authentication precedence", read 2026-10-08), and the
+#   long-lived token, which outranks a login in the home (a token account
+#   re-adds its own from its file), and the named profile and federation
+#   rule, which rank above `/login` ("Anthropic profiles and federation
+#   credentials": "unset ANTHROPIC_PROFILE, or unset either federation
+#   variable", read 2026-10-11);
+# - gemini: every variable Gemini CLI's `getAuthTypeFromEnv` reads to select
+#   a non-login auth type when the home configures none (headless:
+#   `configuredAuthType || getAuthTypeFromEnv()`, packages/cli/src/
+#   validateNonInterActiveAuth.ts), in packages/core/src/core/
+#   contentGenerator.ts (github.com/google-gemini/gemini-cli, main, read
+#   2026-10-11): Vertex, the gateway, the API key and compute ADC; plus the
+#   Vertex credentials `createContentGeneratorConfig` and the authentication
+#   docs (geminicli.com/docs/get-started/authentication) name. Not withheld:
+#   `GOOGLE_GENAI_USE_GCA` (it selects the home login itself) and
+#   `GOOGLE_CLOUD_PROJECT`/`_LOCATION` (they select nothing, and an
+#   organisation's Google login reads the project too);
+# - codex: the per-CLI authentication table of the WI-788 design,
+#   docs/plans/2026-10-04-wi788-design/2-sessions-routing-accounts.md
+#   ("Auth and account", read 2026-10-04). It names codex's source only as
+#   "API key", so codex's are that provider's conventional variables.
+# - opencode: `OPENCODE_AUTH_CONTENT`, which its `Auth.all` reads in place of
+#   the home's `auth.json` (opencode-ai 1.18.30, read 2026-10-20), so it is
+#   refused when a route or account declares it. Its other sources are
+#   open-ended, so a qualified opencode launch inherits nothing outside
+#   `BASE_ENVIRONMENT` rather than withholding a list.
+# Settings-file sources (`apiKeyHelper`, a settings `env` block, a managed
+# gateway sign-in) are not environment variables and are NOT covered here.
 # Implements: SR-227, LLR-305
-TOKEN_VARIABLES = {"ANTHROPIC": ("AGENT_CLAUDE_TOKEN_FILE", "CLAUDE_CODE_OAUTH_TOKEN")}
+COMPETING_CREDENTIALS = {
+    "claude": (
+        "CLAUDE_CODE_USE_BEDROCK",
+        "CLAUDE_CODE_USE_VERTEX",
+        "CLAUDE_CODE_USE_FOUNDRY",
+        "ANTHROPIC_AUTH_TOKEN",
+        "ANTHROPIC_API_KEY",
+        session_adapters.TOKEN_VARIABLES["claude"],
+        "ANTHROPIC_PROFILE",
+        "ANTHROPIC_FEDERATION_RULE_ID",
+    ),
+    "codex": ("CODEX_API_KEY", "OPENAI_API_KEY"),
+    "gemini": (
+        "GOOGLE_GENAI_USE_VERTEXAI",
+        "GOOGLE_GEMINI_BASE_URL",
+        "GEMINI_API_KEY",
+        "CLOUD_SHELL",
+        "GEMINI_CLI_USE_COMPUTE_ADC",
+        "GOOGLE_API_KEY",
+        "GOOGLE_APPLICATION_CREDENTIALS",
+    ),
+    "opencode": ("OPENCODE_AUTH_CONTENT",),
+}
 
-# The credential sources the CLI ranks ABOVE `CLAUDE_CODE_OAUTH_TOKEN` that an
-# environment can carry: the cloud-provider switches, then the bearer token and
-# the API key, which `-p` always uses when present (code.claude.com/docs/en/
-# authentication, "Authentication precedence", read 2026-10-08). A token
-# launch leaves them out of its environment (`_launch_env`); a route that
-# declares one is refused (`refuse_competing`). Settings-file sources
-# (`apiKeyHelper`, a settings `env` block, a managed gateway sign-in) are not
-# environment variables and are NOT covered here.
-# Implements: SR-227, LLR-305
-COMPETING_CREDENTIALS = (
-    "CLAUDE_CODE_USE_BEDROCK",
-    "CLAUDE_CODE_USE_VERTEX",
-    "CLAUDE_CODE_USE_FOUNDRY",
-    "ANTHROPIC_AUTH_TOKEN",
-    "ANTHROPIC_API_KEY",
-)
+# The ambient variables a qualified launch of a CLI with no withheld list
+# inherits, beside the kit's own (`KIT_INHERITED`), and nothing else: none is
+# a credential. opencode's credential sources are open-ended, so no list of
+# them can be complete (opencode-ai
+# 1.18.30, its provider loader and `Auth.all`, read 2026-10-20): every
+# provider in its model catalog, fetched and refreshed hourly, loads from the
+# first set variable of that provider's `env` names; each provider SDK reads
+# its own default key even when the configuration empties that list; and
+# `OPENCODE_AUTH_CONTENT` replaces the home's `auth.json`. So the launch
+# starts from the platform's path, system and user directories, temporary
+# directory, terminal and locale, and the network-transport variables a proxy
+# or a CA bundle needs; then the route's and the account's declared pairs and
+# the account home (`_compose`). Anything else it needs, a provider key
+# included, is declared on the route or the account. Names compare by
+# `agent_route.env_name_key`. An unqualified entry inherits the ambient
+# environment unchanged.
+# Implements: SR-222, LLR-336
+BASE_ENVIRONMENT = {
+    "opencode": (
+        "PATH",
+        "PATHEXT",
+        "SYSTEMROOT",
+        "SYSTEMDRIVE",
+        "WINDIR",
+        "COMSPEC",
+        "PROGRAMDATA",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "PROGRAMW6432",
+        "COMMONPROGRAMFILES",
+        "ALLUSERSPROFILE",
+        "PUBLIC",
+        "HOME",
+        "USERPROFILE",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "USER",
+        "USERNAME",
+        "LOGNAME",
+        "SHELL",
+        "XDG_CONFIG_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_STATE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "TERM",
+        "COLORTERM",
+        "NO_COLOR",
+        "LANG",
+        "LANGUAGE",
+        "LC_ALL",
+        "LC_CTYPE",
+        "LC_MESSAGES",
+        "TZ",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "NO_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "no_proxy",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "NODE_EXTRA_CA_CERTS",
+    ),
+}
 
 
-def _read_token(family):
-    """`(token, problem)` for a family in TOKEN_VARIABLES: the token in the
-    file its declared variable names, stripped, and "", or "" and why there is
-    none (the variable unset, the file missing or unreadable, or empty). The
-    problem names the variable, never the path; the token is never printed.
+# The kit-owned variables every launch inherits, whatever its account's base
+# keeps: each is named by the module that owns it, never copied here, and
+# none is a credential. The loop marker is set in the loop's own process
+# (`provenance.mark_loop_process`), and the commit floors a child's commits
+# run read it to tell the loop's commits from a person's. A new kit variable
+# a child must inherit joins this tuple by its owner's constant.
+# Implements: SR-222, LLR-336
+KIT_INHERITED = (provenance.LOOP_SESSION_ENV,)
+
+
+def _read_token(variable):
+    """`(token, problem)` for a token account: the token in the file its
+    declared environment variable `variable` names (OI-110 (b): the variable
+    is the account's `token_file_variable`), stripped, and "", or "" and why
+    there is none (the variable unset, the file missing or unreadable, or
+    empty). The problem names the variable, never the path; the token is
+    never printed.
 
     Implements: SR-227, LLR-305
     """
-    variable = TOKEN_VARIABLES[family][0]
     path = os.environ.get(variable, "").strip()
     if not path:
         return "", "{} is unset".format(variable)
@@ -903,81 +1109,83 @@ def _read_token(family):
 
 
 TOKEN_REFUSAL = (
-    "keep [{family}]: refused before launch: the dedicated home reads {status} "
-    "to the sign-in probe: {problem}. Run dev-setup's one-time `claude "
-    "setup-token` step, keep the token in a file outside the repository, and "
-    "set {variable} to that file; nothing signs in automatically, and the call "
-    "never falls back to OAuth, a fresh session or the default home."
+    "launch [{account}]: refused before launch: the account's long-lived token "
+    "reads {status} to the sign-in probe: {problem}. Run dev-setup's one-time "
+    "`claude setup-token` step, keep the token in a file outside the "
+    "repository, and set {variable} to that file; nothing signs in "
+    "automatically, and the call never falls back to OAuth, the ambient "
+    "login, a fresh session or another account's home."
 )
 
 
-def _token_refusal(family, status, problem):
-    """The refusal of a token family's retained launch, naming dev-setup and
-    the variable, never the path or the token.
+def _token_refusal(account, status, problem):
+    """The refusal of a token account's launch, naming dev-setup and the
+    variable, never the path or the token.
 
     Implements: SR-227, LLR-305
     """
-    variable = TOKEN_VARIABLES[family][0]
     return SigninRefused(
         TOKEN_REFUSAL.format(
-            family=family, status=status, problem=problem, variable=variable
+            account=account.id,
+            status=status,
+            problem=problem,
+            variable=account.token_file_variable,
         )
     )
 
 
 COMPETING_REFUSAL = (
-    "keep [{family}]: refused before launch: the route declares {names}, so the "
-    "CLI would not authenticate with the long-lived token dev-setup's "
-    "`claude setup-token` step provides. Remove it from the route's env or "
-    "command template; nothing is stripped silently and nothing falls back."
+    "launch [{account}]: refused before launch: the route or the account "
+    "declares {names}, so the CLI would not authenticate with {source}. "
+    "Remove it from the env or the command template; nothing is stripped "
+    "silently and nothing falls back."
 )
+_TOKEN_SOURCE = "the long-lived token dev-setup's `claude setup-token` step provides"
+_LOGIN_SOURCE = "the login in its own home"
 
 
-def refuse_competing(family, template, declared):
-    """Refuse (SigninRefused) a token family's retained launch whose route
-    DECLARES a COMPETING_CREDENTIALS source (a name in its own `env` cell,
-    `declared`, compared by `_name_key` whatever its value) or whose template
-    carries `--bare`, which does not read the token. An ambient source is not
-    the route's choice and is left out of the launch instead (`compose_env`).
+def refuse_competing(account, template, declared):
+    """Refuse (SigninRefused) a declared account's launch whose route or
+    account DECLARES a source its CLI ranks above the account's own
+    (`COMPETING_CREDENTIALS[account.cli]`, a name in `declared`, their env
+    cells together, compared by `agent_route.env_name_key` whatever its
+    value), or, for a token account, whose template carries `--bare`, which
+    does not read the token. An ambient source is not the route's choice and is left out of the
+    launch instead (`_compose`).
 
     Implements: SR-227, LLR-305
     """
-    competing = {_name_key(k) for k in COMPETING_CREDENTIALS}
-    names = [k for k in declared if _name_key(k) in competing]
+    competing = {
+        agent_route.env_name_key(k) for k in COMPETING_CREDENTIALS.get(account.cli, ())
+    }
+    names = [k for k in declared if agent_route.env_name_key(k) in competing]
     try:
-        names += ["--bare"] if "--bare" in agent_session.split_cmd(template) else []
+        bare = "--bare" in agent_session.split_cmd(template)
     except ValueError:
-        pass  # a template that cannot be split cannot launch either
+        bare = False  # a template that cannot be split cannot launch either
+    token = bool(account.token_file_variable)
+    names += ["--bare"] if bare and token else []
     if names:
         raise SigninRefused(
-            COMPETING_REFUSAL.format(family=family.upper(), names=", ".join(names))
+            COMPETING_REFUSAL.format(
+                account=account.id,
+                names=", ".join(names),
+                source=_TOKEN_SOURCE if token else _LOGIN_SOURCE,
+            )
         )
-
-
-# Windows resolves environment variable names case-insensitively, POSIX does
-# not: the one rule every comparison of names in a launch environment uses.
-# Implements: SR-227, LLR-305
-_CASE_INSENSITIVE = os.name == "nt"
-
-
-def _name_key(name):
-    """The name as the platform resolves it (`_CASE_INSENSITIVE`).
-
-    Implements: SR-227, LLR-305
-    """
-    return name.upper() if _CASE_INSENSITIVE else name
 
 
 @dataclass(frozen=True)
 class Prepared:
-    """A retained launch, validated, from ONE snapshot of its route row: the
-    row's family, command template, model and tier (what the call launches
-    and is accounted as), the ONE resolved `executable` both the version
-    probe and the launch run (`""`: it did not resolve), its own declared
-    environment pairs, the credential the CLI reads (`{}` for a family
-    without a token), and the dedicated home (`{variable: path}`, or `{}`).
-    Built only by `prepare_launch`; the environment parts are never stored,
-    logged or shown in a repr.
+    """A retained launch, validated, from ONE snapshot of its route row and
+    its account: the row's family, command template, model and tier (what
+    the call launches and is accounted as), the ONE resolved `executable`
+    both the version probe and the launch run, the route's own declared
+    environment pairs, the credential the CLI reads (`{}` unless the account
+    authenticates with a token), the account home (`{variable: path}`, `{}`
+    for an ambient entry), the account's own declared pairs and the account
+    (None: the person's ambient login). Built only by `prepare_launch`; the
+    environment parts are never stored, logged or shown in a repr.
 
     Implements: SR-227, LLR-305
     """
@@ -990,29 +1198,86 @@ class Prepared:
     declared: dict = field(repr=False)
     credential: dict = field(repr=False)
     home: dict = field(repr=False)
+    account_env: dict = field(default_factory=dict, repr=False)
+    account: object = field(default=None, repr=False)
 
 
-def prepare_launch(root, row):
-    """The `Prepared` launch of a retained call on `row`, or SigninRefused:
-    the ONE step every retained launch (an adjudication on either route, a
-    keep-warm ping) takes. `row` is the registry row the caller SELECTED; the
-    registry is never read here, so that one snapshot supplies everything:
-    family, template, model, tier and declared pairs (`act` launches it), and
-    the executable, resolved here once or refused (`_resolve_executable`). A
-    token
-    family refuses a declared competing source or a `--bare` template
-    (`refuse_competing`) and reads its token (`launch_credential`).
+CONFLICT_REFUSAL = (
+    "launch [{account}]: refused before launch: {why}; neither side silently "
+    "overrides the other, and nothing falls back to the ambient login."
+)
+NO_CONFIG_DIR_REFUSAL = (
+    "launch [{account}]: refused before launch: the user configuration "
+    "directory account homes live under cannot be resolved (%APPDATA% on "
+    "Windows; $XDG_CONFIG_HOME, else ~/.config, on POSIX); nothing falls back "
+    "to a checkout-local home or the ambient login."
+)
+SIGNIN_REFUSAL = (
+    "launch [{account}]: refused before launch: the account home {home} reads "
+    "{status} to the sign-in probe. Sign it in there yourself: {provision}. "
+    "Nothing signs in automatically, and the call never falls back to the "
+    "ambient login, a fresh session or another account's home."
+)
+
+
+def _launch_parts(root, row, account):
+    """`(declared, account_env, home, credential)` of a launch on `row` under
+    `account` (None: the person's ambient login): THE ONE LAUNCH-ENVIRONMENT
+    RULE's parts (WI-798), composed in that order over the ambient
+    environment (`_compose`) by every launch site, the version and sign-in
+    probes and keep-warm. An ambient entry has its route's declared pairs
+    only: no kit-held home and no credential. A qualified entry is refused
+    when its route and account conflict (`agent_route.qualifier_problem`),
+    when its home cannot be placed, when its token cannot be read or a
+    source its CLI ranks above the account's own is declared
+    (`refuse_competing`), or when it is a login account whose home is
+    absent (naming the provisioning command). The kit creates a token
+    account's home, empty, and never a login account's.
+
+    Implements: SR-222, LLR-336
+    """
+    declared = agent_route.parse_env(row.env or "")
+    if account is None:
+        return declared, {}, {}, {}
+    why = agent_route.qualifier_problem(row, account, account.id)
+    if why:
+        raise SigninRefused(CONFLICT_REFUSAL.format(account=account.id, why=why))
+    path = session_keep.account_home(account.id)
+    if path is None:
+        raise SigninRefused(NO_CONFIG_DIR_REFUSAL.format(account=account.id))
+    account_env = agent_route.parse_env(account.env)
+    credential = launch_credential(account)
+    refuse_competing(account, row.cmd_template, {**declared, **account_env})
+    if credential:
+        path.mkdir(parents=True, exist_ok=True)  # holds no credential: kit-made
+    elif not path.is_dir():
+        raise SigninRefused(
+            SIGNIN_REFUSAL.format(
+                account=account.id,
+                home=path,
+                status=SIGNIN_MISSING,
+                provision=provision_command(account),
+            )
+        )
+    home = session_adapters.home_env(account.cli, path)
+    return declared, account_env, home, credential
+
+
+def prepare_launch(root, row, account=None):
+    """The `Prepared` launch of a retained call on `row` under `account`
+    (None: the ambient login), or SigninRefused: the ONE step every retained
+    launch (an adjudication on either route, a keep-warm ping) takes. `row`
+    is the registry row the caller SELECTED; the registry is never read here,
+    so that one snapshot supplies everything: family, template, model, tier
+    and declared pairs (`act` launches it), the account's parts
+    (`_launch_parts`), and the executable, resolved here once or refused
+    (`_resolve_executable`).
 
     Implements: SR-227, LLR-305
     """
     family = (row.family or "").upper()
-    declared = agent_route.parse_env(row.env or "")
-    credential = launch_credential(family)
-    if credential:
-        refuse_competing(family, row.cmd_template, declared)
-    home = session_keep.dedicated_home(root, family)
-    home = {home[0]: str(home[1])} if home else {}
-    launch_env = _compose(os.environ, declared, home, credential)
+    declared, account_env, home, credential = _launch_parts(root, row, account)
+    launch_env = _compose(os.environ, declared, account_env, home, credential, account)
     model = row.model or row.id
     return Prepared(
         family=family,
@@ -1025,7 +1290,29 @@ def prepare_launch(root, row):
         declared=declared,
         credential=credential,
         home=home,
+        account_env=account_env,
+        account=account,
     )
+
+
+def launch_env(root, row, account=None):
+    """The environment an UNRETAINED launch on `row` under `account` runs
+    under, by the one rule (`_launch_parts`, `_compose`), or None to inherit
+    the ambient one exactly; raises SigninRefused as `_launch_parts` does.
+
+    Implements: SR-222, LLR-336
+    """
+    return _compose(os.environ, *_launch_parts(root, row, account), account)
+
+
+def entry_env(root, registry, entry):
+    """`launch_env` for an enabled `entry` of `registry`: its route row and
+    its account, resolved once here (`agent_route.account_of`).
+
+    Implements: SR-222, LLR-336
+    """
+    row = registry[agent_route.entry_route(entry)]
+    return launch_env(root, row, agent_route.account_of(registry, entry))
 
 
 RUNNER_REFUSAL = (
@@ -1037,8 +1324,8 @@ RUNNER_REFUSAL = (
 
 def _resolve_executable(root, family, route, declared, launch_env):
     """The absolute path of the runner a `route` (its template and model)
-    names, the template's first token after the argv substitution
-    (`agent_session.substitute`), found on the `PATH`
+    names (`agent_route.route_runner`, the launcher's own parse of the
+    template, which also names the route's CLI), found on the `PATH`
     of the composed launch environment `launch_env` (None: the ambient one),
     a name with a directory part taken against `root`; SigninRefused
     (`RUNNER_REFUSAL`, naming the route's `declared` PATH or the ambient one)
@@ -1049,18 +1336,17 @@ def _resolve_executable(root, family, route, declared, launch_env):
     Implements: SR-227, LLR-305
     """
     template, model = route
-    try:
-        name = agent_session.substitute(agent_session.split_cmd(template)[0], model, "")
-    except (ValueError, IndexError):
-        name = ""
+    name = agent_route.route_runner(template, model)
     if os.path.dirname(name):
         name = str(Path(root, name))
-    path_key = _name_key("PATH")
+    path_key = agent_route.env_name_key("PATH")
     env = os.environ if launch_env is None else launch_env
-    path = next((v for k, v in env.items() if _name_key(k) == path_key), None)
+    path = next(
+        (v for k, v in env.items() if agent_route.env_name_key(k) == path_key), None
+    )
     resolved = shutil.which(name, path=path) if name else None
     if not resolved:
-        own = any(_name_key(k) == path_key for k in declared)
+        own = any(agent_route.env_name_key(k) == path_key for k in declared)
         raise SigninRefused(
             RUNNER_REFUSAL.format(
                 family=family,
@@ -1072,70 +1358,107 @@ def _resolve_executable(root, family, route, declared, launch_env):
 
 
 def probe_env(prepared):
-    """The environment the runner-version probe runs under: the launch's own
-    (`compose_env` over the ambient one), less every name of the launch's
-    credential, which only the launch receives.
+    """The environment the runner-version and sign-in probes run under: the
+    launch's own (`compose_env` over the ambient one), less every name of the
+    launch's credential, which only the launch receives.
 
     Implements: SR-227, LLR-305
     """
     env = compose_env(os.environ, prepared)
     if env is None or not prepared.credential:
         return env
-    withheld = {_name_key(k) for k in prepared.credential}
-    return {k: v for k, v in env.items() if _name_key(k) not in withheld}
+    withheld = {agent_route.env_name_key(k) for k in prepared.credential}
+    return {k: v for k, v in env.items() if agent_route.env_name_key(k) not in withheld}
 
 
 def compose_env(ambient, prepared):
     """The environment of a prepared launch: the ambient one, less every name
-    the launch sets itself and, for a launch with a credential, every
-    COMPETING_CREDENTIALS source, then the declared pairs, the home and the
-    credential. Names compare by `_name_key`, so no second spelling of one
+    the launch sets itself and, for a declared account, every source its CLI
+    ranks above the account's own (`COMPETING_CREDENTIALS`) or everything
+    outside its CLI's declared base (`BASE_ENVIRONMENT`) and the kit's own
+    names (`KIT_INHERITED`), then the route's declared pairs, the account's, the account home and the credential.
+    Names compare by `agent_route.env_name_key`, so no second spelling of one
     survives; None (inherit exactly) when the launch sets nothing.
 
     Implements: SR-227, LLR-305
     """
-    return _compose(ambient, prepared.declared, prepared.home, prepared.credential)
+    return _compose(
+        ambient,
+        prepared.declared,
+        prepared.account_env,
+        prepared.home,
+        prepared.credential,
+        prepared.account,
+    )
 
 
-def _compose(ambient, declared, home, credential):
+def _compose(ambient, declared, account_env, home, credential, account):
     """`compose_env` over the launch's parts, before they are a `Prepared`
-    (`prepare_launch` resolves the executable on its result).
+    (`prepare_launch` resolves the executable on its result). The selected
+    `account` (None: the ambient login) owns what is inherited
+    (`_ambient_base`): a declared account inherits no ambient source its CLI
+    ranks above its own home or token, or only its CLI's declared base, and
+    carries only its own credential; an ambient entry inherits the ambient
+    environment unchanged.
 
-    Implements: SR-227, LLR-305
+    Implements: SR-222, SR-227, LLR-305, LLR-336
     """
     overlay = {}
-    for pairs in (declared, home, credential):
+    for pairs in (declared, account_env, home, credential):
         for name, value in pairs.items():
-            overlay[_name_key(name)] = (name, value)
+            overlay[agent_route.env_name_key(name)] = (name, value)
     if not overlay:
         return None
-    drop = set(overlay)
-    if credential:
-        drop |= {_name_key(k) for k in COMPETING_CREDENTIALS}
-    base = {k: v for k, v in ambient.items() if _name_key(k) not in drop}
+    base = {
+        k: v
+        for k, v in _ambient_base(ambient, account).items()
+        if agent_route.env_name_key(k) not in overlay
+    }
     return {**base, **dict(overlay.values())}
 
 
-def launch_credential(family):
-    """`{variable: token}` the CLI of a retained `family` launch reads its
-    long-lived token from, read now from the file the declared variable
-    names, or `{}` for a family with no token; raises SigninRefused, naming
-    dev-setup, when the token cannot be read. Nothing falls back to OAuth.
+def _ambient_base(ambient, account):
+    """The part of the `ambient` environment a launch under `account` (None:
+    the ambient login) starts from: all of it for an ambient entry; for a
+    declared account of a CLI with a `BASE_ENVIRONMENT`, only those names and
+    the kit's own (`KIT_INHERITED`); otherwise all of it less every source its
+    CLI ranks above the account's own home or token (`COMPETING_CREDENTIALS`).
+    Names compare by `agent_route.env_name_key`.
+
+    Implements: SR-222, LLR-336
+    """
+    if account is None:
+        return ambient
+    key = agent_route.env_name_key
+    kept = BASE_ENVIRONMENT.get(account.cli)
+    if kept is not None:
+        names = {key(k) for k in (*kept, *KIT_INHERITED)}
+        return {k: v for k, v in ambient.items() if key(k) in names}
+    withheld = {key(k) for k in COMPETING_CREDENTIALS.get(account.cli, ())}
+    return {k: v for k, v in ambient.items() if key(k) not in withheld}
+
+
+def launch_credential(account):
+    """`{variable: token}` the CLI of a launch under `account` reads its
+    long-lived token from, read now from the file the account's declared
+    `token_file_variable` names, or `{}` for an ambient entry or a login
+    account; raises SigninRefused, naming dev-setup, when the token cannot be
+    read. Nothing falls back to OAuth.
 
     Implements: SR-227, LLR-305
     """
-    family = (family or "").upper()
-    if family not in TOKEN_VARIABLES:
+    if account is None or not account.token_file_variable:
         return {}
-    token, problem = _read_token(family)
+    token, problem = _read_token(account.token_file_variable)
     if problem:
-        raise _token_refusal(family, SIGNIN_MISSING, problem)
-    return {TOKEN_VARIABLES[family][1]: token}
+        raise _token_refusal(account, SIGNIN_MISSING, problem)
+    return {session_adapters.TOKEN_VARIABLES[account.cli]: token}
 
 
 def _run_status(argv, env):
     """Run a status command: `(exit code, stdout and stderr)`."""
-    exe = shutil.which(argv[0]) or argv[0]
+    path = (env or os.environ).get("PATH")
+    exe = shutil.which(argv[0], path=path) or argv[0]
     proc = subprocess.run(
         [exe, *argv[1:]],
         capture_output=True,
@@ -1149,66 +1472,77 @@ def _run_status(argv, env):
     return proc.returncode, (proc.stdout or "") + "\n" + (proc.stderr or "")
 
 
-def signin_status(root, family, *, run=None):
-    """Whether `family`'s dedicated CLI home is signed in: `signed-in`,
-    `missing` or `unknown`. A family with a long-lived token
-    (TOKEN_VARIABLES) is signed in exactly when the file its declared
-    variable names is present, readable and not empty, and missing otherwise
-    (an unset variable included); nothing runs. For any other family the home
-    is resolved without being created; an absent home is missing without
-    running anything; otherwise the family's status command runs under it
-    (`run(argv, env)`, default a bounded subprocess); only its documented
+def signin_status(root, account, *, row=None, env=None, run=None):
+    """Whether `account` can authenticate, read from its own source only:
+    `signed-in`, `missing` or `unknown`, or `ambient` for an ambient entry
+    (None), which has no kit-held home and no sign-in gate. A token account
+    is signed in exactly when the file its `token_file_variable` names is
+    present, readable and not empty, and missing otherwise (an unset
+    variable included); nothing runs. A login account's home is resolved
+    without being created; an absent home is missing without running
+    anything; otherwise its CLI's status command runs under `env` (default:
+    the launch environment of `row` under the account, `launch_env`, with no
+    `row` the account's CLI with no route env; a launch refusal reads
+    unknown;
+    `run(argv, env)`, default a bounded subprocess); only its documented
     exit-and-output pairs read signed-in or missing, and any other answer,
-    failure or timeout is unknown.
+    failure or timeout is unknown. Nothing is created and no model is called.
 
-    Implements: SR-227, LLR-305
+    Implements: SR-222, SR-227, LLR-305, LLR-336
     """
-    if (family or "").upper() in TOKEN_VARIABLES:
-        return SIGNIN_MISSING if _read_token(family.upper())[1] else SIGNED_IN
-    home = session_keep.dedicated_home(root, family)
-    probe = SIGNIN_PROBES.get((family or "").upper())
+    if account is None:
+        return SIGNIN_AMBIENT
+    if account.token_file_variable:
+        missing = _read_token(account.token_file_variable)[1]
+        return SIGNIN_MISSING if missing else SIGNED_IN
+    home = session_keep.account_home(account.id)
+    probe = SIGNIN_PROBES.get(account.cli)
     if home is None or probe is None:
         return SIGNIN_UNKNOWN
-    variable, path = home
-    if not path.is_dir():
+    if not home.is_dir():
         return SIGNIN_MISSING
+    if env is None:
+        bare = agent_route.Model("", "", "", "", "", account.cli)
+        try:
+            env = launch_env(root, row or bare, account)
+        except SigninRefused:
+            return SIGNIN_UNKNOWN
     argv, read = probe
     try:
-        code, text = (run or _run_status)(
-            list(argv), {**os.environ, variable: str(path)}
-        )
+        code, text = (run or _run_status)(list(argv), env)
     except (OSError, subprocess.SubprocessError, ValueError):
         return SIGNIN_UNKNOWN
     return read(code, text or "")
 
 
-SIGNIN_REFUSAL = (
-    "keep [{family}]: refused before launch: the dedicated CLI home {home} "
-    "reads {status} to the sign-in probe. Sign in there through dev-setup; "
-    "nothing signs in automatically, and the call never falls back to a "
-    "fresh session or the default home."
-)
+def require_signin(root, prepared):
+    """Refuse (SigninRefused) a retained launch whose account the probe does
+    not read as signed in, run under the prepared launch's own environment
+    less its credential (`probe_env`); an ambient entry has nothing to sign
+    in to. A token account's refusal names its declared variable and
+    dev-setup's `claude setup-token` step; a login account's names the
+    command that provisions its home. An unverified login account is
+    printed (`agent_route.unverified_lines`), never refused here.
 
-
-def require_signin(root, family):
-    """Refuse (SigninRefused) a retained launch of `family` whose dedicated
-    home the probe does not read as signed in; a family with no dedicated
-    home has nothing to sign in to. A token family's refusal names its
-    declared variable and dev-setup's `claude setup-token` step.
-
-    Implements: SR-227, LLR-305
+    Implements: SR-222, SR-227, LLR-305, LLR-336
     """
-    family = (family or "").upper()
-    if family not in session_keep.HOME_VARIABLES:
+    account = prepared.account
+    if account is None:
         return
-    status = signin_status(root, family)
-    if status != SIGNED_IN and family in TOKEN_VARIABLES:
-        problem = _read_token(family)[1] or "the token could not be confirmed"
-        raise _token_refusal(family, status, problem)
+    status = signin_status(root, account, env=probe_env(prepared))
+    if status != SIGNED_IN and account.token_file_variable:
+        problem = _read_token(account.token_file_variable)[1]
+        raise _token_refusal(
+            account, status, problem or "the token could not be confirmed"
+        )
     if status != SIGNED_IN:
-        _variable, home = session_keep.dedicated_home(root, family)
         raise SigninRefused(
-            SIGNIN_REFUSAL.format(family=family, home=home, status=status)
+            SIGNIN_REFUSAL.format(
+                account=account.id,
+                home=session_keep.account_home(account.id),
+                status=status,
+                provision=provision_command(account),
+            )
         )
 
 
@@ -1236,16 +1570,20 @@ class KeepWarmer:
     """
 
     def __init__(
-        self, root, cfg, registry, *, runner=None, clock=time.time, dirty=None
+        self,
+        root,
+        cfg,
+        registry,
+        *,
+        entries,
+        runner=None,
+        clock=time.time,
+        dirty=None,
     ):
         self.root = Path(root)
         self.cfg = cfg
         self.registry = registry
-        self.routes = {
-            route_id
-            for route_id, row in registry.items()
-            if _pings_one_turn(row.cmd_template, row.model or "")
-        }
+        self.routes = _warm_routes(registry, entries)
         self.runner = runner
         self.clock = clock
         self.dirty = dirty or (
@@ -1296,13 +1634,18 @@ class KeepWarmer:
         self.last_said = said
         return lines
 
-    def _prepare(self, route_id):
-        """`(prepared, reason)` for a due route's ping, asked by
+    def _prepare(self, route_id, account):
+        """`(prepared, reason)` for a due entry's ping, asked by
         `take_warm_lease` before it takes any lease: the same `prepare_launch`
-        an adjudication takes, from the row this warmer selected its routes
-        from (one snapshot), its refusal the reason the ping is skipped."""
+        an adjudication takes, from the row and account this warmer selected
+        its entries from (one snapshot), its refusal the reason the ping is
+        skipped."""
+        row = self.registry[route_id]
+        found = getattr(self.registry, "accounts", {}).get(account) if account else None
+        if account and found is None:
+            return None, "account {} is no longer declared".format(account)
         try:
-            return prepare_launch(self.root, self.registry[route_id]), ""
+            return prepare_launch(self.root, row, found), ""
         except SigninRefused as refused:
             return None, str(refused)
 
@@ -1393,6 +1736,30 @@ class KeepWarmer:
         return []
 
 
+def _warm_routes(registry, entries):
+    """The `(route_id, account)` entries a keep-warm may ping: each enabled
+    entry whose route is a row of `registry` its runner can bound to one
+    turn and whose account, if it names one, is declared there (WI-798: a
+    record whose entry is no longer enabled, or whose account no longer
+    resolves, is never pinged).
+
+    Implements: SR-222, SR-227, LLR-270, LLR-336
+    """
+    routes = set()
+    for entry in entries:
+        route_id = agent_route.entry_route(entry)
+        account = agent_route.entry_account(entry)
+        row = registry.get(route_id)
+        declared = not account or account in getattr(registry, "accounts", {})
+        if (
+            row is not None
+            and declared
+            and _pings_one_turn(row.cmd_template, row.model or "")
+        ):
+            routes.add((route_id, account))
+    return routes
+
+
 def _pings_one_turn(template, model):
     """Whether a route's runner can be bounded to one turn, so it may be
     pinged (claude's); a template that cannot be built cannot be pinged.
@@ -1414,17 +1781,16 @@ def keep_warmer(root, cfg):
     """
     if not cfg.enabled or cfg.keepwarm_minutes <= 0:
         return None
-    registry, _errors = agent_route.load_registry(Path(root) / "docs" / "agents.toml")
-    warmer = KeepWarmer(root, cfg, registry)
+    docs = Path(root) / "docs"
+    registry, _errors = agent_route.load_registry(docs / "agents.toml")
+    try:
+        tokens = agent_route.load_enabled(docs / "agents-enabled")
+    except agent_route.EnabledUnreadable as exc:
+        print("keep-warm: off ({})".format(exc), file=sys.stderr)
+        return None
+    entries, _ = agent_route.resolve_enabled(
+        tokens, registry, agent_route.load_tag_rank(docs / "agents.toml")
+    )
+    warmer = KeepWarmer(root, cfg, registry, entries=entries)
     atexit.register(warmer.finish)  # a ping in flight is recorded at the run's end
     return warmer
-
-
-def route_env(row):
-    """A registry row's declared environment merged over the ambient one, or
-    None to inherit it exactly — the loop's own launch rule.
-
-    Implements: SR-227, LLR-305
-    """
-    pairs = agent_route.parse_env(getattr(row, "env", "") or "")
-    return {**os.environ, **pairs} if pairs else None

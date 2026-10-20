@@ -336,9 +336,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      affected chain rows in the appropriate scope and supply the arms map
      as an additional input; the composer does not generate it.
   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.
-  3. Check sign-in. The retained Claude home authenticates with the owner's
-     long-lived token, read at each launch from the file the
-     `AGENT_CLAUDE_TOKEN_FILE` environment variable names. Set that variable
+  3. Check sign-in. The adjudicator runs on the declared ADJUDICATOR account,
+     which authenticates with the owner's long-lived token, read at each
+     launch from the file the `AGENT_CLAUDE_TOKEN_FILE` environment variable
+     names. Set that variable
      to the path in the launching shell; never read the file, and never put
      the token in a brief, log or commit. It is the launch's one environment
      credential: an ambient `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN` or
@@ -346,8 +347,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `--bare`) is refused. Settings-file credentials (`apiKeyHelper`, a
      settings `env` block, a managed gateway) are not checked: keep them out
      of this repo. Then run
-     `"$PY" "$SCRIPTS/coordinator_adjudicate.py" signin` and read
-     `signed-in`, `missing` or `unknown`; `signin` itself always exits 0.
+     `"$PY" "$SCRIPTS/coordinator_adjudicate.py" signin` and read its
+     `signin [ADJUDICATOR] token: <status>` line: `signed-in`, `missing` or
+     `unknown`; `signin` itself always exits 0.
      Leave the verdict path absent: `adjudicate` reserves it exclusively.
      Check the composer's output before appending to the brief: a
      `compose_lane: REFUSED` line leaves no brief, and an append then makes
@@ -361,8 +363,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      - 1: the call failed or the verdict is bad;
      - 2: refused before launch (for example, run from the primary checkout);
      - 7: the token is unset or unreadable, or the route declares a competing
-       credential. The remedy for a home that is not signed in is dev-setup's
-       one-time `claude setup-token` step (`scripts/dev-setup.*`) and the
+       credential. The remedy for an account that is not signed in is
+       dev-setup's one-time `claude setup-token` step (`scripts/dev-setup.*`) and the
        variable above, never an interactive sign-in.
   6. After each call, read `$REPO/out/adjudicator/*.json`
      (`state`, `pct`, `reset_reason`) for telemetry only, never to decide a

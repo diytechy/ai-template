@@ -1,0 +1,172 @@
+# docs/decisions/wi-798.toml — WI-798's lane (overnight leg 03, 2026-10-11);
+# delegated decisions made in the lane. Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001", "D-010", "D-015"]
+
+[decision.D-001]
+decided = "The shipped coordinator_adjudicate default route is the qualified entry ANTHROPIC-OPUS-STRONG@ADJUDICATOR, in the kit file as well as this repo, and resolve_route now refuses an undeclared account, a registry error or an unreadable enable list (it discarded them before). An adopter that runs the in-lane sitting must declare the ADJUDICATOR token account (the template ships it as a commented example) or pass --route; the RESYNC entry states the migration. The token moves with the account, so the adjudicator keeps authenticating with the long-lived token through AGENT_CLAUDE_TOKEN_FILE."
+alternative = "An unqualified default plus a new setting naming the adjudicator's entry (not in the spec), or an unqualified default running on the ambient login."
+reversal_cost = "Low to medium: one constant and the RESYNC entry; adopters who migrated keep working either way."
+why_not_escalated = "It is the spec's (c) as written (this repo's adjudicator on a declared token account through a qualified entry) and D-010 of coordinator-2026-10-11; a default that silently ran on the ambient login would be the fallback the Trust section forbids. High risk because adopters must act."
+review = ""
+
+[decision.D-002]
+decided = "This repo's agents-enabled line for the adjudicator's qualified entry gives every loop phase weight 0, so the loop draws that account only when every other route of its tier is cooling down; the enable-list grammar has no 'never draw' value and this row adds none."
+alternative = "Add a never-draw weight to the enable-list grammar."
+reversal_cost = "Low."
+why_not_escalated = "Weights are the existing consent surface; a grammar change is outside the spec."
+review = ""
+
+[decision.D-003]
+decided = "A token_file_variable on an account whose cli has no token variable (anything but claude today) is a registry error naming the table, and the table is dropped. The Trust section's malformed list did not name this case; without it a launch could not know which variable the token feeds."
+alternative = "Accept and ignore the field on such accounts."
+reversal_cost = "Low."
+why_not_escalated = "It is a malformed-input arm of the Trust ruling, refused as the section refuses the others."
+review = ""
+
+[decision.D-004]
+decided = "`coordinator_adjudicate.py signin` takes --route (an entry) and its --family flag is removed with no alias; the sign-in line names the account: `signin [<ACCOUNT>] <token|login>: <status>`. The four dev-setup scripts parse the new line in the same commit."
+alternative = "Keep --family as a legacy alias."
+reversal_cost = "Low."
+why_not_escalated = "The owner's rule forbids legacy paths; the family no longer identifies a home or a token."
+review = ""
+
+[decision.D-005]
+decided = "Only a retained launch runs a login account's status command before launch; an unretained launch checks only that the login account's home exists (an absent one is refused, naming the provisioning command), so no CLI starts before every worker session."
+alternative = "Run the status command before every launch."
+reversal_cost = "Low."
+why_not_escalated = "The Trust section's absent-home arm is met either way; the status probe's cost per worker launch is the trade."
+review = ""
+
+[decision.D-006]
+decided = "With retention off, `signin --retained` prints `signin [-] retained: off` without resolving the adjudicator's entry; the agents.template.toml example and the RESYNC entry carry the account."
+alternative = "Resolve and report the entry even with retention off."
+reversal_cost = "Low."
+why_not_escalated = "Retention off retains no session, so no retained sign-in is owed."
+review = ""
+
+[decision.D-007]
+decided = "The complexity baseline changes only where a row went down (agent_route.main 16 -> 13, deleted; plan_runner.run_dual_plan_round 95 -> 90, lowered). The builder's full re-stamp also rewrote four rows' line counts upward (route_session, map_preflight, build_worker_assignment, load_registry) at unchanged complexity; the coordinator restored those to trunk's values, which check_complexity does not enforce. agent_loop.py's size stamp rises 2428 -> 2439 with a reason line (already over 1000)."
+alternative = "Keep the re-stamped line counts."
+reversal_cost = "None."
+why_not_escalated = "The coordinator recipes forbid a full re-stamp."
+review = ""
+
+[decision.D-008]
+decided = "Review 001's four MAJORs were confirmed by probe and fixed in round 3 (plan wi-798-plan-r3, plan_coverage exit 0). Competing credential sources are withheld per CLI for any declared account, and a route or account env declaring one is refused for a qualified entry only; an unqualified entry keeps today's environment exactly. The per-CLI lists come from the design's auth table (2-sessions-routing-accounts.md, read 2026-10-04) plus the existing Claude list: claude adds CLAUDE_CODE_OAUTH_TOKEN; codex CODEX_API_KEY and OPENAI_API_KEY (the design says only 'API key', so the provider's conventional names); gemini GEMINI_API_KEY (the design names Vertex with no variable, so GOOGLE_API_KEY, GOOGLE_GENAI_USE_VERTEXAI and GOOGLE_APPLICATION_CREDENTIALS are not withheld); opencode none (the design names logins and keys stored in the home, no environment variable). Account ids follow [A-Z0-9][A-Z0-9-]* and are not Windows device names; token locators compare through env_name_key."
+alternative = "Withhold the Google Vertex and xAI variables as well, from provider documentation beyond the design."
+reversal_cost = "Low: one table in session_service."
+why_not_escalated = "The lists follow the repo's approved design; widening them is a later row if a provider's documentation is read."
+review = ""
+
+[decision.D-009]
+decided = "Narrow review 002's MAJOR (a Gemini login account still inherited ambient Vertex sources, D-008's narrower list) is accepted and fixed in round 4 from the Gemini CLI's own source (contentGenerator.ts getAuthTypeFromEnv and the Vertex key read; validateNonInterActiveAuth.ts): gemini withholds GOOGLE_GENAI_USE_VERTEXAI, GOOGLE_GEMINI_BASE_URL, CLOUD_SHELL, GEMINI_CLI_USE_COMPUTE_ADC, GOOGLE_API_KEY and GOOGLE_APPLICATION_CREDENTIALS besides GEMINI_API_KEY. The builder also added ANTHROPIC_PROFILE and ANTHROPIC_FEDERATION_RULE_ID for claude, which the Claude Code authentication docs rank above the login: same class, sourced, kept. Codex workload identity names no variable and stays open. This corrects D-008's gemini clause."
+alternative = "Keep D-008's design-only lists."
+reversal_cost = "Low: one table."
+why_not_escalated = "The finding cites the provider's code; withholding a source that outranks the home's login is the Trust section's rule."
+review = ""
+
+[decision.D-010]
+decided = "At the rebase onto 9c4971543 (headless leg 04, 2026-10-20), trunk's new act turn (WI-912's `coordinator_adjudicate.py act`) meets the lane's account design: `_call` takes the launch environment as a parameter, and `act` resolves the registry, row and account as `adjudicate` does, composing `launch_env` inside its sign-in refusal, so the act turn runs under the same declared account as the sitting it continues. Git had merged `adjudicate` computing the account environment and `_call` ignoring it for `route_env(row)`; that silent drop is fixed in the same replayed commit. No row states act-under-account yet: it goes to the spine change list for LLR-306's rework, and a test pinning the act's environment and account is owed in the next build round."
+alternative = "Leave act on `route_env(row)`, the route's environment with no account."
+reversal_cost = "Low: one parameter and one resolution step."
+why_not_escalated = "The act continues the retained session the sitting opened under the declared account; running it on the route's bare environment would be the ambient fallback the spec's Trust section forbids. High risk because it widens the account design onto a path the spec did not name."
+review = ""
+
+[decision.D-011]
+decided = "At the same rebase, session_keep's lane-new module-level imports of agent_common and agent_route are dropped, keeping WI-897's guarantee that the guard's no-op hook imports no route or CLI module (tests/test_coordinator_guard_e2e.py). agent_route is imported inside `scoped_route`, its one user (the entry grammar's one home stays agent_route.entry_of), and tests/test_import_layers.py's deferred-import window is re-stamped 35 -> 36 with that reason."
+alternative = "Move entry_of, entry_route and entry_account into a cheap kitlib module both import."
+reversal_cost = "Low."
+why_not_escalated = "The smallest change that keeps both sides' behaviour, on WI-897's own precedent for the same window."
+review = ""
+
+[decision.D-012]
+decided = "The rebase's other resolutions, made by a kit-builder briefed to keep both sides (recipes section 4) and checked by the coordinator: registries merged per cell from the three index stages (LLR-270, LLR-305, LLR-306, TC-321 and IF-284 combine both sides' edits; IF-283 and IF-285 data merged by hand); trunk's tests/test_coordinator_act.py fixture takes the lane's account setup; dev-setup.sh and its template keep trunk's probe tolerance under `set -eu` (`|| SIGNIN_OUT=\"\"`); tests/test_accounts.py launches from a hooked checkout (WI-926's refusal); the lane's RESYNC entry is re-anchored at 9c4971543. The smoke tier read 128.2 s on the rebased lane against trunk's 170.1 s on the same loaded box (both over the 60 s budget); the landing's bar reads beside its parent's (owner, 2026-10-17)."
+alternative = "Re-cut the lane from trunk and rebuild it."
+reversal_cost = "Medium."
+why_not_escalated = "Recipes section 4's rebase, with every semantic call recorded here."
+review = ""
+
+[decision.D-013]
+decided = "The lane was in flight when the review-churn shape landed (its rounds 002 and 003 were narrow), so its count starts at zero at its next review (SKILL section 3). The rebase changed code (D-010), so the next review is counted round 1, a full-lane pair (Sol medium REVIEW-A, Claude Opus high REVIEW-B stand-in) over the rebased tip after the act tests land; the checkpoint rework of sitting 004's returns (LLR-268, LLR-270, LLR-305, TC-324; LLR-336, TC-361 to TC-366) follows a round with no BLOCKER or MAJOR, then the gate in convergence stance."
+alternative = "Rework the returned rows first and treat the old narrow APPROVE as the counted round."
+reversal_cost = "Low."
+why_not_escalated = "The skill's rule for a lane in flight; a narrow round no longer counts."
+review = ""
+
+[decision.D-014]
+decided = "Counted round 1 (reviews 005 REVIEW-A, Codex gpt-6.1-sol medium; 006 REVIEW-B, a Claude Opus high stand-in for the second family, recorded as the substitution ruling 7 asks). Triage: 005's MAJOR (a qualified OpenCode entry still inherits ambient provider credentials such as XAI_API_KEY, since the withheld list for opencode is empty) is accepted for a fix round; it is D-009's class, a source the CLI ranks above the account home. 006's MAJOR (LLR-270's and LLR-305's text still false against the code, LLR-306 owing the act-under-account sentence) names no code defect: its remedy is the checkpoint sitting, the cycle's next step, so it is re-graded and costs no fix round (recipes section 1, wi-931 D-006). The MINORs on row text (LLR-270, LLR-321, LLR-336's provider-state clause, TC-324, TC-267, TC-330, IF-248) go to the spine change list; SR-227's family-bound credential clause is an Approved SR the lane does not amend, and goes to the owner's list as a wording successor. The code and doc MINORs the lane introduced (dev-setup's unresolved sign-in line falling to the default arm in all four scripts; session_service's second copy of the environment-name rule; the coordinator README's and recipes' home wording) ride the same fix round, since each is the lane's own new surface."
+alternative = "Send every MINOR to a successor row."
+reversal_cost = "Low."
+why_not_escalated = "Triage under the skill's section 3; no finding is contested."
+review = ""
+
+[decision.D-015]
+decided = "Review 005's MAJOR (OpenCode) is answered by construction, not a list: OpenCode loads a provider from the first set variable of any catalog provider's env names (226 providers on this box, a catalog fetched and refreshed hourly), honours each provider SDK's own default key even with the provider's env list emptied, and takes OPENCODE_AUTH_CONTENT in place of the home's auth.json (the builder read the installed opencode-ai 1.18.30's embedded source and reproduced the leak against a local listener). A hand list cannot be sourced and drifts. So a qualified OpenCode launch composes its environment from a declared base (platform variables: path, system and user directories, temp, terminal, locale, and the network-transport variables a proxy or CA bundle needs, none of them a credential) plus the route's and account's declared pairs and the account home, never from the ambient environment; a variable the base leaves out is declared on the route or account. An unqualified OpenCode entry keeps today's environment exactly. claude, codex and gemini keep their sourced withheld lists (D-008, D-009); moving them to the same base is not built here."
+alternative = "(B) confine to the route's declared provider through enabled_providers, which still admits that provider's ambient key; (C) a name pattern such as *_API_KEY, which cannot be sourced and both over- and under-withholds."
+reversal_cost = "Low to medium: one composition rule for one CLI, plus its tests."
+why_not_escalated = "It is the spec's Trust rule (a declared account's own credentials, no ambient fallback) at the boundary that already owns it; the only construction that ends the class for an open-ended credential set. High risk because a qualified OpenCode launch that relied on an undeclared ambient variable now fails until the route or account declares it."
+review = ""
+
+[decision.D-016]
+decided = "Review 006's F6 deletes session_service's copy of the environment-name rule and delegates to agent_route.env_name_key (session_service already imports agent_route at module level, so no import edge moves); removing the two symbols from LLR-305's code_symbol cell is trace-field upkeep, which the iteration grants, not a row-text amendment. The stale 'dedicated home' prose the builder found beyond the review's sites (tests/test_coordinator_adjudicate.py's module text, session_keep._prepare_warm's docstring, the third recipes copy under .agents/skills) is fixed with F5; IF-246, IF-282 and IF-284's wording goes to the checkpoint's change list."
+alternative = "Keep the second copy."
+reversal_cost = "Low."
+why_not_escalated = "Removes code; trace upkeep inside the lane's grant."
+review = ""
+
+[decision.D-017]
+decided = "Counted round 2 (reviews 007 REVIEW-A, Codex gpt-6.1-sol medium; 008 REVIEW-B, the Claude Opus high stand-in, ruling 7's substitution). Triage: 007's MAJOR (route_cli splits a template on whitespace, so a qualified entry on a JSON-array template, the supported form, or a quoted executable path is refused as a CLI mismatch while its ambient entry launches) is accepted for a fix round: account routing must work on every template form the launcher accepts. 008's MAJOR (LLR-270, LLR-305 and LLR-336 text false against the code) is re-graded to the checkpoint as D-014 did. 008's unreadable enable-list arms of keep_warmer and agent_route.main have no test, which Done-when item 8 names: built in this round. The lane-introduced MINORs ride the round: the provisioning hint's shell-specific, quoted assignments (007); agents.template.toml's example and the unconditional RESYNC step to declare the account or pass --route (008); process.toml's dial comment naming the coordinator route, the loop route running on the ambient login (008). Row text (007's TC-267, IF-248, LLR-336; 008's SR-227) goes to the spine change list and the owner's list as D-014 said. 008's Done-when items 4 and 7 evidence (the empty-home half, signin --retained on the declared account, the sitting's account) is recorded at the checkpoint sitting, which launches on that account."
+alternative = "Send the MINORs to successor rows."
+reversal_cost = "Low."
+why_not_escalated = "Triage under the skill's section 3; no finding is contested."
+review = ""
+
+[decision.D-018]
+decided = "Round 2's fix calls: (1) the CLI a route launches is read through one new agent_route.route_runner(template, model) over agent_session.split_cmd and substitute, the launcher's own parse, which route_cli and session_service._resolve_executable both call; route_cli's whitespace split is deleted, and LLR-163's approved code_symbol is untouched. (2) The provisioning hint (review 007's F2) carries no shell syntax at all: it names each variable, its quoted value and the login command in prose ('with CODEX_HOME set to \"<home>\", run `codex login`'), so no reader can receive another shell's form, and neither signin's output lines nor the dev-setup scripts' parse change shape."
+alternative = "Per-shell forms: signin printing two labelled lines each dev-setup script reads, the refusal naming both."
+reversal_cost = "Low."
+why_not_escalated = "The smallest change that makes the wrong-shell defect unrepresentable; it adds no output contract."
+review = ""
+
+[decision.D-019]
+decided = "Convergence map before counted round 3, the last the cap allows (SKILL section 3, revisions 8 and 33). Each accepted finding maps to a regression test failing on its pre-fix code, or to checkable evidence: review 001's four MAJORs (claude login overrides; WORK and WORK. aliasing one home; token locators equal under Windows case; non-string account cells) -> tests/test_accounts.py test_a_qualified_login_launch_withholds_every_ambient_credential_its_cli_ranks_above_the_home, test_a_token_account_launch_carries_only_its_own_token, test_an_account_id_a_platform_would_alias_is_a_registry_error, test_two_ids_that_alias_one_windows_directory_cannot_both_load, test_token_locators_the_platform_resolves_as_one_name_drop_both_accounts, test_a_non_string_account_field_is_the_named_table_error (17 failed at the fix commit afa7da16c's tests over its parent's code, this leg); review 002's MAJOR (Gemini's Vertex sources) -> the same withholding test's gemini case and test_a_gemini_login_account_whose_route_declares_a_vertex_source_is_refused (6 failed at 31b8d6eeb's tests over its parent); D-010 (act under the account) -> tests/test_coordinator_act.py test_an_act_turn_on_the_default_entry_launches_under_its_accounts_environment and test_an_act_turn_resumes_the_session_its_sitting_keyed_under_the_entrys_account (3 failed on an act using the route's bare environment); review 005 F1 (OpenCode) -> test_a_qualified_opencode_launch_starts_from_the_declared_base, test_a_key_declared_for_a_qualified_opencode_launch_is_carried, test_a_qualified_opencode_entry_declaring_its_auth_content_is_refused (red shown by the builder before each change); 006 F4 -> tests/test_run_devsetup.py's unresolved sign-in pins (red before); 006 F5 -> the corrected text at scripts/coordinator/README.md and the three recipes copies; 006 F6 -> inspection: session_service holds no _name_key or _CASE_INSENSITIVE and calls agent_route.env_name_key; review 007 F1 -> test_a_qualified_entry_launches_on_every_template_form_the_launcher_reads and test_a_template_the_launcher_refuses_names_no_cli; 007 F2 -> test_the_provisioning_hint_names_each_variable_in_prose_with_its_value_quoted; 008 F3 and F6 -> the corrected text in agents.template.toml, RESYNC_PACK.md's step 3 and docs/process.toml's adjudicator comment; 008 F4 -> test_keep_warm_is_off_on_an_unreadable_enable_list and test_the_route_cli_exits_1_on_an_unreadable_enable_list (2 failed with both arms deleted). The re-graded row-text MAJORs (006 F1, 008 F1) map to the checkpoint sitting's verdict and act (wi-931 D-006)."
+alternative = ""
+reversal_cost = "None."
+why_not_escalated = "The map the skill requires before a convergence round; reviewers do not read it."
+review = ""
+
+[decision.D-020]
+decided = "Counted round 3, the cap (reviews 009 REVIEW-A, Codex gpt-6.1-sol medium; 010 REVIEW-B, the Claude Opus high stand-in, ruling 7's substitution), in convergence stance. 009's MAJOR (a qualified OpenCode launch's declared base drops KIT_LOOP_SESSION, so a loop child loses the marker the provenance rows require; tagged convergence-class) is uncontested and goes to the cap's one dispute sitting (findings file 011, id A009-F1), which alone rules it; a convergence-class finding is never deferred. 010's MAJOR (LLR-270's LAUNCH and lease-only clauses and rationale false against the code) names no code defect and is re-graded to the checkpoint sitting, as D-014 and D-017 did. The MINORs are row text for the spine change list (LLR-268, LLR-305, TC-324, TC-262 or TC-362's verifies for LLR-266, IF-248, TC-267, TC-323), the owner's SR-227 wording successor, and agents-enabled's and RESYNC_PACK's weight-0 sentence (a win-stay or phase pin still reaches the entry), which rides the fix round the sitting orders, if any."
+alternative = ""
+reversal_cost = "Low."
+why_not_escalated = "The cap's routing under SKILL section 3."
+review = ""
+
+[decision.D-021]
+decided = "Dispute sitting 011 ruled A009-F1 FIX; the fix round it ordered keeps the kit-owned names every launch inherits (KIT_INHERITED, read from kitlib.provenance, today the loop marker alone, the builder's search of every environment write in the kit finding no other) beside a declared base, with test_a_qualified_opencode_launch_keeps_the_kit_owned_names failing on the pre-fix code (the convergence map's entry for A009-F1). A route or account declaring the marker itself keeps today's precedence: a hand-written override of the kit's own marker is contrived under the review threat model. The code is now settled, so the checkpoint runs next, and the review owed after the ordered fix round is the gate over the checkpoint tip, uncounted and in convergence stance, which reviews code and rows together; a separate review before the checkpoint would review the same code twice."
+alternative = "Run a convergence review over the fix before the checkpoint, then the gate after it."
+reversal_cost = "Low: one review pair."
+why_not_escalated = "Both reviews are uncounted convergence rounds over the same settled code; the gate reads the whole lane range."
+review = ""
+
+[decision.D-022]
+decided = "Checkpoint reconcile (Terra gpt-5.6-terra medium, the lane's retained session 01a12c25, resumed): it answers sitting 004's two dispositions and the three rounds' row-text findings across LLR-266..268, LLR-270, LLR-305, LLR-306, LLR-321, LLR-336, IF-246, IF-248, IF-282, IF-284, TC-267, TC-323, TC-324, TC-330 and TC-361..366, no status moved and no SR amended. The coordinator applied one byte-exact fix openly: Terra's LLR-305 code_symbol joined adjudicate_brief's symbols onto session_service's segment while dropping the stale empty segment, so the separator between the module cell's two files is restored (require_signin;governing_templates)."
+alternative = ""
+reversal_cost = "None."
+why_not_escalated = "A one-character trace-field repair, recorded."
+review = ""
+
+[decision.D-023]
+decided = "Convergence map additions before the gate over the checkpoint tip (D-019 holds the rest): A009-F1, ruled FIX by sitting 011 -> tests/test_accounts.py test_a_qualified_opencode_launch_keeps_the_kit_owned_names (failed on the pre-fix code); the row-text MAJORs re-graded to the checkpoint (006 F1, 008 F1, 010 F1) -> sittings 012, 013 and 014, which bless or approve every amended and Drafted row of the set; 013's TC-344 return -> tests/test_run_devsetup.py test_a_signed_in_login_account_is_reported_ok_on_its_own_home (failed with the login signed-in arm deleted from either template). Sittings 012 to 014 judged the set in three verdicts, each returning rows in the registries the others bless, and a return holds its whole registry (recipes section 3), so after the gate one combined sitting re-judges the whole set at the gated tip, and its verdict alone authorizes the act turn."
+alternative = "Take three act turns, one per verdict."
+reversal_cost = "One sitting."
+why_not_escalated = "The recipe's rule that the rows of a registry are anchored together."
+review = ""
+
+[decision.D-024]
+decided = "The gate over the checkpoint tip f5b3240 (reviews 015 REVIEW-A, Codex gpt-6.1-sol medium, CHANGES-REQUESTED with two MINORs; 016 REVIEW-B, the Claude Opus high stand-in, ruling 7's substitution, APPROVE with six MINORs), in convergence stance: no BLOCKER or MAJOR, so no dispute sitting and no fix round. Every MINOR would move the tip off the gated one or lives in a home outside the lane, so each is a follow-up in status.md's unfiled list (recipes section 3, wi-935 D-005): IF-246 and IF-282 list a route_runner(entry) session_service does not define, and IF-044 omits agent_route.route_runner(template, model); IF-248's notes still say session_keep creates account homes; the lane's Implements tags name SR-222 beside LLR-336, which traces to SR-154 and SR-227 only; LLR-305's compose_env sentence is unconditional where withholding applies under a declared account; SR-227's family wording (the owner's, as D-014 said); process.toml's dial comment says the loop draws the unqualified route, where a heterogeneity-filtered draw or a win-stay pin picks the weight-0 adjudicator entry when ambient Opus cools (D-002's fallback, worded too strongly). The Done-when's empty-home observation is recorded in the landing's log fragment."
+alternative = "Fix the interface rows after the gate and gate again."
+reversal_cost = "Low."
+why_not_escalated = "The recipe's rule for gate MINORs."
+review = ""

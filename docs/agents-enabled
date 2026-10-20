@@ -29,10 +29,13 @@
 #
 # Contract IF-162: the enable-list, and the CONSENT surface for managed model
 #     selection — routing is on when this file holds at least one entry line and
-#     off when it is absent, empty or all comments. One entry per line in
-#     preference order: a registry id, or a version-less token resolved against
-#     the model registry to the exact id, else the newest row in its
-#     Family-Model line; optionally followed by whitespace-separated
+#     off when it is absent, empty or all comments; one that exists but cannot be
+#     read is an error, never routing off. One entry per line in preference
+#     order: a registry id, or a version-less token resolved against the model
+#     registry to the exact id, else the newest row in its Family-Model line,
+#     optionally qualified `@ACCOUNT` by an account table of docs/agents.toml
+#     whose cli is the route's (WI-798; unqualified = the person's ambient
+#     login); optionally followed by whitespace-separated
 #     `<PHASE>=<int>` draw weights over BUILD|REVIEW|CRITIQUE|DESIGN-CHECK, an
 #     unannotated entry weighing 1 everywhere. Blank lines and `#` lines are
 #     skipped, so this header is not part of the list. An unresolvable token, a
@@ -47,3 +50,9 @@ OPENAI-TERRA
 # OPENCODE-GROK  # row commented out in docs/agents.toml (owner, 2026-10-04)
 ANTHROPIC-SONNET-QUICK
 OPENAI-LUNA
+# The coordinator's adjudicator (WI-798): the strong Anthropic route on the
+# declared token account ADJUDICATOR, coordinator_adjudicate.py's default entry.
+# Weight 0 in every loop phase holds it out of the loop's weighted draws; a
+# win-stay or phase pin still reaches it, as does a draw where it is the last
+# legal candidate.
+ANTHROPIC-OPUS-STRONG@ADJUDICATOR  BUILD=0 REVIEW=0 CRITIQUE=0 DESIGN-CHECK=0 ADJUDICATE=0

@@ -395,9 +395,15 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # a shell tool inside an open blackout window reaches `model_clis`. The
     # same two edges existed before at module level, so no cycle or layer edge
     # grew. Reason in docs/log.d/WI-897-guard-hook-per-call-cost.md.
-    assert 14 <= deferred <= 35, (
+    # RE-STAMPED 35 -> 36 (2026-10-20, WI-798): session_keep -> agent_route
+    # joins deferred, inside `scoped_route`, its one user (a review pin is an
+    # enabled entry, and the entry grammar's one home is agent_route), so the
+    # guard's no-op hook, which imports session_keep, keeps importing no route
+    # module. The edge is new; agent_route imports no session_keep, so no
+    # cycle or layer edge grew. Reason in docs/decisions/wi-798.toml (D-011).
+    assert 14 <= deferred <= 36, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..35 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..36 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

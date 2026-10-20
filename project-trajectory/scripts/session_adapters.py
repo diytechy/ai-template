@@ -40,6 +40,14 @@ Contract IF-245: the per-CLI adapter surface. `adapter_for(argv)` returns the
     (never 0); `context(stream, env, session_id)` returns
     `(session_id, used, window, pct)`, the context occupancy of the session's
     LATEST model request, each field "" where the CLI does not report it.
+    The adapter reads the environment the call composed and never selects,
+    replaces or infers an account home. The account home variables are an
+    adapter fact (WI-798): `HOME_VARIABLES` per CLI (claude
+    `CLAUDE_CONFIG_DIR`, codex `CODEX_HOME`, opencode `XDG_DATA_HOME` and
+    `OPENCODE_CONFIG`, gemini `GEMINI_CLI_HOME`), `home_env(cli, home)` their
+    values for one home, `cli_named(executable)` the CLI an executable
+    launches, and `TOKEN_VARIABLES` the variable a token-account CLI reads its
+    long-lived token from (claude `CLAUDE_CODE_OAUTH_TOKEN`).
 
 Contract IF-266: retained-call compaction observations. `compaction(stream,
 env, session_id)` returns an empty mapping for other runners; codex returns
@@ -830,3 +838,49 @@ def adapter_for(argv):
     """
     name = _basename(argv[0]) if argv else ""
     return next((a for prefix, a in _BY_PREFIX if name.startswith(prefix)), _PLAIN)
+
+
+# The home variables of each CLI an account may name (WI-798, IF-245): the
+# environment that moves the CLI's user layer, and with it its sign-in, into an
+# account's home. opencode keeps its data and its config apart, so it takes two.
+# A CLI outside this table cannot be named by an account.
+# Implements: SR-222, LLR-266
+HOME_VARIABLES = {
+    "claude": ("CLAUDE_CONFIG_DIR",),
+    "codex": ("CODEX_HOME",),
+    "opencode": ("XDG_DATA_HOME", "OPENCODE_CONFIG"),
+    "gemini": ("GEMINI_CLI_HOME",),
+}
+
+# The variable each CLI reads a long-lived token from in headless use, for an
+# account that authenticates with one (`claude setup-token`, 2.1.289: "Use this
+# token by setting: export CLAUDE_CODE_OAUTH_TOKEN=<token>"). Only these CLIs can
+# carry a token account.
+# Implements: SR-222, LLR-266
+TOKEN_VARIABLES = {"claude": "CLAUDE_CODE_OAUTH_TOKEN"}
+
+
+def cli_named(executable):
+    """The CLI of `HOME_VARIABLES` an executable name launches, by the
+    basename prefix `adapter_for` uses (case-insensitive), or "" for none.
+
+    Implements: SR-222, LLR-266
+    """
+    name = _basename(executable)
+    return next((cli for cli in HOME_VARIABLES if name.startswith(cli)), "")
+
+
+def home_env(cli, home):
+    """`{variable: value}` placing `cli`'s user layer in the account home
+    `home`: the home itself for claude, codex and gemini; for opencode its data
+    under `<home>/data` and its config at `<home>/opencode.json`. `{}` for a CLI
+    outside `HOME_VARIABLES`.
+
+    Implements: SR-222, LLR-266
+    """
+    if cli == "opencode":
+        return {
+            "XDG_DATA_HOME": str(Path(home) / "data"),
+            "OPENCODE_CONFIG": str(Path(home) / "opencode.json"),
+        }
+    return {name: str(home) for name in HOME_VARIABLES.get(cli, ())}

@@ -11,6 +11,7 @@ the shipped dev-setup on a bootstrapped scaffold. The consent prompts need a
 terminal, so the denial cases run under a pseudo-terminal on POSIX only.
 """
 
+import contextlib
 import datetime
 import json
 import os
@@ -541,6 +542,45 @@ def _signin_line(stdout):
     return lines[0] if lines else ""
 
 
+# The adjudicator's declared account (WI-798): dev-setup reports on the
+# account coordinator_adjudicate's default entry names, so a scaffold that
+# runs it declares the route, the account and the qualified entry. `kind`
+# token: the account authenticates with the long-lived token its
+# token_file_variable locates; login: with its own home.
+ADJUDICATOR_ROW = """
+[agent.ANTHROPIC-OPUS-STRONG]
+family = "ANTHROPIC"
+model = "claude-opus-5-5"
+version = "5.5"
+tier = "strong"
+cmd_template = "claude -p --model {model}"
+notes = "the adjudicator's route"
+
+[account.ADJUDICATOR]
+cli = "claude"
+notes = "the adjudicator's account"
+"""
+
+
+@contextlib.contextmanager
+def _adjudicator(root, kind="token", verified=""):
+    agents = root / "docs" / "agents.toml"
+    enabled = root / "docs" / "agents-enabled"
+    before = agents.read_text(encoding="utf-8")
+    token = (
+        'token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"\n' if kind == "token" else ""
+    )
+    if verified:
+        token += 'verified = "{}"\n'.format(verified)
+    agents.write_text(before + ADJUDICATOR_ROW + token, encoding="utf-8")
+    enabled.write_text("ANTHROPIC-OPUS-STRONG@ADJUDICATOR\n", encoding="utf-8")
+    try:
+        yield
+    finally:
+        agents.write_text(before, encoding="utf-8")
+        enabled.unlink()
+
+
 def test_the_check_for_run_offers_nothing_without_a_terminal(scaffold_root):
     sh = _sh()
     proc = subprocess.run(
@@ -629,12 +669,128 @@ def test_the_sign_in_is_reported_signed_in_missing_or_off(scaffold_root, tmp_pat
     assert check() == ""  # retention off (the shipped dial): no step at all
     _retention(scaffold_root, 55)
     try:
-        assert "[missing]" in check()
-        token = tmp_path / "token"
-        token.write_text("canary", encoding="utf-8")
-        assert "[ok]" in check(AGENT_CLAUDE_TOKEN_FILE=str(token))
+        line = check()  # no adjudicator account declared: unresolved, missing
+        assert "[missing]" in line and "does not resolve (" in line, line
+        assert "'ANTHROPIC-OPUS-STRONG@ADJUDICATOR'" in line, line  # its reason
+        assert "--route" in line, line
+        with _adjudicator(scaffold_root):
+            line = check()
+            assert "[missing]" in line and "setup-token" in line
+            assert "account ADJUDICATOR" in line and "AGENT_CLAUDE_TOKEN_FILE" in line
+            token = tmp_path / "token"
+            token.write_text("canary", encoding="utf-8")
+            assert "[ok]" in check(AGENT_CLAUDE_TOKEN_FILE=str(token))
     finally:
         _retention(scaffold_root, 0)
+
+
+@pytest.mark.parametrize("family", ["sh", "ps1"])
+def test_a_login_account_is_named_its_provisioning_and_offered_no_token(
+    scaffold_root, family
+):
+    """WI-798: when the adjudicator's account is a LOGIN account, dev-setup
+    names the command that provisions its home and runs nothing; the
+    `claude setup-token` step is only ever offered to a token account."""
+    if family == "sh":
+        argv = [_sh(), "scripts/dev-setup.sh", "--check"]
+    elif WINDOWS:
+        argv = [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass"]
+        argv += ["-File", "scripts/dev-setup.ps1", "-Check"]
+    else:
+        pytest.skip("the PowerShell dev-setup on Windows")
+    _retention(scaffold_root, 55)
+    try:
+        with _adjudicator(scaffold_root, kind="login"):
+            proc = subprocess.run(
+                argv,
+                cwd=str(scaffold_root),
+                capture_output=True,
+                text=True,
+                input="",
+                env=_devsetup_env(),
+                timeout=180,
+            )
+    finally:
+        _retention(scaffold_root, 0)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    line = _signin_line(proc.stdout)
+    assert "[missing]" in line and "account ADJUDICATOR" in line, proc.stdout
+    # the sign-in probe's hint, as it printed it: its variables in prose
+    assert 'with CLAUDE_CONFIG_DIR set to "' in line, line
+    assert "run `claude auth login`" in line and "CLAUDE_CONFIG_DIR=" not in line
+    assert "setup-token" not in line and "[y/N]" not in proc.stdout
+
+
+# A stand-in `claude` that answers only its status command, signed in, as
+# `claude auth status` documents it: one JSON object, `loggedIn` true, exit 0.
+SIGNED_IN_CLI = 'import json\nprint(json.dumps({"loggedIn": True}))\n'
+
+
+def _signed_in_login_home(tmp_path):
+    """The extra environment for a login account whose own home reads signed
+    in: a user configuration directory of this test's own holding the
+    ADJUDICATOR account's home, and a stand-in `claude` first on PATH."""
+    config = tmp_path / "user-config"
+    (config / "project-trajectory" / "accounts" / "ADJUDICATOR").mkdir(parents=True)
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    script = bindir / "claude_status.py"
+    script.write_text(SIGNED_IN_CLI, encoding="utf-8")
+    if WINDOWS:
+        shim = bindir / "claude.cmd"
+        line = '@echo off\r\n"{}" "{}" %*\r\n'
+    else:
+        shim = bindir / "claude"
+        line = '#!/bin/sh\nexec "{}" "{}" "$@"\n'
+    shim.write_text(line.format(sys.executable, script), encoding="ascii")
+    shim.chmod(0o755)
+    return {
+        "APPDATA" if WINDOWS else "XDG_CONFIG_HOME": str(config),
+        "PATH": str(bindir) + os.pathsep + os.environ.get("PATH", ""),
+    }
+
+
+@pytest.mark.parametrize(
+    "verified", ["2026-10-20 2.1.296", ""], ids=["verified", "unverified"]
+)
+@pytest.mark.parametrize("family", ["sh", "ps1"])
+def test_a_signed_in_login_account_is_reported_ok_on_its_own_home(
+    scaffold_root, tmp_path, family, verified
+):
+    """When the adjudicator's account is a LOGIN account whose own home reads
+    signed in, dev-setup reports it ok on its own home and offers no token
+    step; while its login-isolation check has not passed, it says so."""
+    if family == "sh":
+        argv = [_sh(), "scripts/dev-setup.sh", "--check"]
+    elif WINDOWS:
+        argv = [_powershell(), "-NoProfile", "-ExecutionPolicy", "Bypass"]
+        argv += ["-File", "scripts/dev-setup.ps1", "-Check"]
+    else:
+        pytest.skip("the PowerShell dev-setup on Windows")
+    env = _devsetup_env(**_signed_in_login_home(tmp_path))
+    _retention(scaffold_root, 55)
+    try:
+        with _adjudicator(scaffold_root, kind="login", verified=verified):
+            proc = subprocess.run(
+                argv,
+                cwd=str(scaffold_root),
+                capture_output=True,
+                text=True,
+                input="",
+                env=env,
+                timeout=180,
+            )
+    finally:
+        _retention(scaffold_root, 0)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    line = _signin_line(proc.stdout)
+    assert line.startswith("  [ok]"), proc.stdout
+    assert "(account ADJUDICATOR, its own home)" in line, line
+    assert "setup-token" not in line and "[y/N]" not in proc.stdout
+    if verified:
+        assert "UNVERIFIED" not in line, line
+    else:
+        assert "UNVERIFIED: its login-isolation check has not passed" in line, line
 
 
 CANARY = "sk-ant-oat01-CANARY-834-never-shown"  # a fake token shaped like a real one; privacy-ok
@@ -657,15 +813,16 @@ def test_the_sign_in_report_never_prints_or_stores_the_token(
     token.write_text(CANARY + "\n", encoding="utf-8")
     _retention(scaffold_root, 55)
     try:
-        proc = subprocess.run(
-            argv,
-            cwd=str(scaffold_root),
-            capture_output=True,
-            text=True,
-            input="",
-            env=_devsetup_env(AGENT_CLAUDE_TOKEN_FILE=str(token)),
-            timeout=180,
-        )
+        with _adjudicator(scaffold_root):
+            proc = subprocess.run(
+                argv,
+                cwd=str(scaffold_root),
+                capture_output=True,
+                text=True,
+                input="",
+                env=_devsetup_env(AGENT_CLAUDE_TOKEN_FILE=str(token)),
+                timeout=180,
+            )
     finally:
         _retention(scaffold_root, 0)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -793,10 +950,16 @@ def test_the_powershell_check_reports_the_sign_in(scaffold_root, tmp_path):
     assert check() == ""
     _retention(scaffold_root, 55)
     try:
-        assert "[missing]" in check()
-        token = tmp_path / "token"
-        token.write_text("canary", encoding="utf-8")
-        assert "[ok]" in check(AGENT_CLAUDE_TOKEN_FILE=str(token))
+        line = check()  # no adjudicator account declared: unresolved, missing
+        assert "[missing]" in line and "does not resolve (" in line, line
+        assert "'ANTHROPIC-OPUS-STRONG@ADJUDICATOR'" in line, line  # its reason
+        assert "--route" in line, line
+        with _adjudicator(scaffold_root):
+            line = check()
+            assert "[missing]" in line and "account ADJUDICATOR" in line
+            token = tmp_path / "token"
+            token.write_text("canary", encoding="utf-8")
+            assert "[ok]" in check(AGENT_CLAUDE_TOKEN_FILE=str(token))
     finally:
         _retention(scaffold_root, 0)
 
@@ -821,16 +984,17 @@ def test_a_denial_changes_no_configuration_or_credential(scaffold_root, tmp_path
     fake = _with_fake_claude(tmp_path)
     master, slave = pty.openpty()
     try:
-        proc = subprocess.Popen(
-            [sh, "scripts/dev-setup.sh", "--for-run", "--python", sys.executable],
-            cwd=str(scaffold_root),
-            stdin=slave,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            env=_devsetup_env(PATH=fake),
-        )
-        os.write(master, b"n\n" * 20)
-        out, _ = proc.communicate(timeout=180)
+        with _adjudicator(scaffold_root):
+            proc = subprocess.Popen(
+                [sh, "scripts/dev-setup.sh", "--for-run", "--python", sys.executable],
+                cwd=str(scaffold_root),
+                stdin=slave,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                env=_devsetup_env(PATH=fake),
+            )
+            os.write(master, b"n\n" * 20)
+            out, _ = proc.communicate(timeout=180)
     finally:
         os.close(master)
         os.close(slave)

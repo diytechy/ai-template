@@ -1,0 +1,11 @@
+range = "9c4971543a144de0adca5ef3807802dbd6b9c529..ca90862fc"
+
+[[finding]]
+id = "A009-F1"
+held_by = "coordinator"
+finding = '''
+- [MAJOR] project-trajectory/scripts/session_service.py:1423 -> K1/B1: a supported managed launch on an OpenCode account drops KIT_LOOP_SESSION because BASE_ENVIRONMENT omits it; the real session_service.act child receives no marker even when mark_loop_process generated one. LLR-247/248 and IF-194 require children to inherit this identity, which controls loop-writer provenance and the marker-dependent commit floor; this makes the child appear attended at that boundary and can instead leave unmarked work for the landing check to refuse. The identical subprocess probe passes on 6a70de32a^ -> Preserve the kit-owned loop execution identity at the single environment-composition boundary while withholding provider credentials, and cover its inheritance through a qualified OpenCode subprocess launch; this is a construction change, not an added downstream guard -> @implementer convergence-class: yes
+'''
+position = '''
+Nothing is contested: the coordinator and the builder accept the finding as stated, and the round cap routes it to this sitting. The coordinator takes no side on the ruling.
+'''

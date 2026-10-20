@@ -294,10 +294,12 @@ assumption_gate = false
 # Adjudicator session retention, shipped OFF (`context_reset_pct = 0`: every
 # adjudication a fresh session, no id minted, no resume flag, no store). The
 # shipped template's [adjudicator] header carries the full field reasoning.
-# This repo is ON at 55 since WI-835 (owner ruling (b), 2026-10-05), set after
-# the sign-in probe read this machine's dedicated ANTHROPIC home as signed in;
-# a retained launch whose dedicated home is not signed in is refused, naming
-# dev-setup.
+# This repo is ON at 55 since WI-835 (owner ruling (b), 2026-10-05). Since
+# WI-798 the coordinator's adjudication (coordinator_adjudicate.py's default
+# entry) runs on the declared token account ADJUDICATOR (docs/agents.toml); a
+# launch whose account does not read signed in is refused, naming dev-setup.
+# The loop's adjudication draws the unqualified route, on the person's ambient
+# login.
 context_reset_pct = 55           # 0 = off
 # Owner, 2026-10-05 (docs/decisions/wi-835.toml#D-007): first approvals too,
 # so the coordinator's in-lane adjudications all use the retained session;

@@ -21,7 +21,9 @@ loop's review rounds ride the same layer under their own dial (WI-887,
 final_reviewer` is `persisted`.
 
 Stdlib only, Python 3.11+, Windows/POSIX. It imports `agent_policy` (the
-policy-file reader) and `kitlib.git`; `session_service` imports it.
+policy-file reader) and `kitlib.git`, and `agent_route` (the entry grammar a
+review pin is written in) only inside `scoped_route`, its one user;
+`session_service` imports it.
 
 Contracts: IF-247, IF-248, IF-272, IF-273 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
@@ -45,13 +47,16 @@ Contract IF-273: `dir_lock(directory, wait=10.0)` is an exclusive-file
     attempt's reading is kept: past `wait`, StoreBusy names the lock path
     and, when the last create was refused as access denied, that refusal.
 
-Contract IF-247: the retained-session record, one JSON object per route at
-    `out/adjudicator/<FAMILY>-<hash of the route id>.json` under the primary
-    checkout (the git common directory's parent, else the root given), and
-    one per route and scope (a loop review session, WI-887) at
-    `<FAMILY>-<hash of the route id, a NUL and the scope>.json`, so the empty
-    scope keeps the adjudicator's name. Its identity is `family`, `route_id`
-    and, when not empty, `scope`, kept verbatim; `session_id` is the
+Contract IF-247: the retained-session record, one JSON object per route and
+    account at `out/adjudicator/<FAMILY>-<hash of the route id, then a NUL and
+    the scope when not empty, then a NUL, `account=` and the account when not
+    empty>.json` under the primary checkout (the git common directory's
+    parent, else the root given); a loop review session (WI-887) has a scope,
+    the adjudicator none. Its identity is `family`, `route_id`, `account`
+    (WI-798: "" for the person's ambient login, else the declared account the
+    call's entry names) and, when not empty, `scope`, kept verbatim; a record
+    lacking `account` (written before accounts) or naming another reads as
+    not its own, so the next launch mints once; `session_id` is the
     runner's own id, `generation` counts the sessions this route has minted,
     `state` is `active`, `draining` or `retired`, `reset_reason` says why it
     left `active`, `judged` lists the work items it has judged, `cli_version`
@@ -62,16 +67,16 @@ Contract IF-247: the retained-session record, one JSON object per route at
     `request_prompt` as comparison baselines, `compacted` and
     `compaction_source` (reported, inferred or empty). A fresh generation has
     no prior compaction or comparison baseline. A route's first covered call
-    writes a LEASE-ONLY record (`family`, `route_id` and `lease`, no session
+    writes a LEASE-ONLY record (`family`, `route_id`, `account` and `lease`, no session
     yet) before it launches, so a second first call meets the lease; its
     bookkeeping completes the record and its abandonment removes it.
     Every read-modify-write holds the store lock
     (`out/adjudicator/.lock`, created exclusively, stale after two minutes);
     a record is written whole through its own temporary file and a replace; a
-    file that does not parse, or names another family, route or scope, reads
-    as no session. Beside a record lie its pending STORE MARKERS (WI-858),
+    file that does not parse, or names another family, route, account or
+    scope, reads as no session. Beside a record lie its pending STORE MARKERS (WI-858),
     `<record stem>.<hash of the publisher id>.mark`, one JSON object each,
-    written whole without the lock: `family`, `route_id`, `scope`,
+    written whole without the lock: `family`, `route_id`, `account`, `scope`,
     `publisher`, `session_id`, `generation`, `published` and `kind`
     (`bookkeep` with the call's `observation`, `release`, or `retire` with
     its `reason`). A locked read applies and deletes them; a record can lag
@@ -83,7 +88,8 @@ Contract IF-248: the keep call surface the session service composes.
     the operation covers a call (an adjudication with no scope, or a review
     round with one under the review dial); `keep_for(root, cfg, role=, brief=,
     family=, route_id=, wi=, rows=, cli_version=, template_paths=,
-    template_texts=, lease_seconds=, lease_wait=, prepared=, scope=)` returns
+    template_texts=, lease_seconds=, lease_wait=, prepared=, scope=,
+    account=)` returns
     the `Keep` the call resumes or mints, holding the record's lease, or None when the layer does not apply or
     the lease stays held past `lease_wait`. Every `Keep` carries its
     `prepared` launch (the session service's `prepare_launch`), a REQUIRED
@@ -109,11 +115,11 @@ Contract IF-248: the keep call surface the session service composes.
     OSError.
     `take_warm_lease(root, cfg, now=, work_pending=, holder=, prepare=)`
     returns `(keep, reason)` for the next due keep-warm ping, `reason` naming
-    why a due ping cannot run now; `prepare(route_id)` returns `(prepared,
-    reason)` and is asked under the lock before any lease is taken, so a
+    why a due ping cannot run now; `prepare(route_id, account)` returns
+    `(prepared, reason)` and is asked under the lock before any lease is taken, so a
     refused ping holds nothing; a prepared row whose family differs from the
     record's session is refused there too (`_prepare_warm`), and a warmed
-    Keep takes the prepared row's family and home. The blackout window
+    Keep takes the prepared row's family and its account's home. The blackout window
     (WI-834): `take_warm_lease` returns `(None, None)` inside it, and both it
     and `keep_for` first retire a live session last used before the end of
     the most recent window that ended (or with no last use), reset reason
@@ -125,8 +131,8 @@ Contract IF-248: the keep call surface the session service composes.
     iteration scope and stage for a narrow round; for a gating round, after
     retiring the lane's iteration session (`retire_scope`), no scope in
     fresh mode or the final scope and stage in persisted mode; and for any
-    scope, the pin of its live route. `scoped_route(root, scope)` is the
-    live route kept under a scope, or None. A malformed or misfiled record
+    scope, the pin of its live entry. `scoped_route(root, scope)` is the
+    live entry (route, qualified by its account) kept under a scope, or None. A malformed or misfiled record
     is no record to every load and scan (`_read_record`).
 """
 
@@ -172,13 +178,6 @@ FAMILY_RESET_CAP = {"OPENAI": 85}
 GOVERNING_INPUT_FILES = ("CLAUDE.md", "AGENTS.md", "GEMINI.md", "docs/process.toml")
 # Implements: SR-227, LLR-270
 GOVERNING_INPUT_GLOBS = (".claude/skills/*/SKILL.md", ".agents/skills/*/SKILL.md")
-
-# The dedicated CLI home per family, used only while retention is on (OI-69
-# (e1)): the working directory still supplies what the kit mandates, and what
-# moves is the user layer, so a retained transcript never mixes with a
-# person's own sessions. Credentials are provisioned into it by a person.
-# Implements: SR-227, LLR-270
-HOME_VARIABLES = {"ANTHROPIC": "CLAUDE_CONFIG_DIR", "OPENAI": "CODEX_HOME"}
 
 _LOCK_STALE_SECONDS = 120
 
@@ -347,38 +346,43 @@ def _try_lock(path):
     return None
 
 
-def _store_path(root, family, route_id, scope=""):
-    """One record's file: a route's, or a route's under a `scope` (WI-887).
-    The route id, and a scope after it, are hashed into the name (registry
-    and lane data, not trusted path segments) and kept verbatim inside. The
-    EMPTY scope hashes the route id alone, the adjudicator's file name, so a
-    record written before scopes existed still loads."""
-    return store_dir(root) / _record_name(family, route_id, scope)
+def _store_path(root, family, route_id, scope="", account=""):
+    """One record's file: a route's, or a route's under a `scope` (WI-887),
+    under an `account` (WI-798; "" for the ambient login). The route id, and a
+    scope and an account after it, are hashed into the name (registry and lane
+    data, not trusted path segments) and kept verbatim inside."""
+    return store_dir(root) / _record_name(family, route_id, scope, account)
 
 
-def _record_name(family, route_id, scope=""):
+def _record_name(family, route_id, scope="", account=""):
     """The file name a record of this identity is filed under (`_store_path`).
+    An unscoped ambient record keeps the name it had before accounts; a
+    record written then lacks `account`, so it reads as not its own
+    (`_read_record`) and the next launch mints once.
 
-    Implements: SR-227, LLR-270
+    Implements: SR-222, SR-227, LLR-270, LLR-336
     """
     keyed = route_id or ""
     if scope:
         keyed += "\0" + scope
+    if account:
+        keyed += "\0account=" + account
     key = hashlib.sha256(keyed.encode("utf-8")).hexdigest()[:24]
     return "{}-{}.json".format((family or "").upper(), key)
 
 
-def store_load(root, family, route_id, scope=""):
-    """The record of `route_id` under `scope`, or None when absent,
-    unreadable, malformed or not its own: one naming another family, route or
-    scope reads as no record. A corrupt store reads as "no session", and the
-    next launch mints, which is always safe (retention is an optimisation,
-    never a correctness input).
+def store_load(root, family, route_id, scope="", account=""):
+    """The record of `route_id` under `scope` and `account`, or None when
+    absent, unreadable, malformed or not its own: one naming another family,
+    route, account or scope, or lacking `account` (written before accounts),
+    reads as no record. A corrupt store reads as "no session", and the next
+    launch mints, which is always safe (retention is an optimisation, never
+    a correctness input).
 
-    Implements: SR-227, SR-239, LLR-270
+    Implements: SR-222, SR-227, SR-239, LLR-270, LLR-336
     """
-    path = _store_path(root, family, route_id, scope)
-    return _load_path(path, family, route_id, scope)
+    path = _store_path(root, family, route_id, scope, account)
+    return _load_path(path, family, route_id, scope, account)
 
 
 # The record variants the store's writers produce (IF-247), declared once and
@@ -397,7 +401,7 @@ def store_load(root, family, route_id, scope=""):
 # too: the LEASE, on any variant, as `_hold` and `take_warm_lease` write it (a
 # non-empty `holder` str and a numeric `until`), and `judged`'s items, the
 # work-item id strs `_observe` appends.
-_IDENTITY = {"family": str, "route_id": str}
+_IDENTITY = {"family": str, "route_id": str, "account": str}
 
 
 def _nonempty_str(value):
@@ -454,8 +458,22 @@ def _read_record(path):
         return None
     if not _variant(record):
         return None
-    own = _record_name(record["family"], record["route_id"], record.get("scope"))
+    own = _record_name(*_identity_of(record))
     return record if Path(path).name == own else None
+
+
+def _identity_of(record):
+    """`(FAMILY, route_id, scope, account)`: a record's or a marker's
+    identity, the tuple every store key is built from.
+
+    Implements: SR-222, LLR-336
+    """
+    return (
+        record["family"],
+        record["route_id"],
+        record.get("scope") or "",
+        record.get("account") or "",
+    )
 
 
 def _typed(record, fields, required):
@@ -503,16 +521,12 @@ def _variant(record):
     return RETIRED_FIRST if retired and record["state"] == STATE_RETIRED else ""
 
 
-def _load_path(path, family, route_id, scope=""):
+def _load_path(path, family, route_id, scope="", account=""):
     record = _read_record(path)
     if record is None:
         return None
-    same = (
-        record.get("family"),
-        record.get("route_id"),
-        record.get("scope", ""),
-    ) == ((family or "").upper(), route_id or "", scope or "")
-    return record if same else None
+    wanted = ((family or "").upper(), route_id or "", scope or "", account or "")
+    return record if _identity_of(record) == wanted else None
 
 
 def _write_whole(path, text):
@@ -582,6 +596,7 @@ _OBSERVATION = {
 _MARKER = {
     "family": str,
     "route_id": str,
+    "account": str,
     "scope": str,
     "publisher": _nonempty_str,
     "session_id": str,
@@ -596,14 +611,15 @@ _KIND_FIELDS = {
 }
 
 
-def _marker_name(family, route_id, scope, publisher):
+def _marker_name(identity, publisher):
     """The file one publisher's marker on one record is filed under: the
-    record's stem, a hash of the publisher id and `MARKER_SUFFIX`, which no
-    record glob matches. Each publication has its own name.
+    record's stem (of its `identity`, `_identity_of`), a hash of the
+    publisher id and `MARKER_SUFFIX`, which no record glob matches. Each
+    publication has its own name.
 
     Implements: SR-227, LLR-270
     """
-    stem = _record_name(family, route_id, scope)[: -len(".json")]
+    stem = _record_name(*identity)[: -len(".json")]
     tag = hashlib.sha256(publisher.encode("utf-8")).hexdigest()[:16]
     return "{}.{}{}".format(stem, tag, MARKER_SUFFIX)
 
@@ -618,6 +634,7 @@ def keep_marker(keep, kind, **payload):
     return {
         "family": keep.family,
         "route_id": keep.route_id,
+        "account": keep.account or "",
         "scope": keep.scope or "",
         "publisher": keep.holder,
         "session_id": keep.session_id,
@@ -636,9 +653,7 @@ def publish_marker(root, body):
     Implements: SR-227, LLR-270
     """
     body = {**body, "published": time.time()}
-    name = _marker_name(
-        body["family"], body["route_id"], body["scope"], body["publisher"]
-    )
+    name = _marker_name(_identity_of(body), body["publisher"])
     _write_whole(store_dir(root) / name, json.dumps(body, sort_keys=True))
 
 
@@ -657,7 +672,7 @@ class Pending(NamedTuple):
 
 def _pending(root, identity):
     """The markers beside the record of `identity` (`(FAMILY, route_id,
-    scope)`), read and never deleted.
+    scope, account)`), read and never deleted.
 
     Implements: SR-227, LLR-270
     """
@@ -694,8 +709,8 @@ def _parse_marker(text, path, identity):
     fields = _KIND_FIELDS.get(marker["kind"])
     if fields is None or not _typed(marker, fields, True):
         return None
-    named = (marker["family"], marker["route_id"], marker["scope"])
-    own = _marker_name(*named, marker["publisher"])
+    named = _identity_of(marker)
+    own = _marker_name(named, marker["publisher"])
     return marker if named == identity and path.name == own else None
 
 
@@ -781,6 +796,7 @@ def _marker_keep(marker):
     return Keep(
         family=marker["family"],
         route_id=marker["route_id"],
+        account=marker["account"],
         session_id=marker["session_id"],
         wi=seen["wi"],
         governing=seen["governing"],
@@ -820,7 +836,7 @@ class Honoured(NamedTuple):
     blocked: bool
 
 
-def load_honoured(root, family, route_id, scope="", holder=""):
+def load_honoured(root, family, route_id, scope="", holder="", account=""):
     """The LOCKED READ of one record (callers hold `store_lock`): read the
     clock first, then list the record's markers, apply each in publication
     order, then retire an expired lease another holder than `holder` left
@@ -833,8 +849,9 @@ def load_honoured(root, family, route_id, scope="", holder=""):
     Implements: SR-227, LLR-270
     """
     clock = time.time()
-    pending = _pending(root, ((family or "").upper(), route_id or "", scope or ""))
-    before = store_load(root, family, route_id, scope)
+    identity = ((family or "").upper(), route_id or "", scope or "", account or "")
+    pending = _pending(root, identity)
+    before = store_load(root, *identity)
     markers = [marker for _, marker in pending.markers]
     record, applied = fold_markers(copy.deepcopy(before), markers)
     blocked = bool(pending.unreadable)
@@ -871,8 +888,7 @@ def _folded(root, record):
     """
     if record is None:
         return None
-    identity = (record["family"], record["route_id"], record.get("scope", ""))
-    markers = [marker for _, marker in _pending(root, identity).markers]
+    markers = [marker for _, marker in _pending(root, _identity_of(record)).markers]
     return fold_markers(record, markers)[0]
 
 
@@ -882,13 +898,16 @@ def _apply_now(root, identities):
     markers stand for the next locked read)."""
     try:
         with store_lock(root, wait=APPLY_WAIT):
-            return [load_honoured(root, *identity) for identity in identities]
+            return [
+                load_honoured(root, family, route_id, scope, account=account)
+                for family, route_id, scope, account in identities
+            ]
     except StoreBusy:
         return None
 
 
 def _identity(keep):
-    return (keep.family, keep.route_id, keep.scope or "")
+    return (keep.family, keep.route_id, keep.scope or "", keep.account or "")
 
 
 def keep_release(root, keep):
@@ -906,9 +925,8 @@ def keep_release(root, keep):
 
 
 def _record_path(root, record):
-    """The file a record lives in: its family, route and scope."""
-    family, route_id = record["family"], record["route_id"]
-    return _store_path(root, family, route_id, record.get("scope", ""))
+    """The file a record lives in: its family, route, scope and account."""
+    return _store_path(root, *_identity_of(record))
 
 
 def store_save(root, record):
@@ -929,33 +947,39 @@ def store_remove(root, record):
         pass
 
 
-def dedicated_home(root, family):
-    """`(variable, path)` of the dedicated CLI home for `family` under the
-    store's `home/`, WITHOUT creating it, or None for a family with no ruled
-    home variable: the one path rule, read by the launch and by the sign-in
-    probe, which must not leave an empty home behind.
+def user_config_dir(environ=None):
+    """The user configuration directory account homes live under (WI-798):
+    `%APPDATA%` on Windows; on POSIX `$XDG_CONFIG_HOME` when it is an
+    absolute path (the XDG rule ignores a relative one), else `~/.config`.
+    None when it cannot be resolved, which refuses every qualified launch.
 
-    Implements: SR-227, LLR-305
+    Implements: SR-222, LLR-336
     """
-    variable = HOME_VARIABLES.get((family or "").upper())
-    if not variable:
+    env = os.environ if environ is None else environ
+    if os.name == "nt":
+        found = (env.get("APPDATA") or "").strip()
+        return Path(found) if found and os.path.isabs(found) else None
+    xdg = (env.get("XDG_CONFIG_HOME") or "").strip()
+    if xdg and os.path.isabs(xdg):
+        return Path(xdg)
+    home = os.path.expanduser("~")
+    return Path(home) / ".config" if os.path.isabs(home) else None
+
+
+def account_home(account_id, environ=None):
+    """The home of account `account_id`,
+    `<user config dir>/project-trajectory/accounts/<ID>/`, derived from the id
+    and the user config directory alone and never created here: outside every
+    checkout, shared by every repository on the box. None when the user config
+    directory cannot be resolved. The kit never reads, moves, copies or
+    deletes what a provider writes there.
+
+    Implements: SR-222, LLR-336
+    """
+    base = user_config_dir(environ)
+    if base is None or not account_id:
         return None
-    return variable, store_dir(root) / "home" / (family or "").lower()
-
-
-def dedicated_home_env(root, family):
-    """The dedicated CLI home for `family` while retention is on, created if
-    absent: `{variable: path}` under the store's `home/`, or `{}` for a family
-    with no ruled home variable.
-
-    Implements: SR-227, LLR-270
-    """
-    home = dedicated_home(root, family)
-    if home is None:
-        return {}
-    variable, path = home
-    path.mkdir(parents=True, exist_ok=True)
-    return {variable: str(path)}
+    return base / "project-trajectory" / "accounts" / account_id
 
 
 # --- the rules ------------------------------------------------------------------
@@ -1075,12 +1099,14 @@ def is_clear_point(rows, judged, current):
 
 @dataclass
 class Keep:
-    """One call's hold on a retained session: which route, the session it
-    resumes (an empty `session_id` mints), what it judges, the lease it
-    holds, the dedicated home its launch runs under, and its `prepared`
-    launch: the session service's validated environment and credential
-    (`session_service.prepare_launch`), REQUIRED, so no retained launch can be
-    built without that validation; never stored, logged or shown in a repr."""
+    """One call's hold on a retained session: which route and account
+    ("" for the ambient login), the session it resumes (an empty
+    `session_id` mints), what it judges, the lease it holds, the account home
+    its launch runs under (`home_env`, the prepared launch's; `{}` for an
+    ambient entry), and its `prepared` launch: the session service's
+    validated environment and credential (`session_service.prepare_launch`),
+    REQUIRED, so no retained launch can be built without that validation;
+    never stored, logged or shown in a repr."""
 
     family: str
     route_id: str
@@ -1094,6 +1120,7 @@ class Keep:
     generation: int = 0
     home_env: dict = field(default_factory=dict)
     scope: str = ""
+    account: str = ""
 
 
 def _lease_held(record, holder, now):
@@ -1229,11 +1256,13 @@ def keep_for(
     lease_wait=120.0,
     prepared,
     scope="",
+    account="",
 ):
     """The retained session an adjudication, or a loop review round under
     `scope` (WI-887), resumes or mints, or None. The Keep carries `prepared`,
-    the call's validated launch, and `scope`, which keys its record: a record
-    under another scope is never resumed.
+    the call's validated launch, and `scope` and `account` ("" for the
+    ambient login; WI-798), which key its record: a record under another
+    scope or account, or one written before accounts, is never resumed.
 
     None, touching nothing, when the layer does not apply (`applies`): the
     dial is off, the role is neither ADJUDICATE of a retained class with no
@@ -1268,14 +1297,16 @@ def keep_for(
                 # ONE clock read per locked decision (`load_honoured` reads
                 # it first): two reads could see a lease live to the retire
                 # rule and free to the busy rule.
-                found = load_honoured(root, family, route_id, scope, holder)
+                found = load_honoured(
+                    root, family, route_id, scope, holder, account=account
+                )
                 busy = _busy(found, holder)
                 if not busy:
                     return _hold(
                         root,
                         cfg,
                         found.record,
-                        (family, route_id, scope, wi, governing, cli_version),
+                        (family, route_id, scope, wi, governing, cli_version, account),
                         rows,
                         (holder, found.clock + lease_seconds),
                         prepared,
@@ -1297,7 +1328,7 @@ def _hold(root, cfg, record, subject, rows, lease, prepared):
     """Apply the pre-launch rules, take the lease `(holder, until)`, and
     build the Keep. A route with no record gets a lease-only one, so the
     first mint holds the lease as every later call does."""
-    family, route_id, scope, wi, governing, version = subject
+    family, route_id, scope, wi, governing, version, account = subject
     holder, until = lease
     # Live means a session to resume: a retired record, and a lease-only one
     # (no session yet, no state), mint.
@@ -1307,7 +1338,7 @@ def _hold(root, cfg, record, subject, rows, lease, prepared):
     live = live and record.get("state") != STATE_RETIRED
     if record is None:
         record = {"family": (family or "").upper(), "route_id": route_id or ""}
-        record.update({"scope": scope} if scope else {})
+        record.update({"scope": scope} if scope else {}, account=account)
     record["lease"] = {"holder": holder, "until": until}
     store_save(root, record)
     return Keep(
@@ -1321,8 +1352,9 @@ def _hold(root, cfg, record, subject, rows, lease, prepared):
         holder=holder,
         cli_version=version or "",
         generation=record.get("generation", 0),
-        home_env=dedicated_home_env(root, family),
+        home_env=dict(getattr(prepared, "home", {})),
         scope=scope or "",
+        account=account,
     )
 
 
@@ -1344,6 +1376,7 @@ def _fresh_record(keep, session_id, prior, stamp):
         **scoped,
         "family": keep.family,
         "route_id": keep.route_id,
+        "account": keep.account or "",
         "session_id": session_id or "",
         "generation": prior + 1,
         "started": stamp,
@@ -1525,16 +1558,19 @@ def _scoped_records(root, scope):
 
 
 def scoped_route(root, scope):
-    """The route id of the live session kept under `scope`, or None: the
-    route a lane's next review round of that scope pins, so it resumes the
-    reviewer that served the round before. A record whose pending markers
-    retire it pins nothing.
+    """The enabled entry of the live session kept under `scope` (its route,
+    qualified by its account when it has one; WI-798), or None: the entry a
+    lane's next review round of that scope pins, so it resumes the reviewer
+    that served the round before. A record whose pending markers retire it
+    pins nothing.
 
-    Implements: SR-227, SR-239, LLR-270
+    Implements: SR-222, SR-227, SR-239, LLR-270, LLR-336
     """
+    import agent_route  # deferred: the guard's no-op hook imports no route module
+
     for record in _scoped_records(root, scope):
         if record.get("state") in (STATE_ACTIVE, STATE_DRAINING):
-            return record["route_id"]
+            return agent_route.entry_of(record["route_id"], record["account"])
     return None
 
 
@@ -1555,8 +1591,8 @@ def retire_scope(root, scope, reason):
     for found in _scoped_records(root, scope):
         if found.get("state") not in (STATE_ACTIVE, STATE_DRAINING):
             continue
-        identity = (found["family"], found["route_id"], scope)
-        body = dict(zip(("family", "route_id", "scope"), identity))
+        identity = _identity_of(found)
+        body = dict(zip(("family", "route_id", "scope", "account"), identity))
         body.update(publisher="scope-retire:" + uuid.uuid4().hex, kind=RETIRE)
         body.update(session_id=found["session_id"], generation=found["generation"])
         publish_marker(root, {**body, "reason": reason})
@@ -1627,18 +1663,19 @@ def review_retention(root, worker, phase, narrow):
 # --- keep-warm --------------------------------------------------------------------
 
 
-def _prepare_warm(prepare, route_id, record):
-    """`(prepared, reason)` for a due record's ping: the route's prepared
-    launch, refused when `prepare` refuses it or when the prepared row names
-    another family than the record's session, which is then never warmed
-    (one family's session never runs under another family's home).
+def _prepare_warm(prepare, entry, record):
+    """`(prepared, reason)` for a due record's ping: the prepared launch of
+    its `entry` (`(route_id, account)`), refused when `prepare` refuses it or
+    when the prepared row names another family than the record's session,
+    which is then never warmed (one family's session never runs under another
+    family's CLI).
 
     Implements: SR-227, LLR-270
     """
-    prepared, refused = prepare(route_id)
+    prepared, refused = prepare(*entry)
     if not refused and prepared.family != record.get("family"):
         refused = "route {} now names family {}; its {} session is not warmed".format(
-            route_id, prepared.family, record.get("family")
+            entry[0], prepared.family, record.get("family")
         )
     return prepared, refused
 
@@ -1661,7 +1698,8 @@ def _warm_keep(root, cfg, record, holder, prepared):
         holder=holder,
         cli_version=record.get("cli_version") or "",
         generation=record.get("generation", 0),
-        home_env=dedicated_home_env(root, prepared.family),
+        home_env=dict(prepared.home),
+        account=record.get("account") or "",
     )
 
 
@@ -1689,7 +1727,8 @@ def keepwarm_due(record, cfg, now, work_pending):
 
 
 def due_routes(root, cfg, now, work_pending):
-    """The route ids whose retained session is due a keep-warm ping, read
+    """The `(route_id, account)` entries whose retained session is due a
+    keep-warm ping, read
     without the lock (a read of whole records only) through the store's one
     reader (`_read_record`), each with its pending markers folded in
     (`_folded`): a malformed or misfiled record is never due, one a pending
@@ -1702,13 +1741,14 @@ def due_routes(root, cfg, now, work_pending):
     for path in sorted(store_dir(root).glob("ANTHROPIC-*.json")):
         record = _folded(root, _read_record(path))
         if keepwarm_due(record, cfg, now, work_pending):
-            due.append(record.get("route_id") or "")
+            due.append((record["route_id"], record["account"]))
     return due
 
 
 def _warm_candidates(root, cfg, now, work_pending, routes):
-    """The due routes a keep-warm tick may ping: none inside the blackout
-    window, else `due_routes` narrowed to `routes` (None: every route).
+    """The due entries a keep-warm tick may ping: none inside the blackout
+    window, else `due_routes` narrowed to `routes`, the `(route_id, account)`
+    entries still enabled (None: every entry).
 
     Implements: SR-227, LLR-270
     """
@@ -1724,11 +1764,12 @@ def take_warm_lease(
     """`(keep, reason)` for the next due keep-warm ping. `keep` holds the
     route's lease, so no adjudication resumes the session while the ping
     runs; `reason` names why a due ping cannot run now (the lease or the lock
-    is held, or `prepare(route_id)`, which returns `(prepared, reason)` and
-    is asked under the lock BEFORE any lease is taken, refused the launch:
-    nothing is then held, so nothing needs releasing). `(None, None)` when
-    nothing is due. With `routes`, only those route ids are considered (a
-    route the registry no longer lists is never pinged).
+    is held, or `prepare(route_id, account)`, which returns `(prepared,
+    reason)` and is asked under the lock BEFORE any lease is taken, refused
+    the launch: nothing is then held, so nothing needs releasing). `(None,
+    None)` when nothing is due. With `routes`, only those `(route_id,
+    account)` entries are considered (an entry no longer enabled, or whose
+    account no longer resolves, is never pinged).
 
     Inside the blackout window nothing is due. After one, a due session last
     used before the window's end is retired (`retire_after_blackout`) before
@@ -1745,9 +1786,11 @@ def take_warm_lease(
         return None, None
     try:
         with store_lock(root, wait=0.5):
-            for route_id in due:
+            for route_id, account in due:
                 # One clock read for this record's decision (`load_honoured`).
-                found = load_honoured(root, "ANTHROPIC", route_id, holder=holder)
+                found = load_honoured(
+                    root, "ANTHROPIC", route_id, holder=holder, account=account
+                )
                 record, clock = found.record, found.clock
                 busy = _busy(found, holder)  # left to its holder
                 if not busy and retire_after_blackout(root, record):
@@ -1756,7 +1799,7 @@ def take_warm_lease(
                     continue
                 if busy:
                     return None, "the session is leased to {}".format(busy)
-                prepared, refused = _prepare_warm(prepare, route_id, record)
+                prepared, refused = _prepare_warm(prepare, (route_id, account), record)
                 if refused:
                     return None, refused
                 record["lease"] = {"holder": holder, "until": clock + lease_seconds}

@@ -286,7 +286,8 @@ def test_the_coordinators_adjudication_reports_a_refusal(root, monkeypatch, caps
     """The coordinator's route: a refused launch is reported, its verdict
     reservation released, and nothing waits."""
     released = []
-    monkeypatch.setattr(coadj, "_inputs", lambda r, a: (_Row(), "brief", None))
+    registry = coadj.agent_route.Registry({_Row.id: _Row()})
+    monkeypatch.setattr(coadj, "_inputs", lambda r, a: (registry, "brief", None))
     monkeypatch.setattr(coadj, "_release", released.append)
     monkeypatch.setattr(svc, "adjudication_keep", lambda request: None)
     args = _Args(root)
@@ -311,6 +312,7 @@ class _Args:
         self.wi = "WI-404"  # no active claim
         self.verdict = str(Path(root) / "verdict.md")
         self.timeout = 60
+        self.route = "ANTHROPIC-ROUTE"  # an ambient entry (WI-798)
 
 
 @pytest.fixture
@@ -845,7 +847,7 @@ def test_a_wrap_up_verdict_asking_for_rework_leaves_the_rework_waiting(
 def retained(root, retained_runners, monkeypatch, tmp_path):
     token = tmp_path / "token"
     token.write_text("canary-token", encoding="utf-8")
-    monkeypatch.setenv(svc.TOKEN_VARIABLES["ANTHROPIC"][0], str(token))
+    monkeypatch.setenv("AGENT_CLAUDE_TOKEN_FILE", str(token))
     write_policy(root, reset_pct=50)
     cfg = keep.keep_config(root)
     rows = svc.agent_route.load_registry(root / "docs" / "agents.toml")[0]
@@ -861,6 +863,7 @@ def seed(root, last_used, state="active", **extra):
     record = {
         "family": "ANTHROPIC",
         "route_id": "ANTHROPIC-ROUTE",
+        "account": "",  # the ambient entry's record (WI-798)
         "session_id": "S1",
         "generation": 1,
         "governing_hash": "",
@@ -942,7 +945,7 @@ def test_no_keep_warm_ping_fires_inside_the_window(root, clock, retained):
         now=epoch(INSIDE),
         work_pending=True,
         holder="keep-warm:x",
-        prepare=lambda route_id: (prepared, ""),
+        prepare=lambda route_id, account: (prepared, ""),
     )
     assert (ping, reason) == (None, None)
     assert "lease" not in state(root)
@@ -967,7 +970,13 @@ def _wrap_up_across_the_end(root, cfg, prepared, clock, mp):
     active_claim(root)
     rows = svc.agent_route.load_registry(root / "docs" / "agents.toml")[0]
     warmer = svc.KeepWarmer(
-        root, cfg, rows, runner=None, clock=fake.time, dirty=lambda: False
+        root,
+        cfg,
+        rows,
+        entries=["ANTHROPIC-ROUTE"],
+        runner=None,
+        clock=fake.time,
+        dirty=lambda: False,
     )
     seen = {}
 
@@ -1008,7 +1017,7 @@ def test_a_keep_warm_tick_first_after_the_window_retires_and_never_refreshes(
         now=epoch(AFTER),
         work_pending=True,
         holder="keep-warm:x",
-        prepare=lambda route_id: (prepared, ""),
+        prepare=lambda route_id, account: (prepared, ""),
     )
     assert ping is None and reason is None
     after = state(root)
@@ -1022,21 +1031,39 @@ def test_a_keep_warm_tick_first_after_the_window_retires_and_never_refreshes(
 def test_the_sign_in_reading_is_off_while_retention_is_off(root, capsys):
     args = coadj._parser().parse_args(["signin", "--root", str(root), "--retained"])
     assert coadj.signin(args) == 0
-    assert capsys.readouterr().out.strip() == "signin [ANTHROPIC]: off"
+    assert capsys.readouterr().out.strip() == "signin [-] retained: off"
+
+
+# The adjudicator's declared token account (WI-798): the reading is its
+# token file's, named by its `token_file_variable`, never a family's.
+ADJUDICATOR = (
+    '\n[account.ADJUDICATOR]\ncli = "claude"\nnotes = "test"\n'
+    'token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"\n'
+)
 
 
 def test_the_sign_in_reading_names_signed_in_and_missing(root, monkeypatch, capsys):
     write_policy(root, reset_pct=55)
-    variable = svc.TOKEN_VARIABLES["ANTHROPIC"][0]
+    (root / "docs" / "agents.toml").write_text(AGENTS + ADJUDICATOR, encoding="utf-8")
+    entry = "ANTHROPIC-ROUTE@ADJUDICATOR"
+    (root / "docs" / "agents-enabled").write_text(entry + "\n", encoding="utf-8")
+    variable = "AGENT_CLAUDE_TOKEN_FILE"
     monkeypatch.delenv(variable, raising=False)
-    args = coadj._parser().parse_args(["signin", "--root", str(root), "--retained"])
+    argv = ["signin", "--root", str(root), "--retained", "--route", entry]
+    args = coadj._parser().parse_args(argv)
     coadj.signin(args)
-    assert capsys.readouterr().out.strip() == "signin [ANTHROPIC]: missing"
+    lines = capsys.readouterr().out.splitlines()
+    assert lines == [
+        "signin [ADJUDICATOR] token: missing",
+        "signin [ADJUDICATOR]: token_file_variable " + variable,
+    ]
     token = root / "token"
     token.write_text("t", encoding="utf-8")
     monkeypatch.setenv(variable, str(token))
     coadj.signin(args)
-    assert capsys.readouterr().out.strip() == "signin [ANTHROPIC]: signed-in"
+    assert capsys.readouterr().out.splitlines()[0] == (
+        "signin [ADJUDICATOR] token: signed-in"
+    )
 
 
 # --- the hooks opt-in (part D, in-process) --------------------------------------------

@@ -54,7 +54,9 @@ refused with exit 2), so the call goes through the loop's keep operation and
    rows whose text drifted from `docs/archive/last_approved/`, `first-approval`
    for Drafted rows. Number the verdict `NNN-ADJUDICATE-<lane sha7>.md` under
    `docs/reviews/<wi-slug>/`.
-2. Confirm the dedicated home is signed in:
+2. Confirm the adjudicator's declared account is signed in: the command
+   prints `signin [ADJUDICATOR] token: <status>`, and only `signed-in` is
+   ready:
 
        .venv/Scripts/python.exe project-trajectory/scripts/coordinator_adjudicate.py signin
 
@@ -66,8 +68,8 @@ refused with exit 2), so the call goes through the loop's keep operation and
 
    Expect `keep: minting…` on a route's first call and `keep: resuming <id>`
    after. Exit 0 means a valid verdict, 1 a failed call or missing/invalid
-   verdict, 2 a refusal before launch, and 7 a home that is not signed in
-   (sign in through dev-setup; nothing falls back).
+   verdict, 2 a refusal before launch, and 7 an ADJUDICATOR account that is
+   not signed in (set its token up through dev-setup; nothing falls back).
 4. The adjudicator commits the verdict (trailer `WI: WI-NNN`) and its own
    re-attest or approve act. The entry point commits the telemetry log. A
    returned row's follow-up arrives as a `## Dispositions` block in the spec.

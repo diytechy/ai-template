@@ -309,7 +309,10 @@ BASELINE = {
     # into `_covers_findings` / `_interfaces_findings` and main's input loading
     # into `_load_gate` / `_check_one`, so both now measure under the limit.
     ("plan_round.py", "record"): 29,
-    ("plan_runner.py", "dispatch"): 16,
+    # WI-798: 16 -> 15, re-stamped DOWNWARD: the runtime-nonresponse fallback's
+    # pool, failed family and hat routes moved into `_dp_fallback` /
+    # `_hat_routes` (the fallback now refuses on resolution errors).
+    ("plan_runner.py", "dispatch"): 15,
     # WI-446: 30 -> 31. ONE new `except` arm — the hats roster (SN-036) that
     # EXISTS and is broken PAGEs instead of composing a decomposition brief with
     # no perspective in it. The rest of the layer was extracted to `_hat_slots`
@@ -317,7 +320,9 @@ BASELINE = {
     # refusal into the neighbouring `except OSError` is the only way to avoid
     # the +1, and it would report a broken roster as an unreadable template.
     # Reviewed bump; the fail-open it buys out of is the whole point of SN-036.
-    ("plan_runner.py", "run_dual_plan_round"): 31,
+    # WI-798: 31 -> 30, re-stamped DOWNWARD with dispatch above (the fallback
+    # extracted to `_dp_fallback`).
+    ("plan_runner.py", "run_dual_plan_round"): 30,
     # WI-259 reviewed bump 50 -> 53: the verification-basis split went binary ->
     # three-way (mechanized/demonstrated/attested, a new elif branch) and
     # --require-verified was widened to every approved SR of any method, naming

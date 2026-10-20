@@ -399,9 +399,9 @@ assumption_gate = false
 # version change, and a session whose call fails to launch retires at once.
 # The codex family clamps a dial above 85 to 85 (its own compaction is the
 # backstop); claude and opencode keep their provider compaction above the dial.
-# With the dial on, retained claude and codex sessions run under dedicated CLI
-# homes under out/adjudicator/home/ (CLAUDE_CONFIG_DIR, CODEX_HOME), so a person
-# provisions credentials there before turning it on.
+# A retained session runs under its entry's account home, as every launch
+# does (docs/agents.toml [account.<ID>], outside every checkout); an unqualified
+# entry under the person's own login. Provision a login account's home first.
 context_reset_pct = 0            # e.g. 55
 # Retain the session across these adjudication classes only (Brief cell values).
 retain_for = ["disposition", "amendment", "red-tc"]
@@ -423,8 +423,8 @@ reset_on_same_artifact = false
 # loop's review role resumes its session within one lane's iteration: a NARROW
 # round (after a CHANGES-REQUESTED round, over the rework alone) resumes the
 # session that reviewed that lane's previous narrow round, through the same
-# keep operation, store, lease and dedicated CLI homes as [adjudicator]
-# retention, so provision credentials there first. Each kept session is keyed
+# keep operation, store and lease as [adjudicator] retention, each session
+# under its entry's account home (provision a login account's first). Each kept session is keyed
 # by its scope (the lane, its claim base, the review phase and the stage), so
 # no other lane, re-claim or phase ever resumes it, and it is never pinged to
 # keep warm. Drawing the lane's gating (full-lane) round retires that lane's

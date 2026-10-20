@@ -100,16 +100,27 @@ def wi_plan_mode(row):
 
 
 def _dp_routes(root, tier):
-    """The two planner hat routes as `[(label, model, template, env, note)]`.
-    With routing opted in (docs/agents-enabled + agents.toml), the pair comes
-    from agent_route.planner_pair (different families where the pool allows,
-    else the recorded degraded reason); with routing off, both hats ride the
-    ambient template/model — the recorded routing-off degraded mode. Returns
-    (routes, registry, note); registry is None when routing is off."""
+    """The two planner hat routes as `[(label, model, template, env, entry)]`,
+    `env` the hat's launch environment by the one rule
+    (`session_service.entry_env`: the row's env, its account's env and home)
+    and `entry` the enabled entry it was routed to. With routing opted in
+    (docs/agents-enabled + agents.toml), the pair comes from
+    agent_route.planner_pair (different families where the pool allows, else
+    the recorded degraded reason); with routing off, both hats ride the
+    ambient template/model — the recorded routing-off degraded mode. An
+    agents-enabled that exists but cannot be read pages, never reading as
+    routing off (WI-798). Returns (routes, registry, note); registry is None
+    when routing is off.
+
+    Implements: SR-222, LLR-336
+    """
     import agent_route
 
-    enabled = agent_route.load_enabled(root / "docs" / "agents-enabled")
     registry, reg_errors = agent_route.load_registry(root / "docs" / "agents.toml")
+    try:
+        enabled = agent_route.load_enabled(root / "docs" / "agents-enabled")
+    except agent_route.EnabledUnreadable as exc:
+        return None, registry, "routing: {}".format(exc)
     if not enabled:
         return None, None, "routing-off: one template drives every hat (degraded)"
     if not registry or reg_errors:
@@ -126,7 +137,7 @@ def _dp_routes(root, tier):
             "routing: agents.toml unreadable/malformed with agents-enabled "
             "present: {}".format("; ".join(reg_errors) or "no parseable rows"),
         )
-    # resolve_enabled returns (ids, errors) — unpack it, or planner_pair iterates
+    # resolve_enabled returns (entries, errors) — unpack it, or planner_pair iterates
     # the whole tuple as the pool and crashes (TypeError: unhashable list) before
     # any session launches. This routing-ON dual-plan path was never exercised
     # (the kit's own DP-001 ran routing-off), so the defect stayed latent until it
@@ -147,30 +158,72 @@ def _dp_routes(root, tier):
     pair = agent_route.planner_pair(pool, registry, tier)
     if pair.sessions[0] is None:
         return None, registry, "routing: no routable model ({})".format(pair.detail)
-    routes = []
-    for label, sess in zip(("A", "B"), pair.sessions):
-        m = registry[sess.model_id]
-        routes.append((label, m.model, m.cmd_template, m.env, sess.model_id))
+    try:
+        routes = _hat_routes(root, registry, pair)
+    except session_service.SigninRefused as refused:
+        return None, registry, "routing: {}".format(refused)
     return routes, registry, "{} ({})".format(pair.reason, pair.detail)
 
 
-def _dp_session(
-    template, model, prompt, root, timeout, env_cell="", *, attribution=None
-):
+def _hat_routes(root, registry, pair):
+    """`[(label, model, template, env, entry)]` for a routed planner pair:
+    each hat's row read through its entry, and its launch environment
+    composed once by the one rule (`session_service.entry_env`), which
+    raises SigninRefused for an account that cannot authenticate.
+
+    Implements: SR-222, LLR-336
+    """
+    routes = []
+    for label, sess in zip(("A", "B"), pair.sessions):
+        m = registry[sess.model_id]
+        env = session_service.entry_env(root, registry, sess.entry)
+        routes.append((label, m.model, m.cmd_template, env, sess.entry))
+    return routes
+
+
+def _dp_fallback(root, registry, failed_entry):
+    """`(pair, routes, why)` for the one runtime-nonresponse fallback
+    (WI-196) after the hat routed to `failed_entry` went dark: the failed
+    hat's own entry names the family to exclude (never a match on the model
+    name), the pool is the enable list re-resolved, and `routes` are the
+    fresh pair's (`_hat_routes`; empty when no family responds). Refused
+    (`why`, the round pages) when the enable list cannot be read, does not
+    resolve, or an account of the pair cannot authenticate: never a fallback
+    on a pool with its errors discarded (WI-798).
+
+    Implements: SR-222, LLR-336
+    """
+    import agent_route
+
+    docs = root / "docs"
+    try:
+        tokens = agent_route.load_enabled(docs / "agents-enabled")
+    except agent_route.EnabledUnreadable as exc:
+        return None, [], "the fallback is refused: {}".format(exc)
+    tag_rank = agent_route.load_tag_rank(docs / "agents.toml")
+    pool, errors = agent_route.resolve_enabled(tokens, registry, tag_rank)
+    if errors:
+        return None, [], "the fallback is refused: {}".format("; ".join(errors))
+    row = registry[agent_route.entry_route(failed_entry)]
+    failed = agent_route.PlannerSession("", failed_entry, row.family, row.tier)
+    pair = agent_route.planner_fallback(failed, pool, registry, "strong")
+    if pair.sessions[0] is None:
+        return pair, [], ""
+    try:
+        return pair, _hat_routes(root, registry, pair), ""
+    except session_service.SigninRefused as refused:
+        return pair, [], "the fallback is refused: {}".format(refused)
+
+
+def _dp_session(template, model, prompt, root, timeout, env=None, *, attribution=None):
     """One round session through the session service. Returns (ok, output).
-    A pair row's Env cell is merged over the ambient env
-    (agent_route.parse_env), matching the loop's session launch. A round the
-    blackout window refuses waits the window out and is retried
-    (`session_service.through_blackout`).
+    `env` is the hat's launch environment, composed by the one rule
+    (`_hat_routes`), or None to inherit the ambient one (routing off),
+    matching the loop's session launch. A round the blackout window refuses
+    waits the window out and is retried (`session_service.through_blackout`).
 
     Implements: SR-222, LLR-269
     """
-    env = None
-    if env_cell:
-        import agent_route
-
-        env = dict(os.environ)
-        env.update(agent_route.parse_env(env_cell))
     attribution = dict(attribution or {})
     asked = session_service.Call(
         root=root,
@@ -255,9 +308,13 @@ def _hat_slots(root, row, planner_tmpl):
     return plan_briefs.hat_surface_for_work_item(root, row)
 
 
-def _dp_attribution(root, wi, round_dir, step, registry, route_id=""):
-    """Attribute a plan role to its existing round and selected roster row."""
+def _dp_attribution(root, wi, round_dir, step, registry, entry=""):
+    """Attribute a plan role to its existing round and selected roster row,
+    the route the hat's enabled `entry` selects."""
+    import agent_route
+
     kind, plan = step["step"], step.get("plan")
+    route_id = agent_route.entry_route(entry or "")
     route = (registry or {}).get(route_id)
     return {
         "wi": wi,
@@ -319,9 +376,9 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
     if routes is None and _registry is not None:
         return "PAGE", route_note  # routing opted in but nothing routable
     if routes is None:
-        routes = [
-            ("A", model, template, "", "ambient"),
-            ("B", model, template, "", "ambient"),
+        routes = [  # routing off: the inherited environment exactly (None)
+            ("A", model, template, None, "ambient"),
+            ("B", model, template, None, "ambient"),
         ]
     route_of = {r[0]: r for r in routes}
     # Cross-critique: each plan is judged by the OTHER hat's route (cross-family
@@ -380,49 +437,26 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                 ),
                 planner_tmpl,
             )
-            _label, m, tmpl, env_cell, note = route_of[plan]
+            _label, m, tmpl, env, note = route_of[plan]
             ok, output = _dp_session(
                 tmpl,
                 m,
                 prompt,
                 root,
                 timeout,
-                env_cell,
+                env,
                 attribution=_dp_attribution(root, wi, round_dir, step, _registry, note),
             )
             if not ok:
                 if _registry is not None and not fell_back:
                     # One runtime-nonresponse fallback (WI-196), then page.
-                    import agent_route
-
-                    failed = type("S", (), {"family": ""})()
-                    for sess_id, mm in _registry.items():
-                        if mm.model == m:
-                            failed.family = mm.family
-                            break
-                    # resolve_enabled returns (ids, errors) — unpack (the same
-                    # latent tuple bug fixed in _dp_routes); the tag-rank
-                    # override rides along like every other resolution site.
-                    pool, _pool_errors = agent_route.resolve_enabled(
-                        agent_route.load_enabled(root / "docs" / "agents-enabled"),
-                        _registry,
-                        agent_route.load_tag_rank(root / "docs" / "agents.toml"),
-                    )
-                    pair = agent_route.planner_fallback(
-                        failed, pool, _registry, "strong"
-                    )
-                    if pair.sessions[0] is not None:
+                    pair, routes, why = _dp_fallback(root, _registry, note)
+                    if why:
+                        return None, "session failed at {} {}; {}".format(
+                            kind, plan or "", why
+                        )
+                    if routes:
                         fell_back = True
-                        routes = [
-                            (
-                                lbl,
-                                _registry[s.model_id].model,
-                                _registry[s.model_id].cmd_template,
-                                _registry[s.model_id].env,
-                                s.model_id,
-                            )
-                            for lbl, s in zip(("A", "B"), pair.sessions)
-                        ]
                         route_of.update({r[0]: r for r in routes})
                         critic_route_of.update({"A": route_of["B"], "B": route_of["A"]})
                         arbiter_notes.append(
@@ -473,14 +507,14 @@ def run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map=None
                 },
                 critic_tmpl,
             )
-            _label, m, tmpl, env_cell, note = critic_route_of[plan]
+            _label, m, tmpl, env, note = critic_route_of[plan]
             ok, output = _dp_session(
                 tmpl,
                 m,
                 prompt,
                 root,
                 timeout,
-                env_cell,
+                env,
                 attribution=_dp_attribution(root, wi, round_dir, step, _registry, note),
             )
             if not ok:

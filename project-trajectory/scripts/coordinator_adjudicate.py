@@ -38,25 +38,33 @@ Contract IF-283: the coordinator's adjudication command line, its arguments.
     what this call's session writes into it is read; a call refused before
     its launch removes it (the directories stay), and one that launched
     leaves it, written or empty, for inspection.
-    It reads the composed brief from F (UTF-8) and launches it on the route
-    (default `ANTHROPIC-OPUS-STRONG`), which must be a row of
-    `docs/agents.toml` named on `docs/agents-enabled`, as an ADJUDICATE call
-    of brief class CLASS for WI-N, retained where the `[adjudicator]` dial
-    covers it, and writes and commits the call's session log.
+    It reads the composed brief from F (UTF-8) and launches it on the
+    enabled entry ID (a registry id, or `ROUTE@ACCOUNT`; default
+    `ANTHROPIC-OPUS-STRONG@ADJUDICATOR`, the strong Anthropic route on the
+    declared token account ADJUDICATOR, WI-798), which must resolve against
+    `docs/agents.toml` (its route a row, its account declared for that
+    route's CLI, the registry free of errors) and be named on
+    `docs/agents-enabled`, as an ADJUDICATE call of brief class CLASS for
+    WI-N, under that entry's account by the one launch-environment rule,
+    retained where the `[adjudicator]` dial covers it, and writes and commits
+    the call's session log.
     `act --verdict PATH --wi WI-N [--route ID] [--root DIR] [--timeout
     SECONDS]` runs only from a lane, as `adjudicate` does, with no
     uncommitted change in it: it composes the act brief from the verdict at
     PATH (repo-relative) and its binding as committed at the lane's HEAD,
-    launches it on the route as an ADJUDICATE call for WI-N, retained where
-    the `[adjudicator]` dial retains the verdict's bound class and fresh
-    otherwise, and writes and commits the call's session log. It reserves no
-    verdict path, writes no binding and records no outcome.
-    `signin [--family F] [--root DIR] [--retained]` prints the sign-in
-    probe's reading for family F (default ANTHROPIC), creating nothing and
-    making no model call; for ANTHROPIC the reading is whether the long-lived
-    token file the `AGENT_CLAUDE_TOKEN_FILE` environment variable names can
-    be read, never the token or its path. With `--retained` it reads `off`,
-    probing nothing, while the `[adjudicator]` dial leaves retention off.
+    launches it on the enabled entry ID as `adjudicate` resolves it, under
+    that entry's account by the same launch-environment rule, as an
+    ADJUDICATE call for WI-N, retained where the `[adjudicator]` dial
+    retains the verdict's bound class and fresh otherwise, and writes and
+    commits the call's session log. It reserves no verdict path, writes no
+    binding and records no outcome.
+    `signin [--route ID] [--root DIR] [--retained]` prints the sign-in
+    probe's reading for the account of entry ID (default the adjudicator's),
+    creating nothing and making no model call: for a token account whether
+    the long-lived token file its `token_file_variable` names can be read,
+    never the token or its path; for a login account its own home's status
+    command. With `--retained` it reads `off`, probing nothing, while the
+    `[adjudicator]` dial leaves retention off.
 
 Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     verdict; 1 for a call that failed, timed out or reported an error result
@@ -65,8 +73,10 @@ Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     is not a lane, an unusable route, a brief file that cannot be read or
     decoded, a PATH that exists or cannot be reserved, or a launch the
     blackout window refuses (the session service admits only an
-    adjudication of a work item whose claim is active there); and 7 (needs a human) when the retained launch is refused
-    because its dedicated CLI home is not signed in. `act` exits 0 only when
+    adjudication of a work item whose claim is active there); and 7 (needs a
+    human) when the launch is refused because its account cannot
+    authenticate (a token that cannot be read, a login home absent or not
+    signed in) or its environment conflicts. `act` exits 0 only when
     the call succeeded, HEAD then carries in full every act the verdict
     authorizes, and nothing under docs/reviews/ changed; 1 otherwise after a
     launch; 2, before anything launches, for a root that is not a lane, an
@@ -84,8 +94,14 @@ Contract IF-285: the command's stdout readings. `adjudicate` prints the
     failed and that its verdict is not read. `act` prints its keep and exit,
     then the acts still owed at HEAD after the call, the paths it changed
     under docs/reviews/, or `act: complete`; a refusal prints `act: refused:`
-    and why, naming the uncommitted paths or the inconsistent row. `signin` prints the sign-in probe's reading: `signed-in`,
-    `missing` or `unknown`, or `off` under `--retained` with retention off.
+    and why, naming the uncommitted paths or the inconsistent row. `signin`
+    prints one line
+    `signin [<ACCOUNT>] <token|login>: <status>` (status `signed-in`,
+    `missing` or `unknown`; `signin [-] retained: off` under `--retained` with retention off;
+    an unverified Claude login appends ` (unverified)` and a line saying it
+    is printed, not refused; a login account reading missing adds the
+    command that provisions it), `signin [-] ambient: ambient` for an
+    unqualified entry, or `signin [-] unresolved: unknown (<why>)`.
 
 Run with Python 3.11+:  python scripts/coordinator_adjudicate.py adjudicate \\
     --brief-file out/brief.md --brief amendment --wi WI-123 \\
@@ -117,31 +133,47 @@ except ImportError:  # pragma: no cover - in-process fallback
 from kitlib.config import utf8_console
 from kitlib.git import git_out
 
-# The coordinator's adjudicator: the strong Anthropic route (owner, 2026-10-05).
-# Implements: SR-231, LLR-306
-DEFAULT_ROUTE = "ANTHROPIC-OPUS-STRONG"
+# The coordinator's adjudicator: the strong Anthropic route (owner, 2026-10-05),
+# run on the declared token account ADJUDICATOR (WI-798), whose table names the
+# variable locating its long-lived token (OI-110 (b)). A repository that does
+# not declare that account names its entry with --route.
+# Implements: SR-231, SR-222, LLR-306, LLR-336
+DEFAULT_ROUTE = "ANTHROPIC-OPUS-STRONG@ADJUDICATOR"
 # The loop's default idle bound (AGENT_SESSION_IDLE_TIMEOUT), so a wedged
 # call ends as the loop's would.
 IDLE_TIMEOUT = 900
 
 
-def resolve_route(root, route_id):
-    """`(row, None)` for an enabled registry row, else `(None, reason)`: the
-    enable-list is the owner's consent to launch a route, here as in the loop.
+def resolve_route(root, entry):
+    """`(registry, None)` when the enabled `entry` may launch, else `(None,
+    reason)`: the entry's own enable-list line is the owner's consent to
+    launch it, here as in the loop (an unqualified entry is its route id, a
+    qualified one `ROUTE@ACCOUNT`). Refused, never discarded (WI-798): a
+    registry error (a malformed row or account table), an agents-enabled
+    that exists but cannot be read, an entry that does not resolve (its
+    route not a row, its account not declared or not its CLI's), or one not
+    on the enable list. The caller reads the row and account through
+    `agent_route.entry_route` / `account_of`.
 
-    Implements: SR-231, LLR-306
+    Implements: SR-231, SR-222, LLR-306, LLR-336
     """
     docs = Path(root) / "docs"
-    registry, _errors = agent_route.load_registry(docs / "agents.toml")
-    row = registry.get(route_id)
-    if row is None:
-        return None, "{} is not a row in docs/agents.toml".format(route_id)
+    registry, errors = agent_route.load_registry(docs / "agents.toml")
+    if errors:
+        return None, "docs/agents.toml: {}".format("; ".join(errors))
+    found, why = agent_route.resolve_entry(entry, registry)
+    if why:
+        return None, why
+    try:
+        tokens = agent_route.load_enabled(docs / "agents-enabled")
+    except agent_route.EnabledUnreadable as exc:
+        return None, str(exc)
     enabled, _ = agent_route.resolve_enabled(
-        agent_route.load_enabled(docs / "agents-enabled"), registry
+        tokens, registry, agent_route.load_tag_rank(docs / "agents.toml")
     )
-    if route_id not in enabled:
-        return None, "{} is not named on docs/agents-enabled".format(route_id)
-    return row, None
+    if found != entry or found not in enabled:
+        return None, "{} is not named on docs/agents-enabled".format(entry)
+    return registry, None
 
 
 def _worktree_index(records, root):
@@ -248,9 +280,9 @@ def _release(path, bound=True):
 
 
 def _inputs(root, args):
-    """`(row, prompt, None)` when the call may launch, else `(None, None,
-    why)`: a lane root, an enabled route, a readable brief, and, last, the
-    verdict path reserved for this call alone (`reserve_verdict`)."""
+    """`(registry, prompt, None)` when the call may launch, else `(None,
+    None, why)`: a lane root, an enabled entry, a readable brief, and, last,
+    the verdict path reserved for this call alone (`reserve_verdict`)."""
     why = lane_refusal(root)
     row, prompt = None, None
     if why is None:
@@ -317,9 +349,10 @@ def _launched(prompt):
     return prompt + agent_brief.loop_provenance_note()
 
 
-def _call(root, row, request, kept, prompt):
+def _call(root, row, request, kept, prompt, env):
     """Launch `prompt` (as `_launched` makes it) on the route as the request's
-    adjudication call under `kept`, and record its session log; raises
+    adjudication call under `kept`, in `env` (the entry's launch environment,
+    `session_service.launch_env`; WI-798), and record its session log; raises
     BlackoutRefused or HooksOffRefused as `session_service.call` does.
 
     Implements: SR-231, LLR-306
@@ -336,7 +369,7 @@ def _call(root, row, request, kept, prompt):
             route_id=row.id,
             source_event="coordinator",
             attribution={"wi": request.wi},
-            env=session_service.route_env(row),
+            env=env,
             timeout=request.deadline,
             idle_timeout=IDLE_TIMEOUT,
             keep=kept,
@@ -351,26 +384,29 @@ def adjudicate(args):
     Implements: SR-231, LLR-306
     """
     root = Path(args.root).resolve()
-    row, prompt, why = _inputs(root, args)
+    registry, prompt, why = _inputs(root, args)
     if why:
         print("adjudicate: refused: {}".format(why))
         return agent_common.EXIT_PREFLIGHT
+    row = registry[agent_route.entry_route(args.route)]
     request = session_service.AdjudicationRequest(
         root=root,
         brief=args.brief,
         route=row,
         wi=args.wi,
         deadline=args.timeout,
+        account=agent_route.account_of(registry, args.route),
     )
     try:
         kept = session_service.adjudication_keep(request)
+        env = session_service.launch_env(root, row, request.account)
     except session_service.SigninRefused as refused:
         _release(args.verdict)
         print("adjudicate: {}".format(refused))
         return agent_common.EXIT_NEEDS_HUMAN
     print(_keep_line(kept))
     try:
-        outcome = _call(root, row, request, kept, prompt)
+        outcome = _call(root, row, request, kept, prompt, env)
     except (
         session_service.BlackoutRefused,
         session_service.HooksOffRefused,
@@ -405,8 +441,8 @@ def _status_paths(root, *pathspec):
 
 
 def _act_inputs(root, args):
-    """`(row, brief, prompt, None)` when the act turn may launch, else
-    `(None, None, None, why)`: a lane root, an enabled route, a lane with no
+    """`(registry, brief, prompt, None)` when the act turn may launch, else
+    `(None, None, None, why)`: a lane root, an enabled entry, a lane with no
     uncommitted change, and the act brief composed from the verdict accepted
     at HEAD (`adjudicate_act.compose_act`), which refuses a verdict that is
     not accepted there, owes no act, or judged a row in a state no act
@@ -415,9 +451,9 @@ def _act_inputs(root, args):
     Implements: SR-231, LLR-306
     """
     why = lane_refusal(root)
-    row, prompt = None, None
+    registry, prompt = None, None
     if why is None:
-        row, why = resolve_route(root, args.route)
+        registry, why = resolve_route(root, args.route)
     if why is None:
         dirty = _status_paths(root)
         if dirty is None:
@@ -428,7 +464,7 @@ def _act_inputs(root, args):
         prompt, why = adjudicate_act.compose_act(root, args.verdict, args.wi)
     if why:
         return None, None, None, why
-    return row, adjudicate_act.bound_brief(root, args.verdict), prompt, None
+    return registry, adjudicate_act.bound_brief(root, args.verdict), prompt, None
 
 
 def _reviews_written(root, before):
@@ -471,22 +507,29 @@ def act(args):
     Implements: SR-231, LLR-306
     """
     root = Path(args.root).resolve()
-    row, brief, prompt, why = _act_inputs(root, args)
+    registry, brief, prompt, why = _act_inputs(root, args)
     if why:
         print("act: refused: {}".format(why))
         return agent_common.EXIT_PREFLIGHT
+    row = registry[agent_route.entry_route(args.route)]
     request = session_service.AdjudicationRequest(
-        root=root, brief=brief, route=row, wi=args.wi, deadline=args.timeout
+        root=root,
+        brief=brief,
+        route=row,
+        wi=args.wi,
+        deadline=args.timeout,
+        account=agent_route.account_of(registry, args.route),
     )
     try:
         kept = session_service.adjudication_keep(request)
+        env = session_service.launch_env(root, row, request.account)
     except session_service.SigninRefused as refused:
         print("act: {}".format(refused))
         return agent_common.EXIT_NEEDS_HUMAN
     print(_keep_line(kept))
     before = (git_out(root, ["rev-parse", "HEAD"]) or "").strip()
     try:
-        outcome = _call(root, row, request, kept, prompt)
+        outcome = _call(root, row, request, kept, prompt, env)
     except (
         session_service.BlackoutRefused,
         session_service.HooksOffRefused,
@@ -497,21 +540,71 @@ def act(args):
 
 
 def signin(args):
-    """Print the sign-in probe's reading of a family's dedicated home (for
-    Claude, whether its long-lived token file can be read; never the token).
-    With `--retained`, `off` and no probe while the `[adjudicator]` dial
-    (`session_keep.keep_config`) leaves retention off: dev-setup's reading.
+    """Print the sign-in probe's reading of the adjudicator entry's account
+    (`--route`, default `DEFAULT_ROUTE`; WI-798) as `signin_lines` words it.
+    An entry that does not resolve reads `signin [-] unresolved: unknown`
+    and says why. With `--retained`, `signin [-] retained: off` and no probe
+    or resolution while the `[adjudicator]` dial
+    (`session_keep.keep_config`) leaves retention off: dev-setup's reading. Nothing is run beyond the account's own status
+    command, nothing is created and nothing signs in.
 
-    Implements: SR-231, LLR-306
+    Implements: SR-231, SR-222, LLR-306, LLR-336
     """
-    family = args.family.upper()
     root = Path(args.root).resolve()
     if args.retained and not session_service.session_keep.keep_config(root).enabled:
-        status = "off"
-    else:
-        status = session_service.signin_status(root, family)
-    print("signin [{}]: {}".format(family, status))
+        print("signin [-] retained: off")
+        return 0
+    registry, why = resolve_route(root, args.route)
+    if why:
+        print("signin [-] unresolved: unknown ({})".format(why))
+        return 0
+    row = registry[agent_route.entry_route(args.route)]
+    account = agent_route.account_of(registry, args.route)
+    status = session_service.signin_status(root, account, row=row)
+    for line in signin_lines(account, status):
+        print(line)
     return 0
+
+
+def signin_lines(account, status):
+    """The `signin` command's lines for `account` (None: an ambient entry)
+    reading `status`. First the parseable status line,
+    `signin [<ACCOUNT>] <kind>: <status>`: kind `token` (whether its
+    long-lived token file can be read; never the token or its path), `login`
+    (its own home's status command; an unverified Claude login carries
+    ` (unverified)`), or `signin [-] ambient: ambient` for the person's own
+    login, which has no kit-held home. Then, for a token account, the name of
+    the variable locating its token file (never the path or the token); for a
+    login account reading missing, the command that provisions it (never
+    run); and for an unverified one the line saying it is printed, not
+    refused (D-011).
+
+    Implements: SR-222, LLR-336
+    """
+    if account is None:
+        return ["signin [-] ambient: {}".format(status)]
+    kind = "token" if account.token_file_variable else "login"
+    flag = " (unverified)" if account.unverified else ""
+    lines = ["signin [{}] {}: {}{}".format(account.id, kind, status, flag)]
+    if kind == "token":
+        lines.append(
+            "signin [{}]: token_file_variable {}".format(
+                account.id, account.token_file_variable
+            )
+        )
+    if kind == "login" and status == session_service.SIGNIN_MISSING:
+        lines.append(
+            "signin [{}]: provision it yourself: {}".format(
+                account.id, session_service.provision_command(account)
+            )
+        )
+    if account.unverified:
+        lines.append(
+            "signin [{}]: UNVERIFIED: a Claude login other than the ambient one "
+            "whose login-isolation check has not passed (`verified` is empty); "
+            "printed, not refused".format(account.id)
+        )
+    return lines
 
 
 def _parser():
@@ -527,7 +620,11 @@ def _parser():
     )
     run.add_argument("--wi", required=True)
     run.add_argument("--verdict", required=True)
-    run.add_argument("--route", default=DEFAULT_ROUTE)
+    run.add_argument(
+        "--route",
+        default=DEFAULT_ROUTE,
+        help="the enabled entry: a registry id, or ROUTE@ACCOUNT",
+    )
     run.add_argument("--timeout", type=int, default=session_service.DEFAULT_DEADLINE)
     run.set_defaults(handler=adjudicate)
     take = sub.add_parser(
@@ -536,16 +633,25 @@ def _parser():
     take.add_argument("--root", default=".")
     take.add_argument("--verdict", required=True)
     take.add_argument("--wi", required=True)
-    take.add_argument("--route", default=DEFAULT_ROUTE)
+    take.add_argument(
+        "--route",
+        default=DEFAULT_ROUTE,
+        help="the enabled entry: a registry id, or ROUTE@ACCOUNT",
+    )
     take.add_argument("--timeout", type=int, default=session_service.DEFAULT_DEADLINE)
     take.set_defaults(handler=act)
     probe = sub.add_parser(
         "signin",
-        help="read a dedicated home's sign-in; Claude's is its long-lived token, "
-        "read from the file the AGENT_CLAUDE_TOKEN_FILE env var names",
+        help="read the adjudicator entry's account sign-in: a token account's "
+        "long-lived token file (named by its token_file_variable), or a login "
+        "account's own home",
     )
     probe.add_argument("--root", default=".")
-    probe.add_argument("--family", default="ANTHROPIC")
+    probe.add_argument(
+        "--route",
+        default=DEFAULT_ROUTE,
+        help="the enabled entry whose account is read (default: the adjudicator's)",
+    )
     probe.add_argument(
         "--retained",
         action="store_true",

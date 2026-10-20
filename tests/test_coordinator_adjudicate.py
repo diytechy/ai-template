@@ -4,9 +4,10 @@ The coordinator adjudicates through the same keep operation and the same
 `out/adjudicator/` record as the loop (WI-835): one entry point composes the
 shared adjudication request, the session service plans the keep, launches,
 records the session log, and the entry point prints the verdict. A retained
-launch whose dedicated CLI home is not signed in is refused before launch on
-either route, naming dev-setup; nothing signs in automatically and nothing
-falls back to a fresh session or the default home.
+launch whose account is not signed in (its token, or the login in its own
+home) is refused before launch on either route, naming dev-setup; nothing
+signs in automatically and nothing falls back to a fresh session or the
+ambient login.
 
 No test calls a real model or a real CLI login: the launch is
 `session_service.run_session`, replaced in the module the entry point
@@ -34,6 +35,10 @@ pytestmark = pytest.mark.usefixtures("retained_runners")
 keep = svc.session_keep
 
 ROUTE = "ANTHROPIC-OPUS-STRONG"
+# The adjudicator's entry (WI-798): the route on the declared token account
+# ADJUDICATOR, whose table names the OI-110 (b) token variable.
+ACCOUNT = "ADJUDICATOR"
+ENTRY = ROUTE + "@" + ACCOUNT
 TEMPLATE = "claude -p --model {model} --output-format stream-json --verbose"
 AGENTS = """[agent.ANTHROPIC-OPUS-STRONG]
 family = "ANTHROPIC"
@@ -52,6 +57,11 @@ tier = "medium"
 cmd_template = "{template}"
 env = ""
 notes = "a row the enable-list does not name"
+
+[account.ADJUDICATOR]
+cli = "claude"
+notes = "the adjudicator's token account"
+token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"
 """
 
 
@@ -125,7 +135,7 @@ def _inputs(tmp_path, dial=50):
     (docs / "agents.toml").write_text(
         AGENTS.replace("{template}", TEMPLATE), encoding="utf-8"
     )
-    (docs / "agents-enabled").write_text(ROUTE + "\n", encoding="utf-8")
+    (docs / "agents-enabled").write_text(ENTRY + "\n", encoding="utf-8")
     (tmp_path / "brief.md").write_text("judge the amendment", encoding="utf-8")
     return tmp_path
 
@@ -134,13 +144,14 @@ def _inputs(tmp_path, dial=50):
 def launched(monkeypatch, tmp_path):
     """The launch and the telemetry commit replaced: each launch writes a
     valid amendment verdict and returns the queued stream (10% by default).
-    The retained Claude home's long-lived token is a canary file outside the
-    repository (WI-846; tests/test_adjudicator_token.py tests it)."""
+    The adjudicator account's long-lived token is a canary file outside the
+    repository (WI-846, bound to the account by WI-798;
+    tests/test_adjudicator_token.py tests it)."""
     seen = {"argv": [], "env": [], "streams": []}
     token = tmp_path / "token" / "claude-token"
     token.parent.mkdir()
     token.write_text("canary-token", encoding="utf-8")
-    monkeypatch.setenv(svc.TOKEN_VARIABLES["ANTHROPIC"][0], str(token))
+    monkeypatch.setenv("AGENT_CLAUDE_TOKEN_FILE", str(token))
 
     def run(argv, root, timeout, **kw):
         seen["argv"].append(list(argv))
@@ -158,7 +169,11 @@ def launched(monkeypatch, tmp_path):
 def _signed_in(monkeypatch, status="signed-in"):
     calls = []
     monkeypatch.setattr(
-        svc, "signin_status", lambda root, family: calls.append(family) or status
+        svc,
+        "signin_status",
+        lambda root, account, **k: (
+            calls.append(getattr(account, "id", account)) or status
+        ),
     )
     return calls
 
@@ -195,7 +210,7 @@ def _adjudicate(root, wi="WI-1", *extra, brief="amendment"):
 
 
 def _state(root):
-    return keep.store_load(root, "ANTHROPIC", ROUTE)
+    return keep.store_load(root, "ANTHROPIC", ROUTE, account=ACCOUNT)
 
 
 # --- the coordinator route (TC-321) ---------------------------------------------
@@ -214,9 +229,12 @@ def test_a_second_coordinator_adjudication_resumes_the_first(
     record = _state(root)
     assert record["session_id"] == minted and record["generation"] == 1
     assert record["judged"] == ["WI-1"] and "lease" not in record
-    # the retained launch runs under the dedicated home, in the primary store
-    home = keep.store_dir(root) / "home" / "anthropic"
-    assert launched["env"][0]["CLAUDE_CONFIG_DIR"] == str(home)
+    # the retained launch runs under the adjudicator ACCOUNT's home (WI-798),
+    # outside the checkout, created empty for a token account; the retired
+    # per-family home under the store is never created
+    home = keep.account_home(ACCOUNT)
+    assert launched["env"][0]["CLAUDE_CONFIG_DIR"] == str(home) and home.is_dir()
+    assert not (keep.store_dir(root) / "home").exists()
     out = capsys.readouterr().out
     assert "VERDICT: MEANING rows=SR-1" in out
 
@@ -296,12 +314,13 @@ def _loop_ctx(root, templates=None, timeout=60):
     """A loop context whose registry, the snapshot the loop selects from,
     holds the repository's rows (when the root has them) and LOOP_ROW."""
     agents = Path(root) / "docs" / "agents.toml"
-    registry = cli.agent_route.load_registry(agents)[0] if agents.exists() else {}
+    registry = cli.agent_route.load_registry(agents)[0]  # absent: empty
+    registry[LOOP_ROW.id] = LOOP_ROW  # its accounts stay with it (WI-798)
     return SimpleNamespace(
         root=root,
         prompt_templates=templates or {},
         args=SimpleNamespace(session_timeout=timeout),
-        registry={**registry, LOOP_ROW.id: LOOP_ROW},
+        registry=registry,
     )
 
 
@@ -342,6 +361,7 @@ def test_the_loop_composes_the_same_keep_request_as_before(
             "role": "ADJUDICATE",
             "brief": "disposition",
             "scope": "",  # WI-887: an adjudication is kept under no scope
+            "account": None,  # WI-798: an unqualified entry, the ambient login
             "wi": "WI-7",
             "rows": {},
             # ...and the tier questions' home, which the amendment brief
@@ -405,8 +425,14 @@ def test_the_identity_covers_the_act_brief_for_an_actable_retained_class():
 # --- the sign-in probe (TC-323) ----------------------------------------------------
 
 
-def _home(root, family):
-    home = keep.store_dir(root) / "home" / family.lower()
+# The probe reads a LOGIN account's own home (WI-798, re-pointed from the
+# retired per-family home): a codex account, the documented answers its status
+# command gives.
+CODEX = cli.agent_route.Account("CODEXACCT", "codex")
+
+
+def _home(root, account="CODEXACCT"):
+    home = keep.account_home(account)
     home.mkdir(parents=True)
     return home
 
@@ -428,48 +454,52 @@ def _home(root, family):
 def test_the_probe_reports_signed_in_missing_or_unknown(
     tmp_path, family, code, text, expected
 ):
-    home = _home(tmp_path, family)
+    home = _home(tmp_path)
     seen = []
 
     def run(argv, env):
         seen.append((argv, env))
         return code, text
 
-    assert svc.signin_status(tmp_path, family, run=run) == expected
+    assert svc.signin_status(tmp_path, CODEX, run=run) == expected
     argv, env = seen[0]
-    assert argv[:2] == ["codex", "login"]  # Claude's home reads its token file
+    assert argv[:2] == ["codex", "login"]  # a token account reads its file
     assert argv[-1] == "status"
-    variable = keep.HOME_VARIABLES[family]
-    assert env[variable] == str(home)
+    assert env["CODEX_HOME"] == str(home)  # its own home, nobody else's
 
 
 @pytest.mark.parametrize("error", [OSError, TimeoutError, ValueError])
 def test_a_probe_that_fails_or_times_out_reports_unknown(tmp_path, error):
-    _home(tmp_path, "OPENAI")
+    _home(tmp_path)
 
     def run(argv, env):
         raise error("boom")
 
-    assert svc.signin_status(tmp_path, "OPENAI", run=run) == "unknown"
+    assert svc.signin_status(tmp_path, CODEX, run=run) == "unknown"
 
 
 def test_the_probe_resolves_the_home_without_creating_it(tmp_path):
     ran = []
-    status = svc.signin_status(
-        tmp_path, "ANTHROPIC", run=lambda argv, env: ran.append(argv)
+    token = cli.agent_route.Account(
+        ACCOUNT, "claude", token_file_variable="AGENT_CLAUDE_TOKEN_FILE"
     )
-    assert status == "missing" and ran == []
+    status = svc.signin_status(tmp_path, token, run=lambda argv, env: ran.append(argv))
+    assert status == "missing" and ran == []  # the variable is unset
     assert not keep.store_dir(tmp_path).exists()
-    variable, home = keep.dedicated_home(tmp_path, "OPENAI")
-    assert variable == "CODEX_HOME" and not home.exists()
-    assert keep.dedicated_home(tmp_path, "OPENCODE") is None
+    login = svc.signin_status(tmp_path, CODEX, run=lambda argv, env: ran.append(argv))
+    assert login == "missing" and ran == []  # an absent home runs nothing
+    assert not keep.account_home("CODEXACCT").exists()  # and creates nothing
+    opencode = cli.agent_route.Account("OC", "opencode")
+    keep.account_home("OC").mkdir(parents=True)
+    assert svc.signin_status(tmp_path, opencode) == "unknown"  # no status command
 
 
 def test_the_signin_command_prints_the_probe_result(tmp_path, monkeypatch, capsys):
+    root = _inputs(tmp_path)
     _signed_in(monkeypatch, "missing")
-    code = cli.main(["signin", "--root", str(tmp_path), "--family", "OPENAI"])
+    code = cli.main(["signin", "--root", str(root), "--route", ENTRY])
     out = capsys.readouterr().out
-    assert code == 0 and "OPENAI" in out and "missing" in out
+    assert code == 0 and "signin [ADJUDICATOR] token: missing" in out
 
 
 # --- the refusal (TC-324) ------------------------------------------------------------
@@ -485,7 +515,7 @@ def test_the_coordinator_route_refuses_a_retained_launch_not_signed_in(
     out = capsys.readouterr().out
     assert "dev-setup" in out and status in out
     assert launched["argv"] == []  # no launch, fresh or otherwise
-    assert not (keep.store_dir(root) / "home").exists()  # no home created
+    assert not (keep.store_dir(root) / "home").exists()  # no family home
     assert _state(root) is None  # no lease taken, nothing recorded
 
 
@@ -496,9 +526,7 @@ def test_the_loop_route_refuses_a_retained_launch_not_signed_in(
     al = load_script("agent_loop")
     root = _repo(tmp_path)
     monkeypatch.setattr(al.session_service, "cli_version", lambda *a, **k: "")
-    monkeypatch.setattr(
-        al.session_service, "signin_status", lambda root, family: status
-    )
+    monkeypatch.setattr(al.session_service, "signin_status", lambda *a, **k: status)
     ran = []
     monkeypatch.setattr(al.session_service, "act", lambda *a, **k: ran.append(a))
     ctx = _loop_ctx(root)
@@ -506,7 +534,7 @@ def test_the_loop_route_refuses_a_retained_launch_not_signed_in(
     ctx.worker = {"train": "t"}
     ctx.use_live = False
     ctx.args.no_session_echo = True
-    plan = dict(PLAN, route_id=ROUTE, session_env=None)
+    plan = dict(PLAN, route_id=ROUTE, entry=ENTRY, session_env=None)
     assert al.launch_session(ctx, plan, "WI-1") == al.EXIT_NEEDS_HUMAN
     assert ran == []
     out = capsys.readouterr().out
@@ -514,9 +542,9 @@ def test_the_loop_route_refuses_a_retained_launch_not_signed_in(
 
 
 def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
-    """The probe guards only a launch whose keep carries a dedicated home: at
-    the off dial, or for a brief class the dial does not retain, nothing is
-    probed and the call launches fresh as before."""
+    """The probe guards only a retained launch: at the off dial, or for a
+    brief class the dial does not retain, nothing is probed and the call
+    launches fresh as before."""
     calls = _signed_in(monkeypatch, "missing")
     root = _repo(tmp_path, dial=0)
     assert _adjudicate(root) == 0
@@ -528,9 +556,18 @@ def test_an_unretained_call_is_never_probed(tmp_path, monkeypatch, launched):
 
 
 def test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route():
-    assert cli.DEFAULT_ROUTE == ROUTE
-    registry = cli.agent_route.load_registry(ROOT / "docs" / "agents.toml")[0]
+    """WI-798: the default is the strong Anthropic route on the declared
+    token account ADJUDICATOR, and this repository's own registry and enable
+    list resolve it (its table names the OI-110 (b) variable)."""
+    assert cli.DEFAULT_ROUTE == ENTRY
+    registry, why = cli.resolve_route(ROOT, cli.DEFAULT_ROUTE)
+    assert why is None
     assert registry[ROUTE].family == "ANTHROPIC" and registry[ROUTE].tier == "strong"
+    account = cli.agent_route.account_of(registry, cli.DEFAULT_ROUTE)
+    assert (account.cli, account.token_file_variable) == (
+        "claude",
+        "AGENT_CLAUDE_TOKEN_FILE",
+    )
 
 
 # --- round 2 (Sol r1): the probe recognises only documented answers (TC-323) ----
@@ -551,8 +588,8 @@ def test_the_shipped_entry_point_defaults_to_the_strong_anthropic_route():
     ],
 )
 def test_an_undocumented_probe_answer_is_unknown(tmp_path, family, code, text):
-    _home(tmp_path, family)
-    assert svc.signin_status(tmp_path, family, run=lambda a, e: (code, text)) == (
+    _home(tmp_path)
+    assert svc.signin_status(tmp_path, CODEX, run=lambda a, e: (code, text)) == (
         "unknown"
     )
 
@@ -821,7 +858,7 @@ def test_an_operator_override_still_drains_the_session(tmp_path, monkeypatch, la
     _adjudicate(root, "WI-1", brief="amendment")
     assert _state(root)["state"] == "active"
     ctx = _loop_ctx(root, {"ADJUDICATE-AMENDMENT": "an override brief"})
-    plan = dict(PLAN, brief="amendment", route_id=ROUTE, session_env=None)
+    plan = dict(PLAN, brief="amendment", route_id=ROUTE, entry=ENTRY, session_env=None)
     assert al.adjudication_keep(ctx, plan, "WI-1") is not None
     record = _state(root)
     assert record["state"] == "draining"
@@ -831,11 +868,10 @@ def test_an_operator_override_still_drains_the_session(tmp_path, monkeypatch, la
 def test_a_family_with_no_dedicated_home_passes_require_signin_unprobed(
     tmp_path, monkeypatch
 ):
-    """Pins existing behaviour: opencode has no dedicated home, so nothing
-    is probed and nothing is refused."""
+    """Re-pointed by WI-798: an ambient entry (no account) has no kit-held
+    home and no sign-in gate, so nothing is probed and nothing is refused."""
     calls = _signed_in(monkeypatch, "missing")
-    assert "OPENCODE" not in keep.HOME_VARIABLES
-    assert svc.require_signin(tmp_path, "OPENCODE") is None
+    assert svc.require_signin(tmp_path, SimpleNamespace(account=None)) is None
     assert calls == []
 
 
@@ -962,3 +998,20 @@ def test_a_retained_reviewers_identity_is_its_own_template(tmp_path, monkeypatch
         _keep_request_templates(monkeypatch, tmp_path, "ADJUDICATE", overridden)
         == adjudication
     )
+
+
+def test_the_adjudicator_resolves_its_enabled_entry(tmp_path, monkeypatch):
+    """WI-798: `--route` names an enable-list entry. The row is read through
+    the entry's route, the account through its qualifier, and consent is the
+    entry's own line: the qualified line never consents to the unqualified
+    entry, and an unqualified entry is its route id."""
+    root = _inputs(tmp_path)
+    registry, why = cli.resolve_route(root, ENTRY)
+    assert why is None and cli.agent_route.entry_route(ENTRY) == ROUTE
+    assert registry[ROUTE].id == ROUTE
+    assert cli.agent_route.account_of(registry, ENTRY).id == ACCOUNT
+    registry, why = cli.resolve_route(root, ROUTE)
+    assert registry is None and "not named on docs/agents-enabled" in why
+    (root / "docs" / "agents-enabled").write_text(ROUTE + "\n", encoding="utf-8")
+    registry, why = cli.resolve_route(root, ROUTE)
+    assert why is None and cli.agent_route.account_of(registry, ROUTE) is None

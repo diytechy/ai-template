@@ -7,6 +7,7 @@ scaffold in a temp dir and run the actual commands.
 """
 
 import collections
+import hashlib
 import importlib.util
 import os
 import shutil
@@ -1297,6 +1298,18 @@ def _no_owner_token_file(monkeypatch):
     canary file of its own."""
     monkeypatch.delenv("AGENT_CLAUDE_TOKEN_FILE", raising=False)
     monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _no_owner_account_homes(monkeypatch, tmp_path_factory, request):
+    """WI-798: account homes live under the user configuration directory
+    (`%APPDATA%` on Windows, `$XDG_CONFIG_HOME` on POSIX), shared by every
+    repository on the box. No test reads, or creates a home in, the owner's
+    real one: each test gets a temporary one of its own, named under the
+    basetemp and created only if something writes there."""
+    tag = hashlib.sha256(request.node.nodeid.encode("utf-8")).hexdigest()[:16]
+    base = tmp_path_factory.getbasetemp() / "user-config" / tag
+    monkeypatch.setenv("APPDATA" if os.name == "nt" else "XDG_CONFIG_HOME", str(base))
 
 
 @pytest.fixture

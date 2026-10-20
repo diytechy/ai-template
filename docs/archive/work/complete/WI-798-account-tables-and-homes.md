@@ -2,13 +2,43 @@
 id = "WI-798"
 title = "Account tables and per-account homes for every CLI route"
 workstream = "process"
-specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-accounts"
+specref = ""
 sr_refs = ["SR-222"]
 needs = ["WI-797", "WI-834", "WI-887"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-20, after its gate, in a headless leg:
+
+- `docs/agents.toml` declares `[account.<ID>]` tables (`cli`, `notes`, an
+  optional `env`, an optional `token_file_variable`, `verified`), and the
+  enable list names a `ROUTE@ACCOUNT` entry. Malformed tables and qualifiers,
+  an unreadable enable list, a route env declaring its CLI's home variable
+  and a route or account declaring a competing credential source are named
+  errors, never an ambient or unqualified fallback.
+- Each account has its own home outside every checkout, under the user
+  configuration directory; the per-family home is gone. A qualified launch
+  withholds every ambient source its CLI ranks above the account's own home
+  or token, and a qualified OpenCode launch composes from a declared base of
+  platform variables plus the kit-owned names it inherits, never the ambient
+  environment. An unqualified entry keeps today's environment.
+- The enable-list entry is the identity selection, preference, cooldowns,
+  planners and retained records carry; a record lacking or naming another
+  account re-mints once. A route's CLI is read through the launcher's one
+  template parse.
+- This repository's adjudicator runs on the declared token account
+  ADJUDICATOR through the qualified entry `ANTHROPIC-OPUS-STRONG@ADJUDICATOR`,
+  for its sittings and its act turns alike; the sign-in probe and dev-setup
+  report the account, and an unverified non-ambient Claude login is printed,
+  not refused. The two-login half of the isolation check is WI-908's (OI-114).
+- The spine: LLR-336 and TC-361..366 approved; LLR-044, LLR-072, LLR-266..268,
+  LLR-270, LLR-305, LLR-306, LLR-321, TC-267, TC-321, TC-323, TC-324, TC-330
+  and TC-344 re-attested (verdict 017). The RESYNC entry states the migration.
+  Lane log: `docs/log.d/WI-798-account-tables-and-homes.md`.
 
 ## Context
 

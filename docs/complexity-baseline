@@ -17,7 +17,6 @@ project-trajectory/scripts/agent_loop.py	seconds_until_reset	18	30
 project-trajectory/scripts/agent_route.py	_rows_from_csv	17	34
 project-trajectory/scripts/agent_route.py	escalate	16	72
 project-trajectory/scripts/agent_route.py	load_registry	24	65
-project-trajectory/scripts/agent_route.py	main	16	62
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
 project-trajectory/scripts/assumption_rules.py	_classify	16	24	2026-10-03, WI-723 (3b872471): joint-delivery classification adds sibling-reference validation and class precedence to the sole classification parse (crossing to 16); WI-729 (17c54c2f) adds shared-need validation at the same score, so a declared sibling alone cannot establish joint delivery.
 project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	20	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
@@ -117,7 +116,7 @@ project-trajectory/scripts/plan_coverage.py	find_cycle	17	28
 project-trajectory/scripts/plan_round.py	_advance	18	18
 project-trajectory/scripts/plan_round.py	ready_steps	22	35
 project-trajectory/scripts/plan_round.py	record	61	90
-project-trajectory/scripts/plan_runner.py	run_dual_plan_round	95	311
+project-trajectory/scripts/plan_runner.py	run_dual_plan_round	90	292
 project-trajectory/scripts/rejudge.py	due_cases	16	32	ABSORBED FROM TRUNK at the WI-657 integration (2026-09-27), not introduced by it: this new row came with WI-638 (f7885a49), which landed while the ratchet was red. SR-215's checkpoint decides each observation case's due-ness from four independent conditions (no result, expired, inputs moved, link exclusion) over one snapshot. Repair is owed on trunk: the conditions are a table of predicates.
 project-trajectory/scripts/rendering/traj_graph.py	_dag_ranks	22	22	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_graph.py	_detour_d	23	44	-10 (33 -> 23) 2026-10-03, WI-758: the lane-separation router's helpers take the detour's obstacle and gap logic; re-stamped downward.

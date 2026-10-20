@@ -74,11 +74,11 @@ the per-family form is planned.
 
 ### account
 
-**Planned.** A declared login of one CLI, with its own **home** (the CLI's
-configuration and credential directory) outside every checkout. A route runs
-under an account as `ROUTE@ACCOUNT`, so a second login needs no second registry
-row. **Today:** a second account is a second registry row whose `env` points
-the CLI at another home (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`).
+A declared login of one CLI, an `[account.<ID>]` table in the model
+registry, with its own **home** (the CLI's configuration and credential
+directory) under the user configuration directory, outside every checkout. A
+route runs under an account as `ROUTE@ACCOUNT`, so a second login needs no
+second registry row; an unqualified entry runs under the person's own login.
 
 ### strength
 

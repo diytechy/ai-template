@@ -515,16 +515,31 @@ def test_resolve_token_unresolvable(tmp_path):
 
 
 def test_acct2_row_cools_down_independently(tmp_path):
-    # A second account is a second pair row with a distinct id -> its cooldown is
-    # independent by construction (ruling 12): cool the primary, the acct2 stays
-    # available and select() falls to it.
-    reg, _ = _pair_registry(tmp_path)
-    enabled = ["ANTHROPIC-OPUS-4.9", "ANTHROPIC-OPUS-4.9-ACCT2"]
+    # A second account is an account table and a qualified entry (WI-798,
+    # README change 21, retiring "a second account is a second pair row"); its
+    # entry is its own cooldown key, so cooling the primary leaves the second
+    # account available and select() falls to it (ruling 12, re-pointed).
+    p = tmp_path / "agents.toml"
+    p.write_text(
+        '[agent."ANTHROPIC-OPUS-4.9"]\nfamily = "ANTHROPIC"\nmodel = "opus"\n'
+        'version = "4.9"\ntier = "strong"\ncmd_template = "claude -p --model {model}"\n'
+        '\n[account.ACCT2]\ncli = "claude"\nnotes = "second paid plan"\n',
+        encoding="utf-8",
+    )
+    reg, errors = route.load_registry(p)
+    assert errors == []
+    enabled, errors = route.resolve_enabled(
+        ["ANTHROPIC-OPUS-4.9", "ANTHROPIC-OPUS-4.9@ACCT2"], reg
+    )
+    assert errors == [] and enabled == [
+        "ANTHROPIC-OPUS-4.9",
+        "ANTHROPIC-OPUS-4.9@ACCT2",
+    ]
     cooldowns = {}
     route.cool(cooldowns, "ANTHROPIC-OPUS-4.9", now=0.0, seconds=300)
-    assert route.available(cooldowns, "ANTHROPIC-OPUS-4.9-ACCT2", 10.0)
+    assert route.available(cooldowns, "ANTHROPIC-OPUS-4.9@ACCT2", 10.0)
     chosen, _ = route.select(enabled, reg, "strong", now=10.0, cooldowns=cooldowns)
-    assert chosen == "ANTHROPIC-OPUS-4.9-ACCT2"
+    assert chosen == "ANTHROPIC-OPUS-4.9@ACCT2"
 
 
 def test_router_row_is_not_diverse_from_its_native_sibling(tmp_path):
@@ -1327,3 +1342,68 @@ def test_winstay_invalid_next_primary_degrades_to_the_weighted_draw(tmp_path):
             pool, reg, "strong", preferred_ids=list(pref), weights=weights, counter=0
         )
         assert chosen in pool and "selected" in reason  # a real draw, no wedge
+
+
+# --- WI-798: the selected enable-list ENTRY is the identity ----------------- #
+# Resolution, selection, preference and cooldowns carry the entry the loader
+# produced, and read a registry row only through `entry_route`. An unqualified
+# entry's key equals its route id; a qualified one (`ROUTE@ACCOUNT`) differs
+# from its route, so a consumer that took the entry for the route id, or keyed
+# a cooldown on the route, would fail here. (Unit (b) pinned this with a
+# stand-in key; units (a)+(c) made the qualifier real.)
+
+
+def test_an_unqualified_entry_is_keyed_by_its_route_id(tmp_path):
+    reg, _ = _registry(tmp_path)
+    # An exact id and a version-less Family-Model token each yield one entry.
+    entries, errors = route.resolve_enabled(["OPENAI-GPT-5.2", "ANTHROPIC-OPUS"], reg)
+    assert errors == []
+    assert entries == ["OPENAI-GPT-5.2", "ANTHROPIC-OPUS-4.8"]
+    assert [route.entry_route(e) for e in entries] == entries
+
+
+def test_cooldowns_key_on_the_entry_not_its_route(tmp_path, monkeypatch):
+    reg, _ = _registry(tmp_path)
+    enabled = ["OPENAI-GPT-5.2@W", "OPENAI-GPT-5.2@P"]  # two entries, one route
+    cooldowns = {}
+    route.cool(cooldowns, "OPENAI-GPT-5.2@W", now=0.0, seconds=300)
+    assert cooldowns == {"OPENAI-GPT-5.2@W": 300.0}
+    assert not route.available(cooldowns, "OPENAI-GPT-5.2@W", 10.0)
+    assert route.available(cooldowns, "OPENAI-GPT-5.2@P", 10.0)
+    chosen, reason = route.select(enabled, reg, "strong", now=10.0, cooldowns=cooldowns)
+    assert chosen == "OPENAI-GPT-5.2@P", reason
+    pool = route.pool_context(enabled, reg, cooldowns, 10.0)
+    assert "OPENAI-GPT-5.2@W [strong, OPENAI] cooling" in pool
+    assert "OPENAI-GPT-5.2@P [strong, OPENAI] available" in pool
+
+
+def test_selection_and_preference_return_entries(tmp_path, monkeypatch):
+    reg, _ = _registry(tmp_path)
+    enabled = ["ANTHROPIC-OPUS-4.8@W", "OPENAI-GPT-5.2@W", "OPENAI-GPT-5.2@P"]
+    pin = route.select(enabled, reg, "strong", preferred_ids=["OPENAI-GPT-5.2@P"])
+    assert pin[0] == "OPENAI-GPT-5.2@P"
+    different = route.select(
+        enabled, reg, "strong", exclude_families=["ANTHROPIC"], prefer_different=True
+    )
+    assert different[0] == "OPENAI-GPT-5.2@W"
+    assert route.winstay_preferred_ids("OPENAI", enabled, reg) == (
+        "OPENAI-GPT-5.2@W",
+        "OPENAI-GPT-5.2@P",
+    )
+
+
+def test_planner_sessions_carry_their_entry(tmp_path, monkeypatch):
+    reg, _ = _registry(tmp_path)
+    enabled = ["ANTHROPIC-OPUS-4.8@W", "OPENAI-GPT-5.2@W"]
+    pair = route.planner_pair(enabled, reg, "strong")
+    assert pair.reason == route.PAIR_TWO_FAMILY
+    a, b = pair.sessions
+    assert (a.entry, a.model_id, a.family) == (
+        "ANTHROPIC-OPUS-4.8@W",
+        "ANTHROPIC-OPUS-4.8",
+        "ANTHROPIC",
+    )
+    assert (b.entry, b.model_id) == ("OPENAI-GPT-5.2@W", "OPENAI-GPT-5.2")
+    fb = route.planner_fallback(a, enabled, reg, "strong")
+    assert fb.reason == route.PAIR_RUNTIME_FALLBACK
+    assert [s.entry for s in fb.sessions] == ["OPENAI-GPT-5.2@W"] * 2

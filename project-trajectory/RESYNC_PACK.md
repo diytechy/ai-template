@@ -9070,6 +9070,163 @@ longer exists. An older, unmatched group keeps working: it runs the guard on
 every tool, which costs time and refuses nothing it should not. No registry,
 setting or record format changes.
 
+### Accounts and per-account homes: route config moves to account tables (WI-798) [since 9c4971543]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.**
+
+- **Accounts are tables, not rows.** A second account of one CLI is an
+  `[account.<ID>]` table in `docs/agents.toml` (`cli`: `claude`, `codex`,
+  `opencode` or `gemini`; `notes`; an optional `env`; an optional
+  `token_file_variable`, the environment VARIABLE that names the account's
+  long-lived token file, never a path; `verified`, `"<date> <cli version>"`
+  once the login-isolation check passed) named by a qualified enable-list
+  entry `ROUTE@ACCOUNT`. "A second account is a second pair row" is retired;
+  a router is still a second row. An unqualified entry runs under your own
+  ambient login with the route's env, exactly as before.
+- **The entry is the identity.** `scripts/agent_route.py` parses the tables
+  and qualifiers (the only module that does), and the entry, not the bare
+  route id, is what selection, preference, cooldowns and the planner pair
+  carry; `entry_route(entry)` names its row and `account_of(registry, entry)`
+  its account. A malformed table (no `cli`, an unknown `cli` or key, a
+  non-string value, an id outside `[A-Z0-9][A-Z0-9-]*` or equal to a Windows
+  device name, an `env` naming its own CLI's home variable, a token variable
+  another account also names as the platform resolves it (case-insensitively
+  on Windows, so every account sharing it is dropped), a malformed
+  `verified`) is a registry error and the table is dropped; a malformed qualifier (an empty side, two `@`, an
+  undeclared account, an account of another CLI) is an enable-list error,
+  never stripped to the unqualified entry; a route env that names its CLI's
+  home variable under an account, or a name both the route and the account
+  env declare, is refused. `PlannerSession` holds `entry` (its constructor's
+  second argument is renamed from `model_id` to `entry`; `model_id` is a
+  read-only property naming the entry's route).
+- **One launch-environment rule, and per-account homes.** Every launch site
+  (the loop's worker launch and liveness probe, the dual-plan hats, the
+  coordinator's adjudication, retained launches, the version and sign-in
+  probes, keep-warm) composes one environment
+  (`scripts/session_service.py`): the ambient environment, the route's env,
+  the account's env, then the account home's variables
+  (`scripts/session_adapters.py` `HOME_VARIABLES`: claude
+  `CLAUDE_CONFIG_DIR`, codex `CODEX_HOME`, opencode `XDG_DATA_HOME` and
+  `OPENCODE_CONFIG`, gemini `GEMINI_CLI_HOME`). An account's home is
+  `<user config dir>/project-trajectory/accounts/<ID>/` (`%APPDATA%` on
+  Windows; `$XDG_CONFIG_HOME`, else `~/.config`, on POSIX), outside every
+  checkout. The kit creates a token account's home, empty, and never a login
+  account's: you provision that (with `CODEX_HOME` set to the home, run
+  `codex login`; with `CLAUDE_CONFIG_DIR` set to it, run `claude auth
+  login`), and a launch on a login account whose home is absent is refused
+  naming the variables, their values and the sign-in command, in prose
+  rather than one shell's syntax.
+- **A qualified launch carries only its account's credential.** Under a
+  declared account the launch and its version and sign-in probes inherit no
+  ambient variable its CLI ranks above the account's home login or token
+  (`session_service.COMPETING_CREDENTIALS`: claude's cloud-provider switches,
+  `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`,
+  `ANTHROPIC_PROFILE` and `ANTHROPIC_FEDERATION_RULE_ID`; codex
+  `CODEX_API_KEY` and `OPENAI_API_KEY`; gemini `GOOGLE_GENAI_USE_VERTEXAI`,
+  `GOOGLE_GEMINI_BASE_URL`, `GEMINI_API_KEY`, `CLOUD_SHELL`,
+  `GEMINI_CLI_USE_COMPUTE_ADC`, `GOOGLE_API_KEY` and
+  `GOOGLE_APPLICATION_CREDENTIALS`); a token account re-adds only its own
+  token. An account `env` or a qualified
+  route `env` that declares one is refused before launch, naming it.
+  opencode's credential sources are open-ended (any model-catalog
+  provider's variable, each provider SDK's default key, and
+  `OPENCODE_AUTH_CONTENT` in place of the home's `auth.json`), so a
+  qualified opencode launch does not inherit the ambient environment at all:
+  it starts from a declared base (`session_service.BASE_ENVIRONMENT`: the
+  path, system and user directories, temporary directory, terminal and
+  locale, and `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY` and their lower-case
+  forms, `SSL_CERT_FILE`, `SSL_CERT_DIR` and `NODE_EXTRA_CA_CERTS`), then
+  the route's and the account's declared pairs and the account home. A
+  qualified opencode route or account `env` that declares
+  `OPENCODE_AUTH_CONTENT` is refused before launch, as the other CLIs'
+  competing sources are.
+  **Action:** a qualified opencode route that relied on an ambient variable
+  outside that base, a provider key included, fails until you declare it in
+  the route's or the account's `env`. An
+  unqualified entry inherits the ambient environment exactly as before,
+  route env included.
+- **The per-family home retires.** Retention no longer moves a call to
+  `out/adjudicator/home/<family>/`; a retained call runs under its entry's
+  account home, or the ambient login for an unqualified entry. The retired
+  directory is left in place; the kit never reads, moves or deletes it, and
+  you may delete it yourself.
+- **The token binds to one account.** The OI-110 (b) long-lived token no
+  longer belongs to the ANTHROPIC family (`session_service.TOKEN_VARIABLES` is
+  gone): it authenticates exactly the account whose `token_file_variable`
+  names the variable locating its file, on every launch of that account.
+- **The retained record gains `account`.** Its identity is family, route,
+  account and scope (IF-247). Every record written before this change lacks
+  `account`, so it reads as not its own and the next retained launch mints a
+  fresh session, ONCE; a record of another account is never resumed.
+- **The adjudicator runs on a declared account.**
+  `scripts/coordinator_adjudicate.py`'s default entry is
+  `ANTHROPIC-OPUS-STRONG@ADJUDICATOR`, and it refuses a registry error, an
+  undeclared account or an `agents-enabled` that cannot be read (all
+  discarded before). `signin` takes `--route` (default the adjudicator's
+  entry) instead of `--family`, and prints
+  `signin [<ACCOUNT>] <token|login>: <status>` (or `signin [-] ambient:
+  ambient`, `signin [-] retained: off`, `signin [-] unresolved: unknown`);
+  dev-setup reads that line, offers `claude setup-token` only for a token
+  account reading missing, for a login account names the variables and the
+  sign-in command that provision it and runs nothing, and reports an unresolved entry as
+  missing, with the probe's reason and step 3 below as the remedy.
+- **An unreadable `docs/agents-enabled` is an error,** never routing off:
+  the loop fails preflight, the dual-plan round pages, the adjudicator
+  refuses. An unverified login-authenticated Claude account (an empty
+  `verified`) is printed at preflight and by `signin`, never refused.
+
+**Kit-owned files — overwrite:** `scripts/agent_route.py`,
+`scripts/agent_loop.py`, `scripts/plan_runner.py`,
+`scripts/coordinator_adjudicate.py`, `scripts/session_service.py`,
+`scripts/session_keep.py`, `scripts/session_adapters.py`,
+`scripts/dev-setup.template.ps1` and `.sh` (as your `scripts/dev-setup.*`
+when you never filled their install slots; else carry the sign-in block into
+yours), `agents.template.toml` (reference: your `docs/agents.toml` is yours),
+`process.toml.template`, `GLOSSARY.md`, `PROCESS_OPTIONS.md`.
+
+**What to do.**
+
+1. Overwrite the kit-owned files.
+2. **Move each second-account row to an account table.** For a row that
+   differs from its sibling only in the env selecting another home (for
+   example `CLAUDE_CONFIG_DIR=~/.claude-work` or `CODEX_HOME=...`), delete the
+   row, add `[account.<ID>]` with that row's CLI as `cli` and any other env
+   pairs as `env` (never the home variable, nor a credential variable its
+   CLI ranks above the account's own), and replace its enable-list line
+   with `<sibling route>@<ID>`; the `<ID>` is `[A-Z0-9][A-Z0-9-]*` and not a
+   Windows device name. Move or sign in the account's credentials
+   under its new home yourself; the kit never copies them.
+3. **Declare the coordinator's adjudicator account, or pass `--route`.**
+   The coordinator's default entry, `ANTHROPIC-OPUS-STRONG@ADJUDICATOR`, is
+   refused until both its sides resolve, whatever your retention: its route
+   side must be a row of your own `docs/agents.toml` (the template ships no
+   `ANTHROPIC-OPUS-STRONG` row) and its account must be declared. Declare
+   the account, for example `[account.ADJUDICATOR]` with `cli = "claude"`
+   and, if your retained adjudicator used the long-lived token (OI-110 (b)),
+   `token_file_variable = "AGENT_CLAUDE_TOKEN_FILE"` with the variable kept
+   set (the template ships it commented). Add
+   `<your strong Anthropic route>@ADJUDICATOR` to `docs/agents-enabled`
+   (weight it `BUILD=0 REVIEW=0 CRITIQUE=0 DESIGN-CHECK=0 ADJUDICATE=0` to
+   hold it out of the loop's weighted draws; a win-stay or phase pin still
+   reaches it, as does a draw where it is the last legal candidate), and
+   pass that entry with `--route`, unless your route's id is
+   `ANTHROPIC-OPUS-STRONG`. Or pass `--route <your entry>` to run the
+   adjudicator on any enabled entry.
+4. **Expect one re-mint** of every retained session at its next call, and
+   leave or delete `out/adjudicator/home/` as you like.
+5. Code that constructs `PlannerSession(..., model_id=...)` by keyword passes
+   `entry=` instead; code that read `session_keep.HOME_VARIABLES`,
+   `dedicated_home`, `dedicated_home_env`, `session_service.TOKEN_VARIABLES`
+   or `route_env`, or called `signin_status(root, family)` /
+   `require_signin(root, family)`, moves to `session_adapters.HOME_VARIABLES`,
+   `session_keep.account_home`, `session_service.launch_env` /
+   `entry_env`, `signin_status(root, account)` and
+   `require_signin(root, prepared)`. A login-authenticated Claude account
+   stays unverified (printed) until its login-isolation check passes and its
+   `verified` cell is set.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

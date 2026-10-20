@@ -1151,7 +1151,12 @@ def test_the_loop_records_a_failed_calls_verdict_failed(tmp_path, code, timed_ou
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
     _write(lane, _VERDICT_REL, line)
     _commit(lane, "the verdict, committed before the call failed")
-    plan = {"brief": "done-when", "verdict_path": lane / _VERDICT_REL, "route_id": "r"}
+    plan = {
+        "brief": "done-when",
+        "verdict_path": lane / _VERDICT_REL,
+        "entry": "r",
+        "route_id": "r",
+    }
     ctx = SimpleNamespace(
         root=lane,
         worker={"adjudication_owed": ""},
@@ -1196,7 +1201,12 @@ def test_a_call_reporting_an_error_is_failed_on_both_routes(tmp_path, monkeypatc
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
     _write(lane, _VERDICT_REL, line)
     _commit(lane, "the verdict, committed by a call that then reported an error")
-    plan = {"brief": "done-when", "verdict_path": lane / _VERDICT_REL, "route_id": "r"}
+    plan = {
+        "brief": "done-when",
+        "verdict_path": lane / _VERDICT_REL,
+        "entry": "r",
+        "route_id": "r",
+    }
     ctx = SimpleNamespace(
         root=lane,
         worker={"adjudication_owed": ""},

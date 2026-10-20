@@ -219,27 +219,51 @@ if [ "$TIER" = "full" ]; then
   report "IDE (VS Code 'code')" "$(have code && echo 1 || echo 0)" "install an editor; run again with --full to add extensions"
 fi
 
-# The retained adjudicator's sign-in (WI-834): with [adjudicator] retention on,
-# a retained Claude launch runs under its own dedicated home and authenticates
-# with the long-lived token in the file AGENT_CLAUDE_TOKEN_FILE names (WI-846),
-# refused before launch without one. Read through the kit's own readers (the
-# retention dial and the sign-in probe, coordinator_adjudicate.py signin
-# --retained) when a Python runtime exists, else unknown; reported only while
-# retention is on. dev-setup never reads, stores or prints the token.
+# The retained adjudicator's sign-in (WI-834, WI-798): with [adjudicator]
+# retention on, the adjudicator's entry runs under its declared account: a token
+# account authenticates with the long-lived token in the file its
+# token_file_variable names (WI-846), a login account with its own home. Read
+# through the kit's own readers (the retention dial and the sign-in probe,
+# coordinator_adjudicate.py signin --retained, which prints the account, its
+# kind and its reading) when a Python runtime exists, else unknown; reported
+# only while retention is on. dev-setup never reads, stores or prints the token.
 SIGNIN="unknown"
+SIGNIN_ACCOUNT="" SIGNIN_KIND="" SIGNIN_VAR="" SIGNIN_HINT="" SIGNIN_UNVERIFIED="" SIGNIN_WHY=""
 if [ -n "$PYBIN" ]; then
-  SIGNIN=$("$PYBIN" scripts/coordinator_adjudicate.py signin --retained --root . 2>/dev/null |
-    sed -n 's/^signin \[ANTHROPIC\]: //p')
+  SIGNIN_OUT=$("$PYBIN" scripts/coordinator_adjudicate.py signin --retained --root . 2>/dev/null) || SIGNIN_OUT=""
+  SIGNIN_ACCOUNT=$(printf '%s\n' "$SIGNIN_OUT" | sed -n 's/^signin \[\([^]]*\)\] [a-z]*: [a-z-]*.*$/\1/p' | head -n 1)
+  SIGNIN_KIND=$(printf '%s\n' "$SIGNIN_OUT" | sed -n 's/^signin \[[^]]*\] \([a-z]*\): [a-z-]*.*$/\1/p' | head -n 1)
+  SIGNIN=$(printf '%s\n' "$SIGNIN_OUT" | sed -n 's/^signin \[[^]]*\] [a-z]*: \([a-z-]*\).*$/\1/p' | head -n 1)
+  SIGNIN_VAR=$(printf '%s\n' "$SIGNIN_OUT" | sed -n 's/^signin \[[^]]*\]: token_file_variable //p' | head -n 1)
+  SIGNIN_HINT=$(printf '%s\n' "$SIGNIN_OUT" | sed -n 's/^signin \[[^]]*\]: provision it yourself: //p' | head -n 1)
+  SIGNIN_WHY=$(printf '%s\n' "$SIGNIN_OUT" | sed -n 's/^signin \[[^]]*\] unresolved: [a-z-]* (\(.*\))$/\1/p' | head -n 1)
+  case "$SIGNIN_OUT" in *"(unverified)"*) SIGNIN_UNVERIFIED=1 ;; esac
   [ -n "$SIGNIN" ] || SIGNIN="unknown"
 fi
-case "$SIGNIN" in
-  off) ;;
-  signed-in) say "  [ok]      retained adjudicator sign-in (AGENT_CLAUDE_TOKEN_FILE)" ;;
-  missing)
-    say "  [missing] retained adjudicator sign-in — run 'claude setup-token' once (offered by --baseline and a bare run), keep the token in a file outside the repository, and set AGENT_CLAUDE_TOKEN_FILE to that file"
+case "$SIGNIN_KIND:$SIGNIN" in
+  *:off) ;;
+  ambient:*) say "  [ok]      retained adjudicator sign-in (its entry runs on your own login; no account declared)" ;;
+  token:signed-in) say "  [ok]      retained adjudicator sign-in (account $SIGNIN_ACCOUNT, its token file)" ;;
+  login:signed-in)
+    if [ -n "$SIGNIN_UNVERIFIED" ]; then
+      say "  [ok]      retained adjudicator sign-in (account $SIGNIN_ACCOUNT, its own home) — UNVERIFIED: its login-isolation check has not passed"
+    else
+      say "  [ok]      retained adjudicator sign-in (account $SIGNIN_ACCOUNT, its own home)"
+    fi
+    ;;
+  token:missing)
+    say "  [missing] retained adjudicator sign-in (account $SIGNIN_ACCOUNT) — run 'claude setup-token' once (offered by --baseline and a bare run), keep the token in a file outside the repository, and set ${SIGNIN_VAR:-the variable its token_file_variable names} to that file"
     missing=$((missing + 1))
     ;;
-  *) say "  [unknown] retained adjudicator sign-in — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the token)" ;;
+  login:missing)
+    say "  [missing] retained adjudicator sign-in (account $SIGNIN_ACCOUNT) — sign it in yourself under its own home: $SIGNIN_HINT (nothing here runs it)"
+    missing=$((missing + 1))
+    ;;
+  unresolved:*)
+    say "  [missing] retained adjudicator sign-in — its entry does not resolve (${SIGNIN_WHY:-no reason given}): declare the adjudicator's account in docs/agents.toml and add its qualified entry to docs/agents-enabled, as RESYNC_PACK's accounts entry says, or run coordinator_adjudicate.py with --route <your entry>"
+    missing=$((missing + 1))
+    ;;
+  *) say "  [unknown] retained adjudicator sign-in — could not be read (it needs a Python 3.11+ runtime to read the retention dial and the adjudicator's account)" ;;
 esac
 
 # The coordinator's Claude Code hooks: shipped inert in
@@ -284,16 +308,18 @@ if [ "$TIER" = "check" ]; then
 fi
 
 # The one-time long-lived token step (WI-846's, shown only while retention is on
-# and the token is missing), consented. `claude setup-token` prints the token
-# once; the person keeps it in a file outside the repository and points
-# AGENT_CLAUDE_TOKEN_FILE at that file. Nothing here reads the token.
+# and a TOKEN account's token is missing; a login account is named its
+# provisioning command above and offered nothing), consented. `claude
+# setup-token` prints the token once; the person keeps it in a file outside the
+# repository and points the account's token_file_variable at that file.
+# Nothing here reads the token.
 offer_signin() {
-  { [ "$SIGNIN" = "missing" ] && have claude && interactive; } || return 0
+  { [ "$SIGNIN_KIND" = "token" ] && [ "$SIGNIN" = "missing" ] && have claude && interactive; } || return 0
   say
-  say "The retained adjudicator runs Claude under its own dedicated home, which signs"
+  say "The retained adjudicator runs Claude on its token account $SIGNIN_ACCOUNT, which signs"
   say "in with a long-lived token. The one-time 'claude setup-token' step mints that"
   say "token; you keep it in a file outside this repository, at the location you set"
-  say "AGENT_CLAUDE_TOKEN_FILE to. Your normal 'claude' login and every other"
+  say "${SIGNIN_VAR:-its token_file_variable} to. Your normal 'claude' login and every other"
   say "repository are left alone, and declining changes no configuration or credential."
   printf "Run 'claude setup-token' now? [y/N] "
   read -r ans || ans=""
@@ -301,7 +327,7 @@ offer_signin() {
     [Yy]*)
       claude setup-token || say "  [warn] claude setup-token did not finish; rerun it when ready."
       say "  Keep the printed token in a file outside this repository, then set"
-      say "  AGENT_CLAUDE_TOKEN_FILE to that file's path (e.g. in your shell profile)."
+      say "  ${SIGNIN_VAR:-its token_file_variable} to that file's path (e.g. in your shell profile)."
       ;;
     *) say "  - skipped the token step; nothing was changed" ;;
   esac

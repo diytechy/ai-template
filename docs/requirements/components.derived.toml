@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 306
+design_rows = 307
 seam_rows = 246
 requirements_placed = 126
 requirements_unplaced = 6
@@ -768,6 +768,7 @@ llr_refs = [
   "LLR-317",
   "LLR-318",
   "LLR-319",
+  "LLR-336",
   "LLR-337",
   "LLR-338",
   "LLR-339",
@@ -806,6 +807,8 @@ modules = [
   "project-trajectory/scripts/consolidate.py",
   "project-trajectory/scripts/coordinator_adjudicate.py",
   "project-trajectory/scripts/coordinator_guard.py",
+  "project-trajectory/scripts/dev-setup.template.ps1",
+  "project-trajectory/scripts/dev-setup.template.sh",
   "project-trajectory/scripts/dispatch.py",
   "project-trajectory/scripts/gen_open_items.py",
   "project-trajectory/scripts/gen_release_checklist.py",
@@ -851,6 +854,8 @@ modules = [
   "scripts/coordinator-relaunch.cmd",
   "scripts/coordinator-relaunch.sh",
   "scripts/coordinator/overnight_legs.py",
+  "scripts/dev-setup.ps1",
+  "scripts/dev-setup.sh",
 ]
 seam_internal_refs = [
   "IF-009",
@@ -1028,6 +1033,8 @@ seam_boundary_refs = [
   "IF-285",
   "IF-288",
   "IF-289",
+  "IF-292",
+  "IF-293",
 ]
 
 [component_view.CMP-009]
@@ -1217,6 +1224,7 @@ seam_boundary_refs = [
   "IF-034",
   "IF-035",
   "IF-037",
+  "IF-044",
   "IF-046",
   "IF-047",
   "IF-048",
