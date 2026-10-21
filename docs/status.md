@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-20d-leg06-coordinator.md](handoff-2026-10-20d-leg06-coordinator.md),
+  [handoff-2026-10-20e-attended-coordinator.md](handoff-2026-10-20e-attended-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -50,8 +50,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   coordinator-landing gap is the one-landing row's
   (owner, 2026-10-17). The
   disposition-adoption row was re-cut and closed partial at its rebuild's
-  plan cap: the cap's sitting ruled a FIX, which is the owner's to route,
-  and its minted disposition row waits on that choice. The
+  plan cap: the cap's sitting ruled a FIX, and the owner routed it to a
+  third plan revision with one confirming critique, which its minted
+  disposition row now carries. The trunk mint's settled-amendment filter
+  is filed as the first new build (owner, 2026-10-20), and the lane
+  lifecycle design's in-lane mint and station authority rows are
+  cancelled, its config-retirement row folded into item 10's program. The
   account-homes row has landed: the adjudicator runs on its declared
   token account through a qualified entry. The review gate's queue row is
   filed as four rows: its text row (test cases before the code in a lane)
