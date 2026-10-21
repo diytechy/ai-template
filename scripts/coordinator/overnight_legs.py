@@ -101,7 +101,7 @@ the lane itself, the range is empty, and the lane passes. No supported
 workflow produces either order (PROCESS.md §6). WI-925's declared name ends
 both.
 
-    python overnight_legs.py [--repo <checkout>] [--max-legs 6] [--dry-run]
+    python overnight_legs.py [--repo <checkout>] [--max-legs 10] [--dry-run]
     python overnight_legs.py check-lane <branch> [--repo <checkout>]
 
 `check-lane` runs the same lane rule over one branch at its tip, from the tip
@@ -502,7 +502,7 @@ def main(argv=None):
         return check_lane_main(argv[1:])
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", default=str(REPO))
-    ap.add_argument("--max-legs", type=int, default=6)
+    ap.add_argument("--max-legs", type=int, default=10)
     ap.add_argument("--model", default="claude-opus-5-5")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
