@@ -99,8 +99,14 @@ an unknown transcript shape.
    - A second ingest over the same transcript records only messages after
      the recorded cursor (a resumed transcript) or nothing (a repeated
      close-out), reading the logs already recorded, committed and spooled.
-   - WI-800's backfill then appends these logs like any other, keyed by
-     their invocation id.
+   - Each log also carries a contribution key, immutable and bound to
+     the message range it counted (the invocation identity with the
+     first and last message ids counted), so a resumed transcript's
+     later log is a second contribution to the same invocation, never
+     a duplicate of the first.
+   - WI-800's ledger folds each contribution once, keyed by its
+     contribution key, into its invocation's total (WI-800's
+     Done-when, amended at this row's filing).
 3. **Recording through the service's writer.** Each ingested invocation is
    one session log written by `session_service.record`. It carries a role
    of its own (`SUBAGENT` for a sub-agent, `COORDINATOR` for the session
@@ -179,7 +185,10 @@ Each named test fails on the code before the change.
   time. Appending messages to a fixture transcript and ingesting again
   records only the appended messages, under the same invocation identity.
   A run killed after some logs were spooled, then re-run, ends with each
-  invocation recorded once.
+  invocation recorded once. An initial ingest, a resumed transcript's
+  ingest and a repeated ingest give two logs under one invocation
+  identity with distinct contribution keys, whose usage summed equals
+  the usage over every unique message id.
 - **No double count.** A session whose id a service-recorded log already
   carries: its main transcript is skipped; its sub-agents follow the
   recorded plan-step-3 finding.
@@ -230,3 +239,20 @@ Each named test fails on the code before the change.
 - **B3.** Exactly-once trusts the logs already recorded, the record each
   earlier ingest wrote at its event. It does not recompute from history.
 - **B4.** No owner act. The live ingest reads the box's own transcripts.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, 2026-10-20; CHANGES-REQUESTED,
+findings=1):
+
+- **MAJOR, S5 (a resumed transcript's second log shares the invocation id
+  WI-800 appends once by): adopted.** Deliverable 2 now reads "Each log also
+  carries a contribution key, immutable and bound to the message range it
+  counted" and "WI-800's ledger folds each contribution once, keyed by its
+  contribution key, into its invocation's total"; Done-when's "Exactly
+  once" gains the initial, resumed and repeated ingest example. WI-800's
+  Done-when gains the matching line on trunk in the same commit as this
+  disposition, before either row's claim: "The ledger folds each
+  contribution once by its contribution key into its invocation's total, so
+  a repeated harvest adds nothing and a resumed transcript's later
+  contribution is kept."

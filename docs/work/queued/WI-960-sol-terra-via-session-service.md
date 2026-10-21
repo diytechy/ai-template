@@ -64,7 +64,10 @@ log is the name `session_service._call_row` gives (`call_<invocation-id>-
 (`kitlib.verdict.SESSION_LOG_RE`) does not match. A commit that adds a
 gate-grammar log, modifies or deletes any log, or touches any other path is
 an edit. Uncommitted state is compared the same way: a standard-call log
-present only after the call is not an edit.
+present only after the call is not an edit, and neither is a standard-call
+log present uncommitted at the call's first snapshot that a discounted
+commit in the call's range adds (another call's log committed during this
+call).
 
 **Not in scope: the one writer.** `commit_telemetry` serializes nothing; two
 `record`s in one worktree contend for git's index lock and the loser's log
@@ -181,8 +184,11 @@ its Trust. Written under [PROCESS.md §3, "When a guard is owed"](../../../proje
     deletion of a log, a gate-grammar log name, a merge): an edit.
   - Uncommitted: a standard-call log that is new after the call is
     discounted (another call's log written but not yet committed, or left
-    after a lost commit). Every other change is an edit for Sol; for Terra,
-    uncommitted changes are its output.
+    after a lost commit). So is a standard-call log uncommitted at the
+    first snapshot that is committed during the call, bound to a
+    discounted commit in the observed range that adds that same path;
+    its modification or deletion stays an edit. Every other change is an
+    edit for Sol; for Terra, uncommitted changes are its output.
   - The discount binds to the call's own before and after HEAD and status,
     read in the root; never to a log's content.
 - **The bound** (PROCESS.md §6, "Review threat model"): the promise covers
@@ -197,6 +203,15 @@ its Trust. Written under [PROCESS.md §3, "When a guard is owed"](../../../proje
   that never writes to trunk. A spool directory that cannot be created or
   written raises, and the call is reported failed to record. The log is
   never dropped silently and never committed elsewhere.
+- **Ruling, at Terra's resume reader** (Deliverable 2): the carrier the
+  plan chooses (the lane's last Terra session log, or a lane-scoped keep)
+  selects the thread a resumed turn continues, so the plan records,
+  before the build, its producer and write route, its reader by path,
+  the lane and route identity it is bound to, and what a failed or
+  partial write leaves. An absent, unreadable, failed or malformed
+  carrier, or one bound to another lane or route, refuses the resumed
+  turn before launch, naming the cause; it never starts a fresh thread
+  in its place and never reads an id typed into the decisions record.
 
 ## Done-when
 
@@ -211,7 +226,12 @@ Each named test fails on the code before the change.
 - **Another call's log commit.** During the stand-in's run, a second
   `record` in the same root commits a `call_` log: exit 0. The same with a
   commit that adds a gate-grammar log, modifies an existing log or touches
-  a work path: exit 3.
+  a work path: exit 3. A second call's `call_` log already present,
+  uncommitted, at the first snapshot and committed by its own `record`
+  during the run: exit 0; the same log modified or deleted instead: exit 3.
+- **Terra's resume carrier.** Absent, unreadable, malformed, or bound to
+  another lane: the resumed turn is refused before launch, the cause
+  named, and no fresh thread starts.
 - **A rewritten history.** HEAD after is not a descendant of HEAD before:
   exit 3. Git unreadable during the check: nonzero, never 0.
 - **Outside a lane.** From the primary checkout, a detached checkout and an
@@ -299,3 +319,24 @@ text above carries them:
   lands only after a cycle has run through it. A defect is fixed forward in
   a lane with a regression test. Where the defect blocks the fix's own
   review, that one launch runs by hand, attended and recorded.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, 2026-10-20; CHANGES-REQUESTED,
+findings=2):
+
+- **MAJOR, S3 (another call's log, uncommitted at the first snapshot,
+  committed during this call, read as an edit): adopted.** Settlement 2 now
+  reads "neither is a standard-call log present uncommitted at the call's
+  first snapshot that a discounted commit in the call's range adds", Trust's
+  uncommitted ruling reads "So is a standard-call log uncommitted at the
+  first snapshot that is committed during the call, bound to a discounted
+  commit in the observed range that adds that same path; its modification
+  or deletion stays an edit", and Done-when's "Another call's log commit"
+  gains that case (exit 0) and its modified or deleted variant (exit 3).
+- **MINOR, S2 (Terra's resume carrier is an unlisted consumer): adopted.**
+  Trust gains "Ruling, at Terra's resume reader": the plan records the
+  chosen carrier's producer, write route, reader by path, lane and route
+  binding and failed-write shape before the build, and an absent,
+  unreadable, failed, malformed or foreign carrier refuses the resumed turn
+  before launch; Done-when gains "Terra's resume carrier".

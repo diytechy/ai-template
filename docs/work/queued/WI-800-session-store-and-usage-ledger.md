@@ -35,6 +35,9 @@ Knowledge packs (CMP-008), read before building: `docs/knowledge/agent-routing.m
 - A resumed `thread`-scope session's row is end minus baseline, and the claude
   resumed-call fixture pins its scope.
 - `trunk_step`'s ledger append is idempotent.
+- The ledger folds each contribution once by its contribution key into its
+  invocation's total, so a repeated harvest adds nothing and a resumed
+  transcript's later contribution is kept (WI-961's logs carry the key).
 - Spooled logs land exactly once; a spooled entry is deleted only once trunk's tree
   holds its log.
 - The backfill covers every existing log (keyed `log:<name>` where a log predates
