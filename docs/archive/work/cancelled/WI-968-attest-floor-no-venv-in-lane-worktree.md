@@ -3,16 +3,29 @@ id = "WI-968"
 title = "attest's harness floor finds no .venv in a linked lane worktree, so no lane can take its review attestation"
 workstream = "process"
 sr_refs = []
-specref = "docs/specs/WI-968.md"
+specref = ""
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 +++
 
+## Deliverable
+
+Cancelled in headless leg 08 (2026-10-21) before its claim: its premise was
+the coordinator's wrong route, not a defect (wi-957 D-007). `integrate.py
+attest` takes the primary checkout as `--root` and finds the lane by
+`--branch`, running the review bar in the lane under the primary
+checkout's interpreter; run from the lane with the default root, its floor
+read the lane's own root. Run as designed, it attested WI-957's tip. Its
+scope critique's round 1 (CHANGES-REQUESTED) and the drafter's reading are
+kept under the leg's scratch root; the drafter's separate finding (the
+bookkeeping and lane harness reads have no floor) is in status.md's
+unfiled follow-ups. The route is now in the coordinator-cycle recipes.
+
 ## Context
 
-The defect and its Trust section: [the spec of record](../../specs/WI-968.md).
+The defect and its Trust section: [the spec of record](../../specs/WI-968.2026-10-21.md).
 
 ## Done-when
 

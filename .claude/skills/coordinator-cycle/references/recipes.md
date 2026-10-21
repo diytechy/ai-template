@@ -316,6 +316,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   finding under that id. The plan cap takes only a DISMISS. Until WI-878 binds the findings file into the sitting, keep finding ids
   unique within a lane: a second dispute reusing ids refuses a valid
   dismissal.
+  A dispute FIX's remedy is checked on the coordinator's own landing
+  shape: the remedy WI-963's sitting named (compare with the copy the
+  re-attesting act's commit wrote) closed its finding only on an
+  unsquashed range, while every hand landing is a squash; ask the
+  builder to drive the fix over a squashed range too (wi-963 D-011).
   Before writing a disposition broader than a finding, read the finding's
   own remedy: a triage that forbade WI ids in shipped comments contradicted
   both reviewers' remedies and a pinned convention (wi-911 D-014). A
@@ -875,7 +880,12 @@ lane commit being replayed.
   landing commit rather than after it.
 - `integrate.py attest` runs `[bars] review`, the smoke action with its
   budget step in warn mode, so it refuses only a red bar, never the
-  tier's seconds.
+  tier's seconds. Run it from the primary checkout, `"$PY"
+  "$SCRIPTS/integrate.py" --root "$REPO" attest --branch <lane> --bar
+  review --tests <files> --message-file <file>`: it finds the lane by
+  branch and runs the bar there under the primary checkout's
+  interpreter. Run from the lane with the default root, its harness floor
+  reads the lane's own root, finds no `.venv` and refuses (wi-957 D-007).
 - The declared bar runs the tier once: the lints run first, then the
   budget step's run, which exits with the tier's own code on a red tier
   and prints its CPU-seconds and wall time, with a WARN line for a limit

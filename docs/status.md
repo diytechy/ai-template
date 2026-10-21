@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-21a-leg07-coordinator.md](handoff-2026-10-21a-leg07-coordinator.md),
+  [handoff-2026-10-21b-leg08-coordinator.md](handoff-2026-10-21b-leg08-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -35,9 +35,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   Sol and Opus. The adjudication split has landed: a checkpoint sitting
   now ends at its committed verdict, and its act is a later turn
   (`coordinator_adjudicate.py act`), and the machine-line reader row has
-  landed through it. A landing's bar
-  runs on the box as it is, read beside its parent's (owner, 2026-10-17);
-  a CPU-time smoke budget is queued after the batch (owner, 2026-10-17).
+  landed through it. No bar fails on the
+  smoke tier's seconds: the bars report its CPU-seconds and wall, and
+  `run.cmd audit` judges them and its count (owner, 2026-10-20).
   The re-sync entry check is in the commit bar: a lane rebased onto a
   newer trunk re-anchors its own RESYNC entry at its new base.
   The headless coordinator's marking row has landed, and the guard-hooks
@@ -53,8 +53,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   plan cap: the cap's sitting ruled a FIX, and the owner routed it to a
   third plan revision with one confirming critique, which its minted
   disposition row now carries. The trunk mint's settled-amendment filter
-  (the first new build, owner, 2026-10-20) is claimed and built in its
-  lane, through its first review round, and the lane
+  (the first new build, owner, 2026-10-20) passed its checkpoint and
+  holds at its gate for the owner (OI-115: its ruled fix needs the act
+  ledger to record what each act copied), and the lane
   lifecycle design's in-lane mint and station authority rows are
   cancelled, its config-retirement row folded into item 10's program. The
   account-homes row has landed: the adjudicator runs on its declared
@@ -62,15 +63,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   filed as four rows: its text row (test cases before the code in a lane)
   and its attestation row (one tree-bound bar attestation, and the
   `attest` verb) have landed; the coordinator's review refusal is built
-  in its lane and holds before its first review for the owner: `attest`
-  runs the review bar with its smoke budget step, so on this box, whose
-  tier reads 70 to 110 s against 60 s, it refuses every attestation that
-  the paired-reading procedure would read as load, and under the refusal
-  no review could render. The owner ruled the hold (2026-10-20): no bar
-  fails on seconds; the CPU-time budget row, re-scoped, moves the judgement
-  into the run menu's audit and lands first; it is claimed, its plan
-  passed and its first two stages built in its lane. The loop's refusal
-  follows it.
+  in its lane, attested (`attest` runs from the primary checkout and finds
+  the lane by branch) and through its first review round; the CPU-time
+  budget row it waited on has landed. The loop's refusal follows it.
   The lane lifecycle design's remaining rows are deferred until the owner
   reviews their re-scopes, and the queue table is an explicit list. Item 8's usage
   record is filed as two rows (the coordinator's Sol and Terra calls
@@ -171,7 +166,18 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
   entities · 4 crossings · 3 relationships, watermark-held); `OI-61` (c) stays deferred
   on its condition (a demonstrated residual drift class), not owner-owed.
-- **Unfiled follow-ups** (topics, no ids): the wave-11 log's follow-ups (the claim
+- **Unfiled follow-ups** (topics, no ids): from the CPU-time budget
+  row's gate (wi-940 D-011): its archived spec's two delta sentences say
+  TC-026 verifies IF-302 where TC-374 does, the root conftest comment and
+  pytest.ini still state a 60 s wall bound, the shipped job module's
+  docstring names this repository's own step by path, and its deliverable
+  3 says max-tests is unchanged where the lane re-stamped it (wording);
+  from the settled-amendment filter's lane (wi-963 D-007, D-010): a ledger
+  malformed at a range's before revision leaves no sweep that recovers
+  the range, and two ledger readers repeat one seq rule (with OI-115);
+  from WI-968's drafter: the bookkeeping and lane harness reads have no
+  floor of their own and fall back to the ambient interpreter when a
+  pinned repository has no .venv; the wave-11 log's follow-ups (the claim
   reads the working-tree pause; an in-lane act never meets the held-rung
   re-attestation refusal; a refresh merge must carry a citer's update for a
   trunk ruling); the wave-9 log's session-close list (removed approved rows mint no adjudication; six batch-R row-text residues); the stage-ladder program's deferred
@@ -359,12 +365,11 @@ _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` —
   - **WI-850** `P5` — A spine row is approved only after the rows it hangs from are
   - **WI-957** `P5` — The coordinator's review brief is rendered only for a tip whose review bar is attested gr…
   - **WI-966** `P5` — The policy file's one-key-per-line shape rule retires: the hooks read it through one pars…
-  - **WI-968** `P5` — attest's harness floor finds no .venv in a linked lane worktree, so no lane can take its…
   - **WI-878** `P4` — A dispute sitting's binding records the findings file it ruled, and the coverage gate rea…
   - **WI-856** `P3` — A queue-with-edge verdict edges a waiter filed without a needs line
   - **WI-827** `P3` — Owner signs SN-029's amendment after text-before-act
   - **WI-908** `P3` — Owner-assisted Claude login-isolation check: two account homes on Windows show two logins
-  - _(+1 more ready — see the dashboard)_
+  - **WI-910** `P2` — The full suite is green on macOS: the run.command fixture runs an executable run.sh, and…
 - **Blocked** _(held by a pending open item its `needs` cites):_
   - **WI-684** — re-judge TC-036: no result recorded [sha256:2f2f30dfba87] at merge 77fb093 — [OI-98 — Owner re-sync from 2026-10-03](open-items.html#OI-98)
   - **WI-795** — Owner provisioning: the FreeLLMAPI endpoint and pinned models — [OI-105 — FreeLLMAPI provisioning: the endpoint and the pinned models](open-items.html#OI-105)
