@@ -80,7 +80,7 @@ count closes partial") is drafted TC-first in the lane.
 ## Trust
 
 `[build] red_rounds_max` gains authority over an act (the partial close).
-Written under [PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+Written under [PROCESS.md §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 The attestation's Trust is WI-956's.
 
 - **Producer:** the owner or an agent, by hand, in a reviewed commit; the
