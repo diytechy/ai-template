@@ -3,7 +3,7 @@
 # 20261021T045653Z-213020).
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-001"]
+high_risk = ["D-001", "D-004"]
 
 [decision.D-001]
 decided = "WI-940's re-scope (the owner, coordinator-2026-10-20 D-014: no bar fails on seconds; the run menu's audit judges them) names the commit and review bars, and its drafter found two more callers that run the smoke budget step in enforce mode: docs/stack.ini [step:smoke] (the harness step from DevStg-Tests, in the stage bar a lane refresh runs) and the CI workflow's smoke-budget job. Both move to warn mode in WI-940, written into its Scope answers and Done-when: each is a bar in the ruling's sense, and the seconds are judged only by the audit."
@@ -24,4 +24,11 @@ decided = "The confirming rounds of WI-963's and WI-940's scope critiques (Codex
 alternative = "Claim one row per unpause."
 reversal_cost = "Low."
 why_not_escalated = "The handoff's queue order and the batch-claim rule."
+review = ""
+
+[decision.D-004]
+decided = "WI-963 holds for the owner at its gate tip (OI-115; wi-963 D-011), so the queue's next rows move without it: WI-940 continues in its lane and may land ahead of WI-963, keeping the landing rule the order served (each machinery lane lands alone, the next only after the cycle has run a landing through the last); WI-963 then rebases onto WI-940's landing and re-runs its affected steps. The queue table's order (WI-940 after WI-963) is kept wherever WI-963 can land first."
+alternative = "Hold WI-940's landing until the owner rules OI-115."
+reversal_cost = "Low: an overrule holds WI-940's landing; nothing is lost."
+why_not_escalated = "Recorded for confirm or overrule; a headless leg moves to the next row when one is owner-held (coordinator-cycle section 7)."
 review = ""

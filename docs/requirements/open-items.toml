@@ -4099,3 +4099,19 @@ options = """- (a) PROVISION NOW: the owner signs in a second Claude login under
 - (c) DECLINE: close WI-908 won't-fix; non-ambient Claude accounts are supported by token only, and the RESYNC entry says so."""
 recommendation = "(b) until a second Claude login is wanted: nothing else waits on it, and the adjudicator already runs on its token account."
 ruled_date = "2026-10-14"
+
+[open_item.OI-115]
+title = "WI-963: settlement the act ledger cannot prove on a squashed landing"
+status = "pending"
+raised = "2026-10-21"
+one_line = "Choose how WI-963 closes its gate's ruled FIX, whose only sound remedy needs the act ledger to record the registries each act copied (outside the row's surface); recommendation (a), a preparatory row for the ledger's producer, landed first."
+decision = """Raised by the coordinator in headless leg 08 of loop session 20261021T045653Z-213020 (wi-963 D-011).
+
+WHAT IS TRUE. WI-963 (the trunk mint drops amendment records the merged range already settled) passed its checkpoint sitting (003-ADJUDICATE-9f9b2a8 accepted the whole set). Its gate's REVIEW-B raised one MAJOR tagged convergence-class: a routed traced change made after a row's act settles silently when a later act in the range re-copies that registry for another row, because the row's snapshot copy at the range's after revision does not prove the re-attesting act judged it. The dispute sitting 007-ADJUDICATE-1ae50f4 ruled it FIX (final). Its remedy, comparing with the copy the re-attesting act's own commit wrote, closes it only on an unsquashed range; every hand landing is a git merge --squash, whose one commit is the act's commit. Settlement from the act ledger alone fails too: a traced re-anchor copies its registry and records an entry naming no registry (approved and reattested both empty); an act mixing an approves registry with ids in another lists only the second; a re-seed copies every registry listing only newly approved rows. A probe through the real producer showed the same range minting SR-001 unsquashed and nothing squashed.
+
+WHAT IS HELD. WI-963's lane (branch wi-963, committed at its gate tip, nothing landed); the fix1 build is kept as a patch outside the repository (the leg's scratch root). A convergence-class finding is never deferred by the coordinator or a sitting (the coordinator-cycle skill, at the cap; wi-921 D-014)."""
+blast_radius = """WI-963 only, and WI-940 is not held by it (WI-940 lands after WI-963 in the queue: the queue order, not a needs edge; the coordinator may land WI-940 first if this stays open, recorded as a decision). Until WI-963 lands, the trunk mint keeps filing a redundant amendment row for an amendment a lane already re-attested, closed by hand as today."""
+options = """- (a) PREPARATORY ROW: file a row on trunk that makes each act-ledger entry record the registries its act copied (the entry's shape, its writer and its validators, with a RESYNC entry for adopters' ledgers); land it as its own lane; rebase WI-963 onto it and build settlement from the ledger. FOR: closes F1 on every landing shape, one owning boundary. AGAINST: a ledger shape change adopters migrate; two lanes.
+- (b) BUILD IT IN WI-963: widen WI-963's surface to the ledger's producer and build both in this lane. FOR: one lane. AGAINST: a scope change after the plan's pass record (a Done-when or Trust edit, a re-critique), and the lane changes the machinery twice.
+- (c) LAND WITH THE GAP STATED: the owner rules the squashed-range residue acceptable, recorded in WI-963's Trust section, and the fix1 build lands with it. FOR: fastest. AGAINST: the convergence-class finding stays open on the coordinator's own landing route."""
+recommendation = "(a): the defect is that the act ledger does not say what an act wrote, and making the producer record it ends the class at its one owning boundary; WI-963's filter then reads it, on any landing shape."
