@@ -55,17 +55,15 @@ that easier to achieve in a real project — or get out of the way.
   registry rows, enabled sets); STRUCTURE must not (schema headers, launcher
   command contracts, declared-section shapes) — `tests/test_dogfood_sync.py`
   enforces it.
-- **Self-test before claiming done.** The per-commit bar means results AND
-  seconds, both enforced locally, not just claimed (OI-52 ruling (a),
-  2026-08-23): one declared command, `run.cmd smoke` (`run_menu.py smoke`
-  from a shell; its steps are [`docs/stack.ini`](docs/stack.ini) `[run]`),
-  its smoke tier budgeted at **60 s** wall — a breach FAILS the bar where it
-  is introduced. **Re-tiered and re-measured 2026-09-27 (WI-652, OI-92 (b)):
-  26.4 / 26.4 / 25.7 s over three quiet runs on the 4-core / 8-thread box**,
-  where the tier had grown to 188 s; its heavy cases moved to
-  `tests/conftest.py` `SLOW_MODULES`, every script family keeping an
-  in-process pin (a trial the owner may revisit). One box is one data point and the budget is not moved to
-  fit it. A mid-phase WI/slice ends at that commit bar. Run the **full**
+- **Self-test before claiming done.** The per-commit bar is one declared
+  command, `run.cmd smoke` (`run_menu.py smoke` from a shell; its steps are
+  [`docs/stack.ini`](docs/stack.ini) `[run]`). It runs the smoke tier once: a
+  red tier FAILS the bar; its CPU-seconds and wall time are only reported
+  (owner, 2026-10-20). `run.cmd audit` judges them, and the tier's test
+  count, against `[smoke-budget]`, by hand and at phase close; a breach is
+  filed as a re-tier row, never charged to the lane that ran it. Heavy cases
+  live in `tests/conftest.py` `SLOW_MODULES`, every script family keeping an
+  in-process pin. A mid-phase WI/slice ends at that commit bar. Run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~10 min on a quiet box,
   3–4× that while other sessions load it) once at phase close; the lane refresh
   runs the full bar declared for its current stage in the merge slot. The

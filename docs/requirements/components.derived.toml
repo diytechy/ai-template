@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 307
-seam_rows = 247
+seam_rows = 248
 requirements_placed = 126
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -831,6 +831,7 @@ modules = [
   "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/station.py",
   "project-trajectory/scripts/kitlib/verdict.py",
+  "project-trajectory/scripts/kitlib/winjob.py",
   "project-trajectory/scripts/lane.py",
   "project-trajectory/scripts/migrate_decisions.py",
   "project-trajectory/scripts/observation_cadence.py",
@@ -916,6 +917,7 @@ seam_internal_refs = [
   "IF-295",
   "IF-296",
   "IF-297",
+  "IF-302",
 ]
 seam_boundary_refs = [
   "IF-001",

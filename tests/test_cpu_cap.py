@@ -19,12 +19,13 @@ Two halves, and the split matters:
 
 import ctypes
 import importlib.util
+import json
 import os
 import subprocess
 import sys
 
 import pytest
-from conftest import ROOT
+from conftest import ROOT, SCRIPTS
 
 if sys.platform == "win32":
     from ctypes import wintypes
@@ -327,9 +328,12 @@ def test_a_run_that_is_already_jobbed_gets_its_own_ceiling(tmp_path):
     probe.write_text(_PROBE, encoding="utf-8")
     job_name = "ai-template-pytest-test-{}".format(os.getpid())
     args = [sys.executable, str(probe), str(ROOT), job_name]
+    # The named topology is the one measured, so a run started with the
+    # private job mode (the smoke budget step's tier) does not pass it on.
+    env = {k: v for k, v in os.environ.items() if k != "PYTEST_CPU_CAP_JOB"}
 
     holder = subprocess.Popen(
-        args + ["hold", "spawn-child"], stdout=subprocess.PIPE, text=True
+        args + ["hold", "spawn-child"], stdout=subprocess.PIPE, text=True, env=env
     )
     try:
         first = holder.stdout.readline().strip()
@@ -344,7 +348,7 @@ def test_a_run_that_is_already_jobbed_gets_its_own_ceiling(tmp_path):
         )
 
         second = subprocess.run(
-            args + ["pre-job"], capture_output=True, text=True, timeout=60
+            args + ["pre-job"], capture_output=True, text=True, timeout=60, env=env
         )
         out = second.stdout.strip()
         assert "PREJOB-FAILED" not in out, "could not construct the topology: " + out
@@ -365,3 +369,179 @@ def test_a_run_that_is_already_jobbed_gets_its_own_ceiling(tmp_path):
     finally:
         holder.kill()
         holder.wait()
+
+
+# --- The job mode: named (shared) or private --------------------------------
+# A caller that meters its own job (the smoke-budget step) needs the tier it
+# starts to stay out of the named job, or a concurrent run from another tree
+# could join that job and land its CPU in the reading. `PYTEST_CPU_CAP_JOB`
+# set to `private` asks for the fallback's construction from the start.
+
+
+def test_the_job_mode_reads_its_one_value(monkeypatch, capsys):
+    reader = root_conftest._requested_job_mode
+    cases = {"": "named", "  ": "named", "private": "private", " Private ": "private"}
+    for raw, expected in cases.items():
+        monkeypatch.setenv("PYTEST_CPU_CAP_JOB", raw)
+        assert reader() == expected, raw
+    monkeypatch.delenv("PYTEST_CPU_CAP_JOB")
+    assert reader() == "named"
+    assert capsys.readouterr().err == ""
+    # Any other value is named, never fatal, and says which value it ignored.
+    monkeypatch.setenv("PYTEST_CPU_CAP_JOB", "shared-please")
+    assert reader() == "named"
+    err = capsys.readouterr().err
+    assert "PYTEST_CPU_CAP_JOB" in err and "shared-please" in err, err
+
+
+_PRIVATE_PROBE = """
+import ctypes, importlib.util, json, sys
+from ctypes import wintypes
+spec = importlib.util.spec_from_file_location("_rc", sys.argv[1] + "/conftest.py")
+rc = importlib.util.module_from_spec(spec); spec.loader.exec_module(rc)
+rc.JOB_NAME = sys.argv[2]
+warned = []
+rc._warn = lambda m: warned.append(m)
+rc._bound_windows(25)
+k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+k32.GetCurrentProcess.restype = wintypes.HANDLE
+k32.IsProcessInJob.argtypes = [wintypes.HANDLE, wintypes.HANDLE,
+                               ctypes.POINTER(wintypes.BOOL)]
+k32.GetPriorityClass.argtypes = [wintypes.HANDLE]
+me = k32.GetCurrentProcess()
+inside = wintypes.BOOL()
+ok = k32.IsProcessInJob(me, None, ctypes.byref(inside))
+print(json.dumps({"in_a_job": bool(ok and inside.value),
+                  "priority": k32.GetPriorityClass(me),
+                  "warned": warned}), flush=True)
+sys.stdin.readline()  # hold the job open until the test has looked
+"""
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="job objects are Windows-only")
+def test_a_private_run_joins_no_named_job(tmp_path):
+    """Under `private` the run is capped in an unnamed job, so the named job
+    is never created: the test's own create of that name makes a new object.
+    The child holds its job open while the test looks, since a named job dies
+    with its last handle."""
+    probe = tmp_path / "private_probe.py"
+    probe.write_text(_PRIVATE_PROBE, encoding="utf-8")
+    job_name = "ai-template-pytest-private-{}".format(os.getpid())
+    env = dict(os.environ, PYTEST_CPU_CAP_JOB="private")
+    child = subprocess.Popen(
+        [sys.executable, str(probe), str(ROOT), job_name],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    try:
+        line = child.stdout.readline()
+        assert line, "the probe printed nothing"
+        report = json.loads(line)
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        k32.CreateJobObjectW.restype = wintypes.HANDLE
+        k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+        k32.CloseHandle.argtypes = [wintypes.HANDLE]
+        ctypes.set_last_error(0)
+        handle = k32.CreateJobObjectW(None, job_name)
+        error = ctypes.get_last_error()
+        if handle:
+            k32.CloseHandle(handle)
+        assert handle, ctypes.WinError(error)
+        assert error != 183, "the private run created the named job"  # ALREADY_EXISTS
+        assert report["in_a_job"], report
+        assert report["priority"] == 0x00004000, report  # BELOW_NORMAL
+        assert report["warned"] == [], report  # the private job was asked for
+    finally:
+        child.stdin.close()
+        child.wait(timeout=60)
+
+
+_RECORDER_PROBE = """
+import ctypes, importlib.util, json, sys
+sys.path.insert(0, sys.argv[2])
+from kitlib import winjob
+
+log = []
+recorder_calls = []
+RESULTS = {"CreateJobObjectW": 101, "GetCurrentProcess": 7, "IsProcessInJob": 0}
+
+
+def plain(arg):
+    held = getattr(arg, "_obj", None)  # what ctypes.byref points at
+    if held is not None and hasattr(held, "CpuRate"):
+        return {"flags": held.ControlFlags, "rate": held.CpuRate}
+    return arg if arg is None or isinstance(arg, (int, str)) else repr(arg)
+
+
+class Fn:
+    def __init__(self, name):
+        self.name = name
+
+    def __call__(self, *args):
+        log.append([self.name] + [plain(a) for a in args])
+        return RESULTS.get(self.name, 1)
+
+
+class FakeKernel32:
+    def __getattr__(self, name):
+        fn = Fn(name)
+        setattr(self, name, fn)
+        return fn
+
+
+fake = FakeKernel32()
+
+
+def recorder():
+    recorder_calls.append(1)
+    return fake, None
+
+
+winjob.win32 = recorder
+spec = importlib.util.spec_from_file_location("_rc", sys.argv[1] + "/conftest.py")
+rc = importlib.util.module_from_spec(spec); spec.loader.exec_module(rc)
+rc.JOB_NAME = sys.argv[3]
+rc._bound_windows(25)
+reach = getattr(rc, "_winjob", None)
+same = reach is not None and reach() is sys.modules["kitlib.winjob"]
+print(json.dumps({"recorder_calls": len(recorder_calls), "log": log,
+                  "same_module": same}), flush=True)
+"""
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="job objects are Windows-only")
+def test_the_root_conftest_takes_its_prototypes_from_the_shared_module(tmp_path):
+    """The cap's kernel32 calls go through `kitlib.winjob.win32()`, the one
+    prototype set the session kill also uses, never a WinDLL of its own.
+
+    A child replaces `win32` with a recorder over a fake kernel32 and applies
+    the cap; the log must hold the cap's calls, in order. It runs in a child
+    so a conftest that still builds its own WinDLL joins a real job there,
+    not in this test process."""
+    probe = tmp_path / "recorder_probe.py"
+    probe.write_text(_RECORDER_PROBE, encoding="utf-8")
+    job_name = "ai-template-pytest-recorded-{}".format(os.getpid())
+    env = {k: v for k, v in os.environ.items() if k != "PYTEST_CPU_CAP_JOB"}
+    proc = subprocess.run(
+        [sys.executable, str(probe), str(ROOT), str(SCRIPTS), job_name],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=env,
+    )
+    assert proc.returncode == 0, proc.stderr
+    report = json.loads(proc.stdout)
+    assert report["recorder_calls"] >= 1, "the conftest never asked kitlib.winjob"
+    wanted = ("CreateJobObjectW", "SetInformationJobObject")
+    wanted += ("AssignProcessToJobObject", "SetPriorityClass")
+    calls = [entry for entry in report["log"] if entry[0] in wanted]
+    assert calls == [
+        ["CreateJobObjectW", None, job_name],
+        # the class, then ENABLE|HARD_CAP at 25 % in 1/100 percent; the size
+        ["SetInformationJobObject", 101, 15, {"flags": 0x5, "rate": 2500}, 8],
+        ["AssignProcessToJobObject", 101, 7],
+        ["SetPriorityClass", 7, 0x00004000],
+    ], report["log"]
+    assert report["same_module"], "the conftest reaches another kitlib.winjob"

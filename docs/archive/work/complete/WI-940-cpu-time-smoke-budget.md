@@ -3,13 +3,45 @@ id = "WI-940"
 title = "No bar fails on the smoke tier's seconds; the run menu's audit judges the tier's own CPU-seconds, which other load does not move, under a looser wall-clock cap"
 workstream = "process"
 sr_refs = []
-specref = "docs/decisions/coordinator-2026-10-17.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-915", "~WI-916"]
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-21, after its gate, in headless leg 08:
+
+- No bar fails on the smoke tier's seconds: `[run] smoke` (and so
+  `[bars] review`), `[step:smoke]` and CI's `smoke-budget` job run
+  `scripts/check_smoke_budget.py --mode warn`, which fails only on a red
+  tier and reports the tier's CPU-seconds and wall
+  (coordinator-2026-10-21 D-001, for the owner's confirm or overrule).
+- `run.cmd audit` (`[run] audit`) runs the step in enforce mode and judges
+  three keys in `docs/stack.ini` `[smoke-budget]`: `cpu-seconds = 540`,
+  `wall-seconds = 600` and `max-tests = 3140`, each with its `fig:` line;
+  `seconds` retires and `--elapsed` with it.
+- The step meters the tier's own process tree: a joined Windows job
+  (`kitlib/winjob.py`'s `create_joined_job` and `job_cpu_seconds`, over
+  one accounting query shared with the session's active-process reader)
+  or `getrusage` on POSIX, and runs the tier in a private capped job
+  (`PYTEST_CPU_CAP_JOB=private`), so an outside process cannot raise it.
+- The tier count has one home, the step's `count_smoke_tier`, which the
+  membership ratchet also uses.
+- The Windows job helpers moved unchanged from `agent_session.py` into
+  `kitlib/winjob.py` (IF-302), and the root conftest takes its kernel32
+  prototypes from it.
+- The doc homes (CLAUDE.md, the session-protocol and coordinator-cycle
+  skills and recipes, the machinery reference) retire the paired-reading
+  procedure.
+- Spine: TC-374 approved (sitting 004, act on the lane); LLR-026's traced
+  cells follow the moved code. IF-299 to IF-301 were spent by the lane's
+  id floor and carry no row. Follow-ups: wi-940 D-009 (the two CPU readers
+  ship in a kit module but serve only this repository's step, high risk
+  for the owner) and D-011's gate MINORs.
 
 ## Context
 
@@ -38,8 +70,11 @@ Smoke `tier` cells. `scripts/` is this repository's own tooling, outside the
 traced product, and WI-281, WI-496, WI-652, WI-869 and WI-935 changed this
 step without amending a spine row. As in WI-935, the anchor is SN-007
 (approved): "The declared bar is green before a change lands." SN-008 rules
-out a silent fallback. No LLR, TC or IF row is amended, since IF-022 does not
-cover `[smoke-budget]`.
+out a silent fallback. The budget amends no LLR, TC or IF row, since IF-022
+does not cover `[smoke-budget]`. The job-code move (deliverable 6) adds one
+interface row, IF-302 (Drafted), the shared module's call seam, and forces
+traced cells only in two Approved rows: LLR-026's `module` and `code_symbol`,
+which follow the moved code, and TC-026's `verifies`, which names IF-302.
 
 **Measured before drafting** (probes in the coordinator's scratch,
 2026-10-17):
@@ -319,8 +354,10 @@ Each named test fails on the code before the change.
   accounting), a Windows boundary (the step's job), two keys, exit 2, a
   shared kit module holding moved code, and a conftest input under which the
   bar's tier stops sharing the named job's ceiling (a venv-launched run
-  already cannot join it once another run holds it). No component or IF row
-  changes. No refactor row is owed: the move is this row's first commit
+  already cannot join it once another run holds it). No component row
+  changes. The move adds IF-302 (Drafted) and changes only the traced cells
+  of Approved LLR-026 (`module`, `code_symbol`) and TC-026 (`verifies`), as
+  the Context states. No refactor row is owed: the move is this row's first commit
   (D-007). The performance-budget layer
   (SR-167) was not used: it reports a missing measurement as a SKIP, the
   fallback this row refuses.

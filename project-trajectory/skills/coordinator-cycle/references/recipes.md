@@ -742,12 +742,9 @@ lane commit being replayed.
   and a dedupe meant for import lists dropped three of TC-370's (wi-926
   D-006). Run `ruff format` on each resolved Python file: a joined import
   line reds the hook's format step.
-- After a rebase, time the smoke tier beside trunk's tip in adjacent runs:
-  trunk's new tests can take the lane's fixtures, so a lane that read at
-  its parent's on its old base can read well above trunk's (wi-926 D-004).
-  Run trunk's and the lane's changed test modules on the rebased lane too:
-  the smoke tier skips the slow ones, where trunk's new tests meet the
-  lane's new refusals. A failure the pre-rebase tip shares is the lane's,
+- After a rebase, run trunk's and the lane's changed test modules on the
+  rebased lane: the smoke tier skips the slow ones, where trunk's new
+  tests meet the lane's new refusals. A failure the pre-rebase tip shares is the lane's,
   for its next build round (wi-926 D-005).
 - Launch no review until the rebase has finished. A rebase stopped on
   generated-file conflicts leaves the lane mid-rebase: take `--ours`,
@@ -877,28 +874,17 @@ lane commit being replayed.
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
 - `integrate.py attest` runs `[bars] review`, the smoke action with its
-  budget step, and refuses on a breach: on this box, whose tier reads 70
-  to 110 s, it refused a green tree at 96.9 s (wi-957 D-003). Until the
-  owner rules wi-957 D-004, commit lane work by hand with the D-005
-  pair; nothing on trunk requires an attestation yet.
+  budget step in warn mode, so it refuses only a red bar, never the
+  tier's seconds.
 - The declared bar runs the tier once: the lints run first, then the
-  budget step's timed run, which exits with the tier's own code on a red
-  tier and 1 on a breach. `--elapsed <s>` serves only a hand wrapper that
-  still runs every `[run] smoke` step and times its own tier run. A
-  wrapper must exit nonzero
-  on a red tier or a breach: one that exited 0 let a chained `&& git
-  commit` record a 66.2 s reading unmentioned (WI-921's pass record,
-  its message amended, 2026-10-15).
-- Time a breach's parent in a detached scratch worktree at the lane's
-  HEAD (`git -C <lane> worktree add --detach <scratch>/parent-wt <lane
-  sha>`, removed after; run from the primary checkout, `HEAD` names
-  trunk's tip, 2026-10-18d), never by stashing an uncommitted build, and record both
-  readings. Three reviewers running their suites in parallel took a
-  parent to 86 s (2026-10-15): re-measure quiet before the landing.
-  A parent from before the lane's RESYNC re-anchor stops its bar at
-  `check_resync`, before the tier runs: time its tier alone with
-  `"$PY" scripts/check_smoke_budget.py --mode enforce` in the same
-  scratch worktree (WI-946's fix commit, 2026-10-18h).
+  budget step's run, which exits with the tier's own code on a red tier
+  and prints its CPU-seconds and wall time, with a WARN line for a limit
+  over. No bar fails on seconds: `run.cmd audit` (`[run] audit`, the same
+  step in enforce mode) judges them and the tier's count against
+  `max-tests`, by hand and at phase close, and a breach there is filed
+  as a re-tier row, never charged to the lane that ran it. A hand wrapper
+  passes the step's exit code through, so a chained `&& git commit` never
+  records a red tier.
 - A build whose in-process tests take the smoke tier past `max-tests`
   re-stamps the ceiling in that commit, with its reason, fig line and a
   decision, not at the landing: a red bar is not left standing (wi-911
@@ -1022,36 +1008,18 @@ lane commit being replayed.
   close moved the derived stage reads that one red in a detached
   worktree: re-derive there (`derive_stage.py`) and re-run the test
   before treating it as a defect (wi-921 D-020).
-- **A smoke budget breach under load:** time the parent commit in the same
-  window before charging the breach to the change; record both readings in
-  the commit message and re-measure quiet before landing. When the
-  owner's own applications load the box and the owner asks, run every
-  local test job (bars, the full suite, Codex launches, the Claude
-  reviewers' pytest) at below-normal priority through a stdlib wrapper
+- **Test jobs while the owner's applications load the box:** when the
+  owner asks, run every local test job (bars, the full suite, Codex
+  launches, the Claude reviewers' pytest) at below-normal priority
+  through a stdlib wrapper
   (`subprocess.call(cmd, creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)`;
   Windows children inherit the class), naming Git Bash by its full path
   (`C:/Program Files/Git/usr/bin/bash.exe`), since Windows resolves a
   bare `bash` by its own search order (2026-10-15g). The wrapper resolves
   its program with `shutil.which`: a bare `codex` (an npm `.cmd` shim) is
-  not found by `CreateProcess` (2026-10-16d). A landing no longer waits
-  for a quiet box (owner, coordinator-2026-10-17 D-005): take the staged
-  squash's reading beside its parent's in one window and record both in
-  the landing commit. A breach close to the parent's reading on the same
-  tier is load and holds nothing; one well above it, or a tier that
-  grew, is the change's (WI-912's stage 2 read 26 s over its parent until
-  its new module moved to `SLOW_MODULES`, wi-912 D-004). Your own parallel `-n auto`
-  jobs (a builder's module runs, the full suite) push a lane bar to
-  78 to 82 s: take lane bars between them, or re-take one quiet before
-  its commit (2026-10-17).
-  The owner kept D-012's rule under far heavier load (readings of 140 to
-  1832 s, 2026-10-17b): take a commit's reading and its parent's side by
-  side, the parent in a detached scratch worktree at the lane's HEAD, so
-  the pair shares one window. A commit that changes only records
-  (decisions, review files, a queued or closed spec, generated views)
-  records its own reading and cites the session's latest same-window
-  pairs instead; a commit that changes code or tests, or grows the tier,
-  and every landing, still takes its own pair (coordinator-2026-10-17
-  D-011, 2026-10-17e).
+  not found by `CreateProcess` (2026-10-16d). No bar fails on the smoke
+  tier's seconds, so a slow reading under load holds nothing: the
+  audit (`run.cmd audit`) judges them, by hand and at phase close.
 - A bar that stops mid-tier with no summary line was terminated, not
   failed: a test error still prints a summary, and pytest locks a live
   run's default basetemp, so concurrent runs do not prune each other

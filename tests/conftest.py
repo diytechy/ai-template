@@ -424,6 +424,8 @@ SLOW_MODULES = frozenset(
         "test_overnight_legs_git",  # a tmp git repo per case and stub `claude` legs; its in-process pin is test_overnight_legs
         # WI-926: every agent route on a real repository with its hooks off.
         "test_hooks_on_routes",  # a tmp git repo per route case; its in-process pin is test_commit_hooks
+        # WI-940: the smoke budget step's real CPU meters.
+        "test_smoke_budget_meter",  # interpreters and CPU burns per case; its in-process pin is test_check_smoke_budget
     }
 )
 
@@ -442,8 +444,11 @@ def pytest_collection_modifyitems(config, items):
         item.add_marker(smoke_tier_for(stem))
 
 
-def load_script(name):
+def load_script(name, directory=SCRIPTS):
     """Import a kit script as a module (scripts/ is intentionally not a package).
+    Each call returns a fresh module instance. `directory` reaches a script
+    outside the kit, such as this repository's own tooling under the root
+    scripts/.
 
     scripts/ is put on sys.path first so a script that imports a sibling — e.g.
     gen_trajectory's sanctioned `import check_trajectory` — resolves in-process
@@ -453,7 +458,7 @@ def load_script(name):
     ImportError (THREAD_52_REVIEW.md F5). Re-checked here because a test may
     have taken scripts/ off the path since conftest put it there."""
     _put_scripts_on_path()
-    spec = importlib.util.spec_from_file_location(name, SCRIPTS / (name + ".py"))
+    spec = importlib.util.spec_from_file_location(name, directory / (name + ".py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

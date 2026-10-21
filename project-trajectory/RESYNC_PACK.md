@@ -9340,6 +9340,33 @@ you vendored it).
 **Adopter-merged files:** none. No registry, setting or record format
 changes.
 
+### The Windows job helpers move into `kitlib/winjob.py` [since 072b5723d]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The session kill's Windows job-object prototypes, the
+job's basic-accounting structure and its active-process reader move out of
+`scripts/agent_session.py` into a new shared module, `scripts/kitlib/winjob.py`,
+which `agent_session.py` imports. The move is behaviour-preserving: the
+session launch, its containment and its kill are unchanged, and the module
+loads kernel32 only when a job is used, so it imports on POSIX too. Its
+`win32()` also declares the CPU-rate and priority prototypes
+(`SetInformationJobObject`, `IsProcessInJob`, `GetCurrentProcess`,
+`SetPriorityClass`), so a caller that caps a job's CPU takes them from the
+same declaration; the additions change no existing call. The module also
+gains two job readers for a caller that meters a process tree's CPU:
+`create_joined_job()` (a new unnamed job the calling process joins) and
+`job_cpu_seconds(job)` (the user plus kernel seconds of every process the
+job has held). The active-process reader now shares one accounting query
+with them, and its result is unchanged.
+
+**What to do.** Nothing beyond the overwrite: the new file arrives with the
+kit-owned `scripts/kitlib/` package. No registry, setting or record format
+changes.
+
+**Kit-owned files — overwrite:** `scripts/agent_session.py`,
+`scripts/kitlib/winjob.py` (new), `scripts/kitlib/bootstrap_manifest.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

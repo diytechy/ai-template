@@ -2698,3 +2698,14 @@ data = "hooks_refusal(root) -> None | cause and matching repair text"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
+
+[interface.IF-302]
+rationale = "The session controller needs one shared Windows job contract; IF-297 is the nearest existing kitlib call seam but its commit-floor refusal is a different method."
+owner = "scripts/kitlib/winjob"
+requestors = ["scripts/agent_session"]
+channel = "call"
+data = "win32() -> (kernel32, ntdll); JobAccounting; job_active_processes(job) -> int; create_joined_job() -> job; job_cpu_seconds(job) -> float"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - imports only ctypes and functools; consumes no kit module. It also serves untraced local callers outside the architecture map."

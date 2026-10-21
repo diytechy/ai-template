@@ -24,9 +24,9 @@ permissions:
 # The root conftest.py hard-caps a local test run at 50% of the machine (a named
 # Windows job object) so a developer's desktop stays usable while the suite runs.
 # CI is the opposite case: an ephemeral runner nobody is sitting at, with far
-# fewer cores, and a smoke-budget job below that ENFORCES a wall-clock number.
-# Halving throughput here would buy nothing and could breach that budget, so the
-# cap is off for every job in this workflow.
+# fewer cores, and a smoke-budget job below that reports the tier's seconds.
+# Halving throughput here would buy nothing and would only slow every job, so
+# the cap is off for every job in this workflow.
 env:
   PYTEST_CPU_CAP: "off"
 
@@ -86,24 +86,18 @@ jobs:
       - name: Run kit self-tests
         run: python -m pytest -q -n auto
 
-  # WI-281: the smoke commit bar's wall-clock budget. The DETERMINISTIC membership
-  # ratchet (tests/test_smoke_budget.py) is the machine-independent floor and
-  # already runs in the test job above; THIS job times the actual `-m smoke` wall
-  # against docs/stack.ini [smoke-budget] seconds and ENFORCES it (exit 1 on
-  # breach) so a budget regression cannot ship silently.
-  # RE-ARGUED 2026-08-21 (review W-7b), because the sentence that used to stand
-  # here was ~7x off and had never been re-measured: it claimed the tier is
-  # "startup-dominated, ~7.5 s at 24 cores ... ~5x headroom", so a breach could
-  # only mean a heavy module slipped back in. Re-measured warm on a 24-core box,
-  # `-n auto`, three runs: 59.59 / 59.07 / 59.98 s against the 60 s budget —
-  # the tier runs AT its budget, not at a fifth of it. Enforce stays ON because
-  # a tier at 1.0x is exactly where growth must be visible, and because the
-  # membership ratchet cannot see runtime. What a breach no longer licenses is
-  # the DIAGNOSIS: at this ratio runner contention alone can cross the line, so
-  # read the breach as "look", not as "re-tier a module". The budget VALUE is
-  # not moved to fit any box (see scripts/check_smoke_budget.py for the full
-  # measurement; OI-52 ruling (a) settled the dial). One lane: this is a
-  # timing signal, not a portability check.
+  # WI-281, WI-940: the smoke tier's seconds, reported. The DETERMINISTIC
+  # membership ratchet (tests/test_smoke_budget.py) is the machine-independent
+  # floor and already runs in the test job above; THIS job runs `-m smoke` once
+  # under the budget step in warn mode and prints its CPU seconds and wall time
+  # against docs/stack.ini [smoke-budget] cpu-seconds and wall-seconds, with a
+  # WARN annotation for a limit over. No bar fails on the tier's seconds: the
+  # run menu's audit (docs/stack.ini [run] audit) judges them, by hand and at
+  # phase close. A red tier still fails this job with the tier's own code. The
+  # CPU budget is stamped on one workstation and applies everywhere, so a WARN
+  # here is a finding for the owner, not a re-stamp (the step's docstring owns
+  # the meters and their bounds). One lane: this is a timing signal, not a
+  # portability check.
   smoke-budget:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
@@ -117,8 +111,8 @@ jobs:
           python-version: "3.x"
       - name: Install test tooling
         run: python -m pip install -r requirements-dev.txt
-      - name: Time the smoke tier against its budget (enforce)
-        run: python scripts/check_smoke_budget.py --mode enforce
+      - name: Report the smoke tier's seconds against its budget (warn)
+        run: python scripts/check_smoke_budget.py --mode warn
 
   # The kit self-adopts its own gated process (IMPROVEMENT_PLAN.md Thread 47): this
   # job runs the kit's OWN check.py at the stage docs/stage declares — the same bar

@@ -93,25 +93,23 @@ It must pass before **each** commit — this is the **commit bar**. Its steps
 are declared once, in `docs/stack.ini` `[run] smoke`, so a build round's bar
 cannot skip the strict lints it carries (review-churn ruling 6, 2026-10-11;
 they never run in the commit hook). The lints run first; the budget check runs
-last, so a breach under parallel-lane load never hides a lint red, and its
-timed run is the bar's only tier run. The bar means results AND seconds, not
-results alone (OI-52 ruling (a), 2026-08-23):
-`-m smoke` is the fast per-commit tier; `check_smoke_budget.py --mode enforce`
-runs it once and is what makes the seconds a real bar rather than a claim a
-worker could read "passed" over — it FAILS the commit on a red tier (with the
-tier's own exit code) or when the tier's wall time breaches the budget,
-instead of only being caught later in CI. The budget, re-tiered to fit
-by WI-281, WI-496 (2026-08-23) and WI-652 (2026-09-27, OI-92 (b), after the
-tier grew to 188 s on this repo's 4-core / 8-thread box): **≤ 60 s** wall,
-declared in `docs/stack.ini` `[smoke-budget]` (26.4 / 26.4 / 25.7 s over three
-quiet runs on that box at the WI-652 re-tier) so it stays a real smoke test —
-"is it basically alive?", not a re-run of most of the suite. Tiering is
+last, and its run is the bar's only tier run.
+`-m smoke` is the fast per-commit tier; `check_smoke_budget.py --mode warn`
+runs it once, FAILS the commit on a red tier (with the tier's own exit code),
+and reports the tier's CPU-seconds and wall time against `docs/stack.ini`
+`[smoke-budget]`, with a WARN line for a limit over. No bar fails on seconds
+(the owner, 2026-10-20): `run.cmd audit` judges them, running the same step
+with `--mode enforce` against the tier's own CPU-seconds (`cpu-seconds`;
+other load on the box moves it far less than wall time), a looser wall cap (`wall-seconds`)
+and the tier's test count (`max-tests`), by hand and at phase close. A breach
+there is filed as a re-tier row, never charged to the lane that ran it. The
+tier stays a real smoke test — "is it basically alive?", not a re-run of
+most of the suite. Tiering is
 opt-out: smoke drops the **subprocess/scaffold-heavy** modules
 (`tests/conftest.py` `SLOW_MODULES` — the hook/gate/scaffold/heavy-script runs
 the commit hook and the gate re-exercise anyway), so a **new (in-process) test
-is in the bar by default**. The runtime is its own budget item — declared
-seconds (enforced locally now, not only in CI) + a deterministic membership
-ratchet — in `docs/stack.ini` `[smoke-budget]` + `tests/test_smoke_budget.py`
+is in the bar by default**. Every bar judges the tier's membership through a
+deterministic ratchet against `max-tests`, `tests/test_smoke_budget.py`
 (it bites if the tier grows back toward the full suite; re-stamp deliberately,
 reason in the log). Run the **full** unfiltered suite (`pytest -q -n auto`)
 once at phase close; mid-phase, only when it demonstrably fits inside one turn,

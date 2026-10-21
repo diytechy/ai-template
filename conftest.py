@@ -63,7 +63,14 @@ anything in the foreground wants it. On POSIX the priority drop is the whole of
 it.
 
 Dial: `PYTEST_CPU_CAP` — a percent, or `off`/`0`/`100` to disable. CI sets it
-off (ephemeral runners, nobody's desktop, and a wall-clock smoke-budget job).
+off (ephemeral runners, nobody's desktop, and a smoke-budget job that reports
+the tier's seconds).
+
+Dial: `PYTEST_CPU_CAP_JOB` — `private` makes the run skip the named job and cap
+itself in an unnamed one, at the same rate and priority, with no fallback
+warning. The smoke budget step sets it so that no other process can open its
+metered job by name and burn inside it. Absent or blank keeps the named job;
+any other value says so on stderr and keeps it too.
 
 Never fatal. A machine that refuses any of this gets a warning and a normal test
 run — a resource nicety must not be able to red a suite.
@@ -128,8 +135,47 @@ def _warn(message):
     print("conftest: {}".format(message), file=sys.stderr)
 
 
+def _requested_job_mode():
+    """`PYTEST_CPU_CAP_JOB`: "private" when set to private, else "named".
+
+    A caller that meters its own job (the smoke-budget step) sets `private`,
+    so the run it starts is capped in an unnamed job that no concurrent run
+    can find by name and join. Any other non-blank value is named, with a
+    warning naming it: like the cap itself, the dial is never fatal."""
+    raw = (os.environ.get("PYTEST_CPU_CAP_JOB") or "").strip().lower()
+    if raw == "private":
+        return "private"
+    if raw:
+        _warn(
+            "PYTEST_CPU_CAP_JOB={!r} is not a job mode (only 'private' is); "
+            "using the shared {!r} job".format(raw, JOB_NAME)
+        )
+    return "named"
+
+
+def _winjob():
+    """The kit's shared job module, the one `agent_session` also imports.
+
+    Reached lazily, so POSIX and a disabled cap never import it. The scripts
+    directory is APPENDED when absent, never prepended, so it cannot shadow a
+    stdlib module before `tests/conftest.py` moves it to the front."""
+    scripts = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "project-trajectory", "scripts"
+    )
+    target = os.path.normcase(scripts)
+    if not any(
+        isinstance(p, str) and p and os.path.normcase(os.path.abspath(p)) == target
+        for p in sys.path
+    ):
+        sys.path.append(scripts)
+    from kitlib import winjob
+
+    return winjob
+
+
 def _bound_windows(percent):
-    """Join the shared, hard-capped job object; drop to BelowNormal."""
+    """Join the shared (or, when asked, a private) hard-capped job object;
+    drop to BelowNormal."""
     global _JOB_HANDLE
     import ctypes
     from ctypes import wintypes
@@ -144,28 +190,10 @@ def _bound_windows(percent):
     class RATE(ctypes.Structure):
         _fields_ = [("ControlFlags", wintypes.DWORD), ("CpuRate", wintypes.DWORD)]
 
-    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    # Prototypes are NOT optional on x64: an undeclared HANDLE argument is passed
-    # as a 32-bit int, which truncates the handle and fails obscurely.
-    k32.CreateJobObjectW.restype = wintypes.HANDLE
-    k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
-    k32.SetInformationJobObject.restype = wintypes.BOOL
-    k32.SetInformationJobObject.argtypes = [
-        wintypes.HANDLE,
-        ctypes.c_int,
-        ctypes.c_void_p,
-        wintypes.DWORD,
-    ]
-    k32.AssignProcessToJobObject.restype = wintypes.BOOL
-    k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
-    k32.GetCurrentProcess.restype = wintypes.HANDLE
-    k32.SetPriorityClass.argtypes = [wintypes.HANDLE, wintypes.DWORD]
-
-    k32.IsProcessInJob.argtypes = [
-        wintypes.HANDLE,
-        wintypes.HANDLE,
-        ctypes.POINTER(wintypes.BOOL),
-    ]
+    # The prototypes come from the kit's one declaration. They are NOT optional
+    # on x64: an undeclared HANDLE argument is passed as a 32-bit int, which
+    # truncates the handle and fails obscurely.
+    k32, _ = _winjob().win32()
     me = k32.GetCurrentProcess()
 
     def capped(job):
@@ -179,6 +207,19 @@ def _bound_windows(percent):
         if k32.IsProcessInJob(me, job, ctypes.byref(inside)) and inside.value:
             return True  # an xdist worker that inherited it; nothing to do
         return bool(k32.AssignProcessToJobObject(job, me))
+
+    def private_job():
+        """An unnamed job, capped, with this process inside it."""
+        private = k32.CreateJobObjectW(None, None)
+        if not private or not capped(private):
+            raise ctypes.WinError(ctypes.get_last_error())
+        return private
+
+    if _requested_job_mode() == "private":
+        # Asked for, so no warning: the run skips the named job altogether.
+        _JOB_HANDLE = private_job()
+        k32.SetPriorityClass(me, BELOW_NORMAL)
+        return
 
     # Prefer the NAMED job so this run's own descendants (xdist workers, the
     # slow tier's per-test subprocesses) land in it. A concurrent run from
@@ -201,10 +242,7 @@ def _bound_windows(percent):
         # the worst outcome available, since the whole point is a guarantee.
         # Fall back to a private job so THIS tree is still bounded, and say so:
         # the ceiling is no longer shared, so N such runs can reach N x the cap.
-        private = k32.CreateJobObjectW(None, None)
-        if not private or not capped(private):
-            raise ctypes.WinError(ctypes.get_last_error())
-        _JOB_HANDLE = private
+        _JOB_HANDLE = private_job()
         _warn(
             "this run is already inside another job object, so it could not join "
             "the shared {!r} job and is capped at {}% ON ITS OWN rather than "

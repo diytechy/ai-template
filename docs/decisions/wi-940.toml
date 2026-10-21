@@ -1,0 +1,82 @@
+# docs/decisions/wi-940.toml — delegated calls the coordinator made in the
+# wi-940 lane (headless leg 07 of loop session 20261021T045653Z-213020).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-009"]
+
+[decision.D-001]
+decided = "The lane's single plan ran its full plan step: plan 51e0885c4 (fresh Claude Opus planner, DELTA within, coverage gate exit 0); critique 1 (Codex Sol, medium) CHANGES-REQUESTED with one MAJOR (the root conftest must import the shared job module, D-007 Q3 (a) of coordinator-2026-10-17), filed 71706157b; one revision 6d7ed14f4 (a fresh Opus planner, adopting it; gated with the first critique's findings to exit 0); critique 2 (convergence stance, the reading exclusion appended by hand) APPROVE findings=1, MINOR only (P3's predecessor cell omits P2, which its prose already orders), filed 96ea60da4; pass record 30860bcb5. The plan commit's bar read 68.7 s OVER with every test green (2971 passed): the first bar in a freshly added worktree (see wi-963 D-001), a records-only commit."
+alternative = "None: the skill's single-plan step."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-002]
+decided = "Terra's intent turn (gpt-5.6-terra, medium) drafted the lane's only spine rows: IF-302 (new, Drafted, the shared job module's call seam) and LLR-026's traced module and code_symbol cells; it found no SR, LLR or TC text owed, since the move preserves behaviour and the budget step is this repository's own unshipped script. Its id floor was SR-245, LLR-346, TC-377 and IF-302, above wi-963's. The set could not be committed before the module it names exists (the seam-resolution test reds an IF owner that does not resolve, and check_trajectory --strict errors on an IF no TC cites), so the coordinator added IF-302 to TC-026's verifies (traced-only; the registry is re-anchored in the lane after its act turn) and the set rides the plan's first commit, the move, with LLR-026's cells written against the moved symbols. IF-302's data and notes cells describe the module after P2 and P3; the builder's proposed narrowing goes to the spine change list for the checkpoint's reconcile."
+alternative = "Commit the IF row before the module exists, with a red bar."
+reversal_cost = "Low."
+why_not_escalated = "The intent order holds in substance: the rows precede every behaviour change."
+review = ""
+
+[decision.D-003]
+decided = "Build round 1, stage 1 (the plan's first commit, P1: the behaviour-preserving move of the Windows job helpers into kitlib/winjob.py, the bootstrap manifest row, a RESYNC entry anchored at the lane base 7f8e57192) ran on a fresh kit-builder. Its two new tests (the module imports without loading kernel32; agent_session reaches the shared helpers) were written first as strict expected failures, but their red was an import error (the module did not exist), not an assertion, so they fit neither evidence class exactly: they are a structural pin of the move, committed with it, and the existing session and CPU-cap tests, unchanged, are the move's behaviour evidence. The coordinator re-ran the touched modules (100 passed) and the bar (2973 passed, 3 skipped; 54.1 s within)."
+alternative = "Commit the two tests alone first with a stub module."
+reversal_cost = "Low."
+why_not_escalated = "The skill's rule for a test that fits no class: name it here before the code commit."
+review = ""
+
+[decision.D-004]
+decided = "Build round 1, stage 2 (the plan's P2 only: the root conftest takes its kernel32 prototypes from kitlib.winjob through a lazy import, win32() declares the four prototypes the conftest alone declared, and PYTEST_CPU_CAP_JOB=private gives the tier a private job with the same rate, cap and priority) ran on a fresh kit-builder. The plan's second commit is P2 to P6; the stage is committed at P2, a prefix of it, and the next stage builds P3 to P6. Its three new tests were strict expected failures red at their own assertions (re-run reds 3 failed, 6 passed), then the marks were removed; they are committed with the code because they share the cap's test module and its stage. The coordinator re-ran the touched modules (40 passed) and the bar (2976 passed, 3 skipped; 54.1 s within; the builder's two earlier readings at 66.8 and 65.3 s were taken while other runs loaded the box). The smoke tier counts 2979 against max-tests 2980; P4 will re-stamp it. IF-302's data still names P3's functions and runs past the data advisory length: the spine change list carries it to the checkpoint."
+alternative = "Build P2 to P6 in one stage."
+reversal_cost = "Low."
+why_not_escalated = "Procedural staging of an accepted plan."
+review = ""
+
+[decision.D-005]
+decided = "Build round 1, stage 3 (the plan's P3 to P6, completing the plan's second commit) ran on a fresh kit-builder in headless leg 08: kitlib.winjob gains create_joined_job and job_cpu_seconds over one private _accounting query; check_smoke_budget.py takes --mode only (--elapsed retires), validates cpu-seconds, wall-seconds and max-tests in both modes, selects the job meter on Windows and the getrusage meter on POSIX, refusing elsewhere, and runs the tier with PYTEST_CPU_CAP_JOB=private; docs/stack.ini's [smoke-budget] drops seconds and stamps cpu-seconds 540, wall-seconds 600 and max-tests 3140 with fig lines; the new slow module tests/test_smoke_budget_meter.py holds the platform and outside-process cases. Red before the code: 58 failed, 16 passed, 1 skipped, each at its own missing attribute or assertion. The readings: quiet 332.3 to 338.4 CPU-seconds (54.8 to 55.3 s wall); loaded beside two concurrent smoke runs 421.8 to 426.9 (102.7 to 105.1 s); WSL Ubuntu serial 52.4 and 62.6; the spread 426.9/332.3 = 1.28, under the plan's 1.5 hold, and the WSL reading far under the budget, so the hold did not trigger; cpu-seconds is 426.9 x 1.25 rounded up. Two pulls-forward to keep the commit green: test_smoke_budget.py's ratchet message no longer quotes the retired seconds key (a sliver of P7), and test_cpu_cap.py's already-jobbed probe drops PYTEST_CPU_CAP_JOB from its environment. The coordinator re-ran the affected modules (233 passed, 1 skipped) and the bar (both strict lints clean; 3020 passed, 3 skipped; CPU 355.1 s vs 540, wall 56.6 s vs 600, within). The builder's first WSL command ran from the primary checkout and its sed changed one line of the primary checkout's docs/stack.ini; it restored the exact bytes, and the coordinator found the primary checkout clean. Open for the checkpoint: the two new readers carry no Implements tag (they serve only the budget step, which no SR or LLR covers; LLR-026 is the session kill's), with IF-302's data length, on the spine change list."
+alternative = "Stamp the values in their own stage after a quiet re-reading."
+reversal_cost = "Low."
+why_not_escalated = "Builds the accepted plan; the plan's hold did not trigger."
+review = ""
+
+[decision.D-006]
+decided = "Build round 1, stage 4 (the plan's P7 only, its third commit) ran on a fresh kit-builder: [run] audit runs the budget step in enforce mode; count_smoke_tier and its UTF-8 collect move from the membership ratchet into the step, run after the reading stops and only in enforce mode, and the ratchet counts through it. Red before: 13 failed and 2 collection errors at the missing function or the absent audit key; green after (287 passed, 3 skipped across five modules; the meter module 3 passed, 1 skipped). run_menu.py audit exited 0 (CPU 366.3 s vs 540, count 3038 vs 3140). The coordinator re-ran the bar (both strict lints clean; 3035 passed, 3 skipped; CPU 367.9 s vs 540, wall 61.1 s vs 600, count within). No IF-049 cell changes: its data names no values. No RESYNC entry is owed for P7: the step and docs/stack.ini are this repository's own."
+alternative = "Build P7 with P8 and P9."
+reversal_cost = "Low."
+why_not_escalated = "Builds the accepted plan in its commit order."
+review = ""
+
+[decision.D-007]
+decided = "Build round 1, stage 5 (the plan's P8 and P9, its fourth commit) ran on a fresh kit-builder: [run] smoke's budget step, [step:smoke] and the CI smoke-budget job run the step in warn mode (coordinator-2026-10-21 D-001, pending the owner), [bars] review reaching it through run_menu.py smoke; the doc homes (CLAUDE.md, the session-protocol skill, the coordinator-cycle skill and recipes, the byte-budget-guard stamps, the registry machinery reference, the workflow and conftest comments, the step's docstring) say the bars fail only on a red tier and report the seconds, which run.cmd audit judges, and the paired-reading procedure retires; the skill copies synced. Red before: 5 failed, 2 passed against the pre-change tip; the two that passed (test_a_red_tier_still_fails_each_bar) cannot fail against P4's step, which already returns the tier's code, and were red against the lane base's step (2 failed, the missing select_meter): the plan wrote their red against the base. Byte deltas: CLAUDE.md 8,159 to 8,004; the byte-budget-guard skill 4,545 to 4,568. No RESYNC text: every touched home is this repository's own or a this-repo skill. The coordinator re-ran the bar (both strict lints clean; 3041 passed, 3 skipped; CPU 402.1 s vs 540, wall 68.5 s vs 600, within); check_docs --strict-orphans lists only the local docs/test/report.md. The lane's build is complete; counted round 1 follows."
+alternative = "None: the plan's commit order."
+reversal_cost = "Low."
+why_not_escalated = "Builds the accepted plan; D-001's warn mode is the owner's to confirm or overrule."
+review = ""
+
+[decision.D-008]
+decided = "Counted round 1 over 121e31423 (the lane's first review, its count from zero; after the rebase onto 072b5723d): REVIEW-A Codex Sol (gpt-6.1-sol, medium) CHANGES-REQUESTED findings=1, MINOR (001-REVIEW-A-121e314); REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (review-churn ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter, APPROVE findings=6, all MINOR (002-REVIEW-B-121e314). No BLOCKER or MAJOR: the checkpoint follows round 1. Triage: (a) A F1, the step's loader repeated in tests/test_smoke_budget.py: a consolidation inside the lane's test modules, built in a small pre-checkpoint builder stage. (b) B F1 (TC-026 lists IF-302 in verifies while its method exercises only the session kill, and the readers' tests are cited by no TC) and B F2 (IF-302's data cell past the advisory length, its prototype list partial): spine text, for Terra's reconcile. (c) B F3 (the fig lines' rev names the pre-rebase fa1aecde8): refuted as a reachability defect, since the landing archives the pre-rebase tip fa9df3154, which contains fa1aecde8, to archive/lanes (recipes section 3); no change. (d) B F4 (the step's docstring says load does not move the CPU reading, against the stamped +26%) and B F5 (CountFailed drops the collect run's error text, which the old ratchet showed): code, in the same builder stage, B F5 with a test. (e) B F6 (the spec's architectural delta says no IF row changes while the lane adds IF-302 and moves traced cells of LLR-026 and TC-026): the coordinator amends the spec's delta text outside its Done-when in the same stage, a wording correction that unbinds nothing."
+alternative = "Defer every MINOR to successor rows."
+reversal_cost = "Low."
+why_not_escalated = "All MINOR; the skill's triage rule."
+review = ""
+
+[decision.D-009]
+decided = "The checkpoint sitting 003-ADJUDICATE-c0ce587 (accepted) returned TC-374, its one row: (1) a false SR-026 link, (2) an Expected that did not say which condition holds which verified row, and (3), surfaced as a separate design smell for the coordinator or the owner, that IF-302's owner is a shipped kit module, so create_joined_job and job_cpu_seconds ship to every adopter as behaviour no requirement states, while they serve only this repository's smoke-budget step. Its disposition was answered in the lane: Terra's retained session dropped SR-026 from TC-374's verifies and rewrote its Expected per verified row, and the verdict's Dispositions heading moves under another heading so the landing sweep mints nothing for it. On (3) the coordinator keeps the readers where the accepted plan's P3 placed them (the shared module, beside the accounting query they share with the session's active-process reader), because moving them is a change of approach against a passed plan, which the plan step reserves to a new critique; the owner may overrule, routing the readers to this repository's own step in a successor row, and the RESYNC entry already names the two readers adopters receive. The re-sit is one combined sitting over the whole set, TC-374 alone."
+alternative = "Move the readers into scripts/check_smoke_budget.py now, with a revised plan and a fresh critique."
+reversal_cost = "Medium: a successor row moves two functions and their tests out of the shipped module."
+why_not_escalated = "Recorded high risk for the owner's confirm or overrule; the sitting named it the coordinator's or the owner's call."
+review = ""
+
+[decision.D-010]
+decided = "The checkpoint closed: the re-sit 004-ADJUDICATE-b87bfb0 (accepted) approved TC-374, the set's one row, so it is judged whole by one verdict; LLR-026's and TC-026's changes are traced only. The convergence map for the gate (every accepted finding of counted round 1; the reviewers do not read this record): 001-REVIEW-A F1 (the step's loader repeated in tests/test_smoke_budget.py): inspection, tests/conftest.py load_script takes a directory and both budget test modules load the step through it, neither keeping its own importlib sequence (8725e6d83). 002-REVIEW-B F1 (TC-026 lists IF-302 while exercising only the session kill; the readers' tests cited by no TC): the corrected text at TC-026's verifies (IF-302 removed) and the new TC-374 citing the winjob and meter tests (c0ce5874e, b87bfb0ce), approved in sitting 004. 002-REVIEW-B F2 (IF-302's data cell too long, its prototype list partial): the corrected cell, typed signatures only, 136 characters (c0ce5874e). 002-REVIEW-B F3: refuted at triage (D-008 (c)), excluded. 002-REVIEW-B F4 (the docstring says load does not move the CPU reading): the corrected text at scripts/check_smoke_budget.py's module docstring (8725e6d83). 002-REVIEW-B F5 (CountFailed drops the collect run's error text): test_a_failed_count_carries_the_tail_of_the_collect_runs_output, red against the prior message (1 failed) and green after (8725e6d83). 002-REVIEW-B F6 (the spec's delta sentences): the corrected text in the spec's Context and Scope answers (8725e6d83). Trunk has not moved since the lane's base 072b5723d, so the gate reviews the tip that lands."
+alternative = "None: the skill's convergence map."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-011]
+decided = "The gate over the checkpoint tip 5ae5f3366 (uncounted, convergence stance, after the convergence map D-010): REVIEW-A Codex Sol (gpt-6.1-sol, medium) CHANGES-REQUESTED findings=1, MINOR; REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter, CHANGES-REQUESTED findings=6, all MINOR. No BLOCKER or MAJOR: the gate passes, and the act turn follows. Each MINOR's fix would move the tip off the gated one, so each is a follow-up in status.md's unfiled list at the landing (recipes section 3, a gate MINOR): the spec's two delta sentences still say TC-026's verifies names IF-302, where TC-374 carries it and repeats two of TC-026's tree-end tests (A F1, B F1); the conftest comment and pytest.ini still state a 60 s wall bound (B F3); the shipped module's docstring names this repository's own step by path (B F4); deliverable 3 says max-tests is unchanged in value where the lane re-stamped it for its own in-process cases (B F5). The fig lines' revision (B F2) is refuted as before (D-008 (c)): the landing archives the pre-rebase tip, which contains fa1aecde8. status.md's attest and paired-reading sentences (B F6) are trunk prose, rewritten in the landing's status update."
+alternative = "A fix round after the gate, then another gate."
+reversal_cost = "Low."
+why_not_escalated = "All MINOR; the recipes' gate-MINOR rule."
+review = ""

@@ -388,6 +388,10 @@ MAPPING = [
     # `session_service.py`, `bookkeeping.py`, `integrate.py` and
     # `coordinator_guard.py`, all in this list, import it.
     ("scripts/kitlib/commit_hooks.py", "scripts/kitlib/commit_hooks.py"),
+    # WI-940 added `winjob`: the Windows job-object prototypes and the
+    # basic-accounting reader the job callers share; `agent_session.py`, in
+    # this list, imports it.
+    ("scripts/kitlib/winjob.py", "scripts/kitlib/winjob.py"),
     # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
     # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
     # the registry CSV loader — which `trace.py` and `spine_rules.py` each

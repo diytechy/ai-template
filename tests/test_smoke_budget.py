@@ -2,15 +2,16 @@
 
 The per-commit bar runs `-m smoke`; WI-122 keeps that tier OPT-OUT (a new test
 is in the bar by default). WI-281 gave the tier a BUDGET — the bar must answer
-"is it basically alive?" in <= 60 s wall — and split the budget item in two,
-because a wall-clock assert is machine-/core-count-dependent and flaky:
+"is it basically alive?" — and split the budget item in two, because a timing
+assert is machine-/core-count-dependent and flaky:
 
   * this DETERMINISTIC ratchet budgets what does not vary by machine — smoke-tier
     MEMBERSHIP (the collected-count) — and BITES when the tier grows back toward
     the full suite (the regression this exists to catch);
-  * the noisy wall-clock check lives in scripts/check_smoke_budget.py, which
-    the commit bar and CI both run with `--mode enforce` to fail a budget
-    breach. It is not a hard assert here.
+  * the tier's CPU seconds and wall time are metered by
+    scripts/check_smoke_budget.py, which every bar and CI run in warn mode
+    (reported, never failed on) and the run menu's audit runs in enforce mode.
+    They are not a hard assert here.
 
 This is a growth SENSOR with headroom (the test_dashboard_size_budget idiom), not
 an exact freeze: new in-process unit tests SHOULD accrue into the bar (that is
@@ -24,12 +25,17 @@ WI/session log, never silently.
 """
 
 import configparser
-import subprocess
-import sys
 
-from conftest import ROOT
+from conftest import ROOT, load_script
 
 STACK_INI = ROOT / "docs" / "stack.ini"
+
+# The tier's count has one home, the budget step's, so this ratchet and the
+# run menu's audit cannot count differently: the test node ids an independent
+# collect-only `-m smoke` run from the repository root collects. `--co`
+# collects but runs nothing, so the ratchet cannot recurse into itself.
+STEP = load_script("check_smoke_budget", ROOT / "scripts")
+smoke_count = STEP.count_smoke_tier
 
 
 def _budget(option):
@@ -41,41 +47,6 @@ def _budget(option):
     return int(cp["smoke-budget"][option])
 
 
-def _run_pytest_collect(cwd, *extra_args):
-    """A `python -m pytest --co -q` collect-only run against `cwd`, with the
-    child interpreter forced into UTF-8 mode (`-X utf8`).
-
-    M-01 (repo review 2026-08-19): without that flag, a pipe-connected child's
-    stdout/stderr default to the AMBIENT locale encoding — cp1252 on a stock
-    Windows box — not UTF-8. Collection can print non-ASCII (conftest's own
-    missing-POSIX-shell banner uses an en dash) before a single test runs, so
-    the child would emit a cp1252 byte this call's `encoding="utf-8"` decode
-    cannot read. That decode error kills the pipe's READER THREAD — the
-    exception is raised inside the thread, not here, so it never surfaces as a
-    catchable error — and leaves the crashed stream (`proc.stdout` or
-    `.stderr`) `None`; a caller that assumes a string then dies on
-    `AttributeError` for reasons that have nothing to do with the tests
-    themselves. `-X utf8` makes the child's own text streams UTF-8 by
-    construction, so whatever it prints always matches this decode."""
-    return subprocess.run(
-        [sys.executable, "-X", "utf8", "-m", "pytest", "--co", "-q", *extra_args],
-        cwd=str(cwd),
-        capture_output=True,
-        encoding="utf-8",
-    )
-
-
-def _collected_smoke_count():
-    """The true count of tests the `-m smoke` commit bar collects, measured by an
-    INDEPENDENT collect-only run — deterministic and invocation-independent (it
-    does not depend on how the outer suite was invoked). `--co` collects but runs
-    nothing, so this cannot recurse into itself."""
-    proc = _run_pytest_collect(ROOT, "-m", "smoke")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    # `-q --co` prints one node id (containing "::") per collected item.
-    return sum(1 for line in proc.stdout.splitlines() if "::" in line)
-
-
 def _within_budget(count, ceiling):
     """The ceiling is INCLUSIVE: at the line is fine, one past it bites."""
     return count <= ceiling
@@ -83,15 +54,15 @@ def _within_budget(count, ceiling):
 
 def test_smoke_tier_stays_within_its_membership_budget():
     ceiling = _budget("max-tests")
-    count = _collected_smoke_count()
+    count = smoke_count()
     assert _within_budget(count, ceiling), (
         "smoke tier collects {} tests, over its {}-test membership budget "
         "(docs/stack.ini [smoke-budget] max-tests). The per-commit bar must stay "
-        "a smoke test (<= {} s wall). If a heavy subprocess/scaffold module "
+        "a smoke test. If a heavy subprocess/scaffold module "
         "slipped back into the bar, re-tier it into conftest.SLOW_MODULES; if "
         "this is legitimate in-process growth, re-stamp max-tests with the reason "
         "in the WI/session log."
-    ).format(count, ceiling, _budget("seconds"))
+    ).format(count, ceiling)
 
 
 def test_membership_ratchet_bites_past_the_ceiling():
@@ -109,11 +80,12 @@ def test_membership_ratchet_bites_past_the_ceiling():
 def test_the_declared_commit_bar_runs_the_strict_lints_before_its_budget():
     # This repo's one declared commit-bar command, docs/stack.ini [run] smoke,
     # runs both strict lints, the docs staleness check and the RESYNC entry
-    # check first, then the budget check, whose own timed run is the bar's only smoke-tier run. A
-    # lint red stops the bar before the tier runs, and a breach under load
-    # never hides a lint red. A chain that dropped a step, moved the budget
-    # check ahead of the lints, or ran the tier a second time would let a build
-    # round's bar skip a check or pay for the tier twice.
+    # check first, then the budget check in warn mode, whose own metered run is
+    # the bar's only smoke-tier run: a red tier fails the bar, and its seconds
+    # are reported, never failed on. A lint red stops the bar before the tier
+    # runs. A chain that dropped a step, moved the budget check ahead of the
+    # lints, or ran the tier a second time would let a build round's bar skip a
+    # check or pay for the tier twice.
     cp = configparser.ConfigParser(interpolation=None)
     cp.read(STACK_INI, encoding="utf-8-sig")
     steps = [step.strip() for step in cp["run"]["smoke"].split("&&")]
@@ -122,7 +94,7 @@ def test_the_declared_commit_bar_runs_the_strict_lints_before_its_budget():
         "python project-trajectory/scripts/check_trajectory.py --strict",
         "python project-trajectory/scripts/check_docs.py --root . --stale",
         "python scripts/check_resync.py",
-        "python scripts/check_smoke_budget.py --mode enforce",
+        "python scripts/check_smoke_budget.py --mode warn",
     ]
     tier_steps = [
         step
@@ -136,10 +108,10 @@ def test_nested_collection_survives_a_non_utf8_console_byte(tmp_path):
     # M-01 regression (repo review 2026-08-19): a collected module that prints
     # a character during collection — exactly what conftest's own
     # missing-POSIX-shell banner does with an en dash — must not crash the
-    # collect-only run `_collected_smoke_count` depends on. No explicit
+    # collect-only run the step's `count_smoke_tier` depends on. No explicit
     # encoding is forced here: on a stock Windows box a pipe-connected child's
     # default IS cp1252, which is the real trigger this test measures against;
-    # `_run_pytest_collect`'s `-X utf8` is what keeps the child's own default
+    # `STEP._run_pytest_collect`'s `-X utf8` is what keeps the child's own default
     # UTF-8 regardless. Before that flag existed, this reproduced the exact
     # defect on a real Windows checkout: the reader thread died decoding byte
     # 0x96, and `proc.stdout` came back `None`.
@@ -151,7 +123,7 @@ def test_nested_collection_survives_a_non_utf8_console_byte(tmp_path):
     (tmp_path / "test_x.py").write_text(
         "def test_x():\n    assert True\n", encoding="utf-8"
     )
-    proc = _run_pytest_collect(tmp_path)
+    proc = STEP._run_pytest_collect(tmp_path)
     assert proc.stdout is not None and proc.stderr is not None, (
         "a decode failure killed a reader thread — proc.stdout={!r} "
         "proc.stderr={!r}".format(proc.stdout, proc.stderr)

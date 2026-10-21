@@ -879,22 +879,22 @@ def _sites():
         },
         {
             "name": "check_smoke_budget._profile",
-            "call": _smoke_budget_seconds,
-            "valid": "[smoke-budget]\nseconds = 60\n",
-            "upper": "[smoke-budget]\nSECONDS = 60\n",
-            "twin": "[smoke-budget]\nseconds = 60\nSECONDS = 70\n",
+            "call": _smoke_budget_limits,
+            "valid": _SMOKE_LIMITS,
+            "upper": _SMOKE_LIMITS_UPPER,
+            "twin": _SMOKE_LIMITS + "CPU-SECONDS = 950\n",
             "today": {
                 "absent": _RAISES,
                 "empty": _RAISES,
-                "valid": _value(60.0),
-                "bom": _value(60.0),
+                "valid": _value(_SMOKE_LIMITS_VALUE),
+                "bom": _value(_SMOKE_LIMITS_VALUE),
                 "stray": _RAISES,
                 "parse": _RAISES,
-                "upper": _value(60.0),
+                "upper": _value(_SMOKE_LIMITS_VALUE),
                 "twin": _RAISES,
                 "directory": _RAISES,
             },
-            "ruled": {"stray": (_value(60.0), _Q1)},
+            "ruled": {"stray": (_value(_SMOKE_LIMITS_VALUE), _Q1)},
         },
     ]
 
@@ -905,10 +905,19 @@ def _kit_evidence():
     return evidence
 
 
-def _smoke_budget_seconds(root, ini, monkeypatch):
+_SMOKE_LIMITS = (
+    "[smoke-budget]\ncpu-seconds = 900\nwall-seconds = 600\nmax-tests = 3000\n"
+)
+_SMOKE_LIMITS_UPPER = (
+    "[smoke-budget]\nCPU-SECONDS = 900\nWALL-SECONDS = 600\nMAX-TESTS = 3000\n"
+)
+_SMOKE_LIMITS_VALUE = (900.0, 600.0, 3000)
+
+
+def _smoke_budget_limits(root, ini, monkeypatch):
     budget = _smoke_budget_module()
     monkeypatch.setattr(budget, "STACK_INI", ini)
-    return budget.declared_seconds(budget._profile())
+    return tuple(budget.declared_limits(budget._profile()))
 
 
 def _cells():

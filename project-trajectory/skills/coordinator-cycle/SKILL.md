@@ -348,7 +348,6 @@ them where reasonable, and the spawner's bounds hold for each one:
 **Tests across parallel lanes** (owner, 2026-10-14):
 
 - one `--basetemp` per test runner;
-- the landing's smoke budget reading is taken quiet;
 - free disk is checked before lanes fan out, and the full suite runs alone
   at phase close;
 - a red that passes when re-run quietly is filed as a load-sensitive defect,

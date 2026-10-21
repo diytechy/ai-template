@@ -645,11 +645,16 @@ forgotten marker can never silently drop a test from the pre-merge suite.
 Marking a test `release` is what opts it *out* of pre-merge. `docs/stack.ini`
 `[tiers]` overrides the built-in map with stack-native expressions.
 
-This repo additionally budgets the smoke tier in `[smoke-budget]`: a wall-clock
-`seconds` target (enforced by `check_smoke_budget.py`) and a deterministic,
-machine-independent `max-tests` membership ceiling (enforced by
-`tests/test_smoke_budget.py`). Both are **growth sensors with headroom**, not
-freezes — a ratchet stamped at current+1 bites on the first legitimate addition.
+This repo additionally budgets the smoke tier in `[smoke-budget]`, three keys:
+`cpu-seconds`, the budget on the CPU seconds the tier's own processes use;
+`wall-seconds`, a looser cap on its wall time; and `max-tests`, a deterministic,
+machine-independent membership ceiling. `check_smoke_budget.py` meters the
+first two; the bars run it in warn mode, so they report the seconds and fail
+only on a red tier, and the run menu's audit (`[run] audit`) runs it in enforce
+mode against all three. `tests/test_smoke_budget.py` enforces `max-tests`
+inside the tier on every bar. All three are **growth sensors with headroom**,
+not freezes — a ratchet stamped at current+1 bites on the first legitimate
+addition.
 
 ### 9.3 Coverage floors, and how the tier gates them
 

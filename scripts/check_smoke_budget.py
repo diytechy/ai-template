@@ -1,64 +1,124 @@
 #!/usr/bin/env python3
-"""WI-281 — the smoke commit bar's wall-clock budget check.
+"""The smoke tier's budget step: run the tier once, meter its own CPU seconds.
 
-The per-commit smoke tier (docs/stack.ini [tiers] smoke) must run within the
-seconds budget declared in docs/stack.ini [smoke-budget] — a smoke test answers
-"is it basically alive?", not "re-run most of the full suite". WI-281 split the
-budget in two: the ALWAYS-ON deterministic membership ratchet
-(tests/test_smoke_budget.py) is the machine-independent floor; THIS is the
-wall-clock half. The default stays `--mode warn`, for a hand run that only
-reports (a breach prints a WARNING, exit 0), while the commit bar, CI and the
-harness `[step:smoke]` run `--mode enforce` (exit 1 on breach).
+The per-commit smoke tier (docs/stack.ini [tiers] smoke) answers "is it
+basically alive?", not "re-run most of the full suite". This step runs it once
+and reports two readings against two limits declared in docs/stack.ini
+[smoke-budget]:
 
-WHY ENFORCE, RE-ARGUED 2026-08-21 — the previous justification was seven times
-off and had never been re-measured. It read: "startup-dominated, not core-bound
-— ~7.5 s at 24 cores, ~8.1 s at 4, ~10.5 s at 2 (WI-281 rework, 2026-07-23,
-3.11.9) — so the 60 s budget keeps ~5x headroom on any real runner and a breach
-means the tier stopped being a smoke test, not runner noise." Every premise in
-that sentence is false at HEAD. RE-MEASURED, this box (24 cores, 3.11.9,
-`-n auto`, warm, three runs in one sitting): 59.59 / 59.07 / 59.98 s, against
-a 60 s budget — 0.98-1.0x, not 0.2x. The wider record agrees: of 17 smoke wall
-times in docs/log.d/2026-08-20-program-grind.md, 12 exceed 60 s (up to 142.9),
-CLAUDE.md records 54.9 / 64.0 / 55.7, and the 2026-08-21 review measured
-55.46 / 57.14 / 64.6.
+  * `cpu-seconds`, the budget: the CPU seconds the tier's own processes used,
+    user plus system, its xdist workers and their children included. Other
+    load on the box moves it far less than it moves wall time, which is why
+    it is the budget: two concurrent tier runs beside it raised it about 26%
+    while nearly doubling its wall time, and that loaded rise is what the
+    stamped value's 25% margin over the highest loaded reading was sized
+    against (docs/stack.ini [smoke-budget] holds the readings).
+  * `wall-seconds`, a looser cap on the tier's wall time, so a tier that
+    sleeps or hangs for minutes is still caught.
 
-So the honest argument for enforcing is NOT headroom — there is none. It is
-that the tier is AT its budget: every test added to it now spends a resource
-that is already exhausted, and the breach this check reports is real
-information about that, whichever cause produced it. What must NOT be read off
-a breach any more is the diagnosis "a heavy module slipped back in": at 1.0x,
-runner contention alone can cross the line, so a breach says LOOK, not
-RE-TIER. THE BUDGET VALUE DOES NOT MOVE on this measurement — one box is one
-data point, and moving a budget to fit the machine it embarrasses is how a
-budget stops meaning anything. Whether 60 s is enforced locally, or only as a
-CI target, was settled by OI-52 ruling (a), 2026-08-23: the commit bar
-enforces it locally.
+It also validates `max-tests`, the tier's membership ceiling, in both modes,
+so one broken key refuses every caller alike. A missing or broken key exits
+2, naming the file and the key, before any tier runs; there is no default.
+
+THE METERS. On Windows the step creates an unnamed job and joins it before
+the spawn (kitlib.winjob), so every tier process is born in the job; the
+reading is the job's user plus kernel time after the tier exits, minus the
+same sum just before the spawn. Exited processes, orphans and nested jobs
+count. Anywhere `resource` imports, the reading is the change in
+`getrusage(RUSAGE_CHILDREN)` across the run, with nothing else started
+meanwhile. That counts only descendants their parents waited for: a process
+orphaned before it ends is outside the reading, a stated under-count. Any
+other platform, or a job that cannot be made or joined, exits 2. There is no
+wall-only verdict.
+
+NO OUTSIDE PROCESS ADDS CPU. The tier runs with PYTEST_CPU_CAP_JOB=private,
+so the root conftest caps it in an unnamed job, at the same rate and
+priority, instead of the shared named one. Another process cannot open an
+unnamed job by name and join it, so it cannot burn inside the step's job.
+
+THE COUNT. In enforce mode, the run menu's audit (docs/stack.ini [run] audit),
+the step also counts the tier against `max-tests` once the reading has
+stopped, so the count is outside it: the test node ids a collect-only
+`-m smoke` run from the repository root collects. tests/test_smoke_budget.py's
+membership ratchet counts through the same function. A collect-only run that
+exits nonzero, or that yields no node id, is a failed count, never a pass.
+Warn mode does not count: the bars judge membership through the ratchet,
+which runs inside the tier.
+
+THE MODES AND THE EXITS. `--mode warn` (the default) prints a WARN line for a
+limit over and exits 0; `--mode enforce` exits 1 for it, a count over
+`max-tests` included. In both modes a red tier exits with its own code, the
+verdict line still printed, and a green tier whose reading (or, in enforce
+mode, whose count) failed exits 2. Callers test only for nonzero; the lines
+name the cause.
+
+THE CALLERS. Every bar runs warn mode, so no bar fails on the tier's seconds:
+docs/stack.ini [run] smoke (the commit bar, which [bars] review runs through
+the run menu), the [step:smoke] harness step, and the CI workflow's
+smoke-budget job. Only the run menu's audit, [run] audit, runs enforce mode,
+by hand and at phase close; a breach there is filed as a re-tier row.
 
 Usage:
-  # run the smoke tier once, time it and compare; the commit bar's last step,
-  # CI's smoke-budget job and the harness [step:smoke] call this form, and a
-  # red tier exits with its own exit code:
   python scripts/check_smoke_budget.py [--mode warn|enforce]
-  # evaluate an already-measured elapsed time, for a hand wrapper that ran and
-  # timed the tier itself (this form runs nothing):
-  python scripts/check_smoke_budget.py --elapsed 42.5 [--mode warn|enforce]
 
 Stdlib-only, cross-platform (a meta-repo dev/CI tool, like scripts/dev-setup).
 """
 
 import argparse
+import importlib
+import math
 import os
 import shlex
 import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "project-trajectory/scripts"))
 from kitlib import config as _kitconfig  # noqa: E402
 
 STACK_INI = ROOT / _kitconfig.STACK_INI
+SECTION = "smoke-budget"
+# How many of a failed collect-only run's last output lines a failed count
+# carries: enough for a collection error's traceback end, not the whole log.
+COUNT_TAIL_LINES = 20
+
+
+class Refusal(Exception):
+    """A missing or broken declared value or meter: exit 2, no tier run."""
+
+
+class CountFailed(Exception):
+    """The tier's collect-only count exited nonzero or found no node id."""
+
+
+class Limits(NamedTuple):
+    cpu_seconds: float
+    wall_seconds: float
+    max_tests: int
+
+
+class Reading(NamedTuple):
+    """One tier run: its CPU seconds (None when the meter failed), the
+    failure's cause, its wall seconds and its exit code."""
+
+    cpu: object
+    failure: object
+    wall: float
+    code: int
+
+
+class Count(NamedTuple):
+    """The tier's test count (None when the count failed) and the failure's
+    cause."""
+
+    tests: object
+    failure: object
+
+
+_KEYS = (("cpu-seconds", float), ("wall-seconds", float), ("max-tests", int))
 
 
 def _profile():
@@ -68,18 +128,195 @@ def _profile():
     return _kitconfig.read_stack_ini(STACK_INI)
 
 
-def declared_seconds(cp):
-    return float(cp["smoke-budget"]["seconds"])
+def _where():
+    try:
+        return STACK_INI.relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(STACK_INI)
+
+
+def _positive(section, key, kind):
+    raw = section.get(key)
+    if raw is None:
+        raise Refusal("{} [{}] has no {} key".format(_where(), SECTION, key))
+    try:
+        value = kind(raw.strip())
+    except ValueError:
+        value = None
+    if value is None or not math.isfinite(value) or value <= 0:
+        raise Refusal(
+            "{} [{}] {} = {!r} is not a positive number".format(
+                _where(), SECTION, key, raw
+            )
+        )
+    return value
+
+
+def declared_limits(cp):
+    """The three declared limits, validated: positive and finite, max-tests
+    an integer. Raises Refusal naming the file and the key."""
+    if cp is None:
+        raise Refusal("{} is absent; [{}] cannot be read".format(_where(), SECTION))
+    if not cp.has_section(SECTION):
+        raise Refusal("{} has no [{}] section".format(_where(), SECTION))
+    section = cp[SECTION]
+    return Limits(*(_positive(section, key, kind) for key, kind in _KEYS))
+
+
+def _read_limits():
+    try:
+        cp = _profile()
+    except _kitconfig.StackIniError as exc:
+        raise Refusal("{} cannot be read: {}".format(_where(), exc)) from exc
+    return cp, declared_limits(cp)
+
+
+class _JobMeter:
+    """Windows: the CPU seconds of an unnamed job this process joins."""
+
+    name = "windows-job"
+
+    def start(self):
+        from kitlib import winjob
+
+        self._winjob = winjob
+        self._job = winjob.create_joined_job()
+        self._before = winjob.job_cpu_seconds(self._job)
+
+    def stop(self):
+        return self._winjob.job_cpu_seconds(self._job) - self._before
+
+
+class _RusageMeter:
+    """POSIX: the reaped children's CPU seconds, from getrusage."""
+
+    name = "getrusage"
+
+    def __init__(self, resource):
+        self._resource = resource
+
+    def _children(self):
+        usage = self._resource.getrusage(self._resource.RUSAGE_CHILDREN)
+        return usage.ru_utime + usage.ru_stime
+
+    def start(self):
+        self._before = self._children()
+
+    def stop(self):
+        return self._children() - self._before
+
+
+def select_meter(platform=sys.platform):
+    """The CPU meter for `platform`; a Refusal where there is none."""
+    if platform == "win32":
+        return _JobMeter()
+    try:
+        resource = importlib.import_module("resource")
+    except ImportError as exc:
+        raise Refusal(
+            "no CPU meter on {}: no job objects and no resource module".format(platform)
+        ) from exc
+    return _RusageMeter(resource)
 
 
 def smoke_argv(cp):
     """The declared smoke command: [product] test + the [tiers] smoke selector,
-    with {py} bound to this interpreter — so this times exactly the bar sessions
+    with {py} bound to this interpreter — so this runs exactly the bar sessions
     run (`python -m pytest -q -n auto -m smoke`), read from the single source."""
     test = cp.get("product", "test", fallback="{py} -m pytest -q -n auto")
     tier = cp.get("tiers", "smoke", fallback="-m smoke")
     argv = shlex.split(test) + shlex.split(tier)
     return [sys.executable if tok == "{py}" else tok for tok in argv]
+
+
+def tier_env():
+    """The tier's environment: this one, with the root conftest's cap in a
+    private job that no other process can join by name."""
+    return dict(os.environ, PYTEST_CPU_CAP_JOB="private")
+
+
+def run_tier(cmd, env):
+    """Run the tier once and return its exit code."""
+    return subprocess.run(cmd, cwd=str(ROOT), env=env).returncode
+
+
+def measure(cmd, meter):
+    """Run the tier once under the meter. A meter that cannot start is a
+    Refusal, raised before the spawn; one that cannot stop is a failed
+    reading, recorded, not raised."""
+    print("running: " + " ".join(shlex.quote(c) for c in cmd), flush=True)
+    env = tier_env()
+    try:
+        meter.start()
+    except OSError as exc:
+        raise Refusal("the CPU meter could not start: {}".format(exc)) from exc
+    start = time.perf_counter()
+    code = run_tier(cmd, env)
+    wall = time.perf_counter() - start
+    try:
+        return Reading(meter.stop(), None, wall, code)
+    except OSError as exc:
+        return Reading(None, str(exc), wall, code)
+
+
+def _run_pytest_collect(cwd, *extra_args, run=subprocess.run):
+    """A `python -m pytest --co -q` collect-only run against `cwd`, with the
+    child interpreter forced into UTF-8 mode (`-X utf8`).
+
+    Without that flag, a pipe-connected child's stdout/stderr default to the
+    AMBIENT locale encoding — cp1252 on a stock Windows box — not UTF-8.
+    Collection can print non-ASCII (conftest's own missing-POSIX-shell banner
+    uses an en dash) before a single test runs, so the child would emit a
+    cp1252 byte this call's `encoding="utf-8"` decode cannot read. That decode
+    error kills the pipe's READER THREAD — the exception is raised inside the
+    thread, not here, so it never surfaces as a catchable error — and leaves
+    the crashed stream (`proc.stdout` or `.stderr`) `None`; a caller that
+    assumes a string then dies on `AttributeError` for reasons that have
+    nothing to do with the tests themselves. `-X utf8` makes the child's own
+    text streams UTF-8 by construction, so whatever it prints always matches
+    this decode."""
+    return run(
+        [sys.executable, "-X", "utf8", "-m", "pytest", "--co", "-q", *extra_args],
+        cwd=str(cwd),
+        capture_output=True,
+        encoding="utf-8",
+    )
+
+
+def count_smoke_tier(run=subprocess.run):
+    """The smoke tier's test count: the node ids (one `::` line each under
+    `-q --co`) a collect-only `-m smoke` run from the repository root
+    collects. Deterministic and independent of how any outer run was invoked.
+    Raises CountFailed on a nonzero exit, a run that cannot start, or no id.
+    A nonzero exit's message ends with the last lines of the run's output,
+    where a module that failed to import names its error."""
+    try:
+        proc = _run_pytest_collect(ROOT, "-m", "smoke", run=run)
+    except OSError as exc:
+        raise CountFailed("the collect-only run could not start: {}".format(exc))
+    if proc.returncode != 0:
+        output = (proc.stdout or "") + (proc.stderr or "")
+        tail = "\n".join(output.splitlines()[-COUNT_TAIL_LINES:])
+        raise CountFailed(
+            "the collect-only run exited {}; its output ended:\n{}".format(
+                proc.returncode, tail
+            )
+        )
+    count = sum(1 for line in (proc.stdout or "").splitlines() if "::" in line)
+    if count == 0:
+        raise CountFailed("the collect-only run collected no node id")
+    return count
+
+
+def take_count(mode):
+    """The audit's count, in enforce mode only; None in warn mode, which
+    never starts the counter."""
+    if mode != "enforce":
+        return None
+    try:
+        return Count(count_smoke_tier(), None)
+    except CountFailed as exc:
+        return Count(None, str(exc))
 
 
 def _annotate(level, message):
@@ -88,76 +325,112 @@ def _annotate(level, message):
         print("::{}::{}".format(level, message))
 
 
-def evaluate(elapsed, budget, mode):
-    """Report the verdict and return an exit code. warn -> always 0 (a WARNING
-    line on breach); enforce -> 1 on breach."""
-    over = elapsed > budget
-    verdict = "OVER" if over else "within"
-    print(
-        "smoke wall-clock budget: {:.1f}s vs {:.0f}s budget -> {}".format(
-            elapsed, budget, verdict
+def _overs(reading, limits, count=None):
+    """(key, message) for each limit the reading, or the count, is over."""
+    overs = []
+    if reading.cpu is not None and reading.cpu > limits.cpu_seconds:
+        overs.append(("cpu-seconds", "CPU", reading.cpu, limits.cpu_seconds))
+    if reading.wall > limits.wall_seconds:
+        overs.append(("wall-seconds", "wall", reading.wall, limits.wall_seconds))
+    messages = [
+        (
+            key,
+            "smoke tier {} {:.1f} s is over {} = {:g} ({} [{}]). Re-tier a heavy "
+            "module into conftest.SLOW_MODULES, or re-stamp the value with the "
+            "reason in the log.".format(what, value, key, limit, _where(), SECTION),
         )
+        for key, what, value, limit in overs
+    ]
+    if count is not None and (count.tests or 0) > limits.max_tests:
+        messages.append(
+            (
+                "max-tests",
+                "smoke tier count {} tests is over max-tests = {} ({} [{}]). "
+                "Re-tier a heavy module into conftest.SLOW_MODULES, or "
+                "re-stamp the value with the reason in the log.".format(
+                    count.tests, limits.max_tests, _where(), SECTION
+                ),
+            )
+        )
+    return messages
+
+
+def _count_line(count, limits):
+    if count.tests is None:
+        return "smoke tier count FAILED ({}); max-tests {}".format(
+            count.failure, limits.max_tests
+        )
+    return "smoke tier count: {} tests vs {} max-tests -> {}".format(
+        count.tests,
+        limits.max_tests,
+        "OVER" if count.tests > limits.max_tests else "within",
     )
-    if not over:
-        return 0
-    msg = (
-        "smoke tier took {:.1f}s, over its {:.0f}s budget (docs/stack.ini "
-        "[smoke-budget]). Re-tier a heavy module into conftest.SLOW_MODULES, or "
-        "re-stamp the budget with the reason in the log.".format(elapsed, budget)
+
+
+def _verdict_line(reading, limits, meter, overs):
+    if reading.cpu is None:
+        cpu = "CPU reading FAILED ({})".format(reading.failure)
+    else:
+        cpu = "CPU {:.1f} s vs {:g} s cpu-seconds".format(
+            reading.cpu, limits.cpu_seconds
+        )
+    return "smoke budget: {}; wall {:.1f} s vs {:g} s wall-seconds; meter {}; {} logical CPUs -> {}".format(
+        cpu,
+        reading.wall,
+        limits.wall_seconds,
+        meter.name,
+        os.cpu_count(),
+        "OVER" if any(key != "max-tests" for key, _ in overs) else "within",
     )
-    if mode == "enforce":
-        _annotate("error", msg)
-        print("FAIL (enforce): " + msg, file=sys.stderr)
-        return 1
-    _annotate("warning", msg)
-    print("WARN: " + msg)
-    return 0
+
+
+def report(reading, limits, meter, mode, count=None):
+    """Print the verdict (and, in enforce mode, the count) and return the exit
+    code, in precedence order: a red tier's own code, then 2 for a failed
+    reading or count, then 1 for an enforced limit over, else 0."""
+    overs = _overs(reading, limits, count)
+    print(_verdict_line(reading, limits, meter, overs), flush=True)
+    if count is not None:
+        print(_count_line(count, limits), flush=True)
+    for _, message in overs:
+        if mode == "enforce":
+            _annotate("error", message)
+            print("FAIL (enforce): " + message, file=sys.stderr)
+        else:
+            _annotate("warning", message)
+            print("WARN: " + message)
+    if reading.code != 0:
+        print(
+            "note: smoke tier exited {} (test failures are not a budget "
+            "breach; fix them separately)".format(reading.code),
+            file=sys.stderr,
+        )
+        return reading.code
+    if reading.cpu is None or (count is not None and count.tests is None):
+        return 2
+    return 1 if overs and mode == "enforce" else 0
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Smoke-tier wall-clock budget check.")
-    ap.add_argument(
-        "--elapsed",
-        type=float,
-        default=None,
-        help="evaluate this already-measured wall time (seconds) instead of "
-        "running the smoke tier.",
+    ap = argparse.ArgumentParser(
+        description="Run the smoke tier once; judge its CPU seconds and wall time."
     )
     ap.add_argument(
         "--mode",
         choices=("warn", "enforce"),
         default="warn",
-        help="warn (default): report only; enforce: exit 1 when over budget.",
+        help="warn (default): report a limit over; enforce (the audit): also "
+        "count the tier against max-tests, and exit 1 on any limit over.",
     )
     args = ap.parse_args(argv)
-    cp = _profile()
-    budget = declared_seconds(cp)
-
-    if args.elapsed is not None:
-        return evaluate(args.elapsed, budget, args.mode)
-    elapsed, tier_code = _time_the_tier(cp)
-    verdict = evaluate(elapsed, budget, args.mode)
-    # A red tier fails this form in both modes with the tier's own exit code,
-    # since this timed run is the commit bar's only tier run; the budget line
-    # above still reports its time, and any breach message beside it.
-    return tier_code if tier_code != 0 else verdict
-
-
-def _time_the_tier(cp):
-    """Run the declared smoke tier once and return (wall seconds, its exit
-    code), noting a red tier so the cause of a nonzero exit is printed."""
-    cmd = smoke_argv(cp)
-    print("timing: " + " ".join(shlex.quote(c) for c in cmd), flush=True)
-    start = time.perf_counter()
-    proc = subprocess.run(cmd, cwd=str(ROOT))
-    elapsed = time.perf_counter() - start
-    if proc.returncode != 0:
-        print(
-            "note: smoke tier exited {} (test failures are not a budget "
-            "breach; fix them separately)".format(proc.returncode),
-            file=sys.stderr,
-        )
-    return elapsed, proc.returncode
+    try:
+        cp, limits = _read_limits()
+        meter = select_meter()
+        reading = measure(smoke_argv(cp), meter)
+    except Refusal as exc:
+        print("smoke budget: REFUSED: {}".format(exc), file=sys.stderr)
+        return 2
+    return report(reading, limits, meter, args.mode, take_count(args.mode))
 
 
 if __name__ == "__main__":

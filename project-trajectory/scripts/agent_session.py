@@ -71,6 +71,11 @@ import threading
 import time
 import weakref
 
+# The shared job helpers, bound under the names this module has always used.
+from kitlib.winjob import JobAccounting as _JobAccounting  # noqa: F401 (re-export)
+from kitlib.winjob import job_active_processes as _job_active_processes
+from kitlib.winjob import win32 as _win32
+
 
 def split_cmd(template):
     """Split a command template into tokens.
@@ -226,10 +231,8 @@ _CREATE_SUSPENDED = 0x00000004
 # PROCESS_TERMINATE | PROCESS_SUSPEND_RESUME | PROCESS_SET_QUOTA: what
 # AssignProcessToJobObject and NtResumeProcess require of the child's handle.
 _JOB_ASSIGN_ACCESS = 0x0001 | 0x0800 | 0x0100
-# QueryInformationJobObject's JobObjectBasicAccountingInformation and
-# JobObjectBasicProcessIdList classes, the room for that list, and the
-# SYNCHRONIZE right a wait on a member needs.
-_JOB_BASIC_ACCOUNTING = 1
+# QueryInformationJobObject's JobObjectBasicProcessIdList class, the room for
+# that list, and the SYNCHRONIZE right a wait on a member needs.
 _JOB_PROCESS_ID_LIST = 3
 _JOB_PID_CAPACITY = 4096
 _SYNCHRONIZE = 0x00100000
@@ -253,22 +256,6 @@ class TreeNotEnded(OSError):
     """
 
 
-class _JobAccounting(ctypes.Structure):
-    """JOBOBJECT_BASIC_ACCOUNTING_INFORMATION; ActiveProcesses is the count
-    _kill_tree waits on."""
-
-    _fields_ = [
-        ("TotalUserTime", ctypes.c_int64),
-        ("TotalKernelTime", ctypes.c_int64),
-        ("ThisPeriodTotalUserTime", ctypes.c_int64),
-        ("ThisPeriodTotalKernelTime", ctypes.c_int64),
-        ("TotalPageFaultCount", ctypes.c_uint32),
-        ("TotalProcesses", ctypes.c_uint32),
-        ("ActiveProcesses", ctypes.c_uint32),
-        ("TotalTerminatedProcesses", ctypes.c_uint32),
-    ]
-
-
 class _JobPidList(ctypes.Structure):
     """JOBOBJECT_BASIC_PROCESS_ID_LIST, sized for _JOB_PID_CAPACITY members."""
 
@@ -277,41 +264,6 @@ class _JobPidList(ctypes.Structure):
         ("NumberOfProcessIdsInList", ctypes.c_uint32),
         ("ProcessIdList", ctypes.c_size_t * _JOB_PID_CAPACITY),
     ]
-
-
-@functools.lru_cache(maxsize=None)
-def _win32():
-    """kernel32 and ntdll with the prototypes the job calls need, declared
-    once: an undeclared HANDLE is passed as a 32-bit int on x64 and truncates.
-
-    Implements: SR-026, LLR-026
-    """
-    from ctypes import wintypes
-
-    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    k32.CreateJobObjectW.restype = wintypes.HANDLE
-    k32.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
-    k32.OpenProcess.restype = wintypes.HANDLE
-    k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-    k32.AssignProcessToJobObject.restype = wintypes.BOOL
-    k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
-    k32.TerminateJobObject.restype = wintypes.BOOL
-    k32.TerminateJobObject.argtypes = [wintypes.HANDLE, wintypes.UINT]
-    k32.QueryInformationJobObject.restype = wintypes.BOOL
-    k32.QueryInformationJobObject.argtypes = [
-        wintypes.HANDLE,
-        ctypes.c_int,
-        ctypes.c_void_p,
-        wintypes.DWORD,
-        ctypes.POINTER(wintypes.DWORD),
-    ]
-    k32.WaitForSingleObject.restype = wintypes.DWORD
-    k32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
-    k32.CloseHandle.argtypes = [wintypes.HANDLE]
-    ntdll = ctypes.WinDLL("ntdll")
-    ntdll.NtResumeProcess.restype = ctypes.c_long  # an NTSTATUS; 0 is success
-    ntdll.NtResumeProcess.argtypes = [wintypes.HANDLE]
-    return k32, ntdll
 
 
 def _contain_in_job(proc):
@@ -486,20 +438,6 @@ def _close_handles(handles):
     k32, _ = _win32()
     for handle in handles:
         k32.CloseHandle(handle)
-
-
-def _job_active_processes(job):
-    """Windows: the job's active-process count.
-
-    Implements: SR-238, LLR-026
-    """
-    k32, _ = _win32()
-    info = _JobAccounting()
-    if not k32.QueryInformationJobObject(
-        job, _JOB_BASIC_ACCOUNTING, ctypes.byref(info), ctypes.sizeof(info), None
-    ):
-        raise ctypes.WinError(ctypes.get_last_error())
-    return info.ActiveProcesses
 
 
 def _job_survivors(job, members):
