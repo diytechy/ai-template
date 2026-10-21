@@ -100,6 +100,8 @@ WI-817's legacy retirement.
 
 ## Trust
 
+Written under [PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+
 The read gives a file authority over three gates: the mixed-config refusal
 (refuses a commit or push), the privacy gate (decides whether a push must pass
 the LLM privacy review), and the unwired-reviewer posture (decides whether an
@@ -165,9 +167,12 @@ Each named test fails on the code before the change.
 - All three hooks refuse a mixed config naming both files; refuse an
   unparseable or unreadable `process.toml` naming it; refuse when the read exits nonzero or answers
   outside its tokens.
-- `pre-push`: `privacy_review = "warn-unwired"` warns and proceeds with no
-  reviewer; any other value, a wrong type, or absence refuses; the legacy
-  `docs/privacy-review` behaves the same during the window.
+- `pre-push`, when the privacy gate is on: `privacy_review =
+  "warn-unwired"` warns and proceeds with no reviewer; any other value, a
+  wrong type, or absence refuses; the legacy `docs/privacy-review` behaves
+  the same during the window. When the privacy gate is off, no push is
+  refused for an absent or unwired privacy reviewer, whatever
+  `privacy_review` holds.
 - All three hooks refuse a `KIT_SCRIPTS_DIR` naming a missing directory.
 - `kit-python.sh` parses under bash 3.2 (`tests/test_shell_portability.py`).
 - One scaffold bootstrap: a fresh scaffold ships the new probe and hooks,
@@ -226,3 +231,16 @@ delegated decisions, for the owner to confirm or overrule:
 - **B4.** No owner act. The malformed-file ruling is a delegated decision
   the owner confirms or overrules (`docs/decisions/coordinator-2026-10-20.toml#D-006`,
   high risk); an overrule rewrites that Trust line before the claim.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, 2026-10-20; CHANGES-REQUESTED,
+findings=2):
+
+- **MAJOR, S3 (the unwired-reviewer Done-when refuses a privacy-off push):
+  adopted.** The `pre-push` bullet now opens "when the privacy gate is on"
+  and adds "When the privacy gate is off, no push is refused for an absent
+  or unwired privacy reviewer, whatever `privacy_review` holds", matching
+  Trust's "the review posture is moot".
+- **MINOR, S2 (no link to PROCESS.md §3's guard rule): adopted.** Trust now
+  opens with a link to PROCESS.md §3, "When a guard is owed".
