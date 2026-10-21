@@ -3,7 +3,7 @@
 # 20261019T185432Z-8e4f05).
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-002", "D-005"]
+high_risk = ["D-002", "D-005", "D-006"]
 
 [decision.D-001]
 decided = "Queue row P1 (review-churn item 13's review gate) is filed on trunk as four rows, split at birth on independent deliverables (ruling 3): WI-955, the text (TC-first in lanes, the reviewer's test-adequacy and duplication questions); WI-956, the one tree-bound bar attestation (grammar, verifier and producer, the landing refresh moved onto it); WI-957, the coordinator's review-render refusal; WI-958, the loop's review-draw refusal with the red-round cap as a partial close. They land in that order. A planner sub-agent drafted them from plan item 13 and the code; the scope critique judges each before its claim. Each specref names plan item 13's section, as WI-914 named its plan item."
@@ -38,4 +38,11 @@ decided = "WI-960's three filing calls are decided by the coordinator, not held 
 alternative = "Hold the filing for the owner's rulings on C1 to C3."
 reversal_cost = "Low before the claim: an overrule rewrites the spec's settlements and its scope critique re-runs."
 why_not_escalated = "Two follow the approved WI-788 design; the owner confirms or overrules all three."
+review = ""
+
+[decision.D-006]
+decided = "Queue row P7 (review-churn item 10, step 2's build) is filed as WI-962, one deliverable: the three shipped hooks read the policy file through one tomllib read in their shared interpreter probe, and none reads configuration as text. The planner sub-agent's read found two shell reads the plan's list of three omits (pre-push's privacy_review posture, which no Python reader serves, and the scripts-directory lookup, which disagrees across the hooks); the row takes both. Its one filing call is decided by the coordinator in a headless leg: a present but unreadable or unparseable docs/process.toml refuses at all three hooks, naming the file and the parser's message, where today the hooks and check_privacy read it as privacy ON and the commit proceeds. Refusing is the kit's fail-closed Trust rule and gives the read one closed answer set; its cost is a forced change for adopters (a broken policy file holds every commit until it parses), stated in the row's RESYNC entry. The shape-rule retirement (SR-137's line-shape clause and its readers) is a later deletion-only row, filed when WI-962 lands."
+alternative = "Keep reading a malformed policy file as privacy ON (no adopter-visible change), or hold the filing for the owner."
+reversal_cost = "Low before the claim: an overrule rewrites one Trust line and its Done-when case."
+why_not_escalated = "It follows the fail-closed rule every Trust ruling applies; the owner confirms or overrules."
 review = ""
