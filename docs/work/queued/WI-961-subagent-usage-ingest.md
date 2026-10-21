@@ -256,3 +256,5 @@ findings=1):
   contribution once by its contribution key into its invocation's total, so
   a repeated harvest adds nothing and a resumed transcript's later
   contribution is kept."
+
+Confirming round (Codex Sol, medium, convergence stance, 2026-10-20): APPROVE, findings=0; the disposition above is confirmed.

@@ -111,11 +111,10 @@ capability voice: no file, module or path in a requirement cell (ruling 5).
    retires.
 2. **Terra's resumed turn goes through the same route.** No hand-run
    `codex exec resume` survives in the recipes. The resume id is read from
-   a recorded source (the lane's last Terra session log's `session-id`, or
-   a lane-scoped keep under `session_keep` as WI-887 keeps a loop review
-   round). It is never re-typed from the decisions record. Which of the
-   two is the lane's plan. `session_adapters.CodexAdapter.resume` already
-   builds the resume form.
+   a recorded source: the lane's newest Terra (`AUTHOR`) session log's
+   `session-id`, as committed at the lane's HEAD (chosen at filing; see
+   Trust). It is never re-typed from the decisions record.
+   `session_adapters.CodexAdapter.resume` already builds the resume form.
 3. **The change check, between `act` and `record`.** It compares the root's
    HEAD and its status before the launch with the same after `act`:
    - **Sol (review, critique):** any change is an edit, except the discount
@@ -203,15 +202,28 @@ its Trust. Written under [PROCESS.md §3, "When a guard is owed"](../../../proje
   that never writes to trunk. A spool directory that cannot be created or
   written raises, and the call is reported failed to record. The log is
   never dropped silently and never committed elsewhere.
-- **Ruling, at Terra's resume reader** (Deliverable 2): the carrier the
-  plan chooses (the lane's last Terra session log, or a lane-scoped keep)
-  selects the thread a resumed turn continues, so the plan records,
-  before the build, its producer and write route, its reader by path,
-  the lane and route identity it is bound to, and what a failed or
-  partial write leaves. An absent, unreadable, failed or malformed
-  carrier, or one bound to another lane or route, refuses the resumed
-  turn before launch, naming the cause; it never starts a fresh thread
-  in its place and never reads an id typed into the decisions record.
+- **Ruling, at Terra's resume reader** (Deliverable 2). The carrier is
+  the lane's newest `AUTHOR` session log, which selects the thread a
+  resumed turn continues:
+  - **Producer and write route:** `session_service.record`, through
+    `agent_common.write_session_log` into the lane's `docs/iteration/`
+    and `agent_common.commit_telemetry`'s `--only` commit, at the end of
+    each Terra turn this row's entry point runs.
+  - **Failed writes:** no log (the call failed before `record`); a log
+    written but left uncommitted (the lost-commit arm of Deliverable 4,
+    whose nonzero exit names it); a log killed mid-write.
+  - **Reader:** this row's coordinator entry point (Deliverable 1), its
+    resume arm only, reading the lane's committed logs at HEAD (`git
+    show HEAD:<path>`), never the working tree.
+  - **Binding:** the log's branch and role (`AUTHOR`) and its route id
+    (the enabled Terra row) must equal the resumed call's.
+  - **Ruling:** no `AUTHOR` log at HEAD, an unreadable or unparseable
+    one, one with no `session-id`, or one bound to another branch or
+    route refuses the resumed turn before launch, naming the log and
+    the cause; an uncommitted newer log is refused too, naming it, so
+    the coordinator commits it first. The reader never starts a fresh
+    thread in its place and never reads an id typed into the decisions
+    record.
 
 ## Done-when
 
@@ -340,3 +352,14 @@ findings=2):
   binding and failed-write shape before the build, and an absent,
   unreadable, failed, malformed or foreign carrier refuses the resumed turn
   before launch; Done-when gains "Terra's resume carrier".
+
+Confirming round (Codex Sol, medium, convergence stance, 2026-10-20;
+CHANGES-REQUESTED, findings=1): the MAJOR's adoption is confirmed. The
+MINOR's confirmation failed and keeps its severity (the carrier was still
+left to the plan), so it is answered here with no further round (owner,
+2026-10-14): the carrier is chosen at filing. Deliverable 2 now reads "the
+lane's newest Terra (`AUTHOR`) session log's `session-id`, as committed at
+the lane's HEAD", and Trust's "Ruling, at Terra's resume reader" states its
+producer and write route, its failed writes, its reader (the entry point's
+resume arm, reading committed logs at HEAD), its binding (branch, role and
+route id) and the refusal for each bad input.
