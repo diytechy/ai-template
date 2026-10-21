@@ -151,7 +151,7 @@ review or critique until inspected (recipes §1: "Exit 3 means the reviewer
 changed the lane; inspect before trusting"). The discount gives a
 session-log commit authority to pass that gate. The spool is a new carrier.
 It is a gate input only once WI-800's harvest reads it, so WI-800 carries
-its Trust. Written under [PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+its Trust. Written under [PROCESS.md §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producer** of the discounted commits: `session_service.record` ->
   `agent_common.commit_telemetry`. It writes the subject `telemetry: session
