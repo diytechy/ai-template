@@ -643,6 +643,9 @@ commit of its own, move it to trunk's tip
   The bar's `check_resync` refuses every commit of a lane rebased past
   WI-916 until its entry exists, so a plan step that writes the entry
   later moves into the first commit after the rebase (wi-927 D-005).
+  So does a lane's first commit that touches a shipped path, a test
+  stage's stubs included: place the entry there, anchored at the lane's
+  base, and let the plan's record step refine it (wi-958 D-004).
   A last rebase onto a trunk that moved only by docs commits replays
   cleanly and leaves the entry at the old base: re-anchor it in the
   staged squash on trunk, at the landing's parent (WI-927, 2026-10-18e).
@@ -1010,7 +1013,9 @@ lane commit being replayed.
   2026-10-17): tell every builder the same.
   A command that reads stdin (a stray `cat`, a script waiting on input)
   never returns in a headless leg and is moved to the background at the
-  tool cap: give kit commands `< /dev/null` (2026-10-21a). A message
+  tool cap: give kit commands `< /dev/null` (2026-10-21a). So does a
+  file read whose path is an empty `$(ls <glob>)`: `sed -n 1,9p $F` with
+  `F` empty reads stdin (2026-10-21c); check the path first. A message
   composed with `sed` over a wrapped line rewrites the wrong text: write
   commit messages with the file tool (2026-10-21a).
 - **The first bar in a freshly added worktree reads cold:** with no
@@ -1088,6 +1093,13 @@ lane commit being replayed.
 
 ## 8. Re-judge and consolidation recipes
 
+- **A disposition row's lane** (WI-953): compose and sit it from the lane
+  (recipes §1, Adjudication), then close it with
+  `handback.close_adjudication(Path(".").resolve(), "<branch>")` from the
+  lane root. It moves the row to `docs/work/complete/` with its Deliverable
+  and `specref = ""` and commits with the run's trailer; land the lane
+  as any other, and the sweep (`--merged` naming the row) mints each
+  drafted successor.
 - **A disposition whose successor was filed by hand** (WI-894): the verdict
   drafts none, so `handback.close_adjudication` refuses (`owes_successor`)
   and the landing's sweep refuses the empty `## Dispositions` (OI-73).

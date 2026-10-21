@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-21b-leg08-coordinator.md](handoff-2026-10-21b-leg08-coordinator.md),
+  [handoff-2026-10-21c-leg09-coordinator.md](handoff-2026-10-21c-leg09-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -51,8 +51,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   (owner, 2026-10-17). The
   disposition-adoption row was re-cut and closed partial at its rebuild's
   plan cap: the cap's sitting ruled a FIX, and the owner routed it to a
-  third plan revision with one confirming critique, which its minted
-  disposition row now carries. The trunk mint's settled-amendment filter
+  third plan revision with one confirming critique; its disposition is
+  sat, and the successor it drafted is queued on that route. The trunk mint's settled-amendment filter
   (the first new build, owner, 2026-10-20) passed its checkpoint and
   holds at its gate for the owner (OI-115: its ruled fix needs the act
   ledger to record what each act copied), and the lane
@@ -65,12 +65,13 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `attest` verb) have landed, and so has the coordinator's review refusal:
   a review brief renders only over the tip's attested review bar
   (`attest` runs from the primary checkout and finds the lane by branch).
-  The loop's refusal follows it.
+  The loop's refusal (with its red-round cap) is claimed and built
+  through its configuration step in its lane.
   The lane lifecycle design's remaining rows are deferred until the owner
   reviews their re-scopes, and the queue table is an explicit list. Item 8's usage
   record is filed as two rows (the coordinator's Sol and Terra calls
-  through the session service, then the Claude sub-agent usage ingest),
-  built after the coordinator's refusal lands. Item 10 step 2's row (the
+  through the session service, then the Claude sub-agent usage ingest);
+  the first is claimed, its plan passed, and its spec amendment is next. Item 10 step 2's row (the
   hooks' one policy read) has landed, and its shape-rule retirement row
   is filed.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
@@ -85,7 +86,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 143 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 146 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
