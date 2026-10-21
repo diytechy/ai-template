@@ -3,7 +3,7 @@
 # 20261019T185432Z-8e4f05).
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-002"]
+high_risk = ["D-002", "D-005"]
 
 [decision.D-001]
 decided = "Queue row P1 (review-churn item 13's review gate) is filed on trunk as four rows, split at birth on independent deliverables (ruling 3): WI-955, the text (TC-first in lanes, the reviewer's test-adequacy and duplication questions); WI-956, the one tree-bound bar attestation (grammar, verifier and producer, the landing refresh moved onto it); WI-957, the coordinator's review-render refusal; WI-958, the loop's review-draw refusal with the red-round cap as a partial close. They land in that order. A planner sub-agent drafted them from plan item 13 and the code; the scope critique judges each before its claim. Each specref names plan item 13's section, as WI-914 named its plan item."
@@ -24,4 +24,18 @@ decided = "The four rows' scope critiques, round 1 (Codex Sol, medium; WI-955 1 
 alternative = "File P4 now and give WI-958 its hard edge."
 reversal_cost = "Low: four queued rows, unclaimed."
 why_not_escalated = "Ruling 9 makes the dispositions the coordinator's; the confirming round checks them."
+review = ""
+
+[decision.D-004]
+decided = "Queue row P2 (review-churn item 8) is filed as two rows, split at birth (ruling 3): WI-960 routes the coordinator's Sol and Terra calls through the session service, with the change check between the call and its record, another call's session-log commit discounted, and a call outside a claimed lane spooling its log (lands first); WI-961 records Claude coordinator sessions and their sub-agents, nested ones included, from their transcripts, once per invocation (hard edge on WI-960, whose out-of-lane arm its close-out logs need). WI-961 lands before WI-800's store: it carries only the ledger contract's invocation key and a cursor in each log, and WI-800's backfill reads its logs like any other. WI-800 gains WI-960 as a hard edge (its harvest reads WI-960's spool); its text amendments (the spool's write side now WI-960's; keep-warm's commit-nothing line met by WI-960) wait for WI-800's re-critique at its claim, and so does WI-801's Done-when line that adds no other coordinator launcher, which WI-960's entry point contradicts (move WI-960's kinds into ask, or put its route in the adjudication module). A planner sub-agent (Claude Opus) drafted both specs from the plan and the code; the coordinator read their Done-when, Trust and Scope answers before filing. Each scope critique runs before its row's claim."
+alternative = "One row for item 8 (the change check, the spool and the transcript ingest together)."
+reversal_cost = "Low: neither row is claimed."
+why_not_escalated = "Ruling 3 makes the split the filing's; the drafter's verified facts carry it."
+review = ""
+
+[decision.D-005]
+decided = "WI-960's three filing calls are decided by the coordinator, not held for the owner, because a headless leg cannot ask and two follow an approved design: C1, a call outside a claimed lane writes its session log to the spool under the primary checkout's out/ and commits nothing (WI-788's design, ch.2 §6 and ch.4 §3); C2, the change check discounts a commit that only adds standard-call session logs, every other range an edit (the records cannot be ordered after both checks between independent processes); C3, the spool arm is one rule in the record step for every caller, derived from the root (WI-788 ch.4 §3), which moves an adopter's keep-warm logs off trunk (a RESYNC entry). The spec states them under 'Calls decided at filing'."
+alternative = "Hold the filing for the owner's rulings on C1 to C3."
+reversal_cost = "Low before the claim: an overrule rewrites the spec's settlements and its scope critique re-runs."
+why_not_escalated = "Two follow the approved WI-788 design; the owner confirms or overrules all three."
 review = ""
