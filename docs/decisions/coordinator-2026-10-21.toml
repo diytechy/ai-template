@@ -32,3 +32,10 @@ alternative = "Hold WI-940's landing until the owner rules OI-115."
 reversal_cost = "Low: an overrule holds WI-940's landing; nothing is lost."
 why_not_escalated = "Recorded for confirm or overrule; a headless leg moves to the next row when one is owner-held (coordinator-cycle section 7)."
 review = ""
+
+[decision.D-005]
+decided = "Headless leg 09 landed WI-957 (8c32cf2a9), which released the queue's hard edge on WI-958, so it claims the next three rows the queue table names that can move without the owner under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006): WI-953 (queue row 2, WI-902's disposition sitting on the owner's route), WI-958 (row 4: its needs WI-956 and WI-957 are done; scope critique dispositioned and its confirming round APPROVE 0) and WI-960 (row 5: soft edge on WI-957 only; its confirming round's one MINOR answered in its spec). WI-961 hard-needs WI-960 and stays queued. Only WI-953 is worked first; the machinery rows land one at a time, each after the cycle has run a review render through WI-957's changed step."
+alternative = "Claim WI-953 alone and unpause again for the others."
+reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
+why_not_escalated = "The queue table's order and the owner's batch-claim rule; recorded for confirm or overrule."
+review = ""
