@@ -100,7 +100,7 @@ WI-817's legacy retirement.
 
 ## Trust
 
-Written under [PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+Written under [PROCESS.md §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 The read gives a file authority over three gates: the mixed-config refusal
 (refuses a commit or push), the privacy gate (decides whether a push must pass
