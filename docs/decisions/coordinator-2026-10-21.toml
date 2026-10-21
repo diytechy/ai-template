@@ -18,3 +18,10 @@ alternative = "Draft the dispositions by hand in the coordinator's session."
 reversal_cost = "Low: queued specs."
 why_not_escalated = "The skill's pre-claim rule (rulings 1 and 9)."
 review = ""
+
+[decision.D-003]
+decided = "The confirming rounds of WI-963's and WI-940's scope critiques (Codex Sol, medium, convergence stance, over af9eb31d4) both returned APPROVE findings=0: every disposition is carried by its spec. Both rows are claimed together under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006), the handoff's queue rows 2 and 3. Each changes machinery the cycle runs on (the trunk mint; both bars' budget step), so each lands alone, WI-963 first by queue order unless WI-940 is ready first."
+alternative = "Claim one row per unpause."
+reversal_cost = "Low."
+why_not_escalated = "The handoff's queue order and the batch-claim rule."
+review = ""
