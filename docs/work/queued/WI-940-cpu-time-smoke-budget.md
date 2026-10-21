@@ -123,7 +123,20 @@ seconds only. It overrides the deliverables below where they differ:
 3. **The declared values and the verdict.**
    - **Keys.** `[smoke-budget]` gains `cpu-seconds` (the budget) and
      `wall-seconds` (the looser cap). `seconds` retires, so no reader keeps
-     60 as a budget. `max-tests` is unchanged.
+     60 as a budget. `max-tests` is unchanged in value, and the step now
+     reads it too (the audit's count, below).
+   - **The count (the audit's `max-tests` judgment).** In enforce mode,
+     after the timed tier run and outside its reading, the step counts the
+     smoke tier: the test node ids a collect-only `-m smoke` run from the
+     repository root collects. That is the definition
+     `tests/test_smoke_budget.py`'s membership ratchet applies today, and
+     both read it through one counting function (the plan settles its home),
+     so the audit and the ratchet cannot count differently. The ceiling is
+     inclusive, as the ratchet's: at `max-tests` passes, one past it is over.
+     A collect-only run that exits nonzero, or that yields no node id, is a
+     failed count, never a pass. Warn mode, the bars' form, does not count:
+     the bars keep judging membership through the ratchet, which runs inside
+     the tier (the owner's re-scope overrules seconds only).
    - **Values.** Each is stamped from a measured baseline, never invented,
      with its `fig:` line and log reason. For CPU: three or more readings in
      this workstation's quietest windows, three or more under the builder's
@@ -132,14 +145,18 @@ seconds only. It overrides the deliverables below where they differ:
      the ordinary loaded readings on record (D-007).
    - **Report.** One verdict line gives the CPU-seconds against the budget,
      the wall time against the cap, the meter, and the box's logical CPU
-     count, which sets the worker count. A breach adds a WARN or FAIL line
+     count, which sets the worker count. In enforce mode a second line gives
+     the tier's count against `max-tests`. A breach adds a WARN or FAIL line
      naming the limit and its key.
    - **Exits, in precedence order.** First, 2 in both modes, before any
      tier run, for a missing or broken value or meter. Then a red tier's own
-     code in both modes (WI-935), naming a failed reading too. Then 2 for a
-     green tier whose reading failed. Then 1 in enforce mode for CPU or wall
-     over; warn mode prints WARN and exits 0. Otherwise 0. Callers test only
-     for nonzero, and the lines name the cause.
+     code in both modes (WI-935), naming a failed reading or count too, and
+     any limit it measured over (a tier over `max-tests` is usually red
+     already, through the ratchet). Then 2 for a green tier whose reading
+     failed, or, in enforce mode, whose count failed. Then 1 in enforce mode
+     for CPU, wall or count over; warn mode prints WARN and exits 0.
+     Otherwise 0. Callers test only for nonzero, and the lines name the
+     cause.
    - **`--elapsed` retires.** A bare wall time can give only a wall-only
      verdict. No script calls it, and the recipes' wrapper runs the whole
      bar.
@@ -181,11 +198,21 @@ the claim, under [`PROCESS.md` §3, "When a guard is owed"](../../../project-tra
   `scripts/check_smoke_budget.py` (the verdict), `tests/test_smoke_budget.py`
   (the `max-tests` ceiling, and a message quoting the budget) and
   `tests/test_check_smoke_budget.py`. After WI-915, the step reads the file
-  through the shared loader.
+  through the shared loader. After this row the step reads all three keys,
+  `max-tests` included, for the audit's count (deliverable 3).
+- **The count's path** (the audit's `max-tests` judgment): produced by the
+  step's own collect-only `-m smoke` run, through the counting function the
+  membership ratchet shares; consumed by the step alone, in the same run, and
+  never persisted. It is not a declared value, so it has no producer outside
+  that run.
 - **Ruling:** the step exits 2, naming the file and the key, and starts no
   tier when the file is absent or unreadable, the section or a key is
   absent, or a value is blank, non-numeric or non-positive. There is no
-  built-in default. The reading itself is no file: it comes from the OS, is
+  built-in default. It validates `cpu-seconds`, `wall-seconds` and
+  `max-tests` in both modes, so one broken key refuses every caller alike. A
+  failed count (the collect-only run exits nonzero or yields no node id)
+  exits 2 naming it, after a green tier, and a red tier's own code wins over
+  it (deliverable 3's precedence). The reading itself is no file: it comes from the OS, is
   judged in the same run and is never persisted. The authority binds to the
   working tree's `docs/stack.ini` when the step starts.
 
@@ -207,7 +234,8 @@ Each named test fails on the code before the change.
   with a failed reading, its code naming both; a green tier with a failed
   reading, 2.
 - **Refusals** exit 2, name their cause, and assert that the stand-in tier
-  never started: an absent, blank, non-numeric or non-positive key; a
+  never started: an absent, blank, non-numeric or non-positive key
+  (`max-tests` included, in both modes); a
   stand-in platform without `resource`; a job stand-in raising `OSError`.
 - **The verdict line** names the CPU-seconds and the budget, the wall time
   and the cap, the meter, and the CPU count.
@@ -225,20 +253,48 @@ Each named test fails on the code before the change.
   `[bars] review` run the step in warn mode; a test proves a stand-in tier
   over both limits exits 0 with its WARN line under each bar's command, and
   a red stand-in tier still exits nonzero.
+- **No other enforce caller fails on seconds** (coordinator-2026-10-21
+  D-001): `docs/stack.ini` `[step:smoke]` and the CI `smoke-budget` job run
+  the step in warn mode; a test reads each command and finds the warn mode.
 - **The audit's smoke part** runs from `run.cmd audit` (and `run_menu.py
   audit`), runs the step in enforce mode and reports the test count against
-  `max-tests`; over either limit it exits 1 naming the limit.
+  `max-tests`; over any of its three limits (CPU, wall, `max-tests`) it
+  exits 1 naming the limit and its key.
+- **The audit's count**, in-process against a stand-in tier and counter, in
+  enforce mode: a count at `max-tests` exits 0 and one past it exits 1,
+  naming `max-tests`; a counter that fails or counts nothing exits 2 naming
+  the failed count; a red tier over `max-tests` exits with the tier's own
+  code, naming the count too. Warn mode never starts the counter. The
+  membership ratchet in `tests/test_smoke_budget.py` and the step count
+  through the same function.
 - **On the landing tip**, the bar is green and `run.cmd audit` is run once
   quiet, its verdict line recorded in the fragment;
   `check_trajectory.py --strict` and `trace.py --strict` are clean.
 
 ## Scope answers
 
-- **S1.** Two pieces. Deliverable 6, the job-code move, lands first, as its
-  own commit (PROCESS.md §3). Deliverables 1 to 5 land together, as
-  each is broken alone: without deliverable 2 another run can raise the
-  reading, without the step the keys are dead, and retiring the paired
-  procedure first leaves load breaches with no rule.
+- **S1.** The final inventory, after the owner's re-scope, is four pieces:
+  (A) deliverable 6, the job-code move; (B) the CPU meter, its isolation,
+  the keys and their stamped values (deliverables 1 to 3); (C) the bars'
+  switch to warn mode, which is one line, since `[bars] review` runs
+  `run_menu.py smoke` and so takes `[run] smoke`'s step as written, with the
+  paired procedure's retirement; (D) the `[run] audit` action's smoke part,
+  with its count. The doc homes (deliverable 4) follow whichever of them
+  they describe, and RESYNC (deliverable 5) follows A.
+  - **Order.** A lands first, as its own behaviour-preserving commit
+    (PROCESS.md §3). B, C and D follow in one landing, B's commit before
+    C's and D's, all in this lane.
+  - **Why B, C and D stay together.** Each is broken alone. C without D
+    leaves the tier's seconds judged by nothing, the gap that retiring the
+    paired procedure first would open. D without B is a wall-only verdict,
+    which deliverable 1 refuses. B without C and D keeps both bars failing
+    on seconds, against the re-scope. Within B, without deliverable 2
+    another run can raise the reading, and without the step the keys are
+    dead.
+  - **The alternative, for the owner.** C could land alone, ahead of the
+    lane, to release WI-957 sooner. Its cost is that seconds would be
+    judged nowhere until D lands, only printed. The re-scope orders the row
+    as a whole before WI-957, so this spec keeps one landing.
 - **S2.** One file gains a value domain over the bar's gate (`## Trust`).
   The conftest's new input, an environment variable, only picks which job
   the cap uses, and gates nothing.
@@ -281,6 +337,16 @@ Each named test fails on the code before the change.
   landing, and a breach there is a finding for the owner, not a re-stamp. If
   the loaded CPU readings spread too wide for one value, the lane holds
   before the stamp, for the owner.
+- **The two other enforce callers** (found at drafting, not raised by the
+  critique; a delegated call, coordinator-2026-10-21 D-001, for the owner
+  to confirm or overrule). Two more callers run the step in
+  `--mode enforce` and the re-scope does not name them: `docs/stack.ini`
+  `[step:smoke]` (the harness step, `from-stage = DevStg-Tests`, so it is
+  in the stage bar a lane refresh runs) and `.github/workflows/test.yml`'s
+  `smoke-budget` job. Both move to warn mode in this row, as the commit
+  and review bars do: each is a bar in the sense of the owner's ruling,
+  and the seconds are judged only by the run menu's audit. The
+  template's copies of both (if shipped) follow the same rule.
 
 ## Calls ruled at filing
 
@@ -299,3 +365,32 @@ Each named test fails on the code before the change.
   names the CPU count; a breach elsewhere is a finding, not a re-stamp.
 - **The shared job module** (D-007, Q3 (a)): deliverable 6, moved first in a
   behaviour-preserving commit, with its RESYNC entry (PROCESS.md §3, 0→A→B).
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, 2026-10-21), CHANGES-REQUESTED, two
+findings.
+
+- F1 (MAJOR, S2/S3, the re-scope's "The audit judges", Trust, Done-when
+  "The audit's smoke part"): adopted. Deliverable 3 now reads "In enforce
+  mode, after the timed tier run and outside its reading, the step counts
+  the smoke tier: the test node ids a collect-only `-m smoke` run from the
+  repository root collects", with "A collect-only run that exits nonzero, or
+  that yields no node id, is a failed count, never a pass" and the exits
+  "Then 1 in enforce mode for CPU, wall or count over". Trust adds "The
+  count's path ... produced by the step's own collect-only `-m smoke` run
+  ... consumed by the step alone, in the same run" and "It validates
+  `cpu-seconds`, `wall-seconds` and `max-tests` in both modes". Done-when
+  adds "The audit's count ... a count at `max-tests` exits 0 and one past it
+  exits 1, naming `max-tests`; a counter that fails or counts nothing exits
+  2 naming the failed count; a red tier over `max-tests` exits with the
+  tier's own code". The owner's re-scope already rules that the audit judges
+  the count and that a breach is filed as a re-tier row, so the contract
+  needs no new owner call.
+- F2 (MINOR, S1): adopted. S1 now reads "The final inventory, after the
+  owner's re-scope, is four pieces", with "A lands first, as its own
+  behaviour-preserving commit ... B, C and D follow in one landing" and "Why
+  B, C and D stay together. Each is broken alone." The option of landing the
+  bars' warn switch alone, to release WI-957 sooner, is recorded under "The
+  alternative, for the owner"; the spec keeps one landing, as the re-scope
+  orders the row as a whole before WI-957.

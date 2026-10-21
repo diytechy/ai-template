@@ -1,0 +1,20 @@
+# docs/decisions/coordinator-2026-10-21.toml — delegated calls the
+# coordinator made on trunk on 2026-10-21 (headless leg 07 of loop session
+# 20261021T045653Z-213020).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "WI-940's re-scope (the owner, coordinator-2026-10-20 D-014: no bar fails on seconds; the run menu's audit judges them) names the commit and review bars, and its drafter found two more callers that run the smoke budget step in enforce mode: docs/stack.ini [step:smoke] (the harness step from DevStg-Tests, in the stage bar a lane refresh runs) and the CI workflow's smoke-budget job. Both move to warn mode in WI-940, written into its Scope answers and Done-when: each is a bar in the ruling's sense, and the seconds are judged only by the audit."
+alternative = "Run the audit's smoke part in the CI job instead of warn mode, or leave both callers in enforce mode."
+reversal_cost = "Low: two command lines and one test, before or after WI-940 lands."
+why_not_escalated = "It applies the owner's ruling to two callers the ruling's text did not list; a headless leg cannot ask, and the CI choice is the owner's to overrule."
+review = ""
+
+[decision.D-002]
+decided = "Scope critique round 1 (Codex Sol, medium) of WI-963 (CHANGES-REQUESTED, two MAJOR, two MINOR) and of WI-940 (CHANGES-REQUESTED, one MAJOR, one MINOR) were answered in each spec by a fresh Claude Opus drafter, every finding adopted with its disposition under '## Critique dispositions'. WI-963 gains planmode = single (S4), a completed Trust section (the producer's failed-write shapes, consumers by path, the binding; D-020's ruling text unchanged), a deliverables order and a coverage bound; the drafter found that the existing snapshot-row reader reads an unparseable copy as no rows, which D-020 rejects, so the spec requires a read that tells the two apart. WI-940 gains the audit's test-count contract (definition, producer, exit order, tests) and a four-piece S1 answer that keeps one landing. The owner's re-scope and filing-call sections are byte-identical. A confirming round in convergence stance checks each before its claim."
+alternative = "Draft the dispositions by hand in the coordinator's session."
+reversal_cost = "Low: queued specs."
+why_not_escalated = "The skill's pre-claim rule (rulings 1 and 9)."
+review = ""
