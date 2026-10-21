@@ -2,13 +2,17 @@
 id = "WI-807"
 title = "The station authority, lane-side claims and cancellation"
 workstream = "process"
-specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-station-authority"
+specref = ""
 sr_refs = ["SR-170"]
 needs = ["WI-799", "WI-800", "OI-109", "WI-851"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+CANCELLED (owner, 2026-10-20; coordinator-2026-10-20 D-010): a second authority over trunk writes conflicts with the review-churn plan's revision 33, which keeps WI mints under the coordinator's one lease, and station-lane filings are cancelled with WI-810. Its one property still owed, a fenced landing lock, folds into WI-808. The coordinator lease and out/integrate.lock stay as they are.
 
 ## Context
 

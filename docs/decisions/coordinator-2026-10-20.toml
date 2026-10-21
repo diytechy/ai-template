@@ -1,6 +1,7 @@
 # docs/decisions/coordinator-2026-10-20.toml — delegated calls the
 # coordinator made on trunk on 2026-10-20 (headless leg 05 of loop session
-# 20261019T185432Z-8e4f05).
+# 20261019T185432Z-8e4f05), then by the attended coordinator session that
+# evening (D-008 onward: the owner's consolidation rulings and their edges).
 # Format: project-trajectory/decisions.template.toml.
 
 high_risk = ["D-002", "D-005", "D-006"]
@@ -52,4 +53,39 @@ decided = "WI-962 (queue row P7) is claimed ahead of P2 to P6, the rows its queu
 alternative = "Close the leg with the Overnight stop line and no claim."
 reversal_cost = "Low: a claimed row can be closed partial and re-queued."
 why_not_escalated = "Ordering within the owner's queue under the dependencies its rows name is the coordinator's (the session prompt's step 4)."
+review = ""
+
+[decision.D-008]
+decided = "Owner ruling in session (2026-10-20, attended, after headless leg 06 closed): WI-902's plan-cap FIX (wi-902 D-011; sitting docs/reviews/wi-902/016-ADJUDICATE-7ffa12c.md, F1 FIX) is routed to a third plan revision that takes the sitting's ruling (record admission admits the close's exact inbound relinks through spec_move.exact_relink; record/request, parent-tree and close-shape validation and the peel unchanged; the real-close regression added), then ONE confirming critique round in convergence stance over that revision, then the build. WI-953, the disposition row, carries the route under its own heading, so its sitting drafts the successor (supersedes WI-902) on it rather than choosing a route."
+alternative = "Revise without a further critique; defer WI-902 behind P4 and P5 (both would rebase across its handback.py and intake.py changes); or cancel the reshape."
+reversal_cost = "Low: WI-953 is unclaimed; an overrule rewrites its route section."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-009]
+decided = "Owner ruling in session (2026-10-20, attended): WI-810 (MINT in the lane, filed 2026-10-04 from WI-788's design) is SPLIT and the rest CANCELLED. Its one bullet still owed, 'a settled amendment is never minted', is filed as WI-963, the S11 plan's section 4.2 filter on the trunk sweep and the slot's post-merge arm, and is the first build after leg 06 (the trap has cost 54 'Close as already settled' rows, WI-785 to WI-959). The remainder conflicts with the review-churn plan's revision 33 (WI ids minted only on trunk, under the coordinator's one lease) and the rulings section's 'a work branch never mints a WI id': in-lane mint, station lanes and the sweep's retirement are cancelled; 'sequential sittings never collide on an id' folds into queue row P5 (item 16) when it is filed; the open-item placeholder and the undisposed-item refusal are already on the trunk mint. P5's spec, when filed, asks the owner whether the WI space rides the watermark carrier too, which would re-open revision 33's narrowing so that lanes reserve WI ids instead of trunk minting them; that question is not ruled here."
+alternative = "Re-scope WI-810 in place to the filter; or cancel all of it and keep closing re-mints by hand."
+reversal_cost = "Low: WI-810 is cancelled unclaimed and WI-963 is unclaimed."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-010]
+decided = "Owner ruling in session (2026-10-20, attended): WI-807 (the station authority, lane-side claims and cancellation) is CANCELLED. It would replace the coordinator lease as the authority over trunk writes, which revision 33 names, and route filings through station lanes, which D-009 cancels. Its one property still owed folds into WI-808: the landing's lock names its holder, fails closed on a filesystem that cannot lock, and the compare-and-swap re-checks the holder before the ref moves. The coordinator lease and out/integrate.lock stay as they are; WI-808 drops its edge on WI-807."
+alternative = "Narrow WI-807 to one fenced lease with an expiry folding the coordinator lease and integrate.lock (reversing the lease's 'time never transfers it'); or build it as filed."
+reversal_cost = "Low: both rows are unclaimed."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-011]
+decided = "Owner ruling in session (2026-10-20, attended): WI-817 (retire the SN-028 one-word config window and the non-TOML carriers) FOLDS into review-churn item 10's configuration program as its first row: its Done-when stays as that row's first deliverables, and its RESYNC text joins item 10's one entry, so adopters migrate once, before the FileBackup re-sync (the plan's item 10, 'Downstream'). Until item 10's remaining rows (steps 3 to 6) are filed it moves to deferred/, off the ready frontier, so no leg claims it alone. WI-962 (item 10 step 2, in flight) keeps naming WI-817's window as the place the legacy branch is deleted; the fold accounts for whatever WI-962 lands."
+alternative = "Keep WI-817 separate with a hard ordering edge and merge the two RESYNC entries before the FileBackup test; or leave it ready as filed."
+reversal_cost = "Low: a deferred row moves back to queued with one spec move."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-012]
+decided = "The edges D-009 and D-010 leave behind are cut in the same commit, since a hard edge on a cancelled row never clears (docs/work/README.md, IF-054): WI-812 and WI-813 drop WI-810. Their other text is untouched; both are re-critiqued at their claim against the rulings (the consolidation drill's re-scopes for WI-799 to WI-816 are not applied here and stay for the owner's review first). WI-963's specref names the S11 plan's section 4.2, its anchor LLR-153 under SR-174 and SR-228; its scope critique runs before its claim."
+alternative = "Leave the edges and let the scope critique at each claim find them."
+reversal_cost = "Low: two needs lines."
+why_not_escalated = "Mechanical consequence of the owner's rulings."
 review = ""

@@ -2,13 +2,17 @@
 id = "WI-810"
 title = "MINT in the lane: one allocator, the consumption list and station lanes"
 workstream = "process"
-specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-mint"
+specref = ""
 sr_refs = ["SR-215", "SR-220"]
 needs = ["WI-809", "WI-821", "WI-851", "WI-852", "WI-856", "~WI-902"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+CANCELLED (owner, 2026-10-20; coordinator-2026-10-20 D-009): split, then cancelled. Its one bullet still owed, a settled amendment is never minted, is WI-963. In-lane mint, station lanes and the sweep's retirement conflict with the review-churn plan's revision 33 (WI ids minted only on trunk, under the coordinator's one lease); 'sequential sittings never collide on an id' folds into queue row P5 (item 16); the open-item placeholder and the undisposed-item refusal are already on the trunk mint.
 
 ## Context
 

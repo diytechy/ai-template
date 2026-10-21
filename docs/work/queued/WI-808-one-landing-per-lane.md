@@ -4,13 +4,15 @@ title = "One landing per lane on both paths, with the tip archived and the recor
 workstream = "process"
 specref = "docs/plans/2026-10-04-wi788-design/README.md#s788-landing"
 sr_refs = ["SR-225"]
-needs = ["WI-807", "WI-801", "WI-818", "WI-849", "WI-851", "WI-832", "WI-918"]
+needs = ["WI-801", "WI-818", "WI-849", "WI-851", "WI-832", "WI-918"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
 +++
 
 ## Context
+
+Amended 2026-10-20 (owner; coordinator-2026-10-20 D-010): WI-807 is cancelled, and its one property still owed folds in here as the fenced-lock Done-when line; the edge on WI-807 is dropped.
 
 Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design note
 (OI-104, ruled 2026-10-04). This is S788-landing (ch.4 §6, §11; OI-103 Q4). The loop
@@ -41,6 +43,7 @@ is small and ready, so it lands first and this row's record check reads its
   a single-item lane yields one squash commit per item, act or no act; a spine
   batch yields one landing naming every item.
 - A trunk moved under the lane fails the swap, naming the foreign commit.
+- The landing's lock names its holder, fails closed naming the filesystem when it cannot lock, and the compare-and-swap re-checks the holder before the ref moves (folded from WI-807, coordinator-2026-10-20 D-010).
 - The tip is reachable from `archive/lanes`.
 - F1: a refresh killed after `merge --no-commit` is recovered by the next one (it
   aborts its own unfinished merge); any other dirt still refuses.

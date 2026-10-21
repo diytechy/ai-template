@@ -12,6 +12,8 @@ priority = 3
 
 ## Context
 
+Deferred 2026-10-20 (owner; coordinator-2026-10-20 D-011): this row folds into review-churn item 10's configuration program as its first row. Its Done-when stays as that row's first deliverables, and its RESYNC text joins item 10's one entry, so adopters migrate once, before the FileBackup re-sync. It returns to queued/ when item 10's steps 3 to 6 are filed, with an edge from item 10's first filed row; until then no session claims it alone.
+
 Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design note
 (OI-104, ruled 2026-10-04). This is S788-retire-legacy-config-and-carriers (ch.1 §7,
 §9.2; ch.2 §7; risks 7 and 9). It retires D1 (the one-word config window and its
