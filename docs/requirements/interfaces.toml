@@ -1134,9 +1134,9 @@ notes = """No tie-back: the argv comes IN from the adopter's own session (a clai
 
 [interface.IF-175]
 owner = "scripts/kitlib/verdict"
-requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record", "scripts/adjudicate_act"]
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record", "scripts/adjudicate_act", "scripts/review_brief"]
 channel = "call"
-data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers; the bar attestation grammar, verifier and tests digest"
+data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers; the bar attestation grammar, verifier and tests digest; the review-attestation walk"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

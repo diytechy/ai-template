@@ -3658,6 +3658,17 @@ evidence = "tests/test_commit_hooks.py::test_unset_hooks_path_is_not_on; tests/t
 status = "Approved"
 phase = 6
 
+[test.TC-371]
+verifies = ["SR-241", "LLR-341", "IF-288", "IF-289"]
+level = "Integration"
+method = "Exercise review rendering on real lane commits with no review record; records naming another tree or parent and assert each refusal names both values; malformed records, another bar, and another named test set; a matching record; record-only commits above a matching record; work commits above it; and record-only commits above an attested commit, 63 of them (the attested commit is the 64th the search examines) and then 65. Exercise a record written by the attestation route and render with an equivalent reordered test list."
+tier = "Full"
+expected = "Review rendering refuses with no brief for every absent or invalid record and names the reviewed commit, its cause and the recording step; another-bar and test-set refusals name both compared values; a tree-or-parent refusal names both values; and a search that finds no verified record among the first 64 commits it examines, the reviewed commit included, refuses naming the bound, while one that meets the record as the 64th renders. A matching record, including one beneath only record-only commits, renders and reports the attested commit and digest; a work commit above the record refuses. The record producer and rendering consumer agree on a reordered equivalent test set."
+automated = "Yes"
+evidence = "tests/test_review_brief_git.py::test_a_tip_with_no_attestation_refuses_naming_the_attest_command; tests/test_review_brief_git.py::test_an_attestation_that_does_not_name_the_tip_refuses_naming_the_cause; tests/test_review_brief_git.py::test_a_landing_attestation_refuses_naming_both_bars; tests/test_review_brief_git.py::test_a_review_attestation_for_other_tests_refuses_naming_both_digests; tests/test_review_brief_git.py::test_a_matching_review_attestation_renders_and_names_it; tests/test_review_brief_git.py::test_record_only_commits_above_the_attested_one_render; tests/test_review_brief_git.py::test_a_work_commit_above_the_attested_one_refuses; tests/test_review_brief_git.py::test_a_search_past_the_walk_bound_refuses; tests/test_integrate_attest.py::test_the_review_render_accepts_what_attest_writes"
+status = "Approved"
+phase = 6
+
 [test.TC-374]
 verifies = ["SR-238", "LLR-026", "IF-302"]
 level = "Integration"

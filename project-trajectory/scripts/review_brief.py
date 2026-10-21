@@ -64,7 +64,10 @@ Contract IF-288: the attended launcher's command line, its arguments.
     stance is `ordinary` by default, which adds nothing; `convergence` adds
     one fixed ROUND FACTS line after the range line, and its reading-scope
     command also leaves out `docs/decisions` and `docs/plans/*/critique-*`
-    (WI-911). `critique --wi
+    (WI-911). The brief is written only when SHA, or a commit beneath it
+    that only record-only commits separate from it, carries a verified
+    `bar=review` attestation whose tests digest is that of the tests; the
+    command then prints the attested commit and that digest. `critique --wi
     WI-N --rubric RUBRIC --scratch DIR --out FILE [--root DIR]` writes the
     shipped critique template strictly filled with the work item's spec,
     RUBRIC and the registries the critic reads beside the spec, each named by
@@ -108,7 +111,9 @@ Contract IF-289: the command's exit codes. 0 when the brief is written or the
     unfilled template slot, a missing spec, plan, critique or Done-when, an
     unreadable or empty named input, a root not on a branch, a revision that
     is not a commit or a base that is not an ancestor, a branch that is not a
-    review scope, a review that fails the IF-288 checks, a review round whose
+    review scope, a reviewed commit with no such attestation (the refusal
+    names the commit, the cause and the attest command), a review that fails
+    the IF-288 checks, a review round whose
     stance is not one of `ordinary` or `convergence`, a narrow round in the
     convergence stance, a
     convergence round over a reviewer template whose reading-scope command it
@@ -1039,6 +1044,26 @@ def _write(path, text):
         fh.write(text + "\n")
 
 
+def _review_bar_refusal(root, lane, sha, tests):
+    """The commit whose verified `review` attestation for `tests` stands for
+    the reviewed commit `sha`, or `BriefError` naming `sha`, the cause and the
+    step that records one. The render trusts the record and never runs the bar.
+
+    Implements: SR-241, LLR-341
+    """
+    attested, cause = kverdict.review_attestation(root, sha, tests)
+    if attested is not None:
+        return attested
+    raise BriefError(
+        "{} carries no review bar attestation for the round's tests: {}. Run "
+        '"$PY" {}/integrate.py attest --branch {} --bar review --tests {} from '
+        "the primary checkout (staging the work it attests, or nothing for an "
+        "empty attestation commit), then render again".format(
+            sha, cause, agent_brief.scripts_dir(root), lane, " ".join(tests)
+        )
+    )
+
+
 def _cmd_review(args):
     lane, base, sha = lane_commits(args.root, args.base, args.sha)
     rnd = Round(
@@ -1054,8 +1079,13 @@ def _cmd_review(args):
         rubric=args.rubric,
         stance=args.stance,
     )
+    attested = _review_bar_refusal(args.root, lane, sha, rnd.tests)
     text, verdict = render_review(args.root, rnd)
     _write(args.out, text)
+    print(
+        "review_brief: {} renders over the review bar's attestation at {} "
+        "(tests={})".format(sha, attested, kverdict.tests_digest(rnd.tests))
+    )
     print("review_brief: wrote {}; the reviewer writes {}".format(args.out, verdict))
     print(
         "review_brief: file it with `review_brief.py file --review {} --sha {} "

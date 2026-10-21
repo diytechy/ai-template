@@ -1,0 +1,103 @@
+# docs/decisions/wi-957.toml — delegated calls the coordinator made in the
+# wi-957 lane (headless leg 06 of loop session 20261019T185432Z-8e4f05).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-004", "D-003"]
+
+[decision.D-001]
+decided = "The lane runs the order WI-955 introduced: its single plan (docs/plans/WI-957/plan.md) passed its first critique (APPROVE, findings=0) and its pass record is committed, then P1, Terra's intent turn, authored the whole change set before any code. Terra's retained session for this lane is 01a15b92-e996-71b1-98c6-f8a280edc55e (gpt-5.6-terra, medium). Its set adds SR-241 (derived, performance lens, under SN-004 and SN-008), LLR-341 (CMP-008) and TC-371 and TC-372, all Drafted, naming the tests and symbols the plan's P2 to P4 create; it amends no existing row. Its files came back LF; its pytest check met the basetemp lock again, so the coordinator ran the spine tests with the commit bar."
+alternative = "None: the plan's step order binds the build (coordinator-cycle section 3, Plan)."
+reversal_cost = "Low: the rows are Drafted, judged at the checkpoint."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-002]
+decided = "Build round 1 ran on two fresh kit-builder dispatches, one per committed stage: the plan's P2 (the tests, each new case a strict expected failure, committed alone at 6fe5e26a9; all twelve read red at their own assertion with --runxfail) and P3 to P6 (the code). The second builder's two departures from the plan's text are accepted: tests/test_review_brief.py's two in-process CLI tests, which stub lane_commits, also stub the gate's new git read (the plan said that module stays as it is, which the gate's position after Round makes untrue); and IF-175's cell and IF-288's contract say 'record-only commits' where the plan's P3 wrote 'non-record-only', which states the opposite of the walk. Its spine change list (LLR-207's code_symbol could list read_bar_attestation; SR-241's two trace advisories) goes to the checkpoint."
+alternative = "Re-brief the builders to the plan's literal text."
+reversal_cost = "Low."
+why_not_escalated = "Procedural; both departures follow the code the plan describes."
+review = ""
+
+[decision.D-003]
+decided = "The code commit was made by an ordinary commit with the commit bar run by hand and paired with its parent (coordinator-2026-10-17 D-005), not through `integrate.py attest` as the plan's P6 says. Attest refused it: its review bar (docs/stack.ini [bars] review, the run menu's smoke action) reads the smoke tier's wall time against the 60 s budget, and the tier ran 96.9 s, every test green and both strict lints clean. On this box the tier reads 73 to 112 s whatever else runs (101.8 s alone with the box at about 5% CPU, 2026-10-20), so attest refuses every lane commit here, and from WI-957's code every review render refuses a tip attest has not written. The lane is therefore held before its first review round, at a safe committed point, for the owner (D-004). A later attest with nothing staged writes the empty attestation commit the round renders over; the code commit needs no rewrite."
+alternative = "Wait in the leg for a reading under 60 s."
+reversal_cost = "None: the attestation can be added as an empty commit on top."
+why_not_escalated = "Escalated: D-004."
+review = ""
+
+[decision.D-004]
+decided = "OWNER-HELD (headless leg, coordinator-cycle section 7). Two owner rulings now conflict at WI-957's first review: coordinator-2026-10-17 D-005 (a breach whose reading stays close to its parent's is load and holds nothing, and D-007 keeps that paired procedure until WI-940's CPU-time budget lands) and WI-956's attest, which runs the bar alone, cannot pair a reading, and refuses on any breach. Under WI-957's gate a review renders only over attest's record, so on this box no lane can be reviewed until one of: (a) WI-940 lands before WI-957 (the coordinator's recommendation: the owner's chosen fix, already filed, ready and single-plan, reviewed before WI-957's gate exists); (b) docs/stack.ini [bars] review names the bar without its budget step until WI-940 lands (the review bar then judges results only, and the landing keeps its paired seconds reading); (c) a re-tier lane brings the smoke tier under 60 s on this box; or (d) another route. The lane holds at its code commit; its round 1 and every later step wait on the ruling."
+alternative = "Pick (b) as a coordinator call: it relaxes the per-commit seconds bar OI-52 ruling (a) set, which is the owner's."
+reversal_cost = "Low: no review ran and nothing landed."
+why_not_escalated = "Escalated to the owner in the leg's handoff."
+review = ""
+
+[decision.D-005]
+decided = "D-004's hold is released by its option (a): WI-940 landed as 638524428 (headless leg 08), so the bars run the budget step in warn mode and attest's review bar fails only on a red tier. The lane rebased onto 638524428: docs/test/test-cases.toml met trunk's TC-374 beside the lane's TC-371 and TC-372 (both rows kept, each with the shared phase tail, checked with tomllib), docs/id-watermark was taken from trunk's side and re-bumped, and RESYNC_PACK kept trunk's entries first, then the lane's, re-anchored at its new base 638524428. The rebased tip's bar: both strict lints clean; 3043 passed, 3 skipped; CPU 385.5 s vs 540, wall 63.7 s vs 600, within; check_resync OK at the new anchor. The lane then takes its review attestation through integrate.py attest --bar review over its four test modules (the empty attestation commit), and counted round 1 starts its count at zero."
+alternative = "None: D-004's recommended option, taken in queue order."
+reversal_cost = "Low."
+why_not_escalated = "Releases an owner-held step by the recommended route the owner's queue order already set."
+review = ""
+
+[decision.D-006]
+decided = "The empty attestation step refused before its bar: integrate.py attest --branch wi-957 --bar review, run in the lane worktree, met the harness floor's refusal 'no runnable ./.venv interpreter found under C:\\Projects\\ai-template.wt\\wi-957' (agent_common.venv_python reads only the checkout's own root; every lane here is a linked worktree running under the primary checkout's .venv). No lane can therefore take a review attestation, and this lane's own gate makes every review render refuse a tip without one: landed as it stands, WI-957 would stop every lane's review. The defect is WI-956's landed mechanism's, fixed forward in its own row (WI-968, filed on trunk in this leg), never through a bypass or an ambient-interpreter fallback, and never by giving the lane a .venv by hand (installing software the handoff does not name). WI-957 holds at its committed rebased tip until WI-968 lands; it then rebases onto it, takes its attestation, and runs counted round 1."
+alternative = "Render this lane's round with trunk's renderer, which has no gate, and land WI-957 before WI-968."
+reversal_cost = "Low: the lane is committed and parked."
+why_not_escalated = "A defect in a landed mechanism is fixed forward in a lane (coordinator-cycle section 4); WI-968's scope critique runs before its claim."
+review = ""
+
+[decision.D-007]
+decided = "D-006 is corrected: its refusal was the coordinator's wrong route, not a defect. integrate.py attest takes the primary checkout as --root and finds the lane by --branch (_attest_preflight through _lane_off_trunk; the review bar runs in the lane under the primary checkout's interpreter); run from the lane with the default root, its floor read the lane's own root. Run as `integrate.py --root C:/Projects/ai-template attest --branch wi-957 --bar review --tests <four modules>`, it attested the rebased tip: c033a9890, 'review bar @ c033a98906'. WI-968, filed on trunk on D-006's premise, is cancelled there, and the route goes into the coordinator-cycle recipes. The lane no longer holds."
+alternative = "None."
+reversal_cost = "None."
+why_not_escalated = "A correction of the coordinator's own record."
+review = ""
+
+[decision.D-008]
+decided = "Counted round 1 over the attested tip c033a9890 (the lane's first review, its count from zero), rendered by the lane's own gated renderer over the attestation: REVIEW-A Codex Sol (gpt-6.1-sol, medium) CHANGES-REQUESTED findings=1, MINOR (001-REVIEW-A-c033a98); REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (review-churn ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter, APPROVE findings=3, all MINOR (002-REVIEW-B-c033a98). No BLOCKER or MAJOR: the checkpoint follows round 1. Triage, for the next session: (a) B F1 and B F2 (the absent-attestation and work-above cases assert no cause text, and the another-bar case's 'names both bars' assertion is vacuous; each passed a mutant): a small pre-checkpoint builder stage tightens the three assertions, each confirmed by its mutant. (b) A F1 (IF-175's data cell grew past the advisory length with the walk's contract) and B F3 (SR-241's 'only review-record changes' reads narrower than the code's record-only walk): spine text, for Terra's reconcile, then the checkpoint sitting (SR-241, LLR-341, TC-371, TC-372 first approvals and any amendment)."
+alternative = "Defer the MINORs to successor rows."
+reversal_cost = "Low."
+why_not_escalated = "All MINOR; the skill's triage rule."
+review = ""
+
+[decision.D-009]
+decided = "Headless leg 09 (the same loop session). D-008's triage (a) ran as one fresh kit-builder dispatch (Claude Opus, medium), a test-only stage before the checkpoint: the no-attestation case now asserts its cause ('has no verified attestation' and the record's 'carries 0 `Bar-Green:` lines'), both work-above cases assert 'changes non-record paths over its parent', and the landing case asserts the cause clause 'a verified `landing` attestation, not a `review` one' in place of its vacuous strip-and-search. Each was confirmed by a mutant of kitlib/verdict.py that strips the clause (each tightened test failed against its mutant and passed against the real code; the file restored from HEAD after each). The coordinator re-ran the four modules (146 passed) and the commit bar (exit 0; 3043 passed, 3 skipped; both strict lints clean). The builder's two spine proposals (TC-371 stating the clauses are asserted verbatim; renaming the landing test) go to Terra's reconcile as optional; the rename is not taken, since TC-371's evidence names the test."
+alternative = "Defer the three MINORs to a successor row."
+reversal_cost = "Low."
+why_not_escalated = "Procedural; D-008's triage."
+review = ""
+
+[decision.D-010]
+decided = "The checkpoint reconcile (D-008's triage (b)). The coordinator added the review walk's definition to the owner's `Contract IF-175` body (kitlib/verdict.py's module docstring: `read_bar_attestation` / `bar_attestation` / `tests_digest` and `review_attestation`), the single contract home the data cell points at. Terra, resumed (session 01a15b92-e996-71b1-98c6-f8a280edc55e), then shortened IF-175's data cell to name 'the review-attestation walk' as a surface (status and other cells unchanged), reworded SR-241's requirement and acceptance from 'only review-record changes' to 'only record changes or no changes', added two sentences to LLR-341's detail (equivalent spellings and orderings of a test set give one digest; the cycle text's precondition and attest step) so every TC-371 and TC-372 expected clause traces to it, and dropped TC-372's negative clause ('does not retain the superseded pre-review condition'), which no SR or LLR states; the test still checks it. TC-371 already says each refusal names its cause, so it is unchanged. All four rows are Drafted and lane-added; no approved row moved. Files LF, TOML parses; trace.py --strict and check_trajectory.py --strict clean; the commit bar green (3043 passed, 3 skipped)."
+alternative = "Keep TC-372's negative clause and state it in LLR-341 instead."
+reversal_cost = "Low: the sitting judges the set."
+why_not_escalated = "Procedural; the checkpoint's reconcile step."
+review = ""
+
+[decision.D-011]
+decided = "Checkpoint sitting 003-ADJUDICATE-d744107 returned all four rows (RETURN rows=4); its returns are answered in the lane, so its Dispositions heading reads 'Dispositions answered in the lane (wi-957 D-011)'. The coordinator's calls on its options: (1) SR-241's perspective record is written by the kit's writer at docs/plans/WI-957/plan.perspectives.toml (Terra, resumed; rows SR-241, LLR-341, TC-371; tag process; PERFORMANCE produced SR-241, every other applicable hat a one-line no_finding; `hats.py record --check --strict`: no findings). (2) LLR-341's walk bound is kept and stated: no verified record among the first 64 commits the search examines, the reviewed commit included, refuses; a fresh kit-builder added tests/test_review_brief_git.py::test_a_search_past_the_walk_bound_refuses (63 empty commits above the attested commit render, 65 refuse naming the bound; an unbounded-walk mutant fails it), and TC-371's method, expected and evidence carry it. Terra wrote '64 first-parent steps', one step more than the walk takes; the coordinator corrected it in LLR-341 and TC-371 by a guarded replace, openly. (3) LLR-341's coordinator-cycle clause leaves the spine: the cycle skill is this repository's unshipped tooling (scope this-repo), SR-241 does not ask for it, and an unshipped-tooling obligation stays pinned by its own test (the wi-918 sitting 003 precedent in the recipes); TC-372, lane-added and never approved, is retired with retire.py (docs/log.d/retired/TC-372.md), and test_prompts' pin no longer names it. The Done-when item on the skill text stays pinned by tests/test_prompts.py::test_the_cycle_reviews_only_an_attested_tip. (4) TC-371 gains the tree-or-parent both-values clause. Checks: files LF, trace.py --strict and check_trajectory.py --strict clean, the four lane modules 147 passed, the commit bar green (3043 passed, 3 skipped). The three rows re-sit together for first approval."
+alternative = "Drop the walk-bound arm; give the cycle-text clause its own derived row."
+reversal_cost = "Low: the rows are Drafted; TC-372's id stays spent either way."
+why_not_escalated = "The verdict offered each option; procedural."
+review = ""
+
+[decision.D-012]
+decided = "Before the gate, the lane rebased from 638524428 onto trunk's tip 928add987, which moved only by docs commits (WI-968's filing and cancellation, leg 08's close-out), so the gate reviews the tip that lands. The pre-rebase tip 58540bc9e (sitting 004's verdict at bc728e7f1) is kept for archive/lanes. docs/id-watermark conflicted once (the intent commit) and took trunk's side, re-bumped (WI 968 kept; SR 241, LLR 341, TC 374); nothing else conflicted. The lane's diff over its base has the same stable patch-id before and after (85eecf74, the watermark excluded), so the rebase changed no lane code or row and owes no post-rebase round. The RESYNC entry is re-anchored at 928add987. No trunk-only generated view is on the lane (none changed over the base)."
+alternative = "Gate first, rebase at the landing."
+reversal_cost = "None."
+why_not_escalated = "Procedural (recipes section 3: rebase before the gate when trunk moved by commits the lane does not touch)."
+review = ""
+
+[decision.D-013]
+decided = "The convergence map before the gate (an uncounted round in convergence stance over the checkpoint tip; the reviewers do not read this record). Every accepted finding maps to evidence: round 1 REVIEW-B F1 (the no-attestation and work-above cases asserted no cause) -> tests/test_review_brief_git.py's two tightened assertions, each failing on a mutant of kitlib/verdict.py that strips its cause clause (D-009); REVIEW-B F2 (the landing case's vacuous 'names both bars') -> its cause-clause assertion, failing on the mutant that drops ', not a `review` one' (D-009); REVIEW-B F3 (SR-241's 'only review-record changes') -> the corrected text at SR-241's requirement and acceptance, 'only record changes or no changes' (D-010), approved at sitting 004; REVIEW-A F1 (IF-175's data cell carried the walk's contract past the advisory length) -> the corrected cell naming 'the review-attestation walk' and the walk's definition in the owner's `Contract IF-175` body in kitlib/verdict.py (D-010). Sitting 003's four returns -> sitting 004-ADJUDICATE-ea2c0cf, APPROVE rows=3 (TC-372 retired, D-011). The map is complete, so the gate may render."
+alternative = "None: a round that cannot be mapped in full does not start."
+reversal_cost = "None."
+why_not_escalated = "Procedural (coordinator-cycle section 3, the convergence map)."
+review = ""
+
+[decision.D-014]
+decided = "The gate over the attested checkpoint tip 788c3130f (uncounted, convergence stance, after D-013's map), rendered by the lane's gated renderer over the attestation: REVIEW-A Codex Sol (gpt-6.1-sol, medium) CHANGES-REQUESTED findings=1, MINOR (005-REVIEW-A-788c313); REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (review-churn ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief, the lane and the interpreter, APPROVE findings=1, MINOR (006-REVIEW-B-788c313). No BLOCKER or MAJOR, so no dispute sitting and no fix round; the act turn follows. Both MINORs would move the tip off the gated one, so each goes to status.md's unfiled follow-ups at the landing (recipes section 3, 'A gate MINOR'): Sol's, that SR-241's acceptance states no search depth while LLR-341 and TC-371 refuse past the first 64 commits examined (sitting 004 recorded the same as an observation: the bound fails closed and sits outside any supported workflow); Opus's, that test_a_search_past_the_walk_bound_refuses stacks two commits past the 63, so the attested record is the 66th examined and a walk of 65 still passes (stack one, and TC-371's method reads '63 and then 64')."
+alternative = "Fix both after the gate and run another convergence round."
+reversal_cost = "Low: both are wording or a one-line test tightening."
+why_not_escalated = "All MINOR; the skill's triage rule."
+review = ""

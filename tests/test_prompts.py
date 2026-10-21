@@ -343,6 +343,24 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
     )
 
 
+def test_the_cycle_reviews_only_an_attested_tip():
+    # Pins WI-957's Done-when item on the coordinator-cycle skill text: the
+    # pre-review check is the review bar's attestation on the tip, not a moved
+    # `git log -1`, and the skill and its recipes commit lane work through the
+    # attest route. Adequacy witness: a cycle that still
+    # checks only that the commit landed keeps the old phrase.
+    cycle = KIT / "skills" / "coordinator-cycle"
+    texts = {
+        name: " ".join((cycle / name).read_text(encoding="utf-8").split())
+        for name in ("SKILL.md", "references/recipes.md")
+    }
+    step = texts["SKILL.md"].replace("*", "").casefold()
+    assert "the tip carries the review bar's attestation" in step
+    for name, flat in texts.items():
+        assert "integrate.py attest" in flat, name
+        assert "`git log -1` moved" not in flat, name
+
+
 def test_the_terra_brief_has_an_intent_form_before_build_round_1():
     # The spine author's brief serves the intent turn, before any build, as
     # well as the checkpoint: at intent it presumes no built code, no change

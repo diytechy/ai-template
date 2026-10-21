@@ -63,7 +63,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   form that gets past the hook was cut off by a safety classifier (WI-834).
   A plan that orders its commits (a pin, then a structural move alone,
   then the rest) is built in stages: the builder stops after each, you
-  verify and commit, and SendMessage resumes the same builder (WI-911,
+  verify and commit through `integrate.py attest` (§6), and SendMessage resumes the same builder (WI-911,
   2026-10-15). In a headless leg the resumed builder runs in the
   background and reports only while the leg's turn still runs: wait in
   the foreground on the file it writes last (its bar log, then its
@@ -129,6 +129,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `"$PY" "$SCRIPTS/review_brief.py" review --wi WI-NNN --base <trunk base> --sha <tip> --scope full --tests <files> --scratch <dated root>/<reviewer> --rubric docs/rubrics/kit-change-review.md --out <brief>`.
      `--tests` takes the files as separate arguments; one quoted string
      renders as a single bogus path in the brief's pytest line.
+     `--tests` is the list the tip was attested with: the render refuses a
+     tip with no verified `review` attestation for that list, looking
+     beneath it only through record-only commits (round files, log
+     fragments, empty commits), and names the `integrate.py attest` command
+     to run. A spine-checkpoint commit and a decisions-record commit change
+     non-record paths, so attest them (stage them into the next attest, or
+     make an empty attestation commit) before the round.
      A red the tip already shows (a known failing test) is fixed in a build
      stage before the round, so the round reviews a green tip (item 13;
      wi-926 D-007).
@@ -754,6 +761,9 @@ lane commit being replayed.
 - Launch no review until the rebase has finished. A rebase stopped on
   generated-file conflicts leaves the lane mid-rebase: take `--ours`,
   regenerate, continue, then render the brief at the real tip.
+- A rebase changes every commit's `work=`, so no attestation survives it:
+  attest the rebased tip (`integrate.py attest` with nothing staged makes
+  an empty attestation commit) before its round.
 
 ## 5. Spine-cell edits (brief Terra with these)
 
@@ -871,8 +881,13 @@ lane commit being replayed.
 
 ## 6. Commits and hooks
 
-- Run the commit bar on every commit, docs-only ones included: the one
-  declared command, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
+- Run the commit bar on every commit, docs-only ones included. A lane
+  commit runs it through `"$PY" "$SCRIPTS/integrate.py" attest --branch
+  <lane> --bar review --tests <files> --message-file <msg>` from the
+  primary checkout, which runs `[bars] review` and the named tests, refuses
+  red, and commits the staged work with the attestation the review render
+  requires (SKILL §3, Iterate step 1). A trunk commit runs the one
+  declared command by hand, `run.cmd smoke` (`"$PY" "$SCRIPTS/run_menu.py" smoke` from
   a shell), whose steps are `docs/stack.ini` `[run] smoke`. Read the summary
   lines for `failed` and for each lint's findings before committing; a chain
   gated only on the command's exit code inside `$(...)` committed a red tier

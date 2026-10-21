@@ -1902,3 +1902,17 @@ status = "Approved"
 phase = 6
 da_refs = ["DA-004"]
 form = "cross-cutting"
+
+[requirement.SR-241]
+title = "Review briefs render only over a matching verified review record"
+sn_refs = ["SN-004", "SN-008"]
+boundary_refs = ["B-05"]
+hat_refs = ["PERFORMANCE"]
+requirement = "When an attended launcher requests a review brief for a lane commit, the delivered review content shall render it only when that commit, or a commit beneath it from which only record changes or no changes separate it, carries a verified record that the declared review bar and the named test set passed on its tree; otherwise it refuses without a brief and names the cause and the step that makes the record."
+rationale = "A DERIVED requirement, and labelled so. SN-004 and SN-008 require trustworthy gate outcomes, but do not say that a metered independent-review session must be withheld when its requested tree is already known not to meet its declared review bar. The performance lens listens for operating cost left unassessed: a review over such a tree spends the scarce review session on a failure the process can name before dispatch, while a record-only change must not require the same bar again. Trusting the verified record was chosen over running the bar during rendering because rendering then stays a bounded reader of a prior result rather than a second executor with a potentially different result. The coordinator and unattended review routes decompose this shared boundary separately. Fed back to the needs: their acceptance could state that a review begins only from a verified review-bar result."
+acceptance_criteria = "A requested review renders when its commit carries a verified review record for the named test set, and when only record changes or no changes separate it from such a commit; it refuses without a brief when that record is absent, malformed, names another tree or parent, names another bar or test set, or when a commit above it changes a non-record path. Every refusal names the reviewed commit, the cause and the step that records a passing review bar; a test-set mismatch names both digests and a tree or parent mismatch names both values."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+aspect = "process"

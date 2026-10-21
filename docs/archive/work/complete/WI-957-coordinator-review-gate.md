@@ -3,13 +3,40 @@ id = "WI-957"
 title = "The coordinator's review brief is rendered only for a tip whose review bar is attested green for the tests the brief names"
 workstream = "process"
 sr_refs = ["SR-235", "SR-146"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-956", "~WI-955"]
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-21, after its gate, in headless leg 09:
+
+- `review_brief.py review` renders only over a verified `review` bar
+  attestation whose tests digest matches `--tests`, found at the reviewed
+  commit or beneath it through commits whose non-record identity is
+  unchanged (`kitlib.verdict.review_attestation`, sharing
+  `_identity_step` with `governing_rev`). Otherwise it writes no brief,
+  exits 2 and names the reviewed commit, the cause (both values or both
+  digests where it compares) and the `integrate.py attest` command. The
+  walk examines at most 64 commits, the reviewed one included.
+- The coordinator-cycle skill and recipes (all three copies) carry the
+  attested-tip precondition and the `attest` commit step; no text keeps
+  "`git log -1` moved" as the pre-review check.
+- Spine: SR-241 (derived, PERFORMANCE lens, perspective record
+  `docs/plans/WI-957/plan.perspectives.toml`), LLR-341 and TC-371
+  approved (sitting 004, act seq 146 on the lane); TC-372 retired
+  (never approved; the skill-text Done-when item is pinned by its own
+  test). IF-175 gains `scripts/review_brief` and the review-attestation
+  walk, defined in its contract body; IF-288 and IF-289's contracts state
+  the refusal.
+- Reviews: counted round 1 (001-REVIEW-A-c033a98, 002-REVIEW-B-c033a98,
+  all MINOR, answered before the checkpoint); the gate in convergence
+  stance (005-REVIEW-A-788c313, 006-REVIEW-B-788c313, one MINOR each, to
+  the unfiled follow-ups).
 
 ## Context
 

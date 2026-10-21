@@ -3508,3 +3508,15 @@ test_refs = "TC-370"
 status = "Approved"
 component = "CMP-008"
 phase = 6
+
+[design.LLR-341]
+sr_refs = ["SR-241"]
+title = "Verified review-record search before review rendering"
+module = "project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/review_brief.py"
+code_symbol = "read_bar_attestation/review_attestation/_identity_step;_review_bar_refusal"
+detail = "The review render resolves the reviewed commit and searches that commit, then its first-parent ancestors only while their non-record identities remain equal, for one verified review-bar record whose test digest equals the digest of the round's named tests. Equivalent spellings and orderings of a named test set yield the same digest. It does not peel a disposable commit. An absent, malformed or unverified record, another bar, another test set, a changed non-record path, or no verified record among the first 64 commits the search examines, the reviewed commit included, produces a refusal; a landing or no-bar record is another-bar refusal. The refusal reports the reviewed commit, cause, both bar values for another-bar refusal, both digests for a test-set mismatch or both values for a tree or parent mismatch, and the attest step with the lane and round test list; it writes no brief and returns the refusal result. A successful render reports the attested commit and digest. The search reads the record and never runs the bar."
+rationale = "One shared record reader keeps each review route from assigning its own meaning to a verified review result. Searching only through record-only ancestors preserves a valid result across review bookkeeping while stopping at work that can invalidate it; refusing rather than re-running preserves the separation between recording a result and deciding whether it is usable."
+test_refs = "TC-371"
+status = "Approved"
+component = "CMP-008"
+phase = 6

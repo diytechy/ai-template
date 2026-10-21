@@ -12,7 +12,9 @@ red bar or a red named test, a dirty worktree (refused before the bar), an
 undeclared review bar (refused before the bar), a message that already carries
 the label, a commit a hook refuses, and a commit a hook rewrites. The merge
 seam reads the record too: a tip carrying only a `review` attestation is not
-merge-ready, and the refusal names both bars.
+merge-ready, and the refusal names both bars. The review render reads it as
+its gate (WI-957): it renders over what `attest` writes, for the same tests
+named in another order.
 
 Registered in `tests/conftest.py`'s `SLOW_MODULES` with its station
 siblings: real repositories and lane worktrees.
@@ -23,7 +25,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from conftest import SCRIPTS, env_gate_skipif, run_py
+from conftest import SCRIPTS, env_gate_skipif, load_script, run_py
 from integrate_fixtures import T_LATER, _commit, _git, _rev, integ
 from test_integrate_station import (
     STUB_CHECK_GREEN,
@@ -40,6 +42,8 @@ if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
 from kitlib import verdict as kv  # noqa: E402
 
 pytestmark = env_gate_skipif("git")
+
+review_brief = load_script("review_brief")
 
 BRANCH = "wi-401"
 NAMED = ["tests/test_widget.py", "tests/test_gadget.py"]
@@ -436,6 +440,44 @@ def test_the_attest_cli_is_the_route_a_builder_calls(tmp_path):
     # `landing` and `no-bar` are the refresh's alone.
     proc = run_py(argv + ["landing"], cwd=root)
     assert proc.returncode != 0 and _rev(root, BRANCH) == tip
+
+
+REVIEWED_SPEC = """+++
+id = "WI-401"
+title = "A widget under review"
++++
+
+## Done-when
+
+- It works.
+"""
+
+
+def test_the_review_render_accepts_what_attest_writes(tmp_path, capsys):
+    # TC-371 (WI-957): the record's producer and the review render agree on
+    # the tests digest whatever order the round names the set in. Adequacy
+    # witness: a render that never reads the record names no attested commit,
+    # and one that digests the paths in their given order refuses here.
+    root = attest_repo(tmp_path)
+    wt = _lane(root, BRANCH)
+    spec = wt / "docs" / "work" / "active" / BRANCH / "WI-401-widget.md"
+    spec.parent.mkdir(parents=True, exist_ok=True)
+    spec.write_text(REVIEWED_SPEC, encoding="utf-8", newline="\n")
+    _git(wt, "add", "-A")
+    base = _rev(root, BRANCH)
+    sha, refusal = _attest(root)
+    assert refusal is None, refusal
+    capsys.readouterr()  # the route's own console lines are not the render's
+    out = tmp_path / "review-out"
+    out.mkdir()
+    argv = ["review", "--root", str(wt), "--wi", "WI-401", "--base", base]
+    argv += ["--sha", sha, "--scope", "full", "--scratch", str(out)]
+    argv += ["--tests", *reversed(NAMED), "--out", str(out / "brief.md")]
+    assert review_brief.main(argv) == 0, capsys.readouterr().err
+    assert [p.name for p in out.iterdir()] == ["brief.md"]
+    digest = kv.tests_digest(NAMED)
+    shown = capsys.readouterr().out.splitlines()
+    assert [line for line in shown if sha in line and digest in line], shown
 
 
 # --- the merge seam reads the record ------------------------------------------

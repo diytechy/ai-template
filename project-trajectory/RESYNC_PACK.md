@@ -9367,6 +9367,41 @@ changes.
 **Kit-owned files — overwrite:** `scripts/agent_session.py`,
 `scripts/kitlib/winjob.py` (new), `scripts/kitlib/bootstrap_manifest.py`.
 
+### The attended review brief renders only over a review-attested tip [since 928add987]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** `review_brief.py review` now refuses, with exit 2 and no
+brief, a reviewed commit that carries no verified `bar=review` attestation
+whose tests digest is that of its `--tests`. It looks at the reviewed commit
+and beneath it only through record-only commits (round files, log fragments,
+empty commits: a commit whose non-record tree equals its parent's), so the
+cycle's own record commits above an attested tip need no new bar. A
+`landing` or `no-bar` record, another test set, an unverified record (another
+tree or another parent, as after a rebase) and a work commit above the
+attested one are each refused, the refusal naming the reviewed commit, the
+cause and the `integrate.py attest` command to run. A rendered brief prints
+the attested commit and its digest. The render reads the record and never
+runs the bar. The verifier behind it (`kitlib.verdict`) now names why a
+record does not verify; its existing readers keep their behaviour.
+
+**What to do. A forced migration:** a review round over a lane tip that was
+committed by hand now refuses.
+
+1. Commit lane work through `integrate.py attest --branch <lane> --bar
+   review --tests <files>` with the same test list the round names, before
+   rendering. A commit that changes non-record paths above the attested one
+   (a spine row, a decisions record) needs a new attestation; with nothing
+   staged, `attest` makes an empty attestation commit.
+2. Re-attest after a rebase: it changes every commit's parent, so no
+   attestation survives it.
+3. `[bars] review` in `docs/stack.ini` is already required by the entry
+   above.
+
+**Kit-owned files — overwrite:** `scripts/review_brief.py`,
+`scripts/kitlib/verdict.py`, and `skills/coordinator-cycle/` (a `scope:
+this-repo` skill; only if you vendored it).
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

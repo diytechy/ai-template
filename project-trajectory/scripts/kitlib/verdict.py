@@ -125,7 +125,14 @@ Contract IF-175: the verdict record, as functions two independent readers call
     question, weaker than the gate's demand for an APPROVE only on a dissent,
     so the two readers share a span without pretending to share a threshold;
     `branch_trailers` the verified attestations on
-    the branch's own commits, in commit order. Pure functions plus thin reads through
+    the branch's own commits, in commit order;
+    `read_bar_attestation` / `bar_attestation` / `tests_digest` the bar
+    attestation grammar, its verifier and the one tests digest; and
+    `review_attestation` the review walk: a verified `review` record whose
+    tests digest matches, at the commit or beneath it through commits whose
+    non-record identity is unchanged (the step `governing_rev` takes), the
+    first verified record deciding, so another bar or another digest refuses
+    rather than being walked past. Pure functions plus thin reads through
     `kitlib.git`, so nothing here writes and nothing imports a sibling service —
     the verdict parser arrives as an ARGUMENT rather than an import, which is
     what keeps this leaf free of an edge back into the scoring layer. Every
@@ -549,35 +556,60 @@ def format_bar_green(tree, work, bar, tests, summary):
     ).rstrip()
 
 
-def bar_attestation(root, rev):
-    """The verified fields of `rev`'s `Bar-Green:` attestation as a
-    `BarAttestation`, or None.
+def read_bar_attestation(root, rev):
+    """`(BarAttestation, None)` for `rev`'s verified `Bar-Green:` attestation,
+    else `(None, cause)`: the one verifier, with the reason it refused named.
 
     An attestation is the message's ONE line starting with the label at column
     0 (a quoted or indented line is a quotation, two lines attest no single
     bar), matching the grammar in full, naming a bar in `BAR_NAMES`, and whose
     `tree=` and `work=` are `rev`'s own tree and first parent. An unreadable
-    commit, or the old grammar without `bar=`, is not one: no legacy path.
+    commit, or the old grammar without `bar=`, is not one: no legacy path. The
+    cause names the first of those checks that failed, with both values for a
+    tree or parent that does not match, so a refusing reader can say why.
 
-    Implements: SR-156, LLR-207
+    Implements: SR-241, LLR-341
     """
     message = git_out(root, ["log", "-1", "--format=%B", rev])
     if not message:
-        return None
+        return None, "the commit's message cannot be read"
     labelled = [line for line in message.splitlines() if line.startswith(BAR_GREEN)]
     if len(labelled) != 1:
-        return None
+        return None, "it carries {} `{}` lines at column 0, not one".format(
+            len(labelled), BAR_GREEN
+        )
     matched = _ATTEST_RE.match(labelled[0])
-    if not matched or matched.group(3) not in BAR_NAMES:
-        return None
+    if not matched:
+        return None, "its `{}` line is outside the grammar `{}`".format(
+            BAR_GREEN, "tree=<40 hex> work=<40 hex> bar=<bar> tests=<64 hex|none>"
+        )
+    if matched.group(3) not in BAR_NAMES:
+        return None, "its `{}` line names bar {!r}, outside {}".format(
+            BAR_GREEN, matched.group(3), ", ".join(BAR_NAMES)
+        )
     attested = BarAttestation(
         *matched.group(1, 2, 3, 4), (matched.group(5) or "").strip()
     )
-    if _rev(root, rev + "^{tree}") != attested.tree:
-        return None  # the message rode onto a tree it does not describe
-    if _rev(root, rev + "^1") != attested.work:
-        return None  # ...or onto a different parent than the one it names
-    return attested
+    tree = _rev(root, rev + "^{tree}")
+    if tree != attested.tree:  # the message rode onto a tree it does not describe
+        return None, "its `{}` line names tree {}, but the commit's tree is {}".format(
+            BAR_GREEN, attested.tree, tree
+        )
+    parent = _rev(root, rev + "^1")
+    if parent != attested.work:  # ...or onto another parent than the one it names
+        return None, "its `{}` line names work {}, but its first parent is {}".format(
+            BAR_GREEN, attested.work, parent
+        )
+    return attested, None
+
+
+def bar_attestation(root, rev):
+    """The verified fields of `rev`'s `Bar-Green:` attestation as a
+    `BarAttestation`, or None: `read_bar_attestation` without its cause.
+
+    Implements: SR-156, LLR-207
+    """
+    return read_bar_attestation(root, rev)[0]
 
 
 # The one non-record tree the MACHINERY itself moves. See
@@ -745,6 +777,23 @@ def work_tip(root, branch):
 _MAX_GOVERNING_WALK = 64
 
 
+def _identity_step(root, rev, identity):
+    """`(parent, parent identity)` when `rev`'s non-record identity `identity`
+    equals its first parent's, else None: the one step a walk takes through a
+    commit that cannot invalidate a verdict (see `governing_rev`). None also
+    when git had nothing to say, or `rev` is a root commit with nothing under it.
+
+    Implements: SR-241, LLR-341
+    """
+    parent = _rev(root, rev + "^1")
+    if identity is None or parent is None:
+        return None
+    parent_identity = tree_identity(root, parent)
+    if parent_identity != identity:
+        return None
+    return parent, parent_identity
+
+
 def governing_rev(root, branch, rev=None):
     """The commit whose tree governs a verdict on `branch`: `rev` (default: the
     tip), with refresh commits peeled AND identity-preserving commits walked
@@ -812,14 +861,64 @@ def governing_rev(root, branch, rev=None):
             rev = peeled
             identity = tree_identity(root, rev)
             continue
-        parent = _rev(root, rev + "^1")
-        if identity is None or parent is None:
-            break  # git had nothing to say, or a root commit: nothing under it
-        parent_identity = tree_identity(root, parent)
-        if parent_identity != identity:
+        step = _identity_step(root, rev, identity)
+        if step is None:
             break  # this commit changed the work, so it is where the walk ends
-        rev, identity = parent, parent_identity
+        rev, identity = step
     return _rev(root, rev)
+
+
+def review_attestation(root, rev, tests):
+    """`(attested sha, None)` when `rev`, or a commit beneath it that only
+    record-only commits separate from it, carries a verified `review`
+    attestation whose tests digest is `tests_digest(tests)`; else `(None,
+    cause)`.
+
+    The walk looks at `rev`, then steps to the first parent only while the
+    non-record identity is unchanged (`_identity_step`, the step
+    `governing_rev` takes), so a round file, a telemetry fragment or an empty
+    commit above an attested commit needs no new bar. The first verified record
+    it meets decides: another bar, a refresh's `landing` included, is refused
+    as one, and so is another tests digest. It never peels a disposable commit
+    and never runs the bar: it reads the record.
+
+    Implements: SR-241, LLR-341
+    """
+    want = tests_digest(tests)
+    rev = _rev(root, rev) or rev
+    identity = tree_identity(root, rev)
+    for _ in range(_MAX_GOVERNING_WALK):
+        attested, cause = read_bar_attestation(root, rev)
+        if attested is not None:
+            return _review_record_answer(rev, attested, want)
+        step = _identity_step(root, rev, identity)
+        if step is None:
+            return None, (
+                "{} has no verified attestation ({}), and it changes non-record "
+                "paths over its parent, so no commit beneath it stands for "
+                "it".format(rev, cause)
+            )
+        rev, identity = step
+    return None, "no verified attestation within {} record-only commits".format(
+        _MAX_GOVERNING_WALK
+    )
+
+
+def _review_record_answer(rev, attested, want):
+    """`review_attestation`'s answer at the first verified record it meets."""
+    if attested.bar != "review":
+        return (
+            None,
+            "{} carries a verified `{}` attestation, not a `review` one".format(
+                rev, attested.bar
+            ),
+        )
+    if attested.tests != want:
+        return None, (
+            "{}'s review attestation is for tests={}, but the round's tests "
+            "digest to {}".format(rev, attested.tests, want)
+        )
+    return rev, None
 
 
 def governing_identity(root, branch, rev=None):

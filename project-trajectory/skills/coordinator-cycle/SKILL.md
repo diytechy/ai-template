@@ -186,7 +186,8 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    A test that fits none is named, with its disposition, in the lane's
    decisions record before the code commit.
 3. The builder then builds the code. Re-run its claimed results yourself,
-   then verify, regenerate and commit.
+   then verify, regenerate and commit through `integrate.py attest`
+   (recipes §6).
 
 A lane claimed before this order landed keeps the order it started with;
 record that as a decision in its decisions record.
@@ -195,8 +196,11 @@ record that as a decision in its decisions record.
 
 Each round:
 
-1. **Confirm the commit landed** (`git log -1` moved) before any review. A
-   hook-refused commit makes a reviewer judge an empty range.
+1. **The tip carries the review bar's attestation** before any review:
+   commit lane work through `integrate.py attest` with the round's
+   `--tests`, and `review_brief.py review` refuses any other tip. A
+   hook-refused commit or a red bar attests nothing, and the render then
+   refuses.
 2. **Run the lints after the build round** (ruling 6): `trace.py --strict`
    and `check_trajectory.py --strict`, with the commit bar. They run here,
    at the closure check and at the landing check, never in the commit hook.

@@ -1,0 +1,106 @@
+# PERSPECTIVE RECORD (SR-161) for one decomposition, written by
+# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a
+# person authors: subject, rows, tags, recorded_by, recorded_on, and each
+# perspective's no_finding. Comments are not kept.
+#   applicable = false                -> the roster predicate did not reach it
+#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)
+#   applicable = true, produced = []   -> considered: no_finding says why
+# Check: `hats.py record <this file> --check`.
+
+[decomposition]
+subject = "docs/plans/WI-957/plan.md"
+rows = ["SR-241", "LLR-341", "TC-371"]
+tags = ["process"]
+parents = ["SN-004", "SN-008"]
+recorded_by = "GPT Terra (gpt-5.6-terra), WI-957 spine author"
+recorded_on = "2026-10-21"
+
+[perspective.SECURITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The review render reads a prior verified record and refuses otherwise; it introduces no secret, credential, or irreversible authority that needs a separate obligation."
+
+[perspective.FIRST-RUN-ADOPTER]
+applicable = true
+applies_when = "tags contains \"scripts\" or tags contains \"templates\" or tags contains \"process\""
+produced = []
+no_finding = "The named refusal and recording step keep the attended review route understandable without undocumented project knowledge; no adoption or preservation obligation is added."
+
+[perspective.UNATTENDED-OPS]
+applicable = false
+applies_when = "tags contains \"unattended\" or tags contains \"loop\""
+produced = []
+
+[perspective.CROSS-PLATFORM]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"launcher\" or tags contains \"shell\""
+produced = []
+
+[perspective.MAINTAINER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "SR-241 and LLR-341 state why the render trusts a verified record and refuses an unverified one, so no further maintenance obligation is needed."
+
+[perspective.TEST-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "TC-371 exercises each render and refusal arm, including the bounded search, against real lane commits; no distinct verification obligation is missing."
+
+[perspective.UX-DESIGNER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The reader-facing decision is whether the brief may render, and the refusal names its cause and recording step; no separate layout obligation arises."
+
+[perspective.UX-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The review result is a textual render or refusal rather than a view with width, theme, or content-volume behavior; no additional surface obligation arises."
+
+[perspective.SAFETY]
+applicable = false
+applies_when = "tags contains \"safety\""
+produced = []
+
+[perspective.LEGAL]
+applicable = false
+applies_when = "tags contains \"legal\""
+produced = []
+
+[perspective.DATA-PROTECTION]
+applicable = false
+applies_when = "tags contains \"personal-data\""
+produced = []
+
+[perspective.ACCESSIBILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The route communicates the decision through named text rather than color or pointer-only interaction; no additional accessibility obligation arises."
+
+[perspective.PERFORMANCE]
+applicable = true
+applies_when = "always"
+produced = ["SR-241"]
+
+[perspective.CONSISTENCY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The one review-attestation walk and its shared digest keep the producer and render consumer aligned; no separate consistency obligation is missing."
+
+[perspective.INTEGRITY-RECOVERABILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "This read-only gate writes no record and refuses before creating a brief, so it adds no durable-update or recovery obligation."
+
+[perspective.PRODUCT-FITNESS]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The review gate serves the stated need for an honest pass verdict while preserving record-only review bookkeeping; no different stakeholder outcome is identified."

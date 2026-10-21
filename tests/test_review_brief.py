@@ -144,6 +144,16 @@ def test_a_named_input_that_is_not_there_refuses(tmp_path):
         rb.render_review(root, rb.dataclasses.replace(_round(), wi="WI-901"))
 
 
+def _past_the_git_reads(monkeypatch):
+    """Drive the command line in process past its git reads: the lane's
+    commits, and the review bar's attestation the render requires (the real
+    record read is pinned in `tests/test_review_brief_git.py`)."""
+    monkeypatch.setattr(
+        rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
+    )
+    monkeypatch.setattr(rb, "_review_bar_refusal", lambda root, lane, sha, t: sha)
+
+
 def test_an_unfilled_slot_refuses_and_no_brief_is_written(
     tmp_path, monkeypatch, capsys
 ):
@@ -158,9 +168,7 @@ def test_an_unfilled_slot_refuses_and_no_brief_is_written(
     with pytest.raises(rb.prompts.PromptError, match="unfilled slot.*lane_budget"):
         rb.render_review(_lane(tmp_path), _round())
     # The same refusal through the command line, past the git reads.
-    monkeypatch.setattr(
-        rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
-    )
+    _past_the_git_reads(monkeypatch)
     out = tmp_path / "brief.md"
     argv = ["review", "--root", str(tmp_path), "--wi", "WI-900", "--base", BASE]
     argv += ["--sha", SHA, "--scope", "full", "--scratch", "C:/scratch"]
@@ -307,9 +315,7 @@ def test_an_absent_stance_renders_the_ordinary_round(tmp_path, monkeypatch):
     ordinary, _v = rb.render_review(root, _round(stance="ordinary"))
     assert absent == ordinary
     assert "STANCE:" not in absent
-    monkeypatch.setattr(
-        rb, "lane_commits", lambda root, base, sha: ("wi-900", BASE, SHA)
-    )
+    _past_the_git_reads(monkeypatch)
     argv = ["review", "--root", str(root), "--wi", "WI-900", "--base", BASE]
     argv += ["--sha", SHA, "--scope", "full", "--scratch", "C:/scratch"]
     argv += ["--tests", "tests/test_a.py"]
