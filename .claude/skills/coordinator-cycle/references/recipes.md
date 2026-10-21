@@ -94,6 +94,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   - Record that session id in the lane's decisions at the first turn: a
     lane resumed days later found it only in `~/.codex/sessions/<date>/`,
     by its `cwd` and model (wi-798, 2026-10-20).
+  - A single plan that orders its record step after its tests (WI-962's
+    P5 after P1) still meets Terra first: the intent turn takes that
+    step's registry rows, and the builder keeps its non-registry parts
+    (flows, prose outside the registries, contract bodies) and the
+    RESYNC entry (wi-962 D-001).
   - `mkprompt.py` takes `LANE=<branch>` (`wi-912`), never the worktree
     path, which builds a broken `--basetemp` (`C:-Projects-...`).
   - Launched through `lowprio.py` with Git's `usr/bin/bash.exe`, the
@@ -859,6 +864,11 @@ lane commit being replayed.
   gated only on the command's exit code inside `$(...)` committed a red tier
   (2026-10-10). The commit hook does not run it: run it yourself, before a
   landing commit rather than after it.
+- `integrate.py attest` runs `[bars] review`, the smoke action with its
+  budget step, and refuses on a breach: on this box, whose tier reads 70
+  to 110 s, it refused a green tree at 96.9 s (wi-957 D-003). Until the
+  owner rules wi-957 D-004, commit lane work by hand with the D-005
+  pair; nothing on trunk requires an attestation yet.
 - The declared bar runs the tier once: the lints run first, then the
   budget step's timed run, which exits with the tier's own code on a red
   tier and 1 on a breach. `--elapsed <s>` serves only a hand wrapper that
@@ -968,6 +978,10 @@ lane commit being replayed.
   rewrote), a Python script or plain TOML alike (a decisions append quoting
   `$a = $b`, 2026-10-15i). Write the text or the edit script to the scratch
   root with the file tool and append or run it from there (2026-10-14).
+  A step after a failed `&&` chain on its own line still runs: a spec
+  placement whose guard failed was followed by an edit to the decisions
+  record's `high_risk` line (2026-10-20d). Chain every dependent step
+  with `&&` on one line, and check a guard's exit before the next step.
   The shell has also rewritten `\n` and `\1` inside heredoc Python, in a
   builder's test strings and in a coordinator's log edit (WI-912,
   2026-10-17): tell every builder the same.

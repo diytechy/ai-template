@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-20c-leg05-coordinator.md](handoff-2026-10-20c-leg05-coordinator.md),
+  [handoff-2026-10-20d-leg06-coordinator.md](handoff-2026-10-20d-leg06-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -56,8 +56,16 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   token account through a qualified entry. The review gate's queue row is
   filed as four rows: its text row (test cases before the code in a lane)
   and its attestation row (one tree-bound bar attestation, and the
-  `attest` verb) have landed; the coordinator's and the loop's review
-  refusals are next, in that order.
+  `attest` verb) have landed; the coordinator's review refusal is built
+  in its lane and holds before its first review for the owner: `attest`
+  runs the review bar with its smoke budget step, so on this box, whose
+  tier reads 70 to 110 s against 60 s, it refuses every attestation that
+  the paired-reading procedure would read as load, and under the refusal
+  no review could render. The loop's refusal follows it. Item 8's usage
+  record is filed as two rows (the coordinator's Sol and Terra calls
+  through the session service, then the Claude sub-agent usage ingest),
+  built after the coordinator's refusal lands; item 10 step 2's row (the
+  hooks' one policy read) is claimed, its tests committed.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
   headless legs in its section 7. The owner directed (2026-10-18,
   coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
