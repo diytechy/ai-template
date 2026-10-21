@@ -99,6 +99,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     step's registry rows, and the builder keeps its non-registry parts
     (flows, prose outside the registries, contract bodies) and the
     RESYNC entry (wi-962 D-001).
+  - An intent row naming a module the build creates (a new IF row's
+    owner) reds the bar before that module exists
+    (`test_seam_resolution`; `check_trajectory --strict` also errors on
+    an IF no TC cites): keep the set as a patch and let it ride the
+    build commit that creates the module, recorded as a decision
+    (wi-940 D-002).
   - `mkprompt.py` takes `LANE=<branch>` (`wi-912`), never the worktree
     path, which builds a broken `--basetemp` (`C:-Projects-...`).
   - Launched through `lowprio.py` with Git's `usr/bin/bash.exe`, the
@@ -991,6 +997,19 @@ lane commit being replayed.
   The shell has also rewritten `\n` and `\1` inside heredoc Python, in a
   builder's test strings and in a coordinator's log edit (WI-912,
   2026-10-17): tell every builder the same.
+  A command that reads stdin (a stray `cat`, a script waiting on input)
+  never returns in a headless leg and is moved to the background at the
+  tool cap: give kit commands `< /dev/null` (2026-10-21a). A message
+  composed with `sed` over a wrapped line rewrites the wrong text: write
+  commit messages with the file tool (2026-10-21a).
+- **The first bar in a freshly added worktree reads cold:** with no
+  bytecode cache it read 64.9 to 68.7 s where the same tree, warm, read
+  52 to 54 s (2026-10-21a, five readings). A parent timed in a new scratch
+  worktree is that cold reading: run its bar twice and take the second,
+  or record the first as cold, never charge the gap to the change.
+- **The bar runs no hook step:** `skills-sync` (and every other pre-commit
+  step) runs only at the commit, so a green bar can meet a refused commit;
+  read the hook log, fix, and commit again (2026-10-21a).
 - **Scratch:** one dated root, `$REPO.wt/review-tmp/<date>-<session>/`, with one literal
   `--basetemp` per kind of run (`$TEMP` is empty in the Codex shell). Delete
   the root once results are recorded.

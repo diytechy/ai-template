@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-20e-attended-coordinator.md](handoff-2026-10-20e-attended-coordinator.md),
+  [handoff-2026-10-21a-leg07-coordinator.md](handoff-2026-10-21a-leg07-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -53,7 +53,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   plan cap: the cap's sitting ruled a FIX, and the owner routed it to a
   third plan revision with one confirming critique, which its minted
   disposition row now carries. The trunk mint's settled-amendment filter
-  is filed as the first new build (owner, 2026-10-20), and the lane
+  (the first new build, owner, 2026-10-20) is claimed and built in its
+  lane, through its first review round, and the lane
   lifecycle design's in-lane mint and station authority rows are
   cancelled, its config-retirement row folded into item 10's program. The
   account-homes row has landed: the adjudicator runs on its declared
@@ -67,7 +68,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   the paired-reading procedure would read as load, and under the refusal
   no review could render. The owner ruled the hold (2026-10-20): no bar
   fails on seconds; the CPU-time budget row, re-scoped, moves the judgement
-  into the run menu's audit and lands first. The loop's refusal follows it.
+  into the run menu's audit and lands first; it is claimed, its plan
+  passed and its first two stages built in its lane. The loop's refusal
+  follows it.
   The lane lifecycle design's remaining rows are deferred until the owner
   reviews their re-scopes, and the queue table is an explicit list. Item 8's usage
   record is filed as two rows (the coordinator's Sol and Terra calls
