@@ -188,7 +188,7 @@ seconds only. It overrides the deliverables below where they differ:
 `docs/stack.ini` `[smoke-budget]` already holds the value the bar's gate
 compares against. This row replaces that one value (`seconds`) with two, so
 the file keeps its authority, now over a new value domain. Written before
-the claim, under [`PROCESS.md` §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+the claim, under [`PROCESS.md` §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producer:** a person or agent, editing by hand in a reviewed commit with
   its `fig:` line and log reason (`check_figures.py` checks presence, not
