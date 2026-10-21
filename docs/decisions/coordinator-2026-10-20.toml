@@ -4,7 +4,7 @@
 # evening (D-008 onward: the owner's consolidation rulings and their edges).
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = ["D-002", "D-005", "D-006"]
+high_risk = ["D-002", "D-005", "D-006", "D-014", "D-020"]
 
 [decision.D-001]
 decided = "Queue row P1 (review-churn item 13's review gate) is filed on trunk as four rows, split at birth on independent deliverables (ruling 3): WI-955, the text (TC-first in lanes, the reviewer's test-adequacy and duplication questions); WI-956, the one tree-bound bar attestation (grammar, verifier and producer, the landing refresh moved onto it); WI-957, the coordinator's review-render refusal; WI-958, the loop's review-draw refusal with the red-round cap as a partial close. They land in that order. A planner sub-agent drafted them from plan item 13 and the code; the scope critique judges each before its claim. Each specref names plan item 13's section, as WI-914 named its plan item."
@@ -88,4 +88,60 @@ decided = "The edges D-009 and D-010 leave behind are cut in the same commit, si
 alternative = "Leave the edges and let the scope critique at each claim find them."
 reversal_cost = "Low: two needs lines."
 why_not_escalated = "Mechanical consequence of the owner's rulings."
+review = ""
+
+[decision.D-013]
+decided = "Two independent reviews of commits 08fc2fb2f and e70a2c48b (Codex Sol at medium; a fresh Claude Opus at medium; one brief, neither saw the other; filed under C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/) returned CHANGES-REQUESTED with 4 and 6 findings. Every finding was checked against the code and holds; all are adopted: (1) WI-953's Owner route never reached its sitting, because the disposition composer reads only the closed spec, its report and the commit facts (adjudicate_brief.disposition_values): the recipes gain the append step for a disposition row carrying an Owner route, and the handoff's queue row names it; (2) WI-963 refused on an ABSENT ledger or snapshot, which a fresh adopter legitimately has: absence now reads as no acts and a present but unparseable record refuses; (3) WI-963 compared only the net-diff cells, missing a cell restored after its act: the comparison is the whole row; (4) WI-963's anchor moves to SR-178, LLR-153 staying the code home; (5) WI-963 states the warn/mint shared-walk invariant's change (LLR-158) and names intake.py snapshot as the records' writer; (6) WI-800, WI-813 and WI-851 note that WI-807 and WI-810 are cancelled; (7) the drill and the rulings move to the durable review-tmp root, and the handoff's queue becomes an explicit list."
+alternative = "Land the change as committed and let each row's scope critique catch the spec defects at its claim."
+reversal_cost = "Low: spec and procedure text only."
+why_not_escalated = "Reviewer findings, verified; the cycle adopts verified findings."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/sol-review.md; C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/opus-review.md"
+
+[decision.D-014]
+decided = "Owner ruling in session (2026-10-20, attended), on wi-957 D-004: the smoke budget step leaves BOTH bars, the per-commit bar ([run] smoke) and the review bar ([bars] review), which run it in warn mode so the reading still prints and a red tier still fails; this overrules OI-52 ruling (a)'s 'a breach FAILS the bar' for seconds. A slow tier is judged instead by a smoke part of the run menu's audit action (review-churn item 12's run.cmd audit, ruled one manual action in revision 35), in enforce mode against stamped CPU-seconds and wall caps plus the test count. WI-940 is re-scoped in place to carry it (its meter, values and verdict line kept; its Owner re-scope section overrides the rest), lands before WI-957 and releases the D-004 hold; its scope critique re-runs before the claim. Until it lands, the bars keep the budget step as today and records-only commits keep D-011's procedure."
+alternative = "Land WI-940 as filed (a CPU-time gate on both bars); declare [bars] review without the budget step only; or a re-tier lane."
+reversal_cost = "Medium: one row's re-scope before its claim; after landing, a bar-step change and its doc homes."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-015]
+decided = "Owner ruling in session (2026-10-20, attended): WI-906 (the coordinator lease under store-lock contention) is CANCELLED as contrived under PROCESS.md section 6's review threat model, as the queue audit found: every path it guards needs the lease store's lock held past its ten-second wait, while every holder holds it for milliseconds."
+alternative = "Build it as filed."
+reversal_cost = "Low: a cancelled spec can be re-filed as a new row if the contention is ever observed."
+why_not_escalated = "It was the owner's ruling."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/queue-audit.md"
+
+[decision.D-016]
+decided = "Owner ruling in session (2026-10-20, attended): the rows the consolidation drill proposed to re-scope against the review-churn rulings, WI-799, WI-800, WI-801, WI-804, WI-805, WI-808, WI-809, WI-811, WI-812, WI-813, WI-814, WI-815 and WI-816, and WI-832 and WI-833 (kept, but their specs assume parts of the WI-788 design), move to deferred/ until the owner reviews their re-scopes; each returns to queued/ with its re-scope applied and its scope critique re-run. WI-857 is deferred behind WI-801's re-scope (the queue audit's alternative to cancelling it). WI-802 stays in draft. No open row outside the deferred set holds a hard edge on one of them. The owner kept WI-832 (OI-107 (b), ruled 2026-10-07) and WI-833 rather than cancel them as the audit proposed."
+alternative = "Hold them by a handoff rule only (an explicit queue list), or defer only WI-809 and WI-813."
+reversal_cost = "Low: one spec move each way per row."
+why_not_escalated = "It was the owner's ruling."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/consolidation-drill.md"
+
+[decision.D-017]
+decided = "Owner ruling in session (2026-10-20, attended): WI-908 (two account homes, the owner present), WI-910's Mac run (now WI-964) and WI-684 (waits on OI-98, the owner's re-sync) are owner-held: the handoff lists them as skipped by legs and under For the owner. WI-827 (SN-029's amendment, on a held rung, never landed from a lane) is taken in this attended session after the cleanup, under the owner's explicit delegation for the text, the owner taking the act."
+alternative = "Leave them claimable."
+reversal_cost = "Low: handoff text."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-018]
+decided = "Owner ruling in session (2026-10-20, attended): WI-795 (FreeLLMAPI provisioning) needs WI-820 (what listing a route means for repository content), which is due before the first free or third-party route is enabled; WI-820 is deferred, so WI-795 waits until it is un-deferred and lands."
+alternative = "Write the order into WI-795's Done-when when OI-105 is ruled; or no ordering."
+reversal_cost = "Low: one needs entry."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-019]
+decided = "Owner ruling in session (2026-10-20, attended): WI-910 is split. It keeps the fixes CI can verify (the run.command fixture's exec bit, which fails on any POSIX box; the dispatch lane-worktree flake; the POSIX-before-phase-close question), with CI's macOS and Linux job state as its evidence, and becomes claimable. WI-964 (filed) carries the owner's full-suite run on the Mac, needs WI-910 and is owner-held. The WI mark rises 963 -> 964."
+alternative = "Keep WI-910 whole and skipped; or accept CI's macOS job as enough and drop the Mac run."
+reversal_cost = "Low: neither row is claimed."
+why_not_escalated = "It was the owner's ruling."
+review = ""
+
+[decision.D-020]
+decided = "WI-963's Trust ruling, for the owner to confirm or overrule (coordinator-cycle section 1 routes a Trust ruling to the owner): an absent act ledger reads as no acts, so nothing is filtered and the mint runs as today; a present but unreadable or malformed ledger or snapshot copy refuses the mint by name (fail closed); a row the filter cannot prove settled, a missing snapshot copy included, is minted. The filter only removes a row it can prove was judged in the merged range."
+alternative = "Refuse the mint on any absent record (the first draft; it breaks a fresh adopter's first mint), or read an unreadable record as no acts (fails open toward re-minting only, which is safe but hides corruption)."
+reversal_cost = "Low before the claim: one Trust line and its Done-when case."
+why_not_escalated = "It follows the fail-closed rule every Trust ruling applies and the existing reader's absence semantics; the owner confirms or overrules."
 review = ""

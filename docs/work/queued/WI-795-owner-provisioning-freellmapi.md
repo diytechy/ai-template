@@ -3,13 +3,15 @@ id = "WI-795"
 title = "Owner provisioning: the FreeLLMAPI endpoint and pinned models"
 workstream = "process"
 specref = "docs/requirements/open-items.toml#OI-105"
-needs = ["OI-105"]
+needs = ["OI-105", "WI-820"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
 
 ## Context
+
+Amended 2026-10-20 (owner; coordinator-2026-10-20 D-018): it needs WI-820, which is due before the first free or third-party route is enabled; WI-820 is deferred, so this row waits until WI-820 is un-deferred and lands.
 
 Filed by hand by the coordinator on 2026-10-04, as the queued placeholder that
 puts OI-105 on the owner's surface: an open item is filed together with the

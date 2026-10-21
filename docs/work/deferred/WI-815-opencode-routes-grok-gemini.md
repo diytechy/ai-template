@@ -11,6 +11,8 @@ priority = 3
 
 ## Context
 
+Deferred 2026-10-20 (owner; coordinator-2026-10-20 D-016): held until the owner reviews the consolidation drill's proposed re-scope for this row (`C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/consolidation-drill.md`), which checked the WI-788 rows against the review-churn rulings; it returns to queued/ with its re-scope applied and its scope critique re-run at the claim.
+
 Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design note
 (OI-104, ruled 2026-10-04). This is S788-routes (ch.2 §5, §9; OI-101 Q3, Q4). Grok
 and FreeLLMAPI run through OpenCode, with no separate xAI CLI route; Gemini is

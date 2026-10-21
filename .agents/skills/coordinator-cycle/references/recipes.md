@@ -353,7 +353,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      composed as the single-kind `amendment` class, came back with a
      `## amendment` section the one verdict parser refuses for a single-kind
      brief, after its act was committed, and was discarded (wi-921 D-018).
-     Single-kind briefs use bare ids. An empty section refuses the entire composition. Include
+     Single-kind briefs use bare ids. An empty section refuses the entire composition.
+     A `disposition` row that carries an `## Owner route` section (WI-953,
+     coordinator-2026-10-20 D-013): the composer reads only the closed spec,
+     its report and the commit facts, never the disposition row's own body,
+     so append that section verbatim to the composed brief, chained on the
+     composer with `&&` (the WI-894 trap in step 3), and check the brief
+     carries it before the launch. Include
      affected chain rows in the appropriate scope and supply the arms map
      as an additional input; the composer does not generate it.
   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.

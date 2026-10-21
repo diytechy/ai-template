@@ -2,13 +2,17 @@
 id = "WI-906"
 title = "A coordinator-lease hook that meets store-lock contention never leaves the lease with an ended session"
 workstream = "process"
-specref = "docs/work/README.md"
+specref = ""
 sr_refs = ["SR-229", "SR-230"]
 needs = ["WI-858"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+CANCELLED (owner, 2026-10-20; coordinator-2026-10-20 D-015) as contrived under PROCESS.md section 6's review threat model: every path it guards needs the lease store's lock held past its ten-second wait, while every holder holds it for milliseconds, so the contention it answers does not arise in normal use. WI-858 (lease release and bookkeeping writes under contention) is unaffected.
 
 ## Context
 

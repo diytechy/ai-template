@@ -12,6 +12,8 @@ priority = 3
 
 ## Context
 
+Deferred 2026-10-20 (owner; coordinator-2026-10-20 D-016): held until the owner reviews the consolidation drill's proposed re-scope for this row (`C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/consolidation-drill.md`), which checked the WI-788 rows against the review-churn rulings; it returns to queued/ with its re-scope applied and its scope critique re-run at the claim. WI-807 and WI-810, which this spec names, are cancelled (D-009, D-010).
+
 Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design note
 (OI-104, ruled 2026-10-04). This is S788-dual-pickup (ch.3 §4.6, §4.10, §6). The
 dispatcher admits a `planmode = "dual"` row like any row (still the exclusive

@@ -12,6 +12,8 @@ priority = 3
 
 ## Context
 
+Deferred 2026-10-20 (owner; coordinator-2026-10-20 D-016): held until the owner reviews the consolidation drill's proposed re-scope for this row (`C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/consolidation-drill.md`), which checked the WI-788 rows against the review-churn rulings; it returns to queued/ with its re-scope applied and its scope critique re-run at the claim.
+
 Amended 2026-10-20 (owner; coordinator-2026-10-20 D-010): WI-807 is cancelled, and its one property still owed folds in here as the fenced-lock Done-when line; the edge on WI-807 is dropped.
 
 Filed by hand by the coordinator on 2026-10-04 from WI-788's approved design note

@@ -12,6 +12,8 @@ needs = ["WI-909"]
 
 ## Context
 
+Amended 2026-10-20 (owner; coordinator-2026-10-20 D-019): split. This row keeps the fixes CI can verify (the run.command fixture, the flake, the POSIX question); the full suite on the owner's Mac moves to WI-964, which waits on this row.
+
 Filed by hand on 2026-10-13 at the owner's direction: "drill through to see
 if there is anything else related to Mac failures, and make a single WI to
 cover that scope". WI-909 fixed the first Mac failure (the hooks' probe did not
@@ -27,9 +29,9 @@ drill ran, its two findings and why they went unseen are its spec of record,
 - Finding 2 is either reproduced and fixed at its cause, or recorded as not
   reproducible with the attempts named. If the suspect holds, git's failure
   surfaces as the refusal's reason instead of reading as "no holder".
-- The full unfiltered suite is green on the Mac, with the command, revision
-  and result recorded. The CI macOS and Linux jobs' state on the branch tip is
-  checked and recorded.
+- The CI macOS and Linux jobs' state on the landing tip is checked and
+  recorded (green, or each red named). The owner's own Mac run is WI-964,
+  split out by the owner (coordinator-2026-10-20 D-019).
 - The finding that the suite's recent full runs could not see a POSIX-only
   failure is carried to the owner as a question: whether the full suite should
   also run on a POSIX box before phase close, beyond CI.

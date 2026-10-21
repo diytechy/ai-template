@@ -11,6 +11,8 @@ priority = 3
 
 ## Context
 
+Deferred 2026-10-20 (owner; coordinator-2026-10-20 D-016): held until the owner reviews the consolidation drill's proposed re-scope for this row (`C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/consolidation-drill.md`), which checked the WI-788 rows against the review-churn rulings; it returns to queued/ with its re-scope applied and its scope critique re-run at the claim.
+
 Filed by hand by the wave-16 coordinator on 2026-10-05, as the queued placeholder
 that puts OI-107 on the owner's surface: an open item is filed together with the
 queued row that cites it. The independent adjudicator's finding F1 at WI-818

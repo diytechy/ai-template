@@ -12,6 +12,8 @@ priority = 5
 
 ## Context
 
+Deferred 2026-10-20 (owner; coordinator-2026-10-20 D-016): held behind WI-801's re-scope, which settles where a judging session's id is recorded; it returns to queued/ with WI-801 and is re-critiqued at its claim.
+
 Split out of WI-849 by the owner on 2026-10-08 ("Split it out"), when WI-849's
 first build round found the part it could not build. Ruling 6 of 2026-10-07
 (`docs/log.d/2026-10-07-wi841-retro-owner-rulings.md`) lets an independent

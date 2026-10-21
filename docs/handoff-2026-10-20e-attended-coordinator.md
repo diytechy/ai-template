@@ -6,8 +6,11 @@ recipes; this handoff holds state only. After headless leg 06 closed the
 overnight run (`--max-legs 6 reached`), an attended session took the
 owner's rulings on four rows of the WI-788 program that later review-churn
 rulings had overtaken, from a read-only consolidation drill, and applied
-them in one records-only commit. No lane moved. It carries no
-`Overnight: stop` line: WI-962 and WI-963 move without the owner.
+them in one records-only commit. Two independent reviews of that commit
+(Codex Sol and Claude Opus, both medium) and a queue audit followed; their
+verified findings and a second round of owner rulings cleaned the queue
+(coordinator-2026-10-20 D-013 to D-020). No lane moved. It carries no
+`Overnight: stop` line: WI-962, WI-963 and WI-940 move without the owner.
 
 ## State (trunk `refactor_again`, nothing pushed)
 
@@ -26,6 +29,15 @@ them in one records-only commit. No lane moved. It carries no
   - **WI-817** is deferred (D-011): it folds into item 10's config program
     as its first row and returns to queued/ when item 10's steps 3 to 6 are
     filed.
+  - **Round 2** (D-013 to D-020): WI-963's spec corrected from both reviews
+    (absence reads as no acts, whole-row comparison, anchored on SR-178);
+    the recipes gain the Owner-route append for a disposition sitting;
+    WI-940 re-scoped in place (D-014: no bar fails on seconds, the run
+    menu's audit judges them); WI-906 cancelled as contrived (D-015);
+    sixteen rows deferred for the owner's review of their re-scopes (D-016:
+    WI-799, WI-800, WI-801, WI-804, WI-805, WI-808, WI-809, WI-811 to
+    WI-816, WI-832, WI-833, WI-857); WI-795 needs WI-820 (D-018); WI-910
+    split, its Mac run filed as WI-964 (D-019). WI mark 964.
 - **Lane `wi-957`** (worktree `C:/Projects/ai-template.wt/wi-957`, base
   `64b8d686c`, tip `804c8011c`): plan `7f3833550`, critique-1 APPROVE 0
   `d0411d424`, pass record `85a68024a`; Terra's intent set `9015acd72`
@@ -37,10 +49,12 @@ them in one records-only commit. No lane moved. It carries no
   carries no `review` attestation. `integrate.py attest` refused the code
   commit because the smoke tier ran 96.9 s against its 60 s budget, every
   test green (wi-957 D-003). On this box the tier reads 70 to 112 s
-  whatever else runs, so the lane holds for the owner (wi-957 D-004; "For
-  the owner"). After the ruling: an attest with nothing staged writes the
-  empty attestation commit; then counted round 1. If WI-962 lands first,
-  rebase WI-957 onto it and re-anchor the RESYNC entry.
+  whatever else runs, so the lane held for the owner (wi-957 D-004). The
+  owner ruled it on 2026-10-20 (coordinator-2026-10-20 D-014): no bar fails
+  on seconds, WI-940 carries the change and lands first. After WI-940
+  lands: rebase WI-957 onto trunk and re-anchor its RESYNC entry, then an
+  attest with nothing staged writes the empty attestation commit; then
+  counted round 1.
 - **Lane `wi-962`** (worktree `C:/Projects/ai-template.wt/wi-962`, base
   `e79075c46`, tip `1bd47e778`): plan `96c6e7040`, critique-1
   (CHANGES-REQUESTED, one MINOR, read as an approve) `3581b5726`, pass
@@ -72,11 +86,12 @@ them in one records-only commit. No lane moved. It carries no
   no full suite ran.
 - **No judgement is active**; the lease is handed back at close-out.
   `docs/work/pause` is tracked and unchanged.
-- **Scratch:** the consolidation drill and the ruling notes are outside
-  the repository, at
-  `C:/Users/Peter/AppData/Local/Temp/claude/c--Projects-ai-template/f3858ff7-d875-400d-a8a4-da540ea71eaf/scratchpad/`
-  (`consolidation-drill.md`, `owner-rulings-2026-10-20.md`). The leg 06
-  scratch root's `p8-draft/` is still kept until P8 is filed.
+- **Scratch:** the consolidation drill, the queue audit, both reviews and
+  the ruling notes are at `C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/`
+  (`consolidation-drill.md`, `queue-audit.md`, `sol-review.md`,
+  `opus-review.md`, `owner-rulings-2026-10-20.md`); keep them until the
+  deferred rows' re-scopes are reviewed. The leg 06 scratch root's
+  `p8-draft/` is still kept until P8 is filed.
 
 ## How to run reviews now
 
@@ -89,37 +104,46 @@ only its rendered brief.
 
 The owner's order (coordinator-2026-10-16 D-004, D-006; coordinator-2026-10-17
 D-002, D-008), turned toward headless runs (coordinator-2026-10-18 D-004,
-D-006), with the owner's 2026-10-20 rulings (coordinator-2026-10-20 D-008,
-D-009). Each row that changes machinery lands alone, after the cycle has
+D-006), with the owner's 2026-10-20 rulings (coordinator-2026-10-20 D-008 to
+D-019). Each row that changes machinery lands alone, after the cycle has
 run through the last landing's changed steps.
+
+**Only the rows in this table are claimed**, in order and under their
+`needs`. When no row in it can move without the owner, the leg closes out
+with the `Overnight: stop` line. The superseded "leg 03's rows" table is
+retired.
 
 | # | Row | Next |
 |---|---|---|
 | 1 | WI-962 | In its lane: the code stage, then the rounds, the checkpoint, the gate and the landing |
-| 2 | WI-963 | The first new build (owner, D-009): scope critique and its confirming round, then claim under one scoped unpause. It needs nothing open; it touches `intake.py`, so it lands alone |
-| 3 | WI-953 | WI-902's disposition sitting, on the owner's route (D-008); then the successor it drafts (the third plan revision, one confirming critique, the build), before P4 and P5 |
-| 4 | WI-957 | Held for the owner's ruling on wi-957 D-004; then the empty attestation commit and counted round 1 |
-| 5 | WI-958 | After WI-957 lands (hard edge) |
-| 6 | WI-960, then WI-961 | Cleared for a claim; built after WI-957 lands (WI-960's soft edge: the same review steps) |
-| 7 onward | As before | P3 to P6 and P8 (P8 waits on its filing calls, below), then leg 03's rows; WI-940 after the batch, unless the owner moves it (wi-957 D-004 (a)). P5's spec carries the open question in D-009 (does the WI space ride the carrier) and folds in WI-810's "sequential sittings never collide on an id" |
+| 2 | WI-963 | The first new build (D-009): scope critique and its confirming round (its Trust ruling is D-020, for the owner to confirm), then claim under one scoped unpause. Touches `intake.py`; lands alone |
+| 3 | WI-940 | Re-scoped by the owner (D-014): scope critique over its `## Owner re-scope` and the confirming round, then claim (single plan). Changes both bars' budget step; lands alone, and releases WI-957 |
+| 4 | WI-953 | WI-902's disposition sitting on the owner's route (D-008): compose the `disposition` brief, then append the row's `## Owner route` section verbatim, chained with `&&` (recipes section 1, Adjudication step 1), and check the brief carries it. Then the successor it drafts: the third plan revision, one confirming critique, the build, before P4 and P5 |
+| 5 | WI-957 | After WI-940 lands: rebase onto trunk, re-anchor its RESYNC entry, the empty attestation commit, counted round 1 |
+| 6 | WI-958 | After WI-957 lands (hard edge) |
+| 7 | WI-960, then WI-961 | Cleared for a claim; built after WI-957 lands (WI-960's soft edge: the same review steps) |
+| 8 | WI-850, WI-851, WI-856, WI-878, WI-910, WI-920 | Under their `needs`, each scope-critiqued at its claim (WI-910 as split by D-019) |
+| 9 | Filings P3 to P6, P8 | P3 ends in an owner act; P4 and P5 after WI-953's successor lands (P5's spec asks D-009's question: does the WI space ride the carrier, and folds in WI-810's "sequential sittings never collide on an id"); P6 starts with the W3 dry run; P8 waits on its filing calls |
+
+**Never claimed by a leg:** WI-684 (waits on OI-98, the owner's re-sync),
+WI-795 (OI-105, then WI-820), WI-908 (the owner present), WI-964 (the
+owner's Mac), WI-827 (attended only; it never lands from a lane), and every
+row under `docs/work/deferred/` (D-011, D-016).
 
 The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
 
 ## For the owner
 
-- **Rule wi-957 D-004** (high risk; it holds WI-957, and through it WI-958,
-  WI-960 and WI-961): unchanged from the last handoff, options (a) land
-  WI-940 first (the coordinator's recommendation), (b) declare `[bars]
-  review` without its budget step until WI-940 lands, (c) a re-tier lane,
-  (d) another route.
-- **The consolidation drill's other re-scopes** (WI-799, WI-800, WI-801,
-  WI-802, WI-804, WI-805, WI-808's spine-batch clause, WI-809, WI-811,
-  WI-812, WI-813, WI-815, WI-816), drafted in the drill file named under
-  Scratch and not applied: review them before they are applied. The two
-  that gate the managed loop's unpause are WI-809 (cut to the loop's act
-  turn) and P4.
-- **Confirm or overrule** coordinator-2026-10-20 D-012 (the edges cut);
-  D-008 to D-011 are your own rulings.
+- **Review the deferred rows' re-scopes** (D-016): the drill file under
+  Scratch drafts one per row. Each returns to queued/ with its re-scope
+  applied. The two that gate the managed loop's unpause are WI-809 (cut to
+  the loop's act turn) and P4.
+- **Your owner-held rows:** WI-827 (SN-029's amendment: the text, then your
+  act), WI-908, WI-964 (your Mac, after WI-910 lands), and WI-684 and
+  WI-795 behind their open items.
+- **Confirm or overrule** coordinator-2026-10-20 D-012, D-013 and D-020
+  (high risk: WI-963's Trust ruling); D-008 to D-011 and D-014 to D-019
+  are your own rulings.
 - **P8's filing calls** (drafts in the scratch root's `p8-draft/`, split
   three ways: the test-file TC tag and its one reader; the derived review
   test set and its refusals; the strict-mark commit check): the tag

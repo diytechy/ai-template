@@ -1,6 +1,6 @@
 +++
 id = "WI-940"
-title = "The smoke budget step judges the tier's own CPU-seconds, which other load and process priority do not move, under a looser wall-clock cap that still catches a tier that sleeps or waits"
+title = "No bar fails on the smoke tier's seconds; the run menu's audit judges the tier's own CPU-seconds, which other load does not move, under a looser wall-clock cap"
 workstream = "process"
 sr_refs = []
 specref = "docs/decisions/coordinator-2026-10-17.toml"
@@ -63,6 +63,39 @@ cover `[smoke-budget]`.
   `resource` is "Unix, not Emscripten, not WASI". On Windows, `os.times()`
   knows "only user and system". The docs are silent on grandchildren. That
   rule is getrusage(2)'s, checked on Linux only.
+
+## Owner re-scope (2026-10-20)
+
+The owner ruled in session on 2026-10-20 (coordinator-2026-10-20 D-014, on
+wi-957 D-004): "This keeps coming up, I think we need to drop that budget
+from the review bar and find a better way to keep an eye on a slower than
+expected smoke bar. Maybe something that can be added into the auditing pass
+from the run module." Asked whether the per-commit bar keeps failing on the
+budget, the owner chose to drop it from both bars; asked what becomes of
+this row, the owner folded it into the audit's smoke part. This overrules
+the bar's "a breach FAILS the bar" (OI-52 ruling (a), 2026-08-23) for
+seconds only. It overrides the deliverables below where they differ:
+
+- **Neither bar fails on seconds.** `[run] smoke` (the per-commit bar) and
+  `[bars] review` (the attestation's review bar) run the budget step in
+  `--mode warn`: the tier runs once, a red tier still fails the bar with its
+  own code, and the verdict line still prints the reading, so a slow tier
+  stays visible on every commit. The paired-reading procedure (D-005,
+  D-011) retires with the gate it served.
+- **The audit judges.** A new `[run] audit` action, the first part of the
+  review-churn plan's item 12 `run.cmd audit` (ruled in revision 35 as one
+  manual action; its `arch` and `hats` parts are item 12's rows), carries a
+  `smoke` part: the budget step in `--mode enforce` against the stamped
+  `cpu-seconds` and `wall-seconds` (deliverables 1 to 3, unchanged), plus
+  the tier's test count against `max-tests`. It is run by hand and at phase
+  close, and a breach is filed as a re-tier row, never charged to whatever
+  lane happened to run it.
+- **Doc homes** (deliverable 4) state the new split: CLAUDE.md's
+  "Self-test before claiming done" bullet says seconds are reported by the
+  bar and judged by the audit, within its byte budget.
+- **Order.** It lands before WI-957, which it releases from the D-004 hold
+  (WI-957's attest then refuses only a red bar).
+- The scope critique re-runs over this re-scope before the claim.
 
 ## Deliverables
 
@@ -188,7 +221,15 @@ Each named test fails on the code before the change.
 - **The move** (deliverable 6) lands first, as its own commit, with
   `tests/test_session_stdin.py` passing unchanged. The RESYNC entry is
   anchored at the landing's parent.
-- **On the landing tip**, the new bar is green, budget step included, and
+- **Neither bar fails on seconds** (the owner re-scope): `[run] smoke` and
+  `[bars] review` run the step in warn mode; a test proves a stand-in tier
+  over both limits exits 0 with its WARN line under each bar's command, and
+  a red stand-in tier still exits nonzero.
+- **The audit's smoke part** runs from `run.cmd audit` (and `run_menu.py
+  audit`), runs the step in enforce mode and reports the test count against
+  `max-tests`; over either limit it exits 1 naming the limit.
+- **On the landing tip**, the bar is green and `run.cmd audit` is run once
+  quiet, its verdict line recorded in the fragment;
   `check_trajectory.py --strict` and `trace.py --strict` are clean.
 
 ## Scope answers

@@ -12,6 +12,8 @@ priority = 5
 
 ## Context
 
+Amended 2026-10-20 (coordinator-2026-10-20 D-013): WI-807 and WI-810 are cancelled (D-009, D-010); where this spec names them as later amenders of LLR-246, read WI-800 and WI-809 only.
+
 Re-homed 2026-10-10 (D-015): the shared lane-commit walk this row rides
 moved from WI-828 (closed partial) to WI-892, which landed the same day.
 OI-113 was ruled (d), won't fix, on 2026-10-14, and WI-893 was cancelled: no

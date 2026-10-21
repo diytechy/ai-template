@@ -12,6 +12,8 @@ priority = 3
 
 ## Context
 
+Deferred 2026-10-20 (owner; coordinator-2026-10-20 D-016): held until the owner reviews the consolidation drill's proposed re-scope for this row (`C:/Projects/ai-template.wt/review-tmp/2026-10-20e-consolidation/consolidation-drill.md`), which checked the WI-788 rows against the review-churn rulings; it returns to queued/ with its re-scope applied and its scope critique re-run at the claim.
+
 Re-homed 2026-10-10 (D-015): the shared lane-commit walk this row rides
 moved from WI-828 (closed partial) to WI-892, which landed the same day.
 OI-113 was ruled (d), won't fix, on 2026-10-14, and WI-893 was cancelled: no
