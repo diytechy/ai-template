@@ -46,3 +46,10 @@ alternative = "Keep reading a malformed policy file as privacy ON (no adopter-vi
 reversal_cost = "Low before the claim: an overrule rewrites one Trust line and its Done-when case."
 why_not_escalated = "It follows the fail-closed rule every Trust ruling applies; the owner confirms or overrules."
 review = ""
+
+[decision.D-007]
+decided = "WI-962 (queue row P7) is claimed ahead of P2 to P6, the rows its queue position follows: WI-957 holds for the owner (wi-957 D-004), P2's two rows (WI-960, WI-961) are built after WI-957 lands, P3 ends in an owner act, P4 and P5 follow B4's rebuild, which waits on the owner's routing of WI-902's plan-cap FIX, and P6 starts with the W3 dry run. WI-962 has no hard need, touches none of WI-957's files, and changes machinery the cycle does not run on (the shipped hooks' policy read), so it lands alone whenever it is ready; WI-957 rebases onto it if it lands first. P8's three drafted rows wait on the owner's filing calls (two forced migrations and the refusal of a code-touching row with no SR) and are not filed."
+alternative = "Close the leg with the Overnight stop line and no claim."
+reversal_cost = "Low: a claimed row can be closed partial and re-queued."
+why_not_escalated = "Ordering within the owner's queue under the dependencies its rows name is the coordinator's (the session prompt's step 4)."
+review = ""
