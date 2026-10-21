@@ -21,6 +21,7 @@ from conftest import (
     older_only_path,
     pin_autocrlf,
     process_key,
+    python_stand_ins,
     run_py,
     set_process_key,
     skip_without_env_gates,
@@ -412,6 +413,34 @@ def test_privacy_and_loop_commits_get_the_same_scripts_refusal(scaffold, hook, c
     assert "FAILING CLOSED" not in proc.stderr, proc.stderr
 
 
+@pytest.mark.parametrize(
+    "hook",
+    [
+        # The control: pre-commit already refuses with no fallback. Adequacy
+        # witness: a pre-commit that fell back to scripts/ (commit-msg's rule
+        # before this change) would pass the commit and fail this case.
+        pytest.param(HOOK, id="pre-commit"),
+        pytest.param(
+            ".githooks/commit-msg",
+            id="commit-msg",
+        ),
+    ],
+)
+def test_every_hook_refuses_a_kit_scripts_dir_naming_a_missing_directory(
+    scaffold, hook
+):
+    """TC-021 (SR-019, LLR-021): one scripts-directory rule for every hook. A
+    KIT_SCRIPTS_DIR naming no directory refuses even though the scaffold's
+    scripts/ is there to fall back on; the override is never second-guessed."""
+    skip_without_env_gates("posix-shell", "git")
+    subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
+    assert (scaffold / "scripts").is_dir()
+    proc = _run_hook_without_scripts(scaffold, hook)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    _assert_names_the_scripts_refusal(proc.stderr)
+
+
 def test_hook_refuses_clearly_when_no_working_python3(scaffold):
     # SN-013 / SR-019: python3 may resolve on PATH yet exit nonzero (the Windows
     # Store app-execution alias). The hook probes by *running* a candidate, so it
@@ -486,12 +515,7 @@ def test_hook_runs_on_the_project_venv_over_an_older_python(scaffold):
 def _shadow_python(scaffold):
     """A PATH prefix dir whose python3/python fakes exit nonzero (the Store-
     alias shape the hooks probe for) — sh/git/coreutils stay available."""
-    fakebin = scaffold / "fakebin"
-    fakebin.mkdir()
-    for name in ("python3", "python"):
-        cand = fakebin / name
-        cand.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
-        cand.chmod(0o755)
+    fakebin = python_stand_ins(scaffold)
     return dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ.get("PATH", ""))
 
 

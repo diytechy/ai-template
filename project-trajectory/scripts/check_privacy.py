@@ -53,6 +53,10 @@ Modes (each runs whichever of the two layers is active):
                      `.githooks/pre-push` over the outgoing range and by the
                      sync ritual's scrub base pass (process-options.md "Agent
                      iteration branch & sync").
+    --hook-policy    answer the git hooks' one policy question (no scan): one
+                     parse of `docs/process.toml` and the legacy files, one
+                     token on stdout (Contract IF-298 below). Read by
+                     `hooks/kit-python.sh` for all three hooks.
 
 False-positive affordance: a line containing `privacy-ok` (any case) is skipped
 — mark documented example paths instead of training yourself to bypass the
@@ -64,7 +68,7 @@ the pre-push reviewer / sync scrub; deep secrets scanning is a named external
 category (gitleaks, trufflehog — product-layer, never rebuilt in the kit).
 Exit codes: 0 clean/skipped, 1 findings, 2 usage or environment error.
 
-Contracts: IF-005, IF-032, IF-043, IF-148 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-005, IF-032, IF-043, IF-148, IF-298 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-005: the harness runs this CLI (`--repo`, the tracked-file sweep)
     and reads what it prints. Every leak is named on stdout as
@@ -101,6 +105,16 @@ Contract IF-032: our reading of git's surface, stated here because git's
     text of diffs and messages. A git call that fails — no repository, a
     range it cannot resolve — is exit 2, the scan not performed, never a clean
     verdict over nothing.
+
+Contract IF-298: the three git hooks invoke this CLI with `--hook-policy`
+    and read one answer on stdout, written with no newline: `privacy=off`,
+    `privacy=on review=require`, `privacy=on review=warn-unwired`,
+    `refuse=mixed` (`[policies] privacy_check` and the legacy
+    `docs/privacy-check` both present) or `refuse=unreadable` (the policy
+    file is present but cannot be read or parsed; the cause goes to stderr).
+    The answer comes from one parse of `docs/process.toml`, the same parse
+    `read_privacy_enabled` reads, and the exit is 0 on every answer. A
+    nonzero exit or any other answer is refused by the hook.
 """
 
 import argparse
@@ -112,6 +126,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from typing import NamedTuple
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
@@ -215,44 +230,81 @@ GENERIC_TERMS = PLACEHOLDER_USERS | {"localhost", "desktop", "laptop", "runner"}
 _first_declared_line = _kitconfig.first_declared_line
 
 
-def _process_gate(root, key):
-    """One `[policies]` gate out of `docs/process.toml` (SN-028), read the way
-    the git hooks read it — which is the whole point of this function.
+class _PolicyFile(NamedTuple):
+    """One read of `docs/process.toml`: `data` is the parsed table when it
+    parsed, `error` the OS, decode or parser message when the path is present
+    but unreadable; both None when no path exists at all (absent)."""
+
+    path: Path
+    data: dict | None
+    error: str | None
+
+
+def _load_process_toml(root):
+    """The ONE read of `docs/process.toml` a run makes, shared by every gate
+    below, so the hooks' answer and the checker's come from one parse.
+
+    "Absent" is no path at all: a directory at the path is present and
+    unreadable, never a quiet "nothing declared".
+
+    Implements: SR-031, LLR-031"""
+    path = root / "docs" / "process.toml"
+    if not path.exists():
+        return _PolicyFile(path, None, None)
+    try:
+        # utf-8-sig: a BOM is not legal TOML, but a hand edit leaves one and
+        # it must not turn a declared gate into a parse failure.
+        return _PolicyFile(
+            path, tomllib.loads(path.read_text(encoding="utf-8-sig")), None
+        )
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        return _PolicyFile(path, None, str(exc))
+
+
+def _policies(loaded):
+    """The parsed `[policies]` table, or None when there is none to read.
+
+    Implements: SR-031, LLR-031"""
+    table = loaded.data.get("policies") if loaded.data is not None else None
+    return table if isinstance(table, dict) else None
+
+
+def _process_gate(root, key, loaded=None):
+    """One `[policies]` gate out of `docs/process.toml` (SN-028), from the
+    one parse `_load_process_toml` makes (`loaded`, or read here).
 
     Returns True (on), False (off), or None (this file has nothing to say;
     fall through to the legacy one-word file).
 
-    FAILS CLOSED IN THE SAME DIRECTION THE HOOKS DO. Two grammars read this
-    file — `tomllib` here, a pure-sh `grep -E` in the hooks (M-42: a
-    Python-less box must still refuse to skip a declared privacy gate) — and
-    every shape only one of them understands is a silent flip of a security
-    gate. So a file that EXISTS but does not parse, or that declares the key
-    as something other than a boolean, reads ON here exactly as it does there:
-    loud, and never a quiet opt-out. A MIXED config (this file and the legacy
-    one both declaring the gate) reads ON for the same reason.
+    FAILS CLOSED. A file that IS a file but does not parse, or that declares
+    the key as something other than a boolean, reads ON: loud, and never a
+    quiet opt-out. (The git hooks refuse such a file outright before any
+    scan runs, through `hook_policy_answer`; this checker cannot refuse, so
+    it takes the safe reading.) A MIXED config (this file and the legacy one
+    both declaring the gate) reads ON for the same reason. The textual
+    fallback below stays until the file-shape rule is retired: a key the text
+    declares where the parser does not place it reads ON.
 
     STILL A LOCAL reader after WI-448 moved `_first_declared_line` into
     `kitlib.config`, and the split is deliberate: the shared package owns the
     declared-LINE rule, this module keeps the `[policies]` POLICY — which key,
     which fail-direction, which residual — because a security gate's
     fail-closed decision belongs beside the gate, not in a library every
-    checker imports. `tests/test_process_config.py` pins this and the hooks' sh
-    equal over a table of adversarial file shapes."""
-    path = root / "docs" / "process.toml"
+    checker imports. `tests/test_process_config.py` pins this and the shipped
+    hooks equal over a table of adversarial file shapes."""
+    if loaded is None:
+        loaded = _load_process_toml(root)
+    path = loaded.path
     if not path.is_file():
         return None
-    try:
-        # utf-8-sig: a BOM is not legal TOML but is invisible to the hooks'
-        # read — the two must not diverge over one byte.
-        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-        return True  # unparseable but present: fail closed, like the hooks
-    table = data.get("policies")
-    value = table.get(key) if isinstance(table, dict) else None
+    if loaded.error is not None:
+        return True  # unparseable but present: fail closed
+    table = _policies(loaded)
+    value = table.get(key) if table is not None else None
     if value is None:
-        # The key may still be somewhere the hooks WILL act on (a dotted key,
-        # the wrong section). Their read is textual, so ours must be too
-        # before it concludes "not declared".
+        # The key may still be in the text where the parser does not place
+        # it (a multi-line string, the wrong section): fail closed rather
+        # than conclude "not declared".
         return True if _text_declares(path, key) else None
     return value if isinstance(value, bool) else True
 
@@ -262,13 +314,12 @@ _DECLARED_RE_CACHE = {}
 
 def _text_declares(path, key):
     """Whether the file's TEXT declares `key` on a non-comment line — the
-    hooks' broad `declared` test, mirrored so this reader cannot conclude
-    "absent" about a key they would act on.
+    broad `declared` test the git hooks once ran in sh, kept so this reader
+    cannot conclude "absent" about a key a person wrote where the parser does
+    not place it. It stays until the file-shape rule is retired.
 
-    TRAILING comments are stripped, exactly as `_ptoml_body` strips them: a key
-    that appears ONLY inside a comment is not a declaration, and the hooks stop
-    acting on it, so concluding otherwise here would re-open the divergence in
-    the other direction."""
+    TRAILING comments are stripped: a key that appears ONLY inside a comment
+    is not a declaration, which is what `tomllib` says too."""
     pattern = _DECLARED_RE_CACHE.get(key)
     if pattern is None:
         pattern = _DECLARED_RE_CACHE[key] = re.compile(
@@ -289,34 +340,85 @@ _TRAILING_COMMENT_RE = re.compile(r"\s*#.*$")
 
 
 def _strip_comment(line):
-    """One line with its TRAILING comment removed — the sh `sed
-    's/[[:space:]]*#.*$//'` in `_ptoml_body`, mirrored.
+    """One line with its TRAILING comment removed.
 
-    Why the hooks strip at all, recorded here because this copy is the half a
-    Python reader sees: `privacy_check = true # privacy_check = false` is legal
-    TOML whose value is `true`, and the hooks' narrow "provably false" test
-    matched the decoy INSIDE the comment — so the gate switched off while
-    Python read it on, and the hook is the thing that blocks the commit."""
+    Why the strip matters: `privacy_check = true # privacy_check = false` is
+    legal TOML whose value is `true`, and a hook text read that matched the
+    decoy INSIDE the comment once switched the gate off while Python read it
+    on. The hooks now ask `hook_policy_answer` instead of reading text."""
     return _TRAILING_COMMENT_RE.sub("", line)
 
 
-def read_privacy_enabled(root):
+def read_privacy_enabled(root, loaded=None):
     """Whether the privacy layer is on: `docs/process.toml` `[policies]
     privacy_check = true`, else (migration window) docs/privacy-check's first
     non-comment line being `true` (any case). Absent/any other value → False
     (off) — the successor to the old commit-identity `inherit` default.
+    `loaded` is the run's one parse (`_load_process_toml`), read here if None.
 
     A MIXED config — both homes declaring the gate — reads ON. The Python
-    coordinator layer REFUSES that state outright; this checker cannot refuse
-    (it is called from hooks that must still make a decision), so it takes the
+    coordinator layer and the git hooks REFUSE that state outright; this
+    checker cannot refuse (it must still make a decision), so it takes the
     only safe reading."""
-    declared = _process_gate(root, "privacy_check")
+    declared = _process_gate(root, "privacy_check", loaded)
     legacy = (
         _first_declared_line(root / "docs" / "privacy-check") or ""
     ).lower() == "true"
     if declared is None:
         return legacy
     return bool(declared) or legacy
+
+
+WARN_UNWIRED = "warn-unwired"
+
+
+def read_privacy_review(root, loaded=None):
+    """The unwired-reviewer posture the pre-push hook acts on when the
+    privacy gate is on: `warn-unwired` or `require`. `loaded` is the run's
+    one parse (`_load_process_toml`), read here if None.
+
+    Only EXACTLY the string `"warn-unwired"` under `[policies]
+    privacy_review` opts down; any other value there, a wrong type
+    included, is `require`. A key the text declares where the parser does
+    not place it (another section, inside a string) is `require` too, and so
+    is an unreadable file: the stricter direction. With no key at all, the
+    legacy `docs/privacy-review` answers during the migration window
+    (exactly `warn-unwired` opts down); absent everywhere, `require`.
+
+    Implements: SR-031, LLR-031"""
+    if loaded is None:
+        loaded = _load_process_toml(root)
+    table = _policies(loaded)
+    if table is not None and "privacy_review" in table:
+        return WARN_UNWIRED if table["privacy_review"] == WARN_UNWIRED else "require"
+    if loaded.error is not None or (
+        loaded.path.is_file() and _text_declares(loaded.path, "privacy_review")
+    ):
+        return "require"
+    legacy = _first_declared_line(root / "docs" / "privacy-review")
+    return WARN_UNWIRED if legacy == WARN_UNWIRED else "require"
+
+
+def hook_policy_answer(root):
+    """The git hooks' one policy answer (Contract IF-298), from one parse.
+
+    Exactly one of: `refuse=unreadable` (the file is present but cannot be
+    read or parsed; the cause is printed to stderr), `refuse=mixed`
+    (`[policies] privacy_check` and the legacy `docs/privacy-check` both
+    present), `privacy=off` (the review posture is moot), or
+    `privacy=on review=require` / `privacy=on review=warn-unwired`.
+
+    Implements: SR-031, LLR-031"""
+    loaded = _load_process_toml(root)
+    if loaded.error is not None:
+        print("check_privacy: docs/process.toml: " + loaded.error, file=sys.stderr)
+        return "refuse=unreadable"
+    declared = _process_gate(root, "privacy_check", loaded)
+    if declared is not None and (root / "docs" / "privacy-check").is_file():
+        return "refuse=mixed"
+    if not read_privacy_enabled(root, loaded):
+        return "privacy=off"
+    return "privacy=on review=" + read_privacy_review(root, loaded)
 
 
 def email_ok(email):
@@ -331,13 +433,13 @@ def email_ok(email):
     return any(fnmatch.fnmatchcase(email, pat.lower()) for pat in EXEMPT_EMAILS)
 
 
-def read_secrets_scan(root):
+def read_secrets_scan(root, loaded=None):
     """Whether the always-on secrets floor is enabled. `docs/process.toml`
     `[policies] secrets_scan = false` opts out; else (migration window)
     `docs/secrets-scan` with the one word `off`; absent or any other value
     reads on (the safe default) — so an ordinary repo gets the floor without
-    declaring anything."""
-    declared = _process_gate(root, "secrets_scan")
+    declaring anything. `loaded` is the run's one parse, read here if None."""
+    declared = _process_gate(root, "secrets_scan", loaded)
     if declared is not None:
         return bool(declared)
     return (_first_declared_line(root / "docs" / "secrets-scan") or "").lower() != "off"
@@ -587,6 +689,14 @@ def scan_message(msg_path, scanner, layers_desc):
     return report(findings, "commit message", layers_desc)
 
 
+def _layers_desc(privacy_on, secrets_on):
+    """The armed layers as the scan summaries name them.
+
+    Implements: SR-018, LLR-018"""
+    layers = [("privacy", privacy_on), ("secrets floor", secrets_on)]
+    return " + ".join(name for name, armed in layers if armed)
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -620,14 +730,27 @@ def main():
         metavar="FILE",
         help="scan a commit-message file (wired into .githooks/commit-msg)",
     )
+    mode.add_argument(
+        "--hook-policy",
+        action="store_true",
+        help="print the git hooks' one policy answer (one token, no newline) "
+        "and scan nothing",
+    )
     ap.add_argument(
         "--root", default=".", help="repo root (default: current directory)"
     )
     args = ap.parse_args()
     root = Path(args.root).resolve()
+    if args.hook_policy:
+        # No trailing newline: on Windows a text-mode newline reaches the
+        # hook's $(...) as a carriage return, and the hook takes exact
+        # tokens only.
+        sys.stdout.write(hook_policy_answer(root))
+        return 0
 
-    privacy_on = read_privacy_enabled(root)
-    secrets_on = read_secrets_scan(root)
+    loaded = _load_process_toml(root)
+    privacy_on = read_privacy_enabled(root, loaded)
+    secrets_on = read_secrets_scan(root, loaded)
     if not privacy_on and not secrets_on:
         print(
             "check_privacy: privacy check and secrets floor are both OFF "
@@ -635,12 +758,7 @@ def main():
         )
         return 0
 
-    layers = []
-    if privacy_on:
-        layers.append("privacy")
-    if secrets_on:
-        layers.append("secrets floor")
-    layers_desc = " + ".join(layers)
+    layers_desc = _layers_desc(privacy_on, secrets_on)
 
     if args.author:
         # Author identity is a privacy-layer concern; the secrets floor does not

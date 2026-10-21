@@ -143,7 +143,6 @@ BASELINE = {
     ("check_docs.py", "check_links"): 13,
     ("check_docs.py", "git_commit_lookup"): 12,
     ("check_flows.py", "main"): 12,
-    ("check_privacy.py", "main"): 11,
     ("check_privacy.py", "scan_diff_text"): 14,
     ("check_privacy.py", "scan_line"): 13,
     # WI-344 (2026-07-28): `critique_ratchet_findings` (11) and `staged_findings`

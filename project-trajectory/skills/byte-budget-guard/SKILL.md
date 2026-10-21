@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,998 | 2026-10-19 | +2: WI-926 — commit hooks on before any work, paid for by tightening five bullets |
 | `CLAUDE.md` | **8,500** | 8,159 | 2026-10-18 | +168: WI-926 — commit hooks on before any work |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,527 | 2026-10-18 | Restamps the AGENTS.template.md and CLAUDE.md rows |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,545 | 2026-10-21 | Restamps the PROCESS_OPTIONS.md row |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 4% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 97,946 | 2026-10-15 | **+1,340** WI-911: §3 records a decision where it is made; §6 bounds contrived scenarios and promises |
-| `project-trajectory/PROCESS_OPTIONS.md` | 199,496 | 2026-10-18 | **+70** WI-943: a meaning row's act needs a blessing verdict |
+| `project-trajectory/PROCESS_OPTIONS.md` | 199,519 | 2026-10-21 | **+23** WI-962: the hooks read the privacy dials through one parse (18 of it unflagged drift) |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

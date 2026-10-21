@@ -485,9 +485,9 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 
 Every **process** dial — how work is processed, and (since the 2026-08-11
 overturn of WI-423) whether each check is on — is declared once in
-[`docs/process.toml`](docs/process.toml), one `key = value` per line so the git
-hooks can read the privacy dials in pure sh and a Python-less box still fails
-closed. The remaining knobs stay small declared files under `docs/`, because
+[`docs/process.toml`](docs/process.toml), one `key = value` per line, a shape
+that is checked; since the git hooks refuse without Python 3.11, they read the
+privacy dials through one parse. The remaining knobs stay small declared files under `docs/`, because
 presence itself is the semantic. Everything is stated once and read by the hooks,
 `check.py`, and the coordinator; **each file's (or key's) own header comment is
 its canonical doc** (this table is the map, checked against this repo's tree).

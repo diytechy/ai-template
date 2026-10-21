@@ -10,10 +10,12 @@ from conftest import (
     ROOT,
     SCRIPTS,
     load_script,
+    make_minimal_project,
     pin_autocrlf,
     process_key,
     process_toml,
     run_py,
+    skip_without_env_gates,
 )
 
 
@@ -794,6 +796,33 @@ def test_scaffold_pins_hook_line_endings(scaffold):
         "default — the per-path hook pins do not cover the fixture trees that "
         "depend on it"
     )
+
+
+def test_a_fresh_scaffold_ships_the_probe_and_commits_through_its_hooks(scaffold):
+    """TC-021 (LLR-021): a fresh scaffold ships the shared probe and the three
+    hooks byte-for-byte, the probe carries the one policy read, and a first
+    commit passes through both commit hooks."""
+    skip_without_env_gates("posix-shell", "git")
+    for name in ("kit-python.sh", "pre-commit", "commit-msg", "pre-push"):
+        shipped = (scaffold / ".githooks" / name).read_bytes()
+        assert shipped == (KIT / "hooks" / name).read_bytes(), name
+    probe = (scaffold / ".githooks" / "kit-python.sh").read_text(encoding="utf-8")
+    assert re.search(r"(?m)^kit_policy\(\) \{", probe), "the probe has no kit_policy"
+    make_minimal_project(scaffold)
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=str(scaffold), capture_output=True, text=True
+        )
+
+    assert git("init").returncode == 0
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
+    git("config", "user.name", "Test User")
+    git("config", "user.email", "12345+t@users.noreply.github.com")
+    git("config", "core.hooksPath", ".githooks")
+    assert git("add", "-A").returncode == 0
+    proc = git("commit", "-m", "feat: first")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
 def test_scaffolded_process_doc_drops_template_meta_prose(scaffold):

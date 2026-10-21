@@ -1,0 +1,51 @@
+Reviewed: d922c7e38f5e9d63dd9e3e3a661c9156bd683f95
+
+Role: REVIEW-A (independent, full-lane, convergence stance). Model: claude-opus-5-5. Rubric: docs/rubrics/kit-change-review.md (K1, K2, K3, B1).
+
+Verified. I hunted the worst failure classes first. (1) Fail-open privacy gate: a hook reads OFF where the parser reads ON, the 2026-08-08 decoy class. (2) Fail-open on a read failure: an unreadable, empty or foreign answer let through. (3) The scripts-directory fallback skipping a floor. (4) Silent loss of the mixed-config refusal. None of them reproduced.
+- kit_policy (project-trajectory/hooks/kit-python.sh:66-119) acts only on the five exact tokens. A nonzero exit, empty output, a foreign token or a near-token with a CR all return 1. Each of the three hooks calls it once, right after kit_python, under `|| exit 1`.
+- check_privacy --hook-policy writes the token with no newline, so Windows CRLF does not apply. It uses one `_load_process_toml` parse for the mixed check, the privacy gate and the review posture.
+- I drove the real CLI over a scratch tree. A BOM file, a CRLF file with a TOML literal `'warn-unwired'`, a `[x]` decoy for privacy_review, legacy `TRUE` + legacy `warn-unwired`, a whitespace-padded legacy word, a `"warn-unwired "` near-value, a mixed config and an empty file each gave the answer the spec's Trust ruling states.
+- The old three-copy text readers are gone from every live file. The only remaining hits are history/spec records.
+
+Red-before. I exported ddb924a's tree plus d922c7e's tests/ into scratch and ran every added test there. They fail on the pre-fix code: 72 failed, plus the two structural tests in tests/test_shell_portability.py once that tree is a git repo. This includes the hook-driven rows that pin the old hook's fail-open reading (`multiline-string-false`, `wrong-section-false`, `legacy-only-uppercase`), the review-posture decoy rows, the commit-msg and pre-push KIT_SCRIPTS_DIR refusals, and the scaffold test.
+
+Done-when map:
+- No text read of a policy file: tests/test_shell_portability.py::test_no_hook_reads_the_policy_as_text (red on base).
+- One read, once, after the probe: ::test_each_hook_runs_the_one_read_once_after_the_probe, plus tests/test_process_config.py::test_the_mixed_refusal_runs_after_the_interpreter_probe (behavioural; red on base).
+- The adversarial table through the real hook (decoy, dotted key, inline table, multi-line string, wrong section, BOM, wrong type): ::test_the_shipped_hook_and_the_checker_agree_on_every_shape. It drives the shipped pre-push hook end to end, and its `expected` column is an oracle independent of the shared code.
+- Mixed, unreadable and failed/foreign refusals at all three hooks: ::test_every_hook_refuses_a_mixed_config_with_one_text, ::test_every_hook_refuses_an_unreadable_policy_file, ::test_every_hook_refuses_a_failed_or_foreign_policy_answer.
+- The pre-push posture, on and off, with the legacy window: tests/test_pre_push_hook.py::test_the_review_posture_follows_the_one_parse.
+- A missing KIT_SCRIPTS_DIR at all three hooks: tests/test_pre_commit_hook.py::test_every_hook_refuses_a_kit_scripts_dir_naming_a_missing_directory (pre-commit, commit-msg) and tests/test_pre_push_hook.py::test_pre_push_refuses_a_kit_scripts_dir_naming_a_missing_directory.
+- bash 3.2 parse: the existing tests/test_shell_portability.py rule and the `sh -n` sweep cover kit-python.sh. kit_policy has no quoted `${VAR:-word}` with an apostrophe.
+- The scaffold commits through its hooks: tests/test_bootstrap.py::test_a_fresh_scaffold_ships_the_probe_and_commits_through_its_hooks.
+- SR-031's acceptance equals the spec's draft verbatim. TC-031 and LLR-021 are amended.
+- The RESYNC entry is present and names both required forced changes.
+- check_trajectory --strict and trace.py are clean.
+
+Relationship decisions (changed side, counterpart, decision):
+- SR-031 acceptance and coincident text changed. Its parent SN-028 is unchanged: I retain it as an approved parent, as the brief requires. Its "hooks' plain-sh parse" wording is stale and goes to the S1 shape-retirement row (finding 2).
+- SR-031's children: LLR-021 gains SR-031 as a parent. I retain it as a distinct child: the probe's scripts-directory resolution and token handling are hook machinery, verified by TC-021. LLR-031 is amended and retained: the checker's one parse and the review-posture rule, verified by TC-031. Splitting further would add no independent decision, because each gate's answer comes out of the one parse.
+- TC-031 follows SR-031 and LLR-031. TC-021 follows LLR-021 and now also verifies IF-298. I retain both: their methods and evidence name tests that exist and pass.
+- IF-037 consumers: the three hooks are dropped. I carry this: no hook reads docs/process.toml any more, and check_privacy, which still does, stays listed. IF-037's `data` shape clause is retained, because S1 owns it.
+- IF-298 is new: owner check_privacy, consumers the three hooks. Its counterparts are LLR-021 (the consumer side) and LLR-031 (the producer side). I carry it: its token set matches the code and the test_process_config in-process pin.
+- SR-019 and SR-020 are retained unchanged. Their refusals are preserved, and pre-commit's existing scripts-directory rule is extended to the other two hooks.
+
+Commands:
+- `git rev-parse HEAD` -> d922c7e38f5e9d63dd9e3e3a661c9156bd683f95
+- The brief's pytest selection, as given (no sh on PATH) -> `224 passed, 182 skipped in 210.37s` with "ENVIRONMENT-GATED SKIPS: 169 test(s) did not RUN ... (posix-shell)". So I re-ran it with `C:\Program Files\Git\bin` first on PATH and basetemp `.../opus/wi-962b` -> `393 passed, 13 skipped in 349.27s (0:05:49)`
+- `python project-trajectory/scripts/check_trajectory.py --strict` -> `check_trajectory: clean (961 work item(s), 844 done (88%), 33 cancelled, graph acyclic).`
+- `python project-trajectory/scripts/trace.py --strict-integrity` -> `Traceability: SN=31 SR=132 LLR=307 TC=326 orphans=0 integrity=0 ... interface-findings=0 ...`
+- Red-before: the added tests run on a scratch export of ddb924a with d922c7e's tests/ -> `72 failed, 58 passed, 2 errors`. The 2 errors are tests/test_shell_portability.py collection, which needs a git repo; once the export was made one, that module's two new tests -> `2 failed`.
+- `pytest tests/test_complexity_ratchet.py tests/test_resync_pack.py` -> `13 passed`
+- Direct probes: `check_privacy.py --root <scratch> --hook-policy` over 9 file shapes. Each answer was as the Trust ruling states, rc=0.
+
+Findings:
+- [MINOR] project-trajectory/process.toml.template:187 -> K1: the shipped template still says "KEYED-GREPPABLE: the three git hooks match this exact line shape so a Python-less box still fails closed (M-42)". Its header (lines 6-12) also says the hooks' pure-sh parse holds the shape in place, and so does this repo's docs/process.toml:206. The shape check's user-facing refusal also says "The git hooks read this file line-by-line in pure sh (M-42)" (project-trajectory/scripts/agent_policy.py:317). All of this is false after this lane. PROCESS_OPTIONS.md, amended here, sends readers to "the file's own header", which explains why the shape is checked -> reword these comments and the message to the shape rule's actual interim reason (the checker's textual mirror), or name each site in the S1 shape-retirement row when it is filed at landing -> @owner
+- [MINOR] docs/requirements/system-requirements.toml:216 -> K1, for clarity: SR-031's rationale is unchanged and still says the file's "two readings are pinned equal" and "the two-grammars-agree observable lives HERE". Its amended acceptance now says "through one parse". SN-028's approved acceptance (docs/requirements/stakeholder-needs.toml:265) still names "the hooks' plain-sh parse" as the second grammar -> reword SR-031's rationale at this lane's sitting. Leave SN-028 unchanged as the approved parent, and have the S1 row carry its amendment -> @owner
+- [MINOR] docs/requirements/low-level-requirements.toml:341 -> K1/K3: LLR-031's detail opens "The single first-non-comment-line reader the hooks, agent_loop.read_declared, and check_privacy all use" and closes "They no longer read a declared line themselves". Separately, the approved rows LLR-031 (detail and code_symbol), TC-021 (verifies, method, expected, evidence) and LLR-018 (code_symbol, `_layers_desc`) are amended. The spec names only SR-031, TC-031, LLR-021 and IF-037 -> drop "the hooks" from the opening sentence, and have the sitting judge the LLR-031, TC-021 and LLR-018 amendments explicitly alongside the named three -> @owner
+- [MINOR] project-trajectory/scripts/check_privacy.py:243 -> PROCESS.md §3 "Consolidate, don't duplicate": `_load_process_toml` is another read-parse-catch of docs/process.toml. It has the same exception tuple and the same utf-8-sig decoding as kitlib/config.py `process_check` (182-189), `process_check_text` (291-297) and `reviewer_dials` (253-256), and as agent_policy.py `read_toml` (248-266). It differs only in keeping the error message -> home one loader that returns (data, error) in kitlib.config and let each reader keep its own fail-direction policy. That can be this lane or a follow-up consolidation row -> @owner
+- [MINOR] project-trajectory/RESYNC_PACK.md:9328 -> K1: the entry's "Also observable" list omits one change I confirmed by red-before (`wrong-section-false`, `multiline-string-false` fail on the base hook). A `privacy_check = false` that the parser does not place under [policies] (another section, inside a multi-line string) used to read OFF at the shipped pre-push hook. It now reads ON, so with no reviewer wired such a push fails closed. The shape check already refuses those shapes, so only a repo ignoring that refusal reaches this -> add one sentence naming it beside the privacy_review observations -> @owner
+- [MINOR] docs/runtime-flows.md:135 -> K1, for clarity: Flow 3 shows the probe asking check_privacy for the answer before branching on "scripts directory unavailable". kit_policy resolves the scripts directory and refuses before it makes any call (project-trajectory/hooks/kit-python.sh:82-89), and with no scripts directory there is no checker to ask -> put the scripts-directory refusal alt before `Probe->>Priv` -> @owner
+
+VERDICT: APPROVE findings=6

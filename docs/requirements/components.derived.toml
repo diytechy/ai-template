@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 307
-seam_rows = 246
+seam_rows = 247
 requirements_placed = 126
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -540,6 +540,7 @@ seam_internal_refs = [
   "IF-231",
   "IF-239",
   "IF-267",
+  "IF-298",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -1035,6 +1036,7 @@ seam_boundary_refs = [
   "IF-289",
   "IF-292",
   "IF-293",
+  "IF-298",
 ]
 
 [component_view.CMP-009]

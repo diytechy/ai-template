@@ -40,10 +40,11 @@
 # matters. A privacy-check-off repo skips the review (the secrets floor still
 # guards its outgoing range): zero cost otherwise.
 # Declared opt-down (WI-1.30, refining Q12): a repo adopted with the intent to
-# wire the reviewer later may track `warn-unwired` in docs/privacy-review (one
-# word, same parse as every declared-policy file) — then an UNWIRED reviewer
+# wire the reviewer later may set [policies] privacy_review = "warn-unwired"
+# in docs/process.toml (the legacy one-word file still answers during the
+# migration window; read by the probe's one parse) — then an UNWIRED reviewer
 # warns and the push proceeds on the deterministic layer alone. A recorded,
-# reviewable decision, never a silent default: absent file or any other value
+# reviewable decision, never a silent default: absent or any other value
 # = require (fail closed). It only softens the unwired case — deterministic
 # findings still block, a wired reviewer's BLOCK still blocks, and a missing
 # Python still fails closed (then the deterministic layer can't run either).
@@ -56,115 +57,26 @@ set -e
 # wrapper elsewhere), with the .githooks/../ fallback — same as pre-commit.
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
-# Locate the kit scripts dir honoring KIT_SCRIPTS_DIR (env / delegating wrapper)
-# before the default scripts/ | Scripts/ — the harness-elsewhere layout
-# (WI-1.42) that pre-commit already supports; pre-push/commit-msg must too, or a
-# privacy-checked repo with that layout fails its push closed for the wrong
-# reason (REVIEW_GRIND_FULL C4). Echoes the found dir, or empty.
-find_scripts_dir() {
-  if [ -n "${KIT_SCRIPTS_DIR:-}" ]; then
-    case "$KIT_SCRIPTS_DIR" in
-      /*) [ -d "$KIT_SCRIPTS_DIR" ] && { printf '%s' "$KIT_SCRIPTS_DIR"; return; } ;;
-      *)  [ -d "$REPO_ROOT/$KIT_SCRIPTS_DIR" ] && { printf '%s' "$REPO_ROOT/$KIT_SCRIPTS_DIR"; return; } ;;
-    esac
-  fi
-  for sd in scripts Scripts; do
-    if [ -d "$REPO_ROOT/$sd" ]; then printf '%s' "$REPO_ROOT/$sd"; return; fi
-  done
-}
-
-# Privacy gate — same parse as pre-commit / commit-msg. Off / absent = not a
-# privacy-checked repo (the secrets-floor-only branch below still guards it).
-# SN-028: docs/process.toml's KEYED match first (that file is written one
-# `key = value` per line precisely so this pure-sh read stays possible on a
-# Python-less box — M-42), the legacy one-word file second.
-PROCESS_TOML="$REPO_ROOT/docs/process.toml"
-PRIVACY_FILE="$REPO_ROOT/docs/privacy-check"
-
-_ptoml_body() {
-  # The greppable body of docs/process.toml: whole-line comments dropped, then
-  # TRAILING comments stripped.
-  #
-  # The trailing strip is not tidiness — without it the two grammars that read
-  # this file disagree in the FAIL-OPEN direction. `privacy_check = true #
-  # privacy_check = false` is legal TOML whose value is `true`, but the narrow
-  # "provably false" test below matched the decoy inside the comment and the
-  # gate silently switched off, while Python read it as ON. That is the M-42
-  # contract inverted: the hook is what blocks the commit, so the hook reading
-  # `false` is the one that decides.
-  #
-  # Stripping at the first `#` can truncate a string value that legitimately
-  # contains one. Every consequence of that runs the SAFE way: a truncated
-  # value is LESS able to prove `false` (so privacy stays ON), and
-  # `privacy_review` treats anything that is not exactly `warn-unwired` as
-  # require. The declaration test cannot be affected at all — `key =` sits
-  # before any `#` on its line.
-  grep -v '^[[:space:]]*#' "$1" 2>/dev/null | sed 's/[[:space:]]*#.*$//' || true
-}
-
-process_declares() {
-  [ -f "$1" ] || return 1
-  _ptoml_body "$1" | grep -Eq '(^|[^A-Za-z0-9_])'"$2"'[[:space:]]*='
-}
-
-# A MIXED config refuses at the push boundary too — this is the LAST look
-# before history publishes, so it is the worst place to let two readers
-# disagree about whether the privacy gate is on.
-if process_declares "$PROCESS_TOML" privacy_check && [ -f "$PRIVACY_FILE" ]; then
-  echo "pre-push: docs/process.toml AND the legacy docs/privacy-check both" >&2
-  echo "  declare the privacy policy. REFUSING — from your kept kit checkout, run:" >&2
-  echo "    python project-trajectory/scripts/bootstrap.py --migrate-config --dest ." >&2
-  exit 1
-fi
-
 # The ONE interpreter every scan below runs on, resolved once, here, by the
 # probe all three kit hooks share (hooks/kit-python.sh, shipped beside this
 # hook; WI-880). With no Python 3.11+ it refuses, naming dev-setup's install.
+# Then the probe's kit_policy resolves the kit scripts dir (SCRIPTS_DIR) and
+# makes the hooks' one policy read: one parse of the declared policy, after
+# the interpreter check. A mixed config (both policy homes live) or a policy
+# file that cannot be read or parsed refuses the push there; otherwise it sets
+# KIT_PRIVACY (on|off) and, with the gate on, KIT_REVIEW (require|warn-unwired).
+# A hook that cannot find the kit scripts refuses the push rather than skip
+# the scans (WI-926), privacy on or off.
 . "$(dirname "$0")/kit-python.sh"
 kit_python pre-push push || exit 1
+kit_policy pre-push push || exit 1
 
-# The privacy reader: the kit's one live pure-sh read of the policy.
-# TWO GRAMMARS READ ONE FILE, so the read is deliberately asymmetric.
-# `tomllib` understands far more than a `grep -E` can follow, and every shape
-# only one of them sees is a silent flip of a security gate. So:
-#   * the DECLARED test is BROAD — any `privacy_check =` occurrence on a
-#     non-comment line, whatever precedes it;
-#   * the OFF test is NARROW — only a value that is provably `false`;
-#   * anything in between reads ON. FAIL CLOSED: a key we cannot prove is off
-#     is on, which is loud, and the alternative is the M-42 failure itself.
-# `agent_common.process_shape_findings` refuses the shapes this cannot follow
-# (dotted keys, inline tables, multi-line strings, the key under the wrong
-# section), and tests/test_process_config.py drives this exact function
-# against `tomllib` over a table of adversarial files. POSIX ERE only.
-privacy_declared_true() {
-  ptoml="$REPO_ROOT/docs/process.toml"
-  if process_declares "$ptoml" privacy_check; then
-    _ptoml_body "$ptoml" | grep -Eq '(^|[^A-Za-z0-9_])privacy_check[[:space:]]*=[[:space:]]*false([[:space:]]|#|$)' && return 1
-    return 0
-  fi
-  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
-  p=$(grep -v '^[[:space:]]*#' "$REPO_ROOT/docs/privacy-check" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
-  [ "$p" = "true" ]
-}
-
-# A hook that cannot find the kit scripts checks nothing, so it refuses the
-# push rather than skip the scans (WI-926), privacy on or off. A repo never
-# set up has no core.hooksPath, so git never runs this hook there.
-SCRIPTS_DIR=$(find_scripts_dir)
-if [ -z "$SCRIPTS_DIR" ]; then
-  echo "pre-push: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/)" >&2
-  echo "  under $REPO_ROOT, so the push floor cannot run. REFUSING the push." >&2
-  echo "  Fix one of: set KIT_SCRIPTS_DIR in the delegating wrapper; re-run" >&2
-  echo "  bootstrap; or turn the hooks off: git config --unset core.hooksPath" >&2
-  exit 1
-fi
-
-if ! privacy_declared_true; then
+if [ "$KIT_PRIVACY" = off ]; then
   # Privacy check off: the identity review below does not apply. But the
   # always-on SECRETS FLOOR (docs/secrets-scan; default on — Thread 44) still guards the
   # outgoing history against key/token shapes, the security net every repo
   # gets. A missing interpreter already refused above (WI-880), and a
-  # missing scripts dir just above; `docs/secrets-scan: off` disables it
+  # missing scripts dir with it; `docs/secrets-scan: off` disables it
   # in-script.
   zero=0000000000000000000000000000000000000000
   status=0
@@ -198,26 +110,13 @@ if [ -z "$reviewer" ]; then
   reviewer=$(git config --get privacy.reviewcmd || true)
 fi
 
-# Declared unwired-reviewer posture (docs/privacy-review, header comment):
-# exactly `warn-unwired` opts the unwired case down to warn-and-proceed; any
-# other value — including a typo — reads as require, the stricter direction.
-#   SN-028: the same two-tier read. NOTE the variable name is historical — the
-# file this reads is docs/privacy-review (the unwired-REVIEWER posture), NOT
-# docs/review-policy (the reviewer-count dial). No hook has ever read the
-# latter; the misleading name has cost two readings of this block.
-review_policy=""
-PRIVACY_REVIEW_FILE="$REPO_ROOT/docs/privacy-review"
-if process_declares "$PROCESS_TOML" privacy_review; then
-  # This one is already fail-closed by its own vocabulary: EXACTLY
-  # `warn-unwired` opts down, anything else — including a typo — requires.
-  if _ptoml_body "$PROCESS_TOML" | grep -Eq '(^|[^A-Za-z0-9_])privacy_review[[:space:]]*=[[:space:]]*"warn-unwired"([[:space:]]|#|$)'; then
-    review_policy="warn-unwired"
-  else
-    review_policy="require"
-  fi
-elif [ -f "$PRIVACY_REVIEW_FILE" ]; then
-  review_policy=$(grep -v '^[[:space:]]*#' "$PRIVACY_REVIEW_FILE" | grep -v '^[[:space:]]*$' | head -n 1 | tr -d '[:space:]' || true)
-fi
+# The declared unwired-reviewer posture, from the probe's one read:
+# exactly `warn-unwired` under [policies] privacy_review (or, during the
+# migration window, the legacy one-word file) opts the unwired case down to
+# warn-and-proceed; any other value, a typo included, reads as require. NOTE
+# the variable name is historical: this is the unwired-REVIEWER posture, NOT
+# the reviewer-count dial, which no hook has ever read.
+review_policy="$KIT_REVIEW"
 
 # stdin: one line per ref being pushed: <local ref> <local sha> <remote ref> <remote sha>
 zero=0000000000000000000000000000000000000000
@@ -250,13 +149,13 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   if [ -z "$reviewer" ]; then
     if [ "$review_policy" = "warn-unwired" ]; then
       echo "pre-push: WARNING — privacy-check is enabled but no LLM privacy" >&2
-      echo "  reviewer is wired; docs/privacy-review declares 'warn-unwired', so" >&2
+      echo "  reviewer is wired; [policies] privacy_review is 'warn-unwired', so" >&2
       echo "  only the deterministic lint guarded $local_ref ($range)." >&2
       echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
       echo "             git config privacy.reviewcmd '<agent cmd>')" >&2
       continue
     fi
-    echo "pre-push: docs/privacy-check is enabled, which" >&2
+    echo "pre-push: the privacy gate is on, which" >&2
     echo "  requires a privacy review of the outgoing history, but no reviewer" >&2
     echo "  is wired. FAILING CLOSED (a missing reviewer is never a pass)." >&2
     echo "  Wire one:  export REVIEW_CMD='<agent cmd>'   (or per clone:" >&2
@@ -273,7 +172,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   dump=$(mktemp "${TMPDIR:-/tmp}/privacy-review.XXXXXX") || { status=1; continue; }
   {
     echo "PRIVACY REVIEW REQUEST (pre-push; process-options.md 'Commit identity & privacy')"
-    echo "This repo's privacy gate (docs/privacy-check) is: enabled"
+    echo "This repo's privacy gate is: enabled"
     echo "Below is the FULL outgoing history for $local_ref ($range): every commit's"
     echo "message and diff. Hunt for personally identifiable or private information:"
     echo "real names, machine-local paths/usernames/hostnames, off-policy emails,"

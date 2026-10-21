@@ -385,7 +385,7 @@ SLOW_MODULES = frozenset(
         "test_check_figures",  # 109 s: check_figures.py run as a subprocess per case
         "test_wi_convert",  # 107 s: converts and round-trips the whole live registry, repeatedly
         "test_check_need_form",  # 101 s: check_need_form.py run as a subprocess per case
-        "test_process_config",  # 92 s: the hooks' `sh` reader run as a subprocess per shape
+        "test_process_config",  # 92 s: the real pre-push hook driven per shape
         "test_generated_freshness_wiring",  # 86 s: check.py over a copied harness per case
         "test_resync_pack",  # 75 s: scaffold + git history reads
         "test_wi_folder_loaders",  # 70 s: git-committed spec trees per case
@@ -969,6 +969,20 @@ def older_only_path(older, *first):
         ):
             dirs.append(entry)
     return os.pathsep.join(dirs)
+
+
+def python_stand_ins(parent):
+    """A new `parent/fakebin` whose python3/python exist but exit nonzero (the
+    Windows Store-alias shape the hooks' probe runs and rejects), for a PATH
+    prefix on which no runnable Python is found first; sh, git and the system
+    tools stay reachable behind it. Returns the directory."""
+    fakebin = Path(parent) / "fakebin"
+    fakebin.mkdir()
+    for name in ("python3", "python"):
+        cand = fakebin / name
+        cand.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        cand.chmod(0o755)
+    return fakebin
 
 
 def augment_env(env):

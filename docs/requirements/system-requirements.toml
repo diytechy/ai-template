@@ -214,12 +214,12 @@ boundary_refs = ["B-05"]
 hat_refs = ["CONSISTENCY", "SECURITY"]
 requirement = "Every delivered enforcer of a declared policy dial shall read the same value for that dial as every other enforcer — one parse, one answer, across the hooks, the loop and the checkers alike."
 rationale = "Realizes SN-028 (every policy dial in one home, a single hand-edited, machine-read file, whose two readings are pinned equal over a table of adversarial files). Partition with SR-137 (census): the one-home surface and its checked shape are SR-137's obligations at B-01/B-04 — read off that row's current crossings rather than restated here, so a revision there cannot leave a stale pair here — while this row is the package-wide coherence property those mechanics serve. ONE HOME: the two-grammars-agree observable lives HERE and nowhere else. SR-137 stated it too and the texts had already diverged, only this row's naming the trailing-comment decoy that once made the privacy gate fail OPEN; the duplicate clause is struck from SR-137 and nothing of its wording was unique. The shared-parse mechanism and the legacy migration-window read decompose to this row's LLRs."
-acceptance_criteria = "Every enforcer reads the same value for the same dial; the two delivered reader grammars return the same answer over the adversarial file-shape table, including the trailing-comment decoy that once made the privacy gate fail OPEN."
+acceptance_criteria = "Every enforcer reads the same value for the same dial through one parse; the hooks' and the checkers' answers agree over the adversarial file-shape table, the trailing-comment decoy included, and an unreadable declaration refuses at the hooks rather than reading a default."
 priority = "M"
 verification = "Test"
 status = "Approved"
 phase = 1
-coincident = """The need asks for every policy dial in one hand-edited, machine-read file whose shape is a checked contract because two grammars read it, the two readings pinned equal over a table of adversarial files. Every enforcer reading the same value for the same dial, and the two delivered reader grammars returning the same answer over that adversarial table, the trailing-comment decoy included, is that pinned equality, a property of the delivered code with no outside party in it."""
+coincident = """The need asks for every policy dial in one hand-edited, machine-read file whose shape is a checked contract because two grammars read it, the two readings pinned equal over a table of adversarial files. Every enforcer reading the same value for the same dial through one parse, the hooks' and the checkers' answers agreeing over that adversarial table with the trailing-comment decoy included, and an unreadable declaration refusing at the hooks, is that pinned equality, a property of the delivered code with no outside party in it."""
 
 [requirement.SR-032]
 title = "Onboarding and dev-setup scaffold"

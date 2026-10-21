@@ -233,7 +233,7 @@ Contracts (interfaces): IF-004, IF-147, IF-167
 
 ### `scripts/check_privacy`
 _Secrets + privacy-leak lint — the deterministic floor (stdlib only)._
-Contracts (interfaces): IF-005, IF-032, IF-043, IF-148
+Contracts (interfaces): IF-005, IF-032, IF-043, IF-148, IF-298
 
 | Option | Help |
 |---|---|
@@ -241,6 +241,7 @@ Contracts (interfaces): IF-005, IF-032, IF-043, IF-148
 | `--range` | scan a commit range as `git log -p` shows it (diffs + messages + author lines), e.g. origin/main..HEAD or a lone SHA for a not-yet-published branch's full history |
 | `--author` | check the commit author email (git var GIT_AUTHOR_IDENT) against the exempt allowlist; a private author blocks (privacy layer only) |
 | `--message` | scan a commit-message file (wired into .githooks/commit-msg) |
+| `--hook-policy` | print the git hooks' one policy answer (one token, no newline) and scan nothing |
 | `--root` | repo root (default: current directory) |
 
 ### `scripts/check_readability`

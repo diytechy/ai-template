@@ -1,12 +1,9 @@
-"""`docs/process.toml` — the one policy home, and the two grammars that read it.
+"""`docs/process.toml` — the one policy home, and every reader of it agreeing.
 
 SN-028 folded ~10 one-word policy files into one TOML. That is a consolidation
-with a sharp edge, and this module is the edge's guard: **two grammars read this
-file.** `tomllib` reads it in Python, and the three git hooks read it in pure sh
-so a Python-less box still refuses to skip a declared privacy gate (M-42,
-repo-review 2026-07-21). TOML is far more expressive than a `grep -E` can
-follow, and every shape only ONE of them understands is a silent flip of a
-security gate.
+with a sharp edge, and this module is the edge's guard: the git hooks and the
+Python checkers both act on this file, and every shape only ONE of them
+understands is a silent flip of a security gate.
 
 The first cut of this consolidation shipped without this test and had exactly
 that defect in five shapes, driven: a trailing comment (`privacy_check = true
@@ -19,21 +16,33 @@ So the contract has three parts and all three are driven here:
   1. **The file's SHAPE is checked, not assumed** — `process_shape_findings`
      refuses dotted keys, inline tables, multi-line strings, and a hook-read
      key under the wrong section.
-  2. **The sh read is ASYMMETRIC and fails closed** — broad "is it declared",
-     narrow "is it provably false", ON in between.
-  3. **The two readings AGREE** over a table of adversarial files, and the
-     table is the one the review found the bugs with.
+  2. **The shipped hook and the checker AGREE** over a table of adversarial
+     files, the table the review found the bugs with, driven through the real
+     pre-push hook rather than a function extracted from it.
+  3. **The hooks refuse what they cannot read** — an unreadable or
+     unparseable file, a mixed config, and a policy answer that fails or
+     falls outside its set — and they read it once, after the interpreter
+     probe.
 
 Plus the migration's own guarantees: a mixed config is refused rather than
 resolved, a wrong-typed dial is refused rather than defaulted, and the
 converter never deletes a legacy file whose value it did not manage to write.
 """
 
+import os
 import shutil
 import subprocess
+import tomllib
 
 import pytest
-from conftest import KIT, ROOT, load_script, skip_without_env_gates
+from conftest import (
+    KIT,
+    ROOT,
+    load_script,
+    pin_autocrlf,
+    python_stand_ins,
+    skip_without_env_gates,
+)
 
 ac = load_script("agent_common")
 bootstrap = load_script("bootstrap")
@@ -49,10 +58,12 @@ def test_declared_policy_surface_is_reexported_from_its_behavior_module():
         assert exported.__code__.co_code == owned.__code__.co_code
 
 
-HOOK = KIT / "hooks" / "pre-commit"
-# The one live pure-sh privacy reader (SR-137's sh row): pre-push reads the
-# policy; pre-commit and commit-msg refuse outright without the kit scripts.
-READER_HOOK = KIT / "hooks" / "pre-push"
+# The three shipped git hooks; each sources the probe shipped beside it.
+SHIPPED_HOOKS = ("pre-commit", "commit-msg", "pre-push")
+# The deterministic lint identity and the noreply author test_pre_push_hook uses.
+FAKE_USER = "privacyprobeuser"
+NOREPLY = "12345+t@users.noreply.github.com"
+ZERO = "0" * 40
 
 
 def write_toml(root, text):
@@ -63,42 +74,89 @@ def write_toml(root, text):
         fh.write(text)
 
 
-def sh_privacy_declared_true(root):
-    """The SHIPPED pre-push hook's own `privacy_declared_true`, run as sh.
+def _git(root, *args):
+    return subprocess.run(["git", *args], cwd=str(root), capture_output=True, text=True)
 
-    Sourced out of the real hook rather than re-implemented: a guard that
-    carries its own copy of the thing under test can only ever agree with
-    itself. The hook is `. `-sourced with a stub `exit` so its top-level
-    mixed-config rung cannot end the probe."""
-    skip_without_env_gates("posix-shell")
-    sh = shutil.which("sh")
-    script = (
-        'REPO_ROOT="$1"\n'
-        # EVERY function comes out of the shipped hook, `_ptoml_body` INCLUDED.
-        # It used to be re-implemented on the line below, which is exactly the
-        # defect this docstring warns about — and the warning did not save it:
-        # the local copy went stale, so this table kept passing while the
-        # shipped reader failed OPEN on a trailing-comment decoy. A guard that
-        # carries its own copy of the thing under test can only agree with
-        # itself.
-        + _extract_function(READER_HOOK, "_ptoml_body")
-        + _extract_function(READER_HOOK, "privacy_declared_true")
-        + _extract_function(READER_HOOK, "process_declares")
-        + "if privacy_declared_true; then echo TRUE; else echo FALSE; fi\n"
-    )
+
+def _sh_path(path):
+    """`path` as the POSIX shell spells it when absolute (`/c/...` under Git
+    Bash), asked of the shell itself, so a hook's absolute-path test sees it."""
     proc = subprocess.run(
-        [sh, "-c", script, "sh", str(root)], capture_output=True, text=True
+        [shutil.which("sh"), "-c", 'cd "$1" && pwd', "sh", str(path)],
+        capture_output=True,
+        text=True,
     )
+    assert proc.returncode == 0, proc.stderr
+    return proc.stdout.strip()
+
+
+def hook_repo(tmp_path):
+    """A minimal git repo holding the shipped hooks and their probe, copied
+    byte-for-byte from the kit, with one commit by the noreply identity.
+    Returns its root (`tmp_path / "repo"`)."""
+    skip_without_env_gates("posix-shell", "git")
+    root = tmp_path / "repo"
+    (root / ".githooks").mkdir(parents=True)
+    for name in SHIPPED_HOOKS + ("kit-python.sh",):
+        shutil.copyfile(KIT / "hooks" / name, root / ".githooks" / name)
+    assert _git(root, "init").returncode == 0
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
+    _git(root, "config", "user.name", "Test User")
+    _git(root, "config", "user.email", NOREPLY)
+    _git(root, "config", "core.hooksPath", ".git/hooks")
+    (root / "a.txt").write_text("clean base\n", encoding="utf-8")
+    assert _git(root, "add", "a.txt").returncode == 0
+    proc = _git(root, "commit", "-m", "base")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    return proc.stdout.strip() == "TRUE"
+    return root
 
 
-def _extract_function(path, name):
-    """One shell function's source, verbatim, out of a hook file."""
-    text = path.read_text(encoding="utf-8")
-    start = text.index(name + "() {")
-    end = text.index("\n}\n", start) + len("\n}\n")
-    return text[start:end]
+def run_shipped_hook(root, hook, scripts_dir=None, path_prefix=None):
+    """Run one shipped hook in `root` the way git does: pre-push with the
+    remote on argv and HEAD's push line (against the zero sha) on stdin,
+    commit-msg with a message file, pre-commit bare. KIT_SCRIPTS_DIR names
+    `scripts_dir` (the kit's own scripts by default), absolute; `path_prefix`
+    goes first on PATH. No reviewer is wired."""
+    env = dict(os.environ)
+    for var in ("LOGNAME", "USER", "LNAME", "USERNAME"):
+        env[var] = FAKE_USER
+    env.pop("REVIEW_CMD", None)
+    env["KIT_SCRIPTS_DIR"] = _sh_path(scripts_dir or KIT / "scripts")
+    if path_prefix is not None:
+        env["PATH"] = str(path_prefix) + os.pathsep + env.get("PATH", "")
+    args, stdin = [], ""
+    if hook == "pre-push":
+        head = _git(root, "rev-parse", "HEAD").stdout.strip()
+        args = ["origin", "https://example.invalid/repo.git"]
+        stdin = "refs/heads/main {} refs/heads/main {}\n".format(head, ZERO)
+    elif hook == "commit-msg":
+        (root / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
+        args = ["MSG.txt"]
+    return subprocess.run(
+        [shutil.which("sh"), ".githooks/" + hook, *args],
+        cwd=str(root),
+        input=stdin,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+
+def hook_privacy_answer(root):
+    """The SHIPPED pre-push hook's privacy answer, driven whole: `off` when the
+    push passes with no review demanded, `on` when it fails closed for the
+    unwired reviewer, `refused:<stderr>` for any other refusal.
+
+    The real hook, never a function extracted from it: a guard that carries
+    its own copy of the thing under test can only ever agree with itself, and
+    an extracted copy once went stale while the shipped reader failed OPEN on
+    a trailing-comment decoy."""
+    proc = run_shipped_hook(root, "pre-push")
+    if proc.returncode == 0 and "FAILING CLOSED" not in proc.stderr:
+        return "off"
+    if proc.returncode != 0 and "FAILING CLOSED" in proc.stderr:
+        return "on"
+    return "refused:" + proc.stderr
 
 
 # The adversarial table. Each row: (label, file text, what tomllib means).
@@ -112,13 +170,12 @@ SHAPES = [
     ("leading-space", "[policies]\n  privacy_check = true\n", True),
     ("trailing-comment-true", "[policies]\nprivacy_check = true  # on\n", True),
     ("trailing-comment-false", "[policies]\nprivacy_check = false  # off\n", False),
-    # THE DECOY PAIR — the shape the FINAL review found failing OPEN, and the
-    # reason `_ptoml_body` strips TRAILING comments rather than only whole-line
-    # ones. `privacy_check = true # privacy_check = false` is legal TOML whose
-    # value is `true`; the hook's narrow "provably false" test matched the decoy
-    # INSIDE the comment, so the gate switched off while Python read it ON. The
-    # hook is what blocks the commit, so the hook's answer is the one that
-    # decides — this was the M-42 contract inverted.
+    # THE DECOY PAIR — the shape the FINAL review found failing OPEN.
+    # `privacy_check = true # privacy_check = false` is legal TOML whose value
+    # is `true`; a hook text read that matched the decoy INSIDE the comment
+    # switched the gate off while Python read it ON. The hook is what blocks
+    # the commit, so the hook's answer is the one that decides — this was the
+    # M-42 contract inverted.
     (
         "decoy-false-in-comment",
         "[policies]\nprivacy_check = true # privacy_check = false\n",
@@ -129,17 +186,14 @@ SHAPES = [
         "[policies]\nprivacy_check = false # privacy_check = true\n",
         False,
     ),
-    # A `#` inside a legal string value: the strip can truncate it, and every
-    # consequence runs the SAFE way (a truncated value is LESS able to prove
-    # `false`), so the two readers still agree.
+    # A `#` inside a legal string value.
     (
         "hash-inside-a-string",
         '[policies]\nprivacy_review = "a#b"\nprivacy_check = true\n',
         True,
     ),
     # A key mentioned ONLY in a trailing comment declares nothing — which is
-    # what `tomllib` says, so the broad test must agree with it rather than
-    # fail closed on a decoy.
+    # what `tomllib` says, so no reader may fail closed on a decoy here.
     (
         "key-only-in-a-comment",
         "[policies]\nsecrets_scan = true # privacy_check = true\n",
@@ -156,55 +210,264 @@ SHAPES = [
     ("absent", "[policies]\nsecrets_scan = true\n", None),
 ]
 
+# The shapes the shape check refuses, each in a true and a false variant. A
+# key the parser does not place under [policies] (a multi-line string, the
+# wrong section) reads ON whatever its text says: fail closed.
+NON_GREPPABLE = [
+    ("dotted-key-true", "policies.privacy_check = true\n", True),
+    ("dotted-key-false", "policies.privacy_check = false\n", False),
+    ("inline-table-true", "policies = { privacy_check = true }\n", True),
+    ("inline-table-false", "policies = { privacy_check = false }\n", False),
+    (
+        "multiline-string-true",
+        '[policies]\nnote = """\nprivacy_check = true\n"""\n',
+        True,
+    ),
+    (
+        "multiline-string-false",
+        '[policies]\nnote = """\nprivacy_check = false\n"""\n',
+        True,
+    ),
+    ("wrong-section-true", "[attestation]\nprivacy_check = true\n", True),
+    ("wrong-section-false", "[attestation]\nprivacy_check = false\n", True),
+]
 
-@pytest.mark.parametrize("label,text,expected", SHAPES, ids=[s[0] for s in SHAPES])
-def test_the_hook_sh_and_tomllib_agree_on_every_shape(tmp_path, label, text, expected):
-    """THE cross-parser pin. `expected is None` means "this file declares
-    nothing", where both readers must fall through to the legacy file."""
-    write_toml(tmp_path, text)
-    hook = sh_privacy_declared_true(tmp_path)
-    python = check_privacy.read_privacy_enabled(tmp_path)
+# A dial that is not the boolean `false` reads ON.
+WRONG_TYPE = [
+    ("wrong-type-string", '[policies]\nprivacy_check = "false"\n', True),
+    ("wrong-type-int", "[policies]\nprivacy_check = 0\n", True),
+]
+
+
+def _d4_rows():
+    """The D4 table: (label, process.toml text or None, expected, legacy
+    docs/privacy-check text or None). `expected is None` means the file
+    declares nothing, so every reader falls through to the (absent) legacy
+    file."""
+    rows = [(label, text, exp, None) for label, text, exp in SHAPES]
+    rows += [(label, text, exp, None) for label, text, exp in NON_GREPPABLE]
+    rows += [(label, text, exp, None) for label, text, exp in WRONG_TYPE]
+    # The legacy arm with no TOML at all (the dual-read window).
+    rows.append(("legacy-only-true", None, True, "# header\ntrue\n"))
+    # The legacy word in any case reads ON in the checker, so the hook must
+    # read it ON too: an exact lowercase match once let it push unreviewed.
+    rows.append(("legacy-only-uppercase", None, True, "# header\nTRUE\n"))
+    return rows
+
+
+D4_ROWS = _d4_rows()
+
+
+def _write_d4_row(root, text, legacy):
+    if text is not None:
+        write_toml(root, text)
+    if legacy is not None:
+        (_docs(root) / "privacy-check").write_text(legacy, encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "label,text,expected,legacy",
+    [
+        pytest.param(
+            *row,
+            id=row[0],
+        )
+        for row in D4_ROWS
+    ],
+)
+def test_the_shipped_hook_and_the_checker_agree_on_every_shape(
+    tmp_path, label, text, expected, legacy
+):
+    """TC-031 (SR-031: one parse, one answer). THE cross-reader pin: the real
+    pre-push hook's privacy answer equals `check_privacy.read_privacy_enabled`
+    on every row, and the `expected` column where given.
+
+    The `multiline-string-false` and `wrong-section-false` rows catch a hook
+    that reads OFF from text the parser does not place under [policies]
+    (a fail-open divergence). Adequacy witness for the rest: a hook that matched
+    the decoy inside a trailing comment fails `decoy-false-in-comment`, one
+    that missed a BOM-prefixed or CRLF section header fails `bom` or `crlf`,
+    and one that read only a typed `true` fails `wrong-type-string`."""
+    root = hook_repo(tmp_path)
+    _write_d4_row(root, text, legacy)
+    python = "on" if check_privacy.read_privacy_enabled(root) else "off"
+    hook = hook_privacy_answer(root)
     assert hook == python, "{}: hook={} python={}".format(label, hook, python)
     if expected is not None:
-        assert hook is expected, label
+        assert hook == ("on" if expected else "off"), label
 
 
-UNPARSEABLE = [
-    ("uppercase-TRUE", "[policies]\nprivacy_check = TRUE\n"),
+# Present but unreadable or unparseable: the hooks refuse, naming the file
+# (fail closed; never read as a default).
+UNREADABLE = [
     ("malformed", "[policies\nprivacy_check = true\n"),
+    ("uppercase-TRUE", "[policies]\nprivacy_check = TRUE\n"),
     ("bare-word", "[policies]\nprivacy_check = yes\n"),
+    ("undecodable", b"\xff\xfe[policies]\n"),
+    ("directory", None),
 ]
 
 
-@pytest.mark.parametrize("label,text", UNPARSEABLE, ids=[s[0] for s in UNPARSEABLE])
-def test_an_unparseable_file_reads_ON_in_both_readers(tmp_path, label, text):
-    """FAIL CLOSED, together. A file that exists and does not parse must never
-    read as an opted-OUT privacy gate in either grammar — the hook keeps acting
-    on the text it can see, so Python must not conclude "off" behind it."""
-    write_toml(tmp_path, text)
-    assert sh_privacy_declared_true(tmp_path) is True, label
-    assert check_privacy.read_privacy_enabled(tmp_path) is True, label
+def write_unreadable(root, content):
+    """`docs/process.toml` as one UNREADABLE case: TOML text that does not
+    parse, bytes that do not decode, or (None) a directory at the path."""
+    path = _docs(root) / "process.toml"
+    if content is None:
+        path.mkdir()
+    elif isinstance(content, bytes):
+        path.write_bytes(content)
+    else:
+        write_toml(root, content)
 
 
-NON_GREPPABLE = [
-    ("dotted-key", "policies.privacy_check = true\n"),
-    ("inline-table", "policies = { privacy_check = true }\n"),
-    ("multiline-string", '[policies]\nnote = """\nprivacy_check = true\n"""\n'),
-    ("wrong-section", "[attestation]\nprivacy_check = true\n"),
+def _parser_message(text):
+    try:
+        tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        return str(exc)
+    raise AssertionError("expected an unparseable file: {!r}".format(text))
+
+
+@pytest.mark.parametrize(
+    "hook,case,content",
+    [
+        pytest.param(hook, case, content, id="{}-{}".format(hook, case))
+        for hook in SHIPPED_HOOKS
+        for case, content in UNREADABLE
+    ],
+)
+def test_every_hook_refuses_an_unreadable_policy_file(tmp_path, hook, case, content):
+    """TC-021, TC-031: a present but unreadable or unparseable
+    `docs/process.toml` refuses the commit or push at every hook, naming the
+    file, and for a parse error carrying the parser's message; it never
+    reads as a default and never reaches the reviewer check."""
+    root = hook_repo(tmp_path)
+    write_unreadable(root, content)
+    proc = run_shipped_hook(root, hook)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "docs/process.toml" in proc.stderr, proc.stderr
+    assert "cannot be read or parsed" in proc.stderr, proc.stderr
+    assert "FAILING CLOSED" not in proc.stderr, proc.stderr
+    if case == "malformed":
+        assert _parser_message(content) in proc.stderr, proc.stderr
+
+
+def _write_mixed(root):
+    write_toml(root, "[policies]\nprivacy_check = false\n")
+    (root / "docs" / "privacy-check").write_text("true\n", encoding="utf-8")
+
+
+def test_every_hook_refuses_a_mixed_config_with_one_text(tmp_path):
+    """TC-021, TC-031: `[policies] privacy_check` and the legacy
+    `docs/privacy-check` both present refuse at all three hooks, naming both
+    files and the migrator, in one text once the hook's name is removed."""
+    root = hook_repo(tmp_path)
+    _write_mixed(root)
+    texts = {}
+    for hook in SHIPPED_HOOKS:
+        proc = run_shipped_hook(root, hook)
+        assert proc.returncode != 0, (hook, proc.stdout + proc.stderr)
+        for needle in ("docs/process.toml", "docs/privacy-check", "--migrate-config"):
+            assert needle in proc.stderr, (hook, proc.stderr)
+        texts[hook] = proc.stderr.replace(hook, "<hook>")
+    assert len(set(texts.values())) == 1, texts
+
+
+# Stand-ins for the kit's privacy checker whose policy answer fails or falls
+# outside the closed token set.
+POLICY_STUBS = [
+    ("exits-3", "import sys\nsys.exit(3)\n"),
+    ("foreign-token", 'import sys\nsys.stdout.write("privacy=maybe")\n'),
+    ("silent", ""),
+    ("carriage-return", 'import sys\nsys.stdout.buffer.write(b"privacy=off\\r")\n'),
 ]
 
 
-@pytest.mark.parametrize("label,text", NON_GREPPABLE, ids=[s[0] for s in NON_GREPPABLE])
-def test_a_shape_the_hooks_cannot_follow_is_refused_and_still_reads_ON(
+@pytest.mark.parametrize(
+    "hook,stub",
+    [
+        pytest.param(hook, body, id="{}-{}".format(hook, label))
+        for hook in SHIPPED_HOOKS
+        for label, body in POLICY_STUBS
+    ],
+)
+def test_every_hook_refuses_a_failed_or_foreign_policy_answer(tmp_path, hook, stub):
+    """TC-021: a policy read that exits nonzero, prints nothing, or prints
+    anything outside its tokens (a near-token with a stray carriage return
+    included) refuses the commit or push, naming the read."""
+    root = hook_repo(tmp_path)
+    stub_dir = tmp_path / "stub_scripts"
+    stub_dir.mkdir()
+    (stub_dir / "check_privacy.py").write_text(stub, encoding="utf-8")
+    proc = run_shipped_hook(root, hook, scripts_dir=stub_dir)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "check_privacy.py" in proc.stderr, proc.stderr
+    assert "--hook-policy" in proc.stderr, proc.stderr
+
+
+@pytest.mark.parametrize("hook", SHIPPED_HOOKS)
+def test_the_mixed_refusal_runs_after_the_interpreter_probe(tmp_path, hook):
+    """TC-021: with a mixed config and no runnable Python on PATH, each hook
+    refuses for the interpreter, naming dev-setup's install and the 3.11
+    floor, and never reaches the mixed-config refusal (the policy is read
+    once, after the probe)."""
+    root = hook_repo(tmp_path)
+    _write_mixed(root)
+    proc = run_shipped_hook(root, hook, path_prefix=python_stand_ins(tmp_path))
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "dev-setup" in proc.stderr and "3.11" in proc.stderr, proc.stderr
+    assert "--migrate-config" not in proc.stderr, proc.stderr
+
+
+def _hook_answer(root):
+    """The checker's one policy answer for the hooks, or a marker string the
+    assertion names when the checker has no such answer yet."""
+    answer = getattr(check_privacy, "hook_policy_answer", None)
+    return (
+        "<no hook_policy_answer in check_privacy>" if answer is None else answer(root)
+    )
+
+
+@pytest.mark.parametrize(
+    "label,text,legacy,content",
+    [pytest.param(r[0], r[1], r[3], None, id="shape-" + r[0]) for r in D4_ROWS]
+    + [
+        pytest.param(case, None, None, content, id="unreadable-" + case)
+        for case, content in UNREADABLE
+    ],
+)
+def test_the_hook_answer_and_the_checker_agree_in_process(
+    tmp_path, label, text, legacy, content
+):
+    """TC-031: the in-process pin of the D4 table. The checker's hook answer
+    is `privacy=on review=require` exactly where `read_privacy_enabled` reads
+    ON (no row wires the review opt-down), `privacy=off` where it reads OFF,
+    and `refuse=unreadable` for every unreadable case."""
+    if label in dict(UNREADABLE):
+        write_unreadable(tmp_path, content)
+        want = "refuse=unreadable"
+    else:
+        _write_d4_row(tmp_path, text, legacy)
+        on = check_privacy.read_privacy_enabled(tmp_path)
+        want = "privacy=on review=require" if on else "privacy=off"
+    assert _hook_answer(tmp_path) == want, label
+
+
+NON_GREPPABLE_ON = [row[:2] for row in NON_GREPPABLE if row[0].endswith("-true")]
+
+
+@pytest.mark.parametrize(
+    "label,text", NON_GREPPABLE_ON, ids=[s[0] for s in NON_GREPPABLE_ON]
+)
+def test_a_shape_the_hooks_cannot_follow_is_refused_by_the_shape_check(
     tmp_path, label, text
 ):
-    """The shapes that made the two grammars disagree are REFUSED by the shape
-    check — and, because a refusal is only as good as what happens when someone
-    ignores it, they also still read ON in both readers."""
+    """The shapes the two readers once disagreed on are REFUSED by the shape
+    check, and, because a refusal is only as good as what happens when
+    someone ignores it, they still read ON in the checker."""
     write_toml(tmp_path, text)
     findings = ac.process_shape_findings(tmp_path / "docs")
     assert findings, "{}: must be refused as un-greppable".format(label)
-    assert sh_privacy_declared_true(tmp_path) is True, label
     assert check_privacy.read_privacy_enabled(tmp_path) is True, label
 
 
@@ -212,15 +475,6 @@ def test_the_shipped_template_and_this_repos_own_file_pass_the_shape_check():
     # The guard is worthless if the two files it exists for do not satisfy it.
     assert ac.process_shape_findings(ROOT / "docs") == []
     assert ac.process_shape_findings(KIT) == [] or not (KIT / "process.toml").exists()
-
-
-def test_both_hooks_carry_the_same_reader_byte_for_byte():
-    # pre-commit and commit-msg gate two boundaries of the same commit; a
-    # divergence between their copies would gate one and not the other.
-    for fn in ("process_declares", "mixed_config_refusal"):
-        a = _extract_function(HOOK, fn)
-        b = _extract_function(KIT / "hooks" / "commit-msg", fn)
-        assert a == b, fn
 
 
 # --- the mixed-config refusal --------------------------------------------------
@@ -302,11 +556,11 @@ def test_a_typed_value_renders_in_the_legacy_string_vocabulary(tmp_path):
 def test_the_legacy_arm_still_works_with_no_toml_at_all(tmp_path):
     # The dual-read window is the whole reason an adopter is not broken by this
     # release; a test that only ever writes the new home would not notice it
-    # rotting.
+    # rotting. The shipped hook's half is the `legacy-only-true` row of the
+    # D4 table above.
     docs = _docs(tmp_path)
     (docs / "privacy-check").write_text("# header\ntrue\n", encoding="utf-8")
     assert check_privacy.read_privacy_enabled(tmp_path) is True
-    assert sh_privacy_declared_true(tmp_path) is True
 
 
 # --- the converter --------------------------------------------------------------

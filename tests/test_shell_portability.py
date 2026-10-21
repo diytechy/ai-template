@@ -83,3 +83,76 @@ def test_the_rule_catches_the_shape_that_broke():
 def test_every_shell_file_parses_under_sh(rel):
     result = subprocess.run(["sh", "-n", rel], cwd=ROOT, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+# --- the hooks read the policy through one parse (SR-031, LLR-021) ----------
+
+HOOKS_DIR = ROOT / "project-trajectory" / "hooks"
+HOOK_NAMES = ("pre-commit", "commit-msg", "pre-push")
+# A policy file named as a whole file name: `privacy-review.XXXXXX`, the
+# pre-push review dump's temp-file prefix, names no policy file.
+_POLICY_FILE = re.compile(
+    r"(?<![\w.-])(?:process\.toml|privacy-check|privacy-review)(?![\w.-])"
+)
+_MESSAGE = re.compile(r"(?:echo|printf)\b")
+_TEXT_TOOL_PIPE = re.compile(r"\|\s*(?:grep|sed|awk|head|cat|tr|cut)\b")
+
+
+def _code_lines(path):
+    """(line number, line) for every non-blank, non-comment line."""
+    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if line.strip() and not line.lstrip().startswith("#"):
+            yield n, line
+
+
+def test_no_hook_reads_the_policy_as_text():
+    """TC-031 (SR-031: one parse, one answer): no shipped hook and not the
+    probe touches docs/process.toml, docs/privacy-check or
+    docs/privacy-review with a text tool. Every code line naming one of them
+    is an echo or printf message, piped into no text tool."""
+    bad = []
+    for name in HOOK_NAMES + ("kit-python.sh",):
+        for n, line in _code_lines(HOOKS_DIR / name):
+            if not _POLICY_FILE.search(line):
+                continue
+            body = line.strip()
+            if _MESSAGE.match(body) and not _TEXT_TOOL_PIPE.search(body):
+                continue
+            bad.append("{}:{}: {}".format(name, n, body))
+    assert not bad, "a hook reads the policy as text:\n" + "\n".join(bad)
+
+
+def _call_lines(lines, function, hook):
+    """The line numbers of the code lines calling `function <hook>`."""
+    call = re.compile(r"\s*{} {}\b".format(function, hook))
+    return [n for n, text in lines if call.match(text)]
+
+
+def _own_resolution(hook, lines):
+    """The code lines where a hook names the policy read or the scripts
+    override itself, rather than leaving both to the probe."""
+    return [
+        "{}:{}: {}".format(hook, n, text.strip())
+        for n, text in lines
+        if "--hook-policy" in text or "KIT_SCRIPTS_DIR" in text
+    ]
+
+
+def test_each_hook_runs_the_one_read_once_after_the_probe():
+    """TC-021 (LLR-021): each hook calls the probe's one policy read exactly
+    once, after its interpreter probe, and resolves neither the read nor the
+    scripts directory itself; the probe holds the one read and the one
+    interpreter candidate loop."""
+    for name in HOOK_NAMES:
+        lines = list(_code_lines(HOOKS_DIR / name))
+        probe = _call_lines(lines, "kit_python", name)
+        read = _call_lines(lines, "kit_policy", name)
+        assert len(probe) == 1 and len(read) == 1, (name, probe, read)
+        assert read[0] > probe[0], (name, probe, read)
+        own = _own_resolution(name, lines)
+        assert not own, own
+    shared = [text.strip() for _, text in _code_lines(HOOKS_DIR / "kit-python.sh")]
+    reads = [s for s in shared if "--hook-policy" in s and not _MESSAGE.match(s)]
+    assert len(reads) == 1, reads
+    loops = [s for s in shared if "for cand in" in s]
+    assert len(loops) == 1, loops

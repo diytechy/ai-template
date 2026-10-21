@@ -696,7 +696,7 @@ notes = """No tie-back, and the gap is in the FRAME rather than in this row: the
 
 [interface.IF-037]
 owner = "docs/process.toml"
-consumers = ["scripts/agent_common", "scripts/agent_loop", "scripts/bootstrap", "scripts/check_privacy", "scripts/check_trajectory", "scripts/dispatch", "scripts/gen_arch_map", "scripts/gen_okf", "scripts/integrate", "scripts/kitlib/config", "scripts/subagent_gate", "hooks/pre-commit", "hooks/commit-msg", "hooks/pre-push", "external:downstream adopter"]
+consumers = ["scripts/agent_common", "scripts/agent_loop", "scripts/bootstrap", "scripts/check_privacy", "scripts/check_trajectory", "scripts/dispatch", "scripts/gen_arch_map", "scripts/gen_okf", "scripts/integrate", "scripts/kitlib/config", "scripts/subagent_gate", "external:downstream adopter"]
 channel = "file"
 data = "sections: attestation, policies, checks; one key = value per line"
 version = "v1"
@@ -912,6 +912,17 @@ data = "load_wis · _load, frontier, kind_of · SAFETY_CLASSES — the symbols c
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
+
+[interface.IF-298]
+rationale = "The three hook gates need one parse's answer rather than their own reading of the file."
+owner = "scripts/check_privacy"
+consumers = ["hooks/pre-commit", "hooks/commit-msg", "hooks/pre-push"]
+channel = "stdout"
+data = "one answer, no newline: privacy=off | privacy=on review=require | privacy=on review=warn-unwired | refuse=mixed | refuse=unreadable (cause on stderr); a nonzero exit or any other answer is refused by the hook"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+notes = "intra-component"
 
 [interface.IF-054]
 owner = "docs/work/"

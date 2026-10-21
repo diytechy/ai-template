@@ -9296,6 +9296,50 @@ message's own trailer block, so a message's `WI:` trailer stays readable.
 `scripts/kitlib/provenance.py`, `stack.ini.template`,
 `prompts/worker.template.md`.
 
+### The hooks read the policy through one parse; a malformed policy file refuses [since ddb924a96]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The three hooks and their probe read `docs/process.toml`
+and the legacy `docs/privacy-check` and `docs/privacy-review` through one
+call to the checker (`check_privacy.py --hook-policy`, from a new
+`kit_policy` in `hooks/kit-python.sh`), after the interpreter check, instead
+of with `grep`. The mixed-config refusal moves after the interpreter check,
+with one text at all three hooks. All three hooks share one
+scripts-directory rule: a set `KIT_SCRIPTS_DIR` is taken as given, and one
+naming no directory refuses with no fallback; unset, `scripts/` then
+`Scripts/`.
+
+**Forced changes.**
+
+- A present but unreadable or unparseable `docs/process.toml` now refuses
+  every commit and push, naming the file and the parser's message, where it
+  read as privacy ON. Fix the file; the fixing commit passes, because the
+  hook reads the working tree.
+- `commit-msg` and `pre-push` now refuse a `KIT_SCRIPTS_DIR` naming a
+  missing directory, as `pre-commit` already did. Fix the delegating
+  wrapper.
+- A legacy `docs/privacy-check` whose first word is `true` in any case but
+  lowercase (`TRUE`, `True`) now reads ON at `pre-push`, as the checker
+  already read it, where the hook read it OFF and the push needed no privacy
+  review. With no reviewer wired, such a push now fails closed. Wire the
+  reviewer, record the `warn-unwired` opt-down, or set the word to `false`.
+
+**Also observable.** `privacy_review` counts only under `[policies]`. A copy
+in another section or inside a string no longer opts down (the stricter
+direction). `privacy_review = 'warn-unwired'` written as a TOML literal
+string now opts down, where it read as require: an unwired reviewer warns and
+the push proceeds.
+
+**Kit-owned files — overwrite:** `hooks/pre-commit`, `hooks/commit-msg`,
+`hooks/pre-push`, `hooks/kit-python.sh` (each shipped as `.githooks/*`),
+`scripts/check_privacy.py`, `PROCESS_OPTIONS.md`,
+`skills/byte-budget-guard/SKILL.md` (a `scope: this-repo` skill; only if
+you vendored it).
+
+**Adopter-merged files:** none. No registry, setting or record format
+changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

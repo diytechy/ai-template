@@ -221,13 +221,13 @@ status = "Approved"
 phase = 1
 
 [test.TC-021]
-verifies = ["SR-019", "SR-020", "LLR-021"]
+verifies = ["SR-019", "SR-020", "LLR-021", "IF-298"]
 level = "Integration"
-method = "Drive pre-commit, commit-msg and pre-push with non-runnable python3/python stand-ins and, where installed, a real pre-3.11 interpreter as the only interpreter on PATH; drive pre-commit again with a real 3.11+ project virtual environment beside that PATH. Inspect the three shipped hooks and a fresh scaffold for their one shared probe, then compare that probe's post-virtual-environment candidate list with developer setup's runtime search."
+method = "Drive pre-commit, commit-msg and pre-push with non-runnable python3/python stand-ins and, where installed, a real pre-3.11 interpreter as the only interpreter on PATH; drive pre-commit again with a real 3.11+ project virtual environment beside that PATH. Drive each hook with a scripts override naming a missing directory, with an unreadable or mixed declaration, and with a policy answer that fails or falls outside its set; inspect that each hook makes the one read once, after the probe. Inspect the three shipped hooks and a fresh scaffold for their one shared probe, then compare that probe's post-virtual-environment candidate list with developer setup's runtime search."
 tier = "Full"
-expected = "Each hook refuses without a traceback, names the developer-setup install step and the 3.11 floor, and runs neither its checks on an older interpreter nor a skipped floor; pre-commit runs green on the project virtual environment. The hooks source the one shipped probe rather than a candidate loop of their own, and its post-virtual-environment candidates equal developer setup's runtime search."
+expected = "Each hook refuses without a traceback, names the developer-setup install step and the 3.11 floor, and runs neither its checks on an older interpreter nor a skipped floor; pre-commit runs green on the project virtual environment. Each hook refuses a scripts override naming a missing directory, an unreadable or mixed declaration, and a policy answer that fails or falls outside its set. The hooks source the one shipped probe rather than a candidate loop of their own, make the one read once after the probe, and its post-virtual-environment candidates equal developer setup's runtime search."
 automated = "Yes"
-evidence = "tests/test_pre_commit_hook.py::test_hook_refuses_clearly_when_no_working_python3; tests/test_pre_commit_hook.py::test_hook_never_runs_the_checks_on_an_older_python; tests/test_pre_commit_hook.py::test_hook_runs_on_the_project_venv_over_an_older_python; tests/test_pre_commit_hook.py::test_commit_msg_hook_fails_closed_when_no_python; tests/test_pre_commit_hook.py::test_commit_msg_hook_never_runs_on_an_older_python; tests/test_pre_commit_hook.py::test_every_hook_reads_the_one_interpreter_probe; tests/test_pre_push_hook.py::test_pre_push_never_runs_on_an_older_python; tests/test_run_devsetup.py::test_each_run_launcher_searches_what_its_dev_setup_searches[kit-python.sh:hooks]"
+evidence = "tests/test_pre_commit_hook.py::test_hook_refuses_clearly_when_no_working_python3; tests/test_pre_commit_hook.py::test_hook_never_runs_the_checks_on_an_older_python; tests/test_pre_commit_hook.py::test_hook_runs_on_the_project_venv_over_an_older_python; tests/test_pre_commit_hook.py::test_commit_msg_hook_fails_closed_when_no_python; tests/test_pre_commit_hook.py::test_commit_msg_hook_never_runs_on_an_older_python; tests/test_pre_commit_hook.py::test_every_hook_reads_the_one_interpreter_probe; tests/test_pre_commit_hook.py::test_every_hook_refuses_a_kit_scripts_dir_naming_a_missing_directory; tests/test_pre_push_hook.py::test_pre_push_never_runs_on_an_older_python; tests/test_pre_push_hook.py::test_pre_push_refuses_a_kit_scripts_dir_naming_a_missing_directory; tests/test_process_config.py::test_every_hook_refuses_an_unreadable_policy_file; tests/test_process_config.py::test_every_hook_refuses_a_mixed_config_with_one_text; tests/test_process_config.py::test_every_hook_refuses_a_failed_or_foreign_policy_answer; tests/test_process_config.py::test_the_mixed_refusal_runs_after_the_interpreter_probe; tests/test_shell_portability.py::test_each_hook_runs_the_one_read_once_after_the_probe; tests/test_run_devsetup.py::test_each_run_launcher_searches_what_its_dev_setup_searches[kit-python.sh:hooks]; tests/test_bootstrap.py::test_a_fresh_scaffold_ships_the_probe_and_commits_through_its_hooks"
 status = "Approved"
 phase = 1
 
@@ -331,13 +331,13 @@ status = "Approved"
 phase = 1
 
 [test.TC-031]
-verifies = ["SR-031", "LLR-031"]
+verifies = ["SR-031", "LLR-031", "IF-037"]
 level = "Integration"
-method = """Run the process-config and policy suites: every enforcer reads one value per dial from docs/process.toml, the hooks' sh and tomllib agree over the adversarial shape table, and a mixed config is refused."""
+method = """Drive each shipped commit and push hook over the adversarial file-shape table and compare its answer with the checker's for every shape; drive an unreadable declaration and a mixed one through each hook; run the policy suites: every enforcer reads one value per dial. Exercise the unwired-reviewer posture: only the exact opt-down value under the policies table warns, a copied value requires review, and the legacy record answers only when the key is absent. Inspect that no hook reads a declared line itself."""
 tier = "Full"
 expected = "Satisfies SR-031 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_gate_policy.py;tests/test_push_policy.py"
+evidence = "tests/test_process_config.py;tests/test_gate_policy.py;tests/test_push_policy.py;tests/test_pre_push_hook.py::test_the_review_posture_follows_the_one_parse;tests/test_shell_portability.py::test_no_hook_reads_the_policy_as_text"
 status = "Approved"
 phase = 1
 

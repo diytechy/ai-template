@@ -127,12 +127,18 @@ sequenceDiagram
 sequenceDiagram
     participant Dev as commit / push
     participant Hook as pre-commit / pre-push (SR-019/SR-020)
+    participant Probe as kit-python.sh (LLR-021)
     participant Priv as check_privacy.py
     participant Policy as docs/process.toml
     Dev->>Hook: staged diff / outgoing range
-    alt kit scripts directory unavailable
-        Hook-->>Dev: REFUSE; name the repair steps (SR-019/LLR-019, SR-020/LLR-020)
-    else kit scripts directory found
+    Hook->>Probe: interpreter, kit scripts directory, policy answer
+    Probe->>Priv: ask for the one policy answer
+    Priv->>Policy: one parse of the declared policy (SR-031/LLR-021, LLR-031)
+    Priv-->>Probe: one closed answer
+    alt scripts directory unavailable, mixed or unreadable declaration, or a failed or foreign answer
+        Probe-->>Hook: refusal named
+        Hook-->>Dev: REFUSE; name the cause and the repair (SR-019/SR-020/SR-031)
+    else an exact answer
     Hook->>Priv: scan (always-on secrets floor, SR-017/LLR-017)
     Priv->>Policy: read declared toggle (SR-031/LLR-031 shared parse)
     alt privacy_check true

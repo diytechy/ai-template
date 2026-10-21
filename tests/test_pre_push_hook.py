@@ -10,6 +10,7 @@ which softens only the unwired case and is pinned just as hard.
 """
 
 import os
+import re
 import shutil
 import subprocess
 
@@ -65,8 +66,8 @@ def repo(scaffold):
     return scaffold, base, head
 
 
-def run_hook(root, stdin_text, review_cmd=None):
-    env = dict(os.environ)
+def run_hook(root, stdin_text, review_cmd=None, env_extra=None):
+    env = dict(os.environ, **(env_extra or {}))
     # Deterministic lint identity (see test_check_privacy.FAKE_USER rationale).
     for var in ("LOGNAME", "USER", "LNAME", "USERNAME"):
         env[var] = FAKE_USER
@@ -252,6 +253,114 @@ def test_review_policy_typo_stays_fail_closed(repo):
     assert "privacy_review" in proc.stderr
     assert "warn-unwired" in proc.stderr
     assert "docs/process.toml" in proc.stderr
+
+
+_POSTURE_KEY = re.compile(r"^\s*privacy_review\s*=")
+_DECOY_SECTION = '[decoy]\nprivacy_review = "warn-unwired"\n'
+_DECOY_STRING = '[decoy]\nnote = """\nprivacy_review = "warn-unwired"\n"""\n'
+
+
+def _declare_posture(root, value, legacy, decoy):
+    """The unwired-reviewer posture as one case declares it: the scaffold's
+    `privacy_review` line removed, then set to `value` under [policies]
+    unless None; `legacy` as docs/privacy-review unless None; `decoy` text
+    appended to the file unless None."""
+    path = root / "docs" / "process.toml"
+    kept = [
+        line
+        for line in path.read_text(encoding="utf-8").splitlines(keepends=True)
+        if not _POSTURE_KEY.match(line)
+    ]
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        fh.write("".join(kept) + (decoy or ""))
+    if value is not None:
+        set_process_key(root, "policies", "privacy_review", value)
+    if legacy is not None:
+        (root / "docs" / "privacy-review").write_text(legacy + "\n", encoding="utf-8")
+
+
+# (privacy on?, [policies] privacy_review or None, legacy file or None,
+#  appended decoy or None, outcome). The two decoy rows catch a text read
+# that finds the key outside [policies] and warns (a fail-open); every other
+# row carries its adequacy witness in the comment beside it.
+POSTURE_CASES = [
+    # A reader that ignored the opt-down would refuse here.
+    pytest.param(True, "warn-unwired", None, None, "warn", id="on-warn-unwired"),
+    pytest.param(True, "require", None, None, "refuse", id="on-require"),
+    # A reader that matched a prefix or a near-spelling would warn here.
+    pytest.param(True, "warn-unwried", None, None, "refuse", id="on-typo"),
+    # A reader that took any non-"require" value as the opt-down would warn.
+    pytest.param(True, 1, None, None, "refuse", id="on-wrong-type"),
+    # A case-insensitive reader would warn here.
+    pytest.param(True, "WARN-UNWIRED", None, None, "refuse", id="on-uppercase"),
+    # A reader defaulting to warn-unwired on absence would warn here.
+    pytest.param(True, None, None, None, "refuse", id="on-absent"),
+    # A reader that dropped the legacy window would refuse here.
+    pytest.param(True, None, "warn-unwired", None, "warn", id="on-legacy-warn-unwired"),
+    pytest.param(True, None, "require", None, "refuse", id="on-legacy-require"),
+    pytest.param(
+        True,
+        None,
+        None,
+        _DECOY_SECTION,
+        "refuse",
+        id="on-decoy-section",
+    ),
+    pytest.param(
+        True,
+        None,
+        None,
+        _DECOY_STRING,
+        "refuse",
+        id="on-decoy-string",
+    ),
+    # A reader that demanded the reviewer whatever the privacy gate said
+    # would refuse every privacy-off row.
+    pytest.param(False, None, None, None, "proceed", id="off-absent"),
+    pytest.param(False, "require", None, None, "proceed", id="off-require"),
+    pytest.param(False, 1, None, None, "proceed", id="off-wrong-type"),
+    pytest.param(False, "warn-unwried", None, None, "proceed", id="off-typo"),
+]
+
+
+@pytest.mark.parametrize("privacy,value,legacy,decoy,outcome", POSTURE_CASES)
+def test_the_review_posture_follows_the_one_parse(
+    repo, privacy, value, legacy, decoy, outcome
+):
+    """TC-031 (SR-031: one parse, one answer): with no reviewer wired, the
+    push follows the posture the parse places under [policies]. Privacy on:
+    exactly `"warn-unwired"` warns and proceeds; any other value, a wrong
+    type, absence, or a copy outside [policies] (another section, inside a
+    string) refuses; the legacy docs/privacy-review answers when the key is
+    absent. Privacy off: the posture is moot and the push proceeds."""
+    root, base, head = repo
+    set_privacy(root, "true" if privacy else "false")
+    _declare_posture(root, value, legacy, decoy)
+    proc = run_hook(root, push_line(head, base))
+    said = proc.stdout + proc.stderr
+    if outcome == "refuse":
+        assert proc.returncode != 0, said
+        assert "FAILING CLOSED" in proc.stderr, said
+    else:
+        assert proc.returncode == 0, said
+        assert "FAILING CLOSED" not in proc.stderr, said
+        assert ("WARNING" in proc.stderr) is (outcome == "warn"), said
+
+
+def test_pre_push_refuses_a_kit_scripts_dir_naming_a_missing_directory(repo):
+    """TC-021 (SR-020, LLR-021): one scripts-directory rule for every hook. A
+    KIT_SCRIPTS_DIR naming no directory refuses the push even though the
+    scaffold's scripts/ is there to fall back on."""
+    root, base, head = repo
+    assert (root / "scripts").is_dir()
+    proc = run_hook(
+        root, push_line(head, base), env_extra={"KIT_SCRIPTS_DIR": "nope-not-here"}
+    )
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "cannot find the kit scripts dir" in proc.stderr, proc.stderr
+    assert "REFUSING the push" in proc.stderr, proc.stderr
+    assert "KIT_SCRIPTS_DIR in the delegating wrapper" in proc.stderr, proc.stderr
+    assert "git config --unset core.hooksPath" in proc.stderr, proc.stderr
 
 
 def test_approve_proceeds_and_reviewer_sees_full_range(repo, tmp_path):

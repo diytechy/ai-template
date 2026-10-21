@@ -26,52 +26,11 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT=$(cd "$(dirn
 # Phase 5: no llm/train/* branch exists to guard, and the integrator's verdict
 # gate binds a review to its exact commit by git-derived freshness instead.)
 
-# The pure-sh read of docs/process.toml below serves the mixed-config refusal.
 # No step of this hook is ever skipped: a missing interpreter refuses
-# (WI-880), and so does a missing kit scripts dir (below; WI-926).
-# BYTE-IDENTICAL to pre-commit's copy — an F5 duplication the two hooks keep
-# on purpose (their interpreter probe, by contrast, is one shared file), and
-# load-bearing: two hooks that disagreed about the config would gate one
-# boundary and not the other. The mixed-config refusal is documented in full
-# at hooks/pre-commit. POSIX ERE only.
-_ptoml_body() {
-  # The greppable body of docs/process.toml: whole-line comments dropped, then
-  # TRAILING comments stripped.
-  #
-  # The trailing strip is not tidiness — without it the two grammars that read
-  # this file disagree in the FAIL-OPEN direction. `privacy_check = true #
-  # privacy_check = false` is legal TOML whose value is `true`, but the narrow
-  # "provably false" test below matched the decoy inside the comment and the
-  # gate silently switched off, while Python read it as ON. That is the M-42
-  # contract inverted: the hook is what blocks the commit, so the hook reading
-  # `false` is the one that decides.
-  #
-  # Stripping at the first `#` can truncate a string value that legitimately
-  # contains one. Every consequence of that runs the SAFE way: a truncated
-  # value is LESS able to prove `false` (so privacy stays ON), and
-  # `privacy_review` treats anything that is not exactly `warn-unwired` as
-  # require. The declaration test cannot be affected at all — `key =` sits
-  # before any `#` on its line.
-  grep -v '^[[:space:]]*#' "$1" 2>/dev/null | sed 's/[[:space:]]*#.*$//' || true
-}
-
-process_declares() {
-  [ -f "$1" ] || return 1
-  _ptoml_body "$1" | grep -Eq '(^|[^A-Za-z0-9_])'"$2"'[[:space:]]*='
-}
-
-mixed_config_refusal() {
-  ptoml="$REPO_ROOT/docs/process.toml"
-  process_declares "$ptoml" privacy_check || return 1
-  [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
-  echo "$1: docs/process.toml AND the legacy docs/privacy-check both declare" >&2
-  echo "  the privacy policy. REFUSING — a mixed config is where two readers" >&2
-  echo "  disagree about the same gate. From your kept kit checkout, run:" >&2
-  echo "    python project-trajectory/scripts/bootstrap.py --migrate-config --dest ." >&2
-  return 0
-}
-
-if mixed_config_refusal "commit-msg"; then exit 1; fi
+# (WI-880), and so does a missing kit scripts dir (WI-926), whatever the
+# privacy policy or the loop marker says. A mixed or unreadable policy
+# refuses too; the probe's kit_policy makes that one read, as it does for
+# pre-commit and pre-push.
 
 # THE LOOP PROVENANCE FLOOR (SR-209). A commit made from a process the
 # unattended loop started carries the loop marker in its environment, and must
@@ -85,39 +44,11 @@ if mixed_config_refusal "commit-msg"; then exit 1; fi
 # The ONE interpreter every step below runs on, resolved once, here, by the
 # probe all three kit hooks share (hooks/kit-python.sh, shipped beside this
 # hook; WI-880). With no Python 3.11+ it refuses, naming dev-setup's install.
+# Then kit_policy resolves the kit scripts dir (SCRIPTS_DIR) and makes the
+# hooks' one policy read.
 . "$(dirname "$0")/kit-python.sh"
 kit_python commit-msg commit || exit 1
-
-# Locate the kit scripts dir honoring KIT_SCRIPTS_DIR (env / delegating wrapper)
-# before the default scripts/ | Scripts/ — the harness-elsewhere layout WI-1.42
-# gave pre-commit; the message scan must honor it too, or a repo with that
-# layout silently never scans commit messages (REVIEW_GRIND_FULL C4).
-SCRIPTS_DIR=""
-if [ -n "${KIT_SCRIPTS_DIR:-}" ]; then
-  case "$KIT_SCRIPTS_DIR" in
-    /*) SCRIPTS_DIR="$KIT_SCRIPTS_DIR" ;;
-    *)  SCRIPTS_DIR="$REPO_ROOT/$KIT_SCRIPTS_DIR" ;;
-  esac
-fi
-if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
-  SCRIPTS_DIR=""
-  for sd in scripts Scripts; do
-    if [ -d "$REPO_ROOT/$sd" ]; then
-      SCRIPTS_DIR="$REPO_ROOT/$sd"; break
-    fi
-  done
-fi
-# A hook that cannot find the kit scripts checks nothing, so it refuses the
-# commit rather than skip the scan (WI-926), whatever the privacy policy or
-# the loop marker says. A repo never set up has no core.hooksPath, so git
-# never runs this hook there.
-if [ -z "$SCRIPTS_DIR" ] || [ ! -d "$SCRIPTS_DIR" ]; then
-  echo "commit-msg: cannot find the kit scripts dir (KIT_SCRIPTS_DIR or scripts/)" >&2
-  echo "  under $REPO_ROOT, so the commit floor cannot run. REFUSING the commit." >&2
-  echo "  Fix one of: set KIT_SCRIPTS_DIR in the delegating wrapper; re-run" >&2
-  echo "  bootstrap; or turn the hooks off: git config --unset core.hooksPath" >&2
-  exit 1
-fi
+kit_policy commit-msg commit || exit 1
 
 # The loop provenance floor: a no-op (exit 0) for a person's commit.
 "$PY" "$SCRIPTS_DIR/check.py" --loop-trailer "$1"

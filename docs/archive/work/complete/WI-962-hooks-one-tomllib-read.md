@@ -3,12 +3,36 @@ id = "WI-962"
 title = "The commit and push hooks read the policy file through one tomllib read in their shared interpreter probe, and no hook reads configuration as text"
 workstream = "process"
 sr_refs = ["SR-031", "SR-019", "SR-020"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#10-one-configuration-file-in-toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-21, after its gate, in a headless leg:
+
+- The three shipped hooks (`pre-commit`, `commit-msg`, `pre-push`) read
+  no configuration as text: each calls the probe's `kit_policy` right
+  after `kit_python`, which resolves the kit scripts directory once for
+  all three (an override naming no directory refuses with no fallback)
+  and asks `check_privacy.py --hook-policy` for one closed answer
+  (`privacy=off`, `privacy=on review=require`, `privacy=on
+  review=warn-unwired`, `refuse=mixed`, `refuse=unreadable`); any other
+  answer or a failed read refuses, naming the cause.
+- `check_privacy.py` parses `docs/process.toml` once per run
+  (`_load_process_toml`), every gate reads that parse, an unreadable file
+  is its own outcome, and `read_privacy_review` and `hook_policy_answer`
+  carry the posture rule and the answer (IF-298's contract body).
+- `docs/runtime-flows.md` Flow 3, the two prose claims, and one RESYNC
+  entry (forced: a malformed policy file refuses every commit and push; a
+  `KIT_SCRIPTS_DIR` naming no directory refuses at every hook; a legacy
+  privacy-check reading `TRUE` reads ON at pre-push).
+- Spine: SR-031, LLR-021 (gaining SR-031), LLR-031, TC-021 and TC-031
+  amended and re-attested (sitting 003, MEANING+BLESS; the act in the
+  lane); IF-037's consumers amended and IF-298 added (Drafted).
 
 ## Context
 
