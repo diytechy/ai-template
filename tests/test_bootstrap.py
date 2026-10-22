@@ -1340,6 +1340,43 @@ def test_scaffold_ships_no_tracks_layer(scaffold):
     )
 
 
+def test_a_spooled_session_log_leaves_a_stock_scaffolds_status_clean(scaffold):
+    """A call recorded on a stock scaffold's primary checkout (never a lane)
+    spools its log under `out/sessions/spool/`; the shipped `.gitignore`
+    keeps it out of `git status`, which the dispatcher's claims and the
+    keep-warm records read as the primary checkout's cleanliness. No `out/`
+    line is added here: the scaffold's own ignore file is under test.
+    Adequacy witness: a template that names only the older runtime files
+    under `out/` shows the spooled log as untracked."""
+    _git_at(scaffold, "init", "-q")
+    pin_autocrlf(scaffold)
+    for key, value in (("user.email", "t@example.com"), ("user.name", "T")):
+        _git_at(scaffold, "config", key, value)
+    _git_at(scaffold, "config", "commit.gpgsign", "false")
+    _git_at(scaffold, "add", "-A")
+    _git_at(scaffold, "commit", "-q", "--no-verify", "-m", "seed")
+
+    def status():
+        proc = subprocess.run(
+            ["git", "-C", str(scaffold), "status", "--porcelain"]
+            + ["--untracked-files=all"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return proc.stdout
+
+    assert status() == ""
+    svc = load_script("session_service")
+    metrics = {"invocation-id": "0" * 32, "role": "CRITIQUE"}
+    report = {}
+    outcome = svc.Outcome(scaffold, 0, "", False, "", metrics)
+    path = svc.record(outcome, svc._call_row(metrics, "COMPLETED"), report=report)
+    assert report["spooled"] and path.parent == svc.spool_dir(scaffold)
+    assert path.is_file()
+    assert status() == ""
+
+
 def test_strip_provenance_drops_review_anchors_keeps_prose_and_code():
     # WI-079: scaffolded scripts must not carry citations into this meta-repo's
     # docs/archive/ review docs (which do not ship). strip_provenance drops the

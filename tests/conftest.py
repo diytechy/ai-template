@@ -433,6 +433,8 @@ SLOW_MODULES = frozenset(
         "test_smoke_budget_meter",  # interpreters and CPU burns per case; its in-process pin is test_check_smoke_budget
         # WI-969: the adoption-record rule on real commits, lanes and squashes.
         "test_adoption_record",  # a tmp git repo and lane per case; its in-process pin is test_disposition_adoption
+        # WI-960: the coordinator's codex call on real lanes, stand-in codex.
+        "test_codex_call_git",  # a tmp git repo and lane per case and a stand-in `codex` process; its in-process pin is test_codex_call
     }
 )
 
@@ -1213,6 +1215,131 @@ def lane_checkout(repo, branch, trunk="main"):
     add = [str(lane), branch] if exists else ["-b", branch, str(lane)]
     proc = git("worktree", "add", "-q", *add)
     assert proc.returncode == 0, proc.stderr
+    return lane
+
+
+def fixture_git(where, *args):
+    """Run git in `where` for a fixture, asserting it succeeds; its stdout,
+    stripped."""
+    proc = subprocess.run(
+        [shutil.which("git"), "-C", str(where), *args],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+    )
+    assert proc.returncode == 0, (args, proc.stderr)
+    return proc.stdout.strip()
+
+
+def fixture_commit(where, message, *paths):
+    """Stage `paths` (everything when none) in `where` and commit them, the
+    fixture's own commit, past the stub hooks."""
+    fixture_git(where, "add", "-A", "--", *(paths or (".",)))
+    fixture_git(
+        where,
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.com",
+        "commit",
+        "-q",
+        "--no-verify",
+        "-m",
+        message,
+    )
+
+
+def claimed_lane(tmp, *, files=None, trunk=True, branch="wi-1", wi="WI-1"):
+    """A claimed lane: a primary checkout at `tmp/primary` with its commit
+    hooks on (`hooked_checkout`) and, when `trunk`, `[policies] trunk =
+    "main"` declared; one commit on `main` holding the claim
+    `docs/work/active/<branch>/<wi>-x.md` and any further `files`
+    (`{relative path: text}`); `branch` cut there and checked out in a
+    LINKED worktree beside the primary (`lane_checkout`). Returns the linked
+    worktree, the root a call recording into the lane hands the service."""
+    primary = hooked_checkout(Path(tmp) / "primary")
+    fixture_git(primary, "symbolic-ref", "HEAD", "refs/heads/main")
+    for key, value in (
+        ("user.name", "Fixture"),
+        ("user.email", "fixture@example.com"),
+        ("core.autocrlf", "false"),
+        ("commit.gpgsign", "false"),
+    ):
+        fixture_git(primary, "config", key, value)
+    if trunk:
+        declare_trunk(primary, "main")
+    seeded = {
+        "docs/work/active/{}/{}-x.md".format(
+            branch, wi
+        ): "+++\nid = '{}'\n+++\n".format(wi)
+    }
+    seeded.update(files or {})
+    for rel, text in seeded.items():
+        path = primary / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8", newline="\n") as fh:
+            fh.write(text)
+    fixture_commit(primary, "seed the claimed lane")
+    return lane_checkout(primary, branch)
+
+
+def relocate_as_lane(repo, trunk="main", wi="WI-9"):
+    """Make the committed fixture checkout `repo`, sitting on a branch B other
+    than `trunk`, a claimed lane AT THE SAME PATH: the checkout moves to a
+    primary beside it (`<repo>-primary`, switched to `trunk`, hooks re-pointed
+    there), trunk gains the claim `claim_on_trunk` commits (B's own tree is
+    left exactly as it was), and `repo` is re-made as a linked worktree on B.
+    For a fixture that drives a route recording from a lane, whose session
+    log is committed only from a claimed linked worktree (WI-960). Returns
+    `repo`."""
+    repo = Path(repo)
+    branch = fixture_git(repo, "symbolic-ref", "-q", "--short", "HEAD")
+    assert branch and branch != trunk, branch
+    primary = repo.with_name(repo.name + "-primary")
+    os.rename(repo, primary)
+    fixture_git(primary, "checkout", "-q", trunk)
+    hooks_on(primary)
+    fixture_git(primary, "worktree", "add", "-q", str(repo), branch)
+    return claim_on_trunk(repo, wi)
+
+
+def _commit_claim(where, branch, wi):
+    """Commit, in the checkout `where`, a spec claiming `wi` under
+    `docs/work/active/<branch>/`, rendered by the registry's own writer."""
+    wc = load_script("wi_convert")
+    row = {c: "" for c in wc.COLUMNS}
+    row.update({"WI-ID": wi, "Title": "the lane's own claim", "Status": "queued"})
+    relpath, text = wc.render_spec(row, None)
+    claim = Path(where) / "docs" / "work" / "active" / branch / Path(relpath).name
+    claim.parent.mkdir(parents=True, exist_ok=True)
+    with claim.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+    fixture_commit(where, "claim " + branch, claim.relative_to(where).as_posix())
+
+
+def claim_on_trunk(lane, wi="WI-9"):
+    """Make the linked worktree `lane`, on branch B, a claimed lane: one
+    commit on the trunk its primary checkout sits on claims `wi` under
+    `docs/work/active/<B>/`, and B's tree is left exactly as it was, so a
+    fixture's registry reads as before. The lane reading admits a claim held
+    on either tree (WI-960). Returns `lane`."""
+    lane = Path(lane)
+    branch = fixture_git(lane, "symbolic-ref", "-q", "--short", "HEAD")
+    common = fixture_git(
+        lane, "rev-parse", "--path-format=absolute", "--git-common-dir"
+    )
+    _commit_claim(Path(common).parent, branch, wi)
+    return lane
+
+
+def claim_on_branch(lane, wi="WI-9"):
+    """Make the linked worktree `lane`, on branch B, a claimed lane by a
+    commit on B itself claiming `wi` under `docs/work/active/<B>/`: for a
+    fixture that later moves trunk to the lane's tip, which would drop a
+    claim held on trunk alone (WI-960). Returns `lane`."""
+    lane = Path(lane)
+    branch = fixture_git(lane, "symbolic-ref", "-q", "--short", "HEAD")
+    _commit_claim(lane, branch, wi)
     return lane
 
 

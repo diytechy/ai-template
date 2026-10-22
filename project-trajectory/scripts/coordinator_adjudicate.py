@@ -176,16 +176,6 @@ def resolve_route(root, entry):
     return registry, None
 
 
-def _worktree_index(records, root):
-    """The index of `root` among git's worktree records (0 is the primary
-    checkout), or None when it is not the top of one."""
-    want = os.path.normcase(str(Path(root).resolve()))
-    for index, (path, _branch) in enumerate(records):
-        if path and os.path.normcase(str(Path(path).resolve())) == want:
-            return index
-    return None
-
-
 def lane_refusal(root):
     """Why `root` is not a lane, or None. A lane is a linked worktree (never
     the primary checkout, whose session-log commit would land on trunk and
@@ -197,7 +187,7 @@ def lane_refusal(root):
     Implements: SR-231, LLR-306
     """
     records = agent_common.worktree_records(root)
-    index = _worktree_index(records, root)
+    index = agent_common.worktree_index(records, root)
     if index is None:
         return "{} is not the top of a git worktree".format(root)
     if index == 0:

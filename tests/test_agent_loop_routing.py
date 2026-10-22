@@ -9,7 +9,7 @@ classify_outcome ladder.
 """
 
 import pytest
-from conftest import hooked_checkout, hooks_on, load_script
+from conftest import claimed_lane, fixture_git, hooked_checkout, load_script
 
 
 # =============================================================================
@@ -514,25 +514,15 @@ def test_probe_metrics_are_attributed_and_committed(
 ):
     import subprocess
 
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
-    hooks_on(tmp_path)  # every route refuses a checkout without hooks
-    subprocess.run(
-        ["git", "-C", str(tmp_path), "config", "user.name", "Test"], check=True
-    )
-    subprocess.run(
-        ["git", "-C", str(tmp_path), "config", "user.email", "test@example.com"],
-        check=True,
-    )
-    subprocess.run(
-        ["git", "-C", str(tmp_path), "commit", "--allow-empty", "-qm", "base"],
-        check=True,
-    )
-    ctx, al = _probe_ctx(tmp_path, [("A", "FA", answer)])
+    # The probe records from a claimed lane, where its log is committed
+    # (WI-960); a probe rooted outside a lane spools instead.
+    root = claimed_lane(tmp_path)
+    ctx, al = _probe_ctx(root, [("A", "FA", answer)])
 
-    ok, _transcript = al.probe_route(ctx.registry["A"], tmp_path)
+    ok, _transcript = al.probe_route(ctx.registry["A"], root)
 
     assert ok is (answer == "ok")
-    logs = list((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    logs = list((root / "docs" / "iteration").glob("call_*.log"))
     assert len(logs) == 1
     meta = al.agent_common.read_log_meta(logs[0])
     assert meta["outcome"] == outcome
@@ -545,18 +535,40 @@ def test_probe_metrics_are_attributed_and_committed(
         "medium",
     )
     subject = subprocess.run(
-        ["git", "-C", str(tmp_path), "log", "-1", "--format=%s"],
+        ["git", "-C", str(root), "log", "-1", "--format=%s"],
         check=True,
         capture_output=True,
         text=True,
     ).stdout
     assert subject.rstrip().endswith("PROBE {}".format(outcome))
     assert not subprocess.run(
-        ["git", "-C", str(tmp_path), "status", "--porcelain"],
+        ["git", "-C", str(root), "status", "--porcelain"],
         check=True,
         capture_output=True,
         text=True,
     ).stdout
+
+
+def test_a_probe_from_the_primary_checkout_spools_its_log_and_commits_nothing(
+    tmp_path,
+):
+    """A loop run on the primary checkout probes from there, and the primary
+    is never a lane (WI-960): the probe's log goes to the primary's spool,
+    and HEAD and the tracked tree are unchanged."""
+    claimed_lane(tmp_path)
+    primary = tmp_path / "primary"
+    ctx, al = _probe_ctx(primary, [("A", "FA", "ok")])
+    head = fixture_git(primary, "rev-parse", "HEAD")
+
+    ok, _transcript = al.probe_route(ctx.registry["A"], primary)
+
+    assert ok is True
+    assert list((primary / "docs" / "iteration").glob("*.log")) == []
+    (log,) = al.session_service.spool_dir(primary).glob("call_*.log")
+    meta = al.agent_common.read_log_meta(log)
+    assert (meta["role"], meta["source-event"]) == ("PROBE", "recovery-probe")
+    assert fixture_git(primary, "rev-parse", "HEAD") == head
+    assert fixture_git(primary, "status", "--porcelain", "--untracked-files=no") == ""
 
 
 def test_a_committing_design_check_arms_the_review_round_itself(monkeypatch):

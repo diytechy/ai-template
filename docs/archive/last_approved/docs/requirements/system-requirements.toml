@@ -1930,3 +1930,17 @@ verification = "Test"
 status = "Approved"
 phase = 6
 aspect = "process"
+
+[requirement.SR-243]
+title = "Coordinator calls record sessions without committing outside claimed work"
+sn_refs = ["SN-026"]
+boundary_refs = ["B-10"]
+hat_refs = ["UNATTENDED-OPS", "INTEGRITY-RECOVERABILITY"]
+requirement = "When the coordinator's tooling launches a model session, the delivered coordinator call capability shall record the session in the usage record, record its log without committing to the shared line of development when it starts outside claimed work, refuse an unsafe resumed authoring carrier before launch, judge the call's changes against its starting state, and provide the sole Sol or Terra launch route."
+rationale = "A DERIVED requirement, and labelled so. SN-026 requires attributable routing among model families, and SR-222 requires a usage record for sessions the delivered loop launches, but neither reaches a coordinator-started session or states where its record may be committed. The unattended-operations lens identifies a partial or missing call record that leaves unattended progress unrecoverable, while the integrity-and-recoverability lens identifies telemetry committed to unrelated shared work as evidence with ambiguous provenance. Recording every coordinator session through the same usage record while retaining an out-of-work log without a shared commit was chosen over leaving coordinator sessions unrecorded or treating every checkout as a commit authority. Fed back to the need: its acceptance could state that every coordinator-started model session has attributable usage and a recoverable record without changing unrelated shared work. SR-231's rationale supplies the lane-local provenance lens; its adjudication-only boundary remains unchanged."
+acceptance_criteria = "For session-log recording, claimed work includes a linked worktree whose branch tree or the shared tree carries that branch's active work, including after the local claim has closed. A coordinator-started session in such claimed work records one usage record and its log commits with that work. A session started from the shared checkout, a detached checkout, or an unclaimed branch writes its log without a shared commit. A refused record commit is reported and is never success. A resumed authoring turn continues the recorded thread and refuses before launch when its relevant record is missing, damaged, foreign, or when an uncommitted relevant record is no older than it. The edit check distinguishes an edit from another call's standard record commit, reports edits, treats unreadable history as unable to check, and never reports a refused or unable check as success. Published coordinator guidance names the coordinator-call route as the only Sol or Terra launch path, its blackout refusal and result meanings, and shared-checkout spooling."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+aspect = "process"

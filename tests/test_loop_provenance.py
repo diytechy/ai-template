@@ -44,6 +44,7 @@ import pytest
 from conftest import (
     ROOT,
     SCRIPTS,
+    claim_on_trunk,
     declare_trunk,
     env_gate_skipif,
     hooks_on,
@@ -313,7 +314,8 @@ def _loop_repo(tmp_path):
     hooks_on(repo)  # every route refuses a checkout without hooks
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    repo = lane_checkout(repo, "llm/train/t1")
+    # The worker records from its claimed lane (WI-960).
+    repo = claim_on_trunk(lane_checkout(repo, "llm/train/t1"))
     return repo, ctl, cmd
 
 

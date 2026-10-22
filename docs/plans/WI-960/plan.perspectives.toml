@@ -1,0 +1,105 @@
+# PERSPECTIVE RECORD (SR-161) for one decomposition, written by
+# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a
+# person authors: subject, rows, tags, recorded_by, recorded_on, and each
+# perspective's no_finding. Comments are not kept.
+#   applicable = false                -> the roster predicate did not reach it
+#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)
+#   applicable = true, produced = []   -> considered: no_finding says why
+# Check: `hats.py record <this file> --check`.
+
+[decomposition]
+rows = ["SR-243", "LLR-346"]
+parents = ["SN-026"]
+recorded_by = "GPT Terra (gpt-5.6-terra), WI-960 spine author"
+recorded_on = "2026-10-22"
+
+[perspective.SECURITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The coordinator-call record and refusal rules create no credential, secret, or authority boundary requiring a separate obligation."
+
+[perspective.FIRST-RUN-ADOPTER]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"templates\" or tags contains \"process\""
+produced = []
+
+[perspective.UNATTENDED-OPS]
+applicable = true
+applies_when = "tags contains \"unattended\" or tags contains \"loop\""
+produced = ["SR-243"]
+
+[perspective.CROSS-PLATFORM]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"launcher\" or tags contains \"shell\""
+produced = []
+
+[perspective.MAINTAINER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The rows use one coordinator-call path and one recording decision, so no additional maintenance obligation is identified."
+
+[perspective.TEST-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The declared test cases cover recording, refusal, carrier, and edit-judgement outcomes without a distinct verification obligation."
+
+[perspective.UX-DESIGNER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The work exposes text outcomes only and adds no separate interaction or layout obligation."
+
+[perspective.UX-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The coordinator-call outcomes require no presentation behavior beyond the named text results."
+
+[perspective.SAFETY]
+applicable = false
+applies_when = "tags contains \"safety\""
+produced = []
+
+[perspective.LEGAL]
+applicable = true
+applies_when = "tags contains \"legal\""
+produced = []
+no_finding = "Session accounting and repository-local records add no legal duty or regulated record requirement."
+
+[perspective.DATA-PROTECTION]
+applicable = true
+applies_when = "tags contains \"personal-data\""
+produced = []
+no_finding = "The rows do not introduce a new personal-data purpose or handling operation."
+
+[perspective.ACCESSIBILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The stated outcomes are textual and do not rely on color or pointer-only interaction."
+
+[perspective.PERFORMANCE]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The bounded coordinator calls add no measured latency, throughput, or capacity obligation."
+
+[perspective.CONSISTENCY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "One shared call and record path already prevents role-specific meanings for the same session outcome."
+
+[perspective.INTEGRITY-RECOVERABILITY]
+applicable = true
+applies_when = "always"
+produced = ["SR-243"]
+
+[perspective.PRODUCT-FITNESS]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "Attributable coordinator sessions and fail-closed outcomes meet the stated stakeholder need without another product obligation."

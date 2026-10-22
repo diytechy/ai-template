@@ -13,6 +13,7 @@ import sys
 import pytest
 from conftest import (
     SCRIPTS,
+    claim_on_branch,
     declare_review_bar,
     declare_trunk,
     hooks_on,
@@ -254,7 +255,8 @@ def managed_repo(tmp_path):
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    repo = lane_checkout(repo, "llm/train/t1")
+    # The worker records from its claimed lane (WI-960).
+    repo = claim_on_branch(lane_checkout(repo, "llm/train/t1"))
 
     ctl = tmp_path / "control"
     ctl.mkdir()
@@ -863,7 +865,8 @@ def _winstay_repo(tmp_path):
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    repo = lane_checkout(repo, "llm/train/t1")
+    # The worker records from its claimed lane (WI-960).
+    repo = claim_on_branch(lane_checkout(repo, "llm/train/t1"))
 
     ctl = tmp_path / "control"
     ctl.mkdir()

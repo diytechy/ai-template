@@ -46,11 +46,33 @@ Contract IF-246: the session service's call surface. `Call` is the data a role
     the call's accounting, filled into a caller-owned dict so a call that
     raises is still accounted before the exception propagates; a command
     template that cannot be built raises ValueError before anything is
-    accounted. `record(outcome, meta, ...)` writes one session log from the
-    caller's row overlaid by the outcome's accounting, the raw stream to
-    `raw_dir/raw_name` when given, and commits the log; it returns the log's
-    path. `call(call)` is `act` then `record` with the standard row, recording
-    even when the launch raised, and returns the `Outcome`. A call with a
+    accounted. `resume`, a thread id, launches the call in its CLI's resume
+    form with no retained session and accounts it `session-mode = resumed`;
+    a call naming both `keep` and `resume` raises ValueError before anything
+    is accounted. `record(outcome, meta, ..., report=None)` writes one session
+    log from the caller's row overlaid by the outcome's accounting, and the
+    raw stream to `raw_dir/raw_name` when given. Where the log goes is derived
+    from the root alone (`lane_branch`): in a claimed lane, a linked worktree
+    on a branch whose own committed tree or trunk's still holds a claim under
+    `docs/work/active/<branch>/` (trunk's covers a lane closed under
+    close-first and not yet merged), it is written to `docs/iteration/` and
+    committed; from any other root (the primary checkout on any branch, a
+    detached HEAD, a branch neither readable tree shows claimed, or a root
+    whose worktree records cannot be read; a claim read that cannot be read
+    adds no claim) it is written to the primary checkout's spool,
+    `out/sessions/spool/` (`spool_dir`), and nothing is committed; a spool that cannot be written raises OSError. It returns
+    the log's path and fills a caller-owned `report` dict with `path`,
+    `spooled`, `committed` and the telemetry commit's `refusal` text ("" for
+    none), so a refused commit is never read as success. `lane_wis(root)`
+    returns the lane's claimed work item ids on either tree. A standard call's
+    log is named `call_<invocation id>-<YYYYmmdd>-<HHMMSS>.log`, which
+    `is_call_log(name)` accepts and no gate-log name matches. `call(call,
+    between=None, report=None)` is `act` then `record` with the standard
+    row, recording even when the launch raised (a Ctrl-C recorded
+    INTERRUPTED), and returns the `Outcome`; a caller's `between` is called
+    with the Outcome (None when the launch raised) after `act` and before the
+    log is written, for every call that is recorded, and `report` is the
+    caller-owned dict `record` fills. A call with a
     `keep` (from `plan_keep`) launches in its retained session's resume or
     mint form under its account's home (none for an ambient entry), is bookkept into that session's
     record, and retires it if its launch raises; `one_turn` bounds the call to
@@ -229,6 +251,9 @@ class Call:
     keep: object = None
     one_turn: bool = False
     wi: str = ""
+    # A thread id the call resumes WITHOUT a retained session (the
+    # coordinator's authoring turn); never together with `keep`.
+    resume: str = ""
 
 
 @dataclass
@@ -355,6 +380,12 @@ def _redactor(keep, env=None):
     return redact
 
 
+def _resumes(call):
+    """Whether the call continues an existing thread: a retained session
+    holding one, or an unretained `resume`."""
+    return bool((call.keep and call.keep.session_id) or call.resume)
+
+
 def _identity(call):
     """The accounting a call carries before it runs: who asked, on which
     route, for which model."""
@@ -370,7 +401,7 @@ def _identity(call):
         "gen_ai.request.model": call.model or "",
         # WI-887's audit columns: whether the session was minted fresh or
         # resumed, and the scope it is kept under. No gate reads them.
-        "session-mode": "resumed" if call.keep and call.keep.session_id else "fresh",
+        "session-mode": "resumed" if _resumes(call) else "fresh",
         "keep-scope": call.keep.scope if call.keep else "",
     }
     row.update(call.attribution)
@@ -400,6 +431,33 @@ def _timeout_kind(timed_out):
     return "wall" if timed_out else ""
 
 
+def _one_thread(call):
+    """Refuse a call that names its thread twice: a retained session (`keep`)
+    and an unretained `resume`. Raises ValueError.
+
+    Implements: SR-243, LLR-269
+    """
+    if call.resume and call.keep is not None:
+        raise ValueError(
+            "session service: a call resumes a retained session or an unretained "
+            "thread, never both (keep and resume {!r})".format(call.resume)
+        )
+
+
+def _thread_argv(call, adapter, argv):
+    """`(argv, minted_id)`: a retained call's resume or mint form
+    (`session_keep.keep_argv`), an unretained `resume`'s resume form, or the
+    argv unchanged for a fresh unretained call.
+
+    Implements: SR-243, LLR-269
+    """
+    if call.keep is not None:
+        return session_keep.keep_argv(adapter, argv, call.keep)
+    if call.resume:
+        return adapter.resume(argv, call.resume), ""
+    return argv, ""
+
+
 def act(call, metrics=None):
     """Launch one call and account it; see Contract IF-246. In a checkout
     whose commit hooks are not on (`kitlib.commit_hooks`), a call raises
@@ -409,7 +467,10 @@ def act(call, metrics=None):
     released first (`keep_release`, which does not raise on store-lock
     contention).
 
-    Implements: SR-222, SR-229, LLR-269
+    A call naming both a retained session (`keep`) and an unretained
+    `resume` then raises ValueError, before anything is accounted.
+
+    Implements: SR-222, SR-229, SR-243, LLR-269
     """
     hooks_off = commit_hooks.hooks_refusal(call.root)
     refused = _refused_launch(call, hooks_off)
@@ -417,6 +478,7 @@ def act(call, metrics=None):
         if call.keep is not None:
             session_keep.keep_release(call.root, call.keep)
         raise refused
+    _one_thread(call)
     metrics = {} if metrics is None else metrics
     call = _as_prepared(call)
     argv, stdin_input = agent_session.build_argv(call.template, call.model, call.prompt)
@@ -427,9 +489,7 @@ def act(call, metrics=None):
         else session_adapters.adapter_for(argv)
     )
     argv, scratch = adapter.prepare(argv)
-    minted = ""
-    if call.keep is not None:
-        argv, minted = session_keep.keep_argv(adapter, argv, call.keep)
+    argv, minted = _thread_argv(call, adapter, argv)
     if call.one_turn:
         argv = adapter.one_turn(argv)
     env = _launch_env(call)
@@ -614,33 +674,130 @@ def record(
     raw_name=None,
     session=None,
     label=None,
+    report=None,
 ):
-    """Write the call's one session log and commit it; see Contract IF-246.
+    """Write the call's one session log and commit it in a lane, or spool it
+    outside one; see Contract IF-246.
 
     The log's row is the caller's `meta` overlaid by the outcome's accounting,
     so what the service measured is never shadowed by what a role guessed; the
     transcript is the whole captured stream (redacted and bounded by the log
-    writer), not a reduced result.
+    writer), not a reduced result. Where it goes is derived from the root
+    alone (`lane_branch`): in a claimed lane it is written under `iter_dir`
+    (default `docs/iteration/`) and committed; anywhere else it is written to
+    the primary checkout's spool (`spool_dir`; `iter_dir` is ignored) and
+    nothing is committed, and a spool that cannot be written raises OSError.
+    A caller-owned `report` dict is filled with the log's `path`, whether it
+    was `spooled` or `committed`, and the commit's `refusal` text ("" for
+    none).
 
-    Implements: SR-222, LLR-269
+    Implements: SR-222, SR-243, LLR-269
     """
     root = Path(outcome.root)
     row = dict(meta or {})
     row.update(outcome.metrics)
     if raw_dir is not None and raw_name:
         _write_raw(raw_dir, raw_name, outcome.stream)
-    path = agent_common.write_session_log(
-        Path(iter_dir) if iter_dir is not None else root / "docs" / "iteration",
-        row,
-        outcome.stream,
-    )
-    agent_common.commit_telemetry(
-        root,
-        session or row["invocation-id"],
-        label or "{} {}".format(row.get("phase", ""), row.get("outcome", "")),
-        [path],
-    )
+    spooled = lane_branch(root) is None
+    if spooled:
+        target = spool_dir(root)
+    elif iter_dir is not None:
+        target = Path(iter_dir)
+    else:
+        target = root / "docs" / "iteration"
+    path = agent_common.write_session_log(target, row, outcome.stream)
+    refusal = ""
+    if not spooled:
+        label = label or "{} {}".format(row.get("phase", ""), row.get("outcome", ""))
+        refusal = agent_common.commit_telemetry(
+            root, session or row["invocation-id"], label, [path]
+        )
+    if report is not None:
+        report.update(
+            path=path,
+            spooled=spooled,
+            committed=not spooled and not refusal,
+            refusal=refusal or "",
+        )
     return path
+
+
+def spool_dir(root):
+    """The directory a call recorded outside a claimed lane writes its log
+    to: `out/sessions/spool/` of the primary checkout, machine-local and
+    untracked.
+
+    Implements: SR-243, LLR-269
+    """
+    return session_keep.primary_out_dir(root) / "sessions" / "spool"
+
+
+def _lane_claims(root):
+    """`(branch, ids)` for a root that is a linked worktree on a branch, or
+    None. The ids are those the branch's own committed tree holds under
+    `docs/work/active/<branch>/` (`integrate.claimed_ids_on_branch`), united
+    with those trunk's committed tree still holds there (a lane closed under
+    close-first and not yet merged). An unreadable read adds no id, and an
+    undeclared trunk adds none from trunk.
+    """
+    import integrate  # deferred: a heavy import only a record's lane read needs
+
+    records = agent_common.worktree_records(root)
+    index = agent_common.worktree_index(records, root)
+    # None: not the top of a worktree; 0: the primary checkout; no branch: detached
+    if not index or not records[index][1]:
+        return None
+    branch = records[index][1]
+    ids = set(integrate.claimed_ids_on_branch(root, branch) or ())
+    try:
+        trunk = agent_common.trunk_name(root)
+    except agent_common.TrunkUndeclared:
+        return branch, ids
+    trunk_ref, folder = "refs/heads/" + trunk, integrate.ACTIVE + "/" + branch
+    for path in integrate._branch_tree_paths(root, trunk_ref, folder) or ():
+        wid = integrate._spec_id(path.rsplit("/", 1)[-1])
+        if wid is not None:
+            ids.add(wid)
+    return branch, ids
+
+
+def lane_branch(root):
+    """The branch of the claimed lane `root` is the top of, or None. A lane
+    is a linked worktree on a branch whose committed tree, or trunk's, holds
+    a claim under `docs/work/active/<branch>/`; the primary checkout (on any
+    branch), a detached HEAD, a root that is not the top of a worktree, and a
+    branch neither readable tree shows claimed (a claim read that cannot be
+    read adds no claim) are not.
+
+    Implements: SR-243, LLR-269, LLR-346
+    """
+    claims = _lane_claims(root)
+    return claims[0] if claims and claims[1] else None
+
+
+def lane_wis(root):
+    """The work item ids the lane at `root` holds claimed, on its branch's
+    tree or on trunk's; empty outside a lane.
+
+    Implements: SR-243, LLR-269, LLR-346
+    """
+    claims = _lane_claims(root)
+    return set(claims[1]) if claims else set()
+
+
+# The name `_call_row` gives a standard call's log, as the log writer spells
+# it: `call_<invocation id>-<YYYYmmdd>-<HHMMSS>.log`. No gate-log name
+# (`kitlib.verdict.SESSION_LOG_RE`) has this shape.
+CALL_LOG_RE = re.compile(r"^call_[0-9a-f]{32}-(?P<stamp>\d{8}-\d{6})\.log$")
+
+
+def is_call_log(name):
+    """Whether the file name `name` is a standard call's session log, the
+    name `_call_row` gives.
+
+    Implements: SR-243, LLR-269, LLR-346
+    """
+    return CALL_LOG_RE.match(name) is not None
 
 
 def _call_row(metrics, word):
@@ -655,14 +812,18 @@ def _call_row(metrics, word):
     }
 
 
-def call(call_):
+def call(call_, *, between=None, report=None):
     """`act` then `record` with the standard row; see Contract IF-246.
 
     The record is written even when the launch raised (a Ctrl-C in an
     attached sitting is recorded INTERRUPTED and re-raised), but not for a
     command template that could not be built, which launched nothing.
+    `between`, when given, is the caller's one seam between the two: it is
+    called with the Outcome (None when the launch raised) after `act` and
+    before the log is written, for every call that is recorded; the record
+    is written even when it raises. `report` is handed to `record`.
 
-    Implements: SR-222, LLR-269
+    Implements: SR-222, SR-243, LLR-269
     """
     metrics = {}
     outcome = None
@@ -675,7 +836,7 @@ def call(call_):
         word = "INTERRUPTED"
         raise
     finally:
-        _record_call(call_, outcome, metrics, word)
+        _record_call(call_, outcome, metrics, word, between=between, report=report)
 
 
 def _outcome_word(outcome):
@@ -684,13 +845,19 @@ def _outcome_word(outcome):
     return "COMPLETED" if outcome.code == 0 else "ERROR"
 
 
-def _record_call(call_, outcome, metrics, word):
+def _record_call(call_, outcome, metrics, word, *, between=None, report=None):
     """Record one standard call, even one whose launch raised; nothing for
-    a call that was never accounted (its template could not be built)."""
+    a call that was never accounted (its template could not be built). A
+    caller's `between` runs first, given the outcome (None when the launch
+    raised)."""
     if "invocation-id" not in metrics:
         return
-    done = outcome or Outcome(call_.root, -1, "", False, "", metrics)
-    record(done, _call_row(metrics, word))
+    try:
+        if between is not None:
+            between(outcome)
+    finally:
+        done = outcome or Outcome(call_.root, -1, "", False, "", metrics)
+        record(done, _call_row(metrics, word), report=report)
 
 
 # --- keep: adjudicator session retention through act and record -----------------

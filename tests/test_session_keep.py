@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import ROOT, load_script, trunk_repo
+from conftest import ROOT, claimed_lane, fixture_git, load_script, trunk_repo
 
 svc = load_script("session_service")
 keep = load_script("session_keep")
@@ -1015,14 +1015,15 @@ def test_a_keep_warm_ping_is_one_bounded_turn_off_the_tick_and_recorded_on_it(
     """The enabled dispatcher path: the tick returns at once while the ping
     runs on its own thread, a second tick skips with its reason, and the
     session log is written and committed on the tick's thread afterwards."""
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     committed = []
     monkeypatch.setattr(
         svc.agent_common,
         "commit_telemetry",
         lambda *a, **k: committed.append(threading.current_thread().name),
     )
-    _adjudicate(tmp_path, ON, _claude_stream(10))
-    minted = _state(tmp_path)["session_id"]
+    _adjudicate(root, ON, _claude_stream(10))
+    minted = _state(root)["session_id"]
     release, seen = threading.Event(), []
 
     def slow(argv, root, timeout, **kw):
@@ -1030,10 +1031,10 @@ def test_a_keep_warm_ping_is_one_bounded_turn_off_the_tick_and_recorded_on_it(
         release.wait(10)
         return 0, _claude_stream(11, sid=minted), False
 
-    warmer = _warmer(tmp_path, slow)
+    warmer = _warmer(root, slow)
     assert warmer.tick(work_pending=True) == []  # started, not waited on
     assert warmer.thread is not None and warmer.thread.is_alive()
-    assert _state(tmp_path)["lease"]["holder"].startswith("keep-warm:")
+    assert _state(root)["lease"]["holder"].startswith("keep-warm:")
     lines = warmer.tick(work_pending=True)
     assert lines == ["keep-warm: skipped (a ping is in flight)"]
     assert committed == []  # nothing recorded while the ping runs
@@ -1045,21 +1046,22 @@ def test_a_keep_warm_ping_is_one_bounded_turn_off_the_tick_and_recorded_on_it(
     argv = seen[0]
     assert argv[argv.index("--resume") + 1] == minted
     assert argv[argv.index("--max-turns") + 1] == "1"
-    (log,) = (tmp_path / "docs" / "iteration").glob("call_*.log")
+    (log,) = (root / "docs" / "iteration").glob("call_*.log")
     row = common.read_log_meta(log)
     assert row["role"] == "KEEP-WARM" and row["source-event"] == "keep-warm"
     assert row["outcome"] == "COMPLETED" and row["context-pct"] == "11"
-    assert _state(tmp_path)["pct"] == 11 and "lease" not in _state(tmp_path)
+    assert _state(root)["pct"] == 11 and "lease" not in _state(root)
 
 
 def test_a_finished_ping_waits_for_a_clean_trunk_to_be_recorded(tmp_path, monkeypatch):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     committed = []
     monkeypatch.setattr(
         svc.agent_common, "commit_telemetry", lambda *a, **k: committed.append(1)
     )
-    _adjudicate(tmp_path, ON, _claude_stream(10))
+    _adjudicate(root, ON, _claude_stream(10))
     dirty = [True]
-    warmer = _warmer(tmp_path, _launch(_claude_stream(11)), dirty=lambda: dirty[0])
+    warmer = _warmer(root, _launch(_claude_stream(11)), dirty=lambda: dirty[0])
     warmer.tick(work_pending=True)
     warmer.thread.join(10)
     assert warmer.tick(work_pending=True) == [
@@ -1084,15 +1086,41 @@ def test_keep_warm_skips_with_its_reason_when_an_adjudication_holds_the_lease(
 
 
 def test_the_run_end_records_a_ping_still_in_flight(tmp_path, monkeypatch):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     committed = []
     monkeypatch.setattr(
         svc.agent_common, "commit_telemetry", lambda *a, **k: committed.append(1)
     )
-    _adjudicate(tmp_path, ON, _claude_stream(10))
-    warmer = _warmer(tmp_path, _launch(_claude_stream(11)))
+    _adjudicate(root, ON, _claude_stream(10))
+    warmer = _warmer(root, _launch(_claude_stream(11)))
     warmer.tick(work_pending=True)
     warmer.finish()
     assert committed == [1]
+
+
+def test_a_keep_warm_ping_from_the_primary_checkout_spools_its_log(
+    tmp_path, monkeypatch
+):
+    """The dispatcher's warmer is rooted at the primary checkout, which is
+    never a lane (WI-960): the ping's log is written to the primary's spool,
+    nothing is committed, and trunk's HEAD does not move, even with a claimed
+    lane beside it."""
+    claimed_lane(tmp_path)
+    primary = tmp_path / "primary"
+    head = fixture_git(primary, "rev-parse", "HEAD")
+    committed = []
+    monkeypatch.setattr(
+        svc.agent_common, "commit_telemetry", lambda *a, **k: committed.append(1)
+    )
+    _adjudicate(primary, ON, _claude_stream(10))
+    warmer = _warmer(primary, _launch(_claude_stream(11)))
+    warmer.tick(work_pending=True)
+    warmer.finish()
+    assert committed == []
+    assert list((primary / "docs" / "iteration").glob("*.log")) == []
+    (log,) = svc.spool_dir(primary).glob("call_*.log")
+    assert common.read_log_meta(log)["role"] == "KEEP-WARM"
+    assert fixture_git(primary, "rev-parse", "HEAD") == head
 
 
 def test_the_dispatcher_builds_its_warmer_from_the_routing_registry(tmp_path):
@@ -1200,7 +1228,8 @@ def _logged_outcomes(tmp_path):
 def test_a_ping_whose_tree_cannot_be_ended_is_recorded_then_raised(
     tmp_path, monkeypatch, end
 ):
-    warmer, exc, committed = _tree_ping(tmp_path, monkeypatch, dirty=False)
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
+    warmer, exc, committed = _tree_ping(root, monkeypatch, dirty=False)
     with pytest.raises(svc.agent_session.TreeNotEnded) as raised:
         if end == "tick":
             warmer.tick(work_pending=False)
@@ -1208,7 +1237,7 @@ def test_a_ping_whose_tree_cannot_be_ended_is_recorded_then_raised(
             warmer.finish()
     assert raised.value is exc
     assert committed == [1]  # recorded first, over the clean trunk
-    assert _logged_outcomes(tmp_path) == ["ERROR"]
+    assert _logged_outcomes(root) == ["ERROR"]
 
 
 @pytest.mark.parametrize("end", ["tick", "finish"])
@@ -1247,12 +1276,13 @@ def test_a_failed_recording_never_replaces_the_unended_tree(tmp_path, monkeypatc
 def test_an_ordinary_ping_failure_is_still_recorded_and_swallowed(
     tmp_path, monkeypatch
 ):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     warmer, _, committed = _tree_ping(
-        tmp_path, monkeypatch, dirty=False, exc=RuntimeError("launch broke")
+        root, monkeypatch, dirty=False, exc=RuntimeError("launch broke")
     )
     assert warmer.tick(work_pending=False) == []
     assert committed == [1]
-    assert _logged_outcomes(tmp_path) == ["ERROR"]
+    assert _logged_outcomes(root) == ["ERROR"]
     assert warmer.finished == []
 
 

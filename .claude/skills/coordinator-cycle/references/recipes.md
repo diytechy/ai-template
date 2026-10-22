@@ -73,8 +73,42 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   together, never bridge them with a default (wi-918 D-001). A blank line ends a `Contract IF-NNN:` body for the
   interface reference, so text added to a contract continues the body
   without one (wi-922 D-003).
+- **A Codex call (Sol or Terra)** runs through one entry point, from any
+  directory:
+  `"$PY" "$TOOLS/codex_call.py" <role> --root <dir> --prompt-file <prompt> --out <out> [--effort medium] [--wi WI-NNN] [--resume] [--route <entry>]`.
+  The role is `REVIEW-A` (a Sol review), `CRITIQUE` (a Sol scope or plan
+  critique) or `AUTHOR` (a Terra turn, which names its `--wi`). The role's
+  enabled roster row (`OPENAI-SOL`, `OPENAI-TERRA`; `--route` names another
+  enabled entry) gives the model and route; the launch is the entry
+  point's own: workspace-write, unelevated, the review scratch root
+  (`$REPO.wt/review-tmp`, derived from `--root`) writable, the effort, and
+  the prompt on stdin. It writes the final text to `--out`, then prints the
+  log's path and state and the exit code.
+  - Inside the blackout window, a Sol or Terra call is refused before
+    launch (exit 2), as every non-adjudication call is. Exit 2 also
+    refuses an unknown role, an unreadable prompt, a route that cannot be
+    used, commit hooks off, a bad resume carrier and an `AUTHOR` turn
+    whose `--wi` the lane does not hold claimed; nothing is launched.
+  - The change check reads `--root`'s HEAD and uncommitted paths (content
+    and index state, so a staged or unstaged path counts) before and
+    after the call. Exit 3 is an edit, its paths printed: for Sol any
+    change but another call's session-log commit; for Terra only a HEAD
+    move that such a commit does not account for (its uncommitted edits
+    are its output). Nothing is reverted and the log is still recorded.
+  - Exit 4 is a log left uncommitted, or a spool that could not be
+    written, the log and the refusal named: commit the log before the next
+    call in that lane. Exit 5 is a check that could not run (git could not
+    answer): trust nothing the call wrote. Exit 1 is a failed call. After
+    launch 5 outranks 3, 3 outranks 4, and 4 outranks 1.
+  - In a claimed lane the call commits its own `call_` session log when
+    it returns: a record-only commit that moves the lane's HEAD, so render
+    a brief, filing or plan record that follows the call at the new tip
+    (wi-960 D-009). A call outside a claimed lane (the primary checkout,
+    the detached critique checkout) spools its log under the primary
+    checkout's `out/sessions/spool/` and commits nothing; the spool's
+    harvest is WI-800's.
 - **Terra, first turn:**
-  `bash "$TOOLS/terra_author.sh" <lane> <prompt> <out> [effort]`.
+  `"$PY" "$TOOLS/codex_call.py" AUTHOR --root <lane> --wi WI-NNN --prompt-file <prompt> --out <out>`.
   - Terra's first turn is the intent turn, TC rows included, before build
     round 1; a `single` row takes it after its pass record (SKILL §3,
     "Intent").
@@ -86,14 +120,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     does not request a whole subtree or arms map. At the intent turn fill
     `CHANGES=none` and leave `TESTS=` empty: no build has run, so there is
     no change list and no lane test yet.
-  - The script runs `codex exec -m gpt-5.6-terra` at medium with the
-    unelevated sandbox, workspace-write,
-    `--add-dir` on the review scratch root (`$REPO.wt/review-tmp`) and
-    `--skip-git-repo-check`. It exits 3 if HEAD moved.
-  - Note the `session id:` line in its log.
-  - Record that session id in the lane's decisions at the first turn: a
-    lane resumed days later found it only in `~/.codex/sessions/<date>/`,
-    by its `cwd` and model (wi-798, 2026-10-20).
+  - Commit a turn's log before the next turn: the call commits it in the
+    lane, and after an exit 4 commit the named log yourself. The resumed
+    turn reads its session id from that committed log: a lane resumed
+    days later found a noted id only in `~/.codex/sessions/<date>/`, by
+    its `cwd` and model (wi-798, 2026-10-20).
   - A single plan that orders its record step after its tests (WI-962's
     P5 after P1) still meets Terra first: the intent turn takes that
     step's registry rows, and the builder keeps its non-registry parts
@@ -107,19 +138,14 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     (wi-940 D-002).
   - `mkprompt.py` takes `LANE=<branch>` (`wi-912`), never the worktree
     path, which builds a broken `--basetemp` (`C:-Projects-...`).
-  - Launched through `lowprio.py` with Git's `usr/bin/bash.exe`, the
-    script's bash exited 127 after about ten minutes while `codex exec`
-    ran on, orphaned, and wrote its `-o` report when it finished: wait on
-    the codex process (`tasklist`), never relaunch. A resumed turn ran
-    cleanly with `lowprio.py` launching the vendored `codex.exe` directly
-    (under the npm `@openai/codex` package's `vendor/` folder), which keeps
-    the `-c` quoting intact (WI-912, 2026-10-17).
-- **Terra, resumed.** Run this from the lane directory; `resume` takes no `-s`
-  or `-C`:
-  `codex exec resume <session id> -m gpt-5.6-terra -c model_reasoning_effort="medium" -c 'windows.sandbox="unelevated"' -c 'sandbox_mode="workspace-write"' -c 'sandbox_workspace_write.writable_roots=["C:/Projects/ai-template.wt/review-tmp"]' --skip-git-repo-check -o <out> - < <prompt>`
-  Keep the quoting exactly as shown. The writable root is the review scratch
-  root, `$REPO.wt/review-tmp`: on a checkout elsewhere, write that path in
-  place of the literal, inside the same quotes.
+- **Terra, resumed:**
+  `"$PY" "$TOOLS/codex_call.py" AUTHOR --resume --root <lane> --wi WI-NNN --prompt-file <prompt> --out <out>`.
+  It continues the thread of the lane's newest Terra log committed at
+  HEAD (bound to one of the lane's work items and the Terra route). A
+  missing, damaged, foreign or conflicting log, or an uncommitted newer
+  one, refuses the turn before launch, naming the log and the cause; it
+  never starts a fresh thread in its place. Commit the named log, or run
+  a first turn without `--resume`.
 - **A review round: render, launch, file** (SKILL Roles and §3; rulings 4
   and 7, revision 37). Never write a review brief by hand. Every round is
   full-lane, from the lane's trunk base to its tip, and runs REVIEW-A and
@@ -154,11 +180,15 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      judged party. A handoff's builder notes "for the reviewers" stay out
      too: raise them at triage if the round does not (the reviewer found
      both on its own, wi-928 D-002).
-  3. Launch REVIEW-A with `bash "$TOOLS/sol_review.sh" <lane> <brief> <out> [effort]`
-     (default medium). Exit 3 means the reviewer changed the lane; inspect
+  3. Launch REVIEW-A with `"$PY" "$TOOLS/codex_call.py" REVIEW-A --root <lane> --prompt-file <brief> --out <out> [--effort medium]`
+     (default medium). In a headless leg, launch REVIEW-B before REVIEW-A:
+     the harness runs the two launches one after the other, and REVIEW-A's
+     call commits its session log in the lane when it returns, moving HEAD
+     past the sha REVIEW-B's brief pins (wi-960 D-009). Exit 3 means the reviewer changed the lane; inspect
      before trusting. Edit nothing in a lane while its reviewer runs: the
-     check counts your own edit too (WI-911, 2026-10-15). The launcher uses workspace-write, because a read-only
-     sandbox could not run Python, and checks HEAD and status afterwards.
+     check counts your own edit too (WI-911, 2026-10-15). The launch uses workspace-write, because a read-only
+     sandbox could not run Python, and its change check reads HEAD and
+     status before and after; the call's log commits in the lane.
      Launch the Claude REVIEW-B as a sub-agent given only its brief's path
      plus the lane worktree and the interpreter, which the brief does not
      name, and ask for a two-line reply (the verdict path and its VERDICT
@@ -172,7 +202,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      command line), then resume that reviewer with SendMessage, never a
      fresh one (WI-921's gate, 2026-10-15g). A Sol launch whose sandboxed
      shell never returns runs no command and writes no verdict (its
-     output says the review was blocked): probe the same launcher with a
+     output says the review was blocked): probe the same entry point with a
      one-command prompt (`git rev-parse HEAD`), then relaunch fresh on
      the same brief, and file nothing from the failed one (wi-946
      D-012).
@@ -199,7 +229,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
   add the skill's two scope and trust questions, and send it to a fresh Sol
-  session. Record the answer before the claim. In an attended session, put
+  session:
+  `"$PY" "$TOOLS/codex_call.py" CRITIQUE --root "$REPO.wt/trunk-tmp" --prompt-file <brief> --out <out>`.
+  Record the answer before the claim. In an attended session, put
   the spec's filing calls to the owner first and record them under
   `## Calls ruled at filing`, so the critique judges the ruled spec (WI-921
   to WI-923, 2026-10-15). `review_brief.py critique`
@@ -209,11 +241,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   failed-write shape): asked piecemeal, they cost WI-882, WI-884 and WI-887
   three rounds each (2026-10-10).
   Run each critique from a detached scratch checkout at the committed tip
-  (`git -C "$REPO.wt/trunk-tmp" checkout --detach <tip>`): the launcher
+  (`git -C "$REPO.wt/trunk-tmp" checkout --detach <tip>`): the change check
   compares the checkout's HEAD and status before and after, so the
   coordinator's own uncommitted trunk edits would read as the critic's.
   Several critiques may run at once from that one checkout, each with its own
-  scratch directory (2026-10-14).
+  scratch directory (2026-10-14). A detached checkout is outside a claimed
+  lane, so each critique's log spools under the primary checkout's
+  `out/sessions/spool/` and nothing is committed there.
   The rendered brief tells a critic in coordinator use to commit its
   verdict: append a line naming the verdict path and saying to commit
   nothing and change no file in the checkout. Confirming rounds can run
@@ -251,7 +285,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   3. Critique:
      `"$PY" "$SCRIPTS/review_brief.py" critique --plan --wi WI-NNN --sha <plan commit> --rubric docs/rubrics/plan-decomposition.md --scratch <dated root> --out <brief>`
      (it runs the coverage step itself and refuses a failing plan), then
-     `bash "$TOOLS/sol_review.sh" <lane> <brief> <out>`. Each round has its
+     `"$PY" "$TOOLS/codex_call.py" CRITIQUE --root <lane> --prompt-file <brief> --out <out>`. Each round has its
      own verdict path, `WI-NNN-plan-critique-<n>.md`. Append one line to
      every critique brief naming that path and saying to commit nothing,
      run no `plan-file` and change no file in the checkout: with it, eleven
@@ -261,7 +295,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   4. File: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --critique <verdict> --sha <plan commit>`
      writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone. The
      critic may file it first: Sol ran `plan-file` in the lane and tried to
-     commit (WI-911, 2026-10-15; the launcher exits 3). Move its copy
+     commit (WI-911, 2026-10-15; the entry point exits 3). Move its copy
      aside, file the verdict yourself, and compare the two. Never rebase
      the lane between a critique's verdict and its filing: filing needs
      the reviewed commit to be an ancestor of HEAD, so a rebase orphans it
@@ -995,11 +1029,15 @@ lane commit being replayed.
   when using Codex with a ChatGPT account` from a current CLI (2026-10-10:
   0.162.x refused `gpt-6.1-sol`) means the account, not the CLI version.
   Read the offered models from `~/.codex/models_cache.json` (`models[].slug`,
-  read as UTF-8), then probe with a one-word `codex exec -m gpt-6.1-sol`
-  call: the cache listed it and it worked again on 2026-10-10 at 22:40
-  local (leg 02). While it is not offered, review with `gpt-6-luna` at high
-  through `"$TOOLS/luna_review.sh"` (coordinator-2026-10-10 D-017, pending
-  the owner) and record the substitution in every lane's decisions record.
+  read as UTF-8), then probe with a one-word `CRITIQUE` call from the
+  detached checkout
+  (`"$PY" "$TOOLS/codex_call.py" CRITIQUE --root "$REPO.wt/trunk-tmp" --prompt-file <one-word prompt> --out <out>`;
+  its log spools): the cache listed it and it worked again on 2026-10-10
+  at 22:40 local (leg 02). While it is not offered, review through the
+  same entry point with `--route <the enabled Luna row>` at
+  `--effort high` (coordinator-2026-10-10 D-017, pending the owner); the
+  model is that row's. Record the substitution in every lane's decisions
+  record.
 - **Codex usage limit:** wait for the reset the CLI error names. Retain
   Terra; observed session counts are not a quota.
   Every Codex call runs through the `codex` CLI on `PATH`; the owner switches

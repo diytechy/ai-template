@@ -3,13 +3,24 @@ id = "WI-960"
 title = "Sol and Terra calls go through the session service: the change check runs between the call and its record, another call's session-log commit is not an edit, and a call outside a claimed lane records its log in the spool and commits nothing"
 workstream = "process"
 sr_refs = ["SR-222"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#8-record-usage-for-every-model-call-sub-agents-included"
+specref = ""
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["~WI-957"]
 +++
+
+## Deliverable
+
+Landed by headless leg 12 of loop session `20261021T045653Z-213020`, squashed from lane `wi-960`.
+
+- **The route.** `scripts/coordinator/codex_call.py` is the one launch path for a Sol review, a Sol critique (scope or plan) and a Terra turn (roles `REVIEW-A`, `CRITIQUE`, `AUTHOR`). It resolves the role's enabled roster row, launches under its declared template through the session service's `call` (one seam between `act` and `record`), runs the change check between the call and its record, records the log, and exits 0 to 5 (refused before launch, an edit, an uncommitted or unspooled log, a check that could not run). An `AUTHOR` turn names one of the lane's work items; `--resume` continues the thread of the lane's newest committed `AUTHOR` log, chosen by its name's stamp, and refuses a missing, damaged, foreign or newer-uncommitted carrier before launch.
+- **The change check.** It compares HEAD, the status with each path's index state and content identity, and the commit range before and after the call. A commit that only adds standard-call logs (another call's record) is discounted, and so is such a log left uncommitted; anything else is an edit for Sol, and uncommitted changes are Terra's output.
+- **The spool.** `session_service.record` commits a log only from a claimed lane (a linked worktree whose branch's or trunk's tree holds its claim; an unreadable claim read adds no claim). From any other root it writes the log under the primary checkout's `out/sessions/spool/` and commits nothing, and it reports `committed`, `spooled` or the refusal. The shipped `.gitignore` template ignores `out/sessions/`.
+- **Text.** The coordinator-cycle skill and recipes launch every Sol and Terra call through the route (three copies byte-identical), with the headless launch order (REVIEW-B before REVIEW-A); `sol_review.sh`, `terra_author.sh`, `luna_review.sh` and `layout.sh` are retired; Flow 7 in the runtime flows.
+- **Spine.** SR-243 (derived), LLR-346, TC-384 and TC-385 approved (act seq 152); LLR-269, LLR-270, TC-265 and TC-268 re-attested (act seq 151); sitting 006 (`docs/reviews/wi-960/006-ADJUDICATE-91aae34.md`). Reviews: counted rounds 1 and 2 and the gate (`docs/reviews/wi-960/001` to `008`); decisions `docs/decisions/wi-960.toml` D-001 to D-016.
+- **Live runs.** Sol reviews and Terra's checkpoint and resumed turns ran through the lane's route, their logs committed in the lane; WI-850's scope critique spooled from the detached checkout.
 
 ## Context
 
@@ -44,7 +55,10 @@ reason. **Ruling drafted here:** a call whose root is not a claimed lane
 (the primary checkout, a detached HEAD, or a branch with no claim under
 `docs/work/active/<branch>/`, the predicate `lane_refusal` already states)
 writes its session log into the spool, `out/sessions/spool/` under the
-primary checkout (`session_keep.primary_out_dir`), and commits nothing. It
+primary checkout (`session_keep.primary_out_dir`), and commits nothing. A linked worktree whose branch has moved its claim out
+under close-first while trunk's committed tree still holds it is a lane:
+its final verdict round's REVIEW session log is the integrator's gate
+evidence, which must commit on the branch. It
 is the spool WI-788's design gives WI-800 (ch.2 §6; ch.4 §3, "Keep-warm and
 trunk-rooted session logs"). This row builds only its write side; WI-800
 keeps the harvest ("spooled logs land exactly once; a spooled entry is
@@ -130,7 +144,11 @@ capability voice: no file, module or path in a requirement cell (ruling 5).
    A `record` whose telemetry commit is refused (index lock, hook veto)
    reports it to its caller (`commit_telemetry` already returns the refusal
    text). The coordinator entry point then exits nonzero, naming the
-   uncommitted log, never 0 with the log left dangling.
+   uncommitted log, never 0 with the log left dangling. The shipped
+   `.gitignore` template ignores the spool directory (`out/sessions/`), as
+   it names the loop's other runtime files under `out/`, so a spooled log
+   never reads as an uncommitted change on an adopter's primary checkout,
+   whose status the dispatcher's claims and keep-warm's records read.
 5. **Text.** `coordinator-cycle` recipes §1 (Terra first turn and resumed;
    the review, critique and plan-critique launches; "note the session id
    line") and SKILL Roles, all three copies byte-identical
@@ -197,9 +215,12 @@ its Trust. Written under [PROCESS.md §3, "When a guard is owed"](../../../../pr
   consumer above reads a `call_` log as a round or a build. A hand-made
   commit under that name and sub-second races are outside the promise.
 - **Ruling, at `record`'s out-of-lane arm:** a root whose lane-ness cannot
-  be read (git's worktree records unreadable) is treated as not a lane, so
+  be read (git's worktree records unreadable) is treated as not a lane. A
+  claim read that is unreadable (the branch's tree or trunk's) adds no
+  claim, so a root that neither readable tree shows claimed is not a lane:
   the log goes to the spool and nothing is committed. That is the direction
-  that never writes to trunk. A spool directory that cannot be created or
+  that never writes to trunk, and a lane whose trunk side cannot be read
+  (no trunk declared) still commits its gate evidence on its own branch. A spool directory that cannot be created or
   written raises, and the call is reported failed to record. The log is
   never dropped silently and never committed elsewhere.
 - **Ruling, at Terra's resume reader** (Deliverable 2). The carrier is
@@ -363,3 +384,29 @@ the lane's HEAD", and Trust's "Ruling, at Terra's resume reader" states its
 producer and write route, its failed writes, its reader (the entry point's
 resume arm, reading committed logs at HEAD), its binding (branch, role and
 route id) and the refusal for each bad input.
+
+Plan amendment (the plan's P0, 2026-10-22, before the tests): the plan
+critique's F1 is confirmed. Read literally, Settlement 1's "a branch with
+no claim under `docs/work/active/<branch>/`" makes every loop lane that
+closed first (its claim moved out on the branch while trunk's committed
+tree still holds it) a non-lane at its final verdict round, so that
+round's REVIEW session log, the integrator's gate evidence, would go to
+the spool and every loop lane's merge would be refused. Settlement 1 now
+names that worktree a lane, and Trust's out-of-lane ruling adds that any
+unreadable claim read decides "not a lane". Done-when is unchanged, and
+D7's three spool cases stand as written.
+
+Confirming round of the plan amendment (Codex Sol, medium, convergence
+stance, 2026-10-22): APPROVE, findings=0. The build proceeds from P1.
+
+Lane amendment (wi-960 D-006, 2026-10-22, outside the Done-when): P3's
+build found that the shipped `.gitignore` template does not ignore the
+spool, so a stock scaffold's first spooled log dirties its primary
+checkout. Deliverable 4 now states the template line; the lane adds it with
+a regression test, and the RESYNC entry tells adopters to add it.
+
+Lane amendment (wi-960 D-009, 2026-10-22, outside the Done-when): round 1
+found that Trust's out-of-lane ruling, read literally ("whose claim read is
+unreadable"), would spool every claimed lane's gate log where no trunk is
+declared, while the plan's decision 3 and the code read an unreadable claim
+read as adding no claim. The ruling now states that rule.

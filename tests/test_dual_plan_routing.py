@@ -15,7 +15,7 @@ The kit's own DP-001 ran a plain-text, routing-off template, so neither fired in
 the kit's tests — this file closes that coverage gap.
 """
 
-from conftest import hooked_checkout, load_script
+from conftest import claimed_lane, fixture_git, hooked_checkout, load_script
 import json
 import datetime
 from types import SimpleNamespace
@@ -36,10 +36,10 @@ def hooked(tmp_path):
     return hooked_checkout(tmp_path)
 
 
-@pytest.mark.usefixtures("hooked")
 def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypatch):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     common = pr.session_service.agent_common
-    docs = tmp_path / "docs"
+    docs = root / "docs"
     logs = docs / "iteration"
     old = common.write_session_log(
         logs, {"session": "002", "stamp": "old", "date": "2026-09-05 10:00"}, "legacy"
@@ -57,7 +57,7 @@ def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypa
         pr.session_service, "run_session", lambda *a, **k: (0, "plan result", False)
     )
     assert pr._dp_session(
-        "tool", "m", "prompt", tmp_path, 1, attribution={"role": "CRITIQUE"}
+        "tool", "m", "prompt", root, 1, attribution={"role": "CRITIQUE"}
     )[0]
     planner = next(logs.glob("call_*.log"))
     row = common.read_log_meta(planner)
@@ -71,10 +71,10 @@ def test_planner_logs_coexist_with_worker_numbering_and_index(tmp_path, monkeypa
     assert all(path.name in index for path in (old, worker, planner))
 
 
-@pytest.mark.usefixtures("hooked")
 def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
     tmp_path, monkeypatch
 ):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     transcript = json.dumps(
         {
             "type": "result",
@@ -95,11 +95,11 @@ def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
     for _ in range(2):
         assert (
             pr._dp_session(
-                "tool", "requested", "prompt", tmp_path, 1, attribution=attribution
+                "tool", "requested", "prompt", root, 1, attribution=attribution
             )[0]
             is False
         )
-    logs = list((tmp_path / "docs" / "iteration").glob("*.log"))
+    logs = list((root / "docs" / "iteration").glob("*.log"))
     assert len(logs) == 2
     rows = [pr.session_service.agent_common.read_log_meta(p) for p in logs]
     assert len({row["invocation-id"] for row in rows}) == 2
@@ -116,6 +116,32 @@ def test_failed_planning_invocations_keep_attribution_and_unknown_usage(
     # Rereading a retained result cannot create another invocation or log.
     assert pr.session_service.agent_common.read_log_meta(logs[0]) == rows[0]
     assert len(list(logs[0].parent.glob("*.log"))) == 2
+
+
+def test_a_hat_rooted_at_the_primary_checkout_spools_its_log(tmp_path, monkeypatch):
+    """A dual-plan round run from the primary checkout records each hat there,
+    and the primary is never a lane (WI-960): the hat's log goes to the
+    primary's spool, nothing is committed and trunk's HEAD does not move."""
+    claimed_lane(tmp_path)
+    primary = tmp_path / "primary"
+    head = fixture_git(primary, "rev-parse", "HEAD")
+    committed = []
+    monkeypatch.setattr(
+        pr.session_service.agent_common,
+        "commit_telemetry",
+        lambda *a, **k: committed.append(1),
+    )
+    monkeypatch.setattr(
+        pr.session_service, "run_session", lambda *a, **k: (0, "plan result", False)
+    )
+    assert pr._dp_session(
+        "tool", "m", "prompt", primary, 1, attribution={"role": "CRITIQUE"}
+    )[0]
+    assert committed == []
+    assert list((primary / "docs" / "iteration").glob("*.log")) == []
+    (log,) = pr.session_service.spool_dir(primary).glob("call_*.log")
+    assert pr.session_service.agent_common.read_log_meta(log)["role"] == "CRITIQUE"
+    assert fixture_git(primary, "rev-parse", "HEAD") == head
 
 
 # Two strong rows in different families so planner_pair can route a real pair.

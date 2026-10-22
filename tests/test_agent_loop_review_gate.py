@@ -29,6 +29,7 @@ from types import SimpleNamespace
 import pytest
 from conftest import (
     SCRIPTS,
+    claim_on_branch,
     declare_review_bar,
     declare_trunk,
     hooks_on,
@@ -185,7 +186,9 @@ def _lane(tmp_path, rows=None):
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    lane = lane_checkout(repo, TRAIN)
+    # The worker records from its claimed lane (WI-960); `_configure` moves
+    # trunk to the lane's tip, so the claim rides the branch.
+    lane = claim_on_branch(lane_checkout(repo, TRAIN))
 
     ctl = tmp_path / "control"
     ctl.mkdir()

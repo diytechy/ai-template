@@ -1602,20 +1602,35 @@ def write_session_log(iter_dir, meta, transcript):
     return path
 
 
+def log_meta_text(text):
+    """`(meta, terminated)` of one session log's `# key: value` metadata
+    header: the fields read up to the `# ---` terminator or the first line
+    that is not a header line, and whether the terminator was reached (a log
+    whose write was cut short has none). `text` is the log's text or an
+    iterable of its lines (an open file is read only as far as its header).
+    The one header grammar: `read_log_meta` reads through it.
+
+    Implements: SR-243, LLR-346
+    """
+    meta = {}
+    for line in text.splitlines() if isinstance(text, str) else text:
+        if line.startswith("# ---"):
+            return meta, True
+        if not line.startswith("#"):
+            break
+        m = re.match(r"#\s*([\w.-]+):\s*(.*)", line)
+        if m:
+            meta[m.group(1)] = m.group(2).strip()
+    return meta, False
+
+
 def read_log_meta(path):
     """Parse the `# key: value` metadata header of one session log."""
-    meta = {}
     try:
         with open(str(path), encoding="utf-8", errors="replace") as fh:
-            for line in fh:
-                if not line.startswith("#") or line.startswith("# ---"):
-                    break
-                m = re.match(r"#\s*([\w.-]+):\s*(.*)", line)
-                if m:
-                    meta[m.group(1)] = m.group(2).strip()
+            return log_meta_text(fh)[0]
     except OSError:
-        pass
-    return meta
+        return {}
 
 
 def per_turn_pace(meta):
@@ -1878,6 +1893,18 @@ def worktree_records(root):
     if path is not None:
         records.append((path, branch))
     return records
+
+
+def worktree_index(records, root):
+    """The index of `root` among git's worktree records (0 is the primary
+    checkout), or None when it is not the top of one. Shared by the
+    adjudicator's lane check and the session service's lane reading, so the
+    two cannot disagree on which checkout is the primary."""
+    want = os.path.normcase(str(Path(root).resolve()))
+    for index, (path, _branch) in enumerate(records):
+        if path and os.path.normcase(str(Path(path).resolve())) == want:
+            return index
+    return None
 
 
 def primary_worktree_root(root):

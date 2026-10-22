@@ -9493,6 +9493,47 @@ another `supersedes`; the sweep now stops on each, naming the file or rows.
 `prompts/adjudicate-disposition.template.md`, `prompts/CATALOG.md`,
 `registries/work-items.template.csv`, and `work/WI-000.template.md`.
 
+### `record` spools a session log outside a claimed lane [since c06a7e101]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The session service's `record` commits a call's session
+log only when the call's root is a claimed lane: a linked worktree whose
+branch's committed tree holds a claim under `docs/work/active/<branch>/`,
+or whose branch has closed that claim while trunk's committed tree still
+holds it (a lane closed first and not yet merged). From any other root (the
+primary checkout on any branch, a detached checkout, a branch neither
+readable tree shows claimed, or a root whose worktree records cannot be
+read; a claim read that fails adds no claim, so a lane whose own tree
+shows its claim still commits when trunk's read fails or no trunk is
+declared) it writes the log into the spool,
+`out/sessions/spool/` under the primary checkout, and commits nothing. The
+rule is derived from the root; no caller selects it. A spool that cannot be
+written raises. `record` takes an optional caller-owned `report` dict,
+filled with the log's path and whether it was spooled, committed, or its
+commit refused (with the refusal text), so a refused telemetry commit is no
+longer silent. `Call` gains `resume`, a thread id an unretained call
+resumes. `call` takes two optional keyword arguments: `between`, a callable
+run with the call's Outcome (None when the launch raised) after the launch
+and before the log is written, and `report`, handed to `record`; a caller
+passing neither behaves as before. Spooled logs are complete but machine-local until a harvest lands
+them. The shipped `.gitignore` template (`gitignore.template`) gains
+`out/sessions/`, the spool's directory.
+
+**What to do.** This is a forced migration only if you relied on telemetry
+commits landing on trunk: calls rooted at the primary checkout, a detached
+checkout or an unclaimed branch now leave their logs in the spool. That
+includes attended serial work on the primary checkout, the keep-warm pings,
+an `--interactive` sitting, the recovery probe and dual-plan hats rooted
+there. Workers in claimed linked worktrees, closed-but-unmerged ones
+included, and the adjudicator commit as before. Add `out/sessions/` to
+your `.gitignore` (unless you already ignore all of `out/`): otherwise the
+first spooled log is an untracked file on the primary checkout, which the
+dispatcher reads as a dirty trunk.
+
+**Kit-owned files — overwrite:** `scripts/session_service.py`,
+`scripts/agent_common.py` and `scripts/coordinator_adjudicate.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

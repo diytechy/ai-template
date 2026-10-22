@@ -278,3 +278,46 @@ sequenceDiagram
         end
     end
 ```
+
+### Flow 7 — A coordinator codex call (SR-243, SR-222, LLR-346, LLR-269)
+
+A Sol review or critique, or a Terra turn, starts from the coordinator's entry
+point and goes through the one session service. The change check sits between
+the call and its record, because the record's own commit moves the lane's HEAD;
+where the log goes is read from the root, never chosen by the caller.
+
+```mermaid
+sequenceDiagram
+    participant Coord as coordinator codex entry point (LLR-346)
+    participant Root as the call's root (a lane or another checkout)
+    participant Svc as session service (LLR-269)
+    participant Model as codex model session
+    participant Spool as primary checkout's session spool
+    Coord->>Coord: resolve the role's enabled row and the launch template
+    opt a resumed Terra turn
+        Coord->>Root: read the lane's newest committed Terra log at HEAD
+    end
+    alt unknown role, unreadable prompt, unusable route, or bad resume carrier
+        Coord-->>Coord: refused before launch (exit 2), nothing launched
+    else launchable
+        Coord->>Root: snapshot HEAD and uncommitted paths
+        Coord->>Svc: act
+        alt inside the blackout window, or commit hooks off
+            Svc-->>Coord: refused before launch (exit 2), nothing recorded
+        else launched
+            Svc->>Model: launch, prompt on stdin
+            Model-->>Svc: final text and usage
+            Svc-->>Coord: outcome
+            Coord->>Root: snapshot again, read the commits between (SR-243)
+            Note over Coord,Root: another call's commit that only adds standard-call logs is not an edit
+            Coord->>Svc: record the outcome, even after an edit
+            alt the root is a claimed lane
+                Svc->>Root: commit the call log
+            else the primary checkout, a detached checkout, an unclaimed branch
+                Svc->>Spool: write the call log, commit nothing
+            end
+            Svc-->>Coord: committed, spooled, or the refusal
+            Coord-->>Coord: exit 5 check could not run, 3 edit, 4 log unrecorded, 1 failed, else 0
+        end
+    end
+```

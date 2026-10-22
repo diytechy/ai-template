@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 312
+design_rows = 313
 seam_rows = 251
-requirements_placed = 128
+requirements_placed = 129
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -661,6 +661,7 @@ sr_refs = [
   "SR-240",
   "SR-241",
   "SR-242",
+  "SR-243",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -785,6 +786,7 @@ llr_refs = [
   "LLR-343",
   "LLR-344",
   "LLR-345",
+  "LLR-346",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -868,6 +870,7 @@ modules = [
   "project-trajectory/scripts/trunk_step.py",
   "scripts/coordinator-relaunch.cmd",
   "scripts/coordinator-relaunch.sh",
+  "scripts/coordinator/codex_call.py",
   "scripts/coordinator/overnight_legs.py",
   "scripts/dev-setup.ps1",
   "scripts/dev-setup.sh",

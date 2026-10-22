@@ -2297,9 +2297,9 @@ notes = """source - the module imports no kit sibling; the only files it touches
 [interface.IF-246]
 rationale = """Every role that makes a model call needs the same launch, accounting and record, and a role that keeps its own copy of any of them drifts: a usage fix lands in one path and not the others. One service owns the call and its record, and a role hands it only the data it differs by."""
 owner = "scripts/session_service"
-requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch"]
+requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch", "scripts/coordinator/codex_call"]
 channel = "call"
-data = "Call (including wi), Outcome; act/call -> Outcome or BlackoutRefused or HooksOffRefused; through_blackout(launch) -> Outcome; record -> path; call_succeeded(outcome) -> bool; keep plan, version, warmer and route_runner(entry)"
+data = "Call (including wi and resume), Outcome; act -> Outcome or BlackoutRefused or HooksOffRefused; call(between, report) -> Outcome; through_blackout(launch) -> Outcome; record(report) -> path; spool_dir(root); lane_branch(root); lane_wis(root); is_call_log(name) -> bool; record writes to the primary spool without a commit outside a claimed lane and reports whether its log was spooled, committed, or refused; call_succeeded(outcome) -> bool; keep plan, version, warmer and route_runner(entry)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2537,7 +2537,7 @@ notes = """No tie-back: a coordinator reads this local command result in its own
 [interface.IF-282]
 rationale = "The loop and coordinator need one request shape for the retention plan; if either assembled its own inputs, a retained session could be judged under a different template identity or lease. The sign-in reading belongs beside that plan because refusal must happen before it changes retained state."
 owner = "scripts/session_service"
-requestors = ["scripts/agent_loop", "scripts/coordinator_adjudicate"]
+requestors = ["scripts/agent_loop", "scripts/coordinator_adjudicate", "scripts/coordinator/codex_call"]
 channel = "call"
 data = "AdjudicationRequest(route, scope, account); route_runner(entry); prepare_launch(root, row, account) -> Prepared; launch_env/entry_env; cli_version; compose_env; probe_env; refuse_competing; launch_credential(account); signin_status(root, account); require_signin"
 version = "v1"

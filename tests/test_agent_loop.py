@@ -17,10 +17,12 @@ import os
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 from conftest import (
     declare_trunk,
+    relocate_as_lane,
     hooks_on,
     SCRIPTS,
     augment_env,
@@ -220,6 +222,8 @@ def loop_repo(tmp_path):
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
     _git(repo, "checkout", "-q", "-b", "llm/train/t1")
+    # A worker records from its claimed lane, a linked worktree (WI-960).
+    relocate_as_lane(repo)
     ctl = tmp_path / "control"
     ctl.mkdir()
     fake = tmp_path / "fake_agent.py"
@@ -1321,7 +1325,8 @@ def test_telemetry_commit_is_best_effort_when_the_hook_vetoes(loop_repo):
     # the loop keeps going. Simulate with a hook that always fails; noop sessions
     # never make a work commit, so only the telemetry commit meets the veto.
     repo, ctl, template = loop_repo
-    hook = repo / ".githooks" / "pre-commit"  # the hooks `hooks_on` turned on
+    # The hooks `hooks_on` turned on, which the lane reads from its primary.
+    hook = Path(_git(repo, "config", "core.hooksPath")) / "pre-commit"
     hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
     hook.chmod(0o755)
     (ctl / "actions.txt").write_text("noop noop", encoding="utf-8")

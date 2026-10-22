@@ -637,6 +637,27 @@ def test_a_root_outside_any_repository_is_refused(
     assert launched["argv"] == []
 
 
+def test_lane_refusal_is_unchanged_by_the_shared_worktree_index(tmp_path):
+    """The worktree index moves to `agent_common` beside the records it reads
+    (WI-960 P3), shared with the session service's lane reading, and
+    `lane_refusal`'s five cases read exactly as before."""
+    shared = getattr(cli.agent_common, "worktree_index", None)
+    assert callable(shared), "agent_common has no shared worktree_index"
+    assert not hasattr(cli, "_worktree_index"), "a second copy of the reader"
+    primary, lane = _lane(tmp_path / "repo")
+    records = cli.agent_common.worktree_records(lane)
+    assert (shared(records, primary), shared(records, lane)) == (0, 1)
+    assert shared(records, tmp_path) is None
+    detached, scratch = tmp_path / "detached", tmp_path / "scratch"
+    _git(primary, "worktree", "add", "--detach", str(detached), "HEAD")
+    _git(primary, "worktree", "add", "-b", "scratch", str(scratch), "HEAD")
+    assert cli.lane_refusal(lane) is None
+    assert "primary checkout" in cli.lane_refusal(primary)
+    assert "detached HEAD" in cli.lane_refusal(detached)
+    assert "no claim" in cli.lane_refusal(scratch)
+    assert "not the top of a git worktree" in cli.lane_refusal(lane / "docs")
+
+
 # --- round 2 (Sol r1): a stale verdict never reads as success (TC-321) ----------
 
 

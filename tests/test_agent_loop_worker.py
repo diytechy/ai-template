@@ -36,7 +36,9 @@ from conftest import (
     declare_trunk,
     hooks_on,
     env_gate_skipif,
+    claim_on_trunk,
     lane_checkout,
+    relocate_as_lane,
     SCRIPTS,
     load_script,
     pin_autocrlf,
@@ -349,6 +351,7 @@ def test_worker_brief_resolves_close_commands_at_the_runtime_scripts_path(tmp_pa
 
 def test_worker_builds_assignment_and_exits_done(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path)
+    relocate_as_lane(repo)  # a worker records from its claimed lane (WI-960)
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
     assert "worker t1 [WI-201]: DONE" in proc.stdout
@@ -376,6 +379,7 @@ def test_worker_builds_assignment_and_exits_done(tmp_path):
 
 def test_worker_multi_wi_assignment_builds_in_order(tmp_path):
     repo, base, ctl, fake = _setup(tmp_path, wis=("WI-201", "WI-204"))
+    relocate_as_lane(repo)  # a worker records from its claimed lane (WI-960)
     proc = _worker(repo, fake, ctl, "--wi", "WI-201;WI-204", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
     prompt = (ctl / "prompts.txt").read_text(encoding="utf-8")
@@ -448,6 +452,9 @@ def test_two_concurrent_workers_write_non_colliding_evidence(tmp_path):
     wt2 = tmp_path / "wt2"
     _git(repo, "worktree", "add", str(wt1), "llm/train/t1")
     _git(repo, "worktree", "add", str(wt2), "llm/train/t2")
+    # Each worker records from its claimed lane (WI-960).
+    claim_on_trunk(wt1, "WI-8")
+    claim_on_trunk(wt2, "WI-9")
     fake = tmp_path / "fake_worker.py"
     fake.write_text(FAKE_WORKER, encoding="utf-8")
     ctl1, ctl2 = tmp_path / "c1", tmp_path / "c2"

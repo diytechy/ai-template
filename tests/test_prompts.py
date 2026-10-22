@@ -376,6 +376,60 @@ def test_coordinator_cycle_states_the_red_round_cap_citing_the_key():
     assert "Close a lane partial" in flat
 
 
+CYCLE_COPIES = tuple(
+    base / "coordinator-cycle"
+    for base in (
+        KIT / "skills",
+        ROOT / ".claude" / "skills",
+        ROOT / ".agents" / "skills",
+    )
+)
+
+
+def test_the_cycle_says_sol_and_terra_calls_are_refused_in_the_blackout_window():
+    # Pins WI-960's Done-when item on the coordinator-cycle skill text: the
+    # skill's roles and its recipes name the entry point every Sol and Terra
+    # call runs through, and say the blackout window refuses those calls
+    # before launch. test_skills_sync keeps the copies byte-identical.
+    # Adequacy witness: a cycle that still launches through the shell
+    # wrappers never names the entry point or the refusal.
+    cycle = KIT / "skills" / "coordinator-cycle"
+    for name in ("SKILL.md", "references/recipes.md"):
+        text = (cycle / name).read_text(encoding="utf-8")
+        flat = " ".join(text.replace("*", "").split()).casefold()
+        assert "codex_call.py" in flat, name
+        assert (
+            "inside the blackout window, a sol or terra call is refused before launch"
+            in flat
+        ), name
+
+
+_RETIRED_LAUNCHERS = ("sol_review", "terra_author", "luna_review")
+_SOL_OR_TERRA = ("gpt-6.1-sol", "gpt-5.6-terra", "resume")
+
+
+def test_no_recipe_launches_sol_or_terra_outside_the_entry_point():
+    # Pins WI-960's Done-when item: no recipe or skill text launches `codex
+    # exec` for Sol or Terra, or a resume, outside the entry point, and none
+    # names a retired shell launcher, in any of the three skill copies.
+    # Adequacy witness: the hand-typed `codex exec resume <id>` recipe or a
+    # `sol_review.sh` launch line left in place is named here.
+    found = []
+    for copy in CYCLE_COPIES:
+        for path in sorted(copy.rglob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            spans = re.findall(r"`[^`]*`", text) + text.splitlines()
+            for span in spans:
+                if "codex exec" in span and any(w in span for w in _SOL_OR_TERRA):
+                    found.append("{}: {}".format(path, span.strip()))
+            found += [
+                "{}: {}".format(path, name)
+                for name in _RETIRED_LAUNCHERS
+                if name in text
+            ]
+    assert found == []
+
+
 def test_the_terra_brief_has_an_intent_form_before_build_round_1():
     # The spine author's brief serves the intent turn, before any build, as
     # well as the checkpoint: at intent it presumes no built code, no change

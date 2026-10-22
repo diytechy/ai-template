@@ -11,15 +11,19 @@ recorded 2026-09-28, the codex and opencode ones 2026-09-30, WI-541).
 import ast
 import json
 import re
+import uuid
 from pathlib import Path
 
 import pytest
 
-from conftest import SCRIPTS, hooked_checkout, load_script
+from conftest import KIT, ROOT, SCRIPTS, claimed_lane, hooked_checkout, load_script
+from kitlib import verdict as kverdict
 
 svc = load_script("session_service")
 adapters = load_script("session_adapters")
 common = load_script("agent_common")
+keep = svc.session_keep
+GATE_LOG_RE = kverdict.SESSION_LOG_RE
 
 GOLDEN = Path(__file__).parent / "golden" / "sessions"
 PINNED = "e57c543b4889619eb2a05702471937db5119165d"
@@ -272,15 +276,15 @@ def test_a_runner_exception_is_accounted_then_reraised(tmp_path):
 # --- record: one writer (TC-265) ------------------------------------------------
 
 
-@pytest.mark.usefixtures("hooked")
 def test_call_records_one_log_with_the_usage_record_and_the_raw_stream(
     tmp_path, monkeypatch
 ):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     committed = []
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
     stream = _fixture("claude-stream-json.jsonl")
     call = svc.Call(
-        root=tmp_path,
+        root=root,
         role="PROBE",
         template="claude -p --model {model}",
         model="sonnet",
@@ -289,7 +293,7 @@ def test_call_records_one_log_with_the_usage_record_and_the_raw_stream(
         runner=_runner(stream),
     )
     out = svc.call(call)
-    logs = list((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    logs = list((root / "docs" / "iteration").glob("call_*.log"))
     assert len(logs) == 1 and len(committed) == 1
     row = common.read_log_meta(logs[0])
     assert row["outcome"] == "COMPLETED" and row["phase"] == "PROBE"
@@ -303,10 +307,10 @@ def test_call_records_one_log_with_the_usage_record_and_the_raw_stream(
     assert '"type":"assistant"' in logs[0].read_text(encoding="utf-8")
 
 
-@pytest.mark.usefixtures("hooked")
 def test_a_ctrl_c_in_an_attached_sitting_persists_a_complete_record(
     tmp_path, monkeypatch
 ):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     committed = []
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
 
@@ -314,7 +318,7 @@ def test_a_ctrl_c_in_an_attached_sitting_persists_a_complete_record(
         raise KeyboardInterrupt
 
     call = svc.Call(
-        root=tmp_path,
+        root=root,
         role="INTERACTIVE",
         template="agent",
         model="m",
@@ -323,7 +327,7 @@ def test_a_ctrl_c_in_an_attached_sitting_persists_a_complete_record(
     )
     with pytest.raises(KeyboardInterrupt):
         svc.call(call)
-    logs = list((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    logs = list((root / "docs" / "iteration").glob("call_*.log"))
     assert len(logs) == 1 and committed
     header = logs[0].read_text(encoding="utf-8")
     assert "# outcome: INTERRUPTED" in header
@@ -331,40 +335,77 @@ def test_a_ctrl_c_in_an_attached_sitting_persists_a_complete_record(
     assert "# wall-secs: \n" not in header and "# ended-at: \n" not in header
 
 
-@pytest.mark.usefixtures("hooked")
+def test_call_runs_the_callers_seam_between_act_and_record(tmp_path, monkeypatch):
+    """`call(between=..., report=...)`: the caller's seam runs after `act`
+    and before the log is written, given the Outcome (None when the launch
+    raised), and the record's report is filled for the caller; an
+    interrupted call still runs the seam and is recorded INTERRUPTED.
+    Adequacy witness: a seam run after the record, or skipped when the
+    launch raised, sees a log or no call here."""
+    lane = claimed_lane(tmp_path)
+    committed = []
+    monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
+    iter_dir = lane / "docs" / "iteration"
+    seen = []
+
+    def between(outcome):
+        seen.append((outcome, _call_logs(iter_dir)))
+
+    report = {}
+    out = svc.call(_plain_call(lane), between=between, report=report)
+    assert len(seen) == 1 and seen[0][0] is out and seen[0][1] == []
+    assert report["committed"] and report["path"] in _call_logs(iter_dir)
+
+    def interrupted(*_args, **_kwargs):
+        raise KeyboardInterrupt
+
+    seen.clear()
+    report = {}
+    call = svc.Call(
+        root=lane, role="CRITIQUE", template="agent", model="m", runner=interrupted
+    )
+    with pytest.raises(KeyboardInterrupt):
+        svc.call(call, between=between, report=report)
+    assert len(seen) == 1 and seen[0][0] is None
+    header = Path(report["path"]).read_text(encoding="utf-8")
+    assert "# outcome: INTERRUPTED" in header
+    assert len(committed) == 2
+
+
 def test_provider_metadata_cannot_inject_log_headers(tmp_path, monkeypatch):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture([]))
     payload = "provider\n# outcome: COMPLETED"
     stream = json.dumps({"type": "result", "session_id": payload, "model": payload})
     call = svc.Call(
-        root=tmp_path, role="BUILD", template="agent", runner=_runner(stream, code=1)
+        root=root, role="BUILD", template="agent", runner=_runner(stream, code=1)
     )
     svc.call(call)
-    (log,) = (tmp_path / "docs" / "iteration").glob("call_*.log")
+    (log,) = (root / "docs" / "iteration").glob("call_*.log")
     row = common.read_log_meta(log)
     assert row["outcome"] == "ERROR"
     assert row["session-id"] == payload.replace("\n", "\\n")
 
 
-@pytest.mark.usefixtures("hooked")
 def test_the_worker_record_takes_the_callers_row_and_the_raw_stream_file(
     tmp_path, monkeypatch
 ):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     committed = []
     monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
-    out = _act(tmp_path, "agent", json.dumps({"type": "result", "result": "ok"}))
+    out = _act(root, "agent", json.dumps({"type": "result", "result": "ok"}))
     meta = {"session": "007", "stamp": "s", "outcome": "COMPLETED", "phase": "BUILD"}
     path = svc.record(
         out,
         meta,
-        iter_dir=tmp_path / "logs",
-        raw_dir=tmp_path / "raw",
+        iter_dir=root / "logs",
+        raw_dir=root / "raw",
         raw_name="007-s.log",
         label="BUILD COMPLETED",
         session="t007",
     )
-    assert path.parent == tmp_path / "logs"
-    assert (tmp_path / "raw" / "007-s.log").read_text(encoding="utf-8") == out.stream
+    assert path.parent == root / "logs"
+    assert (root / "raw" / "007-s.log").read_text(encoding="utf-8") == out.stream
     row = common.read_log_meta(path)
     assert row["session"] == "007" and row["invocation-id"]
     assert committed[0][1:3] == ("t007", "BUILD COMPLETED")
@@ -375,6 +416,232 @@ def _capture(sink):
         sink.append((root, session, label, paths))
 
     return commit
+
+
+# --- record: where the log goes, and what the caller is told (TC-265, TC-384) ----
+
+
+def _spool(root):
+    return keep.primary_out_dir(root) / "sessions" / "spool"
+
+
+def _call_logs(directory):
+    return sorted(Path(directory).glob("call_*.log"))
+
+
+def _plain_call(root, stream=None):
+    return svc.Call(
+        root=root,
+        role="CRITIQUE",
+        template="agent",
+        model="m",
+        runner=_runner(stream or json.dumps({"type": "result", "result": "ok"})),
+    )
+
+
+@pytest.mark.usefixtures("hooked")
+def test_a_call_outside_a_lane_spools_its_log_and_commits_nothing(
+    tmp_path, monkeypatch
+):
+    """The primary checkout is never a lane: its log goes to the primary's
+    spool and nothing is committed, by `call` and by `record` alike."""
+    committed = []
+    monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
+    svc.call(_plain_call(tmp_path))
+    assert _call_logs(tmp_path / "docs" / "iteration") == []
+    assert len(_call_logs(_spool(tmp_path))) == 1
+    out = svc.act(_plain_call(tmp_path))
+    report = {}
+    path = svc.record(out, svc._call_row(out.metrics, "COMPLETED"), report=report)
+    assert path.parent == _spool(tmp_path)
+    assert report == {"path": path, "spooled": True, "committed": False, "refusal": ""}
+    assert committed == []
+
+
+def test_the_shipped_gitignore_template_ignores_the_spool(tmp_path):
+    """The in-process pin of `test_bootstrap.py`'s stock-scaffold case: a
+    line of the shipped `.gitignore` template ignores the directory the
+    spool is written to (`spool_dir`, relative to the primary checkout), so
+    a spooled log never reads as the primary checkout's uncommitted change.
+    Adequacy witness: a template naming only the older `out/` runtime files
+    has no such line."""
+    spool = svc.spool_dir(tmp_path).relative_to(tmp_path).as_posix() + "/"
+    lines = (KIT / "gitignore.template").read_text(encoding="utf-8").splitlines()
+    entries = [ln.strip() for ln in lines if ln.strip() and not ln.startswith("#")]
+    assert any(e.endswith("/") and spool.startswith(e) for e in entries), entries
+
+
+def _failing_ls_tree(monkeypatch):
+    real = svc.agent_common.git
+
+    def git(root, *args, **kw):
+        if args and args[0] == "ls-tree":
+            return 128, "fatal: not a tree object"
+        return real(root, *args, **kw)
+
+    monkeypatch.setattr(svc.agent_common, "git", git)
+
+
+@pytest.mark.parametrize("reader", ["worktree-records", "ls-tree"])
+def test_an_unreadable_lane_reading_spools(tmp_path, monkeypatch, reader):
+    """A claimed lane whose worktree records cannot be read is treated as
+    not a lane; when its claim reads (the branch's tree and trunk's, both
+    through `agent_common.git`'s `ls-tree`) both fail, each adds no claim, so
+    neither readable tree shows it claimed and it is not a lane either: the
+    direction that never writes to trunk."""
+    lane = claimed_lane(tmp_path)
+    committed = []
+    monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
+    if reader == "worktree-records":
+        monkeypatch.setattr(svc.agent_common, "worktree_records", lambda root: [])
+    else:
+        _failing_ls_tree(monkeypatch)
+    svc.call(_plain_call(lane))
+    assert _call_logs(lane / "docs" / "iteration") == []
+    assert len(_call_logs(_spool(lane))) == 1
+    assert committed == []
+
+
+@pytest.mark.usefixtures("hooked")
+def test_an_unwritable_spool_raises_and_commits_nothing(tmp_path, monkeypatch):
+    """A spool that cannot be created raises: the log is never dropped
+    silently and never committed elsewhere."""
+    committed = []
+    monkeypatch.setattr(svc.agent_common, "commit_telemetry", _capture(committed))
+    (tmp_path / "out").mkdir()
+    (tmp_path / "out" / "sessions").write_text("a file, not a directory\n")
+    out = svc.act(_plain_call(tmp_path))
+    with pytest.raises(OSError):
+        svc.record(out, svc._call_row(out.metrics, "COMPLETED"))
+    assert committed == []
+    assert _call_logs(tmp_path / "docs" / "iteration") == []
+
+
+def test_a_refused_telemetry_commit_is_reported_to_the_caller(tmp_path, monkeypatch):
+    """In a lane, `record` keeps `commit_telemetry`'s refusal text and hands
+    it to its caller; a commit that lands reports none."""
+    lane = claimed_lane(tmp_path)
+    veto = "telemetry commit refused: the pre-commit hook vetoed it"
+    answers = [veto, None]
+    monkeypatch.setattr(
+        svc.agent_common, "commit_telemetry", lambda *a, **k: answers.pop(0)
+    )
+    reports = []
+    for _ in range(2):
+        out = svc.act(_plain_call(lane))
+        report = {}
+        path = svc.record(out, svc._call_row(out.metrics, "COMPLETED"), report=report)
+        reports.append((path, report))
+    (refused_path, refused), (kept_path, kept) = reports
+    assert refused == {
+        "path": refused_path,
+        "spooled": False,
+        "committed": False,
+        "refusal": veto,
+    }
+    assert kept == {
+        "path": kept_path,
+        "spooled": False,
+        "committed": True,
+        "refusal": "",
+    }
+    assert refused_path.parent == lane / "docs" / "iteration"
+
+
+def _argv_runner(seen):
+    def run(argv, root, timeout, **kwargs):
+        seen.append(list(argv))
+        return 0, _fixture("codex-exec-json.jsonl"), False
+
+    return run
+
+
+@pytest.mark.usefixtures("hooked")
+def test_a_resumed_call_launches_the_resume_form_and_logs_resumed(tmp_path):
+    """An unretained call naming a thread launches the runner's resume form
+    and is accounted `session-mode = resumed`, with no retained session."""
+    seen = []
+    call = svc.Call(
+        root=tmp_path,
+        role="AUTHOR",
+        template="codex exec -C elsewhere --model {model}",
+        model="m",
+        prompt="p",
+        runner=_argv_runner(seen),
+        resume="T-1",
+    )
+    out = svc.act(call)
+    assert len(seen) == 1
+    argv = seen[0]
+    assert argv[:4] == ["codex", "exec", "resume", "T-1"]
+    assert "-C" not in argv
+    assert out.metrics["session-mode"] == "resumed"
+    assert out.metrics["keep-scope"] == ""
+    assert not keep.store_dir(tmp_path).exists()
+
+
+@pytest.mark.usefixtures("hooked")
+def test_a_call_with_both_keep_and_resume_is_refused_before_accounting(
+    tmp_path, monkeypatch
+):
+    """A thread named twice (a retained session and an unretained resume) is
+    refused before anything is accounted or launched."""
+    monkeypatch.setattr(keep, "keep_bookkeep", lambda *a, **k: {})
+    prepared = svc.Prepared(
+        family="OPENAI",
+        template="codex exec --model {model}",
+        model="m",
+        tier="strong",
+        executable="codex",
+        declared={},
+        credential={},
+        home={},
+    )
+    held = keep.Keep(
+        family="OPENAI",
+        route_id="OPENAI-SOL",
+        session_id="S-KEPT",
+        wi="WI-1",
+        governing="g",
+        cfg=keep.KeepConfig(),
+        prepared=prepared,
+    )
+    seen, metrics = [], {}
+    call = svc.Call(
+        root=tmp_path,
+        role="AUTHOR",
+        template=prepared.template,
+        model="m",
+        prompt="p",
+        runner=_argv_runner(seen),
+        keep=held,
+        resume="T-1",
+    )
+    with pytest.raises(ValueError):
+        svc.act(call, metrics)
+    assert metrics == {} and seen == []
+
+
+def test_the_standard_call_log_name_is_never_a_gate_log_name(tmp_path):
+    """The name `_call_row` gives, as the log writer spells it, is a standard
+    call log and never a gate log; a gate log, a renamed or a train-prefixed
+    name is not a standard call log."""
+    for _ in range(3):
+        row = svc._call_row({"invocation-id": uuid.uuid4().hex}, "COMPLETED")
+        path = common.write_session_log(tmp_path, row, "")
+        assert svc.is_call_log(path.name), path.name
+        assert not GATE_LOG_RE.match(path.name), path.name
+    hexid = "0123456789abcdef0123456789abcdef"
+    for name in (
+        "001-20261022-101010.log",
+        "wi-1-007-20261022-101010.log",
+        "call_xyz-20261022-101010.log",
+        "call_{}-20261022-101010.log.bak".format(hexid),
+        "wi-1-call_{}-20261022-101010.log".format(hexid),
+        "call_{}-2026102-101010.log".format(hexid),
+    ):
+        assert not svc.is_call_log(name), name
+    assert GATE_LOG_RE.match("001-20261022-101010.log")
 
 
 # --- the one path, pinned structurally (Done-when: no role or provider keeps
@@ -671,10 +938,36 @@ def test_the_retired_launch_and_logging_paths_are_gone():
         assert users == set(), name
 
 
-@pytest.mark.usefixtures("hooked")
+# The coordinator's shell launchers retired with the codex call's entry point
+# (WI-960): every live surface that could launch or teach one is read.
+RETIRED_LAUNCHERS = ("sol_review", "terra_author", "luna_review")
+LAUNCHER_SURFACES = (
+    ROOT / "scripts" / "coordinator",
+    KIT / "skills",
+    ROOT / ".claude" / "skills",
+    ROOT / ".agents" / "skills",
+    SCRIPTS,
+)
+
+
+def test_the_retired_shell_launchers_are_referred_to_nowhere():
+    """Adequacy witness: a launcher left in place, or a recipe still teaching
+    one, is named here."""
+    found = sorted(
+        "{}: {}".format(path.relative_to(ROOT).as_posix(), name)
+        for surface in LAUNCHER_SURFACES
+        for path in surface.rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts
+        for name in RETIRED_LAUNCHERS
+        if name in path.name or name in path.read_text("utf-8", errors="replace")
+    )
+    assert found == []
+
+
 def test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header(
     tmp_path, monkeypatch
 ):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     # The claude usage line is its result event, which carries the result
     # text; the header is committed history, so it passes the same redaction
     # seam the transcript does.
@@ -684,13 +977,13 @@ def test_a_credential_in_a_raw_usage_line_is_redacted_in_the_log_header(
         {"type": "result", "result": "leaked " + key, "usage": {"input_tokens": 1}}
     )
     call = svc.Call(
-        root=tmp_path,
+        root=root,
         role="BUILD",
         template="claude -p",
         runner=_runner(stream),
     )
     svc.call(call)
-    (log,) = (tmp_path / "docs" / "iteration").glob("call_*.log")
+    (log,) = (root / "docs" / "iteration").glob("call_*.log")
     text = log.read_text(encoding="utf-8")
     assert key not in text
     header = text.split("# ---")[0]

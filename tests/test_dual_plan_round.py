@@ -25,6 +25,7 @@ from conftest import (
     hooks_on,
     load_script,
     pin_autocrlf,
+    relocate_as_lane,
     run_py,
     set_process_key,
 )
@@ -199,6 +200,12 @@ def _queued_specs(root):
 
 def test_full_round_unattended_selects_and_files(tmp_path):
     root, fake = make_fixture(tmp_path)
+    # The round records from a claimed lane, where its logs are committed
+    # (WI-960); rooted at the primary checkout they spool instead.
+    subprocess.run(
+        ["git", "checkout", "-q", "-b", "dp-lane"], cwd=str(root), check=True
+    )
+    relocate_as_lane(root)
     proc = run_dualplan(root, fake)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SELECT plan" in proc.stdout

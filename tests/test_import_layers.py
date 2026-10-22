@@ -408,9 +408,17 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # hook's adoption-record step on a commit touching no spec import neither.
     # Neither module reaches adoption_record, so no cycle or layer edge grew.
     # Reason in the WI-969 plan (P7).
-    assert 14 <= deferred <= 38, (
+    # RE-STAMPED 38 -> 39 (2026-10-22, WI-960 P3): session_service ->
+    # integrate joins deferred, inside `_lane_claims`, the record step's lane
+    # reading, which calls the integrator's own claim readers
+    # (`claimed_ids_on_branch`, `_branch_tree_paths`, `_spec_id`) rather than
+    # copying them. Deferred because integrate is heavy and only a record
+    # reads a lane; integrate imports no session_service, directly or through
+    # its imports, so no cycle or layer edge grew. Reason in the WI-960 plan
+    # (P3, decision 3).
+    assert 14 <= deferred <= 39, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..38 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..39 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

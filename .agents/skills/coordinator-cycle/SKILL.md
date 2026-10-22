@@ -38,6 +38,17 @@ reconstruct the chain.
 | Scope and plan critique | Codex 6.1 Sol (`gpt-6.1-sol`, medium) | **fresh per critique**, one critic |
 | Adjudication | a retained Claude Opus home, via `coordinator_adjudicate.py` from the lane | the entry point retains it; never a subagent |
 
+Every Sol and Terra call runs through `scripts/coordinator/codex_call.py`
+(recipes §1, "A Codex call"), which records it through the session service:
+
+- inside the blackout window, a Sol or Terra call is refused before launch
+  (exit 2), as every non-adjudication call is;
+- exit 3 is an edit, exit 4 a log left uncommitted or unspooled, exit 5 a
+  change check that could not run;
+- in a claimed lane the call commits its log; a call outside one (the
+  primary checkout, the detached critique checkout) spools its log and
+  commits nothing.
+
 Keep judgement independent: Terra authors and Opus judges, Opus builds and
 the full-lane reviewers review, none of them the builder's session. The
 adjudicator never drafts the text it judges. Its ruling on a dispute is final.

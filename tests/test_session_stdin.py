@@ -17,7 +17,7 @@ import types
 
 import pytest
 
-from conftest import hooked_checkout, load_script
+from conftest import claimed_lane, fixture_git, hooked_checkout, load_script
 
 al = load_script("agent_loop")
 adapters = load_script("session_adapters")
@@ -285,28 +285,56 @@ def test_attached_interactive_runner_inherits_stdio(monkeypatch, tmp_path):
     assert calls == [(["agent"], {"cwd": str(tmp_path)})]
 
 
-@pytest.mark.usefixtures("hooked")
 def test_interactive_launch_error_is_recorded_then_raised(tmp_path):
+    root = claimed_lane(tmp_path)  # a claimed lane commits its log (WI-960)
     args = types.SimpleNamespace(
         interactive_cmd="definitely-missing-interactive-agent", model="m5"
     )
     with pytest.raises(FileNotFoundError):
         al.run_interactive(
             args,
-            tmp_path,
+            root,
             model_map={},
             cmd_map={},
             template="",
             guardrails_policy="none",
             warned_no_core=[],
         )
-    logs = list((tmp_path / "docs" / "iteration").glob("call_*.log"))
+    logs = list((root / "docs" / "iteration").glob("call_*.log"))
     assert len(logs) == 1
     meta = al.agent_common.read_log_meta(logs[0])
     assert meta["outcome"] == "ERROR"
     assert meta["usage-status"] == "unavailable"
     assert meta["invocation-id"]
     assert meta["started-at"] and meta["ended-at"]
+
+
+def test_an_interactive_sitting_on_the_primary_checkout_spools_its_log(tmp_path):
+    """A hands-on sitting is started from the primary checkout, which is never
+    a lane (WI-960): its log goes to the primary's spool, recorded even when
+    the launch raised, and trunk's HEAD and tracked tree are unchanged."""
+    claimed_lane(tmp_path)
+    primary = tmp_path / "primary"
+    head = fixture_git(primary, "rev-parse", "HEAD")
+    args = types.SimpleNamespace(
+        interactive_cmd="definitely-missing-interactive-agent", model="m5"
+    )
+    with pytest.raises(FileNotFoundError):
+        al.run_interactive(
+            args,
+            primary,
+            model_map={},
+            cmd_map={},
+            template="",
+            guardrails_policy="none",
+            warned_no_core=[],
+        )
+    assert list((primary / "docs" / "iteration").glob("*.log")) == []
+    (log,) = al.session_service.spool_dir(primary).glob("call_*.log")
+    meta = al.agent_common.read_log_meta(log)
+    assert (meta["role"], meta["outcome"]) == ("INTERACTIVE", "ERROR")
+    assert fixture_git(primary, "rev-parse", "HEAD") == head
+    assert fixture_git(primary, "status", "--porcelain", "--untracked-files=no") == ""
 
 
 # A grandchild that names itself, then outlives its parent unless the whole

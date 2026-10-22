@@ -3,7 +3,7 @@
 Built from wave 8 (2026-10-03) in an untracked folder beside the checkout and
 moved into the repository on 2026-10-14. They derive the checkout, its sibling
 `<checkout>.wt` folder (lanes, `review-tmp`, `overnight-logs`) and the venv
-Python from their own location (`layout.py`, `layout.sh`), so no tool names a
+Python from their own location (`layout.py`), so no tool names a
 machine or a user. The coordinator recipes set `TOOLS` and `PY` the same way.
 
 Run from the repo root with the repo venv.
@@ -17,31 +17,42 @@ Run from the repo root with the repo venv.
   after `git merge --squash <branch>` hits conflicts in a registry. It refuses
   on a true per-table conflict.
 
-## Codex Luna review through the CLI (owner, 2026-10-03)
+## A Codex call through the session service (WI-960)
 
-Today it is the reviewer when Sol is unavailable (the coordinator recipes, §7).
+`codex_call.py` runs every Sol and Terra call (the coordinator recipes, §1,
+"A Codex call"). It replaced the shell launchers, so the call is recorded
+through the kit's session service like the adjudicator's.
 
-1. Render the brief with the kit's `review_brief.py review` (WI-852 retired this
-   folder's hand-filled review templates; the recipes give the command).
-   `mkprompt.py` still fills the Terra spine-author brief,
-   `terra-spine-prompt.template.md`: an unfilled slot is refused, and
-   `@LANE_SLUG@`, `@WTROOT@` and `@PY@` are derived.
+    "$PY" "$TOOLS/codex_call.py" <role> --root <dir> --prompt-file <prompt> --out <out> \
+      [--effort medium] [--wi WI-NNN] [--resume] [--route <entry>] [--timeout 7200]
 
-2. Launch it, from the Bash tool with `run_in_background: true`. The effort
-   defaults to high.
+- The role is `REVIEW-A` or `CRITIQUE` (Sol, the enabled `OPENAI-SOL` row) or
+  `AUTHOR` (Terra, the enabled `OPENAI-TERRA` row, naming its `--wi`).
+  `--route` names another enabled entry (the recipes' Luna substitution, §7).
+- The launch template is the script's own: `codex exec` under the
+  workspace-write sandbox, unelevated on Windows, with the primary checkout's
+  `<checkout>.wt/review-tmp` its one extra writable root, so a reviewer can
+  run pytest with a literal `--basetemp` there. The prompt goes on stdin; the
+  final text goes to `--out`.
+- `--resume` (an `AUTHOR` turn only) continues the thread of the lane's newest
+  Terra log committed at HEAD, and refuses before launch when that log is
+  missing, damaged, foreign, or older than an uncommitted one.
+- The change check reads `--root`'s HEAD and uncommitted paths before and
+  after the call. Another call's commit that only adds standard-call session
+  logs is not an edit.
+- The log commits in a claimed lane. Outside one (the primary checkout, a
+  detached checkout, an unclaimed branch) it spools under the primary
+  checkout's `out/sessions/spool/` and nothing is committed.
 
-       bash "$TOOLS/luna_review.sh" <lane worktree> <brief.md> <scratch>/luna-wi-NNN.md
-
-   The review goes to `<out>`, the CLI transcript to `<out>.log`, and the first
-   line is echoed (`<sha> SOUND` or `<sha> NOT YET SOUND`).
-   - Exit 3 means the reviewer changed the lane. Inspect `git status` in the lane
-     before trusting the review.
-   - The allow rule for this exact command is in `.claude/settings.local.json`.
-
-Why the flags are what they are: see the header of `luna_review.sh`. In short,
-`-s read-only` cannot run Python. `workspace-write` plus `--add-dir review-tmp`,
-with a literal `--basetemp` under it, runs the tests. Probed end to end on
-2026-10-03: `tests/test_rule_sync.py` gave 42 passed, and the lane was unchanged.
+Exit codes: 0 a call recorded with no edit; 1 a failed call; 2 refused before
+launch (an argument, the route, the prompt, the blackout window, commit hooks
+off, the resume carrier); 3 an edit, its paths printed; 4 a log left
+uncommitted or a spool that could not be written, the log named; 5 a change
+check that could not run. After launch the precedence is 5, 3, 4, 1, 0.
+`mkprompt.py` still fills the Terra spine-author brief,
+`terra-spine-prompt.template.md`: an unfilled slot is refused, and
+`@LANE_SLUG@`, `@WTROOT@` and `@PY@` are derived. Review briefs are rendered
+with the kit's `review_brief.py review` (the recipes give the command).
 
 ## Adjudicate through the retained session (WI-835, 2026-10-06)
 
