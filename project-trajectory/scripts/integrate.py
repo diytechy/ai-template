@@ -1388,17 +1388,39 @@ def _text_then_act_refusal(root, branch):
     whole; its landing commit is not held to the rule, because the rule has
     held on every commit it carries. Every lane, whoever runs the slot.
 
+    The same walk carries every rider of `text_then_act.LANE_COMMIT_RIDERS`,
+    the adoption record's rule (WI-969) among them. Each rider's lines carry
+    its own remedy: `TEXT_THEN_ACT_REMEDY` is composed onto text then act's
+    lines only (`_with_text_then_act_remedy`), and the record rule's lines
+    already name theirs.
+
     Implements: SR-140, LLR-302
     """
-    found = _each_lane_commit(
-        root, branch, "text and act", text_then_act.LANE_COMMIT_RIDERS
-    )
+    riders = tuple(map(_with_text_then_act_remedy, text_then_act.LANE_COMMIT_RIDERS))
+    found = _each_lane_commit(root, branch, "per-commit rules", riders)
     if found is None or isinstance(found, str):
         return found
     _sha, lines = found
-    return "{}: {}: {}; nothing was merged".format(
-        branch, "; ".join(lines), text_then_act.TEXT_THEN_ACT_REMEDY
-    )
+    return "{}: {}; nothing was merged".format(branch, "; ".join(lines))
+
+
+def _with_text_then_act_remedy(rule):
+    """`rule`, or, when it is text then act's own rider, that rider with
+    `TEXT_THEN_ACT_REMEDY` composed onto its lines, so a refusal names the
+    remedy of the rule that refused it and no other.
+
+    Implements: SR-140, LLR-302
+    """
+    if rule is not text_then_act.commit_text_then_act_lines:
+        return rule
+
+    def remedied(root, rev):
+        lines = rule(root, rev)
+        return lines and [
+            "{}: {}".format("; ".join(lines), text_then_act.TEXT_THEN_ACT_REMEDY)
+        ]
+
+    return remedied
 
 
 def _each_lane_commit(root, branch, reading, riders):

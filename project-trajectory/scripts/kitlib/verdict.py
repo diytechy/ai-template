@@ -137,7 +137,11 @@ Contract IF-175: the verdict record, as functions two independent readers call
     sha a red review bar refused, `red_record` whether a build already has
     one, and `red_rounds` the count: the distinct red builds since the last
     verified `review` attestation, an unreadable log counting toward the cap,
-    never away from it. Pure functions plus thin reads through
+    never away from it; and `mechanical_close` the one close-shape reader,
+    whose optional relink oracle (injected by the adoption-record rule)
+    admits only the close's byte-exact inbound relinks outside `docs/work/`,
+    while the peel (`mechanical_close_attestation`) calls it without that
+    oracle. Pure functions plus thin reads through
     `kitlib.git`, so nothing here writes and nothing imports a sibling service —
     the verdict parser arrives as an ARGUMENT rather than an import, which is
     what keeps this leaf free of an edge back into the scoring layer. Every
@@ -188,6 +192,7 @@ __all__ = [
     "format_bar_green",
     "bar_attestation",
     "mechanical_close_attestation",
+    "mechanical_close",
     "work_tip",
     "governing_rev",
     "governing_identity",
@@ -629,8 +634,17 @@ _ACTIVE_SPEC = re.compile(rb"^docs/work/active/([^/]+)/((WI-[0-9]+)-[^/]+[.]md)$
 _COMPLETE_SPEC = re.compile(rb"^docs/work/complete/(WI-[0-9]+-[^/]+[.]md)$")
 
 
-def _closed_wi_ids(fields):
+def _closed_wi_ids(fields, relinked=None, blobs=None):
     """The canonically ordered ids moved from active/ to complete/, or None.
+
+    THE ONE CLOSE SHAPE, read two ways (WI-969). With no `relinked` oracle it
+    is the peel's reading: every changed path must live under `docs/work/`.
+    With one (the adoption-record rule passes `spec_move.exact_relink`; this
+    leaf imports no script, so the oracle is injected), a path outside
+    `docs/work/` is admitted only as an `M` entry whose blobs
+    (`blobs(path) -> (old bytes, new bytes)`, at the parent and at the commit)
+    are exactly the inbound relink of the commit's own paired moves
+    (`_outside_relinked`). Everything else in the shape is the same for both.
 
     ONLY THE MOVE ITSELF MAY CREATE OR DESTROY. An `A` or `D` entry this
     function does not RECOGNISE is a refusal, not an entry it skips: while they
@@ -658,10 +672,11 @@ def _closed_wi_ids(fields):
     """
     if len(fields) % 2:
         return None
-    deleted, added, branches = [], [], set()
+    deleted, added, branches, outside = [], [], set(), []
     for status, path in zip(fields[::2], fields[1::2]):
         if not path.startswith(_WORK_PREFIX):
-            return None
+            outside.append((status, path))
+            continue
         active = _ACTIVE_SPEC.match(path) if status == b"D" else None
         complete = _COMPLETE_SPEC.match(path) if status == b"A" else None
         if active:
@@ -673,7 +688,49 @@ def _closed_wi_ids(fields):
             return None
     if len(branches) != 1 or sorted(name for name, _ in deleted) != sorted(added):
         return None
+    if not _outside_relinked(outside, branches, deleted, relinked, blobs):
+        return None
     return mechanical_close_order(deleted)
+
+
+def _outside_relinked(outside, branches, deleted, relinked, blobs):
+    """Whether every changed path outside `docs/work/` (`outside`, its
+    `(status, path bytes)` entries) is exactly the inbound relink the close's
+    own moves write: never without an oracle (the peel's reading), and with
+    one only an `M` entry with a UTF-8 path whose two blobs
+    `relinked(old, new, path, remap)` accepts, `remap` mapping each paired
+    `active/<branch>/` path (the one branch of `branches`, the names of
+    `deleted`) to its `complete/` path, re-derived from the commit's own A/D
+    entries. An `A` or `D` outside, an undecodable path and an unreadable blob
+    (which the oracle reads as not a relink) all refuse. No path outside is
+    trivially true, oracle or none.
+
+    Implements: SR-148, LLR-345
+    """
+    if not outside:
+        return True
+    if relinked is None or blobs is None:
+        return False
+    try:
+        (branch,) = (b.decode("utf-8") for b in branches)
+        names = [name.decode("utf-8") for name, _ in deleted]
+    except UnicodeDecodeError:
+        return False
+    remap = {
+        "docs/work/active/{}/{}".format(branch, name): "docs/work/complete/" + name
+        for name in names
+    }
+    for status, raw in outside:
+        if status != b"M":
+            return False
+        try:
+            path = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+        old, new = blobs(path)
+        if not relinked(old, new, path, remap):
+            return False
+    return True
 
 
 def mechanical_close_attestation(root, rev):
@@ -719,6 +776,35 @@ def mechanical_close_attestation(root, rev):
     honest bound is `refresh_attestation`'s — this defeats accident and drift,
     not a lane that lies on purpose, which is the threat model the coordinator
     holds throughout.
+
+    THE RECORD (WI-969). The close may also add one thing to the row's front
+    matter: its `adopted` record, the request's validated result, which the
+    adoption-record rule verifies (`adoption_record`). The peel reads the
+    shared close shape (`mechanical_close`) with NO relink oracle, so a close
+    whose relink reaches outside `docs/work/`, which that rule admits when
+    the relink is exact, is still not peeled here. What it verifies is
+    unchanged.
+
+    Implements: SR-156, SR-148, LLR-207, LLR-345
+    """
+    closed = mechanical_close(root, rev)
+    return closed[0] if closed else None
+
+
+def mechanical_close(root, rev, relinked=None):
+    """`(parent, closed ids)` when `rev` is the machinery's own adjudication
+    close, else None: the ONE reading of the close shape, shared by the peel
+    (`mechanical_close_attestation`, no oracle) and the adoption-record rule
+    (`relinked=spec_move.exact_relink`, injected because this leaf imports no
+    script). One parent (a merge is never a close), the
+    `--name-status --no-renames -z` stream judged by `_closed_wi_ids` (with
+    the oracle, a changed path outside `docs/work/` is admitted only as the
+    exact inbound relink of the commit's own moves, its blobs read at the
+    parent and at `rev`), and the ids composed through
+    `mechanical_close_subject` equal to the subject. A read git cannot make is
+    None, never a close.
+
+    Implements: SR-148, LLR-345
     """
     message = git_out(root, ["log", "-1", "--format=%B", rev]) or ""
     lines = message.splitlines()
@@ -732,10 +818,17 @@ def mechanical_close_attestation(root, rev):
     if listing is None:
         return None
     fields = [field for field in listing.split(b"\0") if field]
-    wi_ids = _closed_wi_ids(fields)
+
+    def blobs(path):
+        return tuple(
+            git_bytes(root, ["cat-file", "blob", "{}:{}".format(at, path)])
+            for at in (parent, rev)
+        )
+
+    wi_ids = _closed_wi_ids(fields, relinked, blobs)
     if wi_ids is None or subject != mechanical_close_subject(wi_ids):
         return None
-    return parent
+    return parent, wi_ids
 
 
 def _peel_target(root, branch, rev):

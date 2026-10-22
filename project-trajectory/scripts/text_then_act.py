@@ -27,6 +27,7 @@ from pathlib import PurePosixPath
 # What this rule reads of the acceptance record: the approval-act registries,
 # the record directory, a registry's rows at one tree, and the parent reader.
 try:
+    import adoption_record
     import spine_carrier
     from acceptance_record import (
         APPROVAL_ACT_CSVS,
@@ -40,6 +41,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import adoption_record
     import spine_carrier
     from acceptance_record import (
         APPROVAL_ACT_CSVS,
@@ -170,9 +172,13 @@ def commit_text_then_act_lines(root, rev):
 
 # The per-commit rules that ride the lane-commit walk, each `rule(root, rev) ->
 # lines` judging one commit against its own parents. Text then act is the
-# first rider; a later per-commit rule joins here and rides the same walk for
-# both the hook's squash path and the merge slot.
-LANE_COMMIT_RIDERS = (commit_text_then_act_lines,)
+# first rider; the adoption record's rule (WI-969) the second, its lines
+# carrying their own remedy. The merge slot walks every rider; each hook
+# step's squash path walks only its own rule.
+LANE_COMMIT_RIDERS = (
+    commit_text_then_act_lines,
+    adoption_record.commit_adoption_record_lines,
+)
 
 
 def lane_commit_walk(root, commits, riders=LANE_COMMIT_RIDERS):
@@ -199,7 +205,8 @@ def _squash_lines(root, head, tip):
     approval-act registries and record are byte-equal to the tip's own. So a
     squash combining two judged cells into a third, and a `SQUASH_MSG` left
     behind by an abandoned squash, exempt nothing unless the staged spine and
-    record are a judged commit's.
+    record are a judged commit's. Only this rule's own rider walks here, so a
+    line never carries another rule's refusal under this rule's remedy.
 
     Implements: SR-140, LLR-302
     """
@@ -209,9 +216,8 @@ def _squash_lines(root, head, tip):
     within = _git(root, ["merge-base", "--is-ancestor", head, tip]) == ""
     if not within or _git(root, staged) != "" or commits is None:
         return None
-    return [
-        ln for _rev, lines in lane_commit_walk(root, commits.split()) for ln in lines
-    ]
+    walk = lane_commit_walk(root, commits.split(), (commit_text_then_act_lines,))
+    return [ln for _rev, lines in walk for ln in lines]
 
 
 def staged_text_then_act_lines(root, squashed=()):

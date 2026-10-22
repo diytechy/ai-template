@@ -1198,8 +1198,9 @@ def test_an_unreadable_dial_falls_to_when_minting_not_to_never(tmp_path):
     assert ac.adjudication_review_owed(_docs(tmp_path, "nevr"), "", ["spine"]) is True
 
 
-def adjudication_repo(tmp_path, mode, drafts_class="ordinary"):
-    """A closed ADJUDICATION lane whose verdict drafts one successor."""
+def adjudication_repo(tmp_path, mode, drafts_class="ordinary", block=None):
+    """A closed ADJUDICATION lane whose verdict drafts one successor, or carries
+    `block` as its one `## Dispositions` block's body instead."""
     root = rounds_repo(tmp_path)
     (root / "docs" / "process.toml").write_text(
         '[attestation]\nadjudication_review = "{}"\n'.format(mode),
@@ -1217,8 +1218,12 @@ def adjudication_repo(tmp_path, mode, drafts_class="ordinary"):
     landed.write_text(
         spec.read_text(encoding="utf-8")
         + "\n## Dispositions\n\n```toml\n"
-        'title = "the successor"\nworkstream = "process"\n'
-        'safety_class = "{}"\n```\n\nThe successor\'s scope.\n'.format(drafts_class),
+        + (
+            block
+            or 'title = "the successor"\nworkstream = "process"\n'
+            'safety_class = "{}"\n'.format(drafts_class)
+        )
+        + "```\n\nThe successor's scope.\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -1241,6 +1246,57 @@ def test_an_adjudication_lane_owing_no_round_merges_with_no_verdict_file(
     # verdict artifact of any kind and the gate is satisfied.
     root = adjudication_repo(tmp_path, mode, drafts_class="ordinary")
     assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
+
+
+@pytest.mark.parametrize(
+    "block,owed",
+    [
+        # A well-formed adoption mints and amends nothing: no spine review.
+        pytest.param('adopts = "WI-450"\n', False, id="well-formed"),
+        # A malformed one keeps the fail-toward-review rule (already true).
+        pytest.param('adopts = "WI-450"\ntitle = "x"\n', True, id="malformed"),
+    ],
+)
+def test_the_scheduler_and_the_gate_read_an_adoption_by_its_shape(
+    tmp_path, block, owed
+):
+    """WI-969: both read the block's shape only, never the adopted row or the
+    record. The `well-formed` case is new behaviour (trunk's unknown-key
+    refusal reads as review owed). The `malformed` case is a characterization.
+    Adequacy witness: a reader that took any parsed section as drafting
+    nothing (an `adopts` key beside `title` treated as a clean adoption)
+    would answer no review owed and fail it."""
+    al = _al()
+    root = adjudication_repo(tmp_path, "when-minting", block=block)
+    _git(root, "checkout", "-q", "wi-401")
+    assert al.dispositions_drafted(root, "WI-401") == (["spine"] if owed else [])
+    _git(root, "checkout", "-q", "main")
+    got, _why = integ._verdict_owed(
+        root, "wi-401", integ._claimed_spec_frontmatters(root, "wi-401")[0]
+    )
+    assert got is owed
+
+
+def test_the_peel_still_refuses_a_close_whose_relink_leaves_docs_work(tmp_path):
+    """WI-969 keeps the peel as it is: a real `close_adjudication` whose
+    inbound relink rewrites a review file outside `docs/work/` is not peeled
+    (the adoption-record rule admits that relink; the peel does not).
+
+    A characterization, green before and after the shared close shape lands.
+    Adequacy witness: an attestor that handed the shared close shape the relink
+    oracle (`spec_move.exact_relink`), widening the peel, would return the
+    close's parent here and fail it."""
+    import test_handback as thb
+
+    root = thb.adjudication_repo(tmp_path)
+    review = thb.link_the_active_spec_from_a_review(root)
+    ids, refusal = thb.hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    assert ids == ["WI-401"]
+    close = _git(root, "rev-parse", "wi-401").strip()
+    changed = _git(root, "diff", "--name-only", close + "^", close).split()
+    assert review in changed  # the case is real: the close rewrote the review
+    assert kv.mechanical_close_attestation(root, close) is None
 
 
 def _loop_ctx(al, root, rp_int=1, **over):

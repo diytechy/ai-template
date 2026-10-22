@@ -116,6 +116,11 @@ a wall of `= ""`.
   which cannot tell an amended test-case row from a red-TC census row — both
   cite the TC registry. Absent, or a brief whose evidence cannot be assembled
   in full, sends the ordinary worker assignment instead.
+- `adopted` — on a disposition row (one judging a partial or cancelled close)
+  only: the record of the already-filed successors its `## Dispositions`
+  section adopted. Only the mechanical close writes it, as a non-empty TOML
+  list of WI ids (`["WI-012"]`), once it has validated each one; a row that
+  adopts nothing carries no key.
 - `order` — a migration artifact written by `wi_convert.py` to reproduce a CSV
   whose row order the ids do not describe. A hand-filed spec omits it and sorts
   after the numbered ones, by id.

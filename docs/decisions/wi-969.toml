@@ -1,0 +1,194 @@
+# docs/decisions/wi-969.toml — delegated calls the coordinator made in the
+# wi-969 lane (headless leg 11 of loop session 20261021T045653Z-213020).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-969's minted spec declares no Done-when; its specref names WI-902's partial spec, but the single-plan brief (review_brief.py plan), the plan gate and the Done-when hold read the row's own spec, and the plan render refused it ('declares no Done-when items'). The lane copies WI-902's spec of record from its Deliverables section to its end (Deliverables, Trust, Done-when, Scope answers, Critique dispositions) byte for byte into WI-969's spec, under a short Context note naming the source, sitting 016's FIX and the owner's route; those sections carry no markdown links, so nothing is re-pathed. The copied Done-when is new against the claim copy, so a done-when sitting (the adjudicator, combined brief, kind done-when:WI-969) blesses the exact text before the plan is rendered, and the pass record then binds it. The mint gap (a disposition sitting's successor with a specref to a spec of record but no Done-when of its own, while planmode is single) is listed for the owner as a follow-up."
+alternative = "Hold WI-969 for the owner; or render the plan from WI-902's spec by hand (the gate and the hold would still read the empty row)."
+reversal_cost = "Low: one spec edit in an unlanded lane; the Done-when is WI-902's own text, which its claim carried."
+why_not_escalated = "Procedural: the owner routed the third plan revision (coordinator-2026-10-20 D-008), and the copy changes no promise; the adjudicator, not the coordinator, blesses the text."
+review = ""
+
+[decision.D-002]
+decided = "Re-made (d3d301216:docs/decisions/wi-902.toml#D-002; lane record docs/plans/2026-10-11-review-churn/wi-902-lane-record.md part (b)). The old decision raised intake.py's module-size stamp 1719 -> 1823 over rounds 1 to 4, each with a reason line. The rebuild records its own stamp and reason: P12 finalises the stamp at the reconciliation, weighing again the old alternative of decomposing the Dispositions parsing and sweep wiring out of intake.py."
+alternative = "Carry the old stamp and its reason lines forward unchanged."
+reversal_cost = "Low: one ratchet row and its reason line."
+why_not_escalated = "The lane record routes it to the owner through this record; the entry is open for the owner to confirm or overrule."
+review = ""
+
+[decision.D-003]
+decided = "Kept (d3d301216:docs/decisions/wi-902.toml#D-003; lane record part (b)). The old decision fixed review 002's finding at _standing_successors: exact-title dedup suppresses only allocation, and an already-minted draft keeps its place in the successor set, for drafts-only replays too. It is mint-side and reads no history, so it survives the rebuild."
+alternative = "Fix only the adoption arm and file the drafts-only replay gap as its own row (the old decision's alternative)."
+reversal_cost = "Low: one helper in intake.py and its regression."
+why_not_escalated = "The lane record keeps it and routes it to the owner through this record."
+review = ""
+
+[decision.D-004]
+decided = "Kept (d3d301216:docs/decisions/wi-902.toml#D-004; lane record part (b)). The old decision built dispute 004's DA FIX: a standing row needs exactly one title match whose recorded supersedes equals the draft's, and a mismatch or a duplicate title refuses the mint before any write. The ruling is final; this entry records how it is built."
+alternative = "None: the dispute ruling is final."
+reversal_cost = "Low: one helper branch in intake.py."
+why_not_escalated = "The adjudicator ruled FIX, not ESCALATE; the lane record routes the build to the owner through this record."
+review = ""
+
+[decision.D-005]
+decided = "Re-made (d3d301216:docs/decisions/wi-902.toml#D-005; lane record part (b)). The old decision answered checkpoint 006's returns in the lane: LLR-335 is the adoption decision's one home, LLR-153 keeps the mint's arms, cites LLR-335 and gains SR-148, TC-360's Evidence drops the two title-identity tests, and eleven Implements lines were retagged. The one-home structure stands; P1 redoes the symbol list and retags for the rebuilt code, applying sitting 007's advisory 1 (a shared function names every row it serves)."
+alternative = "Carry the old eleven retags unchanged."
+reversal_cost = "Low: registry cells and docstring tags."
+why_not_escalated = "The lane record routes it to the owner through this record; P1's spine sitting judges the cells."
+review = ""
+
+[decision.D-006]
+decided = "D-006 F2 kept (d3d301216:docs/decisions/wi-902.toml#D-006; lane record part (b)). The old decision accepted review 008's F2: LLR-335's blanket claim that no consumer changes the adopted row's own cells is wrong, since the shared re-point rewrites the adopted row's needs edge to the disposed row. LLR-335 keeps the narrowed clause."
+alternative = "Leave LLR-335's blanket wording and dispute the finding."
+reversal_cost = "Low: one LLR-335 clause."
+why_not_escalated = "The lane record keeps the F2 part and routes it to the owner through this record."
+review = ""
+
+[decision.D-007]
+decided = "D-007 F2 kept and moved to the close (d3d301216:docs/decisions/wi-902.toml#D-007; lane record part (b)). The old decision accepted review 010's F2: spec text read from git went through a lossy decoder, so one strict-UTF-8 reader sits at the history-read boundary. _tree_text's strict decode stays as the one reader, and the regression moves to the close: a successor whose spec is not UTF-8 refuses the close."
+alternative = "Keep the regression on the sweep's replay path."
+reversal_cost = "Low: one decoder and one regression."
+why_not_escalated = "The lane record keeps the F2 part and routes it to the owner through this record."
+review = ""
+
+[decision.D-008]
+decided = "Kept, amended in P1 (d3d301216:docs/decisions/wi-902.toml#D-008; lane record part (b)). The old decision accepted review 014's MINOR: IF-294 declares the kitlib/adoption seam intake calls, with its Contract header in adoption.py, and joins TC-360's Verifies. The seam survives; P1 amends it: its Contract loses work_specs, its requestors gain the close's and the check's modules if they call it directly, and its owner and requestor cells follow trunk's current schema."
+alternative = "Carry IF-294 as the old lane wrote it."
+reversal_cost = "Low: one IF row and one docstring block."
+why_not_escalated = "The lane record keeps it and routes it to the owner through this record; P1's spine sitting judges the row."
+review = ""
+
+[decision.D-009]
+decided = "Old D-010 kept, folded into P3 (d3d301216:docs/decisions/wi-902.toml#D-010; lane record part (b)). The old decision accepted review 015's MAJOR: parse_disposition_section harvests only complete fences, so a valid block followed by an unclosed adoption block silently loses the second successor. Both the close and the sweep read this parser, so P3 builds the fix (the amended spec's deliverable 5), widened to drafts; the old decision's left-committed stance is superseded by the rebuild."
+alternative = "File the parser fix as its own row."
+reversal_cost = "Low: one section parser and its regressions."
+why_not_escalated = "The lane record keeps it and routes it to the owner through this record."
+review = ""
+
+[decision.D-010]
+decided = "Withdrawn, recorded with nothing to confirm (lane record part (b); d3d301216:docs/decisions/wi-902.toml): old D-001 (first consumption split from replay; record-at-close removes that distinction); old D-006 F1 (ruling 009's mechanism of re-deriving the landing verdict from git history; owner ruling 2 supersedes it, and its invariant holds by construction); old D-007 F1 (the shallow-boundary landing commit; no landing commit is sought any more); old D-009 (the TC-360 re-anchor), with act 117."
+alternative = "None: the lane record withdraws them."
+reversal_cost = "None: nothing of them is built."
+why_not_escalated = "The lane record withdraws them under the owner's plan ruling 2; nothing is owed to the owner."
+review = ""
+
+[decision.D-011]
+decided = "The review round count starts at zero at this lane's next review (docs/reviews/wi-969/, 002 today), since the lane was in flight when the review shape landed. The reviewers are Codex Sol at medium as REVIEW-A and a Claude Opus high stand-in as REVIEW-B, recorded as a substitution; each REVIEW file names the model behind it."
+alternative = "Carry WI-902's rounds (001 to 016) into this lane's count."
+reversal_cost = "Low: the count and the reviewer roles are record."
+why_not_escalated = "The review-shape rule says a lane in flight starts its count at zero at its next review, recorded as a decision; the roles are the skill's current ones."
+review = ""
+
+[decision.D-012]
+decided = "Acts 113 to 117 (a2a95f847, 7c4544ef3, acab09035, a588ae83f, 97ea2e47d) are not ported, and this lane takes no seq between 113 and 117. P13's ancestry check proves it."
+alternative = "Port the act commits with their last_approved copies and acts.toml rows."
+reversal_cost = "Low: no act is written."
+why_not_escalated = "The accepted plan (P0) records it; the carried spec governs, and the acts would re-attest a superseded lane."
+review = ""
+
+[decision.D-013]
+decided = "The lane follows the skill's current Intent order: P1 (the spine at intent) before build, and P2's tests alone first, since the lane was claimed after that order landed."
+alternative = "Follow the order the old WI-902 lane used."
+reversal_cost = "Low: it orders the lane's own steps."
+why_not_escalated = "Procedural: the skill's current order applies to a lane claimed after it landed."
+review = ""
+
+[decision.D-014]
+decided = "P1's intent set (Terra, gpt-5.6-terra medium, retained session 01a16169-7b0e-7853-9760-992b15cb7c87) was checked mechanically against the lane's base 254e609c5: every approved cell keeps its approved text, except TC-156's evidence, where Terra replaced the approved module entries (tests/test_handback.py;tests/test_intake.py) with named functions; the coordinator restored the approved entries ahead of Terra's additions by a guarded replace (and dropped the duplicate tests/test_intake.py at its tail). SR-148's acceptance and the TC-156 and TC-254 methods gain text by insertion (an 'and' moved to the new last clause). The strict trajectory check then refused IF-303 and IF-304 as cited by no TC; TC-383, which verifies the commit check those seams carry, gained both in its verifies (a traced-only fix, applied by the coordinator). The set cannot commit alone: the smoke tier reds on seams whose owner modules the build has not created, so it stays staged and rides P2's commit, whose stubs create those modules (wi-940 D-002)."
+alternative = "Have Terra repair the evidence and the citation in its retained session."
+reversal_cost = "Low: registry cells in an unlanded lane, reconciled at P12."
+why_not_escalated = "Procedural (coordinator-cycle recipes section 1, Terra, and section 5)."
+review = ""
+
+[decision.D-015]
+decided = "P2 (the tests, with stub modules so every strict expected failure reaches its own assertion) ran as one fresh kit-builder dispatch and carries P1's intent set in the same commit (D-014). The RESYNC_PACK.md entry is written in this commit, anchored at the lane's base 254e609c5, not at P10: the bar's check_resync refuses the first commit touching a shipped path without it (wi-958 D-004); P10 refines it. The builder's other departures from the plan's letter: the sweep tests write the adopted record by hand, since they judge only the sweep's reading of a record; the shallow-clone test runs a plain sweep in a depth-1 clone (sweep --merged needs a --before commit the clone lacks); the scheduler test's mark names P3, whose parser turns it green; the census is the only test outside the three evidence classes, as the plan places it. intake.py's size stamp moves 1719 to 1722 with its reason line."
+alternative = "Hold the entry for P10 and leave the bar red."
+reversal_cost = "Low: test-only and stub changes in an unlanded lane."
+why_not_escalated = "Procedural (coordinator-cycle recipes section 3, RESYNC)."
+review = ""
+
+[decision.D-016]
+decided = "P3 to P5 ran as one fresh kit-builder dispatch, committed as one stage. Beyond the plan's file list: the work-items CSV template's header gains Adopted (three existing tests pin every header copy to it), and the RESYNC entry tells legacy-CSV adopters to add the column and lists that template among the kit-owned files; kitlib.adoption.row_refusal takes the listing (the stub's and tests' signature) rather than a callable, so its unavailable-listing refusal moves to P6's tree reader. Every _mint caller now gets the lineage-aware title refusal (the gap census, rejudge and the consolidation census included): a draft with supersedes whose title another lineage holds is refused rather than dropped silently; the modules driving those callers pass. intake.py's size stamp moves 1722 to 1822 with its reason line (it was past 1000 SLOC before the lane; D-002 weighs decomposition at P12). Three items went to the spine change list for P12: LLR-345's first sentence reads inverted against the pinned record-change table (merge-unheld); LLR-335's unavailable-listing clause belongs to the tree reader; an integer adopted value raises in the shared list join, as needs and sr_refs already do (outside this row's surface)."
+alternative = "Build P3, P4 and P5 as three commits."
+reversal_cost = "Low: an unlanded lane."
+why_not_escalated = "Procedural; within the plan's P3 to P5, the off-list edits forced by pinned tests."
+review = ""
+
+[decision.D-017]
+decided = "P6 ran as one fresh kit-builder dispatch. Four of test_adoption_record's pass cases (the close's own commit, a later commit carrying the record, a refresh merge carrying trunk's record, a rebased lane's squash landing) turned green once the close wrote the record, while the P7 rule is still a stub returning no refusal: their strict marks were moved per test, the four left unmarked; they stay meaningful once P7 builds the rule, and the gate's convergence map does not cite them as pre-fix-failing evidence. The builder confirmed, and did not build, the plan's known residue: in close_adjudication's multi-row loop a later row's refusal leaves an earlier row's move uncommitted in the worktree (it predates this row)."
+alternative = "Keep a module-wide mark and leave four strict XPASS reds."
+reversal_cost = "Low."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-018]
+decided = "P7 (the commit check, carrying sitting 016's FIX) ran as one fresh kit-builder dispatch. Three calls it made, recorded here as the plan asks: (1) the record step owns its squash handling (staged_adoption_record_lines with its own HEAD..tip walk, judging the index against both HEAD and the tip) and does not reuse text_then_act._squash_lines, whose exemption is keyed to the approval-act registries; the alternative was WI-913's plan_gate shape (its own rider, slot rung and walk), passed over because the spec and Trust name LANE_COMMIT_RIDERS for the slot; (2) that walk calls the rule itself rather than through text_then_act.lane_commit_walk, which the plan names, because text_then_act imports adoption_record to list it as a rider and the call back is an import cycle test_import_layers refuses; the behaviour is the same; (3) a parent's spec whose front matter or record does not parse reads as holding no record (the commit's own tree is read strictly), so a commit repairing a malformed spec is not refused at both the hook and the slot; proposed for LLR-345 on the spine change list. The peel calls the shared close-shape reader without the relink oracle, its behaviour unchanged. Ratchets re-stamped with reasons: check.py 1301 to 1309, integrate.py 1761 to 1767, the deferred-import window 36 to 38."
+alternative = "Reuse _squash_lines with a widened exemption; read parents strictly."
+reversal_cost = "Low: an unlanded lane; the reviewers judge the calls."
+why_not_escalated = "Within the plan's P7 and the spec's Trust; the review rounds judge them."
+review = ""
+
+[decision.D-019]
+decided = "P8 to P10 ran as one fresh kit-builder dispatch, committed as one stage. P8: the sweep compares the request with the record (four refusals), re-points from the record beside the drafts, and refuses an unreadable merged spec; none of the old lane's history readers was ported, and _merged_dispositions takes no root. P9 beyond its named passages: the close's empty-section refusal reads 'drafted NO successor and adopted none', keeping the 'no successor' phrase two tests pin. P10: the entry keeps its anchor at the lane's base and states no forced migration (only an adopter on the retired legacy CSV form adds the Adopted column). intake.py's size stamp moves 1822 to 1859 with its reason line."
+alternative = "Three commits."
+reversal_cost = "Low."
+why_not_escalated = "Procedural; within the plan's P8 to P10."
+review = ""
+
+[decision.D-020]
+decided = "Counted round 1 (the lane's first review; its count starts at zero, D-011): REVIEW-A Codex Sol (gpt-6.1-sol, medium), filed docs/reviews/wi-969/002-REVIEW-A-f7bdfe4.md, CHANGES-REQUESTED findings=6; REVIEW-B a Claude Opus high stand-in sub-agent (a substitution for the third-family slot, coordinator-2026-10-16 D-008), filed 003-REVIEW-B-f7bdfe4.md, CHANGES-REQUESTED findings=7. Triage under PROCESS.md section 6: (1) 002 F1 (MAJOR) and 003 F2 (MINOR) are one class, an indented fence line silently ignored by the one section parser so a second block's successor is lost with no refusal; model-written text reaches it through the supported adjudicator-to-close route and it fails open against the complete-section Done-when, so it is taken at MAJOR and fixed this round. (2) 003 F1 (MAJOR): TC-147's evidence lost its approved module entry (tests/test_intake.py); accepted, the entry restored ahead of the lane's additions (a traced-only fix); its Method gaining the LLR-153 clauses goes to the spine change list for the checkpoint reconcile; 002 F4 (MINOR) is the same finding. (3) 003 F3 (MINOR, a request rewritten while the record is carried passes the slot and the hook and fails closed only at the sweep): the code does not enforce what LLR-345 states, so it rides this fix round rather than a checkpoint return (cheap, inside the spec's surface). (4) To the spine change list for the checkpoint: 002 F2 and 003 F7 (LLR-345 wording and both complete folders; LLR-335's duplicate admission sentence), 002 F3 and 003 F5 (IF-294's data names parse_block), 002 F5 (record-change symbols' one home), 003 F6 (SR-148: 'work item'). (5) To successor candidates at the landing, unless the checkpoint folds them: 002 F6 (_squash_walk beside lane_commit_walk; a shared leaf breaks the import cycle) and 003 F4 (_spec_paths beside acceptance_record._tree_specs), both consolidation MINORs outside the round's cost."
+alternative = "Grade the indented-fence class MINOR (Opus's grading: 0 of 69 trunk sections) and defer it."
+reversal_cost = "Low."
+why_not_escalated = "Triage under the review threat model; no finding is contested."
+review = ""
+
+[decision.D-021]
+decided = "Fix round 1 ran as one fresh kit-builder dispatch in two stages (coverage plans per round file, both gated by plan_coverage --findings to exit 0 and re-run by the coordinator, kept outside the repository; then the fixes). Built: the one section parser treats every line whose left-stripped text opens with three backticks as a fence and refuses one off column zero (through the real close and the real sweep); record_change judges one (record, request) pair per parent, so a carried record is admitted only with an unchanged request, at the slot rider and the staged hook form alike; TC-147's approved evidence entry restored. Each regression test was shown red on the pre-fix code (19 failed by assertion), then green. Beyond D-020: the disposition prompt tells the adjudicator to put each fence at column zero (the catalog regenerated), kept so the supported route does not trip the new refusal. All 58 tracked Dispositions sections were scanned: none holds an indented fence. The census test and the non-toml-fence test are cited by no TC (as before this round); to the spine change list."
+alternative = "Leave the prompt unchanged."
+reversal_cost = "Low."
+why_not_escalated = "Procedural (coordinator-cycle section 3, Iterate)."
+review = ""
+
+[decision.D-022]
+decided = "Counted round 2: REVIEW-A Codex Sol (medium), filed docs/reviews/wi-969/004-REVIEW-A-dab688d.md, CHANGES-REQUESTED findings=4, all MINOR; REVIEW-B the Claude Opus high stand-in (a substitution, as D-020), filed 005-REVIEW-B-dab688d.md, APPROVE findings=9, all MINOR. No BLOCKER or MAJOR, so the checkpoint follows (round count 2 of 3). Triage: the row-wording MINORs (LLR-345's merge sentence and both complete folders; IF-294's data; LLR-335's duplicate admission sentence and its decomposition; SR-148's 'work item' and 'record' wording; TC-147 and TC-156 expected and method gaining the LLR-153 and SR-148 clauses; IF-294, IF-303 and IF-304 lacking the status cell every other interface row carries) go to the checkpoint's reconcile turn. 005's test-adequacy MINOR (test_a_consumed_adoption_replays_after_its_successor_completes re-points its only dependent before the successor completes, so it does not witness the Done-when's 'still does so after its successor completes') goes to the builder at the checkpoint, a test-only strengthening the gate reviews. The consolidation MINORs (004 F4 and 005's _squash_walk beside text_then_act.lane_commit_walk and _squash_lines, a third copy beside plan_gate's; 005's _spec_paths beside acceptance_record._tree_specs) are filed as one successor row on trunk at the landing (move LANE_COMMIT_RIDERS' traversal to a shared leaf both squash paths use; one tree-spec listing), unless the checkpoint folds them."
+alternative = "Run a third counted round for the MINORs."
+reversal_cost = "Low."
+why_not_escalated = "Triage; MINORs never cost a round (ruling 4)."
+review = ""
+
+[decision.D-023]
+decided = "Checkpoint reconcile: Terra, resumed in its retained session 01a16169, reconciled the whole set against the settled code and the spine change list (items 1 to 17 confirmed, item 9, an integer list cell in the shared registry reader, confirmed as outside this row) and the round-2 row-wording MINORs: LLR-345's merge sentence corrected, both complete folders, the carried-request and lenient-parent clauses; LLR-335's duplicate admission sentence dropped and the record-change symbols moved to LLR-345 (Terra judged LLR-335 one decision, the adoption record's lifecycle, and proposed no split); IF-294 names the owner's real calls; IF-294, IF-303 and IF-304 carry status Drafted; SR-148's added clause says work item; TC-147 and TC-156 state by addition what their new evidence verifies; TC-360 cites the census and the non-toml fence test; TC-205's evidence gains the peel pin. Checked mechanically against the lane's base: every approved cell keeps its approved words (a word diff shows only insertions and a moved 'and'). The coordinator applied the one code item Terra reported: the Implements tags on kitlib/adoption.py record_change, _ids and _shown now name LLR-345 (a byte-exact trace fix). Both strict lints clean."
+alternative = "Route the three tags to the builder."
+reversal_cost = "Low."
+why_not_escalated = "Procedural (coordinator-cycle section 3, Checkpoint step 1)."
+review = ""
+
+[decision.D-024]
+decided = "Checkpoint sitting 006 (docs/reviews/wi-969/006-ADJUDICATE-e213f8d.md): first approval APPROVE for LLR-335, LLR-345, TC-360 and TC-383; amendments SR-148, LLR-161, LLR-312 and TC-254 MEANING+BLESS; LLR-153, TC-147 and TC-156 returned (LLR-153 did not state the title-lineage mismatch refusal; TC-147 and TC-156 cited SR-148 for full-successor replay, which LLR-153 and LLR-335 state; TC-156's Method carried the mint arms TC-147 verifies). Terra, resumed, answered the three in their lane-added text only (approved sentences verbatim, word-diffed); the verdict's Dispositions section, answered in the lane, moved under 'Follow-up answered in the lane' so the sweep mints no rework row. A return holds its whole registry, so the whole set is re-sat in one combined sitting at the reworked tip, one verdict for the act (wi-958 D-014)."
+alternative = "Re-sit only the three returned rows."
+reversal_cost = "Low."
+why_not_escalated = "Procedural (coordinator-cycle section 3, Checkpoint step 3; recipes section 3)."
+review = ""
+
+[decision.D-025]
+decided = "Convergence map for the gate (uncounted, convergence stance, over the checkpoint tip). Every accepted finding maps to evidence the gate's reviewers can check without earlier verdicts: (a) round 1's indented-fence class (002 F1, 003 F2) -> tests/test_disposition_adoption.py::test_a_fence_line_off_column_zero_is_refused, the census's planted-indented case, tests/test_handback.py::test_a_valid_adoption_then_an_indented_block_refuses_the_close and tests/test_intake.py::test_a_valid_adoption_then_an_indented_block_refuses_the_sweep, each shown failing on the pre-fix code by assertion in fix round 1 (D-021); (b) 003 F3, a request rewritten under a carried record -> tests/test_adoption_record.py::test_a_request_rewritten_under_a_carried_record_is_refused[slot] and [hook], shown failing pre-fix (the rider returned [], the hook exited 0); (c) 003 F1 and 002 F4, TC-147's evidence -> inspection: TC-147's evidence cell in docs/test/test-cases.toml opens with the approved entry tests/test_intake.py, equal to the base's; (d) round 2's test-adequacy MINOR -> tests/test_intake.py::test_a_consumed_adoption_replays_after_its_successor_completes, shown failing on a replay that drops a completed successor's adoption (assert 'WI-005' == 'WI-020'); (e) every row-wording finding -> checkpoint sitting 007 (docs/reviews/wi-969/007-ADJUDICATE-9d73112.md): seven amendments blessed, four first approvals; its act follows the gate and the rebase. Sitting 016's FIX, which the plan carries -> tests/test_adoption_record.py's real-close regression (an inbound relink outside docs/work/ admitted for the machinery close, a hand-written record beside the same relink refused) and tests/test_verdict_record.py::test_the_peel_still_refuses_a_close_whose_relink_leaves_docs_work. The map is complete; the gate may render."
+alternative = "None: coordinator-cycle section 3, the convergence map."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-026]
+decided = "Before the gate the lane was rebased onto trunk 8c03d504f (trunk had moved by one docs commit, leg 10's close-out, which touches the recipes this lane also edits); the replay was clean, and the lane's diff has the same patch id over the new base as over the old (aafc2a366f16), so no post-rebase round is owed and the gate reviews the tip that lands. The pre-rebase tip b5fbc80a7 is kept for archive/lanes. The RESYNC entry is re-anchored at the new base. Sittings 001 and 007 judged rows trunk did not touch."
+alternative = "Gate first, rebase at the landing, then an uncounted round over the rebase."
+reversal_cost = "None."
+why_not_escalated = "Procedural (recipes section 3, Rebase)."
+review = ""
+
+[decision.D-027]
+decided = "The gate (uncounted, convergence stance, over the rebased checkpoint tip fd5acbf58, after the convergence map D-025): REVIEW-A Codex Sol (medium), filed docs/reviews/wi-969/008-REVIEW-A-fd5acbf.md, APPROVE findings=2; REVIEW-B the Claude Opus high stand-in (a substitution, as D-020), filed 009-REVIEW-B-fd5acbf.md, APPROVE findings=4. Every finding is MINOR and none is convergence-class, so no dispute sitting is owed; a gate MINOR whose fix would move the tip off the gated one is a follow-up, never a fix after the gate (wi-935 D-005). Follow-ups for the owner's unfiled list: LLR-153's SR refs lack SR-148 (008 F1); LLR-161 and the disposition prompt's 'continuing partial work means minting a successor' wording, unqualified beside adoption (008 F2); TC-147, TC-156 and TC-254's expected naming the SR-148 clause each discharges, and the LLR-335 citation without a verifies link (009 F3); the census selecting files by the exact Dispositions heading where the parser reads the first prefix (009 F4); _spec_refusal refusing a commit that only writes an unreadable spec with no record question live (009 F1). One successor row is filed on trunk at the landing for the consolidation MINORs every round raised (004 F4, 005, 009 F2: the record step's staged walk and squash handling beside text_then_act's, and _spec_paths beside acceptance_record._tree_specs), as D-022 states."
+alternative = "A fix round and a second gate for the MINORs."
+reversal_cost = "Low."
+why_not_escalated = "Triage; MINORs never cost a round."
+review = ""

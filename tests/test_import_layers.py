@@ -401,9 +401,16 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # guard's no-op hook, which imports session_keep, keeps importing no route
     # module. The edge is new; agent_route imports no session_keep, so no
     # cycle or layer edge grew. Reason in docs/decisions/wi-798.toml (D-011).
-    assert 14 <= deferred <= 36, (
+    # RE-STAMPED 36 -> 38 (2026-10-21, WI-969 P7): adoption_record -> intake
+    # and adoption_record -> spec_move join deferred, inside the commit rule's
+    # request reader and close test, their only users: text_then_act imports
+    # adoption_record for LANE_COMMIT_RIDERS, so the text-then-act step and the
+    # hook's adoption-record step on a commit touching no spec import neither.
+    # Neither module reaches adoption_record, so no cycle or layer edge grew.
+    # Reason in the WI-969 plan (P7).
+    assert 14 <= deferred <= 38, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..36 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..38 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

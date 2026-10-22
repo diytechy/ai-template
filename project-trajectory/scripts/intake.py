@@ -154,12 +154,14 @@ except ImportError:  # pragma: no cover - in-process fallback
 # of two git trees, so it needs the FORMAT reader, not the filesystem-bound common
 # one — the parse rule has exactly one home either way.
 try:
+    from kitlib import adoption as kadoption
     from kitlib import done_when as kdone
     from kitlib import sitting as ksitting
     from kitlib import stage as kitstage
     from kitlib import spine as _spine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import adoption as kadoption
     from kitlib import done_when as kdone
     from kitlib import sitting as ksitting
     from kitlib import stage as kitstage
@@ -277,8 +279,10 @@ def owes_successor(meta):
     return str(meta.get("title") or "").strip().startswith(_DISPOSITION_TITLE_PREFIX)
 
 
-# A fenced TOML draft inside the ## Dispositions section.
-_TOML_FENCE_RE = re.compile(r"```toml\s*\n(.*?)```", re.S)
+# The two fence lines a ## Dispositions section may hold: a block opens with
+# exactly the first and closes with the second, in pairs (WI-969).
+_TOML_OPEN = "```toml"
+_FENCE = "```"
 # The keys a drafted follow-up may carry — a typo'd key is a refusal, because
 # a silently dropped cell on a row minted with nobody watching is the exact
 # failure shape this module exists to close.
@@ -1462,44 +1466,148 @@ def _close_context(relpath, rel_report):
 
 
 def parse_dispositions(text, where):
-    """`(drafts, refusal)` — the `## Dispositions` section's fenced TOML
-    blocks, validated. A malformed block is a REFUSAL, never a skip: a ruled
-    follow-up silently dropped by a mint running with nobody watching is the
-    exact loss this module exists to prevent (recovery: fix the completed spec
-    trunk-side, then `python intake.py sweep`)."""
+    """`(drafts, refusal)` — the `## Dispositions` section's drafts, through
+    the one parser (`parse_disposition_section`). An ADOPTION block is not a
+    draft and is not returned here: it mints nothing, so a reader that asks only
+    what a verdict mints (the review scheduler, the merge gate, a SUCCESSOR
+    Done-when verdict) reads it as nothing drafted. A malformed block of either
+    shape, or a section whose fences do not pair, is still a refusal.
+
+    Implements: SR-174, LLR-153"""
+    drafts, _adoptions, refusal = parse_disposition_section(text, where)
+    return drafts, refusal
+
+
+def parse_disposition_section(text, where):
+    """`(drafts, adoptions, refusal)` — the ONE parser of a `## Dispositions`
+    section: its fenced TOML drafts, validated, and the WI ids its adoption
+    blocks name, in block order (`kitlib.adoption`). A malformed block is a
+    REFUSAL, never a skip: a ruled follow-up silently dropped by a mint running
+    with nobody watching is the exact loss this module exists to prevent
+    (recovery: fix the completed spec trunk-side, then `python intake.py
+    sweep`). The section's fences are paired before any block is read
+    (`_fenced_blocks`), so an unclosed block refuses the whole section rather
+    than vanishing after a valid one, and an adoption named twice refuses here,
+    where the section is assembled.
+
+    Implements: SR-148, LLR-335"""
     _, sep, tail = text.partition("\n## Dispositions")
     if not sep:
-        return [], None
-    section = tail.split("\n## ", 1)[0]
-    blocks = _TOML_FENCE_RE.findall(section)
-    if not blocks:
-        return [], (
+        return [], [], None
+    blocks, refusal = _fenced_blocks(tail.split("\n## ", 1)[0], where)
+    if not blocks and not refusal:
+        refusal = (
             "{}: a ## Dispositions section with no ```toml draft block - "
             "nothing minted".format(where)
         )
-    # The prose after each block, up to the next one: the adjudicator's own
-    # statement of the successor's scope, which rides into the minted Context
-    # verbatim - the cells alone cannot carry a boundary or an exclusion.
-    prose = _TOML_FENCE_RE.split(section)[2::2]
-    drafts = []
-    for index, block in enumerate(blocks, 1):
-        try:
-            data = tomllib.loads(block)
-        except tomllib.TOMLDecodeError as exc:
-            return [], (
+    drafts, adoptions = [], []
+    for index, (block, scope) in enumerate(blocks, 1):
+        adopted, draft, refusal = _section_block(block, where, index, scope)
+        if adopted in adoptions:
+            refusal = (
+                "{}: ## Dispositions block {} repeats the adoption of {} - each "
+                "successor is adopted once; nothing minted".format(
+                    where, index, adopted
+                )
+            )
+        if refusal:
+            break
+        if adopted:
+            adoptions.append(adopted)
+        else:
+            drafts.append(draft)
+    return ([], [], refusal) if refusal else (drafts, adoptions, None)
+
+
+def _fenced_blocks(section, where):
+    """`([(block, scope)], refusal)` for a `## Dispositions` section's text:
+    each fenced block's TOML source and the prose after it, up to the next
+    block (the adjudicator's own statement of the successor's scope, which
+    rides into the minted Context verbatim - the cells alone cannot carry a
+    boundary or an exclusion).
+
+    THE FENCE GRAMMAR (WI-969). Every line whose text, leading whitespace
+    stripped, begins with three backticks is a fence line, and must be an
+    opening `` ```toml `` or a bare closing `` ``` `` at column zero,
+    alternating open then close from an open, so they pair; anything else -
+    an indented fence (one nested under a list bullet), another fence, a close
+    with nothing open, an open left unclosed - refuses the whole section,
+    naming the line, before any block is read, so no block is ever folded
+    into the previous block's scope prose.
+
+    Implements: SR-148, LLR-335"""
+    lines = section.split("\n")
+    pairs, opened = [], None
+    for number, line in enumerate(lines):
+        if not line.lstrip().startswith(_FENCE):
+            continue
+        if line.rstrip() != (_TOML_OPEN if opened is None else _FENCE):
+            return [], _fence_refusal(where, line, opened)
+        if opened is None:
+            opened = number
+        else:
+            pairs.append((opened, number))
+            opened = None
+    if opened is not None:
+        return [], _fence_refusal(where, lines[opened], opened)
+    ends = [start for start, _end in pairs[1:]] + [len(lines)]
+    return [
+        (
+            "\n".join(lines[start + 1 : end]) + "\n",
+            "\n".join(lines[end + 1 : after]).strip("\n"),
+        )
+        for (start, end), after in zip(pairs, ends)
+    ], None
+
+
+def _fence_refusal(where, line, opened):
+    """The refusal naming the fence line that breaks the pairing.
+
+    Implements: SR-148, LLR-335"""
+    if line != line.lstrip():
+        why = "does not start at column zero"
+    elif opened is None:
+        why = "is not an opening ```toml fence"
+    elif line.rstrip() == _TOML_OPEN:
+        why = "opens a block that no bare ``` fence closes"
+    else:
+        why = "is not the bare ``` fence that closes the open block"
+    return (
+        "{}: ## Dispositions fence line {!r} {} - each block opens with ```toml "
+        "and closes with a bare ```, in pairs; nothing minted".format(where, line, why)
+    )
+
+
+def _section_block(block, where, index, scope):
+    """`(adopted id, draft, refusal)` for one fenced `## Dispositions` block:
+    an adoption (`kitlib.adoption`, never a `_DRAFT_KEYS` draft, never minted)
+    names its id, anything else is a draft, each validated.
+
+    Implements: SR-148, LLR-335"""
+    try:
+        data = tomllib.loads(block)
+    except tomllib.TOMLDecodeError as exc:
+        return (
+            None,
+            None,
+            (
                 "{}: ## Dispositions block {} is not valid TOML ({}) - "
                 "nothing minted".format(where, index, exc)
-            )
-        refusal = _draft_refusal(data, where, index)
-        if refusal:
-            return [], refusal
-        draft = {key: data.get(key) for key in _DRAFT_KEYS if key in data}
-        draft["kind"] = draft.pop("safety_class", "") or (
-            "" if draft.get("planmode") == "dual" else "ordinary"
+            ),
         )
-        draft["scope"] = prose[index - 1].strip("\n") if index <= len(prose) else ""
-        drafts.append(draft)
-    return drafts, None
+    if kadoption.KEY in data:
+        at = "{}: ## Dispositions block {}".format(where, index)
+        adopted, refusal = kadoption.parse_block(data, at)
+        return adopted, None, refusal
+    refusal = _draft_refusal(data, where, index)
+    if refusal:
+        return None, None, refusal
+    draft = {key: data.get(key) for key in _DRAFT_KEYS if key in data}
+    draft["kind"] = draft.pop("safety_class", "") or (
+        "" if draft.get("planmode") == "dual" else "ordinary"
+    )
+    draft["scope"] = scope
+    return None, draft, None
 
 
 def _supersedes_refusal(value, at, known_ids=None, absorbed_ids=None):
@@ -1663,50 +1771,125 @@ def _open_item_refusal(draft, at):
 
 
 def _disposition_drafts(root, outcomes):
-    """Trigger (d): drafts from every MERGED adjudication row's spec body."""
-    drafts = []
+    """Trigger (d): `(drafts, lineage, refusal)` from every MERGED adjudication
+    row's spec body - its drafts, and the `[(adopted, [disposed])]` lineage of
+    the adoptions its close recorded, which the mint re-points beside the
+    drafts' own (WI-969).
+
+    Implements: SR-148, LLR-335
+    """
+    drafts, lineage = [], []
     for wi_id in _merged_ids(outcomes):
-        hits = _terminal_hits(root, "complete", wi_id + "-*.md")
-        for hit in hits:
+        for hit in _terminal_hits(root, "complete", wi_id + "-*.md"):
             relpath = hit.relative_to(Path(root)).as_posix()
-            try:
-                text = hit.read_text(encoding="utf-8")
-                meta, _body = ac.parse_spec_frontmatter(text, relpath)
-            except (OSError, ValueError, UnicodeDecodeError):
-                continue
-            if (meta.get("safety_class") or "").strip().lower() != "adjudication":
-                continue
-            parsed, refusal = parse_dispositions(text, relpath)
+            meta, parsed, adopted, refusal = _merged_dispositions(hit, relpath)
             if refusal:
-                return [], refusal
-            # THE REFUSAL INVARIANT (OI-70, tightened by OI-73): a PARTIAL or
-            # CANCELLED close MUST queue at least one successor — an OI alone no
-            # longer discharges it (OI-70 exit-(B)-alone is retired), and there
-            # is no third exit. `owes_successor` reads the durable title signal,
-            # NOT `brief`: the `partial` arm carries `brief = "disposition"` but
-            # the `cancelled` arm is brief-LESS by design (it owes no report, so
-            # the kit assembles no brief and `agent_loop` gives it the ordinary
-            # worker assignment), and gating on `brief` let a cancelled close
-            # queue no successor and merge silently. THIS guard is the one that
-            # catches the SELF-close path — an agent that moved its own spec to
-            # `complete/` never reaches `close_adjudication` (dispatch short-
-            # circuits on a finished branch), and the self-close CLEARS specref,
-            # so the title is the only signal left. A clean-close spot check owes
-            # none and is not caught. A merged early-close row with an empty
-            # `## Dispositions` section is REFUSED here: the merge stands
-            # (all-or-nothing mint), the run stops, and a human reads the lane
-            # rather than a close silently vanishing without a continuation.
-            if owes_successor(meta) and not parsed:
-                return [], (
-                    "{}: an early-close (partial/cancelled) adjudication row "
-                    "merged with an EMPTY ## Dispositions section — such a close "
-                    "must queue at least one successor (OI-70/OI-73, no third "
-                    "exit). Draft the successor in the row's ## Dispositions "
-                    "section and re-run `python intake.py sweep`".format(relpath)
-                )
+                return [], [], refusal
+            lineage += adopted
             for draft in parsed:
                 drafts.append(_disposition_draft(root, draft, meta, wi_id, relpath))
-    return drafts, None
+    return drafts, lineage, None
+
+
+def _merged_dispositions(hit, relpath):
+    """`(meta, drafts, lineage, refusal)` for one merged `complete/` spec;
+    nothing for a row that is not an adjudication row.
+
+    A spec that cannot be read, or whose front matter does not parse, REFUSES
+    the sweep (WI-969): it used to be skipped, and a skipped early close is a
+    close that vanishes without a successor.
+
+    THE SWEEP TRUSTS THE RECORD (WI-969). The close validated each adoption
+    once, in the tree its closing commit was made on, and wrote the validated
+    ids into this spec's `adopted` cell; the commit check admits that record
+    only there. So the sweep validates nothing again and reads no git history
+    and no state of the adopted row: it compares the request (the section's
+    adoption blocks) with the record (`_recorded_lineage`) and re-points from
+    the record, at the landing sweep and every replay alike.
+
+    THE REFUSAL INVARIANT (OI-70, tightened by OI-73): a PARTIAL or CANCELLED
+    close MUST queue at least one successor - an OI alone no longer discharges
+    it (OI-70 exit-(B)-alone is retired), and there is no third exit.
+    `owes_successor` reads the durable title signal, NOT `brief`: the `partial`
+    arm carries `brief = "disposition"` but the `cancelled` arm is brief-LESS by
+    design (it owes no report, so the kit assembles no brief and `agent_loop`
+    gives it the ordinary worker assignment), and gating on `brief` let a
+    cancelled close queue no successor and merge silently. THIS guard is the one
+    that catches the SELF-close path - an agent that moved its own spec to
+    `complete/` never reaches `close_adjudication` (dispatch short-circuits on a
+    finished branch), and the self-close CLEARS specref, so the title is the
+    only signal left. A clean-close spot check owes none and is not caught. A
+    merged early-close row with an empty `## Dispositions` section is REFUSED
+    here: the merge stands (all-or-nothing mint), the run stops, and a human
+    reads the lane rather than a close silently vanishing without a
+    continuation. A recorded adoption is that successor exit, not a third one:
+    a row already open that supersedes the closed one, so it mints nothing.
+
+    Implements: SR-148, LLR-335
+    """
+    try:
+        text = hit.read_text(encoding="utf-8")
+        meta, _body = ac.parse_spec_frontmatter(text, relpath)
+    except (OSError, ValueError, UnicodeDecodeError) as exc:
+        return (
+            None,
+            [],
+            [],
+            (
+                "{}: a merged spec cannot be read ({}) - whether it owes a "
+                "successor is unknown; nothing minted".format(relpath, exc)
+            ),
+        )
+    if (meta.get("safety_class") or "").strip().lower() != "adjudication":
+        return meta, [], [], None
+    parsed, adoptions, refusal = parse_disposition_section(text, relpath)
+    lineage = []
+    if not refusal:
+        lineage, refusal = _recorded_lineage(meta, adoptions, relpath)
+    if not refusal and owes_successor(meta) and not (parsed or adoptions):
+        refusal = (
+            "{}: an early-close (partial/cancelled) adjudication row "
+            "merged with an EMPTY ## Dispositions section — such a close "
+            "must queue at least one successor, drafted or adopted (OI-70/OI-73, "
+            "no third exit). Draft the successor, or adopt the open row that "
+            "supersedes the closed one, in the row's ## Dispositions section "
+            "and re-run `python intake.py sweep`".format(relpath)
+        )
+    return meta, parsed, lineage, refusal
+
+
+def _recorded_lineage(meta, adoptions, relpath):
+    """`(lineage, refusal)`: the `[(adopted, [disposed])]` pairs of the close's
+    `adopted` record in the merged spec's front matter `meta`, each paired with
+    the row the title disposes (`kitlib.adoption.disposed_id`). The request
+    (`adoptions`, the section's blocks in order) and the record must agree:
+    both absent, or both present and equal. A request with no record, a record
+    with no request, the two differing, a malformed record or an untokened
+    title refuses, and none is repaired or guessed.
+
+    Implements: SR-148, LLR-335
+    """
+    record, refusal = kadoption.record_ids(meta, relpath)
+    if refusal:
+        return [], refusal + "; nothing minted"
+    request = tuple(adoptions) or None
+    if record != request:
+        return [], (
+            "{}: its `{}` record {} does not match the adoption its "
+            "## Dispositions section requests {} - only the close writes the "
+            "record, equal to the request; nothing minted".format(
+                relpath,
+                kadoption.RECORD_KEY,
+                ";".join(record or ()) or "(none)",
+                ";".join(request or ()) or "(none)",
+            )
+        )
+    if record is None:
+        return [], None
+    disposed, refusal = kadoption.disposed_id(meta.get("title"), owes_successor(meta))
+    if refusal:
+        return [], "{}: {}; nothing minted".format(relpath, refusal)
+    return [(adopted, [disposed]) for adopted in record], None
 
 
 def _disposition_draft(root, draft, meta, wi_id, relpath):
@@ -2210,7 +2393,12 @@ def _apply_supersedes(root, minted, *, apply=True):
     naming absorbed rows with DIFFERENT verdicts ends holding the union of both,
     because the second group reads the first group's write and replaces only its
     own tokens. `apply=False` validates and reports the same proposed edits but
-    leaves every source untouched."""
+    leaves every source untouched. Returns the relpath of every proposed edit.
+
+    A successor an earlier run already minted (`_standing_successors`) is a
+    pair here exactly as a newly minted one is: it re-points the absorbed
+    row's inbound edges, and beside drafts of the same row it joins their
+    successor set."""
     per_absorbed = {}
     for wi_id, absorbed in minted:
         for dead_id in absorbed:
@@ -2220,12 +2408,15 @@ def _apply_supersedes(root, minted, *, apply=True):
     groups = {}
     for dead_id, succs in per_absorbed.items():
         groups.setdefault(tuple(succs), []).append(dead_id)
+    edits = []
     for successors, absorbed in groups.items():
         for rel, replaced, dropped in _replace_inbound_edges(
             root, absorbed, list(successors), apply=apply
         ):
+            edits.append(rel)
             if apply:
                 _announce_repoint(rel, replaced, dropped, ";".join(successors))
+    return edits
 
 
 def _announce_repoint(rel, replaced, dropped, into):
@@ -2296,15 +2487,16 @@ def _pre_mint_refusal(drafts, subject_verb, registry, bodies):
     return None
 
 
-def _supersede_source_refusal(root, drafts, subject_verb):
+def _supersede_source_refusal(root, drafts, subject_verb, adopted=()):
     """Prevalidate every existing dependency edit before the mint writes.
 
     Planned ids (`_planned_ids`) shape the lineage groups only; parsed source
-    decides every edit."""
+    decides every edit. `adopted` is the standing successors' lineage, grouped
+    with the drafts' exactly as `_write_mint` groups it."""
     planned = [
         (wi_id, supersedes_ids(draft.get("supersedes")))
         for wi_id, draft in zip(_planned_ids(root, drafts), drafts)
-    ]
+    ] + list(adopted)
     try:
         _apply_supersedes(root, planned, apply=False)
     except ValueError as exc:
@@ -2368,10 +2560,19 @@ def _write_draft(root, draft, registry, subject_verb):
     return (wi_id, (Path(WORK) / rel).as_posix(), absorbed), None
 
 
-def _mint(root, drafts, subject_verb):
+def _mint(root, drafts, subject_verb, adopted=()):
     """Write every draft as a queued spec, then ONE bookkeeping commit.
     `([(wi_id, relpath)], refusal)`; all-or-nothing — a refusal restores what
     the mint wrote and reports zero minted.
+
+    `adopted` is the `[(successor id, [disposed id])]` lineage of successors
+    that already stand (WI-969): no row is written and no id allocated for
+    one, but its inbound edges are re-pointed in the drafts' own
+    `_apply_supersedes` pass, so a mint with no draft still commits when a
+    standing successor owes a re-point. A draft an earlier run already minted
+    joins that pass the same way (`_standing_successors`), so a replay
+    re-points to the verdict's WHOLE successor set; a title match off the
+    draft's own lineage refuses the mint before any write.
 
     The mint's bookkeeping commit is a loop writer: under the loop marker the
     shared helper judges its tree against the held-status rule before it
@@ -2382,9 +2583,11 @@ def _mint(root, drafts, subject_verb):
     """
     root = Path(root)
     registry = ac.read_spec_rows(root / WORK)
-    titles = {r["Title"] for r in registry if r.get("Title")}
-    drafts = [d for d in drafts if str(d["title"]).strip() not in titles]
-    if not drafts:
+    drafts, standing, refusal = _standing_successors(registry, drafts, subject_verb)
+    if refusal:
+        return [], refusal
+    standing += list(adopted)
+    if not drafts and not _repoint_owed(root, standing):
         return [], None
     # The enacted-consolidation record guard 3 reads lives in the judging rows'
     # spec bodies; only a draft that supersedes anything needs it read.
@@ -2395,7 +2598,7 @@ def _mint(root, drafts, subject_verb):
     )
     refusal = _pre_mint_refusal(
         drafts, subject_verb, registry, bodies
-    ) or _supersede_source_refusal(root, drafts, subject_verb)
+    ) or _supersede_source_refusal(root, drafts, subject_verb, standing)
     if refusal:
         return [], refusal
     minted = []
@@ -2403,8 +2606,10 @@ def _mint(root, drafts, subject_verb):
         root,
         # Planned in the scratch, which is HEAD, like the writes themselves.
         lambda tree: _mint_scope(tree, drafts),
-        lambda scratch: _write_mint(scratch, drafts, registry, subject_verb, minted),
-        lambda: _mint_message(minted, subject_verb),
+        lambda scratch: _write_mint(
+            scratch, drafts, registry, subject_verb, minted, standing
+        ),
+        lambda: _mint_message(minted, subject_verb, standing),
         label="the intake mint",
     )
     if refusal:
@@ -2414,7 +2619,64 @@ def _mint(root, drafts, subject_verb):
     return minted, None
 
 
-def _write_mint(root, drafts, registry, subject_verb, minted):
+def _standing_successors(registry, drafts, subject_verb):
+    """`(to allocate, standing, refusal)`: the exact-title dedup as a
+    partition, with identity and lineage resolved TOGETHER. A draft whose
+    title no row carries is allocated. A draft WITH `supersedes` is an earlier
+    run's mint only when exactly one row carries its title AND records the
+    draft's own `supersedes`: its allocation is skipped and it stays in the
+    successor set under the draft's intended lineage. Any other title match -
+    a row of another lineage, or several rows - refuses the whole mint before
+    a write, naming the rows. A draft WITHOUT `supersedes` keeps
+    allocation-only dedup and adds no lineage.
+
+    Implements: SR-174, LLR-153"""
+    by_title = {}
+    for row in registry:
+        by_title.setdefault(row.get("Title") or None, []).append(row)
+    allocate, standing = [], []
+    for draft in drafts:
+        title = str(draft["title"]).strip()
+        held = by_title.get(title, [])
+        intended = supersedes_ids(draft.get("supersedes"))
+        lineages = [supersedes_ids(r.get("Supersedes")) for r in held]
+        if held and intended and lineages != [intended]:
+            return [], [], _title_identity_refusal(subject_verb, title, intended, held)
+        if not held:
+            allocate.append(draft)
+        elif intended:
+            standing.append((held[0]["WI-ID"], intended))
+    return allocate, standing, None
+
+
+def _title_identity_refusal(subject_verb, title, intended, held):
+    """The refusal for a drafted title that rows carry under another identity.
+
+    Implements: SR-174, LLR-153"""
+    rows = ", ".join(
+        "{} (supersedes {})".format(r["WI-ID"], r.get("Supersedes") or "nothing")
+        for r in held
+    )
+    return (
+        "{}: the draft {!r} (supersedes {}) shares its exact title with {}; a "
+        "title match is the draft's earlier mint only for one row recording the "
+        "same supersedes; nothing minted"
+    ).format(subject_verb, title, ";".join(intended), rows)
+
+
+def _repoint_owed(root, standing):
+    """Whether a standing successor still has an inbound edge to re-point. A
+    source the pre-write check cannot edit answers True, so that check names
+    it rather than this one skipping it.
+
+    Implements: SR-174, LLR-153"""
+    try:
+        return bool(standing) and bool(_apply_supersedes(root, standing, apply=False))
+    except ValueError:
+        return True
+
+
+def _write_mint(root, drafts, registry, subject_verb, minted, adopted=()):
     """The mint's own writes, appending each `(wi_id, relpath)` to `minted`: a
     refusal or None. `root` is the bookkeeping commit's scratch worktree, so
     nothing here reaches the checkout unless the commit is installed."""
@@ -2439,8 +2701,8 @@ def _write_mint(root, drafts, registry, subject_verb, minted):
     # a dependent of a row split across several successors must end holding all
     # of them, and a successor must be recognisable as one (by its own written
     # `supersedes` cell) so its edge onto a sibling is never rewritten into an
-    # edge onto itself.
-    _apply_supersedes(root, lineage)
+    # edge onto itself. A standing successor rides in the same pass.
+    _apply_supersedes(root, lineage + list(adopted))
     # ...and THEN the absorbed rows go terminal (restructure plan §1.5). The
     # order is forced: the re-point above needs them still OPEN (`_open_specs`
     # skips a terminal row), and their Deliverable names a successor whose id
@@ -2464,14 +2726,18 @@ def _write_mint(root, drafts, registry, subject_verb, minted):
     return None
 
 
-def _mint_message(minted, subject_verb):
-    """The mint commit's message, built once the ids are allocated."""
+def _mint_message(minted, subject_verb, adopted=()):
+    """The mint commit's message, built once the ids are allocated; a mint
+    that allocated none names the standing successors it re-pointed to."""
+    ids = ";".join(w for w, _ in minted) or "re-point to {}".format(
+        ";".join(dict.fromkeys(a for a, dead in adopted if dead))
+    )
     return (
         "mint: {} - {} (WI-388 intake; bookkeeping)\n\nThe WI-388 unified intake "
         "mint (docs/concurrency-v2.md §A5.2; rulings\nR1/R3): a WI id is created "
         "only by a human trunk commit or this helper -\nlanes never mint. Derived "
         "description, no model in the path; the\nregeneration folds in per "
-        "RULING-6.".format(";".join(w for w, _ in minted), subject_verb)
+        "RULING-6.".format(ids, subject_verb)
     )
 
 
@@ -2493,7 +2759,7 @@ def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
     if refusal:
         return [], refusal
     drafts += goalposts
-    disposition, refusal = _disposition_drafts(root, outcomes)
+    disposition, adopted, refusal = _disposition_drafts(root, outcomes)
     if refusal:
         return [], refusal
     drafts += disposition
@@ -2506,7 +2772,7 @@ def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
     # when given, only names the mint commit, so a sweep's range label is never
     # mistaken for a lane.
     label = "intake at merge of {}".format(label or branch or str(after)[:7])
-    return _mint(root, drafts, label)
+    return _mint(root, drafts, label, adopted)
 
 
 def _rejudge_drafts(root, rev, checkpoint):

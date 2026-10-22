@@ -571,7 +571,7 @@ commit of its own, move it to trunk's tip
   Taken on trunk inside the squash, text-then-act refuses it (WI-887,
   2026-10-11). Adding an IF to an approved TC's `Verifies` (the strict gate refuses
   an IF row no TC cites) is traced-only too: the composer refuses an
-  amendment sitting for it, and the re-anchor is the step (WI-902, act 117). The bar command on the staged squash (below) catches
+  amendment sitting for it, and the re-anchor is the step (WI-902's archived lane tip `d3d301216`). The bar command on the staged squash (below) catches
   this drift; the lane hook does not.
 - **A return in a sitting holds its whole registry.** A row the sitting
   would bless is not anchored while another row in the same registry is
@@ -1110,13 +1110,17 @@ lane commit being replayed.
   and `specref = ""` and commits with the run's trailer; land the lane
   as any other, and the sweep (`--merged` naming the row) mints each
   drafted successor.
-- **A disposition whose successor was filed by hand** (WI-894): the verdict
-  drafts none, so `handback.close_adjudication` refuses (`owes_successor`)
-  and the landing's sweep refuses the empty `## Dispositions` (OI-73).
-  Until WI-902 lands, close the row by hand into `docs/work/complete/`
-  citing the verdict, give the existing successor `supersedes`, and record
-  the sweep's refusal; it mints nothing else. Since WI-901 (2026-10-11) a
-  close whose commit range is empty composes its disposition brief.
+- **A disposition whose successor was filed by hand** (WI-894, WI-969):
+  the filed row's `supersedes` names the closed row, and the verdict adopts
+  it (`adopts = "WI-NNN"` in its `## Dispositions`) rather than drafting a
+  duplicate. An adopting disposition closes through
+  `handback.close_adjudication`, which writes the `adopted` record, and
+  lands inside the squash, never by a hand close, which the
+  adoption-record step refuses. An inbound link elsewhere in the repository
+  needs no workaround: the close's exact relink is admitted. A verdict that
+  neither drafts nor adopts is still refused at the close and at the
+  landing's sweep (OI-73). Since WI-901 (2026-10-11) a close whose commit
+  range is empty composes its disposition brief.
 - **Close a lane partial for an owner decision** (OI-70: never park it
   claimed). Save any uncommitted build outside the repository and revert the
   lane first: `handback.close_partial` commits residue as-is with the hook

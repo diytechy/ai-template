@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 310
-seam_rows = 248
+design_rows = 312
+seam_rows = 251
 requirements_placed = 128
 requirements_unplaced = 6
 seams_unplaced = 0
@@ -406,9 +406,12 @@ seam_boundary_refs = [
   "IF-286",
   "IF-287",
   "IF-290",
+  "IF-294",
   "IF-295",
   "IF-296",
   "IF-297",
+  "IF-303",
+  "IF-304",
 ]
 
 [component_view.CMP-007]
@@ -609,6 +612,7 @@ seam_boundary_refs = [
   "IF-256",
   "IF-287",
   "IF-295",
+  "IF-304",
 ]
 
 [component_view.CMP-008]
@@ -771,6 +775,7 @@ llr_refs = [
   "LLR-317",
   "LLR-318",
   "LLR-319",
+  "LLR-335",
   "LLR-336",
   "LLR-337",
   "LLR-338",
@@ -779,6 +784,7 @@ llr_refs = [
   "LLR-341",
   "LLR-343",
   "LLR-344",
+  "LLR-345",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -799,6 +805,7 @@ modules = [
   "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/adjudicate_act.py",
   "project-trajectory/scripts/adjudicate_brief.py",
+  "project-trajectory/scripts/adoption_record.py",
   "project-trajectory/scripts/agent_brief.py",
   "project-trajectory/scripts/agent_common.py",
   "project-trajectory/scripts/agent_loop.py",
@@ -822,6 +829,7 @@ modules = [
   "project-trajectory/scripts/hats.py",
   "project-trajectory/scripts/intake.py",
   "project-trajectory/scripts/integrate.py",
+  "project-trajectory/scripts/kitlib/adoption.py",
   "project-trajectory/scripts/kitlib/authority.py",
   "project-trajectory/scripts/kitlib/commit_hooks.py",
   "project-trajectory/scripts/kitlib/config.py",
@@ -919,10 +927,13 @@ seam_internal_refs = [
   "IF-287",
   "IF-290",
   "IF-291",
+  "IF-294",
   "IF-295",
   "IF-296",
   "IF-297",
   "IF-302",
+  "IF-303",
+  "IF-304",
 ]
 seam_boundary_refs = [
   "IF-001",

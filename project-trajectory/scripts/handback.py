@@ -88,16 +88,22 @@ from __future__ import annotations
 import re
 import subprocess
 
+import adoption_record
 import agent_common as ac
 import consolidate
 import integrate
 import spec_move
+from kitlib import adoption as kadoption
 from kitlib import provenance as _kitprovenance
+from kitlib import spine as kspine
 from kitlib import station
 
 # The frontmatter `specref = ...` line, cleared at a terminal close (R-E: an
 # open row's forward bridge resolves; a closed row carries none).
 _SPECREF_LINE_RE = re.compile(r"(?m)^specref\s*=\s*.*$")
+# The frontmatter `order = ...` line, the one key `wi_convert.frontmatter_pairs`
+# writes after every column: the close's `adopted` record goes before it.
+_ORDER_LINE_RE = re.compile(r"(?m)^order\s*=")
 
 
 def spec_move_split(text):
@@ -568,20 +574,34 @@ _ADJUDICATION_CLOSE_DELIVERABLE = (
 )
 
 
-def _adjudication_close_text(text, deliverable):
+def _adjudication_close_text(text, deliverable, adopted=None):
     """Rewrite an in-`active/` adjudication spec for its terminal close: clear
     `specref` and insert a `## Deliverable` BEFORE the rest of the body (its
     `## Context` and, crucially, its `## Dispositions` section, which the merge
     reads to mint the successors). Idempotent on the Deliverable — a row an
-    agent already self-closed keeps its own."""
+    agent already self-closed keeps its own.
+
+    `adopted`, the validated adoption ids (`adoption_record.validate_at`), is
+    written in the same rewrite as the front matter's `adopted` record (WI-969),
+    after every other column and before `order`, where
+    `wi_convert.write_spec_file` serialises it, so a converter round trip of
+    the closed spec is byte-stable. None writes no key.
+
+    Implements: SR-148, LLR-335"""
     fm, body = spec_move_split(text)
     fm = _SPECREF_LINE_RE.sub('specref = ""', fm, count=1)
+    if adopted:
+        line = "{} = {}\n".format(
+            kadoption.RECORD_KEY, kspine.toml_value(list(adopted))
+        )
+        at = _ORDER_LINE_RE.search(fm)
+        fm = fm[: at.start()] + line + fm[at.start() :] if at else fm + line
     if "\n## Deliverable" not in ("\n" + body):
         body = "\n## Deliverable\n\n" + deliverable + "\n" + body
     return "+++\n" + fm + "+++\n" + body
 
 
-def _consolidation_close(root, wt, branch, src_rel, text, drafts, meta):
+def _consolidation_close(root, wt, branch, src_rel, text, drafts, meta, adoptions=()):
     """The CONSOLIDATION arm of the close (the 2026-09-02 restructure plan
     §1.5): enact this verdict's outcome on the queue it judged.
     `(True, None)` enacted, `(False, None)` when the row is not a
@@ -611,6 +631,13 @@ def _consolidation_close(root, wt, branch, src_rel, text, drafts, meta):
         # adjudication brief reads this way, which is what lets one close serve
         # all five.
         return False, refusal
+    if adoptions:
+        # WI-969: an absorption reconciles against the drafts' `supersedes`
+        # only, so a consolidation verdict never adopts; refused before any write.
+        return False, (
+            "{}: a consolidation verdict adopts {} - its successor is drafted, "
+            "never adopted; nothing enacted".format(src_rel, ", ".join(adoptions))
+        )
     absorbed = consolidate.absorbed_ids(drafts)
     # THE TRUNK REGISTRY, not the lane's. The lane was cut before this close
     # ran, so its copy of `queued/` is a snapshot: a row another lane claimed
@@ -856,7 +883,7 @@ def _archive_one_adjudication_row(root, wt, branch, name):
     close's business, does its disposition parse, does it owe a successor —
     is one question about one file, and it is asked here.
 
-    Implements: SR-220, LLR-312
+    Implements: SR-220, SR-148, LLR-312, LLR-335
     """
     import intake  # a sibling reader; deferred so a non-adjudicating run pays nothing
 
@@ -877,16 +904,19 @@ def _archive_one_adjudication_row(root, wt, branch, name):
     # the `partial` arm carries `brief = "disposition"` but the `cancelled` arm
     # is brief-LESS by design, so a `brief`-only guard let a cancelled close
     # queue no successor and archive silently. A clean-close spot check owes
-    # none and is not caught.
-    parsed, drefusal = intake.parse_dispositions(text, src_rel)
+    # none and is not caught. An adoption (WI-969) discharges it as a draft
+    # does, once validated below: a row already open that supersedes the
+    # closed one. The section is read ONCE, through the one parser.
+    parsed, adoptions, drefusal = intake.parse_disposition_section(text, src_rel)
     if drefusal:
         return False, "cannot close {}: {}".format(branch, drefusal)
-    if intake.owes_successor(meta) and not parsed:
+    owes = intake.owes_successor(meta)
+    if owes and not (parsed or adoptions):
         return False, (
-            "{} judged a partial/cancelled close but drafted NO successor in "
-            "its ## Dispositions section — such a close must queue at least "
-            "one successor (OI-70/OI-73, no third exit). The run stops for a "
-            "human to draft the continuation".format(name)
+            "{} judged a partial/cancelled close but drafted NO successor and "
+            "adopted none in its ## Dispositions section — such a close must "
+            "queue at least one successor (OI-70/OI-73, no third exit). The run "
+            "stops for a human to draft the continuation".format(name)
         )
     # THE CONSOLIDATION ARM (restructure plan §1.5), before the row is archived:
     # it acts on the QUEUE this verdict judged, and the guards it runs read the
@@ -894,15 +924,24 @@ def _archive_one_adjudication_row(root, wt, branch, name):
     # holds. A row with no `## Consolidation` section answers `(False, None)`
     # and every other brief passes straight through.
     _enacted, crefusal = _consolidation_close(
-        root, wt, branch, src_rel, text, parsed, meta
+        root, wt, branch, src_rel, text, parsed, meta, adoptions
     )
     if crefusal:
         return False, "cannot close {}: {}".format(name, crefusal)
+    # THE ADOPTION, VALIDATED ONCE (WI-969), before any move: in the lane
+    # HEAD's tree, the parent of the commit this close makes, so the commit
+    # check re-validating in that parent judges the same tree. The validated
+    # ids are the record the rewrite below writes; a refusal moves nothing.
+    adopted, arefusal = adoption_record.validate_at(
+        wt, "HEAD", meta.get("title"), owes, adoptions
+    )
+    if arefusal:
+        return False, "cannot close {}: {} - nothing moved".format(name, arefusal)
     # RE-READ, not the text read above (WI-866): a return-to-draft's move
     # relinks inbound links in every markdown file, this spec included, and a
     # close text composed from the pre-arm read would write the stale link back.
     text = (wt / src_rel).read_text(encoding="utf-8")
-    new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE)
+    new_text = _adjudication_close_text(text, _ADJUDICATION_CLOSE_DELIVERABLE, adopted)
     dest_rel = "{}/complete/{}".format(integrate.WORK, name)
     _touched, refusal = spec_move.move_spec(wt, src_rel, dest_rel, new_text=new_text)
     if refusal:

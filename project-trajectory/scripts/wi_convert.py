@@ -185,6 +185,14 @@ COLUMNS = [
     # `parse_spec`, and a guard that silently stops holding after the close is a
     # guard that mints the same judgement forever.
     "Digests",
+    # WI-969 THE ADOPTION RECORD: the ids of the already-filed successors an
+    # early-close disposition row adopted, written once by the mechanical
+    # close as a TOML list after it validated them, empty on every other row.
+    # A REAL COLUMN for the reason the adjudication cells above share: a key
+    # outside this table is dropped by `parse_spec`, and the close writes the
+    # key where this writer would, so a round trip of the closed spec is
+    # byte-stable. Validated only by `kitlib.adoption.record_ids`.
+    "Adopted",
 ]
 
 # Status <-> directory (§2.1; WI-384). One directory per state, both terminals
@@ -239,6 +247,7 @@ LIST_FIELDS = (
     ("SR-Refs", "sr_refs"),
     ("Predecessors", "needs"),
     ("Adjudicates", "adjudicates"),
+    ("Adopted", "adopted"),
 )
 # Columns emitted as TOML integers when — and only when — the round-trip is
 # exact (`str(int(cell)) == cell`). A cell like `01` stays a string rather than

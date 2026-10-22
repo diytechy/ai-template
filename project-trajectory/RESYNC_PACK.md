@@ -9440,6 +9440,59 @@ refuse the quarantined lane.
 `skills/byte-budget-guard/SKILL.md` (`scope: this-repo` skills; only if
 you vendored them).
 
+### A disposition can adopt an already-filed successor [since 8c03d504f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A disposition row that owes a successor may adopt a row
+already filed with `supersedes` naming the closed row, instead of drafting a
+duplicate: a fenced TOML block in its `## Dispositions` section holding
+exactly `adopts = "WI-NNN"`. The adoption is the successor exit, not a third
+one, and it mints nothing. `handback.close_adjudication` validates the
+adoption once, in the lane's tree as the row closes (the row open, readable,
+and superseding the closed row), and writes the validated ids into the closed
+spec's new `adopted` front-matter cell, the record. Only the close writes the
+record: a new pre-commit step, `adoption-record`, and the merge slot's
+lane-commit walk refuse any other commit that adds, changes or removes one,
+that rewrites the request a carried record was written from, or that moves a
+requesting spec into `complete/` without one; the close's
+exact inbound relinks elsewhere in the repository are admitted. The merge
+sweep trusts the record: it compares the record with the request, refuses a
+request with no record, a record with no request, the two differing or a
+malformed record, and re-points the closed row's dependents to the full
+successor set, drafts and adoptions together, on the landing sweep and every
+replay alike. It never validates the adoption again and reads no git history
+and no later state of the adopted row, so a shallow clone sweeps it too.
+
+Three tightenings apply to drafts too:
+
+- an unpaired fence in a `## Dispositions` section is refused, where a
+  trailing unclosed block was silently dropped, and so is a fence line off
+  column zero (an indented or list-nested block): every fence opens with
+  `` ```toml `` and closes with a bare `` ``` ``, each at column zero;
+- a merged spec the sweep cannot read, or whose front matter does not parse,
+  refuses the sweep (exit 1, the merge stands), where it was skipped;
+- a drafted title already held by a row on another lineage, or by two rows,
+  refuses the mint before any write, where the draft was swallowed.
+
+**What to do.** No forced migration: no setting changes, and the spec-folder
+registry needs none, since an absent `adopted` key reads as an empty cell.
+Only if you still carry the retired legacy CSV form, add the `Adopted` column
+to the end of its header, after `Digests`.
+Before the first sweep after upgrading, check that no merged `complete/` spec
+has unparseable front matter, no pending `## Dispositions` section has an
+unpaired fence, and no pending drafted title is already a row's title under
+another `supersedes`; the sweep now stops on each, naming the file or rows.
+
+**Kit-owned files — overwrite:** `scripts/intake.py`, `scripts/handback.py`,
+`scripts/text_then_act.py`, `scripts/integrate.py`, `scripts/check.py`,
+`scripts/adoption_record.py` (new), `scripts/kitlib/adoption.py` (new),
+`scripts/kitlib/registry.py`, `scripts/kitlib/verdict.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `scripts/wi_convert.py`,
+`scripts/plan_artifacts.py`, `hooks/pre-commit`,
+`prompts/adjudicate-disposition.template.md`, `prompts/CATALOG.md`,
+`registries/work-items.template.csv`, and `work/WI-000.template.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

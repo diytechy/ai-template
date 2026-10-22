@@ -107,6 +107,16 @@ WI_COLUMNS = (
     # row goes terminal mints the same judgement forever. Empty on every row that
     # is not a consolidation.
     "Digests",
+    # WI-969 THE ADOPTION RECORD. The `;`-joined ids of the already-filed
+    # successors an early-close disposition row ADOPTED, written once by the
+    # mechanical close (`handback`) after it validated them in the tree the
+    # closing commit is made on, and empty on every other row. A real column
+    # so the converter carries it and a round trip of the closed spec is
+    # byte-stable; this reader grants it nothing beyond the join - the close,
+    # the commit check and the sweep read it through the one strict reader,
+    # `kitlib.adoption.record_ids`, so a malformed record never breaks every
+    # registry read.
+    "Adopted",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -132,6 +142,7 @@ SPEC_LISTS = (
     ("SR-Refs", "sr_refs"),
     ("Predecessors", "needs"),
     ("Adjudicates", "adjudicates"),
+    ("Adopted", "adopted"),
 )
 # The scalars whose frontmatter key may ALSO be written as a TOML list, read
 # either way into the same `;`-joined cell. `supersedes` is the one (the

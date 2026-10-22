@@ -431,6 +431,8 @@ SLOW_MODULES = frozenset(
         "test_hooks_on_routes",  # a tmp git repo per route case; its in-process pin is test_commit_hooks
         # WI-940: the smoke budget step's real CPU meters.
         "test_smoke_budget_meter",  # interpreters and CPU burns per case; its in-process pin is test_check_smoke_budget
+        # WI-969: the adoption-record rule on real commits, lanes and squashes.
+        "test_adoption_record",  # a tmp git repo and lane per case; its in-process pin is test_disposition_adoption
     }
 )
 

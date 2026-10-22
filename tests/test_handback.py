@@ -31,10 +31,12 @@ Mutation notes are inline where a green could be vacuous — a revert that
 reverted nothing, or a "blocked" assertion that would pass on an unblocked row.
 """
 
+import json
 import shutil
 import subprocess
 import sys
 
+import pytest
 from conftest import (
     hooks_on,
     SCRIPTS,
@@ -531,7 +533,13 @@ Scope: re-land the reviewed parts.
 
 
 def adjudication_repo(
-    tmp_path, branch="wi-401", brief="disposition", dispositions=None, outcome="partial"
+    tmp_path,
+    branch="wi-401",
+    brief="disposition",
+    dispositions=None,
+    outcome="partial",
+    title="dispose: the WI-005 close",
+    seed=(),
 ):
     """A trunk with an ADJUDICATION row claimed onto `branch`, then its verdict
     recorded ON THE LANE — the `## Dispositions` are drafted after the claim,
@@ -544,7 +552,12 @@ def adjudication_repo(
     its `specref` points at so the claim resolves (R-E). The refusal invariant
     itself reads the durable `dispose:` TITLE prefix, not that folder and not the
     `brief`, so a `cancelled` row (brief-LESS by design) is caught exactly as the
-    `partial` one — pass `brief=""`, `outcome="cancelled"` to model it."""
+    `partial` one — pass `brief=""`, `outcome="cancelled"` to model it.
+
+    `title` is the row's title (a minted disposition title carries the event
+    token an adoption's disposed row is read from), and `seed` is
+    `[(path, text or bytes)]` committed on trunk BEFORE the claim, so a row an
+    adoption names stands in the tree the lane is cut from."""
     skip_without_env_gates("git")
     root = tmp_path / "repo"
     root.mkdir()
@@ -566,7 +579,7 @@ def adjudication_repo(
     )
     lines = [
         'id = "WI-401"',
-        'title = "dispose: the WI-005 close"',
+        "title = {}".format(json.dumps(title)),
         'workstream = "process"',
         "needs = []",
         'safety_class = "adjudication"',
@@ -607,6 +620,13 @@ def adjudication_repo(
     orig = root / "docs" / "work" / outcome / "WI-005-orig.md"
     orig.parent.mkdir(parents=True, exist_ok=True)
     orig.write_text(orig_text, encoding="utf-8", newline="\n")
+    for name, content in seed:
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if isinstance(content, bytes):
+            target.write_bytes(content)
+        else:
+            target.write_text(content, encoding="utf-8", newline="\n")
     _commit(root, "seed + adjudication row", when=T_BASE)
     assert integ.claim(root, "WI-401", branch) == 0
     # The session records its verdict ON THE LANE: draft the successors into the
@@ -716,6 +736,228 @@ def test_the_cancelled_close_still_closes_when_it_queues_a_successor(tmp_path):
     assert refusal is None, refusal
     assert ids == ["WI-401"]
     assert integ.finished_branches(root) == ["wi-401"]
+
+
+# --- WI-969: a disposition ADOPTS an already-filed successor --------------------
+#
+# The fixtures file the adopted row on trunk BEFORE the lane is cut, so it
+# stands in the lane HEAD's tree, the tree the close validates in.
+
+#: The two minted title forms (`intake._close_drafts`): a report-backed close
+#: and a report-less cancellation. Each carries the disposed row's id as the
+#: leading token of its event path's file name.
+PARTIAL_TITLE = (
+    "dispose: the close recorded at docs/handbacks/WI-005-wi-005.md - cancel / "
+    "defer / draft a successor (a disposition row never closes early; R3)"
+)
+CANCEL_TITLE = (
+    "dispose: the cancellation recorded at docs/work/cancelled/WI-005-orig.md - "
+    "cancel / defer (a disposition row never closes early; R3)"
+)
+ACTIVE_SPEC = "docs/work/active/wi-401/WI-401-dispose.md"
+COMPLETE_SPEC = "docs/work/complete/WI-401-dispose.md"
+
+
+def adopts(*wids):
+    """A `## Dispositions` section of one adoption block per id."""
+    return "\n\n## Dispositions\n\n" + "".join(
+        '```toml\nadopts = "{}"\n```\n\n'.format(w) for w in wids or ("WI-450",)
+    )
+
+
+def successor_seed(supersedes='"WI-005"', state="queued", raw=None, wid="WI-450"):
+    """`(path, content)`: the hand-filed row an adoption names, as WI-893 was,
+    for `adjudication_repo(seed=...)`."""
+    path = "docs/work/{}/{}-successor.md".format(state, wid)
+    if raw is not None:
+        return path, raw
+    lines = [
+        'id = "{}"'.format(wid),
+        'title = "the hand-filed successor"',
+        'workstream = "process"',
+        "needs = []",
+        'specref = ""',
+    ] + (["supersedes = {}".format(supersedes)] if supersedes else [])
+    return path, "+++\n" + "\n".join(lines) + "\n+++\n"
+
+
+def adopting_repo(tmp_path, dispositions=None, title=PARTIAL_TITLE, seed=None):
+    """`adjudication_repo` whose verdict adopts WI-450, filed on trunk first."""
+    return adjudication_repo(
+        tmp_path,
+        title=title,
+        dispositions=adopts() if dispositions is None else dispositions,
+        seed=[successor_seed()] if seed is None else seed,
+    )
+
+
+def link_the_active_spec_from_a_review(root, branch="wi-401"):
+    """Commit, on the lane, a review round file linking the active spec by a
+    relative path, as a review drawn while the row is in `active/` does
+    (LLR-207). The close's inbound relink then rewrites a file outside
+    `docs/work/`. Returns the review file's path from the root."""
+    wt = lane(root, branch)
+    rel = "docs/reviews/{}/001-REVIEW-A-abc1234.md".format(branch)
+    target = wt / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "# Review\n\nJudged [the row](../../work/active/{}/WI-401-dispose.md).\n\n"
+        "VERDICT: APPROVE\n".format(branch),
+        encoding="utf-8",
+        newline="\n",
+    )
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "--no-verify", "-q", "-m", "review: round 1\n\nWI: WI-401")
+    return rel
+
+
+def _assert_nothing_closed(root, head, ids, refusal, reason):
+    """A refused close moved nothing, wrote no record and committed nothing."""
+    assert ids is None
+    assert refusal is not None and reason in refusal, refusal
+    wt = lane(root)
+    assert _git(wt, "status", "--porcelain").strip() == ""
+    assert _git(wt, "rev-parse", "HEAD").strip() == head
+    assert (wt / ACTIVE_SPEC).is_file()
+    assert _git(wt, "grep", "-l", "adopted =", check=False).strip() == ""
+
+
+@pytest.mark.parametrize(
+    "brief,outcome,title",
+    [("disposition", "partial", PARTIAL_TITLE), ("", "cancelled", CANCEL_TITLE)],
+    ids=["partial", "cancelled"],
+)
+def test_an_adoption_of_a_superseding_row_closes_and_writes_the_record(
+    tmp_path, brief, outcome, title
+):
+    root = adjudication_repo(
+        tmp_path,
+        brief=brief,
+        outcome=outcome,
+        title=title,
+        dispositions=adopts(),
+        seed=[successor_seed()],
+    )
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    assert ids == ["WI-401"]
+    wt = lane(root)
+    closed = (wt / COMPLETE_SPEC).read_text(encoding="utf-8")
+    front = closed.split("+++\n")[1]
+    assert 'adopted = ["WI-450"]' in front
+    assert 'specref = ""' in front
+    subject = _git(wt, "log", "-1", "--format=%s").strip()
+    assert subject == hb.station.mechanical_close_subject(["WI-401"])
+
+
+@pytest.mark.parametrize(
+    "dispositions,seed,reason",
+    [
+        (adopts("WI-451"), successor_seed(), "names no open row"),
+        (adopts(), successor_seed(state="complete"), "names no open row"),
+        (adopts(), successor_seed(state="cancelled"), "names no open row"),
+        (
+            adopts(),
+            successor_seed(raw=b'+++\nid = "WI-450"\n# \xff comment\n+++\n'),
+            "cannot read",
+        ),
+        (adopts(), successor_seed(raw=b"+++\nid = \n+++\n"), "cannot read"),
+        (adopts(), successor_seed(supersedes='"WI-006"'), "does not supersede WI-005"),
+        (adopts(), successor_seed(supersedes=None), "does not supersede WI-005"),
+    ],
+    ids=[
+        "missing",
+        "complete",
+        "cancelled",
+        "not-utf8",
+        "unparseable",
+        "other-lineage",
+        "no-supersedes",
+    ],
+)
+def test_an_adoption_that_is_not_accepted_refuses_the_close(
+    tmp_path, dispositions, seed, reason
+):
+    root = adopting_repo(tmp_path, dispositions=dispositions, seed=[seed])
+    head = _git(lane(root), "rev-parse", "HEAD").strip()
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    _assert_nothing_closed(root, head, ids, refusal, reason)
+
+
+def test_an_adoption_without_a_disposition_event_token_refuses(tmp_path):
+    # The disposed row is read from the title's event token, never guessed.
+    root = adopting_repo(tmp_path, title="dispose: the WI-005 close")
+    head = _git(lane(root), "rev-parse", "HEAD").strip()
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    _assert_nothing_closed(root, head, ids, refusal, "event token")
+
+
+def test_a_repeated_adoption_refuses_the_close(tmp_path):
+    root = adopting_repo(tmp_path, dispositions=adopts("WI-450", "WI-450"))
+    head = _git(lane(root), "rev-parse", "HEAD").strip()
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    _assert_nothing_closed(root, head, ids, refusal, "WI-450")
+    assert "repeat" in refusal.lower(), refusal
+
+
+def test_a_drafted_successor_beside_an_adoption_still_mints(tmp_path):
+    waiter = (
+        "docs/work/queued/WI-021-waiter.md",
+        '+++\nid = "WI-021"\ntitle = "the waiter"\nworkstream = "process"\n'
+        'needs = ["WI-005"]\nspecref = "seed.txt"\n+++\n',
+    )
+    root = adopting_repo(
+        tmp_path,
+        dispositions=_DRAFTED_DISPOSITIONS + '\n```toml\nadopts = "WI-450"\n```\n',
+        seed=[successor_seed(), waiter],
+    )
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    assert refusal is None, refusal
+    before = _git(root, "rev-parse", "HEAD").strip()
+    merge_branch(root)
+    after = _git(root, "rev-parse", "HEAD").strip()
+    minted, mrefusal = intake.intake_after_merge(
+        root, before, after, {"WI-401": "merged"}, "wi-401"
+    )
+    assert mrefusal is None, mrefusal
+    assert len(minted) == 1
+    rows = {r["WI-ID"]: r for r in acommon.read_spec_rows(root / "docs" / "work")}
+    assert rows["WI-021"]["Predecessors"] == "{};WI-450".format(minted[0][0])
+
+
+@pytest.mark.parametrize(
+    "dispositions",
+    [
+        adopts() + '```toml\nadopts = "WI-451"\n\nprose\n',
+        _DRAFTED_DISPOSITIONS
+        + '\n```toml\ntitle = "the lost draft"\nworkstream = "process"\n\nprose\n',
+    ],
+    ids=["adoption", "draft"],
+)
+def test_a_valid_block_then_an_unclosed_one_refuses_the_close(tmp_path, dispositions):
+    root = adopting_repo(tmp_path, dispositions=dispositions)
+    head = _git(lane(root), "rev-parse", "HEAD").strip()
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    _assert_nothing_closed(root, head, ids, refusal, "")
+    assert "fence" in refusal.lower(), refusal
+
+
+@pytest.mark.parametrize(
+    "tail",
+    [
+        ' ```toml\nadopts = "WI-451"\n\nunfinished successor\n',
+        '- also:\n  ```toml\n  adopts = "WI-451"\n  ```\n',
+    ],
+    ids=["indented-unclosed", "indented-complete"],
+)
+def test_a_valid_adoption_then_an_indented_block_refuses_the_close(tmp_path, tail):
+    # A second block off column zero is a fence the section refuses by name:
+    # never prose folded into the first block's scope, its successor lost.
+    root = adopting_repo(tmp_path, dispositions=adopts() + tail)
+    head = _git(lane(root), "rev-parse", "HEAD").strip()
+    ids, refusal = hb.close_adjudication(root, "wi-401")
+    _assert_nothing_closed(root, head, ids, refusal, "not start at column zero")
+    assert "fence" in refusal.lower(), refusal
 
 
 def test_the_mechanical_close_no_ops_for_a_non_adjudication_lane(tmp_path):

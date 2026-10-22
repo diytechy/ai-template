@@ -579,6 +579,25 @@ Scope: the second half.
     assert refusal and "drafted 2 successor(s)" in refusal
 
 
+def test_a_consolidation_verdict_that_adopts_refuses_the_close(tmp_path):
+    """WI-969: an absorption reconciles against drafts' `supersedes` only, so a
+    consolidation's successor is drafted, never adopted, and the arm refuses
+    an adoption before its first write. New behaviour: trunk refuses the block
+    as an unknown draft key, not by this reason."""
+    root = cluster_repo(tmp_path)
+    _judge_id, branch = _minted_judge(root)
+    adopting = DISPOSITIONS + '\n```toml\nadopts = "WI-409"\n```\n'
+    _record_verdict(root, branch, adopting + VERDICT, machine=MACHINE)
+    wt, err = integ.lane_worktree(root, branch)
+    assert err is None, err
+    head = _git(wt, "rev-parse", "HEAD").strip()
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert ids is None
+    assert refusal and "never adopted" in refusal, refusal
+    assert _lane_tree_state(root, branch).strip() == "", _lane_tree_state(root, branch)
+    assert _git(wt, "rev-parse", "HEAD").strip() == head
+
+
 def test_a_row_claimed_between_close_and_merge_refuses_the_whole_mint(tmp_path):
     """`archive_absorbed` used to SKIP it: two `restructured` lines instead of
     three, no message about the third, and a successor whose `Supersedes` named

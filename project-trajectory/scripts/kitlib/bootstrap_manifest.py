@@ -379,6 +379,10 @@ MAPPING = [
     # WI-834 added `shell_line`: the one reading of a shell command line, with
     # the shell's quoting; `coordinator_guard.py`, in this list, imports it.
     ("scripts/kitlib/shell_line.py", "scripts/kitlib/shell_line.py"),
+    # WI-969 added `adoption`: a disposition's adoption of an already-filed
+    # successor and the record the close writes, read by `intake.py`,
+    # `handback.py` and `adoption_record.py`, all in this list.
+    ("scripts/kitlib/adoption.py", "scripts/kitlib/adoption.py"),
     # WI-834 added `guard_hooks`; WI-927 reshaped it: the guard hooks read by
     # name as none, absent, on or occupied, and their consented install from
     # absent; `coordinator_guard.py`, in this list, imports it.
@@ -744,6 +748,9 @@ MAPPING = [
     # The plan gate (WI-913): `check.py`'s plan-gate step runs it, and
     # `integrate.py` and `review_brief.py` import it unguarded.
     ("scripts/plan_gate.py", "scripts/plan_gate.py"),
+    # The adoption-record rule (WI-969): `check.py`'s adoption-record step
+    # runs it, and the close and the lane-commit walk call it.
+    ("scripts/adoption_record.py", "scripts/adoption_record.py"),
     # WI-545's behavior seams keep the session briefs and declared-policy
     # decisions behind the small coordinator facades that consume them.
     ("scripts/agent_brief.py", "scripts/agent_brief.py"),

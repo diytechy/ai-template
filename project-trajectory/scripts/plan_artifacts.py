@@ -101,6 +101,7 @@ WI_HEADER = [
     "Brief",
     "Adjudicates",
     "Digests",
+    "Adopted",
 ]
 
 # A round directory: `DP-<digits>-<slug>` under docs/plans/.

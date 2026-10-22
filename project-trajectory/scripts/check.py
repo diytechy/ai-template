@@ -304,6 +304,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "text-then-act",
         "done-when-blessed",
         "plan-gate",
+        "adoption-record",
         "assumption-gate",
         "crossing-allocation",
         "interface-allocation",
@@ -1271,6 +1272,18 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             "plan-gate",
             (),
             [sys.executable, str(_SCRIPTS / "plan_gate.py")],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
+        # The adoption record (WI-969): only the machinery's close writes a
+        # disposition's `adopted` record, so a staged record change, or a
+        # requesting spec moved into `complete/` without one, is refused; a
+        # squash landing is judged by the lane commits it carries. The slot
+        # asks the same of each lane commit, so `--no-verify` lands nothing.
+        (
+            "adoption-record",
+            (),
+            [sys.executable, str(_SCRIPTS / "adoption_record.py")],
             _kitladder.STAGE_NEEDS,
             "process",
         ),

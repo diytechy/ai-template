@@ -716,6 +716,33 @@ def test_the_digests_cell_round_trips_through_the_spec_form(tmp_path):
     ] == ""
 
 
+def test_an_adopted_cell_round_trips_through_the_converter(tmp_path):
+    """WI-969: the close's adoption record is a declared cell, so the
+    converter writes it as the front-matter list the close writes and the
+    registry reader reads it back cell-exact, as `Adjudicates` and `Digests`
+    do. New behaviour: trunk's column list has no `Adopted`, so the writer
+    drops it."""
+    from kitlib import registry
+
+    row = dict.fromkeys(wi_convert.COLUMNS, "")
+    row.update(
+        {
+            "WI-ID": "WI-044",
+            "Title": "dispose: the close recorded at docs/handbacks/WI-005-x.md",
+            "Status": "done",
+            "SafetyClass": "adjudication",
+            "Adopted": "WI-450;WI-451",
+        }
+    )
+    work = tmp_path / "work"
+    rel = wi_convert.write_spec_file(work, row)
+    text = (work / rel).read_text(encoding="utf-8")
+    assert 'adopted = ["WI-450", "WI-451"]' in text
+    back = {r["WI-ID"]: r for r in registry.read_spec_rows(work)}
+    assert back["WI-044"]["Adopted"] == "WI-450;WI-451"
+    assert _cell_mismatches([row], [back["WI-044"]]) == []
+
+
 def test_the_toml_emitter_escapes_what_tomllib_must_read_back():
     """Direct unit cover for the hand-rolled serializer, including a control
     character no registry cell contains today — the escaper must be correct for

@@ -1466,6 +1466,395 @@ def test_a_cancelled_close_with_no_successor_is_refused_at_merge(tmp_path):
     assert refusal is not None and "successor" in refusal
 
 
+# --- WI-969: the mint's lineage corrections, and the sweep trusting the record --
+#
+# The sweep cases write the merged disposition spec, its `adopted` record
+# included, by hand on the fixture: what they judge is what the sweep does
+# with a record, and the close that writes one is test_handback's.
+
+_ADOPTING_TITLE = "dispose: the close recorded at docs/handbacks/WI-005-wi-005.md - x"
+
+_DRAFTED_TITLE = "Continue WI-005 by another route"
+_DRAFTED = (
+    '```toml\ntitle = "{}"\n'
+    'workstream = "scripts"\nbuildtier = "medium"\nsupersedes = "WI-005"\n```\n\n'
+).format(_DRAFTED_TITLE)
+_ADOPTS = '```toml\nadopts = "WI-020"\n```\n'
+
+
+def _adopted_lineage(
+    root, adopted_state="queued", drafts="", adopts=True, record=True, land=True
+):
+    """WI-005 closed partial, WI-020 filed by hand superseding it, and WI-021
+    hard-needing WI-005, committed as `before`; then the disposition row
+    WI-008 lands in `complete/` adopting WI-020 (beside any `drafts`; with
+    `adopts=False`, the drafts alone), its `adopted` record `record` (True:
+    `["WI-020"]` when it adopts, none otherwise; None: no record; else the
+    cell's value as written), committed as `after` (with `land=False`,
+    written but never committed). Returns `(before, after)`."""
+    write_sr(root)
+    write_spec(
+        root, "partial", "WI-005", slug="returned", body="\n## Deliverable\n\nx\n"
+    )
+    write_spec(root, adopted_state, "WI-020", slug="successor", supersedes="WI-005")
+    write_spec(
+        root, "queued", "WI-021", slug="waiter", specref="seed.txt", needs=["WI-005"]
+    )
+    _commit(root, "the successor is filed by hand", when=T_CODE)
+    before = _rev(root)
+    if record is True:
+        record = ["WI-020"] if adopts else None
+    cells = {} if record is None else {"adopted": record}
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="adjudicate",
+        safety_class="adjudication",
+        title=_ADOPTING_TITLE,
+        specref="",
+        body="\n## Deliverable\n\nRuled.\n\n## Dispositions\n\n"
+        + drafts
+        + (_ADOPTS if adopts else ""),
+        **cells,
+    )
+    if land:
+        _commit(root, "the disposition merges, adopting WI-020", when=T_CODE)
+    return before, _rev(root)
+
+
+def _merge_sweep(root, before, after):
+    return intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+
+
+@pytest.mark.parametrize(
+    "adopts",
+    [
+        pytest.param(True, id="mixed"),
+        pytest.param(False, id="drafts-only"),
+    ],
+)
+def test_a_replay_re_points_a_late_dependent_to_the_full_successor_set(
+    tmp_path, adopts
+):
+    # The first sweep consumes the disposition; a dependent filed AFTER it
+    # still needs the disposed WI-005; a bare sweep replays the disposition
+    # and must re-point that dependent to the WHOLE successor set - the draft
+    # the first sweep minted (title dedup skips only its allocation) beside
+    # any adoption - never to a subset of it.
+    root = git_repo(tmp_path)
+    before, after = _adopted_lineage(root, drafts=_DRAFTED, adopts=adopts)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    full = ";".join([minted[0][0]] + (["WI-020"] if adopts else []))
+    assert queued_rows(root)["WI-021"]["Predecessors"] == full
+    write_spec(
+        root, "queued", "WI-030", slug="late", specref="seed.txt", needs=["WI-005"]
+    )
+    _commit(root, "a late dependent of WI-005 is filed", when=T_CODE)
+    assert _sweep(root) == 0
+    assert queued_rows(root)["WI-030"]["Predecessors"] == full
+    assert _git(root, "status", "--porcelain").strip() == ""  # committed
+    # ...and the replay is idempotent on a dependent it already re-pointed.
+    head = _rev(root)
+    assert _sweep(root) == 0
+    assert _rev(root) == head
+    assert queued_rows(root)["WI-030"]["Predecessors"] == full
+
+
+def _title_collision(root, *colliders):
+    """`_adopted_lineage`'s drafts-only disposition (drafting `_DRAFTED_TITLE`
+    with `supersedes = "WI-005"`), where `before` already holds each collider
+    row `(id, supersedes)` under that exact title, plus WI-042 also
+    superseding WI-009 and WI-041 needing WI-009. Returns `(before, after)`."""
+    write_spec(root, "partial", "WI-009", slug="other", body="\n## Deliverable\n\nx\n")
+    for wid, supersedes in colliders:
+        write_spec(
+            root,
+            "queued",
+            wid,
+            slug="collide",
+            supersedes=supersedes,
+            title=_DRAFTED_TITLE,
+        )
+    write_spec(root, "queued", "WI-042", slug="sibling", supersedes="WI-009")
+    write_spec(
+        root, "queued", "WI-041", slug="waiter9", specref="seed.txt", needs=["WI-009"]
+    )
+    return _adopted_lineage(root, drafts=_DRAFTED, adopts=False)
+
+
+@pytest.mark.parametrize(
+    "colliders",
+    [[("WI-040", "WI-009")], [("WI-040", "WI-005"), ("WI-043", "WI-005")]],
+    ids=["other-lineage", "duplicate-title"],
+)
+def test_a_title_match_off_the_drafts_lineage_refuses_the_mint(tmp_path, colliders):
+    # A registry row is the draft's earlier mint only when it is the ONE row
+    # with that title AND records the draft's own `supersedes`. A same-title
+    # row of another lineage, or two rows with the title, refuses the whole
+    # mint before any write, naming the rows; the unrelated waiter WI-041 and
+    # the disposed row's waiter WI-021 are untouched.
+    root = git_repo(tmp_path)
+    before, after = _title_collision(root, *colliders)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert minted == []
+    assert refusal is not None, "a title collision must refuse the mint"
+    for wid, _sup in colliders:
+        assert wid in refusal, refusal
+    assert "nothing minted" in refusal, refusal
+    rows = queued_rows(root)
+    assert rows["WI-041"]["Predecessors"] == "WI-009"
+    assert rows["WI-021"]["Predecessors"] == "WI-005"
+    assert _rev(root) == after  # no dependency write committed
+    assert _git(root, "status", "--porcelain").strip() == ""
+
+
+def test_a_drafts_title_match_on_its_own_lineage_stays_standing(tmp_path):
+    # ...while the ONE same-title row recording the draft's `supersedes` is its
+    # earlier mint: no id is allocated, and it is the successor the disposed
+    # row's dependents are re-pointed to.
+    root = git_repo(tmp_path)
+    before, after = _title_collision(root, ("WI-040", "WI-005"))
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is None, refusal
+    assert minted == []
+    rows = queued_rows(root)
+    assert rows["WI-021"]["Predecessors"] == "WI-040"
+    assert rows["WI-041"]["Predecessors"] == "WI-009"
+
+
+def test_a_replay_with_nothing_left_to_re_point_commits_nothing(tmp_path):
+    """A replay whose re-point has nothing left to change writes nothing and
+    commits nothing: the pin P8's adoption-only replays lean on.
+
+    A characterization (green at trunk for drafts). Adequacy witness: a
+    replay that committed its bookkeeping, or rewrote an already re-pointed
+    `needs` line, whether or not anything changed would move HEAD here."""
+    root = git_repo(tmp_path)
+    before, after = _adopted_lineage(root, drafts=_DRAFTED, adopts=False)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    head = _rev(root)
+    assert _sweep(root) == 0
+    assert _rev(root) == head
+    assert _git(root, "status", "--porcelain").strip() == ""
+
+
+def test_a_recorded_adoption_re_points_a_dependents_needs(tmp_path):
+    # The record joins the one lineage operation, so WI-021's hard edge on the
+    # partial WI-005 moves to the adopted WI-020, as for a drafted successor.
+    root = git_repo(tmp_path)
+    before, after = _adopted_lineage(root)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is None, refusal
+    assert minted == []  # re-pointed without allocating an id
+    assert queued_rows(root)["WI-021"]["Predecessors"] == "WI-020"
+    assert _git(root, "status", "--porcelain").strip() == ""  # committed
+
+
+def test_drafts_and_adoptions_together_hold_the_full_successor_set(tmp_path):
+    root = git_repo(tmp_path)
+    before, after = _adopted_lineage(root, drafts=_DRAFTED)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    rows = queued_rows(root)
+    assert rows["WI-021"]["Predecessors"] == "{};WI-020".format(minted[0][0])
+
+
+def _move_spec(root, wi_id, slug, src, dst):
+    """Move `wi_id`'s spec from state folder `src` to `dst`, bytes intact."""
+    old = root / "docs" / "work" / src / "{}-{}.md".format(wi_id, slug)
+    new = root / "docs" / "work" / dst / "{}-{}.md".format(wi_id, slug)
+    new.parent.mkdir(parents=True, exist_ok=True)
+    new.write_bytes(old.read_bytes())
+    old.unlink()
+
+
+def _all_wi_ids(root):
+    """Every spec row's WI id, in any state folder."""
+    acommon = load_script("agent_common")
+    return {r["WI-ID"] for r in acommon.read_spec_rows(root / "docs" / "work")}
+
+
+def test_a_consumed_adoption_replays_after_its_successor_completes(tmp_path):
+    # The merge's sweep consumes the adoption while WI-020 is open; WI-020 then
+    # completes, and only AFTER that does a dependent of the disposed WI-005
+    # appear (WI-030). A bare sweep must still replay the record and re-point
+    # WI-030 to WI-020, minting nothing: the record binds to the close, and
+    # the successor's later state is never re-read.
+    root = git_repo(tmp_path)
+    before, after = _adopted_lineage(root)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is None, refusal
+    assert minted == []
+    assert queued_rows(root)["WI-021"]["Predecessors"] == "WI-020"
+    _move_spec(root, "WI-020", "successor", "queued", "complete")
+    _commit(root, "WI-020 completes", when=T_LATER)
+    write_spec(
+        root, "queued", "WI-030", slug="late", specref="seed.txt", needs=["WI-005"]
+    )
+    _commit(root, "a late dependent of WI-005 is filed", when=T_LATER)
+    ids = _all_wi_ids(root)
+    head = _rev(root)
+    assert _sweep(root) == 0
+    rows = queued_rows(root)
+    assert rows["WI-030"]["Predecessors"] == "WI-020"
+    assert rows["WI-021"]["Predecessors"] == "WI-020"
+    # Nothing is minted for the disposed lineage: the only new row is the
+    # clean-close spot check WI-020's own completion draws (a separate trigger).
+    new = _all_wi_ids(root) - ids
+    assert all(
+        rows[n]["Title"].startswith("spot-check the clean close of WI-020") for n in new
+    ), [rows[n]["Title"] for n in new]
+    assert _rev(root) != head  # the re-point is committed...
+    assert _git(root, "status", "--porcelain").strip() == ""
+    head = _rev(root)
+    assert _sweep(root) == 0  # ...and a second replay has nothing left to do
+    assert _rev(root) == head
+
+
+def test_a_shallow_clone_sweeps_a_recorded_adoption(tmp_path):
+    # The sweep reads the record and no git history, so a depth-1 clone of the
+    # landed fixture re-points the dependent exactly as the full history does.
+    (tmp_path / "src").mkdir()
+    src = git_repo(tmp_path / "src")
+    _adopted_lineage(src)
+    clone = tmp_path / "clone"
+    _git(
+        tmp_path,
+        "clone",
+        "-q",
+        "-c",
+        "core.autocrlf=false",
+        "--depth",
+        "1",
+        src.as_uri(),
+        str(clone),
+    )
+    assert _git(clone, "rev-parse", "--is-shallow-repository").strip() == "true"
+    pin_autocrlf(clone)
+    hooks_on(clone)
+    _git(clone, "config", "user.email", "t@example.com")
+    _git(clone, "config", "user.name", "T")
+    _git(clone, "config", "commit.gpgsign", "false")
+    assert _sweep(clone) == 0
+    assert queued_rows(clone)["WI-021"]["Predecessors"] == "WI-020"
+    assert _git(clone, "status", "--porcelain").strip() == ""
+
+
+@pytest.mark.parametrize(
+    "drafts,adopts,record",
+    [
+        ("", True, None),
+        (_DRAFTED, False, ["WI-020"]),
+        ("", True, ["WI-022"]),
+        ("", True, "WI-020"),
+    ],
+    ids=["request-no-record", "record-no-request", "differing", "malformed-record"],
+)
+def test_the_sweep_refuses_a_request_and_record_mismatch(
+    tmp_path, drafts, adopts, record
+):
+    root = git_repo(tmp_path)
+    before, after = _adopted_lineage(root, drafts=drafts, adopts=adopts, record=record)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is not None and "adopted" in refusal, refusal
+    assert minted == []
+    assert _rev(root) == after  # no bookkeeping commit
+    assert queued_rows(root)["WI-021"]["Predecessors"] == "WI-005"
+    assert _git(root, "status", "--porcelain").strip() == ""
+
+
+def test_an_unreadable_merged_adjudication_spec_refuses_the_sweep(tmp_path):
+    # It used to be skipped, and a skipped early close vanishes without a
+    # successor: the merge stands and the sweep says why.
+    root = git_repo(tmp_path)
+    write_sr(root)
+    path = root / "docs" / "work" / "complete" / "WI-008-adjudicate.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("+++\nid = \n+++\n", encoding="utf-8", newline="\n")
+    _commit(root, "merged an unreadable spec", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert minted == []
+    assert refusal is not None and "cannot be read" in refusal, refusal
+
+
+@pytest.mark.parametrize(
+    "drafts,adopts,tail",
+    [
+        ("", True, '```toml\nadopts = "WI-021"\n\nprose\n'),
+        (_DRAFTED, False, '```toml\ntitle = "the lost draft"\n\nprose\n'),
+    ],
+    ids=["adoption", "draft"],
+)
+def test_a_valid_block_then_an_unclosed_one_refuses_the_sweep(
+    tmp_path, drafts, adopts, tail
+):
+    root = git_repo(tmp_path)
+    before, _after = _adopted_lineage(root, drafts=drafts, adopts=adopts, land=False)
+    spec = root / "docs" / "work" / "complete" / "WI-008-adjudicate.md"
+    spec.write_text(
+        spec.read_text(encoding="utf-8") + "\n" + tail, encoding="utf-8", newline="\n"
+    )
+    _commit(root, "the disposition merges with an unclosed block", when=T_CODE)
+    after = _rev(root)
+    minted, refusal = _merge_sweep(root, before, after)
+    assert refusal is not None and "fence" in refusal.lower(), refusal
+    assert minted == []
+    assert queued_rows(root)["WI-021"]["Predecessors"] == "WI-005"
+
+
+@pytest.mark.parametrize(
+    "tail",
+    [
+        ' ```toml\nadopts = "WI-031"\n\nunfinished successor\n',
+        '- also:\n  ```toml\n  adopts = "WI-031"\n  ```\n',
+    ],
+    ids=["indented-unclosed", "indented-complete"],
+)
+def test_a_valid_adoption_then_an_indented_block_refuses_the_sweep(tmp_path, tail):
+    # The recorded adoption is valid; a second block off column zero is a
+    # fence the section refuses by name, so nothing re-points to a subset.
+    root = git_repo(tmp_path)
+    before, _after = _adopted_lineage(root, land=False)
+    spec = root / "docs" / "work" / "complete" / "WI-008-adjudicate.md"
+    spec.write_text(
+        spec.read_text(encoding="utf-8") + "\n" + tail, encoding="utf-8", newline="\n"
+    )
+    _commit(root, "the disposition merges with an indented block", when=T_CODE)
+    minted, refusal = _merge_sweep(root, before, _rev(root))
+    assert refusal is not None and "not start at column zero" in refusal, refusal
+    assert minted == []
+    assert queued_rows(root)["WI-021"]["Predecessors"] == "WI-005"
+
+
+def test_a_successor_done_when_verdict_with_an_unclosed_block_is_refused(tmp_path):
+    # A SUCCESSOR Done-when verdict's own section reads through the same
+    # parser, so its unpaired fence is refused there too, never dropped.
+    root = git_repo(tmp_path)
+    rel = "docs/reviews/wi-008/001-ADJUDICATE-abc1234.md"
+    verdict = root / rel
+    verdict.parent.mkdir(parents=True, exist_ok=True)
+    verdict.write_text(
+        "DONE-WHEN: SUCCESSOR changes=2 digest=abc\n\n## Dispositions\n\n"
+        '```toml\ntitle = "Render the widget"\n```\n\nIts scope.\n\n'
+        '```toml\ntitle = "The lost half"\n\nmore prose\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    _commit(root, "the verdict", when=T_CODE)
+    drafts, refusal = intake._successor_drafts(root, _rev(root), ("SUCCESSOR", rel))
+    assert refusal is not None and "fence" in refusal.lower(), refusal
+    assert drafts == []
+
+
 def write_open_items(root):
     """A minimal TOML open-items registry — the carrier the OI mint appends to."""
     path = root / "docs" / "requirements" / "open-items.toml"

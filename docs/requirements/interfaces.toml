@@ -1134,9 +1134,9 @@ notes = """No tie-back: the argv comes IN from the adopter's own session (a clai
 
 [interface.IF-175]
 owner = "scripts/kitlib/verdict"
-requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record", "scripts/adjudicate_act", "scripts/review_brief"]
+requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record", "scripts/adjudicate_act", "scripts/review_brief", "scripts/adoption_record"]
 channel = "call"
-data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers; the bar attestation grammar, verifier and tests digest; the review-attestation walk; the red record and the red-round count"
+data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers; the bar attestation grammar, verifier and tests digest; the review-attestation walk; the red record and the red-round count; a shared close-shape reader whose optional relink oracle admits only byte-exact inbound relinks, while the peel calls it without that oracle"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2709,3 +2709,36 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = "source - imports only ctypes and functools; consumes no kit module. It also serves untraced local callers outside the architecture map."
+
+[interface.IF-294]
+rationale = "The close, sweep and commit check need one pure interpretation of an adoption request and record, so they cannot disagree about its grammar, disposed identity or successor validity."
+owner = "scripts/kitlib/adoption"
+requestors = ["scripts/intake", "scripts/handback", "scripts/adoption_record"]
+channel = "call"
+data = "parse_block; disposed_id; row_refusal over a supplied listing; record_ids and record-change judgement"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - pure request, record and listing interpretation; it reads neither git nor a working tree and writes nothing."
+
+[interface.IF-303]
+rationale = "The close and commit rule need one owner for validation at a named revision, so both bind an adoption record to the same parent-tree result."
+owner = "scripts/adoption_record"
+requestors = ["scripts/handback", "scripts/text_then_act"]
+channel = "call"
+data = "tree_specs(root, rev); validate_at(root, rev, title, owes, adoptions) -> record or refusal; commit_adoption_record_lines(root, rev) -> refusal lines"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "CMP-008; the owner reads named git trees and writes nothing."
+
+[interface.IF-304]
+rationale = "The commit checker needs one fail-closed adoption-record result so it can reject an unauthorized record change without interpreting the rule's internal findings."
+owner = "scripts/adoption_record"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "[--root DIR]: exit 0 when the staged adoption-record change is admitted, 1 naming each refusal; writes nothing."
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "Reads the staged commit and its parent records; writes nothing."

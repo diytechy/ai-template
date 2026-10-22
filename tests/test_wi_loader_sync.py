@@ -83,6 +83,7 @@ def _row(wid, **kw):
         "Brief": "",
         "Adjudicates": "",
         "Digests": "",
+        "Adopted": "",
         "Deliverable": "",
         "SpecRef": "",
     }
@@ -190,6 +191,7 @@ CONVERTIBLE_ROWS = [
         "Brief": "",
         "Adjudicates": "",
         "Digests": "",
+        "Adopted": "",
     },
     {
         "WI-ID": "WI-002",
@@ -225,6 +227,7 @@ CONVERTIBLE_ROWS = [
         # loss.
         "Adjudicates": "LLR-001;LLR-002",
         "Digests": "",
+        "Adopted": "",
     },
     {
         "WI-ID": "WI-003",
@@ -249,6 +252,7 @@ CONVERTIBLE_ROWS = [
         "Brief": "",
         "Adjudicates": "",
         "Digests": "",
+        "Adopted": "",
     },
     {
         "WI-ID": "WI-005",
@@ -273,6 +277,7 @@ CONVERTIBLE_ROWS = [
         "Brief": "",
         "Adjudicates": "",
         "Digests": "",
+        "Adopted": "",
     },
     {
         "WI-ID": "WI-000",
@@ -297,6 +302,7 @@ CONVERTIBLE_ROWS = [
         "Brief": "",
         "Adjudicates": "",
         "Digests": "",
+        "Adopted": "",
     },
 ]
 
