@@ -133,7 +133,7 @@ an unknown transcript shape.
 
 Ingested logs land where a gate reads session logs (`docs/iteration/`, via
 the spool and WI-800's harvest). This row's ruling keeps them out of every
-gate. Written under [PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+gate. Written under [PROCESS.md §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producer:** the ingest command, through `session_service.record`. Its
   input is Claude Code's transcript files, which neither the kit nor the
