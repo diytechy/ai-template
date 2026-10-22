@@ -1,0 +1,13 @@
+# docs/decisions/coordinator-2026-10-22.toml — delegated calls the
+# coordinator made on trunk on 2026-10-22 (headless leg 13 of loop session
+# 20261021T045653Z-213020).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Headless leg 13 claims the queue table's first row, WI-961 (Claude coordinator sessions and their sub-agents recorded from their transcripts), alone under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006). Its hard need WI-960 landed (a7fec6dd9). The row was filed on 2026-10-20 with its S1 to S6 answers, so it is not a row born before S3 to S6: its scope critique round 1 (Codex Sol, medium, CHANGES-REQUESTED, one MAJOR adopted) and its confirming round in convergence stance (APPROVE, findings=0) stand, recorded in its spec (17ebbb3d1), and no new critique is owed. What WI-960 landed matches what the spec assumed of it (the out-of-lane arm spools a primary-checkout call's log). WI-850, the next row with pre-claim work owed, is not batched: its dispositions and confirming round come first, and the leg spends its budget on WI-961's lane."
+alternative = "Re-run WI-961's scope critique against the landed WI-960, or batch WI-850's claim after its dispositions and confirming round."
+reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
+why_not_escalated = "The queue table's order and the owner's batch-claim rule; recorded for confirm or overrule."
+review = ""
