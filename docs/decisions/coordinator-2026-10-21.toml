@@ -39,3 +39,10 @@ alternative = "Claim WI-953 alone and unpause again for the others."
 reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
 why_not_escalated = "The queue table's order and the owner's batch-claim rule; recorded for confirm or overrule."
 review = ""
+
+[decision.D-006]
+decided = "Headless leg 10 landed WI-958 (b70ecbe9e) and claims the queue table's next row, WI-969 (row 2: WI-902's successor on the owner's route, coordinator-2026-10-20 D-008), alone under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006). WI-969 has no needs; its spec of record is WI-902's spec unchanged (docs/work/partial/WI-902-disposition-adopts-existing-successor.md), so no new scope critique is owed, as the queue table states. Its lane next takes the third plan revision carrying sitting 016's FIX, one confirming critique in convergence stance, then the build. WI-960 (row 3) stays claimed in its lane; its P0 is next after WI-969's plan or in parallel."
+alternative = "Claim WI-969 in the next leg."
+reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
+why_not_escalated = "The queue table's order and the owner's batch-claim rule; recorded for confirm or overrule."
+review = ""
