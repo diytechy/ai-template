@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 308
+design_rows = 310
 seam_rows = 248
-requirements_placed = 127
+requirements_placed = 128
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -656,6 +656,7 @@ sr_refs = [
   "SR-239",
   "SR-240",
   "SR-241",
+  "SR-242",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -776,6 +777,8 @@ llr_refs = [
   "LLR-339",
   "LLR-340",
   "LLR-341",
+  "LLR-343",
+  "LLR-344",
 ]
 hat_refs = [
   "CONSISTENCY",

@@ -13,8 +13,10 @@ import sys
 import pytest
 from conftest import (
     SCRIPTS,
+    declare_review_bar,
     declare_trunk,
     hooks_on,
+    lane_checkout,
     load_script,
     pin_autocrlf,
     run_py,
@@ -232,7 +234,10 @@ def _wi_201_row(tier):
 def managed_repo(tmp_path):
     """A git repo wired for managed routing: docs/agents.csv (all rows point at
     ONE fake, distinguished by Provider/Model/Tier) + docs/agents-enabled +
-    run-phase=BUILD. Returns (repo, control-dir, base-template, cmd-template)."""
+    run-phase=BUILD, with a stand-in review bar declared. The train branch is
+    checked out in a linked lane worktree and `main` stays in the primary, as
+    a dispatched worker meets it; `repo` is the lane. Returns (repo,
+    control-dir, cmd-template)."""
     repo = tmp_path / "repo"
     (repo / "docs").mkdir(parents=True)
     (repo / "docs" / "status.md").write_text(STATUS_MD, encoding="utf-8")
@@ -249,10 +254,11 @@ def managed_repo(tmp_path):
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
+    repo = lane_checkout(repo, "llm/train/t1")
 
     ctl = tmp_path / "control"
     ctl.mkdir()
+    declare_review_bar(repo, ctl)
     fake = tmp_path / "fake.py"
     fake.write_text(FAKE, encoding="utf-8")
     cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
@@ -303,8 +309,10 @@ def _commit_config(repo):
         ["git", "-C", str(repo), "commit", "-q", "-m", "test config", "--allow-empty"],
         capture_output=True,
     )
+    # The trunk is checked out in the primary, so its ref is moved directly.
     subprocess.run(
-        ["git", "-C", str(repo), "branch", "-f", "main", "HEAD"], capture_output=True
+        ["git", "-C", str(repo), "update-ref", "refs/heads/main", "HEAD"],
+        capture_output=True,
     )
 
 
@@ -855,10 +863,11 @@ def _winstay_repo(tmp_path):
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
+    repo = lane_checkout(repo, "llm/train/t1")
 
     ctl = tmp_path / "control"
     ctl.mkdir()
+    declare_review_bar(repo, ctl)
     fake = tmp_path / "fake.py"
     fake.write_text(FAKE, encoding="utf-8")
     cmd = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
@@ -1193,9 +1202,10 @@ def test_review_owed_survives_a_failed_marker_write(managed_repo, tmp_path):
     (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
     (ctl / "skip_all").write_text("on\n", encoding="utf-8")
     (repo / "out" / "review-owed").mkdir(parents=True)  # the write cannot succeed
-    # The fixture's primary checkout IS the branch, so the merge-base default
-    # is HEAD; a real lane worktree merge-bases to the claim commit. Name the
-    # integration base the way the dispatcher's lane would resolve it.
+    # The fixture's trunk moves up to the lane's config commit, so the
+    # merge-base default is HEAD; a dispatched lane merge-bases to the claim
+    # commit. Name the integration base the way the dispatcher's lane would
+    # resolve it.
     _commit_config(repo)  # the fixture's own review-policy write is NOT the lane's diff
     base = _git(repo, "rev-parse", "HEAD")
 
@@ -1404,7 +1414,9 @@ FAKE_REVIEWER_MISBEHAVES = FAKE.replace(
     '    if mode in ("stray", "stray-locked"):\n'
     '        pathlib.Path("stray.txt").write_text("left behind", encoding="utf-8")\n'
     '    if mode == "stray-locked":\n'
-    '        pathlib.Path(".git", "index.lock").write_text("", encoding="utf-8")\n',
+    '        lock = subprocess.run(["git", "rev-parse", "--git-path", "index.lock"],\n'
+    "                              capture_output=True, text=True, check=True)\n"
+    '        pathlib.Path(lock.stdout.strip()).write_text("", encoding="utf-8")\n',
 )
 assert FAKE_REVIEWER_MISBEHAVES != FAKE, "the reviewer block moved; re-anchor"
 
@@ -1473,7 +1485,7 @@ def test_a_review_whose_leftovers_cannot_be_stashed_stops_and_is_not_redrawn(
     # as already there, so the run must stop needing a human - and the review
     # route must have been launched exactly once.
     repo, ctl, proc = _misbehaving_round(managed_repo, "stray-locked")
-    lock = repo / ".git" / "index.lock"
+    lock = repo / _git(repo, "rev-parse", "--git-path", "index.lock")
     if lock.exists():
         lock.unlink()
     assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr

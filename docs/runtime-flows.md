@@ -88,6 +88,7 @@ sequenceDiagram
         Loop->>Disp: _drive_entry — nothing is read from docs/status.md
         Note over Loop,Disp: resume authority is the claimed assignment plus the committed<br/>trailers on its branch (SR-026/LLR-026); the serial<br/>resume-from-status.md loop is retired
         Disp->>Worker: spawn per admitted lane, stdin closed (LLR-061)
+        Note over Worker,Agent: the red cap is checked before the first session (SR-242/LLR-343),<br/>and a review is drawn only on a tip attested green (LLR-344)
         Worker->>Agent: run headless session(s)
         alt agent errors (retired model / auth)
             Agent-->>Worker: nonzero
@@ -184,7 +185,7 @@ sequenceDiagram
             Disp->>Lane: spawn the worker subprocess on the lane worktree
         end
         Lane-->>Disp: worker exit
-        alt decided non-DONE exit (NEEDS-HUMAN, blocked, budget, stall)
+        alt decided non-DONE exit (NEEDS-HUMAN, blocked, budget, stall, red cap)
             Disp->>Hand: close_partial — commit as-is, spec to terminal partial/ with a per-close report
             Note over Disp,Hand: the lane still closes into trunk and the run<br/>continues; only a FAILED handback stops it (LLR-144)
         else crash (traceback, signal)

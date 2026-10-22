@@ -51,8 +51,8 @@
 #
 # Contract IF-037: the one home for this repo's policy dials. `[attestation]`
 #     carries the human-approval rung and the review holds, `[policies]` the
-#     push, review-round, privacy and secrets dials, and `[checks]` the
-#     check-enablement toggles. Every value is one `key = value` per line inside a
+#     push, review-round, privacy and secrets dials, `[checks]` the
+#     check-enablement toggles, and `[build]` the red-round cap. Every value is one `key = value` per line inside a
 #     `[section]`, with no dotted key, inline table or multi-line string, so the
 #     hooks' pure-sh keyed match and the tomllib read see the same declaration; a
 #     shape that breaks that agreement is refused rather than parsed. A dial
@@ -325,3 +325,8 @@ final_reviewer = "fresh"         # or "persisted"
 # model, and the owner set the latch at half of it (2026-10-04).
 context_guard_pct = 50
 context_window_tokens = 1000000
+
+[build]
+# The red-round cap (WI-958). The shipped template's [build] header carries
+# the full reasoning. This repo keeps the shipped value.
+red_rounds_max = 3

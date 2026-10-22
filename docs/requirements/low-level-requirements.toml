@@ -2252,6 +2252,31 @@ status = "Approved"
 component = "CMP-006"
 phase = 6
 
+[design.LLR-343]
+sr_refs = ["SR-242"]
+title = "Red review-bar round cap and partial-close outcome"
+module = "project-trajectory/scripts/kitlib/config.py;project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/agent_common.py;project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/dispatch.py"
+code_symbol = "red_rounds_max/_process_toml_at/format_red_record/parse_red_record/red_rounds/red_record/_logged_red/_last_review_green/_is_ancestor/EXIT_RED_CAP/red_cap_check/resolve_session_setup/_session_config_refusal/_lane_close/_red_cap_close"
+detail = "The declared red-round maximum reads as a positive integer, defaults to 3 only when its setting is absent, and refuses an unreadable, malformed, non-table, non-integer, boolean, or sub-one setting before a session or claim, naming the key and its line when available or the parse cause. A red record identifies its build commit and summary; the count uses distinct recorded build commits since the newest verified review attestation and resets after that attestation. An unreadable session log counts as one red; history that cannot be listed has no count and is treated as at the cap. At run start and after each committed red record, the cap decision returns exit 12 at the maximum and reports the count. The partial close's reason names the count, the maximum and the final review-bar result. The dispatcher treats exit 12 as a distinct decided close, records the partial-close reason, split authority, suggested tier, and undelivered review bar, and leaves the existing red landing outcome available to quarantine the lane."
+rationale = "One persisted count lets recovery and dispatch reach the same cap decision. The setting is refused before work rather than guessed from malformed input, and an unreadable history closes toward safety because a missing count cannot establish that further unattended work is permitted."
+test_refs = "TC-378; TC-379; TC-380; TC-381; TC-382"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-344]
+sr_refs = ["SR-154"]
+hat_refs = ["PERFORMANCE"]
+title = "Verified-attestation gate for unattended review draws"
+module = "project-trajectory/scripts/agent_loop.py"
+code_symbol = "review_draw_gate/attest_build/record_bar_result/run_iteration/worker_entry/committed_build_rounds/lane_branch/RoutingState.refuse_round"
+detail = "A queued unattended review round is drawn only over a tip carrying a verified review attestation. A tip without one runs the review bar once through its one producer and records the result: green draws the round, while red drops it and rebuilds with the refusal. A result already recorded for the governing build commit is not produced again. The gate applies to fresh, resumed, post-narrow, and adjudication-triggered review draws."
+rationale = "A DERIVED obligation through the PERFORMANCE lens: SR-154 requires the loop to obtain each review verdict its policy requires, but does not state the evidence condition that prevents a scarce review session from being spent on an unverified tip. A single draw gate was selected over separate route checks so recovery produces missing evidence once without either drawing over an unknown tree or duplicating a recorded result. The attended route's rendering rule remains SR-241."
+test_refs = "TC-375; TC-376; TC-377"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
 [design.LLR-212]
 sr_refs = ["SR-187"]
 title = "Crossing system findings: an unknown value fails the frame check, a missing one is advisory"

@@ -13,6 +13,7 @@ import pytest
 from conftest import (
     declare_trunk,
     hooks_on,
+    lane_checkout,
     SCRIPTS,
     load_script,
     pin_autocrlf,
@@ -166,7 +167,8 @@ def _git(repo, *args):
 @pytest.fixture
 def critique_repo(tmp_path):
     """A git repo wired for managed routing with a Critique SR: a medium PROVA
-    builder + a strong PROVB critic (different provider). Returns (repo, control,
+    builder + a strong PROVB critic (different provider). `repo` is the lane
+    worktree, `main` staying in the primary. Returns (repo, control,
     cmd-template)."""
     repo = tmp_path / "repo"
     (repo / "docs" / "requirements").mkdir(parents=True)
@@ -191,7 +193,7 @@ def critique_repo(tmp_path):
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
+    repo = lane_checkout(repo, "llm/train/t1")
 
     ctl = tmp_path / "control"
     ctl.mkdir()

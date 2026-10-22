@@ -178,7 +178,8 @@ def _git_stdout(cwd, *args):
 # close itself; reverting the rounds deleted a lane's review evidence with its
 # product diff, so the disposition adjudicator judged a close whose review it
 # could not read. Evidence of what happened survives the reverting of what was
-# done.
+# done. The session logs are that evidence too: each is append-only once
+# committed, so reverting one made the merge slot refuse the quarantined lane.
 #   MONOTONE BY CONTRACT: `docs/id-watermark` only ever rises. An id the lane
 # allocated is burned whether or not its row survives the revert, and a mark
 # taken back with the product diff is LOWERED in the quarantine commit itself,
@@ -189,7 +190,13 @@ def _git_stdout(cwd, *args):
 #   Two SHAPES, kept apart: directories match by prefix, the watermark by exact
 # path. One `startswith` over both spared `docs/id-watermark.bak`, a product
 # file that merely shares the name's prefix.
-BOOKKEEPING = (integrate.WORK + "/", "docs/log.d/", REPORTS + "/", "docs/reviews/")
+BOOKKEEPING = (
+    integrate.WORK + "/",
+    "docs/log.d/",
+    REPORTS + "/",
+    "docs/reviews/",
+    "docs/iteration/",
+)
 BOOKKEEPING_FILES = frozenset({"docs/id-watermark"})
 
 

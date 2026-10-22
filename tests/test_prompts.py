@@ -361,6 +361,21 @@ def test_the_cycle_reviews_only_an_attested_tip():
         assert "`git log -1` moved" not in flat, name
 
 
+def test_coordinator_cycle_states_the_red_round_cap_citing_the_key():
+    # No TC row names this case yet; it pins WI-958's Done-when item on the
+    # coordinator-cycle skill text. Its section on rounds and the cap counts
+    # each red attest as a red round and, at the declared key, closes the lane
+    # partial by the recipe. test_skills_sync keeps the copies byte-identical.
+    skill = (KIT / "skills" / "coordinator-cycle" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    start = skill.index("### Rounds, the cap and the convergence round")
+    section = skill[start : skill.index("\n### ", start + 1)]
+    flat = " ".join(section.split())
+    assert "[build] red_rounds_max" in flat
+    assert "Close a lane partial" in flat
+
+
 def test_the_terra_brief_has_an_intent_form_before_build_round_1():
     # The spine author's brief serves the intent turn, before any build, as
     # well as the checkpoint: at intent it presumes no built code, no change

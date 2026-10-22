@@ -9402,6 +9402,44 @@ committed by hand now refuses.
 `scripts/kitlib/verdict.py`, and `skills/coordinator-cycle/` (a `scope:
 this-repo` skill; only if you vendored it).
 
+### The loop draws a review only over an attested tip, and a lane red for `red_rounds_max` rounds closes partial [since 30e7c02c0]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The unattended loop draws a review round only over a
+verified `review` bar attestation of the reviewed commit; a missing one runs
+the review bar once, and a red bar draws no review, records a red round in
+the build's session log and sends the build back with the bar's tail. A new
+setting, `[build] red_rounds_max` in `docs/process.toml` (shipped `3`),
+bounds the consecutive red rounds: at the cap the loop exits with a new
+code, `12` (RED-CAP), before any session when a lane resumes at the cap,
+and the dispatcher closes the lane partial with typed fields. A verified
+review attestation resets the count. A bad value refuses at preflight,
+naming the file, the line and the cause. The handback's quarantine of a
+red lane now keeps the lane's `docs/iteration/` session logs as evidence
+beside its review rounds, for every red handback of a loop lane, not only
+the cap's: the logs are append-only, so reverting them made the merge slot
+refuse the quarantined lane.
+
+**What to do.**
+
+1. Add `[build]` with `red_rounds_max = 3` (or your own positive integer)
+   to `docs/process.toml`, after the sections you already have: add the
+   setting only, never replace the file. Absent, the loop reads `3`.
+2. A launcher or wrapper that reads the loop's exit codes treats `12`
+   (RED-CAP) as a decided stop: the lane closed partial for a red build,
+   never a crash to retry.
+3. `[bars] review` in `docs/stack.ini` is already required by the entries
+   above; the loop now runs it.
+
+**Kit-owned files — overwrite:** `scripts/agent_common.py`,
+`scripts/agent_loop.py`, `scripts/dispatch.py`, `scripts/handback.py`,
+`scripts/kitlib/config.py`, `scripts/kitlib/verdict.py`,
+`process.toml.template` (reference only: your `docs/process.toml` is yours),
+`PROCESS_OPTIONS.md`, and `skills/coordinator-cycle/` and
+`skills/byte-budget-guard/SKILL.md` (`scope: this-repo` skills; only if
+you vendored them).
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

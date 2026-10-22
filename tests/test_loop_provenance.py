@@ -47,6 +47,7 @@ from conftest import (
     declare_trunk,
     env_gate_skipif,
     hooks_on,
+    lane_checkout,
     load_script,
     pin_autocrlf,
     run_py,
@@ -269,7 +270,8 @@ sys.exit(0)
 
 def _loop_repo(tmp_path):
     """A worker-mode repo for one agent_loop.py session (tests/
-    test_agent_loop_env.py's harness, copied per the no-cross-import idiom)."""
+    test_agent_loop_env.py's harness, copied per the no-cross-import idiom),
+    returned as its lane worktree with `main` staying in the primary."""
     import csv
 
     repo = tmp_path / "repo"
@@ -311,7 +313,7 @@ def _loop_repo(tmp_path):
     hooks_on(repo)  # every route refuses a checkout without hooks
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "initial")
-    _git(repo, "checkout", "-q", "-b", "llm/train/t1")
+    repo = lane_checkout(repo, "llm/train/t1")
     return repo, ctl, cmd
 
 

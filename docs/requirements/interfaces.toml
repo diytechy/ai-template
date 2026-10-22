@@ -383,8 +383,8 @@ bridged_by = ["DA-002", "DA-009", "DA-014"]
 owner = "scripts/agent_loop"
 consumers = ["external:downstream adopter"]
 channel = "git"
-data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-HUMAN · 8 paused · 9 REVIEW-OWED · 11 RESTART"
-version = "v4"
+data = "0 DONE · 2 preflight · 3 BLOCKED · 4 stall · 5 WAITING · 6 budget · 7 NEEDS-HUMAN · 8 paused · 9 REVIEW-OWED · 11 RESTART · 12 RED-CAP"
+version = "v5"
 status = "Drafted"
 interface_to_external = "B-05"
 bridged_by = ["DA-006", "DA-013"]
@@ -698,7 +698,7 @@ notes = """No tie-back, and the gap is in the FRAME rather than in this row: the
 owner = "docs/process.toml"
 consumers = ["scripts/agent_common", "scripts/agent_loop", "scripts/bootstrap", "scripts/check_privacy", "scripts/check_trajectory", "scripts/dispatch", "scripts/gen_arch_map", "scripts/gen_okf", "scripts/integrate", "scripts/kitlib/config", "scripts/subagent_gate", "external:downstream adopter"]
 channel = "file"
-data = "sections: attestation, policies, checks; one key = value per line"
+data = "sections: attestation, policies, checks, build; one key = value per line"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -1136,7 +1136,7 @@ notes = """No tie-back: the argv comes IN from the adopter's own session (a clai
 owner = "scripts/kitlib/verdict"
 requestors = ["scripts/integrate", "scripts/agent_loop", "scripts/dispatch", "scripts/gen_verdict_rollup", "scripts/score_reviews", "scripts/acceptance_record", "scripts/adjudicate_act", "scripts/review_brief"]
 channel = "call"
-data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers; the bar attestation grammar, verifier and tests digest; the review-attestation walk"
+data = "tree identity; branch rounds/trailers; row rulings and blessed rows; scope, phase, filing and trailer readers; the bar attestation grammar, verifier and tests digest; the review-attestation walk; the red record and the red-round count"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1144,7 +1144,7 @@ notes = """The seam exists because two callers ask ONE question from two sides -
 
 [interface.IF-173]
 owner = "scripts/integrate"
-requestors = ["scripts/dispatch", "scripts/handback", "scripts/lane"]
+requestors = ["scripts/agent_loop", "scripts/dispatch", "scripts/handback", "scripts/lane"]
 channel = "call"
 data = "claim, refresh, attest, integrate, finished_branches, branch_outcomes, lane_worktree, the ACTIVE and WORK constants, seven _-prefixed readers"
 version = "v1"

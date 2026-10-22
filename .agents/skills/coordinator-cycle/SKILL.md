@@ -274,6 +274,10 @@ this hold (`project-trajectory/PROCESS.md` §4).
 - **The cap** (ruling 4, revision 7): at most three counted full rounds
   before the checkpoint. Rounds run until one has no BLOCKER or MAJOR code
   finding, and the checkpoint follows it.
+- **The red cap** (revisions 17 and 18): a red bar draws no review. Count
+  each red `integrate.py attest` as a red round in the lane's decisions
+  record; at `[build] red_rounds_max` consecutive red rounds, close the lane
+  partial (recipes §8, "Close a lane partial"), never a new stop.
 - **Which rounds run in convergence stance.** The third counted round, the
   last the cap allows, renders `review --scope full --stance convergence`
   (ruling 4: the last allowed round runs in convergence mode). The gate over

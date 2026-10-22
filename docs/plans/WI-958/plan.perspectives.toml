@@ -1,0 +1,108 @@
+# PERSPECTIVE RECORD (SR-161) for one decomposition, written by
+# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a
+# person authors: subject, rows, tags, recorded_by, recorded_on, and each
+# perspective's no_finding. Comments are not kept.
+#   applicable = false                -> the roster predicate did not reach it
+#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)
+#   applicable = true, produced = []   -> considered: no_finding says why
+# Check: `hats.py record <this file> --check`.
+
+[decomposition]
+rows = ["SR-242", "LLR-343", "LLR-344"]
+parents = ["SN-004", "SN-006", "SN-008", "SN-024", "SN-026"]
+recorded_by = "GPT Terra (gpt-5.6-terra), WI-958 spine author"
+recorded_on = "2026-10-21"
+
+[perspective.SECURITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The cap closes a lane partial from committed review-bar evidence and adds no secret, credential, or new authority that needs a separate obligation."
+
+[perspective.FIRST-RUN-ADOPTER]
+applicable = true
+applies_when = "tags contains \"scripts\" or tags contains \"templates\" or tags contains \"process\""
+produced = []
+no_finding = "The declared cap, partial close, and named configuration refusal give an adopter a documented outcome without requiring a separate adoption obligation."
+
+[perspective.UNATTENDED-OPS]
+applicable = true
+applies_when = "tags contains \"unattended\" or tags contains \"loop\""
+produced = []
+no_finding = "The cap and one draw gate already bound unattended rebuilding and review production; no distinct operational obligation is missing."
+
+[perspective.CROSS-PLATFORM]
+applicable = true
+applies_when = "tags contains \"scripts\" or tags contains \"launcher\" or tags contains \"shell\""
+produced = []
+no_finding = "The setting reader, committed records, and exit outcome impose no platform-specific behavior requiring a separate obligation."
+
+[perspective.MAINTAINER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The rows identify the bounded outcome, persisted count, and single draw gate, so no further maintenance obligation is needed."
+
+[perspective.TEST-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "TC-375 through TC-382 cover the draw, counting, refusal, cap, and configuration arms; no distinct verification obligation is missing."
+
+[perspective.UX-DESIGNER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The user-facing outcome is a named partial close or refusal rather than a separate interaction or layout concern."
+
+[perspective.UX-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The loop reports text outcomes and adds no view behavior requiring a separate presentation obligation."
+
+[perspective.SAFETY]
+applicable = false
+applies_when = "tags contains \"safety\""
+produced = []
+
+[perspective.LEGAL]
+applicable = true
+applies_when = "tags contains \"legal\""
+produced = []
+no_finding = "The cap and review evidence do not introduce a legal duty, policy, or regulated record beyond the existing process obligations."
+
+[perspective.DATA-PROTECTION]
+applicable = true
+applies_when = "tags contains \"personal-data\""
+produced = []
+no_finding = "The red record carries build evidence and a bar summary, not a new personal-data purpose or handling obligation."
+
+[perspective.ACCESSIBILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The cap outcome is communicated through named text rather than color or pointer-only interaction, so no additional accessibility obligation arises."
+
+[perspective.PERFORMANCE]
+applicable = true
+applies_when = "always"
+produced = ["SR-242", "LLR-344"]
+
+[perspective.CONSISTENCY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The shared persisted count and one draw gate keep recovery and dispatch from assigning different meanings to the same evidence."
+
+[perspective.INTEGRITY-RECOVERABILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "Committed red records, distinct-build counting, and fail-closed unreadable history already cover the recovery risk without a separate obligation."
+
+[perspective.PRODUCT-FITNESS]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "A bounded partial close preserves trustworthy review outcomes without spending unbounded unattended rounds, so no further stakeholder outcome is identified."

@@ -3,13 +3,40 @@ id = "WI-958"
 title = "The loop draws a review only on a tip attested green, and a lane whose build stays red for the declared number of rounds closes partial through the existing red arm"
 workstream = "process"
 sr_refs = ["SR-154", "SR-144", "SR-172"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 buildtier = "high"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-956", "WI-957"]
 +++
+
+## Deliverable
+
+Closed at its landing on 2026-10-21, after its gate, in headless leg 10:
+
+- The unattended loop draws a review only over a tip carrying a verified
+  `review` attestation. After a committed build that completes its
+  assignment it runs the review bar once through `integrate.attest`; at
+  every queued draw (fresh, resumed, post-narrow, adjudication) one gate
+  reads the attestation, reruns nothing for a build whose red is already
+  recorded, and otherwise runs the bar once and records the result in an
+  `ATTEST` session log. A red draws no review and rebuilds with the
+  refusal's cause and tail.
+- A red is recorded in the session log's header (`bar-red`, keyed by the
+  governing build commit; `bar-summary`), and `kverdict.red_rounds` counts
+  the distinct red builds since the newest verified review attestation
+  (an unreadable log counts as one red; an unlistable history reads as at
+  the cap).
+- `[build] red_rounds_max` (shipped 3) is read by one reader that refuses
+  a bad value before any session or claim. At the cap the worker exits 12
+  (`RED-CAP`), at run start for a lane resumed there or after a red
+  record, and the dispatcher closes the lane partial naming the count, the
+  maximum and the last bar result; the quarantine now keeps the lane's
+  session logs (wi-958 D-008, high risk, for the owner).
+- Rows: SR-242 (derived under SN-004 and SN-008) with LLR-343 beneath it,
+  and LLR-344 (derived under SR-154), TC-375 to TC-382, approved at
+  sitting 006; IF-015 (v5), IF-037, IF-173 and IF-175 updated.
 
 ## Context
 

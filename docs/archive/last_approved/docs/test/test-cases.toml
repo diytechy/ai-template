@@ -3679,3 +3679,91 @@ automated = "Yes"
 evidence = "tests/test_kitlib_winjob.py::test_the_job_helpers_import_without_loading_kernel32; tests/test_kitlib_winjob.py::test_agent_session_reaches_the_shared_helpers; tests/test_kitlib_winjob.py::test_the_cpu_reader_sums_user_and_kernel_time; tests/test_session_stdin.py::test_a_tree_not_ended_within_the_bound_raises; tests/test_session_stdin.py::test_a_member_the_kill_cannot_open_makes_it_raise; tests/test_smoke_budget_meter.py::test_a_windows_reading_counts_the_exited_grandchild; tests/test_smoke_budget_meter.py::test_a_joined_job_counts_an_exited_grandchild; tests/test_smoke_budget_meter.py::test_an_outside_process_cannot_raise_a_reading"
 status = "Approved"
 phase = 6
+
+[test.TC-375]
+verifies = ["SR-154", "LLR-344"]
+level = "Integration"
+method = "Run a red review-bar build and assert that no review is drawn, one red record identifies the build commit, and the next build receives the recorded failure tail."
+tier = "Full"
+expected = "A red review bar suppresses the review and routes one rebuild with its recorded failure summary."
+automated = "Yes"
+evidence = "tests/test_agent_loop_review_gate.py::test_red_bar_draws_no_review_records_a_red_round_and_rebuilds_with_the_tail; tests/test_agent_loop_review_gate.py::test_a_resumed_build_receives_the_tail_of_a_long_recorded_refusal; tests/test_agent_loop_review_gate.py::test_a_long_red_summary_keeps_its_cause_and_its_final_diagnostic"
+status = "Approved"
+phase = 6
+
+[test.TC-376]
+verifies = ["SR-154", "LLR-344"]
+level = "Integration"
+method = "Run a green review-bar build and assert that exactly one verified review attestation precedes the review draw."
+tier = "Full"
+expected = "A green review bar attests once and then draws the queued review."
+automated = "Yes"
+evidence = "tests/test_agent_loop_review_gate.py::test_green_bar_attests_once_then_draws_the_review"
+status = "Approved"
+phase = 6
+
+[test.TC-377]
+verifies = ["SR-154", "LLR-344"]
+level = "Integration"
+method = "Resume an unattested owed round, and complete post-narrow and adjudication-triggered rounds, asserting that the producer runs once when missing and every review draw has a verified review attestation."
+tier = "Full"
+expected = "Unattested review routes produce once; green results draw and red results do not."
+automated = "Yes"
+evidence = "tests/test_agent_loop_review_gate.py::test_resumed_round_on_an_unattested_tip_runs_the_producer_once; tests/test_agent_loop_review_gate.py::test_post_narrow_and_adjudication_rounds_draw_only_over_a_verified_attestation"
+status = "Approved"
+phase = 6
+
+[test.TC-378]
+verifies = ["SR-242", "LLR-343"]
+level = "Integration"
+method = "Run red rounds across a process resume and through a green review attestation, asserting that the persisted count continues across the resume and resets after green."
+tier = "Full"
+expected = "Distinct red build records survive resume, and a verified green attestation resets their consecutive count; a log that cannot be read counts as one red, and a history that cannot be listed answers no count, read as at the cap."
+automated = "Yes"
+evidence = "tests/test_agent_loop_review_gate.py::test_red_count_survives_a_resume_and_a_green_resets_it; tests/test_agent_loop_review_gate.py::test_red_rounds_counts_distinct_red_builds_and_a_green_attestation_resets_it; tests/test_agent_loop_review_gate.py::test_red_rounds_counts_an_unreadable_log_and_answers_none_for_no_history; tests/test_agent_loop_review_gate.py::test_red_count_survives_a_resume_to_the_cap_and_exits_12; tests/test_agent_loop_review_gate.py::test_a_lane_resumed_at_the_cap_exits_12_before_any_session"
+status = "Approved"
+phase = 6
+
+[test.TC-379]
+verifies = ["SR-242", "LLR-343"]
+level = "Integration"
+method = "Resume after an unrecorded red result and assert that the governing build is rechecked once, an ATTEST record is inert to phase readers, and duplicate records for one build count once."
+tier = "Full"
+expected = "Interrupted red evidence is recovered once and distinct build commits define the count."
+automated = "Yes"
+evidence = "tests/test_agent_loop_review_gate.py::test_an_interrupted_red_is_rechecked_once_at_the_draw_and_counted_once; tests/test_agent_loop_review_gate.py::test_a_build_ending_in_a_record_only_commit_is_recorded_and_counted_once; tests/test_agent_loop_review_gate.py::test_red_rounds_counts_one_build_recorded_twice_once; tests/test_agent_loop_review_gate.py::test_attest_phase_is_inert_to_every_phase_reader"
+status = "Approved"
+phase = 6
+
+[test.TC-380]
+verifies = ["SR-242", "LLR-343"]
+level = "Integration"
+method = "Exercise malformed process settings through the worker and dispatcher preflight, asserting refusal before any session or claim."
+tier = "Full"
+expected = "An unparseable setting or non-table build section refuses at preflight, names its cause, and starts no session or claim."
+automated = "Yes"
+evidence = "tests/test_agent_loop_review_gate.py::test_unparseable_process_toml_and_a_non_table_build_refuse_at_preflight; tests/test_agent_loop_review_gate.py::test_a_bad_red_rounds_max_refuses_before_any_session"
+status = "Approved"
+phase = 6
+
+[test.TC-381]
+verifies = ["SR-242", "LLR-343"]
+level = "Integration"
+method = "Reach the red-round maximum during a run and resume a lane already at that maximum, asserting exit 12 before any session in the latter case; assert that the partial-close reason names the count, maximum and final review-bar result, the capped worker emits no route/failure line or PAGE-HUMAN stop, and the dispatcher close is not the NEEDS-HUMAN judgement escalation; exercise the dispatcher close and red landing path."
+tier = "Full"
+expected = "At the cap, exit 12 produces a partial close whose reason names the count, maximum and final review-bar result; the worker does not page through the declared approval level, with no route/failure line, PAGE-HUMAN stop, or NEEDS-HUMAN exit, and the dispatcher close is not the judgement escalation. One fewer red does not close."
+automated = "Yes"
+evidence = "tests/test_agent_loop_review_gate.py::test_red_cap_exits_with_its_own_code_and_one_fewer_does_not; tests/test_agent_loop_review_gate.py::test_a_lane_resumed_at_the_cap_exits_12_before_any_session; tests/test_dispatch.py::test_a_red_cap_exit_closes_the_lane_partial_with_typed_fields_and_the_drain_quarantines_it"
+status = "Approved"
+phase = 6
+
+[test.TC-382]
+verifies = ["SR-242", "LLR-343"]
+level = "Unit"
+method = "Read absent and invalid red-round settings, including zero, negative, boolean, text, and floating values."
+tier = "Smoke"
+expected = "An absent setting reads 3; zero, negative, boolean, text, and floating values each refuse naming their line and key."
+automated = "Yes"
+evidence = "tests/test_red_rounds_max.py::test_red_rounds_max_reads_3_when_absent_and_refuses_each_bad_value"
+status = "Approved"
+phase = 6

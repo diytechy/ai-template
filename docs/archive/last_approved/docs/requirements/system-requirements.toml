@@ -1916,3 +1916,17 @@ verification = "Test"
 status = "Approved"
 phase = 6
 aspect = "process"
+
+[requirement.SR-242]
+title = "A capped sequence of red review bars closes partial"
+sn_refs = ["SN-004", "SN-008"]
+boundary_refs = ["B-01"]
+hat_refs = ["PERFORMANCE"]
+requirement = "When an unattended lane reaches its declared maximum number of consecutive red review-bar rounds, the delivered dispatcher shall close the lane partial and report that cap outcome separately."
+rationale = "A DERIVED requirement through the PERFORMANCE lens: SN-004 and SN-008 require trustworthy, fail-closed outcomes, but leave an unattended lane free to spend unbounded rounds on a known red condition. A declared finite cap was selected over an implicit iteration limit because the outcome must remain attributable to repeated review-bar failure and recoverable from committed evidence. Fed back to the needs: their acceptance could state that a red review-bar rebuild sequence ends in a partial close at its declared cap rather than consuming unbounded review rounds or escalating through the approval level."
+acceptance_criteria = "A run of red review-bar rebuilds is bounded by the declared maximum and closes partial at that maximum rather than escalating through the declared approval level. The partial close names the count, maximum and final review-bar result, and is distinguishable from a stall, crash, or ordinary completion."
+priority = "M"
+verification = "Test"
+status = "Approved"
+phase = 6
+aspect = "process"

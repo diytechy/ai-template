@@ -472,3 +472,19 @@ context_guard_pct = 0            # e.g. 50
 # of the model the coordinator runs (200000 is the standard window; a 1M-context
 # model declares 1000000).
 context_window_tokens = 200000
+
+[build]
+# THE RED-ROUND CAP. A managed loop draws a review only over a tip its
+# declared review bar attested green; a red bar draws no review and hands the
+# bar's failure tail to the next build instead. Each red is recorded in the
+# lane's committed session log, keyed by the build commit it refused, so the
+# count survives a resume, and a verified green attestation resets it. At this
+# many consecutive red rounds the worker stops with its own exit code, and the
+# dispatcher closes the lane partial through the existing red arm.
+#
+# A positive integer. An absent [build] table or key reads the shipped 3. Any
+# other value (0, a negative, a bool, a string, a float) is refused at the
+# loop's preflight and before a lane is claimed, naming its line. There is no
+# "off": an unbounded cap would rebuild a red tip forever, since a red build
+# still commits and the stall guard never trips.
+red_rounds_max = 3

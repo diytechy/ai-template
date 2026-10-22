@@ -32,9 +32,11 @@ import sys
 
 import pytest
 from conftest import (
+    declare_review_bar,
     declare_trunk,
     hooks_on,
     env_gate_skipif,
+    lane_checkout,
     SCRIPTS,
     load_script,
     pin_autocrlf,
@@ -512,6 +514,9 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     # HEAD (LLR-061 — a verdict belongs to the exact commit, never a branch
     # tip), and the scoreboard is train-scoped too.
     repo, base, ctl, fake = _setup(tmp_path)
+    # The worker runs in its lane worktree, `main` staying in the primary.
+    repo = lane_checkout(repo, "llm/train/t1")
+    declare_review_bar(repo, ctl)
     template = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
         sys.executable, fake, ctl
     )
@@ -531,18 +536,22 @@ def test_worker_review_evidence_names_exact_reviewed_commit(tmp_path):
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "wire managed routing")
     # The wiring is the lane's starting point, not its work: the declared
-    # trunk moves up to it, so the lane's integration base sits after it.
-    _git(repo, "branch", "-f", "main", "HEAD")
+    # trunk moves up to it, so the lane's integration base sits after it. The
+    # trunk is checked out in the primary, so its ref is moved directly.
+    _git(repo, "update-ref", "refs/heads/main", "HEAD")
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
 
     verdicts = list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*.md"))
     assert len(verdicts) == 1, "expected one train-scoped verdict"
     sha7 = verdicts[0].stem.rsplit("-", 1)[1]
-    # The named sha is the implementer's commit — the exact reviewed HEAD.
+    # The named sha is the exact reviewed commit: the review bar's attestation
+    # of the implementer's commit, sitting directly on it with its tree.
     subjects = _git(repo, "log", "--format=%h %s", "HEAD")
     build_line = [ln for ln in subjects.splitlines() if "build WI-201" in ln][0]
-    assert build_line.startswith(sha7[:7])
+    reviewed = _git(repo, "rev-parse", sha7)
+    assert agent_loop.kverdict.bar_attestation(str(repo), reviewed) is not None
+    assert _git(repo, "rev-parse", reviewed + "^").startswith(build_line.split()[0])
     assert (repo / "docs" / "reviews" / "t1" / "scoreboard.txt").exists()
     # And no un-scoped lane verdict escaped the train directory.
     assert not list((repo / "docs" / "reviews").glob("*.md"))

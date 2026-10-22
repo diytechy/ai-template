@@ -134,8 +134,10 @@ Contract IF-015: the unattended coordinator's effect on the repository it runs
     always named by an exit code: 0 DONE, 2 preflight or config failure, 3
     BLOCKED, 4 stall abort, 5 WAITING on a rate limit, 6 iteration budget
     exhausted while still running, 7 NEEDS-HUMAN, 8 paused on the tracked pause
-    file, 9 REVIEW-OWED, 11 RESTART after the imported Python source moves (10
-    remains retired). A restart stops at the session/admission boundary and
+    file, 9 REVIEW-OWED, 11 RESTART after the imported Python source moves, 12
+    RED-CAP when the lane's red build rounds reach the declared cap, checked at
+    run start for a resumed lane and after each red record (10 remains
+    retired). A restart stops at the session/admission boundary and
     preserves the branch evidence for a fresh launcher invocation. Preflight
     refuses to start iteration 1 — rather than hanging or committing under a
     wrong identity — when the agent executable is missing, the working directory
@@ -175,6 +177,7 @@ try:
     import agent_common
     import agent_route
     import agent_session
+    import integrate
     import plan_runner
     import prompts
     import score_reviews
@@ -186,6 +189,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import agent_common
     import agent_route
     import agent_session
+    import integrate
     import plan_runner
     import prompts
     import score_reviews
@@ -209,6 +213,10 @@ from kitlib import provenance as kprovenance
 # Whether this checkout's commit hooks are on (WI-926): `main` asks first,
 # before the lock, and a hookless checkout never starts the loop.
 from kitlib import commit_hooks as kcommit_hooks
+
+# The red-round cap's one reader (SR-242): read at preflight, before any
+# session, and carried on `LoopContext`.
+from kitlib import config as kconfig
 
 # The delegated-decisions record (SR-225): the note a delegated session is
 # handed when the dial asks its run for a record.
@@ -239,6 +247,7 @@ EXIT_NEEDS_HUMAN = agent_common.EXIT_NEEDS_HUMAN
 EXIT_PAUSED = agent_common.EXIT_PAUSED
 EXIT_REVIEW_OWED = agent_common.EXIT_REVIEW_OWED
 EXIT_RESTART = agent_common.EXIT_RESTART
+EXIT_RED_CAP = agent_common.EXIT_RED_CAP
 END_STATES = agent_common.END_STATES
 OWNER_ONLY_PATHS = agent_common.OWNER_ONLY_PATHS
 read_declared = agent_common.read_declared
@@ -716,6 +725,15 @@ class RoutingState:
         self.review_queue = list(phases)
         return list(self.review_queue)
 
+    def refuse_round(self):
+        """Drop the queued review round, whose tip the review bar refused, and
+        route the next session to BUILD.
+
+        Implements: SR-154, LLR-344
+        """
+        self.review_queue = []
+        self.next_phase = "BUILD"
+
     def schedule_critique(self, in_scope, limit, exhaustion):
         """Queue a critique round for one build scope. A NEW scope starts a fresh
         budget; a rework of the SAME scope preserves the count so the budget
@@ -981,8 +999,7 @@ def build_hold(root, worker):
     """
     rows = worker.get("rows") or {}
     ids = [w for w in worker["assigned"] if not adjudicating(rows.get(w) or {})]
-    branch = git(root, "branch", "--show-current")[1].strip()
-    reason = kdone.lane_hold(root, "HEAD", worker["base"], branch, ids)
+    reason = kdone.lane_hold(root, "HEAD", worker["base"], lane_branch(root), ids)
     return (EXIT_NEEDS_HUMAN, "HELD", reason) if reason else None
 
 
@@ -1659,6 +1676,7 @@ class LoopContext:
     reviews_dir: Path
     scoreboard: Path
     rp_int: int
+    red_rounds_max: int
     run: LoopRun
 
 
@@ -2412,11 +2430,59 @@ def committed_build_rounds(ctx, plan, commits, after, wi_label):
     The design-check arm had all three in duplicate — a committing design-check
     IS the rework, so it owes exactly what a build owes (WI-579, measured
     2026-09-03) — and a rule kept in two copies is a rule that drifts.
-    Returns `schedule_review_round`'s exit code, or None."""
+    A build whose review bar refused it (`attest_build`) owes no review round:
+    the refusal is the next build's rework, as a round's findings would be.
+    Returns `schedule_review_round`'s exit code, the red cap's after a red
+    (`red_cap_check`), or None.
+
+    Implements: SR-154, LLR-344
+    """
     ctx.run.routing.on_committed_build(plan["route_family"], wi_label, commits)
-    paged = schedule_review_round(ctx, after)
+    paged = None
+    if plan.get("bar_red"):
+        ctx.worker["rework"] = plan["bar_red"]
+        print("dispatch: review bar red -> no review round; rework carries its tail")
+        paged = red_cap_check(ctx)
+    else:
+        paged = schedule_review_round(ctx, plan.get("attested") or after)
     schedule_critique_round(ctx, commits)
     return paged
+
+
+def lane_branch(root):
+    """The branch checked out at `root`, "" when detached.
+
+    Implements: SR-154, LLR-344
+    """
+    return git(root, "branch", "--show-current")[1].strip()
+
+
+def attest_build(ctx, plan, outcome, meta):
+    """The review bar at the event: a committed build (or design-check) that
+    completes the assignment, under managed routing with a reviewer dial, runs
+    the lane's review bar once through its one producer, `integrate.attest`,
+    before the session's log is written. A refusal of any kind is red, its
+    text the cause. Green leaves the attested commit on `plan` for the round's
+    range; red writes the red record into this session's own log header and
+    leaves the refusal on `plan`. The record is keyed by the build commit as
+    the draw names it (`kverdict.governing_rev`, which walks past record-only
+    commits), so a build whose last commit is a log fragment is found again at
+    the draw and never recorded twice.
+
+    Implements: SR-154, LLR-344
+    """
+    worker = ctx.worker
+    builds = outcome == "COMMITTED" and plan["phase"] in ("BUILD", "", "DESIGN-CHECK")
+    if not (builds and ctx.managed and ctx.rp_int >= 1 and worker):
+        return
+    built, _blk = train_evidence(ctx.root, worker["base"])
+    if not all(w in built for w in worker["assigned"]):
+        return
+    build = kverdict.governing_rev(ctx.root, lane_branch(ctx.root))
+    attested, red = integrate.attest(ctx.root, lane_branch(ctx.root), "review", [])
+    plan["attested"], plan["bar_red"] = attested, red
+    if red:
+        meta.update(kverdict.format_red_record(build, red))
 
 
 def build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now):
@@ -3306,6 +3372,113 @@ def session_commit_range(root, before):
     return after, f"{before or '(root)'}..{after or '?'}" if before != after else ""
 
 
+def review_draw_gate(ctx):
+    """The one choke point every queued review round passes before it is drawn
+    (fresh, post-narrow, resumed and adjudication rounds alike): the round is
+    drawn only over a tip carrying a verified `review` attestation, and its
+    range is pointed at that attested commit. Without one, a red already
+    recorded for the governing build commit drops the round and rebuilds with
+    its summary, running no bar; with no record, the review bar runs once here
+    and `record_bar_result` records it, green drawing the round and red
+    dropping it. Returns the red cap's exit code after a red (`red_cap_check`),
+    else None: the session is routed next.
+
+    Implements: SR-154, LLR-344
+    """
+    st, root, worker = ctx.run.routing, ctx.root, ctx.worker
+    if not (st.review_queue and worker):
+        return None
+    attested, _cause = kverdict.review_attestation(root, "HEAD", [])
+    if attested is None:
+        branch = lane_branch(root)
+        build = kverdict.governing_rev(root, branch)
+        red = kverdict.red_record(root, "HEAD", worker["base"], build)
+        if red is None:
+            attested, red = integrate.attest(root, branch, "review", [])
+            record_bar_result(ctx, build, red)
+        if red is not None:
+            st.refuse_round()
+            worker["rework"] = red
+            print("dispatch: review bar red at the draw -> no round; rebuilding")
+            return red_cap_check(ctx)
+    st.set_train_range("{}..{}".format(worker["base"], attested))
+    return None
+
+
+def red_cap_check(ctx):
+    """`EXIT_RED_CAP` with its stop banner once the lane's committed red
+    records, counted from the worker's base (its merge base with trunk, as the
+    dispatcher reads it), reach `[build] red_rounds_max` or cannot be read;
+    else None. Armed where a review is drawn; run at the run's start and after
+    each committed red record.
+
+    Implements: SR-242, LLR-343
+    """
+    if not (ctx.managed and ctx.rp_int >= 1 and ctx.worker):
+        return None
+    red = kverdict.red_rounds(ctx.root, "HEAD", ctx.worker["base"])
+    if red is not None and red.count < ctx.red_rounds_max:
+        return None
+    count = "unreadable" if red is None else red.count
+    stop_banner(
+        ctx.status_path,
+        "RED CAP — {} consecutive red rounds".format(count),
+        "[build] red_rounds_max = {}; last bar: {}. The lane closes partial.".format(
+            ctx.red_rounds_max, red.last_summary if red else "-"
+        ),
+    )
+    return EXIT_RED_CAP
+
+
+def record_bar_result(ctx, build, refusal):
+    """The loop's record of a review-bar run it made at a draw: a log of phase
+    `ATTEST` written through the session service's one writer
+    (`session_service.record`) and committed in its own telemetry commit,
+    never a rewrite of an existing log. A red carries the red record keyed by
+    the build commit `build`.
+
+    Implements: SR-154, LLR-344
+    """
+    worker = ctx.worker
+    session = "{:03d}".format(next_session_number(ctx.iter_dir, worker["train"]))
+    meta = {"session": session, "stamp": time.strftime("%Y%m%d-%H%M%S")}
+    meta["date"] = time.strftime("%Y-%m-%d %H:%M")
+    meta.update(train=worker["train"], base=worker["base"][:12], phase="ATTEST")
+    meta["outcome"] = "RED" if refusal else "GREEN"
+    if refusal:
+        meta.update(kverdict.format_red_record(build, refusal))
+    text = refusal or "green"
+    ran = session_service.Outcome(ctx.root, int(bool(refusal)), text, False, text, {})
+    label = "ATTEST " + meta["outcome"]
+    session_service.record(
+        ran, meta, iter_dir=ctx.iter_dir, session=ctx.tag + session, label=label
+    )
+
+
+def worker_entry(ctx, i):
+    """`(exit code or None, current WI)` before a worker session is routed:
+    the end state judged from committed evidence, then the review draw gate
+    over any queued round (`review_draw_gate`). `(None, None)` off a worker.
+
+    Implements: SR-154, LLR-344
+    """
+    worker, st = ctx.worker, ctx.run.routing
+    if not worker:
+        return None, None
+    end = worker_endstate(
+        ctx.root,
+        worker,
+        bool(st.review_queue or st.critique_queue),
+        ctx.managed,
+        ctx.rp_int,
+        allow_block_exit=(i > 1),
+        rounds=st.rounds,
+    )
+    if end:
+        return worker_exit_banner(worker, end), None
+    return review_draw_gate(ctx), current_assignment_wi(ctx.root, worker)
+
+
 def run_iteration(ctx, i):
     """One worker session end-to-end: guards, routing (route_session),
     launch, telemetry, bookkeeping (session_bookkeeping), and the outcome
@@ -3319,7 +3492,6 @@ def run_iteration(ctx, i):
     args = ctx.args
     root = ctx.root
     worker = ctx.worker
-    st = ctx.run.routing
     wait_out_blackout(ctx.lane)
     code = moved_scripts_stop()
     if code is not None:
@@ -3341,20 +3513,9 @@ def run_iteration(ctx, i):
     # blocked train when the base may have been cured, so the worker gets its one
     # chance to supersede the block with a completion; a block still standing
     # after the session exits BLOCKED (the post-session check honors it).
-    current_wi = None
-    if worker:
-        end = worker_endstate(
-            root,
-            worker,
-            bool(st.review_queue or st.critique_queue),
-            ctx.managed,
-            ctx.rp_int,
-            allow_block_exit=(i > 1),
-            rounds=st.rounds,
-        )
-        if end:
-            return worker_exit_banner(worker, end)
-        current_wi = current_assignment_wi(root, worker)
+    code, current_wi = worker_entry(ctx, i)
+    if code is not None:
+        return code
     session = "{:03d}".format(next_session_number(ctx.iter_dir, worker["train"]))
     stamp = time.strftime("%Y%m%d-%H%M%S")
     now = time.time()
@@ -3398,6 +3559,7 @@ def run_iteration(ctx, i):
         ctx, plan, data, session, stamp, current_wi, outcome, commits, code, wall_secs
     )
     stamp_session_meta(meta, plan, timed_out)
+    attest_build(ctx, plan, outcome, meta)
     # The service's one writer: the tracked log, the raw stream in the
     # untracked run-logs, and its own telemetry commit — never riding the next
     # session's work commit (WI-137). A worker never regenerates the iteration
@@ -3589,13 +3751,19 @@ class SessionSetup:
     prompt_templates: dict
     routing: RoutingSetup
     worker: dict
+    red_rounds_max: int
 
 
 def resolve_session_setup(args, root):
     """Resolve the run, or refuse it. Returns (setup, None), or (None, code)
     when a map is malformed, a preflight check fails, or the worker assignment
     is not a legal one — the three refusals that used to be inline arms of
-    `main`. Every refusal prints exactly what it printed before."""
+    `main`. Every refusal prints exactly what it printed before. A
+    `[build] red_rounds_max` its reader refuses is one more preflight
+    failure, so no session starts under a cap nobody declared.
+
+    Implements: SR-242, LLR-343
+    """
     docs = root / "docs"
     template = (
         args.agent_cmd
@@ -3629,6 +3797,12 @@ def resolve_session_setup(args, root):
     worker, err = build_worker_assignment(args, root)
     if err is not None:
         return None, err
+    # After the assignment: its undeclared-trunk refusal already names the
+    # line an absent docs/process.toml lacks.
+    red_max, refusal = kconfig.red_rounds_max(root)
+    if refusal is not None:
+        print("agent_loop: preflight failed —\n  - " + refusal, file=sys.stderr)
+        return None, EXIT_PREFLIGHT
     return (
         SessionSetup(
             template=template,
@@ -3640,6 +3814,7 @@ def resolve_session_setup(args, root):
             prompt_templates=prompt_templates,
             routing=routing,
             worker=worker,
+            red_rounds_max=red_max,
         ),
         None,
     )
@@ -3883,7 +4058,10 @@ def moved_scripts_stop():
 def run_loop(ctx):
     """Iterate until an iteration returns an exit code, or until the declared
     budget runs out — which is itself an exit with a banner, never a silent
-    stop."""
+    stop. A lane already at its red cap ends before any session."""
+    code = red_cap_check(ctx)
+    if code is not None:
+        return code
     for i in range(1, ctx.args.max_iterations + 1):
         code = run_iteration(ctx, i)
         if code is not None:
@@ -4069,6 +4247,7 @@ def main():
             reviews_dir=reviews_dir,
             scoreboard=reviews_dir / "scoreboard.txt",
             rp_int=rp_int,
+            red_rounds_max=setup.red_rounds_max,
             run=LoopRun(routing=st, warned_no_core=warned_no_core),
         )
     )

@@ -830,6 +830,11 @@ control input — was retired):
   that failed earlier in the run must answer a 30 s `OK` liveness probe on
   its own command template before another real session is spent on it; a
   route with a clean history is never probed (recovery aid, not a tax).
+- **RED-CAP** is **exit code 12** (`EXIT_RED_CAP`): a red review bar draws no
+  review, and the lane's red build rounds reached `[build] red_rounds_max`
+  (`docs/process.toml`, shipped `3`). Checked at run start and after each red
+  record; unlike exit 9 it is a decided outcome, so the dispatcher closes the
+  lane `partial` through the handback's red arm.
 - **The resume-from-`status.md` prompt is retired** with the path: the
   generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
   humans, never a session's input — the hand-authored remainder stays the

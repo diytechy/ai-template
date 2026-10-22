@@ -132,7 +132,12 @@ Contract IF-175: the verdict record, as functions two independent readers call
     tests digest matches, at the commit or beneath it through commits whose
     non-record identity is unchanged (the step `governing_rev` takes), the
     first verified record deciding, so another bar or another digest refuses
-    rather than being walked past. Pure functions plus thin reads through
+    rather than being walked past; `format_red_record` / `parse_red_record`
+    the red record a build's session log header carries, keyed by the build
+    sha a red review bar refused, `red_record` whether a build already has
+    one, and `red_rounds` the count: the distinct red builds since the last
+    verified `review` attestation, an unreadable log counting toward the cap,
+    never away from it. Pure functions plus thin reads through
     `kitlib.git`, so nothing here writes and nothing imports a sibling service —
     the verdict parser arrives as an ARGUMENT rather than an import, which is
     what keeps this leaf free of an edge back into the scoring layer. Every
@@ -202,6 +207,11 @@ __all__ = [
     "branch_paths",
     "log_history",
     "review_logs",
+    "RED_KEYS",
+    "format_red_record",
+    "parse_red_record",
+    "RedCount",
+    "red_rounds",
     "logged_rounds",
     "round_entries",
     "branch_entries",
@@ -1253,6 +1263,159 @@ def review_logs(root, branch, base, paths):
             gate = gating_span(blob, persisted)
             found.append((path, key, phase, session_range(blob), gate))
     return found
+
+
+# --- the red record: a review bar that refused a build, and the count -----------
+
+# A red result is written into a session log's header, keyed by the build
+# commit whose tip the bar refused:
+#
+#     # bar-red: <40-hex build sha>
+#     # bar-summary: <one line>
+#
+# `format_red_record` is the one writer of the two fields (the loop hands them
+# to `agent_common.write_session_log`) and `parse_red_record` the one reader.
+# Only the header counts: a transcript quoting the line is no record.
+RED_KEYS = ("bar-red", "bar-summary")
+_SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
+_BAR_RED_RE = re.compile(r"^# bar-red:[ \t]*([0-9a-f]{40})[ \t]*$", re.M)
+_BAR_SUMMARY_RE = re.compile(r"^# bar-summary:[ \t]*(.*)$", re.M)
+_SUMMARY_MAX = 240
+_SUMMARY_GAP = " ... "
+_SUMMARY_HEAD = 80
+
+
+def format_red_record(sha, summary):
+    """`{"bar-red": sha, "bar-summary": one line}`, the header fields of a red
+    record. The summary's whitespace folds to single spaces; a longer line
+    keeps its first `_SUMMARY_HEAD` characters (the refusal's cause) and its
+    tail (where a bar prints its final diagnostic), joined by `_SUMMARY_GAP`,
+    within `_SUMMARY_MAX` characters. This line is the only copy a resumed
+    build is handed, so the tail is the part it cannot lose. A sha that is not
+    40 lowercase hex raises, so the writer cannot emit a record the reader
+    refuses.
+
+    Implements: SR-242, LLR-343
+    """
+    if not _SHA40_RE.match(str(sha)):
+        raise ValueError("a red record names a 40-hex build sha, not {!r}".format(sha))
+    line = " ".join(str(summary).split())
+    if len(line) > _SUMMARY_MAX:
+        tail = _SUMMARY_MAX - _SUMMARY_HEAD - len(_SUMMARY_GAP)
+        line = line[:_SUMMARY_HEAD] + _SUMMARY_GAP + line[-tail:]
+    return dict(zip(RED_KEYS, (sha, line or "(no summary)")))
+
+
+def parse_red_record(blob):
+    """`(build sha, summary)` for a session log's red record, else None. Read
+    from the header alone, the lines before the log's `# ---` separator.
+
+    Implements: SR-242, LLR-343
+    """
+    header = blob.split("\n# ---", 1)[0]
+    matched = _BAR_RED_RE.search(header)
+    if matched is None:
+        return None
+    summary = _BAR_SUMMARY_RE.search(header)
+    return matched.group(1), summary.group(1).strip() if summary else ""
+
+
+class RedCount(NamedTuple):
+    """The lane's consecutive red review-bar rounds and the last bar summary."""
+
+    count: int
+    last_summary: str
+
+
+def red_rounds(root, branch, base):
+    """The consecutive red review-bar rounds `base..branch` records, as a
+    `RedCount`, or None when git cannot list that history.
+
+    The newest commit in the range carrying a verified `review` attestation is
+    the last green, and it resets the count. Every session log the range's
+    commits added is read as the commit that added it (`log_history`, so a
+    later rewrite changes nothing), and each red record whose build sha is not
+    an ancestor of that green counts. DISTINCT shas give the count, so a red
+    recorded twice for one build counts once, and the last summary is the
+    newest counted record's. A log git cannot show counts as one red keyed by
+    its path (unless the commit that added it is beneath the green): an
+    unreadable record counts toward the cap, never away from it. Both callers
+    read None as "at the cap" for the same reason.
+
+    Implements: SR-242, LLR-343
+    """
+    history = log_history(root, branch, base)
+    green = _last_review_green(root, branch, base)
+    if history is None or green is None:
+        return None
+    reds, last = set(), ""
+    for path, added in history[0].items():
+        red = _logged_red(root, path, added)
+        if red is None or (green and _is_ancestor(root, red[2], green)):
+            continue
+        reds.add(red[0])
+        last = red[1]
+    return RedCount(len(reds), last)
+
+
+def red_record(root, branch, base, sha):
+    """The summary of the red record `base..branch`'s session logs hold for the
+    build commit `sha`, or None when none does: whether a review bar already
+    refused that build, so a draw over it rebuilds without running the bar
+    again. A log git cannot show names no build, so it answers nothing here.
+
+    Implements: SR-242, LLR-343
+    """
+    history = log_history(root, branch, base)
+    found = None
+    for path, added in (history[0] if history else {}).items():
+        red = _logged_red(root, path, added)
+        if red is not None and red[0] == sha:
+            found = red[1]
+    return found
+
+
+def _logged_red(root, path, added):
+    """`(key, summary, dated by)` for the red one session log records, read at
+    the commit `added` that added it, else None. A readable log keys its red
+    by the build sha and is dated by it; a log git cannot show keys one red by
+    its path and is dated by the commit that added it.
+
+    Implements: SR-242, LLR-343
+    """
+    blob = git_out(root, ["show", "{}:{}".format(added, path)])
+    if blob is None:
+        return path, "(session log {} could not be read)".format(path), added
+    record = parse_red_record(blob)
+    return None if record is None else (record[0], record[1], record[0])
+
+
+def _last_review_green(root, branch, base):
+    """The newest commit in `base..branch` carrying a verified `review`
+    attestation, "" when none does, None when git cannot list the range.
+
+    Implements: SR-242, LLR-343
+    """
+    out = git_out(root, ["log", "--format=%x00%H%n%B", "{}..{}".format(base, branch)])
+    if out is None:
+        return None
+    for record in out.split("\x00")[1:]:
+        sha, _sep, message = record.partition("\n")
+        if not any(ln.startswith(BAR_GREEN) for ln in message.splitlines()):
+            continue
+        attested = bar_attestation(root, sha.strip())
+        if attested is not None and attested.bar == "review":
+            return sha.strip()
+    return ""
+
+
+def _is_ancestor(root, rev, of):
+    """True when `rev` is `of` or an ancestor of it; False when it is not, or
+    git cannot say.
+
+    Implements: SR-242, LLR-343
+    """
+    return git_out(root, ["merge-base", "--is-ancestor", rev, of]) is not None
 
 
 def review_scope_refusal(root, branch, base):

@@ -91,6 +91,7 @@ import lane
 import schedule
 import score_reviews
 import session_service
+from kitlib import config as kconfig
 from kitlib import provenance as _kitprovenance
 from kitlib import verdict as kverdict
 
@@ -198,7 +199,12 @@ def _session_config_refusal(root, args):
     """The pre-claim config preflight: an empty AGENT_CMD with no
     managed-routing enable-list means every worker would refuse at its own
     preflight - AFTER the claim had already parked a branch. Refuse here
-    instead, with nothing claimed yet. Returns the refusal string, or None."""
+    instead, with nothing claimed yet. Returns the refusal string, or None.
+    A `[build] red_rounds_max` its reader refuses is refused here too, so no
+    lane is claimed for a worker that could never start.
+
+    Implements: SR-242, LLR-343
+    """
     # SN-028: the mixed-config refusal rides HERE, not at the policy read
     # itself - `run` reads the level once at :985 and a raised exception there
     # would rewrite an exit-code contract. This rung already gates every claim,
@@ -206,6 +212,9 @@ def _session_config_refusal(root, args):
     conflicts = ac.config_conflicts(root / "docs")
     if conflicts:
         return conflicts[0]
+    _, refusal = kconfig.red_rounds_max(root)
+    if refusal is not None:
+        return refusal
     template = (
         args.agent_cmd
         if args.agent_cmd is not None
@@ -572,8 +581,29 @@ _WORKER_OUTCOMES = frozenset(
         ac.EXIT_BUDGET,
         ac.EXIT_NEEDS_HUMAN,
         ac.EXIT_PAUSED,
+        ac.EXIT_RED_CAP,
     }
 )
+
+
+def _red_cap_close(root, branch):
+    """`(reason, not_delivered)` for a lane whose worker hit the red cap: the
+    count and the last bar summary read through `kverdict.red_rounds` from the
+    lane's merge base with trunk, and the declared `[build] red_rounds_max`.
+
+    Implements: SR-242, LLR-343
+    """
+    code, base = ac.git(root, "merge-base", ac.trunk_name(root), branch)
+    red = kverdict.red_rounds(root, branch, base.strip()) if code == 0 else None
+    count, last = (red.count, red.last_summary) if red else ("unreadable", "-")
+    reason = (
+        "red bar cap: {} consecutive red rounds ([build] red_rounds_max = {}); "
+        "last bar: {}".format(count, kconfig.red_rounds_max(root)[0], last)
+    )
+    return reason, (
+        "The lane's review bar stayed red, so its build is not delivered: "
+        "last bar: {}".format(last)
+    )
 
 
 def _lane_close(root, branch, code):
@@ -674,6 +704,8 @@ def _lane_close(root, branch, code):
             "commit range above.".format(code, branch)
         ),
     }
+    if code == ac.EXIT_RED_CAP:
+        reason, fields["not_delivered"] = _red_cap_close(root, branch)
     _ids, refusal = handback.close_partial(root, branch, reason, fields)
     if refusal:
         _say("cannot close {} as partial: {}".format(branch, refusal), err=True)

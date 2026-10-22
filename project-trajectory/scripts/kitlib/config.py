@@ -37,6 +37,7 @@ copies can no longer disagree, so drift is UNREPRESENTABLE rather than detected.
 """
 
 import configparser
+import re
 import sys
 import tomllib
 
@@ -52,6 +53,7 @@ __all__ = [
     "read_declared_lower",
     "read_stack_ini",
     "read_toml_text",
+    "red_rounds_max",
     "reviewer_dials",
     "utf8_console",
     "step_paths",
@@ -263,6 +265,75 @@ def reviewer_dials(root):
         return 0, FINAL_FRESH
     persisted = pct > 0 and final == FINAL_PERSISTED
     return pct, FINAL_PERSISTED if persisted else FINAL_FRESH
+
+
+# `[build] red_rounds_max`'s shipped value: read only for an absent `[build]`
+# table or an absent key, never for a value this reader cannot use.
+RED_ROUNDS_MAX_DEFAULT = 3
+_TOML_HEADER_RE = re.compile(r"^\s*\[\[?\s*([A-Za-z0-9_-]+)\s*\]\]?\s*(#.*)?$")
+
+
+def _process_toml_at(text, section, key):
+    """`docs/process.toml:<line>` for `key` as the file declares it: a
+    `key = ...` line under `[section]` (`section` None: before any header),
+    or a `[key]` / `[[key]]` header. Plain `docs/process.toml` when no line
+    matches, such as a dotted key, which the file's shape check refuses on
+    its own.
+
+    Implements: SR-242, LLR-343
+    """
+    current = None
+    assign = re.compile(r"^\s*{}\s*=".format(re.escape(key)))
+    for lineno, raw in enumerate(text.splitlines(), 1):
+        head = _TOML_HEADER_RE.match(raw)
+        if head and section is None and head.group(1) == key:
+            return "docs/process.toml:{}".format(lineno)
+        if head:
+            current = head.group(1)
+        elif current == section and assign.match(raw):
+            return "docs/process.toml:{}".format(lineno)
+    return "docs/process.toml"
+
+
+def red_rounds_max(root):
+    """`(maximum, None)` for `<root>/docs/process.toml`'s
+    `[build] red_rounds_max`, or `(None, refusal)`. THE ONE READER of the key:
+    the worker's preflight and the dispatcher's pre-claim rung both call it,
+    so a setting one of them refuses never starts a session through the other.
+
+    An absent `[build]` table or key reads the shipped 3. Everything else this
+    reader cannot use is refused, naming the file and the cause: an absent,
+    unreadable or unparseable file, a `build` that is not a table (naming its
+    line), and a value that is not an int, is a bool, or is below 1 (naming
+    its line and the key). Never read as off: an unbounded cap is the
+    fail-open side. tomllib reports no position for a valid key, so the line
+    is found by scanning the text.
+
+    Implements: SR-242, LLR-343
+    """
+    try:
+        text = (Path(root) / "docs" / "process.toml").read_text(encoding="utf-8-sig")
+        data = tomllib.loads(text)
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, "docs/process.toml cannot be read: {}".format(exc)
+    except tomllib.TOMLDecodeError as exc:
+        return None, "docs/process.toml does not parse: {}".format(exc)
+    table = data.get("build", {})
+    if not isinstance(table, dict):
+        return None, "{}: `build` is a {}, not a table".format(
+            _process_toml_at(text, None, "build"), type(table).__name__
+        )
+    value = table.get("red_rounds_max", RED_ROUNDS_MAX_DEFAULT)
+    if type(value) is int and value >= 1:
+        return value, None
+    return None, (
+        "{}: [build] red_rounds_max = {!r} is refused; it must be an integer "
+        "of at least 1 (an absent key reads {})".format(
+            _process_toml_at(text, "build", "red_rounds_max"),
+            value,
+            RED_ROUNDS_MAX_DEFAULT,
+        )
+    )
 
 
 def process_check_text(root, key):

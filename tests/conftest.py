@@ -165,6 +165,11 @@ SLOW_MODULES = frozenset(
         "test_traj_graph",  # layout + obstacle-aware wire routing
         "test_traj_parse",  # source loaders + the git/subprocess seam
         "test_agent_loop_review",  # review-tail subprocess rounds
+        # WI-958: the review gate and the red-round cap, each case a real
+        # agent_loop.py run on a linked lane worktree; the family's in-process
+        # pins are the setting's reader in test_red_rounds_max and the count
+        # reader, called in-process inside these cases.
+        "test_agent_loop_review_gate",  # review-gate subprocess rounds
         "test_agent_loop",  # agent_loop.py subprocess loops
         "test_agent_loop_support",  # coordinator lock + durable log/index support
         # WI-277 split test_agent_loop.py by behavior boundary. Both inherit the
@@ -1179,6 +1184,56 @@ def trunk_repo(root, branch="main"):
         "declare the trunk",
     )
     return root
+
+
+def lane_checkout(repo, branch, trunk="main"):
+    """`branch` checked out in a linked worktree of `repo`, beside it, with
+    `trunk` left checked out in the primary: the topology a dispatched worker
+    runs in. A primary sitting on `branch` is switched back to `trunk` first;
+    an absent `branch` is made at the primary's HEAD. The primary's hooks
+    path is absolute (`hooks_on`), so the lane reads "on" as it is. Returns
+    the lane's path, the root a fixture hands the loop."""
+    repo = Path(repo)
+    lane = repo.with_name(repo.name + "-lane")
+
+    def git(*args):
+        return subprocess.run(
+            [shutil.which("git"), "-C", str(repo), *args],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+
+    if git("symbolic-ref", "-q", "--short", "HEAD").stdout.strip() == branch:
+        proc = git("checkout", "-q", trunk)
+        assert proc.returncode == 0, proc.stderr
+    exists = git("rev-parse", "-q", "--verify", "refs/heads/" + branch).returncode == 0
+    add = [str(lane), branch] if exists else ["-b", branch, str(lane)]
+    proc = git("worktree", "add", "-q", *add)
+    assert proc.returncode == 0, proc.stderr
+    return lane
+
+
+def declare_review_bar(repo, ctl):
+    """Declare `docs/stack.ini [bars] review` under `repo` as a stand-in bar
+    driven from the control directory `ctl`: each run appends one line to
+    `ctl/bar_runs.txt`, and the bar is red (exit 1, printing
+    `BAR-FAIL-MARKER`) while `ctl/bar_red` exists, green (exit 0) otherwise.
+    The caller commits the file with the rest of its configuration. Returns
+    the declared command."""
+    control = Path(ctl).resolve().as_posix()
+    code = (
+        "import pathlib,sys; c=pathlib.Path('{}'); "
+        "open(c/'bar_runs.txt','a').write('run\\n'); "
+        "r=(c/'bar_red').exists(); r and print('BAR-FAIL-MARKER'); "
+        "sys.exit(1 if r else 0)"
+    ).format(control)
+    command = '"{}" -c "{}"'.format(Path(sys.executable).as_posix(), code)
+    path = Path(repo) / "docs" / "stack.ini"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write("[bars]\nreview = {}\n".format(command))
+    return command
 
 
 # --- WI-428/WI-433: a test scaffold must not inherit a LIVE policy window -----
