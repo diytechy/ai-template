@@ -455,7 +455,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 1. `"$PY" "$SCRIPTS/coordinator_guard.py" take --transcript <path>`.
    If a stale holder blocks it, the owner releases it.
 2. Commit the deletion of `docs/work/pause`, carrying the regenerated
-   `docs/open-items.html`. It counts as reviewed when it passes the commit bar
+   `docs/open-items.html`. Run `trunk_step.py --regen` first: right after
+   a landing the deletion commit was refused for a stale status block and
+   `docs/ratify/CURRENT.md` (2026-10-21d). It counts as reviewed when it passes the commit bar
    and cites the owner's authorization.
 3. Confirm HEAD moved. `claim` reads the **working-tree** pause.
 4. Run `"$PY" "$SCRIPTS/integrate.py" claim --wi WI-NNN --branch wi-NNN`
@@ -581,7 +583,15 @@ commit of its own, move it to trunk's tip
   Re-sitting only the returned rows leaves the set judged across several
   verdicts, none of which authorizes the whole act: once the re-sits
   bless everything, one combined sitting over the whole set at the gated
-  tip authorizes the act turn (wi-798 D-023).
+  tip authorizes the act turn (wi-798 D-023). So re-sit the whole set at
+  once when the returns are answered: one sitting, one verdict for the act
+  (wi-958 D-014).
+- **Run the commit bar in the lane after the act turn,** before the
+  squash. An act that approves a row arms checks a Drafted row escapes:
+  an approved Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
+  `test_every_approved_smoke_case_has_evidence_in_the_smoke_tier`. Fix it
+  in the lane (move the case to a fast module, a traced-only change) and
+  re-anchor there, never on trunk (wi-958 D-019).
 - **Squash** on trunk with `git merge --squash <lane>`, one per lane.
   Run `git status` in the primary checkout first: a Claude reviewer's
   probe once left a stray file at its root through a redirect from its

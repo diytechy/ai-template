@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-21c-leg09-coordinator.md](handoff-2026-10-21c-leg09-coordinator.md),
+  [handoff-2026-10-21d-leg10-coordinator.md](handoff-2026-10-21d-leg10-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -52,7 +52,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   disposition-adoption row was re-cut and closed partial at its rebuild's
   plan cap: the cap's sitting ruled a FIX, and the owner routed it to a
   third plan revision with one confirming critique; its disposition is
-  sat, and the successor it drafted is queued on that route. The trunk mint's settled-amendment filter
+  sat, and the successor it drafted is claimed on that route. The trunk mint's settled-amendment filter
   (the first new build, owner, 2026-10-20) passed its checkpoint and
   holds at its gate for the owner (OI-115: its ruled fix needs the act
   ledger to record what each act copied), and the lane
@@ -65,8 +65,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `attest` verb) have landed, and so has the coordinator's review refusal:
   a review brief renders only over the tip's attested review bar
   (`attest` runs from the primary checkout and finds the lane by branch).
-  The loop's refusal (with its red-round cap) is claimed and built
-  through its configuration step in its lane.
+  The loop's refusal (with its red-round cap) has landed: a loop review is
+  drawn only over an attested tip, and `[build] red_rounds_max` closes a
+  lane red that long partial.
   The lane lifecycle design's remaining rows are deferred until the owner
   reviews their re-scopes, and the queue table is an explicit list. Item 8's usage
   record is filed as two rows (the coordinator's Sol and Terra calls
@@ -86,7 +87,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 146 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 148 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -345,6 +346,19 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `test_a_search_past_the_walk_bound_refuses` stacks two commits past
   the 63, so the record is the 66th examined and a 65-commit walk still
   passes (stack one, and TC-371's method reads "63 and then 64");
+  from the red-round cap row's rounds and gate (wi-958 D-012, D-017): a
+  rebase re-counts reds a verified green had reset, since the reset reads
+  sha ancestry and a rebased attestation stops verifying (fails closed;
+  date each red by the commit that added its log); `handback.BOOKKEEPING`
+  repeats `kverdict.RECORD_PREFIXES` by hand (derive it); an undeclared
+  `[bars] review` is found only after each build and spends the cap
+  (refuse it at both preflights beside the cap's read); `kitlib.config`'s
+  key locator repeats `agent_policy`'s section walk and
+  `bootstrap._locate_process_key` (one locator); SR-154's escalation
+  clause and SR-242's cap overlap for a red rebuild run, and the row's
+  archived spec Anchor and SR-241's rationale still name SR-241 as the
+  loop LLR's parent, where LLR-344 is derived under SR-154 (wording, at
+  each row's next amendment);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
