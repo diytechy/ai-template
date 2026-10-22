@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-21d-leg10-coordinator.md](handoff-2026-10-21d-leg10-coordinator.md),
+  [handoff-2026-10-22a-leg11-coordinator.md](handoff-2026-10-22a-leg11-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -49,10 +49,10 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   for the launch and shell tools). The two merge-slot rows are claimed; their
   coordinator-landing gap is the one-landing row's
   (owner, 2026-10-17). The
-  disposition-adoption row was re-cut and closed partial at its rebuild's
-  plan cap: the cap's sitting ruled a FIX, and the owner routed it to a
-  third plan revision with one confirming critique; its disposition is
-  sat, and the successor it drafted is claimed on that route. The trunk mint's settled-amendment filter
+  disposition-adoption row's successor has landed on the owner's route: a
+  disposition can adopt an already-filed successor, recorded at the close
+  and judged by one commit check that admits the close's exact relinks
+  (the hook's `adoption-record` step). The trunk mint's settled-amendment filter
   (the first new build, owner, 2026-10-20) passed its checkpoint and
   holds at its gate for the owner (OI-115: its ruled fix needs the act
   ledger to record what each act copied), and the lane
@@ -72,7 +72,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   reviews their re-scopes, and the queue table is an explicit list. Item 8's usage
   record is filed as two rows (the coordinator's Sol and Terra calls
   through the session service, then the Claude sub-agent usage ingest);
-  the first is claimed, its plan passed, and its spec amendment is next. Item 10 step 2's row (the
+  the first is claimed and building: its spec amendment is confirmed, and
+  its intent set, tests and service are committed; its entry point is next. Item 10 step 2's row (the
   hooks' one policy read) has landed, and its shape-rule retirement row
   is filed.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
@@ -168,7 +169,15 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
   entities · 4 crossings · 3 relationships, watermark-held); `OI-61` (c) stays deferred
   on its condition (a demonstrated residual drift class), not owner-owed.
-- **Unfiled follow-ups** (topics, no ids): from the CPU-time budget
+- **Unfiled follow-ups** (topics, no ids): from the disposition-adoption
+  successor's gate (wi-969 D-027): the mint's LLR lacks the adoption SR in
+  its SR refs; the close's LLR and the disposition prompt still say
+  continuing partial work mints a successor, unqualified beside adoption;
+  three TCs' expected text should name the adoption SR clause each
+  discharges, one citing the record LLR without a verifies link; the
+  Dispositions census selects files by the exact heading where the parser
+  reads the first prefix; the record step refuses a commit that only
+  writes an unreadable spec with no record question live. From the CPU-time budget
   row's gate (wi-940 D-011): its archived spec's two delta sentences say
   TC-026 verifies IF-302 where TC-374 does, the root conftest comment and
   pytest.ini still state a 60 s wall bound, the shipped job module's

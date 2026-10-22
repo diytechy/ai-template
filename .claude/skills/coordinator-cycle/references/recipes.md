@@ -312,6 +312,16 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   pass record fails the landing walk at each of them: rebase those commits
   onto the plan, critique and pass commits, or re-cut the lane and run the
   plan step first.
+  A disposition-minted successor whose spec names its predecessor's spec
+  of record in `specref` but declares no Done-when of its own is refused
+  by the plan render: carry the spec of record's sections into the row's
+  spec byte for byte, and a `combined` sitting of kind
+  `done-when:WI-NNN` blesses them before the plan (wi-969 D-001). A plan
+  revision the owner routes to such a successor renders as a fresh
+  `plan --wi`, with the predecessor's plan and critiques appended as
+  claims and the ruling as binding; its critique then renders as round 1
+  in the ordinary stance, so append the convergence line by hand (wi-969,
+  2026-10-22).
 - **Coverage plan (rework):** from the lane root,
   `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> --findings <round file> <plan>`.
   Dispatch the fix only on exit 0. A finding a dispute sitting dismissed, or
@@ -1000,6 +1010,10 @@ lane commit being replayed.
   `"$TOOLS/overnight_legs.py"`) kills its background tasks when it exits, so
   it runs everything in the foreground under the raised shell cap. The
   headless procedure is SKILL §7.
+  Give every bar, attest and full-suite run the whole raised cap
+  (3600000 ms): on a box other sessions loaded an attest's bar ran 30
+  minutes and the full suite 54, and a 30-minute timeout moved the attest
+  to the background, where a leg loses it (2026-10-22).
   Launch each background call as its own command: in `A=… && (x) & (y) &`
   only the first subshell sees `A`.
 - The agent harness sets `NoDefaultCurrentDirectoryInExePath=1`, so a Windows
