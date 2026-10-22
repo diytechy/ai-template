@@ -935,6 +935,19 @@ lane commit being replayed.
   one-`shall` form rule reports (WI-913, 2026-10-15).
 - A TC's `tier` is the cheapest tier at which every cited arm runs
   (TC-205's rule): a TC citing any test in `SLOW_MODULES` is `Full`.
+  Check each new TC against `conftest.SLOW_MODULES` before its sitting
+  (wi-960 D-013).
+- After every Terra turn, diff the registries row by row against the
+  last commit and compare the changed rows with the set the turn was
+  given: a checkpoint turn narrowed two approved evidence cells outside
+  the set from a module to named nodes, which the approved-sentence
+  check passes, and its report named one under another id. Restore any
+  row outside the set by a guarded replace (wi-960 D-012).
+- A lane that drafts a derived SR owes its perspective record
+  (`hats.py record <plan dir>/plan.perspectives.toml --row <ids>`,
+  passing `--check --strict`) until plan item 14 retires the sidecar:
+  brief it into Terra's checkpoint turn, or the first-approval sitting
+  returns the derived SR for it (wi-957, wi-958, wi-960 sitting 005).
 
 ## 6. Commits and hooks
 
@@ -1075,8 +1088,11 @@ lane commit being replayed.
   2026-10-17): tell every builder the same.
   A command that reads stdin (a stray `cat`, a script waiting on input)
   never returns in a headless leg and is moved to the background at the
-  tool cap: give kit commands `< /dev/null` (2026-10-21a). So does a
-  file read whose path is an empty `$(ls <glob>)`: `sed -n 1,9p $F` with
+  tool cap: give kit commands `< /dev/null` (2026-10-21a), except one
+  fed by a heredoc: `python - <<'EOF' ... < /dev/null` replaces the
+  heredoc, so Python prints its interactive banner and runs nothing
+  (2026-10-22b). A file read whose path is an empty `$(ls <glob>)`
+  hangs the same way: `sed -n 1,9p $F` with
   `F` empty reads stdin (2026-10-21c); check the path first. A message
   composed with `sed` over a wrapped line rewrites the wrong text: write
   commit messages with the file tool (2026-10-21a).

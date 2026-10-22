@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-22a-leg11-coordinator.md](handoff-2026-10-22a-leg11-coordinator.md),
+  [handoff-2026-10-22b-leg12-coordinator.md](handoff-2026-10-22b-leg12-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -72,8 +72,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   reviews their re-scopes, and the queue table is an explicit list. Item 8's usage
   record is filed as two rows (the coordinator's Sol and Terra calls
   through the session service, then the Claude sub-agent usage ingest);
-  the first is claimed and building: its spec amendment is confirmed, and
-  its intent set, tests and service are committed; its entry point is next. Item 10 step 2's row (the
+  the first has landed: every Sol and Terra call goes through one
+  coordinator entry point on the session service, and a call outside a
+  claimed lane spools its log and commits nothing. Item 10 step 2's row (the
   hooks' one policy read) has landed, and its shape-rule retirement row
   is filed.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
@@ -88,7 +89,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 148 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 152 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -368,6 +369,30 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   archived spec Anchor and SR-241's rationale still name SR-241 as the
   loop LLR's parent, where LLR-344 is derived under SR-154 (wording, at
   each row's next amendment);
+  from the Sol and Terra route row's rounds and gate (wi-960 D-006,
+  D-009, D-011, D-016): the shipped gitignore template still leaves the
+  adjudicator store, the coordinator lease and the review-owed marker
+  under `out/` unignored, while an older RESYNC entry says a stock
+  scaffold ignores all of `out/`; the coordinator entry point's
+  working-tree snapshot and range walk repeat `bookkeeping`'s and
+  `retire`'s blob readers and `text_then_act`'s and `kitlib.verdict`'s
+  walks, and the service's trunk-side claim read copies
+  `integrate.claimed_ids_on_branch` through two private names (one
+  public reader taking a ref); `record` reads `commit_telemetry`'s
+  nothing-committed result as committed; the change check records HEAD's
+  commit, not its symbolic ref, so a call that leaves the lane on another
+  branch at the same commit reads clean; `session_service.lane_branch`
+  shares its name with `agent_loop.lane_branch`; a plan critique run in a
+  lane now leaves a telemetry commit between the plan records, which the
+  recipes do not mention; LLR-269 keeps its keep-only session-mode
+  sentence, LLR-346 says the call launches under the route's sandbox and
+  effort where the entry point declares its own template, and SR-243
+  names the roster's Sol and Terra rows (wording, at each row's next
+  sitting); and the RESYNC entry should say that a `--wi` worker on the
+  primary checkout, even on its claimed branch, now spools its BUILD,
+  ATTEST and REVIEW logs, so the loop's committed-evidence readers see
+  none (whether a `--wi` preflight refuses the primary checkout is the
+  owner's call);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
