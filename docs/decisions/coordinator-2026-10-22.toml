@@ -25,3 +25,10 @@ alternative = "None: the skill's section 1 (advice binds before the claim)."
 reversal_cost = "None."
 why_not_escalated = "Procedural."
 review = ""
+
+[decision.D-004]
+decided = "Headless leg 15 claims the queue table's first row, WI-850 (a spine row is approved only after the rows it hangs from are), alone under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006). Its hard need WI-892 has landed, and its scope critique (leg 12) is answered in its spec with a confirming round that read APPROVE findings=0 (D-002, D-003), so no new critique is owed. The queue's third row (WI-851, WI-856, WI-878, WI-910, WI-920) is not batched: each is scope-critiqued at its own claim, and the leg spends its budget on WI-850's lane, whose single plan runs first."
+alternative = "Batch one of the third row's rows into the same unpause after its scope critique."
+reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
+why_not_escalated = "The queue table's order and the owner's batch-claim rule; recorded for confirm or overrule."
+review = ""
