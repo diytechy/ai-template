@@ -451,10 +451,18 @@ def test_sn_status_outside_the_closed_vocabulary_is_an_integrity_finding(scaffol
 
 def test_every_declared_sn_status_leaves_the_enum_floor_silent(scaffold):
     # The other half: a rule that fired on everything would pass the assertions
-    # above. All three live vocabulary words, each on its own scaffold run.
+    # above. All three live vocabulary words, each on its own scaffold run. The
+    # word under test sits on a second need nothing cites: SN-001 stays
+    # Approved, since its SR is, and an approved child under an unapproved
+    # parent is an integrity finding of its own (parent first).
     make_minimal_project(scaffold)
     for status in ("Drafted", "Approved", "Founded"):
-        _needs_on_toml(scaffold, status)
+        _needs_on_toml(scaffold, "Approved")
+        needs = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
+        second = NEEDS_TOML.replace("SN-001", "SN-002").format(status=status)
+        text = needs.read_text(encoding="utf-8") + "\n" + second
+        needs.write_text(text, encoding="utf-8")
+        record_ids(scaffold)
         proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
         assert "closed vocabulary" not in proc.stdout, status
         assert proc.returncode == 0, status + proc.stdout + proc.stderr

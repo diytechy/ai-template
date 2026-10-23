@@ -288,13 +288,21 @@ repo whose LLRs all read `Implemented` is unaffected here (that value defaults
 to APPROVED for this rule deliberately; the closure names it on the integrity
 floor instead, so one fault is not punished twice).
 
-There is a **warn-only** lint for the resulting readout drift
-(`llr_status_advisories`): an LLR below `Approved` while *every* citing TC is
-already `Approved`. Never promoted to an error, "because making LLR status gate
-would re-introduce the exact LLR-status coupling the derived-stage model dropped."
-A `Founded` LLR is exempt — it reads ABOVE `Approved`, so there is nothing to
-lift and the nag would push it DOWN the ladder. (The exemption named the
-transitional `Modified` until that value retired, 2026-08-20.)
+What LLR status DOES answer to is **approval order**, which is an integrity
+rule, not a stage input: a spine row is approved only after the rows it hangs
+from are (`kitlib.spine.parent_first_findings`). An approved child (`Approved`
+or `Founded`) whose cited SN, SR or LLR parent is not approved — `Drafted`, no
+`Status`, or a word outside the vocabulary — is an integrity finding of
+`trace.py --strict-integrity` (`parent-first: <child> (<status>) is approved
+under <parent> (<status>) …`, naming both remedies), and `check.py`'s
+`parent-first` step and the merge slot's lane-commit walk refuse the commit
+that moves either status into such a case. IF, B, DA and undeclared ids and the
+`-000` example rows are not judged. It does not move the derived stage, so the
+coupling the derived-stage model dropped stays dropped. It retired the
+warn-only `llr_status_advisories` lint (WI-129), whose one case — a `Drafted`
+LLR every citing TC of which is `Approved` — is now the finding on the TC-to-LLR
+edge, reported from the first approved TC rather than only once all of them
+are.
 
 ### 4.2 `CodeSymbol` must BIND — the discharge test, and what the cell may name
 

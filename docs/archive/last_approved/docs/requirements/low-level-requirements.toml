@@ -3691,3 +3691,27 @@ test_refs = "TC-389, TC-395"
 status = "Approved"
 component = "CMP-008"
 phase = 6
+
+[design.LLR-357]
+sr_refs = ["SR-245"]
+title = "Parent-first findings are one pure spine rule and standing integrity finding"
+module = "project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/trace.py"
+code_symbol = "claims_approval/parent_first_findings/parent_first_line/_declared_rows/_unapproved_parents/_status_cell/integrity_sweep"
+detail = "The parent-first rule uses one shared approval predicate with approval-act readers: it recognizes Approved or Founded regardless of letter case, and an absent or out-of-vocabulary status does not claim approval. It classifies only declared SN-to-SR, SR-to-LLR, and SR-or-LLR-to-TC references in supplied spine rows. It emits one finding for each child that claims approval whose declared parent does not, carrying the child and parent identities and statuses, and renders that finding as <child> (<status>) is approved under <parent> (<status>), which is not: approve <parent> in its own approval act, or return <child> to Drafted, with no status for a missing status. It emits none for a parent that claims approval, an undeclared or non-spine reference, or a -000 example row. The integrity result includes each standing finding under the parent-first integrity label, so strict integrity fails, and that finding replaces the former non-failing advisory for an Approved TC citing a Drafted LLR."
+rationale = "One pure classification keeps the standing report and the commit judgement from applying different meanings to approval or parentage. Excluding references outside the declared spine and example rows preserves their owners' separate coherence rules and lets a freshly generated scaffold remain valid."
+test_refs = "TC-396"
+status = "Approved"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-358]
+sr_refs = ["SR-246"]
+title = "Parent-first commit judgement refuses a moved inconsistent approval relationship"
+module = "project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/check.py;project-trajectory/scripts/text_then_act.py;project-trajectory/scripts/integrate.py;project-trajectory/hooks/pre-commit"
+code_symbol = "parent_first_lines/staged_parent_first_lines/commit_parent_first_lines/_tree_tiers/_parent_first_names/_status_moved/_parent_statuses/_commit_parents/_tier_reads/_parent_first_refusal/_parent_first_mode/LANE_COMMIT_RIDERS/lane_commit_walk/_each_lane_commit"
+detail = "Once any spine carrier changes, the commit judgement reads all four spine tiers at both trees from the first listed carrier among each tier's TOML and legacy forms, compares the current tree with each comparison parent, and returns a parent-first finding only when its child or parent status moved against at least one parent. It prefixes a staged finding with the index: and a committed finding with commit <sha10>:. It returns a refusal when it cannot list the relevant difference or cannot read or parse a current-side carrier, counts every resulting status as moved when a comparison-side carrier cannot be read or parsed, and treats an absent current-side carrier as no rows and an absent comparison-side carrier as no rows that make every current-side status moved. It returns no parent-first refusal for a true first commit, a tree that changes no spine carrier, or a commit that moves neither relevant status. The staged check applies it to the staged tree against its current parent and the merge parent, the lane-commit walk applies it to every lane commit against every commit parent, and the pre-commit hook invokes the staged judgement as a commit step rather than a trunk-freshness step."
+rationale = "A standing report alone cannot stop a commit from introducing the inconsistent relationship, while status-move readers that silently skip unreadable history would leave the admission decision unsound. One judgement shared by staged and lane-commit admission was selected over separate readers so both routes refuse the same changed relationship."
+test_refs = "TC-397"
+status = "Approved"
+component = "CMP-008"
+phase = 6

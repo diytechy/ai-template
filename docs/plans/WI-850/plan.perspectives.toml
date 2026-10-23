@@ -1,0 +1,104 @@
+# PERSPECTIVE RECORD (SR-161) for one decomposition, written by
+# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a
+# person authors: subject, rows, tags, recorded_by, recorded_on, and each
+# perspective's no_finding. Comments are not kept.
+#   applicable = false                -> the roster predicate did not reach it
+#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)
+#   applicable = true, produced = []   -> considered: no_finding says why
+# Check: `hats.py record <this file> --check`.
+
+[decomposition]
+rows = ["SR-245", "SR-246"]
+parents = ["SN-002", "SN-029"]
+recorded_by = "GPT Terra (gpt-5.6-terra), WI-850 spine author"
+recorded_on = "2026-10-23"
+
+[perspective.SECURITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The approval-parent relationship introduces no credential, secret, or authority boundary requiring a separate obligation."
+
+[perspective.FIRST-RUN-ADOPTER]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"templates\" or tags contains \"process\""
+produced = []
+
+[perspective.UNATTENDED-OPS]
+applicable = true
+applies_when = "tags contains \"unattended\" or tags contains \"loop\""
+produced = []
+no_finding = "The status judgement refuses a changed inconsistent approval relationship and adds no unattended recovery or retry obligation."
+
+[perspective.CROSS-PLATFORM]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"launcher\" or tags contains \"shell\""
+produced = []
+
+[perspective.MAINTAINER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The derived requirement and its two decompositions state the standing and commit-time responsibilities, so no further maintenance obligation is identified."
+
+[perspective.TEST-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "TC-396 and TC-397 cover the standing rule, integrity result, staged judgement, and lane-commit judgement without a separate verification obligation."
+
+[perspective.UX-DESIGNER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The finding and refusal are textual outcomes and add no interaction or layout decision requiring a separate obligation."
+
+[perspective.UX-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The textual status outcomes introduce no rendered surface whose width, theme, volume, or malformed-data behavior needs another obligation."
+
+[perspective.SAFETY]
+applicable = false
+applies_when = "tags contains \"safety\""
+produced = []
+
+[perspective.LEGAL]
+applicable = false
+applies_when = "tags contains \"legal\""
+produced = []
+
+[perspective.DATA-PROTECTION]
+applicable = false
+applies_when = "tags contains \"personal-data\""
+produced = []
+
+[perspective.ACCESSIBILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The textual finding and refusal do not rely on color or pointer-only interaction requiring an accessibility obligation."
+
+[perspective.PERFORMANCE]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The parent-first judgement introduces no material latency, capacity, or operating-cost risk requiring a measured bound."
+
+[perspective.CONSISTENCY]
+applicable = true
+applies_when = "always"
+produced = ["SR-245", "SR-246"]
+
+[perspective.INTEGRITY-RECOVERABILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The judgement reads registry trees and refuses unreadable states, but does not create a durable write or recovery mechanism requiring another obligation."
+
+[perspective.PRODUCT-FITNESS]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "A mechanically coherent approval chain serves the stated traceability and delegated-review needs without another stakeholder outcome."

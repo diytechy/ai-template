@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 323
-seam_rows = 254
-requirements_placed = 130
+design_rows = 325
+seam_rows = 255
+requirements_placed = 132
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -78,6 +78,7 @@ sr_refs = [
   "SR-226",
   "SR-228",
   "SR-236",
+  "SR-245",
 ]
 sr_shared_refs = [
   "SR-017",
@@ -191,6 +192,7 @@ llr_refs = [
   "LLR-278",
   "LLR-286",
   "LLR-302",
+  "LLR-357",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -300,6 +302,7 @@ seam_internal_refs = [
   "IF-252",
   "IF-257",
   "IF-263",
+  "IF-308",
 ]
 seam_boundary_refs = [
   "IF-002",
@@ -544,6 +547,7 @@ seam_internal_refs = [
   "IF-239",
   "IF-267",
   "IF-298",
+  "IF-308",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -663,6 +667,7 @@ sr_refs = [
   "SR-242",
   "SR-243",
   "SR-244",
+  "SR-246",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -798,6 +803,7 @@ llr_refs = [
   "LLR-354",
   "LLR-355",
   "LLR-356",
+  "LLR-358",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -813,6 +819,7 @@ hat_refs = [
 modules = [
   "project-trajectory/PROCESS.md",
   "project-trajectory/hooks/commit-msg",
+  "project-trajectory/hooks/pre-commit",
   "project-trajectory/prompts/adjudicate-dispute.template.md",
   "project-trajectory/prompts/reviewer.template.md",
   "project-trajectory/scripts/acceptance_record.py",
@@ -890,6 +897,7 @@ modules = [
 ]
 seam_internal_refs = [
   "IF-009",
+  "IF-040",
   "IF-044",
   "IF-046",
   "IF-053",
@@ -932,6 +940,7 @@ seam_internal_refs = [
   "IF-261",
   "IF-264",
   "IF-266",
+  "IF-267",
   "IF-269",
   "IF-271",
   "IF-272",
@@ -950,6 +959,7 @@ seam_internal_refs = [
   "IF-302",
   "IF-303",
   "IF-304",
+  "IF-308",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -972,8 +982,8 @@ seam_boundary_refs = [
   "IF-035",
   "IF-037",
   "IF-039",
-  "IF-040",
   "IF-041",
+  "IF-042",
   "IF-045",
   "IF-047",
   "IF-050",
@@ -1018,6 +1028,7 @@ seam_boundary_refs = [
   "IF-129",
   "IF-131",
   "IF-133",
+  "IF-134",
   "IF-139",
   "IF-144",
   "IF-145",
@@ -1057,7 +1068,6 @@ seam_boundary_refs = [
   "IF-262",
   "IF-263",
   "IF-265",
-  "IF-267",
   "IF-274",
   "IF-275",
   "IF-277",

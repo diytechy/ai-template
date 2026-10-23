@@ -112,9 +112,11 @@ SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","a
 SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Modified,v2
 """
 
+# LLR-002 is Drafted: its SR-002 is not approved, and an approved child under
+# an unapproved parent is an integrity finding of its own (parent first).
 PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Phase
 LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Approved,v1
-LLR-002,SR-002,Future part,src/future,todo,"Approved decomposition of the v2 SR.",(see TC),Approved,v2
+LLR-002,SR-002,Future part,src/future,todo,"Drafted decomposition of the v2 SR.",(see TC),Drafted,v2
 """
 
 PHASED_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status,Phase

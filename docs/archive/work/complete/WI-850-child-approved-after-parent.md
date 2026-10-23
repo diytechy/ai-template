@@ -3,13 +3,23 @@ id = "WI-850"
 title = "A spine row is approved only after the rows it hangs from are"
 workstream = "process"
 sr_refs = ["SR-178"]
-specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
+specref = ""
 needs = ["WI-892"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+Landed by headless leg 15 of loop session `20261021T045653Z-213020`, squashed from lane `wi-850`.
+
+- **SR-224's chain, first in its own act.** SR-224 was re-sat twice (a perspective record, and one `shall` governing both the shipped descriptions' floor and the named failure) and approved at sitting 003, act seq 154, so LLR-281 and TC-291 no longer stand approved under a Drafted parent.
+- **The rule.** `kitlib.spine` holds the parent-first rule (`parent_first_findings`, `parent_first_line`) and the one approval predicate (`claims_approval`, Approved or Founded in any letter case), which `acceptance_record` and `adjudicate_act` now bind. Its edges are an SR's SN parents, an LLR's SR parents and a TC's SR and LLR parents; IF, B, DA, undeclared and `-000` references are not judged.
+- **The standing finding.** `trace.py`'s integrity sweep reports each standing case as a `parent-first:` integrity finding naming the child, the parent and both statuses with its remedy, so `--strict-integrity` and `registry-integrity` fail on it; the WI-129 LLR-status advisory is retired.
+- **The commit refusal.** `acceptance_record`'s commit judgement (IF-308) refuses a staged tree or lane commit that moves a status into such a case, prefixed `the index:` or `commit <sha10>:`, reading every registry carrier through WI-963's two-tree reader (`_tier_reads`, carried here as its own commit), refusing what it cannot read on the commit side and counting every status as moved when a comparison side cannot be read. It runs as `check.py`'s `parent-first` step at pre-commit and as the third lane-commit rider at the merge slot.
+- **Rows and text.** SR-245 (the standing finding) and SR-246 (commit admission), labelled derived, with LLR-357, LLR-358, TC-396, TC-397 and IF-308, approved in one combined sitting (006), act seq 155; the spine-authoring skill names the check as the parent-first rule's enforcer; a RESYNC entry names the two remedies for an adopter's standing case.
 
 ## Context
 

@@ -179,6 +179,14 @@ kit_policy pre-commit commit || exit 1
 #                        committer, a direct trunk commit included; a squash
 #                        landing passes when each commit it squashes does. The
 #                        merge slot asks the same of each lane commit.
+#      - parent-first    reads the index too (WI-850): a commit that leaves an
+#                        approved spine row under a cited parent that is not
+#                        approved, where it moved either row's status, is
+#                        refused (against HEAD, and MERGE_HEAD during a
+#                        merge). Every committer; the first commit is not
+#                        judged. The merge slot asks the same of each lane
+#                        commit, and `trace.py --strict-integrity` reports a
+#                        standing case.
 #      - done-when-blessed  reads the index too (WI-841, WI-921, WI-925): it
 #                        refuses a staged close whose changed Done-when no
 #                        accepted verdict or owner ruling in the index binds,
@@ -267,7 +275,7 @@ kit_policy pre-commit commit || exit 1
 #    The two kit-only index/catalogue steps stand alone: each regenerates with
 #    its own single command and feeds nothing else.
 "$PY" "$SCRIPTS_DIR/check.py" --path-triggered
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,component-view,cli-reference,interface-reference,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,verdict-rollup,approval-fresh,approval-immutable,staged-divergence,held-status,ruling-sync,text-then-act,done-when-blessed,plan-gate,adoption-record
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,component-view,cli-reference,interface-reference,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,verdict-rollup,approval-fresh,approval-immutable,staged-divergence,held-status,ruling-sync,text-then-act,parent-first,done-when-blessed,plan-gate,adoption-record
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

@@ -59,7 +59,7 @@ travel with the code they annotate.
 
 Stdlib only.
 
-Contracts: IF-091, IF-129, IF-196 — the interface seams this module declares
+Contracts: IF-091, IF-129, IF-196, IF-308 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-091: the staged spine-amendment set, offered as a call.
@@ -127,6 +127,23 @@ Contract IF-196: the held status, read from a delta. `staged_status_moves(root,
     as held; `held_status_refusal(dial, moves)` joins them into the refusal,
     or returns None. A delta git cannot read is `[]`; a registry
     side that does not parse is one move naming the registry.
+Contract IF-308: the parent-first commit judgement, offered as a call.
+    `staged_parent_first_lines(root)` judges the index against HEAD (and
+    MERGE_HEAD during a merge) and `commit_parent_first_lines(root, rev)` one
+    commit against every parent of its commit object; both return refusal
+    lines, `[]` when the tree passes, and both read through
+    `parent_first_lines(root, bases, head)`. A line names the tree (`the
+    index:` or `commit <sha10>:`) and an approved child (`Approved` or
+    `Founded`) left under a declared parent that is not approved, where the
+    child's or the parent's status differs from that row's status in some
+    parent tree (an absent row counting as a value), with its own remedy
+    (`kitlib.spine.parent_first_line`). A tree whose name list touches no
+    carrier of the need, requirement, design or test registry is not read
+    further. A name list git cannot produce, or a commit-side registry that
+    is listed but cannot be read or does not parse, is a refusal line naming
+    it, never a skip; a parent-side registry that fails either way counts
+    every status as moved; an absent registry is no rows. No HEAD yet, or a
+    root commit, is not judged. Reads two trees and writes nothing.
 
 THE RULING SYNC (WI-790; OI-102 Q3) is the third two-tree rule here, and the
 one with no dial: a commit that takes an open item out of `pending` must, in
@@ -296,17 +313,36 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
     any row whose approved text did not survive. The carrier change is then not
     exempt from the amendment guard — it is checked by it, independently of the
     converter's own round-trip proof. A silent-no-op degrade (`{}`) is kept for
-    a side that has neither carrier, which is the pre-registry history case."""
+    a side that has neither carrier, which is the pre-registry history case;
+    a carrier that cannot be read or does not parse is skipped for the next
+    (`_snapshot_copy_rows` is the reader that refuses one)."""
+    for _path, rows, _failure in _tier_reads(root, rev_prefix, rel_path, id_col):
+        if rows is not None:
+            return {r: row for r, row in rows.items() if not str(r).endswith("-000")}
+    return {}
+
+
+def _tier_reads(root, prefix, rel_path, id_col, under=""):
+    """Each carrier of one tier the tree at `prefix` lists, in preference
+    order, as `(path, rows, failure)`: `rows` its `{id: row}`, or None with
+    `failure` "cannot be read" (listed, but its blob cannot be read) or "does
+    not parse". `under` is prefixed to each carrier path (the snapshot's
+    copies). The one carrier loop: `_spine_rows_at` skips a failed carrier,
+    `_snapshot_copy_rows` refuses on it.
+
+    Implements: SR-246, LLR-358"""
     for cand in _tier_carriers(rel_path, id_col):
-        text = _git(root, ["show", rev_prefix + cand])
+        path = under + cand
+        try:
+            text = _kitgit.git_show(root, prefix, path)
+        except _kitgit.UnreadableBlob:
+            yield path, None, "cannot be read"
+            continue
         if text is None:
             continue
         suffix = "." + cand.rsplit(".", 1)[1]
         rows = spine_carrier.tier_rows_from_text(text, id_col, suffix)
-        if rows is None:
-            continue  # unreadable is not empty — try the other carrier
-        return {r: row for r, row in rows.items() if not str(r).endswith("-000")}
-    return {}
+        yield path, rows, None if rows is not None else "does not parse"
 
 
 # The §A5.1 cell split (OWNER RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
@@ -626,17 +662,16 @@ def _spine_row_sides(root, base, head, registries=SPINE_CSVS):
         yield touched[0], id_col, before_rows, after_rows, csv_path
 
 
-def _claims_approval(row):
-    """True when a spine row's `Status` claims approval or above.
-
-    The vocabulary's one home is `kitlib.spine`; this names the PAIR (`Approved`
-    and the computed `Founded` above it) so the approval-act readers below ask
-    one question instead of each restating which rungs count as blessed. Note
-    the deliberate difference from `_APPROVED_TEXT`, three hundred lines up:
-    that set is the amend-without-flip guard's, and excludes `Founded` because a
-    computed rung is not a second attestation of the row's own text. Here the
-    question is "does this cell CLAIM approval", and `Founded` does."""
-    return _kitspine.is_approved(row) or _kitspine.is_founded(row)
+# Whether a spine row's `Status` claims approval or above: the PAIR (`Approved`
+# and the computed `Founded` above it), so the approval-act readers below ask
+# one question instead of each restating which rungs count as blessed. Its one
+# home is `kitlib.spine.claims_approval`, which the parent-first rule reads
+# too, so the rule and these readers agree on what counts as approved. Note
+# the deliberate difference from `_APPROVED_TEXT`, three hundred lines up: that
+# set is the amend-without-flip guard's, and excludes `Founded` because a
+# computed rung is not a second attestation of the row's own text. Here the
+# question is "does this cell CLAIM approval", and `Founded` does.
+_claims_approval = _kitspine.claims_approval
 
 
 def _approval_act(registry, rid, before, row):
@@ -2213,6 +2248,135 @@ def commit_ruling_sync_lines(root, rev):
     if unread or not parents:
         return unread
     return ruling_sync_lines(root, parents[0], rev)
+
+
+# The parent-first rule's registries: the four spine tiers of the approval-act
+# set (the need, requirement, design and test tiers), read by `_tree_tiers`.
+PARENT_FIRST_CSVS = tuple(
+    (path, col) for path, col in APPROVAL_ACT_CSVS if col in SPINE_TABLE
+)
+
+
+def _tree_tiers(root, prefix):
+    """`({label: rows}, failures)` of the parent-first registries at the tree
+    `prefix`: each tier from the first carrier the tree lists, an absent
+    registry no rows, and one `"<path> cannot be read"` or `"<path> does not
+    parse"` failure per registry that fails.
+
+    Implements: SR-246, LLR-358"""
+    tiers, failures = {}, []
+    for path, col in PARENT_FIRST_CSVS:
+        tiers[col[:-3]] = []
+        for cand, rows, failure in _tier_reads(root, prefix, path, col):
+            if failure:
+                failures.append("{} {}".format(cand, failure))
+            else:
+                tiers[col[:-3]] = list(rows.values())
+            break
+    return tiers, failures
+
+
+def _parent_first_names(root, base, head):
+    """The parent-first carriers the tree `head` (the index when None) changes
+    against `base`, or None when git cannot list them.
+
+    Implements: SR-246, LLR-358"""
+    watched = [c for path, col in PARENT_FIRST_CSVS for c in _tier_carriers(path, col)]
+    side = [head] if head else ["--cached"]
+    return _kitgit.git_paths(
+        root, ["diff", "--name-only", "--no-renames", base, *side, "--", *watched]
+    )
+
+
+def _status_moved(entry, statuses):
+    """Whether the child's or the parent's status in `entry` differs from that
+    row's status in one parent tree's `statuses` (`{id: status}`, an absent
+    row reading None); a parent tree that failed to read (None) moved all.
+
+    Implements: SR-246, LLR-358"""
+    child, child_status, parent, parent_status = entry
+    side = statuses or {}
+    moved = (side.get(child), side.get(parent)) != (child_status, parent_status)
+    return statuses is None or moved
+
+
+def _parent_statuses(root, base):
+    """`{id: status}` of the parent-first tiers at `base`, or None when any of
+    its registries cannot be read or does not parse.
+
+    Implements: SR-246, LLR-358"""
+    tiers, failures = _tree_tiers(root, base + ":")
+    if failures:
+        return None
+    return {
+        str(r.get(label + "-ID") or "").strip(): (r.get("Status") or "").strip()
+        for label, rows in tiers.items()
+        for r in rows
+    }
+
+
+def parent_first_lines(root, bases, head=None):
+    """The parent-first refusal lines for the tree `head` (the index when
+    None) against each tree of `bases`: one per approved child its tree leaves
+    under an unapproved parent where either status moved against some base
+    (`_status_moved`), or one per failed read. Not read further when no base
+    sees a parent-first carrier change.
+
+    Implements: SR-246, LLR-358"""
+    tree = "the index" if head is None else "commit " + head[:10]
+    touched = False
+    for base in bases:
+        names = _parent_first_names(root, base, head)
+        if names is None:
+            return [
+                "{}: git cannot list what it changes against {}, so whether it "
+                "leaves an approved row under an unapproved parent is "
+                "unknown".format(tree, base[:10])
+            ]
+        touched = touched or bool(names)
+    if not touched:
+        return []
+    tiers, failures = _tree_tiers(root, ":" if head is None else head + ":")
+    if failures:
+        return [
+            "{}: {} in {}, so whether it leaves an approved row under an "
+            "unapproved parent is unknown".format(tree, failure, tree)
+            for failure in failures
+        ]
+    entries = _kitspine.parent_first_findings(tiers)
+    sides = [_parent_statuses(root, base) for base in bases] if entries else []
+    return [
+        "{}: {}".format(tree, _kitspine.parent_first_line(entry))
+        for entry in entries
+        if any(_status_moved(entry, side) for side in sides)
+    ]
+
+
+def staged_parent_first_lines(root):
+    """`parent_first_lines` for the commit being made: the index against HEAD,
+    and against MERGE_HEAD during a merge. No HEAD yet judges nothing.
+
+    Implements: SR-246, LLR-358"""
+    shas = [
+        _git(root, ["rev-parse", "--verify", "--quiet", ref + "^{commit}"])
+        for ref in ("HEAD", "MERGE_HEAD")
+    ]
+    bases = [sha.strip() for sha in shas if sha and sha.strip()]
+    return parent_first_lines(root, bases) if shas[0] and shas[0].strip() else []
+
+
+def commit_parent_first_lines(root, rev):
+    """`parent_first_lines` for one lane commit against every parent of its
+    commit object; a root commit is not judged, and a parent the repository
+    cannot read is `_commit_parents`' line.
+
+    Implements: SR-246, LLR-358"""
+    parents, unread = _commit_parents(
+        root, rev, "it leaves an approved row under an unapproved parent"
+    )
+    if unread or not parents:
+        return unread
+    return parent_first_lines(root, parents, rev)
 
 
 def _commit_parents(root, rev, question, first=False):

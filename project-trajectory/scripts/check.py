@@ -302,6 +302,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "held-status",
         "ruling-sync",
         "text-then-act",
+        "parent-first",
         "done-when-blessed",
         "plan-gate",
         "adoption-record",
@@ -1245,6 +1246,18 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
+        # Parent first (WI-850): a commit that leaves an approved spine row
+        # under a cited parent that is not approved, where it moved either
+        # row's status, is refused for every committer; the slot asks it of
+        # each lane commit, so `--no-verify` lands nothing. A standing case the
+        # commit did not move is `trace.py --strict-integrity`'s to report.
+        (
+            "parent-first",
+            (),
+            [sys.executable, str(_SCRIPTS / "check.py"), "--parent-first"],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
         # A hand close's Done-when blessing (WI-841): a commit that moves a
         # spec out of `active/<branch>/` into a closed folder while its
         # Done-when differs from the claimed one is refused unless a verdict or
@@ -2051,6 +2064,36 @@ def _text_then_act_mode(args):
     sys.exit(1 if refusal else 0)
 
 
+def _parent_first_refusal(root="."):
+    """The `parent-first` step's judgement over the staged tree, or None. Off
+    git there is no commit to judge. Each line carries its own remedy.
+
+    Implements: SR-246, LLR-358
+    """
+    if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
+        return None
+    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+
+    lines = acceptance_record.staged_parent_first_lines(root)
+    return "; ".join(lines) if lines else None
+
+
+def _parent_first_mode(args):
+    """The `--parent-first` entry point, `_text_then_act_mode`'s shape: EXIT 1
+    printing the refusal, or 0.
+
+    Implements: SR-246, LLR-358
+    """
+    if not args.parent_first:
+        return
+    refusal = _parent_first_refusal(".")
+    msg = (
+        refusal or "no staged status leaves an approved row under an unapproved parent"
+    )
+    print("  {:5} parent-first  {}".format("FAIL" if refusal else "ok", msg))
+    sys.exit(1 if refusal else 0)
+
+
 def _loop_trailer_mode(args):
     """The `--loop-trailer MSGFILE` entry point, the commit-msg hook's loop
     floor (SR-209): EXIT 1 naming the commit's subject when the loop marker is
@@ -2589,6 +2632,13 @@ def main():
         "cell other than Status, or adding or removing a row",
     )
     ap.add_argument(
+        "--parent-first",
+        action="store_true",
+        help="run ONLY the 'parent-first' step's body and exit (WI-850): refuse "
+        "a staged tree that moves a status so an approved spine row sits under "
+        "a cited parent that is not approved",
+    )
+    ap.add_argument(
         "--loop-trailer",
         metavar="MSGFILE",
         help="the commit-msg hook's loop floor (SR-209): under the loop marker, "
@@ -2625,6 +2675,7 @@ def main():
     _held_status_mode(args)  # exits when --held-status selects it
     _ruling_sync_mode(args)  # exits when --ruling-sync selects it
     _text_then_act_mode(args)  # exits when --text-then-act selects it
+    _parent_first_mode(args)  # exits when --parent-first selects it
     # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow
     # it, so `resolve_stage` and `_step_stage` both see only canonical rungs.
     args.stage = (

@@ -9581,6 +9581,57 @@ it.
 `scripts/usage_ingest.py` (new), `scripts/agent_common.py` and
 `scripts/kitlib/bootstrap_manifest.py`.
 
+### A spine row is approved only after the rows it hangs from are [since ad67e4b3f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A spine row is approved only after the rows it hangs from
+are: an approved row (`Approved` or `Founded`) whose cited parent is not
+approved (`Drafted`, no `Status`, or a word outside the vocabulary) is now a
+finding. An SR waits for every SN it cites, an LLR for every SR, and a TC for
+every SR and LLR it verifies; IF, B and DA ids, ids no row declares and the
+`-000` example rows are not judged.
+
+- A standing case is an integrity finding of `trace.py --strict-integrity`
+  (and `--strict`), `parent-first: <child> (<status>) is approved under
+  <parent> (<status>), ...`, so the `registry-integrity` step fails on it at
+  pre-commit and at every bar.
+- A new pre-commit step, `parent-first` (`check.py --parent-first`, joining
+  the hook's batched `--run-steps` list), refuses a staged commit that moves
+  the child's or the parent's status into such a case, against HEAD and,
+  during a merge, MERGE_HEAD. An act approving parent and child together
+  passes; a commit moving neither status passes over a standing case; the
+  first commit is not judged. A spine registry the index lists but cannot
+  read or parse is refused by name.
+- The merge slot asks the same of each lane commit
+  (`acceptance_record.commit_parent_first_lines` joins
+  `text_then_act.LANE_COMMIT_RIDERS`), so a `--no-verify` commit lands
+  nothing.
+- The warn-only `trace.py` status-coherence advisory retires: its function
+  `llr_status_advisories`, its report section ("Status-coherence advisories")
+  and its `llr-status-advisories=` summary token are gone. Its one case, a
+  `Drafted` LLR every citing TC of which is `Approved`, is now the integrity
+  finding on the TC-to-LLR edge.
+- `kitlib.spine` gains `claims_approval`, `parent_first_findings`,
+  `parent_first_line` and `PARENT_EDGES`; `acceptance_record._claims_approval`
+  and `adjudicate_act._claims_approval` are bound to the first.
+- The `spine-authoring` skill names the enforcers of its parent-first rule.
+
+**What to do.** This is a forced migration only if your registries already
+hold an approved child under an unapproved parent: the first
+`trace.py --strict-integrity` after overwriting fails on it, and so does every
+commit's `registry-integrity` step. Run it once after overwriting, and for
+each `parent-first` finding either approve the parent in its own approval act
+or return the child to `Drafted`. Anything that parsed the report's
+"Status-coherence advisories" section or the `llr-status-advisories=` token
+stops finding it. Re-sync the dogfooded skill copies (`bootstrap.py --sync`).
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`scripts/acceptance_record.py`, `scripts/text_then_act.py`,
+`scripts/check.py`, `scripts/trace.py`, `scripts/adjudicate_act.py`,
+`hooks/pre-commit`, `skills/spine-authoring/SKILL.md` and
+`skills/spine-authoring/references/in-lane.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

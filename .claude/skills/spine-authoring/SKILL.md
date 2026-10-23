@@ -111,8 +111,12 @@ Choose the mode before writing. The `human_approval_through` dial in
 | **In a lane, a held rung** | The change touches a held rung | Split at the dial: held first drafts and MEANING changes wait for the owner; the sitting may re-attest only held amendments ruled CLARITY in its verdict |
 
 **In every mode, a child is approved only after its parent.** An SR waits for
-its SN, an LLR for its SR, and a TC for every row it verifies. An approved
-child under a `Drafted` parent claims a chain nobody has blessed.
+every SN it cites, an LLR for every SR, and a TC for every SR and LLR it
+verifies. An approved child under a `Drafted` parent claims a chain nobody has
+blessed. The enforcers: `check.py`'s `parent-first` step refuses the commit
+that moves either status into such a case, the merge slot's lane-commit walk
+refuses it on each lane commit, and `trace.py --strict-integrity` reports a
+standing case. Approve parent and child in one act, or the parent first.
 
 Before authoring or judging a lane's change, read
 [references/in-lane.md](references/in-lane.md) for closure and held-rung rules.

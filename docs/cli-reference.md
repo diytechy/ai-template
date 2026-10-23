@@ -124,6 +124,7 @@ Contracts (interfaces): IF-013, IF-040, IF-144, IF-197, IF-267
 | `--held-status` | run ONLY the 'held-status' step's body and exit (SR-208): under the loop marker, refuse a staged change to a held status |
 | `--ruling-sync` | run ONLY the 'ruling-sync' step's body and exit (WI-790): refuse a staged tree that rules an open item without updating the Done-when of each row citing it, or closing or removing the row |
 | `--text-then-act` | run ONLY the 'text-then-act' step's body and exit (WI-806): refuse a staged tree that writes the approval record while changing a spine cell other than Status, or adding or removing a row |
+| `--parent-first` | run ONLY the 'parent-first' step's body and exit (WI-850): refuse a staged tree that moves a status so an approved spine row sits under a cited parent that is not approved |
 | `--loop-trailer` | the commit-msg hook's loop floor (SR-209): under the loop marker, exit 1 unless the message carries this run's Loop-Session trailer |
 | `--jobs` | run the plan's steps concurrently on N workers (0 = one per step); every step is read-only or writes a distinct artifact, except the two trace.py steps, which share a lane. Default 1: sequential, with each step's output streamed live exactly as before |
 

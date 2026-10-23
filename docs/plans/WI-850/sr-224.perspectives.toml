@@ -1,0 +1,106 @@
+# PERSPECTIVE RECORD (SR-161) for one decomposition, written by
+# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a
+# person authors: subject, rows, tags, recorded_by, recorded_on, and each
+# perspective's no_finding. Comments are not kept.
+#   applicable = false                -> the roster predicate did not reach it
+#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)
+#   applicable = true, produced = []   -> considered: no_finding says why
+# Check: `hats.py record <this file> --check`.
+
+[decomposition]
+rows = ["SR-224"]
+tags = ["process"]
+parents = ["SN-005"]
+recorded_by = "GPT Terra (gpt-5.6-terra), WI-850 spine author"
+recorded_on = "2026-10-22"
+
+[perspective.SECURITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The description floor and its check introduce no credential, secret, or authority boundary requiring a separate obligation."
+
+[perspective.FIRST-RUN-ADOPTER]
+applicable = true
+applies_when = "tags contains \"scripts\" or tags contains \"templates\" or tags contains \"process\""
+produced = ["SR-224"]
+
+[perspective.UNATTENDED-OPS]
+applicable = false
+applies_when = "tags contains \"unattended\" or tags contains \"loop\""
+produced = []
+
+[perspective.CROSS-PLATFORM]
+applicable = true
+applies_when = "tags contains \"scripts\" or tags contains \"launcher\" or tags contains \"shell\""
+produced = []
+no_finding = "The floor applies to shipped descriptions without platform-specific behavior requiring a separate obligation."
+
+[perspective.MAINTAINER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The rationale states the purpose of the description floor and the check preserves it, so no further maintenance obligation is identified."
+
+[perspective.TEST-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "TC-291 verifies the failure and shipped-description outcomes, so no distinct verification obligation is needed."
+
+[perspective.UX-DESIGNER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The row concerns description content and adds no interaction or layout decision requiring a separate obligation."
+
+[perspective.UX-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The row introduces no rendered surface whose width, theme, volume, or malformed-data behavior needs another obligation."
+
+[perspective.SAFETY]
+applicable = false
+applies_when = "tags contains \"safety\""
+produced = []
+
+[perspective.LEGAL]
+applicable = false
+applies_when = "tags contains \"legal\""
+produced = []
+
+[perspective.DATA-PROTECTION]
+applicable = false
+applies_when = "tags contains \"personal-data\""
+produced = []
+
+[perspective.ACCESSIBILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The description floor adds no color- or pointer-dependent interaction requiring an accessibility obligation."
+
+[perspective.PERFORMANCE]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The description-length floor introduces no material latency, capacity, or operating-cost risk requiring a measured bound."
+
+[perspective.CONSISTENCY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The one declared floor and its one check give the descriptions a single meaning, so no separate consistency obligation is identified."
+
+[perspective.INTEGRITY-RECOVERABILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The row neither writes durable state nor creates a recovery path requiring a separate obligation."
+
+[perspective.PRODUCT-FITNESS]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The description floor serves the parent playbook need by making skill use discoverable, so no additional stakeholder outcome is identified."

@@ -80,10 +80,6 @@ None. Every requirement opens on its subject or an EARS keyword.
 
 None flagged by the overlap heuristic.
 
-## Status-coherence advisories (warn-only)
-
-None. No unlifted LLRs.
-
 ## Artifact-naming advisories (warn-only)
 
 None. No requirement cell names a concrete artifact.

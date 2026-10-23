@@ -2338,6 +2338,17 @@ status = "Drafted"
 component = "CMP-008"
 notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
 
+[interface.IF-308]
+rationale = "The staged check and lane-commit rider need one owner for parent-first refusal lines, so both judge the same parent tree comparison instead of accepting different approval relationships."
+owner = "scripts/acceptance_record"
+requestors = ["scripts/check", "scripts/text_then_act"]
+channel = "call"
+data = "staged_parent_first_lines(root) and commit_parent_first_lines(root, rev) return parent-first refusal lines"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "source - reads staged or committed registry trees and their parents; writes nothing."
+
 [interface.IF-247]
 rationale = """A retained adjudicator session must outlive the lane worktree whose loop minted it, and a keep-warm tick in the dispatcher must read the same record an adjudication writes, so the record is a file under the primary checkout that one owner writes whole and both read."""
 owner = "scripts/session_keep"

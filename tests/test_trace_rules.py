@@ -3,7 +3,8 @@
 
 The spine-prose predicates (a row states the system not its own history; one
 testable obligation; the paraphrase advisory that warns but never gates; the
-optional LLR Rationale column), the WI-129 LLR/TC status-coherence lint, the WI-146(a)
+optional LLR Rationale column), the parent-first standing finding (which
+retired the WI-129 LLR/TC status-coherence lint), the WI-146(a)
 --approve hierarchy view, and the WI-081 Slice C render/exit helpers
 (_bucket_by_ref pre-indexing + the exit_code gate policy).
 """
@@ -628,113 +629,66 @@ def test_duplicate_of_malformed_id_reports_duplicated():
     assert dup == ["SR id SR-001 is duplicated"], dup
 
 
-# --- WI-129: LLR/TC status-coherence warn (registry lint) ---------------------
-def test_llr_status_coherence_predicate():
-    # Done-when 1-3: the coherence predicate itself, unit-level.
-    from conftest import load_script
-
-    trace = load_script("trace")
-
-    def warns(llrs, tcs):
-        return trace.llr_status_advisories(llrs, tcs)
-
-    # RE-POINTED AT D-9 STEP 5, NOT DROPPED: this lint's subject is a
-    # BELOW-APPROVED LLR, and the fold left exactly one such value (`Drafted`),
-    # so the fixture moves onto it rather than onto the `Approved` the raw value
-    # map would have produced — which would have made the test assert its own
-    # negative case.
-    impl = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Drafted"}
-    ver_tc = {"TC-ID": "TC-010", "Verifies": "SR-010;LLR-010", "Status": "Approved"}
-
-    # (1) Drafted LLR, sole citing TC Approved -> exactly the warn.
-    found = warns([impl], [ver_tc])
-    assert len(found) == 1, found
-    assert "LLR LLR-010 reads 'Drafted'" in found[0]
-    assert "every citing TC is Approved" in found[0]
-
-    # (1, cont.) Lifting the LLR to Approved silences it.
-    assert warns([{**impl, "Status": "Approved"}], [ver_tc]) == []
-
-    # (3) Case-insensitive via the shared is_approved() predicate: a lowercase
-    # 'approved' LLR is silent, and a lowercase citing TC still counts as approved.
-    assert warns([{**impl, "Status": "approved"}], [ver_tc]) == []
-    assert len(warns([impl], [{**ver_tc, "Status": "approved"}])) == 1
-
-    # (2) Quiet: one citing TC is not Approved -> not "every citing TC".
-    planned_tc = {"TC-ID": "TC-011", "Verifies": "LLR-010", "Status": "Drafted"}
-    assert warns([impl], [ver_tc, planned_tc]) == []
-
-    # (2) Quiet: an LLR with no citing TC is the orphan rules' job, not this lint's.
-    assert warns([impl], []) == []
+# --- the parent-first standing finding (an integrity finding) ----------------
 
 
-def test_a_FOUNDED_llr_is_exempt_from_the_status_advisory():
-    # THE EXEMPTION MOVED AT D-9 STEPS 7/8, and it moved for the reason it
-    # existed. It named `Modified`, whose below-`Approved` status was
-    # DELIBERATE — a post-approval amendment awaiting re-attest — so the
-    # "lift to Approved" nag would have told the owner to erase the marker the
-    # sitting needed. That word retired; `Founded` reads ABOVE `Approved`, so
-    # a Founded LLR has nothing to lift and the nag would tell it to move DOWN
-    # the ladder. Mutation proof unchanged in shape: the same row as `Drafted`
-    # DOES warn, so the exemption is the value, not a broken lint.
-    from conftest import load_script
-
-    trace = load_script("trace")
-    ver_tc = {"TC-ID": "TC-010", "Verifies": "SR-010;LLR-010", "Status": "Approved"}
-    founded = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Founded"}
-    assert trace.llr_status_advisories([founded], [ver_tc]) == []
-    impl = {**founded, "Status": "Drafted"}
-    assert len(trace.llr_status_advisories([impl], [ver_tc])) == 1
-    # ...and the RETIRED word is NOT exempt any more, which is the direction
-    # that would otherwise go unnoticed: a `Modified` LLR is out-of-vocabulary
-    # and the integrity floor names it, so this lint has no reason to be quiet
-    # about it as well.
-    stale = {**founded, "Status": "Modified"}
-    assert len(trace.llr_status_advisories([stale], [ver_tc])) == 1
+def _set_status(path, old, new):
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(old, new, 1), encoding="utf-8"
+    )
 
 
-def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
-    # Done-when 1+4: a below-`Approved` LLR-001 under an `Approved` TC-001 makes
-    # trace emit the warn on stdout and in the report — but it never changes the
-    # --strict or --strict-integrity exit code.
-    #
-    # THE FIXTURE IS SET HERE RATHER THAN SHIPPED BY `make_minimal_project`
-    # (D-9 step 5). The shared project used to ship `Planned`, which was
-    # below-`Verified` AND non-capping; the fold left one below-approval value
-    # (`Drafted`) and that one DOES cap the derived gate, so leaving it in the
-    # shared fixture would have dropped the gate for every test built on it.
+def test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity(scaffold):
+    """The need tier is a parent tier too: an Approved SR citing a Drafted SN
+    reds the integrity floor, naming both rows and statuses. Adequacy witness:
+    a standing finding that read only the SR, LLR and TC tiers (the need tier's
+    rows not passed to the rule) would leave this run at exit 0."""
     make_minimal_project(scaffold)
-    llr_csv0 = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    llr_csv0.write_text(
-        llr_csv0.read_text(encoding="utf-8").replace(
-            ",(see TC),Approved", ",(see TC),Drafted"
-        ),
+    req = scaffold / "docs" / "requirements"
+    (req / "stakeholder-needs.md").unlink()
+    (req / "stakeholder-needs.toml").write_text(
+        '[need.SN-001]\nstatus = "Drafted"\npriority = "M"\n'
+        'need = "Add two numbers."\nwhy = "Demo."\n'
+        'acceptance = "add(1,2) gives 3."\n',
         encoding="utf-8",
     )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 1, out
+    assert "parent-first: SR-001 (Approved) is approved under SN-001 (Drafted)" in out
+
+
+def test_an_approved_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
+    make_minimal_project(scaffold)
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    _set_status(srs, ",M,Test,Approved", ",M,Test,Drafted")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 1, out
+    assert "parent-first:" in out, out
+    assert "LLR-001 (Approved) is approved under SR-001 (Drafted)" in out, out
+
+
+def test_a_drafted_llr_whose_citing_tcs_are_approved_is_an_integrity_finding(
+    scaffold,
+):
+    make_minimal_project(scaffold)
+    llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
+    _set_status(llrs, ",(see TC),Approved", ",(see TC),Drafted")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 1, out
+    assert "TC-001 (Approved) is approved under LLR-001 (Drafted)" in out, out
+
+
+def test_the_llr_status_advisory_is_retired(scaffold):
+    trace = load_script("trace")
+    assert not hasattr(trace, "llr_status_advisories")
+    make_minimal_project(scaffold)
+    llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
+    _set_status(llrs, ",(see TC),Approved", ",(see TC),Drafted")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "WARNING (advisory): LLR LLR-001 reads 'Drafted'" in proc.stdout
-    assert "llr-status-advisories=1" in proc.stdout
-    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "Status-coherence advisories" in report
-    assert "LLR-001 reads 'Drafted'" in report
-
-    # --strict-integrity likewise unaffected (the warn never joins the integrity set).
-    proc2 = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
-    assert proc2.returncode == 0, proc2.stdout + proc2.stderr
-
-    # Lifting LLR-001 to Approved silences the warn.
-    llr_csv = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    llr_csv.write_text(
-        llr_csv.read_text(encoding="utf-8").replace(",Drafted", ",Approved"),
-        encoding="utf-8",
-    )
-    proc3 = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc3.returncode == 0, proc3.stdout + proc3.stderr
-    assert "reads 'Drafted'" not in proc3.stdout
-    assert "llr-status-advisories" not in proc3.stdout
-    report3 = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "None. No unlifted LLRs." in report3
+    assert "llr-status-advisories=" not in proc.stdout, proc.stdout
 
 
 # --- WI-146(a): the --approve batch-scoped approval hierarchy view ---------

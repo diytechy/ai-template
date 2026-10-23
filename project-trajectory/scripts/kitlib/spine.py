@@ -527,6 +527,21 @@ def is_founded(row):
     return (row.get("Status") or "").strip().lower() == "founded"
 
 
+def claims_approval(row):
+    """True when a row's `Status` claims approval or above: `Approved`, or the
+    computed `Founded` above it. A missing `Status`, or a word outside the
+    vocabulary, claims nothing. The one home of the pair the approval-act
+    readers and the parent-first rule both ask.
+
+    Implements: SR-245, LLR-357
+
+    Contract:
+      Inputs:  row: a registry row mapping
+      Outputs: bool
+    """
+    return is_approved(row) or is_founded(row)
+
+
 def llr_exempt(row):
     """SR `Verification` method in `LLR_EXEMPT`, matched on the STRIPPED cell.
 
@@ -819,6 +834,99 @@ def missing_cell_findings(tiers):
                 "delivered in".format(label, rid)
             )
     return out
+
+
+# THE PARENT-FIRST RULE: a spine row is approved only after the rows
+# it hangs from are. Each child tier, the cell naming its parents, and the
+# tiers a parent is read from: an SR's needs, an LLR's SRs, and a TC's SRs and
+# LLRs. Any other id a cell cites (an IF, B or DA row, or an id no row
+# declares) is not a parent here: unresolved parentage is the orphan rules'.
+PARENT_EDGES = {
+    "SR": ("SN-Refs", ("SN",)),
+    "LLR": ("SR-Refs", ("SR",)),
+    "TC": ("Verifies", ("SR", "LLR")),
+}
+
+
+def _status_cell(row):
+    """A row's stripped `Status` cell, "" when it has none.
+
+    Implements: SR-245, LLR-357"""
+    return (row.get("Status") or "").strip()
+
+
+def _declared_rows(tiers):
+    """`{label: {id: row}}` over `tiers`, `-000` example rows and rows with no
+    id left out, the first row of a duplicated id kept.
+
+    Implements: SR-245, LLR-357"""
+    out = {}
+    for label, rows in tiers.items():
+        byid = out.setdefault(label, {})
+        for row in rows:
+            rid = str(row.get(label + "-ID") or "").strip()
+            if rid and not is_example(rid):
+                byid.setdefault(rid, row)
+    return out
+
+
+def _unapproved_parents(declared, row, column, parent_tiers):
+    """The `(id, row)` of each declared parent `row` cites in `column` that
+    does not claim approval, in citation order, once each.
+
+    Implements: SR-245, LLR-357"""
+    for ref in dict.fromkeys(refs(row.get(column))):
+        for label in parent_tiers:
+            parent = declared.get(label, {}).get(ref)
+            if parent is not None and not claims_approval(parent):
+                yield ref, parent
+
+
+def parent_first_findings(tiers):
+    """One entry `(child, child status, parent, parent status)` per approved
+    child (`claims_approval`: `Approved` or `Founded`) citing a declared parent
+    that is not approved, over `PARENT_EDGES`. A parent with no `Status`, or a
+    word outside the vocabulary, is not approved. Statuses are the stripped
+    cells, "" for a missing one. Pure: the standing finding and the commit
+    judgement both read it.
+
+    Implements: SR-245, LLR-357
+
+    Contract:
+      Inputs:  tiers: {label: rows} over "SN", "SR", "LLR", "TC", each row
+               keyed `<label>-ID`, `Status` and its tier's parent column; a
+               missing tier reads as no rows
+      Outputs: list[tuple[str, str, str, str]], child tiers in SR, LLR, TC
+               order and rows in registry order
+    """
+    declared = _declared_rows(tiers)
+    out = []
+    for label, (column, parent_tiers) in PARENT_EDGES.items():
+        for rid, row in declared.get(label, {}).items():
+            if not claims_approval(row):
+                continue
+            out += [
+                (rid, _status_cell(row), ref, _status_cell(parent))
+                for ref, parent in _unapproved_parents(
+                    declared, row, column, parent_tiers
+                )
+            ]
+    return out
+
+
+def parent_first_line(entry):
+    """The one message for a parent-first entry, carrying its own remedy: the
+    standing finding and the commit judgement each prefix it.
+
+    Implements: SR-245, LLR-357
+    """
+    child, child_status, parent, parent_status = entry
+    return (
+        "{} ({}) is approved under {} ({}), which is not: approve {} in its own "
+        "approval act, or return {} to Drafted".format(
+            child, child_status, parent, parent_status or "no status", parent, child
+        )
+    )
 
 
 # ---------------------------------------------------------------------------

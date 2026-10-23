@@ -1,0 +1,89 @@
+# docs/decisions/wi-850.toml — delegated calls the coordinator made in the
+# wi-850 lane (headless leg 15 of loop session 20261021T045653Z-213020).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "The single plan passed at its first critique: a fresh Claude Opus planner wrote it from the brief alone (DELTA: within; plan_coverage OK, 8 clauses), critique 1 (Codex Sol, medium, from the lane) read APPROVE findings=0, and the pass record (4c842bc07) binds the plan and the Done-when. The plan's P13 names one cross-family REVIEW-A as the Done-when's review bar states; the lane's rounds run the two full-lane reviewers the owner's current shape sets (Codex Sol at medium, Claude Opus at high as the REVIEW-B stand-in; coordinator-2026-10-16 D-008), and the landing is the coordinator's hand squash, not the merge slot, until the one-landing row moves it there."
+alternative = "Run one reviewer per round as the Done-when's review bar reads."
+reversal_cost = "None: a second reviewer only adds findings."
+why_not_escalated = "The owner's review shape governs every lane (coordinator-2026-10-16 D-008)."
+review = ""
+
+[decision.D-002]
+decided = "Done-when item 1 (SR-224's chain) goes the plan's recommended way, SR-224's first approval, not the demotion of LLR-281 and TC-291. Sitting 001 (first-approval of SR-224) returned it with two findings: no perspective record, and an acceptance clause (the shipped skills clear the floor) its Requirement does not state. Terra's first turn wrote docs/plans/WI-850/sr-224.perspectives.toml (parent SN-005, tags process, FIRST-RUN-ADOPTER producing SR-224, a no_finding per other applicable hat; --check --strict clean) and widened the Requirement with one shall. Its sentence put the shipped-skills clause inside the If-then's consequent ('If a description is short, then the check shall fail ... and the shipped descriptions are at or above that floor'), which reads as conditional on a short description. The coordinator reordered it by a guarded replace, keeping the sitting's own phrase and the one shall: 'The skill descriptions the kit ships are at or above the declared description floor, and if a skill's description is shorter than that floor, then the kit's skills-index check shall fail, naming that skill.' The sitting's example wording held two shalls, which trace.py's one-shall form rule reports. The acceptance, LLR-281 and TC-291 are unchanged. The re-sit judges the reordered text."
+alternative = "Resume Terra for the reorder, or return LLR-281 and TC-291 to Drafted (the Done-when's other remedy)."
+reversal_cost = "Low: one Drafted SR cell before its re-sit."
+why_not_escalated = "A coordinator's byte-exact row-text edit before a sitting, judged by that sitting (recipes section 1); recorded for confirm or overrule."
+review = ""
+
+[decision.D-003]
+decided = "Sitting 002 closed the perspective record and returned SR-224 once more: the shipped-skills clause, an indicative ahead of the one shall, could not be read as binding. Terra's resumed turn rewrote the Requirement so one shall governs both clauses, in the coordinated-response form SR-244 uses; its sentence is the sitting's own example, which Terra checked against the acceptance and the form rules: 'The kit shall hold every skill description to the declared description floor: the descriptions it ships are at or above it, and its skills-index check fails, naming the skill, on any description shorter than it.' The acceptance, Rationale, LLR-281, TC-291 and the record are unchanged; trace.py --strict and check_trajectory --strict are clean. A third sitting re-sits SR-224."
+alternative = "Return LLR-281 and TC-291 to Drafted instead (the Done-when's other remedy)."
+reversal_cost = "Low: one Drafted SR cell before its re-sit."
+why_not_escalated = "Spine text answered in the lane through the cycle's return route."
+review = ""
+
+[decision.D-004]
+decided = "Terra's intent turn (resumed, plan row P2) authored the set as the plan lists it: the labelled derived SR-245 (SN-002, SN-029; B-02, B-09; the CONSISTENCY lens), LLR-357 (the rule's one home and the standing finding, CMP-006), LLR-358 (the commit judgement and its wiring, CMP-008), TC-396 (Unit, Smoke) and TC-397 (Integration, Full, its evidence in the real-git module the plan adds to SLOW_MODULES, citing IF-308), the new IF-308 (the call seam, owner scripts/acceptance_record, requestors scripts/check and scripts/text_then_act), the watermark bumped, and SR-245's perspective record (docs/plans/WI-850/plan.perspectives.toml, --check --strict clean). No row describes the WI-129 advisory the code retires, so no approved row is amended. Each LLR's code_symbol keeps one existing symbol, so the traced cells bind while the build creates the rest; IF-308's Contract body is the builder's, in the code. Terra's arms map lists no gap; it is kept in the scratch report for the checkpoint, where the set is reconciled against settled code and judged in one combined sitting (SR-245's one-shall sentence is long, and the sitting judges whether it is one decision)."
+alternative = "Split SR-245 at intent into a reporting SR and a refusal SR."
+reversal_cost = "Low: Drafted rows reconciled at the checkpoint."
+why_not_escalated = "The plan's accepted set; the checkpoint sitting judges the text."
+review = ""
+
+[decision.D-005]
+decided = "Plan row P4 (a) carries WI-963's acceptance_record._tier_reads as its own behaviour-preserving commit, byte-identical to that lane's bodies and docstrings apart from its Implements line (SR-245, LLR-358 here, the row whose code_symbol lists it), so the lane that rebases second meets one conflicting line. Its docstrings still name _snapshot_copy_rows and an 'under' parameter no caller on this base uses; both arrive with WI-963. The builder's affected modules (14, 723 passed, the 31 strict expected failures unchanged) and the smoke tier are green."
+alternative = "Trim the docstrings and the unused parameter so the commit reads true alone, at the cost of a larger conflict at the second rebase."
+reversal_cost = "Low: a private reader's docstring."
+why_not_escalated = "The spec's Trust section names the reader as shared, carried by whichever row lands first."
+review = ""
+
+[decision.D-006]
+decided = "Plan row P9's fixture audit: the full unfiltered suite at the stage-4 tip 76cb381be, from a detached worktree, read 7230 passed, 33 skipped, 1 failed in 19:00; the one red was test_this_repo_s_committed_stage_is_current, the trunk-only docs/stage a detached worktree asserts in full, which passed once derive_stage re-derived it there (drafted 21 to 25, the lane's intent rows). No further fixture approves a child under a Drafted parent; the two the builder found (tests/test_trace.py, tests/test_trace_interfaces.py) are corrected in the stage-4 commit, and the offspine golden now records the parent-first finding its fixture was built to show. Stage 5 owes no build."
+alternative = "None."
+reversal_cost = "None."
+why_not_escalated = "A recorded result."
+review = ""
+
+[decision.D-007]
+decided = "Counted round 1 runs the two full-lane reviewers in parallel from their own renders: Codex Sol at medium (REVIEW-A) and a Claude Opus sub-agent at high effort as the REVIEW-B stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), recorded here as the substitution. REVIEW-B launches first (a headless leg)."
+alternative = "None: the owner's review shape."
+reversal_cost = "None."
+why_not_escalated = "The owner's standing review shape."
+review = ""
+
+[decision.D-008]
+decided = "Round 1's triage (004-REVIEW-A-b0feda1, Codex Sol: CHANGES-REQUESTED findings=4; 005-REVIEW-B-b0feda1, Claude Opus stand-in: APPROVE findings=3). REVIEW-A's one MAJOR (the set's combined sitting and act are not yet taken at this tip) names no code defect: its remedy is the checkpoint sitting, the cycle's next step, so it is re-graded here, costs no fix round, and its convergence-map evidence is the checkpoint's verdict and act (recipes section 1). Every other finding is MINOR, so round 1 has no BLOCKER or MAJOR code finding and the checkpoint follows. The MINORs go: (REVIEW-B 1) a trace-level SR-to-SN standing case and (REVIEW-B 2) a merge case that tells a merge-aware judgement from a HEAD-only one, both to a pre-checkpoint builder stage, with TC-396's evidence widened; (REVIEW-A 4) adjudicate_act._claims_approval, an identical copy of the pair, bound to kitlib.spine.claims_approval in the same stage (behaviour-preserving, the one-home rule the Trust section states); (REVIEW-A 2) SR-245's two obligations, to Terra's checkpoint reconcile, judged by the sitting; (REVIEW-A 3) SR-224 naming the skills-index check, an approved row's wording, to status.md's follow-ups for its next amendment; (REVIEW-B 3) the carried docstrings naming WI-963's reader, kept by D-005, which WI-963's rebase makes true."
+alternative = "Run a fix round on REVIEW-A's MAJOR as graded."
+reversal_cost = "Low: the gate over the checkpoint tip reviews the whole lane again."
+why_not_escalated = "Triage under the cycle's rules (MINORs never cost a round; a sitting-owed finding is the checkpoint's)."
+review = ""
+
+[decision.D-009]
+decided = "The checkpoint reconcile (Terra, resumed) confirmed the coordinator's change list: TC-396 reads Full (its evidence includes tests in a SLOW_MODULES module), and SR-245 splits into two labelled derived SRs, SR-245 (the standing finding; LLR-357, TC-396) and the new SR-246 (commit admission; LLR-358, TC-397, IF-308's seam), with SR-245 and SR-246 both in the perspective record (--check --strict clean); the rows' text was checked against the settled code. Two coordinator edits follow, each a lane-added sentence no sitting has seen: the code's Implements tags for LLR-358's functions retagged SR-245 to SR-246 (the split's back-links, recipes section 5), and LLR-357's and LLR-358's details rewritten in contract voice without 'shall' (trace_text's form rule reserves 'shall' for the SR, and no other LLR uses it), the same content, by a guarded replace that asserted no other cell moved."
+alternative = "Resume Terra for the two LLR details."
+reversal_cost = "Low: Drafted rows before their sitting."
+why_not_escalated = "A row split's retag and byte-level voice edits before the sitting that judges them."
+review = ""
+
+[decision.D-010]
+decided = "An independent arms map (a Claude Opus sub-agent told to change nothing; review-tmp/2026-10-22e-leg15/arms-map-notes.md) at fc9354d05 found 6 gaps and 18 weak arms. Two turns closed them before the sitting, in parallel on disjoint files: the builder's stage 7 added nine characterization tests (11 cases: 'no status' rendering, an unreadable comparison side, a two-parent lane merge, the exact 'the index: ' and 'commit <sha10>: ' prefixes, -000 and B parents, an out-of-vocabulary child word, a missing or unknown parent status at commit, a root commit, the first listed carrier deciding), each checked failing against a deliberate wrong implementation and reverted, no code changed; and Terra, resumed, made the rows true to the code: SR-245's judged edges stated exactly and letter case not mattering, SR-246's absent registry stated by side and the staged check's one merge parent (MERGE_HEAD's first; no kit route makes an octopus merge), LLR-357 stating the one shared approval predicate, LLR-358 reading all four tiers once any carrier changed, the first listed of the TOML and legacy carriers and the pre-commit hook's step, and TC-397's method dropping the trunk-freshness clause no row states. The coordinator added the nine nodes to TC-396's and TC-397's evidence by a guarded replace."
+alternative = "Sit the set with the gaps and let the sitting return them."
+reversal_cost = "Low: tests and Drafted rows before their sitting."
+why_not_escalated = "The arms-map step of the checkpoint (recipes section 5)."
+review = ""
+
+[decision.D-011]
+decided = "Checkpoint sitting 006 (one combined first-approval sitting over SR-245, SR-246, LLR-357, LLR-358, TC-396 and TC-397, the arms map appended) read APPROVE rows=6, with two wording notes on SR-245 that are not findings (its long list's trailing condition; 'replace the former advisory' in history voice), sent to status.md's follow-ups for the row's next amendment. The gate over the checkpoint tip follows, uncounted, in convergence stance, and the act turn after it. THE CONVERGENCE MAP (the reviewers do not read this record): REVIEW-A's re-graded MAJOR (the set's sitting and act owed) -> sitting 006's verdict and the act turn that follows the gate; REVIEW-A's SR-245 split -> the corrected text at SR-245 and SR-246 (fc9354d05) and sitting 006; REVIEW-A's duplicate approval pair -> inspection: adjudicate_act._claims_approval bound to kitlib.spine.claims_approval (e42e32308); REVIEW-B's SR-to-SN standing case -> tests/test_trace_rules.py::test_an_approved_sr_under_a_drafted_sn_reds_strict_integrity, which failed with integrity_sweep's SN tier dropped (the builder's stage-6 mutation); REVIEW-B's merge case -> tests/test_parent_first_git.py::test_a_merge_bringing_a_standing_case_to_the_other_side_is_refused, which failed against a HEAD-only staged judgement; REVIEW-B's docstrings naming WI-963's reader -> kept by D-005, no fix; REVIEW-A's SR-224 carrier name -> status.md's follow-ups, no fix. Every accepted finding is mapped, so the gate may render."
+alternative = "None: the cycle's checkpoint and gate order."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-012]
+decided = "The gate over the checkpoint tip 54a199f93 (uncounted, convergence stance, the convergence map recorded first in D-011): REVIEW-A (Codex Sol, medium) APPROVE findings=0 (007-REVIEW-A-54a199f); REVIEW-B (Claude Opus stand-in, high) APPROVE findings=3, all MINOR (008-REVIEW-B-54a199f): the carried docstrings naming WI-963's reader (kept by D-005; WI-963's rebase makes them true), a second carrier-filtered name lister beside _spine_revs (justified by its three-way failure contract, but _spine_row_sides' 'the one two-tree walk' docstring now overstates; a consolidation for a successor), and SR-245's history-voiced 'replace the former advisory' clause (sitting 006's own note). Gate MINORs never move the tip: all three go to status.md's follow-ups. The act turn follows; trunk has not moved since the lane's base, so no rebase and no post-rebase round is owed, and the judged rows are unchanged since sitting 006's commit."
+alternative = "None."
+reversal_cost = "None."
+why_not_escalated = "Procedural (a gate MINOR is a follow-up, recipes section 3)."
+review = ""

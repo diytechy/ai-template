@@ -34,6 +34,7 @@ try:
         SNAPSHOT_DIR,
         _commit_parents,
         _spine_rows_at,
+        commit_parent_first_lines,
     )
     from kitlib import git as _kitgit
 except ImportError:  # pragma: no cover - in-process fallback
@@ -48,6 +49,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         SNAPSHOT_DIR,
         _commit_parents,
         _spine_rows_at,
+        commit_parent_first_lines,
     )
     from kitlib import git as _kitgit
 
@@ -172,12 +174,15 @@ def commit_text_then_act_lines(root, rev):
 
 # The per-commit rules that ride the lane-commit walk, each `rule(root, rev) ->
 # lines` judging one commit against its own parents. Text then act is the
-# first rider; the adoption record's rule (WI-969) the second, its lines
-# carrying their own remedy. The merge slot walks every rider; each hook
-# step's squash path walks only its own rule.
+# first rider; the adoption record's rule (WI-969) the second and the
+# parent-first rule (`acceptance_record.commit_parent_first_lines`) the third,
+# each carrying its own remedy. The merge slot walks every rider; each hook
+# step's squash path walks only its own rule, and the parent-first step has
+# none: a squash's staged tree is judged like any other.
 LANE_COMMIT_RIDERS = (
     commit_text_then_act_lines,
     adoption_record.commit_adoption_record_lines,
+    commit_parent_first_lines,
 )
 
 

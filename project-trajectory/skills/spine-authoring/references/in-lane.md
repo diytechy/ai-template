@@ -63,7 +63,9 @@ Use the same authoring and closure checks, then split approval authority:
   A MEANING change awaits the owner. Leave existing statuses unchanged.
 - **Released children wait for their held parent.** They may be judged in the
   same sitting, but approved only after the parent is approved for its current
-  text.
+  text. The status half is checked at the commit (the `parent-first` step and
+  the merge slot); the text half is the drift report's (the amendment walk and
+  the re-attestation).
 
 If the snapshot refuses because another approved row in the registry still
 drifts, leave it unanchored and report the refusal; do not widen the act to

@@ -739,47 +739,6 @@ _IF_FILE_TAILS = frozenset(
 # a failure set; the DevStg-Reqs consistency review (process.md §4) makes the call.
 
 
-def llr_status_advisories(llrs, tcs):
-    """Warn-only findings (WI-129): an LLR whose Status reads below `Approved`
-    while *every* TC that cites it is already `Approved`. The evidence to lift it
-    exists, so the gap is a readout drift, not a coverage hole — mechanically
-    harmless (the derived stage ignores LLR/TC Status past `Drafted` — a Drafted
-    LLR holds the LLReqs rung open and a settled one says nothing further;
-    `spine_rules.spine_stage`), but confusing at an
-    approval review, where a below-`Approved` LLR under an `Approved` SR reads
-    like an unfinished decomposition. Warn only: never promoted to an error (not
-    under --strict or --strict-integrity), because making LLR status gate would
-    re-introduce the exact LLR-status coupling the derived-gate model dropped.
-    An LLR with no citing TC is the orphan rules' job, not this lint's; matching
-    is case-insensitive via the shared is_approved() predicate.
-
-    THE EXEMPTION MOVED AT D-9 STEPS 7-8 for the reason it existed. It named
-    `Modified`, whose below-`Approved` status was DELIBERATE, so nagging it told
-    the owner to erase the marker the sitting needed. That word is retired;
-    `Founded` reads ABOVE `Approved`, so a Founded LLR has nothing to lift and
-    the nag would tell it to move DOWN the ladder."""
-    citing = {}  # LLR id -> [is_approved(tc) for each citing TC]
-    for r in tcs:
-        tc_ok = is_approved(r)
-        for x in refs(r.get("Verifies")):
-            if ID_PATTERNS["LLR"].match(x):
-                citing.setdefault(x, []).append(tc_ok)
-    out = []
-    for r in llrs:
-        lid = r.get("LLR-ID")
-        if not lid or is_approved(r) or is_founded(r):
-            continue
-        verdicts = citing.get(lid)
-        if verdicts and all(verdicts):
-            out.append(
-                "LLR {} reads '{}' but every citing TC is Approved — lift to "
-                "Approved (the evidence already exists)".format(
-                    lid, (r.get("Status") or "").strip()
-                )
-            )
-    return out
-
-
 # Verification methods whose approval rests on a recorded human judgment,
 # not a runnable check (process.md §4 "Attest"). --require-verified accepts these
 # as legitimately approved but the report surfaces them distinctly (the
@@ -5115,7 +5074,6 @@ class Findings:
     form: list = field(default_factory=list)
     paraphrase: list = field(default_factory=list)
     ears: list = field(default_factory=list)
-    llr_status_advis: list = field(default_factory=list)
     sr_artifact_advis: list = field(default_factory=list)
     sn_artifact_advis: list = field(default_factory=list)
     provenance_advis: list = field(default_factory=list)
@@ -5370,11 +5328,14 @@ def verification_basis(srs):
 def integrity_sweep(reg, raw):
     """The always-on integrity floor: CSV row structure, per-tier id integrity,
     the closed `Status` vocabulary, the SN tier's own duplicate protection, the
-    SR/LLR/TC citation triangle, and the off-spine registries' ids.
+    parent-first rule's standing cases, the SR/LLR/TC citation triangle, and
+    the off-spine registries' ids.
 
     Extracted outward from `analyze` at WI-483. `raw` is the three-tier
     `{label: rows}` map the caller also feeds the placeholder/schema sweeps, so
     the two readings of "the raw spine" cannot drift apart.
+
+    Implements: SR-245, LLR-357
     """
     docs = reg.docs
     # CSV structure first (a misaligned row can make every later finding
@@ -5417,6 +5378,14 @@ def integrity_sweep(reg, raw):
     # A spine row with NO Status cell (or, once phased, no Phase cell) is the
     # shape the vocabulary check above cannot see: it judges present values.
     integrity += _spine.missing_cell_findings(dict(raw, SN=reg.raw_sns))
+    # A spine row is approved only after the rows it hangs from are: a standing
+    # approved child under an unapproved parent, named with both statuses. The
+    # commit-time half (`check.py --parent-first`, the slot's lane-commit walk)
+    # refuses the commit that moves either status into such a case.
+    integrity += [
+        "parent-first: " + _spine.parent_first_line(entry)
+        for entry in _spine.parent_first_findings(dict(raw, SN=reg.raw_sns))
+    ]
     # The SN tier's duplicate protection (prose registry — see
     # sn_integrity_findings): integrity-class like a duplicated CSV id.
     integrity += reg.sn_integrity
@@ -5677,10 +5646,6 @@ def analyze(reg, args):
     # heuristic (lexical overlap), so it warns FOREVER — 38 of 118 LLRs trip it
     # and most are legitimate. Never joins a failure set below.
     paraphrase = paraphrase_advisories(srs, llrs)
-    # Warn-only, always on (WI-129): an LLR reading below Approved while every
-    # citing TC is Approved — a readout drift, never a failure (LLR status is
-    # non-gating under the derived-gate model). Never joins a failure set below.
-    llr_status_advis = llr_status_advisories(llrs, tcs)
     # Warn-only, always on (re-tier v2 R2/R3, owner ruling 2026-08-15): an SR
     # `Requirement` naming a concrete artifact, and an SR whose direct-LLR fan-out
     # is over the declared bound. Their own pipes — they are TIERING detectors,
@@ -5738,7 +5703,6 @@ def analyze(reg, args):
         form=form,
         paraphrase=paraphrase,
         ears=ears,
-        llr_status_advis=llr_status_advis,
         sr_artifact_advis=sr_artifact_advis,
         sn_artifact_advis=sn_artifact_advis,
         provenance_advis=provenance_advis,
@@ -5786,7 +5750,6 @@ def render_report(reg, findings, args, forest):
     form = findings.form
     paraphrase = findings.paraphrase
     ears = findings.ears
-    llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sn_artifact_advis = findings.sn_artifact_advis
     provenance_advis = findings.provenance_advis
@@ -5983,17 +5946,6 @@ def render_report(reg, findings, args, forest):
         if not paraphrase
         else [f"- {f}" for f in paraphrase]
     )
-    # Warn-only advisory section (never a failure, WI-129): LLRs reading
-    # below Approved whose citing TCs are all Approved — lift the Status cell by
-    # hand (registries are hand-owned SSOT, no generator writes them back). The
-    # WI-316 chain arm RETIRED 2026-08-17m (the cell reading): a Modified child
-    # under an Approved SR is a legitimate state, the snapshot-drift arm's find.
-    lines += ["", "## Status-coherence advisories (warn-only)", ""]
-    lines += (
-        ["None. No unlifted LLRs."]
-        if not llr_status_advis
-        else [f"- {f}" for f in llr_status_advis]
-    )
     # Warn-only sections (re-tier v2 R2/R3): the two tiering detectors. Never a
     # failure under any flag — a merged row and a mis-tiered artifact name are
     # cleared by re-writing requirements, which is the campaign's schedule, not
@@ -6188,7 +6140,6 @@ def render_console(reg, findings, args, out, html_out):
     ears = findings.ears
     interface_advisories = findings.interface_advisories
     knowledge_advisories = findings.knowledge_advisories
-    llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sn_artifact_advis = findings.sn_artifact_advis
     provenance_advis = findings.provenance_advis
@@ -6220,7 +6171,6 @@ def render_console(reg, findings, args, out, html_out):
         advisories
         + interface_advisories
         + knowledge_advisories
-        + llr_status_advis
         + paraphrase
         + ears
         + sr_artifact_advis
@@ -6322,11 +6272,6 @@ def render_console(reg, findings, args, out, html_out):
         + (f" form-findings={len(form)}" if form else "")
         + (f" ears-advisories={len(ears)}" if ears else "")
         + (f" paraphrase-advisories={len(paraphrase)}" if paraphrase else "")
-        + (
-            f" llr-status-advisories={len(llr_status_advis)}"
-            if llr_status_advis
-            else ""
-        )
         + (f" watermark-advisories={len(watermark_advis)}" if watermark_advis else "")
         + (f" approval-record={len(snapshot_findings)}" if snapshot_findings else "")
         + f". Report -> {out}"

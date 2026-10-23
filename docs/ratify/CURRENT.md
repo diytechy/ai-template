@@ -18,7 +18,7 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into approval or arrives approved, `--approves` names it or `--reattests` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 82 changed, 92 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-667, WI-671, WI-672, WI-677, WI-678, WI-679, WI-688, WI-746, WI-747, WI-748, WI-771, WI-774, WI-790, WI-791, WI-798, WI-803, WI-818, WI-822, WI-834, WI-835, WI-838, WI-841, WI-842, WI-846, WI-849, WI-852, WI-853, WI-858, WI-865, WI-870, WI-882, WI-884, WI-887, WI-888, WI-892, WI-897, WI-911, WI-912, WI-913, WI-918, WI-925, WI-926, WI-927, WI-940, WI-946, WI-956, WI-957, WI-958, WI-960, WI-961, WI-962, WI-969.
+- `docs/requirements/interfaces.toml` — 82 changed, 93 added, 1 removed since the snapshot; ruling(s): OI-37, OI-74, OI-75, OI-85, OI-88, OI-95, WI-539, WI-545, WI-553, WI-557, WI-572, WI-577, WI-579, WI-582, WI-589, WI-598, WI-604, WI-608, WI-612, WI-615, WI-616, WI-618, WI-619, WI-620, WI-621, WI-622, WI-623, WI-624, WI-627, WI-628, WI-629, WI-630, WI-631, WI-632, WI-633, WI-634, WI-635, WI-636, WI-637, WI-638, WI-639, WI-640, WI-644, WI-647, WI-651, WI-654, WI-655, WI-657, WI-663, WI-666, WI-667, WI-671, WI-672, WI-677, WI-678, WI-679, WI-688, WI-746, WI-747, WI-748, WI-771, WI-774, WI-790, WI-791, WI-798, WI-803, WI-818, WI-822, WI-834, WI-835, WI-838, WI-841, WI-842, WI-846, WI-849, WI-852, WI-853, WI-858, WI-865, WI-870, WI-882, WI-884, WI-887, WI-888, WI-892, WI-897, WI-911, WI-912, WI-913, WI-918, WI-925, WI-926, WI-927, WI-940, WI-946, WI-956, WI-957, WI-958, WI-960, WI-961, WI-962, WI-969.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-587.
 
 ## Assumptions and surrogates owing an approval
@@ -611,36 +611,4 @@ record runs through the live registry first.
 - DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
 
 
-
-_No chain on a rung the human-approval dial holds owes an act; every chain in this brief waits for automated adjudication._
-
-## Waiting for automated adjudication
-
-_Every owing row of these chains sits on a rung `[attestation] human_approval_through` releases, so an adjudication session approves them and this sitting does not. Shown in full for sight; collapsed by default._
-
-<details>
-<summary>Waiting for automated adjudication — 1 chain(s): SR-224</summary>
-
-## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
-
-> **Requirement.** If a skill's description is shorter than the declared description floor, then the kit's skills-index check shall fail, naming that skill.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-005 asks that agents and humans work from the same playbook; it does not name what a skill's description must carry, so this obligation arrives through the first-run-adopter lens rather than through the need's text. An agent reads only a skill's description to decide whether to load it, so a description too short to say when to use the skill is shipped guidance an adopter's agent never reads: the skill works only for someone who already knows it exists, the undocumented-knowledge failure that lens listens for. A length floor is a lexical proxy, not a proof that a description is good: it catches the one-line stub that cannot state a trigger and leaves the wording to review. A reviewer's judgement of every description was the alternative, and it lost as the only guard because nothing would re-ask it when a skill is added. Fed back to the need: SN-005's acceptance could name the skills' descriptions as part of the playbook; until it does, this row is derived and says so.
-
-
-### SR SR-224 — Drafted, never approved
-_No cell differs from the approved snapshot; this row owes because its own `Status` has never been `Approved`._
-- **SR-ID**: SR-224
-- **Title**: A skill whose description cannot say when to use it fails the skills-index check
-- **SN-Refs**: SN-005
-- **Boundary-Refs**: B-05
-- **Hat-Refs**: FIRST-RUN-ADOPTER
-- **Requirement**: If a skill's description is shorter than the declared description floor, then the kit's skills-index check shall fail, naming that skill.
-- **Rationale**: A DERIVED requirement, and labelled so. SN-005 asks that agents and humans work from the same playbook; it does not name what a skill's description must carry, so this obligation arrives through the first-run-adopter lens rather than through the need's text. An agent reads only a skill's description to decide whether to load it, so a description too short to say when to use the skill is shipped guidance an adopter's agent never reads: the skill works only for someone who already knows it exists, the undocumented-knowledge failure that lens listens for. A length floor is a lexical proxy, not a proof that a description is good: it catches the one-line stub that cannot state a trigger and leaves the wording to review. A reviewer's judgement of every description was the alternative, and it lost as the only guard because nothing would re-ask it when a skill is added. Fed back to the need: SN-005's acceptance could name the skills' descriptions as part of the playbook; until it does, this row is derived and says so.
-- **AcceptanceCriteria**: A skill whose description is shorter than the declared floor fails the check, which names that skill and not a skill at the floor; a description at the floor passes; the kit's shipped skills clear the floor.
-- **Priority**: C
-- **Verification**: Test
-- **Status**: Drafted
-- **Phase**: 6
-
-</details>
+_No spine row differs from its `docs/archive/last_approved` copy, and no row awaits a first approval._

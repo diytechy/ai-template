@@ -437,6 +437,8 @@ SLOW_MODULES = frozenset(
         "test_codex_call_git",  # a tmp git repo and lane per case and a stand-in `codex` process; its in-process pin is test_codex_call
         # WI-961: the usage ingest on real lanes, worktrees and the primary.
         "test_usage_ingest_git",  # a tmp git repo and lane per case, git spawned per read and record commit; its in-process pin is test_usage_ingest
+        # WI-850: the parent-first commit judgement on real repositories.
+        "test_parent_first_git",  # a tmp git repo per case driven through check.py and the merge slot; its in-process pin is test_parent_first
     }
 )
 

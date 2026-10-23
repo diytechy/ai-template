@@ -241,8 +241,10 @@ class _Rows:
         return self.cache[key]
 
 
-def _claims_approval(row):
-    return kspine.is_approved(row) or kspine.is_founded(row)
+# Whether a row's `Status` claims approval (`Approved` or `Founded`): the pair's
+# one home is `kitlib.spine.claims_approval`, which the acceptance record's
+# approval-act readers and the parent-first rule read too.
+_claims_approval = kspine.claims_approval
 
 
 def _retirement(act, rid, held, recorded):
