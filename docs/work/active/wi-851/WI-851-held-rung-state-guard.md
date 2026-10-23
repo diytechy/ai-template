@@ -92,7 +92,7 @@ marked commit: the committed dial, the live registries, the snapshot copies,
 an accepted verdict with its binding (which now records the row-text
 identity), and the git state that says whether a commit is a lane's. All are
 files on disk, and the verdict is model output, so the guard is owed under
-[PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+[PROCESS.md §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producers and failed-write shapes:**
   - *The dial:* `[attestation] human_approval_through` in `docs/process.toml`,
@@ -258,7 +258,7 @@ files on disk, and the verdict is model output, so the guard is owed under
   - *A crashed step* exits nonzero, which the runner reads as FAIL.
 
 - **The bound**
-  ([PROCESS.md §6, "Review threat model"](../../../project-trajectory/PROCESS.md#6-review-depth-triage-efficiency)):
+  ([PROCESS.md §6, "Review threat model"](../../../../project-trajectory/PROCESS.md#6-review-depth-triage-efficiency)):
   - Inside: what supported workflows and the kit's own routes write, a hand
     edit of an authored row included.
   - Outside:
