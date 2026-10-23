@@ -32,3 +32,10 @@ alternative = "(i) keep IF-196's judgement unchanged (off-spine and stakeholder 
 reversal_cost = "Low before the plan step; medium after."
 why_not_escalated = "Revision 36's own premise; recorded high-risk because it widens what an autonomous run is refused, for confirm or overrule."
 review = ""
+
+[decision.D-005]
+decided = "WI-851's confirming round (Codex Sol, medium, convergence stance, from the detached critique checkout at ec57279e9, its log spooled; verdict kept at review-tmp/2026-10-23a-leg16/crit851c/WI-851-scope-critique.md) checked D-001's adopted dispositions and read APPROVE findings=0. WI-851 is claimed alone under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006): its hard needs WI-892 and WI-849 have landed, its single plan runs first, and the queue's other row-2 rows (WI-856, WI-878, WI-910, WI-920) are each scope-critiqued at their own claim, so the leg spends its budget on WI-851's lane."
+alternative = "Batch another row-2 row into the same unpause after its own scope critique."
+reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
+why_not_escalated = "The skill's section 1 and the queue table's order; recorded for confirm or overrule."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-23a-leg16/crit851c/WI-851-scope-critique.md"
