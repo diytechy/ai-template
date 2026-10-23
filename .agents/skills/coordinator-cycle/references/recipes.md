@@ -990,6 +990,18 @@ lane commit being replayed.
   disposition suggested, which one listed outcome did not keep (wi-961
   D-015).
 
+- An intent turn given a plan's amendment list rewrote whole approved
+  cells (SR-208, LLR-246, TC-241, TC-278): run a sentence-level check
+  before committing (each base sentence of an approved cell, split on
+  `.` and `;`, present verbatim in the new cell), and have an
+  independent read-only sub-agent classify each missing sentence as
+  retired by the spec or dropped; it found 27 dropped, which a resumed
+  turn restored (wi-851 D-003).
+- A checkpoint arms turn may state an arm by amending an approved row
+  outside the set (TC-243), which then joins the sitting and can be
+  returned: name the rows it may touch, and restore any other row to
+  its approved bytes (wi-851 D-012).
+
 ## 6. Commits and hooks
 
 - A commit made by hand in a lane worktree runs the hook under the
@@ -1076,6 +1088,10 @@ lane commit being replayed.
   it nowhere. Ask a builder adding a step for a test that drives the
   hook's own step list (WI-913 round 2; WI-841's `done-when-blessed` has
   the same gap).
+
+- `attest --tests` names test files that exist: a missing one
+  collects no tests, and the bar refuses with pytest's exit 5, which
+  is a bad argument, not a red round (2026-10-23b).
 
 ## 7. Environment and limits
 
@@ -1214,6 +1230,13 @@ lane commit being replayed.
 - Unset `MSYS_NO_PATHCONV` in a shell that runs pytest: exported, it
   breaks the shallow-clone tests' `git clone` of a file URI ("'/C:/...'
   does not appear to be a git repository"; WI-913, 2026-10-15).
+
+- A bar can hang instead of dying: under other jobs' load an attest's
+  smoke tier ran over an hour with no summary line, and the tool cap
+  moved it to the background. Stop its process tree
+  (`taskkill //PID <the integrate.py pid> //T //F` from Git Bash), re-run
+  with a fresh log, and record it; a fresh run passed in 34 minutes
+  (wi-851 D-014).
 
 ## 8. Re-judge and consolidation recipes
 

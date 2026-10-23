@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-23a-leg15-coordinator.md](handoff-2026-10-23a-leg15-coordinator.md),
+  [handoff-2026-10-23b-leg16-coordinator.md](handoff-2026-10-23b-leg16-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -81,6 +81,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   is filed. The parent-first row has landed: a commit that leaves an
   approved row under an unapproved parent is refused at pre-commit and
   on each lane commit, and a standing case is an integrity finding.
+  The held-rung state row has landed: a lane's held approval claim lands
+  only as a CLARITY re-attestation bound to its judged text (a digest the
+  binding records at reservation, which the act turn also checks), loop
+  and coordinator lanes alike, and a marked commit outside a lane that
+  moves a held status is refused.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
   headless legs in its section 7. The owner directed (2026-10-18,
   coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
@@ -93,7 +98,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 155 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 157 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -438,6 +443,25 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   ruling its plan's R1 names (a reviewed baseline entry, or a
   decomposition); and the staged parent-first check reads MERGE_HEAD's
   first head only (no kit route makes an octopus merge);
+  from the held-rung state row's rounds and gate (wi-851 D-009, D-014):
+  the lane rule's exception reads any accepted CLARITY binding in the
+  tree whose digest equals the row's text, so a lane that reverts a held
+  row to text an older sitting bound, and takes the act by hand, lands
+  it (the slot's uncovered refusal still wants a lane-carried ruling;
+  bind the copy's digest beside the text's, or read only the lane's own
+  bindings); `merge_status_moves` and `pending_status_moves` have no
+  production caller beside `held_status`'s own parent intersection, and
+  `held_status.HELD_TIERS` is a hand copy of the snapshotted tiers pinned
+  by a test because an import would cycle (one table in a lower layer);
+  `kitlib.git.grep_files` repeats `kitlib.done_when._grep`'s search stage
+  with the opposite failure policy (one search stage);
+  `merge_approval_refusal` keeps a required `trunk` keyword no rule
+  reads, and `integrate`'s caller comment still says the act lands under
+  trunk's authority; SR-228's amended audit clause sits outside the
+  row's named change set and its first clause still reads as a verdict
+  requirement (wording, at its next amendment); TC-278's evidence still
+  cites held lane-rule tests that exercise LLR-246, not LLR-278
+  (traced-only, at its next touch);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on
