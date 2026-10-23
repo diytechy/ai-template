@@ -18,3 +18,10 @@ alternative = "Hold WI-850 for the owner's two calls as an open item: both follo
 reversal_cost = "Low: a queued row's spec before its claim; an overrule edits the Done-when line back."
 why_not_escalated = "Filing calls the coordinator records (SKILL section 5); the owner confirms or overrules."
 review = ""
+
+[decision.D-003]
+decided = "WI-850's confirming round (Codex Sol, medium, from the detached critique checkout at deaff29ec, its log spooled; verdict kept at review-tmp/2026-10-22d-leg14/crit850c/WI-850-scope-critique.md) checked D-002's adopted dispositions in convergence stance and read APPROVE findings=0, so the row is ready to claim under the next scoped unpause, its single plan first."
+alternative = "None: the skill's section 1 (advice binds before the claim)."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""

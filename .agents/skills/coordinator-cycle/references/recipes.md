@@ -953,6 +953,24 @@ lane commit being replayed.
   passing `--check --strict`) until plan item 14 retires the sidecar:
   brief it into Terra's checkpoint turn, or the first-approval sitting
   returns the derived SR for it (wi-957, wi-958, wi-960 sitting 005).
+- Draw the arms map before composing the sitting: a sub-agent given the
+  rows and told to change nothing maps each LLR arm and SR acceptance
+  clause to the TC clause and the test that verify it, and lists the gaps.
+  At a tip two counted rounds had approved it found 25: arms no test
+  exercised (a builder stage pins them with characterization tests, no
+  code change) and arms no citing TC stated (Terra's next turn). Resume
+  the same sub-agent to re-draw it after the fixes, and append the map to
+  the brief (wi-961 D-011 to D-013).
+- After a Terra turn rewrites TC rows, check each LLR's `test_refs`
+  against the TCs whose `verifies` cite it, and each clause it dropped
+  against the evidence that still tests it: an arms turn listed a TC in
+  an LLR's `test_refs` without the forward link, and dropped a clause
+  whose test stayed in the evidence (wi-961 D-012, D-013).
+- A sitting's suggested wording is a claim too: check a sentence it
+  proposes against every outcome the sentence covers before applying it.
+  Sitting 008 returned the universal sentence sitting 007's own
+  disposition suggested, which one listed outcome did not keep (wi-961
+  D-015).
 
 ## 6. Commits and hooks
 
