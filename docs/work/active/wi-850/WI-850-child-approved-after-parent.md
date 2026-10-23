@@ -41,7 +41,7 @@ readers name them). The carriers are `docs/requirements/stakeholder-needs.toml`
 `docs/test/test-cases.toml`, with their legacy forms (`.md` needs, `.csv`
 rows), which the same readers resolve. They are hand-edited files on disk, so
 the guard is owed under
-[PROCESS.md §3, "When a guard is owed"](../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
+[PROCESS.md §3, "When a guard is owed"](../../../../project-trajectory/PROCESS.md#3-traceability--anti-duplication).
 
 - **Producer:**
   - *Authoring:* rows are written `Drafted`, as file edits, by Terra's
@@ -182,7 +182,7 @@ the guard is owed under
     refuses a SKIP.
 
 - **The bound**
-  ([PROCESS.md §6, "Review threat model"](../../../project-trajectory/PROCESS.md#6-review-depth-triage-efficiency)):
+  ([PROCESS.md §6, "Review threat model"](../../../../project-trajectory/PROCESS.md#6-review-depth-triage-efficiency)):
   the promise reaches what supported workflows and the kit's own routes
   write into the four registries, a hand edit of an authored row included,
   since rows are authored by hand; hand-edited kit-written state (the
