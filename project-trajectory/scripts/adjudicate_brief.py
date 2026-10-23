@@ -101,7 +101,11 @@ Contract IF-115: `compose(root, row, verdict_path, prompt_templates)` returns
     can act on it, and what the caller owes in return is the fail-closed half: a
     row declaring a brief this cannot compose is HELD for a human, never
     dispatched as ordinary work, because a judge briefed as a builder ends its
-    session done like any other and the miss is silent.
+    session done like any other and the miss is silent. The amendment brief
+    states the identity of each row's approved text it shows, one
+    `JUDGED-TEXT: <row id> <digest>` line per row; `bind_pending` records
+    those lines in the binding (IF-287) and `record_outcome` keeps them when
+    it rewrites the outcome, so a held CLARITY act is bound to the text judged.
 """
 
 from __future__ import annotations
@@ -109,6 +113,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import acceptance_record
 import adjudicate_act
 import agent_brief
 import agent_common as ac
@@ -317,17 +322,42 @@ def requested_for(brief, prompt):
 
 def bind_pending(verdict_path, brief, prompt, exclusive=False):
     """Bind what this call was asked - its brief and requested kinds, outcome
-    `pending` - beside its verdict, through the one writer; the kinds, or ()
-    when a combined brief names none (no binding is then written). Both routes
-    call it before the call: the coordinator's entry point exclusively at
-    reservation, the loop at composition.
+    `pending`, and the identity of each row's approved text the prompt showed
+    (`requested_identities`) - beside its verdict, through the one writer; the
+    kinds, or () when a combined brief names none (no binding is then
+    written). A prompt that shows no amended text binds no identity. Both
+    routes call it before the call: the coordinator's entry point exclusively
+    at reservation, the loop at composition.
 
-    Implements: SR-232, LLR-310
+    Implements: SR-232, SR-178, LLR-310, LLR-359
     """
     kinds = requested_for(brief, prompt)
     if kinds:
-        ksitting.write_binding(verdict_path, brief, kinds, "pending", exclusive)
+        ksitting.write_binding(
+            verdict_path,
+            brief,
+            kinds,
+            "pending",
+            exclusive,
+            identities=requested_identities(prompt) or None,
+        )
     return kinds
+
+
+# The amendment brief's identity line, one per row it shows: the row and the
+# digest of its approved text (`acceptance_record.approved_text_digest`).
+JUDGED_TEXT = "JUDGED-TEXT"
+_JUDGED_TEXT_RE = re.compile(r"^{}: (\S+) (\S+)[ \t]*$".format(JUDGED_TEXT), re.M)
+
+
+def requested_identities(prompt):
+    """`{row id: digest}` the composed prompt's `JUDGED-TEXT:` lines state:
+    the ONE reader of the line, which the binding records. A combined prompt
+    carries them inside its amendment section; a prompt with none, {}.
+
+    Implements: SR-178, LLR-359
+    """
+    return dict(_JUDGED_TEXT_RE.findall(prompt or ""))
 
 
 def bound_kinds(verdict_path, brief):
@@ -351,9 +381,10 @@ def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
     route can skip it). A failed call is recorded failed without its verdict
     being read. The loop's completion consumes this same decision, so a
     failed call keeps its obligation (WI-841 rounds 11-15). `kinds` None reads
-    back the request bound beside the verdict (`bound_kinds`, round 17).
+    back the request bound beside the verdict (`bound_kinds`, round 17). The
+    rewrite carries the identity cell bound at reservation through unchanged.
 
-    Implements: SR-232, LLR-310
+    Implements: SR-232, SR-178, LLR-310, LLR-359
     """
     kinds = bound_kinds(verdict_path, brief) if kinds is None else kinds
     if call_ok:
@@ -361,7 +392,12 @@ def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
     else:
         why = "the call failed (a non-zero exit, a timeout or a reported error)"
     outcome = "failed" if why else "accepted"
-    ksitting.write_binding(verdict_path, brief, kinds, outcome)
+    # The rewrite keeps the identities bound at reservation: dropping them
+    # would leave every held CLARITY act bound to no text.
+    identities, _none = ksitting.read_identities(
+        _read(ksitting.requested_path(verdict_path))
+    )
+    ksitting.write_binding(verdict_path, brief, kinds, outcome, identities=identities)
     binding = ksitting.requested_path(verdict_path)
     ac.commit_telemetry(root, session, "verdict " + outcome, [binding])
     return outcome, why
@@ -693,7 +729,12 @@ def amendment_values(root, row):
     all of them. `{baseline}` names, for each registry shown, the commit that
     last wrote ITS copy.
 
-    Implements: SR-146, LLR-167
+    `{identity}` states one `JUDGED-TEXT: <row id> <digest>` line per row the
+    brief shows, the digest of that row's approved text as the brief's own
+    reader loads it (`acceptance_record.approved_text_digest`), so the binding
+    records the text this sitting judged.
+
+    Implements: SR-146, SR-178, LLR-167, LLR-359
     """
     import trace as tr
 
@@ -716,8 +757,8 @@ def amendment_values(root, row):
         )
     reg = tr.load_registries(root / "docs")
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
-    lines, tiers = _amended_rows(model, scope)
-    more, more_tiers = _unchained_amended_rows(root, scope)
+    lines, tiers, chained = _amended_rows(model, scope)
+    more, more_tiers, unchained = _unchained_amended_rows(root, scope)
     lines, tiers = lines + more, tiers | more_tiers
     if not lines:
         # One refusal for every way the SCOPED population empties, naming the
@@ -740,17 +781,35 @@ def amendment_values(root, row):
         "rows": "\n".join(lines),
         "aftermath": _aftermath(root, tiers),
         "questions": questions,
+        "identity": _identity(root, chained, unchained),
     }, None
 
 
 def _amended_rows(model, scope):
-    """`(lines, tiers)`: the approved-cell before/after of each drifted row IN
-    `scope`, and the spine tiers those rows sit in.
+    """`(lines, tiers, shown)`: the approved-cell before/after of each drifted
+    row IN `scope`, the spine tiers those rows sit in, and the `(tier, row id)`
+    each block shows.
 
     ONE BLOCK PER ROW, naming every chain it hangs under. The model groups by
     owning SR, so a row with two parents sits in two entries with the same
     cells; rendered per entry, a one-row scope showed its row twice and the
     verdict's `rows=N` could not be counted against the brief."""
+    chains, cells_of = _scoped_chain_rows(model, scope)
+    lines = []
+    for (kind, rid), sids in chains.items():
+        lines.append("- {} {} (chain of {})".format(kind, rid, ", ".join(sids)))
+        for name, before, after in cells_of[(kind, rid)]:
+            lines.append("  - {}".format(name))
+            lines.append("    - before: {}".format(before or "(empty)"))
+            lines.append("    - after: {}".format(after or "(empty)"))
+    return lines, {kind for kind, _rid in chains}, list(chains)
+
+
+def _scoped_chain_rows(model, scope):
+    """`(chains, cells_of)`: each drifted row IN `scope` with approved cells
+    to show, keyed `(tier, row id)`, mapped to the SR chains it hangs under
+    and to those approved cells. Split out of `_amended_rows` so the selection
+    and the rendering each stay under the complexity bar."""
     chains, cells_of = {}, {}
     for entry in model:
         for chain_row in entry["rows"]:
@@ -761,14 +820,7 @@ def _amended_rows(model, scope):
             key = (chain_row["kind"], chain_row["id"])
             chains.setdefault(key, []).append(entry["id"])
             cells_of[key] = cells
-    lines = []
-    for (kind, rid), sids in chains.items():
-        lines.append("- {} {} (chain of {})".format(kind, rid, ", ".join(sids)))
-        for name, before, after in cells_of[(kind, rid)]:
-            lines.append("  - {}".format(name))
-            lines.append("    - before: {}".format(before or "(empty)"))
-            lines.append("    - after: {}".format(after or "(empty)"))
-    return lines, {kind for kind, _rid in chains}
+    return chains, cells_of
 
 
 # The amended tiers the requirement-chain model does not hold (OI-100 gap 1,
@@ -784,25 +836,55 @@ _UNCHAINED_TIERS = (
 
 
 def _unchained_amended_rows(root, scope):
-    """`(lines, tiers)` for the drifted need, assumption and surrogate rows IN
-    `scope`, each rendered like `_amended_rows`' blocks — the approved cells'
-    before/after against the recorded copy (`baseline_snapshot.tier_owing`).
+    """`(lines, tiers, shown)` for the drifted need, assumption and surrogate
+    rows IN `scope`, each rendered like `_amended_rows`' blocks — the approved
+    cells' before/after against the recorded copy
+    (`baseline_snapshot.tier_owing`) — and `shown`, each such row's
+    `(row id, registry, id column, live row)`.
 
     Implements: SR-146, LLR-167"""
     snapshot = baseline_snapshot.load_all(root)
-    lines, shown = [], set()
+    lines, shown, rows = [], set(), []
     for kind, rel, id_col in _UNCHAINED_TIERS:
         owing = baseline_snapshot.tier_owing(root, [(rel, id_col)], snapshot)
-        for rid, why, cells, _row in owing:
+        for rid, why, cells, row in owing:
             if rid not in scope or why != "DRIFTED":
                 continue
             shown.add(kind)
+            rows.append((rid, rel, id_col, row))
             lines.append("- {} {}".format(kind, rid))
             for name, before, after in cells:
                 lines.append("  - {}".format(name))
                 lines.append("    - before: {}".format(before or "(empty)"))
                 lines.append("    - after: {}".format(after or "(empty)"))
-    return lines, shown
+    return lines, shown, rows
+
+
+def _identity(root, chained, unchained):
+    """`{identity}`: one `JUDGED-TEXT: <row id> <digest>` line per row the
+    brief shows, the requirement-chain rows (`(tier, row id)`, read from the
+    live registry the chain model reads) and the unchained ones (already
+    loaded by `tier_owing`), each digest that row's approved text
+    (`acceptance_record.approved_text_digest`).
+
+    Implements: SR-178, LLR-359"""
+    rows, loaded = list(unchained), {}
+    for kind, rid in chained:
+        rel, id_col = _REGISTRY_OF[kind], kind + "-ID"
+        if rel not in loaded:
+            loaded[rel] = {
+                r.get(id_col): r
+                for r in spine_carrier.load(
+                    Path(root) / rel, id_col, keep_examples=False
+                )
+            }
+        rows.append((rid, rel, id_col, loaded[rel][rid]))
+    return "\n".join(
+        "{}: {} {}".format(
+            JUDGED_TEXT, rid, acceptance_record.approved_text_digest(rel, col, row)
+        )
+        for rid, rel, col, row in rows
+    )
 
 
 def _amendment_baseline(root, tiers):
@@ -932,7 +1014,9 @@ _HELD_AFTERMATH = (
 _HELD_ARMS = {
     "reattest": "is re-attested by the later act turn as a judgement act, "
     "naming this verdict; the act ledger records the verdict and the owner's "
-    "surface lists the act for audit",
+    "surface lists the act for audit. The verdict is bound to the text shown "
+    "here (its JUDGED-TEXT identities), so an edit to that text after this "
+    "verdict refuses the act",
     "recommend": "stops at your verdict and the signature is the owner's — "
     "recommend it to the owner and do not re-anchor it",
 }

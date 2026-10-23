@@ -645,29 +645,15 @@ def test_a_marked_loop_writer_commit_after_a_reclaim_reopens_the_window(
     assert _judged(root) is None
 
 
-def _held_frame(root):
-    _write(root, POLICY, _dial("DevStg-Boundary"))
-    _write(root, FRAME, _rows("boundary", B_01="Drafted"))
-
-
-def test_a_lane_never_marked_stays_a_persons_and_the_held_status_rung_judges_a_reclaimed_lane_whole(
-    tmp_path, monkeypatch
-):
+def test_a_lane_never_marked_stays_a_persons(tmp_path, monkeypatch):
+    # The trailer rung's window only: a held rung reads no window, and a
+    # re-claimed lane's held approvals are the lane rule's
+    # (tests/test_held_status_git.py).
     root = _lane(tmp_path / "person", monkeypatch, loop=False)
     _reclaim(root)
     _work(root, "an attended commit")
     assert _judged(root) is None
     assert integ._loop_window(root, "wi-401") == (None, None)
-    assert integ._held_status_refusal(root, "wi-401") is None
-
-    root = _lane(tmp_path / "held", monkeypatch, trunk=_held_frame)
-    _reclaim(root)
-    _write(root, FRAME, _rows("boundary", B_01="Approved"))
-    _commit(root, "an attended commit moving a held status")
-    assert _judged(root) is None
-    refusal = integ._held_status_refusal(root, "wi-401")
-    for word in ("external", "B-01", "DevStg-Boundary"):
-        assert refusal and word in refusal, (word, refusal)
 
 
 def test_a_reclaim_written_literally_by_wi_917s_recipe_is_read_as_a_composed_one(
@@ -756,15 +742,6 @@ def test_an_unreadable_claim_log_is_refused_by_the_trailer_rung_naming_the_read(
     assert _rev(root, "HEAD") == head  # nothing merged
 
 
-def test_an_unreadable_claim_log_is_refused_by_the_held_status_rung(
-    tmp_path, monkeypatch
-):
-    root = _claim_only_lane(tmp_path, monkeypatch)
-    _claim_read_answers(monkeypatch, (128, "fatal: bad object"))
-    refusal = integ._held_status_refusal(root, "wi-401")
-    assert refusal and "--grep" in refusal and "nothing was merged" in refusal
-
-
 @pytest.mark.parametrize(
     "out",
     [
@@ -780,9 +757,8 @@ def test_an_unparseable_claim_record_is_unreadable_never_unclaimed(
     _claim_read_answers(monkeypatch, (0, out))
     claimed, why = ac.loop_claimed(root, "wi-401", _rev(root, "HEAD"))
     assert claimed is None and "unparseable" in why
-    for rung in (integ._loop_trailer_refusal, integ._held_status_refusal):
-        refusal = rung(root, "wi-401")
-        assert refusal and "unparseable" in refusal and "nothing was merged" in refusal
+    refusal = integ._loop_trailer_refusal(root, "wi-401")
+    assert refusal and "unparseable" in refusal and "nothing was merged" in refusal
 
 
 def _claim_history(tmp_path, messages):

@@ -416,9 +416,18 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # reads a lane; integrate imports no session_service, directly or through
     # its imports, so no cycle or layer edge grew. Reason in the WI-960 plan
     # (P3, decision 3).
-    assert 14 <= deferred <= 39, (
+    # RE-STAMPED 39 -> 40 (2026-10-23, the held-status move): check ->
+    # held_status joins deferred. The held-status readers moved out of
+    # acceptance_record whole into their own module, and check.py's
+    # held-status step now imports that module where it imported
+    # acceptance_record, deferred for the same kitlib-only floor; check ->
+    # acceptance_record stays deferred for its other steps. integrate,
+    # agent_policy and check_trajectory import the new module at module level,
+    # so they add no deferred edge. held_status imports acceptance_record one
+    # way, so no cycle grew. Reason in docs/decisions/wi-851.toml (D-002).
+    assert 14 <= deferred <= 40, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..39 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..40 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

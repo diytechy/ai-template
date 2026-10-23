@@ -376,6 +376,25 @@ def test_the_act_command_refuses_each_trust_input_before_launch(
     assert _snapshot_of(lane) == before
 
 
+def test_the_act_turn_refuses_before_launch_when_held_text_moved(
+    tmp_path, launched, capsys
+):
+    # A held CLARITY verdict bound to SR-001's text at the sitting; the text
+    # is edited after it, so the act it would take re-attests text nobody
+    # judged. The entry point refuses before launching an adjudicator.
+    primary, lane = _lane(tmp_path, dial="DevStg-Release")
+    taa._amend(lane)
+    taa._bound_verdict(lane, {"SR-001": taa._sr_digest(lane)})
+    taa._replace(lane, taa.SRS, "add two integers.", "add two integers exactly.")
+    _commit(lane, "edit SR-001 after its verdict")
+    before = _snapshot_of(lane)
+    assert _act(launched, lane) == 2
+    out = capsys.readouterr().out
+    assert "act: refused:" in out and "SR-001" in out, out
+    assert launched["prompts"] == []
+    assert _snapshot_of(lane) == before
+
+
 # --- the act turn -----------------------------------------------------------
 
 

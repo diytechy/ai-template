@@ -32,6 +32,11 @@ a path the tree does not list from one it lists but cannot read (`git_show`,
 raising `UnreadableBlob` for the second, and for a path that is not UTF-8,
 which it cannot hand back to git). Neither decides what that MEANS: the ruling
 sync and the overrule sync in `acceptance_record` refuse an unreadable blob.
+
+ONE CLAIMED-BRANCH READER. `claimed_work_branch` answers whether the checkout
+is a claimed lane. It moved here from `check.py` so every caller that must
+tell a lane from the trunk shares one reader; as with `git_out`, None is
+"no claim found", and each caller declares what that means for it.
 """
 
 import subprocess
@@ -39,10 +44,12 @@ from pathlib import Path
 
 __all__ = [
     "UnreadableBlob",
+    "claimed_work_branch",
     "git_bytes",
     "git_out",
     "git_paths",
     "git_show",
+    "grep_files",
     "squash_commits",
 ]
 
@@ -138,6 +145,32 @@ def _shown(path):
     return path.encode("utf-8", "surrogateescape").decode("utf-8", "backslashreplace")
 
 
+def grep_files(root, rev, needle, path):
+    """The paths under `path` in the tree `rev` (None: the index) whose text
+    holds the fixed string `needle`, read NUL-delimited like `git_paths`; []
+    when none does, and None when git cannot answer. `git grep` exits 1 for
+    "no match" and higher for a failure, so the two are told apart here: a
+    search that could not run is never read as "nothing found".
+
+    Implements: SR-208, LLR-246
+    """
+    args = ["grep", "-l", "-z", "-F", "-e", needle]
+    args += ["--cached"] if rev is None else [rev]
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args, "--", path], capture_output=True
+        )
+    except (OSError, ValueError):
+        return None
+    if proc.returncode == 1 and not proc.stdout and not proc.stderr.strip():
+        return []
+    if proc.returncode != 0:
+        return None
+    prefix = "" if rev is None else rev + ":"
+    found = proc.stdout.decode("utf-8", "surrogateescape").split("\0")
+    return [p[len(prefix) :] if p.startswith(prefix) else p for p in found if p]
+
+
 def git_show(root, prefix, path):
     """The text of `prefix + path` (`prefix` a `git show` prefix: `"<rev>:"` or
     `":"` for the index), None when the tree does not list the path; raises
@@ -185,3 +218,59 @@ def squash_commits(root):
         for ln in text.splitlines()
         if ln.startswith("commit ") and len(ln) >= 47 and set(ln[7:]) <= _HEX
     ]
+
+
+def claimed_work_branch(root, notice=None):
+    """The checkout's branch name IF it is a CLAIMED work branch, else None.
+
+    A claimed branch's work-item specs live in `docs/work/active/<branch>/`,
+    moved there by the serial trunk commit that cut the branch, so the branch
+    itself carries the evidence: in its working tree, or, once the close moves
+    the specs to their terminal directory, in its own history. Off git, on a
+    detached HEAD, with an implausible branch name, or with neither a matching
+    `active/` directory nor a claim in history, the answer is None; what None
+    MEANS (the strict bar, a judged commit) is each caller's to declare.
+
+    `notice`, when given, is called with an implausible branch name before the
+    reader answers None for it, so a caller can say out loud that something fed
+    it a fake ref; the reader itself prints nothing.
+
+    Implements: SR-006, SR-170, LLR-141
+    """
+    branch = (git_out(root, ["symbolic-ref", "--short", "HEAD"]) or "").strip()
+    if not branch:
+        return None  # no git, not a repo, or a detached HEAD
+    # A branch name is used here as a relative PATH. git's own ref rules already
+    # forbid `..` and `\`, but the answer decides whether a gate runs, so it
+    # refuses rather than trusts.
+    if ".." in branch or "\\" in branch or branch.startswith("/"):
+        if notice is not None:
+            notice(branch)
+        return None
+    active = Path(root) / "docs" / "work" / "active"
+    spec_dir = active / branch
+    try:
+        # Belt-and-braces containment: whatever the name, the claim directory
+        # must sit UNDER docs/work/active/ for this to be a claimed branch.
+        spec_dir.resolve().relative_to(active.resolve())
+    except (OSError, ValueError):
+        return None
+    if spec_dir.is_dir():
+        return branch
+    # The working tree alone cannot answer this: the close MOVES the claim out
+    # of active/, so from the close commit on the tree holds no claim. History
+    # outlives the move: the commit that cut the branch added the directory, and
+    # that add stays reachable. One path-limited git call, stopped at the first
+    # hit. FAIL-DIRECTION: no git, a failing git or an empty answer all read as
+    # unclaimed, because a false positive would relax the trunk's own bar.
+    # Residual (review-confirmed breadth): ANY branch whose name ever appeared
+    # under docs/work/active/ in reachable history reads as claimed forever (a
+    # retired WI branch re-cut, or a throwaway reusing its name); bounding the
+    # walk would need a configured trunk name this rule deliberately has not.
+    # Cost note: on the trunk the pathspec never matches, so the -1 walk pays
+    # full history, measured ~0.05 ms/commit (61 ms at 1.2k commits); a caller
+    # that asks often memoizes the answer.
+    log = git_out(
+        root, ["log", "-1", "--format=%H", "--", "docs/work/active/" + branch]
+    )
+    return branch if (log or "").strip() else None

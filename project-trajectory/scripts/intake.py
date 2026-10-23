@@ -787,7 +787,7 @@ def _amendment_context(records):
         "Outcomes (§A5.2): re-attest the rows ruled CLARITY (and, where the",
         "dial releases the rung, the MEANING rows you would bless) by naming",
         "them in the act's `--reattests`; on a HUMAN-HELD tier a CLARITY row",
-        "is re-attested naming its `--verdict` and a MEANING row is",
+        "is re-attested, bound to the text the verdict judged, and a MEANING row is",
         "recommended to the owner (ruled decision 2 as OI-100 amends it). Or",
         "draft the real scope-change / re-scope / cancellation rows in a",
         "`## Dispositions` section of THIS spec — intake mints them at this",
@@ -2989,10 +2989,11 @@ def adjudication_action(human_held, verdict=""):
         CLARITY verdict approves no new text; it records that the owner's
         existing signature still describes the row. So the independent
         session re-attests the row as a judgement act, naming its verdict in
-        the act (`intake.py snapshot --reattests <ROW-ID> --verdict <file>`):
-        the act ledger records it, the owner's surface lists it for audit, and
-        the merge slot refuses a held-rung re-attestation the named verdict
-        does not rule CLARITY (`acceptance_record.held_reattest_refusal`).
+        the act for audit (`intake.py snapshot --reattests <ROW-ID> --verdict
+        <file>`): the act ledger records it and the owner's surface lists it.
+        The merge slot's lane rule (`held_status`) admits the act only when an
+        accepted verdict rules the row CLARITY and its binding records the
+        row's approved text as it stands at the act.
       * **human-held tier otherwise -> `recommend`**: a MEANING verdict, or a
         first draft (no verdict), is the owner's to sign. The session prepares
         the brief and stops; it never approves a first draft on a held rung.
@@ -3502,9 +3503,10 @@ def _cmd_snapshot(args):
     (`baseline_snapshot.parse_approves`, `parse_reattests`). Traced-cell
     refreshes (the common case) still need no flag at all. `--verdict <path>`
     names the verdict file that ruled the re-attested rows, and the act ledger
-    records it: on a held rung a session re-attests only a row its verdict
-    rules CLARITY, and the merge slot refuses the act otherwise
-    (`acceptance_record.held_reattest_refusal`; OI-100, WI-791).
+    records it for audit; it stays optional and no rule requires it. On a held
+    rung a session re-attests only a row an accepted verdict rules CLARITY,
+    bound to the row's text, and the merge slot's lane rule (`held_status`)
+    refuses the act otherwise.
 
     IT COPIES OFF-SPINE APPROVAL CELLS AND DOES NOT MOVE THEM, which is the
     distinction OI-30 D3 makes and the reason this path needs no

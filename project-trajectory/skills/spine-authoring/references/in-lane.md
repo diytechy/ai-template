@@ -59,7 +59,9 @@ Use the same authoring and closure checks, then split approval authority:
   approval stays with the owner through the approval brief.
 - **Judge held amendments for CLARITY or MEANING.** CLARITY means the obligation
   is unchanged. Only an independent sitting that rules the amendment CLARITY
-  in its verdict may re-attest it; name that file in the act's `--verdict`.
+  may re-attest it, and that verdict, bound to the text it was shown, is what
+  permits the act: edit the row after the sitting and the act is refused, so
+  re-sit it. Naming the verdict in the act's `--verdict` is for audit.
   A MEANING change awaits the owner. Leave existing statuses unchanged.
 - **Released children wait for their held parent.** They may be judged in the
   same sitting, but approved only after the parent is approved for its current

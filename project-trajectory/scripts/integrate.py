@@ -192,7 +192,6 @@ import plan_gate
 import score_reviews
 import spec_move
 import text_then_act
-from kitlib import authority as _kitauthority
 from kitlib import commit_hooks as _kitcommit_hooks
 from kitlib import config as _kitconfig
 from kitlib import decisions as kdecisions
@@ -1254,15 +1253,16 @@ def _loop_window(root, branch):
     """`(window, refusal)`: whose lane `branch` is, read off its commits.
 
     `window` is None for a PERSON's lane - claimed without the trailer, and no
-    commit in its range made by one of the loop's own writers - which neither
-    slot rung judges. Otherwise it is the `(sha, message, parents, tree)`
+    commit in its range made by one of the loop's own writers - which the
+    trailer rung does not judge. Otherwise it is the `(sha, message, parents, tree)`
     records, oldest first, the trailer rung judges
     (`provenance.loop_lane_window`): those inside the open window, which opens
     at the loop's claim or a marked loop-writer commit and closes at the
     attended coordinator's re-claim (D-017), an empty unmarked commit checked
     against its parent's tree. `--boundary` lists the range's outside parents
     too, so a re-claim whose parent is on trunk is checked the same way. The
-    held-status rung judges any loop lane WHOLE. A range git cannot read is a
+    held rung reads no window: every lane commit, whoever made it, is judged
+    by the lane rule riding the lane-commit walk. A range git cannot read is a
     refusal: unread commits are not a person's. So is a claim git cannot read
     (`agent_common.loop_claimed`, the one claim reader): an unread claim is
     not a person's lane either."""
@@ -1301,49 +1301,6 @@ def _loop_window(root, branch):
         )
     window = _kitprovenance.loop_lane_window(commits, claimed, branch, boundary)
     return window, None
-
-
-def _held_status_refusal(root, branch):
-    """THE HELD STATUS AT THE SLOT (SR-208): a refusal string, or None.
-
-    Where the dial holds a registry's rung for a human, a LOOP lane may not
-    land a change to that registry's status cells - a changed cell, or a row
-    added or removed with one. The loop's own writers refuse the same change
-    before they commit, but an AI session commits for itself, and neither its
-    commits nor a `--no-verify` or plumbing commit pass through that code or a
-    hook; so the slot judges the lane's WHOLE range, after the approval-act
-    rung, and a refused change never lands on trunk.
-
-    Armed for every loop lane (`_loop_window`: its claim, or any commit one of
-    the loop's own writers made in it, carries the trailer) whoever runs the
-    slot, and over the whole range with no migration window: a change a person
-    made before the loop took the lane over lands through the loop's merge all
-    the same. A re-claimed lane is judged whole too: the attended
-    coordinator's re-claim (D-017) closes the trailer rung's window only,
-    until WI-851 replaces this rung's loop-lane reading with a rule that
-    judges every lane alike. A person's own lane is not governed. The dial
-    is the one COMMITTED on trunk (`kitlib.authority.dial_at`), never the
-    lane's own tree, which could have released itself, and never the trunk
-    checkout's working file.
-
-    Implements: SR-208, LLR-246
-    """
-    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
-
-    window, refusal = _loop_window(root, branch)
-    if refusal or window is None:
-        return refusal
-    head = _head(root)
-    code, base = ac.git(root, "merge-base", head, branch)
-    if code != 0 or not base.strip():
-        # Fail closed: an unread delta is not an empty one.
-        return "cannot read the merge base of trunk {} and {}, so the status cells its range moves are unknowable; nothing was merged:\n{}".format(
-            head[:10], branch, ac._failure_tail(base)
-        )
-    moves = acceptance_record.staged_status_moves(root, base.strip(), branch)
-    dial = _kitauthority.dial_at(root, head)
-    refusal = acceptance_record.held_status_refusal(dial, moves)
-    return "{} - {}; nothing was merged".format(branch, refusal) if refusal else None
 
 
 def _ruling_sync_refusal(root, branch):
@@ -1389,7 +1346,8 @@ def _text_then_act_refusal(root, branch):
     held on every commit it carries. Every lane, whoever runs the slot.
 
     The same walk carries every rider of `text_then_act.LANE_COMMIT_RIDERS`,
-    the adoption record's rule (WI-969) among them. Each rider's lines carry
+    the adoption record's rule (WI-969) and the held-rung lane rule
+    (`held_status.commit_held_approval_lines`, SR-208) among them. Each rider's lines carry
     its own remedy: `TEXT_THEN_ACT_REMEDY` is composed onto text then act's
     lines only (`_with_text_then_act_remedy`), and the record rule's lines
     already name theirs.
@@ -3363,7 +3321,6 @@ def _merge_refusal(root, branch, wi_ids):
         return outcomes, refusal
     refusal = (
         _approval_act_refusal(root, branch)  # owner ruling 6, 2026-10-07
-        or _held_status_refusal(root, branch)  # SR-208
         or _loop_trailer_refusal(root, branch)  # SR-209
         or _ruling_sync_refusal(root, branch)  # the ruling sync (WI-790)
         or _text_then_act_refusal(root, branch)  # text before act (WI-806)

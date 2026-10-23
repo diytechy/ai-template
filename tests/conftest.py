@@ -439,6 +439,8 @@ SLOW_MODULES = frozenset(
         "test_usage_ingest_git",  # a tmp git repo and lane per case, git spawned per read and record commit; its in-process pin is test_usage_ingest
         # WI-850: the parent-first commit judgement on real repositories.
         "test_parent_first_git",  # a tmp git repo per case driven through check.py and the merge slot; its in-process pin is test_parent_first
+        # The held-rung state rule on real repositories.
+        "test_held_status_git",  # a tmp git repo and claimed lane per case driven through the merge slot, check.py and the loop writers; its in-process pin is test_held_status
     }
 )
 

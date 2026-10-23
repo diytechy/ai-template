@@ -1,0 +1,4 @@
+brief = combined
+kinds = amendment;first-approval
+outcome = accepted
+rows = LLR-246=sha256:ad28e36ec824d9b4;LLR-249=sha256:c5fc43d5d1501651;LLR-278=sha256:48bf1b49e369c85a;SR-208=sha256:757ff0c3f098cbb9;SR-228=sha256:f1c045f139fb7dde;TC-241=sha256:79dac0aa7275bb8a;TC-243=sha256:3c4b77cb6c472162;TC-278=sha256:f0bf13cb8e0f8cdb

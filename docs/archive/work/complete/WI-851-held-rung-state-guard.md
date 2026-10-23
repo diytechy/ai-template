@@ -3,13 +3,22 @@ id = "WI-851"
 title = "Held-rung spine rows are protected by state: the registry, the snapshot and the dial"
 workstream = "process"
 sr_refs = ["SR-208", "SR-178"]
-specref = "docs/plans/2026-10-07-wi841-retro/PROPOSAL.md"
+specref = ""
 needs = ["WI-892", "WI-849"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+Landed by headless leg 16 of loop session `20261021T045653Z-213020`, squashed from lane `wi-851`.
+
+- **The lane rule.** A new `held_status` module (the held-status section moved out of `acceptance_record` whole, IF-196 with it) holds the held-rung rule: on every lane commit, judged against each parent, a held approval claim (a live flip into approval, or a snapshot copy that enters, moves or retires an approving row) on any of the eight snapshotted registries is refused naming the row, its rung and the dial, unless it is a CLARITY re-attestation whose live Status is unchanged and approving on both sides, whose live row equals its copy, and whose accepted amendment verdict's binding records the row's approved-text digest. A Drafted sibling a whole-registry copy carries, a demotion, a below-approval move, a traced-only copy move and a released rung are not judged. It rides `text_then_act`'s shared lane-commit walk as the fourth rider and the `held-status` hook step's squash landing; loop and coordinator lanes are judged alike, and an unmarked plain trunk commit is not judged.
+- **The row-text identity.** `acceptance_record.approved_text_digest` (beside IF-129's cell classes); the amendment brief states one judged-text identity line per row; the binding records them at reservation and keeps them through the outcome (`kitlib.sitting`, IF-287); the act turn refuses, before launch, a held CLARITY re-attestation whose committed text no longer matches (IF-296, runtime flow 6).
+- **Retired and narrowed.** The act-ledger CLARITY arm (`held_reattest_refusal`) and the merge slot's loop-lane `held-status` rung retire into the lane rule; the marker arm narrows to a commit made under the loop marker outside a claimed lane (the claimed-branch reader moved into `kitlib.git`), across all eight registries, at pre-commit and at each loop writer. `intake.py snapshot --verdict` stays optional and recorded.
+- **Rows and text.** SR-208, SR-228, LLR-246, LLR-249, LLR-278, TC-241 and TC-278 amended (sittings 003 and 004, act seq 156), LLR-359 and TC-398 approved (act seq 157); the spine-authoring, PROCESS.md and coordinator-cycle text follow; a RESYNC entry names the retired arms, the narrowed arm, that unmarked trunk approvals are untouched, and that a held CLARITY verdict sat before the upgrade is re-sat.
 
 ## Context
 

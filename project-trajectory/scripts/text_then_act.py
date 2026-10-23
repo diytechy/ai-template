@@ -36,6 +36,7 @@ try:
         _spine_rows_at,
         commit_parent_first_lines,
     )
+    from held_status import commit_held_approval_lines
     from kitlib import git as _kitgit
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
@@ -51,6 +52,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         _spine_rows_at,
         commit_parent_first_lines,
     )
+    from held_status import commit_held_approval_lines
     from kitlib import git as _kitgit
 
 # The kit's one `git, or None` read, and a tier's carriers, as the acceptance
@@ -174,15 +176,17 @@ def commit_text_then_act_lines(root, rev):
 
 # The per-commit rules that ride the lane-commit walk, each `rule(root, rev) ->
 # lines` judging one commit against its own parents. Text then act is the
-# first rider; the adoption record's rule (WI-969) the second and the
-# parent-first rule (`acceptance_record.commit_parent_first_lines`) the third,
-# each carrying its own remedy. The merge slot walks every rider; each hook
-# step's squash path walks only its own rule, and the parent-first step has
-# none: a squash's staged tree is judged like any other.
+# first rider; the adoption record's rule (WI-969) the second, the
+# parent-first rule (`acceptance_record.commit_parent_first_lines`) the third
+# and the held-rung lane rule (`held_status.commit_held_approval_lines`) the
+# fourth, each carrying its own remedy. The merge slot walks every rider; each
+# hook step's squash path walks only its own rule (`squash_walk`), and the
+# parent-first step has none: a squash's staged tree is judged like any other.
 LANE_COMMIT_RIDERS = (
     commit_text_then_act_lines,
     adoption_record.commit_adoption_record_lines,
     commit_parent_first_lines,
+    commit_held_approval_lines,
 )
 
 
@@ -203,26 +207,37 @@ def lane_commit_walk(root, commits, riders=LANE_COMMIT_RIDERS):
     )
 
 
-def _squash_lines(root, head, tip):
-    """The lines of every commit `head..tip` when the index IS the squash of
-    `tip` for everything this rule reads, else None: `tip` contains `head` (the
-    lane was rebased onto trunk, as acts serialize) and the index's
-    approval-act registries and record are byte-equal to the tip's own. So a
-    squash combining two judged cells into a third, and a `SQUASH_MSG` left
-    behind by an abandoned squash, exempt nothing unless the staged spine and
-    record are a judged commit's. Only this rule's own rider walks here, so a
-    line never carries another rule's refusal under this rule's remedy.
+def squash_walk(root, head, tip, paths, riders):
+    """The lines `riders` report for every commit `head..tip` when the index
+    IS the squash of `tip` for every one of `paths`, else None: `tip` contains
+    `head` (the lane was rebased onto trunk, as acts serialize) and the index
+    holds each of `paths` byte-equal to the tip's own. So a squash combining
+    two judged cells into a third, and a `SQUASH_MSG` left behind by an
+    abandoned squash, exempt nothing unless the staged paths a rule reads are
+    a judged commit's. Each hook step passes its own paths and its own rider
+    alone, so a line never carries another rule's refusal under its remedy.
 
-    Implements: SR-140, LLR-302
+    Implements: SR-140, SR-208, LLR-302, LLR-246
     """
-    paths = [c for rel, col in APPROVAL_ACT_CSVS for c in _tier_carriers(rel, col)]
-    staged = ["diff", "--cached", "--name-only", tip, "--", SNAPSHOT_DIR, *paths]
+    staged = ["diff", "--cached", "--name-only", tip, "--", *paths]
     commits = _git(root, ["rev-list", "--reverse", head + ".." + tip])
     within = _git(root, ["merge-base", "--is-ancestor", head, tip]) == ""
     if not within or _git(root, staged) != "" or commits is None:
         return None
-    walk = lane_commit_walk(root, commits.split(), (commit_text_then_act_lines,))
+    walk = lane_commit_walk(root, commits.split(), riders)
     return [ln for _rev, lines in walk for ln in lines]
+
+
+def _squash_lines(root, head, tip):
+    """Text then act's squash: `squash_walk` over the approval-act registries
+    and the record, with this rule's own rider.
+
+    Implements: SR-140, LLR-302
+    """
+    paths = [c for rel, col in APPROVAL_ACT_CSVS for c in _tier_carriers(rel, col)]
+    return squash_walk(
+        root, head, tip, [SNAPSHOT_DIR, *paths], (commit_text_then_act_lines,)
+    )
 
 
 def staged_text_then_act_lines(root, squashed=()):

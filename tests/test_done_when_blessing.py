@@ -19,6 +19,7 @@ shape every hold point reads.
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 from conftest import (
@@ -393,6 +394,7 @@ def _fake_spine_assemblers(monkeypatch):
             "rows": "- LLR LLR-1 drifted",
             "aftermath": "A",
             "questions": "Q",
+            "identity": "JUDGED-TEXT: LLR-1 sha256:0123456789abcdef",
         }, None
 
     def first(_root, row):
@@ -1263,8 +1265,17 @@ def test_a_failed_call_is_recorded_failed_without_reading_its_verdict(
     def never(*_a, **_k):
         raise AssertionError("a failed call's verdict was read")
 
+    real_read = ab._read
+
+    def binding_only(path):
+        # The rewrite reads the binding back for its identity cell; the
+        # verdict itself is never read.
+        if Path(path) == lane / _VERDICT_REL:
+            never()
+        return real_read(path)
+
     monkeypatch.setattr(ab, "verdict_refusal", never)
-    monkeypatch.setattr(ab, "_read", never)
+    monkeypatch.setattr(ab, "_read", binding_only)
     outcome, why = ab.record_outcome(
         lane, lane / _VERDICT_REL, "done-when", ("done-when",), False, "s"
     )

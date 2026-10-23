@@ -71,6 +71,12 @@ def _base(tmp_path):
     """SR-001 approved and recorded; SR-002 drafted and recorded."""
     root = _repo(tmp_path / "repo")
     (root / "README.md").write_text("r\n", encoding="utf-8")
+    # Every rung released: a held rung's approval is the lane rule's
+    # (tests/test_held_status_git.py), which an absent dial would arm.
+    (root / "docs").mkdir()
+    (root / "docs" / "process.toml").write_text(
+        '[attestation]\nhuman_approval_through = "DevStg-Below"\n', encoding="utf-8"
+    )
     _commit(root, "first")
     _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two", "Drafted"))
     _act(root)
@@ -196,7 +202,6 @@ def test_the_merge_ladder_consults_the_text_then_act_rung(tmp_path, monkeypatch)
         "_close_record_refusal",
         "_minted_id_refusal",
         "_approval_act_refusal",
-        "_held_status_refusal",
         "_loop_trailer_refusal",
         "_ruling_sync_refusal",
     ):

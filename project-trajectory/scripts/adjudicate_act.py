@@ -22,10 +22,12 @@ of a verdict goes through. After the split that committed verdict is the act
 turn's whole authority: the session that wrote it may be gone, and a fresh act
 turn takes the same act. The other consumers of the same carrier are
 unchanged: the merge slot (`kitlib.sitting.uncovered_refusal` and
-`unaccepted_refusal`, `acceptance_record.held_reattest_refusal`) still admits
-an act only when an accepted verdict over the act's own rows backs it (owner
-ruling 6, 2026-10-07), and `intake.py snapshot --verdict` still records the
-verdict a held-rung re-attestation names.
+`unaccepted_refusal`) still admits an act only when an accepted verdict over
+the act's own rows backs it (owner ruling 6, 2026-10-07), and its lane rule
+(`held_status.commit_held_approval_lines`) admits a held-rung re-attestation
+only when that verdict rules the row CLARITY and its binding records the row's
+text. `intake.py snapshot --verdict` still records the verdict an act names,
+for audit; no rule requires it.
 
 WHAT THE VERDICT AUTHORIZES. Exactly the rows each accepted part rules to
 authorize them, read through `kitlib.sitting.judged_rows`, the one reader the
@@ -57,6 +59,17 @@ compared tier holds) is inconsistent and refuses the whole derivation, naming
 the row: it is never counted as taken. "Equal" compares the whole parsed row, Status included,
 which is what makes a flip committed without its copy read as inconsistent.
 
+A HELD CLARITY ACT IS BOUND TO THE TEXT ITS VERDICT JUDGED. The binding beside
+the verdict records the digest of each judged row's approved text
+(`kitlib.sitting.accepted_identities`); a re-attest owed on a held rung is
+owed only while the committed row still has that digest
+(`acceptance_record.approved_text_digest`). A binding with no identity, a
+malformed one, one that does not name the row, or a different digest refuses
+the whole derivation, naming the row and both digests, so the entry point
+refuses before it launches an adjudicator. A verdict sat before the identity
+existed binds no text and is re-sat. Released rungs and taken acts read no
+identity.
+
 ALL OR NOTHING, as `adjudicate_brief`'s rule 2 states: every call returns
 `(value, None)` or `(None, reason)`, never a partial act and never a brief
 with a hole in it.
@@ -75,7 +88,11 @@ entry point consumes.
     a verdict that is not committed at `rev`, has no binding there, records
     a pending or failed outcome, is not valid against its binding, is of a
     class that owes no act, owes no act, or judged a row whose committed
-    state is inconsistent (named); `act_values(root, verdict, wi,
+    state is inconsistent (named), or a held CLARITY row whose approved text
+    differs from the identity the verdict's binding records for it - the
+    binding has no identity cell, a malformed one, does not name the row, or
+    names another digest (the row, the bound digest and the committed digest
+    named); `act_values(root, verdict, wi,
     rev="HEAD")` is the act brief's slot values from it, and
     `compose_act(root, verdict, wi, prompt_templates=None)` the act brief
     filled from them at HEAD, an operator override under `ADJUDICATE-ACT`
@@ -261,11 +278,13 @@ def _retirement(act, rid, held, recorded):
     return (RETIRE if recorded else "taken"), None
 
 
-def _state(rows, act, rid, held):
+def _state(rows, act, rid, held, bound):
     """`("owed" | RETIRE | "taken" | NO_ACT, None)` for one authorized row,
-    or `(None, why)` when its committed state is inconsistent with the act.
+    or `(None, why)` when its committed state is inconsistent with the act, or
+    when an owed held re-attest's text is not the text `bound` (the verdict's
+    `(identities, why)`) records.
 
-    Implements: SR-231, SR-232, LLR-338"""
+    Implements: SR-231, SR-232, SR-178, LLR-338, LLR-359"""
     tier = _tier(rid)
     if tier is None:
         return None, "{} is held by no compared tier".format(rid)
@@ -279,8 +298,33 @@ def _state(rows, act, rid, held):
     if approved and equal:
         return "taken", None
     if approved and act == "reattest":
-        return "owed", None
+        why = _unbound_text(row, tier, rid, bound) if held else None
+        return (None, why) if why else ("owed", None)
     return None, _odd(rid, row.get("Status") or "(empty)", equal)
+
+
+def _unbound_text(row, tier, rid, bound):
+    """Why the held re-attest of row `rid` is not bound to its committed text,
+    or None: the verdict's binding (`bound`, `(identities, why)`) records no
+    identity, does not name the row, or names another digest than the
+    committed row's approved text has.
+
+    Implements: SR-178, LLR-359"""
+    committed = acceptance_record.approved_text_digest(tier[0], tier[1], row)
+    identities, why = bound
+    if identities is None:
+        return "{} is held and its verdict binds no text ({}); committed {}".format(
+            rid, why, committed
+        )
+    if rid not in identities:
+        return "{} is held and its verdict's binding names no text for it; committed {}".format(
+            rid, committed
+        )
+    if identities[rid] != committed:
+        return "{} is held and its approved text moved after the verdict: bound {}, committed {}".format(
+            rid, identities[rid], committed
+        )
+    return None
 
 
 def _odd(rid, status, equal):
@@ -304,8 +348,12 @@ def _derive(root, verdict, rev):
     if found is None:
         return rel, None, None, why
     rows, authorized, owed = _Rows(root, rev), [], []
-    for act, rid, held in _authorized(found[1], kauthority.dial_at(root, rev)):
-        state, why = _state(rows, act, rid, held)
+    judged = _authorized(found[1], kauthority.dial_at(root, rev))
+    bound = (None, None)
+    if any(act == "reattest" and held for act, _rid, held in judged):
+        bound = ksitting.accepted_identities(root, rev, rel)
+    for act, rid, held in judged:
+        state, why = _state(rows, act, rid, held, bound)
         if state is None:
             return rel, None, None, "the verdict {} judged a row {}".format(rel, why)
         if state == NO_ACT:

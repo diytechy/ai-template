@@ -33,13 +33,13 @@ of `test_integrate_station.py` gets to move it:
     standing in.
   * **the RULING-6 window audit** — a non-merge trunk commit touching product
     paths is flagged by sha; bookkeeping surfaces and `--no-ff` merges are not.
-  * **the held status** (SR-208, TC-241) — a lane that changes, adds or removes
-    a status cell in an off-spine registry whose rung the dial holds is refused
-    at the slot naming the registry, the row and the rung; a released rung
-    passes, an unmapped registry is held, and the loop's own writers (the
-    claim, the mint, the handback residue and the telemetry commit) and the
-    pre-commit step refuse the same change before writing, under the loop
-    marker only.
+  * **the held status** (SR-208, TC-241) — a lane, any lane, that moves an
+    off-spine row into approval on a rung the dial holds is refused at the slot
+    by the lane rule, naming the registry, the row and the rung; a released
+    rung passes, an unmapped registry is held, and the loop's own writers (the
+    claim, the mint and the telemetry commit) and the pre-commit step refuse a
+    held status move outside a lane before writing, under the loop marker
+    only. The rest of the lane rule is `tests/test_held_status_git.py`'s.
 """
 
 import os
@@ -472,6 +472,14 @@ def _spine_lane(
     reg.mkdir(parents=True, exist_ok=True)
     (reg / "system-requirements.csv").write_text(
         _SR_HEADER + _sr("Drafted"), encoding="utf-8", newline="\n"
+    )
+    # The dial releases every rung: what these lanes test is the approval-act
+    # rung, and a held rung's approval is the lane rule's (section 6 below and
+    # tests/test_held_status_git.py), which an absent dial would arm.
+    (root / "docs" / "process.toml").write_text(
+        '[attestation]\nhuman_approval_through = "DevStg-Below"\n',
+        encoding="utf-8",
+        newline="\n",
     )
     _commit(root, "spine: the attested baseline", when=T_BASE)
     assert integ.claim(root, "WI-401", "wi-401") == 0
@@ -1361,14 +1369,13 @@ def test_audit_passes_a_trunk_commit_of_every_regen_output_under_the_shipped_lis
 
 # --- 6. the HELD STATUS (SR-208, TC-241) ---------------------------------------
 #
-# Where the approval level holds an off-spine registry's rung for a human, the
-# loop may not change that registry's status cells. The frame and assumptions
+# Where the approval level holds an off-spine registry's rung for a human, a
+# row of it moves into approval only by the owner. The frame and assumptions
 # registries sit at DevStg-Boundary, which the dial below holds. The merge slot
-# refuses such a change in a LOOP lane (claimed or built by the loop), over its
-# WHOLE range and whoever runs the slot, because a session's own commits never
-# pass through the loop's code; the loop's own writers refuse the same change
-# before they write, but only under the loop marker, because a person's own
-# commit - and a lane a person claimed and built - is not governed.
+# refuses such a move in ANY lane, whoever built it, by the lane rule riding
+# its lane-commit walk; the loop's own writers refuse a held status move before
+# they write, under the loop marker and outside a lane, because a person's own
+# commit is not judged where it is made.
 
 HELD = "DevStg-Boundary"
 FRAME = "docs/requirements/external.toml"
@@ -1498,42 +1505,38 @@ def _held_lane(home, monkeypatch, change, dial=HELD, loop=True):
     return root
 
 
-def test_a_lane_that_moves_a_held_status_is_refused_at_the_merge_slot(
+def test_a_lane_that_moves_a_held_row_into_approval_is_refused_at_the_merge_slot(
     tmp_path, monkeypatch
 ):
-    for change, (_f, _a, registry, row) in LANE_CHANGES.items():
+    # The frame flip is the lane rule's refusal; an assumption flipped to
+    # Approved is an approval act since the assumptions registry joined it,
+    # and the approval-act rung runs before the lane-commit walk. A born
+    # Drafted row or a removal claims no approval and lands
+    # (tests/test_held_status_git.py).
+    for change in ("frame-flip", "assumption-flip"):
+        _f, _a, registry, row = LANE_CHANGES[change]
         root = _held_lane(tmp_path / change, monkeypatch, change)
         head = _rev(root, "HEAD")
         refusal = integ.integrate_one(root, "wi-401", "smoke")
         assert refusal is not None, change
-        # An assumption flipped to Approved is an approval act since the
-        # assumptions registry joined it, and the approval-act rung runs
-        # before this one; the born row keeps the held rung's assumption case.
         rung = "APPROVAL ACT" if change == "assumption-flip" else HELD
         for word in (registry, row, rung):
             assert word in refusal, (change, word, refusal)
         assert _rev(root, "HEAD") == head, change  # nothing merged
 
 
-def test_a_person_s_own_lane_is_not_governed_by_the_held_status_rung(
-    tmp_path, monkeypatch
-):
-    # Claimed and built by a person, with no loop marker anywhere: the change is
-    # that person's own, which SR-208 does not govern, whichever drain merges it.
+def test_a_person_s_own_lane_is_judged_like_any_other(tmp_path, monkeypatch):
+    # Claimed and built by a person, with no loop marker anywhere: every lane
+    # is judged at landing, so the person's flip is refused all the same.
     root = _held_lane(tmp_path, monkeypatch, "frame-flip", loop=False)
-    assert integ._held_status_refusal(root, "wi-401") is None
-    refusal = integ.integrate_one(root, "wi-401", "smoke")
-    assert "no [product] test declaration" in refusal, refusal
+    _assert_named(refused(root, "wi-401", "smoke"))
 
 
-def test_the_same_change_on_a_released_rung_passes_the_held_status_rung(
-    tmp_path, monkeypatch
-):
+def test_the_same_change_on_a_released_rung_passes_the_lane_rule(tmp_path, monkeypatch):
     # DevStg-Needs holds the needs alone: the frame's rung is the loop's, so
-    # the rung admits the lane and the ladder moves on to its next question
-    # (this fixture declares no bar, which is what then stops it).
+    # the lane rule admits the lane and the ladder moves on to its next
+    # question (this fixture declares no bar, which is what then stops it).
     root = _held_lane(tmp_path, monkeypatch, "frame-flip", dial="DevStg-Needs")
-    assert integ._held_status_refusal(root, "wi-401") is None
     refusal = integ.integrate_one(root, "wi-401", "smoke")
     assert "no [product] test declaration" in refusal, refusal
 
@@ -1541,12 +1544,13 @@ def test_the_same_change_on_a_released_rung_passes_the_held_status_rung(
 def test_a_registry_missing_from_the_rung_map_is_held(tmp_path, monkeypatch):
     # Nothing is held at DevStg-Below, so the mapped frame change passes...
     root = _held_lane(tmp_path, monkeypatch, "frame-flip", dial="DevStg-Below")
-    assert integ._held_status_refusal(root, "wi-401") is None
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "no [product] test declaration" in refusal, refusal
     # ...until nobody has ruled which rung governs the frame: then it is the
     # human's, because an unmapped status is one nobody has released.
     monkeypatch.delitem(integ.ac.APPROVAL_RUNGS, "external")
-    refusal = integ._held_status_refusal(root, "wi-401")
-    assert refusal and "external" in refusal and "B-01" in refusal, refusal
+    refusal = refused(root, "wi-401", "smoke")
+    assert "external" in refusal and "B-01" in refusal, refusal
     assert "unmapped" in refusal, refusal
 
 
@@ -1646,26 +1650,6 @@ def test_the_mint_writer_refuses_a_tree_carrying_a_held_status_change(
     assert _frame_row_is(root, "Drafted")
 
 
-def test_the_handback_residue_writer_refuses_a_tree_carrying_a_held_status_change(
-    tmp_path, monkeypatch
-):
-    root = _held_trunk(tmp_path, monkeypatch)
-    assert integ.claim(root, "WI-401", "wi-401") == 0
-    wt, err = integ.lane_worktree(root, "wi-401")
-    assert err is None, err
-    _flip_frame(wt)  # the session left a held status change uncommitted
-    handback = load_script("handback")
-    monkeypatch.setenv(MARK, LOOP_SESSION)
-    tip = _rev(root, "wi-401")
-
-    closed, refusal = handback.close_partial(root, "wi-401", "the lane stopped")
-    assert closed is None
-    _assert_named(refusal)
-    assert _rev(root, "wi-401") == tip  # nothing committed
-    assert _git(wt, "diff", "--cached", "--name-only").strip() == ""
-    assert _frame_row_is(wt, "Approved")  # the residue is left as found
-
-
 def test_the_telemetry_writer_refuses_a_tree_carrying_a_held_status_change(
     tmp_path, monkeypatch, capsys
 ):
@@ -1684,26 +1668,14 @@ def test_the_telemetry_writer_refuses_a_tree_carrying_a_held_status_change(
 
 # --- 6b. the review's rulings on the held status (WI-636 follow-up) ------------
 #
-# Who owns a lane is read off its commits, not its processes: a lane is the
-# loop's once its claim or any commit one of the loop's own writers made in it
-# carries the loop's trailer. The held-status rung then judges the WHOLE lane,
-# whoever runs the slot, with no migration window. The needs file's stakeholder
-# list sits at the needs' rung. The dial is read, with its legacy spellings, from
-# the tree in force rather than an uncommitted file, the same way at every
-# reader. And a merge is judged by what neither of its sides carried.
+# The needs file's stakeholder list sits at the needs' rung. The dial is read,
+# with its legacy spellings, from the tree in force rather than an uncommitted
+# file, the same way at every reader. And a merge is judged by what neither of
+# its sides carried.
 
 
 def _flip_stakeholder(root):
     _write_registries(root, BASE_FRAME, BASE_ASSUMPTIONS, {"STK-01": "Approved"})
-
-
-def _loop_writer_commit(root):
-    """A commit one of the loop's own writers makes INTO a lane - a session's
-    telemetry - carrying the loop's trailer."""
-    log = root / "docs" / "iteration" / "001-test.log"
-    log.parent.mkdir(parents=True, exist_ok=True)
-    log.write_text("# phase: BUILD\n", encoding="utf-8", newline="\n")
-    _commit(root, _marked("telemetry: session 001 iteration log"), when=T_LATER)
 
 
 def test_a_stakeholder_status_is_held_at_the_needs_rung(tmp_path, monkeypatch):
@@ -1711,30 +1683,15 @@ def test_a_stakeholder_status_is_held_at_the_needs_rung(tmp_path, monkeypatch):
     root = _held_lane(
         tmp_path / "held", monkeypatch, _flip_stakeholder, dial="DevStg-Needs"
     )
-    refusal = integ._held_status_refusal(root, "wi-401")
-    assert refusal, refusal
+    refusal = refused(root, "wi-401", "smoke")
     for word in ("stakeholder-needs", "STK-01", "DevStg-Needs"):
         assert word in refusal, (word, refusal)
     # ...and the loop's where nothing is held.
     root = _held_lane(
         tmp_path / "released", monkeypatch, _flip_stakeholder, dial="DevStg-Below"
     )
-    assert integ._held_status_refusal(root, "wi-401") is None
-
-
-def test_a_lane_the_loop_later_builds_is_held_for_every_change_in_it(
-    tmp_path, monkeypatch
-):
-    # Claimed and started by a person: the person's own, so not governed...
-    root = _held_lane(tmp_path, monkeypatch, "frame-flip", loop=False)
-    assert integ._held_status_refusal(root, "wi-401") is None
-    # ...until the loop builds it. Its first marked writer commit makes the lane
-    # the loop's, and the held-status rung has no migration window: the change
-    # made before the loop took the lane over lands through the loop's merge.
-    _git(root, "checkout", "-q", "wi-401")
-    _loop_writer_commit(root)
-    _git(root, "checkout", "-q", "main")
-    _assert_named(integ._held_status_refusal(root, "wi-401"))
+    refusal = integ.integrate_one(root, "wi-401", "smoke")
+    assert "no [product] test declaration" in refusal, refusal
 
 
 def _release_in_the_working_file(root):
@@ -1753,7 +1710,7 @@ def test_the_writers_and_the_slot_read_the_committed_dial_not_the_working_file(
     # The slot judges against the dial trunk has committed...
     root = _held_lane(tmp_path / "slot", monkeypatch, "frame-flip")
     _release_in_the_working_file(root)
-    _assert_named(integ._held_status_refusal(root, "wi-401"))
+    _assert_named(integ.integrate_one(root, "wi-401", "smoke"))
 
     # ...and the claim against the dial in the tree it is about to commit.
     root = _held_trunk(tmp_path / "claim", monkeypatch)

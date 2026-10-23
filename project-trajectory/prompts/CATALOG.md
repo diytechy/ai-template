@@ -20,7 +20,7 @@ is a refusal rather than a silently empty instruction.
 | Key | File | Digest | Slots |
 |---|---|---|---|
 | `ADJUDICATE-ACT` | [adjudicate-act.template.md](adjudicate-act.template.md) | `sha256:41fc9b0c1a37` | `{amendment_act}`, `{approval_act}`, `{approves_rows}`, `{registries}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:b58a12a5c41f` | `{aftermath}`, `{baseline}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:f46c2239be0e` | `{aftermath}`, `{baseline}`, `{identity}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-COMBINED` | [adjudicate-combined.template.md](adjudicate-combined.template.md) | `sha256:d16b4841c8b2` | `{kinds}`, `{sections}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:861339ff1d07` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:c336c79bbbee` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |

@@ -29,6 +29,7 @@ try:
     from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
     from kitlib import decisions as _kitdecisions
+    from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
     from kitlib import provenance as _kitprovenance
     from kitlib import stage as _kitstage
@@ -37,11 +38,12 @@ except ImportError:  # pragma: no cover - in-process fallback
     from kitlib import authority as _kitauthority
     from kitlib import config as _kitconfig
     from kitlib import decisions as _kitdecisions
+    from kitlib import git as _kitgit
     from kitlib import ladder as _kitladder
     from kitlib import provenance as _kitprovenance
     from kitlib import stage as _kitstage
 
-import acceptance_record
+import held_status
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 
@@ -903,33 +905,34 @@ def human_approves_spine(docs, registry):
 def loop_held_status_refusal(
     repo, trunk, base="HEAD", head=None, paths=None, trunk_rev="HEAD"
 ):
-    """The held-status refusal a LOOP writer owes before it commits, or None.
+    """The held-status refusal a LOOP writer owes before it commits, or None:
+    the narrowed marker arm (SR-208).
 
     None at once for a process the loop did not start (no loop marker): a
-    person's own commit is not governed (SR-208). Otherwise every status move
-    between `base` and `head` in `repo`'s off-spine registries is judged
-    against the dial COMMITTED at `trunk_rev` in the `trunk` checkout
-    (`kitlib.authority.dial_at`, the one silent, legacy-aware reader): the
-    TRUNK's, even when `repo` is a lane worktree, because a lane that lowered
-    its own dial would otherwise release itself; and a committed tree's, never
-    the trunk checkout's working file, because an uncommitted owner edit there
-    is not the tree the writer commits onto. `head=None` is the index (a `git
-    commit` writer); a commit or tree sha is the tree a plumbing writer is
-    about to commit; `paths` narrows the registries to the ones a path-scoped
-    commit takes.
+    person's own commit is not judged where it is made. None as well inside a
+    claimed lane (`kitlib.git.claimed_work_branch(repo)`): the lane's every
+    commit is judged when it lands, by the lane rule the merge slot's
+    lane-commit walk runs. Otherwise `held_status.marked_refusal` judges the
+    tree between `base` and `head` in `repo`: a status move the dial holds,
+    off-spine or on the need, requirement, design and test tiers, or a held
+    copy claim. The dial is the one COMMITTED at `trunk_rev` in the `trunk`
+    checkout (`kitlib.authority.dial_at`, the one silent, legacy-aware
+    reader), never the trunk checkout's working file, because an uncommitted
+    owner edit there is not the tree the writer commits onto. `head=None` is
+    the index (a `git commit` writer); a commit or tree sha is the tree a
+    plumbing writer is about to commit; `paths` narrows the judgement to the
+    registries a path-scoped commit takes.
 
     ONE COMPOSITION for every loop writer — the bookkeeping commit, the
-    handback commits and the telemetry commit — so the reading of the marker
-    and the choice of dial cannot drift between them. The judgement itself is
-    `acceptance_record`'s, which the merge slot and the pre-commit step read
-    too."""
-    if _kitprovenance.loop_session() is None:
-        return None
-    moves = acceptance_record.staged_status_moves(repo, base, head, paths=paths)
-    if not moves:
+    handback commits and the telemetry commit — so the reading of the marker,
+    the lane test and the choice of dial cannot drift between them. The
+    judgement itself is `held_status`'s, which the pre-commit step reads too.
+
+    Implements: SR-208, LLR-246"""
+    if _kitprovenance.loop_session() is None or _kitgit.claimed_work_branch(repo):
         return None
     dial = _kitauthority.dial_at(trunk, trunk_rev)
-    return acceptance_record.held_status_refusal(dial, moves)
+    return held_status.marked_refusal(repo, base, head, dial, paths)
 
 
 def final_review(docs):

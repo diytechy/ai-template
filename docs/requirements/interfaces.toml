@@ -1660,11 +1660,12 @@ notes = """intra-component (both endpoints are CMP-006), so the cross-component 
 
 [interface.IF-129]
 owner = "scripts/acceptance_record"
-requestors = ["scripts/baseline_snapshot"]
+requestors = ["scripts/baseline_snapshot", "scripts/held_status", "scripts/adjudicate_brief", "scripts/adjudicate_act"]
 channel = "call"
-data = "split_changed_cells: the approved and traced changed cells, before and after"
+data = "split_changed_cells; approved_text_digest(registry, id_col, row) -> sha256:<16 lowercase hex>"
 version = "v1"
 status = "Drafted"
+notes = "The digest uses the same approved-cell classification as split_changed_cells, so a carrier representation and an absent versus empty cell do not change it."
 
 [interface.IF-131]
 rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (stem resolution, CMP membership) is unchanged."""
@@ -1936,15 +1937,15 @@ component = "CMP-006"
 notes = "source - authority consumes the ladder vocabulary and one git read: the dial of a named commit or of the index, read through the kit's git-or-None primitive, so no git, no repository and an unknown commit all read as the most-held rung. It prints nothing; the migration note a legacy dial deserves is the coordinator's to present, for the one working tree a person can migrate."
 
 [interface.IF-196]
-rationale = """Which status cells a delta moves, and whether a dial holds them, is one judgement read from four places: the loop's writers before they commit, the pre-commit step over a session's staged tree, the merge slot over a lane's range, and the history check over each past commit. Drawing it beside the two-tree spine walk it reuses keeps one comparison basis for all four, and keeps the universe of watched registries declared apart from the rung map, so a registry the map does not name reads as held rather than as absent."""
-owner = "scripts/acceptance_record"
-requestors = ["scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate", "scripts/adjudicate_act"]
+rationale = """Which status cells and copied approval text a delta moves, and whether a dial holds them, is one judgement read from the lane rider, the marked autonomous-commit check and the history check. Drawing it beside the two-tree spine walk it reuses keeps one comparison basis for each route, makes the lane rule independent of who made the lane commit, and keeps the universe of watched registries declared apart from the rung map, so a registry the map does not name reads as held rather than as absent."""
+owner = "scripts/held_status"
+requestors = ["scripts/agent_policy", "scripts/check", "scripts/check_trajectory", "scripts/text_then_act"]
 channel = "call"
-data = "staged_, merge_, pending_, committed_status_moves -> [{registry, id, before, after}]; rows_at; held_status_lines, held_status_refusal(dial, moves)"
+data = "status moves; held_status_lines; held_status_refusal; HELD_TIERS; HELD_PATHS; registry_held; held_claims; held_approval_lines; commit_held_approval_lines; marked_refusal"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "A delta git cannot read is an empty list, the degrade every reader of this module shares; a registry side that does not parse is one move naming the registry, never an empty delta, so an unreadable change is refused where the rung is held. The needs file is shared by a spine tier and an off-spine one: the off-spine walk reads its stakeholder tier alone and the spine walk its needs, so each row is reported once."
+notes = "A delta git cannot read is an empty list, the status-move readers' degrade; a registry side that does not parse is one move naming the registry, never an empty delta, so an unreadable change is refused where the rung is held. The needs file is shared by a spine tier and an off-spine one: the off-spine walk reads its stakeholder tier alone and the spine walk its needs, so each row is reported once. A delta git cannot read is a refusal rather than an empty claim where the lane rule reads it; a registry side that does not parse is a refusal naming the registry. A held claim is evaluated against every parent, so a refresh merge carrying trunk approval makes no lane claim."
 
 [interface.IF-197]
 rationale = """The commit-msg hook is a shell script and the trailer rule is Python, and the rule must be the same wherever the commit floor runs. The hook therefore hands the message file to the harness and reads the exit code, so the grammar lives once and the hook carries only the knowledge of whether the loop marker is set, which it needs to fail closed when the harness cannot run."""
@@ -2063,7 +2064,7 @@ data = "the act ledger acts.toml beside the snapshot copies: [[act]] seq (a posi
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry. No party outside the kit reads the format: the owner writes it and reads it back, and the file reaches history as one more governed write of the act, committed with its copies."""
+notes = """Appended by every snapshot act that copied a registry, the first signing included, and by none that copied nothing. A malformed ledger is refused whole, never read in part: the snapshot act refuses before it moves any byte of the record, trace.py reports it on the always-on integrity floor, and risk_acceptance_act returns no anchor with the reason. risk_acceptance_act reads the entries a commit added by comparing entry numbers with its parent's. The acceptance record's mirror rules skip the file by name, as they skip the prose stamp, since it copies no live registry. No party outside the kit reads the format: the owner writes it and reads it back, and the file reaches history as one more governed write of the act, committed with its copies. The verdict path is recorded for audit and no held-rung rule requires the act ledger's verdict cell."""
 
 [interface.IF-224]
 rationale = """The owner's approval brief sets apart the owing chains the human-approval dial releases, and which rows the dial releases is a question the loop already answers for the rows it mints and the adjudication brief it composes. Reading that one predicate keeps the owner's surface, the mint and the adjudicator agreeing about who signs a row; a rung table in the brief would be a third answer to one question, free to disagree with the other two."""
@@ -2635,15 +2636,15 @@ component = "CMP-008"
 notes = "source - this seam reads version-control trees and review or decision records; its staged hold accepts an injected relink oracle, and callers decide the transition they hold."
 
 [interface.IF-287]
-rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
+rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens, bound row identities and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
 owner = "scripts/kitlib/sitting"
-requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act"]
+requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act", "scripts/held_status"]
 channel = "call"
-data = "verdict binding/path and accepted-verdict grammar; combined-scope and review-verdict readers"
+data = "verdict binding/path grammar; render_requested; read_identities; write_binding; accepted_identities; combined-scope and review-verdict readers"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "source - consumes no declared seam; pure functions."
+notes = "source - consumes no declared seam; pure functions. An identity cell is preserved when a pending binding is rewritten as accepted or failed; absent, malformed or repeated identities read as no identity with a reason."
 
 [interface.IF-290]
 owner = "scripts/kitlib/dispute"
@@ -2723,15 +2724,15 @@ component = "CMP-008"
 notes = "Reads the staged commit and its parent records; writes nothing."
 
 [interface.IF-296]
-rationale = "The coordinator needs one fail-closed derivation of the later act so it cannot construct a partial brief or reinterpret a committed verdict."
+rationale = "The coordinator needs one fail-closed derivation of the later act so it cannot construct a partial brief, reinterpret a committed verdict, or act on held text the verdict did not bind."
 owner = "scripts/adjudicate_act"
 requestors = ["scripts/coordinator_adjudicate", "scripts/adjudicate_brief"]
 channel = "call"
-data = "ACTABLE; owed_acts, left_owed, bound_brief, amendment retires; act_values and compose_act return complete acts, values or brief, or reason"
+data = "ACTABLE; owed_acts; left_owed; bound_brief; amendment retires; act_values; compose_act; held-text identity refusal"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "intra-component: the owner reads committed verdict, registry, record and dial state and writes nothing."
+notes = "intra-component: the owner reads committed verdict, registry, record and dial state and writes nothing. A missing, malformed or unequal held identity returns a row-naming refusal before an adjudicator is launched."
 
 [interface.IF-297]
 rationale = "Every agent route needs the same answer before it can begin governed work; one owner prevents route-specific meanings of an active commit floor."

@@ -1250,9 +1250,10 @@ def _refuse_verdict(root, verdict, reattests):
     A verdict is the ruling that carried the named rows' signature over, so it
     needs rows to rule (`reattests`) and must name a file in the tree: the
     ledger records the path, and a typo would land a ruling nobody can open.
-    Whether the verdict actually rules each row CLARITY is the merge slot's
-    question (`acceptance_record.held_reattest_refusal`), asked of the
-    committed file.
+    The ledger records it for audit; no rule requires it. Whether a held
+    re-attestation lands is the merge slot's lane rule
+    (`held_status.commit_held_approval_lines`): an accepted verdict ruling
+    the row CLARITY whose binding records the row's text.
 
     Implements: SR-207, LLR-245"""
     if not verdict:

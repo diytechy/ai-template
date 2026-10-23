@@ -2,7 +2,6 @@
 # A row is a DEBT STATEMENT, NOT AN APPROVAL: the reason column records why it is carried, and the
 # baseline only ever tightens — re-stamp DOWNWARD or delete a row, never up to clear a finding.
 # path	function	cognitive	sloc	reason
-project-trajectory/scripts/adjudicate_brief.py	_amended_rows	17	19	RE-KEYED 2026-09-27 (WI-657): WI-646 (26c086dd) split the row selection out of `amendment_values` (20 -> 3, below the threshold) when it scoped the amendment brief to its own rows; 17 here, net -3 across the pair. Not a bump.
 project-trajectory/scripts/agent_brief.py	critique_brief	31	49
 project-trajectory/scripts/agent_brief.py	critique_control	18	20
 project-trajectory/scripts/agent_brief.py	worker_prompt	16	72	2026-10-03, WI-746 (9dbb5103): pending-open-item guard joins scheduler disposition and formats gates before assigning a worker; keeping the refusal at the assignment boundary prevents a held WI reaching the worker.

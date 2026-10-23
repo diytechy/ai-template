@@ -34,7 +34,16 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     holds both consume; `requested_path`/`render_requested`/`read_requested`
     are the binding of a sitting's requested kinds beside its verdict;
     `write_binding` is its one writer and `accepted`/`accepted_at` the one
-    reader every consumer of a verdict goes through (round 11);
+    reader every consumer of a verdict goes through (round 11). A binding may
+    also carry the identity cell, `rows = <ID>=sha256:<16 lowercase hex>`
+    joined by `;`, naming each row its brief showed with the digest of that
+    row's approved text: `render_requested(..., identities)` and
+    `write_binding(..., identities)` write it only when identities are given,
+    `read_requested` ignores it, `read_identities(text)` returns
+    `({id: digest}, None)`, or `(None, reason)` for no cell, a malformed
+    token or a repeated id, and `accepted_identities(root, rev, verdict)` is
+    the one reader of an ACCEPTED verdict's bound identities, `(None,
+    reason)` for a verdict `accepted_at` does not read as accepted;
     `judged_rows(parsed)` is the ONE reader of the rows an accepted verdict
     authorizes an act on - an APPROVE row, a CLARITY row, and a MEANING row
     only with its bless mark - which the merge's backing checks and the act
@@ -74,12 +83,14 @@ __all__ = [
     "requested_path",
     "render_requested",
     "read_requested",
+    "read_identities",
     "REQUESTED_SUFFIX",
     "OUTCOMES",
     "write_binding",
     "accepted",
     "accepted_part",
     "accepted_at",
+    "accepted_identities",
     "judged_rows",
     "unaccepted_refusal",
     "REVIEWS",
@@ -263,15 +274,24 @@ def requested_path(verdict_path):
 OUTCOMES = ("pending", "accepted", "failed")
 
 
-def render_requested(brief, kinds, outcome="pending"):
+def render_requested(brief, kinds, outcome="pending", identities=None):
     """The binding's text: the brief class, the kinds it requested and the
-    call's recorded outcome.
+    call's recorded outcome, and, when `identities` (`{row id: digest}`) is
+    given, the identity cell naming each judged row's approved-text digest.
 
-    Implements: SR-232, LLR-310
+    Implements: SR-232, SR-178, LLR-310, LLR-359
     """
-    return "brief = {}\nkinds = {}\noutcome = {}\n".format(
+    text = "brief = {}\nkinds = {}\noutcome = {}\n".format(
         brief, ";".join(kinds), outcome
     )
+    if identities:
+        text += "{} = {}\n".format(
+            IDENTITY_CELL,
+            ";".join(
+                "{}={}".format(rid, identities[rid]) for rid in sorted(identities)
+            ),
+        )
+    return text
 
 
 def read_requested(text):
@@ -288,6 +308,44 @@ def read_requested(text):
         return None
     outcome = cells.get("outcome", "pending").strip()
     return brief, tuple(k for k in kinds.split(";") if k), outcome
+
+
+# The binding's identity cell: one `<row id>=sha256:<16 lowercase hex>` token
+# per row the brief showed, `;`-joined.
+IDENTITY_CELL = "rows"
+_IDENTITY_TOKEN = re.compile(r"([A-Z]+-[0-9]+)=(sha256:[0-9a-f]{16})")
+
+
+def read_identities(text):
+    """`({row id: digest}, None)` from a binding's identity cell, or `(None,
+    reason)`: no cell, more than one, a token that is not `<ID>=sha256:<16
+    lowercase hex>`, or an id named twice. A malformed cell binds no text.
+
+    Implements: SR-178, LLR-359
+    """
+    prefix = IDENTITY_CELL + " = "
+    cells = [
+        line[len(prefix) :]
+        for line in (text or "").splitlines()
+        if line.startswith(prefix)
+    ]
+    if len(cells) != 1:
+        return None, (
+            "the binding carries no identity cell"
+            if not cells
+            else "the binding carries {} identity cells".format(len(cells))
+        )
+    out = {}
+    for token in cells[0].strip().split(";"):
+        match = _IDENTITY_TOKEN.fullmatch(token.strip())
+        if not match:
+            return None, "the identity cell carries a malformed token {!r}".format(
+                token
+            )
+        if match.group(1) in out:
+            return None, "the identity cell names {} twice".format(match.group(1))
+        out[match.group(1)] = match.group(2)
+    return out, None
 
 
 def line_refusal(grammar, text, where):
@@ -531,18 +589,21 @@ def sitting_refusal(text, where, kinds):
 # --- acceptance is a RECORDED fact (WI-841 round 11) --------------------------
 
 
-def write_binding(verdict_path, brief, kinds, outcome, exclusive=False):
+def write_binding(
+    verdict_path, brief, kinds, outcome, exclusive=False, identities=None
+):
     """THE one writer of a verdict's binding: its brief class, requested kinds
-    and recorded outcome, beside the verdict. `exclusive` creates it (the
-    entry point's reservation, which refuses an existing one); otherwise it
-    overwrites, which is how the route that ran the call records `accepted`
-    or `failed`. Raises OSError as `open` does; the caller says what it means.
+    and recorded outcome, beside the verdict, and its identity cell when
+    `identities` is given. `exclusive` creates it (the entry point's
+    reservation, which refuses an existing one); otherwise it overwrites,
+    which is how the route that ran the call records `accepted` or `failed`.
+    Raises OSError as `open` does; the caller says what it means.
 
-    Implements: SR-232, LLR-310
+    Implements: SR-232, SR-178, LLR-310, LLR-359
     """
     mode = "x" if exclusive else "w"
     with open(requested_path(verdict_path), mode, encoding="utf-8", newline="\n") as fh:
-        fh.write(render_requested(brief, kinds, outcome))
+        fh.write(render_requested(brief, kinds, outcome, identities))
 
 
 def accepted(text, binding_text):
@@ -588,12 +649,34 @@ def accepted_at(root, rev, verdict_path):
 
     Implements: SR-232, LLR-310
     """
+    return accepted(*_texts_at(root, rev, verdict_path)) if verdict_path else None
+
+
+def _texts_at(root, rev, verdict_path):
+    """The verdict's text and its binding's, each read at the commit `rev`
+    (None: the index), or None where git shows nothing."""
     at = "" if rev is None else rev
-    texts = [
+    return [
         git_out(root, ["show", "{}:{}".format(at, rel)])
         for rel in (verdict_path, requested_path(verdict_path))
     ]
-    return accepted(*texts) if verdict_path else None
+
+
+def accepted_identities(root, rev, verdict_path):
+    """`({row id: digest}, None)`: the identities the binding of an ACCEPTED
+    verdict records, both read at the commit `rev`, or `(None, reason)`. A
+    verdict `accepted` does not read as accepted binds nothing, and a binding
+    with no identity cell, or a malformed one, binds no text
+    (`read_identities`).
+
+    Implements: SR-178, LLR-359
+    """
+    texts = _texts_at(root, rev, verdict_path) if verdict_path else [None, None]
+    if not accepted(*texts):
+        return None, "the verdict {} is not accepted at {}".format(
+            verdict_path, "the index" if rev is None else rev
+        )
+    return read_identities(texts[1])
 
 
 # The rulings that authorize each kind's act on a row: a first approval's

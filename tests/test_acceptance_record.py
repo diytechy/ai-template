@@ -88,13 +88,18 @@ def test_the_dependency_surface_is_the_argument_for_the_split():
     # record of which rows an act re-attested, and reading it at two revisions
     # is a TOML parse. Its owner's parser cannot be imported here — the owner
     # imports the checker that imports this module — so the widening is one
-    # stdlib parser, not a sibling.
+    # stdlib parser, not a sibling. `hashlib` and `json` joined with the
+    # row-text identity (`approved_text_digest`, IF-129): a digest over the
+    # row's approved cells serialized as sorted JSON, beside the comparison
+    # basis it shares, so it is two stdlib modules, not a sibling either.
     assert _imported_roots() == {
         "spine_carrier",
         "kitlib",
         "sys",
         "pathlib",
         "tomllib",
+        "hashlib",
+        "json",
     }, sorted(_imported_roots())
     # `sys`/`pathlib` are the sanctioned-sibling fallback only — they must not
     # be reachable as module attributes for a rule to use.
@@ -135,6 +140,53 @@ def test_it_does_not_import_the_module_it_came_out_of():
     """
     assert "check_trajectory" not in _imported_roots()
     assert not hasattr(acceptance_record, "check_trajectory")
+
+
+def test_held_status_owns_IF_196():
+    """The held-status readers moved out whole, so IF-196 has one home.
+
+    The new module declares the seam and carries its contract body, and this
+    one declares neither: a contract left behind in both docstrings would be
+    two owners of one interface row. The import runs one way, `held_status`
+    reading this module and never the reverse, so the move cannot have built a
+    cycle. A move that copied the section instead of cutting it is caught by the
+    names: none of them may still be defined here.
+    """
+    held = (SCRIPTS / "held_status.py").read_text(encoding="utf-8")
+    held_tree = ast.parse(held)
+    held_doc = ast.get_docstring(held_tree)
+    own_doc = ast.get_docstring(TREE)
+    assert "Contracts: IF-196 " in held_doc
+    assert "Contract IF-196:" in held_doc
+    declared = next(ln for ln in own_doc.splitlines() if ln.startswith("Contracts:"))
+    assert "IF-196" not in declared
+    assert "Contract IF-196:" not in own_doc
+    assert "held_status" not in _imported_roots()
+    moved = {
+        "NEEDS_REGISTRY",
+        "HELD_STATUS_REGISTRIES",
+        "STATUS_TABLES",
+        "_status_cells",
+        "_status_delta",
+        "_offspine_status_moves",
+        "staged_status_moves",
+        "merge_status_moves",
+        "pending_status_moves",
+        "held_status_lines",
+        "held_status_refusal",
+        "committed_status_moves",
+    }
+    held_names = {
+        getattr(node, "name", None) or getattr(node.targets[0], "id", None)
+        for node in held_tree.body
+        if isinstance(node, (ast.FunctionDef, ast.Assign))
+    }
+    assert moved <= held_names, sorted(moved - held_names)
+    assert not moved & {
+        getattr(node, "name", None) or getattr(node.targets[0], "id", None)
+        for node in TREE.body
+        if isinstance(node, (ast.FunctionDef, ast.Assign))
+    }
 
 
 def test_the_checker_re_exports_the_same_objects_not_copies():

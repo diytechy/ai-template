@@ -1,0 +1,104 @@
+# docs/decisions/wi-851.toml — delegated calls the coordinator made in the
+# wi-851 lane (held-rung rows protected by state), headless leg 16 of loop
+# session 20261021T045653Z-213020.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-851's single plan passed in two critiques: critique 1 (Codex Sol, medium) found one MAJOR (the new held_status module had no scaffold mapping), which the plan's one revision answers in P3 (the bootstrap manifest row, the scaffold inventory, the kit-contents row, both bootstrap checks run in that commit); critique 2 (convergence) found one MINOR, that P3's predecessor P2 and P11's predecessor P9 are ordering preferences rather than artifact dependencies. That MINOR is not edited into the plan, since an edit unbinds the pass record: the build follows the table's order, which those edges also give, and no step consumes the other's artifact. The plan's P13 names one cross-family REVIEW-A, written from the spec's old line: the lane runs today's shape, two full-lane reviewers per round (Codex Sol and the Claude Opus stand-in)."
+alternative = "Revise the plan again for the MINOR, which costs a third critique the cap does not allow."
+reversal_cost = "None: ordering only."
+why_not_escalated = "The skill's section 3 (a CHANGES-REQUESTED whose findings are all MINOR reads as an approval)."
+review = "docs/plans/WI-851/critique-1.md; docs/plans/WI-851/critique-2.md"
+
+[decision.D-002]
+decided = "The plan's R1 is ruled as it recommends: the whole held-status section moves into its own module in P3 (behaviour-preserving, its own commit), LLR-249's module re-points in the one combined sitting, and check_trajectory.py takes the plan's reviewed +2 SLOC; the fallback (moving four functions only) would leave IF-196 across two modules and owe a second IF row or a re-scope."
+alternative = "The plan's fallback: move only staged_status_moves, merge_status_moves, pending_status_moves and held_status_refusal."
+reversal_cost = "Low before P3; a module move after."
+why_not_escalated = "A construction choice inside the accepted plan's stated options; recorded for confirm or overrule."
+review = ""
+
+[decision.D-003]
+decided = "The intent set (P1) is committed after one restoration turn. Terra's first turn rewrote whole approved cells of SR-208, LLR-246, TC-241 and TC-278; an independent read-only Claude Opus audit (review-tmp/2026-10-23a-leg16/intent-audit-notes.md) listed 27 approved sentences dropped without a retirement reason, IF-196's data losing two still-called names, TC-241's tier line deleted, evidence and test_refs cells replaced, and LLR-278 lacking the identity obligations TC-278 tests. Terra, resumed, restored them, and put the identity obligations in a new Drafted LLR-359 under SR-178 with a new Drafted TC-398 (an Approved TC-278 citing a Drafted LLR-359 is refused by the parent-first integrity rule). What still differs from the approved text is the spec's retirements (LLR-278's held act-ledger clause, the slot's loop-lane rung, the narrowed marker arm, approval claims only in every lane, LLR-249's module) and minimal edits joining appended clauses; the combined sitting judges them as amendments."
+alternative = "Re-run the intent turn fresh with the audit as its brief."
+reversal_cost = "Low: registry text before any sitting."
+why_not_escalated = "The recipes' intent check (approved text verbatim unless retired); recorded."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-23a-leg16/intent-audit-notes.md"
+
+[decision.D-004]
+decided = "The tests-first stage (P4) is committed alone: tests/test_held_status.py (smoke tier) and tests/test_held_status_git.py (real git, in SLOW_MODULES), with cases in the adjudicate_brief, adjudicate_act and coordinator_act modules; 59 strict expected failures (XFAIL, none XPASS or ERROR) and two unmarked characterizations, the smoke tier at 3276 of its 3280 ceiling. Two builder points are accepted inside the plan's surface: P8 provides held_status.registry_held(dial, registry), a name the plan does not give, for the unmapped-registry test; and the flip-without-copy and unreadable-file cases judge the new per-commit rule directly on the lane commit, since an earlier slot check that stays in place refuses those lanes first and would hide the rule's wording."
+alternative = "Drive those two cases through the whole slot, where the earlier check's refusal masks the rule."
+reversal_cost = "Low: test construction."
+why_not_escalated = "Construction inside the accepted plan; recorded."
+review = ""
+
+[decision.D-005]
+decided = "P7's commit also carries two fixture fixes in tests/test_done_when_blessing.py, a SLOW_MODULES module the smoke tier skips, which P6's commit f17c3ec31 left red in five cases: a fake assembler gave no value for the amendment template's new identity slot, and one test refused every file read where record_outcome now reads the binding back. Each test keeps its intent. P6 is not amended (an amend is judged against the commit it replaces); the lane's bar was green at each tip, and the full suite runs at P11."
+alternative = "Rewrite P6's commit to carry the fixes."
+reversal_cost = "None."
+why_not_escalated = "Procedural; recorded."
+review = ""
+
+[decision.D-006]
+decided = "P8 lands units 2 and 3 in one commit, as the plan orders. Its check.py stamp moves 1324 to 1340, a reviewed bump that returns the module to its trunk size exactly (P2's move took 16 lines out; the held-status step's three modes put 16 back), so the lane leaves check.py at its trunk count; no module crosses 1000 SLOC for the first time. Accepted from the builder: merge_approval_refusal keeps its now-unread trunk keyword (over 40 callers pass it; removing it is a consolidation outside the row), kitlib.git.grep_files is added rather than reusing kitlib.done_when._grep (which reads a git failure as no match; one grep reader is a candidate successor row), and the plan's exception=True flag is not built (no caller needs it). Two fixtures (_spine_lane, test_text_then_act._base) now commit a released dial, since with no dial the rung reads fully held and the new rule rightly refuses their flips (the plan's P11 fixture rule)."
+alternative = "Decompose check.py further inside the lane."
+reversal_cost = "Low."
+why_not_escalated = "Inside the accepted plan's stated ratchets and fixture rule; recorded."
+review = ""
+
+[decision.D-007]
+decided = "P11's full unfiltered suite ran once on the P8 tip 342d7ef80 from a detached worktree (pytest -q -n auto): 1 failed, 7297 passed, 33 skipped in 18:20. The one red is test_this_repo_s_committed_stage_is_current, which off a claimed branch asserts the trunk-only docs/stage the lane's spine edits moved; re-derived in that worktree (derive_stage.py) it passed. P10 changes RESYNC_PACK.md only, and its tests run in the attest that commits it. No fixture beyond P8's two needed a released dial. P9's read holds: WI-800 and WI-809 (both deferred) need WI-851 and cite its state rule."
+alternative = "Run the suite again on the P10 tip."
+reversal_cost = "None."
+why_not_escalated = "The recipes' full-suite note (re-derive the trunk-only stage in a detached worktree)."
+review = ""
+
+[decision.D-008]
+decided = "Counted round 1 over df08fb7a1 ran the two full-lane reviewers in parallel renders: Codex Sol at medium (REVIEW-A, 001-REVIEW-A-df08fb7.md: CHANGES-REQUESTED, 4 MINOR) and a Claude Opus at high as the REVIEW-B stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008; 002-REVIEW-B-df08fb7.md: CHANGES-REQUESTED, 1 MAJOR and 6 MINOR), launched REVIEW-B first as a headless leg does."
+alternative = "None: the review shape."
+reversal_cost = "None."
+why_not_escalated = "Recorded substitution (ruling 7)."
+review = "docs/reviews/wi-851/001-REVIEW-A-df08fb7.md; docs/reviews/wi-851/002-REVIEW-B-df08fb7.md"
+
+[decision.D-009]
+decided = "Round 1 triage. REVIEW-B F1 (MAJOR: SR-208's approved Title and Coincident still state the retired guarantee, 'the loop never changes a status the approval level holds') names row text the intent set left unamended, no code defect: its remedy is the checkpoint's reconcile and combined sitting, so it is re-graded to the checkpoint and costs no fix round (as wi-850 D-008, wi-931 D-006). Round 1 therefore has no BLOCKER or MAJOR code finding, and the checkpoint follows it. Row-text MINORs go to the checkpoint's Terra turn: B F2 (retitle LLR-246), B F3 and A F2 (IF-196 rows_at belongs to IF-091's module with adjudicate_act its requestor; IF-129 and IF-287 requestors gain their new callers; IF-196's two notes sentences scoped), A F3 (the four IF data cells over 160 characters shortened to pointers), A F1 (SR-228's acceptance still says a held act names its verdict for audit, where the row makes --verdict optional: SR-228 joins the set). Characterization MINORs are closed before the sitting by a builder stage with no code change: B F6 (re-pin the exception's both-ways, failed, pending and other-row cases) and B F7 (the README row names the lane rule, the marker arm and the bound exception). To status.md's follow-ups, as topics: B F4 (merge_status_moves and pending_status_moves have no production caller beside held_status's own parent intersection), B F5 (a stale accepted CLARITY binding whose text a lane reverts to after a later owner signature is read as current; the slot's uncovered refusal still requires a lane-carried ruling, so it is reached only beside a held MEANING+BLESS mistake or on the hook-only squash path: bind the copy's digest too), A F4 (grep_files beside done_when._grep: one search stage)."
+alternative = "Run a fix round for the MINORs, or count B F1 as a code MAJOR."
+reversal_cost = "Low."
+why_not_escalated = "The skill's section 3 triage (MINORs cost no round; row wording goes to the checkpoint); recorded."
+review = "docs/reviews/wi-851/001-REVIEW-A-df08fb7.md; docs/reviews/wi-851/002-REVIEW-B-df08fb7.md"
+
+[decision.D-010]
+decided = "The checkpoint: Terra, resumed, reconciled the set against the settled code and applied the change list (the builder's IF-196 items and the round-1 row items of D-009): SR-208's Title and Coincident restated for the lane rule and the narrowed marker arm, SR-228's audit clause scoped to a supplied verdict (SR-228 joins the set), LLR-246 retitled, IF-196 rows_at dropped and its notes scoped, IF-129 and IF-287 requestors completed, the four IF data cells shortened, and the identity assertions kept only in LLR-359 and TC-398 (TC-278 and LLR-278's test_refs no longer carry them). A builder stage with no production change (CP1) added tests/test_held_status_git.py::test_an_unaccepted_or_unruled_CLARITY_binding_is_no_exception (five characterizations: ruled both ways in either order, failed and pending outcomes, another row ruled; each fails under an exception that accepts any binding naming the digest) and the README clause (D-009's B F6, B F7); the coordinator added that node to TC-278 and TC-241 evidence by a guarded edit, and fixed one byte-exact case glitch Terra left in TC-241's expected ('not judged. with the rung released' to 'With'). What still differs from approved text is the spec's retirements, the deleted act-ledger tests' evidence, and the cells D-009 allowed to be rewritten."
+alternative = "Return the TC-241 glitch to Terra for a turn."
+reversal_cost = "Low."
+why_not_escalated = "The skill's checkpoint step 1 (a byte-exact fix applied openly and recorded)."
+review = ""
+
+[decision.D-011]
+decided = "Before the sitting, an independent Claude Opus arms map of the set (review-tmp/2026-10-23a-leg16/arms-map.md; 84 arms) found 13 arms no test exercised and 9 no citing TC stated. A builder stage with no production change (CP2) added eight real-git characterizations (14 cases, each failing under a mutation of the wrong implementation, restored byte-identical) and named the dial in two marked-arm tests; Terra, resumed, stated the unstated arms (TC-241 and TC-278 wording; TC-278's expected now quotes LLR-278's sentences; TC-241 cites SR-228; LLR-246 gains SR-228 and LLR-359 SR-208 in sr_refs with TC-398 citing SR-208; LLR-246 and LLR-249 test_refs; TC-243's method gains the rung-map arm, so TC-243 joins the set); the coordinator cited the new nodes and two existing provenance tests in the TC evidence by a guarded edit. CP2 stopped on one arm: LLR-246 and TC-241 read 'whose live row is unchanged', stronger than the code and the spec's Done-when ('the row's live Status is unchanged'); a single commit that amends a held row and re-attests it under a binding of its new text passes the lane rule and is refused by text-then-act at the slot and the hook. The wording follows the spec ('whose live Status is unchanged'), a byte-exact edit applied openly in both rows."
+alternative = "Make the exception also require the approved text unchanged against each parent (a code change the spec does not ask for)."
+reversal_cost = "Low: one phrase in two lane-added sentences."
+why_not_escalated = "The spec's Done-when states the rule; recorded."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-23a-leg16/arms-map.md"
+
+[decision.D-012]
+decided = "Sitting 003 (combined, 003-ADJUDICATE-5a56d69.md) blessed SR-208, SR-228, LLR-246, LLR-278 and TC-241 as MEANING+BLESS, approved LLR-359 and TC-398, and returned LLR-249 (a module qualifier the lane added), TC-243 (a sentence naming code carriers) and TC-278 (two code names, a dangling antecedent, and verifies naming SR-208 and LLR-246 whose held outcome its expected no longer claims). Terra, resumed, answered all three: LLR-249 drops the qualifier, TC-243 returns byte-identical to its approved text (leaving the set), TC-278 uses plain words, gives the antecedent, and verifies SR-178, LLR-278 and IF-091 only, with LLR-246's test_refs now TC-241. As the recipes direct (wi-798 D-023, wi-958 D-014), the whole remaining set is re-sat at once so one verdict authorizes the act turn."
+alternative = "Re-sit only the returned rows (then no single verdict authorizes the whole act)."
+reversal_cost = "Low."
+why_not_escalated = "The recipes' return procedure; recorded."
+review = "docs/reviews/wi-851/003-ADJUDICATE-5a56d69.md"
+
+[decision.D-013]
+decided = "The convergence map before the gate (revisions 8 and 33), each accepted round-1 finding to its independently checkable evidence; the gate's reviewers do not read it. REVIEW-B F1 (SR-208's Title and Coincident): the restated cells at the tip, blessed by sitting 004 (004-ADJUDICATE-d860906.md). REVIEW-B F2 (LLR-246's title): the new title at the tip, blessed by sitting 004. REVIEW-B F3 and REVIEW-A F2 (IF-196 rows_at, IF-129 and IF-287 requestors, IF-196's notes): the IF rows' cells at the tip (interfaces.toml). REVIEW-A F3 (four IF data cells over 160 characters): the shortened cells at the tip. REVIEW-A F1 (SR-228's audit clause): the clause at the tip, blessed by sitting 004. REVIEW-B F6 (the exception's refusals unpinned): tests/test_held_status_git.py::test_an_unaccepted_or_unruled_CLARITY_binding_is_no_exception, a characterization of unchanged code that fails under an exception accepting any binding naming the digest (CP1's mutation, restored byte-identical). REVIEW-B F7 (the README row): the clause in project-trajectory/README.md at the tip. No round-1 finding was a code defect, so no regression test fails on pre-fix code. Not accepted for a fix, held for status.md's follow-ups (D-009): REVIEW-B F4, REVIEW-B F5, REVIEW-A F4. The map is complete, so the gate renders. Trunk has not moved since the lane's base, so no rebase precedes the gate, and the lane carries no trunk-only generated view."
+alternative = "None: the convergence map is required before the gate."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-014]
+decided = "The gate over the checkpoint tip a02a18284 (uncounted, convergence stance, after D-013's map): Codex Sol at medium (REVIEW-A, APPROVE findings=0) and the Claude Opus stand-in at high (REVIEW-B, APPROVE findings=6, all MINOR). No BLOCKER or MAJOR, so no dispute sitting and no fix round; the act turn follows. The six MINORs move the tip off the gated one if fixed, so they go to status.md's follow-ups (wi-935 D-005): SR-228's amended clause sits outside the spec's named change set and its first clause still reads as a verdict requirement; TC-278's evidence still cites held lane-rule tests that exercise LLR-246, not LLR-278; merge_approval_refusal keeps a required trunk keyword no rule reads, and integrate's caller comment still says the act lands under trunk's authority; held_status repeats parent-intersection logic it already holds; HELD_TIERS is a hand-copied literal of the snapshotted tiers, pinned equal by a test, because an import would cycle (one table in a lower layer); and the reviewer's B1 note at held_status.py:437. Before the gate the review bar's attest hung over an hour in its smoke tier with no summary line while other jobs loaded the box; its process tree was stopped and a fresh attest passed (34 minutes); the empty log is kept, and a recurrence is filed as a defect row."
+alternative = "Fix the MINORs after the gate, which moves the tip off the gated one."
+reversal_cost = "None."
+why_not_escalated = "The recipes' gate-MINOR rule; recorded."
+review = "docs/reviews/wi-851/005-REVIEW-A-a02a182.md; docs/reviews/wi-851/006-REVIEW-B-a02a182.md"

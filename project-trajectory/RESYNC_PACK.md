@@ -9632,6 +9632,112 @@ stops finding it. Re-sync the dogfooded skill copies (`bootstrap.py --sync`).
 `hooks/pre-commit`, `skills/spine-authoring/SKILL.md` and
 `skills/spine-authoring/references/in-lane.md`.
 
+### Held-rung spine rows are protected by state [since 31b8ed941]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A held-rung row's approval is now judged by the state a
+lane leaves, not by who made the commit. Where the dial
+(`[attestation] human_approval_through`) holds a row's rung, that row's
+approval lands from a lane only as a CLARITY re-attestation whose accepted
+verdict is bound to the row's approved text.
+
+- **The state rule.** A lane commit makes a held approval claim on a row of
+  the eight snapshotted registries when, against every one of its parents:
+  - the row's live `Status` moves into `Approved` or `Founded` (a row born
+    approved included); or
+  - its approval-record copy enters, moves in an approved cell or in
+    `Status`, or retires the row.
+
+  A Drafted sibling that a whole-registry copy carries, a demotion, a move
+  below approval, a traced-only copy move, a released rung and an example
+  `-000` row are not claims, and a registry the rung map does not name is
+  held. The one exception is a copy claim whose live row is unchanged,
+  approving, and equal to its copy, ruled CLARITY by an accepted amendment
+  verdict in the commit's tree whose binding records the row's approved-text
+  digest. Any other claim is refused, naming the row, its rung and the dial.
+  A registry or copy that cannot be read or does not parse is refused by
+  name. The rule lives in the new `scripts/held_status.py` (IF-196), and the
+  dial is the one committed on trunk.
+- **Its two walks.**
+  - At the merge slot, the rule is the fourth rider of the lane-commit walk
+    (`held_status.commit_held_approval_lines` in
+    `text_then_act.LANE_COMMIT_RIDERS`), so every lane is judged alike: a
+    loop's, a coordinator's, a person's or a re-claimed one.
+  - In the pre-commit hook, the `held-status` step judges a
+    `git merge --squash` landing, marked or not. It judges the squash by its
+    lane commits when the index holds the tip's registries and record, and
+    otherwise judges the index as one commit, with the rebase hint
+    (`text_then_act.squash_walk`, extracted from text then act's own squash
+    path).
+- **Retired:**
+  - the act-ledger CLARITY arm (`acceptance_record.held_reattest_refusal` and
+    its helpers);
+  - the slot's loop-lane held-status rung (`integrate._held_status_refusal`).
+- **Narrowed:** the marker arm (the `held-status` step and every loop writer,
+  through `agent_policy.loop_held_status_refusal`) now judges only a commit
+  made under the loop marker outside a claimed lane. It covers held status
+  moves across all eight snapshotted registries, the need, requirement,
+  design and test tiers included, and held copy claims. A marked commit inside
+  a lane passes at the commit and is judged when the lane lands. The
+  claimed-branch reader it uses moved from `check.py` into `kitlib.git` as
+  `claimed_work_branch` (unchanged answers), and `kitlib.git` gains
+  `grep_files`.
+- **The row-text identity.**
+  - `acceptance_record.approved_text_digest` is the digest of a row's approved
+    text: `sha256:` plus 16 hex over its nonempty approved cells, as sorted
+    JSON.
+  - A verdict's binding gains an optional identity cell,
+    `rows = <ID>=sha256:<16 hex>;...`, written by
+    `kitlib.sitting.write_binding` and read by `read_identities` and
+    `accepted_identities`. Other readers of a binding ignore it.
+  - The ADJUDICATE-AMENDMENT template gains a `{identity}` slot, one
+    `JUDGED-TEXT: <row id> <digest>` line per row shown.
+    `adjudicate_brief.bind_pending` records those lines at reservation, and
+    `record_outcome` keeps them when it rewrites the outcome.
+  - The act turn (`adjudicate_act`) owes a held CLARITY re-attestation only
+    while the committed row still has the bound digest. Otherwise
+    `coordinator_adjudicate.py act` refuses before launch, naming the row and
+    both digests.
+- **`intake.py snapshot --verdict`** stays optional. It is recorded in the act
+  ledger for audit, and no rule requires it.
+- **Behaviour-preserving moves:** the held-status readers moved whole from
+  `scripts/acceptance_record.py` into `scripts/held_status.py`, which the
+  bootstrap manifest ships.
+
+**What to do.**
+
+- Overwrite the files below. A local script that imported the held-status
+  readers from `acceptance_record` now imports them from `held_status`.
+- **An adopter's unmarked plain trunk approvals are untouched:** a person's
+  commit made on trunk, outside a lane and without the loop marker, is not
+  judged.
+- **Re-sit a held CLARITY verdict sat before this upgrade.** Its binding
+  carries no identity, so its act is refused, at the act turn and at the
+  slot. Re-sit the row, then take the act from the new verdict.
+- **A fixture or adopter flow that flips a held row in a lane is now
+  refused** at the slot, and at a squash landing, whoever built the lane.
+  Release that rung in the dial, or route the flip through a bound CLARITY
+  re-attestation; a first approval on a held rung stays the owner's.
+- **An operator override of the ADJUDICATE-AMENDMENT prompt** (`--prompt-map`)
+  must add the `{identity}` slot. The strict fill refuses an override that
+  lacks a slot the brief provides.
+
+**Kit-owned files — overwrite:** `scripts/held_status.py` (new),
+`scripts/acceptance_record.py`, `scripts/kitlib/git.py`,
+`scripts/kitlib/sitting.py`, `scripts/kitlib/bootstrap_manifest.py`,
+`scripts/adjudicate_brief.py`, `scripts/adjudicate_act.py`,
+`scripts/text_then_act.py`, `scripts/check.py`, `scripts/integrate.py`,
+`scripts/agent_policy.py`, `scripts/check_trajectory.py`,
+`scripts/baseline_snapshot.py`, `scripts/intake.py`, `hooks/pre-commit`,
+`prompts/adjudicate-amendment.template.md`, `prompts/CATALOG.md`,
+`PROCESS.md`, `README.md`, `skills/spine-authoring/references/in-lane.md`.
+Two `scope: this-repo` skills changed too, only if you vendored them:
+`skills/coordinator-cycle/SKILL.md`,
+`skills/coordinator-cycle/references/recipes.md` and
+`skills/byte-budget-guard/SKILL.md`. Re-sync the dogfooded skill copies
+(`bootstrap.py --sync`).
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

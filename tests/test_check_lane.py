@@ -200,27 +200,55 @@ def test_detached_head_is_not_a_work_branch(check, tmp_path):
     assert check._work_branch(tmp_path) is None
 
 
-def test_dotdot_in_a_branch_name_is_refused_loudly(check, tmp_path, capsys):
+def test_dotdot_in_a_branch_name_is_refused_loudly(
+    check, tmp_path, capsys, monkeypatch
+):
     # git's own ref rules forbid `..`, so reaching this branch means something
     # is feeding check.py a fake ref. It is a path traversal into whatever sits
     # above docs/work/active/, so it is refused — and said out loud, because a
-    # silent refusal here looks identical to an ordinary trunk run.
+    # silent refusal here looks identical to an ordinary trunk run. The fake ref
+    # is fed where the reader asks git: its one home, `kitlib.git`.
     claim(tmp_path, "x")
-    check._git_out = lambda root, args: "../../x\n"
+    monkeypatch.setattr(check._kitgit, "git_out", lambda root, args: "../../x\n")
     assert check._work_branch(tmp_path) is None
     assert "implausible branch name" in capsys.readouterr().err
 
 
-def test_work_branch_is_memoized_per_process(check, tmp_path):
+def test_work_branch_is_memoized_per_process(check, tmp_path, monkeypatch):
     # ~15 steps in a --gate run, each asking. Without the memo that is 15 git
     # subprocesses per check run, on every commit.
     git_repo(tmp_path, branch="wi-360")
     claim(tmp_path, "wi-360")
     assert check._work_branch(tmp_path) == "wi-360"
     calls = []
-    check._git_out = lambda root, args: calls.append(args)
+    monkeypatch.setattr(check._kitgit, "git_out", lambda root, args: calls.append(args))
     assert check._work_branch(tmp_path) == "wi-360"
     assert calls == [], "the second ask re-ran git instead of reading the memo"
+
+
+def test_the_claimed_branch_reader_has_one_home(check, tmp_path, monkeypatch, capsys):
+    # One reader answers "is this checkout a claimed lane" for every caller, so
+    # check.py's private name must delegate to it rather than keep a copy. A
+    # copy left behind in check.py would pass the detector cases above while the
+    # shared reader drifted; the spy below catches it, because a copy never
+    # calls the shared name.
+    seen = []
+
+    def spy(root, notice=None):
+        seen.append((root, notice))
+        return "wi-360"
+
+    monkeypatch.setattr(check._kitgit, "claimed_work_branch", spy)
+    assert check._claimed_work_branch(tmp_path) == "wi-360"
+    assert [root for root, _ in seen] == [tmp_path]
+    # The implausible-name notice still reaches stderr through check.py's own
+    # notice, the shared reader staying silent on its own.
+    monkeypatch.undo()
+    monkeypatch.setattr(check._kitgit, "git_out", lambda root, args: "a/../b\n")
+    assert check._kitgit.claimed_work_branch(tmp_path) is None
+    assert capsys.readouterr().err == ""
+    assert check._claimed_work_branch(tmp_path) is None
+    assert "implausible branch name 'a/../b'" in capsys.readouterr().err
 
 
 # --- 2. the skip -------------------------------------------------------------

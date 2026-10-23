@@ -40,6 +40,14 @@
                    meaning-or-clarity method above them stays this brief's own.
                    An absent or unreadable home, or one with no section for a
                    shown tier, refuses the render.
+       {identity}  one `JUDGED-TEXT: <row id> <digest>` line per row {rows}
+                   shows: the digest of that row's approved text as the
+                   brief's own reader loaded it. The route that binds this
+                   call reads these lines off the composed prompt and records
+                   them in the verdict's binding, so a held CLARITY
+                   re-attestation is bound to the text this sitting judged:
+                   the act turn and the merge refuse it once the row's text
+                   no longer has that digest. Registry-derived ONLY.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 
@@ -84,6 +92,8 @@ Judge the CELLS BELOW and nothing else. You have no access to the session that m
 {baseline}
 --- AMENDED CELLS (before/after, per row) ---
 {rows}
+--- JUDGED TEXT (the identity of each row's approved text shown above) ---
+{identity}
 --- END ---
 
 Method:
@@ -111,7 +121,7 @@ Then exactly one machine line:
 
 Your verdict is this turn's whole output: stop once it is committed. Every row you judged still reads as approved text that drifted from its anchor until an act re-anchors it, and that act is a later act turn taken from your committed verdict, so each row line says what the act needs:
 
-- A `CLARITY` row keeps its attestation: the owner's signature still describes it. The later act turn re-anchors it so the record stops drifting. Where the dial still HOLDS the rung for a human, that act names your verdict, so the act ledger records it and the owner's surface lists it for audit; the merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
+- A `CLARITY` row keeps its attestation: the owner's signature still describes it. The later act turn re-anchors it so the record stops drifting. Where the dial still HOLDS the rung for a human, your verdict is bound to the text shown above (its JUDGED TEXT identities), so an edit to that text after your verdict refuses the act; that act names your verdict, so the act ledger records it and the owner's surface lists it for audit; the merge refuses a held-rung re-attestation your verdict does not rule CLARITY.
 - A `MEANING` row's attestation is now a false claim, and it owes a fresh one. Where the rung is RELEASED, mark each row whose new text you would bless `[MEANING+BLESS]`: the later act turn re-attests exactly those. If a row's new text is NOT one you would bless, mark it `[MEANING]` and draft the corrective work in a `## Dispositions` section of this row's own spec, which intake mints at this row's merge. Where the dial HOLDS the rung, stop at the verdict and recommend the row to the owner: the row surfaces on the owner's approval brief and the signature is theirs.
 - Never approve a first draft on a held rung. A held rung's `Drafted` row is the owner's alone.
 

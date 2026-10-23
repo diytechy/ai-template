@@ -157,15 +157,17 @@ kit_policy pre-commit commit || exit 1
 #                        the staged tree (OI-31 option (a), the destination).
 #                        Skips cleanly with no git and outside a checkout.
 #      - held-status     not a freshness check either, and it reads the index
-#                        (SR-208): a commit made from a process the unattended
-#                        loop started — it carries the loop marker — may not
-#                        change a status cell the approval level holds for a
-#                        human, judged against the dial committed at HEAD. A
-#                        person's commit (no marker) is never judged, and a
-#                        merge in progress is judged only for a status neither
-#                        side carried. The merge slot re-judges a lane's whole
-#                        range whether or not this hook ran, since hooks are
-#                        opt-in.
+#                        (SR-208), under the dial committed at HEAD. A squash
+#                        landing is judged by its lane commits, marked or not:
+#                        a held-rung row's approval lands from a lane only as a
+#                        CLARITY re-attestation bound to its judged text. A
+#                        commit made under the loop marker outside a claimed
+#                        lane may not move a held status or make a held
+#                        approval claim; a merge in progress is judged only for
+#                        a status neither side carried. A marked commit inside
+#                        a lane, and an unmarked plain trunk commit, pass here.
+#                        The merge slot judges every lane commit whether or not
+#                        this hook ran, since hooks are opt-in.
 #      - ruling-sync     reads the index too (WI-790, OI-102 Q3): a commit that
 #                        takes an open item out of `pending` must update the
 #                        Done-when of every row open at HEAD whose `needs`

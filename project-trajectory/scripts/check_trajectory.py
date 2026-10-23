@@ -251,12 +251,16 @@ except ImportError:  # pragma: no cover - in-process fallback
 # not optional like `gen_arch_map` below: its findings join the failure set at
 # `main`'s aggregation, so a copy of this checker without it would silently stop
 # reporting that attested text had drifted, which is the opposite of a vacuity.
-# `bootstrap.MAPPING` carries it, so a scaffold gets both or neither.
+# `bootstrap.MAPPING` carries it, so a scaffold gets both or neither. The
+# held-status readers the history check reads (`held_status`, IF-196) moved out
+# of it whole; they import it one way and ride the same guard and MAPPING.
 try:
     import acceptance_record
+    import held_status
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import acceptance_record
+    import held_status
 
 # Sibling: the arch-map AST walk (`gen_arch_map.scan_inventory`) —
 # `arch_inventory`'s source since WI-455 retired the committed
@@ -3215,7 +3219,7 @@ def loop_held_status_findings(root):
     harness runs, and every lane commit merged into it - once each. A merge is
     skipped because its changes are those of the commits it merges, each
     visited on its own; a root commit is compared with the empty tree
-    (`acceptance_record.committed_status_moves`). Only a commit carrying a
+    (`held_status.committed_status_moves`). Only a commit carrying a
     well-formed `Loop-Session` trailer is judged, and it is judged against the
     dial in ITS OWN tree, so raising the dial later re-judges nothing. `[]`
     off git.
@@ -3234,8 +3238,8 @@ def loop_held_status_findings(root):
             continue
         dial = _commit_dial(root, sha)
         subject = message.strip().splitlines()[0] if message.strip() else ""
-        moves = acceptance_record.committed_status_moves(root, sha)
-        for line in acceptance_record.held_status_lines(dial, moves):
+        moves = held_status.committed_status_moves(root, sha)
+        for line in held_status.held_status_lines(dial, moves):
             out.append(
                 "loop commit {} ({!r}, Loop-Session {}) moved {}, a rung its own "
                 "approval level ({}) holds for a human".format(

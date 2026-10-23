@@ -1207,12 +1207,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             "process",
         ),
         # The held status (SR-208), the staged-tree sibling of the two above and
-        # at every bar for their reason. It is the floor for a commit an AI
-        # SESSION makes through the hook, since a session's own staging never
-        # passes through the loop's code; armed only under the loop marker, so
-        # a person's commit passes. A merge in progress (the station refresh's
-        # bar runs mid-merge) is judged by what NEITHER side carried. The merge
-        # slot re-judges the lane's whole range whether or not a hook ran.
+        # at every bar for their reason. A squash landing is judged by its lane
+        # commits, marked or not; a commit made under the loop marker outside a
+        # claimed lane by the narrowed marker arm, a merge in progress (the
+        # station refresh's bar runs mid-merge) by what NEITHER side carried.
+        # Every lane commit is judged again at the merge slot, whether or not a
+        # hook ran; an unmarked plain trunk commit is not judged.
         (
             "held-status",
             (),
@@ -1959,33 +1959,63 @@ def approval_immutability(root=".", strict=True):
 
 
 def _held_status_refusal(root="."):
-    """The `held-status` step's judgement: the refusal for a marked commit whose
-    STAGED tree changes a status the approval level holds for a human, or None.
+    """The `held-status` step's judgement over the staged tree, or None, in
+    three modes, under the dial COMMITTED at HEAD (`kitlib.authority.dial_at`,
+    the one silent, legacy-aware reader the writers and the merge slot also
+    use), so the commit being made cannot release itself by staging a lower
+    dial:
 
-    The loop writers' judgement (`acceptance_record`), over the index against
-    HEAD, with the dial COMMITTED at HEAD (`kitlib.authority.dial_at`, the one
-    silent, legacy-aware reader the writers and the merge slot also use): the
-    commit being made cannot release itself by staging a lower dial, and a hook
-    that runs on every commit prints no migration note.
+    1. Off git, or before the first commit, nothing is judged.
+    2. A `git merge --squash` in progress (git's `SQUASH_MSG`, read by
+       `kitlib.git.squash_commits`; no MERGE_HEAD) is a landing, judged marked
+       or not (`_held_squash_refusal`).
+    3. A commit made under the loop marker outside a claimed lane
+       (`kitlib.git.claimed_work_branch`) is judged by the narrowed marker arm
+       (`held_status.marked_refusal`): a held status move, or a held copy
+       claim. During a merge the staged result is judged against HEAD and
+       MERGE_HEAD, so a status the merged side already carries is not this
+       commit's.
 
-    DURING A MERGE the staged result is judged against its first parent, less
-    every status the merged side already carries (`pending_status_moves`): those
-    arrived in commits judged where they were made, while a value NEITHER side
-    carried - a conflict resolution or a mid-merge edit - is this commit's own.
-    The reader is imported only on a marked commit, so `check.py` itself still
-    needs nothing beyond `kitlib` to run.
+    Every other commit passes: a marked commit inside a lane is judged when
+    its lane lands, and an unmarked plain trunk commit is the ruled residual.
+    The two-tree readers are imported only when a mode needs them.
 
     Implements: SR-208, LLR-246
     """
-    if _kitprovenance.loop_session() is None:
+    head = (_git_out(root, ["rev-parse", "--verify", "--quiet", "HEAD"]) or "").strip()
+    if not head:
         return None
-    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+    merging = _git_out(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"])
+    squashed = [] if (merging or "").strip() else _kitgit.squash_commits(root)
+    if squashed:
+        return _held_squash_refusal(root, head, squashed[0])
+    if _kitprovenance.loop_session() is None or _kitgit.claimed_work_branch(root):
+        return None
+    import held_status  # a leaf reader of two git trees, sibling of this one
 
-    moves = acceptance_record.pending_status_moves(root)
-    if not moves:
-        return None
-    dial = _kitauthority.dial_at(root, "HEAD")
-    return acceptance_record.held_status_refusal(dial, moves)
+    return held_status.marked_refusal(
+        root, "HEAD", None, _kitauthority.dial_at(root, "HEAD")
+    )
+
+
+def _held_squash_refusal(root, head, tip):
+    """A squash landing's held-rung judgement, or None: each lane commit
+    `head..tip` judged by the lane rule's rider when the index holds every
+    held carrier byte-equal to the tip's (`text_then_act.squash_walk`), else
+    the index judged as one lane commit against HEAD, with the rebase hint.
+
+    Implements: SR-208, LLR-246
+    """
+    import held_status  # leaf readers of two git trees, siblings of this one
+    import text_then_act
+
+    riders = (held_status.commit_held_approval_lines,)
+    lines = text_then_act.squash_walk(root, head, tip, held_status.HELD_PATHS, riders)
+    if lines is None:
+        dial = _kitauthority.dial_at(root, "HEAD")
+        lines = held_status.held_approval_lines(root, [head], None, dial)
+        lines = lines and lines + [text_then_act.SQUASH_REBASE_HINT]
+    return "; ".join(lines) if lines else None
 
 
 def _held_status_mode(args):
@@ -1994,7 +2024,7 @@ def _held_status_mode(args):
     if not args.held_status:
         return
     refusal = _held_status_refusal(".")
-    msg = refusal or "no loop commit moves a held status"
+    msg = refusal or "no held status move or held approval claim to refuse"
     print("  {:5} held-status  {}".format("FAIL" if refusal else "ok", msg))
     sys.exit(1 if refusal else 0)
 
@@ -2145,58 +2175,30 @@ def _divergence_mode(args):
     sys.exit(staged_divergence(".", strict=args.strict))
 
 
-def _claimed_work_branch(root):
-    """The uncached answer behind `_work_branch` — see it for the contract.
+def _implausible_branch_notice(branch):
+    """Say out loud that the claimed-branch reader refused an implausible branch
+    name: a name that reaches it is either a git that stopped enforcing its ref
+    rules or something feeding check.py a fake ref, and a silent refusal looks
+    identical to an ordinary trunk run.
 
     Implements: SR-006, SR-170, LLR-141
     """
-    out = _git_out(root, ["symbolic-ref", "--short", "HEAD"])
-    branch = (out or "").strip()
-    if not branch:
-        return None  # no git, not a repo, or a detached HEAD => full checks
-    # A branch name is used here as a relative PATH. git's own ref rules already
-    # forbid `..` and `\`, but this decides whether a gate runs, so it refuses
-    # rather than trusts — loudly, because a name that reaches here is either a
-    # git that stopped enforcing its rules or something feeding us a fake ref.
-    if ".." in branch or "\\" in branch or branch.startswith("/"):
-        print(
-            "check: ignoring implausible branch name '{}' — running the full "
-            "checks (concurrency-restructure §5.2)".format(branch),
-            file=sys.stderr,
-        )
-        return None
-    active = Path(root) / "docs" / "work" / "active"
-    spec_dir = active / branch
-    try:
-        # Belt-and-braces containment: whatever the name, the claim directory
-        # must sit UNDER docs/work/active/ for this to be a claimed branch.
-        spec_dir.resolve().relative_to(active.resolve())
-    except (OSError, ValueError):
-        return None
-    if spec_dir.is_dir():
-        return branch
-    # WI-357: the working tree alone cannot answer this. §2.3 step 3 closes a WI by
-    # MOVING the claim out of active/, so from the close commit on the tree holds no
-    # claim and the freshness gates re-arm inside the very commit that closes it,
-    # demanding artifacts §5.2 forbids the branch to commit. History outlives the
-    # move: the base commit that cut the branch added the directory, and that add
-    # stays reachable. One path-limited git call, stopped at the first hit.
-    # FAIL-DIRECTION: no git, a failing git or an empty answer all read as the TRUNK
-    # lane and its STRICT bar, because a false positive would switch the freshness
-    # gates off on the trunk — the one branch that owns regenerating them, where
-    # nothing else would catch the drift. Residual (review-confirmed breadth): ANY
-    # branch whose name ever appeared under docs/work/active/ in reachable history
-    # reads as claimed forever — a retired WI branch re-cut, or a throwaway reusing
-    # its name; that relaxes a BRANCH, never the trunk, and bounding the walk would
-    # need a configured trunk name this rule deliberately has not. Cost note: on
-    # the trunk the pathspec never matches, so the -1 walk pays full history —
-    # measured ~0.05 ms/commit (61 ms at 1.2k commits), once per process via the
-    # cache below; a very large adopter repo that feels it should bound with
-    # --since rather than name its trunk.
-    log = _git_out(
-        root, ["log", "-1", "--format=%H", "--", "docs/work/active/" + branch]
+    print(
+        "check: ignoring implausible branch name '{}' — running the full "
+        "checks (concurrency-restructure §5.2)".format(branch),
+        file=sys.stderr,
     )
-    return branch if (log or "").strip() else None
+
+
+def _claimed_work_branch(root):
+    """The uncached answer behind `_work_branch` — see it for the contract. The
+    reader's one home is `kitlib.git.claimed_work_branch`; check.py adds only
+    its stderr notice for an implausible branch name. None (no git, a failing
+    git, a detached HEAD, no claim) reads as the TRUNK lane and its STRICT bar.
+
+    Implements: SR-006, SR-170, LLR-141
+    """
+    return _kitgit.claimed_work_branch(root, notice=_implausible_branch_notice)
 
 
 def _work_branch(root="."):
@@ -2614,8 +2616,9 @@ def main():
     ap.add_argument(
         "--held-status",
         action="store_true",
-        help="run ONLY the 'held-status' step's body and exit (SR-208): under "
-        "the loop marker, refuse a staged change to a held status",
+        help="run ONLY the 'held-status' step's body and exit (SR-208): judge "
+        "a squash landing by its lane commits, and, under the loop marker "
+        "outside a claimed lane, refuse a held status move or approval claim",
     )
     ap.add_argument(
         "--ruling-sync",

@@ -334,7 +334,6 @@ def test_the_merge_ladder_consults_the_ruling_sync_rung(tmp_path, monkeypatch):
         "_close_record_refusal",
         "_minted_id_refusal",
         "_approval_act_refusal",
-        "_held_status_refusal",
         "_loop_trailer_refusal",
     ):
         monkeypatch.setattr(integrate, rung, lambda *a, **k: None)

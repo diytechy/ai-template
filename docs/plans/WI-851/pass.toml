@@ -1,0 +1,11 @@
+# The plan gate's pass record (written by `review_brief.py plan-file --pass`;
+# read by `plan_gate.py`). Never edit it by hand: an edit unbinds it.
+wi = "WI-851"
+plan = "sha256:688410dabc670cb0fbb542fae7721ae06554569907cb39074acaaadc0b75d3a8"
+done_when = "sha256:67d09b7d14ec8011"
+critique = "docs/plans/WI-851/critique-2.md"
+critique_digest = "sha256:7c669b8fbc9d8f7e992ef87a2e72c74b7df1edba275a3f167c90239a12396c0c"
+reviewed = "9c472a1dbc6538b9e9b5e2da9357ab6c75457675"
+delta = "within"
+dispute = ""
+dispute_digest = ""

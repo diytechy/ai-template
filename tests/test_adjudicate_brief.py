@@ -44,10 +44,13 @@ from conftest import (
 )
 
 ab = load_script("adjudicate_brief")
+acceptance_record = load_script("acceptance_record")
 baseline_snapshot = load_script("baseline_snapshot")
 agent_loop = load_script("agent_loop")
 wi_convert = load_script("wi_convert")
 intake = load_script("intake")
+
+from kitlib import sitting as ksitting  # noqa: E402  (scripts/ is on the path)
 
 pytestmark = env_gate_skipif("git")
 
@@ -928,6 +931,99 @@ def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     assert "the signature is the owner's" not in clarity, clarity
     assert "the signature is the owner's" in meaning, meaning
     assert "--verdict" not in meaning, meaning
+
+
+# --- the row-text identity the amendment brief states and the binding keeps ---
+#
+# A held CLARITY re-attestation is bound to the text its verdict judged: the
+# brief states one `JUDGED-TEXT: <row> <digest>` line per row it shows, the
+# binding records those identities at reservation, and the route's outcome
+# rewrite keeps them.
+
+_JUDGED = re.compile(r"^JUDGED-TEXT: (\S+) (\S+)$", re.M)
+
+
+def _committed_digest(repo, rel, id_col, rid):
+    """The approved-text digest of row `rid` as committed at HEAD."""
+    digest = acceptance_record.approved_text_digest
+    row = acceptance_record.rows_at(repo, "HEAD", rel, id_col)[rid]
+    return digest(rel, id_col, row)
+
+
+def test_the_amendment_brief_states_each_shown_rows_digest(tmp_path):
+    # A requirement-chain row and a need-tier row, both amended and committed,
+    # so the brief's digests are those of the rows the rule will read.
+    repo = _spine_repo(tmp_path)
+    needs = repo / "docs" / "requirements" / "stakeholder-needs.toml"
+    needs.write_text(_NEED_TOML.format("a team can use it"), encoding="utf-8")
+    baseline_snapshot.copy_live(repo, seed=True)
+    _amend(repo)
+    needs.write_text(_NEED_TOML.format("a team can use the kit"), encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "amend SR-001 and SN-001")
+    expected = {
+        "SR-001": _committed_digest(
+            repo, "docs/requirements/system-requirements.toml", "SR-ID", "SR-001"
+        ),
+        "SN-001": _committed_digest(
+            repo, "docs/requirements/stakeholder-needs.toml", "SN-ID", "SN-001"
+        ),
+    }
+    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-001;SN-001"))
+    assert why is None, why
+    lines = _JUDGED.findall(values.get("identity") or "")
+    assert sorted(lines) == sorted(expected.items()), values.get("identity")
+
+
+_PROMPT_IDS = {"SR-001": "sha256:0123456789abcdef", "SN-001": "sha256:fedcba9876543210"}
+_PROMPT_LINES = "".join(
+    "JUDGED-TEXT: {} {}\n".format(rid, digest) for rid, digest in _PROMPT_IDS.items()
+)
+
+
+def test_bind_pending_records_the_briefs_identities(tmp_path):
+    read = ksitting.read_identities
+    amendment = tmp_path / "amendment.md"
+    ab.bind_pending(amendment, "amendment", "the brief\n" + _PROMPT_LINES)
+    text = (tmp_path / "amendment.md.requested").read_text(encoding="utf-8")
+    assert read(text) == (_PROMPT_IDS, None), text
+    # A combined prompt carries its lines inside its amendment section.
+    combined = tmp_path / "combined.md"
+    prompt = (
+        "## amendment\n\n" + _PROMPT_LINES + "\n## first-approval\n\nrows\n\n"
+        "SITTING: JUDGED kinds=amendment;first-approval\n"
+    )
+    assert ab.bind_pending(combined, "combined", prompt) == (
+        "amendment",
+        "first-approval",
+    )
+    text = (tmp_path / "combined.md.requested").read_text(encoding="utf-8")
+    assert read(text) == (_PROMPT_IDS, None), text
+    # A first-approval-only prompt shows no amended text, so it binds none.
+    first = tmp_path / "first.md"
+    ab.bind_pending(first, "first-approval", "the brief\n")
+    text = (tmp_path / "first.md.requested").read_text(encoding="utf-8")
+    assert "rows =" not in text, text
+
+
+@pytest.mark.parametrize("call_ok", [True, False], ids=["accepted", "failed"])
+def test_record_outcome_keeps_the_identity_cell(tmp_path, call_ok):
+    # Dropping the cell on the rewrite would refuse every held CLARITY act.
+    write = ksitting.write_binding
+    read = ksitting.read_identities
+    repo = _repo(tmp_path)
+    verdict = repo / "docs" / "reviews" / "v.md"
+    verdict.parent.mkdir(parents=True)
+    verdict.write_text(
+        "- [CLARITY] SR-001 Requirement -> a -> a -> same\n\nVERDICT: CLARITY rows=1\n",
+        encoding="utf-8",
+    )
+    write(verdict, "amendment", ("amendment",), "pending", identities=_PROMPT_IDS)
+    outcome, _why = ab.record_outcome(repo, verdict, "amendment", None, call_ok, "001")
+    assert outcome == ("accepted" if call_ok else "failed")
+    text = (repo / "docs" / "reviews" / "v.md.requested").read_text(encoding="utf-8")
+    assert ksitting.read_requested(text)[2] == outcome, text
+    assert read(text) == (_PROMPT_IDS, None), text
 
 
 def test_the_amendment_brief_reanchors_CLARITY_rows_and_keeps_the_sibling_hold():

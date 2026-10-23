@@ -538,7 +538,8 @@ writes it by hand.
   is no re-claim: it is judged like any other commit in the open window,
   refused by name when its trailer is absent or malformed, and with a
   well-formed trailer it passes but closes nothing. The commits before a
-  re-claim stay judged, and the held-status rung judges the lane whole.
+  re-claim stay judged, and the held-rung lane rule judges every lane commit,
+  loop, coordinator or re-claimed, whatever its window.
 
 **A leg's usage.** Before it writes its handoff and ends its reply, a leg
 runs the same pair as §6's close-out, from the primary checkout:

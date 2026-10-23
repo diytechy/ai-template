@@ -724,6 +724,11 @@ MAPPING = [
     # the one lane-commit walk: `integrate.py` imports it unguarded and
     # `check.py`'s text-then-act step reads it, both in this list.
     ("scripts/text_then_act.py", "scripts/text_then_act.py"),
+    # The held status and the held-rung lane rule (IF-196): `agent_policy.py`
+    # imports it unguarded at module level, `text_then_act.py` (the lane
+    # rider) and `check_trajectory.py` behind their sibling guards and
+    # `check.py`'s held-status step deferred, all in this list.
+    ("scripts/held_status.py", "scripts/held_status.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure

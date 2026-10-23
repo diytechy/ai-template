@@ -24,6 +24,7 @@ from conftest import (
 
 SNAP = load_script("baseline_snapshot")
 AR = load_script("acceptance_record")
+HS = load_script("held_status")
 from kitlib import sitting as SITTING_MOD  # noqa: E402  (scripts/ is on the path)
 
 NEEDS_REL = "docs/requirements/stakeholder-needs.toml"
@@ -423,39 +424,12 @@ def test_a_reattestation_inside_the_amendment_scope_merges(scaffold):
     assert refusal and "SR-001" in refusal, refusal
 
 
-def test_a_held_rung_reattestation_without_a_verdict_is_refused(scaffold):
-    """OI-100 gap 2 (WI-791): on a held rung an adjudication re-attests only a
-    row its verdict rules CLARITY, and the act names that verdict so the act
-    ledger shows it. The scaffold's dial holds every rung; an act naming no
-    verdict is refused at merge, by row."""
-    base, head = _amendment_act(scaffold, {"SR-001"}, held=True)
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
-    assert refusal and "SR-001" in refusal and "names no verdict" in refusal, refusal
-
-
-def test_a_held_rung_reattestation_its_verdict_rules_CLARITY_merges(scaffold):
-    text = "- [CLARITY] SR-001 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
-    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
-    assert (
-        AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head) is None
-    )
-
-
-def test_a_held_rung_reattestation_of_a_MEANING_row_is_refused(scaffold):
-    """A MEANING row on a held rung is the owner's to sign, whatever the act
-    names: the adjudicator recommends it and never re-attests it."""
-    text = "- [MEANING] SR-001 title -> moved\n\nVERDICT: MEANING rows=1\n"
-    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
-    assert refusal and "SR-001" in refusal and "CLARITY" in refusal, refusal
-
-
-def test_a_held_rung_is_read_from_trunk_not_from_the_merge_base(scaffold):
-    """Sol review 1, MAJOR 1 (WI-791): the act lands under TRUNK's authority.
-    A lane forks while the rung is released and re-attests with no verdict;
-    trunk then holds the rung. The merge slot judges a branch before its
-    in-slot refresh, against the old merge base, so a guard reading the merge
-    base's dial would admit the act under an authority trunk has withdrawn."""
+def test_a_held_rung_is_read_from_trunk_not_from_the_lane(scaffold):
+    """The lane rule judges a lane commit under the dial committed at the
+    checkout's HEAD, which is trunk at the merge slot: a lane that forked while
+    the rung was released, and whose own tree still releases it, is refused
+    once trunk holds the rung. Its CLARITY verdict binds no text, so the act
+    is no exception."""
     run_git = _git(scaffold)
     _release(scaffold)
     _append(scaffold, SR_REL, _SR.format(rid="SR-001", title="row one"))
@@ -463,78 +437,17 @@ def test_a_held_rung_is_read_from_trunk_not_from_the_merge_base(scaffold):
     _commit(run_git, "seed")
     trunk_branch = run_git("rev-parse", "--abbrev-ref", "HEAD")
     _rewrite(scaffold, SR_REL, '"row one"', '"row one, amended"')
-    base = _commit(run_git, "the amendment")
+    _commit(run_git, "the amendment")
     run_git("checkout", "-q", "-b", "lane")
     _bind_branch(scaffold, {"amendment": ["SR-001"]})
     SNAP.copy_live(scaffold, reattests=frozenset({"SR-001"}))
-    head = _commit(run_git, "the lane's re-attesting act, no verdict")
+    head = _commit(run_git, "the lane's re-attesting act")
+    assert HS.commit_held_approval_lines(scaffold, head) == []
     run_git("checkout", "-q", trunk_branch)
     set_process_key(scaffold, "attestation", "human_approval_through", "DevStg-Release")
-    trunk = _commit(run_git, "trunk holds every rung")
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=trunk)
-    assert refusal and "SR-001" in refusal and "names no verdict" in refusal, refusal
-    # ...and the same act under a trunk that still releases the rung merges.
-    assert (
-        AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=base) is None
-    )
-
-
-def test_a_held_rung_reattestation_of_a_DRAFTED_row_is_refused(scaffold):
-    """Sol review 1, MINOR 2 (WI-791; SR-228's acceptance): a CLARITY verdict
-    says the owner's signature still describes the row, and a row below
-    approval carries no signature to carry over, so the held-rung allowance
-    never re-attests one, whatever its verdict says."""
-    run_git = _git(scaffold)
-    _append(
-        scaffold,
-        SR_REL,
-        _SR.format(rid="SR-001", title="row one").replace(
-            'status = "Approved"', 'status = "Drafted"'
-        ),
-    )
-    SNAP.copy_live(scaffold, seed=True)
-    _commit(run_git, "seed")
-    _rewrite(scaffold, SR_REL, '"row one"', '"row one, amended"')
-    base = _commit(run_git, "the amendment")
-    (scaffold / _VERDICT).parent.mkdir(parents=True, exist_ok=True)
-    (scaffold / _VERDICT).write_text("- [CLARITY] SR-001 title -> same\n", "utf-8")
-    SNAP.copy_live(scaffold, reattests=frozenset({"SR-001"}), verdict=_VERDICT)
-    head = _commit(run_git, "a held-rung act re-attesting a Drafted row")
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
-    assert refusal and "SR-001" in refusal and "below approval" in refusal, refusal
-
-
-def test_a_held_rung_reattestation_its_verdict_does_not_rule_is_refused(scaffold):
-    """SR-228: a verdict that rules other rows and not this one is a
-    non-CLARITY verdict for it, so the held-rung act is refused by row."""
-    text = "- [CLARITY] SR-002 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
-    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
-    assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
-
-
-def test_a_held_rung_reattestation_whose_verdict_is_unreadable_is_refused(scaffold):
-    """SR-228: an act naming a verdict its own head does not carry has no
-    readable ruling, so the held-rung act is refused by row."""
-    text = "- [CLARITY] SR-001 title -> same obligation\n\nVERDICT: CLARITY rows=1\n"
-    base, _head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
-    run_git = _git(scaffold)
-    run_git("rm", "-q", _VERDICT)
-    head = _commit(run_git, "the named verdict leaves the head")
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
-    assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
-
-
-def test_a_held_rung_row_ruled_both_ways_reads_MEANING_and_is_refused(scaffold):
-    """LLR-278: a verdict tagging one row both CLARITY and MEANING rules it
-    MEANING, whichever tag comes first, so the held-rung act is refused."""
-    for order in (("CLARITY", "MEANING"), ("MEANING", "CLARITY")):
-        text = "".join("- [{}] SR-001 title -> ruled\n".format(w) for w in order)
-        assert AR.verdict_rulings(text) == {"SR-001": "MEANING"}, order
-    text = "- [MEANING] SR-001 a -> b\n- [CLARITY] SR-001 c -> d\n"
-    base, head = _amendment_act(scaffold, {"SR-001"}, held=True, verdict=text)
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _AMENDMENT, trunk=head)
-    assert refusal and "SR-001 is not ruled CLARITY" in refusal, refusal
+    _commit(run_git, "trunk holds every rung")
+    lines = " ".join(HS.commit_held_approval_lines(scaffold, head))
+    assert "SR-001" in lines and "DevStg-Release" in lines, lines
 
 
 # --- a released rung's MEANING re-attestation needs the bless mark (TC-278) ---
@@ -668,11 +581,11 @@ def test_a_retirement_beside_another_act_in_its_registry_merges(scaffold):
 
 
 def test_a_lone_retirement_on_a_held_rung_is_refused_by_row(scaffold):
-    base, head, _written = _retirement_act(scaffold, held=True)
-    refusal = AR.merge_approval_refusal(scaffold, base, head, _RETIRE, trunk=head)
-    assert refusal and "SR-002 is below approval (or absent) at the act" in refusal, (
-        refusal
-    )
+    # The lane rule, asked of the retirement act under the scaffold's held
+    # dial: a copy retiring an approved row is a held approval claim.
+    _base, head, _written = _retirement_act(scaffold, held=True)
+    lines = " ".join(HS.commit_held_approval_lines(scaffold, head))
+    assert "SR-002" in lines and "held rung" in lines, lines
 
 
 def test_a_retirement_outside_the_amendment_scope_is_refused(scaffold):
@@ -1177,27 +1090,6 @@ def test_an_unauthorized_registrys_obsolete_copy_is_still_widened(scaffold):
     assert refusal and "WIDENED to docs/requirements/stakeholder-needs" in refusal, (
         refusal
     )
-
-
-def test_a_rejected_bound_sitting_cannot_carry_a_held_rung_reattestation(scaffold):
-    """WI-841 round 11 (Sol final3 MAJOR 1): a bound, accepted
-    `amendment;done-when` sitting whose done-when section has no machine line
-    is not a valid verdict, so its amendment section's CLARITY ruling carries
-    no held-rung re-attestation: the integrator refuses the act."""
-    text = (
-        "## amendment\n- [CLARITY] SR-001 title -> same obligation\n"
-        "VERDICT: CLARITY rows=1\n\n## done-when\nno machine line\n"
-        "SITTING: JUDGED kinds=amendment;done-when\n"
-    )
-    binding = SITTING_MOD.render_requested(
-        "combined", ("amendment", "done-when"), "accepted"
-    )
-    base, head = _amendment_act(
-        scaffold, {"SR-001"}, held=True, verdict=text, binding=binding
-    )
-    metas = _combined(["amendment:SR-001", "done-when:WI-900"])
-    refusal = AR.merge_approval_refusal(scaffold, base, head, metas, trunk=head)
-    assert refusal and "SR-001" in refusal, refusal
 
 
 _REJECTED_SITTING = (

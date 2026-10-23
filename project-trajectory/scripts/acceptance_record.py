@@ -8,8 +8,9 @@ acceptance; everything left in `check_trajectory.py` asks what the registries sa
 TODAY.** Nothing in this module reads the working tree, and the free-name census
 proves it rather than the docstring claiming it — the whole module's only
 non-builtin dependencies are `spine_carrier` (which carrier a spine registry
-uses) and one `git -C <root> … or None` primitive — and, for the held status
-at the end of the module, `kitlib.authority`'s rung tables.
+uses) and one `git -C <root> … or None` primitive. The held-status readers,
+and the held-rung rule with them, live in `held_status.py` (IF-196), which
+imports this module one way.
 
 WHAT IT OWNS. `SR-178` (text that has moved away from its acceptance record is
 reported) and `SR-179` (the record can only ever be written by copying live
@@ -59,7 +60,7 @@ travel with the code they annotate.
 
 Stdlib only.
 
-Contracts: IF-091, IF-129, IF-196, IF-308 — the interface seams this module declares
+Contracts: IF-091, IF-129, IF-308 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-091: the staged spine-amendment set, offered as a call.
@@ -93,12 +94,8 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     scope, the flips through its first-approval scope besides, and its
     re-attestations — read from the act ledger entries the delta added — through
     `reattest_scope_refusal`, which refuses by name every re-attested row
-    outside the `Adjudicates` scope of the amendment rows the lane claims, and
-    `held_reattest_refusal`, which refuses by name every row re-attested on a
-    rung the dial at `trunk` (the commit the merge lands on) holds unless the
-    row is approved at the act and the act entry names a verdict file that
-    rules the row CLARITY (`verdict_rulings` reads its `- [CLARITY] <id>`
-    lines).
+    outside the `Adjudicates` scope of the amendment rows the lane claims. A
+    held rung is the lane rule's (`held_status`, IF-196), not this call's.
 Contract IF-129: the ONE cell-comparison basis.
     `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
     `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
@@ -108,25 +105,12 @@ Contract IF-129: the ONE cell-comparison basis.
     amendment guard and a snapshot comparison cannot disagree about which cells
     are content or which half of the remainder arms an act. The dependency runs
     one way only: nothing in this module imports the readers that call it.
-Contract IF-196: the held status, read from a delta. `staged_status_moves(root,
-    base, head, paths)` returns every change to a status cell of an off-spine
-    registry in `HELD_STATUS_REGISTRIES` between two trees, or between `base`
-    and the index when `head` is None - a changed cell, and a row added or
-    removed with a status - as `{"registry", "id", "before", "after"}`,
-    an absent side reading ""; `head` may be a tree, and `paths` narrows the
-    registries to those among them. The needs file is read for its stakeholder
-    tier alone (`STATUS_TABLES`). `merge_status_moves(root, parents)` is the
-    index's moves against the first of `parents` that differ from EVERY one of
-    them - a staged merge result's own - and `pending_status_moves(root)` the
-    moves of the commit in progress, merge or not. `committed_status_moves(root,
-    rev)` is the same as `staged_status_moves` for one commit against its first
-    parent, or the empty tree for a root commit, across the spine registries
-    too, the needs tier included, each row once. `held_status_lines(dial,
-    moves)` returns one line naming the registry, the row and the rung of every
-    move whose rung the dial holds, a registry the rung map does not name read
-    as held; `held_status_refusal(dial, moves)` joins them into the refusal,
-    or returns None. A delta git cannot read is `[]`; a registry
-    side that does not parse is one move naming the registry.
+    `approved_text_digest(registry_path, id_col, row)` is the row's
+    approved-text identity on the same basis: `sha256:` and 16 lowercase hex
+    over the row's nonempty cells `spine_cell_class` classes approved, the id
+    column and `Status` excluded, serialized as sorted JSON. So a carrier
+    change, an empty cell against an absent one, a status move or a traced
+    cell's move leaves it unchanged, and any approved cell's move changes it.
 Contract IF-308: the parent-first commit judgement, offered as a call.
     `staged_parent_first_lines(root)` judges the index against HEAD (and
     MERGE_HEAD during a merge) and `commit_parent_first_lines(root, rev)` one
@@ -171,13 +155,15 @@ TEXT THEN ACT (WI-806) is a separate judgement with its own module,
 sync's parent reader, kept here as its one home.
 """
 
+import hashlib
+import json
 import tomllib
 from pathlib import PurePosixPath
 
 try:
     import spine_carrier
-    from kitlib import authority as _kitauthority
     from kitlib import decisions as _kitdecisions
+    from kitlib import done_when as _kitdone
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
     from kitlib import sitting as _kitsitting
@@ -189,8 +175,8 @@ except ImportError:  # pragma: no cover - in-process fallback
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
-    from kitlib import authority as _kitauthority
     from kitlib import decisions as _kitdecisions
+    from kitlib import done_when as _kitdone
     from kitlib import git as _kitgit
     from kitlib import registry as _kitregistry
     from kitlib import sitting as _kitsitting
@@ -550,6 +536,15 @@ def traced_cells(csv_path):
 # anyway. It is PUBLIC because `baseline_snapshot.is_drifted` reads it as the
 # drift basis, so the snapshot comparison and the amend-without-flip warn can
 # never disagree about what "normative" means.
+#
+# A ROW-TEXT IDENTITY CAME BACK, AND IT ANSWERS THAT DIRECTIVE POINT BY POINT
+# (`approved_text_digest`). A verdict about one approved text authorizes no
+# later text, so a held re-attestation must name the text its verdict judged;
+# a copy is written at the act, after the sitting, so it cannot witness what
+# the sitting saw. The identity is not an on-row cell: it lives in the
+# verdict's binding. It needs no separator, because JSON escapes every cell.
+# And it keeps no exclusion list of its own: it hashes exactly the cells
+# `spine_cell_class` classes approved, the classes this comparison uses.
 
 # The Status values whose ROW TEXT is approved — the population the
 # amend-without-flip guard scans. ONE MEMBER SINCE D-9 STEP 5, and it is a
@@ -585,6 +580,28 @@ def split_changed_cells(csv_path, id_col, head, row):
         if before != after:
             changed[spine_cell_class(csv_path, key)][key] = (before, after)
     return changed
+
+
+def approved_text_digest(csv_path, id_col, row):
+    """The identity of one row's approved text: `sha256:` and the first 16
+    lowercase hex of SHA-256 over its nonempty approved cells, the id column
+    and `Status` excluded, serialized as sorted JSON. The cells are classed by
+    `spine_cell_class`, as `split_changed_cells` classes them, so the identity
+    a verdict binds and the drift that comparison reports read one split; an
+    empty cell is dropped, as that comparison reads it like an absent one.
+
+    Implements: SR-178, LLR-359
+    """
+    cells = {
+        str(key): value
+        for key, value in row.items()
+        if key not in (id_col, "Status")
+        and value
+        and spine_cell_class(csv_path, key) == "approved"
+    }
+    text = json.dumps(cells, sort_keys=True, ensure_ascii=True, separators=(",", ":"))
+    hexed = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return "sha256:" + hexed[: _kitdone._DIGEST_CHARS]
 
 
 def _spine_revs(root, base, head, touches=()):
@@ -980,11 +997,11 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
     by the amendment scope (`reattest_scope_refusal`). The bound is read off
     `metas`, never off a caller's flag, so a mixed lane keeps its adjudication
     row's scope (Sol r1 MAJOR 1); unreadable claims never reach here, the
-    merge slot refuses them. Any lane's re-attestations on a rung `trunk`'s
-    dial holds need the CLARITY verdict the act names (`held_reattest_refusal`).
-    `trunk` is the commit the merge lands on: the authority the act lands under,
-    which the merge base is not once trunk has moved since the lane forked.
-    The scope, backing and copy checks all judge ONE acted set
+    merge slot refuses them. A held rung is not judged here: every lane commit
+    is judged against the dial committed on trunk by the lane rule that rides
+    the merge slot's lane-commit walk (`held_status.commit_held_approval_lines`),
+    so `trunk`, the commit the merge lands on, is read by no rule of this
+    function. The scope, backing and copy checks all judge ONE acted set
     (`lane_acted_set`: the ledger's approvals and re-attestations and the live
     transitions), so an act recorded only in the ledger is judged by each.
 
@@ -1001,7 +1018,6 @@ def merge_approval_refusal(root, base, head, metas, *, trunk):
     elif not any(acted.values()):
         return lane_approval_refusal(root, base, head, delta)
     added = _added_acts(root, base, head)
-    refusal = refusal or held_reattest_refusal(root, trunk, base, head, delta)
     refusal = refusal or _kitsitting.unaccepted_refusal(root, head, added)
     refusal = refusal or backed_act_refusal(root, base, head, acted, delta)
     return refusal or adjudication_approval_refusal(scope, acted, delta)
@@ -1130,55 +1146,6 @@ def _tier_of(rid):
     )
 
 
-def _held_row(dial, rid):
-    """Does `dial` hold the rung row `rid`'s tier is approved into? A row of a
-    tier the amendment walk does not name is held, the direction every
-    authority read fails."""
-    rel, _col = _tier_of(rid)
-    rung = _kitauthority.rung_for(rel) if rel else None
-    return rung is None or _kitauthority.holds_under(dial, rung)
-
-
-def _below_approval(root, head, rid):
-    """Is row `rid` below approval, or absent, at `head`? Such a row carries no
-    signature for a CLARITY ruling to carry over (SR-228)."""
-    rel, col = _tier_of(rid)
-    row = _spine_rows_at(root, head + ":", rel, col).get(rid) if rel else None
-    return row is None or not _claims_approval(row)
-
-
-def _held_row_line(root, head, rid, act, rulings):
-    """The refusal line for one held-rung re-attested row, or None: a row below
-    approval at the act, an act naming no verdict, or a verdict that does not
-    rule the row CLARITY."""
-    if _below_approval(root, head, rid):
-        return (
-            "  {} is below approval (or absent) at the act, so it carries no "
-            "signature to re-attest".format(rid)
-        )
-    if not str(act.get("verdict") or "").strip():
-        return "  {} re-attested on a held rung, and act {} names no verdict".format(
-            rid, act.get("seq")
-        )
-    if rulings.get(rid) != "CLARITY":
-        return "  {} is not ruled CLARITY by {}".format(rid, act["verdict"])
-    return None
-
-
-def _held_act_lines(root, head, dial, act):
-    """The refusal lines for one act entry's held-rung re-attestations, the
-    named verdict read at `head` (`_held_row_line` judges each row)."""
-    held = sorted(str(r) for r in act.get("reattested") or [] if _held_row(dial, r))
-    if not held:
-        return []
-    verdict = str(act.get("verdict") or "").strip()
-    # Only an ACCEPTED, valid verdict's amendment section counts (WI-841).
-    found = (_kitsitting.accepted_at(root, head, verdict) or {}).get("amendment")
-    rulings = found[3] if found else {}
-    lines = (_held_row_line(root, head, rid, act, rulings) for rid in held)
-    return [line for line in lines if line]
-
-
 def _added_acts(root, base, head):
     """The act-ledger entries `head` adds over `base`, `[]` when either side
     does not parse (`reattest_scope_refusal` names that).
@@ -1189,44 +1156,6 @@ def _added_acts(root, base, head):
         return []
     seen = {a.get("seq") for a in before if isinstance(a, dict)}
     return [a for a in after if isinstance(a, dict) and a.get("seq") not in seen]
-
-
-def held_reattest_refusal(root, trunk, base, head, delta=None):
-    """Refuse an adjudication's act re-attesting a row on a HELD rung unless
-    the act names the verdict that ruled the row CLARITY — or None.
-
-    OI-100 gap 2 (ruled 2026-10-03, WI-791) amends ruled decision 2's held arm
-    by one case: a CLARITY verdict approves no new text, it records that the
-    owner's signature still describes the row, so an independent adjudicator
-    session may re-attest it. The act names its verdict (`intake.py snapshot
-    --verdict`), so the act ledger records which ruling carried the signature
-    over and the owner's surface lists it for audit. A MEANING row stays the
-    owner's to sign, and a row below approval carries no signature to carry
-    over (SR-228). The dial is read at `trunk`, the commit the merge lands on:
-    the merge slot judges a branch before its in-slot refresh, so the merge base
-    can predate a hold trunk has since declared (Sol review 1, WI-791). Only
-    ledger entries this merge adds are judged, so the owner's own acts on trunk
-    never reach this rule. The judgement is the session's: this only records
-    and refuses.
-
-    Implements: SR-178, LLR-278"""
-    if not _wrote_ledger(delta or approval_delta(root, base, head)):
-        return None
-    dial = _kitauthority.dial_at(root, trunk)
-    lines = []
-    for act in _added_acts(root, base, head):
-        lines += _held_act_lines(root, head, dial, act)
-    if not lines:
-        return None
-    return (
-        "the adjudication's act re-attests rows on a rung the dial HOLDS for a "
-        "human without a verdict that rules them CLARITY; nothing was merged:\n"
-        "{}\nRemedy: on a held rung only a row the session ruled CLARITY is "
-        "its own to re-attest, and the act names that verdict (`intake.py "
-        "snapshot --reattests <ROW-ID> --verdict <verdict file>`). A MEANING "
-        "row is recommended to the owner, never re-attested by a "
-        "session.".format("\n".join(lines))
-    )
 
 
 def lane_approval_refusal(root, base, head, delta=None, reason=None):
@@ -1793,221 +1722,11 @@ def committed_snapshot_findings(root):
     return out
 
 
-# --- THE HELD STATUS: which status cells a delta moves (SR-208, SR-210) ------
-# The approval level names the rungs a human still approves, and the approval
-# act above is already refused for the SPINE. The off-spine registries carry
-# status cells of their own that no automated path was stopped from changing,
-# so a declared hold on their rung was a claim rather than a control. The two
-# readers below make it a control: the same two-tree comparison as the spine
-# walk, read over the status cell of every row of every off-spine registry, and
-# the judgement of the result against a dial. The loop's writers and the merge
-# slot refuse on it (`agent_common.loop_held_status_refusal`,
-# `integrate._held_status_refusal`); the history check reports on it
-# (`check_trajectory.loop_held_status_findings`).
-#
-# THE UNIVERSE IS DECLARED, separately from the rung map, and that separation
-# is load-bearing: a registry here that the map does not name is HELD (an
-# unmapped status is one nobody has released), which a universe derived FROM
-# the map could never express. The frame carries three tiers in one file and
-# the assumptions registry two, so the reader walks every table of the file
-# rather than one tier by id column. The off-spine registries are TOML only
-# (each was converted, or born, under that carrier), and the example `-000`
-# rows are never statuses anyone approved.
-#
-# THE NEEDS FILE IS SHARED: it carries the stakeholder list (off-spine, so
-# here) beside the needs (a spine tier, walked by the spine half of
-# `committed_status_moves` through `APPROVAL_ACT_CSVS`). `STATUS_TABLES` narrows
-# its read to the stakeholder table, so each tier is read by exactly one walk
-# and no need is reported twice; both tiers are judged at the needs rung
-# (`kitlib.authority.rung_for`).
-NEEDS_REGISTRY = "docs/requirements/stakeholder-needs.toml"
-HELD_STATUS_REGISTRIES = (
-    "docs/requirements/external.toml",
-    "docs/requirements/interfaces.toml",
-    "docs/requirements/components.toml",
-    "docs/requirements/assumptions.toml",
-    NEEDS_REGISTRY,
-)
-STATUS_TABLES = {NEEDS_REGISTRY: (spine_carrier.OFFSPINE_TABLE["STK-ID"],)}
-
-
-def _status_cells(text, tables=None):
-    """`{row id: status}` of a registry text (of its `tables` only, when named),
-    the `-000` example rows dropped (never statuses anyone approved), or None
-    when it does not parse: `{}` is a registry with no status rows, None one
-    that cannot be read, and the two are opposite claims."""
-    cells = spine_carrier.status_cells(text, tables)
-    if cells is None:
-        return None
-    return {rid: status for rid, status in cells.items() if not rid.endswith("-000")}
-
-
-def _status_delta(path, before_text, after_text):
-    """The status moves one registry makes between two sides: a changed cell,
-    and a row added or removed WITH a status. A side that does not parse is
-    ONE move naming the registry, never an empty delta: a delta nobody can read
-    is not a delta that moved nothing."""
-    tables = STATUS_TABLES.get(path)
-    before = {} if before_text is None else _status_cells(before_text, tables)
-    after = {} if after_text is None else _status_cells(after_text, tables)
-    if before is None or after is None:
-        return [{"registry": path, "id": "(unparseable)", "before": "", "after": ""}]
-    return [
-        {
-            "registry": path,
-            "id": rid,
-            "before": before.get(rid, ""),
-            "after": after.get(rid, ""),
-        }
-        for rid in sorted(set(before) | set(after))
-        if before.get(rid) != after.get(rid)
-    ]
-
-
-def _offspine_status_moves(root, base, head, watched):
-    """Every status move in `watched` between the two sides `_spine_revs` names
-    (`head=None` is the index)."""
-    revs = _spine_revs(root, base, head, touches=watched)
-    if revs is None:
-        return []
-    changed, old, new = revs
-    moves = []
-    for path in watched:
-        if path in changed:
-            moves += _status_delta(
-                path, _git(root, ["show", old + path]), _git(root, ["show", new + path])
-            )
-    return moves
-
-
-def staged_status_moves(root, base="HEAD", head=None, paths=None):
-    """Every change to a status cell of an off-spine registry between two trees,
-    or between `base` and the index when `head` is None — rows added or removed
-    with a status included, as `{"registry", "id", "before", "after"}` (an
-    absent side is ""). `head` may be a commit or a TREE: a plumbing writer asks
-    about the tree it is about to commit, before any commit names it. `paths`,
-    when given, narrows the registries to those among them (a path-scoped
-    commit takes nothing else). `[]` when git cannot answer.
-
-    Implements: SR-208, LLR-246
-    """
-    watched = list(HELD_STATUS_REGISTRIES)
-    if paths is not None:
-        named = {str(p).replace("\\", "/").strip() for p in paths}
-        watched = [p for p in watched if p in named]
-    return _offspine_status_moves(root, base, head, watched) if watched else []
-
-
-def merge_status_moves(root, parents):
-    """The status moves a STAGED MERGE RESULT makes of its own: each move of the
-    index against the first of `parents` whose new value also differs from
-    every other parent's. A status the merged side already carried was judged
-    in the commit that made it and arrives with it; a value NEITHER side
-    carried - a conflict resolution, a hand edit mid-merge - was written by
-    this commit, and is judged here. `[]` when git cannot answer.
-
-    Implements: SR-208, LLR-246
-    """
-    own = None
-    for parent in parents:
-        moves = staged_status_moves(root, parent)
-        keys = {(m["registry"], m["id"]) for m in moves}
-        own = (
-            moves
-            if own is None
-            else [m for m in own if (m["registry"], m["id"]) in keys]
-        )
-    return own or []
-
-
-def pending_status_moves(root):
-    """The status moves the commit being made in `root` makes of its OWN: the
-    index against HEAD, or, while a merge is in progress, `merge_status_moves`
-    against HEAD and MERGE_HEAD. Read through git alone. An octopus merge's
-    further heads are not read, so a status only they carried reads as the
-    merge's own: the held direction.
-
-    Implements: SR-208, LLR-246
-    """
-    merging = _git(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"])
-    if merging and merging.strip():
-        return merge_status_moves(root, ["HEAD", merging.strip()])
-    return staged_status_moves(root)
-
-
-def held_status_lines(dial, moves):
-    """One line per move whose registry's rung `dial` holds for a human, naming
-    the registry, the row, the move and the rung — THE judgement both the
-    refusal below and the history check read, so the two cannot disagree about
-    which move is held.
-
-    A registry the rung map does not name is HELD whatever the dial says:
-    nobody has ruled which rung governs it, and the only safe answer to that is
-    the human's (the `agent_common.human_approves` fail-safe, applied to a
-    delta instead of an intent)."""
-    lines = []
-    for move in moves:
-        rung = _kitauthority.rung_for(move["registry"])
-        if rung is None or _kitauthority.holds_under(dial, rung):
-            lines.append(
-                "{} {} {} -> {} (rung {})".format(
-                    spine_carrier.stem(move["registry"]).rsplit("/", 1)[-1],
-                    move["id"],
-                    move["before"] or "(absent)",
-                    move["after"] or "(removed)",
-                    rung or "unmapped, so held",
-                )
-            )
-    return lines
-
-
-def held_status_refusal(dial, moves):
-    """The refusal naming every move `held_status_lines` holds, or None.
-
-    Implements: SR-208, LLR-246
-    """
-    held = held_status_lines(dial, moves)
-    if not held:
-        return None
-    return (
-        "the loop may not change a status the approval level holds for a human "
-        "(human_approval_through = {}): {} - a held status moves only in a "
-        "person's own reviewed commit".format(dial, "; ".join(held))
-    )
-
-
 def _empty_tree(root):
     """The empty tree's id in this repository's hash, or None off git — what a
     ROOT commit is compared with."""
     out = _git(root, ["hash-object", "-t", "tree", "--stdin"], stdin="")
     return out.strip() if out and out.strip() else None
-
-
-def committed_status_moves(root, rev):
-    """Every status move `rev` made against its FIRST parent — or against the
-    empty tree when it has none — across the spine registries and the off-spine
-    ones, in `staged_status_moves`' shape. A merge commit's first-parent delta
-    is the merged work's, which is why the history check skips merges and
-    visits the merged commits instead.
-
-    Implements: SR-210, LLR-249
-    """
-    parent = _git(root, ["rev-parse", "--verify", "--quiet", rev + "^1"])
-    base = parent.strip() if parent and parent.strip() else _empty_tree(root)
-    if base is None:
-        return []
-    moves = _offspine_status_moves(root, base, rev, list(HELD_STATUS_REGISTRIES))
-    for registry, _id_col, before, after, _csv in _spine_row_sides(
-        root, base, rev, APPROVAL_ACT_CSVS
-    ):
-        for rid in sorted(set(before) | set(after)):
-            was = ((before.get(rid) or {}).get("Status") or "").strip()
-            now = ((after.get(rid) or {}).get("Status") or "").strip()
-            if was != now:
-                moves.append(
-                    {"registry": registry, "id": rid, "before": was, "after": now}
-                )
-    return moves
 
 
 # --- THE RULING SYNC: a ruling updates the rows that cite it (WI-790) ---------

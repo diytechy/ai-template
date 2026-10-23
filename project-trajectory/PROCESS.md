@@ -668,16 +668,18 @@ triggered session (the unattended loop, a launcher-spawned worker) never
 approves on a held rung; that is what the hold is for. One stated case: an
 independent adjudicator session may **re-attest** an amended row it rules
 CLARITY — that approves no new text, it records that the owner's signature
-still describes the row — naming its verdict in the act (`--verdict`), so the
-act ledger records it and the owner's surface lists it for audit; the merge
-slot refuses one the verdict does not rule CLARITY. A MEANING row and a first
-draft stay the owner's. MECHANICAL: a
-loop-started commit must carry its `Loop-Session` trailer
-(`scripts/kitlib/provenance.py`), `check.py`'s `held-status` step and the merge
-slot refuse a held status such a commit moves, and `check_trajectory.py`
-reports one that lands. REVIEW-ENFORCED: the delegation record; nothing
-authenticates it or stops an unmarked session that lacks one, the risk the
-owner accepts by delegating.
+still describes the row — bound to the text it judged: the verdict's binding
+records it, and an edit after the verdict refuses the act. The act names its
+verdict (`--verdict`) for audit. A MEANING row and a first draft stay the
+owner's. MECHANICAL: the merge slot judges every lane commit against trunk's
+dial, so a held row's approval lands from a lane only as such a bound
+re-attestation (`scripts/held_status.py`), and `check.py`'s `held-status` step
+judges a squash landing by its lane commits. A loop-started commit must carry
+its `Loop-Session` trailer (`scripts/kitlib/provenance.py`); outside a lane
+the `held-status` step and each loop writer refuse a held status move or
+approval claim it makes, and `check_trajectory.py` reports one that lands.
+REVIEW-ENFORCED: the delegation record, and an unmarked plain trunk commit,
+which nothing judges: the risk the owner accepts by delegating.
 
 **What a signature certifies is NOT derivable from the rung.** Leaving
 `DevStg-Reqs` also requires non-goals captured and a UX sign-off; leaving

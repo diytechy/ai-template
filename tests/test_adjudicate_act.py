@@ -29,6 +29,7 @@ from conftest import (
 )
 
 act = load_script("adjudicate_act")
+acceptance_record = load_script("acceptance_record")
 baseline_snapshot = load_script("baseline_snapshot")
 from kitlib import sitting as ksitting  # noqa: E402  (scripts/ is on the path)
 from kitlib import verdict as kverdict  # noqa: E402
@@ -135,10 +136,29 @@ def _draft(repo):
     _commit(repo, "draft LLR-002 and TC-002")
 
 
-def _verdict(repo, text, brief, kinds=None, outcome="accepted", commit=True):
-    """The verdict and the binding a route writes beside it."""
+def _judged_identities(repo, text):
+    """`{row id: digest}` of each row an amendment verdict text rules, as
+    committed at HEAD: the identities the route binds from the brief that
+    showed those rows. A row absent at HEAD (a retirement) has no text."""
+    out = {}
+    part = ksitting.own_section(text, "amendment", "VERDICT") or text
+    for rid in kverdict.row_rulings(part, "amendment"):
+        tier = act._tier(rid)
+        row = acceptance_record.rows_at(repo, "HEAD", *tier).get(rid) if tier else None
+        if row is not None:
+            out[rid] = acceptance_record.approved_text_digest(tier[0], tier[1], row)
+    return out
+
+
+def _verdict(repo, text, brief, kinds=None, outcome="accepted", commit=True, bind=True):
+    """The verdict and the binding a route writes beside it, recording the
+    identity of each row an amendment part rules unless `bind` is False (a
+    binding written before the identity existed)."""
     _write(repo, VERDICT, text)
-    binding = ksitting.render_requested(brief, kinds or (brief,), outcome)
+    ids = _judged_identities(repo, text) if bind and brief != "first-approval" else {}
+    binding = ksitting.render_requested(
+        brief, kinds or (brief,), outcome, identities=ids or None
+    )
     _write(repo, ksitting.requested_path(VERDICT), binding)
     if commit:
         _commit(repo, "the verdict\n\nWI: {}".format(WI))
@@ -398,6 +418,78 @@ def test_a_held_rung_APPROVE_row_owes_no_act(tmp_path):
     acts, why = act.owed_acts(repo, VERDICT, "HEAD")
     assert acts is None
     assert "owes no act" in why, why
+
+
+# --- a held CLARITY act is bound to the text its verdict judged ------------
+#
+# The binding beside an amendment verdict records each judged row's
+# approved-text digest; on a held rung the act is owed only while the
+# committed row still has that digest.
+
+SR_REL = "docs/requirements/system-requirements.toml"
+
+
+def _sr_digest(repo):
+    """SR-001's approved-text digest as committed at HEAD."""
+    digest = acceptance_record.approved_text_digest
+    row = acceptance_record.rows_at(repo, "HEAD", SR_REL, "SR-ID")["SR-001"]
+    return digest(SR_REL, "SR-ID", row)
+
+
+def _bound_verdict(repo, identities):
+    """The amendment verdict ruling SR-001 CLARITY, and the binding a route
+    writes beside it recording `identities`, committed."""
+    render = ksitting.render_requested
+    _write(repo, VERDICT, AMENDMENT_CLARITY)
+    binding = render("amendment", ("amendment",), "accepted", identities=identities)
+    _write(repo, ksitting.requested_path(VERDICT), binding)
+    _commit(repo, "the verdict\n\nWI: {}".format(WI))
+
+
+def test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed(tmp_path, monkeypatch):
+    # The owed result is today's (the act this verdict authorizes); what is
+    # new is that the derivation read the bound identity to reach it, which
+    # the spy on the one reader of a binding's identities records.
+    reader = ksitting.accepted_identities
+    repo = _repo(tmp_path, dial="DevStg-Release")
+    _amend(repo)
+    _bound_verdict(repo, {"SR-001": _sr_digest(repo)})
+    calls = []
+
+    def spy(*args, **kwargs):
+        calls.append(args)
+        return reader(*args, **kwargs)
+
+    monkeypatch.setattr(ksitting, "accepted_identities", spy)
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert why is None, why
+    assert acts == {"amendment": {"reattests": ["SR-001"], "verdict": True}}
+    assert calls, "the act was derived without reading the bound identity"
+
+
+def test_a_held_CLARITY_act_whose_text_changed_after_the_verdict_is_refused(tmp_path):
+    repo = _repo(tmp_path, dial="DevStg-Release")
+    _amend(repo)
+    bound = _sr_digest(repo)
+    _bound_verdict(repo, {"SR-001": bound})
+    _replace(repo, SRS, "add two integers.", "add two integers exactly.")
+    _commit(repo, "edit SR-001 after its verdict")
+    committed = _sr_digest(repo)
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert acts is None, acts
+    for word in ("SR-001", bound, committed):
+        assert word in why, (word, why)
+
+
+def test_a_held_CLARITY_act_whose_binding_has_no_identity_is_refused(tmp_path):
+    # A binding written before the identity existed binds no text, so a
+    # verdict sat then is re-sat before its held act.
+    repo = _repo(tmp_path, dial="DevStg-Release")
+    _amend(repo)
+    _verdict(repo, AMENDMENT_CLARITY, "amendment", bind=False)
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert acts is None, acts
+    assert "SR-001" in why and _sr_digest(repo) in why, why
 
 
 # --- order, re-runs and the committed tree --------------------------------

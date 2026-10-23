@@ -598,7 +598,10 @@ commit of its own, move it to trunk's tip
   The act brief lists its own `--reattests` and `--approves` rows: CLARITY
   rows, a MEANING row the verdict marks `[MEANING+BLESS]` on a released rung,
   and APPROVE rows on a released rung; on a held rung a CLARITY re-attest
-  names the verdict with `--verdict`. A row the verdict rules CLARITY that
+  names the verdict with `--verdict`, for audit, and is owed only while the
+  row's committed text still has the identity the verdict's binding records
+  (the act turn refuses before launch otherwise: re-sit the row). A row the
+  verdict rules CLARITY that
   the lane deleted (a retired row) is listed in `--reattests` until its
   recorded copy drops it; on a held rung it owes no act (removing a held row
   is the owner's). A first approval of a row absent at HEAD is refused as
@@ -659,7 +662,8 @@ commit of its own, move it to trunk's tip
   never by forging the file. Cite
   the lane's SOUND full-lane review in the command's description: the
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
-  The squash's hook judges text-then-act, held-status and ruling-sync, but
+  The squash's hook judges text-then-act, held-status (each lane commit's
+  held approval claims, by the lane rule) and ruling-sync, but
   never the merge slot's approval-act floor, so on this path the act
   turn's verdict-derived command is the only guard until the one-landing
   row moves coordinator landings onto the slot (coordinator-2026-10-17
