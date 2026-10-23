@@ -3,11 +3,18 @@
 # 20261021T045653Z-213020).
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = []
+high_risk = ["D-002"]
 
 [decision.D-001]
 decided = "Headless leg 13 claims the queue table's first row, WI-961 (Claude coordinator sessions and their sub-agents recorded from their transcripts), alone under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006). Its hard need WI-960 landed (a7fec6dd9). The row was filed on 2026-10-20 with its S1 to S6 answers, so it is not a row born before S3 to S6: its scope critique round 1 (Codex Sol, medium, CHANGES-REQUESTED, one MAJOR adopted) and its confirming round in convergence stance (APPROVE, findings=0) stand, recorded in its spec (17ebbb3d1), and no new critique is owed. What WI-960 landed matches what the spec assumed of it (the out-of-lane arm spools a primary-checkout call's log). WI-850, the next row with pre-claim work owed, is not batched: its dispositions and confirming round come first, and the leg spends its budget on WI-961's lane."
 alternative = "Re-run WI-961's scope critique against the landed WI-960, or batch WI-850's claim after its dispositions and confirming round."
 reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
 why_not_escalated = "The queue table's order and the owner's batch-claim rule; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "WI-850's scope critique (leg 12, Codex Sol; CHANGES-REQUESTED, 2 MAJOR and 1 MINOR) answered on trunk before its confirming round, from a Trust draft a Claude Opus planner wrote by reading the code (review-tmp/2026-10-22d-leg14/wi850-trust-draft.md): the spec gains a Trust section (the four registries' status and parent cells as carriers, each producer route and failed-write shape, the rule's one home in kitlib.spine and the commit judgement's in acceptance_record with every caller by path, a ruling per consumer for absent, unreadable, unparseable and git-unreadable input, and the review-threat-model bound), planmode = 'single', and a Critique dispositions section adopting all three findings. Two calls the draft raised for the owner are taken here, to confirm or overrule: (1) a TC's parents are the SRs and LLRs it verifies, never an IF row it cites (IF rows carry no approval status; counting them would make 114 approved TCs standing findings), so Done-when's 'a TC for every row it verifies' now reads 'a TC for every SR and LLR it verifies'; (2) the standing finding stays an integrity finding as Done-when already states (the draft's option a; option b would make it --strict only), its first act clearing the only standing case (LLR-281 and TC-291 under SR-224). The reader WI-963's held lane adds is named as shared: whichever row lands first carries it. The draft's fail-open note on acceptance_record._spine_rows_at (an unparseable registry or failed git show read as absent, backstopped by registry-integrity on disk) is outside the row and goes to status.md's follow-ups."
+alternative = "Hold WI-850 for the owner's two calls as an open item: both follow from the spec's own text and the IF rows' lack of a status, so neither blocks the row."
+reversal_cost = "Low: a queued row's spec before its claim; an overrule edits the Done-when line back."
+why_not_escalated = "Filing calls the coordinator records (SKILL section 5); the owner confirms or overrules."
 review = ""
