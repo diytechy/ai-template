@@ -1,0 +1,34 @@
+# docs/decisions/coordinator-2026-10-23.toml — delegated calls the
+# coordinator made on trunk on 2026-10-23 (headless leg 16 of loop session
+# 20261021T045653Z-213020).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002", "D-004"]
+
+[decision.D-001]
+decided = "WI-851 (held-rung rows protected by state), the queue's next row, was born before the rubric's S3 to S6, so it was re-critiqued at its claim: Codex Sol at medium from the detached critique checkout at 3e121a1f1 (log spooled; verdict kept at review-tmp/2026-10-23a-leg16/crit851/WI-851-scope-critique.md) read CHANGES-REQUESTED, 4 MAJOR (S2 no Trust section, S3 an open predicate that refused a whole-registry copy's Drafted sibling, S4 no planmode, S5 no carrier for the promised row-text digest and the marked writers unaddressed) and 2 MINOR (S1 no deliverable order, S6 no reason for WI-849). A Claude Opus drafter read the code, confirmed all six, and wrote the revised spec placed here: a Deliverables order, a Trust section with every carrier, consumer and ruling, a closed row-state predicate, planmode single, an Architectural delta section, WI-849's reason, and a Critique dispositions section adopting all six. It also found two consumers failing open today, both closed by the row: a held first approval lands from any lane behind an accepted APPROVE verdict, and a held row's text edited after its CLARITY sitting is still re-attested. The stale 'Review bar: A' line and the cancelled WI-807 and WI-810 amenders are dropped."
+alternative = "Claim WI-851 on its 2026-10-07 text and let the single plan's critique find the gaps."
+reversal_cost = "Low: a queued row's spec before its claim."
+why_not_escalated = "The skill's section 1: the advice binds before the claim; recorded for confirm or overrule."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-23a-leg16/crit851/WI-851-scope-critique.md"
+
+[decision.D-002]
+decided = "WI-851's CLARITY exception binds to a row-text digest recorded in the verdict's binding at reservation (the drafter's call 1, option a): SHA-256 over the row's approved cells classed by IF-129, serialized as sorted JSON and truncated as kitlib.done_when.digest is, written by adjudicate_brief.bind_pending from the amendment composer's per-row JUDGED-TEXT lines, read by the act turn and the lane rule. The owner directive of 2026-08-15 retired an on-row TextHash anchor in favour of snapshot copies; the owner-accepted retro proposal of 2026-10-07 (section 7.1, which ruling 5 adopted) later named 'bound to its exact text by a digest', and a copy written at the act cannot witness the sitting, while a recorded commit id does not survive the rebase an act requires. The digest lives in no row cell, needs no separator, and reuses IF-129's cell classes, which answers the directive's three objections."
+alternative = "(b) the adjudicator copies a digest onto each verdict row line (model output carries the identity); (c) no digest, comparing against the row at the sitting's commit (history archaeology, and lost to a rebase)."
+reversal_cost = "Medium after the build (a binding grammar change and its readers); low before the plan step."
+why_not_escalated = "The owner-accepted proposal's own text names the digest; recorded high-risk because it sits beside the 2026-08-15 directive, for confirm or overrule."
+review = ""
+
+[decision.D-003]
+decided = "WI-851's lane rule judges approval claims only (the drafter's call 2, option a): a demotion, a Drafted row added to a held off-spine registry, or a status move between values below approval lands from any lane, loop or coordinator alike, as ruling 5 of 2026-10-07 states the rule ('a held row whose snapshot moved to match changed text is refused') and as the spine already treats a de-approval. Loop lanes lose today's refusal of those moves, which grant no authority; the SR-210 history advisory still lists them."
+alternative = "(b) refuse every held status move in every lane, which also refuses ruling 3's in-lane authoring of Drafted rows in held registries; (c) keep refusing them in loop lanes only, against the row's 'loop and coordinator lanes are judged alike'."
+reversal_cost = "Low before the plan step; medium after (a predicate arm and its tests)."
+why_not_escalated = "Follows ruling 5's text; recorded for confirm or overrule."
+review = ""
+
+[decision.D-004]
+decided = "WI-851's narrowed marker arm judges a marked commit outside a lane that moves a held status OR makes a held approval claim across all eight snapshotted registries (the drafter's call 3, option ii), at pre-commit and through agent_policy.loop_held_status_refusal for each loop writer. Today the arm watches only the off-spine registries and the stakeholder table, so a headless leg's direct trunk commit approving a held SN is not refused; revision 36 narrowed the arm on the premise that an autonomous run's held acts stay refused, which only (ii) makes true."
+alternative = "(i) keep IF-196's judgement unchanged (off-spine and stakeholder statuses only)."
+reversal_cost = "Low before the plan step; medium after."
+why_not_escalated = "Revision 36's own premise; recorded high-risk because it widens what an autonomous run is refused, for confirm or overrule."
+review = ""
