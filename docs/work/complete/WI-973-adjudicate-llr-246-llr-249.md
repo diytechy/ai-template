@@ -3,12 +3,23 @@ id = "WI-973"
 title = "adjudicate: LLR-246, LLR-249, LLR-278, SR-208, SR-228, TC-241, TC-278 - approved/routed cell(s) amended on merged trunk 31b8ed9..afb57ae (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-208", "SR-228"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-246", "LLR-249", "LLR-278", "SR-208", "SR-228", "TC-241", "TC-278"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second
+sitting is held (the re-mint trap, S11 plan section 4.2; owner-agreed
+close, 2026-10-03). WI-851's in-lane sitting
+`docs/reviews/wi-851/004-ADJUDICATE-d860906.md` blessed all seven rows as
+MEANING+BLESS, and the lane's act turn took act seq 156 (and 157 for its
+two first approvals). At the landing afb57ae33 the stakeholder, system,
+low-level and test registries are byte-equal to their approved snapshots
+under docs/archive/last_approved/.
 
 ## Context
 
