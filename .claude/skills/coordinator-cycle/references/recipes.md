@@ -68,6 +68,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   background and reports only while the leg's turn still runs: wait in
   the foreground on the file it writes last (its bar log, then its
   spine change list), never end the turn on it (wi-925 D-008).
+  Ask it to create a `.done` file as its very last act and poll for that
+  file in one foreground Python command (`time.sleep` in a loop; a bare
+  `sleep` is blocked): three resumed stages were waited out that way
+  (2026-10-22c). A sub-agent's write of a file named `report.md` was
+  refused by the harness; ask for a `*-notes.md` or the reply inline.
   A stage that changes a shared signature before the stage
   that moves its callers has a red bar alone: commit the two stages
   together, never bridge them with a default (wi-918 D-001). A blank line ends a `Contract IF-NNN:` body for the
@@ -951,6 +956,11 @@ lane commit being replayed.
 
 ## 6. Commits and hooks
 
+- A commit made by hand in a lane worktree runs the hook under the
+  ambient interpreter, which has no ruff, so its format step prints "A
+  DECLARED CHECK DID NOT RUN": commit every Python change through
+  `integrate.py attest` (below), which runs under the primary checkout's
+  interpreter; a records-only commit may go by hand (2026-10-22c).
 - Run the commit bar on every commit, docs-only ones included. A lane
   commit runs it through `"$PY" "$SCRIPTS/integrate.py" attest --branch
   <lane> --bar review --tests <files> --message-file <msg>` from the

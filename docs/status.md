@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-22b-leg12-coordinator.md](handoff-2026-10-22b-leg12-coordinator.md),
+  [handoff-2026-10-22c-leg13-coordinator.md](handoff-2026-10-22c-leg13-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -74,7 +74,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   through the session service, then the Claude sub-agent usage ingest);
   the first has landed: every Sol and Terra call goes through one
   coordinator entry point on the session service, and a call outside a
-  claimed lane spools its log and commits nothing. Item 10 step 2's row (the
+  claimed lane spools its log and commits nothing; the second (the ingest)
+  is claimed and through its counted rounds, its checkpoint next. Item 10 step 2's row (the
   hooks' one policy read) has landed, and its shape-rule retirement row
   is filed.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
