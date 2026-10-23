@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-22d-leg14-coordinator.md](handoff-2026-10-22d-leg14-coordinator.md),
+  [handoff-2026-10-23a-leg15-coordinator.md](handoff-2026-10-23a-leg15-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -78,7 +78,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   too: each close-out records its session and every sub-agent, at any
   depth, from their transcripts. Item 10 step 2's row (the
   hooks' one policy read) has landed, and its shape-rule retirement row
-  is filed.
+  is filed. The parent-first row has landed: a commit that leaves an
+  approved row under an unapproved parent is refused at pre-commit and
+  on each lane commit, and a standing case is an integrity finding.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
   headless legs in its section 7. The owner directed (2026-10-18,
   coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
@@ -91,7 +93,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 152 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 155 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -415,8 +417,27 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   staged approval-act, amendment and drafted-row readers and
   `check_test_first._members` pass; `registry-integrity` backstops it on
   disk, leaving a direct trunk commit whose index alone holds the broken
-  registry (its own row); and the Approved-or-Founded pair is restated in
-  six modules (one home in `kitlib.spine`);
+  registry (its own row); and the Approved-or-Founded pair, whose one
+  home is now `kitlib.spine.claims_approval`, is still restated in the
+  modules that do not bind it (`baseline_snapshot`'s wider OR is
+  deliberate);
+  from the parent-first row's rounds, sitting and gate (wi-850 D-008,
+  D-011, D-012): SR-224's approved Requirement names the skills-index
+  check, a carrier name at SR tier (wording, at its next amendment);
+  SR-245's Requirement attaches 'that lacks either status' only after
+  its last edge, and its 'replace the former non-failing advisory'
+  clause is history-voiced where its acceptance states the standing
+  form (wording, at its next amendment); `acceptance_record`'s
+  carried two-tree reader names WI-963's `_snapshot_copy_rows` and an
+  `under` parameter no caller here passes, true once WI-963 lands;
+  `_parent_first_names` is a second carrier-filtered name lister beside
+  `_spine_revs` (its three-way failure contract justifies it, but
+  `_spine_row_sides`' 'the one two-tree walk' docstring now overstates;
+  a consolidation row); `acceptance_record.py` stands at 998 SLOC, so
+  WI-963's rebase onto it crosses the 1000-SLOC ratchet and needs the
+  ruling its plan's R1 names (a reviewed baseline entry, or a
+  decomposition); and the staged parent-first check reads MERGE_HEAD's
+  first head only (no kit route makes an octopus merge);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on

@@ -622,6 +622,12 @@ commit of its own, move it to trunk's tip
   an IF row no TC cites) is traced-only too: the composer refuses an
   amendment sitting for it, and the re-anchor is the step (WI-902's archived lane tip `d3d301216`). The bar command on the staged squash (below) catches
   this drift; the lane hook does not.
+- **Approve a parent with its children, never after them** (WI-850):
+  the pre-commit `parent-first` step and the slot's third lane-commit
+  rider refuse a commit that leaves an approved row under an
+  unapproved parent where either status moved, so an act that flips a
+  child whose parent is still Drafted is refused; sit the parent in
+  the same combined sitting, or first.
 - **A return in a sitting holds its whole registry.** A row the sitting
   would bless is not anchored while another row in the same registry is
   returned; rework the returns and re-sit them all together. Move each
@@ -953,6 +959,14 @@ lane commit being replayed.
   passing `--check --strict`) until plan item 14 retires the sidecar:
   brief it into Terra's checkpoint turn, or the first-approval sitting
   returns the derived SR for it (wi-957, wi-958, wi-960 sitting 005).
+- An LLR detail carries no `shall`: the one-`shall` rule is the SR's.
+  Told "one `shall`", Terra wrote it into two LLR details, and
+  `trace.py --strict` passed them; grep each new LLR detail for it
+  before the sitting and rewrite it in contract voice (wi-850 D-009).
+- A builder's test stage and a Terra turn may run at once on disjoint
+  files: the builder writes the tests and lists each node with its TC,
+  never touching a registry, and the coordinator adds the nodes to the
+  TC evidence by a guarded replace after both return (wi-850 D-010).
 - Draw the arms map before composing the sitting: a sub-agent given the
   rows and told to change nothing maps each LLR arm and SR acceptance
   clause to the TC clause and the test that verify it, and lists the gaps.
