@@ -1,0 +1,9 @@
+{
+  "session_id": "125152ca-33e0-45be-93dd-a7820b0bf88a",
+  "usage": {
+    "input_tokens": 4,
+    "cache_read_input_tokens": 47798,
+    "cache_creation_input_tokens": 11300,
+    "output_tokens": 380
+  }
+}

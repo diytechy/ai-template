@@ -3581,3 +3581,113 @@ test_refs = "TC-384, TC-385"
 status = "Approved"
 component = "CMP-008"
 phase = 6
+
+[design.LLR-347]
+sr_refs = ["SR-244"]
+title = "Transcript usage is finalized once per message"
+module = "project-trajectory/scripts/session_adapters.py"
+code_symbol = "claude_session/transcript_usage/transcript_time/TranscriptMessage/TranscriptInvocation/SessionRead"
+detail = "The transcript reader accepts usage only from assistant message usage, orders messages by first appearance, and takes each message id's last record. A message is final when a non-null stop reason occurs, a later assistant message follows, or, for a sub-agent's last message, the session's transcripts hold a notice that the agent finished written at or after that message: a task notification naming the agent, or, for an agent its spawner waited on, the spawner's tool result for its call. A session's own transcript is never finished by a notice. Only a transcript's last message may remain open; it is named and is neither counted nor crossed by a cursor. A final message without a stop record is counted at its last record as partial, while reasoning is empty unless every counted message reports it. The usage record sums fresh input, cache read, cache write and output, selects the last non-synthetic counted model, and identifies the cli and provider."
+test_refs = "TC-386, TC-387, TC-388, TC-389"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-348]
+sr_refs = ["SR-244"]
+title = "Transcript identity determines each invocation identity"
+module = "project-trajectory/scripts/usage_ingest.py;project-trajectory/scripts/session_adapters.py"
+code_symbol = "invocation_id/contribution_row/main/TranscriptInvocation"
+detail = "An invocation represents the session transcript or one sub-agent transcript, retaining its session identity, agent identity, parent identity, depth, agent type, model and timestamps. Its invocation identifier is a deterministic 32-hex value derived from the session and agent identities. The session role and phase are COORDINATOR; every sub-agent role and phase are SUBAGENT."
+test_refs = "TC-386, TC-387"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-349]
+sr_refs = ["SR-244"]
+title = "Each recorded range is an ordered contribution"
+module = "project-trajectory/scripts/usage_ingest.py"
+code_symbol = "name_stamp/contribution_row/record_contribution"
+detail = "A contribution records its counted-message count, final-message cursor, immutable key derived from its invocation and first and last message identities, and the counted range's verbatim start and end timestamps. Its name stamp starts at the last counted message's local time and advances one second beyond any existing same-invocation stamp when necessary, so contribution names remain distinct and ordered."
+test_refs = "TC-389"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-350]
+sr_refs = ["SR-244"]
+title = "Existing contributions determine the next transcript range"
+module = "project-trajectory/scripts/usage_ingest.py"
+code_symbol = "record_dirs/recorded_logs/prior_contributions/new_messages/ingest_one/ingest"
+detail = "The ingest reads same-invocation logs by name from the spool, the root record directory and every worktree record directory, de-duplicated by name. It reads each header to find the furthest cursor and latest stamp, records only final messages after that cursor, and reports unchanged when none exist. It refuses the invocation naming an unreadable or unterminated header, a missing cursor or contribution key, or a cursor absent from the transcript."
+test_refs = "TC-389"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-351]
+sr_refs = ["SR-244"]
+title = "A service-recorded session is excluded from transcript duplication"
+module = "project-trajectory/scripts/usage_ingest.py;project-trajectory/scripts/session_adapters.py"
+code_symbol = "service_record/ingest/CLAUDE_RESULT_COUNTS_SUBAGENTS"
+detail = "A non-transcript usage record for a session excludes that session's main transcript and names the skip. Its sub-agent transcripts are excluded only when the declared result-coverage constant says the service result includes them; otherwise they are recorded separately. A record named for one of the session's own transcript invocations is that invocation's contribution, not a service record. An unreadable record that governs this decision refuses every transcript the decision governs."
+test_refs = "TC-389, TC-390"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-352]
+sr_refs = ["SR-244"]
+title = "The transcript reader refuses shapes outside its closed contract"
+module = "project-trajectory/scripts/session_adapters.py"
+code_symbol = "claude_session/TranscriptRefused/TRANSCRIPT_TYPES"
+detail = "The reader accepts only declared record types and required typed assistant and meta fields, binds a record to its session and transcript identity, and accepts every positive non-boolean nesting depth. It records an unresolved parent while naming it. It refuses one malformed or missing record, meta, pairing or sub-agent entry per transcript, naming its file and field, while other transcripts remain recordable."
+test_refs = "TC-391"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-353]
+sr_refs = ["SR-244"]
+title = "Ingest reads the ambient transcript home for one selected session"
+module = "project-trajectory/scripts/usage_ingest.py;project-trajectory/scripts/session_adapters.py"
+code_symbol = "claude_home/ingest/main"
+detail = "The command selects the ambient provider home from its environment or default location and never selects an account home. It selects an explicit session, or the ambient session identity when none is given, refuses with the usage outcome when neither exists, refuses two matching project locations naming both, and names an absent main transcript while allowing present sub-agent transcripts to be read."
+test_refs = "TC-391, TC-394"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-354]
+sr_refs = ["SR-244"]
+title = "Ingested logs carry contribution usage without transcript text"
+module = "project-trajectory/scripts/usage_ingest.py;project-trajectory/scripts/agent_common.py"
+code_symbol = "contribution_row/summary/record_contribution/write_session_log"
+detail = "Each contribution records its identity, range, usage vocabulary, response and request models, role, phase, INGESTED outcome, transcript source, contribution scope, and known or partial usage status. Its body is a fixed summary of counts, message identities and timestamps, never transcript text or a raw usage object. Empty fields remain empty where the contribution does not provide them."
+test_refs = "TC-387, TC-392, TC-393"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-355]
+sr_refs = ["SR-244"]
+title = "Usage ingest reports one defined command outcome per invocation"
+module = "project-trajectory/scripts/usage_ingest.py"
+code_symbol = "record_contribution/ingest_one/ingest/main"
+detail = "The usage-ingest command accepts an optional session identity and root. It emits per-invocation recorded, unchanged, open, skipped, refused, absent or unresolved-parent outcomes, each invocation's line naming its role, agent type and agent id, while a transcript refused for its shape is named by its file and field, in the stdout form IF-306 declares. It exits zero when no refusal, absence or record-commit refusal occurred, one when any occurred, and two when no session was selected."
+test_refs = "TC-389, TC-390, TC-391, TC-394"
+status = "Approved"
+component = "CMP-008"
+phase = 6
+
+[design.LLR-356]
+sr_refs = ["SR-244"]
+title = "Close-out and headless completion ingest current and prior session tails"
+module = "project-trajectory/skills/coordinator-cycle/SKILL.md"
+code_symbol = "close_out/headless_leg"
+detail = "Coordination completion ingests its current session before writing its handoff, and each handoff names its own session identity. When the replaced handoff names a session, coordination ingests that prior session again. The later read records only the prior transcript's final range, including a message that was previously open once it becomes final."
+test_refs = "TC-389, TC-395"
+status = "Approved"
+component = "CMP-008"
+phase = 6

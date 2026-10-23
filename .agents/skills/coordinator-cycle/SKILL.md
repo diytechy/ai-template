@@ -429,6 +429,24 @@ The handoff links the one it replaces, points here for procedure, and holds
 state only: what landed, what is open, what the owner owes, and the session
 prompt. It carries no cycle, recipe or "corrections learned" section.
 
+**Record the session's usage** before the handoff is written, from the
+primary checkout (`$PY` and `$SCRIPTS` as in the recipes' section 0):
+
+```bash
+"$PY" "$SCRIPTS/usage_ingest.py"
+"$PY" "$SCRIPTS/usage_ingest.py" --session <the replaced handoff's session id>
+```
+
+- The first run records this session and every sub-agent it spawned into
+  the spool. The second records what the previous session wrote after its
+  own last run (its closing reply, or a sub-agent message that was still
+  open then); skip it when the replaced handoff names no session id. A
+  repeated run records nothing twice.
+- The handoff names this session's id (`$CLAUDE_CODE_SESSION_ID`) under its
+  state, so the next close-out can pick up this session's tail. A nonzero
+  exit is recorded there too, with the lines it printed; it is never
+  hand-patched.
+
 ## 7. Headless legs
 
 This section is the headless procedure's one home. It carries the review-churn
@@ -521,6 +539,16 @@ writes it by hand.
   refused by name when its trailer is absent or malformed, and with a
   well-formed trailer it passes but closes nothing. The commits before a
   re-claim stay judged, and the held-status rung judges the lane whole.
+
+**A leg's usage.** Before it writes its handoff and ends its reply, a leg
+runs the same pair as §6's close-out, from the primary checkout:
+`"$PY" "$SCRIPTS/usage_ingest.py"`, then
+`"$PY" "$SCRIPTS/usage_ingest.py" --session <the replaced handoff's session id>`.
+A headless session's shell carries its own `CLAUDE_CODE_SESSION_ID`, so the
+first run needs no `--session`. Neither run launches a model CLI, so the
+blackout window does not deny them. As in §6, the leg's handoff names this
+session's id (`$CLAUDE_CODE_SESSION_ID`), so the next close-out records the
+leg's own tail.
 
 **A leg's landing.** A leg squashes a lane only after
 `"$PY" "$TOOLS/overnight_legs.py" check-lane <lane>` exits 0; exit 3 names

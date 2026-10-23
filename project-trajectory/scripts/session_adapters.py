@@ -48,6 +48,24 @@ Contract IF-245: the per-CLI adapter surface. `adapter_for(argv)` returns the
     values for one home, `cli_named(executable)` the CLI an executable
     launches, and `TOKEN_VARIABLES` the variable a token-account CLI reads its
     long-lived token from (claude `CLAUDE_CODE_OAUTH_TOKEN`).
+    The Claude Code transcript reader: `claude_session(home, session_id)`
+    reads the one session its caller names under the Claude home `home`
+    (`<home>/projects/*/<id>.jsonl` and its `<id>/subagents/` transcripts
+    and metas, never writing there) and returns a `SessionRead`: the
+    session's own invocation, then each sub-agent's by depth and id, each
+    with its identity, its final messages (each message id counted once, at
+    its last record) and its open last message's id (a last message with no
+    stop record, unless a sub-agent's finish notice in the session's
+    transcripts was written at or after it); the refusals
+    (`TranscriptRefused`, naming the file and the field of a shape outside
+    the closed one, `TRANSCRIPT_TYPES` the record types it knows); and the
+    transcripts named absent. `transcript_usage(messages)` returns the usage
+    record of a run of counted messages, scoped `contribution`.
+    `CLAUDE_RESULT_COUNTS_SUBAGENTS` states whether a `claude -p` result's
+    usage already includes its sub-agents' (it does not). `claude_home(env)`
+    is the ambient Claude home (the claude home variable when `env` sets
+    it, else `~/.claude`), and `transcript_time(value)` the one parse of a
+    transcript timestamp (an aware datetime, or None).
 
 Contract IF-266: retained-call compaction observations. `compaction(stream,
 env, session_id)` returns an empty mapping for other runners; codex returns
@@ -58,8 +76,11 @@ differencing across calls and clears its baseline on a kit reset.
 
 import json
 import os
+import re
 import tempfile
 import uuid
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from pathlib import Path
 
 # The usage vocabulary the record follows, PINNED to one commit: every name in
@@ -430,6 +451,514 @@ class ClaudeAdapter(PlainAdapter):
         used = sum(_count(last.get(k)) or 0 for k in keys)
         window = _count(_dig(result, "modelUsage", model, "contextWindow")) or ""
         return sid, used, window, _pct(used, window)
+
+
+# --- Claude Code transcripts: one session and its sub-agents, read from disk ---
+#
+# Claude Code writes each session's transcript to `<home>/projects/<cwd slug>/
+# <session id>.jsonl`, and each sub-agent's, at any depth, flat beside it as
+# `<session id>/subagents/agent-<agent id>.jsonl` with its
+# `agent-<agent id>.meta.json`. The format is Claude Code's, not the kit's, so
+# this reader is the only code that knows it: the shape it accepts is closed,
+# and anything else is refused by file and field, never skipped.
+
+# Whether a `claude -p` result's usage already includes the usage of the
+# sub-agents the session spawned. Probed on Claude Code 2.1.296: a session
+# with a foreground sub-agent reported exactly its main transcript's usage,
+# not the sum with its sub-agent's, so it does not.
+# Implements: SR-244, LLR-351
+CLAUDE_RESULT_COUNTS_SUBAGENTS = False
+
+# The record types a transcript may hold, surveyed over Claude Code 2.1.276
+# to 2.1.306. A sub-agent's transcript holds six of them (`user`,
+# `attachment`, `assistant` and the three `api-request*`). Only `assistant`
+# records carry usage the reader counts; `usage` elsewhere (a parent's
+# tool-result summary, an attachment) is never read. A type Claude Code adds
+# later is refused until it is added here.
+# Implements: SR-244, LLR-352
+TRANSCRIPT_TYPES = frozenset(
+    {
+        "queue-operation",
+        "user",
+        "attachment",
+        "file-history-snapshot",
+        "atis-latch",
+        "last-prompt",
+        "ai-title",
+        "assistant",
+        "file-history-delta",
+        "system",
+        "cost-state",
+        "mode",
+        "bridge-session",
+        "api-request-shape",
+        "api-request-blob",
+        "api-request",
+        "artifact-comment-monitor",
+        "artifact-autoreact-ledger",
+        "frame-link",
+        "custom-title",
+        "agent-name",
+    }
+)
+
+# The four counts of an assistant record's `message.usage`, every one required.
+_TRANSCRIPT_COUNTS = (
+    "input_tokens",
+    "cache_read_input_tokens",
+    "cache_creation_input_tokens",
+    "output_tokens",
+)
+
+# A task notification names the agent it reports finished in this tag.
+_TASK_ID = re.compile(r"<task-id>([^<]+)</task-id>")
+
+_SUBAGENT_ENTRY = re.compile(
+    r"^agent-(?P<id>[A-Za-z0-9_-]+)\.(?P<kind>jsonl|meta\.json)$"
+)
+
+
+class TranscriptRefused(Exception):
+    """A transcript, meta or entry the reader does not know, naming the file
+    (`path`) and the field (`field`) at fault.
+
+    Implements: SR-244, LLR-352
+    """
+
+    def __init__(self, path, field):
+        self.path = str(path)
+        self.field = field
+        super().__init__("{}: {}".format(self.path, field))
+
+
+@dataclass(frozen=True)
+class TranscriptMessage:
+    """One final assistant message, counted once: its id and model, the
+    timestamps of its first and last records, the four counts of its last
+    record (`fresh` is `input_tokens`), the thinking count its stop record
+    reports (None when it reports none), and whether a record of it carried a
+    stop reason.
+
+    Implements: SR-244, LLR-347
+    """
+
+    id: str
+    model: str
+    started_at: str
+    ended_at: str
+    fresh: int
+    cache_read: int
+    cache_write: int
+    output: int
+    thinking: object
+    stopped: bool
+
+
+@dataclass(frozen=True)
+class TranscriptInvocation:
+    """One transcript of a session: the session's own (`agent_id` "", depth
+    0) or one sub-agent's, with its meta's identity, the model its spawner
+    requested ("" when none), its final messages in order, its open last
+    message's id ("" when none), and whether its parent agent is in the same
+    directory.
+
+    Implements: SR-244, LLR-347, LLR-348
+    """
+
+    session_id: str
+    agent_id: str
+    parent_agent_id: str
+    depth: int
+    agent_type: str
+    request_model: str
+    path: str
+    messages: tuple
+    open_message: str
+    parent_resolved: bool
+
+
+@dataclass(frozen=True)
+class SessionRead:
+    """What `claude_session` read: the invocations in order (the session's
+    own, then the sub-agents by depth and id), the refusals
+    (`TranscriptRefused`), and the transcripts named absent.
+
+    Implements: SR-244, LLR-347
+    """
+
+    invocations: tuple = ()
+    refusals: tuple = ()
+    absent: tuple = ()
+
+
+def _is_count(value):
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _record_of(path, number, line):
+    """One transcript line as a record of a known type, or refused."""
+    try:
+        record = json.loads(line)
+    except ValueError:
+        raise TranscriptRefused(path, "line {}: not JSON".format(number)) from None
+    if not isinstance(record, dict):
+        raise TranscriptRefused(path, "line {}: not a JSON object".format(number))
+    kind = record.get("type")
+    if kind not in TRANSCRIPT_TYPES:
+        raise TranscriptRefused(
+            path, "line {}: type {!r} is unknown".format(number, kind)
+        )
+    return record
+
+
+def _assistant_fields(path, number, record, session_id, agent_id):
+    """The checked `message` of one assistant record: every field the reader
+    counts or keys on, typed, and bound to its session and transcript."""
+    where = "line {}: ".format(number)
+    message = record.get("message")
+    if not isinstance(message, dict):
+        raise TranscriptRefused(path, where + "message")
+    for key in ("id", "model"):
+        if not isinstance(message.get(key), str):
+            raise TranscriptRefused(path, where + "message." + key)
+    if not isinstance(record.get("timestamp"), str):
+        raise TranscriptRefused(path, where + "timestamp")
+    stop = message.get("stop_reason", ())
+    if not (stop is None or isinstance(stop, str)):
+        raise TranscriptRefused(path, where + "message.stop_reason")
+    usage = message.get("usage")
+    if not isinstance(usage, dict):
+        raise TranscriptRefused(path, where + "message.usage")
+    for key in _TRANSCRIPT_COUNTS:
+        if not _is_count(usage.get(key)):
+            raise TranscriptRefused(path, where + "message.usage." + key)
+    _bind(path, where, record, session_id, agent_id)
+    return message
+
+
+def _bind(path, where, record, session_id, agent_id):
+    """Refuse an assistant record of another session or transcript: the
+    session's own carries `isSidechain` false and no `agentId`; a sub-agent's
+    carries `isSidechain` true and its own file's `agentId`."""
+    if record.get("sessionId") != session_id:
+        raise TranscriptRefused(path, where + "sessionId")
+    if record.get("isSidechain") is not bool(agent_id):
+        raise TranscriptRefused(path, where + "isSidechain")
+    if record.get("agentId", None) != (agent_id or None):
+        raise TranscriptRefused(path, where + "agentId")
+
+
+def _thinking(message):
+    value = _dig(message, "usage", "output_tokens_details", "thinking_tokens")
+    return value if _is_count(value) else None
+
+
+def claude_home(env):
+    """The ambient Claude home: the claude home variable
+    (`HOME_VARIABLES["claude"]`) when the environment `env` sets it, else
+    `~/.claude`, the home Claude Code itself uses there. It never selects an
+    account home.
+
+    Implements: SR-244, LLR-353
+    """
+    declared = env.get(HOME_VARIABLES["claude"][0], "")
+    return Path(declared) if declared else Path.home() / ".claude"
+
+
+def transcript_time(value):
+    """A transcript timestamp as an aware datetime (UTC when it names no
+    zone), or None when it is not one: the one parse of the timestamps
+    Claude Code writes.
+
+    Implements: SR-244, LLR-347
+    """
+    try:
+        when = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (AttributeError, ValueError):
+        return None
+    return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
+
+
+def _finish_keys(record):
+    """The finish notices one record carries: `("agent", id)` for each agent
+    a task notification names (a `queue-operation` record), and `("call",
+    tool use id)` for each tool result a `user` record holds."""
+    if record["type"] == "queue-operation":
+        content = record.get("content")
+        found = _TASK_ID.findall(content) if isinstance(content, str) else []
+        return [("agent", agent_id) for agent_id in found]
+    if record["type"] == "user":
+        content = _dig(record, "message", "content")
+        return [
+            ("call", block["tool_use_id"])
+            for block in (content if isinstance(content, list) else ())
+            if isinstance(block, dict)
+            and block.get("type") == "tool_result"
+            and isinstance(block.get("tool_use_id"), str)
+        ]
+    return []
+
+
+def _note_finishes(record, evidence):
+    """Record in `evidence` the latest time each finish notice in `record`
+    was written."""
+    keys = _finish_keys(record)
+    when = transcript_time(record.get("timestamp")) if keys else None
+    for key in keys if when is not None else ():
+        evidence[key] = max(evidence.get(key, when), when)
+
+
+def _transcript_messages(path, session_id, agent_id, evidence):
+    """Every message of one transcript, each counted once, from its LAST
+    record in file order (a message's records repeat, and only
+    `output_tokens` grows across them), in the order of its first
+    appearance. The finish notices the transcript carries are added to
+    `evidence`; which messages are final is `_settled`'s call."""
+    seen = {}
+    with open(path, encoding="utf-8") as handle:
+        for number, line in enumerate(handle, 1):
+            record = _record_of(path, number, line)
+            _note_finishes(record, evidence)
+            if record["type"] != "assistant":
+                continue
+            message = _assistant_fields(path, number, record, session_id, agent_id)
+            entry = seen.setdefault(message["id"], {"first": record["timestamp"]})
+            entry.update(last=record["timestamp"], message=message)
+            if message.get("stop_reason") is not None:
+                entry.update(stopped=True, thinking=_thinking(message))
+    return tuple(_message(mid, entry) for mid, entry in seen.items())
+
+
+def _settled(invocation, keys, evidence):
+    """The invocation with its final messages and its open last message.
+
+    A message is final when a record of it carries a stop reason, when a
+    later assistant message follows it, or, for a sub-agent's last message,
+    when the session's transcripts hold a notice that the agent finished,
+    written at or after that message's last record: a task notification
+    naming the agent, or, for an agent its spawner waited on, the spawner's
+    tool result for the agent's call. A notice older than the message is no
+    evidence (the agent was resumed after it). Only the last message can be
+    none of these; it is left open: not counted, its id named.
+    """
+    messages = invocation.messages
+    if not messages or messages[-1].stopped:
+        return invocation
+    ended = transcript_time(messages[-1].ended_at)
+    if ended is not None and any(k in evidence and evidence[k] >= ended for k in keys):
+        return invocation
+    return replace(invocation, messages=messages[:-1], open_message=messages[-1].id)
+
+
+def _message(mid, entry):
+    message = entry["message"]
+    usage = message["usage"]
+    return TranscriptMessage(
+        id=mid,
+        model=message["model"],
+        started_at=entry["first"],
+        ended_at=entry["last"],
+        fresh=usage["input_tokens"],
+        cache_read=usage["cache_read_input_tokens"],
+        cache_write=usage["cache_creation_input_tokens"],
+        output=usage["output_tokens"],
+        thinking=entry.get("thinking"),
+        stopped=entry.get("stopped", False),
+    )
+
+
+def _meta(path):
+    """`(agent type, depth, parent agent id, requested model, finish keys)`
+    of one sub-agent meta, or refused naming the field. The finish keys are
+    the notices that would show the agent finished: a task notification
+    naming it, and, when its spawner waited on it (`requestShape`
+    `foreground`), the tool result for its call (`toolUseId`)."""
+    try:
+        meta = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        raise TranscriptRefused(path, "meta: not readable JSON") from None
+    if not isinstance(meta, dict):
+        raise TranscriptRefused(path, "meta: not a JSON object")
+    if not isinstance(meta.get("agentType"), str):
+        raise TranscriptRefused(path, "agentType")
+    depth = meta.get("spawnDepth")
+    if not _is_count(depth) or depth < 1:
+        raise TranscriptRefused(path, "spawnDepth")
+    parent = meta.get("parentAgentId", "")
+    if depth >= 2 and not (isinstance(parent, str) and parent):
+        raise TranscriptRefused(path, "parentAgentId")
+    model = meta.get("model")
+    call = meta.get("toolUseId")
+    waited = meta.get("requestShape") == "foreground" and isinstance(call, str)
+    return (
+        meta["agentType"],
+        depth,
+        parent or "",
+        model if isinstance(model, str) else "",
+        [("call", call)] if waited else [],
+    )
+
+
+def _subagent_files(directory):
+    """`({agent id: {kind: path}}, refusals)` of a session's `subagents/`
+    directory: every entry must be an `agent-<id>.jsonl` or
+    `agent-<id>.meta.json` file, and each id must have both."""
+    agents, refusals = {}, []
+    if not directory.is_dir():
+        return agents, refusals
+    for entry in sorted(directory.iterdir()):
+        matched = _SUBAGENT_ENTRY.match(entry.name)
+        if not matched or not entry.is_file():
+            refusals.append(
+                TranscriptRefused(entry, "an entry the reader does not know")
+            )
+            continue
+        agents.setdefault(matched.group("id"), {})[matched.group("kind")] = entry
+    for agent_id, files in sorted(agents.items()):
+        for kind, field in (("jsonl", "transcript"), ("meta.json", "meta")):
+            if kind not in files:
+                name = "agent-{}.{}".format(agent_id, kind)
+                refusals.append(TranscriptRefused(directory / name, field))
+    return agents, refusals
+
+
+def _subagent(session_id, agent_id, files, present, evidence):
+    """One sub-agent's unsettled invocation and its finish keys, or
+    refused."""
+    agent_type, depth, parent, model, keys = _meta(files["meta.json"])
+    messages = _transcript_messages(files["jsonl"], session_id, agent_id, evidence)
+    invocation = TranscriptInvocation(
+        session_id=session_id,
+        agent_id=agent_id,
+        parent_agent_id=parent,
+        depth=depth,
+        agent_type=agent_type,
+        request_model=model,
+        path=str(files["jsonl"]),
+        messages=messages,
+        open_message="",
+        parent_resolved=depth < 2 or parent in present,
+    )
+    return invocation, [("agent", agent_id)] + keys
+
+
+def _holders(home, session_id):
+    """The project directories under `home` holding the session's transcript
+    or its directory."""
+    projects = Path(home) / "projects"
+    if not projects.is_dir():
+        return []
+    return [
+        project
+        for project in sorted(projects.iterdir())
+        if (project / (session_id + ".jsonl")).is_file()
+        or (project / session_id).is_dir()
+    ]
+
+
+def _main_invocation(main, session_id, evidence):
+    """The session's own unsettled invocation; no notice finishes it."""
+    messages = _transcript_messages(main, session_id, "", evidence)
+    invocation = TranscriptInvocation(
+        session_id=session_id,
+        agent_id="",
+        parent_agent_id="",
+        depth=0,
+        agent_type="",
+        request_model="",
+        path=str(main),
+        messages=messages,
+        open_message="",
+        parent_resolved=True,
+    )
+    return invocation, []
+
+
+def claude_session(home, session_id):
+    """The session `session_id`'s transcripts under the Claude home `home`.
+
+    The session is found as `<home>/projects/*/<id>.jsonl` and its
+    `<id>/subagents/` directory. Held in two project directories, it is
+    refused naming both; found in none, its transcript is named absent; a
+    missing main transcript beside present sub-agents is named absent and the
+    sub-agents are read. Each transcript, meta or entry of a shape the reader
+    does not know is refused by file and field and nothing of that transcript
+    is read; the others are. Every `spawnDepth` of 1 or more is accepted, and
+    a parent that names no agent in the directory is kept as written and
+    marked unresolved. Each transcript's last message is settled final or
+    open (`_settled`) once every transcript's finish notices are read.
+
+    Implements: SR-244, LLR-347, LLR-352
+    """
+    holders = _holders(home, session_id)
+    if len(holders) > 1:
+        both = "; ".join(str(h) for h in holders)
+        refused = TranscriptRefused(
+            both, "the session is held in more than one project directory"
+        )
+        return SessionRead(refusals=(refused,))
+    if not holders:
+        absent = Path(home) / "projects" / "*" / (session_id + ".jsonl")
+        return SessionRead(absent=(str(absent),))
+    read, absent, evidence = [], [], {}
+    main = holders[0] / (session_id + ".jsonl")
+    agents, refusals = _subagent_files(holders[0] / session_id / "subagents")
+    if main.is_file():
+        _collect(read, refusals, _main_invocation, main, session_id, evidence)
+    else:
+        absent.append(str(main))
+    for agent_id, files in agents.items():
+        if len(files) == 2:
+            args = (session_id, agent_id, files, agents, evidence)
+            _collect(read, refusals, _subagent, *args)
+    settled = [_settled(inv, keys, evidence) for inv, keys in read]
+    settled.sort(key=lambda inv: (inv.depth, inv.agent_id))
+    return SessionRead(tuple(settled), tuple(refusals), tuple(absent))
+
+
+def _collect(read, refusals, reader, *args):
+    try:
+        read.append(reader(*args))
+    except TranscriptRefused as refused:
+        refusals.append(refused)
+    except OSError as error:
+        refusals.append(TranscriptRefused(error.filename or args[0], "not readable"))
+
+
+def transcript_usage(messages):
+    """The usage record of a run of counted messages, through the one usage
+    builder: fresh input, cache read, cache write and output summed; the
+    reasoning count summed only when every message's stop record reports it
+    (a partial sum is never shown as a count); the response model that of the
+    last message not named `<synthetic>`.
+
+    Implements: SR-244, LLR-347
+    """
+    messages = tuple(messages)
+    if not messages:
+        return usage_record(
+            "claude",
+            "anthropic",
+            fresh=None,
+            cache_read=None,
+            cache_write=None,
+            output=None,
+            scope="contribution",
+        )
+    thinking = [m.thinking for m in messages]
+    reported = all(m.stopped and t is not None for m, t in zip(messages, thinking))
+    model = next((m.model for m in reversed(messages) if m.model != "<synthetic>"), "")
+    return usage_record(
+        "claude",
+        "anthropic",
+        fresh=sum(m.fresh for m in messages),
+        cache_read=sum(m.cache_read for m in messages),
+        cache_write=sum(m.cache_write for m in messages),
+        output=sum(m.output for m in messages),
+        reasoning=sum(thinking) if reported else None,
+        model=model,
+        scope="contribution",
+    )
 
 
 class CodexAdapter(PlainAdapter):

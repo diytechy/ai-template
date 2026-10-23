@@ -771,6 +771,15 @@ Contracts (interfaces): IF-081, IF-155
 | `--regen` | re-derive the generated artifacts in dependency order |
 | `--dry-run` | print what each selected operation would do; write nothing |
 
+### `scripts/usage_ingest`
+_Record the usage of a Claude Code session and its sub-agents, once per_
+Contracts (interfaces): IF-305, IF-306, IF-307
+
+| Option | Help |
+|---|---|
+| `--session` | the session id to ingest |
+| `--root` | the root to record from |
+
 ### `scripts/wi_convert`
 _Convert the work-item registry between its CSV row form and its spec-file form._
 Contracts (interfaces): IF-078, IF-092

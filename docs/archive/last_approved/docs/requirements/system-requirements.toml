@@ -1944,3 +1944,16 @@ verification = "Test"
 status = "Approved"
 phase = 6
 aspect = "process"
+
+[requirement.SR-244]
+title = "Transcript-derived usage records include coordinated nested agents"
+sn_refs = ["SN-026"]
+hat_refs = ["PERFORMANCE"]
+requirement = "The delivered coordination capability shall record once each transcript-bearing model session that coordination completion ingests for coordinated work, including every session an agent spawns at any nesting depth, with its identity and transcript-derived usage; record no already-recorded message, duplicate no service record, grant its record no gate authority, include no transcript text, refuse an unknown source shape, and direct completion to ingest the current session and a named prior-session tail."
+rationale = "A DERIVED requirement through the PERFORMANCE lens: SN-026 makes model-family routing a configurable operating choice, but does not require the cost of coordinated sessions outside the launcher result to be visible. The lens identifies an incomplete cost reading when nested work is omitted or a repeated or resumed read inflates it. Recorded probes establish that a resume appends to its existing transcript, that a Claude result excludes sub-agent usage, and that arbitrary nesting occurs; a sub-agent's final hand-back often has no stop record and is complete once the session's transcripts show the agent finished. The direct-child fan-out re-stamp is intentional: the independently observable reader, identity, contribution, recovery, duplication, shape, source-selection, record, CLI, and completion decisions must not be merged. Fed back to the need: its acceptance could require the owner to see complete, non-duplicated usage for coordinated work across the configured families."
+acceptance_criteria = "Every ingested transcript-bearing coordination session and nested agent is recorded with its identity; usage counts each completed message once, marks source-stated partial counts, retries add no already-recorded messages, and resumed recording adds only newly finalized messages; a session already recorded by the service is not counted twice; an ingested record has no gate authority and contains no transcript text; an unknown source shape is refused naming the defect; and published coordination guidance runs the recording at close-out and at a headless leg's end, including pickup of the previous session's tail."
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 6
+aspect = "performance"

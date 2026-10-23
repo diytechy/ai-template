@@ -3811,3 +3811,113 @@ automated = "Yes"
 evidence = "tests/test_prompts.py::test_the_cycle_says_sol_and_terra_calls_are_refused_in_the_blackout_window; tests/test_prompts.py::test_no_recipe_launches_sol_or_terra_outside_the_entry_point"
 status = "Approved"
 phase = 6
+
+[test.TC-386]
+verifies = ["SR-244", "LLR-347", "LLR-348", "IF-245"]
+level = "Integration"
+method = "Read a nested session fixture and assert its main and nested-agent identities, depth, parent, model and timestamp fields, together with deterministic distinct invocation identities; make the last counted model synthetic."
+tier = "Smoke"
+expected = "Every transcript invocation has its recorded identity, including nested agents, and its response model is the last counted non-synthetic model."
+automated = "Yes"
+evidence = "tests/test_claude_transcripts.py::test_a_session_with_nested_agents_yields_four_invocations_with_their_identities; tests/test_usage_ingest.py::test_the_invocation_id_is_derived_from_the_transcript_identity; tests/test_claude_transcripts.py::test_the_response_model_is_the_last_counted_model_not_named_synthetic"
+status = "Approved"
+phase = 6
+
+[test.TC-387]
+verifies = ["SR-244", "LLR-347", "LLR-348", "LLR-354", "IF-245", "IF-246"]
+level = "Integration"
+method = "Read transcript fixtures with records in first-appearance order, repeated records, partial records and unrelated summary usage, then inspect the written usage records."
+tier = "Smoke"
+expected = "Usage is the once-per-message assistant sum in first-appearance order, with empty reasoning unless every counted message reports it; written records carry the required vocabulary and partial state, leave unavailable fields and raw usage empty, and use COORDINATOR role and phase for the session and SUBAGENT for each agent."
+automated = "Yes"
+evidence = "tests/test_claude_transcripts.py::test_each_invocation_usage_is_its_unique_message_sum; tests/test_claude_transcripts.py::test_a_repeated_record_adds_nothing; tests/test_claude_transcripts.py::test_the_parents_tool_result_summary_is_never_read; tests/test_usage_ingest.py::test_one_ingest_records_four_logs_with_the_usage_vocabulary; tests/test_claude_transcripts.py::test_the_main_sum_equals_the_clis_own_result"
+status = "Approved"
+phase = 6
+
+[test.TC-388]
+verifies = ["SR-244", "LLR-347"]
+level = "Unit"
+method = "Cut and restore a final transcript message, read a message without a stop record followed by another message, and vary an absent, stale, or timely sub-agent finish notice, including notices in the session transcript itself."
+tier = "Smoke"
+expected = "An open last message is named and uncounted until final; a later assistant message or timely sub-agent finish notice finalizes it once, while a session notice never finalizes its own transcript and an earlier message without a stop record is counted once and marked partial."
+automated = "Yes"
+evidence = "tests/test_claude_transcripts.py::test_an_open_last_message_is_named_and_not_counted; tests/test_claude_transcripts.py::test_a_message_without_a_stop_record_is_final_once_a_later_message_follows; tests/test_claude_transcripts.py::test_a_finished_agents_unstopped_hand_back_is_counted_at_its_last_record; tests/test_claude_transcripts.py::test_an_agent_with_no_evidence_of_finishing_keeps_its_last_message_open; tests/test_claude_transcripts.py::test_a_background_agents_task_notice_makes_its_last_message_final; tests/test_usage_ingest.py::test_a_finished_agents_hand_back_is_recorded_once; tests/test_claude_transcripts.py::test_no_finish_notice_finishes_the_sessions_own_last_message"
+status = "Approved"
+phase = 6
+
+[test.TC-389]
+verifies = ["SR-244", "LLR-347", "LLR-349", "LLR-350", "LLR-351", "LLR-355", "LLR-356", "IF-065", "IF-246"]
+level = "Integration"
+method = "Ingest, resume, repeat and interrupt fixture sessions, including same-second ending ranges, open last messages, malformed prior headers, and same-name prior logs in the spool, root record directory, and another worktree."
+tier = "Full"
+expected = "Each completed range records its count, final cursor, immutable identity-derived key, and verbatim endpoint timestamps; its same-invocation contribution names are distinct and ordered. Existing completed ranges report unchanged, retries record only final still-unrecorded messages, and an open last message is neither counted nor crossed by a cursor. Same-name prior logs are read once, unreadable or unterminated headers, missing cursor or key, and an absent cursor refuse the invocation, naming the log, and a session contribution is not a service record. Recorded, unchanged, and open outcomes identify each invocation and a successful invocation exits zero; a later read records only the newly final prior range."
+automated = "Yes"
+evidence = "tests/test_usage_ingest.py::test_ingesting_one_session_twice_records_nothing_the_second_time; tests/test_usage_ingest.py::test_appended_messages_are_recorded_alone_under_the_same_identity; tests/test_usage_ingest.py::test_initial_resumed_and_repeated_ingests_give_two_contributions_summing_to_the_whole; tests/test_usage_ingest.py::test_an_open_message_is_recorded_once_final_and_the_contributions_equal_the_completed_transcript; tests/test_usage_ingest.py::test_two_contributions_whose_last_messages_share_a_second_both_survive; tests/test_usage_ingest.py::test_a_run_killed_after_some_logs_then_rerun_records_each_invocation_once; tests/test_usage_ingest.py::test_a_torn_earlier_log_refuses_that_invocation_naming_it; tests/test_usage_ingest.py::test_a_cursor_missing_from_the_transcript_refuses; tests/test_usage_ingest_git.py::test_a_log_in_another_worktree_counts_toward_exactly_once; tests/test_usage_ingest_git.py::test_from_the_primary_checkout_the_logs_spool_and_nothing_is_committed; tests/test_usage_ingest.py::test_an_unreadable_header_refuses_that_invocation_naming_it; tests/test_usage_ingest.py::test_a_header_without_its_cursor_or_key_refuses_that_invocation; tests/test_usage_ingest.py::test_a_log_in_the_roots_own_record_directory_counts_and_a_name_held_twice_is_read_once; tests/test_usage_ingest.py::test_recorded_unchanged_and_open_lines_name_each_invocations_role_type_and_id"
+status = "Approved"
+phase = 6
+
+[test.TC-390]
+verifies = ["SR-244", "LLR-351", "LLR-355", "IF-246"]
+level = "Integration"
+method = "Ingest a session with service records under both declared result-coverage states, including an unreadable governing record."
+tier = "Smoke"
+expected = "A service-recorded main transcript emits a skipped outcome, while sub-agents are skipped only when the service result covers them; an unreadable governing record refuses every transcript it governs."
+automated = "Yes"
+evidence = "tests/test_usage_ingest.py::test_a_service_recorded_session_skips_its_main_transcript; tests/test_usage_ingest.py::test_an_unreadable_service_record_refuses_every_transcript_it_governs"
+status = "Approved"
+phase = 6
+
+[test.TC-391]
+verifies = ["SR-244", "LLR-352", "LLR-353", "LLR-355", "IF-245", "IF-305", "IF-306"]
+level = "Integration"
+method = "Exercise malformed or missing transcript and meta shapes, positive and nonpositive nesting, unresolved parents, duplicate transcript locations, and absent or unspecified sessions through the reader and command."
+tier = "Smoke"
+expected = "Unknown or missing transcript shapes are named and refused, with a command refusal exiting one, while other transcripts remain recordable; positive non-boolean nesting and unresolved parents remain observable; two matching project locations for one session are refused, naming both."
+automated = "Yes"
+evidence = "tests/test_claude_transcripts.py::test_an_unknown_shape_is_refused_naming_file_and_field; tests/test_claude_transcripts.py::test_a_depth_two_agent_whose_parent_is_absent_is_kept_and_named_unresolved; tests/test_claude_transcripts.py::test_any_spawn_depth_is_accepted_and_recorded; tests/test_claude_transcripts.py::test_a_session_held_in_two_project_directories_is_refused_naming_both; tests/test_usage_ingest.py::test_an_unknown_shape_exits_nonzero_and_records_nothing_for_that_transcript; tests/test_usage_ingest.py::test_no_session_is_a_usage_error; tests/test_usage_ingest.py::test_an_absent_transcript_is_named; tests/test_usage_ingest.py::test_an_unresolved_parent_is_named_on_its_agents_lines"
+status = "Approved"
+phase = 6
+
+[test.TC-392]
+verifies = ["SR-244", "LLR-354", "IF-246"]
+level = "Integration"
+method = "Plant transcript text in every supported transcript text location and inspect every written ingest log and its contribution body."
+tier = "Smoke"
+expected = "Each written contribution body is the fixed summary of counts, message identities and timestamps, with no transcript text or raw usage object."
+automated = "Yes"
+evidence = "tests/test_usage_ingest.py::test_no_transcript_text_reaches_any_written_log; tests/test_usage_ingest.py::test_each_log_body_is_the_fixed_summary_of_counts_ids_and_timestamps"
+status = "Approved"
+phase = 6
+
+[test.TC-393]
+verifies = ["SR-244", "LLR-354", "IF-246"]
+level = "Integration"
+method = "Place an ingested log in lane records and exercise round, build-family, draw and resume-carrier readers."
+tier = "Full"
+expected = "An ingested record is not interpreted as a round, build, draw, or resume carrier."
+automated = "Yes"
+evidence = "tests/test_usage_ingest_git.py::test_an_ingested_log_in_a_lane_is_no_round_no_build_and_no_draw"
+status = "Approved"
+phase = 6
+
+[test.TC-394]
+verifies = ["SR-244", "LLR-353", "LLR-355", "IF-305", "IF-307"]
+level = "Integration"
+method = "Invoke the command with the configured and default homes, an explicit or ambient selected session, no selected session, an absent selected transcript with present sub-agents, and a refused record commit."
+tier = "Full"
+expected = "The home is the configured Claude home when one is set, else the default home, and never an account home; an explicit session takes precedence over the ambient session. No selected session exits 2; an absent main transcript is named while present sub-agents are recorded; and an absence or refused record commit is named and exits 1."
+automated = "Yes"
+evidence = "tests/test_usage_ingest.py::test_no_session_is_a_usage_error; tests/test_usage_ingest.py::test_an_absent_transcript_is_named; tests/test_usage_ingest.py::test_the_home_is_the_config_variable_else_the_default_never_an_account_home; tests/test_usage_ingest.py::test_the_ambient_session_id_is_ingested_when_none_is_named; tests/test_usage_ingest.py::test_an_absent_main_transcript_is_named_and_its_sub_agents_are_recorded; tests/test_usage_ingest_git.py::test_a_refused_record_commit_exits_one_and_names_the_refusal"
+status = "Approved"
+phase = 6
+
+[test.TC-395]
+verifies = ["SR-244", "LLR-356"]
+level = "Unit"
+method = "Read the synchronized completion guidance and assert that current-session ingest precedes each handoff, each handoff names its own session, and replaced-handoff sessions are ingested."
+tier = "Smoke"
+expected = "Close-out and headless completion ingest the current session before its handoff, whose own session is named, and when named ingest the prior session tail."
+automated = "Yes"
+evidence = "tests/test_prompts.py::test_the_close_out_and_headless_leg_run_the_usage_ingest; tests/test_prompts.py::test_the_close_out_and_headless_leg_ingest_before_the_handoff_is_written"
+status = "Approved"
+phase = 6

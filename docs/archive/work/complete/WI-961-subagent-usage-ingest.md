@@ -3,13 +3,23 @@ id = "WI-961"
 title = "Claude coordinator sessions and their sub-agents, nested agents included, are recorded once per invocation from their transcripts, under the usage ledger's invocation key"
 workstream = "process"
 sr_refs = ["SR-222"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#8-record-usage-for-every-model-call-sub-agents-included"
+specref = ""
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 needs = ["WI-960"]
 +++
+
+## Deliverable
+
+Landed by headless leg 14 of loop session `20261021T045653Z-213020`, squashed from lane `wi-961`.
+
+- **The reader.** `session_adapters.claude_session` reads the Claude Code transcripts and metas of the one session its caller names, under the ambient Claude home, in a closed shape (21 main and 6 sub-agent record types): any depth of nesting, each message counted once from its last record, a final message counted partial where it carries no stop record, a transcript's last message left open unless a stop reason, a later message or, for a sub-agent, a finish notice (a task notification, or the spawner's tool result) makes it final, and a malformed transcript refused by file and field while the others stay recordable.
+- **The command.** `usage_ingest.py [--session ID] [--root DIR]` records each transcript's not-yet-recorded final messages as one contribution log through `session_service.record` (committed in a claimed lane, spooled elsewhere), under an invocation id derived from the transcript's identity, so a repeated, resumed or interrupted run adds only what no earlier log holds; a session whose main transcript the service already recorded is skipped, its sub-agents still recorded. The logs carry a usage summary only, never transcript text, under roles no gate reads. Its arguments, stdout and exit codes are IF-305, IF-306 and IF-307.
+- **Text.** The coordinator-cycle skill's close-out and headless-leg sections run the ingest before each handoff is written, naming the session, and ingest the replaced handoff's session tail (three copies byte-identical); Flow 8 in the runtime flows.
+- **Spine.** SR-244 (derived, performance), LLR-347 to LLR-356 and TC-386 to TC-395 approved (act seq 153) by sitting 009 (`docs/reviews/wi-961/009-ADJUDICATE-941a256.md`), after sittings 007 and 008's returns were answered in the lane; IF-305 to IF-307 added and IF-065, IF-245 and IF-246 amended by addition. Reviews: counted rounds 1 and 2 and the gate (`docs/reviews/wi-961/003` to `011`); decisions `docs/decisions/wi-961.toml` D-001 to D-017.
+- **Live run.** P8's ingest of leg 3's session reproduced the plan's figures exactly with no prompt text in any log (D-009). Owed after landing: the double-count scan's cost over this repository's worktrees, measured at the first close-out ingest.
 
 ## Context
 

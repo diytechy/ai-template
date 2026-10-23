@@ -430,6 +430,62 @@ def test_no_recipe_launches_sol_or_terra_outside_the_entry_point():
     assert found == []
 
 
+def _cycle_section(text, number):
+    """The body of the cycle skill's `## <number>.` section, up to the next
+    `## ` heading."""
+    match = re.search(r"^## {}\. .*?(?=^## )".format(number), text, re.M | re.S)
+    assert match, number
+    return match.group(0)
+
+
+def test_the_close_out_and_headless_leg_run_the_usage_ingest():
+    # Pins WI-961's Done-when item on the coordinator-cycle skill text: the
+    # close-out (section 6) and a headless leg's end (section 7) run the usage
+    # ingest for this session and, with `--session`, for the session the
+    # replaced handoff names; the handoff of each names its own session id.
+    # Checked in all three copies; test_skills_sync keeps them
+    # byte-identical. Adequacy witness: a cycle that never runs the command,
+    # runs it only for its own session, or leaves a leg's handoff without
+    # its session id, fails here.
+    for copy in CYCLE_COPIES:
+        text = (copy / "SKILL.md").read_text(encoding="utf-8")
+        close_out, leg = _cycle_section(text, 6), _cycle_section(text, 7)
+        for name, section in (("close-out", close_out), ("headless leg", leg)):
+            assert "usage_ingest.py" in section, (copy, name)
+            assert re.search(r"usage_ingest\.py\"?\s+--session", section), (copy, name)
+            flat = " ".join(section.split())
+            assert re.search(
+                r"handoff names this session's id \(`\$CLAUDE_CODE_SESSION_ID`\)",
+                flat,
+                re.I,
+            ), (copy, name)
+
+
+def test_the_close_out_and_headless_leg_ingest_before_the_handoff_is_written():
+    # The cycle skill's close-out (section 6) and a headless leg's end
+    # (section 7) order the usage ingest BEFORE the handoff is written, so
+    # the handoff can record the run's exit and lines. Checked in all three
+    # copies. Adequacy witness: a cycle that ingests after writing the
+    # handoff, or states no order at all, fails here.
+    for copy in CYCLE_COPIES:
+        text = (copy / "SKILL.md").read_text(encoding="utf-8")
+        close_out = " ".join(_cycle_section(text, 6).split())
+        leg = " ".join(_cycle_section(text, 7).split())
+        assert re.search(
+            r"\*\*Record the session's usage\*\* before the handoff is written",
+            close_out,
+        ), copy
+        assert re.search(
+            r"Before it writes its handoff and ends its reply, a leg runs the "
+            r"same pair as §6's close-out",
+            leg,
+        ), copy
+        for section in (close_out, leg):
+            assert not re.search(
+                r"after (it writes|writing) (its|the) handoff", section
+            )
+
+
 def test_the_terra_brief_has_an_intent_form_before_build_round_1():
     # The spine author's brief serves the intent turn, before any build, as
     # well as the checkpoint: at intent it presumes no built code, no change

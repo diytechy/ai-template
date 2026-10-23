@@ -1,0 +1,7 @@
+range = "1d6484cc5f0ba2f84c66df0138f3d1856fe1659d..80f67de01e365480c1e2861627f439fb6c7f8411"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = "[MAJOR] DevStg-Tests -> plan decision 5 (lines 320 onward), P4/P5, and P2's kill/torn-log tests (lines 706–707) do not deliver D4's killed-run recovery. The supported interruption path is explicitly in the spec's Trust section: a spool write can fail or a run can be killed. At this commit `agent_common.write_session_log` writes directly to the final discoverable name with `path.write_text` (line 1597); P4 only adds columns and the plan leaves that writer otherwise unchanged. A kill during that write can leave an empty or unterminated `call_<invocation-id>-*.log`. Every retry discovers it and refuses the invocation, so the required rerun cannot finish recording each invocation once. Raising KeyboardInterrupt on the third `record` call tests interruption between writes, while the torn-log test explicitly blesses permanent refusal. -> Extend P4 to publish completed logs atomically through the existing shared writer, with an incomplete temporary file outside the final call-log pattern; add an interrupted-write/retry test proving the final log is either absent or complete and the rerun produces exactly one complete contribution. Preserve refusal for genuinely unreadable previously published logs. -> @implementer"
+position = "Nothing is contested. The coordinator takes no side; the plan cap routes this MAJOR from the second critique to the sitting."

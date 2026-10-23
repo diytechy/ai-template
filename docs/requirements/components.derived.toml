@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 313
-seam_rows = 251
-requirements_placed = 129
+design_rows = 323
+seam_rows = 254
+requirements_placed = 130
 requirements_unplaced = 6
 seams_unplaced = 0
 
@@ -662,6 +662,7 @@ sr_refs = [
   "SR-241",
   "SR-242",
   "SR-243",
+  "SR-244",
 ]
 sr_shared_refs = [
   "SR-139",
@@ -787,6 +788,16 @@ llr_refs = [
   "LLR-344",
   "LLR-345",
   "LLR-346",
+  "LLR-347",
+  "LLR-348",
+  "LLR-349",
+  "LLR-350",
+  "LLR-351",
+  "LLR-352",
+  "LLR-353",
+  "LLR-354",
+  "LLR-355",
+  "LLR-356",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -868,6 +879,8 @@ modules = [
   "project-trajectory/scripts/spec_move.py",
   "project-trajectory/scripts/text_then_act.py",
   "project-trajectory/scripts/trunk_step.py",
+  "project-trajectory/scripts/usage_ingest.py",
+  "project-trajectory/skills/coordinator-cycle/SKILL.md",
   "scripts/coordinator-relaunch.cmd",
   "scripts/coordinator-relaunch.sh",
   "scripts/coordinator/codex_call.py",
@@ -1058,6 +1071,9 @@ seam_boundary_refs = [
   "IF-292",
   "IF-293",
   "IF-298",
+  "IF-305",
+  "IF-306",
+  "IF-307",
 ]
 
 [component_view.CMP-009]

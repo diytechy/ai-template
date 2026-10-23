@@ -1474,7 +1474,7 @@ def write_session_log(iter_dir, meta, transcript):
     metadata header (what the index is regenerated from) + the transcript
     (credential shapes redacted — see redact_secrets).
 
-    Implements: SR-176, LLR-177
+    Implements: SR-176, LLR-177, SR-244, LLR-354
     """
     transcript, redacted = redact_secrets(transcript)
     iter_dir.mkdir(parents=True, exist_ok=True)
@@ -1577,6 +1577,17 @@ def write_session_log(iter_dir, meta, transcript):
         "usage-scope",
         "usage-source",
         "usage-status",
+        # A usage ingest's contribution (usage_ingest.py): the transcript's
+        # agent identity, and the messages it counted, as a count, the last
+        # one's id (the cursor the next ingest resumes after) and the
+        # immutable key of the range; empty on every other log.
+        "agent-id",
+        "parent-agent-id",
+        "spawn-depth",
+        "agent-type",
+        "message-count",
+        "message-cursor",
+        "contribution-key",
     ):
         # Header values occupy one physical line, including provider metadata,
         # and pass the same credential redaction the transcript does: a raw

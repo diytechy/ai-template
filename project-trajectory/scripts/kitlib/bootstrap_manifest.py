@@ -739,6 +739,9 @@ MAPPING = [
     # The coordinator's adjudication entry point (WI-835): a thin caller of the
     # session service's keep operation; temporary until WI-801's `ask`.
     ("scripts/coordinator_adjudicate.py", "scripts/coordinator_adjudicate.py"),
+    # The usage ingest: a Claude Code session's transcripts, its sub-agents
+    # included, recorded once per invocation through the session service.
+    ("scripts/usage_ingest.py", "scripts/usage_ingest.py"),
     # The coordinator context guard (WI-822): integrate.claim imports it;
     # dormant at the shipped `[coordinator] context_guard_pct = 0`.
     ("scripts/coordinator_guard.py", "scripts/coordinator_guard.py"),

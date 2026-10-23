@@ -435,6 +435,8 @@ SLOW_MODULES = frozenset(
         "test_adoption_record",  # a tmp git repo and lane per case; its in-process pin is test_disposition_adoption
         # WI-960: the coordinator's codex call on real lanes, stand-in codex.
         "test_codex_call_git",  # a tmp git repo and lane per case and a stand-in `codex` process; its in-process pin is test_codex_call
+        # WI-961: the usage ingest on real lanes, worktrees and the primary.
+        "test_usage_ingest_git",  # a tmp git repo and lane per case, git spawned per read and record commit; its in-process pin is test_usage_ingest
     }
 )
 

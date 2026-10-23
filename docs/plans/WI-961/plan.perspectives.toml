@@ -1,0 +1,106 @@
+# PERSPECTIVE RECORD (SR-161) for one decomposition, written by
+# `hats.py record`. A rewrite regenerates every field EXCEPT the ones a
+# person authors: subject, rows, tags, recorded_by, recorded_on, and each
+# perspective's no_finding. Comments are not kept.
+#   applicable = false                -> the roster predicate did not reach it
+#   applicable = true, produced = [..] -> it produced these rows (own Hat-Refs)
+#   applicable = true, produced = []   -> considered: no_finding says why
+# Check: `hats.py record <this file> --check`.
+
+[decomposition]
+rows = ["SR-244", "LLR-347", "LLR-348", "LLR-349", "LLR-350", "LLR-351", "LLR-352", "LLR-353", "LLR-354", "LLR-355", "LLR-356"]
+parents = ["SN-026"]
+recorded_by = "GPT Terra (gpt-5.6-terra), WI-961 spine author"
+recorded_on = "2026-10-22"
+
+[perspective.SECURITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The bounded ambient transcript read and redacted contribution records introduce no separate security obligation beyond the stated source boundary."
+
+[perspective.FIRST-RUN-ADOPTER]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"templates\" or tags contains \"process\""
+produced = []
+
+[perspective.UNATTENDED-OPS]
+applicable = true
+applies_when = "tags contains \"unattended\" or tags contains \"loop\""
+produced = []
+no_finding = "The existing completion procedure is the operational route; this decomposition adds no separate unattended-operation decision."
+
+[perspective.CROSS-PLATFORM]
+applicable = false
+applies_when = "tags contains \"scripts\" or tags contains \"launcher\" or tags contains \"shell\""
+produced = []
+
+[perspective.MAINTAINER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The reader, contribution, and command contracts are independently named, so no further maintenance obligation is needed."
+
+[perspective.TEST-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The TC rows bind each observable arm to focused automated evidence; no additional testability requirement is derived."
+
+[perspective.UX-DESIGNER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The command's concise outcome vocabulary is specified at the command-contract tier; no separate experience obligation is derived."
+
+[perspective.UX-ENGINEER]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "No interactive visual surface or responsive layout is in this decomposition's scope."
+
+[perspective.SAFETY]
+applicable = false
+applies_when = "tags contains \"safety\""
+produced = []
+
+[perspective.LEGAL]
+applicable = true
+applies_when = "tags contains \"legal\""
+produced = []
+no_finding = "The existing personal-data boundary and redaction obligation cover the applicable concern without a new legal requirement."
+
+[perspective.DATA-PROTECTION]
+applicable = true
+applies_when = "tags contains \"personal-data\""
+produced = []
+no_finding = "LLR-354's transcript-text exclusion addresses the relevant data exposure without a separate derived row."
+
+[perspective.ACCESSIBILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The command's textual outcomes introduce no accessibility-specific interaction beyond the stated result vocabulary."
+
+[perspective.PERFORMANCE]
+applicable = true
+applies_when = "always"
+produced = ["SR-244"]
+
+[perspective.CONSISTENCY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "Shared usage vocabulary and service seams remain governed by their existing rows; this set adds no distinct consistency decision."
+
+[perspective.INTEGRITY-RECOVERABILITY]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The exactly-once cursor and contribution obligations are derived through performance cost visibility here, not a separate integrity lens."
+
+[perspective.PRODUCT-FITNESS]
+applicable = true
+applies_when = "always"
+produced = []
+no_finding = "The bounded transcript-ingest capability fits the recorded coordinated-work outcome without a further product-fit constraint."

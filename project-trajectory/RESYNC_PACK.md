@@ -9534,6 +9534,53 @@ dispatcher reads as a dirty trunk.
 **Kit-owned files — overwrite:** `scripts/session_service.py`,
 `scripts/agent_common.py` and `scripts/coordinator_adjudicate.py`.
 
+### A Claude Code session's usage, sub-agents included, is recorded from its transcripts [since 5db53a6b3]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A new shipped command, `scripts/usage_ingest.py
+[--session ID] [--root DIR]`, records the usage of one Claude Code session
+and of every sub-agent it spawned, at any nesting depth, from the
+transcripts Claude Code writes under the ambient Claude home
+(`CLAUDE_CONFIG_DIR` when set, else `~/.claude`; never an account home). It
+writes one session log per invocation and contribution through the session
+service's `record`, so it commits in a claimed lane and spools anywhere
+else. Usage is counted once per message, from each message's last record,
+and only once the message is final; a message still being written is named
+`open` and recorded by a later run. A repeated or resumed run records only
+what earlier logs have not, read from the logs already recorded. A session
+whose main transcript the service already recorded is not counted twice. A
+transcript shape the reader does not know is refused, naming the file and
+the field, and nothing is recorded for that transcript. The command prints
+one line per invocation (`recorded`, `unchanged`, `open`, `skipped`,
+`refused`, `absent`, `parent unresolved`) and exits 0, 1 on a refusal, an
+absent transcript or a refused record commit, or 2 when no session is named
+(`--session`, else `CLAUDE_CODE_SESSION_ID`).
+
+- `session_adapters` gains the reader beside the claude adapter:
+  `claude_session(home, session_id)`, `transcript_usage(messages)`,
+  `TranscriptRefused`, `TRANSCRIPT_TYPES` (the record types it knows) and
+  `CLAUDE_RESULT_COUNTS_SUBAGENTS`.
+- `agent_common.write_session_log` writes seven new header columns on every
+  log, empty where unused: `agent-id`, `parent-agent-id`, `spawn-depth`,
+  `agent-type`, `message-count`, `message-cursor` and `contribution-key`.
+- The ingested logs carry role and phase `COORDINATOR` or `SUBAGENT`,
+  outcome `INGESTED`, `usage-source` `transcript` and `usage-scope`
+  `contribution`, and a standard `call_` name, so no gate reads one as a
+  review round, a build or a draw.
+
+**What to do.** No forced migration: the new header columns are empty on
+every other log, and nothing runs the command until you do. To record a
+Claude coordinator's usage, run it from your primary checkout at your
+close-out, for the current session and for the session your previous
+handoff names. A Claude Code update that adds a transcript record type makes
+the command refuse that transcript, naming the type, until the kit learns
+it.
+
+**Kit-owned files — overwrite:** `scripts/session_adapters.py`,
+`scripts/usage_ingest.py` (new), `scripts/agent_common.py` and
+`scripts/kitlib/bootstrap_manifest.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

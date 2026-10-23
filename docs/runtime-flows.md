@@ -321,3 +321,45 @@ sequenceDiagram
         end
     end
 ```
+
+### Flow 8 — A usage ingest at close-out (SR-244, SR-222, LLR-347, LLR-350, LLR-351, LLR-269)
+
+A Claude coordinator's own session and the sub-agents it spawned make model
+calls the kit never launched. At close-out (and at a headless leg's end) the
+coordinator runs the usage ingest for its own session, then again for the
+session the replaced handoff names, so that session's tail is recorded too.
+The reader is the only code that knows Claude Code's transcript format; the
+records go through the one session service, so where a log lands is read from
+the root, never chosen by the command.
+
+```mermaid
+sequenceDiagram
+    participant Coord as coordinator close-out
+    participant Ingest as usage ingest (LLR-350, LLR-351)
+    participant Reader as transcript reader (LLR-347)
+    participant Home as ambient Claude home
+    participant Logs as recorded logs (spool and every worktree's records)
+    participant Svc as session service (LLR-269)
+    Coord->>Ingest: this session, then the replaced handoff's session
+    Ingest->>Reader: read the session
+    Reader->>Home: the main transcript and every sub-agent's, with its meta
+    alt a shape the reader does not know
+        Reader-->>Ingest: refused, naming the file and the field
+    else known
+        Reader-->>Ingest: invocations: final messages, open last message, identity
+    end
+    Ingest->>Logs: earlier contributions by name, and a service record of the session
+    alt the service already recorded the session
+        Ingest-->>Coord: the main transcript skipped
+    else not yet recorded
+        Ingest->>Ingest: final messages after the furthest cursor
+        alt none
+            Ingest-->>Coord: unchanged
+        else some
+            Ingest->>Svc: record one contribution (usage summary only)
+            Svc-->>Ingest: committed in a claimed lane, else spooled
+            Ingest-->>Coord: recorded
+        end
+    end
+    Note over Ingest,Coord: an open last message is named and recorded by a later run once final
+```

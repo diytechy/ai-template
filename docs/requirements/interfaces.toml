@@ -966,9 +966,9 @@ status = "Drafted"
 
 [interface.IF-065]
 owner = "scripts/agent_common"
-requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/session_service"]
+requestors = ["scripts/agent_loop", "scripts/integrate", "scripts/session_service", "scripts/usage_ingest"]
 channel = "call"
-data = "END_STATES, git, head_sha, acquire_lock, release_lock, preflight, parse_map, process_config, load_wi_registry, substantive_working_tree_dirty, write_session_log, commit_telemetry, loop_claimed"
+data = "END_STATES, git, head_sha, acquire_lock, release_lock, preflight, parse_map, process_config, load_wi_registry, substantive_working_tree_dirty, write_session_log, commit_telemetry, loop_claimed, log_meta_text, worktree_records"
 version = "v1"
 status = "Drafted"
 
@@ -2286,24 +2286,57 @@ notes = """No tie-back: the argv comes in from the adopter's own session, and th
 [interface.IF-245]
 rationale = """Each provider runner differs in the flags that make it emit structured output, where its final text is, which events carry its usage and how full its context is. Scattered through the launching roles those differences drift apart, so one module answers them per runner and the session layer imports it."""
 owner = "scripts/session_adapters"
-requestors = ["scripts/session_service", "scripts/agent_route"]
+requestors = ["scripts/session_service", "scripts/agent_route", "scripts/usage_ingest"]
 channel = "call"
-data = "USAGE_KEYS, OTEL_SEMCONV; adapter_for(argv) -> adapter; adapter methods; HOME_VARIABLES, TOKEN_VARIABLES; cli_named(executable), home_env(cli, home)"
+data = "USAGE_KEYS, OTEL_SEMCONV; adapter_for(argv) -> adapter; adapter methods; HOME_VARIABLES, TOKEN_VARIABLES; cli_named(executable), home_env(cli, home), claude_session(home, session_id), transcript_usage(messages), TranscriptRefused, TRANSCRIPT_TYPES, CLAUDE_RESULT_COUNTS_SUBAGENTS, claude_home(env), transcript_time(value)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - the module imports no kit sibling; the only files it touches are the codex last-message temp file it creates and removes, and a codex rollout file it reads by exact thread id under the launch's CODEX_HOME."""
+notes = """source - the module imports no kit sibling; the only files it touches are the codex last-message temp file it creates and removes, and a codex rollout file it reads by exact thread id under the launch's CODEX_HOME. It also reads the Claude Code transcripts and metas of the one session its caller names under the ambient Claude home, and never writes there."""
 
 [interface.IF-246]
 rationale = """Every role that makes a model call needs the same launch, accounting and record, and a role that keeps its own copy of any of them drifts: a usage fix lands in one path and not the others. One service owns the call and its record, and a role hands it only the data it differs by."""
 owner = "scripts/session_service"
-requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch", "scripts/coordinator/codex_call"]
+requestors = ["scripts/agent_loop", "scripts/plan_runner", "scripts/dispatch", "scripts/coordinator/codex_call", "scripts/usage_ingest"]
 channel = "call"
-data = "Call (including wi and resume), Outcome; act -> Outcome or BlackoutRefused or HooksOffRefused; call(between, report) -> Outcome; through_blackout(launch) -> Outcome; record(report) -> path; spool_dir(root); lane_branch(root); lane_wis(root); is_call_log(name) -> bool; record writes to the primary spool without a commit outside a claimed lane and reports whether its log was spooled, committed, or refused; call_succeeded(outcome) -> bool; keep plan, version, warmer and route_runner(entry)"
+data = "Call (including wi and resume), Outcome; act -> Outcome or BlackoutRefused or HooksOffRefused; call(between, report) -> Outcome; through_blackout(launch) -> Outcome; record(report) -> path; spool_dir(root); lane_branch(root); lane_wis(root); is_call_log(name) -> bool; CALL_LOG_RE (its stamp group); record writes to the primary spool without a commit outside a claimed lane and reports whether its log was spooled, committed, or refused; call_succeeded(outcome) -> bool; keep plan, version, warmer and route_runner(entry)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """source - the session log and its telemetry commit are written through the shared primitives' writer, and the raw stream to the untracked run-logs directory a caller names."""
+
+[interface.IF-305]
+rationale = "The coordinator needs one explicit ingest invocation surface so it can distinguish a completed, deferred, absent, or refused transcript read without interpreting the command's internals."
+owner = "scripts/usage_ingest"
+requestors = ["external:coordinator"]
+channel = "cli"
+data = "[--session ID] [--root DIR]; ambient home and session selection"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator invokes this local command from its own repository session; the locked frame declares no inbound crossing for that invocation. The command reads one ambient transcript home and writes usage records through its declared service seam."
+
+[interface.IF-306]
+rationale = "The coordinator needs the command's human-readable operational reading separate from its arguments and exit code, so it can see each transcript contribution's outcome without parsing a result number."
+owner = "scripts/usage_ingest"
+consumers = ["external:coordinator"]
+channel = "stdout"
+data = "recorded, unchanged, open, skipped, refused, absent, parent-unresolved lines prefixed by role, agent type and agent id; a shape refusal names file and field"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command output in its own repository session; the locked frame declares no outbound crossing for that output."
+
+[interface.IF-307]
+rationale = "The coordinator needs a result surface distinct from command arguments and printed outcomes, so it can distinguish successful ingest, an absent or refused transcript, and an invocation without a selected session."
+owner = "scripts/usage_ingest"
+consumers = ["external:coordinator"]
+channel = "exit-code"
+data = "0 no refusal, absence, or record-commit refusal; 1 refusal, absent transcript, or refused record commit; 2 no selected session"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: a coordinator reads this local command result in its own repository session; the locked frame declares no outbound crossing for that result."
 
 [interface.IF-247]
 rationale = """A retained adjudicator session must outlive the lane worktree whose loop minted it, and a keep-warm tick in the dispatcher must read the same record an adjudication writes, so the record is a file under the primary checkout that one owner writes whole and both read."""
