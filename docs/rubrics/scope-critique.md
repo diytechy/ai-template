@@ -24,7 +24,9 @@ authorize acts without anyone stating who may write it or what its readers do
 with a bad one (`docs/plans/2026-10-07-wi841-retro/PROPOSAL.md` §1 and §2).
 S3 to S6, B3 and B4 carry the review-churn plan's owner rulings of 2026-10-11
 (`docs/plans/2026-10-11-review-churn/README.md#owner-rulings-2026-10-11`),
-cited per anchor.
+cited per anchor. S7 and S2's bounded ruling carry the owner's direction of
+2026-10-23: a critique settles a row's scope and never grows it past the
+row's intent.
 
 ## Anchors
 
@@ -37,10 +39,14 @@ new sitting under one row with no word on which lands first.
 **S2 — Authority over a hold, an act or a gate is named.** Say whether any
 deliverable gives a file authority over a hold, an act or a gate. If one does,
 the spec carries a `## Trust` section before the claim: the file's producer and
-what a failed write looks like, every consumer by path, and the ruling for an
-absent, unreadable, failed or malformed input (PROCESS.md §3 "When a guard is
-owed", linked, not restated). *Bad:* a verdict file that releases a hold, with
-no stated reader rule.
+what a failed write looks like, every consumer by path, and the ruling for each
+input state a supported workflow or the kit's own routes produce (PROCESS.md
+§3 "When a guard is owed", linked, not restated). A file a kit script writes
+is never malformed by a supported route, so its malformed state is outside
+the ruling, as is a hand edit of it (S3). The ruling covers what a model
+writes and what a person writes by a supported route, such as a registry.
+One ruling the consumers share is preferred to one ruling per consumer.
+*Bad:* a verdict file that releases a hold, with no stated reader rule.
 
 **S3 — Coverage is closed** (ruling 1). A promise over an input space is
 either an enumerated set with a declared default, or a construction that makes
@@ -73,6 +79,17 @@ it, a refactor row is filed on trunk before the claim.
 `needs`, each with the reason. Any new third-party package, tool or service
 has a reviewed row in `docs/dependencies.md` before the build.
 
+**S7 — The scope stays proportionate.** The critique checks the row's scope;
+it does not grow it. A recommendation that adds a mechanism (a check, a
+refusal, a record or a ledger) names the supported-workflow scenario in
+which the row as written fails without it. With no such scenario, the
+recommendation is not made. S3's coverage bound, a Done-when gap and an S1
+split are not mechanisms under S7. A row whose Done-when changes no
+behaviour (a move, an extraction, a deletion) gains no mechanism from its
+critique. Work worth doing beyond the row's intent is named as a
+separate row to file, never folded into this one. *Bad:* a recommendation
+that adds a refusal for a hand-edited kit-written file to a refactor row.
+
 **B1 — A deliverable hidden in prose.** A Context paragraph that commits to
 work the Done-when does not list.
 
@@ -96,8 +113,12 @@ machine line. A finding naming a new failure mode proposes a new `B#` anchor.
 
 Every recommendation is dispositioned before the claim, adopted into the spec
 or rejected with a reason (ruling 9), so write each as one concrete change to
-the spec. In every round, severity is tied to reachability (review-churn item
-4): a BLOCKER or MAJOR states a defect in the scope that would reasonably cost
+the spec, with the scenario that makes it owed in its where/why. Rejection is
+the disposition for a recommendation that names no reachable scenario or that
+reaches past the row's intent (S7); work past the intent that is worth doing
+is filed as its own row (S5). `[TC-HARDEN]` lines and proposed anchors are
+not spec recommendations and need no disposition. In every round, severity
+is tied to reachability (review-churn item 4): a BLOCKER or MAJOR states a defect in the scope that would reasonably cost
 a build or review round in normal use, and a fail-open, data-loss or security
 path counts only when a supported workflow or the kit's own routes reach it; a
 rare or contrived path is MINOR at most, or dismissed under PROCESS.md §6

@@ -86,8 +86,11 @@ registries they are judged against. Two of its questions shape the spec most:
   - **Producer:** who writes the file, by which route, and what a failed write
     looks like (failed call, timeout, structured error, partial file).
   - **Consumers:** every reader, found by grep and listed by path.
-  - **Ruling:** what each consumer does with an absent, unreadable, failed or
-    malformed input, and what the authority binds to.
+  - **Ruling:** what the consumers do with each input state a supported
+    workflow or the kit's own routes produce (absent, a failed write, a
+    model's malformed output, or a person's on a file people edit by a
+    supported route), and what the authority binds to. One shared ruling
+    where the consumers allow (rubric S2).
 
   Route the Ruling to the owner for confirmation or overrule (§5). Apply
   `project-trajectory/PROCESS.md` §3, "When a guard is owed".
@@ -97,6 +100,11 @@ registries they are judged against. Two of its questions shape the spec most:
 
 - Every critique recommendation gets a disposition in the spec: adopted,
   quoting the spec text that now carries it, or rejected, with the reason.
+  Reject one that names no reachable scenario or reaches past the row's
+  intent (the rubric's S7); never adopt one only to make a round pass.
+  When the adopted dispositions leave the spec more than three times its
+  size in bytes at its filing commit, list the row under the handoff's
+  "For the owner".
 - A fresh confirming round checks the adopted ones before the claim. It runs
   in convergence stance, which the rubric's verdict section states, so its
   brief needs only one appended line saying it is a confirming round of
