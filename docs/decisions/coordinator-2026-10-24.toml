@@ -11,3 +11,10 @@ alternative = "Reject the S3 bound as already implied by the Done-when's 'a fron
 reversal_cost = "Low: a queued row's spec before its claim."
 why_not_escalated = "The skill's section 1: the advice binds before the claim; recorded for confirm or overrule."
 review = "C:/Projects/ai-template.wt/review-tmp/2026-10-24a-leg17/crit856/WI-856-scope-critique.md"
+
+[decision.D-002]
+decided = "WI-856's confirming round (Codex Sol, medium, convergence stance, from the detached critique checkout at 5bc5dd7cc, its log spooled; verdict kept at review-tmp/2026-10-24a-leg17/crit856c/WI-856-scope-critique.md) checked D-001's adopted dispositions and read APPROVE findings=0. WI-856 is claimed alone under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006): it has no needs, it changes the consolidation close's edge transform, so it lands alone, and the queue's other row-2 rows (WI-878, WI-910, WI-920) are each scope-critiqued at their own claim."
+alternative = "Batch WI-878 into the same unpause after its own scope critique."
+reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
+why_not_escalated = "The skill's section 1 and the queue table's order; recorded for confirm or overrule."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-24a-leg17/crit856c/WI-856-scope-critique.md"
