@@ -813,7 +813,7 @@ def _enact_plan(wt, record):
         entry[1] = step(entry[1])
         if entry[1] is None:
             return [], (
-                "cannot {}: {} carries no readable `needs` line; nothing "
+                "cannot {}: {} has no frontmatter the edge can read; nothing "
                 "written".format(what, rel)
             )
         entry[2].append(step)
@@ -846,7 +846,7 @@ def _apply_plan(wt, plan):
         for step in steps:
             text = text and step(text)  # a None stays None, refused below
         if not text:
-            refusal = "{} no longer carries a readable `needs` line".format(rel)
+            refusal = "{} no longer has a frontmatter the edge can read".format(rel)
         elif kind == "edge":
             path.write_text(text, encoding="utf-8", newline="\n")
             code, out = ac.git(wt, "add", "--", rel)

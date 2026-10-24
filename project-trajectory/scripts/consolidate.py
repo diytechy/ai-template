@@ -1412,23 +1412,46 @@ def returned_text(text, finding):
 
 
 def edged_text(text, blocker):
-    """A QUEUE-WITH-EDGE row's spec with `blocker` added to its hard `needs`;
-    None when the row carries no readable `needs` line.
+    """A QUEUE-WITH-EDGE row's spec with `blocker` added to its hard `needs`.
 
-    A surgical rewrite of the ONE frontmatter line, like
-    `intake._replace_inbound_edges`, so the row's Context and Deliverable are
-    untouched. Idempotent: a row that already waits on the blocker (hard, or
-    softly with the `~` prefix) comes back unchanged, and the caller reports a
-    no-op rather than committing one."""
-    matched = _NEEDS_RE.search(text)
-    if matched is None:
+    The frontmatter is found by `_fence_close`'s line-wise fence rule and
+    parsed once, and the parsed table decides among three outcomes:
+
+    - no frontmatter fence, or a frontmatter that does not parse: None, a
+      refusal. An unterminated `needs = [` line lands here and never in the
+      insert arm, because the parse, not a line match, decides;
+    - a `needs` key: the ONE frontmatter line is rewritten surgically, like
+      `intake._replace_inbound_edges`, so the row's Context and Deliverable are
+      untouched (a `needs` list spread over several lines has no one line to
+      rewrite and is refused too);
+    - no `needs` key, as a row filed by hand commonly has: a
+      `needs = ["<blocker>"]` line is inserted directly after the opening
+      fence, where every byte up to the first table header is top-level TOML
+      (so a frontmatter ending in a table cannot take the line as its own
+      key), in the opening fence line's own line ending, and every other byte
+      is kept.
+
+    Idempotent: a row that already waits on the blocker (hard, or softly with
+    the `~` prefix) comes back unchanged, and the caller reports a no-op rather
+    than committing one."""
+    lines = text.split("\n")
+    close = _fence_close(lines)
+    if close is None:
         return None
     try:
-        current = [str(v) for v in tomllib.loads(matched.group(0)).get("needs") or []]
+        table = tomllib.loads("\n".join(ln.rstrip("\r") for ln in lines[1:close]))
     except tomllib.TOMLDecodeError:
         return None
+    if "needs" not in table:
+        eol = "\r" if lines[0].endswith("\r") else ""
+        inserted = 'needs = ["{}"]{}'.format(blocker, eol)
+        return "\n".join(lines[:1] + [inserted] + lines[1:])
+    current = [str(v) for v in table["needs"] or []]
     if blocker in current or ("~" + blocker) in current:
         return text
+    matched = _NEEDS_RE.search("\n".join(lines[:close]))
+    if matched is None:
+        return None
     rendered = ", ".join('"{}"'.format(tok) for tok in current + [blocker])
     return (
         text[: matched.start()] + "needs = [" + rendered + "]" + text[matched.end() :]

@@ -2,13 +2,23 @@
 id = "WI-856"
 title = "A queue-with-edge verdict edges a waiter filed without a needs line"
 workstream = "process"
-specref = "docs/reviews/wi-855-adjudicate-queue-overlap-2042/001-ADJUDICATE-2d74139.md"
+specref = ""
 sr_refs = ["SR-220"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 planmode = "none"
 +++
+
+## Deliverable
+
+Landed by headless leg 17 of loop session `20261024T053017Z-23122f`, squashed from lane `wi-856`.
+
+- **The edge write.** `consolidate.edged_text` finds the frontmatter by the module's line-wise fence rule and parses it once: a spec with no `needs` key gains `needs = ["<blocker>"]` right after the opening fence, at the frontmatter's top level ahead of any table, every other byte kept; a `needs` line is extended as before, idempotently; a missing fence, a frontmatter that does not parse, or a `needs` list not on one line is refused. `handback`'s two refusal messages now name an unreadable frontmatter.
+- **The rows.** LLR-210's detail and TC-208's and TC-254's methods state it (sitting 003, MEANING+BLESS, act seq 158); the tests pin the insertion (LF and CRLF, its exact top position, a trailing table), the extension, the three refusals and the close end to end. The smoke ceiling is re-stamped 3280 to 3410.
+- **RESYNC_PACK.** "A queue-with-edge close edges a waiter filed without a `needs` line".
+
+Reviews: round 1 `001-REVIEW-A-79be877.md` (1 MINOR), `002-REVIEW-B-79be877.md` (4 MINOR); gate `004-REVIEW-A-25cc8b1.md` (1 MINOR), `005-REVIEW-B-25cc8b1.md` (2 MINOR), to status.md's follow-ups. Decisions: `docs/decisions/wi-856.toml` D-001 to D-006.
 
 ## Context
 

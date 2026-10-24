@@ -9762,6 +9762,28 @@ a proportionality anchor in your own words: a recommendation that adds a
 mechanism names the scenario that needs it, and a row that changes no
 behaviour gains none. Nothing is migrated and no check changes.
 
+### A queue-with-edge close edges a waiter filed without a `needs` line [since 3b9f2b44f]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A consolidation census's `queue-with-edge` close now edges
+a queued waiter whose front matter carries no `needs` line, as a row filed by
+hand commonly does: the waiter gains `needs = ["<blocker>"]` at the top of
+its front matter, and the close writes the waiter in the registry's LF
+format, as it writes every spec, with nothing else in it changed. Before, such a waiter refused the whole verdict, and the edge had
+to be left out of the typed block and written by hand. A waiter with a
+`needs` line is extended exactly as before, idempotently. A waiter whose
+front-matter fence is missing or whose front matter does not parse is still
+refused before any write; the refusal now says the waiter has no front matter
+the edge can read, where it said it carried no readable `needs` line.
+
+**What to do.** No adopter action beyond taking the scripts: nothing is
+migrated and no setting changes. Anything that matched the old refusal text
+matches the new one instead.
+
+**Kit-owned files — overwrite:** `scripts/consolidate.py` and
+`scripts/handback.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

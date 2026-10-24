@@ -13,6 +13,7 @@ end-to-end drive is in `tests/test_consolidate_end_to_end.py`.
 """
 
 import pathlib
+import tomllib
 
 import pytest
 from conftest import load_script
@@ -1171,17 +1172,123 @@ def test_a_returned_rows_finding_is_quoted_verbatim_into_its_context():
 
 
 def test_the_edge_write_is_surgical_and_idempotent():
+    """A spec WITH a `needs` line keeps exactly one, extended in place, and
+    nothing else moves.
+
+    Adequacy witness: an implementation that took the insert arm for every
+    spec (adding a second `needs` line rather than extending the first) fails
+    the one-line check; one that rewrote the line in another place or form
+    fails the byte comparison."""
     text = _spec("\n## Context\n\nkeep me\n", needs='["WI-300"]')
     edged = consolidate.edged_text(text, "WI-401")
-    assert 'needs = ["WI-300", "WI-401"]' in edged
-    assert "keep me" in edged
+    needs_lines = [ln for ln in edged.splitlines() if ln.startswith("needs")]
+    assert needs_lines == ['needs = ["WI-300", "WI-401"]']
+    assert edged == text.replace('needs = ["WI-300"]', 'needs = ["WI-300", "WI-401"]')
     # Already waiting — hard or soft — comes back UNCHANGED, so the caller
     # reports a no-op instead of committing one.
     assert consolidate.edged_text(edged, "WI-401") == edged
     soft = _spec("", needs='["~WI-401"]')
     assert consolidate.edged_text(soft, "WI-401") == soft
-    # A row with no readable needs line is a refusal, not a silent skip.
-    assert consolidate.edged_text('+++\nid = "WI-1"\n+++\n', "WI-401") is None
+
+
+def _frontmatter_span(lines):
+    """The indices of a spec's two `+++` fence lines, in a list of lines that
+    keep their line endings."""
+    fences = [i for i, line in enumerate(lines) if line.rstrip("\r\n") == "+++"]
+    assert len(fences) >= 2 and fences[0] == 0, lines
+    return fences[0], fences[1]
+
+
+def _no_needs_spec(eol):
+    """A queued spec in the work-spec format with NO `needs` key, as a row
+    filed by hand commonly is; `eol` is its line ending throughout."""
+    return eol.join(
+        [
+            "+++",
+            'id = "WI-404"',
+            'title = "filed by hand"',
+            'specref = "docs/plans/a.md"',
+            "+++",
+            "",
+            "## Context",
+            "",
+            "keep me",
+            "",
+            "## Deliverable",
+            "",
+            "and me",
+            "",
+        ]
+    )
+
+
+@pytest.mark.parametrize("eol", ["\n", "\r\n"], ids=["lf", "crlf"])
+def test_the_edge_write_inserts_a_missing_needs_line(eol):
+    """A waiter filed without a `needs` line gains one holding just the
+    blocker, inside its frontmatter and in the file's own line ending, and the
+    spec with that one line removed is the input byte for byte."""
+    text = _no_needs_spec(eol)
+    edged = consolidate.edged_text(text, "WI-401")
+    assert edged is not None, "a spec with no needs line was refused"
+    inserted = 'needs = ["WI-401"]' + eol
+    lines = edged.splitlines(keepends=True)
+    assert lines.count(inserted) == 1, lines
+    opening, closing = _frontmatter_span(lines)
+    assert opening < lines.index(inserted) < closing
+    # At the top of the frontmatter: the line right after the opening fence.
+    # Witness: an insert placed before the closing fence, or before the first
+    # table header, passes the range check above and fails this one.
+    assert lines.index(inserted) == opening + 1, lines
+    frontmatter = "".join(lines[opening + 1 : closing])
+    assert tomllib.loads(frontmatter)["needs"] == ["WI-401"]
+    del lines[lines.index(inserted)]
+    assert "".join(lines) == text
+    # Edging the result again with the same blocker is a no-op.
+    assert consolidate.edged_text(edged, "WI-401") == edged
+
+
+def test_the_inserted_needs_line_is_top_level_before_any_table():
+    """A frontmatter that ends in a TOML table still gains a TOP-LEVEL `needs`:
+    a line placed after the table's header would parse as the table's key, and
+    the row would read as edged while no edge exists.
+
+    Adequacy witness: an implementation that inserts the line just before the
+    closing fence gives `extra.needs` and no top-level `needs`, and fails both
+    assertions."""
+    text = (
+        '+++\nid = "WI-404"\ntitle = "filed by hand"\n'
+        '[extra]\nnote = "x"\n+++\n\n## Context\n\nkeep me\n'
+    )
+    edged = consolidate.edged_text(text, "WI-401")
+    assert edged is not None, "a spec with no needs line was refused"
+    lines = edged.splitlines(keepends=True)
+    _opening, closing = _frontmatter_span(lines)
+    table = tomllib.loads("".join(lines[1:closing]))
+    assert table.get("needs") == ["WI-401"]
+    assert table["extra"] == {"note": "x"}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        'id = "WI-404"\ntitle = "no fence"\n\n## Context\n\nctx\n',
+        '+++\nid = "WI-404"\nneeds = [\n+++\n\n## Context\n\nctx\n',
+        '+++\nid = "WI-404"\nneeds = [\n  "WI-300",\n]\n+++\n\n## Context\n\nctx\n',
+    ],
+    ids=["no-frontmatter-fence", "unterminated-needs-list", "multi-line-needs-list"],
+)
+def test_the_edge_write_refuses_a_frontmatter_it_cannot_read(text):
+    """Characterization: a spec with no frontmatter fence, one whose
+    frontmatter does not parse, and one whose parseable `needs` list is spread
+    over several lines are each refused (None), never edged.
+
+    Adequacy witness: an implementation that inserts a `needs` line without
+    first finding and parsing the frontmatter (after the first line, say,
+    whenever no complete `needs` line matches) returns text for the first two
+    and fails the `is None`; one that appends a second `needs` line, or
+    rewrites only the first line of a multi-line list, returns text for the
+    third and fails it too."""
+    assert consolidate.edged_text(text, "WI-401") is None
 
 
 def test_the_text_transforms_survive_a_crlf_checkout():

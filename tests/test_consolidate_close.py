@@ -25,6 +25,7 @@ make the mint refuse its own successor.
 """
 
 import subprocess
+import tomllib
 
 from conftest import (
     declare_trunk,
@@ -175,15 +176,33 @@ outcome = "consolidate"
 
 MACHINE = "OUTCOME: CONSOLIDATE needs=- absorbs=WI-401;WI-402;WI-403"
 
-#: A queued spec with NO `needs = [...]` frontmatter line, so
-#: `consolidate.edged_text` answers None for it — the refusal the two-edge
-#: preflight test drives.
+#: A queued spec with NO `needs = [...]` frontmatter line, as a row filed by
+#: hand commonly is: a queue-with-edge close gives it one.
 NO_NEEDS_SPEC = (
     "+++\n"
     'id = "WI-404"\n'
     'title = "no needs line"\n'
     'workstream = "process"\n'
     "sr_refs = []\n"
+    'safety_class = "ordinary"\n'
+    'buildtier = "medium"\n'
+    'specref = "docs/plans/one.md"\n'
+    "+++\n"
+    "\n## Context\n\nctx\n"
+    "\n## Done-when\n\n1. Deliver WI-404.\n"
+)
+
+
+#: A queued spec whose frontmatter does NOT PARSE (an unterminated `needs = [`
+#: line), so `consolidate.edged_text` answers None for it — the refusal the
+#: two-edge preflight test drives, written on the lane over a trunk row.
+UNREADABLE_NEEDS_SPEC = (
+    "+++\n"
+    'id = "WI-404"\n'
+    'title = "unreadable needs line"\n'
+    'workstream = "process"\n'
+    "sr_refs = []\n"
+    "needs = [\n"
     'safety_class = "ordinary"\n'
     'buildtier = "medium"\n'
     'specref = "docs/plans/one.md"\n'
@@ -641,17 +660,28 @@ def _lane_tree_state(root, branch):
 def test_a_refused_edge_leaves_the_lane_tree_byte_identical(tmp_path):
     """THE CLOSE IS ALL-OR-NOTHING ACROSS ITS WRITES, not just its archival.
     Both enact loops used to write one target at a time: a two-edge verdict
-    whose SECOND waiter carries no readable `needs` line refused after the first
-    waiter's spec had been rewritten AND STAGED on the lane — reported nowhere,
-    and committed by whatever committed next even if the verdict was withdrawn.
+    whose SECOND waiter has a frontmatter the edge cannot read refused after
+    the first waiter's spec had been rewritten AND STAGED on the lane —
+    reported nowhere, and committed by whatever committed next even if the
+    verdict was withdrawn.
 
-    `WI-404` is the fixture's frontmatter-less row: `consolidate.edged_text`
-    answers None on a spec with no `needs =` line, which is the refusal this
-    drives."""
+    `WI-404` is queued on trunk as a readable row, so the census clusters it,
+    and is then rewritten ON THE LANE ONLY to the fixture whose frontmatter does
+    not parse (an unterminated `needs = [` line): `consolidate.edged_text`
+    answers None on a frontmatter it cannot read, which is the refusal this
+    drives. A row that does not parse on trunk never reaches the cluster, so
+    the close would refuse it earlier, on membership."""
     root = cluster_repo(
         tmp_path, extra_rows=[("queued/WI-404-no-needs.md", NO_NEEDS_SPEC)]
     )
     _judge_id, branch = _minted_judge(root)
+    wt, err = integ.lane_worktree(root, branch)
+    assert err is None, err
+    (wt / "docs" / "work" / "queued" / "WI-404-no-needs.md").write_text(
+        UNREADABLE_NEEDS_SPEC, encoding="utf-8", newline="\n"
+    )
+    _git(wt, "add", "-A")
+    _git(wt, "commit", "--no-verify", "-m", "a hand edit on the lane")
     before = _lane_tree_state(root, branch)
     assert before.strip() == "", before
     _record_verdict(
@@ -663,7 +693,11 @@ def test_a_refused_edge_leaves_the_lane_tree_byte_identical(tmp_path):
     )
     ids, refusal = hb.close_adjudication(root, branch)
     assert ids is None
-    assert refusal and "WI-404" in refusal and "no readable `needs` line" in refusal
+    assert (
+        refusal
+        and "WI-404" in refusal
+        and "no frontmatter the edge can read" in refusal
+    )
     assert "nothing written" in refusal
     # THE CLAIM: the first edge was never written, so the lane's docs/work is
     # exactly where the verdict commit left it.
@@ -673,6 +707,42 @@ def test_a_refused_edge_leaves_the_lane_tree_byte_identical(tmp_path):
         encoding="utf-8"
     )
     assert "WI-401" not in spec
+
+
+def test_queue_with_edge_gives_a_waiter_with_no_needs_line_one(tmp_path):
+    """A waiter filed without a `needs` line, as a hand-filed row commonly is,
+    is edged rather than refusing the whole verdict: the close succeeds, the
+    waiter stays queued with `needs = ["WI-401"]` inside its frontmatter, and
+    the rest of its spec is byte-identical."""
+    root = cluster_repo(
+        tmp_path, extra_rows=[("queued/WI-404-no-needs.md", NO_NEEDS_SPEC)]
+    )
+    judge_id, branch = _minted_judge(root)
+    _record_verdict(
+        root,
+        branch,
+        '\n## Consolidation\n\n```toml\noutcome = "queue-with-edge"\n'
+        'edges = ["WI-404 needs WI-401"]\n```\n',
+        machine="OUTCOME: QUEUE-WITH-EDGE needs=WI-404 absorbs=-",
+    )
+    ids, refusal = hb.close_adjudication(root, branch)
+    assert refusal is None, refusal
+    assert ids == [judge_id]
+    _merge(root, branch)
+    rows = _rows(root)
+    assert rows["WI-404"]["Status"] == "queued"  # queued, not absorbed
+    assert rows["WI-404"]["Predecessors"] == "WI-401"
+    text = (root / "docs" / "work" / "queued" / "WI-404-no-needs.md").read_text(
+        encoding="utf-8"
+    )
+    inserted = 'needs = ["WI-401"]\n'
+    lines = text.splitlines(keepends=True)
+    assert lines.count(inserted) == 1, lines
+    closing = lines.index("+++\n", 1)
+    assert 0 < lines.index(inserted) < closing
+    assert tomllib.loads("".join(lines[1:closing]))["needs"] == ["WI-401"]
+    del lines[lines.index(inserted)]
+    assert "".join(lines) == NO_NEEDS_SPEC
 
 
 def test_a_refused_return_leaves_the_lane_tree_byte_identical(tmp_path):

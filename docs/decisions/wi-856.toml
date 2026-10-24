@@ -1,0 +1,47 @@
+# docs/decisions/wi-856.toml — delegated calls the coordinator made in the
+# wi-856 lane (headless leg 17 of loop session 20261024T053017Z-23122f).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-856's intent set (Terra's one retained session: LLR-210's detail and TC-208's method amended by addition, TC-254's method with the one spec-dictated replacement of its refusal clause and one added clause, the two TCs' evidence naming the four new tests) and build round 1's tests stage (the kit-builder: two strict expected failures for the new behaviour, two characterizations with their adequacy witnesses, the retired no-needs refusal assertion deleted, the close module's refusal fixture made unreadable on the lane) commit together, before any code. Rows and tests still precede the code (PROCESS.md section 4); one review bar serves both under a box another project's jobs load (a smoke run there took 22 to 60 minutes). The mechanical approved-sentence check passed: every approved sentence of the three cells survives verbatim except the TC-254 replacement the spec dictates."
+alternative = "Two commits, each through its own attest and bar."
+reversal_cost = "None: the order of rows, tests and code is unchanged."
+why_not_escalated = "Within the skill's section 3 order; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "The tests stage takes the smoke tier from 3276 to 3281 tests, past max-tests 3280, which reds the tier's ratchet (tests/test_smoke_budget.py); the first attest refused the commit for it. The ceiling is re-stamped in this commit, 3280 to 3410, with its reason and fig line in docs/stack.ini (about 4% headroom, the WI-960 practice), not at the landing: a red bar is not left standing (wi-911 D-005). The seconds budget is not moved."
+alternative = "Move the new in-process cases to a slow module."
+reversal_cost = "Low: one stamped value."
+why_not_escalated = "The recipes' section 6 rule for in-process growth; recorded for confirm or overrule."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 over 79be877e3 ran the two full-lane reviewers in parallel renders: Codex Sol at medium (REVIEW-A, 001-REVIEW-A-79be877.md: CHANGES-REQUESTED, 1 MINOR) and a Claude Opus at high as the REVIEW-B stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008; 002-REVIEW-B-79be877.md: APPROVE, 4 MINOR), REVIEW-B launched first as a headless leg does. No BLOCKER or MAJOR, so the checkpoint follows. The MINORs go: (B F1) the insert arm places the line before the closing fence, where a frontmatter ending in a TOML table would scope it under that table (no writer and no spec on file carries one, 0 of 971), and (A F1) the existing-needs characterization repeats the retained surgical-and-idempotent test's input, both to a pre-checkpoint builder stage taking each reviewer's own construction remedy (insert right after the opening fence; fold the stronger assertions into the retained test, its soft-edge assertion kept), as wi-850's round 1 did; (B F2) the RESYNC entry promises the file's own line ending through the close, which reads with read_text and writes LF, to the same stage as a wording fix (the close writes the registry's LF format; the CRLF case stays a property of the transform); (B F3) LLR-210's and TC-208's 'needs line does not parse' under-describes the refusal set, to Terra's checkpoint reconcile; (B F4) the frontmatter read repeats kitlib.registry.parse_spec_frontmatter, not adopted: that reader is LF-only and would refuse the CRLF text the module's transforms read line-wise by design (consolidate._fence_close), so one shared CRLF-tolerant reader is a consolidation row, recorded under status.md's follow-ups."
+alternative = "Route every MINOR to status.md's follow-ups and change no code before the checkpoint."
+reversal_cost = "Low: a one-line placement, a test fold and a wording fix, all inside the spec's surface."
+why_not_escalated = "The skill's section 3 triage; recorded for confirm or overrule."
+review = "docs/reviews/wi-856/001-REVIEW-A-79be877.md; docs/reviews/wi-856/002-REVIEW-B-79be877.md"
+
+[decision.D-004]
+decided = "The checkpoint reconcile's first attest refused the commit for a red smoke tier, whose failing test the refusal does not name (attest prints only the bar's tail); the same staged tree's smoke bar run in the lane right after read 3278 passed, 3 skipped, so the red was load-sensitive (another project's synthesis jobs load the box; four trunk tests timed out the same way earlier in this leg), filed under status.md's follow-ups, never charged to the lane. The arms map (a read-only sub-agent, review-tmp/2026-10-24a-leg17/arms856.md) found three gaps before the sitting: no test for the multi-line needs-list refusal and none pinning the line's exact top position (a builder test stage added both, characterizations with their witnesses, no code change), and no TC clause stating the extension's idempotence (Terra's resumed turn added it to TC-208's edge-write clause). The two ran at once on disjoint files (wi-850 D-010)."
+alternative = "Re-attest without the arms map's fixes and leave the gaps to the sitting."
+reversal_cost = "Low: two test assertions and one TC clause."
+why_not_escalated = "The recipes' section 5 arms-map step; recorded for confirm or overrule."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-24a-leg17/arms856.md"
+
+[decision.D-005]
+decided = "The checkpoint's combined sitting 003 (003-ADJUDICATE-793f65c.md, its binding accepted) judged the three amendments MEANING+BLESS, rows=3, with no return and no Dispositions; its act is the later act turn. The convergence map for the gate over the checkpoint tip (round 1's accepted findings; REVIEW-B F4 was not adopted, D-003): REVIEW-B F1 (the insert scoped under a trailing table) -> tests/test_consolidate.py::test_the_inserted_needs_line_is_top_level_before_any_table, which failed on the closing-fence placement (assert None == ['WI-401'], the builder's red run at bd1b77878's code) and passes at the fix; REVIEW-A F1 (the duplicate existing-needs characterization) -> inspection: the deleted test's exact-bytes and one-needs-line assertions now sit in test_the_edge_write_is_surgical_and_idempotent, and TC-208's evidence names that test; REVIEW-B F2 (the RESYNC entry's line-ending promise through the close) -> the corrected sentence at its site in project-trajectory/RESYNC_PACK.md ('the close writes the waiter in the registry's LF format, as it writes every spec'); REVIEW-B F3 (the refusal set under-described) -> LLR-210's and TC-208's reconciled sentences, blessed by sitting 003. The gate runs both reviewers uncounted in convergence stance; REVIEW-B is again the Claude Opus stand-in at high (ruling 7)."
+alternative = "Re-run a counted round instead of the gate."
+reversal_cost = "None: the map is the coordinator's record; the reviewers never read it."
+why_not_escalated = "The skill's section 3 convergence map; recorded for confirm or overrule."
+review = "docs/reviews/wi-856/003-ADJUDICATE-793f65c.md"
+
+[decision.D-006]
+decided = "The gate over the checkpoint tip 25cc8b133 (uncounted, convergence stance, after D-005's map): Codex Sol at medium (REVIEW-A, 004-REVIEW-A-25cc8b1.md: CHANGES-REQUESTED, 1 MINOR) and the Claude Opus stand-in at high (REVIEW-B, 005-REVIEW-B-25cc8b1.md: CHANGES-REQUESTED, 2 MINOR). No BLOCKER or MAJOR, so no dispute sitting and no fix round; the act turn follows. Each MINOR would move the tip off the gated one, so all three go to status.md's follow-ups (wi-935 D-005): (A) LLR-210's and TC-208's 'a needs list not on one line is refused' reads unconditional, where a multi-line list already holding the blocker comes back unchanged under the idempotence clause before it (qualify the wording at the rows' next sitting, with a transform case for it); (B1) the extension arm rewrites the first one-line needs match in the whole frontmatter without confirming it is the root key, so a frontmatter with a multi-line root needs and a table holding its own one-line needs would edge the table's key (no spec on file carries a table; the parse-verified writer intake._replace_needs_value already owns, lifted into one kitlib home both call, is the consolidation); (B2) handback's two refusal messages and the RESYNC entry name the missing fence and the unparseable frontmatter but not the multi-line needs list (wording, in all three homes together)."
+alternative = "A fix round after the gate, then one more checkpoint and gate."
+reversal_cost = "Low: three follow-up topics."
+why_not_escalated = "The recipes' section 3 gate-MINOR rule; recorded for confirm or overrule."
+review = "docs/reviews/wi-856/004-REVIEW-A-25cc8b1.md; docs/reviews/wi-856/005-REVIEW-B-25cc8b1.md"
