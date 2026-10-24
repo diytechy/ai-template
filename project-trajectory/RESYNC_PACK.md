@@ -9738,6 +9738,30 @@ Two `scope: this-repo` skills changed too, only if you vendored them:
 `skills/byte-budget-guard/SKILL.md`. Re-sync the dogfooded skill copies
 (`bootstrap.py --sync`).
 
+### Critiques settle scope and never grow it [since 202a7bb96]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The shipped critique brief
+(`prompts/critique.template.md`) now tells the critic to judge the artifact
+against its intent and never grow it: a finding that asks for a new check,
+refusal or record names the supported-workflow scenario that needs it, or is
+not made; work past the intent is a separate item; severity tracks
+reachability (process.md §6 "Review threat model"); and `[TC-HARDEN]` lines
+need no disposition on the artifact. The rubric guide
+(`rubrics/README.template.md`) adds that the accumulation rule grows the
+reference, not the scope, and that a scope rubric carries the same bar as an
+anchor of its own.
+
+**What to do.** Overwrite the kit-owned prompt as usual. In your own
+`docs/rubrics/README.md`, copy the paragraph beginning "The reference grows;
+the scope does not." from `rubrics/README.template.md` to just after the
+accumulation rule.
+If you keep a scope rubric (a work item's spec judged before its claim), add
+a proportionality anchor in your own words: a recommendation that adds a
+mechanism names the scenario that needs it, and a row that changes no
+behaviour gains none. Nothing is migrated and no check changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

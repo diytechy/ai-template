@@ -21,6 +21,16 @@ Before scoring, check that the rubric independently covers the supplied SN/SR
 intent. A rubric copied from a permissive TC without that derivation is a
 finding; propose the missing numbered anchors instead of approving against it.
 
+Judge the artifact against its intent; never grow it past that intent. A
+finding that asks for a new mechanism (a check, a refusal, a record) names
+the supported-workflow scenario in which the artifact fails without it, or
+it is not made; work worth doing past the intent is named as a separate item,
+never as a change to this artifact. Severity tracks reachability: a BLOCKER
+or MAJOR names a failure a supported workflow or the kit's own routes reach
+in normal use; a rare or contrived path is MINOR at most, or dismissed
+(process.md §6 "Review threat model"). Whoever rules on a finding may
+dismiss it for that reason.
+
 In coordinator use, Write your verdict to {verdict} in the log.md block format;
 the assigned verdict path/round is bound by the coordinator to its session log.
 In attended use, identify the human-chosen reviewer and sitting/review record
@@ -35,10 +45,11 @@ existing critique carrier. Then write one
 `- [BLOCKER|MAJOR|MINOR] <rubric-anchor> -> where/why it fails -> the concrete
 change -> @owner` line per finding, each CITING a rubric anchor id
 (B1/DevStg-Tests/…) and locating the region/aspect of the artifact it fails on.
-A finding that names a NEW failure mode must propose it as a new `B#` anchor for
+A finding that names a NEW failure mode within the intent must propose it as a new `B#` anchor for
 the rubric (the accumulation rule). You MAY add `- [TC-HARDEN] ...` lines
 proposing measurable sub-criteria — these route through change-intake
-(process.md §5); you NEVER edit the spine or the artifact yourself. Then exactly
+(process.md §5), are not change requests on this artifact, and need no
+disposition on it; you NEVER edit the spine or the artifact yourself. Then exactly
 one machine line:
     VERDICT: APPROVE|CHANGES-REQUESTED findings=N
 In coordinator use, commit that verdict file (a critique is a recorded verdict

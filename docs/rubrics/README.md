@@ -50,6 +50,15 @@ version missed. Verdicts and the lax-TC ratchet both look for exactly this — a
 `CHANGES-REQUESTED` round that closes without hardening the TC **or adding an
 anchor** trips the no-validation-delta warn (`check_trajectory --staged`).
 
+The reference grows; the scope does not. A new `B#` names a failure mode the
+intent already covers, reached by a supported workflow — never a new
+requirement, and never a mechanism the artifact's intent does not need. Work
+past the intent is filed as its own item through change-intake (process.md
+§5). A rubric for scope (a work item's spec judged before it is claimed)
+states the same bar as one of its own anchors: a recommendation that adds a
+check, a refusal or a record names the scenario that needs it, or is not
+made, and a work item that changes no behaviour gains no mechanism.
+
 ## What a rubric is not
 
 Not a second source of truth. The requirement lives in the `SN→SR→LLR→TC` spine;
