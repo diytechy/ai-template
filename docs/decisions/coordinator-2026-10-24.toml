@@ -32,3 +32,10 @@ alternative = "Split the binding's producer into its own preparatory row landing
 reversal_cost = "Low: a queued row's spec before its claim."
 why_not_escalated = "The skill's section 1: the advice binds before the claim; recorded for confirm or overrule."
 review = "C:/Projects/ai-template.wt/review-tmp/2026-10-24b-leg18/crit878/WI-878-scope-critique.md"
+
+[decision.D-005]
+decided = "WI-878's confirming round (Codex Sol, medium, convergence stance, from the detached critique checkout at d0457611e, its log spooled; verdict kept at review-tmp/2026-10-24b-leg18/crit878c/WI-878-scope-critique.md) checked D-004's adopted dispositions and read APPROVE findings=0. WI-878 is claimed alone under one scoped unpause (owner, 2026-10-04; coordinator-2026-10-18 D-004, D-006): it has no needs, it changes the dispute sitting's binding and the coverage gate, steps of the per-lane cycle, so it lands alone, and the queue's other row-2 rows (WI-910, WI-920) are each scope-critiqued at their own claim."
+alternative = "Critique WI-910 and WI-920 first and claim all three under one unpause."
+reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
+why_not_escalated = "The skill's section 1 and the queue table's order; recorded for confirm or overrule."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-24b-leg18/crit878c/WI-878-scope-critique.md"
