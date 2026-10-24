@@ -1092,6 +1092,15 @@ lane commit being replayed.
 - `attest --tests` names test files that exist: a missing one
   collects no tests, and the bar refuses with pytest's exit 5, which
   is a bad argument, not a red round (2026-10-23b).
+- `attest`'s refusal prints only the bar's last lines, never the
+  failing test: run `"$PY" "$SCRIPTS/run_menu.py" smoke` in the lane,
+  to a log, to name it. A red that run passes is load-sensitive: file
+  it under status.md's follow-ups and re-attest; never charge it to the
+  lane (2026-10-24a).
+- A tests stage's in-process cases can carry the smoke tier past
+  `max-tests` at its first attest: count the tier first
+  (`pytest -q -m smoke --collect-only`, against `docs/stack.ini`'s
+  `max-tests`) and re-stamp in that commit (wi-856 D-002).
 
 ## 7. Environment and limits
 

@@ -18,3 +18,10 @@ alternative = "Batch WI-878 into the same unpause after its own scope critique."
 reversal_cost = "Low: a claimed lane with no commits returns to the queue by handback."
 why_not_escalated = "The skill's section 1 and the queue table's order; recorded for confirm or overrule."
 review = "C:/Projects/ai-template.wt/review-tmp/2026-10-24a-leg17/crit856c/WI-856-scope-critique.md"
+
+[decision.D-003]
+decided = "WI-856 landed alone (b65b30462). The step it changed, the consolidation close's queue-with-edge transform (consolidate.edged_text and handback's two refusal messages), is not a step of the per-lane cycle (claim, plan, intent, attest, review, sitting, act, landing, sweep): it runs only when a consolidation verdict queues with an edge. So it holds no later landing under the one-at-a-time rule (revision 37); the next machinery row lands after its own cycle, and the transform first runs live at the next census close."
+alternative = "Hold every later machinery landing until a consolidation close has run through the changed transform."
+reversal_cost = "Low: a landing order."
+why_not_escalated = "Reads the revision 37 rule's 'the cycle has run through the last one's change'; recorded for confirm or overrule."
+review = ""
