@@ -1,0 +1,13 @@
+# docs/decisions/coordinator-2026-10-24.toml — delegated calls the
+# coordinator made on trunk on 2026-10-24 (headless leg 17 of loop session
+# 20261024T053017Z-23122f).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-856 (a queue-with-edge verdict edges a waiter filed without a needs line), the queue's next row, was born on 2026-10-08, before the rubric's S3 to S7, so it was re-critiqued at its claim: Codex Sol at medium from the detached critique checkout at aa1215540 (log spooled; verdict kept at review-tmp/2026-10-24a-leg17/crit856/WI-856-scope-critique.md) read CHANGES-REQUESTED, 2 MINOR: S3 (no supported-workflow coverage bound) and S4 (no planmode). Both are adopted into the spec as its Critique dispositions section quotes: one bounding sentence in the Done-when's first bullet and planmode none. Neither adds a mechanism (S7). The stale 'Review bar: A' line is dropped, as WI-851's revision dropped its own: ruling 4 runs two full-lane reviewers per round."
+alternative = "Reject the S3 bound as already implied by the Done-when's 'a frontmatter it cannot read is still refused'."
+reversal_cost = "Low: a queued row's spec before its claim."
+why_not_escalated = "The skill's section 1: the advice binds before the claim; recorded for confirm or overrule."
+review = "C:/Projects/ai-template.wt/review-tmp/2026-10-24a-leg17/crit856/WI-856-scope-critique.md"

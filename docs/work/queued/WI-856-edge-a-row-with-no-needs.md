@@ -7,6 +7,7 @@ sr_refs = ["SR-220"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
+planmode = "none"
 +++
 
 ## Context
@@ -29,12 +30,31 @@ writes back; this row widens what it accepts, not what it means.
 - `edged_text` gives a row with no `needs` line one, holding just the
   blocker, inserted in the frontmatter (the row's Context and Deliverable stay
   byte-identical). A row with a `needs` line behaves as today, idempotence
-  included. A frontmatter it cannot read is still refused.
+  included. A frontmatter it cannot read is still refused. The promise
+  covers the queued specs the supported routes write: a row filed by hand
+  in the work-spec format, and a row a kit writer filed. A spec whose
+  frontmatter fence is missing or does not parse is outside it and keeps
+  today's refusal (PROCESS.md §6, "Review threat model").
 - Tests: a queue-with-edge close edges a waiter that had no `needs` line; the
   inserted line parses and the rest of the spec is unchanged; an existing
   `needs` line is extended exactly as before.
 - LLR-210's detail and its TC say that the transform inserts a missing `needs`
   line, and those rows pass in-lane adjudication.
-- Review bar: A (one cross-family REVIEW-A).
 - RESYNC_PACK: an entry anchored at a trunk commit (an adopter's census can
   now edge its hand-filed rows).
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, 2026-10-24; CHANGES-REQUESTED,
+findings=2):
+
+- **MINOR, S3 (no supported-workflow coverage bound): adopted.** The
+  Done-when's first bullet now ends "The promise covers the queued specs
+  the supported routes write: a row filed by hand in the work-spec format,
+  and a row a kit writer filed. A spec whose frontmatter fence is missing
+  or does not parse is outside it and keeps today's refusal".
+- **MINOR, S4 (planmode unstated): adopted.** The frontmatter now carries
+  `planmode = "none"`: the input partition (a `needs` line missing,
+  present, or unreadable), the byte preservation of the rest of the spec
+  and the idempotence the Done-when states fully specify a one-function
+  change, so no plan is owed.
