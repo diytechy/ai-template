@@ -440,6 +440,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      carries it before the launch. Include
      affected chain rows in the appropriate scope and supply the arms map
      as an additional input; the composer does not generate it.
+     A row `retire.py` removed is absent live, and the composer's
+     amendment scope is read from the live drift model, so an
+     `amendment:` token naming it is dropped without a refusal: no
+     verdict names the removal, and the act turn's snapshot then
+     refuses every registry holding it (wi-976 D-016). Check that
+     the composed brief lists each retired row before the launch.
   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.
   3. Check sign-in. The adjudicator runs on the declared ADJUDICATOR account,
      which authenticates with the owner's long-lived token, read at each
@@ -1144,6 +1150,9 @@ lane commit being replayed.
   `"$TOOLS/overnight_legs.py"`) kills its background tasks when it exits, so
   it runs everything in the foreground under the raised shell cap. The
   headless procedure is SKILL §7.
+  Start the close-out's full suite before writing the handoff: on
+  2026-10-25 it passed the 60-minute cap at 88% and moved to the
+  background, where a leg loses it at its exit.
   Give every bar, attest and full-suite run the whole raised cap
   (3600000 ms): on a box other sessions loaded an attest's bar ran 30
   minutes and the full suite 54, and a 30-minute timeout moved the attest
