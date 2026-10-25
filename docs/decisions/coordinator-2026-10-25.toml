@@ -1,0 +1,20 @@
+# docs/decisions/coordinator-2026-10-25.toml — delegated calls the
+# coordinator made on trunk on 2026-10-25 (headless leg 19 of loop session
+# 20261025T055732Z-64b2b6).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-910 (the macOS full-suite fixes CI can verify), the queue's next row after WI-878, is not claimed by this leg. Its Done-when's third item checks and records the CI macOS and Linux jobs' state on the landing tip, and CI runs only on a pushed tip; push is the owner's (push = human; the session prompt's Never list), and nothing on refactor_again is pushed. A lane claimed now could build and review its fixes but never close, so it would hold a claim across legs for an owner act. The row stays queued and goes under the handoff's 'For the owner': push refactor_again so its landing tip can carry CI's state, or rule that the WSL POSIX evidence route (wi-931 D-002) stands in for CI on that item. The queue moves to WI-920."
+alternative = "Claim WI-910 now, build and review it, and hold its landing for the push."
+reversal_cost = "Low: a queued row stays queued one more leg."
+why_not_escalated = "SKILL section 7's owner-held steps: a Done-when item that needs an owner act is recorded and the leg moves to the next row; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "WI-920 (re-judge TC-055: its declared trigger component:CMP-009 fired at merge b803dd0, 2026-10-15, after the latest result of 2026-10-11) was scope-critiqued at its claim: Codex Sol at medium from the detached critique checkout at d10265cc2 (log spooled; verdict kept at review-tmp/2026-10-25a-leg19/crit920/WI-920-scope-critique.md) read APPROVE findings=0: one deliverable (the fresh judgment, then its recording through record_observation.py), no file given authority over a hold, act or gate (no Trust section owed), planmode none by default. No disposition is owed, so the spec is unchanged and no confirming round runs. The re-judge is owed although the inputs digest at the trigger equals the one the 2026-10-11 result judged: TC-055's standing limit re-judges on its declared trigger after the closed-work floor, which covers dashboard changes outside the declared inputs."
+alternative = "Close WI-920 as settled on the matching inputs digest, without a fresh judgment."
+reversal_cost = "Low: a re-judge run and one observation record."
+why_not_escalated = "The row's own Method and the skill's section 1; recorded for confirm or overrule."
+review = ""
