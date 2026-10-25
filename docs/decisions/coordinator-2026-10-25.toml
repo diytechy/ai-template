@@ -60,3 +60,10 @@ alternative = "File P5 without the open item, building for revision 33's answer,
 reversal_cost = "Low: a queued row and a pending open item."
 why_not_escalated = "It is escalated: OI-116 is the owner's, and each call goes to the owner as confirm or overrule."
 review = ""
+
+[decision.D-009]
+decided = "Headless leg 21 closes out at 31 percent of the guard's window, before taking P6's text filing or WI-966's scope critique, so the next leg starts those with a full window. The new handoff's queue table adds WI-977 (the queue's P4, filed and its critique passed this leg) as a row to claim after WI-966 and WI-971, under one scoped unpause with them: it is a machinery row, so it lands alone, after WI-976 and before the managed loop is unpaused. P5 (WI-978) stays out of the claim rows until OI-116 is ruled and its scope critique passes. The handoff carries no Overnight: stop line: P6's text filing, WI-966, WI-971 and WI-977 move without the owner."
+alternative = "Continue into P6's text filing in this leg, or leave WI-977 off the table until the owner orders it."
+reversal_cost = "Low: a queue row's position."
+why_not_escalated = "The session prompt's step 4 works P1 to P9 under their dependencies; recorded for confirm or overrule."
+review = ""

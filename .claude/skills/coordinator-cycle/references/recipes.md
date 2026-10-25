@@ -446,6 +446,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      verdict names the removal, and the act turn's snapshot then
      refuses every registry holding it (wi-976 D-016). Check that
      the composed brief lists each retired row before the launch.
+     The wi-976 lane's composer fix briefs such a row as a removal
+     and refuses a token naming a row in neither the live registry
+     nor the recorded copy (wi-976 D-017); the trap holds until it
+     lands.
   2. Name the verdict `docs/reviews/<wi-slug>/NNN-ADJUDICATE-<lane sha7>.md`.
   3. Check sign-in. The adjudicator runs on the declared ADJUDICATOR account,
      which authenticates with the owner's long-lived token, read at each
@@ -578,7 +582,12 @@ commit of its own, move it to trunk's tip
   is owed (WI-922, 2026-10-16c).
 - **Complexity on the merged tree:**
   - Run `"$PY" "$SCRIPTS/check_complexity.py" --mode enforce`.
-  - A module pushed past 1000 SLOC is decomposed, never bumped.
+  - A module pushed past 1000 SLOC is decomposed, never bumped. When a
+    fix inside the spec's surface does it, save the fix as a patch
+    outside the tree and revert it, have a builder move one cohesive
+    arm into its own module byte for byte (an `ast` segment comparison
+    proves it) as a commit alone, then re-apply the fix on the new home
+    (wi-976 D-017).
   - A baseline row that went down is deleted or lowered alone, in the lane
     commit that moved it (the hook refuses a stale row), in the tab-separated
     `docs/complexity-baseline`. Never run a full `--restamp`: it rewrites every
@@ -903,6 +912,9 @@ lane commit being replayed.
   "No tie-back" reason.
 - A row split leaves `Implements:` tags on the old id; retag them in a
   coordinator commit.
+- When a move makes an approved cell's module-qualified name false, drop
+  the qualifier and keep the approved symbol: a swapped qualifier adds a
+  name to row text, which a sitting returns (wi-976 sitting 015).
 - Terra has dropped an existing `code_symbol` entry as "nonexistent". Grep
   every symbol it removes before committing.
 - On a large change set (WI-834: about 30 cells) one Terra turn applies three
@@ -1152,7 +1164,11 @@ lane commit being replayed.
   headless procedure is SKILL §7.
   Start the close-out's full suite before writing the handoff: on
   2026-10-25 it passed the 60-minute cap at 88% and moved to the
-  background, where a leg loses it at its exit.
+  background, where a leg loses it at its exit. Run it as two
+  foreground halves of the test files, interleaved
+  (`ls tests/test_*.py | awk 'NR%2==1'`, then `NR%2==0`), each with its
+  own basetemp, deleted after it: on 2026-10-25c they took 19:41 and
+  12:08.
   Give every bar, attest and full-suite run the whole raised cap
   (3600000 ms): on a box other sessions loaded an attest's bar ran 30
   minutes and the full suite 54, and a 30-minute timeout moved the attest
