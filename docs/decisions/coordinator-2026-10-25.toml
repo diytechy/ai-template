@@ -46,3 +46,17 @@ alternative = "Split the port from the retirement (two rows), or file P4 attende
 reversal_cost = "Low: a queued row's spec, re-scoped before any claim."
 why_not_escalated = "The queue table files P4 now and the scope critique judges the spec before the claim; each call goes to the owner as confirm or overrule."
 review = ""
+
+[decision.D-007]
+decided = "WI-977's scope critique (Codex Sol at medium, fresh, from the detached critique checkout at aed0364fd; log spooled) read APPROVE findings=0 with no recommendation, so no disposition and no confirming round is owed and the row is claimable. It is a machinery row (the dispatcher's admission, the claim, the worker's assignment and the close), so it lands alone, after WI-976, and before the managed loop is unpaused."
+alternative = "Run a confirming round anyway."
+reversal_cost = "Low: a queued row's readiness."
+why_not_escalated = "The cycle's pre-claim rule owes a confirming round only over adopted dispositions; recorded for confirm or overrule."
+review = ""
+
+[decision.D-008]
+decided = "Headless leg 21 files the queue's P5 (plan item 16, one mint across parallel lanes) as WI-978, with OI-116 pending, drafted by a fresh Claude Opus planner from trunk aed0364fd and filed verbatim. As coordinator-2026-10-20 D-009 directs, the spec asks the owner whether the WI space rides the watermark carrier (re-opening the plan's revision 33): that is OI-116 (recommendation (a): spine only, revision 33 standing; option (c) builds for (a) now and keeps the question open without holding the row), and WI-978's needs cites it, so the row reads blocked until the ruling; its Done-when is written for revision 33's answer and marks the items a yes changes. Its scope critique waits for the ruling, since a yes reshapes the spec. The drafter's contestable calls, for the owner's confirm or overrule and the critique: the anchor is SR-174 widened rather than a new SR; the keep-or-mint text stays in this row; the carrier is an orphan single-file ref written by plumbing with a compare-and-swap, a lost swap refusing with no retry; a reservation requires the work item claimed on trunk; a count cap of 1 to 50 per space per call; the carrier spaces are every watermark space except WI, OI and DP, read from the one space list; the fold copies the whole carrier into the lane; the landing check does not verify that the landing folded the carrier; burned numbers stay retirement-report advisories; a plain trunk commit adding a carrier-space id is not judged (the held-status residual's shape); malformed record lines justify nothing; the code goes in a new stdlib module trace.py composes (trace.py stands at 3741 SLOC); the spine shape (SR-174 and TC-158 amended, two new LLRs, two new TCs, IF-101 updated); the carrier seeded from trunk on first use; 'sequential sittings never collide on an id' read as any two reservations taken one after another being disjoint; where the hand squash reads its work item left to the plan; buildtier strong; the CLI spellings left to the plan. The drafter's notes also record that the rebase recipe's take-ours-then-bump on the watermark drops a lane's higher mark for a minted-then-deleted id, which the fold replaces."
+alternative = "File P5 without the open item, building for revision 33's answer, and ask the owner in the handoff only."
+reversal_cost = "Low: a queued row and a pending open item."
+why_not_escalated = "It is escalated: OI-116 is the owner's, and each call goes to the owner as confirm or overrule."
+review = ""
