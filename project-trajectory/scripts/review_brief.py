@@ -910,8 +910,8 @@ def pass_fields(root, wi, dispute=None):
 def _ruled_findings(root, head, fields, critique):
     """Why the dispute verdict's rulings are not shown to be this critique's
     BLOCKER and MAJOR findings: each `F#` (the coverage gate's numbering) must
-    be the finding the findings file beside the verdict records under that
-    id (`plan_coverage.ruling_problem`, read at HEAD), or [].
+    be the finding the findings file the verdict's binding records holds
+    under that id (`plan_coverage.ruling_problem`, read at HEAD), or [].
 
     Implements: SR-146, LLR-313
     """

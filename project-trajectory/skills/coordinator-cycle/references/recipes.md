@@ -368,10 +368,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   `Excludes: F2 — dismissed: docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`, or
   `Excludes: F2 — successor: docs/reviews/<lane>/NNN-ADJUDICATE-<sha7>.md#<its id there>`.
   The gate refuses a cite that is not an accepted DISMISS or SUCCESSOR of
-  that finding, or whose findings file beside the verdict records another
-  finding under that id. The plan cap takes only a DISMISS. Until WI-878 binds the findings file into the sitting, keep finding ids
-  unique within a lane: a second dispute reusing ids refuses a valid
-  dismissal.
+  that finding, or whose findings file, the one its binding records,
+  records another finding under that id. The gate reads no other file, so
+  finding ids may repeat across a lane's sittings. A dispute bound before
+  the binding recorded its file refuses: re-sit it, or exclude the finding
+  with a reason that cites no verdict. The plan cap takes only a DISMISS.
   A dispute FIX's remedy is checked on the coordinator's own landing
   shape: the remedy WI-963's sitting named (compare with the copy the
   re-attesting act's commit wrote) closed its finding only on an
@@ -481,8 +482,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      text verbatim) and `position` (the holder's position verbatim). Never
      name a finding `G` plus a digit: `check_vocab` reads it as a retired gate
      tag wherever the id is quoted in an authored file (a decisions record),
-     and the smoke tier goes red. Keep the
-     file after the sitting: the coverage gate reads it.
+     and the smoke tier goes red. Commit the
+     file and keep it: the composed brief names it, its binding records
+     that path, and the coverage gate reads that file alone.
   2. Compose: `"$PY" "$TOOLS/compose_lane.py" WI-NNN dispute "<findings path>" "" <verdict> <brief>`
      (a row whose `Brief` is `dispute` and whose `Adjudicates` names the
      findings file, through `adjudicate_brief.compose`).

@@ -901,10 +901,10 @@ def test_a_family_with_no_dedicated_home_passes_require_signin_unprobed(
 DISPUTE_BRIEF = "Rule each finding.\n\nDISPUTE: findings=F1;R2\n\n=== FINDING F1 ===\n"
 
 
-def _dispute_call(tmp_path, monkeypatch, verdict_text):
+def _dispute_call(tmp_path, monkeypatch, verdict_text, brief=DISPUTE_BRIEF):
     root = _repo(tmp_path)
     _signed_in(monkeypatch)
-    (root / "brief.md").write_text(DISPUTE_BRIEF, encoding="utf-8")
+    (root / "brief.md").write_text(brief, encoding="utf-8")
 
     def run(argv, root_, timeout, **kw):
         VERDICT["path"].write_text(verdict_text, encoding="utf-8")
@@ -967,6 +967,90 @@ def test_a_dispute_brief_naming_no_findings_is_refused_before_launch(
     assert _adjudicate(root, brief="dispute") == 2
     assert launched["argv"] == []
     assert "DISPUTE:" in capsys.readouterr().out
+
+
+# --- WI-878: the dispute binding records the findings file its brief names ------
+
+RECORDED = "docs/reviews/wi-1/002-DISPUTE-findings.toml"
+RECORDED_BRIEF = DISPUTE_BRIEF.replace(
+    "DISPUTE: findings=F1;R2\n", "DISPUTE: findings=F1;R2\nFINDINGS-FILE: {}\n"
+).format(RECORDED)
+
+
+def _binding():
+    return Path(str(VERDICT["path"]) + ".requested").read_text(encoding="utf-8")
+
+
+def test_a_dispute_binding_records_its_findings_file_through_the_outcome(
+    tmp_path, monkeypatch, launched
+):
+    """The brief's findings-file line is bound beside the verdict and kept
+    through the outcome rewrite, accepted or failed; a brief without the
+    line binds no record."""
+    line = "findings_file = {}".format(RECORDED)
+    text = "RULING: F1 FIX real\nRULING: R2 DISMISS refuted it does not hold\n"
+    _root, code = _dispute_call(tmp_path / "a", monkeypatch, text, RECORDED_BRIEF)
+    assert code == 0
+    assert line in _binding() and "outcome = accepted" in _binding(), _binding()
+    unruled = "RULING: F1 FIX real\n"
+    _root, code = _dispute_call(tmp_path / "f", monkeypatch, unruled, RECORDED_BRIEF)
+    assert code == 1
+    assert line in _binding() and "outcome = failed" in _binding(), _binding()
+    _root, code = _dispute_call(tmp_path / "n", monkeypatch, text)
+    assert code == 0
+    assert "findings_file" not in _binding(), _binding()
+
+
+def _findings(span, text):
+    """A one-finding dispute findings file over `span`, its F1 `text`."""
+    return (
+        'range = "{}"\n\n[[finding]]\nid = "F1"\nheld_by = "builder"\n'
+        "finding = '''\n{}\n'''\nposition = '''\nContested.\n'''\n".format(span, text)
+    )
+
+
+def test_the_entry_points_dispute_binding_resolves_only_its_own_rounds_finding(
+    tmp_path, monkeypatch, launched
+):
+    """End to end: a brief composed over the lane's round-1 findings file,
+    sat through the entry point and dismissed, then a later round's file
+    reusing F1 beside it. The citation resolves round 1's F1 and refuses the
+    later round's."""
+    ab = load_script("adjudicate_brief")
+    coverage = load_script("plan_coverage")
+    root = _repo(tmp_path)
+    _signed_in(monkeypatch)
+    head = _git(root, "rev-parse", "--short=12", "HEAD")
+    span = "{}..{}".format(head, head)
+    first = "- [MAJOR] scripts/a.py:1 -> the first round's finding -> fix -> @owner"
+    later = "- [MAJOR] scripts/b.py:2 -> a later round's finding -> fix -> @owner"
+    (root / RECORDED).parent.mkdir(parents=True)
+    (root / RECORDED).write_text(_findings(span, first), encoding="utf-8", newline="\n")
+    verdict = "docs/reviews/wi-1/003-ADJUDICATE-abc1234.md"
+    row = {"WI-ID": "WI-1", "Brief": "dispute", "Adjudicates": RECORDED}
+    brief, why = ab.compose(root, row, verdict)
+    assert why is None, why
+    (root / "brief.md").write_text(brief, encoding="utf-8", newline="\n")
+    VERDICT["path"] = root / verdict
+
+    def run(argv, root_, timeout, **kw):
+        VERDICT["path"].write_text(
+            "RULING: F1 DISMISS refuted the code holds\n", encoding="utf-8"
+        )
+        return 0, _claude_stream(10), False
+
+    monkeypatch.setattr(svc, "run_session", run)
+    argv = _argv(root, root / verdict)
+    argv[argv.index("amendment")] = "dispute"
+    assert cli.main(argv) == 0
+    (root / "docs/reviews/wi-1/004-DISPUTE-findings.toml").write_text(
+        _findings(span, later), encoding="utf-8", newline="\n"
+    )
+    cite = coverage.RULING_CITE_RE.search(verdict + "#F1")
+    resolving = coverage.RESOLVING
+    assert coverage.ruling_problem(root, cite, "F1", first, resolving=resolving) is None
+    refused = coverage.ruling_problem(root, cite, "F1", later, resolving=resolving)
+    assert refused and "is not this review's F1" in refused, refused
 
 
 # --- WI-887 round 1 (review 001 F3): a retained reviewer's own template ---------

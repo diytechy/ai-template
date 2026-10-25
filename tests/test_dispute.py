@@ -128,6 +128,25 @@ def test_the_dispute_brief_carries_each_finding_its_position_range_and_scope_lin
 
 
 @env_gate_skipif("git")
+def test_the_dispute_brief_names_the_findings_file_it_was_composed_over(tmp_path):
+    """The composed brief names the row's findings file on its own line, after
+    the `DISPUTE:` line and before the first finding, and the grammar reads
+    the path back; the requested ids read as before."""
+    repo, span = _lane(tmp_path)
+    (repo / "findings.toml").write_text(_findings_toml(span), encoding="utf-8")
+    text, why = ab.compose(repo, _row(), "docs/reviews/wi-9/001-DISPUTE.md")
+    assert why is None, why
+    line = "FINDINGS-FILE: findings.toml"
+    assert line in text
+    assert text.index("DISPUTE: findings=F1;R2-3") < text.index(line)
+    assert text.index(line) < text.index("=== FINDING F1 ")
+    dispute = _dispute()
+    assert dispute.requested_file(text) == "findings.toml"
+    assert dispute.requested_file("DISPUTE: findings=F1\n") is None
+    assert ab.requested_for("dispute", text) == ("F1", "R2-3")
+
+
+@env_gate_skipif("git")
 @pytest.mark.parametrize(
     "body,cell,needle",
     [

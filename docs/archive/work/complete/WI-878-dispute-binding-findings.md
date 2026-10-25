@@ -3,12 +3,23 @@ id = "WI-878"
 title = "A dispute sitting's binding records the findings file it ruled, and the coverage gate reads exactly that file"
 workstream = "process"
 sr_refs = ["SR-236"]
-specref = "project-trajectory/scripts/plan_coverage.py"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
 priority = 4
 +++
+
+## Deliverable
+
+Claimed by headless leg 18 of loop session `20261024T053017Z-23122f` and landed by headless leg 19 of loop session `20261025T055732Z-64b2b6`, squashed from lane `wi-878`.
+
+- **The producer.** The composed dispute brief names the findings file it was composed over on a `FINDINGS-FILE:` line beside its `DISPUTE:` request; the sitting's binding records that path in a `findings_file` cell, written by the one binding writer in the same call as the requested ids and carried unchanged through the accepted or failed outcome rewrite. A brief naming none binds none.
+- **The consumer.** The coverage gate's dispute-cited exclusion reads exactly the findings file the verdict's binding records, in the same reading as the verdict and its binding, and no sibling file: a binding with no record, a recorded file that cannot be read or is refused, and one that records no such finding each refuse by name. The plan cap's pass route reads the same record, so two dispute rounds in one lane may reuse finding ids.
+- **The rows.** LLR-069, LLR-310, LLR-314, LLR-315, TC-069, TC-327 and TC-334 state it (sitting 003, MEANING+BLESS, act seq 159); IF-287, IF-290 and Flow 6's bind step name the record. One private cell reader in `kitlib.sitting` now serves both binding readers.
+- **RESYNC_PACK.** "A dispute sitting's binding records its findings file, and the coverage gate reads only that file": a dispute binding written before this change records no findings file, so an exclusion citing its verdict now refuses; re-sit that dispute, or exclude the finding with a reason that cites no verdict.
+
+Reviews: round 1 `001-REVIEW-B-fa73042.md` (4 MINOR), `002-REVIEW-A-fa73042.md` (3 MINOR), the shared code MINOR fixed before the checkpoint; gate `004-REVIEW-B-3cf85aa.md` (1 MINOR, to status.md's follow-ups), `005-REVIEW-A-86d0d09.md` (no finding). Decisions: `docs/decisions/wi-878.toml` D-001 to D-008.
 
 ## Context
 

@@ -20,7 +20,11 @@ Contract IF-290: the dispute grammar `adjudicate_brief` calls. Text in,
     why)` naming `where` and the cause. `request_line(ids)` returns the brief's
     `DISPUTE: findings=<ids>` line, and `requested_ids(brief_text)` reads the
     ids back off the first such line, `()` when there is none, so the request a
-    brief renders is the request its verdict is judged against. `parse(text,
+    brief renders is the request its verdict is judged against. `file_line(
+    path)` returns the brief's `FINDINGS-FILE: <path>` line, naming the
+    findings file the brief was composed over, and `requested_file(
+    brief_text)` reads the path back off the first such line, None when there
+    is none or it is empty. `parse(text,
     requested, where)` returns `({id: (ruling, reason class or None, reason)},
     None)` for a verdict ruling every requested finding exactly once and
     nothing else, else `(None, why)`.
@@ -71,7 +75,9 @@ __all__ = [
     "HELD_BY",
     "read_findings",
     "request_line",
+    "file_line",
     "requested_ids",
+    "requested_file",
     "parse",
 ]
 
@@ -79,9 +85,11 @@ BRIEF = "dispute"
 RULINGS = ("FIX", "SUCCESSOR", "DISMISS", "ESCALATE")
 DISMISS_REASONS = ("out-of-scope", "refuted", "not-worth-cost")
 HELD_BY = ("builder", "coordinator")
-# The verdict's per-finding keyword, and the composed brief's request line.
+# The verdict's per-finding keyword, the composed brief's request line, and
+# its line naming the findings file it was composed over.
 _RULING = "RULING"
 _REQUEST = "DISPUTE"
+_FILE = "FINDINGS-FILE"
 _ID_RE = re.compile(r"[A-Za-z][A-Za-z0-9._-]*")
 _FILE_KEYS = ("range", "finding")
 _FINDING_KEYS = ("id", "held_by", "finding", "position")
@@ -163,6 +171,15 @@ def request_line(ids):
     return "{}: findings={}".format(_REQUEST, ";".join(ids))
 
 
+def file_line(path):
+    """The composed brief's line naming the findings file it was composed
+    over, which the binding records beside the verdict.
+
+    Implements: SR-234, LLR-314
+    """
+    return "{}: {}".format(_FILE, path)
+
+
 def _keyword_rests(text, keyword):
     """The text after `keyword:` on every physical line of `text` whose first
     token, leading whitespace aside, is `keyword:`. One line at a time, as
@@ -187,6 +204,17 @@ def requested_ids(brief_text):
         if sep and key.strip() == "findings":
             return tuple(i for i in value.strip().split(";") if i)
     return ()
+
+
+def requested_file(brief_text):
+    """The findings file a composed dispute brief names, read off its FIRST
+    `FINDINGS-FILE: <path>` line (the template puts it before any finding's
+    text); None when it carries none or names nothing.
+
+    Implements: SR-234, LLR-314
+    """
+    rests = _keyword_rests(brief_text, _FILE)
+    return (rests[0] or None) if rests else None
 
 
 def _one_ruling(rest, where):

@@ -43,11 +43,16 @@ Contract IF-287: a combined sitting's grammar. `SITTING` is the brief class and
     `({id: digest}, None)`, or `(None, reason)` for no cell, a malformed
     token or a repeated id, and `accepted_identities(root, rev, verdict)` is
     the one reader of an ACCEPTED verdict's bound identities, `(None,
-    reason)` for a verdict `accepted_at` does not read as accepted;
-    `judged_rows(parsed)` is the ONE reader of the rows an accepted verdict
-    authorizes an act on - an APPROVE row, a CLARITY row, and a MEANING row
-    only with its bless mark - which the merge's backing checks and the act
-    assembler both read. `review_line(text)`
+    reason)` for a verdict `accepted_at` does not read as accepted. A dispute
+    binding may also carry the findings-file record cell, `findings_file =
+    <repo-relative path>`, naming the findings file its brief was composed
+    over: `render_requested(..., findings_file)` and `write_binding(...,
+    findings_file)` write it only when a path is given, `read_requested`
+    ignores it, and `read_findings_file(text)` returns the path, or None for
+    no cell or an empty one; `judged_rows(parsed)` is the ONE reader of the
+    rows an accepted verdict authorizes an act on - an APPROVE row, a CLARITY
+    row, and a MEANING row only with its bless mark - which the merge's
+    backing checks and the act assembler both read. `review_line(text)`
     is the ONE reader of a review round's `VERDICT:` line, which the attended
     filing boundary and the merge gate's round reader both consume. Pure
     functions over text, except `write_binding` (one file) and `accepted_at`
@@ -84,6 +89,7 @@ __all__ = [
     "render_requested",
     "read_requested",
     "read_identities",
+    "read_findings_file",
     "REQUESTED_SUFFIX",
     "OUTCOMES",
     "write_binding",
@@ -274,16 +280,22 @@ def requested_path(verdict_path):
 OUTCOMES = ("pending", "accepted", "failed")
 
 
-def render_requested(brief, kinds, outcome="pending", identities=None):
+def render_requested(
+    brief, kinds, outcome="pending", identities=None, findings_file=None
+):
     """The binding's text: the brief class, the kinds it requested and the
-    call's recorded outcome, and, when `identities` (`{row id: digest}`) is
-    given, the identity cell naming each judged row's approved-text digest.
+    call's recorded outcome; when `findings_file` is given, the record of the
+    findings file a dispute brief was composed over; and, when `identities`
+    (`{row id: digest}`) is given, the identity cell naming each judged row's
+    approved-text digest.
 
     Implements: SR-232, SR-178, LLR-310, LLR-359
     """
     text = "brief = {}\nkinds = {}\noutcome = {}\n".format(
         brief, ";".join(kinds), outcome
     )
+    if findings_file:
+        text += "{} = {}\n".format(FINDINGS_FILE_CELL, findings_file)
     if identities:
         text += "{} = {}\n".format(
             IDENTITY_CELL,
@@ -294,15 +306,21 @@ def render_requested(brief, kinds, outcome="pending", identities=None):
     return text
 
 
+def _cells(text):
+    """A binding's `key = value` cells, keyed by the text before each line's
+    first ` = `; a line without one is not a cell."""
+    return dict(
+        line.split(" = ", 1) for line in (text or "").splitlines() if " = " in line
+    )
+
+
 def read_requested(text):
     """`(brief, kinds, outcome)` from a binding's text, or None when it is not
     one; a binding recording no outcome reads `pending`.
 
     Implements: SR-232, LLR-310
     """
-    cells = dict(
-        line.split(" = ", 1) for line in (text or "").splitlines() if " = " in line
-    )
+    cells = _cells(text)
     brief, kinds = cells.get("brief", "").strip(), cells.get("kinds", "").strip()
     if not brief or not kinds:
         return None
@@ -314,6 +332,19 @@ def read_requested(text):
 # per row the brief showed, `;`-joined.
 IDENTITY_CELL = "rows"
 _IDENTITY_TOKEN = re.compile(r"([A-Z]+-[0-9]+)=(sha256:[0-9a-f]{16})")
+# A dispute binding's record of the findings file its brief was composed over.
+FINDINGS_FILE_CELL = "findings_file"
+
+
+def read_findings_file(text):
+    """The repo-relative path a dispute binding records as the findings file
+    its brief was composed over, or None when it carries no record or an
+    empty one. Cells come from `_cells`, the one cell reader it shares with
+    `read_requested`.
+
+    Implements: SR-232, LLR-310
+    """
+    return _cells(text).get(FINDINGS_FILE_CELL, "").strip() or None
 
 
 def read_identities(text):
@@ -590,11 +621,18 @@ def sitting_refusal(text, where, kinds):
 
 
 def write_binding(
-    verdict_path, brief, kinds, outcome, exclusive=False, identities=None
+    verdict_path,
+    brief,
+    kinds,
+    outcome,
+    exclusive=False,
+    identities=None,
+    findings_file=None,
 ):
     """THE one writer of a verdict's binding: its brief class, requested kinds
-    and recorded outcome, beside the verdict, and its identity cell when
-    `identities` is given. `exclusive` creates it (the entry point's
+    and recorded outcome, beside the verdict, its identity cell when
+    `identities` is given, and its findings-file record when `findings_file`
+    is given. `exclusive` creates it (the entry point's
     reservation, which refuses an existing one); otherwise it overwrites,
     which is how the route that ran the call records `accepted` or `failed`.
     Raises OSError as `open` does; the caller says what it means.
@@ -603,7 +641,7 @@ def write_binding(
     """
     mode = "x" if exclusive else "w"
     with open(requested_path(verdict_path), mode, encoding="utf-8", newline="\n") as fh:
-        fh.write(render_requested(brief, kinds, outcome, identities))
+        fh.write(render_requested(brief, kinds, outcome, identities, findings_file))
 
 
 def accepted(text, binding_text):

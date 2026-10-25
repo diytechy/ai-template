@@ -261,7 +261,7 @@ sequenceDiagram
     participant Agent as adjudicator session
     participant Records as approved-row records
     Coord->>Lane: confirm the judging lane claim (SR-231)
-    Coord->>Verdict: reserve path and bind the judging brief and its judged rows' identities (LLR-306, LLR-359)
+    Coord->>Verdict: reserve path and bind the judging brief, its judged rows' identities and a dispute brief's findings file (LLR-306, LLR-359, LLR-310)
     Coord->>Agent: launch judging brief
     Agent->>Verdict: commit verdict
     Coord->>Verdict: validate and record accepted verdict

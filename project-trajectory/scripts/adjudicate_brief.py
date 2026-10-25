@@ -106,6 +106,9 @@ Contract IF-115: `compose(root, row, verdict_path, prompt_templates)` returns
     `JUDGED-TEXT: <row id> <digest>` line per row; `bind_pending` records
     those lines in the binding (IF-287) and `record_outcome` keeps them when
     it rewrites the outcome, so a held CLARITY act is bound to the text judged.
+    The dispute brief names the findings file it was composed over on its
+    `FINDINGS-FILE:` line (IF-290); `bind_pending` records that path in the
+    binding and `record_outcome` keeps it the same way.
 """
 
 from __future__ import annotations
@@ -323,9 +326,12 @@ def requested_for(brief, prompt):
 def bind_pending(verdict_path, brief, prompt, exclusive=False):
     """Bind what this call was asked - its brief and requested kinds, outcome
     `pending`, and the identity of each row's approved text the prompt showed
-    (`requested_identities`) - beside its verdict, through the one writer; the
-    kinds, or () when a combined brief names none (no binding is then
-    written). A prompt that shows no amended text binds no identity. Both
+    (`requested_identities`), and for a dispute the findings file its
+    `FINDINGS-FILE:` line names (`kitlib.dispute.requested_file`) - beside
+    its verdict, through the one writer; the kinds, or () when a combined
+    brief names none (no binding is then written). A prompt that shows no
+    amended text binds no identity, and one naming no findings file binds no
+    record. Both
     routes call it before the call: the coordinator's entry point exclusively
     at reservation, the loop at composition.
 
@@ -340,6 +346,7 @@ def bind_pending(verdict_path, brief, prompt, exclusive=False):
             "pending",
             exclusive,
             identities=requested_identities(prompt) or None,
+            findings_file=kdispute.requested_file(prompt) if brief == DISPUTE else None,
         )
     return kinds
 
@@ -382,7 +389,8 @@ def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
     being read. The loop's completion consumes this same decision, so a
     failed call keeps its obligation (WI-841 rounds 11-15). `kinds` None reads
     back the request bound beside the verdict (`bound_kinds`, round 17). The
-    rewrite carries the identity cell bound at reservation through unchanged.
+    rewrite carries the identity cell and the findings-file record bound at
+    reservation through unchanged.
 
     Implements: SR-232, SR-178, LLR-310, LLR-359
     """
@@ -392,13 +400,20 @@ def record_outcome(root, verdict_path, brief, kinds, call_ok, session):
     else:
         why = "the call failed (a non-zero exit, a timeout or a reported error)"
     outcome = "failed" if why else "accepted"
-    # The rewrite keeps the identities bound at reservation: dropping them
-    # would leave every held CLARITY act bound to no text.
-    identities, _none = ksitting.read_identities(
-        _read(ksitting.requested_path(verdict_path))
-    )
-    ksitting.write_binding(verdict_path, brief, kinds, outcome, identities=identities)
+    # The rewrite keeps the identities and the findings-file record bound at
+    # reservation: dropping them would leave every held CLARITY act bound to
+    # no text, and every dispute verdict bound to no findings file.
     binding = ksitting.requested_path(verdict_path)
+    bound = _read(binding)
+    identities, _none = ksitting.read_identities(bound)
+    ksitting.write_binding(
+        verdict_path,
+        brief,
+        kinds,
+        outcome,
+        identities=identities,
+        findings_file=ksitting.read_findings_file(bound),
+    )
     ac.commit_telemetry(root, session, "verdict " + outcome, [binding])
     return outcome, why
 
@@ -1824,7 +1839,9 @@ def dispute_values(root, row):
     but the commit facts is a CLAIM the template labels as under judgement:
     the finding as the reviewer wrote it, and the position on it. The range
     it declares is re-derived from git (`_commit_facts`), so a range git
-    cannot resolve refuses rather than briefing a judge on nothing.
+    cannot resolve refuses rather than briefing a judge on nothing. The
+    request names the ids to rule, then the file they were read from, as the
+    row writes it, for the binding to record.
 
     Implements: SR-234, LLR-315
     """
@@ -1852,7 +1869,7 @@ def dispute_values(root, row):
     return {
         "range": span,
         "commits": commits,
-        "request": kdispute.request_line(ids),
+        "request": kdispute.request_line(ids) + "\n" + kdispute.file_line(scope[0]),
         "findings": "\n".join(_render_finding(f) for f in found["findings"]),
         "process_doc": agent_brief.process_doc_path(root),
     }, None

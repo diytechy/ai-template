@@ -22,7 +22,10 @@
                    `git diff --name-status`, clipped with the cut stated. No
                    commit bodies.
        {request}   the `DISPUTE: findings=<ids>` line naming the findings to
-                   rule; the entry point binds those ids beside the verdict.
+                   rule, then the `FINDINGS-FILE: <path>` line naming the
+                   file they were read from; the entry point binds both
+                   beside the verdict, and the coverage gate reads that file
+                   alone.
        {findings}  each finding as the reviewer wrote it, and the builder's or
                    coordinator's position on it, verbatim from the findings
                    file. Both are CLAIMS UNDER JUDGEMENT, never premises.

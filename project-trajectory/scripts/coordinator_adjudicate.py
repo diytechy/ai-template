@@ -236,7 +236,8 @@ def bind_requested(path, brief, prompt):
     `kitlib.sitting.requested_path(path)` is created exclusively holding the
     brief class and its requested kinds (a combined brief's, read off its one
     `SITTING:` line; a dispute brief's finding ids, off its `DISPUTE:` line;
-    a single-kind brief's own class). A separate file, so the
+    a single-kind brief's own class), and for a dispute brief the findings
+    file its `FINDINGS-FILE:` line names. A separate file, so the
     adjudicator's rewrite of the verdict cannot change what the verdict is
     judged against (WI-841 round 10). None when bound.
 

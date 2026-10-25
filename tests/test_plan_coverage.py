@@ -9,6 +9,7 @@ registry is absent.
 
 from pathlib import Path
 
+import pytest
 from conftest import ROOT, SCRIPTS, run_py
 
 SCRIPT = SCRIPTS / "plan_coverage.py"
@@ -452,7 +453,8 @@ def test_a_row_citing_nothing_is_a_finding(tmp_path):
 # the verdict's finding lines into those clauses, for the coordinator's attended
 # rework round (and, once WI-805 wires it, the loop's replan); a finding an
 # adjudicator dismissed in a dispute sitting counts when the plan cites that
-# ruling and the findings file beside it shows the ruled finding is this one.
+# ruling and the findings file its binding records shows the ruled finding is
+# this one.
 
 REVIEW = """- [MAJOR] scripts/launch.py:10 -> the launcher ignores the session budget -> enforce it -> @owner
 - [MINOR] docs/brief.md:3 -> stale wording -> reword it -> @owner
@@ -480,19 +482,40 @@ def findings_toml(findings, name="002-DISPUTE-findings.toml"):
     return name, 'range = "aaaaaaa..bbbbbbb"\n' + tables
 
 
-def write_dispute(root, ruling, outcome="accepted", kinds="F2", findings=()):
-    """A recorded dispute verdict and its binding, as the coordinator's
-    adjudication entry point leaves them, beside the findings files
-    (`findings_toml`) the sitting ruled."""
-    verdict = root / DISPUTE_VERDICT
-    verdict.parent.mkdir(parents=True, exist_ok=True)
-    verdict.write_text("Judged.\n\n{}\n".format(ruling), encoding="utf-8")
-    Path(str(verdict) + ".requested").write_text(
-        "brief = dispute\nkinds = {}\noutcome = {}\n".format(kinds, outcome),
+# `write_dispute`'s default record: the first findings file it writes.
+FIRST = object()
+
+
+def write_dispute(
+    root,
+    ruling,
+    outcome="accepted",
+    kinds="F2",
+    findings=(),
+    verdict=DISPUTE_VERDICT,
+    recorded=FIRST,
+):
+    """A recorded dispute verdict at `verdict` and its binding, as the
+    coordinator's adjudication entry point leaves them, beside the findings
+    files (`findings_toml`) written into the verdict's folder. The binding
+    records `recorded`, the repo-relative findings file the sitting ruled, on
+    its literal `findings_file = <path>` line: by default the first of
+    `findings`, and no record when `recorded` is None or no findings file is
+    written."""
+    path = root / verdict
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("Judged.\n\n{}\n".format(ruling), encoding="utf-8", newline="\n")
+    if recorded is FIRST:
+        folder = verdict.rsplit("/", 1)[0]
+        recorded = "{}/{}".format(folder, findings[0][0]) if findings else None
+    record = "" if recorded is None else "findings_file = {}\n".format(recorded)
+    Path(str(path) + ".requested").write_text(
+        "brief = dispute\nkinds = {}\noutcome = {}\n{}".format(kinds, outcome, record),
         encoding="utf-8",
+        newline="\n",
     )
     for name, text in findings:
-        (verdict.parent / name).write_text(text, encoding="utf-8")
+        (path.parent / name).write_text(text, encoding="utf-8", newline="\n")
 
 
 def test_the_shared_step_turns_a_real_verdict_into_F_clauses():
@@ -627,8 +650,12 @@ def test_a_dismissal_from_another_round_under_the_same_id_refuses(tmp_path):
 
 
 def test_a_dismissal_whose_finding_cannot_be_shown_refuses(tmp_path):
-    """No findings file beside the verdict, or two beside it that request the
-    same ids but record different findings: correspondence is not shown."""
+    """No findings file and no record, or a record naming a file that records
+    another finding under the ruled id while a file beside it records the
+    matching one: correspondence is not shown.
+
+    Adequacy witness: a gate that accepted any agreeing findings file beside
+    the verdict would pass the "two" case on 002's matching WORDING."""
     write_dispute(tmp_path / "none", "RULING: F2 DISMISS refuted no")
     write_dispute(
         tmp_path / "two",
@@ -637,6 +664,7 @@ def test_a_dismissal_whose_finding_cannot_be_shown_refuses(tmp_path):
             findings_toml({"F2": WORDING}),
             findings_toml({"F2": LAUNCHER}, name="004-DISPUTE-findings.toml"),
         ],
+        recorded="docs/reviews/wi-001/004-DISPUTE-findings.toml",
     )
     plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(DISPUTE_VERDICT)
     for case, says in (("none", "no findings file"), ("two", "is not this")):
@@ -736,3 +764,118 @@ def test_a_real_dispute_verdict_ruling_FIX_refuses_its_exclusion(tmp_path):
     proc = write_single(tmp_path, plan=plan, findings=REVIEW)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "rules A FIX" in proc.stdout
+
+
+# --- WI-878: the binding beside a dispute verdict records the findings file
+# its sitting ruled, and the gate reads that one file: two rounds in one lane
+# may reuse finding ids, and a binding without the record refuses by name.
+
+ROUND_ONE_TYPO = "- [MINOR] docs/other.md:9 -> an old typo -> fix it -> @owner"
+# Round 1's review: its F2 is the typo, under the id round 2 reuses.
+ROUND_ONE_REVIEW = "{}\n{}\nVERDICT: CHANGES-REQUESTED findings=2\n".format(
+    LAUNCHER, ROUND_ONE_TYPO
+)
+ROUND_TWO_VERDICT = "docs/reviews/wi-001/005-ADJUDICATE-def5678.md"
+
+
+def write_two_rounds(root):
+    """One lane's two dispute rounds, each dismissing its own F2: round 1's
+    verdict (`DISPUTE_VERDICT`, 003) bound with a record of 002 (the typo),
+    round 2's (`ROUND_TWO_VERDICT`, 005) bound with a record of 004 (the
+    wording)."""
+    write_dispute(
+        root,
+        "RULING: F2 DISMISS not-worth-cost a typo",
+        findings=[findings_toml({"F2": ROUND_ONE_TYPO})],
+    )
+    write_dispute(
+        root,
+        "RULING: F2 DISMISS refuted the wording matches",
+        findings=[findings_toml({"F2": WORDING}, name="004-DISPUTE-findings.toml")],
+        verdict=ROUND_TWO_VERDICT,
+    )
+
+
+@pytest.mark.parametrize(
+    "verdict, review",
+    [(DISPUTE_VERDICT, ROUND_ONE_REVIEW), (ROUND_TWO_VERDICT, REVIEW)],
+    ids=["round-one", "round-two"],
+)
+def test_two_dispute_rounds_reusing_ids_each_resolve_their_own_finding(
+    tmp_path, verdict, review
+):
+    """Each round's plan, citing its own round's verdict for its F2, passes:
+    the gate reads the one findings file that verdict's binding records."""
+    write_two_rounds(tmp_path)
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(verdict)
+    proc = write_single(tmp_path, plan=plan, findings=review)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_round_ones_verdict_cited_for_round_twos_same_id_finding_refuses(tmp_path):
+    """Round 2's plan citing round 1's verdict for its F2 refuses: round 1's
+    binding records 002, whose F2 is the typo.
+
+    Adequacy witness: a gate that resolved by the ruled id alone, or that
+    accepted any agreeing findings file beside the verdict (004 records the
+    wording), would pass it."""
+    write_two_rounds(tmp_path)
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "F2 is not this review's F2" in proc.stdout, proc.stdout
+
+
+def test_a_binding_without_the_findings_record_refuses_and_reads_no_sibling(
+    tmp_path,
+):
+    """A binding recording no findings file refuses the citation by name,
+    though a findings file beside the verdict records the matching finding."""
+    write_dispute(
+        tmp_path,
+        "RULING: F2 DISMISS refuted the wording matches",
+        findings=[findings_toml({"F2": WORDING})],
+        recorded=None,
+    )
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "whose binding records no findings file" in proc.stdout, proc.stdout
+
+
+RECORDED = "docs/reviews/wi-001/006-DISPUTE-findings.toml"
+
+
+@pytest.mark.parametrize(
+    "arm, says",
+    [
+        ("missing", "cannot be read"),
+        ("directory", "cannot be read"),
+        ("not-toml", "is refused"),
+        ("no-such-id", "records no finding F2"),
+    ],
+)
+def test_a_recorded_findings_file_that_cannot_show_the_finding_refuses(
+    tmp_path, arm, says
+):
+    """The binding records `RECORDED`, which is missing, a directory, not
+    TOML, or records only F1 while the verdict rules F2; a findings file
+    beside the verdict records the matching F2. Each refuses by name."""
+    findings = [findings_toml({"F2": WORDING}, name="004-DISPUTE-findings.toml")]
+    name = RECORDED.rsplit("/", 1)[1]
+    if arm == "not-toml":
+        findings.append((name, "not = [toml\n"))
+    if arm == "no-such-id":
+        findings.append(findings_toml({"F1": LAUNCHER}, name=name))
+    write_dispute(
+        tmp_path,
+        "RULING: F2 DISMISS refuted the wording matches",
+        findings=findings,
+        recorded=RECORDED,
+    )
+    if arm == "directory":
+        (tmp_path / RECORDED).mkdir()
+    plan = REWORK_PLAN + "Excludes: F2 — dismissed: {}\n".format(DISPUTE_VERDICT)
+    proc = write_single(tmp_path, plan=plan, findings=REVIEW)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert says in proc.stdout, proc.stdout

@@ -62,10 +62,12 @@ Findings (exit 1):
       SUCCESSOR — only a dismissal, or a successor row filed at the landing
       (WI-911, the owner's ruling of 2026-10-14), resolves a finding; a FIX
       is covered by a row — or whose
-      ruled finding is not shown to be that `F#` finding: every dispute
-      findings file beside the verdict requesting the ids its call requested
-      must record the ruled finding as the review wrote it (no such file, or
-      one recording another finding, refuses);
+      ruled finding is not shown to be that `F#` finding: the one findings
+      file the verdict's binding records, read in the same reading as the
+      verdict, must record the ruled finding as the review wrote it (a
+      binding with no record, a recorded file that cannot be read, is not in
+      the declared shape or records no such finding, or one recording another
+      finding, refuses; no other findings file is read);
     - a clause neither covered by a row nor excluded with a reason;
     - SINGLE only: an item SR no row cites (an item SR cannot be excluded);
       a TC verifying one of those SRs that no row names and no line excludes.
@@ -106,7 +108,6 @@ Contract IF-153: the `--out` report file. It is the same markdown the run
 """
 
 import argparse
-import posixpath
 import re
 import sys
 from pathlib import Path
@@ -499,51 +500,39 @@ def _tree_text(root, rel, rev):
         return None
 
 
-def _tree_tomls(root, folder, rev):
-    """The repo-relative `*.toml` files directly in `folder`, in the working
-    tree (`rev` None) or at the commit `rev`.
-
-    Implements: SR-236, LLR-069
-    """
-    if rev is None:
-        found = (Path(root) / folder).glob("*.toml")
-        return sorted(p.relative_to(Path(root)).as_posix() for p in found)
-    out = _kitgit.git_out(root, ["ls-tree", "--name-only", rev, folder + "/"]) or ""
-    return sorted(p for p in out.splitlines() if p.endswith(".toml"))
-
-
-def _ruled_texts(root, verdict, ids, rid, rev=None):
-    """The text of the finding `rid` in every dispute findings file
-    (`kitlib.dispute.read_findings`) beside `verdict` whose ids, in order,
-    are the `ids` its call requested: the files that sitting can have ruled.
-
-    Implements: SR-236, LLR-069
-    """
-    texts = []
-    for rel in _tree_tomls(root, posixpath.dirname(verdict), rev):
-        found, _why = _dispute.read_findings(_tree_text(root, rel, rev) or "", rel)
-        if found and tuple(f["id"] for f in found["findings"]) == tuple(ids):
-            texts += [f["finding"] for f in found["findings"] if f["id"] == rid]
-    return texts
-
-
-def _correspondence_problem(root, path, ids, rid, fid, text, rev=None):
+def _correspondence_problem(root, path, binding_text, rid, fid, text, rev=None):
     """Why the finding `rid` the verdict at `path` ruled is not shown to be
-    this review's `fid` (whose clause text is `text`), or None. The repo
-    records no link from a verdict to the findings file its sitting read, so
-    every candidate beside it (`_ruled_texts`) must record that finding as
-    `fid`'s text (`_finding_key`); none, or one that differs, refuses.
+    this review's `fid` (whose clause text is `text`), or None. The one file
+    read is the findings file the verdict's binding (`binding_text`) records
+    (`kitlib.sitting.read_findings_file`), in the same reading as the verdict:
+    no record, a file that cannot be read or is refused
+    (`kitlib.dispute.read_findings`), no finding `rid` in it, or another text
+    under it (`_finding_key`) refuses by name.
 
     Implements: SR-236, LLR-069
     """
-    texts = _ruled_texts(root, path, ids, rid, rev)
-    if not texts:
+    rel = _sitting.read_findings_file(binding_text)
+    if rel is None:
         return (
-            "cites {}, beside which no findings file requesting {} records "
-            "the finding {} it ruled".format(path, ";".join(ids), rid)
+            "cites {}, whose binding records no findings file: re-sit the "
+            "dispute, or exclude {} with a reason that cites no verdict".format(
+                path, fid
+            )
         )
-    want = _finding_key(text)
-    if any(_finding_key(t) != want for t in texts):
+    body = _tree_text(root, rel, rev)
+    if body is None:
+        return "cites {}, whose recorded findings file {} cannot be read".format(
+            path, rel
+        )
+    found, why = _dispute.read_findings(body, rel)
+    if why:
+        return "cites {}, whose recorded findings file is refused: {}".format(path, why)
+    texts = [f["finding"] for f in found["findings"] if f["id"] == rid]
+    if not texts:
+        return "cites {}, whose recorded findings file {} records no finding {}".format(
+            path, rel, rid
+        )
+    if _finding_key(texts[0]) != _finding_key(text):
         return "cites {}, whose finding {} is not this review's {}".format(
             path, rid, fid
         )
@@ -561,10 +550,13 @@ def ruling_problem(root, cite, fid, text, rev=None, resolving=("DISMISS",)):
     (WI-911, the owner's ruling of 2026-10-14) - a FIX ruling is work a row
     covers, and an ESCALATE ruling is the owner's to decide - AND whose ruled
     finding is `fid` itself, as the
-    findings file beside the verdict records it (`_correspondence_problem`):
-    a dismissal of another finding, or of another round's finding under the
-    same id, resolves nothing. Read in the working tree, or at the commit
-    `rev` (the plan gate's pass record, judged against its parent).
+    findings file the verdict's binding records shows it
+    (`_correspondence_problem`): a dismissal of another finding, or of another
+    round's finding under the same id, resolves nothing, and a binding that
+    records no findings file refuses. No other findings file is read. The
+    verdict, its binding and the recorded file are read in one reading: the
+    working tree, or the commit `rev` (the plan gate's pass record, judged
+    against its parent).
 
     Implements: SR-236, LLR-069
     """
@@ -587,7 +579,7 @@ def ruling_problem(root, cite, fid, text, rev=None, resolving=("DISMISS",)):
         return "cites {}, which rules {} {}; only {} resolves a finding".format(
             path, rid, rulings[rid][0], " or ".join("a " + r for r in resolving)
         )
-    return _correspondence_problem(root, path, bound[1], rid, fid, text, rev)
+    return _correspondence_problem(root, path, binding_text, rid, fid, text, rev)
 
 
 def resolution_findings(name, excluded, root, clauses):

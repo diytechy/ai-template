@@ -2640,17 +2640,17 @@ rationale = "Combined brief composition, review verdict checking, merge-time dis
 owner = "scripts/kitlib/sitting"
 requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act", "scripts/held_status"]
 channel = "call"
-data = "verdict binding/path grammar; render_requested; read_identities; write_binding; accepted_identities; combined-scope and review-verdict readers"
+data = "binding/path grammar; requested, identity and findings-file cells; outcome; combined-scope and review-verdict readers"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "source - consumes no declared seam; pure functions. An identity cell is preserved when a pending binding is rewritten as accepted or failed; absent, malformed or repeated identities read as no identity with a reason."
+notes = "source - consumes no declared seam; pure functions. An identity cell is preserved when a pending binding is rewritten as accepted or failed; absent, malformed or repeated identities read as no identity with a reason. A findings-file record is carried the same way when a pending binding is rewritten as accepted or failed; an absent record reads as none."
 
 [interface.IF-290]
 owner = "scripts/kitlib/dispute"
 requestors = ["scripts/adjudicate_brief", "scripts/plan_coverage", "scripts/plan_gate", "scripts/review_brief"]
 channel = "call"
-data = "read_findings(text, where); request_line(ids); requested_ids(brief_text); parse(text, requested, where)"
+data = "read_findings(text, where); request_line(ids); file_line(path); requested_ids(brief_text); requested_file(brief_text); parse(text, requested, where)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"

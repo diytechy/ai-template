@@ -176,19 +176,24 @@ def cap(
     ruling="RULING: F1 DISMISS refuted the plan has the test",
     outcome="accepted",
     second=(MAJOR,),
+    recorded=True,
 ):
     """A plan through both critiques and a recorded dispute sitting over the
     second's BLOCKER and MAJOR findings, whose findings file the filing step
-    writes."""
+    writes. The binding records that file (`FINDINGS`) on its literal
+    `findings_file = <path>` line, or no record when `recorded` is False."""
     lane, text = second_critique(tmp_path, second)
     ids = blocking(text)
     positions = "".join("{}: Contested.\n".format(fid) for fid in ids)
     rb.write_dispute_findings(lane, WI, positions, FINDINGS)
     write(lane, VERDICT, "Judged.\n\n{}\n".format(ruling))
+    record = "findings_file = {}\n".format(FINDINGS) if recorded else ""
     write(
         lane,
         VERDICT + ".requested",
-        "brief = dispute\nkinds = {}\noutcome = {}\n".format(";".join(ids), outcome),
+        "brief = dispute\nkinds = {}\noutcome = {}\n{}".format(
+            ";".join(ids), outcome, record
+        ),
     )
     commit(lane, "the dispute sitting")
     return lane, text
@@ -240,6 +245,16 @@ def test_at_the_cap_a_successor_ruling_never_passes(tmp_path):
     said = str(refused.value)
     assert "rules it SUCCESSOR" in said and "only a DISMISS" in said, said
     assert "SUCCESSOR resolves" not in said and "or a SUCCESSOR" not in said, said
+    assert not (lane / pp.record_path(WI)).exists()
+
+
+def test_at_the_cap_a_dismissal_bound_without_its_findings_file_is_refused(tmp_path):
+    """The pass-record route reads the dispute at HEAD: a binding that records
+    no findings file refuses the dismissal by name, though `FINDINGS` beside
+    the verdict records the ruled finding, and no pass record is written."""
+    lane, _sha = cap(tmp_path, recorded=False)
+    with pytest.raises(rb.BriefError, match="records no findings file"):
+        rb.write_pass(lane, WI, VERDICT)
     assert not (lane / pp.record_path(WI)).exists()
 
 

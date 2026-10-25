@@ -9784,6 +9784,39 @@ matches the new one instead.
 **Kit-owned files — overwrite:** `scripts/consolidate.py` and
 `scripts/handback.py`.
 
+### A dispute sitting's binding records its findings file, and the coverage gate reads only that file [since a7c89a5da]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.**
+
+- The composed dispute brief names its findings file on a `FINDINGS-FILE:`
+  line, inside the existing `{request}` slot.
+- The binding beside a dispute verdict records that path
+  (`findings_file = <path>`), and the outcome rewrite keeps it.
+- An `F#` exclusion citing a dispute verdict is judged against that one
+  file. A binding without the record refuses the citation by name, and the
+  gate no longer reads other findings files beside the verdict.
+
+**What to do.**
+
+- A dispute sat before this change has no record, so a rework plan citing
+  it now refuses. Re-sit the finding through the kit's route, or exclude it
+  with a reason that cites no verdict.
+- Pass records already filed still pass the landing walk, since the plan
+  gate's check is unchanged.
+- A `--prompt-map` override of the dispute template needs no edit if it
+  renders `{request}`.
+- No setting or registry format changes.
+
+**Kit-owned files — overwrite:** `scripts/plan_coverage.py`,
+`scripts/kitlib/sitting.py`, `scripts/kitlib/dispute.py`,
+`scripts/adjudicate_brief.py`, `scripts/review_brief.py` and
+`scripts/coordinator_adjudicate.py` (docstrings only in the last two);
+`prompts/adjudicate-dispute.template.md` (its dispatcher note only). One
+`scope: this-repo` skill changed too, only if you vendored it:
+`skills/coordinator-cycle/`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
