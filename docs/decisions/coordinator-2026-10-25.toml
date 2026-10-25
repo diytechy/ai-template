@@ -88,3 +88,10 @@ alternative = "Reject the S4 finding as over-planning a text row."
 reversal_cost = "Low: a queued row's planmode before any claim."
 why_not_escalated = "The cycle's pre-claim rule (rulings 1 and 9); recorded for confirm or overrule."
 review = ""
+
+[decision.D-013]
+decided = "WI-979's confirming round (Codex Sol at medium, fresh, convergence stance, from the detached critique checkout at dc7e9db4b; log spooled) read APPROVE findings=0. Headless leg 22 claims WI-966, WI-971, WI-977 and WI-979 under one scoped unpause (owner direction 2026-10-04: a reviewed deletion of docs/work/pause, the claims, a byte-identical restore). WI-979 joins the queue table as a claim row beside the three the table names, as D-009 added WI-977: it is the queue's P6, filed and its critique passed this leg. Landing order: each changes machinery or text the cycle composes, so each lands alone, after the cycle has run through the last landing's changed step; WI-977 lands after WI-976, WI-966 before item 10 step 5."
+alternative = "Claim only the three rows the table names and leave WI-979 queued for the next leg."
+reversal_cost = "Low: a claimed lane with no commits can be handed back."
+why_not_escalated = "The session prompt's step 4 works P1 to P9 under their dependencies and claims a batch under one scoped unpause; recorded for confirm or overrule."
+review = ""
