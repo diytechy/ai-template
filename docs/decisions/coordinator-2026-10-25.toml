@@ -18,3 +18,10 @@ alternative = "Close WI-920 as settled on the matching inputs digest, without a 
 reversal_cost = "Low: a re-judge run and one observation record."
 why_not_escalated = "The row's own Method and the skill's section 1; recorded for confirm or overrule."
 review = ""
+
+[decision.D-003]
+decided = "Queue row 3's first filing, P3 (the review-churn plan's item 14), is filed as WI-976 from a planner-drafter's draft, confirmed against trunk at 2695213c6: one row kept whole on the owner's direction (one sitting, one owner act), anchored on SR-161 under SN-036, planmode single, no Trust section (no file gains authority over a hold, an act or a gate). The drafter found the plan's evidence short and the spec carries each gap: seven sidecars, not one (six written by the spine author under the coordinator recipe since 2026-10-21, and three first-approval sittings returned SRs for lacking one), TC-211's rubric and procedure, the roster tests' SAFETY pins, the prompt filler's literal-only slots, an amended need unreached by the applicability function, and uncommitted sitting briefs. Two calls the plan did not answer are taken by default for the owner to confirm or overrule: the six lane-authored sidecars stay as inert lane records under docs/plans/ (the ruling deleted only the one a builder wrote after the fact); and WI-684, held on OI-98, is not edited: the owner is asked under the handoff's For the owner to hold the FileBackup re-sync until WI-976 lands, so the one known adopter never receives the record."
+alternative = "Delete the six sidecars with the after-the-fact one; add WI-976 to WI-684's needs."
+reversal_cost = "Low: six inert files, one needs edge on a queued row."
+why_not_escalated = "Neither blocks the row's claim; both are recorded defaults the scope critique and the owner can turn; recorded for confirm or overrule."
+review = ""
