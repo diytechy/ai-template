@@ -8,6 +8,7 @@ needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
+planmode = "single"
 +++
 
 ## Context
@@ -107,10 +108,11 @@ rubric authority is item 12's build. No `## Trust` section.
 are a closed list. The new fragment section uses the existing tiers grammar
 (the closed tier set), and the brief's composition rule does not change.
 
-**S4.** No `planmode` line: no `## Trust` section, no promise over an
-input space, and no seam's form changes (IF-035's skill-directory shape,
-the single-plan template's seven slots, the fragment's grammar). One script
-family is touched, by one manifest data row; no code path is added.
+**S4.** `planmode = "single"`: the row touches two interface seams, the
+skill directory (IF-035), where it adds a skill, and the scaffold mapping
+(IF-262), where it adds a seeded destination, and the five rubric
+clarifications and two descent rules are judgements no cheap check fully
+specifies, so it plans in its lane first. Neither seam's form changes.
 
 **S5.** None of the four. No state; no domain value (the seeded files and
 the skill set are open member lists, not closed domains); no new input (the
@@ -121,6 +123,17 @@ single-plan prompt) have landed, the dry run is recorded and F-call 6 is
 ruled (revision 35). WI-976 (active, §2(c3)) and WI-978 (queued, §0) edit
 other sections of `spine-questions.md`: a merge order, not an edge. No new
 third-party dependency.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol at medium, 2026-10-25, headless leg 22;
+CHANGES-REQUESTED, findings=1):
+
+- F1 (MAJOR, S4 frontmatter and Scope answers): adopted — "planmode =
+  \"single\"", and S4 now reads "the row touches two interface seams, the
+  skill directory (IF-035), where it adds a skill, and the scaffold mapping
+  (IF-262), where it adds a seeded destination ...". The deliverable scope
+  is unchanged.
 
 ## Done-when
 

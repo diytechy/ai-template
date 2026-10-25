@@ -81,3 +81,10 @@ alternative = "Reject WI-971's planmode single as over-planning a no-behaviour c
 reversal_cost = "Low: queued rows' specs before any claim."
 why_not_escalated = "The cycle's pre-claim rule (rulings 1 and 9): adopted dispositions, confirmed by a fresh round; recorded for confirm or overrule."
 review = ""
+
+[decision.D-012]
+decided = "The confirming rounds of WI-966's and WI-971's scope critiques (Codex Sol at medium, fresh, convergence stance, from the detached critique checkout at 15fe570b2; logs spooled) read APPROVE findings=0, so both rows are claimable. WI-979's first scope critique (same route) read CHANGES-REQUESTED findings=1: a MAJOR at S4, since the row touches two interface seams (the skill directory, IF-035, and the scaffold mapping, IF-262) and its rubric clarifications are judgements no cheap check specifies; adopted in its Critique dispositions as planmode single with S4 rewritten, the deliverable scope unchanged. Its confirming round follows."
+alternative = "Reject the S4 finding as over-planning a text row."
+reversal_cost = "Low: a queued row's planmode before any claim."
+why_not_escalated = "The cycle's pre-claim rule (rulings 1 and 9); recorded for confirm or overrule."
+review = ""
