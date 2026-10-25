@@ -32,3 +32,10 @@ alternative = "Reject it as already settled by the Done-when's safe order."
 reversal_cost = "Low: two list items in a queued spec."
 why_not_escalated = "The skill's section 1: the advice binds before the claim; recorded for confirm or overrule."
 review = ""
+
+[decision.D-005]
+decided = "WI-976's confirming scope-critique round (Codex Sol at medium, fresh, convergence stance, from the detached critique checkout at 5755a78b6; log spooled) read APPROVE findings=0 over the adopted disposition, so the advice is bound and the row is claimable. The leg closes out here rather than filing P4 and P5: the context guard read 32 percent with the close-out's full suite, usage, handoff and folds still owed, and the queue's next rows (WI-976's claim, P4 and P5's filings, WI-966, WI-971) move without the owner, so the handoff carries no stop line."
+alternative = "File P4 in this leg before the close-out."
+reversal_cost = "Low: the next leg takes the row."
+why_not_escalated = "The cycle's own steps and the close-out threshold; recorded for confirm or overrule."
+review = ""

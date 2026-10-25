@@ -210,7 +210,17 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      output says the review was blocked): probe the same entry point with a
      one-command prompt (`git rev-parse HEAD`), then relaunch fresh on
      the same brief, and file nothing from the failed one (wi-946
-     D-012).
+     D-012). A Sol call that fails mid-review (exit 1, "Selected model
+     is at capacity") still commits its log, so HEAD has passed the
+     brief's pinned sha and a relaunch on that brief stops at the
+     reviewer's checkout identity check, filing nothing: re-render that
+     reviewer's brief at the record-only tip (the render finds the
+     attestation beneath it) and relaunch; the other reviewer's verdict
+     at the earlier sha stands, since the range between holds only call
+     logs, which the reading scope excludes (wi-878 D-008). A leg that
+     ends before its round is filed leaves nothing to file: the next
+     leg renders the round afresh at the same attested tip and records
+     it as that round (wi-878 D-004).
   4. File each: `"$PY" "$SCRIPTS/review_brief.py" file --review <verdict path> --sha <tip> --scope full --phase REVIEW-A`
      (or `--phase REVIEW-B`) writes `docs/reviews/<lane>/NNN-<phase>-<sha7>.md`.
      It refuses a review not opening `Reviewed: <full sha>`, or without
@@ -1304,6 +1314,18 @@ lane commit being replayed.
   - run the judges per width, at about 5k tokens a tile with
     `codex exec -i <png>`, splitting a 120-tile width by theme;
   - an anchor with only MINOR findings passes;
-  - the judges' model family differs from the rendering author's.
+  - the judges' model family differs from the rendering author's;
+  - a freshly added lane worktree has no `scripts/dashboard-shots/node_modules`
+    (gitignored): link it to the primary checkout's install with a
+    directory junction (PowerShell `New-Item -ItemType Junction`), never
+    a new install;
+  - a Claude operator sub-agent may render, tile, brief, launch the six
+    judges (`codex exec -m gpt-6-luna -c model_reasoning_effort=high -s
+    read-only`, each verdict captured with `-o`, all six children of
+    one foreground command that waits) and compile the record; it
+    judges nothing, and the adjudicator checks the sitting from its raw
+    material (WI-920). On 2026-10-25 no judge could run a shell command
+    in its sandbox, so every brief carries the rubric and the intent
+    verbatim and never relies on a judge reading the repository.
 - **TC-279:** the part population is `gen_arch_map.declaration_sites`, never a
   hand-written scan. Record the first result only after the case is approved.
