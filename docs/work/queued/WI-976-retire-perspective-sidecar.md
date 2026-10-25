@@ -114,12 +114,14 @@ direction ("one sitting, one owner act"), in this lane order:
    SAFETY in this repo's roster.
 4. The hat block in the two sitting templates' composition and in the
    spine-author prompt.
-5. TC-211's re-judge against this lane's own checkpoint sitting, an SN to
-   SR round (SN-036 is amended) and the first round to use deliverable 4.
-6. SN-036's act, which is the owner's (Done-when, "The owner-held step").
+5. SN-036's act, which is the owner's (Done-when, "The owner-held step"),
+   with the sitting's other acts.
+6. TC-211's re-judge after the acts, against this lane's own checkpoint
+   sitting, an SN to SR round (SN-036 is amended) and the first round to
+   use deliverable 4.
 
-Deliverables 3 to 5 hang from SR-161's amended text, which the one sitting
-judges, and 5's sample is 4's first use. A split would add a second sitting
+Deliverables 3, 4 and 6 hang from SR-161's amended text, which the one
+sitting judges, and 6's sample is 4's first use. A split would add a second sitting
 and, between its landings, leave Approved SR-161 asking for a record that
 no longer exists, or stating a brief the coordinator's path does not
 compose.
@@ -321,3 +323,15 @@ default)
   row.
 - [ ] The commit bar is green, and both strict lints are clean on the
   landing tip.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol, medium, fresh, from the detached
+critique checkout at `eada7b9cd`; coordinator-2026-10-25 D-004):
+CHANGES-REQUESTED, one MINOR.
+
+- **S1, the last two deliverables' order: adopted.** The deliverable list
+  now reads "5. SN-036's act, which is the owner's ..., with the sitting's
+  other acts. 6. TC-211's re-judge after the acts, against this lane's own
+  checkpoint sitting", matching the Done-when's "After the acts, a fresh
+  session ... inspects it".

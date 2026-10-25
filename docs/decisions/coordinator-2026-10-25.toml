@@ -25,3 +25,10 @@ alternative = "Delete the six sidecars with the after-the-fact one; add WI-976 t
 reversal_cost = "Low: six inert files, one needs edge on a queued row."
 why_not_escalated = "Neither blocks the row's claim; both are recorded defaults the scope critique and the owner can turn; recorded for confirm or overrule."
 review = ""
+
+[decision.D-004]
+decided = "WI-976's scope critique, round 1 (Codex Sol at medium, fresh, from the detached critique checkout at eada7b9cd; log spooled; verdict kept at review-tmp/2026-10-25a-leg19/crit976/WI-976-scope-critique.md) read CHANGES-REQUESTED, one MINOR (S1: the deliverable list put TC-211's re-judge before SN-036's act while the Done-when inspects after the acts). Adopted, as the spec's Critique dispositions section quotes: the last two deliverables swap, the owner's act fifth and the re-judge after the acts sixth. The spec stays within three times its filing size. A confirming round in convergence stance checks the adopted disposition before any claim."
+alternative = "Reject it as already settled by the Done-when's safe order."
+reversal_cost = "Low: two list items in a queued spec."
+why_not_escalated = "The skill's section 1: the advice binds before the claim; recorded for confirm or overrule."
+review = ""
