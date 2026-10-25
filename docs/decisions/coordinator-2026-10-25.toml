@@ -67,3 +67,17 @@ alternative = "Continue into P6's text filing in this leg, or leave WI-977 off t
 reversal_cost = "Low: a queue row's position."
 why_not_escalated = "The session prompt's step 4 works P1 to P9 under their dependencies; recorded for confirm or overrule."
 review = ""
+
+[decision.D-010]
+decided = "Headless leg 22 files the queue's P6 (plan item 12's text row) as WI-979, drafted by a fresh Claude Opus planner sub-agent from trunk 912792f0c and the W3 dry-run record, filed verbatim; its scope critique follows before any claim. The drafter's contestable calls, for the owner's confirm or overrule and for the critique: (1) the rubric ships as a seeded template (a new manifest row seeding docs/rubrics/architecture-decomposition.md, adopter-owned once seeded, as the rubric README is), not kit-owned and not inside the skill directory, so an adopter with no agent skills still has it; (2) the Architect role (revision 35), a matching line in the dual-plan planner template, the dry run's other anchor edits (A1, A2, A3, A5, B1 to B4) and item 11's terms in the spine-authoring rubric stay out, since the handoff's P6 list names none of them (the rubric's S7); (3) the plan-decomposition question becomes an anchor id beside the existing DELTA paragraph, so a delta finding has an anchor to cite; (4) spine-questions.md gains a section 4 composed into LLR briefs only, since the fragment grammar has no CMP or IF tier. The coordinator adds one call: the row lands alone under revision 37's rule, because it changes text two briefs the cycle composes (the single-plan prompt and the LLR adjudication questions)."
+alternative = "File P6 attended so the owner rules the drafter's calls first, or ship the rubric kit-owned."
+reversal_cost = "Low: a queued row's spec, re-scoped before any claim."
+why_not_escalated = "The queue table files P6 now and the scope critique judges the spec before the claim; each call goes to the owner as confirm or overrule."
+review = ""
+
+[decision.D-011]
+decided = "WI-966's and WI-971's scope critiques (Codex Sol at medium, fresh, from the detached critique checkout at 912792f0c; logs spooled) read CHANGES-REQUESTED, findings=3 and findings=2. Every finding is adopted in the spec's new Critique dispositions section, quoting the carrying text: WI-966 takes planmode none (the deletion exception), Done-when item 4 keeps SR-137's one-home, duplicate-declaration and invalid-dial obligations (retiring SR-137 only where the sitting names their surviving home), and a coverage bound on items 1 and 2; WI-971 takes planmode single and a Deliverables and order paragraph (the traversal owner first, the listing second, one landing, since both change one module). A fresh confirming round in convergence stance checks the adoptions before the claim."
+alternative = "Reject WI-971's planmode single as over-planning a no-behaviour consolidation."
+reversal_cost = "Low: queued rows' specs before any claim."
+why_not_escalated = "The cycle's pre-claim rule (rulings 1 and 9): adopted dispositions, confirmed by a fresh round; recorded for confirm or overrule."
+review = ""

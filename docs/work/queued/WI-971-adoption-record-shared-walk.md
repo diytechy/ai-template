@@ -7,6 +7,7 @@ specref = "docs/decisions/wi-969.toml"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 6
+planmode = "single"
 +++
 
 ## Context
@@ -32,6 +33,26 @@ fixed after the gate.
 
 Anchor: SR-148 (LLR-345 is the commit rule's one home). The row changes
 no behaviour.
+
+**Deliverables and order.** The traversal owner (Done-when item 1) is
+built and committed first, the work-spec listing (item 2) second. They
+stay one row and one landing because both remove duplication from the same
+module, `adoption_record`, whose rider registration and spec reads change
+together, and one review cycle over that module costs less than two; each
+stage keeps the bar green alone.
+
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol at medium, 2026-10-25, headless leg 22;
+CHANGES-REQUESTED, findings=2):
+
+- F1 (MAJOR, S4 frontmatter): adopted — "planmode = \"single\"". The row
+  builds shared constructions across four script families'
+  (`text_then_act`, `adoption_record`, `plan_gate`, `acceptance_record`)
+  differing caller policies, so it plans in its lane first.
+- F2 (MINOR, S1): adopted — "**Deliverables and order.** The traversal
+  owner (Done-when item 1) is built and committed first, the work-spec
+  listing (item 2) second. They stay one row and one landing because ...".
 
 ## Done-when
 

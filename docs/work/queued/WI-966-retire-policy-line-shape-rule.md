@@ -8,6 +8,7 @@ needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
+planmode = "none"
 +++
 
 ## Context
@@ -52,6 +53,24 @@ amendment or retirement is judged at this row's sitting.
 Its scope critique (S1 to S6, `planmode` decided at S4) runs before its
 claim.
 
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol at medium, 2026-10-25, headless leg 22;
+CHANGES-REQUESTED, findings=3):
+
+- F1 (MAJOR, S4 frontmatter): adopted — "planmode = \"none\"", the
+  deletion exception: the parsed reading the hooks already take stays, and
+  no new code path is constructed.
+- F2 (MAJOR, S5 Done-when item 4): adopted — "SR-137's obsolete line-shape
+  and two-reader clauses are removed while its one-home,
+  duplicate-declaration and invalid-dial obligations are kept; SR-137 is
+  retired only if the sitting names the approved row that already states
+  each of them".
+- F3 (MINOR, S3 Done-when items 1 and 2): adopted — "Coverage bound: the
+  promise reaches the policy files supported workflows and the kit's own
+  routes produce (PROCESS.md §6); a hand-edited kit-written state file,
+  hand-chosen name aliases and sub-second timing windows are outside it."
+
 ## Done-when
 
 - [ ] No kit reader refuses or reads a policy file by its line shape:
@@ -60,10 +79,16 @@ claim.
   remaining readers read the parse alone.
 - [ ] A dotted key, an inline table or a multi-line string in the policy
   file is read as the TOML parser reads it, by every reader; no hook or
-  checker refuses it for its shape.
+  checker refuses it for its shape. Coverage bound: the promise reaches
+  the policy files supported workflows and the kit's own routes produce
+  (PROCESS.md §6); a hand-edited kit-written state file, hand-chosen name
+  aliases and sub-second timing windows are outside it.
 - [ ] Every shipped and repo text listed under Context that states the
   shape rule or the hooks' text read is rewritten or removed.
-- [ ] SR-137 is retired or amended, IF-037's `data` cell amended, and
+- [ ] SR-137's obsolete line-shape and two-reader clauses are removed
+  while its one-home, duplicate-declaration and invalid-dial obligations
+  are kept; SR-137 is retired only if the sitting names the approved row
+  that already states each of them. IF-037's `data` cell is amended, and
   SN-028's and SR-031's premise wording corrected, each judged at the
   lane's sitting (SN-028 at the owner's rung if it is held).
 - [ ] One RESYNC entry: what an adopter's policy file may now contain, and
