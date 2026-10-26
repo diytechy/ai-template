@@ -25,3 +25,10 @@ alternative = "Defer the filings to an attended session."
 reversal_cost = "Low: two queued rows the owner may re-scope or cancel."
 why_not_escalated = "The cycle files successors at the landing (SKILL section 4, step 4); the self-judging disclosure is listed for the owner."
 review = ""
+
+[decision.D-004]
+decided = "Headless leg 24 closes out on the Codex account's usage limit (first met at 06:44 local on 2026-10-26, its reset named 2026-11-02 00:00 local, re-probed at 08:00 and 08:49): every remaining queue row needs a Codex call or the owner. WI-966's next step is the checkpoint's Terra reconcile, and WI-977's is the rest of its Terra intent turn; the spine-author role has no stated substitute, so neither moves, and rows 1 to 3 hold for the owner as before. The new handoff carries `Resume-not-before: 2026-11-02T00:05` (the launcher's wait for a Codex limit, SKILL section 7), not `Overnight: stop`, since rows move again at the reset without the owner. The close-out runs no full suite: no code changed on trunk this leg (the lane's code is reviewed and suite-run at its landing)."
+alternative = "Fill the spine-author slot with a Claude session for WI-966's reconcile and WI-977's intent, by analogy to the REVIEW-A relaxation."
+reversal_cost = "Low: the owner may switch the Codex account (codex logout, codex login) and restart the launcher before the reset, or rule a spine-author substitute."
+why_not_escalated = "The launcher's own Codex-limit contract; listed for the owner, who may move it sooner."
+review = ""

@@ -151,6 +151,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     (wi-940 D-002).
   - `mkprompt.py` takes `LANE=<branch>` (`wi-912`), never the worktree
     path, which builds a broken `--basetemp` (`C:-Projects-...`).
+  - A large set can come back part done: a 23-row intent turn amended 15
+    rows and said so, and its shell's short tool window cut off the
+    strict lints and pytest under load. Check the final message against
+    the plan's row list before committing, tell a resumed turn to skip
+    the lints and pytest, and run them yourself (wi-977 D-002).
 - **Terra, resumed:**
   `"$PY" "$TOOLS/codex_call.py" AUTHOR --resume --root <lane> --wi WI-NNN --prompt-file <prompt> --out <out>`.
   It continues the thread of the lane's newest Terra log committed at
@@ -249,6 +254,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     D-005).
   - With Codex capacity short, run two lanes' REVIEW-A sessions one at a
     time, so a usage limit takes out at most one review.
+  - When the two reviewers run one after the other (a Claude REVIEW-A
+    while Codex is out), move the first one's filed round file outside
+    the lane until the second has written its verdict, then put it back
+    and file the second (wi-966 D-007).
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
   add the skill's two scope and trust questions, and send it to a fresh Sol
@@ -1182,6 +1191,12 @@ lane commit being replayed.
   record.
 - **Codex usage limit:** wait for the reset the CLI error names. Retain
   Terra; observed session counts are not a quota.
+  A reset days away (2026-10-26: a week) stops every Terra turn, which
+  has no stand-in. Probe again after two hours (a one-word `CRITIQUE`
+  call); then a Claude reviewer may fill REVIEW-A, but each lane whose
+  next step is Terra's stops at a committed safe point, and the leg
+  closes out with a `Resume-not-before:` line at the reset
+  (coordinator-2026-10-26 D-004).
   Every Codex call runs through the `codex` CLI on `PATH`; the owner switches
   accounts with `codex logout` and `codex login`.
 - **Background or foreground.** In an attended session, start each Codex call
