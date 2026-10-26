@@ -413,6 +413,16 @@ def test_a_convergence_tagged_finding_files_with_its_count_unchanged(tmp_path):
     assert "| 1 | REVIEW-B | `abcdef0` | CHANGES-REQUESTED | 1 |" in rolled
 
 
+# The scope rubric's delta question, as S5 asks it; the pointer to the shared
+# rubric is appended after it and leaves it unchanged.
+S5_QUESTION = (
+    "Does the WI add a state, add a value to a domain, make an output depend on "
+    "a new input, or cross a new boundary? Within the row's scope, the spec "
+    "carries the change. Beyond it, a refactor row is filed on trunk before the "
+    "claim."
+)
+
+
 def test_the_scope_rubric_names_every_registry_the_critique_brief_renders(tmp_path):
     # The live rubric's artifact line names each registry the brief renders,
     # and the rubric declares the anchors the review-churn rulings added.
@@ -454,6 +464,12 @@ def test_the_scope_rubric_names_every_registry_the_critique_brief_renders(tmp_pa
         "a Done-when gap, and a supported workflow or the kit's own routes reach "
         "it; anything else is MINOR."
     ) in verdict
+    # S5 keeps its question verbatim and points at the shared rubric and the
+    # author's procedure for answering it.
+    s5 = " ".join(live[live.index("**S5 —") : live.index("**S6 —")].split())
+    assert S5_QUESTION in s5
+    assert "](architecture-decomposition.md)" in s5
+    assert "`architecture-decomposition` skill" in s5
 
 
 # --- filing a review as a kit round file -----------------------------------------

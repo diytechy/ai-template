@@ -30,7 +30,7 @@ is a refusal rather than a silently empty instruction.
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-REJUDGE` | [adjudicate-rejudge.template.md](adjudicate-rejudge.template.md) | `sha256:5a1e40710449` | `{case}`, `{reason}`, `{tc}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:58eb6e1b0a8f` | `{brief}`, `{verdict}` |
-| `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:46b8f19d14de` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
+| `PLAN-SINGLE` | [plan-single.template.md](plan-single.template.md) | `sha256:b240ed4cb2a3` | `{clauses}`, `{inputs}`, `{plan}`, `{revision}`, `{spec}`, `{title}`, `{wi}` |
 | `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:e125a41b7023` | `{head}`, `{process_doc}`, `{round_facts}`, `{scripts}`, `{trunk}`, `{verdict}`, `{wis}` |
 | `WORKER` | [worker.template.md](worker.template.md) | `sha256:98df1503e211` | `{assignment_block}`, `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{scripts}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
@@ -44,7 +44,7 @@ no key and no override. An absent or unreadable fragment fails generation and
 
 | File | Digest | Fills |
 |---|---|---|
-| [spine-questions.md](spine-questions.md) | `sha256:7f64f09126d3` | `{questions}` |
+| [spine-questions.md](spine-questions.md) | `sha256:64cacf17fbe6` | `{questions}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

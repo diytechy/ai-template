@@ -305,6 +305,11 @@ MAPPING = [
     # -000 file, so a fresh scaffold that never uses Critique carries it for free.
     ("rubrics/README.template.md", "docs/rubrics/README.md"),
     ("rubrics/rubric-000.template.md", "docs/rubrics/rubric-000.md"),
+    (
+        "rubrics/architecture-decomposition.template.md",
+        "docs/rubrics/architecture-decomposition.md",
+        "SR-186",
+    ),
     # THE SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed WI-448) —
     # AND THIS BLOCK IS THE WHOLE DOWNSTREAM RISK SURFACE OF THAT RULING.
     #

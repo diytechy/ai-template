@@ -17,7 +17,8 @@
      docs/status.md, docs/log.md or a session note.
 
      DO NOT RE-WRAP the delta question: it is asked in the review-churn plan
-     item 12 entry point 2's own words, and a test pins them.
+     item 12 entry point 2's own words, and a test pins them; the skill line
+     beside it, naming each agent's copy of the skill, is pinned too.
 -->
 
 You are the PLANNER for one claimed work item, {wi} — {title}. You are a fresh session: you did not write its spec and you will not build it. Read the spec `{spec}` in full, with its `specref` target and any owner ruling or adjudicator draft it quotes. Do not read docs/status.md, docs/log.md or any session note.
@@ -42,6 +43,8 @@ THE ARCHITECTURAL-DELTA QUESTION. Answer it in this plan, and again in any revis
 
 - **Within its scope:** the plan carries the architecture change explicitly — the interface and domain edits, perhaps a sub-component split — as rows of the table.
 - **Beyond its scope:** the change needs a refactor this work item does not own. Say so and stop: the lane closes partial, and the refactor is drafted as its own successor. Do not plan around it.
+
+Answer it by following the `architecture-decomposition` skill: `.claude/skills/architecture-decomposition/SKILL.md`, or the same file under `.agents/skills/` or `.gemini/skills/` for your agent.
 
 State the answer on one line of its own, exactly one of:
 

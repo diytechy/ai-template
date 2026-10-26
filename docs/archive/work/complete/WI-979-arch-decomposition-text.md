@@ -3,13 +3,30 @@ id = "WI-979"
 title = "Architectural decomposition, text: the shared rubric with the W3 dry run's five clarifications and the requirement-versus-component descent split, the architecture-decomposition skill, and four one-line pointers to them"
 workstream = "process"
 sr_refs = ["SR-186", "SR-165"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#12-architectural-decomposition-encouraged-at-three-moments"
+specref = ""
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+The `architecture-decomposition` rubric ships as a seeded template
+(`docs/rubrics/architecture-decomposition.md`, adopter-owned once seeded),
+with the W3 dry run's five clarifications in A4, A6 and A7 and A8 split
+into requirement descent (the four tests) and component descent (no
+information-hiding cut pays its way), its stopping record named. The
+`architecture-decomposition` skill ships (scope kit) with its two
+materialized copies; `spine-questions.md` gains section 4, put only to the
+first LLR sitting at a component scope or a re-cut; the scope critique's
+S5 and the plan-decomposition rubric (G5) point at the rubric, and the
+single-plan prompt names the skill. One RESYNC entry. Built from its
+single plan (critique 2 after a link fix), tests first; round 1 (a
+reach-graded MAJOR fixed with three MINORs), round 2 at the rebased tip
+(Codex Sol APPROVE, Claude Opus MINOR-only). No row text changed, so no
+sitting. Decisions: `docs/decisions/wi-979.toml` D-001 to D-003.
 
 ## Context
 
@@ -137,23 +154,23 @@ CHANGES-REQUESTED, findings=1):
 
 ## Done-when
 
-- [ ] `project-trajectory/rubrics/architecture-decomposition.template.md`
+- [x] `project-trajectory/rubrics/architecture-decomposition.template.md`
   holds the rubric, written from `rubric-draft.md`, and one MAPPING row
   seeds it to `docs/rubrics/architecture-decomposition.md`. This repo's copy
   is byte-identical and pinned in `BOILERPLATE_COPIES`. The scaffold test
   sees the new destination.
-- [ ] The rubric's A4, A6, A7 and A8 carry the five clarifications above,
+- [x] The rubric's A4, A6, A7 and A8 carry the five clarifications above,
   each one findable in the anchor that asks it. No B pattern is added for
   them.
-- [ ] The rubric's A8 separates requirement descent (tests 1 to 4) from
+- [x] The rubric's A8 separates requirement descent (tests 1 to 4) from
   component descent (no information-hiding cut pays its way after the
   A1/A4/A7 comparison), and its stopping record names the candidate
   children, the evidence, the remaining uncertainty and what would trigger a
   revisit.
-- [ ] The rubric's references read correctly in an adopter's repo
+- [x] The rubric's references read correctly in an adopter's repo
   (`process.md` §N, `prompts/spine-questions.md` §3, its sibling
   `README.md`), and `check_docs` finds no broken link.
-- [ ] `project-trajectory/skills/architecture-decomposition/SKILL.md` is
+- [x] `project-trajectory/skills/architecture-decomposition/SKILL.md` is
   `scope: kit` and walks four steps: name the mode classes, state each
   boundary's value domain, tabulate output against input dependencies, and
   apply A8's two descent tests. It records each output only in a home that
@@ -161,26 +178,26 @@ CHANGES-REQUESTED, findings=1):
   points to `deep-module-design` for the code level. Its `description`
   triggers on planning a work item and on DevStg-Arch, and clears the
   description floor. `INDEX.csv` is regenerated.
-- [ ] The skill is materialized into this repo's `.claude/skills/` and
+- [x] The skill is materialized into this repo's `.claude/skills/` and
   `.agents/skills/`, and `gen_skills_index.py --check-agents` is clean.
-- [ ] `spine-questions.md` gains `## 4.` (DevStg-Arch) with an `LLR` tiers
+- [x] `spine-questions.md` gains `## 4.` (DevStg-Arch) with an `LLR` tiers
   line and a single line that points the adjudicator at the rubric. Sections
   0 to 3 keep their numbers.
-- [ ] `plan-decomposition.md` gains an anchor that judges the plan's
+- [x] `plan-decomposition.md` gains an anchor that judges the plan's
   `DELTA:` answer against the shared rubric, so a delta finding has an
   anchor id to cite. The existing delta paragraph keeps its wording.
-- [ ] S5 in `scope-critique.md` gains one sentence pointing at the rubric
+- [x] S5 in `scope-critique.md` gains one sentence pointing at the rubric
   and the skill. The question's own words are unchanged.
-- [ ] `plan-single.template.md` gains one line beside the delta question
+- [x] `plan-single.template.md` gains one line beside the delta question
   naming the skill, by a path that resolves in this repo and in a scaffold
   with an agent selected. `test_plan_pass`'s `DELTA_QUESTION` pin holds, and
   `prompts/CATALOG.md` is regenerated.
-- [ ] One RESYNC entry covers what an adopter does:
+- [x] One RESYNC entry covers what an adopter does:
   - the add-only re-run seeds the rubric, which is theirs from then on;
   - `bootstrap.py --agents <yours>` materializes the skill;
   - `plan-single` and `spine-questions` are kit-owned and are overwritten;
   - an adopter with its own scope or plan rubric may add the pointers in its
     own words;
   - nothing migrates.
-- [ ] `run.cmd smoke` is green, and `trace.py --strict` and
+- [x] `run.cmd smoke` is green, and `trace.py --strict` and
   `check_trajectory.py --strict` are clean on the landing tip.

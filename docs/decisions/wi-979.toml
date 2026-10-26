@@ -1,0 +1,26 @@
+# docs/decisions/wi-979.toml — delegated calls the coordinator made in the
+# wi-979 lane (headless leg 22 of loop session 20261025T055732Z-64b2b6).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "The plan's first pass record (critique 1, APPROVE) was removed after the tests stage found the committed plan's three quoted suggestion links ([architecture-decomposition](architecture-decomposition.md)) resolving from docs/plans/WI-979/, where check_docs reds the bar; the coordinator made them code spans (no other byte changed), which unbinds the record, so a fresh critique 2 in convergence stance (Codex Sol at medium) judged the edited plan and read APPROVE findings=0, and its pass record binds the build. Round 1's REVIEW-B is a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008); REVIEW-A is Codex Sol at medium."
+alternative = "Leave the plan red and allow the links, or skip the second critique as a no-content edit."
+reversal_cost = "Low: plan records in the lane."
+why_not_escalated = "The single-plan rule: an edited plan unbinds its record and a fresh critique passes it; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "Round 1 (001 REVIEW-A APPROVE findings=0; 002 REVIEW-B APPROVE findings=5, all MINOR). The coordinator re-grades REVIEW-B's first finding (spine-questions section 4 is put to every LLR sitting unconditionally, where its own note scopes it to the first LLR sitting at a component scope) to MAJOR by reachability: every LLR first-approval and amendment sitting the cycle runs reaches it, and an unanswerable A8 record question there returns rows in the cycle's own sittings (PROCESS.md section 6: severity tracks reachability). So a fix round is owed. The fix round also takes the finding's sibling MINORs that are one-line text fixes at their cited sites (the skill line's placement in the single-plan prompt, bootstrap.py's layout docstring, the skill's 'two descent tests' wording); the test-helper duplication MINOR goes to status.md's follow-ups as a consolidation. Round 2 runs as an ordinary counted round."
+alternative = "Keep the reviewer's MINOR grade and land the text, filing the applies-when sentence as a follow-up."
+reversal_cost = "Medium: one fix round and one review round in the lane."
+why_not_escalated = "The coordinator triages under the review threat model; recorded high risk for the owner's confirm or overrule, since it raises a reviewer's grade."
+review = ""
+
+[decision.D-003]
+decided = "Fix round 1 answered round 1's findings 1, 2, 4 and 5 from one coverage plan (plan_coverage --findings exit 0, re-run by the coordinator; finding 3 excluded as a consolidation follow-up), each with a test that fails on the pre-fix text. The lane then rebased onto trunk deebc18f6 (WI-971's landing; one RESYNC conflict resolved as both entries, trunk's first, the lane's re-anchored at the new base) and round 2 ran as an ordinary counted round at the attested rebased tip f0a05a1: 003 REVIEW-A (Codex Sol at medium) APPROVE findings=0 and 004 REVIEW-B (Claude Opus at high, the Gemini slot's stand-in) APPROVE findings=3, all MINOR, which go to status.md's follow-ups: the skill's 'each step answers one clause' sentence; A7's insufficient-evidence outcome is not mapped onto the verdict line; and the record-id pattern and A8 labels are declared in two test modules (with round 1's finding 3). No sitting is owed (no row text changed), so the tip round 2 reviewed is the tip that lands."
+alternative = "Fix the round 2 MINORs and run round 3."
+reversal_cost = "Low: follow-ups only."
+why_not_escalated = "MINORs never cost a round (ruling 4); recorded for confirm or overrule."
+review = ""

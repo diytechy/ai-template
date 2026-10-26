@@ -698,6 +698,46 @@ def test_every_tier_receives_the_one_naming_rule():
             assert stale not in flat, (tier, stale)
 
 
+def test_the_arch_section_points_at_the_rubric_and_restates_nothing():
+    """The architecture stage's section of the tier-questions home is one line
+    pointing at the shared rubric, served to LLR sittings only, and appended
+    so sections 0 to 3 keep the numbers other kit text cites. The line states
+    in its own sentence which LLR sittings it judges, and that elsewhere an
+    absent decomposition record is not supplied, never a return.
+
+    Adequacy: a section that copied the rubric's anchors would be a second
+    home for them; one inserted before section 3 would renumber it; one
+    declaring `*` would reach SN and SR sittings that judge no scope; a line
+    with no applies-when would put the rubric's stopping-record question to
+    every LLR sitting, including an amendment inside an existing leaf."""
+    home = (KIT / "prompts" / "spine-questions.md").read_text(encoding="utf-8")
+    body = pr.strip_dispatcher_block(home)
+    heads = [line for line in body.splitlines() if line.startswith("## ")]
+    assert [h.split(" ", 2)[1] for h in heads[:5]] == ["0.", "1.", "2.", "3.", "4."]
+    assert heads[4].startswith("## 4. At DevStg-Arch")
+    section = body[body.index(heads[4]) :].split("\n## ", 1)[0]
+    lines = section.splitlines()
+    assert lines[1] == "<!-- tiers: LLR -->"
+    content = [line for line in lines[2:] if line.strip()]
+    assert len(content) == 1, content
+    assert "docs/rubrics/architecture-decomposition.md" in content[0]
+    line = " ".join(content[0].split())
+    for applies_when in (
+        "the first LLR sitting at a component scope",
+        "or one that re-cuts it",
+        "*not supplied*",
+        "A4",
+        "never a ground for `RETURN`",
+    ):
+        assert applies_when in line, applies_when
+    llr, why = adjudicate_brief.tier_questions({"LLR"})
+    assert why is None, why
+    assert content[0] in llr
+    sr, why = adjudicate_brief.tier_questions({"SR"})
+    assert why is None, why
+    assert content[0] not in sr and "## 4." not in sr
+
+
 def test_the_record_at_event_rule_has_one_home():
     # WI-911 (review-churn ruling 2): PROCESS.md §3 states it once, directly
     # after "When a guard is owed".

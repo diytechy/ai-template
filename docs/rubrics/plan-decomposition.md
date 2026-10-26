@@ -60,6 +60,18 @@ consumes), and no real dependency is missing. `plan_coverage.py` catches
 unknown ids and cycles; the phantom edge and the missing edge are judgment
 calls.
 
+**G5 — The delta answer holds against the shared rubric.** A single plan's
+`DELTA:` line is judged against
+[architecture-decomposition](architecture-decomposition.md). Each of these is
+a G5 finding, citing the rubric anchor it rests on:
+- a `none` that a row contradicts, because the row adds a mode class (A2), a
+  domain case (A3), a dependency cell (A4) or a boundary interface (A6);
+- a `within` whose rows do not carry the interface and domain edits;
+- a `beyond` that plans around the refactor.
+
+The planner's procedure for the answer is the `architecture-decomposition`
+skill.
+
 **B1 — Seam duplication** *(imports
 [spec-interface-hygiene](spec-interface-hygiene.md) B1).* A row's `Proposed:`
 seam near-duplicates an existing `IF-###` instead of consuming or amending it,

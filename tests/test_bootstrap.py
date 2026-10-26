@@ -108,6 +108,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/knowledge/README.md",
         "docs/rubrics/README.md",
         "docs/rubrics/rubric-000.md",
+        "docs/rubrics/architecture-decomposition.md",
         "docs/test/test-cases.toml",
         # The shared helper package (WI-448) — every module, because a
         # PARTIAL copy is the failure mode: the scripts import

@@ -40,6 +40,11 @@ A rubric file is `rubric-<name>.md` (see the worked example
   that produce the screenshot/render/output under judgment) — the rubric names the
   bar, the TC names how to produce what's judged.
 
+The kit also seeds one shared rubric,
+[`architecture-decomposition.md`](architecture-decomposition.md): the bar a
+component scope's decomposition is judged against at `DevStg-Arch`, when a work
+item's plan answers its architectural-delta question, and in an audit.
+
 ## The accumulation rule (the reference builds over time)
 
 A critique finding that names a **new** failure mode is added to the rubric's

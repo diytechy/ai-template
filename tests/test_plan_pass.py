@@ -11,7 +11,7 @@ arms of the gate and the filing step are in `test_plan_gate.py` and
 import re
 
 import pytest
-from conftest import KIT, load_script
+from conftest import KIT, ROOT, load_script
 
 rb = load_script("review_brief")
 pr = load_script("prompts")
@@ -41,6 +41,7 @@ planmode = "single"
 - The gate holds the build.
 - The record releases it.
 """
+
 # Review-churn plan item 12, entry point 2: the delta question in its own words.
 DELTA_QUESTION = (
     "does the WI add a state, add a value to a domain, make an output depend "
@@ -157,6 +158,7 @@ def test_the_planner_brief_carries_the_clauses_the_contract_and_the_delta_questi
     assert "Plan-WI" in text and "Excludes:" in text
     assert DELTA_QUESTION in " ".join(text.split())
     assert "DELTA: none" in text and "DELTA: beyond" in text
+    assert "architecture-decomposition/SKILL.md" in text
     assert "SR-001" in text
     assert "REVISION MODE" not in text
 
@@ -233,12 +235,51 @@ def test_the_command_writes_nothing_when_the_brief_refuses(tmp_path):
     assert not out.exists()
 
 
-def test_the_shipped_planner_template_names_no_skill_and_no_row_of_this_repo():
+def test_the_shipped_planner_template_names_the_architecture_skill_by_its_agent_paths_and_no_row_of_this_repo():
+    """The planner answers the delta question by the architecture-decomposition
+    skill, named at the path each agent's copy has, after the question's two
+    outcome bullets and before the one-line answer it asks for.
+
+    Adequacy: a line naming only one agent's directory sends the other agents'
+    planners to a file their scaffold does not have; a line between "two
+    outcomes:" and its bullets opens that list with an unrelated sentence."""
     text = pr.load(pr.PLAN_SINGLE)
     raw = (KIT / "prompts" / "plan-single.template.md").read_text(encoding="utf-8")
-    assert "skill" not in raw.lower()
-    assert DELTA_QUESTION in " ".join(text.split())
+    assert "architecture-decomposition/SKILL.md" in raw
+    for spec in load_script("bootstrap").AGENTS.values():
+        assert spec["skills_dir"] in raw, spec["skills_dir"]
+    flat = " ".join(text.split())
+    assert DELTA_QUESTION in flat
+    skill = flat.index("architecture-decomposition/SKILL.md")
+    assert flat.index(DELTA_QUESTION) < flat.index("**Beyond its scope:**") < skill
+    assert (
+        skill < flat.index("State the answer on one line") < flat.index("DELTA: none")
+    )
+    assert (ROOT / ".claude/skills/architecture-decomposition/SKILL.md").is_file()
     assert not re.search(r"\b(?:WI|SR|LLR|TC|IF|OI)-\d+\b", raw)
+
+
+def test_the_plan_rubric_judges_the_delta_line_against_the_shared_rubric():
+    """This repository's plan rubric judges a single plan's `DELTA:` line
+    against the shared rubric under its own good anchor, and keeps the second
+    use's delta question as it reads.
+
+    Adequacy: a G5 that restated the delta question without linking the
+    shared rubric would leave the critic no anchors to cite."""
+    live = (ROOT / "docs" / "rubrics" / "plan-decomposition.md").read_text(
+        encoding="utf-8"
+    )
+    assert "**G5 —" in live
+    start = live.index("**G5 —")
+    after = re.search(r"\n\*\*[A-Z]\d+ —|\n## ", live[start + 1 :])
+    g5 = live[start : start + 1 + after.start() if after else len(live)]
+    assert "](architecture-decomposition.md)" in g5
+    assert "DELTA:" in g5
+    assert (
+        "does the work item add a state, add a value to a domain, make an output "
+        "depend on a new input, or cross a new boundary, and if so does the plan "
+        "carry the change within its scope?"
+    ) in " ".join(live.split())
 
 
 def test_the_planner_template_is_in_the_generated_catalogue():

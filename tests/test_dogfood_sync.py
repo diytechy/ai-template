@@ -782,6 +782,9 @@ BOILERPLATE_COPIES = {
     "docs/specs/WI-000.md": "project-trajectory/specs/WI-000.template.md",
     "docs/rubrics/README.md": "project-trajectory/rubrics/README.template.md",
     "docs/rubrics/rubric-000.md": "project-trajectory/rubrics/rubric-000.template.md",
+    "docs/rubrics/architecture-decomposition.md": (
+        "project-trajectory/rubrics/architecture-decomposition.template.md"
+    ),
 }
 
 
@@ -800,6 +803,8 @@ def _without_contract_header(data):
 
 @pytest.mark.parametrize("live_rel,tmpl_rel", sorted(BOILERPLATE_COPIES.items()))
 def test_dogfooded_boilerplate_matches_template(live_rel, tmpl_rel):
+    for rel in (live_rel, tmpl_rel):
+        assert (ROOT / rel).is_file(), "{} is missing".format(rel)
     live = _without_contract_header((ROOT / live_rel).read_bytes())
     assert live == (ROOT / tmpl_rel).read_bytes(), (
         "{} drifted from {} — re-copy it (or demote this entry with a recorded "

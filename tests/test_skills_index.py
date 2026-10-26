@@ -120,3 +120,58 @@ def test_gate_advance_names_the_stage_gate_rejudge_step():
     body = text.split("---", 2)[2]
     assert "python scripts/intake.py rejudge --checkpoint stage-gate" in body
     assert "required" in body
+
+
+_RECORD_ID = re.compile(r"\b(?:WI|SN|SR|LLR|TC|IF|OI|CMP)-\d+\b")
+_RUBRIC = KIT / "rubrics" / "architecture-decomposition.template.md"
+_A8_TESTS = (
+    "A describable state",
+    "An invented number",
+    "A paraphrase",
+    "No pass/fail of its own",
+)
+
+
+def test_architecture_decomposition_skill_walks_four_steps_and_cites_the_rubric():
+    """The skill is the author's procedure; the rubric is the bar. The skill
+    cites the rubric's anchors by id, writes each step's result to a home the
+    project already has, and restates no anchor.
+
+    Adequacy: a skill that copied an anchor's title or one of A8's test labels
+    into its body would be a second home for the rubric's text, and the first
+    rubric edit would leave it stale."""
+    skill_md = SKILLS / "architecture-decomposition" / "SKILL.md"
+    assert skill_md.is_file(), "the kit ships no architecture-decomposition skill"
+    text = skill_md.read_text(encoding="utf-8")
+    fm = load_script("gen_skills_index").parse_frontmatter(text)
+    assert fm.get("scope") == "kit"
+    assert "planning a work item" in fm.get("description", "")
+    assert "DevStg-Arch" in fm.get("description", "")
+    body = text.split("---", 2)[2]
+    # A8 holds two descent rules, the first of them four tests.
+    for where in (fm.get("description", ""), body):
+        assert "two descent rules" in where
+        assert "two descent tests" not in where
+    for cited in (
+        "docs/rubrics/architecture-decomposition.md",
+        "A2",
+        "A3",
+        "A4",
+        "A8",
+        "deep-module-design",
+        "docs/runtime-flows.md",
+        "docs/requirements/interfaces.toml",
+    ):
+        assert cited in body, cited
+    rubric = " ".join(_RUBRIC.read_text(encoding="utf-8").split())
+    titles = re.findall(r"\*\*A\d+ — (.+?)\.\*\*", rubric)
+    assert titles, "the rubric declares no anchor heads"
+    flat = " ".join(body.split())
+    for title in titles + list(_A8_TESTS):
+        assert title not in flat, title
+    assert _RECORD_ID.findall(body) == []
+    names = [
+        name
+        for name, _path in load_script("bootstrap").select_skills(None, None, False)
+    ]
+    assert "architecture-decomposition" in names

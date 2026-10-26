@@ -1928,19 +1928,27 @@ _SN_HEAD = "## 1. At SN intake"
 _SR_HEAD = "## 2. At SR derivation"
 _LLR_HEAD = "## 3. At LLR and TC"
 _EVERY_HEAD = "## 0. Every row"
+_ARCH_HEAD = "## 4. At DevStg-Arch"
+
+# The architecture-stage section serves the LLR tier: the first LLR sitting at
+# a component scope, or one that re-cuts it, is the act a decomposition
+# judgement feeds; at any other LLR sitting the decomposition record is not
+# supplied, never a ground for a return.
 
 
 def _heads(text):
-    return [h for h in (_EVERY_HEAD, _SN_HEAD, _SR_HEAD, _LLR_HEAD) if h in text]
+    heads = (_EVERY_HEAD, _SN_HEAD, _SR_HEAD, _LLR_HEAD, _ARCH_HEAD)
+    return [h for h in heads if h in text]
 
 
 def test_a_first_approval_brief_carries_the_questions_for_its_rows_tiers(tmp_path):
-    # The row judged is an LLR, so the brief carries the every-row questions and
-    # the LLR/TC tier's, and neither the need tier's nor the requirement tier's.
+    # The row judged is an LLR, so the brief carries the every-row questions,
+    # the LLR/TC tier's and the architecture stage's, and neither the need
+    # tier's nor the requirement tier's.
     repo = _first_approval_repo(tmp_path)
     text, why = ab.compose(repo, _fa_row(), repo / "docs/reviews/v.md")
     assert why is None, why
-    assert _heads(text) == [_EVERY_HEAD, _LLR_HEAD]
+    assert _heads(text) == [_EVERY_HEAD, _LLR_HEAD, _ARCH_HEAD]
     assert "tiers:" not in text  # the home's section markers are not sent
 
 
@@ -1962,7 +1970,7 @@ def test_each_combined_section_carries_its_own_rows_tier_questions(tmp_path):
     text, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
     assert why is None, why
     section = text.split("=== SECTION `## first-approval` ===", 1)[1]
-    assert _heads(section) == [_EVERY_HEAD, _LLR_HEAD]
+    assert _heads(section) == [_EVERY_HEAD, _LLR_HEAD, _ARCH_HEAD]
 
 
 def _home(path, body):

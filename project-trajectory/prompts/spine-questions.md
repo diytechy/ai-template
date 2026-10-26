@@ -25,6 +25,13 @@
      file-naming clause, held once where tier_questions composes it into every
      tier's brief, so an SN or SR sitting reads the same rule as an LLR or TC
      one; §1(e), §2(b), §2(d) and §3 point at it.
+
+     §4 serves the LLR tier because DevStg-Arch has no approval act of its
+     own: the first LLR sitting at a component scope, or one that re-cuts
+     it, is the act a decomposition judgement feeds. Every LLR brief carries
+     §4, so its line states that applies-when itself: at any other LLR
+     sitting the decomposition record is "not supplied" in the rubric's A4
+     sense, never a ground for a return.
 -->
 
 # The adjudicator's questions, per spine tier
@@ -300,3 +307,8 @@ Questions:
   dimensional space and are not interdependent; otherwise the honest states are
   a recorded orphan or a direct TC. No validator settles this, and none is
   likely to be efficient: it rests on the author's and the reviewer's reading.
+
+## 4. At DevStg-Arch — a component scope's decomposition
+<!-- tiers: LLR -->
+
+- **When the sitting is the first LLR sitting at a component scope, or one that re-cuts it, judge the scope's decomposition against `docs/rubrics/architecture-decomposition.md`**, citing its anchor ids; at any other LLR sitting the scope's decomposition record is *not supplied* in the rubric's A4 sense, never a ground for `RETURN`. This section restates none of the rubric's anchors.

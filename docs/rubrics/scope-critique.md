@@ -73,7 +73,9 @@ step checks a construction, and a deletion constructs none (owner,
 **S5 — The architectural delta** (item 12, entry point 2). Does the WI add a
 state, add a value to a domain, make an output depend on a new input, or cross
 a new boundary? Within the row's scope, the spec carries the change. Beyond
-it, a refactor row is filed on trunk before the claim.
+it, a refactor row is filed on trunk before the claim. Judge the answer
+against [architecture-decomposition](architecture-decomposition.md); the
+`architecture-decomposition` skill is the author's procedure for it.
 
 **S6 — Dependencies are anchored.** Every row this one waits on is in its
 `needs`, each with the reason. Any new third-party package, tool or service

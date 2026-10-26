@@ -9848,6 +9848,56 @@ passes its riders (`text_then_act.LANE_COMMIT_RIDERS` for every rule).
 `scripts/adoption_record.py`, `scripts/plan_gate.py`, `scripts/integrate.py`,
 `scripts/check.py`, `scripts/acceptance_record.py`, `README.md`.
 
+### The architecture-decomposition rubric and skill, and pointers to them [since deebc18f6]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.**
+
+- A shared rubric is seeded at `docs/rubrics/architecture-decomposition.md`:
+  the bar a component scope's decomposition is judged against at
+  `DevStg-Arch`, when a work item's plan answers its architectural-delta
+  question, and in an audit.
+- A new `scope: kit` skill, `architecture-decomposition`, is the author's
+  procedure for what that rubric judges. It cites the rubric's anchors and
+  restates none of them.
+- `prompts/spine-questions.md` gains `## 4.` (DevStg-Arch), one line pointing
+  at the rubric, composed into LLR briefs only. The line states its own
+  applies-when: it judges the scope's decomposition at the first LLR sitting
+  at a component scope, or one that re-cuts it; at any other LLR sitting the
+  decomposition record is *not supplied* in the rubric's A4 sense, never a
+  ground for a return. Sections 0 to 3 keep their numbers.
+- The single-plan brief (`prompts/plan-single.template.md`) gains one line
+  beside the delta question naming the skill at each agent's path. The
+  question's wording is unchanged.
+- The rubric README template gains one sentence linking the new rubric, and
+  the scaffold layout `bootstrap.py --help` prints and the kit README's file
+  table name it.
+
+**What to do.**
+
+- A plain add-only `bootstrap.py --dest .` re-run seeds
+  `docs/rubrics/architecture-decomposition.md`, which is yours from then on.
+  Add the README template's one-sentence link to your own
+  `docs/rubrics/README.md`, or check_docs reports the new rubric as an
+  orphan.
+- `bootstrap.py --dest . --agents <yours>` materializes the skill.
+  (`--sync` refreshes only skills you already carry.)
+- `prompts/plan-single.template.md` and `prompts/spine-questions.md` are
+  kit-owned and are overwritten. Then run
+  `python scripts/gen_prompt_catalog.py` (§1.3 step 3).
+- If you keep your own scope or plan rubric, you may add the two pointers
+  (one beside the scope rubric's delta question, one as a plan-rubric anchor
+  judging the plan's `DELTA:` line) in your own words.
+- Nothing migrates. No setting, registry or check changes.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/bootstrap_manifest.py`,
+`scripts/bootstrap.py` (its layout docstring only), `README.md`,
+`prompts/plan-single.template.md`, `prompts/spine-questions.md`,
+`prompts/CATALOG.md` (regenerate) and `skills/INDEX.csv` (regenerate). New:
+`rubrics/architecture-decomposition.template.md` (seeded once) and
+`skills/architecture-decomposition/`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

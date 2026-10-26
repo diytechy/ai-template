@@ -68,6 +68,8 @@ What it creates in the destination:
     docs/specs/README.md, docs/specs/WI-000.md <- specs/*.template.md  (spec-of-record dir)
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
+    docs/rubrics/architecture-decomposition.md <- rubrics/architecture-decomposition.template.md
+                                               (the shared bar a component scope's decomposition is judged against)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, absolute_terms.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, retire.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, flag_axis.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
