@@ -25,7 +25,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-10-25c-leg21-coordinator.md](handoff-2026-10-25c-leg21-coordinator.md),
+  [handoff-2026-10-25d-leg22-coordinator.md](handoff-2026-10-25d-leg22-coordinator.md),
   run in **headless legs** under the overnight launcher (the handoff
   carries no stop line). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
@@ -86,6 +86,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   binding records at reservation, which the act turn also checks), loop
   and coordinator lanes alike, and a marked commit outside a lane that
   moves a held status is refused.
+  The shared lane-walk row has landed: every per-commit rule walks a
+  lane's commits and a staged squash range through one owner, and one
+  work-spec listing serves both spec views. So has plan item 12's text
+  row: the `architecture-decomposition` rubric (seeded) and skill, and
+  `spine-questions.md` section 4, put only to the first LLR sitting at a
+  component scope or a re-cut.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
   headless legs in its section 7. The owner directed (2026-10-18,
   coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
@@ -493,6 +499,24 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   while the helpers every arm calls (the scope reader, the question home)
   sit in the module named for the amendment arm (one shared home under
   public names, a consolidation row);
+  from the shared lane-walk row's round 1 (wi-971 D-002): the squash spy
+  helper repeats in three test modules; `staged_heads`' docstring, the
+  module docstring and the kernel-modules-allow line say every per-commit
+  hook step reads HEAD and MERGE_HEAD there, where the parent-first step
+  still reads them itself; `WORK_SPEC_ROOTS` hard-codes the archive path
+  `spec_archive_dir` derives; `acceptance_record.ARCHIVE_WORK_DIR` is
+  dead; and `check_trajectory`'s HEAD spec-status map lists both spec
+  roots itself (a consolidation row);
+  from item 12's text row's rounds (wi-979 D-002, D-003): the record-id
+  pattern and the A8 test labels are declared in two test modules beside
+  a wider pattern in `test_prompts.py`; the skill's "each step's result
+  answers one clause of the delta question" is not literal; the rubric's
+  A7 "insufficient evidence for approval" outcome is not mapped onto its
+  verdict line; the `spine-authoring` skill's list of `spine-questions.md`
+  sections stops at section 3; the plan-decomposition rubric's first
+  three anchor ids (and the shipped rubric README template's) read as
+  stage names, likely a vocabulary sweep's rename, where anchor ids belong; and the row's archived Done-when
+  says "two descent tests" where the rubric holds two rules (wording);
   from leg 17's bars: under another project's load, the smoke tier's
   timing-bound cases go red (three sign-in probe cases in
   `test_accounts.py` read the probe as unknown, and

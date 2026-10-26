@@ -307,6 +307,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      plan critiques left their lanes untouched (2026-10-18a). Several
      lanes' plans, critiques and records run in parallel, each from its
      own lane, its records committed alone behind its own bar.
+  A plan that quotes a relative markdown link meant for another file (a
+  suggested pointer) reds `check_docs` once committed, and the plan
+  commit's hook does not run it: run `check_docs.py --root .` before
+  committing a plan, since the repair edits the plan and unbinds its pass
+  record, owing a fresh critique (wi-979 D-001).
   4. File: `"$PY" "$SCRIPTS/review_brief.py" plan-file --wi WI-NNN --critique <verdict> --sha <plan commit>`
      writes `docs/plans/WI-NNN/critique-<n>.md`; commit it alone. The
      critic may file it first: Sol ran `plan-file` in the lane and tried to
@@ -1174,7 +1179,15 @@ lane commit being replayed.
   minutes and the full suite 54, and a 30-minute timeout moved the attest
   to the background, where a leg loses it (2026-10-22).
   Launch each background call as its own command: in `A=… && (x) & (y) &`
-  only the first subshell sees `A`.
+  only the first subshell sees `A`, since the first `&` backgrounds the
+  whole `&&` chain before it, and a `wait` or `tail` after it runs without
+  `A` too. Write parallel launches to a script under the scratch root and
+  run that script in the foreground (2026-10-25d).
+  Under another project's load a full-suite half can still pass the
+  60-minute cap (half 1 ran 66 minutes on 2026-10-25d): poll its log for
+  the summary line in one foreground Python loop, and never delete its
+  basetemp from a second command while the moved command's own delete
+  still runs.
 - The agent harness sets `NoDefaultCurrentDirectoryInExePath=1`, so a Windows
   probe run inside it never sees the command processor's working-directory
   lookup; unset it when that lookup is the subject (dispute 005, WI-880).
@@ -1243,7 +1256,8 @@ lane commit being replayed.
   two builders on 2026-10-18d, cause unknown. Write every bar to a fresh
   log path so the dead run's output survives, re-run it, and file a
   defect row with the kept log if it recurs.
-- Never grep the whole scratch root: its basetemps hold gigabytes, and
+- Never grep or `du` the whole scratch root (a `du` there outran a
+  15-minute cap, 2026-10-25d): its basetemps hold gigabytes, and
   a recursive search there outran the tool's two-minute cap
   (2026-10-17). Never grep `tests/test_module_size_ratchet.py` with a
   pattern its notes may hold: each stamp's history is one line tens of
