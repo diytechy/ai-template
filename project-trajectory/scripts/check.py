@@ -1982,11 +1982,10 @@ def _held_status_refusal(root="."):
 
     Implements: SR-208, LLR-246
     """
-    head = (_git_out(root, ["rev-parse", "--verify", "--quiet", "HEAD"]) or "").strip()
+    head, merging = _kitgit.staged_heads(root)
     if not head:
         return None
-    merging = _git_out(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"])
-    squashed = [] if (merging or "").strip() else _kitgit.squash_commits(root)
+    squashed = [] if merging else _kitgit.squash_commits(root)
     if squashed:
         return _held_squash_refusal(root, head, squashed[0])
     if _kitprovenance.loop_session() is None or _kitgit.claimed_work_branch(root):

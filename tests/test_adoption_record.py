@@ -446,3 +446,97 @@ def test_a_record_refusal_at_the_slot_does_not_carry_the_text_then_act_remedy(
     refusal = integ._text_then_act_refusal(root, BRANCH)
     assert refusal is not None and "close_adjudication" in refusal, refusal
     assert tta.TEXT_THEN_ACT_REMEDY not in refusal
+
+
+def _spy_shared_walk(monkeypatch):
+    """Wrap `kitlib.git.lane_commit_walk` with a spy recording each call's
+    commits and riders, then walking them as the owner does."""
+    from kitlib import git as kgit
+
+    real = getattr(kgit, "lane_commit_walk", None)
+    seen = []
+
+    def spy(root, commits, riders):
+        commits = list(commits)
+        seen.append((commits, tuple(riders)))
+        return real(root, commits, riders)
+
+    monkeypatch.setattr(kgit, "lane_commit_walk", spy, raising=False)
+    return seen
+
+
+def test_a_squash_landing_is_judged_through_the_shared_walk(tmp_path, monkeypatch):
+    """A rebased lane's squash landing is judged by `kitlib.git`'s walk over
+    HEAD..tip with the record rule as its one rider, and is still admitted."""
+    root = adopting_repo(tmp_path)
+    _real_close(root)
+    (root / "trunk-moved.txt").write_text("moved\n", encoding="utf-8", newline="\n")
+    _git(root, "add", "-A")
+    _git(root, "commit", "--no-verify", "-q", "-m", "trunk moves on")
+    _git(lane(root), "rebase", "-q", "main")
+    _squash(root)
+    head = _git(root, "rev-parse", "HEAD").strip()
+    tip = _git(root, "rev-parse", BRANCH).strip()
+    commits = _git(root, "rev-list", "--reverse", head + ".." + tip).split()
+    seen = _spy_shared_walk(monkeypatch)
+    assert _hook(root) == 0
+    assert seen == [(commits, (ar.commit_adoption_record_lines,))]
+
+
+def test_each_spec_view_keeps_its_shape_over_one_tree(tmp_path):
+    """The ruling sync's and the adoption record's views of one committed
+    tree, read at HEAD and at the index: the ruling sync's `{id: path}` drops
+    the `-000` example and keeps the last of WI-005's two paths; the adoption
+    record's `{id: [path]}` keeps every path, so `_spec_at` refuses the two
+    specs carrying WI-005; the registry loader's work-root relpaths leave the
+    archive out. Files that are not `WI-*.md` reach no view.
+
+    Adequacy witness: it fails for an implementation that serves one view to
+    both callers. Serving the ruling sync's view collapses WI-005's duplicates
+    for the adoption record, so the "2 specs carry one id" refusal never
+    fires; serving the adoption record's view sends the `-000` example and
+    the duplicate list to the ruling sync.
+    """
+    acceptance = load_script("acceptance_record")
+    root = tmp_path / "repo"
+    root.mkdir()
+    _git(root, "init", "-q")
+    pin_autocrlf(root)
+    archived = "docs/archive/work/complete/WI-005-five.md"
+    active = "docs/work/active/wi-007/WI-007-seven.md"
+    example = "docs/work/queued/WI-000-example.md"
+    queued = "docs/work/queued/WI-005-five.md"
+    others = ["docs/work/README.md", "docs/work/queued/WI-011-eleven.txt"]
+    for rel in [archived, active, example, queued, *others]:
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text("spec\n", encoding="utf-8", newline="\n")
+    _git(root, "add", "-A")
+    _git(
+        root,
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@example.invalid",
+        "commit",
+        "--no-verify",
+        "-q",
+        "-m",
+        "specs",
+    )
+    for rev in ("HEAD", None):
+        assert acceptance._tree_specs(root, rev) == {
+            "WI-005": queued,
+            "WI-007": active,
+        }, rev
+        assert ar._spec_paths(root, rev) == {
+            "WI-005": [archived, queued],
+            "WI-007": [active],
+            "WI-000": [example],
+        }, rev
+    assert [rel for rel, _read in ar.tree_specs(root, "HEAD")] == [
+        "active/wi-007/WI-007-seven.md",
+        "queued/WI-000-example.md",
+        "queued/WI-005-five.md",
+    ]
+    with pytest.raises(ValueError, match="2 specs carry one id"):
+        ar._spec_at(root, "HEAD", [archived, queued])

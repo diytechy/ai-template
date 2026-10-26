@@ -543,3 +543,40 @@ def test_a_refresh_merge_combining_two_text_commits_beside_trunks_act_passes(
     assert tta.commit_text_then_act_lines(root, merge) == []
     _git(root, "checkout", "-q", "main")
     assert integrate._text_then_act_refusal(root, "wi-001") is None
+
+
+def _spy_shared_walk(monkeypatch):
+    """Wrap `kitlib.git.lane_commit_walk` with a spy recording each call's
+    commits and riders, then walking them as the owner does."""
+    from kitlib import git as kgit
+
+    real = getattr(kgit, "lane_commit_walk", None)
+    seen = []
+
+    def spy(root, commits, riders):
+        commits = list(commits)
+        seen.append((commits, tuple(riders)))
+        return real(root, commits, riders)
+
+    monkeypatch.setattr(kgit, "lane_commit_walk", spy, raising=False)
+    return seen
+
+
+def test_a_squash_landing_is_judged_through_the_shared_walk(tmp_path, monkeypatch):
+    """The admitted rebased-lane squash is judged by `kitlib.git`'s walk over
+    HEAD..tip with text then act's own rider alone, and is still admitted."""
+    root = _base(tmp_path)
+    _git(root, "checkout", "-q", "-b", "wi-002")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Drafted"))
+    _commit(root, "the text")
+    _rows(root, ("SR-001", "One", "Approved"), ("SR-002", "Two amended", "Approved"))
+    _act(root)
+    _commit(root, "the act")
+    _git(root, "checkout", "-q", "main")
+    _git(root, "merge", "-q", "--squash", "wi-002")
+    head = _git(root, "rev-parse", "HEAD")
+    tip = _git(root, "rev-parse", "wi-002")
+    commits = _git(root, "rev-list", "--reverse", head + ".." + tip).split()
+    seen = _spy_shared_walk(monkeypatch)
+    assert tta.staged_text_then_act_lines(root, _squashed(root)) == []
+    assert seen == [(commits, (tta.commit_text_then_act_lines,))]

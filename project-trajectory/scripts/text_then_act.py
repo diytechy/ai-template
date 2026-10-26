@@ -12,14 +12,14 @@ unchanged by WI-892. It reads that module's approval-act registries, record
 directory and row reader, and shares `acceptance_record._commit_parents`, the
 ruling sync's parent reader, which stays there as its one home.
 
-THE LANE-COMMIT WALK. `lane_commit_walk` is the one walk the hook's squash
-path and the merge slot's per-lane-commit rungs share: each listed lane
-commit, oldest first, judged against its own parents by each rider in turn.
-`LANE_COMMIT_RIDERS` is the tuple of per-commit rules that ride it, text then
-act first; the merge slot's ruling sync rides the same walk with its own
-judge. Each caller lists the range, because what an unlistable range means
-differs: the hook reads it as no squash to exempt, and the slot refuses the
-lane in git's own words.
+THE LANE-COMMIT WALK is `kitlib.git`'s (`lane_commit_walk`, with the staged
+squash's HEAD..tip step `squash_lines`): each listed lane commit, oldest
+first, judged against its own parents by each rider in turn. The riders are
+registered here, in `LANE_COMMIT_RIDERS`, the tuple of per-commit rules that
+ride it, text then act first; the merge slot's ruling sync rides the same walk
+with its own judge. What an unlistable range means differs per caller: this
+hook step reads it as no squash to exempt, and the slot refuses the lane in
+git's own words.
 """
 
 from pathlib import PurePosixPath
@@ -174,8 +174,9 @@ def commit_text_then_act_lines(root, rev):
     return ["commit {}: {}".format(rev[:10], line) for line in lines]
 
 
-# The per-commit rules that ride the lane-commit walk, each `rule(root, rev) ->
-# lines` judging one commit against its own parents. Text then act is the
+# The per-commit rules that ride the lane-commit walk (`kitlib.git`'s
+# `lane_commit_walk`), each `rule(root, rev) -> lines` judging one commit
+# against its own parents. Text then act is the
 # first rider; the adoption record's rule (WI-969) the second, the
 # parent-first rule (`acceptance_record.commit_parent_first_lines`) the third
 # and the held-rung lane rule (`held_status.commit_held_approval_lines`) the
@@ -190,23 +191,6 @@ LANE_COMMIT_RIDERS = (
 )
 
 
-def lane_commit_walk(root, commits, riders=LANE_COMMIT_RIDERS):
-    """The ONE lane-commit walk: `(rev, lines)` for each commit of `commits`
-    (listed by the caller, oldest first) that a rider in `riders` reports lines
-    for, each rider asked of each commit in turn. Lazy, so a caller that stops
-    at the first report judges no commit after it.
-
-    Implements: SR-148, SR-140, LLR-298, LLR-302
-    """
-    return (
-        (rev, lines)
-        for rev in commits
-        for rule in riders
-        for lines in (rule(root, rev),)
-        if lines
-    )
-
-
 def squash_walk(root, head, tip, paths, riders):
     """The lines `riders` report for every commit `head..tip` when the index
     IS the squash of `tip` for every one of `paths`, else None: `tip` contains
@@ -216,16 +200,15 @@ def squash_walk(root, head, tip, paths, riders):
     abandoned squash, exempt nothing unless the staged paths a rule reads are
     a judged commit's. Each hook step passes its own paths and its own rider
     alone, so a line never carries another rule's refusal under its remedy.
+    The ancestry test, the range and the walk are `kitlib.git.squash_lines`';
+    a range git cannot list is no squash to exempt.
 
     Implements: SR-140, SR-208, LLR-302, LLR-246
     """
     staged = ["diff", "--cached", "--name-only", tip, "--", *paths]
-    commits = _git(root, ["rev-list", "--reverse", head + ".." + tip])
-    within = _git(root, ["merge-base", "--is-ancestor", head, tip]) == ""
-    if not within or _git(root, staged) != "" or commits is None:
+    if _git(root, staged) != "":
         return None
-    walk = lane_commit_walk(root, commits.split(), riders)
-    return [ln for _rev, lines in walk for ln in lines]
+    return _kitgit.squash_lines(root, head, tip, riders, None)
 
 
 def _squash_lines(root, head, tip):
@@ -257,10 +240,9 @@ def staged_text_then_act_lines(root, squashed=()):
 
     Implements: SR-140, LLR-302
     """
-    head = (_git(root, ["rev-parse", "--verify", "--quiet", "HEAD"]) or "").strip()
+    head, merging = _kitgit.staged_heads(root)
     if not head:
         return []
-    merging = (_git(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]) or "").strip()
     squash = None if merging or not squashed else _squash_lines(root, head, squashed[0])
     if squash is not None:
         return squash

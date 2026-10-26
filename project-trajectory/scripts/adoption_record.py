@@ -29,12 +29,15 @@ the same shape with no oracle, so such a close is admitted here and still not
 peeled. A record refusal carries this rule's own remedy, never text then
 act's.
 
-THE SQUASH LANDING. The hook step owns its squash handling: when git's
+THE SQUASH LANDING. The hook step owns its squash policy: when git's
 `SQUASH_MSG` names a lane tip that contains HEAD, each lane commit HEAD..tip
 is judged by this rule (so the lane's close meets the same close test as at
 the slot), and a staged spec equal to the tip's own is carried; any other
-staged record change is judged like any commit's. Text then act's squash
-exemption is keyed to the approval-act registries, so it is not borrowed.
+staged record change is judged like any commit's. The ancestry test, the
+range and the walk are the shared lane-commit walk's (`kitlib.git`'s
+`squash_lines`), with this rule as the one rider and its own line for a range
+git cannot list. Text then act's squash exemption is keyed to the approval-act
+registries, so it is not borrowed.
 
 Contracts: IF-303, IF-304 - the seams this module declares (process.md §8;
 rows of record in docs/requirements/interfaces.toml).
@@ -83,8 +86,9 @@ from kitlib.config import utf8_console  # noqa: E402
 #: The work root, from the repository root; every listed spec's relpath is
 #: taken from it, the form `kitlib.adoption.row_refusal` judges.
 WORK = "docs/work"
-#: Both spec roots the commit rule reads: the work root and its archive.
-SPEC_ROOTS = (WORK, "docs/archive/work")
+#: Both spec roots the commit rule reads: the work root and its archive,
+#: `kitlib.registry`'s pair (its one work-spec listing reads both).
+SPEC_ROOTS = _kregistry.WORK_SPEC_ROOTS
 #: A spec path under either root: its state folder (`active/` one level
 #: deeper, under its branch) and the WI id its file name leads with.
 _SPEC_PATH = re.compile(
@@ -107,11 +111,13 @@ def tree_specs(root, rev):
     """`[(relpath, read)]` of every work spec in the tree of `rev`, `relpath`
     from the work root and `read()` its strict UTF-8, LF-normalised text.
     Raises OSError naming the tree when git cannot list it: an unavailable
-    listing is a refusal, never an empty registry.
+    listing is a refusal, never an empty registry. A view over
+    `kitlib.registry`'s one work-spec listing, narrowed to the work root's
+    state folders.
 
     Implements: SR-148, LLR-335
     """
-    listing = _kitgit.git_paths(root, ["ls-tree", "-r", "--name-only", rev, "--", WORK])
+    listing = _kregistry.tree_spec_paths(root, rev)
     if listing is None:
         raise OSError(
             "the registry cannot be loaded: git cannot list {} at {}".format(WORK, rev)
@@ -120,24 +126,22 @@ def tree_specs(root, rev):
     return [
         (path[len(prefix) :], functools.partial(_tree_text, root, rev, path))
         for path in listing
-        if path.startswith(prefix)
-        and "/" in path[len(prefix) :]
-        and path.rsplit("/", 1)[-1].startswith("WI-")
-        and path.endswith(".md")
+        if path.startswith(prefix) and "/" in path[len(prefix) :]
     ]
 
 
 def _tree_text(root, rev, path):
-    """The text of `path` in the tree of `rev`, its bytes decoded as strict
+    """The text of `path` in the tree of `rev` (None: the index), the
+    module's one spec read, its bytes decoded as strict
     UTF-8 with line endings normalised to LF (an undecodable spec is
     unreadable, never replacement-character text); raises OSError when git
     cannot show it, UnicodeDecodeError when it is not UTF-8.
 
     Implements: SR-148, LLR-335
     """
-    data = _kitgit.git_bytes(root, ["show", "{}:{}".format(rev, path)])
+    data = _kitgit.git_bytes(root, ["show", "{}:{}".format(rev or "", path)])
     if data is None:
-        raise OSError("git cannot show {} at {}".format(path, rev))
+        raise OSError("git cannot show {} at {}".format(path, rev or "the index"))
     return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
 
@@ -274,12 +278,13 @@ def _touched_ids(root, bases, head):
 
 def _spec_paths(root, rev):
     """`{wi: [path]}` of the specs under either spec root in the tree `rev`
-    (None: the index); raises OSError naming the tree git cannot list.
+    (None: the index), every path kept so several specs carrying one id still
+    refuse: a view over `kitlib.registry`'s one work-spec listing, read
+    through `_SPEC_PATH`. Raises OSError naming the tree git cannot list.
 
     Implements: SR-148, LLR-345
     """
-    args = ["ls-files"] if rev is None else ["ls-tree", "-r", "--name-only", rev]
-    listing = _kitgit.git_paths(root, args + ["--", *SPEC_ROOTS])
+    listing = _kregistry.tree_spec_paths(root, rev)
     if listing is None:
         raise OSError("git cannot list the specs at {}".format(rev or "the index"))
     found = {}
@@ -374,10 +379,7 @@ def _spec_at(root, rev, paths):
     if len(paths) > 1:
         raise ValueError("{} specs carry one id: {}".format(len(paths), paths))
     (path,) = paths
-    data = _kitgit.git_bytes(root, ["show", "{}:{}".format(rev or "", path)])
-    if data is None:
-        raise OSError("git cannot show {} at {}".format(path, rev or "the index"))
-    text = data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    text = _tree_text(root, rev, path)
     meta, _body = _kregistry.parse_spec_frontmatter(text, path)
     record, refusal = _kadoption.record_ids(meta, path)
     if refusal:
@@ -401,54 +403,32 @@ def staged_adoption_record_lines(root):
 
     A SQUASH LANDING (git's `SQUASH_MSG`, read by `kitlib.git.squash_commits`)
     whose tip contains HEAD is judged by its lane commits: each commit
-    HEAD..tip is judged by this rule (`_squash_walk`), and the index is
-    judged against the tip too, so a staged spec equal to the tip's own is
-    carried and any other staged record change is refused. A squash whose tip
-    does not contain HEAD is judged like any commit, its refusal ending with
-    `SQUASH_HINT`.
+    HEAD..tip is judged by this rule (`kitlib.git.squash_lines`, a range git
+    cannot list being a line), and the index is judged against the tip too, so
+    a staged spec equal to the tip's own is carried and any other staged
+    record change is refused. A squash whose tip does not contain HEAD is
+    judged like any commit, its refusal ending with `SQUASH_HINT`.
 
     Implements: SR-148, LLR-345
     """
-    head = (
-        _kitgit.git_out(root, ["rev-parse", "--verify", "--quiet", "HEAD"]) or ""
-    ).strip()
+    head, merging = _kitgit.staged_heads(root)
     if not head:
         return []
-    merging = (
-        _kitgit.git_out(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]) or ""
-    ).strip()
     if merging:
         return _record_lines(root, [head, merging], None, _not_a_close)
     squashed = _kitgit.squash_commits(root)
-    tip = squashed[0] if squashed else None
-    within = (
-        tip and _kitgit.git_out(root, ["merge-base", "--is-ancestor", head, tip]) == ""
-    )
-    if not within:
+    walked = None
+    if squashed:
+        tip = squashed[0]
+        unlisted = [
+            "cannot list the squashed commits {}..{}".format(head[:10], tip[:10])
+        ]
+        riders = (commit_adoption_record_lines,)
+        walked = _kitgit.squash_lines(root, head, tip, riders, unlisted)
+    if walked is None:
         lines = _record_lines(root, [head], None, _not_a_close)
         return lines + [SQUASH_HINT] if lines and squashed else lines
-    walked = _squash_walk(root, head, tip)
     return walked + _record_lines(root, [head, tip], None, _not_a_close)
-
-
-def _squash_walk(root, head, tip):
-    """The lines of every commit `head..tip`, oldest first, each judged by
-    `commit_adoption_record_lines` against its own parents, as the merge
-    slot's lane-commit walk judges it with this rule as a rider; a line when
-    git cannot list the range. The commits are walked here, not through
-    `text_then_act.lane_commit_walk`, because that module imports this one
-    for `LANE_COMMIT_RIDERS`, and the import graph admits no cycle.
-
-    Implements: SR-148, LLR-345
-    """
-    commits = _kitgit.git_out(root, ["rev-list", "--reverse", head + ".." + tip])
-    if commits is None:
-        return ["cannot list the squashed commits {}..{}".format(head[:10], tip[:10])]
-    return [
-        line
-        for rev in commits.split()
-        for line in commit_adoption_record_lines(root, rev)
-    ]
 
 
 def main(argv=None):

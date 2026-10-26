@@ -29,6 +29,8 @@ import re
 import tomllib
 from pathlib import Path
 
+from . import git as _kitgit
+
 __all__ = [
     "plan_table_rows",
     "WI_COLUMNS",
@@ -49,6 +51,8 @@ __all__ = [
     "spec_archive_dir",
     "spec_roots",
     "spec_files",
+    "WORK_SPEC_ROOTS",
+    "tree_spec_paths",
     "parse_spec_frontmatter",
     "parse_spec_status",
     "parse_spec_id",
@@ -297,6 +301,34 @@ def spec_roots(work_dir):
     work_dir = Path(work_dir)
     archive_dir = spec_archive_dir(work_dir)
     return (work_dir,) if archive_dir == work_dir else (work_dir, archive_dir)
+
+
+#: Both homes of a work spec in a tree, from the repository root: the work
+#: root and its archive (`spec_roots`' pair, as git paths).
+WORK_SPEC_ROOTS = ("docs/work", "docs/archive/work")
+
+
+def tree_spec_paths(root, rev):
+    """Every path under `WORK_SPEC_ROOTS` in the tree of `rev` (None: the
+    index) whose file name begins `WI-` and ends `.md`, in git's listing
+    order, read NUL-safe through `kitlib.git.git_paths`; None when git cannot
+    list it. The one work-spec listing: each caller keeps its own view over
+    it (its id reading, its duplicate handling, its error).
+
+    Implements: SR-148, LLR-298, LLR-335, LLR-345
+    """
+    if rev is None:
+        args = ["ls-files", "--"]
+    else:
+        args = ["ls-tree", "-r", "--name-only", rev, "--"]
+    paths = _kitgit.git_paths(root, args + list(WORK_SPEC_ROOTS))
+    if paths is None:
+        return None
+    return [
+        path
+        for path in paths
+        if path.rsplit("/", 1)[-1].startswith("WI-") and path.endswith(".md")
+    ]
 
 
 def _spec_files_under(root):

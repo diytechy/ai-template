@@ -1753,22 +1753,20 @@ _show = _kitgit.git_show
 
 def _tree_specs(root, rev):
     """`{WI id: path}` of every spec in a tree (`rev` None is the index), or
-    None when git cannot list it. A `-000` example is never a row.
+    None when git cannot list it: a view over `kitlib.registry`'s one
+    work-spec listing, the id being the file name's first two dash fields. A
+    `-000` example is never a row, and of two paths carrying one id the later
+    listed wins.
 
     Implements: SR-148, LLR-298
     """
-    roots = [WORK_DIR, ARCHIVE_WORK_DIR]
-    if rev is None:
-        paths = _git_paths(root, ["ls-files", "--"] + roots)
-    else:
-        paths = _git_paths(root, ["ls-tree", "-r", "--name-only", rev, "--"] + roots)
+    paths = _kitregistry.tree_spec_paths(root, rev)
     if paths is None:
         return None
     specs = {}
     for path in paths:
-        name = path.rsplit("/", 1)[-1]
-        wid = "-".join(name.split("-")[:2])
-        if name.startswith("WI-") and name.endswith(".md") and not wid.endswith("-000"):
+        wid = "-".join(path.rsplit("/", 1)[-1].split("-")[:2])
+        if not wid.endswith("-000"):
             specs[wid] = path
     return specs
 

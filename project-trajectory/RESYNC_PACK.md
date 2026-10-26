@@ -9817,6 +9817,37 @@ matches the new one instead.
 `scope: this-repo` skill changed too, only if you vendored it:
 `skills/coordinator-cycle/`.
 
+### The per-commit rules share one lane-commit walk and one work-spec listing [since a1984f739]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.**
+
+- The lane-commit walk and a staged squash's HEAD..tip step move to
+  `scripts/kitlib/git.py`: `staged_heads` (the HEAD / MERGE_HEAD read of the
+  commit being made), `lane_commit_walk` and `squash_lines`. Text then act,
+  the adoption record, the plan gate, the held-status step and the merge slot
+  all walk through it. `text_then_act.lane_commit_walk` is now
+  `kitlib.git.lane_commit_walk`, and its `riders` argument is required.
+  `LANE_COMMIT_RIDERS` stays in `scripts/text_then_act.py`.
+- The adoption record no longer walks a squash's commits by itself, so the
+  import cycle that made it do so is gone.
+- The listing of a tree's work specs moves to `scripts/kitlib/registry.py`
+  (`WORK_SPEC_ROOTS` and `tree_spec_paths`). The ruling sync's and the
+  adoption record's spec reads are views over it, each keeping its own id
+  reading, duplicate handling and error.
+- Every refusal text, exit code and step line is unchanged.
+
+**What to do.** No adopter action beyond taking the scripts. Nothing is
+migrated, and no setting or registry format changes. Code of your own that
+imported `text_then_act.lane_commit_walk` imports it from `kitlib.git`, and
+passes its riders (`text_then_act.LANE_COMMIT_RIDERS` for every rule).
+
+**Kit-owned files — overwrite:** `scripts/kitlib/git.py`,
+`scripts/kitlib/registry.py`, `scripts/text_then_act.py`,
+`scripts/adoption_record.py`, `scripts/plan_gate.py`, `scripts/integrate.py`,
+`scripts/check.py`, `scripts/acceptance_record.py`, `README.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

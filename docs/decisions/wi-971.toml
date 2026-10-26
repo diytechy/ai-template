@@ -1,0 +1,19 @@
+# docs/decisions/wi-971.toml — delegated calls the coordinator made in the
+# wi-971 lane (headless leg 22 of loop session 20261025T055732Z-64b2b6).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The row's single plan (a fresh Claude Opus planner) passed its coverage gate and critique 1 (Codex Sol at medium) read APPROVE findings=0, so its pass record binds the build. The plan edits traced registry cells only (LLR module and code_symbol, TC evidence), so no spine row is authored, no Terra turn runs and no sitting or act is owed (traced-only updates owe no sitting). The build ran in the plan's two stages, each its tests first as strict expected failures, then the code; every stage was committed through integrate.py attest."
+alternative = "Run an intent turn and a checkpoint sitting anyway."
+reversal_cost = "Low: no row text changed."
+why_not_escalated = "The cycle's rule for traced-only changes; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "Round 1 at d98cfd09d: REVIEW-A (Codex Sol at medium) APPROVE findings=1 (MINOR) and REVIEW-B (a Claude Opus at high stand-in for the Gemini slot, ruling 7, coordinator-2026-10-16 D-008) CHANGES-REQUESTED findings=5, every one MINOR, so the round reads as an approve and no fix round is owed. The MINORs go to status.md's unfiled follow-ups, none fixed after the round, since a fix would move the tip off the reviewed one: the spy helper repeated in three test modules (both reviewers); staged_heads' docstring, the module docstring and the kernel-modules-allow line claim every per-commit hook step reads HEAD and MERGE_HEAD there, where the parent-first step still reads them itself; WORK_SPEC_ROOTS hard-codes the archive path that spec_archive_dir derives; acceptance_record.ARCHIVE_WORK_DIR is dead; and check_trajectory's HEAD spec-status map still lists both spec roots itself (a consolidation row). No checkpoint is owed, so the tip round 1 reviewed is the tip that lands; trunk has not moved since the lane was cut, so the rebase is empty."
+alternative = "Fix the MINORs in the lane and run a second round."
+reversal_cost = "Low: follow-ups only."
+why_not_escalated = "MINORs never cost a round (ruling 4); recorded for confirm or overrule."
+review = ""

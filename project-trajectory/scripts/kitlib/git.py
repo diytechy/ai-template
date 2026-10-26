@@ -37,6 +37,17 @@ ONE CLAIMED-BRANCH READER. `claimed_work_branch` answers whether the checkout
 is a claimed lane. It moved here from `check.py` so every caller that must
 tell a lane from the trunk shares one reader; as with `git_out`, None is
 "no claim found", and each caller declares what that means for it.
+
+THE LANE-COMMIT WALK. Every per-commit rule (text then act, the adoption
+record, the plan gate, the held-status step and the merge slot) shares one
+traversal, held here below them all: `staged_heads`, the HEAD / MERGE_HEAD read
+of the commit being made; `lane_commit_walk`, each listed commit, oldest first,
+asked of each rider in turn; and `squash_lines`, a staged squash's HEAD..tip
+step. The rules keep what differs: each lists its own range where its order or
+ancestry policy differs, keeps its own refusal text, remedy and squash policy,
+and registers its rider where it is read (`text_then_act.LANE_COMMIT_RIDERS`).
+As with `git_out`, the owner never decides what an unlistable range means:
+`squash_lines` hands back the caller's own lines for it, or None.
 """
 
 import subprocess
@@ -50,7 +61,10 @@ __all__ = [
     "git_paths",
     "git_show",
     "grep_files",
+    "lane_commit_walk",
     "squash_commits",
+    "squash_lines",
+    "staged_heads",
 ]
 
 
@@ -203,7 +217,8 @@ def squash_commits(root):
     read off git's own `SQUASH_MSG` (each `commit <full id>` header line); []
     when no squash is in progress or the file cannot be read. One reader for
     every pre-commit step that judges a squash landing by the commits it
-    carries (text then act, the plan gate): the two-tree rules read no file.
+    carries (text then act, the adoption record, the held-status step, the
+    plan gate): the two-tree rules read no file.
 
     Implements: SR-140, LLR-302
     """
@@ -218,6 +233,56 @@ def squash_commits(root):
         for ln in text.splitlines()
         if ln.startswith("commit ") and len(ln) >= 47 and set(ln[7:]) <= _HEX
     ]
+
+
+def staged_heads(root):
+    """`(head, merging)` of the commit being made: HEAD's id, `""` before the
+    first commit, and MERGE_HEAD's id, `""` when no merge is in progress. Every
+    per-commit hook step reads the two here; what an empty HEAD means (nothing
+    is judged) is each step's own.
+
+    Implements: SR-148, SR-140, SR-154, SR-208, LLR-302, LLR-345, LLR-337, LLR-246
+    """
+    head, merging = (
+        (git_out(root, ["rev-parse", "--verify", "--quiet", name]) or "").strip()
+        for name in ("HEAD", "MERGE_HEAD")
+    )
+    return head, merging
+
+
+def lane_commit_walk(root, commits, riders):
+    """The ONE lane-commit walk: `(rev, lines)` for each commit of `commits`
+    (listed by the caller, oldest first) that a rider in `riders` reports lines
+    for, each rider (`rule(root, rev) -> lines`) asked of each commit in turn.
+    Lazy, so a caller that stops at the first report judges no commit after it.
+
+    Implements: SR-148, SR-140, SR-154, LLR-298, LLR-302, LLR-345, LLR-337
+    """
+    return (
+        (rev, lines)
+        for rev in commits
+        for rule in riders
+        for lines in (rule(root, rev),)
+        if lines
+    )
+
+
+def squash_lines(root, head, tip, riders, unlisted):
+    """A staged squash's HEAD..tip step: None when `tip` does not contain
+    `head` (the lane was not rebased onto trunk); `unlisted`, the caller's own
+    lines or None, when git cannot list `head..tip`; else every line `riders`
+    report for those commits, oldest first, through `lane_commit_walk`. Which
+    staged paths admit a squash, and what None means, are the caller's.
+
+    Implements: SR-148, SR-140, SR-208, LLR-302, LLR-345, LLR-246
+    """
+    if git_out(root, ["merge-base", "--is-ancestor", head, tip]) != "":
+        return None
+    commits = git_out(root, ["rev-list", "--reverse", head + ".." + tip])
+    if commits is None:
+        return unlisted
+    walk = lane_commit_walk(root, commits.split(), riders)
+    return [line for _rev, lines in walk for line in lines]
 
 
 def claimed_work_branch(root, notice=None):

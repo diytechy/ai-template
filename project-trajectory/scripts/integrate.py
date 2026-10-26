@@ -199,7 +199,7 @@ from kitlib import provenance as _kitprovenance
 from kitlib import registry as kregistry
 from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
-from kitlib.git import git_out
+from kitlib.git import git_out, lane_commit_walk
 from kitlib.station import (
     BAR_GREEN,
     OUTCOME_DIRS,
@@ -1383,7 +1383,7 @@ def _with_text_then_act_remedy(rule):
 
 def _each_lane_commit(root, branch, reading, riders):
     """The first lane commit, oldest first, that a rider in `riders` returns
-    lines for on `text_then_act.lane_commit_walk`, as `(sha, lines)`; None
+    lines for on `kitlib.git.lane_commit_walk`, as `(sha, lines)`; None
     when every commit passes; a refusal string when git cannot list the range,
     which is never a skip. Lists the range the per-commit rungs share the walk
     over.
@@ -1397,7 +1397,7 @@ def _each_lane_commit(root, branch, reading, riders):
         return "cannot read {}'s commits to check their {}; nothing was merged:\n{}".format(
             branch, reading, ac._failure_tail(out)
         )
-    return next(text_then_act.lane_commit_walk(root, out.split(), riders), None)
+    return next(lane_commit_walk(root, out.split(), riders), None)
 
 
 def _loop_trailer_refusal(root, branch):

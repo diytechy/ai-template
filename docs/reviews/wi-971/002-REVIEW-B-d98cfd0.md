@@ -1,0 +1,40 @@
+Reviewed: d98cfd09dc02fa27468bbd3cfc42ae3d2b188c7f
+
+Verified. `git rev-parse HEAD` in the lane printed d98cfd09dc02fa27468bbd3cfc42ae3d2b188c7f. The failure classes I hunted first were fail-open on a squash landing (a squash that used to be refused now admitted), silent wrong content in the spec views, and an import cycle coming back. I found none of them.
+- Squash paths, compared branch by branch against the pre-change code:
+  - `text_then_act.squash_walk`: the staged-paths test now runs before the ancestry and range reads. Every arm still returns None in the same cases.
+  - `adoption_record.staged_adoption_record_lines`: a tip that does not contain HEAD is still judged against HEAD, with `SQUASH_HINT`. An unlistable range still gives the "cannot list the squashed commits" line, followed by the index judged against [HEAD, tip]. A merge is still judged against [HEAD, MERGE_HEAD].
+  - `plan_gate`, `check._held_status_refusal` and `integrate._each_lane_commit` keep their own range reads, `--topo-order` and refusal texts.
+- `staged_heads` makes the same `rev-parse --verify --quiet` reads it replaces, stripped.
+- Spec views:
+  - `acceptance_record._tree_specs` returns the same result as before (same roots, `WI-*.md` filter, `-000` drop, last listed path wins).
+  - `adoption_record.tree_specs` now lists both roots but filters to `docs/work/<state>/`, so it returns the same paths.
+  - `_spec_paths` uses a narrower listing (a superset of what `_SPEC_PATH` matches), so its result is unchanged.
+- Imports: `adoption_record` no longer imports `text_then_act`, and `kitlib.git` imports only stdlib. `test_import_layers` passed.
+- Existing tests: the lane's changes to `test_adoption_record.py`, `test_text_then_act.py` and `test_plan_gate.py` only append. Its only other change to an existing test file is one re-stamped baseline in `test_module_size_ratchet.py`.
+- Red before the fix: I extracted the trunk base (`git archive a1984f739`) into my review area, put the lane's five new or changed test files on top, and ran them. 11 failed and 1 passed. The three `test_a_squash_landing_is_judged_through_the_shared_walk` tests fail on the pre-change code because the spy sees no call (`assert [] == [...]`), so they really pin "through the shared walk". `test_each_spec_view_keeps_its_shape_over_one_tree` passes at the base, as a behaviour pin should.
+- K3: every new `Implements:` tag names an LLR whose `module` lists the file and whose `code_symbol` lists the function. I checked LLR-246/298/302/335/337/345 for `staged_heads`, `lane_commit_walk`, `squash_lines` and `tree_spec_paths`. No Status flips. The LLR and TC edits touch only `module`, `code_symbol` and `evidence` cells.
+
+Done-when coverage:
+- (1) One traversal owner: tests/test_kitlib_lane_walk.py (6 tests) and the three shared-walk squash tests. "No import cycle": read from the import block, and test_import_layers passed.
+- (2) One work-spec listing: tests/test_kitlib_spec_listing.py (2 tests) and tests/test_adoption_record.py::test_each_spec_view_keeps_its_shape_over_one_tree.
+- (3) Existing tests pass unchanged, and each rule's squash form goes through the shared walk: covered as above.
+- (4) No forced RESYNC migration: the RESYNC_PACK entry asks for no adopter action beyond taking the scripts. The only adopter-side note is about code that imports kit internals, which no supported route does. The landing-tip bar was not run here: the round facts replace it with the commands below.
+
+Housekeeping: trace.py rewrote the git-ignored generated report `docs/test/report.md`. That is a side effect of running the instrument, not an authored change.
+
+Commands:
+- `git rev-parse HEAD` -> d98cfd09dc02fa27468bbd3cfc42ae3d2b188c7f
+- `python -m pytest -q -p no:cacheprovider -n 2 --basetemp .../r1-971-B/wi-971 tests/test_kitlib_lane_walk.py tests/test_kitlib_spec_listing.py tests/test_text_then_act.py tests/test_adoption_record.py tests/test_plan_gate.py tests/test_held_status.py tests/test_disposition_adoption.py tests/test_integrate_admission.py tests/test_import_layers.py tests/test_handback.py` -> `316 passed in 800.08s (0:13:20)` (posix-shell gate unsatisfied; 0 tests skipped by it)
+- `python project-trajectory/scripts/check_trajectory.py --strict` -> `check_trajectory: clean (976 work item(s), 863 done (88%), 34 cancelled, graph acyclic).`
+- `python project-trajectory/scripts/trace.py --strict-integrity` -> `Traceability: SN=31 SR=138 LLR=326 TC=353 orphans=0 integrity=0 ... interface-findings=0 ac-advisories=1 paraphrase-advisories=2.` (exit 0)
+- Red before the fix, on the extracted trunk base with the lane's new or changed test files on top: `pytest ... test_adoption_record.py::test_a_squash_landing_is_judged_through_the_shared_walk test_text_then_act.py::test_a_squash_landing_is_judged_through_the_shared_walk test_plan_gate.py::test_a_squash_landing_is_judged_through_the_shared_walk test_adoption_record.py::test_each_spec_view_keeps_its_shape_over_one_tree tests/test_kitlib_lane_walk.py tests/test_kitlib_spec_listing.py` -> `11 failed, 1 passed in 16.73s`
+
+Findings:
+- [MINOR] project-trajectory/scripts/kitlib/git.py:240 -> The `staged_heads` docstring says "Every per-commit hook step reads the two here", and the kitlib/git.py module docstring and the docs/kernel-modules-allow line make the same claim. Two hook steps still read HEAD and MERGE_HEAD themselves: the parent-first step, `acceptance_record.staged_parent_first_lines` (acceptance_record.py:2075-2078, which is the third `LANE_COMMIT_RIDERS` rule), and the ruling-sync step, `acceptance_record.staged_ruling_sync_lines` (acceptance_record.py:1948). The held-status step reads MERGE_HEAD again through `held_status.pending_status_moves` (held_status.py:219). So the "one read" is not one (PROCESS.md §3; K1, read against the code) -> Either route `staged_parent_first_lines` through `staged_heads` (keeping its `^{commit}` peel as its own policy), or narrow the docstring and the allow-list line to the steps that actually read through it -> @owner
+- [MINOR] project-trajectory/scripts/kitlib/registry.py:308 -> `WORK_SPEC_ROOTS = ("docs/work", "docs/archive/work")` hard-codes the archive path. In the same module, `spec_archive_dir` (registry.py:283-290) derives that path from the work dir, and its docstring calls it "one fact, not a second constant a caller could let drift". This is a second statement of that fact (PROCESS.md §3) -> Derive the tuple from `spec_roots(Path("docs/work"))` as posix strings, so one derivation owns both homes -> @owner
+- [MINOR] project-trajectory/scripts/acceptance_record.py:1743 -> `ARCHIVE_WORK_DIR` is dead after this change. Its only reader, `_tree_specs`, now lists through `kitlib.registry.tree_spec_paths`, and a grep finds no other user in the scripts or tests. The constant now restates `WORK_SPEC_ROOTS[1]` and could drift from it -> Delete `ARCHIVE_WORK_DIR` -> @owner
+- [MINOR] tests/test_plan_gate.py:600 -> `_spy_shared_walk` is copied verbatim into three test modules: tests/test_adoption_record.py:451, tests/test_plan_gate.py:600 and tests/test_text_then_act.py:548. That is the same duplication this row removes from the scripts (PROCESS.md §3) -> Define the spy once in a shared test helper (for example tests/conftest.py) and import it in the three tests -> @owner
+- [MINOR] project-trajectory/scripts/kitlib/registry.py:311 -> The new "one work-spec listing" repeats, in intent, the HEAD listing of both spec roots in `check_trajectory._head_spec_status_map` (check_trajectory.py:2638-2640). That function still lists `WI_WORK` and `WI_ARCHIVE_WORK` itself, and through a plain listing rather than `git_paths`, so a path with a non-ASCII byte comes back quoted and its row is silently dropped. The listing is pre-existing and outside this row's Done-when, so this is a follow-up, not a defect in the lane (PROCESS.md §3) -> File a follow-up row that makes `_head_spec_status_map` a view over `tree_spec_paths(root, "HEAD")` -> @owner
+
+VERDICT: CHANGES-REQUESTED findings=5

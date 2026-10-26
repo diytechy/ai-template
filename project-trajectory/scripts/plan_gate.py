@@ -16,7 +16,7 @@ where it lands (the owner's 2026-10-03 rule: enforce at the commit):
     by name while any claim copy the gate reads is `single` or outside the
     set: the branch is its only key to the claim copies);
   * the merge slot (`landing_refusal`), of each lane commit, riding the one
-    lane-commit walk (`text_then_act.lane_commit_walk`) with its own judge.
+    lane-commit walk (`kitlib.git.lane_commit_walk`) with its own judge.
 
 THE ONE PREDICATE, `commit_lines`, judges one lane commit against its
 parents, for each row the lane itself claimed whose claim copy declares
@@ -85,7 +85,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import agent_common  # noqa: E402  (path set above; the script-sibling idiom)
 import score_reviews  # noqa: E402
 import spec_move  # noqa: E402
-import text_then_act  # noqa: E402
 import trunk_step  # noqa: E402
 from kitlib import dispute as _dispute  # noqa: E402
 from kitlib import done_when as _kdone  # noqa: E402
@@ -512,9 +511,7 @@ def landing_refusal(root, trunk, branch):
         return "cannot read {}'s commits to check its plan gate; nothing was merged".format(
             branch
         )
-    walk = text_then_act.lane_commit_walk(
-        root, out.split(), (lane_rider(trunk, branch),)
-    )
+    walk = _kitgit.lane_commit_walk(root, out.split(), (lane_rider(trunk, branch),))
     found = next(walk, None)
     return found and "{}: {}; nothing was merged".format(branch, "; ".join(found[1]))
 
@@ -542,9 +539,7 @@ def _squash_lines(root, head, tip):
         rider = lane_rider(head, lane)
         out += [
             ln
-            for _r, lines in text_then_act.lane_commit_walk(
-                root, commits.split(), (rider,)
-            )
+            for _r, lines in _kitgit.lane_commit_walk(root, commits.split(), (rider,))
             for ln in lines
         ]
     return out
@@ -607,14 +602,9 @@ def staged_lines(root):
 
     Implements: SR-154, LLR-337
     """
-    head = (
-        _kitgit.git_out(root, ["rev-parse", "--verify", "--quiet", "HEAD"]) or ""
-    ).strip()
+    head, merging = _kitgit.staged_heads(root)
     if not head:
         return []
-    merging = (
-        _kitgit.git_out(root, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]) or ""
-    ).strip()
     squashed = [] if merging else _kitgit.squash_commits(root)
     lines = _squash_lines(root, head, squashed[0]) if squashed else []
     branch = (_kitgit.git_out(root, ["branch", "--show-current"]) or "").strip()

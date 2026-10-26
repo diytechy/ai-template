@@ -3,12 +3,26 @@ id = "WI-971"
 title = "The adoption-record step reads lane commits and work specs through the shared walk and listing"
 workstream = "process"
 sr_refs = ["SR-148"]
-specref = "docs/decisions/wi-969.toml"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 6
 planmode = "single"
 +++
+
+## Deliverable
+
+One traversal owner in `kitlib.git` (`staged_heads`, `lane_commit_walk`,
+`squash_lines`) walks a lane's commits and a staged squash's HEAD..tip
+range for text-then-act, the held-status step, the merge slot, the plan
+gate and the adoption record, each keeping its own range read, refusal
+text, remedy and squash policy; the rider registration needs no import
+cycle. One work-spec listing at a tree or the index
+(`kitlib.registry.tree_spec_paths`) serves `acceptance_record` and
+`adoption_record`, each keeping its own view. Built from its single plan
+in two stages, tests first; round 1 (Codex Sol APPROVE, Claude Opus
+MINOR-only) reviewed the landing tip; traced cells only, so no sitting.
+Decisions: `docs/decisions/wi-971.toml` D-001, D-002.
 
 ## Context
 

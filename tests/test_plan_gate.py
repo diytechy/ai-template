@@ -595,3 +595,38 @@ def test_a_branch_holding_no_claim_folder_is_judged_at_head_with_the_trunk_undec
     declared = gate.staged_lines(side)
     (side / "docs" / "process.toml").unlink()
     assert gate.staged_lines(side) == declared == []
+
+
+def _spy_shared_walk(monkeypatch):
+    """Wrap `kitlib.git.lane_commit_walk` with a spy recording each call's
+    commits and riders, then walking them as the owner does."""
+    from kitlib import git as kgit
+
+    real = getattr(kgit, "lane_commit_walk", None)
+    seen = []
+
+    def spy(root, commits, riders):
+        commits = list(commits)
+        seen.append((commits, tuple(riders)))
+        return real(root, commits, riders)
+
+    monkeypatch.setattr(kgit, "lane_commit_walk", spy, raising=False)
+    return seen
+
+
+def test_a_squash_landing_is_judged_through_the_shared_walk(tmp_path, monkeypatch):
+    """An unbound build squashed onto trunk is held through `kitlib.git`'s
+    walk over the topo-ordered HEAD..tip, the lane's own rider its one rider."""
+    trunk, lane = make_lane(tmp_path)
+    build(lane)
+    commit(lane, "build")
+    git(trunk, "merge", "--squash", BRANCH)
+    head = git(trunk, "rev-parse", "HEAD")
+    tip = git(trunk, "rev-parse", BRANCH)
+    commits = git(trunk, "rev-list", "--reverse", "--topo-order", head + ".." + tip)
+    seen = _spy_shared_walk(monkeypatch)
+    assert any("src/app.py" in ln for ln in gate.staged_lines(trunk))
+    assert [walked for walked, _riders in seen] == [commits.split()]
+    ((_commits, riders),) = seen
+    assert len(riders) == 1
+    assert riders[0].__qualname__.startswith("lane_rider")

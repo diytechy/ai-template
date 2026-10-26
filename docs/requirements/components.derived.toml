@@ -866,6 +866,7 @@ modules = [
   "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/plan_pass.py",
   "project-trajectory/scripts/kitlib/provenance.py",
+  "project-trajectory/scripts/kitlib/registry.py",
   "project-trajectory/scripts/kitlib/shell_line.py",
   "project-trajectory/scripts/kitlib/sitting.py",
   "project-trajectory/scripts/kitlib/spine.py",
