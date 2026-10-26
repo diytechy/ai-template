@@ -4131,3 +4131,18 @@ options = """- (a) SPINE ONLY (revision 33 stands): the carrier carries every wa
 - (b) THE WI SPACE RIDES THE CARRIER: lanes reserve WI ids, so every WI mint, trunk included, draws from the carrier (otherwise trunk and the lanes are two writers of one space); R1 becomes a refusal of an unreserved WI id; the landing check covers WI. FOR: one allocator for every space lanes touch; a lane may name its successors' ids before landing. AGAINST: re-opens revision 33 and part of WI-810's in-lane mint, which D-009 cancelled; widens WI-978 across the intake mint, the sweep, the dual-plan filer and R1, with a larger RESYNC entry for adopters.
 - (c) DEFER: WI-978 builds for (a) now, and (b) is filed later as its own row if a lane is ever blocked for want of a WI id. FOR: the carrier lands sooner, and (b) stays reachable. AGAINST: none beyond (a)'s, but it leaves the question formally open."""
 recommendation = "(a): revision 33's reason still holds, since the WI space has one writer under the coordinator's lease and nothing on record collides there; (b) would move every trunk mint onto the carrier and re-open a cancellation the owner made on 2026-10-20 to buy only early citation of successor ids. Rule (c) instead if the owner wants the question kept open without holding WI-978."
+
+[open_item.OI-117]
+title = "WI-976: the owner re-attests SN-036 on trunk"
+status = "pending"
+raised = "2026-10-26"
+one_line = "Take SN-036's re-attestation act on trunk (its amended text landed with WI-976), or return its text; recommendation (a), take the act, as sitting 016 recommends."
+decision = """Filed by the coordinator at WI-976's landing (headless leg 23), as the owner's 2026-10-25 route requires (docs/decisions/wi-976.toml D-023): SN-036's re-attestation act moves to trunk after the landing, carried by a queued owner row citing a pending open item.
+
+WHAT IS TRUE. WI-976 landed SN-036's amended acceptance (the 2026-09-06 owner ruling's text, carried verbatim from contract_split) with every other act of its checkpoint sitting 016 (docs/reviews/wi-976/016-ADJUDICATE-9d6ad4c.md, acts 160 and 161). The sitting ruled SN-036 MEANING on its held rung and recommended it to the owner, naming each of its eleven hats' outcomes. The held-rung lane rule refuses a MEANING act from a lane, so the owner's in-lane act (kept under the tag attended/wi-976-sn036-act) never landed, and the needs registry stays off its anchor until the act. The command is intake.py snapshot --approves stakeholder-needs=docs/log.d/2026-10-25-wi976-sn036-ruling.md --reattests SN-036, adding --verdict docs/reviews/wi-976/016-ADJUDICATE-9d6ad4c.md where the route asks for it, in its own trunk commit (text then act).
+
+WHAT IS HELD. The owner row that carries the act, and the landing's re-mint, which closes citing the act once every registry equals its anchor."""
+blast_radius = """The owner row and the landing's re-mint only, both held by the needs edge. Until the act, SN-036's Approved status records the older acceptance in the snapshot, and the approval brief lists it as drifted."""
+options = """- (a) TAKE THE ACT: run the command above on trunk; the owner row and the re-mint then close citing the act.
+- (b) RETURN SN-036's TEXT: name what is wrong; it is reworked and re-sat alone, with any row whose meaning follows it (SR-161's acceptance and coincident cell), and the act follows that sitting."""
+recommendation = "(a): the text is the owner's own 2026-09-06 ruling, carried verbatim, and sitting 016 judged its chain and recommends it."

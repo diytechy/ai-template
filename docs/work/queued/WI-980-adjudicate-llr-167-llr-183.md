@@ -8,6 +8,7 @@ buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-167", "LLR-183", "LLR-273", "SN-036", "SR-161", "SR-165", "TC-161", "TC-178", "TC-211"]
+needs = ["OI-117"]
 +++
 
 ## Context

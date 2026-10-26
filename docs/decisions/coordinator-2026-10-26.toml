@@ -1,0 +1,27 @@
+# docs/decisions/coordinator-2026-10-26.toml — delegated calls the
+# coordinator made on trunk on 2026-10-26 (headless leg 23 of loop session
+# 20261025T055732Z-64b2b6).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-001"]
+
+[decision.D-001]
+decided = "WI-976 landed (574cfcd53) as the queue's row 3, ahead of the movable claimed rows 5 and 6, under the reading that its own sittings run the cycle through WI-979's changed steps: the machinery-landing rule (revision 37) holds the next mechanism landing until the cycle has run through the last one's changed step, and the leg-22 handoff names WI-976's next sitting among those that run through WI-979's LLR-sitting question (section 4). WI-976's sittings this leg (dispute 021, Done-when 024) composed through the rebased lane's composer, which carries WI-979's section-4 rule, and section 4 was rightly not put, since neither judged an LLR at a component scope or a re-cut; WI-979's other change, the single-plan prompt's skill line, has not run, since no single plan has rendered since it landed. WI-976 changes the sitting-brief composer and the spine-author prompt, so the next mechanism landing waits until a sitting and an author turn have run through them."
+alternative = "Hold WI-976 until a single plan renders and an LLR sitting at a component scope runs, which no row in the queue table owes soon."
+reversal_cost = "Medium: a fix-forward lane, with a regression test, if a defect in either landing surfaces."
+why_not_escalated = "The handoff's queue named WI-976 movable and its next sitting as the run-through; recorded high risk for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "At WI-976's landing, filed as the owner's route D-023 requires: OI-117 (pending: the owner re-attests SN-036 on trunk, or returns its text; recommendation (a)) and its queued owner row WI-981 in WI-827's shape, citing it. The landing's sweep minted the re-mint WI-980, whose registries all equal their anchors except the needs registry (SN-036, the owner's act); it gains `needs = [\"OI-117\"]`, so it reads blocked, and it closes citing the owner's act once every registry equals its anchor (recipes section 3, the re-mint). The owner's general 2026-10-25 ruling that an owner-held step is an open item is not filed here: that filing, with its skill and PROCESS.md text, is attended."
+alternative = "Leave WI-980 ready on the frontier while it waits on an act only the owner can take."
+reversal_cost = "Low: one needs edge and one pending item, ruled by the owner's act."
+why_not_escalated = "It files the owner's own route (wi-976 D-023); the act and the ruling stay the owner's."
+review = ""
+
+[decision.D-003]
+decided = "Filed on trunk at WI-976's landing, one row per SUCCESSOR ruling of an accepted dispute verdict, each scoped to its ruling's text and citing the verdict by name: WI-982 from sitting 004's RB1-F1 (both adjudication routes widen a sitting's hats by the authoring work item's tags; the minted rows carry the merged lane's tags) and WI-983 from sitting 021's F1 (a decomposition round's brief names a stopping-boundary line, and TC-211 is re-inspected on the first record carrying it). Neither is in the queue table, so no leg claims them until the owner orders them; each owes its scope critique before its claim. Sitting 021's verdict discloses that the adjudicator session judging it also wrote sitting 016's verdict, the record under judgement; it agreed with the finding against its own record and ruled the route, not the finding's truth."
+alternative = "Defer the filings to an attended session."
+reversal_cost = "Low: two queued rows the owner may re-scope or cancel."
+why_not_escalated = "The cycle files successors at the landing (SKILL section 4, step 4); the self-judging disclosure is listed for the owner."
+review = ""
