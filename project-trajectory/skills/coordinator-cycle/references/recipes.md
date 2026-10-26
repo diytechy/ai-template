@@ -364,6 +364,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      partial.
   An edited plan or Done-when unbinds the record: remove it, and a fresh
   critique (the cap still counts) must pass the changed plan.
+  When an owner ruling makes the Done-when edit itself owed after the
+  second critique, make it the lane's last commit outside the record
+  homes' reach: run first every step that writes elsewhere (an
+  inspection's result, a RESYNC re-anchor, a round and any fix it orders),
+  then the edit and its `done-when` sitting (wi-976 D-026).
   So a checkpoint item a handoff or spine change list calls a Done-when
   amendment, on a `single` row whose pass record stands, goes to the
   Trust section instead: once the Done-when digest moves, the plan gate
@@ -788,6 +793,10 @@ commit of its own, move it to trunk's tip
   committed after the gate, as WI-911's was, lands only when
   `git diff --stat <gate tip> HEAD` shows no code and no authored spine row. Two minted rows are real work and stay open: an
   observation re-judge whose trigger fired, and a goalposts row.
+  When the one registry still off its anchor holds an owner-held act (a
+  held-rung row the sitting ruled MEANING), the re-mint cannot close: give
+  it `needs` on the act's pending open item, filed with the owner row that
+  carries the act (coordinator-2026-10-26 D-002).
 - **Review rollup:** restore `docs/reviews/rollup/` to its trunk version before
   committing the lane. `trunk_step.py --regen` writes it on trunk at landing,
   from the round files the lane brought in.
@@ -853,6 +862,17 @@ lane commit being replayed.
   judged rows still get their unchanged-rows check (wi-927 D-013).
 - Acts collide too: check `acts.toml` after every rebase for duplicate act
   seqs (the skill's §4 latches sittings to avoid them).
+- A lane rebased after its act turn, onto a trunk that moved an approved
+  row's traced cells (`module`, `code_symbol`, `evidence`), replays its act
+  commits' snapshot copies unchanged, so each no longer equals its live
+  file at that commit. The registry-integrity step reads that as a landed
+  divergence in the committed history and refuses every later commit, so
+  no forward re-anchor clears it. Finish the replay instead: rebuild the
+  chain from the first act commit with `git commit-tree`, setting each
+  snapshot path a commit wrote to the live file's blob at that same commit
+  and carrying it forward, every message, author and date kept and a
+  re-claim left empty; then `trace.py --strict` reads `integrity=0`
+  (wi-976 D-024). Landing an acted lane before the next landing avoids it.
 - A registry cell's line can carry leading whitespace (` detail = "...`):
   match a cell on its `key = ` line after stripping, or a guarded replace
   edits the next row's cell. Chain a merge script to its `git add` with
@@ -1369,5 +1389,15 @@ lane commit being replayed.
     material (WI-920). On 2026-10-25 no judge could run a shell command
     in its sandbox, so every brief carries the rubric and the intent
     verbatim and never relies on a judge reading the repository.
+- **An Inspection TC's re-judge** (TC-211, wi-976 D-026, D-027): a fresh
+  Codex Sol session through `codex_call.py CRITIQUE` from the lane (the
+  entry point has no inspection role), its brief naming the TC row, its
+  procedure, its sample from the TC's `inputs` and the chain evidence,
+  writing one record to scratch; place it as
+  `docs/reviews/<lane>/NNN-REJUDGE-<sha7>.md`, normalized to LF. Write the
+  dated result into the procedure's result section before
+  `record_observation.py` (a declared input). A fail is recorded as a fail;
+  its finding goes to one dispute sitting, uncontested, the coordinator
+  taking no side, since only that sitting moves a MAJOR to a successor.
 - **TC-279:** the part population is `gen_arch_map.declaration_sites`, never a
   hand-written scan. Record the first result only after the case is approved.
