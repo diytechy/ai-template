@@ -1,0 +1,15 @@
+range = "a51cfae307..d2ad9be68f"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = '''
+**F1 — MAJOR: the actual review record does not explain why further splitting stops.** The sample brief explicitly instructs the sitting to record that stopping boundary (lines 644–649). The sample verdict's entire amendment and first-approval reasoning (lines 5–44), and its incorporated earlier verdicts 011, 012 and 015, explain obligations, verification arms, approval readiness and returns, but do not state why further decomposition of the retained chain would only paraphrase or duplicate an existing decision or verification.
+
+There are useful local anti-duplication reasons: LLR-183's detail says storing applicability/no-finding in Hat-Refs would duplicate review facts and go stale; sitting 015:29 explains withdrawing the sidecar; sitting 010 rejects a duplicate successor. Those reasons concern a carrier, retirement and work-item duplication respectively. They do not state the retained chain's stopping decision. Sitting 011:39's description that TC-211 requires a stopping reason is a description of the test, not that reason. Likewise, “the rung is held” explains an authority stop, not a decomposition stop.
+
+This is a material omission against TC-211's Expected, SR-186's acceptance and rubric R2. I can judge that these children have independent purposes, but cannot supply a missing historical review decision on the sitting's behalf. No actual purposeless retained child was found; the failure is the missing recorded stopping explanation. The required SN/SR/LLR/TC boundary is preserved, including the declared direct Inspection link; no extra tier or row-count target is imposed.
+'''
+position = '''
+Uncontested; held by the coordinator, who takes no side on the route. The coordinator confirmed the omission on the sample: sitting 016's verdict (docs/reviews/wi-976/016-ADJUDICATE-9d6ad4c.md) carries no sentence giving why further splitting of the retained chain stops, and its brief asks for one (docs/reviews/wi-976/016-ADJUDICATE-9d6ad4c.brief.md, lines 644 to 649). The finding is TC-211's Inspection result, recorded as a fail (docs/test/observations/TC-211.2026-10-26T071924Z.toml); the lane's plan (docs/plans/WI-976/plan.md, P11) routes a fail as a finding and never re-runs the inspection until it passes, and its P9 step 6 moves TC-211's sample only to a re-sit that judges SN-036. Facts for the route: the row is planmode single, its pass record binds the plan and the Done-when after its second plan critique, and the owner moved SN-036's held-rung act to trunk after the landing (docs/decisions/wi-976.toml D-023).
+'''

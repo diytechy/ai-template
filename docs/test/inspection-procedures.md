@@ -50,28 +50,45 @@ execute that source.
 
 ## Decomposition proportionality inspection
 
-Read the existing scoped decomposition/review record and its applicable
-SR-161 applicability/no-finding record. Confirm the required spine remains the
-scope boundary, then inspect a small chain containing a child that only
-paraphrases or duplicates a parent's decision or verification. A child within a
-required tier with no independent decision or verification purpose is an
-Inspection finding. Record why
-further splitting stops at the independent-value boundary. This procedure uses
-the existing record and does not impose a row-count threshold or extra depth.
+Read one actual completed decomposition review record, the declared hats roster,
+and the decomposition brief used by that review. Resolve the applicable hats,
+confirm that the brief presents every applicable hat's question and that the
+review record names each hat's outcome. Confirm the required spine remains the
+scope boundary, then inspect the complete reviewed chain and a small chain
+containing a child that only paraphrases or duplicates a parent's decision or
+verification. A missing applicable-hat outcome or a child within a required tier
+with no independent decision or verification purpose is an Inspection finding.
+Record why further splitting stops at the independent-value boundary. This
+procedure uses the existing brief and review record and does not impose a
+row-count threshold, extra depth, new record carrier, or machine coverage check.
 
 ### Decomposition proportionality inspection result
 
-**INCOMPLETE — 2026-09-06, [fresh Opus 5/high Inspection](../reviews/2026-09-06-oi85-inspection-structured-opus.md).** The inspector accepted the
+**FAIL — 2026-10-26, [fresh Codex Sol Inspection](../reviews/wi-976/019-REJUDGE-28a0309.md),**
+recorded through `record_observation.py` as TC-211's observation of that date,
+under the procedure as amended by WI-976. The sample was the WI-976
+checkpoint sitting 016 (its brief and verdict, as TC-211's `inputs` name
+them), with that lane's sittings 004, 010, 011, 012 and 015 as chain evidence.
+Applicability, the brief's questions and the verdict's outcomes pass (eleven
+applicable hats, each question presented and each outcome named), the
+returned rows were all re-sat, each retained child has an independent
+purpose, and the procedure identifies both abnormal inputs. It fails on one
+MAJOR finding: the verdict does not record why further splitting stops,
+which its brief asked for (rubric R2; SR-186's acceptance).
+
+**PASS — 2026-10-03,** recorded as the observation
+`docs/test/observations/TC-211.2026-10-03T210347Z.toml`, under the procedure
+as it then read.
+
+**Historical INCOMPLETE — 2026-09-06, [earlier Opus 5/high Inspection](../reviews/2026-09-06-oi85-inspection-structured-opus.md).** That inspector accepted the
 independent purposes of SR-184/SR-185/SR-186 and their direct Inspection cases,
-read the stopping reason, and rejected the paraphrasing child. The procedure's
-normal sample also calls for its applicable SR-161 perspective record. That
-machine-record producer remains unimplemented and no such record was supplied;
-LLR-183 already names this undischarged per-decomposition no-finding obligation.
-This positive-input gap is retained; prose and Hat-Refs do not count as its
-output. TC-211 is not reported fully passed, and its method is not weakened to
-obtain a pass. The remaining work is the existing SR-161 implementation and an
-Inspection of a complete produced sample. No new carrier or machine gate was
-introduced by this sitting.
+read the stopping reason, and rejected the paraphrasing child. The procedure
+then required a machine-produced SR-161 perspective record that did not exist,
+as LLR-183 then stated. The owner ruling of 2026-09-06, re-affirmed on
+2026-10-13 (`docs/log.d/2026-10-25-wi976-sn036-ruling.md`), replaced that
+obligation with the existing hat-by-hat review path, and LLR-183 was amended
+accordingly. The earlier result remains incomplete for the procedure it
+actually executed; the ruling itself supplies no test result.
 
 ## Sampled new-reader inspection
 
@@ -170,13 +187,16 @@ inspector must identify the exact versions it reads.
   existing behavior. Its review says only that all named IDs and endpoints
   resolve and therefore the change passes. It records neither a corresponding
   behavioral change nor a reason why retaining it preserves meaning.
+- **Missing perspective outcome:** the actual completed review record with one
+  applicable hat's outcome omitted, while the applicable-hat brief and all other
+  outcomes remain. The Inspection must identify that omitted applicable hat.
 - **Paraphrasing child:** the actual SR-186→TC-211 chain gains an unminted
   candidate child saying “the process shall keep decomposition proportionate,”
   verified by the same Inspection judgment without another decision or case.
   Its only stated purpose is to make the chain look more detailed. This adds
   no independent decision or verification purpose within a required tier.
 
-The SR-161 machine-generated perspective-record producer remains an existing,
-unimplemented obligation. This Inspection must report how that affects its
-positive proportionality sample; a prose worksheet cannot be presented as a
-successful execution of the absent producer.
+The historical incomplete result records what that earlier inspection examined.
+A later TC-211 execution inspects the actual completed review record and records
+its own reviewer, date, subject and findings; the owner ruling itself supplies
+no Inspection result.

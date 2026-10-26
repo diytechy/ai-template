@@ -816,6 +816,34 @@ def _removed_rows(before_rows, live_rows, id_col):
     }
 
 
+def removed_rows(root, ids, snapshot):
+    """`(removed, unknown)` over the row ids `ids`, against `snapshot`
+    (`load_all`'s): `removed` is `[(registry, id column, row id, cells,
+    recorded row)]`, in `SNAPSHOT_TIERS` order, for each id the record holds
+    claiming approval that the live registry no longer carries (`_removed_rows`'
+    rule, the removals `refresh_ledger` absorbs), `cells` the recorded row's
+    approved cells as `(name, recorded value, "")` triples, sorted; and
+    `unknown` the sorted ids that no live row of a compared tier carries and
+    the record does not hold.
+
+    The one reading of which ids name a row at all: `--reattests` refuses an
+    unknown id with it, and the amendment brief briefs a removed scoped row and
+    refuses an unknown scope token with it.
+
+    Implements: SR-178, LLR-271"""
+    ids, removed, known = set(ids), [], set()
+    for rel, id_col in SNAPSHOT_TIERS:
+        recorded = rows_for(snapshot, rel, id_col)
+        live = _tier_rows(root, rel, id_col)
+        known |= {str(row.get(id_col) or "").strip() for row in live}
+        known |= set(recorded)
+        for rid in sorted(ids & set(_removed_rows(recorded, live, id_col))):
+            cells = check_trajectory.split_changed_cells(rel, id_col, recorded[rid], {})
+            cells = [(n, b, a) for n, (b, a) in sorted(cells["approved"].items())]
+            removed.append((rel, id_col, rid, cells, recorded[rid]))
+    return removed, sorted(ids - known)
+
+
 def refresh_ledger(root, snapshot=None):
     """What a refresh WOULD ABSORB, per registry:
     `{rel: {"absorbed": {row id: {cell: (before, after)}}, "flips": [row id]}}`.
@@ -1199,12 +1227,7 @@ def _refuse_reattests(root, reattests, snapshot, first_signing):
          `act_summary` would otherwise claim a record that was never written."""
     if not reattests:
         return
-    known = set()
-    for rel, id_col in SNAPSHOT_TIERS:
-        live = _tier_rows(root, rel, id_col)
-        known |= {str(row.get(id_col) or "").strip() for row in live}
-        known |= set(rows_for(snapshot, rel, id_col))
-    unknown = sorted(reattests - known)
+    unknown = removed_rows(root, reattests, snapshot)[1]
     if unknown:
         raise SystemExit(
             "baseline_snapshot: REFUSED — --reattests names {}, which no live row "

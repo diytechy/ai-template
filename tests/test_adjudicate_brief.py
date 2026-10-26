@@ -40,10 +40,12 @@ from conftest import (
     pin_autocrlf,
     run_py,
     set_process_key,
+    ROOT,
     SCRIPTS,
 )
 
 ab = load_script("adjudicate_brief")
+plan_briefs = load_script("plan_briefs")
 acceptance_record = load_script("acceptance_record")
 baseline_snapshot = load_script("baseline_snapshot")
 agent_loop = load_script("agent_loop")
@@ -751,7 +753,7 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
     # asserted — the before text is present, and it is labelled as not being
     # the thing under judgement.
     repo = _amendment_repo(tmp_path)
-    values, why = ab.amendment_values(repo, _am_row())
+    values, why = ab.amendment_brief.amendment_values(repo, _am_row())
     assert why is None, why
     assert baseline_snapshot.SNAPSHOT_DIR in values["baseline"]
     assert "not the change under judgement" in values["baseline"]
@@ -772,7 +774,7 @@ def test_only_APPROVED_cells_reach_the_judge(tmp_path):
         ),
         encoding="utf-8",
     )
-    values, why = ab.amendment_values(repo, _am_row())
+    values, why = ab.amendment_brief.amendment_values(repo, _am_row())
     # Stronger than "the cell is filtered out of the listing": a traced-only
     # change never makes the row DRIFT in the first place, so it does not reach
     # the model, the brief, or a judge. One ruling (§A5.1), enforced once.
@@ -789,7 +791,7 @@ def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
     # neither.
     repo = _spine_repo(tmp_path)
     assert not baseline_snapshot.exists(repo)
-    values, why = ab.amendment_values(repo, _am_row())
+    values, why = ab.amendment_brief.amendment_values(repo, _am_row())
     assert values is None
     assert "FIRST-APPROVAL" in why and "no accepted anchor" in why
 
@@ -808,14 +810,14 @@ def test_the_MEANING_aftermath_is_DERIVED_from_the_dial_not_left_to_the_judge(tm
     row = _am_row()
 
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
-    values, why = ab.amendment_values(repo, row)
+    values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
     assert "RELEASED" in values["aftermath"]
     assert "[MEANING+BLESS]" in values["aftermath"]
     assert "later act turn" in values["aftermath"]
 
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Release")
-    values, why = ab.amendment_values(repo, row)
+    values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
     assert "still HOLDS for a human" in values["aftermath"]
     assert "the signature is the owner's" in values["aftermath"]
@@ -861,7 +863,9 @@ def test_a_need_scoped_amendment_row_composes_with_its_before_and_after(tmp_path
     # must render them. The SR-chain model holds no need, so before WI-791 a
     # need-scoped row refused as "nothing in scope" and held for a human.
     repo = _need_amendment_repo(tmp_path)
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SN-001"))
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="SN-001")
+    )
     assert why is None, why
     assert re.findall(r"^- (\S+) (\S+)", values["rows"], re.M) == [("SN", "SN-001")]
     assert "a team can use it" in values["rows"]  # before
@@ -899,7 +903,9 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
     path.write_text(
         _ASSUMPTION_TOML.format("it holds, mostly", "new stand-in"), encoding="utf-8"
     )
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="DA-001;SUR-001"))
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="DA-001;SUR-001")
+    )
     assert why is None, why
     shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
     assert shown == [("DA", "DA-001"), ("SUR", "SUR-001")], values["rows"]
@@ -912,7 +918,9 @@ def test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_sco
     ):
         block = lines[lines.index("- {} {}".format(rid.split("-")[0], rid)) :][:4]
         assert block[2:] == ["    - before: " + before, "    - after: " + after], block
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="DA-001"))
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="DA-001")
+    )
     assert why is None, why
     shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
     assert shown == [("DA", "DA-001")], values["rows"]
@@ -924,7 +932,9 @@ def test_the_held_aftermath_gives_each_verdict_its_own_arm(tmp_path):
     that it stops for the owner, never the other way round (WI-912)."""
     repo = _need_amendment_repo(tmp_path)
     set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SN-001"))
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="SN-001")
+    )
     assert why is None, why
     clarity, meaning = values["aftermath"].split("A MEANING verdict on them", 1)
     assert "later act turn" in clarity and "naming this verdict" in clarity, clarity
@@ -969,7 +979,9 @@ def test_the_amendment_brief_states_each_shown_rows_digest(tmp_path):
             repo, "docs/requirements/stakeholder-needs.toml", "SN-ID", "SN-001"
         ),
     }
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-001;SN-001"))
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="SR-001;SN-001")
+    )
     assert why is None, why
     lines = _JUDGED.findall(values.get("identity") or "")
     assert sorted(lines) == sorted(expected.items()), values.get("identity")
@@ -1097,14 +1109,16 @@ def test_a_one_row_amendment_mint_renders_that_row_alone(tmp_path):
     assert drafts[0]["adjudicates"] == ["SR-001"]
     row = intake._draft_row("WI-301", drafts[0])
     assert row["Adjudicates"] == "SR-001"
-    values, why = ab.amendment_values(repo, row)
+    values, why = ab.amendment_brief.amendment_values(repo, row)
     assert why is None, why
     assert re.findall(r"^- (?:SR|LLR|TC) (\S+)", values["rows"], re.M) == ["SR-001"]
     assert "refuse floats" in values["rows"]
     assert "subtract and round" not in values["rows"]
     # The premise, or the assertion above is vacuous: SR-002 really has drifted
     # from its copy, so a scope naming it renders it.
-    wide, why = ab.amendment_values(repo, dict(row, Adjudicates="SR-001;SR-002"))
+    wide, why = ab.amendment_brief.amendment_values(
+        repo, dict(row, Adjudicates="SR-001;SR-002")
+    )
     assert why is None, why
     assert "subtract and round" in wide["rows"]
 
@@ -1114,7 +1128,7 @@ def test_an_amendment_row_with_no_declared_scope_is_REFUSED_not_widened(tmp_path
     # is an unstated boundary, and reading it as "every drifted row in the tree"
     # is the widening itself. So it fails toward the human, naming the cell.
     repo = _amendment_repo(tmp_path)
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates=""))
+    values, why = ab.amendment_brief.amendment_values(repo, _am_row(Adjudicates=""))
     assert values is None
     assert "declares no `Adjudicates` scope" in why, why
     text, why = ab.compose(repo, _am_row(Adjudicates=""), repo / "docs/reviews/v.md")
@@ -1154,17 +1168,141 @@ def test_an_amendment_scope_that_no_longer_differs_REFUSES_by_naming_it(tmp_path
 
     assert sr_001(srs) == sr_001(copy) and ",Approved," in sr_001(srs)
     # ...and the drift OUTSIDE the scope is real: a scope naming it renders it.
-    outside, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-002"))
+    outside, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="SR-002")
+    )
     assert why is None, why
     assert "subtract and round" in outside["rows"]
 
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-001"))
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="SR-001")
+    )
     assert values is None
     assert "(SR-001)" in why and "differs from its" in why, why
     assert "SR-002" not in why, why
-    # A scope naming a row the spine no longer has refuses the same way.
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="SR-404"))
+    # A scope naming a row neither the live registry nor its recorded copy
+    # holds refuses too, naming it.
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="SR-404")
+    )
     assert values is None and "(SR-404)" in why, why
+
+
+# --- a scoped row the lane removed is briefed as a removal ----------------------
+#
+# A row the recorded copy holds approved and the live registry no longer
+# carries is a retirement the sitting rules: its approved cells are the
+# `before`, the removal is the `after`, and its tier is counted like a drifted
+# row's. A scope token naming a row in neither home refuses by name.
+
+_TC_002 = (
+    "TC-002,LLR-001,unit,run the subtraction check,fast,the difference is right,"
+    "yes,tests/test_demo.py::test_sub,Approved,P1\n"
+)
+_REMOVED_AFTER = "    - after: ({})".format(baseline_snapshot.ROW_REMOVED)
+
+
+def _removed_tc_repo(tmp_path):
+    """The demo spine plus an approved TC-002, seeded, then TC-002 deleted
+    from the live registry: a retirement in a chained tier."""
+    repo = _spine_repo(tmp_path)
+    tcs = repo / "docs" / "test" / "test-cases.csv"
+    tcs.write_text(tcs.read_text(encoding="utf-8") + _TC_002, encoding="utf-8")
+    baseline_snapshot.copy_live(repo, seed=True)
+    tcs.write_text(SPINE_TCS, encoding="utf-8")
+    return repo
+
+
+def _removed_da_repo(tmp_path):
+    """The demo spine plus an approved DA-001 and SUR-001, seeded, then DA-001
+    deleted from the live registry: a retirement in an unchained tier."""
+    repo = _spine_repo(tmp_path)
+    path = repo / "docs" / "requirements" / "assumptions.toml"
+    path.write_text(_ASSUMPTION_TOML.format("it holds", "stand-in"), encoding="utf-8")
+    baseline_snapshot.copy_live(repo, seed=True)
+    path.write_text(
+        _ASSUMPTION_TOML.format("x", "stand-in").split("\n\n", 1)[1], encoding="utf-8"
+    )
+    return repo
+
+
+def _recorded_digest(repo, rel, id_col, rid):
+    """The approved-text digest of row `rid` as its recorded copy holds it."""
+    recorded = baseline_snapshot.rows_for(baseline_snapshot.load_all(repo), rel, id_col)
+    return acceptance_record.approved_text_digest(rel, id_col, recorded[rid])
+
+
+def _removal_block(rows, kind, rid):
+    """The rendered block of removed row `rid`: its header line onward."""
+    lines = rows.splitlines()
+    head = "- {} {} ({})".format(kind, rid, baseline_snapshot.ROW_REMOVED)
+    assert head in lines, rows
+    return lines[lines.index(head) :]
+
+
+def test_a_removed_scoped_tc_is_briefed_as_a_removal(tmp_path):
+    repo = _removed_tc_repo(tmp_path)
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="TC-002")
+    )
+    assert why is None, why
+    block = _removal_block(values["rows"], "TC", "TC-002")
+    assert "    - before: the difference is right" in block, block
+    assert block.count(_REMOVED_AFTER) == len([b for b in block if "before:" in b])
+    assert TC_TOML in values["baseline"], values["baseline"]
+    assert "THE DIAL FOR THIS ROW: the TC tier(s)" in values["aftermath"]
+    digest = _recorded_digest(repo, TC_TOML, "TC-ID", "TC-002")
+    assert _JUDGED.findall(values["identity"]) == [("TC-002", digest)]
+
+
+def test_a_removed_scoped_assumption_is_briefed_as_a_removal(tmp_path):
+    repo = _removed_da_repo(tmp_path)
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="DA-001")
+    )
+    assert why is None, why
+    block = _removal_block(values["rows"], "DA", "DA-001")
+    assert "    - before: it holds" in block, block
+    assert _REMOVED_AFTER in block, block
+    assert "docs/requirements/assumptions.toml" in values["baseline"]
+    rel = "docs/requirements/assumptions.toml"
+    digest = _recorded_digest(repo, rel, "DA-ID", "DA-001")
+    assert _JUDGED.findall(values["identity"]) == [("DA-001", digest)]
+
+
+@pytest.mark.parametrize(
+    "repo_of, kind, rid",
+    [(_removed_tc_repo, "TC", "TC-002"), (_removed_da_repo, "DA", "DA-001")],
+    ids=["chained", "unchained"],
+)
+def test_a_combined_sitting_briefs_a_removed_scoped_row(tmp_path, repo_of, kind, rid):
+    repo = repo_of(tmp_path)
+    row = _am_row(Brief="combined", Adjudicates="amendment:" + rid)
+    text = _composed(repo, row)
+    _removal_block(text, kind, rid)
+    assert _REMOVED_AFTER in text, text
+    assert rid in ab.requested_identities(text), text
+
+
+def test_a_scope_token_in_neither_home_refuses_naming_it(tmp_path):
+    repo = _removed_tc_repo(tmp_path)
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="TC-002;TC-404")
+    )
+    assert values is None
+    assert "(TC-404)" in why and "neither" in why, why
+    assert "TC-002" not in why, why
+
+
+def test_a_present_undrifted_scoped_row_still_drops_beside_a_removal(tmp_path):
+    repo = _removed_tc_repo(tmp_path)
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="SR-001;TC-002")
+    )
+    assert why is None, why
+    shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
+    assert shown == [("TC", "TC-002")], values["rows"]
+    assert [rid for rid, _d in _JUDGED.findall(values["identity"])] == ["TC-002"]
 
 
 def test_an_amended_row_under_two_SRs_is_rendered_once(tmp_path):
@@ -1189,7 +1327,9 @@ def test_an_amended_row_under_two_SRs_is_rendered_once(tmp_path):
         ),
         encoding="utf-8",
     )
-    values, why = ab.amendment_values(repo, _am_row(Adjudicates="LLR-001"))
+    values, why = ab.amendment_brief.amendment_values(
+        repo, _am_row(Adjudicates="LLR-001")
+    )
     assert why is None, why
     headers = re.findall(r"^- (?:SR|LLR|TC) .*$", values["rows"], re.M)
     assert len(headers) == 1, values["rows"]
@@ -1357,7 +1497,14 @@ def test_the_first_approval_brief_carries_the_WHOLE_CHAIN(tmp_path):
     assert "SR-001 [approved]" in chain
     # The act's `--approves` argument is no longer this brief's: the act turn
     # derives it from the committed verdict (WI-912).
-    assert set(values) == {"chain", "baseline", "questions"}
+    # The SRs it marks as this session's are reported beside the slots, under
+    # a key the composer takes out before the fill.
+    assert set(values) == {
+        "chain",
+        "baseline",
+        "questions",
+        plan_briefs.HAT_PARENTS,
+    }
     assert baseline_snapshot.SNAPSHOT_DIR in values["baseline"]
 
     # ...and the whole brief composes with NO hole. Strict fill makes the
@@ -1986,7 +2133,7 @@ def test_a_change_to_the_home_changes_the_brief(tmp_path, monkeypatch):
         "- the one LLR question\n\n## Q for SR\n<!-- tiers: SR -->\n"
         "- the one SR question\n",
     )
-    monkeypatch.setattr(ab, "QUESTIONS_HOME", home)
+    monkeypatch.setattr(ab.amendment_brief, "QUESTIONS_HOME", home)
     text, why = ab.compose(repo, _fa_row(), repo / "v.md")
     assert why is None, why
     assert "- the one LLR question" in text
@@ -2006,7 +2153,7 @@ def test_an_absent_or_unreadable_home_refuses_the_render(tmp_path, monkeypatch, 
         home.mkdir()
     elif make == "undecodable":
         home.write_bytes(b"## Q\n<!-- tiers: LLR -->\n\xff\xfe\xfa\n")
-    monkeypatch.setattr(ab, "QUESTIONS_HOME", home)
+    monkeypatch.setattr(ab.amendment_brief, "QUESTIONS_HOME", home)
     for row in (
         _fa_row(),
         _fa_row(Brief="combined", Adjudicates="first-approval:LLR-001"),
@@ -2028,7 +2175,9 @@ def test_a_home_that_cannot_answer_the_rows_tiers_refuses(
     tmp_path, monkeypatch, body, expect
 ):
     repo = _first_approval_repo(tmp_path)
-    monkeypatch.setattr(ab, "QUESTIONS_HOME", _home(tmp_path / "home.md", body))
+    monkeypatch.setattr(
+        ab.amendment_brief, "QUESTIONS_HOME", _home(tmp_path / "home.md", body)
+    )
     text, why = ab.compose(repo, _fa_row(), repo / "v.md")
     assert text is None
     assert expect in why, why
@@ -2048,10 +2197,10 @@ def test_no_second_copy_of_the_questions_exists(tmp_path):
     # The skill and the templates read the home; none of them restates it. A
     # question whose opening reappears in any of them is the second home this
     # change removed.
-    home = ab.QUESTIONS_HOME.read_text(encoding="utf-8")
+    home = ab.amendment_brief.QUESTIONS_HOME.read_text(encoding="utf-8")
     openings = _question_lines(home)
     assert len(openings) > 20
-    kit = ab.QUESTIONS_HOME.parent.parent
+    kit = ab.amendment_brief.QUESTIONS_HOME.parent.parent
     readers = list((kit / "prompts").glob("*.template.md"))
     readers += list((kit / "skills" / "spine-authoring").rglob("*.md"))
     repo_root = kit.parent
@@ -2064,3 +2213,362 @@ def test_no_second_copy_of_the_questions_exists(tmp_path):
         body = path.read_text(encoding="utf-8")
         copied = [o for o in openings if o in body]
         assert copied == [], "{} restates {}".format(path, copied[:3])
+
+
+# --- the perspectives a decomposition round's sitting brief carries -----------
+#
+# A first approval of an SR, or an amendment of an approved need, is a
+# decomposition round: the brief carries the question of every declared hat
+# applicable to the round's parent needs and asks for one outcome per hat. Any
+# other sitting says it is none. The slot is filled only where the template
+# declares it, a combined sitting carries the questions once over the union of
+# its sections' parents, and a roster that exists and does not parse refuses a
+# round's brief by name.
+
+_HAT_ROSTER = """
+[hat.ALWAYS-ON]
+applies_when = "always"
+asks = "always-on question?"
+listens_for = "always-on failure"
+
+[hat.NEED-A]
+applies_when = 'tags contains "need-a"'
+asks = "need-a question?"
+listens_for = "need-a failure"
+
+[hat.NEED-B]
+applies_when = 'tags contains "need-b"'
+asks = "need-b question?"
+listens_for = "need-b failure"
+
+[hat.UNREACHED]
+applies_when = 'tags contains "nobody"'
+asks = "unreached question?"
+listens_for = "unreached failure"
+"""
+_MALFORMED_ROSTER = "[hat.BROKEN\n"
+_ROSTER_REL = "docs/requirements/hats.toml"
+_HAT_QUESTIONS = (
+    "always-on question?",
+    "need-a question?",
+    "need-b question?",
+    "unreached question?",
+)
+
+# SN-001 (tag need-a) is SR-001's parent; SN-002 (tag need-b) is the parent of
+# the SR-002 a lane drafts.
+_HAT_NEEDS = (
+    "[need.SN-001]\n"
+    'status = "Approved"\n'
+    'need = "{}"\n'
+    'why = "why"\n'
+    'priority = "M"\n'
+    'acceptance = "ac"\n'
+    'tags = ["need-a"]\n'
+    "\n[need.SN-002]\n"
+    'status = "Approved"\n'
+    'need = "a team can subtract"\n'
+    'why = "why"\n'
+    'priority = "M"\n'
+    'acceptance = "ac"\n'
+    'tags = ["need-b"]\n'
+)
+_DRAFTED_SR = (
+    "SR-002,Subtracts,SN-002,The system shall subtract two numbers.,the demo "
+    "needs it,the difference is right,Must,Test,Drafted,P1,core\n"
+)
+
+
+def _write_roster(repo, roster):
+    if roster is not None:
+        path = repo / "docs" / "requirements" / "hats.toml"
+        path.write_text(roster, encoding="utf-8")
+    return repo
+
+
+def _hat_repo(
+    tmp_path, roster=_HAT_ROSTER, amend_need=False, drafted_sr=False, amended_sr=False
+):
+    """The demo spine with two approved needs, seeded, on a dial that releases
+    the requirement rungs; then SN-001's text amended and/or an SR-002 under
+    SN-002 drafted (or, with `amended_sr`, approved before the seed and its
+    text amended after it), and the roster written."""
+    repo = _spine_repo(tmp_path)
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Needs")
+    needs = repo / "docs" / "requirements" / "stakeholder-needs.toml"
+    needs.write_text(_HAT_NEEDS.format("a team can use it"), encoding="utf-8")
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    if amended_sr:
+        approved = _DRAFTED_SR.replace(",Drafted,", ",Approved,")
+        srs.write_text(srs.read_text(encoding="utf-8") + approved, encoding="utf-8")
+    baseline_snapshot.copy_live(repo, seed=True)
+    if amend_need:
+        needs.write_text(_HAT_NEEDS.format("a team can use the kit"), encoding="utf-8")
+    if amended_sr:
+        text = srs.read_text(encoding="utf-8")
+        text = text.replace("subtract two numbers", "subtract two integers")
+        srs.write_text(text, encoding="utf-8")
+    if drafted_sr:
+        srs.write_text(srs.read_text(encoding="utf-8") + _DRAFTED_SR, encoding="utf-8")
+    return _write_roster(repo, roster)
+
+
+def _not_a_round():
+    line = getattr(plan_briefs, "NOT_A_ROUND", None)
+    assert isinstance(line, str) and line.strip(), "plan_briefs states no NOT_A_ROUND"
+    return line
+
+
+def _composed(repo, row, prompt_templates=None):
+    text, why = ab.compose(repo, row, repo / "docs/reviews/v.md", prompt_templates)
+    assert why is None, why
+    return text
+
+
+def test_a_first_approval_of_a_drafted_sr_carries_the_hat_block(tmp_path):
+    repo = _hat_repo(tmp_path, drafted_sr=True)
+    text = _composed(repo, _fa_row(Adjudicates="SR-002"))
+    assert "SR-002 [AWAITING FIRST APPROVAL]" in text
+    assert "always-on question?" in text
+    assert "need-b question?" in text  # SR-002's parent need reaches its hat
+    assert "need-a question?" not in text  # SN-001 is no parent of this round
+    assert "unreached question?" not in text
+    assert "- HAT " in text  # the verdict is asked for one outcome per hat
+
+
+def test_a_first_approval_of_llr_and_tc_rows_only_says_no_decomposition_round(
+    tmp_path,
+):
+    repo = _write_roster(_first_approval_repo(tmp_path), _HAT_ROSTER)
+    text = _composed(repo, _fa_row())
+    assert _not_a_round() in text
+    assert not [q for q in _HAT_QUESTIONS if q in text]
+
+
+def test_an_amendment_of_an_approved_need_carries_the_hat_block(tmp_path):
+    repo = _hat_repo(tmp_path, amend_need=True)
+    text = _composed(repo, _am_row(Adjudicates="SN-001"))
+    assert "always-on question?" in text
+    assert "need-a question?" in text  # the amended need reaches its own hat
+    assert "need-b question?" not in text
+    assert "- HAT " in text
+
+
+def test_an_amendment_of_an_sr_only_says_no_decomposition_round(tmp_path):
+    repo = _write_roster(_amendment_repo(tmp_path), _HAT_ROSTER)
+    text = _composed(repo, _am_row())
+    assert _not_a_round() in text
+    assert not [q for q in _HAT_QUESTIONS if q in text]
+
+
+def test_an_amendment_round_reaches_the_need_of_every_sr_it_judges(tmp_path):
+    # SN-001 (need-a) is amended, which makes the round; SR-002, amended in
+    # the same sitting, names SN-002 (need-b), which joins the round's
+    # parents although an amended SR alone makes no round.
+    repo = _hat_repo(tmp_path, amend_need=True, amended_sr=True)
+    text = _composed(repo, _am_row(Adjudicates="SN-001;SR-002"))
+    assert "subtract two integers" in text  # SR-002 is judged here
+    assert "need-a question?" in text
+    assert "need-b question?" in text
+    assert "unreached question?" not in text
+
+
+def test_a_combined_round_reaches_the_need_of_an_sr_another_section_amends(
+    tmp_path,
+):
+    # The first-approval section's drafted SR-002 (under SN-002) makes the
+    # round; the amendment section's SR-001 names SN-001, whose hat the
+    # sitting's one perspectives part carries too.
+    repo = _hat_repo(tmp_path, drafted_sr=True)
+    _amend(repo)
+    row = _am_row(
+        Brief="combined", Adjudicates="amendment:SR-001;first-approval:SR-002"
+    )
+    text = _composed(repo, row)
+    head = text.index(_PERSPECTIVES_HEAD)
+    for question in ("always-on question?", "need-a question?", "need-b question?"):
+        assert text.count(question) == 1, question
+        assert text.index(question) > head, question
+    assert "unreached question?" not in text
+
+
+_MKPROMPT = ROOT / "scripts" / "coordinator" / "mkprompt.py"
+_AUTHOR_TEMPLATE = ROOT / "scripts" / "coordinator" / "terra-spine-prompt.template.md"
+
+
+def test_the_spine_authors_hats_value_puts_the_sittings_questions(tmp_path):
+    # A turn that amends SN-001 (need-a) and SR-002 (under SN-002, need-b) is
+    # a decomposition round. Its HATS value names each need the sitting
+    # reaches: the amended need and the need the amended SR names. The real
+    # author prompt then asks exactly the sitting's questions.
+    repo = _hat_repo(tmp_path, amend_need=True, amended_sr=True)
+    sitting = _composed(repo, _am_row(Adjudicates="SN-001;SR-002"))
+    spec = {column: "" for column in wi_convert.COLUMNS}
+    spec.update({"WI-ID": "WI-301", "Title": "a mixed amendment", "Status": "queued"})
+    wi_convert.write_spec_file(repo / "docs" / "work", spec)
+    out = tmp_path / "author-prompt.md"
+    proc = run_py(
+        [
+            _MKPROMPT,
+            _AUTHOR_TEMPLATE,
+            out,
+            "WI=WI-301",
+            "LANE=" + repo.name,
+            "WTROOT=" + repo.parent.as_posix(),
+            "PY=python",
+            "BASE=0000000",
+            "SPEC=docs/work/unused.md",
+            "CHANGES=SN-001;SR-002",
+            "TESTS=",
+            "HATS=SN-001;SN-002",
+        ],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    author = out.read_text(encoding="utf-8")
+
+    def asked(text):
+        return {question for question in _HAT_QUESTIONS if question in text}
+
+    assert "need-b question?" in asked(sitting)
+    assert asked(author) == asked(sitting)
+
+
+_OVERRIDE = (
+    "An operator's own first-approval brief, written before the hats slot.\n"
+    "{chain}\n\n{baseline}\n\n{questions}\n\n"
+    "Write your verdict to {verdict} for {wi}.\n"
+)
+
+
+def test_an_override_without_the_hats_slot_composes_unchanged(tmp_path):
+    # Over a malformed roster, in a round: the override declares no slot, so
+    # its brief is the plain fill of the assembler's values and the roster is
+    # never read.
+    repo = _hat_repo(tmp_path, roster=_MALFORMED_ROSTER, drafted_sr=True)
+    row = _fa_row(Adjudicates="SR-002")
+    key = ab.BRIEF_PROMPTS["first-approval"]
+    text = _composed(repo, row, {key: _OVERRIDE})
+    values, why = ab.first_approval_values(repo, row)
+    assert why is None, why
+    declared = ab.prompts.slots(_OVERRIDE)
+    values = {k: v for k, v in values.items() if k in declared}
+    values.update(verdict=str(repo / "docs/reviews/v.md"), wi="WI-301")
+    assert text == ab.prompts.fill(key, _OVERRIDE, values)
+    # The shipped template declares the slot, so the same round refuses there.
+    shipped, why = ab.compose(repo, row, repo / "docs/reviews/v.md")
+    assert shipped is None, "a malformed roster composed a round's brief"
+    assert _ROSTER_REL in why.replace("\\", "/"), why
+
+
+_PERSPECTIVES_HEAD = "=== THIS SITTING'S PERSPECTIVES ==="
+_SECTION_HEAD = "=== SECTION `## "
+
+
+def test_a_combined_sitting_carries_the_hat_questions_once_over_the_union(tmp_path):
+    # The amendment section amends SN-001 (need-a); the first-approval section
+    # drafts SR-002 under SN-002 (need-b). One perspectives part follows the
+    # last section and carries the union, each question once.
+    repo = _hat_repo(tmp_path, amend_need=True, drafted_sr=True)
+    row = _am_row(
+        Brief="combined", Adjudicates="amendment:SN-001;first-approval:SR-002"
+    )
+    text = _composed(repo, row)
+    assert text.count(_SECTION_HEAD) == 2
+    assert text.count(_PERSPECTIVES_HEAD) == 1
+    head = text.index(_PERSPECTIVES_HEAD)
+    assert head > text.rindex(_SECTION_HEAD)
+    for question in ("always-on question?", "need-a question?", "need-b question?"):
+        assert text.count(question) == 1, question
+        assert text.index(question) > head, question
+    assert "unreached question?" not in text
+
+
+def test_a_combined_sitting_that_is_no_round_states_it_once(tmp_path):
+    # An amended SR and a drafted LLR: neither section is a decomposition
+    # round, and the sitting says so once.
+    repo = _first_approval_repo(tmp_path)
+    _amend(repo)
+    _write_roster(repo, _HAT_ROSTER)
+    row = _fa_row(
+        Brief="combined", Adjudicates="amendment:SR-001;first-approval:LLR-001"
+    )
+    text = _composed(repo, row)
+    assert text.count(_not_a_round()) == 1
+    assert not [q for q in _HAT_QUESTIONS if q in text]
+
+
+def test_a_malformed_roster_refuses_a_round_sitting_by_name(tmp_path):
+    repo = _hat_repo(tmp_path, roster=_MALFORMED_ROSTER, drafted_sr=True)
+    text, why = ab.compose(
+        repo, _fa_row(Adjudicates="SR-002"), repo / "docs/reviews/v.md"
+    )
+    assert text is None, "a malformed roster composed a round's brief"
+    assert _ROSTER_REL in why.replace("\\", "/"), why
+
+
+_NO_HATS_BRIEFS = sorted(
+    {key for brief, key in ab.BRIEF_PROMPTS.items() if brief not in ab.QUESTION_BRIEFS}
+    | {ab.prompts.ADJUDICATE_COMBINED, ab.prompts.ADJUDICATE_ACT}
+)
+
+
+@pytest.mark.parametrize("key", _NO_HATS_BRIEFS)
+def test_no_other_brief_declares_the_hats_slot(key):
+    """Only the two spine sitting templates carry the perspectives slot; the
+    done-when, red-TC, rejudge, disposition, consolidate, dispute, act and
+    combined templates do not. Adequacy witness: a `{hats}` slot added to the
+    done-when template (or a combined template that declared it beside its
+    sections' own) fails here."""
+    assert "hats" not in ab.prompts.slots(ab.prompts.load(key))
+
+
+_HAT_LINES = (
+    "- HAT ALWAYS-ON -> no finding -> the rows name their authority\n"
+    "- HAT NEED-A -> SR-001 -> it raised the bound\n"
+)
+_AMENDMENT_VERDICT = "VERDICT: CLARITY rows=1\n- [CLARITY] SR-001 -> a rewording\n"
+_FIRST_APPROVAL_VERDICT = (
+    "OUTCOME: APPROVE rows=2\n"
+    "- [APPROVE] LLR-001 -> ready\n"
+    "- [RETURN] TC-001 -> its expected result is vague\n"
+)
+_COMBINED_VERDICT = (
+    "SITTING: JUDGED kinds=amendment;first-approval\n\n"
+    "## amendment\n\n" + _AMENDMENT_VERDICT + "\n## first-approval\n\n"
+    "" + _FIRST_APPROVAL_VERDICT
+)
+
+
+def _rulings(text, brief, kinds):
+    """What a verdict rules: its parsed machine lines, each part's row
+    rulings, and the rows it authorizes an act on."""
+    parsed, why = ksitting.parse(text, brief, kinds)
+    assert why is None, why
+    binding = ksitting.render_requested(brief, kinds, "accepted")
+    accepted = ksitting.accepted(text, binding)
+    assert accepted, text
+    rows = {kind: part[3] for kind, part in accepted.items()}
+    return parsed, rows, ksitting.judged_rows(accepted)
+
+
+@pytest.mark.parametrize(
+    "brief, kinds, verdict",
+    [
+        ("amendment", ("amendment",), _AMENDMENT_VERDICT),
+        ("first-approval", ("first-approval",), _FIRST_APPROVAL_VERDICT),
+        (ksitting.SITTING, ("amendment", "first-approval"), _COMBINED_VERDICT),
+    ],
+    ids=["amendment", "first-approval", "combined"],
+)
+def test_hat_outcome_lines_change_no_ruling(brief, kinds, verdict):
+    """A verdict naming each hat's outcome on `- HAT <NAME> -> ...` lines
+    parses to the same machine lines, row rulings and authorized rows as the
+    same verdict without them: the outcome lines are neither row lines nor
+    machine lines. Adequacy witness: a reader counting any `- ` line under a
+    kind as a row line would add a ruling for `ALWAYS-ON` or `NEED-A`, and a
+    reader taking `HAT` as a keyword would refuse the verdict."""
+    plain = _rulings(verdict, brief, kinds)
+    with_hats = _rulings(verdict + _HAT_LINES, brief, kinds)
+    assert with_hats == plain
+    assert plain[2], "the fixture verdict authorizes no act"

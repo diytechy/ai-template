@@ -39,6 +39,16 @@
                    match, its every-tier section included). An absent or
                    unreadable home, or one with no section for a judged tier,
                    refuses the render: there is no fallback method here.
+       {hats}      OPTIONAL: the perspectives this decomposition round must
+                   face (scripts/plan_briefs.py), filled by the composer only
+                   where a template declares it, so an override without it
+                   composes unchanged. A first approval of an SR is a
+                   decomposition round: the slot carries the question of each
+                   declared hat applicable to that SR's parent need, widened
+                   by the work item's tags, and asks the verdict for one
+                   `- HAT` outcome line per hat. Any other judged set says it
+                   is no decomposition round. A roster that exists and does
+                   not parse refuses the render, naming it.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 
@@ -77,6 +87,10 @@ Your verdict is this turn's whole output. You change no registry cell and take n
 If the answer is RETURN, change NO registry cell. Draft the follow-up work in a `## Dispositions` section of this row's own spec — one fenced ```toml block per draft — and intake mints it at this row's merge. Do not file the row yourself; a lane that mints an id is refused at the merge slot.
 
 A MIXED batch is normal: approve the rows that are ready, return the rest, and say which is which. The verdict label answers for the BATCH.
+
+--- PERSPECTIVES (the declared hats this decomposition round must face) ---
+{hats}
+--- END ---
 
 Write your verdict to {verdict}. One line per row, in the log.md block format:
 

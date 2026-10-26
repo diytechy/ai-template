@@ -804,18 +804,18 @@ phase = 5
 da_refs = ["DA-012"]
 
 [requirement.SR-161]
-title = "Decompositions carry a perspective record"
+title = "Each decomposition round is reviewed against its applicable perspectives"
 sn_refs = ["SN-036"]
 boundary_refs = ["B-05"]
 hat_refs = ["TEST-ENGINEER"]
-requirement = """The delivered planning content shall leave, with every decomposition it produces, a machine-readable record of the declared review perspectives — each perspective's applicability decision and the requirements or explicit no-finding it produced — such that an applicable declared perspective missing from the record is a reportable finding."""
-rationale = """Realizes SN-036 — a decomposition produced from one perspective can look complete while omitting security, operations or first-use failures, and the omission is invisible unless the record names what was considered. SN-036 had no citing SR. The declared-perspective inventory is the ruled hats roster; the record proves coverage and provenance while adequacy stays with the independent review, exactly as the need partitions it."""
-acceptance_criteria = """A decomposition round writes the perspective record beside its artifacts; a declared perspective applicable to the decomposition and absent from the record is reported; the record distinguishes not-applicable from considered-with-no-finding; the independent adequacy review reads the record rather than the authoring transcript."""
+requirement = """When a decomposition round is reviewed, the delivered planning content shall provide every applicable declared perspective's question in the decomposition brief and require the sitting's review record to name the outcome for each perspective."""
+rationale = """A decomposition produced from one perspective can look complete while omitting security, operations or first-use failures. The hats roster and the planning briefs already supply the applicable questions, and the sitting's review record preserves their outcomes; a separate machine-readable coverage record and checker would duplicate that review without improving its adequacy judgment. Hat-Refs remain the row-level provenance for perspectives that raised a requirement. This applies the owner ruling of 2026-09-06, re-affirmed 2026-10-13."""
+acceptance_criteria = """For one completed decomposition round, the applicable perspectives resolve from the declared hats roster, the decomposition brief presents each applicable perspective's question, and the sitting's review record names an outcome for every one; the independent adequacy review reads that record."""
 priority = "S"
-verification = "Test"
+verification = "Inspection"
 status = "Approved"
 phase = 5
-coincident = """The need asks for each decomposition examined from every declared perspective; the machine-readable record of each perspective's decision, and the finding when an applicable one is missing, is that outcome, and whether the resulting requirements are adequate is left to independent review, as the need states."""
+coincident = """The need asks that each decomposition round is reviewed against every applicable declared perspective; the sitting's review record naming each perspective's outcome is that outcome, and whether the resulting requirements are adequate is left to independent review, as the need states."""
 
 [requirement.SR-162]
 title = "Requirement boundary references resolve against the declared frame"
@@ -865,7 +865,7 @@ sn_refs = ["SN-040"]
 boundary_refs = ["B-05"]
 hat_refs = ["MAINTAINER"]
 requirement = "The delivered planning content shall leave, with every component partition it produces, a machine-readable derivation record in the tracked component registry rather than session prose — the candidate partitions considered, the declared objective and constraints they were scored against, each candidate's score, the selected partition, and the human ruling that named the components and adopted it — such that a live component row whose record omits any of those elements, or a selection the recorded scores do not rank first without a recorded human override, is a reportable finding."
-rationale = "Realizes SN-040 — a free-form partition leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents; the record is what lets the choice be re-examined. SN-040 had no citing SR, even as the P5 partition work performed exactly this record. Reproducibility is stated as a recomputation from the record's own declared inputs, not as a reviewer re-running a model session, because only the former can fail — the SR-161 form applied to the partition instead of the perspective set. B-05 alone: the human ruling is an element the record must carry, not an observable the system states at the authority input, which is SR-139's and SR-140's ground."
+rationale = "Realizes SN-040 — a free-form partition leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents; the record is what lets the choice be re-examined. SN-040 had no citing SR, even as the P5 partition work performed exactly this record. Reproducibility is stated as a recomputation from the record's own declared inputs, not as a reviewer re-running a model session, because only the former can fail. B-05 alone: the human ruling is an element the record must carry, not an observable the system states at the authority input, which is SR-139's and SR-140's ground."
 acceptance_criteria = "A partition round writes the derivation record into the tracked component registry, never into session prose or a plan document alone; a live component row with no record, or a record omitting the candidate partitions, the declared objective, the constraints, any candidate's score, the selected partition or the human ruling, is reported naming the missing element; a selected partition the recorded scores do not rank first is reported unless the record carries the human override that chose it; the recorded ranking recomputes from the record's own objective, constraints and scores alone."
 priority = "S"
 verification = "Test"

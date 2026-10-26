@@ -425,9 +425,15 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # agent_policy and check_trajectory import the new module at module level,
     # so they add no deferred edge. held_status imports acceptance_record one
     # way, so no cycle grew. Reason in docs/decisions/wi-851.toml (D-002).
-    assert 14 <= deferred <= 40, (
+    # RE-STAMPED 40 -> 41 (2026-10-25, WI-976): amendment_brief -> trace joins
+    # deferred. The amendment arm moved out of adjudicate_brief whole, its
+    # deferred `trace` and `intake` reads with it: the composer keeps its own
+    # deferred `trace` edge for the first-approval and re-judge arms, so the
+    # arm's copy is a new edge, and `intake` moved rather than joined. The
+    # composer imports the new module one way, so no cycle or layer edge grew.
+    assert 14 <= deferred <= 41, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..40 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..41 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

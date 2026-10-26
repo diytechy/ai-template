@@ -1,0 +1,9 @@
+# OBSERVATION RECORD, written by scripts/record_observation.py. Do not edit:
+# a new sample is a new record, and a record that fails to parse, or whose
+# case or lifetime does not allow it, fails the traceability check.
+tc = "TC-211"
+outcome = "fail"
+observed_at = "2026-10-26T07:19:24Z"
+provenance = "Codex Sol gpt-6.1-sol (medium), codex_call session 71a4603ab0754920958803da5c619c4f, TC-211 re-judge P11 of WI-976"
+expires = "2027-01-24T07:19:24Z"
+judged = "sha256:05ef97641ae80392ada28be71bd8323a7e6c2437af1e884f87cd4d5ad997164c"

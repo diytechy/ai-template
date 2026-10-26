@@ -482,7 +482,7 @@ notes = """Published contract, not a single consumer: 14+ kit scripts independen
 
 [interface.IF-161]
 owner = "docs/test/"
-consumers = ["scripts/acceptance_record", "scripts/adjudicate_brief", "scripts/agent_loop", "scripts/baseline_snapshot", "scripts/check_doc_refs", "scripts/check_flows", "scripts/check_trajectory", "scripts/gen_okf", "scripts/gen_release_checklist", "scripts/intake", "scripts/plan_coverage", "scripts/spine_rules", "scripts/trace", "scripts/traj_parse", "external:downstream adopter"]
+consumers = ["scripts/acceptance_record", "scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/agent_loop", "scripts/baseline_snapshot", "scripts/check_doc_refs", "scripts/check_flows", "scripts/check_trajectory", "scripts/gen_okf", "scripts/gen_release_checklist", "scripts/intake", "scripts/plan_coverage", "scripts/spine_rules", "scripts/trace", "scripts/traj_parse", "external:downstream adopter"]
 channel = "file"
 data = "test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids are the table keys"
 version = "v1"
@@ -1054,7 +1054,7 @@ coincident = """The page lists the pending decisions and the re-attestation chai
 [interface.IF-075]
 rationale = """Split out of reattest_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
 owner = "scripts/trace"
-requestors = ["scripts/gen_open_items", "scripts/adjudicate_brief"]
+requestors = ["scripts/gen_open_items", "scripts/adjudicate_brief", "scripts/amendment_brief"]
 channel = "call"
 data = "reattest_model entries: chain rows, changed cells, baseline rev and date, and each spine registry's own copy stamp; an empty model is a valid answer"
 version = "v1"
@@ -1272,7 +1272,7 @@ notes = """sink — the census consumes the validator's one orphan/status engine
 
 [interface.IF-090]
 owner = "scripts/intake"
-requestors = ["scripts/integrate", "scripts/dispatch", "scripts/agent_loop", "scripts/adjudicate_act", "scripts/adjudicate_brief"]
+requestors = ["scripts/integrate", "scripts/dispatch", "scripts/agent_loop", "scripts/adjudicate_act", "scripts/amendment_brief"]
 channel = "call"
 data = "merge intake, gap minting, advisory context, and adjudication-action policy"
 version = "v1"
@@ -1517,7 +1517,7 @@ notes = """cross-component crossing declared per the architecture rule. Existenc
 [interface.IF-113]
 rationale = """The loader's both-ways strictness is load-bearing here rather than merely tidy: a judge's brief whose evidence section is thin reads as an investigation that was run and found nothing, so there is deliberately no partially-filled path across this seam."""
 owner = "scripts/prompts"
-requestors = ["scripts/adjudicate_brief", "scripts/adjudicate_act"]
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/adjudicate_act"]
 channel = "call"
 data = "ADJUDICATE-AMENDMENT · ADJUDICATE-DISPOSITION · ADJUDICATE-RED-TC · ADJUDICATE-DONE-WHEN · ADJUDICATE-COMBINED · ADJUDICATE-ACT · PROMPTS / SPINE_QUESTIONS"
 version = "v1"
@@ -1528,7 +1528,7 @@ notes = """intra-component: both endpoints are CMP-008 under the narrow-waist pa
 [interface.IF-114]
 rationale = """Read through the carrier rather than a path with a suffix because the brief must assemble identically either side of the carrier cutover. Every listed cell is required rather than dash-filled, since a dash in an evidence listing reads as "checked, not applicable" when the truth is "the registry never said"."""
 owner = "scripts/spine_carrier"
-requestors = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief"]
 channel = "call"
 data = "spine_carrier.load over the TC, SR and LLR tiers; every listed cell required, read-only"
 carried_by = "IF-102"
@@ -1620,7 +1620,7 @@ status = "Drafted"
 
 [interface.IF-124]
 owner = "scripts/baseline_snapshot"
-requestors = ["scripts/adjudicate_brief", "scripts/adjudicate_act"]
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/adjudicate_act"]
 channel = "call"
 data = "exists, stamp, SNAPSHOT_DIR, SNAPSHOT_TIERS and format_approves"
 carried_by = "IF-123"
@@ -1660,7 +1660,7 @@ notes = """intra-component (both endpoints are CMP-006), so the cross-component 
 
 [interface.IF-129]
 owner = "scripts/acceptance_record"
-requestors = ["scripts/baseline_snapshot", "scripts/held_status", "scripts/adjudicate_brief", "scripts/adjudicate_act"]
+requestors = ["scripts/baseline_snapshot", "scripts/held_status", "scripts/amendment_brief", "scripts/adjudicate_act"]
 channel = "call"
 data = "split_changed_cells; approved_text_digest(registry, id_col, row) -> sha256:<16 lowercase hex>"
 version = "v1"
@@ -1693,7 +1693,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 owner = "scripts/spine_carrier"
 requestors = ["scripts/hats"]
 channel = "call"
-data = "spine_carrier.load_needs, load, resolve, stem, folded, NEED_CARRIERS; absent registry [] and VACUOUS, unreadable carrier SystemExit"
+data = "spine_carrier.load_needs, resolve, stem, folded, NEED_CARRIERS; absent registry [] and VACUOUS, unreadable carrier SystemExit"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -2638,7 +2638,7 @@ notes = "source - this seam reads version-control trees and review or decision r
 [interface.IF-287]
 rationale = "Combined brief composition, review verdict checking, merge-time disposition and approval acts need one interpretation of their machine lines, kind-scoped tokens, bound row identities and sections; separate parsers could let one judgement act outside its requested scope or let a malformed review verdict reach a different consumer."
 owner = "scripts/kitlib/sitting"
-requestors = ["scripts/adjudicate_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act", "scripts/held_status"]
+requestors = ["scripts/adjudicate_brief", "scripts/amendment_brief", "scripts/acceptance_record", "scripts/consolidate", "scripts/intake", "scripts/review_brief", "scripts/score_reviews", "scripts/plan_coverage", "scripts/adjudicate_act", "scripts/held_status"]
 channel = "call"
 data = "binding/path grammar; requested, identity and findings-file cells; outcome; combined-scope and review-verdict readers"
 version = "v1"

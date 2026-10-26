@@ -189,6 +189,8 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    statuses unchanged; interface rows have no approval status. Verify and
    commit the set without a sitting yet. These rows give the builder the
    tests to write and reviewers the obligations the code is meant to meet.
+   Fill the prompt's `HATS` slot as `references/recipes.md`, "Terra, first
+   turn", defines it.
 2. Build round 1's first deliverable is the tests, committed alone before
    the code, each under one evidence class (plan item 13's typed evidence):
    - **New or corrected executable behaviour:** a strict expected assertion
@@ -331,7 +333,7 @@ this hold (`project-trajectory/PROCESS.md` §4).
    was reconciled at an earlier checkpoint and since then no round proposed
    row text and no code moved, omit the turn and record why, after checking
    mechanically that each changed approved cell keeps its approved text
-   (WI-914, WI-923).
+   (WI-914, WI-923). Fill the turn's `HATS` slot as at intent.
 2. **The closure check passes** before the sitting (`spine-authoring`,
    `references/in-lane.md`: parents, the arms, TC-to-LLR-and-SR, interface
    citations, the strict integrity checks).

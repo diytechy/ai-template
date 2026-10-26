@@ -189,16 +189,15 @@ Questions:
   - **Which tiers carry it:** `SR` and `LLR` only. `SN` states the need a hat is
     a lens *on*, and `TC` records how a claim is checked; neither is a place an
     obligation is attributed, and neither schema declares the key.
-- **(c3) Leave the decomposition's perspective record beside it, and review
-  from it.** `Hat-Refs` cannot say that a perspective was weighed and found
-  nothing. The decomposing session runs `python scripts/hats.py record
-  <record-stem>.perspectives.toml --row <id> ... --by <who>` next to its
-  decomposition record. That derives which hats applied and what each produced (own
-  `Hat-Refs`), and the session writes a one-line `no_finding` for each applicable
-  hat that produced nothing. As adjudicator, read that file, not the authoring
-  transcript, and run `record <file> --check`. MISSING, STALE or CONFLICT goes
-  back for a fix. Whether each no-finding is adequate is your judgement; the
-  check only proves that every applicable hat has an answer.
+- **(c3) In a decomposition round, the review record names each applicable
+  hat's outcome.** `Hat-Refs` cannot say that a perspective was weighed and
+  found nothing, and no file beside the decomposition says it either. A round
+  that adds an SR under a need, or amends an approved need, carries each
+  applicable hat's question in its brief, and the sitting's verdict, the
+  review record, names every one of them once: the rows it raised, by their
+  `Hat-Refs`, or no finding with the reason. A missing outcome is a finding
+  for the review, never a coverage gate, and no check counts the outcomes.
+  Whether each outcome is adequate is your judgement as adjudicator.
 - **(d) The advisories are detectors, not caps.** `scripts/trace.py` warns —
   never gates — on (i) an SR `Requirement` naming a concrete `.py` artifact,
   (ii) two SRs naming the same artifact token, (iii) an SN `acceptance` naming a

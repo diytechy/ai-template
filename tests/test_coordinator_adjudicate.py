@@ -373,7 +373,7 @@ def test_the_loop_composes_the_same_keep_request_as_before(
                 if not (override and key == "ADJUDICATE-DISPOSITION")
             ]
             + [
-                cli.adjudicate_brief.QUESTIONS_HOME,
+                cli.adjudicate_brief.amendment_brief.QUESTIONS_HOME,
                 prompts.template_path("ADJUDICATE-ACT"),
             ],
             "template_texts": [override] if override else [],
@@ -397,7 +397,7 @@ def test_the_identity_covers_each_class_and_nothing_for_a_class_without_a_templa
     # one of its governing inputs: a change to it drains a retained session.
     assert paths == [
         ab.prompts.template_path("ADJUDICATE-AMENDMENT"),
-        ab.QUESTIONS_HOME,
+        ab.amendment_brief.QUESTIONS_HOME,
         ab.prompts.template_path("ADJUDICATE-ACT"),
     ]
     assert texts == ["an override"]

@@ -573,6 +573,9 @@ MAPPING = [
     # ADJUDICATE session composes from the worker assignment, which is
     # the WI-424 defect this ships to close.
     ("scripts/adjudicate_brief.py", "scripts/adjudicate_brief.py"),
+    # The amendment brief's arm, moved out of the composer by WI-976:
+    # `adjudicate_brief.py` imports it unguarded, so it ships beside it.
+    ("scripts/amendment_brief.py", "scripts/amendment_brief.py"),
     # The act assembler (WI-912): derives the act a committed verdict still
     # owes and fills the act brief; the coordinator's entry point imports it.
     ("scripts/adjudicate_act.py", "scripts/adjudicate_act.py"),

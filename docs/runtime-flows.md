@@ -241,7 +241,7 @@ sequenceDiagram
     Keep->>Win: keep-warm tick: inside? (no ping), else retire a stale session first
 ```
 
-### Flow 6 — The coordinator's judging turn and act turn (SR-231, SR-232, SR-209, SR-178, LLR-306, LLR-338, LLR-359)
+### Flow 6 — The coordinator's judging turn and act turn (SR-231, SR-232, SR-209, SR-178, SR-161, LLR-306, LLR-338, LLR-359, LLR-360)
 
 A judging turn reserves and binds a verdict, recording the identity of each
 judged row's approved text beside it, launches its judging brief, commits and
@@ -260,8 +260,10 @@ sequenceDiagram
     participant Keep as retained adjudicator plan
     participant Agent as adjudicator session
     participant Records as approved-row records
+    participant Roster as hats roster
     Coord->>Lane: confirm the judging lane claim (SR-231)
     Coord->>Verdict: reserve path and bind the judging brief, its judged rows' identities and a dispute brief's findings file (LLR-306, LLR-359, LLR-310)
+    Coord->>Roster: a decomposition round's judging brief reads the applicable hats' questions, and any other sitting's says it is none (SR-161, LLR-360)
     Coord->>Agent: launch judging brief
     Agent->>Verdict: commit verdict
     Coord->>Verdict: validate and record accepted verdict

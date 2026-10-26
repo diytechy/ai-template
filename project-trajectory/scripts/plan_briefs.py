@@ -333,9 +333,8 @@ def _parent_need_ids(root, row):
     return need_ids
 
 
-def _parent_need_contexts(root, row, work_context):
-    """One WI+SN context per parent; declared missing inputs refuse."""
-    need_ids = _parent_need_ids(root, row)
+def _parent_need_contexts(root, need_ids, work_context):
+    """One WI+SN context per parent need id; declared missing inputs refuse."""
     if not need_ids:
         return []
     if spine_carrier.resolve(root / NEEDS_REL, spine_carrier.NEED_CARRIERS) is None:
@@ -356,14 +355,24 @@ def _parent_need_contexts(root, row, work_context):
     return [_hat_parent_context(work_context, needs[need_id]) for need_id in need_ids]
 
 
-def hat_surface_for_work_item(root, row):
-    """Hat surface for a WI and each exact parent, without merging parents."""
+def hat_surface_for_work_item(root, row, needs=()):
+    """Hat surface for a WI and each exact parent, without merging parents.
+
+    The parents are the needs the row's SR-Refs and SpecRef reach, plus
+    `needs` (exact SN ids): a round that amends a need names it here, since
+    no reference on the row reaches it. Each parent is one context, widened
+    by the work item's tags.
+
+    Implements: SR-161, LLR-360"""
     root = Path(root)
     roster = hats_roster.load(root)
     if not roster:  # absent/empty roster is the declared opt-out
         return {HAT_QUESTIONS_SLOT: hats_roster.brief_block(roster)}
     work_context = hats_roster.context_from_work_item(row)
-    contexts = [work_context] + _parent_need_contexts(root, row, work_context)
+    need_ids = _parent_need_ids(root, row)
+    for need_id in needs:
+        need_ids.setdefault(need_id, None)
+    contexts = [work_context] + _parent_need_contexts(root, need_ids, work_context)
     selected = {
         hat["name"]
         for context in contexts
@@ -372,6 +381,145 @@ def hat_surface_for_work_item(root, row):
 
     chosen = [hat for hat in roster if hat["name"] in selected]
     return {HAT_QUESTIONS_SLOT: hats_roster.brief_block(chosen)}
+
+
+# --- the perspectives a decomposition round's sitting brief carries -----------
+# A sitting that judges a system requirement awaiting its first approval, or an
+# approved need whose text is amended, is a decomposition round: its brief puts
+# every applicable hat's question and asks the verdict for one outcome line per
+# hat. The outcome lines are review text, read by the review of the verdict;
+# no code counts them, and a missing one is a finding, never a check.
+
+# The optional single-brace slot the two spine sitting templates declare.
+HAT_SLOT = "hats"
+# The key an assembler reports its judged parents under: `(srs, needs,
+# amended)`, the SR ids awaiting a first approval, the amended SN ids, and the
+# amended SR ids, whose needs join a round's parents but make no round. Never
+# a slot.
+HAT_PARENTS = "_hat_parents"
+_NO_PARENTS = ((), (), ())
+
+NOT_A_ROUND = (
+    "_(no decomposition round: nothing judged here is a system requirement "
+    "awaiting its first approval or an amended stakeholder need, so no "
+    "perspective question is put and no hat outcome is owed.)_"
+)
+
+_OUTCOME_INSTRUCTION = (
+    "Name every hat listed above in your verdict, once each, on its own line "
+    "beside your row lines and under no heading of its own:\n\n"
+    "    - HAT <NAME> -> <the rows it raised, by their Hat-Refs, or no finding> "
+    "-> <why>\n\n"
+    "An outcome line rules no row and is no machine line. A listed hat with no "
+    "outcome line is a finding for the review of this verdict, never a check."
+)
+
+_POINTER = (
+    "_(this sitting's perspectives follow its last section, once for the "
+    "whole sitting.)_"
+)
+
+_PERSPECTIVES_HEAD = "=== THIS SITTING'S PERSPECTIVES ==="
+
+
+def round_questions(root, row, srs=(), needs=()):
+    """The questions of every hat applicable to a decomposition round whose
+    parent needs are those the SRs `srs` name and the SN ids `needs`, each
+    need widened by the work item `row`'s tags and evaluated alone. The row's
+    own SR-Refs and SpecRef never stand in for the round's parents, so the
+    sitting's brief and the spine author's prompt put one set. No roster, or
+    no applicable hat: the roster's stated no-hats line. A roster that exists
+    and does not parse raises `HatsError`.
+
+    Implements: SR-161, LLR-360"""
+    judged = dict(row, **{"SR-Refs": ";".join(srs), "SpecRef": ""})
+    return hat_surface_for_work_item(root, judged, tuple(needs))[HAT_QUESTIONS_SLOT]
+
+
+def round_hat_block(root, row, needs=(), srs=()):
+    """The block a decomposition round's brief carries: the round's questions
+    (`round_questions`), then the instruction to name each hat's outcome
+    once. With no applicable hat, or no roster, it is the roster's stated
+    no-hats line and asks for nothing.
+
+    Implements: SR-161, LLR-360"""
+    block = round_questions(root, row, srs, needs)
+    if block == hats_roster.NO_HATS:
+        return block
+    return block + "\n\n" + _OUTCOME_INSTRUCTION
+
+
+def sitting_hat_block(root, row, srs, needs, amended=()):
+    """The perspectives a sitting judging `srs` (SR ids awaiting a first
+    approval), `needs` (amended SN ids) and `amended` (amended SR ids)
+    carries. What makes a round is `srs` or `needs`: with neither it is
+    `NOT_A_ROUND`, and the roster is not read. Otherwise the round's block,
+    whose parents are the needs every judged SR names (`srs` and `amended`)
+    and `needs`, the work item's tags kept.
+
+    Implements: SR-161, LLR-360"""
+    if not srs and not needs:
+        return NOT_A_ROUND
+    return round_hat_block(root, row, tuple(needs), (*srs, *amended))
+
+
+def fill_hat_slot(root, row, base, values, sitting=None):
+    """Take the assembler's reported parents out of `values` and, only when
+    the template `base` declares the slot, fill it: with the sitting's block
+    for a brief composed alone, or, inside a combined sitting (`sitting`, a
+    list the sections share), with a line pointing at the one block that
+    follows the sitting's last section, the parents kept in `sitting`. A
+    roster that cannot be read raises `prompts.PromptError` naming it.
+
+    Implements: SR-161, LLR-360"""
+    parents = tuple(tuple(ids) for ids in values.pop(HAT_PARENTS, _NO_PARENTS))
+    declared = HAT_SLOT in prompts.slots(base)
+    if sitting is not None:
+        sitting.append((parents, declared))
+        if declared:
+            values[HAT_SLOT] = _POINTER
+        return
+    if not declared:
+        return
+    try:
+        values[HAT_SLOT] = sitting_hat_block(root, row, *parents)
+    except HatsError as exc:
+        raise prompts.PromptError(_roster_refusal(exc)) from exc
+
+
+def sitting_tail(root, row, sitting):
+    """`(text, None)`: the one perspectives part a combined sitting carries
+    after its last section, over the union of every section's parents, or
+    `("", None)` when no section's template declared the slot, or
+    `(None, reason)` naming the roster when it cannot be read.
+
+    Implements: SR-161, LLR-360"""
+    if not any(declared for _parents, declared in sitting):
+        return "", None
+    union = [
+        list(dict.fromkeys(i for parents, _d in sitting for i in parents[k]))
+        for k in range(len(_NO_PARENTS))
+    ]
+    try:
+        block = sitting_hat_block(root, row, *union)
+    except HatsError as exc:
+        return None, _roster_refusal(exc)
+    where = (
+        ""
+        if block in (NOT_A_ROUND, hats_roster.NO_HATS)
+        else "\n\nWrite these outcome lines once for the whole sitting, under "
+        "the last section's `## <kind>` heading."
+    )
+    return "{}\n\n{}{}".format(_PERSPECTIVES_HEAD, block, where), None
+
+
+def _roster_refusal(exc):
+    """The refusal a roster that cannot be read gives, naming the roster.
+
+    Implements: SR-161, LLR-360"""
+    return "the perspectives block cannot be composed from {}: {}".format(
+        hats_roster.ROSTER_REL, exc
+    )
 
 
 # --- strict slot fill ---------------------------------------------------------

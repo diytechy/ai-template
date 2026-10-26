@@ -28,6 +28,7 @@ COMPOSING_MODULES = (
     "agent_brief.py",  # worker_prompt / critique_brief
     "plan_briefs.py",  # the dual-plan round's allowlist surface
     "adjudicate_brief.py",  # compose: spec + report + oneline/name-status logs
+    "amendment_brief.py",  # the amendment arm: registry rows and snapshot copies
     "intake.py",  # context_block
     "prompts.py",  # the template loader/renderer
 )

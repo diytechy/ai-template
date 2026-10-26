@@ -3,12 +3,30 @@ id = "WI-976"
 title = "The perspective-record sidecar retires and the 2026-09-06 SN-036 ruling applies here: an SN to SR round's sitting and author briefs carry the applicable hats' questions, and the sitting's verdict names each hat's outcome"
 workstream = "process"
 sr_refs = ["SR-161", "SR-186"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#14-retire-the-perspective-record-sidecar-apply-the-2026-09-06-hat-ruling-here"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+The perspective-record sidecar retires: `hats.py record`, its test module,
+the DECOMPOSITION-AMENDMENTS sidecar and every instruction asking for the
+record are gone, with LLR-297 and TC-312 retired. The 2026-09-06 SN-036
+ruling applies: SN-036, SR-161, LLR-183, TC-178 and TC-211 carry
+`contract_split`'s meaning; a decomposition round's sitting brief (and the
+spine-author prompt) carries the applicable hats' questions through an
+optional template slot, and the verdict names each hat's outcome (LLR-360,
+TC-399); SAFETY leaves this repo's roster. The amendment brief's arm moved
+into its own module (`amendment_brief.py`), which briefs a scoped retired
+row as a removal. Checkpoint sitting 016 blessed the set, acts 160 and 161
+took its acts, and TC-211's re-judge (P11) recorded a FAIL on the sample's
+missing stopping reason, ruled SUCCESSOR by sitting 021. SN-036's
+re-attestation act is the owner's, on trunk after this landing (wi-976
+D-023), carried by a queued owner row; sitting 024 blessed that Done-when
+route. One RESYNC entry.
 
 ## Context
 
@@ -104,8 +122,9 @@ direction ("one sitting, one owner act"), in this lane order:
 1. The ruling record: a log fragment carrying the 2026-09-06 decision, its
    four acts and its closing line, citing `f6c7360f` and `contract_split`'s
    `docs/log.md` heading, plus the 2026-10-13 direction and the revision 25
-   SAFETY ruling. SN-036's act cites this fragment directly, with no open
-   item.
+   SAFETY ruling. SN-036's act cites this fragment directly as its ruling;
+   the open item the owner-held step names tracks only that the act is
+   owed.
 2. The spine change set, authored at the intent turn: SN-036, SR-161,
    LLR-183, TC-178 and TC-211 amended; LLR-297 and TC-312 retired; one new
    LLR under SR-161 and one TC for the sitting brief's hat block; IF-133's
@@ -114,8 +133,9 @@ direction ("one sitting, one owner act"), in this lane order:
    SAFETY in this repo's roster.
 4. The hat block in the two sitting templates' composition and in the
    spine-author prompt.
-5. SN-036's act, which is the owner's (Done-when, "The owner-held step"),
-   with the sitting's other acts.
+5. The sitting's acts in the lane, but for SN-036's, which is the owner's,
+   on trunk after the landing (Done-when, "The owner-held step"; owner,
+   2026-10-25, `docs/decisions/wi-976.toml` D-023).
 6. TC-211's re-judge after the acts, against this lane's own checkpoint
    sitting, an SN to SR round (SN-036 is amended) and the first round to
    use deliverable 4.
@@ -213,45 +233,45 @@ overrule).
 ## Done-when
 
 **The ruling record**
-- [ ] The log fragment of deliverable 1 is committed before any row text
+- [x] The log fragment of deliverable 1 is committed before any row text
   changes.
 
 **The spine** (judged at one checkpoint sitting, top-down)
-- [ ] SN-036, SR-161, LLR-183, TC-178 and TC-211 carry `contract_split`'s
+- [x] SN-036, SR-161, LLR-183, TC-178 and TC-211 carry `contract_split`'s
   meaning, SR-161's rationale and `coincident` aside, as proposed above:
   TC-178's `expected` is split (LLR-183's `Hat-Refs` mechanics here,
   SR-161's acceptance inspected by TC-211); TC-211 verifies SR-161 and
   SR-186, inspects one actual completed decomposition review record, and
   its `inputs` name that record and its brief and no sidecar, its other
   cells staying.
-- [ ] LLR-297 and TC-312 are retired, each with its retirement record, at
+- [x] LLR-297 and TC-312 are retired, each with its retirement record, at
   the sitting that rules those amendments.
-- [ ] One new LLR under SR-161 states the sitting brief's hat block, and one
+- [x] One new LLR under SR-161 states the sitting brief's hat block, and one
   TC verifies it.
-- [ ] IF-133's `data` cell no longer lists `load`.
-- [ ] `docs/test/inspection-procedures.md` takes `contract_split`'s
+- [x] IF-133's `data` cell no longer lists `load`.
+- [x] `docs/test/inspection-procedures.md` takes `contract_split`'s
   proportionality procedure and its "missing perspective outcome" abnormal
   input; the 2026-09-06 INCOMPLETE result stays as history.
-- [ ] `docs/rubrics/decomposition-proportionality.md` R1 and B1 ask for the
+- [x] `docs/rubrics/decomposition-proportionality.md` R1 and B1 ask for the
   review record's outcomes, not a record producer.
 
 **The retirement**
-- [ ] The roster reader's `record` command and its test module are removed,
+- [x] The roster reader's `record` command and its test module are removed,
   with every symbol, import and docstring line only they used.
-- [ ] `DECOMPOSITION-AMENDMENTS.perspectives.toml` and its pointer paragraph
+- [x] `DECOMPOSITION-AMENDMENTS.perspectives.toml` and its pointer paragraph
   in `DECOMPOSITION-AMENDMENTS.md` go.
-- [ ] No instruction asks for the record: PROCESS.md section 1's record
+- [x] No instruction asks for the record: PROCESS.md section 1's record
   sentence goes; `spine-questions.md` (c3) becomes the ruling's rule (the
   review record names each applicable hat's outcome, and a missing outcome
   is a review finding, never a coverage gate); both roster headers state
   the same rule, and `docs/requirements/hats.toml`'s "WHAT IS NOT BUILT
   YET" paragraph goes; the coordinator recipe's perspective-record line
   goes, in all three copies.
-- [ ] SAFETY leaves `docs/requirements/hats.toml`, citing the revision 25
+- [x] SAFETY leaves `docs/requirements/hats.toml`, citing the revision 25
   ruling: its header count and its open SAFETY call close, the shipped
   template keeps SAFETY, and the live and template name pins in the roster
   tests split to match.
-- [ ] No live surface names the sidecar or the `record` command. Live:
+- [x] No live surface names the sidecar or the `record` command. Live:
   `project-trajectory/`, `scripts/`, `tests/`, `.claude/skills/`,
   `.agents/skills/`, `CLAUDE.md`, `AGENTS.md`, `docs/requirements/`,
   `docs/test/`, `docs/rubrics/` and the generated pages. Not live: the
@@ -261,67 +281,70 @@ overrule).
 
 **The hat block** (a closed input space; anything outside it gets the
 default)
-- [ ] A sitting is a decomposition round exactly when its judged set holds
+- [x] A sitting is a decomposition round exactly when its judged set holds
   an SR awaiting first approval or an amended SN; every other judged set
   (LLR, TC and IF rows, SR amendments, Done-when changes and every other
   brief class) gets no hat questions.
-- [ ] Applicability is computed from the roster for each parent need (each
+- [x] Applicability is computed from the roster for each parent need (each
   amended SN, and the SN each judged SR names), widened by the work item's
   tags and never merged across sibling needs, the rule the dual-plan
   planner already uses; it is never hand-written.
-- [ ] `adjudicate-first-approval.template.md` and
+- [x] `adjudicate-first-approval.template.md` and
   `adjudicate-amendment.template.md` each declare an optional single-brace
   hat slot; the composer supplies it only where the template declares it,
   so an overridden template without it composes unchanged; outside a
   decomposition round the slot says so.
-- [ ] A combined sitting carries the questions once, and its verdict names
+- [x] A combined sitting carries the questions once, and its verdict names
   each hat's outcome once.
-- [ ] An absent roster yields the opt-out line, and a malformed roster
+- [x] An absent roster yields the opt-out line, and a malformed roster
   refuses the composition by name.
-- [ ] The verdict's hat outcome lines are neither row-ruling lines nor
+- [x] The verdict's hat outcome lines are neither row-ruling lines nor
   machine lines: a verdict carrying them parses to the same rulings as one
   without them.
-- [ ] The spine-author prompt (`scripts/coordinator/terra-spine-prompt.template.md`)
+- [x] The spine-author prompt (`scripts/coordinator/terra-spine-prompt.template.md`)
   carries the same block, computed from the lane's work item, for a turn
   whose change set adds an SR under a need or amends a need; any other
   turn gets a line saying it is no decomposition round; the
   `coordinator-cycle` skill's dispatch step and the recipe name the slot.
-- [ ] Tests cover each state above, and the prompt slot pins follow.
+- [x] Tests cover each state above, and the prompt slot pins follow.
 
 **TC-211**
-- [ ] This lane's checkpoint sitting is the sample: composed with the block,
+- [x] This lane's checkpoint sitting is the sample: composed with the block,
   its brief committed beside its verdict, its verdict naming each
   applicable hat's outcome.
-- [ ] After the acts, a fresh session that wrote none of the rows, the brief
+- [x] After the acts, a fresh session that wrote none of the rows, the brief
   or the verdict inspects it under the amended procedure; its result is
   recorded through the kit's observation writer and in the procedure's
   result section.
 
-**The owner-held step**
-- [ ] One step is the owner's: SN-036's re-attestation act, through the
+**The owner-held step** (owner, 2026-10-25: `docs/decisions/wi-976.toml`
+D-023)
+- [x] One step is the owner's: SN-036's re-attestation act, through the
   needs-only snapshot route, in text-then-act order
   (`intake.py snapshot --approves stakeholder-needs=<the fragment> --reattests SN-036`),
-  naming the sitting's verdict where the route asks for it, taken attended
-  in the lane, after a re-claim if a headless leg marked the lane.
-- [ ] A headless leg brings the lane to that act and stops: it commits the
-  verdict, takes every other act, and records the command and its evidence
-  in the lane's decisions record and under the handoff's "For the owner".
-  It never takes the act.
-- [ ] The lane does not land before the act. If the owner returns SN-036's
-  text, it is reworked and re-sat alone, with any row whose meaning follows
-  it.
+  naming the sitting's verdict where the route asks for it, taken on trunk
+  after this lane lands. The held-rung lane rule refuses that act from a
+  lane, since the sitting rules SN-036 MEANING.
+- [x] The lane brings its rows to that act: it commits the verdict, takes
+  every other act, and records the command and its evidence in the lane's
+  decisions record and under the handoff's "For the owner". No session but
+  the owner's takes the act.
+- [x] The lane lands before the act. At the landing, a queued owner row in
+  WI-827's shape carries the act on trunk, citing a pending open item for
+  it. If the owner returns SN-036's text, it is reworked and re-sat alone,
+  with any row whose meaning follows it.
 
 **Shipping and the bar**
-- [ ] One RESYNC entry, superseding the 9233772b entry: the `record` command
+- [x] One RESYNC entry, superseding the 9233772b entry: the `record` command
   is gone and an adopter's script calling it fails; existing
   `.perspectives.toml` files are inert notes; the two sitting templates
   gain an optional hat slot, and an overridden template without it
   composes unchanged; the roster template's header changed, so a preserved
   roster's header comment is stale.
-- [ ] The generated pages and the prompt catalogue are regenerated, and the
+- [x] The generated pages and the prompt catalogue are regenerated, and the
   `byte-budget-guard` skill reports PROCESS.md's delta and restamps its
   row.
-- [ ] The commit bar is green, and both strict lints are clean on the
+- [x] The commit bar is green, and both strict lints are clean on the
   landing tip.
 
 ## Critique dispositions

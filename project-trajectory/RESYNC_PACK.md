@@ -6747,6 +6747,11 @@ approved case still owes a re-attest, as before.
 
 ### The per-decomposition perspective record [since 9233772b]
 
+*(Superseded by the entry below that retires the perspective record, "A
+decomposition round's sitting brief carries the applicable hats' questions" —
+if you are syncing past that commit, skip this entry: the `record` command it
+adds is gone there.)*
+
 *(Anchored at the preceding commit: the change lands in the commit after it.)*
 
 **What changed.** `scripts/hats.py` gains a `record` subcommand. It writes a
@@ -9897,6 +9902,61 @@ passes its riders (`text_then_act.LANE_COMMIT_RIDERS` for every rule).
 `prompts/CATALOG.md` (regenerate) and `skills/INDEX.csv` (regenerate). New:
 `rubrics/architecture-decomposition.template.md` (seeded once) and
 `skills/architecture-decomposition/`.
+
+### A decomposition round's sitting brief carries the applicable hats' questions; the perspective record retires [since a51cfae30]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.**
+
+- The `hats.py record` subcommand is gone, with everything only it used.
+  Coverage of a decomposition's perspectives is now the review path: a
+  decomposition round's sitting brief carries each applicable hat's
+  question, and the sitting's verdict names each hat's outcome on a
+  `- HAT <NAME> -> ...` line. A missing outcome is a finding for the
+  review; nothing checks it.
+- A sitting is a decomposition round when it judges an SR awaiting its
+  first approval or an amended approved need. Its hats are those
+  applicable to each amended need and to the need each judged SR names;
+  an amended SR's need joins a round another row makes, but makes none
+  alone. Any other sitting's brief says it is none, and reads no roster.
+- `adjudicate-first-approval.template.md` and `adjudicate-amendment.template.md`
+  gain an optional `{hats}` slot, filled only where a template declares
+  it. A combined sitting carries the questions once, after its last
+  section. A roster that exists and does not parse refuses a round's
+  brief, naming the roster; an absent roster yields its no-hats line.
+- The outcome lines are neither row lines nor machine lines: a verdict
+  parses to the same rulings with or without them.
+- `PROCESS.md` §1, `prompts/spine-questions.md` (c3) and the shipped roster
+  template's header state the review-record rule in place of the record.
+- The amendment sitting brief now briefs a scoped row that the approved
+  copy holds and the live registry lacks as a removal for the sitting to
+  rule, and refuses a scope token naming a row in neither.
+
+**What to do.**
+
+- A script of yours that calls `hats.py record` now fails (argparse
+  refuses the unknown subcommand). Delete the call.
+- Existing `*.perspectives.toml` files are inert notes that nothing reads:
+  keep them as records or delete them.
+- A `--prompt-map` override of either sitting template without `{hats}`
+  composes unchanged; add the slot to carry the hats' questions.
+- Your preserved `docs/requirements/hats.toml` keeps its old header
+  comment about the record. It is now stale: reword it from the template's
+  "THE REVIEW RECORD" paragraph when you next touch the roster.
+- No setting or registry format changes.
+
+**Kit-owned files — overwrite:** `scripts/hats.py`,
+`scripts/plan_briefs.py`, `scripts/adjudicate_brief.py`,
+`scripts/amendment_brief.py` (new: the amendment brief's arm, moved out of
+`scripts/adjudicate_brief.py`, which imports it),
+`scripts/baseline_snapshot.py`, `scripts/kitlib/bootstrap_manifest.py`,
+`prompts/adjudicate-first-approval.template.md`,
+`prompts/adjudicate-amendment.template.md`, `prompts/spine-questions.md`,
+`prompts/CATALOG.md`, `registries/hats.template.toml` (its header comment
+only) and `PROCESS.md`. Two `scope: this-repo`
+skills changed too, only if you vendored them: `skills/coordinator-cycle/`
+and `skills/byte-budget-guard/SKILL.md`.
 
 ## 5. Promotion: when this pack stops being prose
 

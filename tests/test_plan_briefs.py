@@ -9,11 +9,17 @@ over the kit template, and hat-key vocabulary stability.
 """
 
 import csv
+import inspect
+import re
 
 import pytest
 from conftest import SCRIPTS, load_script, run_py
 
 pb = load_script("plan_briefs")
+hats_roster = load_script("hats")
+
+from kitlib import sitting as ksitting  # noqa: E402  (scripts/ is on the path)
+from kitlib import verdict as kverdict  # noqa: E402
 
 # A string planted in status.md/log.md — the leak the redaction boundary must
 # never let through into any assembled brief.
@@ -343,3 +349,183 @@ def test_cli_surface_prints_registry_material_not_sentinel(tmp_path):
     assert "SR-061" in proc.stdout
     assert "IF-059" in proc.stdout
     assert SENTINEL not in proc.stdout
+
+
+# --- the perspectives a sitting brief carries ---------------------------------
+#
+# A sitting that judges an SR awaiting its first approval, or an amended
+# approved need, is a decomposition round: its brief carries the question of
+# every declared hat applicable to the round's parent needs and asks the
+# verdict for one outcome line per hat. Any other sitting says it is no
+# decomposition round and reads no roster. Each parent need is one context,
+# widened by the work item's tags and never merged with a sibling need.
+
+ROUND_ROSTER = """
+[hat.ALWAYS-ON]
+applies_when = "always"
+asks = "always-on question?"
+listens_for = "always-on failure"
+
+[hat.NEED-A]
+applies_when = 'tags contains "need-a"'
+asks = "need-a question?"
+listens_for = "need-a failure"
+
+[hat.NEED-B]
+applies_when = 'tags contains "need-b"'
+asks = "need-b question?"
+listens_for = "need-b failure"
+
+[hat.OTHER]
+applies_when = 'tags contains "other"'
+asks = "other question?"
+listens_for = "other failure"
+
+[hat.BOTH]
+applies_when = 'tags contains "a" and tags contains "b"'
+asks = "both question?"
+listens_for = "both failure"
+"""
+
+# SR-1 names SN-1 and SR-2 names SN-3; SN-2 is named by no SR, so only a
+# round that amends it reaches it; SN-4 and SN-5 each carry half of BOTH's
+# conjunction.
+ROUND_SRS = """
+[requirement.SR-1]
+sn_refs = ["SN-1"]
+
+[requirement.SR-2]
+sn_refs = ["SN-3"]
+"""
+
+ROUND_NEEDS = """
+[need.SN-1]
+tags = ["need-a"]
+
+[need.SN-2]
+tags = ["need-b"]
+
+[need.SN-3]
+tags = ["other"]
+
+[need.SN-4]
+tags = ["a"]
+
+[need.SN-5]
+tags = ["b"]
+"""
+
+MALFORMED_ROSTER = "[hat.BROKEN\n"
+
+
+def _round_repo(root, roster=ROUND_ROSTER):
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "system-requirements.toml").write_text(ROUND_SRS, encoding="utf-8")
+    (req / "stakeholder-needs.toml").write_text(ROUND_NEEDS, encoding="utf-8")
+    if roster is not None:
+        (req / "hats.toml").write_text(roster, encoding="utf-8")
+    return root
+
+
+def _round_fn(name):
+    fn = getattr(pb, name, None)
+    assert callable(fn), "plan_briefs has no {}".format(name)
+    return fn
+
+
+def _not_a_round():
+    line = getattr(pb, "NOT_A_ROUND", None)
+    assert isinstance(line, str) and line.strip(), "plan_briefs states no NOT_A_ROUND"
+    return line
+
+
+def test_a_sitting_with_no_first_approval_sr_and_no_amended_need_says_it_is_no_decomposition_round(
+    tmp_path,
+):
+    # The work item's own SR-Refs do not make a sitting a round: only the
+    # judged SRs and amended needs passed in do.
+    root = _round_repo(tmp_path)
+    block = _round_fn("sitting_hat_block")(
+        root, {"WI-ID": "WI-1", "SR-Refs": "SR-1"}, [], []
+    )
+    assert block == _not_a_round()
+    assert "always-on question?" not in block
+
+
+def test_outside_a_round_the_roster_is_not_read(tmp_path):
+    root = _round_repo(tmp_path, roster=MALFORMED_ROSTER)
+    block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], [])
+    assert block == _not_a_round()
+
+
+def test_an_amended_need_is_a_parent_the_work_items_refs_do_not_reach(tmp_path):
+    root = _round_repo(tmp_path)
+    surface = pb.hat_surface_for_work_item
+    assert "needs" in inspect.signature(surface).parameters, (
+        "the applicability function takes no amended needs"
+    )
+    row = {"WI-ID": "WI-1", "SR-Refs": "SR-1"}
+    without = surface(root, row)[pb.HAT_QUESTIONS_SLOT]
+    with_need = surface(root, row, needs=("SN-2",))[pb.HAT_QUESTIONS_SLOT]
+    assert "need-b question?" not in without
+    assert "need-b question?" in with_need
+    # The work item's own parents still reach their hats beside it.
+    assert "need-a question?" in with_need
+
+
+def test_a_judged_sr_reaches_hats_through_the_need_it_names(tmp_path):
+    # The row's own SR-Refs (SR-2) and its SpecRef (SN-3) both reach OTHER; the
+    # judged SR-1 reaches NEED-A. The judged SRs replace the row's anchors.
+    root = _round_repo(tmp_path)
+    row = {
+        "WI-ID": "WI-1",
+        "SR-Refs": "SR-2",
+        "SpecRef": "docs/requirements/stakeholder-needs.toml#SN-3",
+    }
+    block = _round_fn("sitting_hat_block")(root, row, ["SR-1"], [])
+    assert "always-on question?" in block
+    assert "need-a question?" in block
+    assert "other question?" not in block
+
+
+def test_the_work_items_tags_widen_each_need_and_sibling_needs_never_merge(tmp_path):
+    root = _round_repo(tmp_path)
+    fn = _round_fn("sitting_hat_block")
+    apart = fn(root, {"WI-ID": "WI-1"}, [], ["SN-4", "SN-5"])
+    assert "always-on question?" in apart
+    assert "both question?" not in apart, "sibling needs' tags were merged"
+    widened = fn(root, {"WI-ID": "WI-1", "Workstream": "b"}, [], ["SN-4", "SN-5"])
+    assert "both question?" in widened
+
+
+def test_an_absent_roster_yields_the_opt_out_line_in_a_round(tmp_path):
+    root = _round_repo(tmp_path, roster=None)
+    block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], ["SN-1"])
+    assert block == hats_roster.NO_HATS
+    assert "- HAT " not in block
+
+
+def test_a_malformed_roster_refuses_a_round_naming_the_roster(tmp_path):
+    root = _round_repo(tmp_path, roster=MALFORMED_ROSTER)
+    fn = _round_fn("sitting_hat_block")
+    with pytest.raises(pb.HatsError) as caught:
+        fn(root, {"WI-ID": "WI-1"}, [], ["SN-1"])
+    assert hats_roster.ROSTER_REL in str(caught.value).replace("\\", "/")
+
+
+def test_the_round_block_asks_one_outcome_line_per_hat_in_a_non_ruling_form(
+    tmp_path,
+):
+    root = _round_repo(tmp_path)
+    block = _round_fn("round_hat_block")(root, {"WI-ID": "WI-1"}, needs=("SN-1",))
+    assert "always-on question?" in block and "need-a question?" in block
+    forms = re.findall(r"- HAT [^`\n]*", block)
+    assert forms, "the block states no `- HAT <NAME> -> ...` outcome line form"
+    row_tags = [tag for tags, _wins in kverdict.ROW_RULINGS.values() for tag in tags]
+    keywords = [grammar[0] for grammar in ksitting.GRAMMAR.values()]
+    for form in forms:
+        assert not any(form.startswith(tag) for tag in row_tags), form
+        assert not any(re.search(r"\b{}:".format(k), form) for k in keywords), form
+        for kind in kverdict.ROW_RULINGS:
+            assert kverdict.row_rulings(form, kind) == {}, form

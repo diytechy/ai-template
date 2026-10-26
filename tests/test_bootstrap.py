@@ -157,6 +157,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/subagent_gate.py",
         "scripts/agent_route.py",
         "scripts/adjudicate_brief.py",
+        "scripts/amendment_brief.py",
         "scripts/score_reviews.py",
         "scripts/gen_cases.py",
         "scripts/gen_trajectory.py",

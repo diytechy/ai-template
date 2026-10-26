@@ -125,6 +125,14 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     does not request a whole subtree or arms map. At the intent turn fill
     `CHANGES=none` and leave `TESTS=` empty: no build has run, so there is
     no change list and no lane test yet.
+  - Fill `HATS` at every turn. A set that amends a need or adds an SR
+    under one is a decomposition round: give the `;`-joined SN ids of
+    every need its sitting reaches, which are each need it amends, each
+    need a new SR sits under and each need an SR it amends names, and
+    `mkprompt.py` puts the applicable hats' questions in the prompt,
+    computed from the lane's roster, needs and work item. `HATS=none`
+    for any other set states that the turn is no decomposition round. A
+    missing or empty `HATS` refuses.
   - Commit a turn's log before the next turn: the call commits it in the
     lane, and after an exit 4 commit the named log yourself. The resumed
     turn reads its session id from that committed log: a lane resumed
@@ -993,11 +1001,6 @@ lane commit being replayed.
   the set from a module to named nodes, which the approved-sentence
   check passes, and its report named one under another id. Restore any
   row outside the set by a guarded replace (wi-960 D-012).
-- A lane that drafts a derived SR owes its perspective record
-  (`hats.py record <plan dir>/plan.perspectives.toml --row <ids>`,
-  passing `--check --strict`) until plan item 14 retires the sidecar:
-  brief it into Terra's checkpoint turn, or the first-approval sitting
-  returns the derived SR for it (wi-957, wi-958, wi-960 sitting 005).
 - An LLR detail carries no `shall`: the one-`shall` rule is the SR's.
   Told "one `shall`", Terra wrote it into two LLR details, and
   `trace.py --strict` passed them; grep each new LLR detail for it

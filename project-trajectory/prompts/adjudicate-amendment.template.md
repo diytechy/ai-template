@@ -40,6 +40,16 @@
                    meaning-or-clarity method above them stays this brief's own.
                    An absent or unreadable home, or one with no section for a
                    shown tier, refuses the render.
+       {hats}      OPTIONAL: the perspectives this decomposition round must
+                   face (scripts/plan_briefs.py), filled by the composer only
+                   where a template declares it, so an override without it
+                   composes unchanged. An amendment of an approved need is a
+                   decomposition round: the slot carries the question of each
+                   declared hat applicable to that need, widened by the work
+                   item's tags, and asks the verdict for one `- HAT` outcome
+                   line per hat. An amendment of SR, LLR or TC rows alone says
+                   it is no decomposition round. A roster that exists and does
+                   not parse refuses the render, naming it.
        {identity}  one `JUDGED-TEXT: <row id> <digest>` line per row {rows}
                    shows: the digest of that row's approved text as the
                    brief's own reader loaded it. The route that binds this
@@ -106,6 +116,10 @@ Method:
 Whether a `MEANING` row's new text is one you would bless — or recommend to the owner — is judged by the questions for its tier, the same ones a first approval puts. A `CLARITY` verdict owes them nothing new: the obligation is the one already blessed.
 
 {questions}
+
+--- PERSPECTIVES (the declared hats this decomposition round must face) ---
+{hats}
+--- END ---
 
 Write your verdict to {verdict}. One line per amended row, in the log.md block format:
 

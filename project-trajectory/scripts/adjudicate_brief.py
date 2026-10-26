@@ -116,12 +116,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import acceptance_record
 import adjudicate_act
 import agent_brief
 import agent_common as ac
+import amendment_brief
 import baseline_snapshot
 import consolidate as cons
+import plan_briefs
 import prompts
 import rejudge
 import spine_carrier
@@ -154,7 +155,6 @@ BRIEF_PROMPTS = {
 # The per-close reports' home (`intake.REPORTS` / `handback.REPORTS`, restated
 # rather than imported so this module loads without either sibling).
 REPORTS = "docs/handbacks"
-TC_REGISTRY = "docs/test/test-cases.toml"
 # The TC cells `{tcs}` lists. REQUIRED, every one: the brief's whole method is
 # "run the cited evidence and say what you observed", which a row missing its
 # Evidence, Method or Expected cannot support — and a dash there reads as
@@ -237,22 +237,6 @@ def declared_brief(row):
 
     Implements: SR-146, LLR-167"""
     return ksitting.declared_brief(row.get("Brief"))
-
-
-def adjudicates(row):
-    """The registry row ids this adjudication's act is SCOPED to — the `;`-joined
-    `Adjudicates` cell as a set; empty when the row declares none.
-
-    The typed companion to `declared_brief`, and typed for the same reason:
-    `Brief` says which judgement is asked for, this says over WHAT, and an
-    assembler that re-derives its population live needs both or it re-derives a
-    wider question than the mint asked (WI-572 REVIEW-A). Reading it from the
-    mint's title or `## Context` prose instead is the WI-417 fold — prose
-    carrying control flow — which is why it is a `wi_convert` column. Its
-    tokens are `kitlib.sitting.scope_tokens`', the merge's own reading.
-
-    Implements: SR-146, LLR-167"""
-    return set(ksitting.scope_tokens(row.get("Adjudicates")))
 
 
 def verdict_refusal(brief, verdict_path, kinds=None):
@@ -351,10 +335,9 @@ def bind_pending(verdict_path, brief, prompt, exclusive=False):
     return kinds
 
 
-# The amendment brief's identity line, one per row it shows: the row and the
-# digest of its approved text (`acceptance_record.approved_text_digest`).
-JUDGED_TEXT = "JUDGED-TEXT"
-_JUDGED_TEXT_RE = re.compile(r"^{}: (\S+) (\S+)[ \t]*$".format(JUDGED_TEXT), re.M)
+_JUDGED_TEXT_RE = re.compile(
+    r"^{}: (\S+) (\S+)[ \t]*$".format(amendment_brief.JUDGED_TEXT), re.M
+)
 
 
 def requested_identities(prompt):
@@ -565,7 +548,8 @@ def red_tc_values(root, row):
     if not lines_in:
         return None, "the red-TC census is now empty — there is nothing to judge"
     tc_rows = {
-        r.get("TC-ID"): r for r in spine_carrier.load(Path(root) / TC_REGISTRY, "TC-ID")
+        r.get("TC-ID"): r
+        for r in spine_carrier.load(Path(root) / amendment_brief.TC_REGISTRY, "TC-ID")
     }
     lines = []
     targets = set()
@@ -576,7 +560,9 @@ def red_tc_values(root, row):
         tc_id, tc_targets = parsed
         row_cells = tc_rows.get(tc_id)
         if row_cells is None:
-            return None, "{} is in the census but not in {}".format(tc_id, TC_REGISTRY)
+            return None, "{} is in the census but not in {}".format(
+                tc_id, amendment_brief.TC_REGISTRY
+            )
         targets.update(tc_targets)
         cells = {}
         for name in TC_CELLS:
@@ -620,422 +606,9 @@ def _spine_excerpt(root, ids):
     return "\n".join(out), sorted(set(ids) - found)
 
 
-# --- the tier questions, composed from one home (WI-854) ----------------------
-
-#: The ONE home of the questions an adjudicator puts to a spine row, per tier,
-#: shipped beside the prompt templates and resolved script-relatively as they
-#: are, so a brief composes them in a repo with no skills installed. The
-#: spine-authoring skill points here and holds no copy. Its filename is
-#: declared once in `prompts.KIT_FRAGMENTS`, which the prompt catalogue
-#: digests, so an edit to the home stales that catalogue (WI-882).
-QUESTIONS_HOME = prompts.PROMPTS / prompts.SPINE_QUESTIONS
-# The line under each section heading naming the tiers it serves; `*` is every
-# tier.
-_TIERS_LINE = re.compile(r"<!-- tiers: ([A-Z* ]+) -->")
-ANY_TIER = "*"
 # The briefs whose `{questions}` slot the home fills; the combined sitting
 # composes both, so the home governs it too.
 QUESTION_BRIEFS = ("amendment", "first-approval", COMBINED)
-
-
-def _question_sections(text):
-    """`(sections, None)` — each `## ` section of the home as `(tiers, text)`,
-    its tiers line dropped — or `([], heading)` naming the first section
-    with no tiers line. Text before the first heading is not a section.
-
-    Implements: SR-146, LLR-167"""
-    sections = []
-    for chunk in re.split(r"(?m)^(?=## )", text)[1:]:
-        heading, _, rest = chunk.partition("\n")
-        marker, _, body = rest.partition("\n")
-        match = _TIERS_LINE.fullmatch(marker.strip())
-        if match is None:
-            return [], heading
-        sections.append((frozenset(match.group(1).split()), heading + "\n" + body))
-    return sections, None
-
-
-def tier_questions(tiers):
-    """`(text, None)`: the home's sections serving any of `tiers` (its
-    every-tier sections included), in the home's order, or `(None, reason)`.
-
-    NO FALLBACK. An absent or unreadable home, a section with no tiers line,
-    or a judged tier no section serves refuses the brief (rule 2): a judge
-    handed a brief with its questions missing reads the gap as "nothing to
-    ask", and there is no second copy of them to fall back on.
-
-    Implements: SR-146, LLR-167
-    """
-    path = QUESTIONS_HOME
-    try:
-        text = Path(path).read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError) as exc:
-        return None, "the tier questions' home {} cannot be read: {}".format(path, exc)
-    sections, bad = _question_sections(prompts.strip_dispatcher_block(text))
-    if bad is not None:
-        return (
-            None,
-            "the tier questions' home {}: section {!r} declares no tiers".format(
-                path, bad
-            ),
-        )
-    served = set().union(*(declared for declared, _body in sections))
-    missing = [] if ANY_TIER in served else sorted(set(tiers) - served)
-    if missing or not sections:
-        return None, "the tier questions' home {} declares no questions for {}".format(
-            path, ", ".join(missing) or "any tier"
-        )
-    return "\n\n".join(
-        body.rstrip()
-        for declared, body in sections
-        if ANY_TIER in declared or declared & set(tiers)
-    ), None
-
-
-# --- the amendment brief (SN-029; routed at D-9 step 4b) ----------------------
-
-
-def amendment_values(root, row):
-    """`({baseline, rows, aftermath}, None)` for the spine rows whose approved
-    text moved after they were approved, or `(None, reason)`.
-
-    `{baseline}` is the SNAPSHOT STAMP, and the substitution is the whole point
-    of this assembler existing. The slot asks for "the accepted anchor this diff
-    is measured against"; the old derivation resolved, for a row that never
-    flipped, to the amendment commit ITSELF — presenting the text under
-    judgement as its own accepted anchor, which is precisely the failure rule 1
-    exists to prevent. `docs/archive/last_approved/` is an anchor that is
-    provably NOT the text under judgement: the mirror invariant means it can
-    only have been written by copying a live registry in a reviewed approval
-    commit.
-
-    `{rows}` is `trace.reattest_model`'s APPROVED cells — the same model behind
-    `trace.py --approve` and `open-items.html`, so the judge, the brief and the
-    owner surface can never show three different diffs. Traced cells are
-    deliberately excluded: §A5.1 rules them non-attesting, and a judge asked to
-    rule "meaning or clarity" on a re-pointed `Module` cell is being asked a
-    question the ruling already answers. The need, assumption and surrogate
-    tiers, which that model does not hold, are read beside it from the same
-    recorded copy (`_unchained_amended_rows`; OI-100 gap 1, WI-791), so a row
-    the widened mint routes is briefed rather than held.
-
-    NO SNAPSHOT IS A HOLD, AND IT SAYS WHY. A repo that has never signed has no
-    accepted anchor at all, so "did this amendment change the meaning?" is not
-    the question its rows pose — a FIRST APPROVAL is. Refusing names that
-    exactly, rather than fabricating an anchor (rule 1) or rendering a
-    before/after with an empty before (rule 2). The stamp itself is advisory:
-    off git, or before the snapshot's own commit lands, it is empty and the
-    baseline line says so rather than naming a date.
-
-    WHICH ROWS IS THE ROW'S OWN `Adjudicates` SCOPE, intersected with the
-    model — `first_approval_values`' rule, for its reason. The model is
-    REPO-WIDE: it walks every SR, so a brief built from it alone handed each
-    amendment row every drifted approved row in the tree, and each verdict had
-    to count its own rows by hand and list the rest as excluded (three
-    adjudications that each named one row were each handed the same twenty).
-    The mint writes the rows it routes into the cell; the live model answers
-    for those rows only, so a row re-anchored since the mint drops out and a
-    scope with nothing left REFUSES by name. A row with NO scope refuses too:
-    reading the empty cell as "everything" is the widening itself.
-
-    THE ANCHOR IS STAMPED PER REGISTRY. A refresh copies only the registries
-    its act authorises, so the copies were written at different commits, and
-    the directory's newest write named one registry's copy as the provenance of
-    all of them. `{baseline}` names, for each registry shown, the commit that
-    last wrote ITS copy.
-
-    `{identity}` states one `JUDGED-TEXT: <row id> <digest>` line per row the
-    brief shows, the digest of that row's approved text as the brief's own
-    reader loads it (`acceptance_record.approved_text_digest`), so the binding
-    records the text this sitting judged.
-
-    Implements: SR-146, SR-178, LLR-167, LLR-359
-    """
-    import trace as tr
-
-    root = Path(root)
-    scope = adjudicates(row)
-    if not scope:
-        return None, (
-            "this amendment adjudication declares no `Adjudicates` scope, so the "
-            "rows the merge routed to it are unknown — and an unstated boundary "
-            "read as 'every drifted row in the repo' is the widening this cell "
-            "exists to make unrepresentable. Re-mint the row, or rule on it by "
-            "hand"
-        )
-    if not baseline_snapshot.exists(root):
-        return None, (
-            "no {} snapshot exists yet, so nothing has been approved — every row "
-            "here poses a FIRST-APPROVAL question rather than a "
-            "meaning-or-clarity one, and there is no accepted anchor to measure "
-            "an amendment against".format(baseline_snapshot.SNAPSHOT_DIR)
-        )
-    reg = tr.load_registries(root / "docs")
-    model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
-    lines, tiers, chained = _amended_rows(model, scope)
-    more, more_tiers, unchained = _unchained_amended_rows(root, scope)
-    lines, tiers = lines + more, tiers | more_tiers
-    if not lines:
-        # One refusal for every way the SCOPED population empties, naming the
-        # scope: a repo-wide "nothing to judge" beside it would be two answers
-        # to one question (`first_approval_values`' rule).
-        return None, (
-            "none of the {} row(s) this adjudication was minted over ({}) still "
-            "carries approved text that differs from its {} copy — re-anchored, "
-            "withdrawn or renumbered since the mint, awaiting a FIRST approval, "
-            "or moved only TRACED cells — so there is no amendment in its scope "
-            "to rule on".format(
-                len(scope), ", ".join(sorted(scope)), baseline_snapshot.SNAPSHOT_DIR
-            )
-        )
-    questions, why = tier_questions(tiers)
-    if questions is None:
-        return None, why
-    return {
-        "baseline": _amendment_baseline(root, tiers),
-        "rows": "\n".join(lines),
-        "aftermath": _aftermath(root, tiers),
-        "questions": questions,
-        "identity": _identity(root, chained, unchained),
-    }, None
-
-
-def _amended_rows(model, scope):
-    """`(lines, tiers, shown)`: the approved-cell before/after of each drifted
-    row IN `scope`, the spine tiers those rows sit in, and the `(tier, row id)`
-    each block shows.
-
-    ONE BLOCK PER ROW, naming every chain it hangs under. The model groups by
-    owning SR, so a row with two parents sits in two entries with the same
-    cells; rendered per entry, a one-row scope showed its row twice and the
-    verdict's `rows=N` could not be counted against the brief."""
-    chains, cells_of = _scoped_chain_rows(model, scope)
-    lines = []
-    for (kind, rid), sids in chains.items():
-        lines.append("- {} {} (chain of {})".format(kind, rid, ", ".join(sids)))
-        for name, before, after in cells_of[(kind, rid)]:
-            lines.append("  - {}".format(name))
-            lines.append("    - before: {}".format(before or "(empty)"))
-            lines.append("    - after: {}".format(after or "(empty)"))
-    return lines, {kind for kind, _rid in chains}, list(chains)
-
-
-def _scoped_chain_rows(model, scope):
-    """`(chains, cells_of)`: each drifted row IN `scope` with approved cells
-    to show, keyed `(tier, row id)`, mapped to the SR chains it hangs under
-    and to those approved cells. Split out of `_amended_rows` so the selection
-    and the rendering each stay under the complexity bar."""
-    chains, cells_of = {}, {}
-    for entry in model:
-        for chain_row in entry["rows"]:
-            approved = chain_row.get("approved") or frozenset()
-            cells = [c for c in chain_row["cells"] if c[0] in approved]
-            if chain_row["id"] not in scope or not cells:
-                continue
-            key = (chain_row["kind"], chain_row["id"])
-            chains.setdefault(key, []).append(entry["id"])
-            cells_of[key] = cells
-    return chains, cells_of
-
-
-# The amended tiers the requirement-chain model does not hold (OI-100 gap 1,
-# WI-791): the need tier and the assumption registry's two tiers, each
-# `(kind, registry, id column)`. The mint routes their amendments since WI-791,
-# so the brief must render them or every such row would refuse as "nothing in
-# scope" and hold for a human.
-_UNCHAINED_TIERS = (
-    ("SN", "docs/requirements/stakeholder-needs.toml", "SN-ID"),
-    ("DA", "docs/requirements/assumptions.toml", "DA-ID"),
-    ("SUR", "docs/requirements/assumptions.toml", "SUR-ID"),
-)
-
-
-def _unchained_amended_rows(root, scope):
-    """`(lines, tiers, shown)` for the drifted need, assumption and surrogate
-    rows IN `scope`, each rendered like `_amended_rows`' blocks — the approved
-    cells' before/after against the recorded copy
-    (`baseline_snapshot.tier_owing`) — and `shown`, each such row's
-    `(row id, registry, id column, live row)`.
-
-    Implements: SR-146, LLR-167"""
-    snapshot = baseline_snapshot.load_all(root)
-    lines, shown, rows = [], set(), []
-    for kind, rel, id_col in _UNCHAINED_TIERS:
-        owing = baseline_snapshot.tier_owing(root, [(rel, id_col)], snapshot)
-        for rid, why, cells, row in owing:
-            if rid not in scope or why != "DRIFTED":
-                continue
-            shown.add(kind)
-            rows.append((rid, rel, id_col, row))
-            lines.append("- {} {}".format(kind, rid))
-            for name, before, after in cells:
-                lines.append("  - {}".format(name))
-                lines.append("    - before: {}".format(before or "(empty)"))
-                lines.append("    - after: {}".format(after or "(empty)"))
-    return lines, shown, rows
-
-
-def _identity(root, chained, unchained):
-    """`{identity}`: one `JUDGED-TEXT: <row id> <digest>` line per row the
-    brief shows, the requirement-chain rows (`(tier, row id)`, read from the
-    live registry the chain model reads) and the unchained ones (already
-    loaded by `tier_owing`), each digest that row's approved text
-    (`acceptance_record.approved_text_digest`).
-
-    Implements: SR-178, LLR-359"""
-    rows, loaded = list(unchained), {}
-    for kind, rid in chained:
-        rel, id_col = _REGISTRY_OF[kind], kind + "-ID"
-        if rel not in loaded:
-            loaded[rel] = {
-                r.get(id_col): r
-                for r in spine_carrier.load(
-                    Path(root) / rel, id_col, keep_examples=False
-                )
-            }
-        rows.append((rid, rel, id_col, loaded[rel][rid]))
-    return "\n".join(
-        "{}: {} {}".format(
-            JUDGED_TEXT, rid, acceptance_record.approved_text_digest(rel, col, row)
-        )
-        for rid, rel, col, row in rows
-    )
-
-
-def _amendment_baseline(root, tiers):
-    """`{baseline}`: the snapshot as the accepted anchor, with the commit that
-    last wrote the copy of EACH registry the listing shows — the provenance of
-    the text actually under judgement, in spine order."""
-    rels = list(dict.fromkeys(r for tier, r in _REGISTRY_OF.items() if tier in tiers))
-    return (
-        "{} — the approved text as a human last blessed it, each registry's copy "
-        "as last written:\n{}\nThis is the text BEFORE the change below; it is "
-        "not the change under judgement, and it could only have been written by "
-        "copying a live registry in an approval commit.".format(
-            baseline_snapshot.SNAPSHOT_DIR, _copy_stamp_lines(root, rels)
-        )
-    )
-
-
-def _copy_stamp_lines(root, rels):
-    """One `  - <registry>: copied <date> (commit <rev>)` line per registry in
-    `rels`, each naming the commit that last wrote THAT registry's copy — a
-    refresh copies only what its act authorises, so the directory's newest
-    write is one copy's provenance, not every copy's.
-
-    Implements: SR-146, LLR-273"""
-    lines = []
-    for rel in rels:
-        rev, date = baseline_snapshot.stamp(root, rel)
-        lines.append(
-            "  - {}: {}".format(
-                rel,
-                "copied {} (commit {})".format(date, rev)
-                if rev
-                else "not yet committed, so no copy stamp",
-            )
-        )
-    return "\n".join(lines)
-
-
-# The spine tier a chain row's `kind` names -> the registry it lives in. The
-# ONE join this module owns: a rendered chain row carries its tier, and both
-# questions asked of it downstream — "is this tier's approval mine or the
-# owner's" (`agent_common.human_approves_spine`, keyed by registry stem) and
-# "what `--approves` argument does the act owe" (keyed by registry path) — are
-# registry-keyed. A second, tier-keyed rung table lived here until WI-572's
-# rework; it answered the same question as `agent_common.SPINE_APPROVAL_RUNGS`
-# and was wired into only ONE of the two briefs that needed it.
-_REGISTRY_OF = {
-    "SR": "docs/requirements/system-requirements.toml",
-    "LLR": "docs/requirements/low-level-requirements.toml",
-    "TC": TC_REGISTRY,
-    # The amendment brief's unchained tiers (OI-100, WI-791). Only the
-    # amendment arm ever renders these kinds; a first-approval chain holds
-    # SR, LLR and TC rows alone.
-    **{kind: rel for kind, rel, _col in _UNCHAINED_TIERS},
-}
-
-
-def _loop_approves(root, kind):
-    """Is a `Drafted` row of spine tier `kind` THIS session's to approve?
-
-    The one place this module turns a rendered chain row's tier into the dial's
-    answer. An unrecognised tier has no registry, so it is HELD — the same
-    direction `human_approves_spine` fails an unmapped one."""
-    registry = _REGISTRY_OF.get(kind)
-    if registry is None:
-        return False
-    return not ac.human_approves_spine(
-        Path(root) / "docs", spine_carrier.stem(registry)
-    )
-
-
-def _aftermath(root, tiers):
-    """What each verdict owes NEXT, derived from the declared gate authority for
-    the tiers actually shown (owner ruling 2026-09-01) and from ruled decision
-    2's one home, `intake.adjudication_action`, as OI-100 amended it
-    (2026-10-03, WI-791): on a released rung the session re-attests what it
-    rules CLARITY and the MEANING rows it would bless; on a held rung it
-    re-attests a CLARITY row naming its verdict, and recommends a MEANING row
-    to the owner.
-
-    THIS SLOT REPLACED A SENTENCE THAT HAD GONE FALSE. The template used to end
-    "the flip, if one is owed, is the mechanical tool's act, not yours" — true
-    when written, and false since OI-45 ruled (b) retired that tool
-    (`intake._apply_flips` writes nothing, permanently). A MEANING verdict on a
-    loop-held rung therefore ended at a brief nobody was owed, contradicting the
-    loop-held doctrine itself.
-
-    DERIVED, NOT LEFT TO THE SESSION. The dial is a repo-level declaration the
-    judge would otherwise have to go read and interpret mid-verdict, which is
-    the shape that produces a session confidently doing the owner's act. An
-    unrecognised tier is reported as HELD, the same direction `human_holds`
-    fails."""
-    import intake  # ruled decision 2's one home; deferred, a leaf read
-
-    held, mine = [], []
-    for tier in sorted(tiers):
-        (mine if _loop_approves(root, tier) else held).append(tier)
-    parts = []
-    if mine:
-        parts.append(_RELEASED_AFTERMATH.format("/".join(mine)))
-    if held:
-        arms = {v: intake.adjudication_action(True, v) for v in ("CLARITY", "MEANING")}
-        parts.append(
-            _HELD_AFTERMATH.format(
-                "/".join(held), _HELD_ARMS[arms["CLARITY"]], _HELD_ARMS[arms["MEANING"]]
-            )
-        )
-    return "\n\n".join(parts)
-
-
-# The aftermath's wording per dial arm. The ARM each verdict takes on a held
-# rung is `intake.adjudication_action`'s answer, read above, never restated.
-# The sitting ends at its committed verdict (WI-912, revisions 32 and 36): the
-# act is a later act turn, so each arm says what the verdict must record for
-# that act, never an act of its own.
-_RELEASED_AFTERMATH = (
-    "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
-    "authority has RELEASED, so a CLARITY row is re-attested by the later act "
-    "turn, and so is a MEANING row you mark `[MEANING+BLESS]`; a row you mark "
-    "plain `[MEANING]` is not re-anchored."
-)
-_HELD_AFTERMATH = (
-    "THE DIAL FOR THIS ROW: the {} tier(s) sit on a rung the declared gate "
-    "authority still HOLDS for a human. A CLARITY verdict on them {}. A MEANING "
-    "verdict on them {}."
-)
-_HELD_ARMS = {
-    "reattest": "is re-attested by the later act turn as a judgement act, "
-    "naming this verdict; the act ledger records the verdict and the owner's "
-    "surface lists the act for audit. The verdict is bound to the text shown "
-    "here (its JUDGED-TEXT identities), so an edit to that text after this "
-    "verdict refuses the act",
-    "recommend": "stops at your verdict and the signature is the owner's — "
-    "recommend it to the owner and do not re-anchor it",
-}
-
 
 # --- the first-approval brief (owner ruling 2026-09-01) -----------------------
 
@@ -1076,7 +649,7 @@ def _render_approval_rows(root, rows, scope, registries):
         # Nothing downstream can promote a row that fails any of the three,
         # because `yours` is what mints both the label and the registry.
         in_scope = rid in scope
-        yours = drafted and in_scope and _loop_approves(root, kind)
+        yours = drafted and in_scope and amendment_brief._loop_approves(root, kind)
         if drafted:
             drafted_ids.add(rid)
         lines.append(
@@ -1102,7 +675,7 @@ def _render_approval_rows(root, rows, scope, registries):
             # this repo's live spine, `LLR-205` under two chains). Chain order
             # is kept — it reads SR, LLR, TC, which is the order the session
             # reads the rows in above.
-            registries.setdefault(_REGISTRY_OF[kind], {})[rid] = True
+            registries.setdefault(amendment_brief._REGISTRY_OF[kind], {})[rid] = True
     return lines, mine, drafted_ids
 
 
@@ -1155,7 +728,9 @@ def _render_assumption_cases(root, reg, scope, registries):
 
 def first_approval_values(root, row):
     """`({chain, baseline, questions}, None)` for the spine rows a lane
-    authored `Drafted` and did not approve, or `(None, reason)`.
+    authored `Drafted` and did not approve, or `(None, reason)`; the values
+    also report the SRs marked as this session's under
+    `plan_briefs.HAT_PARENTS`, never a slot.
 
     THE APPROVAL ACT IS AN INDEPENDENT ADJUDICATOR'S, in the authoring lane or
     on trunk (owner ruling 6, 2026-10-07): a lane's merge is refused if it
@@ -1249,7 +824,7 @@ def first_approval_values(root, row):
     import trace as tr
 
     root = Path(root)
-    scope = adjudicates(row)
+    scope = amendment_brief.adjudicates(row)
     if not scope:
         return None, (
             "this adjudication row declares no `Adjudicates` scope, so the rows "
@@ -1307,7 +882,7 @@ def first_approval_values(root, row):
                 ", ".join(live), ac.approval_through(root / "docs")
             )
         )
-    questions, why = tier_questions(_judged_tiers(registries))
+    questions, why = amendment_brief.tier_questions(_judged_tiers(registries))
     if questions is None:
         return None, why
     # Each registry the act would copy, with the commit that last wrote ITS
@@ -1318,7 +893,7 @@ def first_approval_values(root, row):
         "no others (WI-571), so an off-spine census computed against it "
         "survives the act.".format(
             baseline_snapshot.SNAPSHOT_DIR,
-            _copy_stamp_lines(root, sorted(registries)),
+            amendment_brief._copy_stamp_lines(root, sorted(registries)),
         )
         if baseline_snapshot.exists(root)
         else "{} does not exist yet — approving these rows would be this "
@@ -1332,6 +907,12 @@ def first_approval_values(root, row):
         # The questions for the tiers of the rows marked as this session's,
         # from the one home (`tier_questions`).
         "questions": questions,
+        # The SRs awaiting a first approval make this a decomposition round.
+        plan_briefs.HAT_PARENTS: (
+            list(registries.get(amendment_brief._REGISTRY_OF["SR"], ())),
+            (),
+            (),
+        ),
     }, None
 
 
@@ -1340,7 +921,11 @@ def _judged_tiers(registries):
     the tiers whose registry its `--approves` walk collected.
 
     Implements: SR-146, LLR-167"""
-    return {kind for kind in ("SR", "LLR", "TC") if _REGISTRY_OF[kind] in registries}
+    return {
+        kind
+        for kind in ("SR", "LLR", "TC")
+        if amendment_brief._REGISTRY_OF[kind] in registries
+    }
 
 
 def _chain_label(drafted, in_scope, yours):
@@ -1419,7 +1004,7 @@ def consolidate_values(root, row):
     Implements: SR-146, LLR-167
     """
     root = Path(root)
-    scope = adjudicates(row)
+    scope = amendment_brief.adjudicates(row)
     if not scope:
         return None, (
             "this consolidation declares no `Adjudicates` scope, so the cluster "
@@ -1574,7 +1159,7 @@ def rejudge_values(root, row):
 
     Implements: SR-215, LLR-255
     """
-    scope = sorted(adjudicates(row))
+    scope = sorted(amendment_brief.adjudicates(row))
     if len(scope) != 1:
         return None, (
             "a re-judge row names exactly one case in `Adjudicates`; this one "
@@ -1713,7 +1298,7 @@ def done_when_values(root, row):
 
     Implements: SR-156, LLR-308
     """
-    scope = sorted(adjudicates(row))
+    scope = sorted(amendment_brief.adjudicates(row))
     if len(scope) != 1:
         return None, (
             "a done-when row names exactly one work item in `Adjudicates`; this "
@@ -1786,7 +1371,7 @@ def _sitting_scopes(row):
 
     Implements: SR-232, LLR-310
     """
-    scopes, bad = ksitting.scopes(sorted(adjudicates(row)))
+    scopes, bad = ksitting.scopes(sorted(amendment_brief.adjudicates(row)))
     if bad:
         return None, (
             "combined scope token {!r} is not `<kind>:<id>` with a kind of {}".format(
@@ -1809,22 +1394,29 @@ def combined_values(root, row, verdict_path, prompt_templates=None):
     by `compose` for a row scoped to that kind's ids, its verdict path naming
     its `## <kind>` section of this sitting's one file, so each keeps its own
     grammar, its own acts and its own refusals. ALL OR NOTHING: a section that
-    cannot be composed refuses the sitting, naming the kind (rule 2).
+    cannot be composed refuses the sitting, naming the kind (rule 2). The
+    sections' perspectives follow the last one, once
+    (`plan_briefs.sitting_tail`).
 
-    Implements: SR-232, LLR-310
+    Implements: SR-232, SR-161, LLR-310, LLR-360
     """
     scopes, reason = _sitting_scopes(row)
     if scopes is None:
         return None, reason
     kinds = [kind for kind in COMBINABLE if kind in scopes]
-    sections = []
+    sections, parents = [], []
     for kind in kinds:
         sub = dict(row, Brief=kind, Adjudicates=";".join(scopes[kind]))
         where = "the `## {}` section of {}".format(kind, verdict_path)
-        text, why = compose(root, sub, where, prompt_templates)
+        text, why = compose(root, sub, where, prompt_templates, sitting=parents)
         if text is None:
             return None, "the {} section: {}".format(kind, why)
         sections.append("=== SECTION `## {}` ===\n\n{}".format(kind, text))
+    # The sitting's perspectives, once, over every section's parents.
+    tail, why = plan_briefs.sitting_tail(root, row, parents)
+    if tail is None:
+        return None, why
+    sections += [tail] if tail else []
     return {"sections": "\n\n".join(sections), "kinds": ";".join(kinds)}, None
 
 
@@ -1845,7 +1437,7 @@ def dispute_values(root, row):
 
     Implements: SR-234, LLR-315
     """
-    scope = sorted(adjudicates(row))
+    scope = sorted(amendment_brief.adjudicates(row))
     if len(scope) != 1:
         return None, (
             "a dispute row names exactly one findings file in `Adjudicates`; "
@@ -1890,7 +1482,7 @@ def _render_finding(finding):
 # directions), so shipping a new brief means adding its assembler here, never
 # relaxing the fill.
 _ASSEMBLERS = {
-    "amendment": amendment_values,
+    "amendment": amendment_brief.amendment_values,
     "first-approval": first_approval_values,
     "consolidate": consolidate_values,
     "disposition": disposition_values,
@@ -1942,7 +1534,7 @@ def governing_templates(classes, prompt_templates=None, role="ADJUDICATE"):
     # The tier questions' home fills those briefs' `{questions}` slot, so it
     # governs them whether or not their template is overridden.
     if set(classes or ()) & set(QUESTION_BRIEFS):
-        paths.append(QUESTIONS_HOME)
+        paths.append(amendment_brief.QUESTIONS_HOME)
     _add_act_template(classes, prompt_templates, paths, texts)
     return paths, texts
 
@@ -1965,7 +1557,7 @@ def _add_act_template(classes, prompt_templates, paths, texts):
         paths.append(prompts.template_path(key))
 
 
-def compose(root, row, verdict_path, prompt_templates=None):
+def compose(root, row, verdict_path, prompt_templates=None, sitting=None):
     """`(prompt_text, None)` when this adjudication row's declared brief could
     be filled IN FULL, else `(None, reason)` — on which the caller HOLDS the
     row for a human (rule 3), never quietly downgrading it to a build.
@@ -1976,7 +1568,12 @@ def compose(root, row, verdict_path, prompt_templates=None):
     override declaring slots this evidence cannot fill) is a refusal, never a
     partially-filled send.
 
-    Implements: SR-146, LLR-167
+    A spine sitting's template may declare the optional perspectives slot
+    (`plan_briefs.fill_hat_slot`, which also takes the assembler's reported
+    parents out of the values); `sitting` is the list a combined sitting's
+    sections share, so their perspectives are carried once after them.
+
+    Implements: SR-146, SR-161, LLR-167, LLR-360
     """
     brief = declared_brief(row)
     if not brief:
@@ -1997,6 +1594,7 @@ def compose(root, row, verdict_path, prompt_templates=None):
     values["wi"] = (row.get("WI-ID") or "").strip()
     try:
         base = (prompt_templates or {}).get(key) or prompts.load(key)
+        plan_briefs.fill_hat_slot(root, row, base, values, sitting)
         return prompts.fill(key, base, values), None
     except prompts.PromptError as exc:
         return None, str(exc)

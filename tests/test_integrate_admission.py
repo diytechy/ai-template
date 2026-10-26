@@ -772,6 +772,7 @@ def _route_reading(root, brief):
     (`read_spec_rows`) and then the scope the adjudication route composes
     from its cell - `("refused", message)` or `("scope", token set)`."""
     import adjudicate_brief
+    import amendment_brief
 
     errors = []
     rows = kit_registry.read_spec_rows(root / "docs" / "work", on_error=errors.append)
@@ -779,7 +780,7 @@ def _route_reading(root, brief):
     if row is None:
         return "refused", " ".join(errors)
     if brief != "combined":
-        return "scope", adjudicate_brief.adjudicates(row)
+        return "scope", amendment_brief.adjudicates(row)
     scopes, reason = adjudicate_brief._sitting_scopes(row)
     if reason:
         return "refused", reason

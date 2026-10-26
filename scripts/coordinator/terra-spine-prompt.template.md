@@ -26,6 +26,11 @@ An independent Claude Opus adjudicator will judge your rows later, in this lane,
 - At intent, a test-case row's evidence and an LLR's `code_symbol` name the tests and symbols the build will create, each test written to verify what its row claims; they bind at the checkpoint's reconcile. At a checkpoint, a test-case row's evidence names test functions that exist and test what the row claims.
 - Keep each cell's prose plain and true; do not paraphrase PROCESS.md into a row.
 
+## Perspectives
+When this turn adds an SR under a need or amends a need, it is a decomposition round: put each question below to the rows you write, and say in your final message which rows each hat raised, or that it raised none and why. Otherwise the block says the turn is no decomposition round.
+
+@HATS@
+
 ## Check before you finish
 From this worktree, in PowerShell:
 
@@ -40,4 +45,5 @@ Always pass that literal `--basetemp`; never `$TEMP`.
 1. Every row you added or amended: id, cell, before (quoted, or "new") and after (quoted), and one line on why.
 2. At a checkpoint, each item of the builder's list you confirmed, refuted (with the evidence) or extended; at intent, the tests and symbols your rows name for the build to create.
 3. The check commands and their summary lines.
-4. Anything you could not settle.
+4. In a decomposition round, each hat above: the rows it raised, or no finding and why.
+5. Anything you could not settle.

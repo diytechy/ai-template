@@ -1,5 +1,5 @@
 # The HATS ROSTER — this repo's declared expert perspectives, the ones every
-# applicable decomposition must face. Sixteen hats today.
+# applicable decomposition must face. Fifteen hats today.
 #
 # A HAT IS NOT A PERSON AND NOT A STAKEHOLDER ROW. It is a QUESTION that must be
 # put to every decomposition it applies to. A domain expert may have no needs of
@@ -7,14 +7,15 @@
 # constraint is what a hat carries.
 #
 # THIS FILE IS OWNER TEXT, NOT AGENT TEXT, and it is MARKED FOR THE OWNER'S EDIT
-# AT RETURN: review all sixteen, cut what does not earn its place, add what is
+# AT RETURN: review all fifteen, cut what does not earn its place, add what is
 # missing, and rewrite any `applies_when` that does not match how this repo
 # actually files work. A roster chosen by an agent and left unread is exactly the
-# ceremony this tier was admitted to prevent. One call is explicitly the owner's
-# and still open: whether SAFETY belongs in THIS repo's roster at all, or ships
-# only in the template — its failure vocabulary (harm to a person, property or
-# the environment) has essentially one reachable referent in a developer-process
-# kit, and that one is already SECURITY's and DATA-PROTECTION's declared subject.
+# ceremony this tier was admitted to prevent. SAFETY is not here: the owner
+# ruled on 2026-10-13 (the review-churn plan's revision 25) that it has no
+# application in a software-only repo, its failure vocabulary (harm to a person,
+# property or the environment) having one reachable referent here, already
+# SECURITY's and DATA-PROTECTION's subject. The shipped template keeps it for
+# adopters with physical products, a values divergence the dogfood rule allows.
 #
 # ONE TABLE PER HAT, keyed by the hat's NAME (upper-case, `-` joined):
 # `[hat.SECURITY]`. The name is the id; there is no numeric id space and
@@ -54,11 +55,12 @@
 # proceeds without hats; leave it here broken and the composer refuses loudly
 # rather than quietly decomposing with no perspective at all.
 #
-# WHAT IS NOT BUILT YET, stated so its absence is not mistaken for coverage: the
-# per-decomposition RECORD of which hats were applied and what each produced.
-# Injection is the half that changes what decompositions produce; the record only
-# proves it happened, and it is a later artifact class. NOTHING GATES ON A HAT
-# TODAY.
+# THE REVIEW RECORD (SN-036's other half): a decomposition round's sitting
+# brief carries each applicable hat's question, and the sitting's verdict
+# names each hat's outcome: the rows it raised, by their Hat-Refs, or no
+# finding with the reason. A missing outcome is a finding for the review,
+# never a coverage gate, and nothing beside the decomposition records it.
+# NOTHING GATES ON A HAT TODAY.
 #
 # VALUES-DIVERGE NOTE (the kit's dogfood rule): in THIS repo the two UX hats are
 # `always`, because the generated owner surfaces are real, owner-facing pages a
@@ -116,11 +118,6 @@ applies_when = "always"
 asks = """Does this hold up at the real widths, themes and content volumes — and what does it do when the data is empty, huge, or malformed?"""
 listens_for = """A view verified only by reading its generator, never by looking at it rendered."""
 knowledge = ["docs/knowledge/rendered-surface-review.md"]
-
-[hat.SAFETY]
-applies_when = 'tags contains "safety"'
-asks = """How can this harm a person, property or the environment if it behaves incorrectly, and what requirement bounds that harm?"""
-listens_for = """A hazardous outcome with no requirement naming its bound, or a mitigation asserted with nothing verifying it."""
 
 [hat.LEGAL]
 applies_when = 'tags contains "legal"'

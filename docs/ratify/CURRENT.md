@@ -611,4 +611,14 @@ record runs through the live registry first.
 - DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
 
 
+## Stakeholder needs and stakeholders owing an act
+
+_A drifted row's approved text moved from its `docs/archive/last_approved` copy: once its meaning is ruled, re-anchor it with `intake.py snapshot --reattests <ROW-ID>`; until then an act copying the needs registry is refused. A row with no `Status` cell, or a `Drafted` one, owes its first approval._
+
+### SN-036 — DRIFTED
+
+- **Acceptance**
+  - before: Each decomposition has a machine-readable record of the declared perspectives, the applicability decision for each perspective, and the requirements or explicit no-finding result produced from it. A check reports any applicable declared perspective missing from that record. The record proves coverage and provenance; an independent review judges whether the resulting requirements are adequate.
+  - after: Each decomposition round is reviewed against every applicable declared perspective, and the review record names each perspective and its outcome. The record demonstrates coverage and provenance; an independent review judges whether the resulting requirements are adequate.
+
 _No spine row differs from its `docs/archive/last_approved` copy, and no row awaits a first approval._

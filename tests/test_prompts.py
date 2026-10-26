@@ -31,12 +31,13 @@ driven in test_prompts_driven.py.
 import re
 
 import pytest
-from conftest import KIT, ROOT, load_script
+from conftest import KIT, ROOT, load_script, run_py
 
 pr = load_script("prompts")
 plan_briefs = load_script("plan_briefs")
 review_brief = load_script("review_brief")
-adjudicate_brief = load_script("adjudicate_brief")
+amendment_brief = load_script("amendment_brief")
+wi_convert = load_script("wi_convert")
 
 
 # --- the catalogue ------------------------------------------------------------
@@ -522,6 +523,7 @@ def test_the_terra_brief_has_an_intent_form_before_build_round_1():
         "PY",
         "LANE_SLUG",
         "TESTS",
+        "HATS",
     }
     recipes = " ".join(
         (KIT / "skills" / "coordinator-cycle" / "references" / "recipes.md")
@@ -529,6 +531,167 @@ def test_the_terra_brief_has_an_intent_form_before_build_round_1():
         .split()
     )
     assert "At the intent turn fill `CHANGES=none`" in recipes
+
+
+# --- the perspectives slot of the spine sitting and author briefs ------------
+#
+# A decomposition round's sitting brief carries the applicable hats' questions
+# through an optional `{hats}` slot the two spine sitting templates declare;
+# the spine author's prompt carries the same block through `@HATS@`, which the
+# prompt filler computes from the lane's work item and the needs the turn's
+# sitting reaches, or fills with the stated no-round line for `none`.
+
+
+@pytest.mark.parametrize("key", [pr.ADJUDICATE_FIRST_APPROVAL, pr.ADJUDICATE_AMENDMENT])
+def test_the_two_spine_sitting_templates_declare_the_hats_slot(key):
+    assert "hats" in pr.slots(pr.load(key))
+
+
+MKPROMPT = ROOT / "scripts" / "coordinator" / "mkprompt.py"
+TERRA_TEMPLATE = ROOT / "scripts" / "coordinator" / "terra-spine-prompt.template.md"
+
+_LANE_ROSTER = """
+[hat.ALWAYS-ON]
+applies_when = "always"
+asks = "always-on question?"
+listens_for = "always-on failure"
+
+[hat.NEED-A]
+applies_when = 'tags contains "need-a"'
+asks = "need-a question?"
+listens_for = "need-a failure"
+
+[hat.NEED-B]
+applies_when = 'tags contains "need-b"'
+asks = "need-b question?"
+listens_for = "need-b failure"
+
+[hat.UNREACHED]
+applies_when = 'tags contains "nobody"'
+asks = "unreached question?"
+listens_for = "unreached failure"
+"""
+
+# SN-001 carries tag need-a; SN-002 carries need-b and is the parent of the
+# approved SR-001 a work item may name in its SR-Refs.
+_LANE_NEEDS = (
+    '[need.SN-001]\nstatus = "Approved"\ntags = ["need-a"]\n\n'
+    '[need.SN-002]\nstatus = "Approved"\ntags = ["need-b"]\n'
+)
+_LANE_SRS = (
+    "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Priority,"
+    "Verification,Status,Phase,Area\n"
+    "SR-001,Subtracts,SN-002,The system shall subtract two numbers.,r,a,Must,"
+    "Test,Approved,P1,core\n"
+)
+
+
+def _mkprompt_lane(tmp_path, sr_refs=""):
+    """A lane under a stand-in `.wt` root holding a roster, a needs registry,
+    a system-requirements registry and the work item's spec, whose SR-Refs
+    are `sr_refs`."""
+    lane = tmp_path / "wt" / "wi-001"
+    req = lane / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "hats.toml").write_text(_LANE_ROSTER, encoding="utf-8")
+    (req / "stakeholder-needs.toml").write_text(_LANE_NEEDS, encoding="utf-8")
+    (req / "system-requirements.csv").write_text(_LANE_SRS, encoding="utf-8")
+    row = {column: "" for column in wi_convert.COLUMNS}
+    row.update(
+        {"WI-ID": "WI-001", "Title": "a lane", "Status": "queued", "SR-Refs": sr_refs}
+    )
+    wi_convert.write_spec_file(lane / "docs" / "work", row)
+    return tmp_path / "wt"
+
+
+def _mkprompt(tmp_path, *extra, sr_refs=""):
+    wtroot = _mkprompt_lane(tmp_path, sr_refs)
+    out = tmp_path / "prompt.md"
+    proc = run_py(
+        [
+            MKPROMPT,
+            TERRA_TEMPLATE,
+            out,
+            "WI=WI-001",
+            "LANE=wi-001",
+            "BASE=0000000",
+            "SPEC=docs/work/WI-001-a-lane.md",
+            "CHANGES=none",
+            "TESTS=",
+            "WTROOT=" + wtroot.as_posix(),
+            "PY=python",
+            *extra,
+        ],
+        cwd=tmp_path,
+    )
+    text = out.read_text(encoding="utf-8") if out.exists() else ""
+    return proc, text
+
+
+def test_mkprompt_expands_hats_for_a_decomposition_turn(tmp_path):
+    proc, text = _mkprompt(tmp_path, "HATS=SN-001")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "always-on question?" in text
+    assert "need-a question?" in text  # the named need reaches its own hat
+    assert "unreached question?" not in text
+
+
+def test_mkprompt_says_no_decomposition_round_for_hats_none(tmp_path):
+    proc, text = _mkprompt(tmp_path, "HATS=none")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    line = getattr(plan_briefs, "NOT_A_ROUND", None)
+    assert isinstance(line, str) and line.strip(), "plan_briefs states no NOT_A_ROUND"
+    assert line in text
+    assert "always-on question?" not in text
+
+
+def test_mkprompt_refuses_without_hats(tmp_path):
+    proc, _text = _mkprompt(tmp_path)
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "HATS" in proc.stderr
+
+
+def test_mkprompt_asks_only_the_hats_of_the_needs_the_turn_names(tmp_path):
+    # The work item's SR-Refs reach SN-002 (need-b); the turn amends only
+    # SN-001, so its sitting puts need-a's hat and never need-b's, and the
+    # author's block is the same set.
+    proc, text = _mkprompt(tmp_path, "HATS=SN-001", sr_refs="SR-001")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "always-on question?" in text
+    assert "need-a question?" in text
+    assert "need-b question?" not in text
+
+
+@pytest.mark.parametrize(
+    "value", ["", " ", ";", " ; "], ids=["empty", "blank", "sep", "seps"]
+)
+def test_mkprompt_refuses_a_hats_value_naming_no_need(tmp_path, value):
+    proc, text = _mkprompt(tmp_path, "HATS=" + value)
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "HATS" in proc.stderr
+    assert text == ""
+
+
+def _intent_or_checkpoint_step_1(text, heading):
+    match = re.search(r"^### {}.*?^1\. (.*?)^2\. ".format(heading), text, re.M | re.S)
+    assert match, heading
+    return match.group(1)
+
+
+@pytest.mark.parametrize("copy", CYCLE_COPIES, ids=["kit", "claude", "agents"])
+def test_the_cycle_names_the_hats_slot_at_dispatch(copy):
+    skill = (copy / "SKILL.md").read_text(encoding="utf-8")
+    for heading in ("Intent:", "Checkpoint:"):
+        assert "HATS" in _intent_or_checkpoint_step_1(skill, heading), heading
+    recipes = (copy / "references" / "recipes.md").read_text(encoding="utf-8")
+    match = re.search(
+        r"^- \*\*Terra, first turn:\*\*.*?(?=^- \*\*)", recipes, re.M | re.S
+    )
+    assert match, "no Terra first-turn bullet"
+    assert "HATS" in match.group(0)
+    # A round's sitting also reaches the need each amended SR names, so the
+    # author's value must name it too.
+    assert "each need an SR it amends names" in " ".join(match.group(0).split())
 
 
 def test_both_builder_briefs_search_before_minting_a_file_or_function():
@@ -690,7 +853,7 @@ def test_every_tier_receives_the_one_naming_rule():
     every_row = flat_home[flat_home.index("## 0. Every row") : flat_home.index("## 1.")]
     assert NAMING_RULE in every_row
     for tier in ("SN", "SR", "LLR", "TC"):
-        text, why = adjudicate_brief.tier_questions({tier})
+        text, why = amendment_brief.tier_questions({tier})
         assert why is None, why
         flat = " ".join(text.split())
         assert NAMING_RULE in flat, tier
@@ -730,10 +893,10 @@ def test_the_arch_section_points_at_the_rubric_and_restates_nothing():
         "never a ground for `RETURN`",
     ):
         assert applies_when in line, applies_when
-    llr, why = adjudicate_brief.tier_questions({"LLR"})
+    llr, why = amendment_brief.tier_questions({"LLR"})
     assert why is None, why
     assert content[0] in llr
-    sr, why = adjudicate_brief.tier_questions({"SR"})
+    sr, why = amendment_brief.tier_questions({"SR"})
     assert why is None, why
     assert content[0] not in sr and "## 4." not in sr
 

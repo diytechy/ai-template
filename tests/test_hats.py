@@ -267,7 +267,10 @@ LIVE_NAMES = [
     "TEST-ENGINEER",
     "UX-DESIGNER",
     "UX-ENGINEER",
-    "SAFETY",
+    # SAFETY leaves this repo's roster (owner ruling: it has no application in
+    # a software-only repo). The shipped template keeps it for adopters with
+    # physical products, a values divergence the dogfood rule allows, so
+    # TEMPLATE_NAMES below keeps it in its place.
     "LEGAL",
     "DATA-PROTECTION",
     "ACCESSIBILITY",
@@ -287,6 +290,14 @@ LIVE_NAMES = [
     "INTEGRITY-RECOVERABILITY",
     "PRODUCT-FITNESS",
 ]
+
+# The shipped template's names, in declared order: this repo's roster plus
+# SAFETY, in the place it holds in the template.
+TEMPLATE_NAMES = (
+    LIVE_NAMES[: LIVE_NAMES.index("LEGAL")]
+    + ["SAFETY"]
+    + LIVE_NAMES[LIVE_NAMES.index("LEGAL") :]
+)
 
 # The floor every decomposition in THIS repo faces, IN DECLARED ORDER: the three
 # original `always` hats plus the UX pair, unconditional here because
@@ -827,7 +838,10 @@ def test_template_and_instance_share_structure_and_the_template_ships_thirteen()
     SHIPPED template is kit product: it carries exactly the thirteen ruled
     starting hats (the six of OI-19 plus the UX pair and five aspect hats of
     Decision 11, rulings 2026-08-13q/s, executed at WI-453) until a reviewed
-    edit changes the shipped roster."""
+    edit changes the shipped roster. The template's names are pinned apart
+    from this repo's: SAFETY ships in the template and not in the live
+    roster. Adequacy witness: a template that dropped SAFETY along with the
+    live roster, or gained a hat, fails the name pin."""
     import tomllib
 
     inst = tomllib.loads(
@@ -847,7 +861,7 @@ def test_template_and_instance_share_structure_and_the_template_ships_thirteen()
                 name,
                 hid,
             )
-    assert set(tmpl["hat"]) == set(LIVE_NAMES), (
+    assert set(tmpl["hat"]) == set(TEMPLATE_NAMES), (
         "the shipped template's thirteen-hat starting roster changed — reviewed edit?"
     )
 
@@ -935,16 +949,25 @@ def test_aspect_hats_ship_silent_by_design_and_switch_on_by_tag():
     and PERFORMANCE `always` — "in general those should always be considered" —
     so they are no longer examples of design silence at all, and asserting they
     stay silent would now be asserting the ruling did not happen. Their
-    unconditional half is pinned below, in both roster copies."""
+    unconditional half is pinned below, in both roster copies.
+
+    SAFETY's condition is read from the shipped template, the roster that
+    keeps it; this repo's roster does not carry it. Adequacy witness: a
+    template whose SAFETY condition fired on a real row, or stayed silent on
+    work tagged `safety`, fails here, as does a live LEGAL or DATA-PROTECTION
+    that fired untagged."""
     roster = {h["name"]: h for h in hats.load(ROOT)}
+    template = {
+        h["name"]: h for h in hats.load(ROOT, rel=str(KIT_ROSTER.relative_to(ROOT)))
+    }
     aspects = {
-        "SAFETY": "safety",
-        "LEGAL": "legal",
-        "DATA-PROTECTION": "personal-data",
+        "SAFETY": ("safety", template),
+        "LEGAL": ("legal", roster),
+        "DATA-PROTECTION": ("personal-data", roster),
     }
     contexts = _real_work_item_contexts()
-    for name, tag in aspects.items():
-        condition = roster[name]["condition"]
+    for name, (tag, source) in aspects.items():
+        condition = source[name]["condition"]
         silent_on = [
             wi for wi, ctx in contexts.items() if hats.evaluate(condition, ctx)
         ]
