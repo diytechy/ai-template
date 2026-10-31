@@ -8,8 +8,6 @@ recipes; this handoff holds state only. Headless leg 24 (loop session
 counted round and began WI-977's intent set, then met the Codex account's
 usage limit, which stops every Terra and Sol call until its reset.
 
-Resume-not-before: 2026-11-02T00:05
-
 ## State (trunk `refactor_again`, nothing pushed)
 
 - **Trunk:** this close-out only, on `07e135e5f`. No landing this leg.
@@ -17,8 +15,9 @@ Resume-not-before: 2026-11-02T00:05
   run 40 characters (ceiling 37): shorten each at its scope critique.
 - **Codex:** the account's usage limit, first met at 06:44 local on
   2026-10-26; the CLI names its reset 2026-11-02 00:00 local (re-probed
-  08:00 and 08:49). The launcher waits for the line above
-  (coordinator-2026-10-26 D-004).
+  08:00 and 08:49). The owner reported the limit reset on 2026-10-31, so
+  the `Resume-not-before:` line (coordinator-2026-10-26 D-004) is removed
+  and the next leg starts at once.
 - **Lane `wi-966`** (worktree `C:/Projects/ai-template.wt/wi-966`, tip
   `942d50126`, base `07e135e5f`; headless-marked; `check-lane` passes):
   intent set (D-001, D-002), tests first (D-003), code (D-004), a
@@ -111,12 +110,6 @@ The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
 
 ## For the owner
 
-- **Codex's usage limit** (reset 2026-11-02 00:00 local): every Terra and
-  Sol call fails until then, and the launcher waits for the
-  `Resume-not-before:` line. To resume sooner, switch the Codex account
-  (`codex logout`, `codex login`) and restart the launcher; or rule
-  whether a Claude session may stand in for the spine author
-  (coordinator-2026-10-26 D-004's alternative).
 - **SN-036's act, on trunk** (OI-117, its owner row WI-981):
   `intake.py snapshot --approves stakeholder-needs=docs/log.d/2026-10-25-wi976-sn036-ruling.md --reattests SN-036`,
   adding `--verdict docs/reviews/wi-976/016-ADJUDICATE-9d6ad4c.md` where
