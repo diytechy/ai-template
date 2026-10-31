@@ -432,11 +432,9 @@ def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
             encoding="utf-8",
         )
         found = ac.config_conflicts(docs)  # MUST NOT RAISE — that is the claim
-        # AT LEAST one, not exactly one: the inline table trips a SECOND,
-        # pre-existing rule (the git hooks parse this file in pure sh and cannot
-        # read an inline table), and two findings for two genuinely different
-        # problems is right. What must not happen is zero findings, or a raise.
-        assert found, literal
+        # Exactly one: an inline table is valid TOML, so the wrong type is the
+        # only problem each of these files has.
+        assert len(found) == 1, (literal, found)
         assert any("human_approval_through" in f for f in found), (literal, found)
         assert ac.approval_through(docs) == dg.STAGE_RELEASE, literal
 

@@ -9958,6 +9958,80 @@ only) and `PROCESS.md`. Two `scope: this-repo`
 skills changed too, only if you vendored them: `skills/coordinator-cycle/`
 and `skills/byte-budget-guard/SKILL.md`.
 
+### The policy file is read through one TOML parse; its line-shape rule retires [since 827adec75]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.**
+
+- `docs/process.toml` may now hold any valid TOML: a dotted key
+  (`policies.push = "human"`), an inline table
+  (`policies = { privacy_check = true }`) and a multi-line string are each
+  read as the TOML parser reads them, by the git hooks, the privacy checker
+  and the coordinator's configuration check alike.
+- Bootstrap's in-place writes are the exception: the scaffold flags
+  (`--privacy-check`, `--push-policy`, `--gate-policy`) and
+  `--migrate-config` still edit the file one line at a time, so they can
+  set a dial only where it is one `key = value` line directly under its
+  `[table]` header (or a key they may add under that header). Each edit is
+  kept only when the parse of the edited file holds exactly that change.
+  Where the parse holds the dial in an inline table or a dotted key, or
+  the file does not parse, they REFUSE and write nothing: a flag ends the
+  run nonzero with a `bootstrap: REFUSED:` line naming the key and the
+  form, and prints no value; the migration names it in a `NOTE:` and
+  leaves that legacy one-word file in place. A key-like line inside a
+  multi-line string is text, never the line they edit. A flag whose key
+  the file does not declare at all prints a `NOTE: ... not written` line
+  instead of the value.
+- The configuration check no longer refuses a file for its shape: the
+  dotted-key, inline-table, multi-line-string and wrong-section refusals are
+  gone, with `agent_common.process_shape_findings` and `GREPPABLE_KEYS`.
+  The refusals it keeps are unchanged: a file that does not parse, a dial
+  of the wrong type or outside its range or vocabulary, and a dial declared
+  both here and in its legacy one-word file.
+- The privacy checker no longer falls back to the file's text. A
+  `privacy_check` or `privacy_review` name inside a multi-line string is
+  text, not a key: it declares nothing, so the legacy one-word file, or the
+  default, answers. Before this change such text read the gate ON, or the
+  reviewer posture `require`.
+- A `privacy_check` or `privacy_review` the parse holds under any table
+  other than `[policies]` (another section, a `[policies.<name>]`
+  sub-table) still fails closed, now in every reader, the coordinator's
+  policy read included: the gate reads ON and the reviewer posture
+  `require`, whatever the misplaced value, `[policies]` or the legacy file
+  says.
+- The shipped template's header and its `KEYED-GREPPABLE` notes now state
+  the one parse, and the kit README's `process.toml.template` cell says
+  the same.
+
+**What to do.**
+
+- Nothing migrates, and no setting changes. Do not replace your own
+  `docs/process.toml`; its values stay yours.
+- Its header comments are yours too, and now stale: when you next touch
+  the file, reword the header's "KEYED match ... one `key = value` per
+  line" paragraph from the template's, and delete the two
+  `KEYED-GREPPABLE` notes above `privacy_check` and `privacy_review`.
+- If your file has a `privacy_check` or `privacy_review` name inside a
+  multi-line string, that text no longer turns the gate on: move the key
+  under `[policies]` if you meant it. One under another section still reads
+  the gate on and the reviewer required: move it under `[policies]`.
+- Code of your own that called `agent_common.process_shape_findings` or
+  read `agent_common.GREPPABLE_KEYS` fails on the missing name: delete the
+  call; `config_conflicts` is the configuration check.
+- If you keep a table inline or in dotted keys and a bootstrap flag or
+  `--migrate-config` refuses it, set that dial by hand, or move the table
+  under a `[table]` header with one `key = value` line per dial, and re-run.
+
+**Kit-owned files — overwrite:** `scripts/agent_policy.py`,
+`scripts/agent_common.py`, `scripts/check_privacy.py`,
+`scripts/kitlib/config.py` (the misplaced-privacy-key reading's one home),
+`scripts/bootstrap.py` (its in-place writer confirms each edit through
+the parse and refuses what it cannot confirm), `process.toml.template` (its
+comments only, the header now naming the misplaced-privacy-key reading;
+your `docs/process.toml` is not overwritten), `PROCESS_OPTIONS.md` and
+`README.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

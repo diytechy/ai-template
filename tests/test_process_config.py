@@ -2,8 +2,8 @@
 
 SN-028 folded ~10 one-word policy files into one TOML. That is a consolidation
 with a sharp edge, and this module is the edge's guard: the git hooks and the
-Python checkers both act on this file, and every shape only ONE of them
-understands is a silent flip of a security gate.
+Python checkers both act on this file, and any form one of them reads
+differently from the parser is a silent flip of a security gate.
 
 The first cut of this consolidation shipped without this test and had exactly
 that defect in five shapes, driven: a trailing comment (`privacy_check = true
@@ -13,9 +13,9 @@ had declared the privacy gate committing with it silently off.
 
 So the contract has three parts and all three are driven here:
 
-  1. **The file's SHAPE is checked, not assumed** — `process_shape_findings`
-     refuses dotted keys, inline tables, multi-line strings, and a hook-read
-     key under the wrong section.
+  1. **Every reader takes the one parse** — a dotted key, an inline table and
+     a multi-line string read as the TOML parser reads them, and no reader
+     refuses a valid form for its shape.
   2. **The shipped hook and the checker AGREE** over a table of adversarial
      files, the table the review found the bugs with, driven through the real
      pre-push hook rather than a function extracted from it.
@@ -37,10 +37,10 @@ import tomllib
 import pytest
 from conftest import (
     KIT,
-    ROOT,
     load_script,
     pin_autocrlf,
     python_stand_ins,
+    run_py,
     skip_without_env_gates,
 )
 
@@ -111,12 +111,14 @@ def hook_repo(tmp_path):
     return root
 
 
-def run_shipped_hook(root, hook, scripts_dir=None, path_prefix=None):
+def run_shipped_hook(
+    root, hook, scripts_dir=None, path_prefix=None, message="an innocent message"
+):
     """Run one shipped hook in `root` the way git does: pre-push with the
     remote on argv and HEAD's push line (against the zero sha) on stdin,
-    commit-msg with a message file, pre-commit bare. KIT_SCRIPTS_DIR names
-    `scripts_dir` (the kit's own scripts by default), absolute; `path_prefix`
-    goes first on PATH. No reviewer is wired."""
+    commit-msg with a file holding `message`, pre-commit bare. KIT_SCRIPTS_DIR
+    names `scripts_dir` (the kit's own scripts by default), absolute;
+    `path_prefix` goes first on PATH. No reviewer is wired."""
     env = dict(os.environ)
     for var in ("LOGNAME", "USER", "LNAME", "USERNAME"):
         env[var] = FAKE_USER
@@ -130,7 +132,7 @@ def run_shipped_hook(root, hook, scripts_dir=None, path_prefix=None):
         args = ["origin", "https://example.invalid/repo.git"]
         stdin = "refs/heads/main {} refs/heads/main {}\n".format(head, ZERO)
     elif hook == "commit-msg":
-        (root / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
+        (root / "MSG.txt").write_text(message + "\n", encoding="utf-8")
         args = ["MSG.txt"]
     return subprocess.run(
         [shutil.which("sh"), ".githooks/" + hook, *args],
@@ -210,10 +212,12 @@ SHAPES = [
     ("absent", "[policies]\nsecrets_scan = true\n", None),
 ]
 
-# The shapes the shape check refuses, each in a true and a false variant. A
-# key the parser does not place under [policies] (a multi-line string, the
-# wrong section) reads ON whatever its text says: fail closed.
-NON_GREPPABLE = [
+# Valid TOML forms beyond one `key = value` per line, each in a true and a
+# false variant. A key's name inside a multi-line string is text, not a key,
+# and declares nothing whatever it says: `None`, so every reader falls through
+# to the legacy file. A key the parse holds under another section reads ON
+# whatever its value: a privacy gate declared in the wrong place fails closed.
+OTHER_TOML_FORMS = [
     ("dotted-key-true", "policies.privacy_check = true\n", True),
     ("dotted-key-false", "policies.privacy_check = false\n", False),
     ("inline-table-true", "policies = { privacy_check = true }\n", True),
@@ -221,12 +225,12 @@ NON_GREPPABLE = [
     (
         "multiline-string-true",
         '[policies]\nnote = """\nprivacy_check = true\n"""\n',
-        True,
+        None,
     ),
     (
         "multiline-string-false",
         '[policies]\nnote = """\nprivacy_check = false\n"""\n',
-        True,
+        None,
     ),
     ("wrong-section-true", "[attestation]\nprivacy_check = true\n", True),
     ("wrong-section-false", "[attestation]\nprivacy_check = false\n", True),
@@ -245,7 +249,7 @@ def _d4_rows():
     declares nothing, so every reader falls through to the (absent) legacy
     file."""
     rows = [(label, text, exp, None) for label, text, exp in SHAPES]
-    rows += [(label, text, exp, None) for label, text, exp in NON_GREPPABLE]
+    rows += [(label, text, exp, None) for label, text, exp in OTHER_TOML_FORMS]
     rows += [(label, text, exp, None) for label, text, exp in WRONG_TYPE]
     # The legacy arm with no TOML at all (the dual-read window).
     rows.append(("legacy-only-true", None, True, "# header\ntrue\n"))
@@ -282,9 +286,13 @@ def test_the_shipped_hook_and_the_checker_agree_on_every_shape(
     pre-push hook's privacy answer equals `check_privacy.read_privacy_enabled`
     on every row, and the `expected` column where given.
 
-    The `multiline-string-false` and `wrong-section-false` rows catch a hook
-    that reads OFF from text the parser does not place under [policies]
-    (a fail-open divergence). Adequacy witness for the rest: a hook that matched
+    The dotted-key and inline-table rows catch a hook that misses a key the
+    parser places, and the `wrong-section-false` row one that reads a gate
+    declared under another section as absent or as its value (a fail-open).
+    The multi-line-string rows declare nothing, so here they pin the hook
+    and the checker equal; the parser's own answer for such text is pinned
+    by `test_valid_toml_policy_shapes_reach_every_reader`. Adequacy witness
+    for the rest: a hook that matched
     the decoy inside a trailing comment fails `decoy-false-in-comment`, one
     that missed a BOM-prefixed or CRLF section header fails `bom` or `crlf`,
     and one that read only a typed `true` fails `wrong-type-string`."""
@@ -453,30 +461,6 @@ def test_the_hook_answer_and_the_checker_agree_in_process(
     assert _hook_answer(tmp_path) == want, label
 
 
-NON_GREPPABLE_ON = [row[:2] for row in NON_GREPPABLE if row[0].endswith("-true")]
-
-
-@pytest.mark.parametrize(
-    "label,text", NON_GREPPABLE_ON, ids=[s[0] for s in NON_GREPPABLE_ON]
-)
-def test_a_shape_the_hooks_cannot_follow_is_refused_by_the_shape_check(
-    tmp_path, label, text
-):
-    """The shapes the two readers once disagreed on are REFUSED by the shape
-    check, and, because a refusal is only as good as what happens when
-    someone ignores it, they still read ON in the checker."""
-    write_toml(tmp_path, text)
-    findings = ac.process_shape_findings(tmp_path / "docs")
-    assert findings, "{}: must be refused as un-greppable".format(label)
-    assert check_privacy.read_privacy_enabled(tmp_path) is True, label
-
-
-def test_the_shipped_template_and_this_repos_own_file_pass_the_shape_check():
-    # The guard is worthless if the two files it exists for do not satisfy it.
-    assert ac.process_shape_findings(ROOT / "docs") == []
-    assert ac.process_shape_findings(KIT) == [] or not (KIT / "process.toml").exists()
-
-
 # --- the mixed-config refusal --------------------------------------------------
 
 
@@ -522,6 +506,345 @@ def _docs(root):
     d = root / "docs"
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+# --- one parse: valid TOML forms reach every reader -----------------------------
+
+# A non-exempt address the privacy layer flags when, and only when, the gate is
+# on: what makes a commit hook's policy answer observable from outside it.
+_LEAK = "probe.person@corp-mail.net"
+
+
+def _parser_answer(text, legacy):
+    """The policy answer the TOML parser alone gives for `text` with the
+    legacy one-word files in `legacy` ({name: first line}), in the hooks'
+    answer vocabulary. The reference every reader is compared against."""
+    table = tomllib.loads(text).get("policies", {})
+    if "privacy_check" in table:
+        if "privacy-check" in legacy:
+            return "refuse=mixed"
+        on = table["privacy_check"] is True
+    else:
+        on = legacy.get("privacy-check") == "true"
+    if not on:
+        return "privacy=off"
+    review = table.get("privacy_review", legacy.get("privacy-review"))
+    return "privacy=on review=" + (
+        "warn-unwired" if review == "warn-unwired" else "require"
+    )
+
+
+def _commit_hook_answer(root, hook):
+    """A shipped commit hook's privacy answer, driven whole: `off` when the
+    commit passes with a flaggable address staged (pre-commit) or in the
+    message (commit-msg), `on` when the privacy layer names it, and
+    `refused:<stderr>` for any other refusal."""
+    if hook == "pre-commit":
+        # The commit floor's two records a bare repo lacks (the derived stage
+        # and the id watermark), so the floor passes and the privacy step runs.
+        for args in (("derive_stage.py",), ("trace.py", "--bump-ids")):
+            made = run_py([KIT / "scripts" / args[0], "--root", root, *args[1:]], root)
+            assert made.returncode == 0, made.stdout + made.stderr
+        (root / "leak.txt").write_text("mail {}\n".format(_LEAK), encoding="utf-8")
+        assert _git(root, "add", "leak.txt").returncode == 0
+    proc = run_shipped_hook(root, hook, message="mail " + _LEAK)
+    said = proc.stdout + proc.stderr
+    if proc.returncode == 0:
+        return "off"
+    if "probe.person" in said:
+        return "on"
+    return "refused:" + said
+
+
+def _push_hook_answer(root):
+    """The shipped pre-push hook's full answer: `hook_privacy_answer` with the
+    unwired-reviewer posture told apart (warn-unwired warns and proceeds)."""
+    proc = run_shipped_hook(root, "pre-push")
+    if proc.returncode == 0 and "FAILING CLOSED" not in proc.stderr:
+        return "on-warn" if "WARNING" in proc.stderr else "off"
+    if proc.returncode != 0 and "FAILING CLOSED" in proc.stderr:
+        return "on-require"
+    return "refused:" + proc.stderr
+
+
+def _as_push(answer):
+    return {
+        "privacy=off": "off",
+        "privacy=on review=require": "on-require",
+        "privacy=on review=warn-unwired": "on-warn",
+    }.get(answer, "refused")
+
+
+def _as_commit(answer):
+    return {"privacy=off": "off"}.get(
+        answer, "on" if answer.startswith("privacy=on") else "refused"
+    )
+
+
+# Valid policy files in the three forms a line-shape rule once refused: (id,
+# file text, legacy one-word files). The answer each must produce is the
+# parser's own (`_parser_answer`), never a value written here.
+VALID_SHAPES = [
+    pytest.param(
+        'policies.privacy_check = true\npolicies.privacy_review = "warn-unwired"\n',
+        {},
+        id="dotted-key-on-warn",
+    ),
+    pytest.param("policies.privacy_check = true\n", {}, id="dotted-key-on-require"),
+    pytest.param("policies.privacy_check = false\n", {}, id="dotted-key-off"),
+    pytest.param(
+        'policies = { privacy_check = true, privacy_review = "warn-unwired" }\n',
+        {},
+        id="inline-table-on-warn",
+    ),
+    pytest.param("policies = { privacy_check = false }\n", {}, id="inline-table-off"),
+    pytest.param(
+        '[policies]\nprivacy_check = true\nprivacy_review = """warn-unwired"""\n',
+        {},
+        id="multiline-string-value",
+    ),
+    pytest.param(
+        '[policies]\nprivacy_check = true\nprivacy_review = "warn-unwired"\n'
+        'note = """\nprivacy_review = "require"\n"""\n',
+        {},
+        id="multiline-string-beside-the-key",
+    ),
+    # The key's name is only text inside a string: the parser places nothing,
+    # so the gate is off, and the legacy files answer where they exist.
+    pytest.param(
+        '[policies]\nnote = """\nprivacy_check = true\n"""\n',
+        {},
+        id="multiline-string-holds-the-gate-key",
+    ),
+    pytest.param(
+        '[policies]\nnote = """\nprivacy_check = false\n"""\n',
+        {"privacy-check": "true"},
+        id="multiline-string-holds-the-gate-key-legacy-declares",
+    ),
+    pytest.param(
+        '[policies]\nprivacy_check = true\nnote = """\nprivacy_review = "require"\n"""\n',
+        {"privacy-review": "warn-unwired"},
+        id="multiline-string-holds-the-posture-key-legacy-opts-down",
+    ),
+]
+
+
+@pytest.mark.parametrize("text,legacy", VALID_SHAPES)
+def test_valid_toml_policy_shapes_reach_every_reader(tmp_path, text, legacy):
+    """TC-031 (SR-031: every enforcer reads one value per dial from one TOML
+    parse, a dotted key, an inline table and a multi-line string included,
+    and none refuses those forms for their shape). Each shipped commit and
+    push hook, driven whole, and the privacy checker's own readers give the
+    answer the parser gives for the file.
+
+    Adequacy witness: a reader that took a key's name inside a multi-line
+    string as a declaration reads the gate ON where the parser places
+    nothing (`multiline-string-holds-the-gate-key`), refuses a file the
+    parser reads as one declaration as mixed (`...-legacy-declares`), and
+    demands the reviewer the legacy record opted down (`...-posture-key-...`);
+    a reader that matched the policy by line text misses the dotted key and
+    the inline table, reading the gate absent where the parser reads it."""
+    root = hook_repo(tmp_path)
+    write_toml(root, text)
+    for name, line in legacy.items():
+        (root / "docs" / name).write_text(line + "\n", encoding="utf-8")
+    want = _parser_answer(text, legacy)
+    got = {"pre-push": (_push_hook_answer(root), _as_push(want))}
+    for hook in ("pre-commit", "commit-msg"):
+        got[hook] = (_commit_hook_answer(root, hook), _as_commit(want))
+    got["hook_policy_answer"] = (check_privacy.hook_policy_answer(root), want)
+    if want != "refuse=mixed":
+        got["read_privacy_enabled"] = (
+            check_privacy.read_privacy_enabled(root),
+            want.startswith("privacy=on"),
+        )
+    if want.startswith("privacy=on"):
+        got["read_privacy_review"] = (
+            check_privacy.read_privacy_review(root),
+            want.split("review=", 1)[1],
+        )
+    wrong = {k: v for k, v in got.items() if v[0] != v[1]}
+    assert not wrong, "reader: (answer, the parser's) {}".format(wrong)
+
+
+# A privacy key the parse holds under a table other than [policies]: (file
+# text, legacy one-word files, the answer every reader must give). The answer
+# is written here, not the parser's: the parser places such a key outside the
+# policy, and every reader fails closed on it, whatever its value and whatever
+# the legacy file says.
+MISPLACED_PRIVACY_KEYS = [
+    pytest.param(
+        '[policies]\nprivacy_check = true\n[checks]\nprivacy_review = "warn-unwired"\n',
+        {"privacy-review": "warn-unwired"},
+        "privacy=on review=require",
+        id="posture-key-under-checks-legacy-opts-down",
+    ),
+    pytest.param(
+        "[checks]\nprivacy_check = true\n",
+        {},
+        "privacy=on review=require",
+        id="gate-key-under-checks-true",
+    ),
+    pytest.param(
+        "[checks]\nprivacy_check = false\n",
+        {},
+        "privacy=on review=require",
+        id="gate-key-under-checks-false",
+    ),
+    pytest.param(
+        "[policies.extra]\nprivacy_check = false\n",
+        {},
+        "privacy=on review=require",
+        id="gate-key-under-a-policies-subtable",
+    ),
+    pytest.param(
+        "[policies]\nprivacy_check = false\n[checks]\nprivacy_check = false\n",
+        {},
+        "privacy=on review=require",
+        id="gate-key-off-in-policies-and-under-checks",
+    ),
+]
+
+
+@pytest.mark.parametrize("text,legacy,want", MISPLACED_PRIVACY_KEYS)
+def test_a_privacy_key_under_another_table_fails_closed_in_every_reader(
+    tmp_path, text, legacy, want
+):
+    """TC-031 (SR-031, LLR-031: a copy of the opt-down elsewhere requires the
+    reviewer). A `privacy_check` the parse holds under any table other than
+    [policies] reads the gate ON, and a `privacy_review` there reads
+    `require`, in each shipped hook driven whole, the checker's readers and
+    the agent layer's policy read.
+
+    Adequacy witness: a reader that took the parse's placement alone reads
+    the misplaced gate absent (off, or the legacy file's answer) and lets the
+    legacy opt-down warn; one that took the misplaced value reads
+    `gate-key-under-checks-false` off."""
+    root = hook_repo(tmp_path)
+    write_toml(root, text)
+    for name, line in legacy.items():
+        (root / "docs" / name).write_text(line + "\n", encoding="utf-8")
+    review = want.split("review=", 1)[1]
+    got = {"pre-push": (_push_hook_answer(root), _as_push(want))}
+    for hook in ("pre-commit", "commit-msg"):
+        got[hook] = (_commit_hook_answer(root, hook), _as_commit(want))
+    got["hook_policy_answer"] = (check_privacy.hook_policy_answer(root), want)
+    got["read_privacy_enabled"] = (check_privacy.read_privacy_enabled(root), True)
+    got["read_privacy_review"] = (check_privacy.read_privacy_review(root), review)
+    docs = root / "docs"
+    got["declared_policy privacy-check"] = (
+        ac.declared_policy(docs, "privacy-check", "false"),
+        "true",
+    )
+    got["declared_policy privacy-review"] = (
+        ac.declared_policy(docs, "privacy-review", "require"),
+        review,
+    )
+    wrong = {k: v for k, v in got.items() if v[0] != v[1]}
+    assert not wrong, "reader: (answer, the fail-closed answer) {}".format(wrong)
+
+
+def test_an_unreadable_policy_file_is_refused(tmp_path):
+    """TC-031 (SR-031: an unreadable declaration refuses rather than reading
+    a default), at the configuration layer every guarded entry point folds
+    in; the hooks' half is `test_every_hook_refuses_an_unreadable_policy_file`
+    and the checker's `test_the_hook_answer_and_the_checker_agree_in_process`.
+
+    Adequacy witness: a configuration layer that took a file it cannot parse
+    or decode as "nothing declared" returns no refusal here, and every dial
+    would read its default."""
+    for case, content in UNREADABLE:
+        if content is None:
+            continue  # a directory at the path: see the build report
+        root = tmp_path / case
+        write_unreadable(root, content)
+        refusals = ac.config_conflicts(root / "docs")
+        assert any("does not parse" in r for r in refusals), (case, refusals)
+        assert ac.process_config(root / "docs") == {}, case
+
+
+@pytest.mark.parametrize("value", [-1, 101])
+def test_an_out_of_range_dial_is_refused_not_defaulted(tmp_path, value):
+    """TC-150 (SR-137: an out-of-range dial is refused rather than defaulted).
+    The coverage bar's own reader answers report-only for a value it cannot
+    use, so the refusal is what makes the value visible. (The rung dial's
+    out-of-range ordinal is `test_approval_level`'s
+    `test_a_malformed_dial_is_REFUSED_not_silently_defaulted`.)
+
+    Adequacy witness: a check that clamped the value into range, or let the
+    reader's report-only default stand, returns no refusal."""
+    write_toml(tmp_path, "[checks]\nbacklink_coverage_min = {}\n".format(value))
+    refusals = ac.config_conflicts(tmp_path / "docs")
+    assert len(refusals) == 1, refusals
+    assert "backlink_coverage_min" in refusals[0], refusals
+    assert "outside 0-100" in refusals[0], refusals
+
+
+def _entry_point_refusals(root):
+    """Each guarded entry point's refusal text on `root`, by entry point."""
+    dispatch = load_script("dispatch")
+    intake = load_script("intake")
+    integrate = load_script("integrate")
+    return {
+        "dispatch pre-claim preflight": dispatch._session_config_refusal(root, None),
+        "intake adjudication arm": intake.flip_verified(root, [])[2],
+        "integrator verdict gate": integrate._verdict_gate(root, "wi-000", {}),
+    }
+
+
+def test_every_guarded_entry_point_refuses_a_mixed_config(tmp_path):
+    """TC-150 (SR-137: a dial declared in both homes is refused, naming the
+    key and both homes, at every guarded entry point).
+
+    Adequacy witness: an entry point that resolved the two homes by
+    precedence instead (read the policy file and went on) returns no
+    refusal, or one that does not name both homes."""
+    _write_mixed(tmp_path)
+    for entry, refusal in _entry_point_refusals(tmp_path).items():
+        assert refusal, entry
+        for needle in ("privacy_check", "docs/process.toml", "docs/privacy-check"):
+            assert needle in refusal, (entry, refusal)
+        assert "declared TWICE" in refusal, (entry, refusal)
+
+
+# Valid TOML forms holding real dials: (file text, {legacy name: the value
+# the config layer must read}).
+VALID_CONFIG_SHAPES = [
+    pytest.param(
+        'policies.review_rounds = 2\npolicies.push = "human"\n',
+        {"review-policy": "2", "push-policy": "human"},
+        id="dotted-key",
+    ),
+    pytest.param(
+        'policies = { review_rounds = 2, push = "human" }\n',
+        {"review-policy": "2", "push-policy": "human"},
+        id="inline-table",
+    ),
+    pytest.param(
+        '[policies]\nreview_rounds = 2\npush = """human"""\n'
+        'note = """\nfirst line\nsecond line\n"""\n',
+        {"review-policy": "2", "push-policy": "human"},
+        id="multiline-string",
+    ),
+]
+
+
+@pytest.mark.parametrize("text,values", VALID_CONFIG_SHAPES)
+def test_valid_toml_policy_shapes_cause_no_configuration_refusal(
+    tmp_path, text, values
+):
+    """TC-150 (SR-137, LLR-155: valid TOML syntax, a dotted key, an inline
+    table and a multi-line string included, is not a refusal condition). The
+    configuration check every guarded entry point folds in returns nothing,
+    and each dial reads as the parser places it.
+
+    Adequacy witness: a configuration check that still refused a form for
+    its line shape returns a refusal for each of these files."""
+    write_toml(tmp_path, text)
+    docs = tmp_path / "docs"
+    for legacy_name, value in values.items():
+        assert ac.declared_policy(docs, legacy_name, "<default>") == value
+    assert ac.config_conflicts(docs) == []
 
 
 # --- precedence and the legacy arm ---------------------------------------------

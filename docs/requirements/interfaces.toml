@@ -698,7 +698,7 @@ notes = """No tie-back, and the gap is in the FRAME rather than in this row: the
 owner = "docs/process.toml"
 consumers = ["scripts/agent_common", "scripts/agent_loop", "scripts/bootstrap", "scripts/check_privacy", "scripts/check_trajectory", "scripts/dispatch", "scripts/gen_arch_map", "scripts/gen_okf", "scripts/integrate", "scripts/kitlib/config", "scripts/subagent_gate", "external:downstream adopter"]
 channel = "file"
-data = "sections: attestation, policies, checks, build; one key = value per line"
+data = "TOML tables: attestation, policies, checks, build; a privacy gate key outside [policies] reads as gate on, and a reviewer key there as review required"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"

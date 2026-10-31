@@ -261,14 +261,6 @@ def _load_process_toml(root):
         return _PolicyFile(path, None, str(exc))
 
 
-def _policies(loaded):
-    """The parsed `[policies]` table, or None when there is none to read.
-
-    Implements: SR-031, LLR-031"""
-    table = loaded.data.get("policies") if loaded.data is not None else None
-    return table if isinstance(table, dict) else None
-
-
 def _process_gate(root, key, loaded=None):
     """One `[policies]` gate out of `docs/process.toml` (SN-028), from the
     one parse `_load_process_toml` makes (`loaded`, or read here).
@@ -281,17 +273,18 @@ def _process_gate(root, key, loaded=None):
     quiet opt-out. (The git hooks refuse such a file outright before any
     scan runs, through `hook_policy_answer`; this checker cannot refuse, so
     it takes the safe reading.) A MIXED config (this file and the legacy one
-    both declaring the gate) reads ON for the same reason. The textual
-    fallback below stays until the file-shape rule is retired: a key the text
-    declares where the parser does not place it reads ON.
+    both declaring the gate) reads ON for the same reason. The parse alone
+    answers, through `kitlib.config.policy_declaration`: a privacy key it
+    holds under another table reads ON, and a key's name inside a string
+    declares nothing.
 
     STILL A LOCAL reader after WI-448 moved `_first_declared_line` into
-    `kitlib.config`, and the split is deliberate: the shared package owns the
-    declared-LINE rule, this module keeps the `[policies]` POLICY — which key,
-    which fail-direction, which residual — because a security gate's
-    fail-closed decision belongs beside the gate, not in a library every
-    checker imports. `tests/test_process_config.py` pins this and the shipped
-    hooks equal over a table of adversarial file shapes."""
+    `kitlib.config`: this module keeps the gate's fail-direction for a file it
+    cannot parse and for a wrong-typed value. The misplaced-privacy-key rule
+    is the shared package's, because the agent layer's policy read takes it
+    too and the two must never disagree about a security gate.
+    `tests/test_process_config.py` pins this and the shipped hooks equal over
+    a table of valid TOML forms."""
     if loaded is None:
         loaded = _load_process_toml(root)
     path = loaded.path
@@ -299,54 +292,8 @@ def _process_gate(root, key, loaded=None):
         return None
     if loaded.error is not None:
         return True  # unparseable but present: fail closed
-    table = _policies(loaded)
-    value = table.get(key) if table is not None else None
-    if value is None:
-        # The key may still be in the text where the parser does not place
-        # it (a multi-line string, the wrong section): fail closed rather
-        # than conclude "not declared".
-        return True if _text_declares(path, key) else None
-    return value if isinstance(value, bool) else True
-
-
-_DECLARED_RE_CACHE = {}
-
-
-def _text_declares(path, key):
-    """Whether the file's TEXT declares `key` on a non-comment line — the
-    broad `declared` test the git hooks once ran in sh, kept so this reader
-    cannot conclude "absent" about a key a person wrote where the parser does
-    not place it. It stays until the file-shape rule is retired.
-
-    TRAILING comments are stripped: a key that appears ONLY inside a comment
-    is not a declaration, which is what `tomllib` says too."""
-    pattern = _DECLARED_RE_CACHE.get(key)
-    if pattern is None:
-        pattern = _DECLARED_RE_CACHE[key] = re.compile(
-            r"(?:^|[^A-Za-z0-9_])" + re.escape(key) + r"\s*="
-        )
-    try:
-        text = path.read_text(encoding="utf-8-sig", errors="replace")
-    except OSError:
-        return False
-    return any(
-        pattern.search(_strip_comment(line))
-        for line in text.splitlines()
-        if not line.lstrip().startswith("#")
-    )
-
-
-_TRAILING_COMMENT_RE = re.compile(r"\s*#.*$")
-
-
-def _strip_comment(line):
-    """One line with its TRAILING comment removed.
-
-    Why the strip matters: `privacy_check = true # privacy_check = false` is
-    legal TOML whose value is `true`, and a hook text read that matched the
-    decoy INSIDE the comment once switched the gate off while Python read it
-    on. The hooks now ask `hook_policy_answer` instead of reading text."""
-    return _TRAILING_COMMENT_RE.sub("", line)
+    value = _kitconfig.policy_declaration(loaded.data, key)
+    return value if value is None or isinstance(value, bool) else True
 
 
 def read_privacy_enabled(root, loaded=None):
@@ -379,21 +326,20 @@ def read_privacy_review(root, loaded=None):
 
     Only EXACTLY the string `"warn-unwired"` under `[policies]
     privacy_review` opts down; any other value there, a wrong type
-    included, is `require`. A key the text declares where the parser does
-    not place it (another section, inside a string) is `require` too, and so
-    is an unreadable file: the stricter direction. With no key at all, the
-    legacy `docs/privacy-review` answers during the migration window
-    (exactly `warn-unwired` opts down); absent everywhere, `require`.
+    included, is `require`, and so is a copy the parse holds under any other
+    table (`kitlib.config.policy_declaration`) and an unreadable file: the
+    stricter
+    direction. With no `privacy_review` in the parse, the legacy
+    `docs/privacy-review` answers during the migration window (exactly
+    `warn-unwired` opts down); absent everywhere, `require`.
 
     Implements: SR-031, LLR-031"""
     if loaded is None:
         loaded = _load_process_toml(root)
-    table = _policies(loaded)
-    if table is not None and "privacy_review" in table:
-        return WARN_UNWIRED if table["privacy_review"] == WARN_UNWIRED else "require"
-    if loaded.error is not None or (
-        loaded.path.is_file() and _text_declares(loaded.path, "privacy_review")
-    ):
+    value = _kitconfig.policy_declaration(loaded.data, "privacy_review")
+    if value is not None:
+        return WARN_UNWIRED if value == WARN_UNWIRED else "require"
+    if loaded.error is not None:
         return "require"
     legacy = _first_declared_line(root / "docs" / "privacy-review")
     return WARN_UNWIRED if legacy == WARN_UNWIRED else "require"

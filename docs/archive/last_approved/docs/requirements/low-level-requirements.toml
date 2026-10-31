@@ -335,10 +335,10 @@ phase = 1
 
 [design.LLR-031]
 sr_refs = ["SR-031"]
-title = "Shared declared-line parse"
-module = "project-trajectory/scripts/check_privacy.py"
-code_symbol = "_first_declared_line;_load_process_toml;_policies;read_privacy_review;hook_policy_answer"
-detail = """The single first-non-comment-line reader the hooks, agent_loop.read_declared, and check_privacy all use so a declared policy value is read one way. Each run parses the declared policy file once, and every gate in the checker reads that parse. An unreadable or unparseable file is a distinct outcome, never a default. Only the exact opt-down value under the policies table opts the unwired reviewer down; a copy elsewhere or an unreadable file requires the reviewer, and the legacy record answers only when that key is absent. The hooks receive one closed answer from that parse: the gate off; on with the unwired reviewer required; on with it warned; a mixed declaration; or an unreadable one, as IF-298 carries. They no longer read a declared line themselves and instead reach it through that answer."""
+title = "Shared declared-policy parse"
+module = "project-trajectory/scripts/check_privacy.py;project-trajectory/scripts/kitlib/config.py"
+code_symbol = "_first_declared_line;_load_process_toml;read_privacy_review;hook_policy_answer;policy_declaration"
+detail = """All policy enforcers, including the agent layer, obtain a declared policy answer from one parsed representation. A privacy gate declaration the parse holds outside `[policies]` reads as gate on, whatever its value or any direct or legacy gate declaration; a privacy reviewer declaration it holds there reads as reviewer required, whatever its value or any direct or legacy reviewer declaration. A name inside a string declares nothing. An unreadable or unparseable declaration is a distinct outcome, never a default. Only the exact opt-down value directly under the policies table opts the unwired reviewer down; a copy elsewhere or an unreadable declaration requires the reviewer, and the legacy record answers only when that key is absent. The hook answer is one of: the gate off; on with the unwired reviewer required; on with it warned; a mixed declaration; or an unreadable declaration, as IF-298 carries. The hooks no longer read a declared line themselves and instead reach it through that answer."""
 test_refs = "(see TC-031)"
 status = "Approved"
 component = "CMP-007"
@@ -1558,11 +1558,11 @@ phase = 4
 
 [design.LLR-155]
 sr_refs = ["SR-137", "SR-139"]
-title = "The config layer: one reader, checked shape, one comparison"
-module = "project-trajectory/scripts/agent_policy.py"
-code_symbol = "process_config/process_shape_findings/config_conflicts/approval_through/human_holds"
-detail = """`process_config` parses `docs/process.toml` once; `declared_policy` reads a dial through it with the legacy file as fallback; `process_shape_findings` refuses every line shape the hooks' sh cannot follow; `config_conflicts` returns refusal STRINGS (never raises — `dispatch.run` sits in the tick loop's caller, where an exception would rewrite an exit-code contract) covering the double-declaration, the wrong type and the out-of-range value; `approval_level` + `human_holds` are the ordinal and the ONE comparison every consumer makes."""
-rationale = """Five entry points read policy without passing through `agent_loop.main`, so the refusal has to live where the value is read. The comparison is stated once for the same reason the shape is checked: the failure modes here are silent, and a rule restated at four call sites is four chances to state it differently."""
+title = "The config layer: one parse, declaration checks, one comparison"
+module = "project-trajectory/scripts/agent_policy.py;project-trajectory/scripts/bootstrap.py"
+code_symbol = "process_config/config_conflicts/approval_through/human_holds;_migrate_dial_key_name"
+detail = """The configuration layer parses the policy declaration once, reads a dial from that parse with its legacy declaration as fallback, and returns refusal text rather than raising for a duplicate declaration, a wrong-typed value or an out-of-range value. It supplies the ordinal approval level and the one comparison every consumer uses. Valid TOML syntax, including dotted keys, inline tables and multi-line strings, is not a refusal condition. A legacy dial key the migration cannot rename in place is refused rather than altered."""
+rationale = """The policy values serve several entry points, so their validation and comparison need one home. A duplicate or invalid declaration must surface as a refusal rather than letting each entry point choose a different fallback; valid TOML syntax is a parser concern, not a policy violation."""
 test_refs = "TC-150;TC-151"
 status = "Approved"
 component = "CMP-008"
@@ -1572,8 +1572,8 @@ phase = 5
 sr_refs = ["SR-138"]
 title = "The legacy converter, and the one word that is not a rename"
 module = "project-trajectory/scripts/bootstrap.py"
-code_symbol = "migrate_legacy_config/_migrate_gate_policy/set_process_key/LEGACY_APPROVAL"
-detail = """`set_process_key` answers THREE states (`wrote`/`unchanged`/`missing`) and the write decides the delete; `add_if_missing` makes the write total. `gate-policy` gets its own arm because its single word expands to three dials, so it cannot be a one-key `LEGACY_CONFIG` row. `LEGACY_APPROVAL` is F5-duplicated from `agent_common` (bootstrap imports no kit sibling — it must run standing on nothing but the kit directory it copies FROM) and pinned equal by `test_rule_sync`. Exposed as bootstrap.py --migrate-config, the pass both scaffolding and the documented re-sync run; the destination home is docs/process.toml."""
+code_symbol = "PolicyWriteRefused;set_process_key;_toml_canon;_confirmed_edit;_locate_process_key;_unconfirmed_form;_refusal;_written;_report_flag;LEGACY_APPROVAL;_migrate_dial_ordinal;migrate_legacy_config;_migrate_legacy_file;_migrate_gate_policy"
+detail = """`set_process_key` retains an in-place edit only when the TOML parse of the edited text equals the old parse with exactly that key set; every other candidate — including an inline table, dotted key, key-like line inside a multi-line string, or unparseable file — is refused and writes nothing. A scaffold flag ends with that refusal and prints its value only when written. A refused legacy migration keeps its legacy file; it deletes one only when the parse of the written policy declaration holds its value. `gate-policy` gets its own arm because its single word expands to three dials, so it cannot be a one-key `LEGACY_CONFIG` row. `LEGACY_APPROVAL` is F5-duplicated from `agent_common` (bootstrap imports no kit sibling — it must run standing on nothing but the kit directory it copies FROM) and pinned equal by `test_rule_sync`. Exposed as bootstrap.py --migrate-config, the pass both scaffolding and the documented re-sync run; the destination home is docs/process.toml."""
 rationale = """This is duplicated POLICY, not plumbing: a migrator and a reader disagreeing about what `single-approve` meant would let a repo scaffold with one posture and run with another — which is the shadowing defect the ordinal was introduced to remove, returning through the migration path."""
 test_refs = "TC-152"
 status = "Approved"

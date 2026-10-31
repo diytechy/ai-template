@@ -521,8 +521,8 @@ def _shadow_python(scaffold):
 
 def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     # M-42: the Python-less exit-0 skip must never silently drop a DECLARED
-    # privacy policy — with docs/privacy-check `true` (parsed in pure sh, the
-    # pre-push pattern) and no working python, the hook REFUSES the skip. The
+    # privacy policy — with `[policies] privacy_check = true` and no working
+    # python, the hook REFUSES the skip. The
     # privacy-off scaffold default keeps the free skip (previous test).
     skip_without_env_gates("posix-shell", "git")
     sh = shutil.which("sh")

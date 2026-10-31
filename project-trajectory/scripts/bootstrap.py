@@ -356,6 +356,7 @@ Contract IF-014: SR-010's obligation delivered as a CLI here — the kit's
 """
 
 import argparse
+import functools
 import json
 import re
 import shutil
@@ -936,21 +937,35 @@ PROCESS_TOML_REL = "docs/process.toml"
 _toml_scalar = _kitspine.toml_value
 
 
+class PolicyWriteRefused(Exception):
+    """The in-place writer could not confirm its edit through the file's one
+    TOML parse, so it wrote nothing. The message names the key and the form
+    the parse holds it in. The scaffold flags let it end the run (the CLI
+    exits nonzero with it); the migration notes it and keeps the legacy file.
+
+    Implements: SR-138, LLR-156
+    """
+
+
 def set_process_key(dest, section, key, value, dry_run=False, add_if_missing=False):
     """Set `[section] key = value` in `docs/process.toml`, IN PLACE.
 
-    A LINE REWRITE, not a re-serialization: stdlib has no TOML writer, and the
+    A LINE EDIT, not a re-serialization: stdlib has no TOML writer, and the
     file's explanatory header is most of its value (the same reason the legacy
-    appliers kept the template's `#` lines). The one-`key = value`-per-line
-    convention this file owes the git hooks is exactly what makes a line
-    rewrite exact.
+    appliers kept the template's `#` lines). THE PARSE IS THE AUTHORITY on
+    where a dial is declared: the file may hold any valid TOML, so an edit is
+    kept only when the parse of the edited text equals the old parse with
+    exactly this one key set (`_confirmed_edit`). A dial the parse holds in a
+    form a line edit cannot reach (an inline table, a dotted key), a key-like
+    line that is text inside a multi-line string, or a file that does not
+    parse, is REFUSED with `PolicyWriteRefused`, and nothing is written.
 
-    Returns `"set"` (written), `"same"` (already that value) or `"missing"`
-    (no such file/section/key, nothing written). THREE states, not a bool: the
-    MIGRATOR must be able to tell "already correct" from "I could not write
-    it", because deleting a legacy file on the strength of a write that never
-    happened destroys a declared policy and reports success. It did exactly
-    that once, on a hand-trimmed process.toml.
+    Returns `"set"` (written), `"same"` (the parse already holds that value) or
+    `"missing"` (no file, or the parse holds no such key; nothing written).
+    THREE states, not a bool: the MIGRATOR must be able to tell "already
+    correct" from "I could not write it", because deleting a legacy file on
+    the strength of a write that never happened destroys a declared policy and
+    reports success. It did exactly that once, on a hand-trimmed process.toml.
 
     `add_if_missing` appends the key (creating the `[section]` header when
     needed) instead of answering `"missing"` — what the migrator passes, so a
@@ -962,47 +977,124 @@ def set_process_key(dest, section, key, value, dry_run=False, add_if_missing=Fal
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
         return "missing"
-    lines = path.read_text(encoding="utf-8-sig").splitlines()
-    want = "{} = {}".format(key, _toml_scalar(value))
-    header = "[{}]".format(section)
-    at, append_at = _locate_process_key(lines, header, key)
-    if at is not None:
-        if lines[at] == want:
-            return "same"
-        if not dry_run:
-            lines[at] = want
-            _write_text_lf(path, "\n".join(lines) + "\n")
-        return "set"
-    if not add_if_missing:
+    text = path.read_text(encoding="utf-8-sig")
+    before = _kitconfig.read_toml_text(text)
+    if before is None:
+        raise PolicyWriteRefused(
+            _refusal(section, key, "the file does not parse as TOML")
+        )
+    table = before.get(section, {})
+    if not isinstance(table, dict):
+        raise PolicyWriteRefused(
+            _refusal(section, key, "the parse holds `{}` as a value".format(section))
+        )
+    if key in table and _toml_canon(table[key]) == _toml_canon(value):
+        return "same"
+    if key not in table and not add_if_missing:
         return "missing"
+    after = dict(before, **{section: dict(table, **{key: value})})
+    want = "{} = {}".format(key, _toml_scalar(value))
+    edited = _confirmed_edit(text.splitlines(), section, key, want, after)
+    if edited is None:
+        raise PolicyWriteRefused(
+            _refusal(section, key, _unconfirmed_form(text, section, key in table))
+        )
     if not dry_run:
-        if header in [ln.strip() for ln in lines]:
-            lines.insert(append_at if append_at is not None else len(lines), want)
-        else:
-            lines.extend(["", header, want])
-        _write_text_lf(path, "\n".join(lines) + "\n")
+        _write_text_lf(path, edited)
     return "set"
 
 
-def _locate_process_key(lines, header, key):
-    """`(index_of_key, index_to_append_at)` for `key` under `header`.
+def _toml_canon(data):
+    """One comparable string for parsed TOML: key order ignored, and a
+    boolean never equal to an integer (Python's `True == 1`).
 
-    The pure SCAN half of `set_process_key`, split from the write half so
-    neither sits at the C901 ceiling — and because "where is it" and "what do I
-    write" are two questions. Either value is None when there is no answer."""
-    in_section, append_at = False, None
+    Implements: SR-138, LLR-156
+    """
+    return json.dumps(data, sort_keys=True, default=repr)
+
+
+def _confirmed_edit(lines, section, find_key, new_line, after):
+    """The edited text whose parse is exactly `after`, or None.
+
+    Tries, in order, each line the scan reads as `find_key` under a bare
+    `[section]` header replaced by `new_line`, then `new_line` appended under
+    that header, then a new `[section]` table at the end. The scan only
+    PROPOSES; the parse disposes: a line inside a multi-line string, an edit
+    that duplicates a key, or a header the parse already holds as an inline
+    table each parse to something other than `after`, so none is kept.
+
+    Implements: SR-138, LLR-156
+    """
+    header = "[{}]".format(section)
+    found, append_at = _locate_process_key(lines, header, find_key)
+    edits = [lines[:i] + [new_line] + lines[i + 1 :] for i in found]
+    if append_at is not None:
+        edits.append(lines[:append_at] + [new_line] + lines[append_at:])
+    edits.append(lines + ["", header, new_line])
+    want = _toml_canon(after)
+    for edit in edits:
+        text = "\n".join(edit) + "\n"
+        if _toml_canon(_kitconfig.read_toml_text(text)) == want:
+            return text
+    return None
+
+
+def _locate_process_key(lines, header, key):
+    """`(key_lines, append_at)`: every line reading `key = ...` under a bare
+    `header` line, and the index just past that section's last non-blank
+    line (None with no such header).
+
+    The pure SCAN half of `set_process_key`, and a CANDIDATE scan, not an
+    answer: a line it names may be text inside a multi-line string, so only
+    `_confirmed_edit`'s parse says which, if any, is the key.
+
+    Implements: SR-138, LLR-156
+    """
+    in_section, found, append_at = False, [], None
     for i, line in enumerate(lines):
         stripped = line.strip()
         if stripped.startswith("[") and stripped.endswith("]"):
             in_section = stripped == header
+            append_at = i + 1 if in_section else append_at
             continue
         if not in_section:
             continue
         if "=" in stripped and stripped.split("=", 1)[0].strip() == key:
-            return i, None
+            found.append(i)
         if stripped:
             append_at = i + 1
-    return None, append_at
+    return found, append_at
+
+
+def _unconfirmed_form(text, section, held):
+    """Which form keeps a line edit from reaching `[section]`'s key, for the
+    refusal message.
+
+    Implements: SR-138, LLR-156
+    """
+    if "[{}]".format(section) not in (ln.strip() for ln in text.splitlines()):
+        return "the parse holds the `{}` table inline or through dotted keys".format(
+            section
+        )
+    if held:
+        return (
+            "the parse holds the key, but on no single `key = value` line "
+            "directly under the header (a dotted key, or a line inside a "
+            "multi-line string)"
+        )
+    return "no line added under the header reads back as that key alone"
+
+
+def _refusal(section, key, form):
+    """The one refusal message: the key, the form, and the hand edit.
+
+    Implements: SR-138, LLR-156
+    """
+    return (
+        "{}: cannot write [{}] {} in place: {}. Nothing was written. Set it by "
+        "hand, or declare it as one `{} = ...` line directly under a `[{}]` "
+        "header.".format(PROCESS_TOML_REL, section, key, form, key, section)
+    )
 
 
 def apply_gate_policy(dest, level, dry_run):
@@ -1024,7 +1116,9 @@ def apply_gate_policy(dest, level, dry_run):
     if level == "attended" or dry_run:
         return []
     for key, value in sorted(LEGACY_APPROVAL.get(level, {}).items()):
-        set_process_key(dest, "attestation", key, value)
+        _written(
+            "[attestation] " + key, set_process_key(dest, "attestation", key, value)
+        )
     register = dest / "docs" / "gate-policy.md"
     written = [PROCESS_TOML_REL]
     if not register.exists():
@@ -1064,23 +1158,55 @@ PUSH_POLICY_CHOICES = ("human", "agent-iteration", "agent")
 
 def apply_push_policy(dest, policy, dry_run):
     """Write a non-default push policy into `[policies] push` of
-    docs/process.toml (SN-028; same shape as apply_privacy_check)."""
+    docs/process.toml (SN-028; same shape as apply_privacy_check). Returns
+    `set_process_key`'s answer, or None when nothing was to be written; a
+    refused write raises."""
     if policy == "human" or dry_run:
-        return
-    set_process_key(dest, "policies", "push", policy)
+        return None
+    return set_process_key(dest, "policies", "push", policy)
 
 
 def apply_privacy_check(dest, value, dry_run):
     """Write the privacy-check toggle into `[policies] privacy_check` of
     docs/process.toml. Set at repo creation — an explicitly passed/answered
     `true` overwrites the scaffolded default (`false`). `value` arrives as the
-    legacy one-word string; it is written as a TOML BOOLEAN, which is the shape
-    the keyed git-hook grep matches (M-42)."""
+    legacy one-word string; it is written as a TOML BOOLEAN, the one type the
+    gate reads as declared off (any other value reads ON). Returns
+    `set_process_key`'s answer, or None on a dry run; a refused write raises."""
     if dry_run:
-        return
-    set_process_key(
+        return None
+    return set_process_key(
         dest, "policies", "privacy_check", str(value).strip().lower() == "true"
     )
+
+
+def _written(label, answer):
+    """Whether a scaffold flag's write landed (None: a dry run, which would
+    write). A key the file does not declare is NOTED, never reported as
+    written: no caller prints a value it did not write. A refused write never
+    reaches here; it raises.
+
+    Implements: SR-138, LLR-156
+    """
+    if answer != "missing":
+        return True
+    print(
+        "  NOTE: {} not written: {} declares no such key (removed by hand?); "
+        "set it there if you meant it.".format(label, PROCESS_TOML_REL)
+    )
+    return False
+
+
+def _report_flag(outcome, label, value, answer):
+    """Print a scaffold flag's value only when `_written` says it landed.
+
+    Implements: SR-138, LLR-156
+    """
+    if not _written(label, answer):
+        return
+    if PROCESS_TOML_REL not in outcome.created:
+        outcome.created.append(PROCESS_TOML_REL)
+    print("  {}: {}".format(label, value))
 
 
 # SN-029: the retired gate-authority enum, translated to the three dials that
@@ -1203,27 +1329,43 @@ def _migrate_dial_key_name(dest, notes, dry_run):
     the retired 0-4 ordinal — `_migrate_dial_ordinal`, called right after this
     in `migrate_legacy_config`, normalizes that half).
 
-    A LINE REWRITE, not a TOML parse, for the same reason `_migrate_dial_ordinal`
-    reads a line: this module parses no TOML at all. Silent when the old key is
-    absent, or when BOTH keys are present (the new one wins; the old line is
-    left as a harmless duplicate for a human to remove, not silently deleted
-    out from under a repo that may have meant to keep it visible during a
-    manual re-key).
+    The parse says whether the old key is there and what it holds; the rename
+    is a line edit kept only when the parse of the edited text holds exactly
+    that rename (`_confirmed_edit`), so a key-like line inside a string is
+    never the one renamed, and an old key the edit cannot reach is REFUSED.
+    Silent when the file does not parse (each write that follows refuses
+    it), when the old key is absent, or when BOTH keys are present (the new
+    one wins; the old line is left as a harmless duplicate for a human to
+    remove, not silently deleted out from under a repo that may have meant to
+    keep it visible during a manual re-key).
 
     Implements: SR-137, SR-139, LLR-155
     """
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
         return
-    lines = path.read_text(encoding="utf-8-sig").splitlines()
-    new_at, _ = _locate_process_key(lines, "[attestation]", "human_approval_through")
-    old_at, _ = _locate_process_key(lines, "[attestation]", LEGACY_ATTESTATION_KEY)
-    if old_at is None or new_at is not None:
+    old, new = LEGACY_ATTESTATION_KEY, "human_approval_through"
+    text = path.read_text(encoding="utf-8-sig")
+    data = _kitconfig.read_toml_text(text) or {}
+    table = data.get("attestation")
+    if not isinstance(table, dict) or old not in table or new in table:
         return
-    raw_value = lines[old_at].split("=", 1)[1].strip()
+    renamed = {k: v for k, v in table.items() if k != old}
+    renamed[new] = table[old]
+    raw_value = _toml_scalar(table[old])
+    edited = _confirmed_edit(
+        text.splitlines(),
+        "attestation",
+        old,
+        "{} = {}".format(new, raw_value),
+        dict(data, attestation=renamed),
+    )
+    if edited is None:
+        raise PolicyWriteRefused(
+            _refusal("attestation", old, _unconfirmed_form(text, "attestation", True))
+        )
     if not dry_run:
-        lines[old_at] = "human_approval_through = {}".format(raw_value)
-        _write_text_lf(path, "\n".join(lines) + "\n")
+        _write_text_lf(path, edited)
     notes.append(
         # check_vocab: allow -- the printed note must name the retired word so
         # an adopter searching their own history for it finds the fix.
@@ -1231,7 +1373,7 @@ def _migrate_dial_key_name(dest, notes, dry_run):
         '"ratification" is retired kit vocabulary). The value ({}) is '  # check_vocab: allow
         "unchanged by this step.".format(
             PROCESS_TOML_REL,
-            LEGACY_ATTESTATION_KEY,
+            old,
             "would rename to" if dry_run else "renamed to",
             raw_value,
         )
@@ -1248,7 +1390,10 @@ def _migrate_dial_ordinal(dest, notes, dry_run):
     alternative is `agent_common.approval_through` printing its translation
     warning on every run of every kit script, forever.
 
-    Silent when the dial is absent or already a rung. A number OUTSIDE the
+    The value is read from the parse, never off a line (a key-like line may be
+    text inside a multi-line string), and written through `set_process_key`.
+    Silent when the file does not parse (each write that follows refuses
+    it), or when the dial is absent or already a rung. A number OUTSIDE the
     retired range is left alone and named in `notes` rather than guessed at:
     there is no rung it meant, and an out-of-range dial is the one input that
     reads as LESS human involvement than the owner asked for, so a migrator that
@@ -1260,19 +1405,12 @@ def _migrate_dial_ordinal(dest, notes, dry_run):
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
         return
-    lines = path.read_text(encoding="utf-8-sig").splitlines()
-    at, _ = _locate_process_key(lines, "[attestation]", key)
-    if at is None:
+    data = _kitconfig.read_toml_text(path.read_text(encoding="utf-8-sig")) or {}
+    table = data.get("attestation")
+    raw = table.get(key) if isinstance(table, dict) else None
+    if not isinstance(raw, int) or isinstance(raw, bool):
         return
-    raw = lines[at].split("=", 1)[1].strip()
-    # A LINE READ, not a TOML parse, because this module parses no TOML at all:
-    # it is the one script an adopter may run from a bare download, and every
-    # other write it makes to this file is a line rewrite for the same reason.
-    # The one-`key = value`-per-line convention `docs/process.toml` owes the git
-    # hooks is what makes reading a bare integer off the line exact.
-    if not re.fullmatch(r"-?\d+", raw):
-        return
-    rung = LEGACY_DIAL_ORDINALS.get(int(raw))
+    rung = LEGACY_DIAL_ORDINALS.get(raw)
     if rung is None:
         notes.append(
             "{} [attestation] {} = {} is outside the retired 0-4 range, so "
@@ -1311,7 +1449,11 @@ def migrate_legacy_config(dest, dry_run=False):
 
     Idempotent: a repo with no legacy files answers `([], [])`. A legacy file
     whose value does not parse (a non-integer reviewer dial) is left in place
-    and named in `notes`, never silently dropped.
+    and named in `notes`, never silently dropped. A write `set_process_key`
+    REFUSES (the parse holds the dial where a line edit cannot reach it) is
+    named in `notes` too, and its legacy declaration stays where it is: a
+    legacy file is deleted only once the parse of the file as written holds
+    its value.
 
     Implements: SR-138, LLR-156
     """
@@ -1320,56 +1462,76 @@ def migrate_legacy_config(dest, dry_run=False):
     if not target.is_file():
         return [], ["{} is absent — nothing to migrate into".format(PROCESS_TOML_REL)]
     moved, notes = [], []
-    _migrate_gate_policy(dest, moved, notes, dry_run)
-    _migrate_dial_key_name(dest, notes, dry_run)
-    _migrate_dial_ordinal(dest, notes, dry_run)
-    for legacy_name, section, key, coerce in LEGACY_CONFIG:
-        path = dest / "docs" / legacy_name
-        if not path.is_file():
-            continue
-        word = _first_declared_line(path)
-        if word is None:
-            # An empty/comment-only legacy file declared nothing; deleting it is
-            # the whole migration.
-            if not dry_run:
-                path.unlink()
-            moved.append("docs/" + legacy_name)
-            continue
-        value = coerce(word)
-        if value is None:
+    steps = [
+        functools.partial(_migrate_gate_policy, dest, moved, notes, dry_run),
+        functools.partial(_migrate_dial_key_name, dest, notes, dry_run),
+        functools.partial(_migrate_dial_ordinal, dest, notes, dry_run),
+    ] + [
+        functools.partial(_migrate_legacy_file, dest, row, moved, notes, dry_run)
+        for row in LEGACY_CONFIG
+    ]
+    for step in steps:
+        try:
+            step()
+        except PolicyWriteRefused as exc:
             notes.append(
-                "docs/{} holds {!r}, which is not a valid value — left in "
-                "place; fix it, then re-run --migrate-config".format(legacy_name, word)
+                "{} The legacy declaration is LEFT IN PLACE with its value "
+                "intact; re-run --migrate-config once the line is "
+                "writable.".format(exc)
             )
-            continue
-        # THE WRITE DECIDES THE DELETE. `set_process_key` can answer "missing"
-        # (a hand-trimmed process.toml, a renamed section, a dial this kit
-        # version does not carry) — and unlinking on the strength of a write
-        # that never happened is how a declared policy disappears under a
-        # green `migrated:` line. `add_if_missing` makes the write total, and
-        # the guard below is the belt beside that brace.
-        wrote = set_process_key(
-            dest, section, key, value, dry_run=dry_run, add_if_missing=True
-        )
-        if wrote == "missing":
-            notes.append(
-                "docs/{} could NOT be folded into {} [{}] {} — the legacy file "
-                "is LEFT IN PLACE with its value intact. Fix the TOML, then "
-                "re-run --migrate-config.".format(
-                    legacy_name, PROCESS_TOML_REL, section, key
-                )
-            )
-            continue
-        if _has_comment_lines(path):
-            notes.append(
-                "docs/{} carried its own comment lines; the VALUE migrated and "
-                "the notes went with the file. Re-state them in {} if they "
-                "still matter.".format(legacy_name, PROCESS_TOML_REL)
-            )
+    return moved, notes
+
+
+def _migrate_legacy_file(dest, row, moved, notes, dry_run):
+    """Fold one `LEGACY_CONFIG` row's file into docs/process.toml and delete
+    it, or leave it and say why. A refused write raises past the delete.
+
+    Implements: SR-138, LLR-156
+    """
+    legacy_name, section, key, coerce = row
+    path = dest / "docs" / legacy_name
+    if not path.is_file():
+        return
+    word = _first_declared_line(path)
+    if word is None:
+        # An empty/comment-only legacy file declared nothing; deleting it is
+        # the whole migration.
         if not dry_run:
             path.unlink()
         moved.append("docs/" + legacy_name)
-    return moved, notes
+        return
+    value = coerce(word)
+    if value is None:
+        notes.append(
+            "docs/{} holds {!r}, which is not a valid value — left in "
+            "place; fix it, then re-run --migrate-config".format(legacy_name, word)
+        )
+        return
+    # THE WRITE DECIDES THE DELETE. `set_process_key` answers "set" or "same"
+    # only when the parse of the file it leaves holds this value, and raises
+    # when it cannot make that so; "missing" (a file gone between the check
+    # above and this write) keeps the legacy file too.
+    wrote = set_process_key(
+        dest, section, key, value, dry_run=dry_run, add_if_missing=True
+    )
+    if wrote == "missing":
+        notes.append(
+            "docs/{} could NOT be folded into {} [{}] {} — the legacy file "
+            "is LEFT IN PLACE with its value intact. Fix the TOML, then "
+            "re-run --migrate-config.".format(
+                legacy_name, PROCESS_TOML_REL, section, key
+            )
+        )
+        return
+    if _has_comment_lines(path):
+        notes.append(
+            "docs/{} carried its own comment lines; the VALUE migrated and "
+            "the notes went with the file. Re-state them in {} if they "
+            "still matter.".format(legacy_name, PROCESS_TOML_REL)
+        )
+    if not dry_run:
+        path.unlink()
+    moved.append("docs/" + legacy_name)
 
 
 def _migrate_gate_policy(dest, moved, notes, dry_run):
@@ -1380,7 +1542,8 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     drain policy AND an end-of-run hold at once, and folding it to a single key
     is what loses two of the three (SN-029). The translation itself lives in
     `agent_common.LEGACY_APPROVAL`, so the migrator and the readers cannot
-    disagree about what a word meant.
+    disagree about what a word meant. A refused write raises past the
+    delete, so the legacy file stays.
 
     Implements: SR-138, LLR-156
     """
@@ -2701,18 +2864,14 @@ def apply_declared_policies(dest, plan, outcome):
     # A declared non-default push authority overwrites the scaffolded default
     # (the file itself was just copied with `human` on its value line).
     if plan.push_policy != "human":
-        apply_push_policy(dest, plan.push_policy, plan.dry_run)
-        if PROCESS_TOML_REL not in outcome.created:
-            outcome.created.append(PROCESS_TOML_REL)
-        print("  push policy: {}".format(plan.push_policy))
+        answer = apply_push_policy(dest, plan.push_policy, plan.dry_run)
+        _report_flag(outcome, "push policy", plan.push_policy, answer)
 
     # A `true` privacy-check overwrites the scaffolded default (`false`) — set
     # at repo creation, the cheap moment.
     if plan.privacy_check and plan.privacy_check != "false":
-        apply_privacy_check(dest, plan.privacy_check, plan.dry_run)
-        if PROCESS_TOML_REL not in outcome.created:
-            outcome.created.append(PROCESS_TOML_REL)
-        print("  privacy-check: {}".format(plan.privacy_check))
+        answer = apply_privacy_check(dest, plan.privacy_check, plan.dry_run)
+        _report_flag(outcome, "privacy-check", plan.privacy_check, answer)
 
 
 def report_outcome(plan, outcome):
@@ -2865,4 +3024,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except PolicyWriteRefused as exc:
+        # The policy writer's refusal ends the run with the reason, not a
+        # traceback, and before any success line for the value it refused.
+        sys.exit("bootstrap: REFUSED: {}".format(exc))

@@ -333,11 +333,11 @@ phase = 1
 [test.TC-031]
 verifies = ["SR-031", "LLR-031", "IF-037"]
 level = "Integration"
-method = """Drive each shipped commit and push hook over the adversarial file-shape table and compare its answer with the checker's for every shape; drive an unreadable declaration and a mixed one through each hook; run the policy suites: every enforcer reads one value per dial. Exercise the unwired-reviewer posture: only the exact opt-down value under the policies table warns, a copied value requires review, and the legacy record answers only when the key is absent. Inspect that no hook reads a declared line itself."""
+method = """Drive each shipped commit and push hook and the checker with a policy file containing a dotted key, an inline table, and a multi-line string. For each form, compare every policy answer with the TOML parser's answer and assert no hook or checker refuses the file for its shape. Separately drive a privacy gate declaration under another table and assert every reader, including the agent layer, reads gate on; drive a privacy reviewer declaration there and assert every reader reads reviewer required. Drive an unreadable declaration and a mixed declaration through each hook; run the policy suites to confirm every enforcer reads one value per dial. Exercise the unwired-reviewer posture: only the exact opt-down value under the policies table warns, a copied value requires review, and the legacy record answers only when that key is absent. Inspect that no hook reads a declared line itself."""
 tier = "Full"
 expected = "Satisfies SR-031 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_process_config.py;tests/test_gate_policy.py;tests/test_push_policy.py;tests/test_pre_push_hook.py::test_the_review_posture_follows_the_one_parse;tests/test_shell_portability.py::test_no_hook_reads_the_policy_as_text"
+evidence = "tests/test_process_config.py::test_valid_toml_policy_shapes_reach_every_reader; tests/test_process_config.py::test_a_privacy_key_under_another_table_fails_closed_in_every_reader; tests/test_process_config.py::test_an_unreadable_policy_file_is_refused; tests/test_process_config.py::test_every_hook_refuses_an_unreadable_policy_file; tests/test_process_config.py::test_a_mixed_config_is_refused_by_name; tests/test_process_config.py::test_every_hook_refuses_a_mixed_config_with_one_text; tests/test_gate_policy.py; tests/test_push_policy.py; tests/test_pre_push_hook.py::test_the_review_posture_follows_the_one_parse; tests/test_shell_portability.py::test_no_hook_reads_the_policy_as_text"
 status = "Approved"
 phase = 1
 
@@ -1491,11 +1491,11 @@ phase = 1
 [test.TC-150]
 verifies = ["SR-137", "LLR-155", "IF-261"]
 level = "Integration"
-method = """Run the process-config suite: it sources the SHIPPED hook's own sh functions and drives them against `tomllib` over a table of adversarial file shapes (trailing comments, dotted keys, inline tables, uppercase TRUE, BOM, CRLF, wrong section), asserts the two agree on every shape and that an unparseable file reads ON in both, and drives the mixed-config refusal and the wrong-typed-dial refusal."""
+method = """Run the process-config suite over a duplicated declaration, wrong-typed dials and out-of-range dials, valid policy files containing a dotted key, an inline table or a multi-line string, and a legacy dial-key rename held in an inline table. Assert each guarded entry point refuses a duplicated declaration by naming its key and both homes, that invalid values are refused rather than defaulted, that valid TOML forms cause no configuration refusal, and that the unreachable rename is refused with its old declaration intact."""
 tier = "Full"
 expected = "Satisfies SR-137 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_process_config.py::test_declared_policy_surface_is_reexported_from_its_behavior_module; tests/test_process_config.py"
+evidence = "tests/test_process_config.py::test_a_mixed_config_is_refused_by_name; tests/test_process_config.py::test_a_wrong_typed_dial_is_refused_not_defaulted; tests/test_process_config.py::test_an_out_of_range_dial_is_refused_not_defaulted; tests/test_approval_level.py::test_a_malformed_dial_is_REFUSED_not_silently_defaulted; tests/test_process_config.py::test_every_guarded_entry_point_refuses_a_mixed_config; tests/test_process_config.py::test_valid_toml_policy_shapes_cause_no_configuration_refusal; tests/test_bootstrap.py::test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table"
 status = "Approved"
 phase = 5
 
@@ -1513,11 +1513,11 @@ phase = 5
 [test.TC-152]
 verifies = ["SR-138", "LLR-156"]
 level = "Integration"
-method = """Run the migration cases in the process-config suite: a full conversion deletes every legacy file and lands all three approval dials; a second pass is a no-op; a hand-trimmed process.toml leaves the legacy file in place with its value intact; the F5 translation tables are pinned equal and the retired enum key is absent from the shipped template."""
+method = """Run the migration and bootstrap writer cases: a full conversion deletes every legacy file and lands all three approval dials; a second pass is a no-op; a hand-trimmed process.toml leaves the legacy file in place with its value intact; an inline table, dotted key, key-like line inside a multi-line string, and an unparseable policy file each refuse an unconfirmable in-place write without changing the file; a refused migration keeps its legacy file; the ordinal migration ignores a string decoy; and an ordinary policy file still migrates and accepts an in-place update. Assert that a scaffold flag reports refusal without a value it did not write, that the F5 translation tables are pinned equal, and that the retired enum key is absent from the shipped template."""
 tier = "Full"
 expected = "Satisfies SR-138 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_process_config.py;tests/test_rule_sync.py"
+evidence = "tests/test_process_config.py::test_migration_folds_every_dial_in_and_deletes_the_file; tests/test_process_config.py::test_migration_never_deletes_a_file_it_could_not_write; tests/test_process_config.py::test_migration_leaves_an_unparseable_value_in_place; tests/test_rule_sync.py::test_the_legacy_approval_translation_agrees; tests/test_rule_sync.py::test_the_retired_enum_key_is_no_longer_shipped; tests/test_bootstrap.py::test_a_scaffold_flag_refuses_an_inline_policies_table; tests/test_bootstrap.py::test_a_scaffold_flag_names_a_key_the_file_does_not_declare; tests/test_bootstrap.py::test_set_process_key_refuses_a_dial_it_cannot_edit_in_place; tests/test_bootstrap.py::test_the_writer_refuses_a_policy_file_that_does_not_parse; tests/test_bootstrap.py::test_migration_keeps_the_legacy_file_when_its_write_is_refused; tests/test_bootstrap.py::test_migration_writes_the_real_key_never_a_line_inside_a_string; tests/test_bootstrap.py::test_the_ordinal_migration_reads_the_dial_never_a_line_inside_a_string; tests/test_bootstrap.py::test_an_ordinary_policy_file_still_migrates_and_sets_in_place"
 status = "Approved"
 phase = 5
 

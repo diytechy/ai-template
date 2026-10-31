@@ -51,11 +51,10 @@ required for the minimum profile). Rows are in document order; each maps to the
 **Where the dials live.** Every *process* dial this file names — gate authority,
 the human-approval level, push authority, the reviewer count, the privacy
 and secrets gates, guardrails, the blackout window — is declared once in
-**`docs/process.toml`**, one `key = value` per line under a bare `[section]`
-header; the file's own header explains the shape and why it is checked (since
-the git hooks refuse without Python 3.11, they read the privacy dials through
-one parse). It is **kit-owned**: a re-sync takes the kit's copy and the repo
-re-applies its values. A repo carrying the retired one-word files under `docs/`
+**`docs/process.toml`**, read as TOML; the file's own header explains why
+every reader takes one parse of it (since the git hooks refuse without Python
+3.11, they read the privacy dials through that parse). It is **kit-owned**: a
+re-sync takes the kit's copy and the repo re-applies its values. A repo carrying the retired one-word files under `docs/`
 converts with, from your kept kit checkout,
 `python project-trajectory/scripts/bootstrap.py --migrate-config --dest .` —
 running with both homes live is refused, not resolved by precedence. Three kinds of

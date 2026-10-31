@@ -9,20 +9,15 @@
 # read; the old 3.8 floor's lack of `tomllib` did the rest.
 #
 # Both reasons are spent. The floor is 3.11 (`tomllib` is stdlib), and the
-# hooks now do a KEYED match instead of a first-line one — asymmetrically, so
-# the two grammars cannot disagree in the dangerous direction:
-#
-#     declared?  any `privacy_check =` on a non-comment line  (BROAD)
-#     off?       only a value provably `false`                 (NARROW)
-#     otherwise  ON — fail closed
-#
-# which is why every value below is written ONE `key = value` PER LINE, under a
-# bare [section] header, with no dotted keys, no inline tables and no
-# multi-line strings. That shape is CHECKED, not merely conventional
-# (`agent_common.process_shape_findings` refuses anything else), and
-# tests/test_process_config.py drives the shipped hooks' sh against `tomllib`
-# over a table of adversarial files — because a claim of agreement that no test
-# drives is exactly how two parsers diverge.
+# git hooks read this file through the same one TOML parse the Python checkers
+# use (`check_privacy.py --hook-policy`), so no reader follows its text. Any
+# valid TOML reads as the parser reads it — a dotted key, an inline table and a
+# multi-line string included — and a file that does not parse is refused,
+# never read as a default. tests/test_process_config.py drives the shipped
+# hooks and the checkers over a table of valid forms, so every reader gives
+# the parser's answer. One reading is stricter than the parser's: a
+# `privacy_check` or `privacy_review` held anywhere but directly under
+# [policies] reads the gate on and the reviewer required, whatever its value.
 #
 # WHAT IS IN SCOPE: every dial that answers "how is work PROCESSED" — gate
 # authority, the human-approval level, push authority, the reviewer count,
@@ -48,8 +43,8 @@
 #   IS the point, because absence-as-declaration is unreadable — a repo that
 #   declares nothing looks identical to one that never heard of the layer.
 #   The cost the old text priced is real and is PAID, not hidden: the hooks
-#   never sh-parse these six, so folding them replicates no greppable
-#   contract, and each independently-copyable checker grows its own small
+#   never read these six, so folding them widens no hook's read, and each
+#   independently-copyable checker grows its own small
 #   `tomllib` read (F5 — no shared `_kitcommon.py`, owner 2026-07-12). Every
 #   checker also keeps reading its legacy one-word file as a MIGRATION-WINDOW
 #   fallback, the way check_privacy.py reads `docs/privacy-check` — see the
@@ -185,8 +180,6 @@ push = "human"
 review_rounds = 1
 # Run the PII / identity-leak gate — was docs/privacy-check. The always-on
 # secrets floor below is separate and runs regardless.
-# KEYED-GREPPABLE: the three git hooks match this exact line shape so a
-# Python-less box still fails closed (M-42).
 privacy_check = false
 # The always-on secrets floor (key/token shapes in the staged diff, message and
 # outgoing range) — was docs/secrets-scan, where ABSENCE read as on.
@@ -194,7 +187,6 @@ secrets_scan = true
 # The unwired-privacy-reviewer posture at the push boundary — was
 # docs/privacy-review. Exactly "warn-unwired" opts the unwired case down to
 # warn-and-proceed; any other value — including a typo — reads as require.
-# KEYED-GREPPABLE, like privacy_check.
 privacy_review = "require"
 # Vendored-core guardrail injection — was docs/guardrails-policy.
 #   "off" | "all" | "all except <sub> …" | "<sub> …"

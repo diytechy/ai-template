@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Declared process policy, approval authority, and coordinator dials.
 
-This module owns the constrained ``docs/process.toml`` reading, its conflict and
-shape findings, approval-rung comparisons, and the small coordinator dial
+This module owns the ``docs/process.toml`` reading, its conflict findings,
+approval-rung comparisons, and the small coordinator dial
 resolution built from those declarations. Coordinator locks, Git, subprocess
 harnessing, assignment state, and telemetry remain in ``agent_common``.
 
@@ -192,33 +192,6 @@ PROCESS_KEY_VOCAB = {}
 # stays reserved for values nothing can honour.
 PROCESS_KEY_LEGACY_VALUES = {}
 
-# The two keys the git hooks match in pure sh (M-42 fail-closed). Named here
-# because the cross-parser agreement test (tests/test_process_config.py) is
-# driven from this tuple: for every one of these keys the hooks' ERE and
-# `tomllib` must return the SAME answer over a table of adversarial file
-# shapes. A claim of agreement that no test drives is how the two parsers
-# diverge.
-GREPPABLE_KEYS = ("privacy_check", "privacy_review")
-
-# THE GREPPABLE SHAPE, and why it is a CHECKED contract rather than a
-# convention. The git hooks read this file in pure sh so a Python-less box
-# still fails closed (M-42) — which means two grammars read one file, and two
-# grammars WILL disagree unless the file's shape is narrowed to where they
-# cannot. TOML is far more expressive than a `grep -E` can follow: a dotted key
-# (`policies.privacy_check = true`), an inline table (`policies = { … }`), a
-# key in a multi-line string, a key under the wrong section header — every one
-# of those parses to something `tomllib` sees and the hook does not, or the
-# reverse. Each is a silent flip of the privacy gate.
-#
-# So the file is CONSTRAINED and the constraint is enforced: one `key = value`
-# per line, under a bare `[section]` header, no dotted keys, no inline tables,
-# no multi-line strings. `process_shape_findings` refuses anything else, and
-# the hooks fail CLOSED (a declared key they cannot prove `false` reads as ON)
-# so the residual is loud rather than permissive.
-_SECTION_RE = re.compile(r"^\s*\[([^]]*)\]\s*(#.*)?$")
-_KEY_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$")
-_MULTILINE_RE = re.compile(r'"""|\'\'\'')
-
 
 def _process_toml_path(docs):
     return Path(docs) / PROCESS_TOML
@@ -261,9 +234,8 @@ def read_toml(path):
         if not path.is_file():
             return None
         # utf-8-SIG: a BOM is not legal TOML, so `tomllib` would raise on a
-        # file some editors write by default — while the git hooks' sh read is
-        # unaffected by a BOM at offset 0 and would keep acting on the same
-        # file. The two readings must not diverge over an invisible byte.
+        # file some editors write by default. The hooks' parse reads it the
+        # same way, so no reader diverges over an invisible byte.
         return tomllib.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
         return None
@@ -294,81 +266,6 @@ def _coerce(value, kind):
     return value
 
 
-def process_shape_findings(docs):
-    """Refusal strings for a `docs/process.toml` written in a shape the git
-    hooks' pure-sh read cannot follow (see the constants above).
-
-    Checks the file as LINES, not as parsed TOML, because what is being
-    verified is precisely that the two readings agree: a dotted key, an inline
-    table, a multi-line string or a key outside a `[section]` all parse fine
-    and are all invisible-or-worse to a `grep -E`. Only the greppable keys are
-    enforced this strictly — the rest of the file is Python-read only.
-
-    Implements: SR-137, SR-139, LLR-155
-    """
-    path = _process_toml_path(docs)
-    if not path.is_file():
-        return []
-    try:
-        text = path.read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeDecodeError) as exc:
-        return ["docs/{} cannot be read: {}".format(PROCESS_TOML, exc)]
-    out = []
-    if _MULTILINE_RE.search(text):
-        out.append(
-            "docs/{} contains a multi-line string. The git hooks read this "
-            "file line-by-line in pure sh (M-42), and a key inside a "
-            "multi-line string is a key they will act on. Use single-line "
-            "values only.".format(PROCESS_TOML)
-        )
-    section = None
-    for lineno, raw in enumerate(text.splitlines(), 1):
-        head = _SECTION_RE.match(raw)
-        if head:
-            section = head.group(1).strip()
-            continue
-        out.extend(_line_shape_findings(raw, lineno, section))
-    return out
-
-
-def _line_shape_findings(raw, lineno, section):
-    """The per-line half of `process_shape_findings` — split out so neither
-    half sits at the C901 ceiling, and because the loop above is about
-    SECTIONS while this is about KEYS."""
-    line = raw.strip()
-    if not line or line.startswith("#") or "=" not in line:
-        return []
-    # The dotted-key test runs BEFORE the key match, not inside it: a dotted
-    # key does not match `_KEY_RE` at all, so a check placed after it is
-    # unreachable — which is what a first cut of this function did, and the
-    # shape it silently let through is the one that flips the gate.
-    if "." in line.split("=", 1)[0]:
-        return [
-            "docs/{}:{} uses a DOTTED key ({}). One `key = value` per line "
-            "under a bare [section] header — a dotted key is invisible to the "
-            "hooks' keyed read.".format(PROCESS_TOML, lineno, line)
-        ]
-    key = _KEY_RE.match(raw)
-    if key is None:
-        return []
-    name, value = key.group(1), key.group(2)
-    out = []
-    if value.startswith("{"):
-        out.append(
-            "docs/{}:{} uses an INLINE TABLE ({}). The hooks cannot read one; "
-            "write each key on its own line.".format(PROCESS_TOML, lineno, name)
-        )
-    if name in GREPPABLE_KEYS and section != "policies":
-        out.append(
-            "docs/{}:{} declares the hook-read key `{}` under [{}], not "
-            "[policies]. Python would ignore it and the hooks would act on it "
-            "— the two must never disagree about a security gate.".format(
-                PROCESS_TOML, lineno, name, section or "(no section)"
-            )
-        )
-    return out
-
-
 def declared_policy(docs, legacy_name, default):
     """The value of one policy dial, `docs/process.toml` first.
 
@@ -383,11 +280,21 @@ def declared_policy(docs, legacy_name, default):
     at preflight rather than silently resolved (SN-028 / plan §11.8), because a
     mixed config is exactly the state where two readers disagree about the same
     policy and neither is wrong.
+
+    The two privacy keys are read through `kitlib.config.policy_declaration`,
+    the one home of their misplaced-key rule: a copy the parse holds under any
+    table other than `[policies]` reads the gate on and the reviewer required,
+    so this layer and the git hooks never disagree.
     """
     section, key, kind = PROCESS_KEYS[legacy_name]
-    table = process_config(docs).get(section)
-    if isinstance(table, dict) and key in table:
-        value = _coerce(table[key], kind)
+    data = process_config(docs)
+    if key in _kitconfig.MISPLACED_PRIVACY_READING:
+        raw = _kitconfig.policy_declaration(data, key)
+    else:
+        table = data.get(section)
+        raw = table.get(key) if isinstance(table, dict) else None
+    if raw is not None:
+        value = _coerce(raw, kind)
         # A wrong-typed value is NOT silently a default here — `config_conflicts`
         # refuses it upstream, and this fall-through only ever runs on a path
         # that already declined to refuse (a caller outside the three guarded
@@ -1354,10 +1261,9 @@ def config_conflicts(docs):
     if not isinstance(data, dict):
         return [
             "docs/{} does not parse — every policy dial would silently read "
-            "its default while the git hooks keep acting on the text. Fix the "
-            "file; do not delete it.".format(PROCESS_TOML)
+            "its default. Fix the file; do not delete it.".format(PROCESS_TOML)
         ]
-    out = process_shape_findings(docs)
+    out = []
     for (section, key), kind in sorted(PROCESS_ONLY_KEYS.items()):
         out.extend(_key_value_findings(data, section, key, kind))
     for legacy_name in sorted(PROCESS_KEYS):
@@ -1458,17 +1364,11 @@ __all__ = (
     "PROCESS_KEY_RANGES",
     "PROCESS_KEY_VOCAB",
     "PROCESS_KEY_LEGACY_VALUES",
-    "GREPPABLE_KEYS",
-    "_SECTION_RE",
-    "_KEY_RE",
-    "_MULTILINE_RE",
     "_process_toml_path",
     "process_config",
     "read_toml_text",
     "read_toml",
     "_coerce",
-    "process_shape_findings",
-    "_line_shape_findings",
     "declared_policy",
     "LEGACY_APPROVAL",
     "APPROVAL_DIAL_RUNGS",

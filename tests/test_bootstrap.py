@@ -5,6 +5,8 @@ import re
 import shutil
 import subprocess
 
+import pytest
+
 from conftest import (
     KIT,
     ROOT,
@@ -1183,9 +1185,212 @@ def test_privacy_check_flag_sets_toggle(tmp_path):
     policy = dest / "docs" / "process.toml"
     assert process_key(dest, "policies", "privacy_check") is True
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
-    # KEYED-GREPPABLE (M-42): the git hooks read this exact line shape in pure
-    # sh, so a Python-less box still fails closed on a declared privacy policy.
+    # Written as a TOML boolean under [policies], where the one parse every
+    # reader takes (the git hooks included) places it.
     assert "\nprivacy_check = true\n" in policy.read_text(encoding="utf-8")
+
+
+# --- The in-place policy writer takes the one parse as its authority -----------
+# The policy file may hold any valid TOML, while bootstrap's writer edits it a
+# line at a time (stdlib has no TOML writer). So the writer keeps an edit only
+# when the parse of the edited text holds exactly the one change it meant, and
+# refuses, writing nothing, whenever it cannot: a dial held in an inline table
+# or a dotted key, or a key-like line that is really text inside a multi-line
+# string. These drive the writer's real callers, the scaffold flags and the
+# migration, and read the result back through the parse.
+
+_INLINE_POLICIES = 'policies = { push = "human", privacy_check = false }\n'
+_DOTTED_POLICIES = 'policies.push = "human"\npolicies.privacy_check = false\n'
+_DECOY_POLICIES = (
+    '[policies]\nnote = """\nprivacy_check = false\n"""\nprivacy_check = false\n'
+)
+
+
+def _policy_repo(root, text, legacy=None):
+    """A bare repo whose docs/process.toml is `text`, plus legacy one-word
+    files `{name: word}`; returns the policy file's path."""
+    docs = root / "docs"
+    docs.mkdir(parents=True)
+    path = docs / "process.toml"
+    path.write_bytes(text.encode("utf-8"))
+    for name, word in (legacy or {}).items():
+        (docs / name).write_bytes((word + "\n").encode("utf-8"))
+    return path
+
+
+def _refusal(call):
+    """The writer's refusal message; fails when it answered instead."""
+    boot = load_script("bootstrap")
+    try:
+        answer = call(boot)
+    except boot.PolicyWriteRefused as exc:
+        return str(exc)
+    raise AssertionError("the writer answered {!r} instead of refusing".format(answer))
+
+
+@pytest.mark.parametrize(
+    "flag, value",
+    [("--privacy-check", "true"), ("--push-policy", "agent")],
+    ids=["privacy-check", "push-policy"],
+)
+def test_a_scaffold_flag_refuses_an_inline_policies_table(tmp_path, flag, value):
+    dest = tmp_path / "repo"
+    path = _policy_repo(dest, _INLINE_POLICIES)
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest, flag, value], tmp_path)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert path.read_bytes() == _INLINE_POLICIES.encode("utf-8"), "wrote anyway"
+    label = flag[2:].replace("-policy", " policy")
+    assert "{}: {}".format(label, value) not in proc.stdout, "printed success"
+    assert "REFUSED" in proc.stderr and flag[2:].split("-")[0] in proc.stderr
+
+
+def test_a_scaffold_flag_names_a_key_the_file_does_not_declare(tmp_path):
+    # A hand-trimmed file with no `privacy_check` line: the flag writes
+    # nothing (an absent key was removed on purpose), so it must not report
+    # the value it did not write.
+    dest = tmp_path / "repo"
+    path = _policy_repo(dest, '[policies]\npush = "human"\n')
+    proc = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", dest, "--privacy-check", "true"],
+        tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "privacy-check: true" not in proc.stdout
+    assert "NOTE: privacy-check not written" in proc.stdout
+    assert path.read_text(encoding="utf-8") == '[policies]\npush = "human"\n'
+
+
+@pytest.mark.parametrize(
+    "text",
+    [_INLINE_POLICIES, _DOTTED_POLICIES],
+    ids=["inline-table", "dotted-key"],
+)
+def test_set_process_key_refuses_a_dial_it_cannot_edit_in_place(tmp_path, text):
+    path = _policy_repo(tmp_path, text)
+    message = _refusal(
+        lambda boot: boot.set_process_key(tmp_path, "policies", "privacy_check", True)
+    )
+    assert "privacy_check" in message and "[policies]" in message
+    assert path.read_bytes() == text.encode("utf-8")
+
+
+_UNPARSEABLE_POLICIES = (
+    '[policies]\npush = "human"\nprivacy_check = false\nunfinished =\n'
+)
+
+
+def test_the_writer_refuses_a_policy_file_that_does_not_parse(tmp_path):
+    """A file that is not TOML is refused, through the writer and through
+    the scaffold flag, with its bytes unchanged and no success line.
+
+    Adequacy witness: a writer that treats an unparseable file as empty
+    answers `missing` (the CLI then exits 0 with a NOTE), and one that falls
+    back to a line edit rewrites the `privacy_check` line the scan still
+    finds; either fails here.
+    """
+    path = _policy_repo(tmp_path / "unit", _UNPARSEABLE_POLICIES)
+    message = _refusal(
+        lambda boot: boot.set_process_key(
+            tmp_path / "unit", "policies", "privacy_check", True
+        )
+    )
+    assert "does not parse" in message and "privacy_check" in message
+    assert path.read_bytes() == _UNPARSEABLE_POLICIES.encode("utf-8")
+    dest = tmp_path / "repo"
+    path = _policy_repo(dest, _UNPARSEABLE_POLICIES)
+    proc = run_py(
+        [SCRIPTS / "bootstrap.py", "--dest", dest, "--privacy-check", "true"],
+        tmp_path,
+    )
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert path.read_bytes() == _UNPARSEABLE_POLICIES.encode("utf-8"), "wrote anyway"
+    assert "privacy-check: true" not in proc.stdout, "printed success"
+    assert "REFUSED" in proc.stderr and "does not parse" in proc.stderr
+
+
+def test_set_process_key_never_appends_a_second_table_header(tmp_path):
+    path = _policy_repo(tmp_path, _INLINE_POLICIES)
+    _refusal(
+        lambda boot: boot.set_process_key(
+            tmp_path, "policies", "review_rounds", 2, add_if_missing=True
+        )
+    )
+    assert path.read_bytes() == _INLINE_POLICIES.encode("utf-8")
+    assert process_toml(tmp_path)["policies"]["privacy_check"] is False
+
+
+def test_migration_keeps_the_legacy_file_when_its_write_is_refused(tmp_path):
+    path = _policy_repo(tmp_path, _INLINE_POLICIES, {"privacy-check": "true"})
+    moved, notes = load_script("bootstrap").migrate_legacy_config(tmp_path)
+    assert moved == []
+    assert (tmp_path / "docs" / "privacy-check").read_text() == "true\n"
+    assert path.read_bytes() == _INLINE_POLICIES.encode("utf-8")
+    assert process_toml(tmp_path)["policies"]["privacy_check"] is False
+    assert any("privacy_check" in n and "LEFT IN PLACE" in n for n in notes), notes
+
+
+def test_migration_writes_the_real_key_never_a_line_inside_a_string(tmp_path):
+    _policy_repo(tmp_path, _DECOY_POLICIES, {"privacy-check": "true"})
+    moved, _notes = load_script("bootstrap").migrate_legacy_config(tmp_path)
+    policies = process_toml(tmp_path)["policies"]
+    assert policies["note"] == "privacy_check = false\n", "the string was edited"
+    assert policies["privacy_check"] is True
+    assert moved == ["docs/privacy-check"]
+    assert not (tmp_path / "docs" / "privacy-check").exists()
+
+
+def test_the_ordinal_migration_reads_the_dial_never_a_line_inside_a_string(
+    tmp_path,
+):
+    text = (
+        "[attestation]\n"
+        "note = '''\n"
+        "human_approval_through = 2\n"
+        "'''\n"
+        'human_approval_through = "DevStg-Arch"\n'
+    )
+    path = _policy_repo(tmp_path, text)
+    load_script("bootstrap").migrate_legacy_config(tmp_path)
+    assert path.read_bytes() == text.encode("utf-8")
+
+
+def test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table(tmp_path):
+    """The migration's rename of the retired attestation dial key refuses an
+    old key the parse holds inside an inline `attestation` table: the file's
+    bytes are unchanged, the old declaration stays, and a note says so.
+
+    Adequacy witness: a rename that returns silently when its line edit is
+    not confirmed (as the line-scan rename did, finding no line under a
+    bare header) leaves no note; one that keeps an unconfirmed edit appends
+    a second `[attestation]` table and changes the bytes; either fails here.
+    """
+    boot = load_script("bootstrap")
+    old = boot.LEGACY_ATTESTATION_KEY
+    text = 'attestation = {{ {} = "DevStg-Arch" }}\n'.format(old)
+    path = _policy_repo(tmp_path, text)
+    _moved, notes = boot.migrate_legacy_config(tmp_path)
+    assert path.read_bytes() == text.encode("utf-8"), "wrote anyway"
+    attestation = process_toml(tmp_path)["attestation"]
+    assert attestation == {old: "DevStg-Arch"}, "the old declaration was lost"
+    assert any(old in n and "LEFT IN PLACE" in n for n in notes), notes
+
+
+def test_an_ordinary_policy_file_still_migrates_and_sets_in_place(tmp_path):
+    # The characterization: one `key = value` line per dial under its header
+    # is rewritten on that line, and a new key lands under its own header.
+    text = (
+        '# header kept\n[policies]\npush = "human"\nprivacy_check = false\n\n[checks]\n'
+    )
+    path = _policy_repo(tmp_path, text, {"privacy-check": "true", "review-policy": "2"})
+    boot = load_script("bootstrap")
+    moved, notes = boot.migrate_legacy_config(tmp_path)
+    assert sorted(moved) == ["docs/privacy-check", "docs/review-policy"], notes
+    assert boot.set_process_key(tmp_path, "policies", "push", "agent") == "set"
+    assert boot.set_process_key(tmp_path, "policies", "push", "agent") == "same"
+    assert path.read_text(encoding="utf-8") == (
+        '# header kept\n[policies]\npush = "agent"\nprivacy_check = true\n'
+        "review_rounds = 2\n\n[checks]\n"
+    )
 
 
 def test_setup_scripts_advise_on_privacy_not_pin_identity():

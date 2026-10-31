@@ -24,7 +24,6 @@ project-trajectory/scripts/bookkeeping.py	_restore	20	35	ABSORBED FROM TRUNK at 
 project-trajectory/scripts/bootstrap.py	append_stack_checklist	26	40
 project-trajectory/scripts/bootstrap.py	copy_kit_files	17	31
 project-trajectory/scripts/bootstrap.py	main	16	41
-project-trajectory/scripts/bootstrap.py	migrate_legacy_config	17	48
 project-trajectory/scripts/bootstrap.py	strip_markers	28	36
 project-trajectory/scripts/bootstrap.py	sync_agent_skills	49	41
 project-trajectory/scripts/check.py	main	40	220

@@ -9,14 +9,15 @@
 # read; the old 3.8 floor's lack of `tomllib` did the rest.
 #
 # Both reasons are spent. The floor is 3.11 (`tomllib` is stdlib), and the
-# hooks now do a KEYED match instead of a first-line one:
-#
-#     grep -Eq '^[[:space:]]*privacy_check[[:space:]]*=[[:space:]]*true' docs/process.toml
-#
-# which is why every value below is written ONE `key = value` PER LINE with no
-# inline tables and no multi-line strings. Python consumers read it with
-# `tomllib` and a cross-parser agreement test pins the two readings equal, so
-# the greppable form can never drift from the parsed one.
+# git hooks read this file through the same one TOML parse the Python checkers
+# use (`check_privacy.py --hook-policy`), so no reader follows its text. Any
+# valid TOML reads as the parser reads it — a dotted key, an inline table and a
+# multi-line string included — and a file that does not parse is refused,
+# never read as a default. tests/test_process_config.py drives the shipped
+# hooks and the checkers over a table of valid forms, so every reader gives
+# the parser's answer. One reading is stricter than the parser's: a
+# `privacy_check` or `privacy_review` held anywhere but directly under
+# [policies] reads the gate on and the reviewer required, whatever its value.
 #
 # THREE DELIBERATE EXCEPTIONS stay outside this file, each for a stated reason
 # (there were four until 2026-08-11 — see the note below them):
@@ -52,10 +53,10 @@
 # Contract IF-037: the one home for this repo's policy dials. `[attestation]`
 #     carries the human-approval rung and the review holds, `[policies]` the
 #     push, review-round, privacy and secrets dials, `[checks]` the
-#     check-enablement toggles, and `[build]` the red-round cap. Every value is one `key = value` per line inside a
-#     `[section]`, with no dotted key, inline table or multi-line string, so the
-#     hooks' pure-sh keyed match and the tomllib read see the same declaration; a
-#     shape that breaks that agreement is refused rather than parsed. A dial
+#     check-enablement toggles, and `[build]` the red-round cap. Every reader, the git hooks included,
+#     takes one TOML parse of the file, so a dotted key, an inline table or a
+#     multi-line string reads as the parser reads it; a file that does not parse
+#     is refused rather than defaulted. A dial
 #     resolves to this file first, then to its legacy one-word file for the length
 #     of the migration window, then to the built-in default — and a repo declaring
 #     one dial in both homes is refused at preflight rather than silently
@@ -202,8 +203,6 @@ push = "human"
 review_rounds = 1
 # Run the PII / identity-leak gate — was docs/privacy-check. The always-on
 # secrets floor below is separate and runs regardless.
-# KEYED-GREPPABLE: the three git hooks match this exact line shape so a
-# Python-less box still fails closed (M-42).
 # `false` here is a RULED posture, not an unexamined default: OI-44 (ruled
 # 2026-08-20) defers the publication/identity decision to the first act that
 # would publish this repo's history beyond the owner's machines — re-answer
@@ -216,7 +215,6 @@ secrets_scan = true
 # The unwired-privacy-reviewer posture at the push boundary — was
 # docs/privacy-review. Exactly "warn-unwired" opts the unwired case down to
 # warn-and-proceed; any other value — including a typo — reads as require.
-# KEYED-GREPPABLE, like privacy_check.
 privacy_review = "require"
 # Vendored-core guardrail injection — was docs/guardrails-policy.
 #   "off" | "all" | "all except <sub> …" | "<sub> …"

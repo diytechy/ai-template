@@ -88,9 +88,7 @@ def run_hook(root, stdin_text, review_cmd=None, env_extra=None):
 
 def set_privacy(root, value="true"):
     # SN-028: the toggle's home is docs/process.toml [policies] privacy_check,
-    # which the hook reads with a KEYED grep (the M-42 pure-sh fail-closed path
-    # survives the move; the file is written one `key = value` per line for
-    # exactly this reason).
+    # which the hook reads through the checker's one TOML parse.
     set_process_key(root, "policies", "privacy_check", value == "true")
 
 
@@ -280,7 +278,7 @@ def _declare_posture(root, value, legacy, decoy):
 
 
 # (privacy on?, [policies] privacy_review or None, legacy file or None,
-#  appended decoy or None, outcome). The two decoy rows catch a text read
+#  appended decoy or None, outcome). The two bare decoy rows catch a reader
 # that finds the key outside [policies] and warns (a fail-open); every other
 # row carries its adequacy witness in the comment beside it.
 POSTURE_CASES = [
@@ -314,6 +312,26 @@ POSTURE_CASES = [
         "refuse",
         id="on-decoy-string",
     ),
+    # A reader that let the legacy opt-down answer beside a copy under
+    # another section would warn here.
+    pytest.param(
+        True,
+        None,
+        "warn-unwired",
+        _DECOY_SECTION,
+        "refuse",
+        id="on-decoy-section-legacy-warn-unwired",
+    ),
+    # A reader that took the key's name inside a string as a copy would
+    # refuse here.
+    pytest.param(
+        True,
+        None,
+        "warn-unwired",
+        _DECOY_STRING,
+        "warn",
+        id="on-decoy-string-legacy-warn-unwired",
+    ),
     # A reader that demanded the reviewer whatever the privacy gate said
     # would refuse every privacy-off row.
     pytest.param(False, None, None, None, "proceed", id="off-absent"),
@@ -330,9 +348,11 @@ def test_the_review_posture_follows_the_one_parse(
     """TC-031 (SR-031: one parse, one answer): with no reviewer wired, the
     push follows the posture the parse places under [policies]. Privacy on:
     exactly `"warn-unwired"` warns and proceeds; any other value, a wrong
-    type, absence, or a copy outside [policies] (another section, inside a
-    string) refuses; the legacy docs/privacy-review answers when the key is
-    absent. Privacy off: the posture is moot and the push proceeds."""
+    type or absence refuses, and so does a copy the parse holds under another
+    section, whatever its value and whatever the legacy docs/privacy-review
+    says. The key's name inside a string is text, not a copy: it declares
+    nothing, so the legacy file answers as for an absent key. Privacy off:
+    the posture is moot and the push proceeds."""
     root, base, head = repo
     set_privacy(root, "true" if privacy else "false")
     _declare_posture(root, value, legacy, decoy)

@@ -3,13 +3,30 @@ id = "WI-966"
 title = "The policy file's one-key-per-line shape rule retires: the hooks read it through one parse, so nothing reads it as text"
 workstream = "process"
 sr_refs = ["SR-137", "SR-031"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#10-one-configuration-file-in-toml"
+specref = ""
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "none"
 +++
+
+## Deliverable
+
+The policy file's one-key-per-line shape rule retires (owner ruling 10 of
+2026-10-11): the shape check, the greppable-key set and the privacy
+checker's textual mirror are deleted, and every reader takes the one TOML
+parse, so a dotted key, an inline table or a multi-line string reads as
+the parser reads it. A privacy key the parse holds outside the policies
+table fails closed in every reader, decided once in the shared kernel
+(`kitlib.config.policy_declaration`). The gate's dispute sitting 006 ruled
+bootstrap's in-place policy writer inside Done-when items 1 and 2: it now
+keeps an edit only when the parse confirms it and otherwise refuses,
+writing nothing, and the migration keeps a legacy file whose write is
+refused. SR-031, LLR-031, TC-031, SR-137, LLR-155, TC-150, LLR-156 and
+TC-152 were re-attested from whole-set sitting 007; SN-028's amendment
+(MEANING, on its held rung) is the owner's act on trunk. One RESYNC entry.
+Decisions: `docs/decisions/wi-966.toml` D-001 to D-017.
 
 ## Context
 

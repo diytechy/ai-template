@@ -47,6 +47,8 @@ from pathlib import Path
 __all__ = [
     "assumption_gate_enabled",
     "first_declared_line",
+    "MISPLACED_PRIVACY_READING",
+    "policy_declaration",
     "process_check",
     "process_check_text",
     "read_declared",
@@ -196,6 +198,58 @@ def process_check(root, key):
     return value if isinstance(value, bool) else True
 
 
+# The two privacy keys, and the reading each takes when the parse holds it
+# under any table other than [policies]: the gate on, the reviewer required.
+# A privacy gate a person declared, misplaced by hand, must never read off.
+MISPLACED_PRIVACY_READING = {"privacy_check": True, "privacy_review": "require"}
+
+
+def policy_declaration(data, key):
+    """`[policies] key`'s value in one parse `data` of `docs/process.toml`
+    (a dict, or None when there is no parse), or None when it declares none.
+
+    THE ONE HOME of the misplaced-privacy-key rule, which every reader of the
+    two privacy keys takes: the privacy checker's gates, the git hooks' policy
+    answer and the agent layer's `declared_policy`. A privacy key the parse
+    holds under any other table (another section, a `[policies]` sub-table,
+    the root, an array of tables) reads `MISPLACED_PRIVACY_READING`, whatever
+    its value and whatever `[policies]` or the legacy file says. The parse
+    alone answers: a key's name inside a string is text, not a key, and
+    declares nothing.
+
+    Implements: SR-031, LLR-031"""
+    if key in MISPLACED_PRIVACY_READING and _held_elsewhere(data, key):
+        return MISPLACED_PRIVACY_READING[key]
+    table = _policies_table(data)
+    return table.get(key) if table is not None else None
+
+
+def _policies_table(data):
+    """The `[policies]` table of one parse `data`, or None when there is none."""
+    table = data.get("policies") if isinstance(data, dict) else None
+    return table if isinstance(table, dict) else None
+
+
+def _held_elsewhere(data, key):
+    """Whether the parse `data` holds `key` in any table but directly in
+    `[policies]` (whose own sub-tables count as elsewhere)."""
+    if not isinstance(data, dict):
+        return False
+    table = _policies_table(data)
+    nodes = [v for v in data.values() if v is not table]
+    nodes += list(table.values()) if table is not None else []
+    return key in data or any(_holds_key(node, key) for node in nodes)
+
+
+def _holds_key(node, key):
+    """Whether `key` names a key in any table within one parsed value."""
+    if isinstance(node, dict):
+        return key in node or any(_holds_key(v, key) for v in node.values())
+    if isinstance(node, list):
+        return any(_holds_key(v, key) for v in node)
+    return False
+
+
 def assumption_gate_enabled(docs):
     """Whether `[checks] assumption_gate` in `<docs>/process.toml` turns the
     assumption gate on: true only when the key reads `true`.
@@ -277,8 +331,8 @@ def _process_toml_at(text, section, key):
     """`docs/process.toml:<line>` for `key` as the file declares it: a
     `key = ...` line under `[section]` (`section` None: before any header),
     or a `[key]` / `[[key]]` header. Plain `docs/process.toml` when no line
-    matches, such as a dotted key, which the file's shape check refuses on
-    its own.
+    matches, such as a dotted key or an inline table, which the parse reads
+    but no single line names.
 
     Implements: SR-242, LLR-343
     """

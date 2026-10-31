@@ -1,0 +1,49 @@
+Reviewed: ae21dca76a04d7793cef49377ebd5aaed441ebf5
+
+Verified. This was a full-lane review in the convergence stance. I read no earlier verdict, nothing under docs/reviews/ or docs/decisions/, and no lane commit message. The failure classes I hunted first were these: a privacy gate that reads OFF where it should read ON (fail-open), the in-place writer corrupting or silently dropping a dial (silent wrong content), and a migration that deletes a legacy file it never wrote (data loss).
+
+Done-when map:
+- (1) Deletion. `process_shape_findings`, `_line_shape_findings`, `GREPPABLE_KEYS`, the three line regexes, their `agent_common` re-exports, and `check_privacy`'s `_text_declares`/`_strip_comment` are gone. A repo-wide grep finds no live caller; only the size-ratchet history comment and old handback patches still name them. COVERED, by the deletion plus the suite.
+- (2) Valid TOML forms read as the parser reads them, by every reader. Covered by `test_valid_toml_policy_shapes_reach_every_reader` and `test_valid_toml_policy_shapes_cause_no_configuration_refusal`. The first drives the shipped pre-push, pre-commit and commit-msg hooks whole. I ran it with Git's sh on PATH (it is env-gated off in the brief's run) and it passed.
+- (3) The texts listed under Context are rewritten: template header and notes, `docs/process.toml`, the kit README `process.toml.template` cell, and the module and config_conflicts strings. One shipped row outside that list is still stale (finding 3).
+- (4) SR-137 keeps its one-home, duplicate and invalid-value obligations and drops the shape clause. IF-037 `data`, SN-028 and SR-031 are amended. I could not read the sitting's judgment, which lives under docs/decisions/ and is out of bounds in this stance.
+- (5) The RESYNC entry is present and says both required things.
+- (6) The bar commands are green (Commands below).
+
+Interface counterpart decision: IF-037's `data` cell changed. Its counterpart IF-298 (the hooks' closed answer vocabulary) keeps its text, which is justified because the vocabulary is unchanged. IF-037's consumers (`kitlib/config`, `check_privacy`, `bootstrap`, `agent_common`) carry the change in code.
+
+Pre-fix checks, run in a `git archive` copy of the commit before each fix with the tip's tests:
+- Before the `kitlib.config.policy_declaration` fix (404ffdb4c), all 5 `test_a_privacy_key_under_another_table_fails_closed_in_every_reader` cases fail.
+- Before the writer fix (a9680ecf9), 10 of the 11 new writer/migration tests in `tests/test_bootstrap.py` fail. Example: "the writer answered 'set' instead of refusing".
+- Both regression sets therefore fail on the pre-fix code.
+
+Probes driving the real functions:
+- A dotted `policies.privacy_check = false` reads off in the hook and the agent layer.
+- `[checks] privacy_check = false`, a `[policies.extra]` sub-table, and a nested inline `privacy_check` all read ON in every reader. No fail-open was found.
+- The writer edits the real key and never a key-like line inside a string. It refuses an inline or dotted `[policies]` with the bytes unchanged. A refused migration keeps its legacy file.
+
+K3: each new bootstrap and kitlib function's `Implements:` tag names an LLR whose `module` and `code_symbol` carry it.
+
+Commands:
+- `git rev-parse HEAD` -> ae21dca76a04d7793cef49377ebd5aaed441ebf5
+- `python -m pytest -q -p no:cacheprovider -n 2 --basetemp .../g2B/wi-966 <the 11 brief test files>` -> 376 passed, 131 skipped in 303.76s (130 skips are the posix-shell gate)
+- the same runner with `C:\Program Files\Git\bin` on PATH, over `tests/test_process_config.py tests/test_pre_push_hook.py tests/test_pre_commit_hook.py tests/test_shell_portability.py` -> 246 passed in 400.19s
+- `python project-trajectory/scripts/check_trajectory.py --strict` -> check_trajectory: clean (980 work item(s), 866 done (88%), 34 cancelled, graph acyclic).
+- `python project-trajectory/scripts/trace.py --strict-integrity` -> Traceability: SN=31 SR=138 LLR=326 TC=353 orphans=0 integrity=0 ... interface-findings=0 ac-advisories=1 paraphrase-advisories=2. This rewrote the gitignored `docs/test/report.md`; no tracked file changed.
+- pre-fix runs in `git archive` copies at 404ffdb4c and a9680ecf9 with the tip's `tests/test_process_config.py` and `tests/test_bootstrap.py` -> 5 failed; 10 failed, 1 passed
+- probe scripts under `g2B/probe` calling `check_privacy.hook_policy_answer`, `agent_common.config_conflicts`/`declared_policy`, `bootstrap.set_process_key`, and `bootstrap.py --dest gp --gate-policy single-approve`
+
+Coverage-extension note, no severity: a section header carrying a trailing comment (`[policies] # c`) is valid TOML. The writer's scan does not recognise it, so `set_process_key` REFUSES and writes nothing, which fails closed. But `_unconfirmed_form` (project-trajectory/scripts/bootstrap.py:1069) misnames the cause as "the parse holds the `policies` table inline or through dotted keys". The base code missed this header too.
+
+- [MINOR] project-trajectory/scripts/bootstrap.py:1118 -> `apply_gate_policy` ignores `_written`'s answer. On a policy file whose `[attestation]` lacks the three dials, `--gate-policy single-approve` prints three `NOTE: ... not written` lines, yet still prints `gate-authority level: single-approve` (bootstrap.py:2861-2862). It also writes `docs/gate-policy.md` registering that level and exits 0. Driven: `process.toml` unchanged, rc=0. The repo therefore runs at the default full hold while its register and the run's output say single-approve. This contradicts the amended LLR-156 detail (docs/requirements/low-level-requirements.toml:1576, "A scaffold flag ... prints its value only when written") and the RESYNC bullet (project-trajectory/RESYNC_PACK.md:9983, "A flag whose key the file does not declare at all prints a NOTE ... instead of the value") (K1). -> Fix: have `apply_gate_policy` report whether every dial landed. Print the level and write the register only then, through the existing `_written`/`_report_flag` owner. Alternatively, narrow LLR-156 and the RESYNC bullet to `--push-policy`/`--privacy-check`. This adds no new guard; it routes the third flag through the one boundary the lane already built. -> @owner
+- [MINOR] project-trajectory/scripts/agent_policy.py:1266 -> A privacy key the parse holds outside `[policies]` is now refused nowhere in the configuration layer. The base refused it there (the wrong-section shape finding).
+  - Driven: `[policies] privacy_check = false` plus `[checks] privacy_check = true` gives `config_conflicts == []`, and every reader silently reads ON. SN-028 says "a repo that declares the same dial twice is REFUSED rather than resolved by precedence", and SR-031's new rationale (docs/requirements/system-requirements.toml:216) assigns "ambiguous" declarations to SR-137, yet nothing refuses this one.
+  - Driven: with the legacy `docs/privacy-check` also present, the hooks answer `refuse=mixed` and print "docs/process.toml AND the legacy docs/privacy-check both declare". Meanwhile `config_conflicts` returns `[]` and `declared_policy` returns "true", so the enforcers disagree on one state (SR-031).
+  - `hook_policy_answer`'s docstring (project-trajectory/scripts/check_privacy.py:352) still says `refuse=mixed` needs `[policies] privacy_check`.
+  - The misplaced reading fails closed, hence MINOR (K1).
+  -> Fix: have `config_conflicts` name a privacy key held outside `[policies]`, computed from `kitlib.config`'s own `_held_elsewhere`/`policy_declaration` so the rule keeps one home. Or state in SR-137/SR-031 that a misplaced privacy key resolves fail-closed without a refusal, and correct the docstring. This would be validation at a genuine trust boundary (a hand-edited TOML file, PROCESS.md §3 "When a guard is owed"), so no unrepresentability clause is owed. -> @owner
+- [MINOR] project-trajectory/README.md:53 -> The kit README's `scripts/agent_policy.py` row still describes "constrained `docs/process.toml` parsing, shape and conflict findings". The shape findings are deleted, and the module docstring now says "the `docs/process.toml` reading, its conflict findings". This is a shipped text still stating the retired rule (Done-when 3's intent; K1). -> Fix: reword to "`docs/process.toml` parsing and conflict findings". -> @owner
+- [MINOR] docs/work/active/wi-966/WI-966-retire-policy-line-shape-rule.md:10 -> The spec takes `planmode = "none"` on F1's ground that "no new code path is constructed". Its Done-when names no writer work. Yet the lane builds a new parse-confirmed in-place writer in bootstrap.py: `PolicyWriteRefused`, `_confirmed_edit`, `_unconfirmed_form`, `_refusal`, `_written`, `_report_flag`, and `_migrate_legacy_file` split out (+82 SLOC ratchet bump). It also amends approved LLR-156 and TC-152 to state it. The work looks necessary: the pre-fix writer answered 'set' on an inline or dotted `[policies]`, as the pre-fix run shows. But an approved row changes only where the spec grants it (K3). -> Fix: amend the spec's Done-when to name the writer's parse-confirmed-edit obligation and its LLR-156/TC-152 amendment, bound by an adjudicator's verdict per PROCESS.md §4, and record that the deletion exception no longer describes the lane. -> @owner
+- [MINOR] docs/requirements/low-level-requirements.toml:1564 -> for clarity: LLR-155 (under SR-137/SR-139) now ends "A legacy dial key the migration cannot rename in place is refused rather than altered", and TC-150 (docs/test/test-cases.toml:1491) cites `test_the_dial_key_rename_refuses_an_old_key_held_in_an_inline_table`. That is a migration obligation, which SR-138/LLR-156 own and already state ("A refused legacy migration keeps its legacy file"), so the rule has two homes across two SR parents (K1). -> Fix: move the sentence to LLR-156 and the test's citation to TC-152, or record in LLR-155 why the rename belongs under SR-137/SR-139. -> @owner
+
+VERDICT: APPROVE findings=5
