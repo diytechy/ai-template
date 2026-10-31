@@ -4146,3 +4146,18 @@ blast_radius = """The owner row and the landing's re-mint only, both held by the
 options = """- (a) TAKE THE ACT: run the command above on trunk; the owner row and the re-mint then close citing the act.
 - (b) RETURN SN-036's TEXT: name what is wrong; it is reworked and re-sat alone, with any row whose meaning follows it (SR-161's acceptance and coincident cell), and the act follows that sitting."""
 recommendation = "(a): the text is the owner's own 2026-09-06 ruling, carried verbatim, and sitting 016 judged its chain and recommends it."
+
+[open_item.OI-118]
+title = "WI-966: the owner re-attests SN-028 on trunk"
+status = "pending"
+raised = "2026-10-31"
+one_line = "Take SN-028's re-attestation act on trunk (its amended text landed with WI-966), or return its text; recommendation (a), take the act, as sitting 007 recommends."
+decision = """Filed by the coordinator at WI-966's landing (headless leg 25), on the route WI-976's SN-036 act took (docs/decisions/wi-976.toml D-023; coordinator-2026-10-26 D-002): a held-rung MEANING act moves to trunk after the landing, carried by a queued owner row citing a pending open item.
+
+WHAT IS TRUE. WI-966 landed SN-028's amended acceptance and why (the one-key-per-line line shape and the two-reader pin leave the need, owner ruling 10 of 2026-10-11; the migration deletes each legacy file it can confirm and leaves one it cannot write intact with a named refusal and the hand edit) with every other act of its whole-set sitting 007 (docs/reviews/wi-966/007-ADJUDICATE-d8f6fd3.md), which ruled SN-028 MEANING on its held rung and recommended it to the owner, naming each hat's outcome. Sitting 003 noted for the owner that SN-028 still carries the tag shell, which reached CROSS-PLATFORM for the retired sh parse; whether the tag stays is the owner's call. The needs registry stays off its anchor until the act. The command is intake.py snapshot --approves stakeholder-needs=<the owner's ruling record> --reattests SN-028, adding --verdict docs/reviews/wi-966/007-ADJUDICATE-d8f6fd3.md where the route asks for it, in its own trunk commit (text then act).
+
+WHAT IS HELD. The owner row that carries the act, and the landing's re-mint WI-984, which closes citing the act once every registry equals its anchor (OI-117's SN-036 act holds the same registry)."""
+blast_radius = """The owner row and the landing's re-mint only, both held by the needs edge. Until the act, SN-028's Approved status records the older acceptance in the snapshot, and the approval brief lists it as drifted."""
+options = """- (a) TAKE THE ACT: run the command above on trunk; the owner row and the re-mint then close citing the act.
+- (b) RETURN SN-028's TEXT: name what is wrong; it is reworked and re-sat alone, with any row whose meaning follows it (SR-031's and SR-137's acceptance), and the act follows that sitting."""
+recommendation = "(a): the text applies the owner's own ruling 10 of 2026-10-11 and keeps the need's outcome (one policy home, loud on a double declaration, no silent default); sittings 003 and 007 judged its chain and recommend it."

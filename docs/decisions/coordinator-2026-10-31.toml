@@ -1,0 +1,20 @@
+# docs/decisions/coordinator-2026-10-31.toml — delegated calls the
+# coordinator made on trunk on 2026-10-31 (headless leg 25 of loop session
+# 20261031T174835Z-e602ab).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The leg started at once, as the leg-24 handoff's dropped Resume-not-before line directs (coordinator-2026-10-26 D-004): a one-word CRITIQUE probe through codex_call.py from the detached critique checkout answered at 12:49 local, so Terra and Sol were back, and the queue's row 4 (WI-966's checkpoint) moved first."
+alternative = "Hold for the CLI's own named reset, 2026-11-02 00:00 local."
+reversal_cost = "Low: a probe."
+why_not_escalated = "The owner reported the reset; the probe confirmed it; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "At WI-966's landing (2aaf9f66f) the sweep minted the re-mint WI-984. The SR, LLR and test registries equal their anchors; the stakeholder-needs registry does not, since sitting 007 ruled SN-028 MEANING on its held rung (and OI-117's SN-036 act holds the same registry). So, as at WI-976's landing (coordinator-2026-10-26 D-002), the coordinator filed OI-118 (pending: the owner takes SN-028's re-attestation act on trunk, or returns its text; recommendation (a)), its owner row WI-985, and WI-984's needs on OI-118. The gate's five MINORs are follow-ups in status.md's unfiled list (wi-966 D-017), not rows: none is fail-open, and each is small; the agent layer's mixed-config presence finding, raised in both rounds, stays among them."
+alternative = "File the gate MINORs as successor rows now."
+reversal_cost = "Low: an open item and two row edits."
+why_not_escalated = "The filing route coordinator-2026-10-26 D-002 set; the OI's ruling is the owner's; recorded for confirm or overrule."
+review = ""
