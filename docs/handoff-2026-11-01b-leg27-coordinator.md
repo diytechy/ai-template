@@ -1,14 +1,15 @@
 # Handoff 2026-11-01b (headless leg 27): WI-977 landed; the queue holds for the owner
 
-Overnight: stop
-
 It replaces [handoff-2026-11-01a-leg26-coordinator.md](handoff-2026-11-01a-leg26-coordinator.md)
 as the resume map. The procedure is in the `coordinator-cycle` skill and its
 recipes; this handoff holds state only. Headless leg 27 ran under loop session
 `20261031T174835Z-e602ab`; its coordinator session was
 `f59c0ba2-2861-47f9-a38b-8d00fd787f69`. It landed WI-977 and closed its
-re-mint. Every other row in the queue table holds for the owner, so this
-handoff carries the stop line.
+re-mint. Every other row in the queue table held for the owner, so this
+handoff carried the stop line. **Amended 2026-11-01, attended:** the owner
+ruled OI-115 (a) and OI-116 (a); WI-967 became the act ledger's
+preparatory row and WI-987 was filed; the queue table below leads with
+them, and the stop line is dropped (coordinator-2026-11-01 D-001 to D-004).
 
 ## State (trunk `refactor_again`, nothing pushed)
 
@@ -91,13 +92,16 @@ worker's `--wi`, the resume and the closes. The next machinery landing waits
 until a lane has been claimed and closed through them.
 
 **Only the rows in this table are claimed**, in order and under their
-`needs`. No row in it can move without the owner, hence the stop line.
+`needs`.
 
 | # | Row | Next |
 |---|---|---|
-| 1 | WI-963 | Held: OI-115 (the owner); recount its module size at the rebase |
-| 2 | WI-910 | Held: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push (coordinator-2026-10-25 D-001) |
-| 3 | Filing P8 | Waits on its filing calls (P6 landed as WI-979) |
+| 1 | WI-987 | Scope critique, then claim. Not machinery; its claim and close run the cycle through WI-977's changed steps |
+| 2 | WI-967 | Scope critique, then claim (OI-115 ruled (a)). Changes the act ledger: lands alone, after row 1 has closed |
+| 3 | WI-963 | Rebase onto WI-967's landing; build settlement from the ledger; recount its module size at the rebase |
+| 4 | WI-978 | Scope critique (owed since filing; OI-116 ruled (a)), then claim. Machinery: lands alone, after WI-967's changed step has run |
+| 5 | WI-910 | Held: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push (coordinator-2026-10-25 D-001) |
+| 6 | Filing P8 | Waits on its filing calls (P6 landed as WI-979) |
 
 **Never claimed by a leg:**
 
@@ -106,26 +110,21 @@ until a lane has been claimed and closed through them.
 - WI-908 (the owner present);
 - WI-964 (the owner's Mac);
 - WI-827 (attended only; it never lands from a lane);
-- WI-967 (OI-115's placeholder);
-- WI-978, until OI-116 is ruled;
 - WI-980 and WI-981 (OI-117);
 - WI-984 and WI-985 (OI-118);
 - the successor rows WI-982 and WI-983, until the owner orders them into
   this table;
 - every row under `docs/work/deferred/` (D-011, D-016).
 
-The queue runs in headless legs (the `coordinator-cycle` skill's section 7)
-once the owner adds a movable row and drops the stop line.
+The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
 
 ## For the owner
 
-- **Unblock the queue:** rule OI-115 (WI-963's settlement fix;
-  recommendation (a)), or push `refactor_again` so WI-910's landing tip
-  carries CI's state. Alternatively, rule that the WSL POSIX evidence route
-  (wi-931 D-002) stands in for CI on that Done-when item
-  (coordinator-2026-10-25 D-001). Also make P8's filing calls, or order
-  WI-982 and WI-983 into the table (each owes its scope critique before its
-  claim). Then drop `Overnight: stop`.
+- **Rows still held:** push `refactor_again` so WI-910's landing tip
+  carries CI's state, or rule that the WSL POSIX evidence route (wi-931
+  D-002) stands in for CI on that Done-when item (coordinator-2026-10-25
+  D-001). Make P8's filing calls, or order WI-982 and WI-983 into the table
+  (each owes its scope critique before its claim).
 - **SN-028's act, on trunk** (OI-118, its owner row WI-985), unchanged:
   `intake.py snapshot --approves stakeholder-needs=<your ruling record> --reattests SN-028`,
   adding `--verdict docs/reviews/wi-966/007-ADJUDICATE-d8f6fd3.md`; then
@@ -138,8 +137,8 @@ once the owner adds a movable row and drops the stop line.
   WI-966 changes what an adopter's policy file may hold. WI-977's RESYNC
   entry: both `--wi` flags take one id, and a parked multi-row lane must
   land or close before the upgrade.
-- **Rule OI-116** (WI-978; recommendation (a), spine only).
 - **Confirm or overrule:**
+  - from the attended amendment: coordinator-2026-11-01 D-001 to D-003 (D-004 is owner-confirmed);
   - from this leg: wi-977 D-026 (the machinery-rule reading) and D-027
     (the whole-set sitting 014 in place of three act turns);
   - carried from leg 26: wi-977 D-015 to D-025. Note especially:

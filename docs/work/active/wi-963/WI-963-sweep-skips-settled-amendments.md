@@ -4,7 +4,7 @@ title = "The trunk mint never mints an amendment row for a row the merged range 
 workstream = "process"
 sr_refs = ["SR-178"]
 specref = "docs/plans/2026-10-03-s11-in-lane-adjudication.md#42-the-re-mint-trap"
-needs = ["OI-115"]
+needs = ["OI-115", "WI-967"]
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
@@ -117,6 +117,10 @@ following piece 1 (the coordinator's answer to S1 at critique round 1).
   threat model" bounds a spec's promise. A hand-edited act ledger or snapshot
   copy, hand-chosen name aliases (a row id or registry path in another case
   or spelling) and sub-second timing windows are outside it.
+- OI-115 ruled 2026-11-01 (a): the lane rebases onto WI-967's landing, and
+  settlement reads the registries each re-attesting act copied from the act
+  ledger, so a row amended after its act still mints on a squashed landing
+  as on an unsquashed one (dispute sitting 007-ADJUDICATE-1ae50f4's FIX).
 - Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Trust

@@ -1,0 +1,36 @@
+# docs/decisions/coordinator-2026-11-01.toml — delegated calls the
+# coordinator made on trunk on 2026-11-01 (attended, with the owner, after
+# headless leg 27's stop).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Recording the owner's OI-115 ruling (a), WI-967 (its placeholder) became the preparatory row in the same commit: a spec of record at docs/specs/WI-967.md holding the problem (the three act shapes wi-963 D-011 probed whose ledger entry names no copied registry), a scope that excludes WI-963's settlement rule, and three questions for its scope critique (how entries written before the row are read, the ledger's readers and whether a Trust section is owed, its landing alone); its Done-when names the record, the validators, IF-220, one RESYNC entry and the bar. The full scope is left to the scope critique, not drafted here."
+alternative = "Draft the full spec through a planner sub-agent before recording the ruling."
+reversal_cost = "Low: the row's text, re-settled at its scope critique."
+why_not_escalated = "The open-items contract requires the ruling commit to write the citing row's criteria and spec of record; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "Filed WI-987 on trunk by hand (spec of record docs/specs/WI-987.md, anchor SR-178): docs/open-items.html section 2 renders only trace.reattest_model's SR chains and never baseline_snapshot.needs_owing, so the drifted SN-028 and SN-036 do not show as rows owing a re-attest while the Markdown approval brief lists both. The generator's docstring makes the brief authoritative, so the page is the defect. Found from the owner's report that SN-036 was missing."
+alternative = "Leave it to the OI-117 and OI-118 cards, which name both needs in prose."
+reversal_cost = "Low: a queued row."
+why_not_escalated = "A defect against an approved SR, filed with its scope critique owed before its claim; recorded for confirm or overrule."
+review = ""
+
+[decision.D-003]
+decided = "With the owner's go-ahead, the leg-27 handoff's queue table is amended in place and its Overnight: stop line dropped: 1 WI-987 (not machinery the cycle runs on; its claim and close run the cycle through WI-977's changed steps, which the next machinery landing waits on), 2 WI-967 (machinery: lands alone), 3 WI-963 (rebases onto WI-967's landing), 4 WI-978 (scope critique owed now OI-116 is ruled; machinery: lands alone, after WI-967's changed step has run), then WI-910 and filing P8, both still held. WI-982 and WI-983 stay out until the owner orders them."
+alternative = "Write a new handoff, or keep the stop line until the owner drops it by hand."
+reversal_cost = "Low: restore the stop line."
+why_not_escalated = "The owner approved making the rows movable for the next leg; the order follows the machinery landing rule; recorded for confirm or overrule."
+review = ""
+
+[decision.D-004]
+decided = "OI-115's ruling commit adds one item to WI-963's claimed Done-when (its trunk claim copy cites OI-115, so ruling-sync requires the change in the same commit): \"OI-115 ruled 2026-11-01 (a): the lane rebases onto WI-967's landing, and settlement reads the registries each re-attesting act copied from the act ledger, so a row amended after its act still mints on a squashed landing as on an unsquashed one (dispute sitting 007-ADJUDICATE-1ae50f4's FIX).\" WI-963's needs gain WI-967. The owner confirmed the exact text in session, so this entry binds its digest and the done-when hold reads it as blessed; the lane's copy takes it at the rebase."
+alternative = "Drop OI-115 from WI-963's needs so the lane writes and blesses the item itself at its rebase (sidesteps ruling-sync)."
+reversal_cost = "Low: one Done-when item, re-blessed in the lane if it changes."
+why_not_escalated = "Escalated: the owner confirmed the text in session, 2026-11-01."
+review = ""
+owner = "confirmed"
+done_when = "sha256:f8c62f4a13affe14"

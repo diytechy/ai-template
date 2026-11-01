@@ -22,8 +22,8 @@ lanes, acts keep landing order), and 33 (spine ids only). Rulings 1, 3, 4,
 5 and 9 shape this spec. coordinator-2026-10-20 D-009 adds two things: WI-810's
 "sequential sittings never collide on an id" folds in here (below), and this
 spec asks the owner whether the WI space rides the carrier too (OI-116,
-`## Held for the owner`). That question is not ruled. This spec is written
-for revision 33's answer.
+`## Ruled by the owner`). The owner ruled it 2026-11-01: no, revision 33
+stands. This spec is written for that answer.
 
 **Anchor.** SR-174 (Approved, under SN-025): "allocate each work-item
 identity at most once, so that no two concurrent actors receive the same
@@ -287,11 +287,14 @@ no carrier, and a moved carrier.
 | `scripts/bootstrap.py` `raise_watermark`; `kitlib/bootstrap_manifest.py` | scaffold marks | unchanged: a fresh scaffold has no records and no carrier |
 | coordinator recipes §4 and SKILL §4 (procedure) | the rebase row, the floor briefing | replaced (Done-when, text) |
 
-## Held for the owner (OI-116)
+## Ruled by the owner (OI-116)
+
+**Ruled 2026-11-01: No (option (a), spine only).** Revision 33 stands and
+this spec stands as filed; the owner saw no reason for a lane to open a
+work item. The question and its options are kept below as the record.
 
 Does the WI space ride the carrier too? A yes would re-open revision 33,
-so that lanes reserve WI ids instead of trunk minting them (D-009 asks it;
-it is not ruled).
+so that lanes reserve WI ids instead of trunk minting them (D-009 asks it).
 
 - **No (revision 33 stands; what this spec is written for).** WI, OI and
   DP keep their trunk writers. Successors are filed on trunk at the
@@ -303,7 +306,8 @@ it is not ruled).
   its work item reserved", and the landing check covers WI. SR-174's "on
   the integration branch alone" and LLR-153's "lanes never mint" are
   amended. This revives part of WI-810's in-lane mint, which D-009
-  cancelled. The Done-when items marked **(OI-116)** change.
+  cancelled. The Done-when's carrier, landing and RESYNC items would have
+  changed.
 - The open item's third option, defer, builds this spec as for No and
   files a yes as its own row later.
 
@@ -328,7 +332,7 @@ filed".
 
 **The carrier**
 - [ ] The reserve verb admits and refuses exactly as the S3 table says; each
-  refusal is driven, with nothing written. **(OI-116: WI admitted)**
+  refusal is driven, with nothing written.
 - [ ] A reservation writes one carrier commit by compare-and-swap. Its first
   use creates the carrier from trunk's committed watermark. A lost race
   refuses with nothing written (driven with two worktrees).
@@ -348,7 +352,7 @@ filed".
 - [ ] Every row of the landing table is driven, on both callers (the merge
   slot and a hand squash): a stale-base lane that mints another lane's
   reserved number is refused, and a code-only lane passes with no
-  reservation. **(OI-116: WI ids judged; R1 replaced)**
+  reservation.
 - [ ] The landing folds the carrier into trunk's watermark, and a refresh
   that conflicts only on `docs/id-watermark` is resolved by the fold.
 - [ ] The act ledger, `_record_act`, act numbering and the act latch are
@@ -376,7 +380,7 @@ filed".
   trunk-only repository is unaffected). A lane open at upgrade reserves and
   renumbers before it lands. The watermark gains a record line kind, which
   every writer carries, and no existing file migrates. `--bump-ids` is no
-  longer the lanes' spine minter. **(OI-116: the WI mint moves)**
+  longer the lanes' spine minter.
 - [ ] At this row's landing, every other open lane that adds carrier-space
   ids is named, and each reserves and renumbers before its own landing.
   This row's own ids are reserved through its verb, so its landing passes
@@ -386,7 +390,6 @@ filed".
 - [ ] The commit bar is green, and both strict lints (`trace.py --strict`,
   `check_trajectory.py --strict`) are clean on the landing tip.
 
-**Held for the owner**
-- [ ] OI-116 is ruled. On "no", nothing above changes. On "yes", the items
-  marked **(OI-116)** are amended in the ruling's commit, as the open-items
-  contract requires.
+**Ruled by the owner**
+- [x] OI-116 ruled 2026-11-01 (a), spine only: revision 33 stands, WI ids
+  stay minted on trunk and R1 stays, so nothing above changes.

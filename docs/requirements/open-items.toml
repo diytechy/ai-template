@@ -4102,10 +4102,12 @@ ruled_date = "2026-10-14"
 
 [open_item.OI-115]
 title = "WI-963: settlement the act ledger cannot prove on a squashed landing"
-status = "pending"
+status = "ruled"
 raised = "2026-10-21"
-one_line = "Choose how WI-963 closes its gate's ruled FIX, whose only sound remedy needs the act ledger to record the registries each act copied (outside the row's surface); recommendation (a), a preparatory row for the ledger's producer, landed first."
-decision = """Raised by the coordinator in headless leg 08 of loop session 20261021T045653Z-213020 (wi-963 D-011).
+one_line = "RULED 2026-11-01 (a) PREPARATORY ROW: WI-967 becomes the row that makes each act-ledger entry record the registries its act copied; it lands as its own lane, and WI-963 then rebases onto it and builds settlement from the ledger."
+decision = """RULED 2026-11-01 by the owner: option (a), the preparatory row, as recommended. WI-967, this item's placeholder, becomes that row in the same commit (its Done-when, title and spec of record, docs/specs/WI-967.md); it owes its scope critique before its claim and lands alone, since it changes the act ledger the cycle runs on. WI-963's lane stays parked at its gate tip until WI-967 lands, then rebases onto it and builds the settlement fix from the ledger.
+
+Raised by the coordinator in headless leg 08 of loop session 20261021T045653Z-213020 (wi-963 D-011).
 
 WHAT IS TRUE. WI-963 (the trunk mint drops amendment records the merged range already settled) passed its checkpoint sitting (003-ADJUDICATE-9f9b2a8 accepted the whole set). Its gate's REVIEW-B raised one MAJOR tagged convergence-class: a routed traced change made after a row's act settles silently when a later act in the range re-copies that registry for another row, because the row's snapshot copy at the range's after revision does not prove the re-attesting act judged it. The dispute sitting 007-ADJUDICATE-1ae50f4 ruled it FIX (final). Its remedy, comparing with the copy the re-attesting act's own commit wrote, closes it only on an unsquashed range; every hand landing is a git merge --squash, whose one commit is the act's commit. Settlement from the act ledger alone fails too: a traced re-anchor copies its registry and records an entry naming no registry (approved and reattested both empty); an act mixing an approves registry with ids in another lists only the second; a re-seed copies every registry listing only newly approved rows. A probe through the real producer showed the same range minting SR-001 unsquashed and nothing squashed.
 
@@ -4115,13 +4117,16 @@ options = """- (a) PREPARATORY ROW: file a row on trunk that makes each act-ledg
 - (b) BUILD IT IN WI-963: widen WI-963's surface to the ledger's producer and build both in this lane. FOR: one lane. AGAINST: a scope change after the plan's pass record (a Done-when or Trust edit, a re-critique), and the lane changes the machinery twice.
 - (c) LAND WITH THE GAP STATED: the owner rules the squashed-range residue acceptable, recorded in WI-963's Trust section, and the fix1 build lands with it. FOR: fastest. AGAINST: the convergence-class finding stays open on the coordinator's own landing route."""
 recommendation = "(a): the defect is that the act ledger does not say what an act wrote, and making the producer record it ends the class at its one owning boundary; WI-963's filter then reads it, on any landing shape."
+ruled_date = "2026-11-01"
 
 [open_item.OI-116]
 title = "WI-978: does the WI space ride the watermark carrier, re-opening revision 33's narrowing?"
-status = "pending"
+status = "ruled"
 raised = "2026-10-25"
-one_line = "Choose whether lanes reserve work-item ids from the watermark carrier (re-opening the review-churn plan's revision 33, so trunk no longer mints them alone) or whether the carrier stays spine-only; recommendation (a), spine-only, revision 33 standing."
-decision = """Raised by the coordinator at the filing of WI-978 (the review-churn plan's item 16, queue row P5), as coordinator-2026-10-20 D-009 directs: "P5's spec, when filed, asks the owner whether the WI space rides the watermark carrier too, which would re-open revision 33's narrowing so that lanes reserve WI ids instead of trunk minting them; that question is not ruled here."
+one_line = "RULED 2026-11-01 (a) SPINE ONLY: revision 33 stands; WI ids stay minted on trunk under the coordinator's lease, R1 stays, and WI-978's spec stands as filed."
+decision = """RULED 2026-11-01 by the owner: option (a), spine only, as recommended. The owner noted that an adjudicator could in principle open a work item in a lane (a SUCCESSOR ruling naming its row by id), but sees no reason to: filing successors on trunk at the landing serves. WI-978's spec stands as filed; its Done-when drops the (OI-116) marks and records the ruling in the same commit.
+
+Raised by the coordinator at the filing of WI-978 (the review-churn plan's item 16, queue row P5), as coordinator-2026-10-20 D-009 directs: "P5's spec, when filed, asks the owner whether the WI space rides the watermark carrier too, which would re-open revision 33's narrowing so that lanes reserve WI ids instead of trunk minting them; that question is not ruled here."
 
 WHAT IS TRUE. Revision 33 (owner, 2026-10-14) narrowed the carrier to the spine spaces lanes mint: "act seqs and WI ids stay where they are, since each already has one writer"; a WI id is minted only on trunk, under the coordinator's one lease, and the landing's per-space maximum carries the WI space. The integrator's mint refusal R1 (owner, 2026-08-01: a work branch never mints a work-item id) refuses a lane that adds a spec, and records that a reservation table was the alternative rejected for WI ids then. D-009 cancelled WI-810's in-lane mint for conflicting with revision 33. The collisions on record are spine ids (held by the coordinator's floor briefing) and act seqs (the 2026-10-08 D-002 repair); none is a WI collision. The 54 re-mints WI-963 targets are settled amendments re-filed on trunk, not collisions.
 
@@ -4131,6 +4136,7 @@ options = """- (a) SPINE ONLY (revision 33 stands): the carrier carries every wa
 - (b) THE WI SPACE RIDES THE CARRIER: lanes reserve WI ids, so every WI mint, trunk included, draws from the carrier (otherwise trunk and the lanes are two writers of one space); R1 becomes a refusal of an unreserved WI id; the landing check covers WI. FOR: one allocator for every space lanes touch; a lane may name its successors' ids before landing. AGAINST: re-opens revision 33 and part of WI-810's in-lane mint, which D-009 cancelled; widens WI-978 across the intake mint, the sweep, the dual-plan filer and R1, with a larger RESYNC entry for adopters.
 - (c) DEFER: WI-978 builds for (a) now, and (b) is filed later as its own row if a lane is ever blocked for want of a WI id. FOR: the carrier lands sooner, and (b) stays reachable. AGAINST: none beyond (a)'s, but it leaves the question formally open."""
 recommendation = "(a): revision 33's reason still holds, since the WI space has one writer under the coordinator's lease and nothing on record collides there; (b) would move every trunk mint onto the carrier and re-open a cancellation the owner made on 2026-10-20 to buy only early citation of successor ids. Rule (c) instead if the owner wants the question kept open without holding WI-978."
+ruled_date = "2026-11-01"
 
 [open_item.OI-117]
 title = "WI-976: the owner re-attests SN-036 on trunk"
