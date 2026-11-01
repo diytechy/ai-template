@@ -251,7 +251,10 @@ landing (an added id lands only inside its own work item's record).
 **Producer and write route.** The reserve verb is the only writer of a
 record, and it writes only on the carrier. It reads the carrier tip (or, on
 first use, the trunk's committed watermark), computes the new marks and
-records, writes one commit, and moves the ref by compare-and-swap. The fold
+records, writes one commit, and moves the ref by compare-and-swap. Each
+range starts one above the larger of the carrier's mark and trunk's
+committed mark for its space, so a ruled `--correct-mark` on trunk raises
+the next reservation's floor, and the correction's record is kept. The fold
 is the only copier, into a working file. No model writes a record. A model
 or a person runs the verb.
 
@@ -320,6 +323,25 @@ owner made five days ago. The one thing it buys is a lane citing a
 successor by id before landing, and today that is "cite it by subject until
 filed".
 
+## Critique dispositions
+
+Scope critique round 1 (Codex Sol at medium, 2026-11-01, headless leg 28;
+CHANGES-REQUESTED, findings=2):
+
+- F1 (MAJOR, S3 the spine author's prompt): adopted — the Done-when item
+  "The coordinator's spine-author prompt
+  (`scripts/coordinator/terra-spine-prompt.template.md`) drafts new ids
+  from the reserved ranges its brief names, never from the watermark's
+  mark, and its `--bump-ids` instruction is removed; an author who needs
+  more ids than a range holds stops and reports the count, and the
+  coordinator reserves again."
+- F2 (MINOR, S2 a ruled correction): adopted — the Trust producer's
+  "Each range starts one above the larger of the carrier's mark and
+  trunk's committed mark for its space, so a ruled `--correct-mark` on
+  trunk raises the next reservation's floor, and the correction's record
+  is kept", and the carrier item "and a reservation after a ruled
+  `--correct-mark` on trunk starts above the corrected mark".
+
 ## Done-when
 
 **The spine** (the intent turn, TC first; one checkpoint sitting)
@@ -338,7 +360,9 @@ filed".
   refuses with nothing written (driven with two worktrees).
 - [ ] Two reservations in sequence, and two from stale bases, receive
   disjoint ranges, each starting one above the carrier's mark. This is the
-  folded sittings rule, with a test that fails on today's code.
+  folded sittings rule, with a test that fails on today's code; and a
+  reservation after a ruled `--correct-mark` on trunk starts above the
+  corrected mark.
 - [ ] The fold gives each space's maximum, the union of records, and the
   basis from the receiving tree's live ids, on a clean file and on a
   conflicted one.
@@ -366,6 +390,12 @@ filed".
   the change breaks or minting instead. The `byte-budget-guard` skill
   reports the delta and restamps.
 - [ ] `spine-questions.md` §0 cites it (one line, no restatement).
+- [ ] The coordinator's spine-author prompt
+  (`scripts/coordinator/terra-spine-prompt.template.md`) drafts new ids
+  from the reserved ranges its brief names, never from the watermark's
+  mark, and its `--bump-ids` instruction is removed; an author who needs
+  more ids than a range holds stops and reports the count, and the
+  coordinator reserves again.
 - [ ] Recipes §4 replace the floor briefing with "reserve before drafting"
   (the coordinator reserves the draft's counts before dispatching the spine
   author, and the brief names the reserved ranges). Its rebase row for

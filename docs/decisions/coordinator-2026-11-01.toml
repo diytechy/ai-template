@@ -48,3 +48,10 @@ alternative = "A ledger format-version marker as the legacy boundary; or treat a
 reversal_cost = "Low before the claim; medium after the build (the field name and boundary are in the producer, validators and IF-220)."
 why_not_escalated = "Within the ruled OI-115 (a) scope; the commit boundary follows the owner's enforce-at-the-commit rule and the readers' existing seq comparison; the Trust ruling is routed for confirm or overrule (coordinator-cycle section 1)."
 review = ""
+
+[decision.D-007]
+decided = "Headless leg 28: WI-967's confirming round APPROVEd with no findings, so it is claimable. WI-978's scope critique (owed since filing; Sol, CHANGES-REQUESTED findings=2) answered by adopting both: a Done-when item moving the coordinator's spine-author prompt from the watermark mark and --bump-ids to the brief's reserved ranges (MAJOR), and a reservation floor of the larger of the carrier's and trunk's committed mark so a ruled --correct-mark raises it (MINOR). A confirming round follows."
+alternative = "Reject the MINOR as an uncommon correction route (S7)."
+reversal_cost = "Low: the row's text, before its claim."
+why_not_escalated = "Both name a supported route the row's own carrier serves; recorded for confirm or overrule."
+review = ""
