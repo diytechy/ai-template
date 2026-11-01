@@ -50,6 +50,7 @@ if str(SCRIPTS) not in sys.path:  # the kit's script-sibling import idiom
     sys.path.insert(0, str(SCRIPTS))
 
 from kitlib import verdict as kv  # noqa: E402
+from integrate_fixtures import claim_by_hand  # noqa: E402
 
 pytestmark = env_gate_skipif("git")
 
@@ -667,9 +668,9 @@ def test_the_mechanical_adjudication_close_archives_terminal_and_finishes(tmp_pa
 def test_the_close_the_writer_lands_is_one_the_attestor_peels(tmp_path):
     # THE WRITER↔VERIFIER LOOP, closed on a REAL close rather than a
     # hand-composed one. `verdict.mechanical_close_attestation` re-derives this
-    # subject from the diff and compares it exactly, so the two sides share an
-    # ordering (`station.mechanical_close_order`) AND a spelling; if either
-    # drifts, every adjudication close silently stops peeling and re-opens the
+    # subject from the one row the diff moves and compares it exactly, so the
+    # writer and the attestor share one composer and one spelling; if they
+    # drift, every adjudication close silently stops peeling and re-opens the
     # staled-APPROVE failure the peel exists to close. The peel test suite
     # composes its own fixtures, so nothing else drives the producer here.
     root = adjudication_repo(tmp_path)
@@ -847,7 +848,7 @@ def test_an_adoption_of_a_superseding_row_closes_and_writes_the_record(
     assert 'adopted = ["WI-450"]' in front
     assert 'specref = ""' in front
     subject = _git(wt, "log", "-1", "--format=%s").strip()
-    assert subject == hb.station.mechanical_close_subject(["WI-401"])
+    assert subject == hb.station.mechanical_close_subject("WI-401")
 
 
 @pytest.mark.parametrize(
@@ -968,35 +969,10 @@ def test_the_mechanical_close_no_ops_for_a_non_adjudication_lane(tmp_path):
     assert ids is None and refusal is None
 
 
-def batch_repo(tmp_path, branch="wi-401", wids=("WI-401", "WI-402")):
-    """A trunk with a BATCH claimed onto one branch (§A4: one branch, one claim
-    commit moving every batched spec) — the shape every defect below is
-    specific to."""
-    skip_without_env_gates("git")
-    root = tmp_path / "repo"
-    root.mkdir()
-    _git(root.parent, "init", "-q", str(root))
-    hooks_on(root)  # every route refuses a checkout without hooks
-    pin_autocrlf(root)
-    _git(root, "config", "user.email", "t@example.com")
-    _git(root, "config", "user.name", "T")
-    _git(root, "config", "commit.gpgsign", "false")
-    _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
-    (root / "seed.txt").write_text("seed\n", encoding="utf-8", newline="\n")
-    (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
-    for wid in wids:
-        spec = root / "docs" / "work" / "queued" / "{}-widget.md".format(wid)
-        spec.parent.mkdir(parents=True, exist_ok=True)
-        spec.write_text(spec_text(wid), encoding="utf-8", newline="\n")
-    _commit(root, "seed + batch", when=T_BASE)
-    assert integ.claim(root, list(wids), branch) == 0
-    return root
-
-
 def close_one_row_on_the_lane(root, branch="wi-401", wid="WI-401"):
-    """What a batch lane's own C6 close ritual does to ONE of its rows: the spec
-    moves to `complete/` and the build commit carries the row's `WI:` trailer.
-    The TRUNK's claimed set still lists it — that is the whole point."""
+    """What a lane's own C6 close ritual does to its row: the spec moves to
+    `complete/` and the build commit carries the row's `WI:` trailer. The
+    TRUNK's claimed set still lists it — that is the whole point."""
     wt = lane(root, branch)
     name = "{}-widget.md".format(wid)
     src = "docs/work/active/{}/{}".format(branch, name)
@@ -1013,29 +989,83 @@ def close_one_row_on_the_lane(root, branch="wi-401", wid="WI-401"):
     return wt
 
 
-def test_the_mechanical_close_no_ops_when_a_batch_row_already_closed(tmp_path):
-    # THE MEASURED DEFECT (2026-09-03, lane `wi-589-…`, four rows on one
-    # branch). `_close_done_adjudication` calls this for every DONE worker whose
-    # branch is not finished, and the claimed set is read off the TRUNK — which
-    # still lists a row the lane has already moved to `complete/`. Reading that
-    # one as "cannot read the claimed spec" turned a NON-adjudication lane's
-    # ordinary stall candidate into a refusal the dispatcher treats as fatal
-    # (EXIT_PREFLIGHT), and the whole loop exited 2.
-    root = batch_repo(tmp_path)
-    close_one_row_on_the_lane(root, wid="WI-401")
-    # WI-401 is in complete/ on the branch, WI-402 still in active/; neither is
-    # an adjudication row.
-    assert integ.finished_branches(root) == []  # not finished: WI-402 is open
+def two_spec_claim_repo(tmp_path, text=None, branch="wi-401"):
+    """A trunk whose claim of `branch` holds TWO specs, WI-401 and WI-402: the
+    historical joined claim record, made by hand (`claim_by_hand`), which a
+    lane of exactly one work item must refuse to close. `text(wid)` is each
+    spec's text (an ordinary row by default)."""
+    skip_without_env_gates("git")
+    root = tmp_path / "repo"
+    root.mkdir()
+    _git(root.parent, "init", "-q", str(root))
+    hooks_on(root)  # every route refuses a checkout without hooks
+    pin_autocrlf(root)
+    _git(root, "config", "user.email", "t@example.com")
+    _git(root, "config", "user.name", "T")
+    _git(root, "config", "commit.gpgsign", "false")
+    _git(root, "symbolic-ref", "HEAD", "refs/heads/main")
+    (root / "seed.txt").write_text("seed\n", encoding="utf-8", newline="\n")
+    (root / ".gitignore").write_text("out/\n", encoding="utf-8", newline="\n")
+    _commit(root, "seed", when=T_BASE)
+    specs = []
+    for wid in ("WI-401", "WI-402"):
+        spec = root / "docs" / "work" / "queued" / "{}-widget.md".format(wid)
+        spec.parent.mkdir(parents=True, exist_ok=True)
+        spec.write_text((text or spec_text)(wid), encoding="utf-8", newline="\n")
+        specs.append(spec)
+    claim_by_hand(root, branch, specs, when=T_BASE)
+    return root
+
+
+def spot_check_text(wid):
+    """A clean-close spot-check adjudication row: it owes no successor, so
+    the mechanical close would archive it with nothing drafted."""
+    lines = [
+        'id = "{}"'.format(wid),
+        'title = "spot check: the WI-005 close"',
+        'workstream = "process"',
+        "needs = []",
+        'safety_class = "adjudication"',
+        "order = 0",
+        'specref = "seed.txt"',
+    ]
+    return (
+        "+++\n"
+        + "".join(ln + "\n" for ln in lines)
+        + "+++\n\n## Context\n\nSpot-check the WI-005 close.\n"
+    )
+
+
+def _assert_two_spec_claim_untouched(root, wt, lane_head):
+    """Nothing a close writes exists: no report, no new lane commit, a clean
+    lane, and both claimed specs still in `active/` on the lane and trunk."""
+    assert not list((wt / "docs" / "handbacks").glob("*.md"))
+    assert _git(wt, "rev-parse", "HEAD").strip() == lane_head
+    assert _git(wt, "status", "--porcelain").strip() == ""
+    for checkout in (wt, root):
+        active = checkout / "docs" / "work" / "active" / "wi-401"
+        assert (active / "WI-401-widget.md").is_file(), checkout
+        assert (active / "WI-402-widget.md").is_file(), checkout
+
+
+def test_an_adjudication_close_of_a_two_spec_claim_refuses_before_any_move(tmp_path):
+    # A lane closes exactly one claimed work item. The mechanical close of a
+    # lane whose trunk claim holds two specs refuses, naming the claimed ids,
+    # before it reads either row: nothing archived, nothing committed.
+    root = two_spec_claim_repo(tmp_path, text=spot_check_text)
+    wt = lane(root)
+    lane_head = _git(wt, "rev-parse", "HEAD").strip()
     ids, refusal = hb.close_adjudication(root, "wi-401")
-    assert refusal is None, refusal
     assert ids is None
-    # MUTATION NOTE: before the skip this returned
-    # (None, "cannot read the claimed spec WI-401-widget.md on wi-401").
+    assert refusal is not None
+    assert "WI-401" in refusal and "WI-402" in refusal, refusal
+    _assert_two_spec_claim_untouched(root, wt, lane_head)
 
 
-def test_an_adjudication_batch_still_closes_the_row_that_is_open(tmp_path):
-    # The other side: skipping an already-moved spec must not stop the close
-    # doing its job on the row that IS still claimed.
+def test_an_adjudication_close_moves_its_one_row(tmp_path):
+    # The one claimed row is still open on the lane, so the close moves it and
+    # names it. Adequacy witness: a close that refused or no-opped on a claim
+    # of one open row would return no ids here.
     root = adjudication_repo(tmp_path)
     ids, refusal = hb.close_adjudication(root, "wi-401")
     assert refusal is None, refusal
@@ -1285,34 +1315,57 @@ def test_the_git_dependency_is_declared_for_this_module():
     assert shutil.which("git"), "the module-level env gate should have skipped"
 
 
-def test_a_partial_close_skips_a_row_the_lane_already_closed(tmp_path):
-    # The batch shape again, on the OTHER close. The claimed set is the TRUNK's,
-    # so a batch that finished WI-401 and then hit its session ceiling still
-    # lists WI-401 as claimed — and moving it a second time both fails and would
-    # overwrite an outcome the lane itself declared. Only the row still open
-    # closes as partial.
-    root = batch_repo(tmp_path)
-    close_one_row_on_the_lane(root, wid="WI-401")
+def test_a_partial_close_of_a_two_spec_claim_refuses_before_any_report(tmp_path):
+    # The other close, the same contract: a partial close of a lane whose
+    # trunk claim holds two specs refuses, naming the claimed ids, before any
+    # report, residue commit or move.
+    root = two_spec_claim_repo(tmp_path)
+    wt = lane(root)
+    lane_head = _git(wt, "rev-parse", "HEAD").strip()
     ids, refusal = hb.close_partial(
         root,
         "wi-401",
         "worker exit 7",
         {"suggested_tier": "strong", "keep_commits": ["abc1234"]},
     )
-    assert refusal is None, refusal
-    assert ids == ["WI-402"]
-    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file() is False
-    merge_branch(root)
-    # WI-401 keeps its OWN outcome; WI-402 got the partial one, with its report.
-    assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
-    assert (root / "docs" / "work" / "partial" / "WI-402-widget.md").is_file()
-    assert report_path(root, "WI-402", "wi-401").is_file()
-    # ...and no report was written for the row this close did not touch.
-    assert not report_path(root, "WI-401", "wi-401").is_file()
+    assert ids is None
+    assert refusal is not None
+    assert "WI-401" in refusal and "WI-402" in refusal, refusal
+    _assert_two_spec_claim_untouched(root, wt, lane_head)
+
+
+def test_a_partial_close_restores_the_single_report_after_move_refusal(
+    tmp_path, monkeypatch
+):
+    # The close writes its one report, then the move refuses: the report is
+    # restored and the claim and terminal state are left as they were.
+    # Adequacy witness: a close that kept the report it had written, or left
+    # it staged, would leave a report on disk and a dirty lane here.
+    root = claimed_repo(tmp_path)
+    wt = lane(root)
+    lane_head = _git(wt, "rev-parse", "HEAD").strip()
+    monkeypatch.setattr(
+        hb.spec_move, "move_spec", lambda *_a, **_k: ([], "injected move refusal")
+    )
+    ids, refusal = hb.close_partial(
+        root,
+        "wi-401",
+        "worker exit 7",
+        {"suggested_tier": "strong", "keep_commits": ["abc1234"]},
+    )
+    assert ids is None
+    assert refusal is not None and "injected move refusal" in refusal, refusal
+    assert not report_path(wt).exists()
+    assert _git(wt, "status", "--porcelain").strip() == ""
+    assert _git(wt, "rev-parse", "HEAD").strip() == lane_head
+    for checkout in (wt, root):
+        work = checkout / "docs" / "work"
+        assert (work / "active" / "wi-401" / "WI-401-widget.md").is_file()
+        assert not (work / "partial" / "WI-401-widget.md").exists()
 
 
 def test_a_partial_close_with_every_row_already_terminal_is_a_no_op(tmp_path):
-    root = batch_repo(tmp_path, wids=("WI-401",))
+    root = claimed_repo(tmp_path)
     close_one_row_on_the_lane(root, wid="WI-401")
     ids, refusal = hb.close_partial(
         root,

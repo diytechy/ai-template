@@ -46,6 +46,8 @@ from integrate_fixtures import (
     _commit,
     _git,
     _rev,
+    _worktree_count,
+    claim_by_hand,
     claim_repo,
     declare_generated,
     declare_shipped_generated,
@@ -58,6 +60,8 @@ from integrate_fixtures import (
 pytestmark = env_gate_skipif("git")
 
 spec_move = load_script("spec_move")
+# Imported after `load_script` has put scripts/ on sys.path.
+from kitlib import provenance  # noqa: E402
 
 
 def claim_dir(root, branch, wid="WI-999"):
@@ -177,11 +181,8 @@ def test_a_hand_claim_during_live_lanes_is_unrepresentable(tmp_path, capsys):
         integ.ac.release_lock()
 
 
-def test_a_spine_batch_claims_as_one_commit(tmp_path):
-    # §A4 (WI-381): ALL spine WIs admit together — one branch, ONE claim
-    # commit moving every batched spec into active/<branch>/, so N spine
-    # changes cost one re-attest window and one owner sitting rather than N.
-    root = git_repo(tmp_path)
+def _two_queued_spine_rows(root):
+    git_repo(root)
     write_spec(
         root, "queued", "WI-501", slug="alpha", safety="spine", specref="seed.txt"
     )
@@ -189,15 +190,88 @@ def test_a_spine_batch_claims_as_one_commit(tmp_path):
         root, "queued", "WI-502", slug="beta", safety="spine", specref="seed.txt"
     )
     declare_generated(root)
-    _commit(root, "file the spine batch", when=T_CODE)
+    _commit(root, "file two spine rows", when=T_CODE)
+    return root
 
-    assert integ.claim(root, ["WI-501", "WI-502"], "wi-501-alpha") == 0
-    active = root / "docs" / "work" / "active" / "wi-501-alpha"
-    assert (active / "WI-501-alpha.md").is_file()
-    assert (active / "WI-502-beta.md").is_file()
-    subject = _git(root, "log", "-1", "--format=%s").strip()
-    assert subject == "claim: WI-501;WI-502 -> active/wi-501-alpha (bookkeeping)"
-    assert integ._claimed_wi_ids(root, "wi-501-alpha") == ["WI-501", "WI-502"]
+
+def _assert_no_claim_state(root, head, branch, worktrees):
+    """Nothing a claim writes exists: no branch, trunk HEAD unmoved, both
+    specs still queued, no dispatch lock file and no new worktree."""
+    assert branch not in _branches(root)
+    assert _rev(root, "HEAD") == head
+    queued = root / "docs" / "work" / "queued"
+    assert (queued / "WI-501-alpha.md").is_file()
+    assert (queued / "WI-502-beta.md").is_file()
+    assert not (root / "out" / "agent-loop.lock").exists()
+    assert _worktree_count(root) == worktrees
+
+
+def test_a_multi_item_claim_refuses_before_any_state_change(tmp_path, capsys):
+    # One work item per lane: a claim names exactly one queued work item. A
+    # list in-process, or a `;`, `,` or whitespace-joined value on the command
+    # line, refuses with a nonzero exit naming the input, before the lock and
+    # before any move, commit, branch or worktree.
+    root = _two_queued_spine_rows(tmp_path)
+    head, worktrees = _rev(root, "HEAD"), _worktree_count(root)
+
+    assert integ.claim(root, ["WI-501", "WI-502"], "wi-501-alpha") == 1
+    assert repr(["WI-501", "WI-502"]) in capsys.readouterr().err
+    _assert_no_claim_state(root, head, "wi-501-alpha", worktrees)
+    for value in ("WI-501;WI-502", "WI-501,WI-502", "WI-501 WI-502"):
+        argv = ["--root", str(root), "claim", "--wi", value]
+        assert integ.main(argv + ["--branch", "wi-501-alpha"]) == 1, value
+        assert repr(value) in capsys.readouterr().err, value
+        _assert_no_claim_state(root, head, "wi-501-alpha", worktrees)
+
+
+def test_an_empty_claim_refuses_before_the_lock(tmp_path, capsys):
+    # An empty or separator-only value reduces to no work item at all. It must
+    # refuse, naming the input, rather than commit a claim that moves no spec
+    # and cut its branch.
+    root = _two_queued_spine_rows(tmp_path)
+    head, worktrees = _rev(root, "HEAD"), _worktree_count(root)
+    for value in (";", ""):
+        argv = ["--root", str(root), "claim", "--wi", value, "--branch", "x"]
+        assert integ.main(argv) == 1, value
+        assert repr(value) in capsys.readouterr().err, value
+        _assert_no_claim_state(root, head, "x", worktrees)
+
+
+def test_the_claim_subject_composes_one_id_only():
+    # The claim writer composes one work item's subject; a list is a caller
+    # error that fails loudly instead of writing a joined subject.
+    with pytest.raises(TypeError):
+        integ.ac.claim_subject(["WI-1", "WI-2"], "b")
+    assert (
+        integ.ac.claim_subject("WI-1", "b") == "claim: WI-1 -> active/b (bookkeeping)"
+    )
+
+
+def test_a_historical_joined_claim_still_reads_as_a_claim(tmp_path):
+    # Two batch claims on this repository's trunk carry the joined subject
+    # (`claim: WI-569;WI-575 -> ...`). No writer composes it again, but every
+    # reader of claim history must still read such a commit as the claim.
+    # Adequacy witness: a claim-base reader that re-composed the subject
+    # through a one-id writer would not match the joined subject and would
+    # return (None, True), and a claim pattern anchored on one WI token would
+    # not match it at all.
+    git_repo(tmp_path)
+    specs = [
+        write_spec(tmp_path, "queued", "WI-569", slug="x", specref="seed.txt"),
+        write_spec(tmp_path, "queued", "WI-575", slug="y", specref="seed.txt"),
+    ]
+    sha = claim_by_hand(
+        tmp_path,
+        "wi-569-x",
+        specs,
+        when=T_CODE,
+        body="Loop-Session: 20261031T000000Z-abc123",
+    )
+    message = _git(tmp_path, "log", "-1", "--format=%B", sha)
+    assert message.startswith("claim: WI-569;WI-575 -> active/wi-569-x (bookkeeping)")
+    assert integ.ac.claim_base(tmp_path, "wi-569-x") == (sha, True)
+    assert integ.ac.loop_claimed(tmp_path, "wi-569-x", sha) == (True, None)
+    assert provenance.loop_writer_commit(message, "wi-569-x")
 
 
 def test_a_claim_of_a_row_with_no_done_when_warns_by_name(tmp_path, capsys):

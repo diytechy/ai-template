@@ -42,7 +42,7 @@ from that module per this suite's no-cross-test-import idiom.
 import argparse
 import os
 import subprocess
-
+import sys
 
 from conftest import (
     hooks_on,
@@ -64,6 +64,7 @@ pytestmark = env_gate_skipif("git")
 drv = load_script("dispatch")
 # Imported after `load_script` has put scripts/ on sys.path.
 from kitlib import provenance  # noqa: E402
+from integrate_fixtures import claim_by_hand  # noqa: E402
 
 # The attestation constant has ONE home; a literal here would be a second one
 # that could drift silently past every test in this file.
@@ -211,10 +212,10 @@ class Recorder:
         self.outcomes = list(outcomes)
         self.effect = effect
 
-    def __call__(self, root, branch, wi_ids, args):
-        self.calls.append((branch, tuple(wi_ids)))
+    def __call__(self, root, branch, wi_id, args):
+        self.calls.append((branch, wi_id))
         if self.effect is not None:
-            self.effect(root, branch, wi_ids)
+            self.effect(root, branch, wi_id)
         return self.outcomes.pop(0) if self.outcomes else 0
 
 
@@ -302,7 +303,7 @@ def test_a_dirty_owner_scratchpad_does_not_stop_the_drive(tmp_path, capfd):
     err = capfd.readouterr().err
     assert "working tree is dirty" not in err
     assert rc == 4 and "STALL" in err
-    assert worker.calls == [("wi-401", ("WI-401",)), ("wi-401", ("WI-401",))]
+    assert worker.calls == [("wi-401", "WI-401"), ("wi-401", "WI-401")]
     assert pad.read_text(encoding="utf-8") == "owner notes, mid-edit\n"
 
 
@@ -361,8 +362,8 @@ def test_drive_pause_appearing_mid_run_stops_the_next_claim(tmp_path, capfd):
     _commit(root, "file WI-402 behind WI-401", when=T_CODE)
     closing = closing_all_worker()
 
-    def worker(r, branch, wi_ids, args):
-        code = closing(r, branch, wi_ids, args)
+    def worker(r, branch, wi_id, args):
+        code = closing(r, branch, wi_id, args)
         write_pause(r)
         _commit(r, "pause: owner says stop", when=T_LATER)
         return code
@@ -373,7 +374,7 @@ def test_drive_pause_appearing_mid_run_stops_the_next_claim(tmp_path, capfd):
     assert "PAUSED" in err and "owner says stop" in err
     # The lane in flight finished and MERGED; the next frontier row did not
     # move at all.
-    assert closing.calls == [("wi-401-widget", ("WI-401",))], closing.calls
+    assert closing.calls == [("wi-401-widget", "WI-401")], closing.calls
     assert (root / "docs" / "work" / "complete" / "WI-401-widget.md").is_file()
     assert (root / "docs" / "work" / "queued" / "WI-402-second.md").is_file()
 
@@ -394,7 +395,7 @@ def test_a_fresh_launch_under_a_pause_resumes_the_lane_in_flight(tmp_path, capfd
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
 
     assert rc == 8
-    assert worker.calls == [("wi-402", ("WI-402",))], worker.calls
+    assert worker.calls == [("wi-402", "WI-402")], worker.calls
     # It finished AND unloaded — the pause never strands finished work.
     assert (root / "docs" / "work" / "complete" / "WI-402-parked.md").is_file()
     # ...and still claimed nothing new.
@@ -433,7 +434,7 @@ def test_drive_resumes_a_parked_branch_and_stalls_on_no_progress(tmp_path, capfd
     rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
     assert rc == 4
     assert "STALL" in capfd.readouterr().err
-    assert worker.calls == [("wi-401", ("WI-401",)), ("wi-401", ("WI-401",))]
+    assert worker.calls == [("wi-401", "WI-401"), ("wi-401", "WI-401")]
 
 
 def test_a_crashed_worker_stays_parked_and_the_next_cycle_resumes_it(tmp_path, capfd):
@@ -452,6 +453,33 @@ def test_a_crashed_worker_stays_parked_and_the_next_cycle_resumes_it(tmp_path, c
     assert len(worker.calls) == 2
     assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
     assert "wi-401" in _git(root, "branch", "--format=%(refname:short)")
+
+
+def test_a_parked_lane_claimed_with_two_specs_stops_the_run(tmp_path, capfd):
+    # A lane carries exactly one work item. A parked branch whose trunk claim
+    # holds TWO specs (the historical joined record, made by hand) is outside
+    # that contract, so the resume stops the run loudly, naming the branch,
+    # before any lane mechanics run: no worker launch, no commit, no move.
+    root = git_repo(tmp_path)
+    specs = [
+        write_spec(root, "queued", "WI-401", slug="alpha", specref="seed.txt"),
+        write_spec(root, "queued", "WI-402", slug="beta", specref="seed.txt"),
+    ]
+    claim_by_hand(root, "wi-401", specs, when=T_CODE)
+    head = _git(root, "rev-parse", "HEAD").strip()
+    tip = _git(root, "rev-parse", "wi-401").strip()
+    worker = Recorder(outcomes=(0, 0))
+
+    rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
+    captured = capfd.readouterr()
+    assert worker.calls == []
+    assert rc == drv.ac.EXIT_PREFLIGHT
+    assert "wi-401" in captured.out + captured.err
+    assert _git(root, "rev-parse", "HEAD").strip() == head
+    assert _git(root, "rev-parse", "wi-401").strip() == tip
+    active = root / "docs" / "work" / "active" / "wi-401"
+    assert (active / "WI-401-alpha.md").is_file()
+    assert (active / "WI-402-beta.md").is_file()
 
 
 # --- the third terminal outcome: HANDBACK (WI-387, §A3) -----------------------
@@ -511,7 +539,7 @@ def building_worker(exit_code, files=()):
     `exit_code` WITHOUT closing its specs — the shape of a session that got
     part-way and then could not proceed."""
 
-    def worker(root, branch, wi_ids, args):
+    def worker(root, branch, wi_id, args):
         wt, err = drv.integrate.lane_worktree(root, branch)
         assert err is None, err
         for name, text in files:
@@ -549,10 +577,10 @@ buildtier = "quick"
 Re-land the reviewed parts.
 """
 
-    def worker(root, branch, wi_ids, args):
-        calls.append((branch, tuple(wi_ids)))
+    def worker(root, branch, wi_id, args):
+        calls.append((branch, wi_id))
         if len(calls) == 1:
-            return first_worker(root, branch, wi_ids, args)
+            return first_worker(root, branch, wi_id, args)
         wt, err = drv.integrate.lane_worktree(root, branch)
         assert err is None, err
         for spec in sorted((wt / "docs" / "work" / "active" / branch).glob("WI-*.md")):
@@ -561,12 +589,12 @@ Re-land the reviewed parts.
             # (OI-73). Draft one unless the row already carries a Dispositions
             # section (a fresh mint never does).
             if 'brief = "disposition"' in text and "\n## Dispositions\n" not in text:
-                text += successor.format(wi=wi_ids[0])
+                text += successor.format(wi=wi_id)
             dst = wt / "docs" / "work" / "complete" / spec.name
             dst.parent.mkdir(parents=True, exist_ok=True)
             dst.write_text(text, encoding="utf-8", newline="\n")
             _git(wt, "rm", "-q", "docs/work/active/{}/{}".format(branch, spec.name))
-        _commit(wt, "{}: adjudicated + closed".format(";".join(wi_ids)), when=T_LATER)
+        _commit(wt, "{}: adjudicated + closed".format(wi_id), when=T_LATER)
         return 0
 
     worker.calls = calls
@@ -609,7 +637,7 @@ def test_a_needs_human_worker_hands_back_and_the_run_keeps_going(tmp_path, capfd
     assert (root / "half-done.py").read_text(encoding="utf-8") == "VALUE = 1\n"
     # ...and the handback's merge MINTED the disposition row at intake
     # (WI-388, ruling R3), which this same run then drove to a close.
-    assert worker.calls[1][1] == ("WI-402",), worker.calls
+    assert worker.calls[1][1] == "WI-402", worker.calls
     assert list((root / "docs" / "work" / "complete").glob("WI-402-*.md"))
 
 
@@ -625,7 +653,7 @@ def test_a_decided_exit_after_the_lane_closed_merges_on_its_declared_outcome(
     # outcome; the drain merges it on that.
     root = stub_harness_repo(tmp_path)
 
-    def worker(root_, branch, wi_ids, args):
+    def worker(root_, branch, wi_id, args):
         wt, err = drv.integrate.lane_worktree(root_, branch)
         assert err is None, err
         (wt / "shipped.py").write_text("VALUE = 1\n", encoding="utf-8", newline="\n")
@@ -682,7 +710,7 @@ def red_capped_worker(reds):
     session log keyed by that build's sha with the bar's summary. It then ends
     with the red cap's exit code, specs still in active/."""
 
-    def worker(root, branch, wi_ids, args):
+    def worker(root, branch, wi_id, args):
         wt, err = drv.integrate.lane_worktree(root, branch)
         assert err is None, err
         logs = wt / "docs" / "iteration"
@@ -789,7 +817,7 @@ def closing_worker(src_text):
     evidence amounts to — one product commit + the closing move to complete/
     (SpecRef cleared per R-F) on the claimed branch, via its own worktree."""
 
-    def worker(root, branch, wi_ids, args):
+    def worker(root, branch, wi_id, args):
         wt = root.parent / ("wt-" + branch)
         _git(root, "worktree", "add", str(wt), branch)
         (wt / "src" / "demo.py").write_text(src_text, encoding="utf-8", newline="\n")
@@ -876,13 +904,13 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
 
 
 def closing_all_worker(recorder=None):
-    """A worker that closes EVERY claimed spec on its branch (specref cleared
-    per R-F) — the batch-aware sibling of `closing_worker`, driving the
-    admitted assignment exactly as one agent_loop --wi 'A;B' session would."""
+    """A worker that closes the claimed spec on its branch (specref cleared
+    per R-F) — the any-branch sibling of `closing_worker`, driving the
+    admitted assignment exactly as one agent_loop --wi session would."""
     calls = recorder if recorder is not None else []
 
-    def worker(root, branch, wi_ids, args):
-        calls.append((branch, tuple(wi_ids)))
+    def worker(root, branch, wi_id, args):
+        calls.append((branch, wi_id))
         wt, err = drv.integrate.lane_worktree(root, branch)
         assert err is None, err
         for spec in sorted((wt / "docs" / "work" / "active" / branch).glob("WI-*.md")):
@@ -899,18 +927,18 @@ def closing_all_worker(recorder=None):
                 "-q",
                 "docs/work/active/{}/{}".format(branch, spec.name),
             )
-        _commit(wt, "{}: build + close".format(";".join(wi_ids)), when=T_LATER)
+        _commit(wt, "{}: build + close".format(wi_id), when=T_LATER)
         return 0
 
     worker.calls = calls
     return worker
 
 
-def test_the_spine_batch_admits_first_and_together(tmp_path, capfd):
-    # §A4: spine rows sort first (rank 0) and admit TOGETHER as one batch on
-    # one branch — the worker seam receives the whole batch (`agent_loop --wi
-    # 'A;B'`, its one surviving caller) — and the ordinary row behind the
-    # barrier waits for the window to close before it is admitted.
+def test_spine_rows_admit_one_per_exclusive_turn(tmp_path, capfd):
+    # §A4, one work item per lane: spine rows sort first (rank 0) and each
+    # admits ALONE on its own branch, one per exclusive turn - the worker seam
+    # receives one id per launch - and the ordinary row behind the barrier
+    # waits until the last spine lane is back before it is admitted.
     root = stub_harness_repo(tmp_path)
     write_spec(
         root, "queued", "WI-501", slug="alpha", safety="spine", specref="seed.txt"
@@ -918,17 +946,21 @@ def test_the_spine_batch_admits_first_and_together(tmp_path, capfd):
     write_spec(
         root, "queued", "WI-502", slug="beta", safety="spine", specref="seed.txt"
     )
-    _commit(root, "file the spine batch", when=T_LATER)
+    _commit(root, "file two spine rows", when=T_LATER)
     worker = closing_all_worker()
 
     rc = drv.run(root, drive_args(), worker=worker, tier="smoke")
-    assert rc == 0
     out = capfd.readouterr().out
     assert worker.calls == [
-        ("wi-501-alpha", ("WI-501", "WI-502")),
-        ("wi-401-widget", ("WI-401",)),
-    ]
-    assert "claiming WI-501;WI-502 on wi-501-alpha (exclusive)" in out, out
+        ("wi-501-alpha", "WI-501"),
+        ("wi-502-beta", "WI-502"),
+        ("wi-401-widget", "WI-401"),
+    ], out
+    assert rc == 0
+    assert "claiming WI-501 on wi-501-alpha (exclusive)" in out, out
+    assert "claiming WI-502 on wi-502-beta (exclusive)" in out, out
+    claims = [line for line in out.splitlines() if "claiming" in line]
+    assert claims and not any(";" in line for line in claims), claims
     complete = root / "docs" / "work" / "complete"
     for name in ("WI-501-alpha.md", "WI-502-beta.md", "WI-401-widget.md"):
         assert (complete / name).is_file(), name
@@ -943,16 +975,17 @@ def hand_finished_branch(
     is what `finished_branches` calls residue at the next tick — finished,
     unmerged, and settled by whichever drain reaches it first.
 
-    `rows` is a list because ONE branch may carry SEVERAL WIs (that is what an
-    exclusive batch is), and a residue count that credits branches instead of
-    WIs is only visible when a residue branch carries more than one. Trunk must
-    already hold everything it is going to hold when this is called: the branch
-    is cut from HEAD, and §A2 admits it only while trunk is still its
-    ancestor.
+    `rows` is a list because a hand-made historical lane may carry SEVERAL WIs
+    (the multi-item claims made before one work item per lane), and a residue
+    count that credits branches instead of WIs is only visible when a residue
+    branch carries more than one. Trunk must already hold everything it is
+    going to hold when this is called: the branch is cut from HEAD, and §A2
+    admits it only while trunk is still its ancestor.
 
-    `claimed` records the claim as `integrate.claim` does (queued -> active
-    under the claim subject), the commit a full-lane review binds to (WI-884);
-    otherwise the claim is the by-hand move a manual lane makes."""
+    `claimed` records the claim of its one row as `integrate.claim` does
+    (queued -> active under the one-id claim subject), the commit a full-lane
+    review binds to (WI-884); otherwise the claim is the by-hand move a manual
+    lane makes."""
     ids = [w for w, _s in rows]
     for wid, slug in rows:
         home = "queued" if claimed else "active/" + branch
@@ -964,7 +997,8 @@ def hand_finished_branch(
             spec.rename(active)
     subject = "claim: {} -> active/{} (by hand)".format(";".join(ids), branch)
     if claimed:
-        subject = drv.ac.claim_subject(ids, branch)
+        (wid,) = ids  # the claim writer composes one work item's subject
+        subject = drv.ac.claim_subject(wid, branch)
     _commit(root, subject, when=T_CODE)
     _git(root, "branch", branch)
     wt, err = drv.integrate.lane_worktree(root, branch)
@@ -997,25 +1031,25 @@ def test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner(
 ):
     # REVIEW-A finding 3, the reviewer's two-branch drive. The spine row opens
     # the barrier, and the barrier-open `_drain` settles the hand-finished
-    # lane so the batch runs as the sole toucher of trunk. That merge is real
+    # lane so the spine row runs as the sole toucher of trunk. That merge is real
     # — the spec lands in complete/ — but the arm did not credit it, so the
     # run's own banner disowned a WI it had just integrated. `_station_exit`
     # has counted its residue this way since REVIEW-A round 1; this is the
     # same contract, on the other admission path.
     root = stub_harness_repo(tmp_path)
-    # TWO spine rows, deliberately: they admit as ONE batch on ONE branch, so a
-    # count that credits branches instead of WIs reports 3 where 4 integrated.
-    # A single-WI batch cannot tell those two units apart (REVIEW-A finding 1).
+    # TWO spine rows, each admitted alone on its own exclusive turn, so the
+    # barrier opens twice and the residue is settled (and counted) at the
+    # first opening only.
     write_spec(
         root, "queued", "WI-501", slug="alpha", safety="spine", specref="seed.txt"
     )
     write_spec(
         root, "queued", "WI-502", slug="beta", safety="spine", specref="seed.txt"
     )
-    _commit(root, "file the spine batch", when=T_LATER)
-    # ...and the residue branch carries TWO as well, for the same reason on the
-    # other counting path: the barrier-open credit is taken from the residue
-    # branches, so a single-WI residue branch cannot tell WIs from branches.
+    _commit(root, "file two spine rows", when=T_LATER)
+    # ...and the residue branch carries TWO, a hand-made historical shape: the
+    # barrier-open credit is taken from the residue branches' claimed specs,
+    # so a single-WI residue branch cannot tell WIs from branches.
     hand_finished_branch(root, rows=(("WI-777", "residue"), ("WI-778", "second")))
     worker = closing_all_worker()
 
@@ -1023,8 +1057,8 @@ def test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner(
     assert rc == 0
     out = capfd.readouterr().out
     complete = root / "docs" / "work" / "complete"
-    # All three really did integrate: the residue at barrier-open, the spine
-    # batch it made way for, and the ordinary row behind the barrier.
+    # All of them really did integrate: the residue at barrier-open, the two
+    # spine rows it made way for, and the ordinary row behind the barrier.
     for name in (
         "WI-777-residue.md",
         "WI-778-second.md",
@@ -1037,7 +1071,7 @@ def test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner(
     # Every way this count has been wrong, pinned by name so no regression can
     # pass by printing a merely plausible number: 3 dropped the residue
     # entirely (the original finding), and 4 is either unit counted as
-    # branches — the batch's second WI, or the residue branch's.
+    # branches — the residue branch's second WI.
     for wrong in ("2 WI(s)", "3 WI(s)", "4 WI(s)"):
         assert wrong + " integrated this run." not in out, (wrong, out)
 
@@ -1074,7 +1108,7 @@ def test_a_finished_branch_that_owes_a_round_is_resumed_not_integrated(tmp_path,
     rc = drv.run(root, drive_args(stall_limit=2), worker=worker, tier="smoke")
 
     # RESUMED — on the finished branch, by the parked-resume path's own banner.
-    assert worker.calls == [("wi-777", ("WI-777",))], worker.calls
+    assert worker.calls == [("wi-777", "WI-777")], worker.calls
     out = capfd.readouterr().out
     assert "resuming parked branch wi-777" in out, out
     # ...and NOT integrated on the strength of a round nobody drew: this stub
@@ -1307,6 +1341,43 @@ def test_plain_agent_loop_launch_enters_the_drive_mode(tmp_path, monkeypatch):
     assert "no role given" not in out
 
 
+def test_an_explicit_empty_assignment_is_refused_not_driven(tmp_path):
+    # An explicit --wi names the worker role whatever its value. An empty one is
+    # an assignment naming no work item, so it is refused by the assignment
+    # preflight, by name, and never read as a plain launch: no dispatch lock,
+    # no claim commit, no branch, no worktree and no provider launch, although
+    # a ready row sits on the frontier for a drive to claim.
+    root = tmp_path / "repo"
+    root.mkdir()
+    git_repo(root)
+    write_spec(root, "queued", "WI-401", specref="seed.txt")
+    _commit(root, "file WI-401", when=T_CODE)
+    head = _git(root, "rev-parse", "HEAD").strip()
+    launched = tmp_path / "provider-launched"
+    provider = tmp_path / "provider.py"
+    provider.write_text(
+        "import pathlib\npathlib.Path({!r}).write_text('launched')\n".format(
+            str(launched)
+        ),
+        encoding="utf-8",
+    )
+    agent_cmd = '"{}" "{}" {{prompt}}'.format(sys.executable, provider)
+    proc = run_py(
+        [SCRIPTS / "agent_loop.py", "--root", str(root), "--wi", ""]
+        + ["--agent-cmd", agent_cmd, "--max-iterations", "1", "--pause", "0"],
+        cwd=root,
+    )
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == drv.ac.EXIT_PREFLIGHT, out
+    assert "--wi takes exactly one WI-### id; got ''" in out, out
+    assert not (root / "out" / "agent-loop.lock").exists(), out
+    assert _git(root, "rev-parse", "HEAD").strip() == head, out
+    assert (root / "docs" / "work" / "queued" / "WI-401-widget.md").is_file()
+    assert _git(root, "branch", "--format=%(refname:short)").split() == ["main"]
+    assert len(_git(root, "worktree", "list").splitlines()) == 1
+    assert not launched.exists(), out
+
+
 def test_a_review_owed_worker_stays_parked_and_the_next_cycle_resumes_it(
     tmp_path, capfd
 ):
@@ -1396,9 +1467,9 @@ def test_restart_drain_preserves_other_finished_lane_for_fresh_code(
     _commit(root, "file two lanes", when=T_CODE)
     calls = []
 
-    def worker(root_, branch, wi_ids, _args):
-        calls.append((branch, tuple(wi_ids)))
-        if wi_ids == ["WI-401"]:
+    def worker(root_, branch, wi_id, _args):
+        calls.append((branch, wi_id))
+        if wi_id == "WI-401":
             return drv.ac.EXIT_RESTART
         wt, err = drv.integrate.lane_worktree(root_, branch)
         assert err is None, err

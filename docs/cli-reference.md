@@ -47,7 +47,7 @@ Contracts (interfaces): IF-015, IF-253
 | `--agent-cmd` | agent command template ({model}/{prompt} placeholders; omit {prompt} to deliver the prompt via stdin — immune to the OS command-line caps); default: the AGENT_CMD env var (set by the agent-resume launchers) |
 | `--interactive` | boot exactly one hands-on session (stdio attached) instead of the unattended loop |
 | `--interactive-cmd` | command template for --interactive; default: the AGENT_CMD_INTERACTIVE env var, else AGENT_CMD |
-| `--wi` | worker assignment (with --train): the assigned traincar's ordered constituent WI list, e.g. 'WI-201' or 'WI-201;WI-204'. The worker builds each in order on the train branch and reports through commit trailers — no lane status/next/run-state file (docs/specs/parallel-wi-dispatch.md §6). |
+| `--wi` | worker assignment: the one claimed work item this worker builds, e.g. 'WI-201'; a list is refused. The worker builds it on its claimed branch and reports through commit trailers — no lane status/next/run-state file (docs/specs/parallel-wi-dispatch.md §6). |
 | `--dual-plan` | run one dual-plan decomposition round for this queued WI (its registry row must declare PlanMode=dual) and exit: two planner sessions, the coverage pre-pass, one cross-critique + revision, the position-swapped arbiter pair, artifacts under docs/plans/DP-NNN-*/ (process-options.md 'Dual-plan decomposition'; WI-199). |
 | `--train` | worker assignment: the session tag scoping logs and review evidence. Default: the current branch name (the §2.3 claim branch `integrate.py claim` cut). |
 | `--worktree` | worker assignment: the worktree to run in (becomes the effective --root; default: --root itself). |

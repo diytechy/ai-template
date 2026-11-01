@@ -28,17 +28,19 @@ authority the deleted `_claim_refusal` safety arm moved here). The §A8 policy
 table, per kind x session hold: ordinary/critique dispatch parallel at
 every level; high-risk/protected dispatch exclusive at every level; a `spine`
 row dispatches at every level — building a scope change is WORK, not an
-approval — but EXCLUSIVELY and BATCHED: an exclusive-kind row on the
-frontier stops new admission, the dispatcher waits for every lane back in the
-station, then admits ALL spine rows TOGETHER as one batch (one branch, one
-`agent_loop --wi 'A;B'` worker, one re-attest window, one owner sitting). An
-`attestation`/`gate` row does NOT dispatch while the tier in process is still
-HUMAN-HELD: the lanes drain, the cards stay on open-items.html, and the run
-exits 0 — the machine finished everything it was allowed to do
+approval — but EXCLUSIVELY, one row per exclusive turn: an exclusive-kind
+row on the frontier stops new admission, the dispatcher waits for every lane
+back in the station, then admits the first spine row ALONE (one branch, one
+`agent_loop --wi WI-###` worker, one re-attest window); the remaining spine
+rows stay queued for later exclusive turns. A lane carries exactly one work
+item. An `attestation`/`gate` row does NOT dispatch while the tier in process
+is still HUMAN-HELD: the lanes drain, the cards stay on open-items.html, and
+the run exits 0 — the machine finished everything it was allowed to do
 (`agent_route.failure_action(human_held=True)` is the contract this
-implements). With `keep_nondependent` those rows dispatch only as the queued
-batch once nothing else remains; on a LOOP-HELD tier they dispatch outright (a
-recorded fresh-context reviewer verdict approves). The three retired enum words
+implements). `keep_nondependent` never releases that hold: once nothing else
+remains, those rows still surface; on a LOOP-HELD tier they dispatch outright,
+one at a time and exclusive (a recorded fresh-context reviewer verdict
+approves). The three retired enum words
 (`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
 points hold at every level: the owner's final read is the human's, no un-run greens, the
@@ -239,12 +241,11 @@ def _session_config_refusal(root, args):
 def _residue_wi_count(root):
     """How many WI **ids** the finished-but-unmerged branches carry.
 
-    The banner promises "N WI(s) integrated", and that is not the branch count:
-    a spine batch is ONE branch carrying several WIs, and the barrier-open
-    drain is exactly where batches turn up. Counted off the TRUNK's claim
-    directories (`integrate._claimed_wi_ids`) — the same evidence the merge
-    slot reads — so the banner and the merge can never disagree about how many
-    WIs a branch was carrying (REVIEW-A finding 1)."""
+    The banner promises "N WI(s) integrated". A lane carries one work item, so
+    this is one per branch; it is counted off the TRUNK's claim directories
+    (`integrate._claimed_wi_ids`) — the same evidence the merge slot reads — so
+    the banner and the merge can never disagree about what a branch was
+    carrying."""
     return sum(
         len(integrate._claimed_wi_ids(root, branch))
         for branch in integrate.finished_branches(root)
@@ -329,7 +330,7 @@ def _kind_action(kind, human_held, approval_held=False):
         kind                  human-held tier      loop-held tier
         ordinary, critique    parallel             parallel
         high-risk, protected  exclusive            exclusive
-        spine                 batch                batch
+        spine                 exclusive            exclusive
         attestation, gate     surface              exclusive
 
     `human_held` is the SN-029 comparison already made: is the tier this repo's
@@ -372,7 +373,7 @@ def _kind_action(kind, human_held, approval_held=False):
     if kind in ("ordinary", "critique"):
         return "parallel"
     if kind == "spine":
-        return "batch"
+        return "exclusive"
     if kind in ("attestation", "gate"):
         return "surface" if (human_held or approval_held) else "exclusive"
     return "exclusive"
@@ -392,7 +393,7 @@ def _judgement_first(ready_kinds):
     WHY dispositions outrank even a scope change: an adjudication row exists
     because a lane CLAIMED an outcome (a partial close, a cancellation, an
     amendment that may have moved meaning) and nothing has judged that claim
-    yet. A spine batch re-attests requirements. Running the batch first
+    yet. A spine row re-attests requirements. Running the spine row first
     re-approves a spine on a premise the pending judgement may overturn, and an
     approval is the one thing this loop cannot cheaply take back — the
     attestation ledger is append-only by design. Judge, then build."""
@@ -409,11 +410,10 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     dial an ordinal cannot carry — may other work keep running while an
     approval is queued? Returns `(verb, payload)`:
 
-      ("admit", [batch, ...])       fill lanes with parallel rows, one per lane
-      ("admit-exclusive", batch)    ONE batch that must run alone — all spine
-                                    rows together, or the first exclusive row,
-                                    or the queued approval batch at the
-                                    close under `keep_nondependent`
+      ("admit", [[id], ...])        fill lanes with parallel rows, one per lane
+      ("admit-exclusive", [id])     the first exclusive row, spine included,
+                                    which must run alone; later spine rows
+                                    wait for later exclusive turns
       ("wait", [])                  an exclusive-kind row is pending: stop
                                     admitting and let the lanes come home
       ("surface", ids)              attestation/gate rows that may not dispatch
@@ -423,7 +423,8 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     The barrier property is the wait arm: any exclusive-kind row on the
     frontier (they all sort ahead of parallel kinds by rank) stops NEW
     admission outright — nothing slips past it into a free lane — and the
-    batch admits only into an idle station, as the sole toucher of trunk.
+    exclusive row admits only into an idle station, as the sole toucher of
+    trunk. Every admitted assignment carries exactly one id.
 
     Implements: SR-148, LLR-149, LLR-159
     """
@@ -459,19 +460,17 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
         return "surface", surfaced
     first_w, first_k = dispatchable[0]
     action = _kind_action(first_k, human_held)
-    if action in ("batch", "exclusive"):
+    if action == "exclusive":
         if busy:
             return "wait", []
-        if action == "batch":
-            return "admit-exclusive", [w for w, k in dispatchable if k == first_k]
         return "admit-exclusive", [first_w]
-    batches = [
+    assignments = [
         [w] for w, k in dispatchable if _kind_action(k, human_held) == "parallel"
     ]
-    batches = batches[: max(0, free)]
-    if not batches:
+    assignments = assignments[: max(0, free)]
+    if not assignments:
         return "wait", []
-    return "admit", batches
+    return "admit", assignments
 
 
 def _lane_count(args, root):
@@ -564,8 +563,9 @@ def _branch_exclusive(root, branch):
 # than an omission. A preflight refusal is the worker saying it could not START
 # - a config conflict, an unreadable assignment, a registry the dispatcher
 # derived wrongly - so it is evidence about the LAUNCH, never about the work. A
-# four-row spine batch measured what the old membership cost: the resumed
-# worker's preflight refused three rows the lane had itself closed, and the
+# four-row spine lane (from when a lane could carry several rows) measured
+# what the old membership cost: the resumed worker's preflight refused three
+# rows the lane had itself closed, and the
 # handback then committed the lane's uncommitted residue as "the work so far,
 # committed as-is (partial close)" and moved rows to the TERMINAL `partial/` -
 # recording an outcome for a failure the lane could not have caused and no
@@ -714,7 +714,7 @@ def _lane_close(root, branch, code):
 
 
 class _Lane:
-    """One live lane, dispatcher-side: which branch, which WIs, which phase.
+    """One live lane, dispatcher-side: which branch, which WI, which phase.
 
     The MECHANICS live in lane.py (the worker subprocess, the refresh
     subprocess); this record is only the dispatcher's bookkeeping. There is
@@ -723,9 +723,9 @@ class _Lane:
     a crashed dispatcher leaves nothing to reconcile beyond the parked
     branches the next run already resumes."""
 
-    def __init__(self, branch, wi_ids, exclusive, head):
+    def __init__(self, branch, wi_id, exclusive, head):
         self.branch = branch
-        self.wi_ids = list(wi_ids)
+        self.wi_id = wi_id  # a lane carries exactly one work item
         self.exclusive = exclusive
         self.head = head  # trunk head at admission — the stall baseline
         self.phase = "worker"  # -> "refresh" -> closed (removed from table)
@@ -734,17 +734,17 @@ class _Lane:
         self.retried = False  # the one §A3 quarantine retry
 
 
-def _launch(root, table, branch, wi_ids, exclusive, args, worker):
+def _launch(root, table, branch, wi_id, exclusive, args, worker):
     """Create the live lane record for `branch` and start its worker — the
     injected sync callable (tests), or lane.py's real subprocess. The lane is
     ALWAYS appended: a spawn failure becomes the lane's own EXIT_PREFLIGHT
     outcome, so it closes through the one §A3 decision path (`_lane_close`)
     instead of a side exit."""
-    ln = _Lane(branch, wi_ids, exclusive, ac.git(root, "rev-parse", "HEAD")[1].strip())
+    ln = _Lane(branch, wi_id, exclusive, ac.git(root, "rev-parse", "HEAD")[1].strip())
     if worker is not None:
-        ln.code = worker(root, branch, wi_ids, args)
+        ln.code = worker(root, branch, wi_id, args)
     else:
-        proc, err = lane.spawn_worker(root, branch, wi_ids, args)
+        proc, err = lane.spawn_worker(root, branch, wi_id, args)
         if err:
             _say(err, err=True)
             ln.code = ac.EXIT_PREFLIGHT
@@ -882,10 +882,7 @@ def _poll(root, table, args, tier, state):
                 "the branch for the fresh coordinator.".format(ln.branch, code)
             )
         elif verb == "merged":
-            # WI(s), NOT lanes: an exclusive spine batch is ONE branch carrying
-            # several WIs, so crediting the lane under-reports exactly the
-            # admission path the barrier exists for (REVIEW-A finding 1).
-            state["merged"] += len(ln.wi_ids)
+            state["merged"] += 1  # a lane carries exactly one work item
             state["stall"] = 0
         else:
             head_now = ac.git(root, "rev-parse", "HEAD")[1].strip()
@@ -1053,9 +1050,30 @@ def _pre_admit(args, table, state, config_refusal):
     return "ok", None
 
 
+def _stop_run(table, state, code):
+    """A composed refusal stops the run, never skipped or talked past. With
+    lanes live it freezes admission (the first fatal code wins) and answers
+    None, so the station drains before the run ends on that code; with none
+    live it answers `code`, ending the run now.
+
+    Implements: SR-026, SR-156, LLR-143, LLR-150
+    """
+    if not table:
+        return code
+    if state["fatal"] is None:
+        state["fatal"] = code
+    return None
+
+
 def _admit_parked(root, table, args, worker, parked, free, config_refusal, state):
     """Resume interrupted lanes first — an unfinished claim must come home
-    before any barrier can open. `(admitted, exit_code)`."""
+    before any barrier can open. `(admitted, exit_code)`.
+
+    A lane carries exactly one work item, so a parked branch whose trunk claim
+    holds two or more specs (a historical joined claim, or one made by hand)
+    is not resumed: the run stops loudly, naming the branch, before the
+    admission rungs, the cycle count or any lane mechanics run — nothing is
+    relaunched, ensured, committed or moved."""
     admitted = False
     for branch in parked:
         if free <= 0:
@@ -1063,17 +1081,26 @@ def _admit_parked(root, table, args, worker, parked, free, config_refusal, state
         excl = _branch_exclusive(root, branch)
         if excl and table:
             break  # an exclusive resume waits for an idle station
+        wi_ids = integrate._claimed_wi_ids(root, branch)
+        if len(wi_ids) > 1:
+            _say(
+                "parked branch {} is claimed with {} work items ({}) - a lane "
+                "carries exactly one work item; close or land it by hand, then "
+                "relaunch".format(branch, len(wi_ids), ";".join(wi_ids)),
+                err=True,
+            )
+            return admitted, _stop_run(table, state, ac.EXIT_PREFLIGHT)
+        (wi_id,) = wi_ids
         action, code = _pre_admit(args, table, state, config_refusal)
         if action != "ok":
             return admitted, code
         state["cycles"] += 1
-        wi_ids = integrate._claimed_wi_ids(root, branch)
         _say(
             "cycle {} - resuming parked branch {} ({})".format(
-                state["cycles"], branch, ";".join(wi_ids)
+                state["cycles"], branch, wi_id
             )
         )
-        _launch(root, table, branch, wi_ids, excl, args, worker)
+        _launch(root, table, branch, wi_id, excl, args, worker)
         admitted = True
         free -= 1
         if excl:
@@ -1081,16 +1108,19 @@ def _admit_parked(root, table, args, worker, parked, free, config_refusal, state
     return admitted, None
 
 
-def _claim_lanes(root, table, args, worker, batches, exclusive, config_refusal, state):
-    """Claim and launch one lane per batch. `(admitted, exit_code)`. A claim
-    refusal stops the run (never skipped, never talked past) — with lanes
-    live it freezes admission and lets the station drain first."""
+def _claim_lanes(
+    root, table, args, worker, assignments, exclusive, config_refusal, state
+):
+    """Claim and launch one lane per admitted assignment, each exactly one work
+    item. `(admitted, exit_code)`. A claim refusal stops the run (never
+    skipped, never talked past) — with lanes live it freezes admission and
+    lets the station drain first."""
     admitted = False
-    for batch in batches:
+    for (wi_id,) in assignments:
         action, code = _pre_admit(args, table, state, config_refusal)
         if action != "ok":
             return admitted, code
-        branch = _branch_for(root, batch[0])
+        branch = _branch_for(root, wi_id)
         if (
             branch is None
             or ac.git(root, "check-ref-format", "--branch", branch)[0] != 0
@@ -1098,31 +1128,23 @@ def _claim_lanes(root, table, args, worker, batches, exclusive, config_refusal, 
             _say(
                 "no single queued spec matches {}, or its filename does not map "
                 "to a valid git branch name - fix the spec folder, then "
-                "relaunch".format(batch[0]),
+                "relaunch".format(wi_id),
                 err=True,
             )
-            if table:
-                state["fatal"] = (
-                    ac.EXIT_PREFLIGHT if state["fatal"] is None else state["fatal"]
-                )
-                return admitted, None
-            return admitted, ac.EXIT_PREFLIGHT
+            return admitted, _stop_run(table, state, ac.EXIT_PREFLIGHT)
         state["cycles"] += 1
         _say(
             "cycle {} - claiming {} on {}{}".format(
                 state["cycles"],
-                ";".join(batch),
+                wi_id,
                 branch,
                 " (exclusive)" if exclusive else "",
             )
         )
-        code = integrate.claim(root, batch, branch, dispatch_lock_held=True)
+        code = integrate.claim(root, wi_id, branch, dispatch_lock_held=True)
         if code != 0:
-            if table:
-                state["fatal"] = code if state["fatal"] is None else state["fatal"]
-                return admitted, None
-            return admitted, code
-        _launch(root, table, branch, batch, exclusive, args, worker)
+            return admitted, _stop_run(table, state, code)
+        _launch(root, table, branch, wi_id, exclusive, args, worker)
         admitted = True
     return admitted, None
 
@@ -1280,8 +1302,8 @@ def _admit_frontier(
         return False, None
     if verb == "admit-exclusive":
         # THE BARRIER OPENS. The station is idle by construction (`_admission`
-        # answers wait while any lane is out); settle any residue so the batch
-        # runs as the sole toucher of trunk.
+        # answers wait while any lane is out); settle any residue so the
+        # exclusive row runs as the sole toucher of trunk.
         #
         # COUNT IT BEFORE THE DRAIN, exactly as `_station_exit` does: after
         # the drain those branches have merged and are no longer residue, so
@@ -1442,7 +1464,7 @@ def _keep_warm(warmer, table):
 
 def run(root, args, worker=None, tier="all"):
     """The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one
-    injection seam (tests): a callable `(root, branch, wi_ids, args) -> exit
+    injection seam (tests): a callable `(root, branch, wi_id, args) -> exit
     code` standing in for the worker session launch, run synchronously at
     admission; None means lane.py's real subprocess launch. `tier` is the bar
     tier the §A2 refresh runs (default: the full gate bar).

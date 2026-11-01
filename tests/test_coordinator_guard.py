@@ -564,7 +564,7 @@ def test_the_crossing_replys_claim_refuses_via_the_pre_tool_use_reading(
     )  # never a spelling rule
     monkeypatch.setenv(guard.SESSION_ENV, COORD)
     capsys.readouterr()
-    assert integ.claim(root, ["WI-001"], "wi-001") == 1
+    assert integ.claim(root, "WI-001", "wi-001") == 1
     assert "coordinator guard: drain mode is latched" in capsys.readouterr().err
 
 
@@ -573,7 +573,7 @@ def test_the_crossing_replys_claim_refuses_with_no_hook_run(
 ):
     _crossing(root, tx)
     monkeypatch.setenv(guard.SESSION_ENV, COORD)
-    assert integ.claim(root, ["WI-001"], "wi-001") == 1
+    assert integ.claim(root, "WI-001", "wi-001") == 1
     assert "drain mode is latched" in capsys.readouterr().err
     assert guard._load(guard.lease_dir(root))["latched_pct"] == 52.0
 
@@ -586,7 +586,7 @@ def test_the_live_dispatchers_claim_route_is_untouched(root, tx, monkeypatch, ca
         raise AssertionError("the dispatcher's route consulted the guard")
 
     monkeypatch.setattr(integ.coordinator_guard, "claim_refusal", boom)
-    integ.claim(root, ["WI-001"], "wi-001", dispatch_lock_held=True)
+    integ.claim(root, "WI-001", "wi-001", dispatch_lock_held=True)
     assert "coordinator guard" not in capsys.readouterr().err
 
 
@@ -1548,7 +1548,7 @@ def test_end_to_end_dry_run(root, tx, tmp_path, monkeypatch):
     out = guard.hook(ev("PreToolUse", transcript=tx.path), root, env={})
     assert "Close out now" in out["hookSpecificOutput"]["additionalContext"]
     monkeypatch.setenv(guard.SESSION_ENV, COORD)
-    assert integ.claim(root, ["WI-001"], "wi-001") == 1
+    assert integ.claim(root, "WI-001", "wi-001") == 1
     handoff = tmp_path / "handoff.md"
     handoff.write_text(HANDOFF, encoding="utf-8")
     assert guard.request_relaunch(root, handoff, COORD) is None

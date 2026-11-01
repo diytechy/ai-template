@@ -81,7 +81,7 @@ AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 
 --wi runs one WORKER ASSIGNMENT (WI-181, LLR-061) on a CLAIMED branch (the
 §2.3 model: `integrate.py claim` moves the spec queued/ -> active/<branch>/ on
-the trunk and cuts the branch; the ordered `--wi "WI-###[;WI-###…]"` list is
+the trunk and cuts the branch; the one work item `--wi WI-###` names is
 built in the worktree named by --worktree, default --root, from the
 integration base --base, default the durable claim commit (or the merge-base
 with trunk for a legacy/manual assignment). --train survives as the
@@ -97,13 +97,14 @@ the worker exits 3). Session logs are collision-safe
 docs/reviews/<tag>/ naming the exact reviewed commit, so parallel branches
 never collide. An assignment is ONE review scope (WI-183, LLR-140): under
 managed routing + review-policy >= 1 the round is scheduled once, after the
-LAST assigned WI commits, over the combined base..HEAD diff. A multi-WI list is
-no longer something the loop packs for itself: session grouping was REMOVED
-rather than wired (WI-383, docs/concurrency-v2.md §A6.1 — two lanes beat two
-WIs in one session at the same throughput, with better attribution), leaving
-one caller, the dispatcher admitting the spine batch, where N WIs genuinely
-must share one window and one owner sitting. Exit 0 = every assigned WI built
-(and its one review cycle approved).
+assigned WI commits, over the combined base..HEAD diff. A lane carries exactly
+one work item, so `--wi` has no list form and an empty or list value fails
+preflight before a provider launches: session grouping was REMOVED rather than
+wired (WI-383, docs/concurrency-v2.md §A6.1 — two lanes beat two WIs in one
+session at the same throughput, with better attribution), and the dispatcher's
+spine batch retired with it (WI-977: each spine row admits alone, one per
+exclusive turn). Exit 0 = the assigned WI built (and its one review cycle
+approved).
 
 A per-worktree lockfile (out/agent-loop.lock) stops two coordinators grinding
 one checkout — a worker and an --interactive sitting both take it (one
@@ -262,7 +263,7 @@ blackout_at = agent_common.blackout_at
 blackout_wait = agent_common.blackout_wait
 WI_TOKEN_RE = agent_common.WI_TOKEN_RE
 sanitize_train = agent_common.sanitize_train
-parse_wi_list = agent_common.parse_wi_list
+parse_wi_id = agent_common.parse_wi_id
 load_wi_registry = agent_common.load_wi_registry
 train_evidence = agent_common.train_evidence
 # The trunk/base pair went OUTWARD to `agent_common` (2026-09-04): the
@@ -305,7 +306,6 @@ _PROMPT_CACHE = agent_brief._PROMPT_CACHE
 DEFAULT_PHASE_TIER = agent_brief.DEFAULT_PHASE_TIER
 DEFAULT_COOLDOWN_SECONDS = agent_brief.DEFAULT_COOLDOWN_SECONDS
 NON_BUILD_PHASES = agent_brief.NON_BUILD_PHASES
-assignment_block = agent_brief.assignment_block
 _row_title = agent_brief._row_title
 _predecessor_lines = agent_brief._predecessor_lines
 worker_prompt = agent_brief.worker_prompt
@@ -418,7 +418,6 @@ def session_body(root, worker, current_wi, session, sha, reviews_dir, templates)
             worker["train"],
             worker["base"],
             worker["rework"],
-            worker["assigned"],
         )
         + decision_record_note(root, worker),
         None,
@@ -1026,9 +1025,9 @@ def _done_endstate(worker, managed, rp_int, rounds):
         note = "; {} review round(s) drawn this run, latest verdict {}".format(
             len(rounds), rounds[-1].get("verdict") or "unrecorded"
         )
-    detail = "every assigned WI ({}) carries its trailer commit on branch {}{}"
-    ids = ";".join(worker["assigned"])
-    return (EXIT_DONE, "DONE", detail.format(ids, worker["train"], note))
+    detail = "the assigned WI ({}) carries its trailer commit on branch {}{}"
+    wid = worker["assigned"][0]
+    return (EXIT_DONE, "DONE", detail.format(wid, worker["train"], note))
 
 
 def worker_exit_banner(worker, end):
@@ -1037,7 +1036,7 @@ def worker_exit_banner(worker, end):
     code_, label, detail = end
     print(
         "\n=== worker {} [{}]: {} ===".format(
-            worker["train"], ";".join(worker["assigned"]), label
+            worker["train"], worker["assigned"][0], label
         )
     )
     if detail:
@@ -1078,11 +1077,13 @@ def parse_args():
     ap.add_argument(
         "--wi",
         default=None,
-        help="worker assignment (with --train): the assigned traincar's ordered "
-        "constituent WI list, e.g. 'WI-201' or 'WI-201;WI-204'. The worker "
-        "builds each in order on the train branch and reports through commit "
-        "trailers — no lane status/next/run-state file "
-        "(docs/specs/parallel-wi-dispatch.md §6).",
+        # Outer whitespace is normalized here, at the command line's boundary;
+        # the shared parser takes the one id exactly.
+        type=str.strip,
+        help="worker assignment: the one claimed work item this worker "
+        "builds, e.g. 'WI-201'; a list is refused. The worker builds it on "
+        "its claimed branch and reports through commit trailers — no lane "
+        "status/next/run-state file (docs/specs/parallel-wi-dispatch.md §6).",
     )
     ap.add_argument(
         "--dual-plan",
@@ -1356,9 +1357,33 @@ def map_preflight(
     return failures, prompt_templates
 
 
+def _buildable_wi(spec, rows):
+    """The one work-item id `--wi` names, when a worker may build it as a
+    direct BUILD session; None, after printing why, when it may not: anything
+    but one WI-### id, or a dual-plan row (fail-closed, WI-199: the round has
+    its own entry, --dual-plan, and safeguards).
+
+    Implements: SR-026, LLR-061
+    """
+    try:
+        wid = parse_wi_id(spec, "--wi")
+    except ValueError as exc:
+        print("agent_loop: {}".format(exc), file=sys.stderr)
+        return None
+    if wi_plan_mode(rows.get(wid, {})) == PLAN_MODE_DUAL:
+        print(
+            "agent_loop: {0} declares PlanMode=dual — a dual-plan WI is "
+            "never a direct BUILD; run it with --dual-plan {0} instead "
+            "(process-options.md 'Dual-plan decomposition')".format(wid),
+            file=sys.stderr,
+        )
+        return None
+    return wid
+
+
 def build_worker_assignment(args, root):
     """The explicit worker assignment (--wi, on a claimed branch): parse the
-    WI list, fail closed on an unresolvable --base, and load the registry +
+    one WI id, fail closed on an unresolvable --base, and load the registry +
     scheduler views + any --rework findings. The session tag (`worker["train"]`,
     scoping logs and review evidence) is --train when given, else the current
     branch name — the §2.3 claim branch. Returns (None, None) when this is not
@@ -1373,7 +1398,7 @@ def build_worker_assignment(args, root):
     # generated-artifact regeneration, tag-scoped collision-safe logs + review
     # evidence, result = committed trailers + the exit code.
     worker = None
-    if args.wi:
+    if args.wi is not None:
         tag = (args.train or "").strip()
         if not tag:
             code, out = git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
@@ -1404,24 +1429,15 @@ def build_worker_assignment(args, root):
                 file=sys.stderr,
             )
             return None, EXIT_PREFLIGHT
-        assigned = parse_wi_list(args.wi)
         rows = load_wi_registry(root)
-        # A dual-plan WI never builds as a direct BUILD session (fail-closed,
-        # WI-199): the round has its own entry (--dual-plan) and safeguards.
-        dual = [w for w in assigned if wi_plan_mode(rows.get(w, {})) == PLAN_MODE_DUAL]
-        if dual:
-            print(
-                "agent_loop: {} declare(s) PlanMode=dual — a dual-plan WI is "
-                "never a direct BUILD; run it with --dual-plan {} instead "
-                "(process-options.md 'Dual-plan decomposition')".format(
-                    ";".join(dual), dual[0]
-                ),
-                file=sys.stderr,
-            )
+        wid = _buildable_wi(args.wi, rows)
+        if wid is None:
             return None, EXIT_PREFLIGHT
         worker = {
             "train": sanitize_train(tag),
-            "assigned": assigned,
+            # One work item per lane: a one-element tuple, so the evidence
+            # readers that iterate the assignment read the one row.
+            "assigned": (wid,),
             "base": base,
             # WI-884: the claim commit the merge gate binds a full-lane round
             # to (None for a manual or pre-claim lane: no round can gate it).
@@ -1547,7 +1563,7 @@ def print_run_banner(
         print(
             "worker assignment: branch={} wi={} base={} (result = committed "
             "trailers + exit code; no lane files)".format(
-                worker["train"], ";".join(worker["assigned"]), worker["base"][:12]
+                worker["train"], worker["assigned"][0], worker["base"][:12]
             )
         )
     print(
@@ -2684,40 +2700,11 @@ def wait_out_blackout(lane):
 
 
 def current_assignment_wi(root, worker):
-    """The WI this session claims (WI-137): the first assigned WI that is not
-    BUILT, else the rework target (else the last assigned).
-
-    BUILT MEANS BOTH HALVES — the committed `WI:` trailer AND the spec gone from
-    `active/<branch>/` on the branch tree. The trailer alone was the whole test
-    until a four-row spine batch measured what that misses (2026-09-03, lane
-    `wi-589-…`): session 001 committed WI-589's build WITH its trailer and ran
-    out of budget before the close ritual, so every later session's walk stepped
-    straight past a row whose spec was still in `active/`. Nothing ever came
-    back to it, and `integrate.finished_branches` — which asks the OTHER half,
-    the tree — never counted the branch finished, so the lane stranded after its
-    review round and a human closed the row by hand. The two readers now ask the
-    same question: a row is done with when its trailer is committed and its spec
-    has left `active/<branch>/`.
-
-    A ONE-ROW LANE IS UNCHANGED, which is why this is safe: with a single
-    assignment the `remaining` list is either `[A]` or empty and both arms
-    answer `A`, so only a batch can observe the difference.
-
-    (The §7 continuation re-check retired with session grouping, WI-383 /
-    §A6.1. It re-asked, once per successor, whether the classifier still
-    permitted a MULTI-WI grouping — a guard that only ever had work to do
-    because the dispatcher packed independent WIs into one session. With
-    packing deleted, the only multi-WI assignment left is the spine batch the
-    dispatcher admits deliberately (§A4), whose constituents are homogeneous by
-    construction: the guard's sole non-refusing case. A check that can only
-    ever say yes is not a safeguard.)"""
-    _built, done = lane_completion(root, worker["base"])
-    remaining = [w for w in worker["assigned"] if w not in done]
-    return (
-        remaining[0]
-        if remaining
-        else (worker.get("rework_wi") or worker["assigned"][-1])
-    )
+    """The WI this session claims (WI-137): the lane's one assigned work item.
+    A lane builds exactly one, so there is no row to walk past; whether that
+    row is built (its committed `WI:` trailer AND its spec gone from
+    `active/<branch>/`) is the end state's question, not this one's."""
+    return worker["assigned"][0]
 
 
 def stamp_session_meta(meta, plan, timed_out):
@@ -3660,8 +3647,10 @@ def is_drive_launch(args):
     """A plain launch (no role flag) is the DRIVE mode (WI-374): the serial
     claim->build->integrate front end, restored after the parallel dispatcher's
     Phase 5 deletion took the scheduling front half with it. Any explicit role
-    opts out of it."""
-    return not (args.wi or args.train or args.interactive or args.dual_plan)
+    opts out of it, read by the argument's PRESENCE: an explicit value names
+    its role whatever it holds, so an empty `--wi` is an assignment that the
+    assignment preflight refuses by name, never a plain launch that claims."""
+    return not args.interactive and {args.wi, args.train, args.dual_plan} == {None}
 
 
 def _parse_session_maps(args):
@@ -4161,7 +4150,7 @@ def main():
             warned_no_core,
         )
 
-    if args.dual_plan:
+    if args.dual_plan is not None:
         return _dual_plan_entry(root, docs, args, setup, policies)
 
     print_run_banner(

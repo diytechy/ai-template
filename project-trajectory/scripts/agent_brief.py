@@ -152,56 +152,8 @@ NON_BUILD_PHASES = frozenset(kverdict.REVIEW_PHASES) | {
 # concept; docs/ is the one coordination surface and the integrator owns it.)
 
 
-def assignment_block(root, wi_rows, wi, base, assigned):
-    """The WI-580 batch block: EVERY row this lane was claimed with, each with
-    its evidence state, or `""` for the ordinary one-row lane.
-
-    The dispatcher admits a spine batch as ONE lane (`--wi 'A;B'`, §A4) and
-    `current_assignment_wi` walks it a row per session — but the brief rendered
-    the walked row alone, under an opening sentence that called it the whole
-    scope. Measured 2026-09-02 on `wi-569-…`: the human saw `wi=WI-569;WI-575`
-    in the launch banner and the session that took WI-569 never learned WI-575
-    was on its lane.
-
-    THE ONE-ROW LANE RENDERS NOTHING, which is what keeps this safe to add: the
-    `- WI:`/`- SR-Refs:`/`- Branch:` lines already carry every fact this block
-    would repeat, so only a batch can observe the difference.
-
-    The state vocabulary is the walk's own, not a fourth opinion about
-    doneness: `this session's focus` is whatever `current_assignment_wi`
-    returned, and the rest split on the SAME two-part predicate that walk reads
-    (`lane_completion`). A row that is `built` here is one the walk has already
-    stepped past — trailer committed AND spec out of `active/<branch>/`. A row
-    with only the trailer reads `started, not closed`, because that is a row
-    the walk WILL come back to and telling its next session `built` is the
-    silent-completion miss this block was measured against.
-
-    Implements: SR-026, LLR-061
-    """
-    if len(assigned) < 2:
-        return ""
-    built, done = lane_completion(root, base)
-    # `done` wins over `built` where a row is both — the trailer-only rows are
-    # what is left, and a row in neither set was never touched.
-    state = dict.fromkeys(built, "started, not closed") | dict.fromkeys(done, "built")
-    return (
-        "- The WHOLE assignment ({} rows claimed on this lane, one row per "
-        "session — a sibling row is this lane's later work, not another "
-        "lane's):\n".format(len(assigned))
-        + "".join(
-            "  - {} [{}] {} — SpecRef: {}\n".format(
-                tok,
-                "this session's focus" if tok == wi else state.get(tok, "not started"),
-                _row_title(wi_rows, tok),
-                (wi_rows.get(tok, {}).get("SpecRef") or "—").strip() or "—",
-            )
-            for tok in assigned
-        )
-    )
-
-
 def _row_title(wi_rows, tok):
-    """A WI's Title for a prompt block, with the placeholder both blocks show
+    """A WI's Title for a brief block, with the placeholder the briefs show
     for a row the registry does not carry — an empty cell there would read as a
     row with no scope rather than as a row the reader cannot look up."""
     return (
@@ -239,7 +191,7 @@ def _predecessor_lines(wi_rows, row):
     return preds
 
 
-def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None):
+def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
     """The per-session worker prompt (LLR-061): the WI row + SpecRef +
     predecessor context + the current branch diff + any rework finding, slotted
     into WORKER_PROMPT (`train` is the session tag = the claim branch name).
@@ -247,10 +199,6 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
     a scaffold use their respective runtime script directories.
     Reads NOTHING from docs/status.md or docs/next-wi — the explicit
     assignment is the whole scope.
-
-    `assigned` is the lane's WHOLE claim (WI-580); `wi` is the row this session
-    walked to. Defaulting it to `[wi]` keeps every in-process caller that only
-    knows one row rendering exactly what it rendered before.
 
     Implements: SR-026, LLR-061
     """
@@ -331,9 +279,6 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text="", assigned=None)
         train=train,
         base=base,
         scripts=scripts_dir(root),
-        assignment_block=assignment_block(
-            root, wi_rows, wi, base, list(assigned) if assigned else [wi]
-        ),
         pred_block=pred_block,
         context_block=context_block,
         diff_block=diff_block,
@@ -1099,18 +1044,12 @@ def claimed_on_branch(root):
 
 
 def lane_completion(root, base):
-    """`(built, done)` for a lane, the ONE completion predicate its two readers
-    share: `built` is the rows carrying a committed `WI:` trailer, `done` the
-    rows a session is finished with — trailer AND spec gone from
-    `active/<branch>/`.
-
-    Both facts in one read because both readers need the distinction and
-    neither may invent its own (WI-580 review A): the walk
-    (`current_assignment_wi`) and the brief (`assignment_block`) had each
-    derived doneness separately, and the brief's half-predicate labelled a row
-    `built` on its trailer alone — so a batch with a trailer committed but the
-    close ritual unrun told the next session its still-active row was complete,
-    the exact miss `current_assignment_wi`'s two-part test exists to prevent."""
+    """`(built, done)` for a lane, the ONE two-part completion predicate:
+    `built` is the rows carrying a committed `WI:` trailer, `done` the rows a
+    session is finished with — trailer AND spec gone from `active/<branch>/`.
+    Both facts come from one read so no reader derives doneness from the
+    trailer alone, which would call a row built whose close ritual never ran.
+    A lane builds one work item, so each set holds at most that row."""
     built, _blocked = train_evidence(root, base)
     return built, built - claimed_on_branch(root)
 
@@ -1248,7 +1187,6 @@ __all__ = (
     "DEFAULT_PHASE_TIER",
     "DEFAULT_COOLDOWN_SECONDS",
     "NON_BUILD_PHASES",
-    "assignment_block",
     "_row_title",
     "_predecessor_lines",
     "worker_prompt",

@@ -22,7 +22,9 @@ the git plumbing, the spec/watermark/stack.ini repo builders every section
 starts from, the pinned commit stamps, and the two builders whose callers
 straddle a boundary (`scaffolded_closed_branch`, built by the station's
 end-to-end and reused by the unload queue tests; `_worktree_count`, the other
-way round). Anything used by a single module moved WITH that module —
+way round), plus `claim_by_hand`, the historical multi-spec claim record the
+claim, dispatcher and close suites each drive their one-item refusals against.
+Anything used by a single module moved WITH that module —
 `claim_dir` and `spec_move` to the claim tests, `verdict_repo` to admission,
 `station_repo` to the station, `residue_lane` to unload.
 
@@ -211,7 +213,33 @@ def claim_lane(root, branch, wid="WI-401", slug="widget", when=None):
     active = root / "docs" / "work" / "active" / branch / queued.name
     active.parent.mkdir(parents=True, exist_ok=True)
     queued.rename(active)
-    _commit(root, integ.ac.claim_subject([wid], branch), when=when)
+    _commit(root, integ.ac.claim_subject(wid, branch), when=when)
+    return _rev(root, "HEAD")
+
+
+def claim_by_hand(root, branch, specs, when=None, body=""):
+    """A HISTORICAL multi-spec claim, made by hand on the checked-out trunk:
+    the queued `specs` (paths under `docs/work/queued/`) move together into
+    `active/<branch>/` in ONE commit whose subject is the joined form the two
+    batch claims on this repo's trunk carry (`claim: WI-569;WI-575 -> ...`),
+    and `branch` is cut from it. Returns the claim commit.
+
+    The subject is written literally, never through the claim writer: a lane
+    carries exactly one work item, so no writer composes the joined form, and
+    this record is the one a reader must still parse and every admission,
+    resume and close must refuse to act on. Specs left uncommitted in
+    `queued/` are filed first, so the claim commit is a pure queued -> active
+    move. `body` is appended as the message body (a trailer block, say)."""
+    ids = ["-".join(spec.name.split("-", 2)[:2]) for spec in specs]
+    if _git(root, "status", "--porcelain").strip():
+        _commit(root, "file " + ";".join(ids), when=when)
+    active = root / "docs" / "work" / "active" / branch
+    active.mkdir(parents=True, exist_ok=True)
+    for spec in specs:
+        spec.rename(active / spec.name)
+    subject = "claim: {} -> active/{} (bookkeeping)".format(";".join(ids), branch)
+    _commit(root, subject + ("\n\n" + body if body else ""), when=when)
+    _git(root, "branch", branch)
     return _rev(root, "HEAD")
 
 

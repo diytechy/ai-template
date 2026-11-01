@@ -3,11 +3,11 @@ of driven rules.
 
 The plan's §4 states the tick priority as *approved prose the tests pin, not an
 emergent property of the tick loop*: dispositions -> amendment adjudication ->
-surface-or-dispatch by level -> spine batch -> non-spine -> red-TC intake. This
+surface-or-dispatch by level -> spine work item -> non-spine -> red-TC intake. This
 module pins the three rungs that were not already built:
 
   1. **Judgement first** (`dispatch._judgement_first`): an `adjudication` row
-     outranks everything ready, including a spine batch — and the ruled §A1
+     outranks everything ready, including a spine work item — and the ruled §A1
      rank table is NOT renumbered to achieve it.
   6. **The red-TC census** (`census.red_tc_census` + `intake._red_tc_draft`):
      a TC left red under a CLOSED implementation is a contradiction, routed to
@@ -37,14 +37,15 @@ ct = load_script("check_trajectory")
 # --- rung 1: judgement first --------------------------------------------------
 
 
-def test_an_adjudication_row_outranks_a_spine_batch():
+def test_an_adjudication_row_outranks_a_spine_work_item():
     # The one place the loop-order contract and §A1's rank table disagree.
     # Spine is rank 0 and adjudication rank 1, so the FRONTIER hands them over
     # spine-first; admission re-orders. Why: an adjudication row exists because
-    # a lane CLAIMED an outcome nothing has judged, and a spine batch
-    # re-attests requirements — running the batch first approves a spine on a
+    # a lane CLAIMED an outcome nothing has judged, and a spine work item
+    # re-attests requirements — running it first approves a spine on a
     # premise the pending judgement may overturn, and the attestation ledger is
-    # append-only by design.
+    # append-only by design. Adequacy witness: an admission that dropped the
+    # judgement-first rung would admit WI-001 (the spine row, rank 0) and fail.
     frontier = [("WI-001", "spine"), ("WI-002", "adjudication")]
     assert dsp._admission(frontier, False, busy=False, free=2) == (
         "admit-exclusive",

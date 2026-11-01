@@ -36,7 +36,7 @@ pytestmark = pytest.mark.skipif(
 MAX_COMPLEXITY = 10
 
 BASELINE = {
-    ("agent_common.py", "preflight"): 17,
+    ("agent_common.py", "preflight"): 16,
     # (The agent_dispatch.py rows retired with the module at
     # concurrency-restructure Phase 5.)
     # Repo-review 2026-07-21 reviewed bumps (each +1..+3, all fail-closed

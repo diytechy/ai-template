@@ -149,8 +149,9 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     subcommand exits nonzero on refusal with the reason named; the caller
     needs no other channel to know what happened.
 Contract IF-154: the argv surface, one required subcommand deep. `--root`
-    (default the cwd) precedes the subcommand; `claim` requires `--wi` (one id,
-    or several `;`-separated) and `--branch`; `refresh` requires `--branch` and
+    (default the cwd) precedes the subcommand; `claim` requires `--wi` (exactly
+    one id; an empty value or a list in any separator is refused by name) and
+    `--branch`; `refresh` requires `--branch` and
     takes `--tier` (default `all`, the full gate bar); `attest` requires
     `--branch` and `--bar review` and takes `--tests` (the named test paths)
     and `--message-file`; `integrate` takes
@@ -410,13 +411,11 @@ def _specref_refusal(root, meta, wi_id):
     return None
 
 
-def _claim_subject(wi_ids, branch):
+def _claim_subject(wi_id, branch):
     """The claim commit's subject - one home, because the writer and the
-    abandoned-claim reader below must agree on it exactly. A spine BATCH
-    (WI-381, §A4: all spine WIs admit together) joins its ids with ";", so the
-    single-WI form is byte-identical to what it always was. Accepts one id or
-    the list, like `claim` itself."""
-    return ac.claim_subject(wi_ids, branch)
+    abandoned-claim reader below must agree on it exactly. One work item per
+    lane, so it names the one id."""
+    return ac.claim_subject(wi_id, branch)
 
 
 def _name_status(out):
@@ -424,7 +423,7 @@ def _name_status(out):
     return ac.name_status(out)
 
 
-def _abandoned_claim(root, wi_ids, branch):
+def _abandoned_claim(root, wi_id, branch):
     """Is `branch` the orphan a CRASHED claim leaves behind - and nothing else?
 
     This function authorises a `git branch -D`, so it has to convict, not
@@ -470,41 +469,37 @@ def _abandoned_claim(root, wi_ids, branch):
 
     Implements: SR-156, LLR-151
     """
-    wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     tip = _rev(root, "refs/heads/" + branch)
     if tip is None:
         return False
     subject = _commit_message(root, tip).splitlines()[:1]
-    if not subject or subject[0].strip() != _claim_subject(wi_ids, branch):
+    if not subject or subject[0].strip() != _claim_subject(wi_id, branch):
         return False
     head = _head(root)
     if ac.git(root, "merge-base", "--is-ancestor", tip, head)[0] == 0:
         return False
     if ac.git(root, "merge-base", "--is-ancestor", tip + "^1", head)[0] != 0:
         return False
-    delta = _claim_delta(root, tip, branch, wi_ids)
+    delta = _claim_delta(root, tip, branch, wi_id)
     if delta is None:
         return False
     moved, relinked = delta
-    # A commit that regenerated artifacts but moved fewer specs than THIS
-    # claim would move is not this claim (a batch is one commit, whole).
-    if any(moved[wid].get("dest") is None for wid in wi_ids):
+    # A commit that regenerated artifacts but did not move this claim's spec
+    # is not this claim.
+    if moved["dest"] is None:
         return False
-    remap = {
-        moved[wid]["src"]: moved[wid]["dest"] for wid in wi_ids if moved[wid].get("src")
-    }
+    remap = {moved["src"]: moved["dest"]} if moved["src"] else {}
     return not relinked or _relinked_exactly(root, tip, remap, relinked)
 
 
-def _claim_delta(root, tip, branch, wi_ids):
+def _claim_delta(root, tip, branch, wi_id):
     """Classify the candidate claim commit's own diff, or None to convict.
 
-    `(moved, relinked)` where `moved` maps each claimed id to its own move
-    pair — the A under active/<branch>/ (`dest`) and the D under queued/
-    (`src`) — and `relinked` is every other `.md` MODIFICATION, the paths only
-    the WI-393 oracle may excuse. A batch claim (WI-381) is ONE commit moving
-    every batched spec, so every id gets its own pair. Any path outside those
-    shapes is somebody's work and the whole read is None."""
+    `(moved, relinked)` where `moved` is the claimed id's move pair — the A
+    under active/<branch>/ (`dest`) and the D under queued/ (`src`) — and
+    `relinked` is every other `.md` MODIFICATION, the paths only the WI-393
+    oracle may excuse. Any path outside those shapes is somebody's work and
+    the whole read is None."""
     # --no-renames because the claim's `git mv` would otherwise arrive as ONE
     # rename record and hide the queued side of the move; split, both paths are
     # named and each is judged on its own.
@@ -512,19 +507,17 @@ def _claim_delta(root, tip, branch, wi_ids):
     if code != 0:
         return None  # a diff nobody could read is not evidence of anything
     generated = _generated_paths(root)
-    claimed = {wid: "{}/{}/{}-".format(ACTIVE, branch, wid) for wid in wi_ids}
-    queued = {wid: "{}/queued/{}-".format(WORK, wid) for wid in wi_ids}
-    moved = {wid: {"src": None, "dest": None} for wid in wi_ids}
+    claimed = "{}/{}/{}-".format(ACTIVE, branch, wi_id)
+    queued = "{}/queued/{}-".format(WORK, wi_id)
+    moved = {"src": None, "dest": None}
     relinked = []
     for status, path in _name_status(out):
-        wid_a = next((w for w, pre in claimed.items() if path.startswith(pre)), None)
-        wid_d = next((w for w, pre in queued.items() if path.startswith(pre)), None)
-        if wid_a is not None:
+        if path.startswith(claimed):
             if status.startswith("A"):
-                moved[wid_a]["dest"] = path
-        elif wid_d is not None:
+                moved["dest"] = path
+        elif path.startswith(queued):
             if status.startswith("D"):
-                moved[wid_d]["src"] = path
+                moved["src"] = path
         elif any(path == g.rstrip("/") or path.startswith(g) for g in generated):
             continue
         elif status.startswith("M") and path.endswith(".md"):
@@ -564,9 +557,8 @@ def _relinked_exactly(root, tip, remap, paths):
     on a CRLF checkout still matches without any folding. A parent that does
     not decode as UTF-8 convicts too: `_rewrite_md_links` SKIPS such a file,
     so a modification to it cannot be the ritual's write. `remap` is the
-    commit's own src->dest move pairs — one entry per batched spec (WI-381),
-    re-derived by the caller from the A/D records themselves. The reading
-    itself is the one shared stage, `spec_move.exact_relink`; an empty remap
+    commit's own src->dest move pair, re-derived by the caller from the A/D
+    records themselves. The reading itself is the one shared stage, `spec_move.exact_relink`; an empty remap
     rewrites nothing, so it excuses nothing."""
     for path in paths:
         old = _blob_bytes(root, "{}^1:{}".format(tip, path))
@@ -672,11 +664,10 @@ def _dispatch_lock(root):
     return release, None
 
 
-def _claim_refusal(root, wi_ids, branch):
+def _claim_refusal(root, wi_id, branch):
     """The claim's refusal ladder: the first reason this claim may not happen,
-    or None. Every reason is named; order is cheapest-first. `wi_ids` is the
-    admitted batch (WI-381: all spine WIs admit together as ONE claim); the
-    per-spec rungs run for every id.
+    or None. Every reason is named; order is cheapest-first. `wi_id` is the
+    one work item the lane claims (`_claim_input_refusal` has checked it).
 
     The `safety_class != ordinary` arm that used to live here is DELETED
     (§A4.1, owner question B): the dispatcher admits, so the claim rung has no
@@ -697,24 +688,23 @@ def _claim_refusal(root, wi_ids, branch):
     # through `bookkeeping.commit`, whose pre-check refuses by name the dirty
     # paths it must write - and dirt anywhere else is the owner's to keep.
     code, _ = ac.git(root, "rev-parse", "--verify", "--quiet", "refs/heads/" + branch)
-    if code == 0 and not _abandoned_claim(root, wi_ids, branch):
+    if code == 0 and not _abandoned_claim(root, wi_id, branch):
         return "branch {} already exists".format(branch)
     if ".." in branch or "/" in branch or "\\" in branch:
         return (
             "branch name {!r} does not map to a flat claim directory - the queue "
             "handles single-segment branch names".format(branch)
         )
-    for wi_id in wi_ids:
-        try:
-            meta = _spec_frontmatter(_queued_spec(root, wi_id))
-        except ValueError as exc:
-            return str(exc)
-        refusal = _specref_refusal(root, meta, wi_id)  # WI-370
-        if refusal:
-            return refusal
-        refusal = _status_prose_refusal(root, wi_id)  # WI-358
-        if refusal:
-            return refusal
+    try:
+        meta = _spec_frontmatter(_queued_spec(root, wi_id))
+    except ValueError as exc:
+        return str(exc)
+    refusal = _specref_refusal(root, meta, wi_id)  # WI-370
+    if refusal:
+        return refusal
+    refusal = _status_prose_refusal(root, wi_id)  # WI-358
+    if refusal:
+        return refusal
     import schedule  # sibling; deferred so the cheap refusals above stay cheap
 
     ready = {
@@ -723,15 +713,14 @@ def _claim_refusal(root, wi_ids, branch):
             schedule._load(root), oi_status=schedule.load_oi_status(root)
         )
     }
-    missing = [w for w in wi_ids if w not in ready]
-    if missing:
+    if wi_id not in ready:
         return "{} is not on the ready frontier (unmet needs or not queued)".format(
-            ";".join(missing)
+            wi_id
         )
     return None
 
 
-def _done_when_warning(root, wi_ids):
+def _done_when_warning(root, wi_id):
     """S13's first rule at the claim: every claimable row has a Done-when,
     written before claim by whoever filed it. WARN-FIRST, by name, on stderr.
 
@@ -743,28 +732,47 @@ def _done_when_warning(root, wi_ids):
 
     Implements: SR-156, LLR-262
     """
-    for wi_id in wi_ids:
-        spec = _queued_spec(root, wi_id)
-        try:
-            text = spec.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
-            text = ""
-        if not kdone.has_done_when(text):
-            print(
-                "integrate: WARNING - {} ({}) declares no Done-when; its reviewer "
-                "has no checklist and its merge nothing to hold it to. Write one "
-                "before claim (S13; warn-first).".format(
-                    wi_id, spec.relative_to(root).as_posix()
-                ),
-                file=sys.stderr,
-            )
+    spec = _queued_spec(root, wi_id)
+    try:
+        text = spec.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        text = ""
+    if not kdone.has_done_when(text):
+        print(
+            "integrate: WARNING - {} ({}) declares no Done-when; its reviewer "
+            "has no checklist and its merge nothing to hold it to. Write one "
+            "before claim (S13; warn-first).".format(
+                wi_id, spec.relative_to(root).as_posix()
+            ),
+            file=sys.stderr,
+        )
 
 
-def claim(root, wi_ids, branch, dispatch_lock_held=False):
+def _claim_input_refusal(wi_id):
+    """The claim's first rung, a pure input check: a lane claims exactly one
+    work item, so the input is one id in the WI grammar or the claim refuses,
+    naming the value as given. Deny-by-default: an empty or separator-only
+    value, a `;`, `,` or whitespace list, and any list or tuple (a
+    one-element one included) all refuse, before the lock and before any
+    move, commit, branch or worktree. The rule is the worker's too, so it
+    has one home (`ac.parse_wi_id`); the command line's case and whitespace
+    normalization stays at `main`.
+
+    Implements: SR-156, LLR-151
+    """
+    try:
+        ac.parse_wi_id(wi_id, "claim")
+    except ValueError as exc:
+        return str(exc)
+    return None
+
+
+def claim(root, wi_id, branch, dispatch_lock_held=False):
     """§2.3 steps 1+2 in the order that makes a half-claim BENIGN (§A3).
 
-    `wi_ids` is a single id or the admitted BATCH (WI-381, §A4: all spine WIs
-    admit together — one branch, ONE claim commit moving every batched spec).
+    `wi_id` is the one work item the lane claims: one branch, ONE claim commit
+    moving its spec. Anything else refuses at the first rung, before every
+    other (`_claim_input_refusal`).
     `dispatch_lock_held=True` is the live dispatcher's path: it already holds
     `out/agent-loop.lock` for its process lifetime, so the claim must not
     re-acquire (kernel locks are not re-entrant across descriptors). Every
@@ -813,12 +821,14 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
 
     Implements: SR-156, SR-229, LLR-140, LLR-151, LLR-300
     """
-    # The commit hooks are on before any rung (WI-926): a hookless claim takes
-    # no lock, cuts no branch and moves no spec.
+    refusal = _claim_input_refusal(wi_id)
+    if refusal:
+        return fail(refusal)
+    # The commit hooks are on before any other rung (WI-926): a hookless claim
+    # takes no lock, cuts no branch and moves no spec.
     hooks_off = _kitcommit_hooks.hooks_refusal(root)
     if hooks_off is not None:
         return fail(hooks_off)
-    wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     # The ladder runs BEFORE the lock: the lock protects the WRITES, and the
     # reads it leaves outside cannot race a live dispatcher, because a live
     # dispatcher makes the acquisition below fail outright. The lock's own file
@@ -833,28 +843,28 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     # (WI-834) binds every route, the dispatcher's included, at any dial.
     fence = coordinator_guard.window_refusal if dispatch_lock_held else None
     guarded = (fence or coordinator_guard.claim_refusal)(root)
-    refusal = guarded or _claim_refusal(root, wi_ids, branch)
+    refusal = guarded or _claim_refusal(root, wi_id, branch)
     if refusal:
         return fail(refusal)
-    _done_when_warning(root, wi_ids)
+    _done_when_warning(root, wi_id)
     release = None
     if not dispatch_lock_held:
         release, refusal = _dispatch_lock(root)
         if refusal:
             return fail(refusal)
     try:
-        return _claim_locked(root, wi_ids, branch)
+        return _claim_locked(root, wi_id, branch)
     finally:
         if release is not None:
             release()
 
 
-def _claim_locked(root, wi_ids, branch):
+def _claim_locked(root, wi_id, branch):
     """`claim` past its ladder, with the dispatch lock settled — the write
     sequence itself, through the ONE trunk bookkeeping commit the intake mint
     also uses (`bookkeeping.commit`, WI-612).
 
-    The claim's write set is planned before anything moves: each spec's
+    The claim's write set is planned before anything moves: the spec's
     `queued/ -> active/<branch>/` pair and every file the link-aware move will
     rewrite (`spec_move.planned_writes`, read over HEAD in the helper's scratch
     worktree), with the declared regeneration joined by the helper. So a dirty
@@ -871,11 +881,9 @@ def _claim_locked(root, wi_ids, branch):
 
     Implements: SR-208, SR-209, LLR-246, LLR-248
     """
-    moves = []
-    for wi_id in wi_ids:
-        spec = _queued_spec(root, wi_id)
-        dest = "{}/{}/{}".format(ACTIVE, branch, spec.name)
-        moves.append((spec.relative_to(root).as_posix(), dest))
+    spec = _queued_spec(root, wi_id)
+    dest = "{}/{}/{}".format(ACTIVE, branch, spec.name)
+    moves = [(spec.relative_to(root).as_posix(), dest)]
 
     def write(scratch):
         # The abandoned branch is a ref, shared by every worktree; the move is
@@ -887,15 +895,14 @@ def _claim_locked(root, wi_ids, branch):
         # spec's own relative links rebase onto active/<branch>/ and every
         # inbound link follows the move, all inside this one claim commit — the
         # 2026-08-01 claim that broke the backlog plan's row links is the driven
-        # instance. A batch is the same ritual per spec, in the ONE commit. The
-        # claim changes the registry, a generated-artifact input, so the helper
-        # folds the regeneration in (RULING-6: claims and regeneration are the
-        # one bookkeeping lane) - otherwise the claim is blocked by its own
-        # freshness floor, which the acceptance run proved live.
-        for src, dest in moves:
-            _touched, refusal = spec_move.move_spec(scratch, src, dest)
-            if refusal:
-                return "the claim move failed: {}".format(refusal)
+        # instance. The claim changes the registry, a generated-artifact
+        # input, so the helper folds the regeneration in (RULING-6: claims and
+        # regeneration are the one bookkeeping lane) - otherwise the claim is
+        # blocked by its own freshness floor, which the acceptance run proved
+        # live.
+        _touched, refusal = spec_move.move_spec(scratch, *moves[0])
+        if refusal:
+            return "the claim move failed: {}".format(refusal)
         return None
 
     cuts = []
@@ -915,7 +922,7 @@ def _claim_locked(root, wi_ids, branch):
         lambda tree: (spec_move.planned_writes(tree, moves), None),
         write,
         "{}\n\nThe §2.3 claim with its regeneration folded in, written BEFORE the\nbranch and before trunk moves onto it (§A3): a crash between the two\nwrites leaves at worst an orphan branch this claim re-cuts, never a\nclaim no lane can reach.".format(
-            _claim_subject(wi_ids, branch)
+            _claim_subject(wi_id, branch)
         ),
         label="the claim",
         before_advance=cut,
@@ -927,9 +934,7 @@ def _claim_locked(root, wi_ids, branch):
     if refusal:
         return fail(refusal)
     print(
-        "integrate: claimed {} on {} (branch cut + trunk advance)".format(
-            ";".join(wi_ids), branch
-        )
+        "integrate: claimed {} on {} (branch cut + trunk advance)".format(wi_id, branch)
     )
     return 0
 
@@ -946,9 +951,10 @@ def claimed_ids_on_branch(root, branch):
     committed tree — the rows that lane has not closed yet.
 
     `finished_branches` below asks the same tree the same question and takes the
-    all-or-nothing answer; this one names WHICH rows, because a §A4 BATCH closes
-    its rows one at a time and the loop's walk has to know which of its
-    assignment is still open (`agent_loop.current_assignment_wi`). Both read the
+    all-or-nothing answer; this one names the row, for the readers that need the
+    id rather than a yes or no (the brief's open-row read, the session service's
+    attribution, the coordinator entry point's open-row check). A lane carries
+    exactly one work item, so the set holds at most one id. Both read the
     BRANCH, never the trunk copy — the question is what the branch DID with the
     row. `None` when git cannot say, which every caller reads as "nothing is
     known to be open".
@@ -1882,11 +1888,8 @@ def _run_trunk_step(wt, root):
 
 # The `bar` frontmatter key's vocabulary (WI-388; the stage-ladder names since
 # OI-21): bar declares verification strictness for this row's lane; it never
-# affects scheduling. Ordered weakest to strictest so a batch takes the
-# STRICTEST — by LADDER POSITION, never by `max()` on the string. The retired
-# tags alphabetized, so `max()` was accidentally right; `DevStg-Tests` sorts
-# above `DevStg-Impl`, so it is now accidentally WRONG in the permissive
-# direction, which is exactly the class of bug the label carrier makes loud.
+# affects scheduling. Ordered weakest to strictest, by LADDER POSITION; a
+# declared value outside it is refused.
 _BAR_GATES = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
 
 # A WI `bar:` is AUTHOR-WRITTEN, so the retired tags translate on read (OI-21
@@ -2012,16 +2015,16 @@ def _adjudication_scope_ok(root, branch):
 
 
 def _lane_bar_directives(root, branch):
-    """The claimed rows' say over the refresh bar (WI-388): `(skip, gate,
+    """The claimed row's say over the refresh bar (WI-388): `(skip, gate,
     refusal)`.
 
-    * `skip` — True when EVERY claimed spec declares the `adjudication` kind:
-      adjudication runs NO bar (§A5.2 — its outputs are Status cells and the
-      work registry, nothing a product bar can speak to; that is why the kind
-      needs its own no-bar arm rather than a tier). Fails TOWARD the bar: an
-      unreadable frontmatter or a mixed batch runs it.
-    * `gate` — the strictest `bar` key among the claimed rows (DevStg-Reqs < DevStg-Tests < DevStg-Impl),
-      handed to check.py --gate. None when no row declares one.
+    * `skip` — True when the lane's one claimed spec declares the
+      `adjudication` kind: adjudication runs NO bar (§A5.2 — its outputs are
+      Status cells and the work registry, nothing a product bar can speak to;
+      that is why the kind needs its own no-bar arm rather than a tier). Fails
+      TOWARD the bar: an unreadable frontmatter or any other kind runs it.
+    * `gate` — that row's `bar` key (one of DevStg-Reqs, DevStg-Tests,
+      DevStg-Impl), handed to check.py --gate. None when it declares none.
     * `refusal` — a malformed bar value. Refused loudly rather than silently
       barred at whatever the derived gate happens to read (the drift the key
       exists to pin); the claimed spec is on the branch, so the fix is a
@@ -2059,8 +2062,7 @@ def _lane_bar_directives(root, branch):
     # no-bar path — the branch's delta must LOOK like adjudication too.
     if skip and not _adjudication_scope_ok(root, branch):
         skip = False
-    strictest = max(bars, key=_BAR_GATES.index) if bars else None
-    return skip, strictest, None
+    return skip, (bars[0] if bars else None), None
 
 
 def _worktree_holding(root, branch):
@@ -3660,8 +3662,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
     if args.op == "claim":
-        wi_ids = [normalize_wi_id(w) for w in args.wi.split(";") if w.strip()]
-        return claim(root, wi_ids, args.branch)
+        return claim(root, normalize_wi_id(args.wi), args.branch)
     if args.op == "refresh":
         _sha, refusal = refresh(root, args.branch, args.tier)
         return fail(refusal) if refusal else 0

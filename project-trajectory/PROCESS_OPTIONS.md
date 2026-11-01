@@ -1114,11 +1114,6 @@ behavior**, so a fresh scaffold pays nothing.
   `quick`; bounded choices a reviewer can check against the spec, at `medium`;
   an open design decision, at `strong` — or back to planning, since a build that
   must settle the design is a plan in disguise.
-  **Multi-WI assignments (WI-133 → the scheduler).** Independent, off-spine
-  dev slices may still batch onto one branch — one Build pass per WI, one
-  review round over the combined diff (`--wi "WI-a;WI-b"`); `schedule.py`
-  remains the registry-derived frontier the claim reads. The single-review
-  amortization and the off-spine-only rule are unchanged.
   **Review rework carry-forward (WI-170).** When a managed review merges to
   `CHANGES-REQUESTED`, the coordinator records the reviewed BUILD scope in
   `docs/rework-wi` and reworks it before taking new work (its prompt, telemetry

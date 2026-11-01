@@ -3,7 +3,7 @@
      THE WORKER ASSIGNMENT (SR-060, WI-181). Sent to the BUILD session of a
      claimed work item. Slots are SINGLE-BRACE `{name}` and the fill is
      `str.format`, NOT the `{{NAME}}` strict fill the dual-plan hats use — this
-     prompt is filled from twelve computed values, several of which are whole
+     prompt is filled from eleven computed values, several of which are whole
      blocks, and the two idioms are kept apart deliberately (see
      prompts/README.md, "Two slot syntaxes, and why").
 
@@ -11,19 +11,9 @@
      at session-composition time, not at preflight. Double them (`{{`/`}}`) if
      you ever need one.
 
-     Slots: {wi} {title} {srs} {specref} {train} {base} {scripts} and the five computed
-     blocks {assignment_block} {pred_block} {context_block} {diff_block}
-     {rework_block}, each of which is either empty or already carries its own
-     trailing newline.
-
-     {assignment_block} IS EMPTY FOR A ONE-ROW LANE, by design (WI-580): the
-     three `- WI:`/`- SR-Refs:`/`- Branch:` lines above it already say
-     everything there is to say, and the single-row render stays what it was.
-     It renders only for a BATCH lane (`--wi 'A;B'`, the spine batch §A4
-     admits), where the dispatcher walks the assignment one row per session
-     (`current_assignment_wi`) and the brief used to name only the row this
-     session took — measured 2026-09-02 on `wi-569-…`: the human saw
-     `wi=WI-569;WI-575` in the launch banner and the model saw one row.
+     Slots: {wi} {title} {srs} {specref} {train} {base} {scripts} and the four computed
+     blocks {pred_block} {context_block} {diff_block} {rework_block}, each of
+     which is either empty or already carries its own trailing newline.
 
      THE SENT BODY CITES NO RECORD OF THIS REPOSITORY (WI-668). An adopter's
      session reads only what survives the comment strip, and an id of the
@@ -52,13 +42,13 @@
      the worker brief, and that is a reviewed diff.
 -->
 
-You are a worker session for a CLAIMED work item ({scripts}/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. The Assignment below is your whole scope: ONE claimed branch, and on it the work item named as this session's focus — plus, when the lane was claimed as a batch, the sibling rows listed with it, which are this lane's later sessions and nobody else's. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
+You are a worker session for a CLAIMED work item ({scripts}/agent_loop.py --wi, on a branch cut by `integrate.py claim`) — assume no human is watching. The Assignment below is your whole scope: ONE claimed branch, and on it the work item named as this session's focus. Read AGENTS.md first, then the SpecRef and SR rows below — they are the spec of record.
 
 Assignment:
 - WI: {wi} — {title}
 - SR-Refs: {srs} | SpecRef: {specref}
 - Branch: {train} (its claim is docs/work/active/{train}/; integration base {base})
-{assignment_block}{pred_block}{context_block}{diff_block}{rework_block}
+{pred_block}{context_block}{diff_block}{rework_block}
 Rules (the branch discipline):
 - Work ONLY the Assignment above — this session's focus row first, and no row that is not listed there. Do not resume from docs/status.md and do not look for docs/next-wi (retired) — the assignment above is authoritative.
 - Before patching around an unsuitable LLR, use the process's §5 change-intake route and the spine-authoring skill; any replacement stays within this assignment and its applicable approval authority.

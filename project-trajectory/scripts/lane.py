@@ -8,14 +8,14 @@ branch, extracted from the tick loop that decides WHICH branches run. A lane
                                by construction),
     launches the worker       (`run_worker` / `spawn_worker` — one worker
                                session loop on the claimed branch's worktree,
-                               agent_loop.py --worktree --wi A;B), and
+                               agent_loop.py --worktree --wi A), and
     runs the §A2 refresh      (`spawn_refresh` — the WI-386 station refresh as
                                its own subprocess, so N lanes' 11-minute bars
                                genuinely overlap instead of queueing at the
                                dispatcher; §A4.3 is why that matters),
 
 and it REPORTS an outcome rather than deciding one: a lane declares itself
-finished by moving its specs out of active/<branch>/ — the tree-derived signal
+finished by moving its spec out of active/<branch>/ — the tree-derived signal
 `integrate.finished_branches` reads — and every decision about what an exit
 code or a red refresh MEANS stays in dispatch.py, where the serial trunk
 writes live. There is deliberately no back-channel and no state file: the
@@ -29,14 +29,14 @@ Contract IF-136: the dispatcher's admitted lane table calls three functions
     here and reads nothing else. `ensure_worktree(root, branch)` returns
     `(path, error)` for the worktree holding a claimed branch, creating it if
     needed — the one path both the worker and the refresh use, by construction
-    rather than by two matching literals. `spawn_worker(root, branch, wi_ids,
+    rather than by two matching literals. `spawn_worker(root, branch, wi_id,
     args)` returns `(Popen, None)` or `(None, refusal)` for one worker session
     on that worktree, non-blocking and with stdio inherited, the resolved
     session dials forwarded as explicit flags so nothing a launcher set is
     silently dropped. `spawn_refresh(root, branch, tier)` returns a Popen
     running the station refresh as its own subprocess, so N lanes' bars run
     concurrently instead of queueing at the dispatcher. What comes back is
-    only the tree-derived signal — the specs moved out of `active/<branch>/` —
+    only the tree-derived signal — the spec moved out of `active/<branch>/` —
     plus each subprocess's exit code: no state file and no back-channel. This
     module runs and reports; what an exit code or a red refresh MEANS is the
     caller's to decide.
@@ -63,9 +63,9 @@ def ensure_worktree(root, branch):
     return integrate.lane_worktree(root, branch)
 
 
-def worker_argv(root, wt, branch, wi_ids, args):
+def worker_argv(root, wt, branch, wi_id, args):
     """The worker session's argv: one agent_loop.py --wi run on the lane
-    worktree. The plain launch's session dials ride to the worker EXPLICITLY —
+    worktree, `--wi` naming the lane's one work item. The plain launch's session dials ride to the worker EXPLICITLY —
     env inheritance covers the launcher-set slots, but a flag given on the
     command line would otherwise be silently dropped (codex cross-review
     finding, WI-374 round 1). model/model-map arrive here already resolved
@@ -77,7 +77,7 @@ def worker_argv(root, wt, branch, wi_ids, args):
         "--worktree",
         str(wt),
         "--wi",
-        ";".join(wi_ids),
+        wi_id,
         "--train",
         branch,
     ]
@@ -112,7 +112,7 @@ def worker_argv(root, wt, branch, wi_ids, args):
     return argv
 
 
-def spawn_worker(root, branch, wi_ids, args):
+def spawn_worker(root, branch, wi_id, args):
     """Launch one worker session loop on the claimed branch's worktree,
     NON-blocking: `(Popen, None)` or `(None, refusal)`. Stdio is inherited so
     the walk-away console shows the worker's own live echo; AGENT_CMD and the
@@ -121,11 +121,11 @@ def spawn_worker(root, branch, wi_ids, args):
     wt, err = ensure_worktree(root, branch)
     if err:
         return None, err
-    argv = worker_argv(root, wt, branch, wi_ids, args)
+    argv = worker_argv(root, wt, branch, wi_id, args)
     return subprocess.Popen(argv, cwd=str(root), stdin=subprocess.DEVNULL), None
 
 
-def run_worker(root, branch, wi_ids, args):
+def run_worker(root, branch, wi_id, args):
     """The BLOCKING worker launch — `spawn_worker` waited to completion, with
     the refusal printed here (the sync path has no lane record to carry it).
     Returns the worker's exit code.
@@ -137,7 +137,7 @@ def run_worker(root, branch, wi_ids, args):
     is `spawn_worker` (non-blocking, so N lanes overlap), and its `worker=`
     injection is what tests substitute — so a dead-symbol sweep sees zero
     callers here and must not read that as dead. Verified 2026-08-11 (WI-422)."""
-    proc, err = spawn_worker(root, branch, wi_ids, args)
+    proc, err = spawn_worker(root, branch, wi_id, args)
     if err:
         print("lane: {}".format(err), file=sys.stderr, flush=True)
         return ac.EXIT_PREFLIGHT

@@ -778,6 +778,8 @@ reissue the held id — and **nothing reds**; `check_trajectory --strict` reads
 
 ### The dispatcher split: `drive.py` → `dispatch.py` + `lane.py` [since 81cac0e1]
 
+*(Superseded in part by "One work item per lane: the spine batch retires"
+below: spine rows no longer admit together as one batch.)*
 `scripts/drive.py` is renamed `scripts/dispatch.py` with `scripts/lane.py`
 extracted (one lane's mechanics: worktree, worker subprocess, the refresh). On
 re-sync, copy both new scripts and **delete your old `scripts/drive.py`** — a
@@ -4715,6 +4717,9 @@ that look. Nothing to edit; re-sync the script.
 
 ### Four batch-lane defects: the walk, the two closes, and the mechanical-close peel [since f4ca1bd5]
 
+*(Superseded in part by "One work item per lane: the spine batch retires"
+below: a lane no longer carries a multi-row assignment, so none of these
+batch shapes can arise; the closes and the peel now refuse them.)*
 **What changed.** Four independent fixes, all specific to a lane carrying a
 MULTI-ROW `--wi 'A;B;C;D'` assignment (the §A4 spine batch). A one-row lane hits
 none of them and observes none of the fixes. Measured 2026-09-03 on one
@@ -10031,6 +10036,83 @@ the parse and refuses what it cannot confirm), `process.toml.template` (its
 comments only, the header now naming the misplaced-privacy-key reading;
 your `docs/process.toml` is not overwritten), `PROCESS_OPTIONS.md` and
 `README.md`.
+
+### One work item per lane: the spine batch retires [since cf21e8c0e]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.
+Supersedes in part the batch sentences of the dispatcher-split entry `[since
+81cac0e1]` and the whole premise of "Four batch-lane defects" `[since
+f4ca1bd5]`, both above.)*
+
+**What changed.** A lane carries exactly one work item, end to end.
+
+- **Admission.** A `spine` row no longer admits with every other spine row
+  as one batch: it takes the exclusive arm, so the first spine row admits
+  alone into an idle station and each later one waits for its own exclusive
+  turn. N spine rows now cost N re-attestation windows, not one shared
+  window. Held `attestation`/`gate` rows still surface; `keep_nondependent`
+  never releases that hold.
+- **Claim.** `integrate.py claim --wi` takes one work-item id. An empty or
+  separator-only value, or one holding a `;`, `,` or whitespace list,
+  refuses (nonzero, naming the value) before the dispatch lock and before
+  any move, commit, branch or worktree. Before this change an empty value
+  such as `--wi ";"` reduced to an empty list that no rung refused. The
+  in-process `integrate.claim` takes a `str` and refuses any list or tuple, a
+  one-element one included.
+- **Worker.** `agent_loop.py --wi` takes one id; an empty, list, malformed
+  or repeated value fails preflight (exit 2) before a provider launches. A
+  role flag given an empty value (`--wi ""`, `--train ""`, `--dual-plan ""`)
+  still names its role, so it is refused there instead of starting a plain
+  drive launch. The walk has no row to step past.
+- **Resume.** A parked branch whose trunk claim holds two or more specs
+  stops the run with a refusal naming the branch and its ids: nothing is
+  relaunched, ensured, committed or moved.
+- **Closes and the peel.** `handback.py`'s partial and adjudication closes
+  refuse a claim of zero or of two or more specs before any report, residue
+  commit or move. The mechanical-close subject names one id, and the
+  verdict peel accepts only a close moving exactly one row; any other shape
+  is reviewed, never peeled.
+- **Readers of history.** The claim-subject writer composes one id only;
+  the readers still parse a historical joined subject (`claim: WI-1;WI-2 ->
+  active/<branch> (bookkeeping)`) as a claim, so old claim commits stay
+  evidence. None is acted on as a batch.
+- **Prompt.** The worker template loses its multi-row assignment slot and
+  the operator notes about it; a one-row prompt renders as before apart
+  from the opening sentence's batch clause.
+- **Text.** `PROCESS_OPTIONS.md`'s "Multi-WI assignments" paragraph, which
+  offered `--wi "WI-a;WI-b"`, is deleted; the kit README's `dispatch.py`
+  and `lane.py` rows and the script headers state one item per lane.
+
+**What to do.**
+
+- **Before upgrading,** close or land by hand any parked lane whose claim
+  directory holds several work items: after the upgrade it stops the run
+  instead of resuming.
+- **A forced change for any script or launcher of yours that passes a
+  list** to `integrate.py claim --wi` or `agent_loop.py --wi`: it now fails.
+  Claim and run each work item as its own lane.
+- **Code of your own** that imported a retired name fails on the missing
+  name: `agent_common.parse_wi_list` (now `parse_wi_id(value, source)`,
+  returning the one id and refusing anything else, the claim's input check
+  included),
+  `agent_brief.assignment_block` and `worker_prompt`'s `assigned` argument,
+  `kitlib.station.mechanical_close_order`, and
+  `handback.open_claimed_specs` (now the one-spec predicate
+  `claimed_spec_is_open`). `station.mechanical_close_subject` and
+  `agent_common.claim_subject` take one `str` and raise `TypeError` on a
+  list.
+- If you planned on one owner sitting for several spine rows, plan one
+  re-attestation window per spine row instead.
+- No data migrates, no setting changes, and no registry schema changes.
+
+**Kit-owned files — overwrite:** `scripts/dispatch.py`, `scripts/lane.py`,
+`scripts/integrate.py`, `scripts/agent_loop.py`, `scripts/agent_common.py`,
+`scripts/agent_brief.py`, `scripts/handback.py`, `scripts/kitlib/station.py`,
+`scripts/kitlib/verdict.py`, `scripts/rendering/traj_panels.py`,
+`prompts/worker.template.md` (kit-owned and not overridable, so no adopter
+copy holds the slot; then regenerate `prompts/CATALOG.md`),
+`PROCESS_OPTIONS.md` and `README.md`.
+
 
 ## 5. Promotion: when this pack stops being prose
 

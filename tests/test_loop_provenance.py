@@ -201,7 +201,7 @@ def test_a_child_the_dispatcher_starts_sees_the_marker(tmp_path, capfd):
     assert MARK not in os.environ  # nothing inherited from this test's own shell
     seen = []
 
-    def worker(r, branch, wi_ids, args):
+    def worker(r, branch, wi_id, args):
         child = subprocess.run(
             [sys.executable, "-c", PRINT_MARKER], capture_output=True, text=True
         )
@@ -906,13 +906,11 @@ def test_the_handback_close_and_telemetry_writers_carry_the_trailer(
     assert integ._marked_loop_writer(message, "wi-401"), message
 
     # The mechanical adjudication close composes its subject through the one
-    # shared composer, which is what `close_adjudication` commits; a multi-row
-    # close joins the ids.
-    for closed in (["WI-401"], ["WI-401", "WI-402"]):
-        message = provenance.with_loop_trailer(
-            handback.mechanical_close_subject(closed) + "\n\nWI: WI-401", SESSION
-        )
-        assert integ._marked_loop_writer(message, "wi-401"), message
+    # shared composer, which is what `close_adjudication` commits.
+    message = provenance.with_loop_trailer(
+        handback.mechanical_close_subject("WI-401") + "\n\nWI: WI-401", SESSION
+    )
+    assert integ._marked_loop_writer(message, "wi-401"), message
 
     log = root / "docs" / "iteration" / "001-test.log"
     log.parent.mkdir(parents=True, exist_ok=True)

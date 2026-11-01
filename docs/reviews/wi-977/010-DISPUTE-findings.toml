@@ -1,0 +1,11 @@
+range = "41dfbb17e415aa9fb39a9c3b1b7c928f0d64cfe9..4dc0f7e292f3429c966f1f2c2c67bc213074000f"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = '''
+- [MAJOR] docs/test/test-cases.toml:2103 -> **TC-205's evidence cell shrank from 87 entries to 4.** The spec grants only a traced edit that follows the code. Yet 86 still-existing tests are gone from the cell, and with them every citation of three files: `tests/test_bar_attestation.py`, `tests/test_integrate_station.py` and `tests/test_integrate_admission.py`. `tests/test_bar_attestation.py` is now cited by no TC at all. The real reader proves the loss: `trace.py --tests-for kitlib/verdict.py` and `--tests-for integrate.py` listed `tests/test_bar_attestation.py` at base and no longer do. So a builder iterating on the Bar-Green grammar's home is no longer pointed at its tests. TC-205's own method still says those suites are "cited beside this module" and in "the cited set", so the row now contradicts itself (K1, K3). TC-156 (docs/test/test-cases.toml:1564) likewise dropped five still-existing adoption-test node ids. -> Restore the base evidence of both cells, and change only what the code changed: drop `test_a_two_row_batch_close_peels_under_one_canonical_order` and add the new tests. -> @owner convergence-class: yes
+'''
+position = '''
+Not contested; the gate's convergence rule routes it here. Confirmed on the registry: TC-205's evidence held 88 entries at the lane base 55fe67d82 and at 9e1116b and holds 4 at 4dc0f7e; TC-156's held 7 and holds 3. The narrowing came in the W14 reconcile turns, not at intent. The coordinator proposes the finding's own remedy as a traced-cell fix: restore each cell's 9e1116b evidence, dropping only entries that name a test the lane deleted and adding the new nodes, and check every other evidence, module and code_symbol cell of the 23 rows the same way; the same-class traced MINORs (REVIEW-B 008's Implements-tag finding, REVIEW-A 009's back-link finding) ride the same fix. No normative cell changes.
+'''

@@ -177,7 +177,7 @@ sequenceDiagram
         Disp->>Sched: re-derive the ready frontier as (WI, kind) pairs
         Sched-->>Disp: exclusive kinds ranked ahead of parallel ones (LLR-059/LLR-123)
         alt an exclusive kind is on the frontier
-            Note over Disp: THE SPINE BARRIER — admission stops outright;<br/>the batch admits alone, sole toucher of trunk
+            Note over Disp: THE SPINE BARRIER — admission stops outright;<br/>the exclusive row admits alone, sole toucher of trunk
         else free lane and parallel work
             Disp->>Slot: claim, dispatch lock held (LLR-140/LLR-151)
             Note over Disp,Slot: inactive commit hooks refuse before the coordinator guard<br/>and dispatch lock (SR-240/LLR-340)

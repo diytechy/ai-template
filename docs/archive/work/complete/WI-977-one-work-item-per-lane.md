@@ -3,13 +3,34 @@ id = "WI-977"
 title = "One work item per lane: the managed loop's spine batch retires, so every admission, claim, resume, worker assignment and lane close names exactly one work item, and contract_split's single-item rows are ported"
 workstream = "process"
 sr_refs = ["SR-144", "SR-148", "SR-156", "SR-026"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#15-one-work-item-per-lane"
+specref = ""
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+One work item per lane (the review-churn plan's item 15, owner revision
+25): the managed loop's spine batch retires. Admission has no batch arm,
+so a spine row takes the exclusive arm and admits alone and every
+admitted assignment carries one id; the claim, the worker's `--wi`, the
+resume and the partial and adjudication closes each take exactly one work
+item, and an empty, separator-only, list or multi-id input refuses before
+any lock, move, commit or launch; a parked lane claimed with several rows
+stops the run by name. The multi-row prompt block goes, the claim subject
+is written with one id while the history readers still parse the two
+historical joined subjects, and the mechanical close peels only a close
+moving exactly one row. The 23 spine rows (SR-144, SR-148, SR-156, LLR-058,
+LLR-061, LLR-123, LLR-144, LLR-149 to LLR-152, LLR-161, LLR-207, TC-058,
+TC-061, TC-138, TC-143 to TC-146, TC-154, TC-156, TC-205) were judged at
+checkpoint sittings 005 to 007 and re-attested in one act from whole-set
+sitting 014. Two counted rounds, a gate whose MAJOR dispute 011 ruled FIX,
+and an all-MINOR second gate. One RESYNC entry (both `--wi` flags take one
+id; a parked multi-row lane must land or close before an upgrade).
+Decisions: `docs/decisions/wi-977.toml` D-001 to D-027.
 
 ## Context
 

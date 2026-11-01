@@ -457,6 +457,16 @@ benign side and the check deletes with it.
 
 ## A4. How the dispatcher operates (OWNER, with the barrier now derived)
 
+> **SUPERSEDED IN PART — one work item per lane (review-churn item 15,
+> [`docs/plans/2026-10-11-review-churn/README.md`](plans/2026-10-11-review-churn/README.md)
+> §15; built by WI-977).** The spine BATCH this section designed is retired:
+> a lane carries exactly one work item, so the first spine row admits alone
+> into an idle station and each later spine row waits for its own exclusive
+> turn (N spine rows cost N re-attest windows, not one). The barrier, the
+> exclusivity and the priority below still hold. The batch passages of §A4,
+> §A4.1, §A4.4, §A6.1 and §A8 are kept as the design history, each marked;
+> none describes the shipped dispatcher.
+
 Spine work is **not refused** — it waits for the station to clear, then runs
 alone.
 
@@ -468,11 +478,11 @@ flowchart TD
     D --> E[Integrator: serial merge queue]
     E --> A
 
-    B -- yes --> F[Stop admitting new work<br/>spine batch has priority]
+    B -- yes --> F[Stop admitting new work<br/>spine work has priority]
     F --> G{All lanes back<br/>in the station?}
     G -- no --> H[Wait for in-flight lanes<br/>to finish and merge]
     H --> G
-    G -- yes --> I[Admit ALL spine WIs together<br/>as one batch, sole toucher of trunk]
+    G -- yes --> I[Admit the first spine WI alone<br/>sole toucher of trunk; later ones wait]
     I --> J[Build, review, approve<br/>ONE re-attest window]
     J --> K[Merge; window closes]
     K --> L[Re-evaluate the backlog:<br/>which queued WIs cite amended SRs?]
@@ -480,7 +490,8 @@ flowchart TD
 ```
 
 Properties this gives, none of which hold today: spine work is **exclusive**,
-**batched** (N spine changes = one window, one owner sitting), and
+**batched** (N spine changes = one window, one owner sitting; *superseded:
+one spine row per exclusive turn, see the note above*), and
 **prioritised** (drains rather than starving).
 
 **Constraint, not check:** `schedule.py` already classifies
@@ -490,6 +501,9 @@ blunt refusal. Making the frontier itself withhold a spine WI until lanes are
 empty is a constraint; the current refusal is a check.
 
 ### A4.1 What admits the batch — the dispatcher (OWNER, question B)
+
+*(Since WI-977 the dispatcher admits one spine row per exclusive turn, not a
+batch; see the note at §A4. The authority below is unchanged.)*
 
 > *"A dispatcher is the only one who should kick off spine work."*
 
@@ -534,6 +548,9 @@ At `lanes = 1` `dispatch.py` degenerates to today's serial loop, so the split
 is safe to land before any concurrency is switched on.
 
 ### A4.4 Component-scoped spine batching (mechanized-loop plan §4 rung 4) — DESIGN NOTE, not built
+
+*(Moot since WI-977: with one work item per lane there is no spine batch to
+split; see the note at §A4. Kept as design history.)*
 
 The spine batch is one branch, one worker session, one re-attest window (§A4).
 That is exactly right while the batch is small, and it is the wrong shape once
@@ -726,7 +743,9 @@ plumbing — `classify()`'s packing distinction, the §7 continuation guard, the
 
 `agent_loop --wi 'WI-201;WI-204'` **stays**, with exactly one caller left: the
 dispatcher admitting the **spine batch** (§A4), which is the one case where N
-WIs genuinely must share one window and one owner sitting.
+WIs genuinely must share one window and one owner sitting. *(Superseded by
+WI-977: that caller retired with the batch, so `--wi` names exactly one work
+item and a list is refused before a provider launches; see the note at §A4.)*
 
 **Drain grouping: not built.** §A2 makes the merge bar disappear rather than
 amortising it, and catches Class C on the *real* composed tree via refresh —
@@ -793,6 +812,11 @@ barrier needs and the one place the design must not invent policy:
 | `spine` — build a scope change | dispatch: it is **work**, not an approval. It *opens* a window; closing it is the next row's job | dispatch | dispatch |
 | `adjudication` | dispatch — but **see the open decision below** | dispatch | dispatch |
 | `attestation` / `gate` — close a window | **do not dispatch.** Drain the lanes, surface the cards, exit 0 into the owner's queue | dispatch only the queued batch at the phase `[DevStg-Impl]` close; otherwise surface | dispatch (recorded reviewer verdict approves) |
+
+*(The "queued batch" cells above are the retired enum's wording. As shipped,
+a held `attestation`/`gate` row always surfaces — `keep_nondependent` never
+releases the hold — and on a loop-held tier such rows dispatch one at a time,
+exclusive; see the note at §A4.)*
 
 **Fixed points survive every level** and the dispatcher must not paper over
 them: the owner's final read is the human's; **no un-run greens**; the harness is still the
@@ -873,7 +897,8 @@ one only makes sense once *all* the rows have landed:
    was built, never edit it into a claim about what now exists.
 
 **Why this is one `spine` row and not a checklist: §A4 applied to this design
-itself.** All spine WIs admit together as one batch, so the whole program costs
+itself.** All spine WIs admit together as one batch (as designed then; one
+per exclusive turn since WI-977, §A4's note), so the whole program costs
 the owner **one re-attest window and one sitting** rather than one per row —
 which is exactly the WI-280 pain the design was written to remove. Executes as
 **WI-390**, hard-blocked on every contract-changing row so the amendment

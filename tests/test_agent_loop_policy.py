@@ -467,14 +467,12 @@ def test_resolve_coordinator_dials_precedence(tmp_path):
 
 def test_worker_exit_banner_returns_code_and_prints(capsys):
     al = load_script("agent_loop")
-    worker = {"train": "t1", "assigned": ["WI-201", "WI-204"]}
-    code = al.worker_exit_banner(
-        worker, (al.EXIT_DONE, "DONE", "every assigned WI built")
-    )
+    worker = {"train": "t1", "assigned": ("WI-201",)}
+    code = al.worker_exit_banner(worker, (al.EXIT_DONE, "DONE", "the WI built"))
     assert code == al.EXIT_DONE
     out = capsys.readouterr().out
-    assert "worker t1 [WI-201;WI-204]: DONE" in out
-    assert "every assigned WI built" in out
+    assert "worker t1 [WI-201]: DONE" in out
+    assert "the WI built" in out
 
 
 def test_build_worker_assignment_is_none_without_wi_and_train():
@@ -553,6 +551,8 @@ def test_is_drive_launch_only_when_no_role_flag():
     assert al.is_drive_launch(args())
     for flag in ("wi", "train", "dual_plan"):
         assert not al.is_drive_launch(args(**{flag: "WI-1"}))
+        # An explicit empty value still names its role: presence, not truth.
+        assert not al.is_drive_launch(args(**{flag: ""}))
     assert not al.is_drive_launch(args(interactive=True))
 
 

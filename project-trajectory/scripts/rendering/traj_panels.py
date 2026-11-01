@@ -503,7 +503,7 @@ STATION_GEOM = {
 # as literals); the sync pin — test_station_barrier_and_admission_arms_pin_to_
 # the_dispatcher — recomputes the set from `_kind_action` over every kind x
 # session hold and reds here the moment the dispatcher's vocabulary moves.
-_ADMISSION_ARMS = ("parallel", "exclusive", "batch", "surface")
+_ADMISSION_ARMS = ("parallel", "exclusive", "surface")
 
 
 def _exclusive_kinds():
@@ -670,8 +670,8 @@ def _station_svg(root):
     # an exclusive-kind row stops new admission until the station is idle.
     barrier = (
         '<g class="stbarrier"><title>The spine barrier — an exclusive-kind row '
-        "({}) stops new admission; the lanes drain; the batch runs alone as the "
-        "sole toucher of trunk.</title>"
+        "({}) stops new admission; the lanes drain; the exclusive row runs alone "
+        "as the sole toucher of trunk.</title>"
         '<rect class="stbar" x="288.5" y="58.0" width="3.5" height="24.0"/>'
         '<rect class="stbar" x="296.5" y="58.0" width="3.5" height="24.0"/>'
         '<text class="stbarlab" x="294.0" y="96.0" text-anchor="middle">'
@@ -847,8 +847,8 @@ def _station_panel(root):
     notes = (
         '<ul class="esc">\n'
         "<li><b>Spine barrier</b> — an exclusive-kind row ({kinds}) stops new "
-        "admission; the lanes drain; the batch runs alone — one window, one "
-        "owner sitting.</li>\n"
+        "admission; the lanes drain; the exclusive row runs alone, the sole "
+        "toucher of trunk.</li>\n"
         "<li><b>Admission arms</b> — what the dispatcher does with a ready row, "
         "by kind × the declared gate policy: {arms}. Surfaced approvals "
         "drain to cards on {oi}; the run exits 0 with the asks visible.</li>\n"

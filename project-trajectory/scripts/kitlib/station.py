@@ -141,37 +141,20 @@ MECHANICAL_CLOSE_PREFIX = "adjudicate: "
 MECHANICAL_CLOSE_SUFFIX = " -> complete/ (mechanical close)"
 
 
-def mechanical_close_subject(wi_ids):
-    """The subject line of the machinery's own adjudication-close commit."""
-    return "{}{}{}".format(
-        MECHANICAL_CLOSE_PREFIX, ", ".join(wi_ids), MECHANICAL_CLOSE_SUFFIX
-    )
+def mechanical_close_subject(wi_id):
+    """The subject line of the machinery's own adjudication-close commit, which
+    moves the lane's ONE work item `wi_id`.
 
-
-def mechanical_close_order(pairs):
-    """The canonical WI-id order of a mechanical close, from `(spec filename, WI
-    id)` pairs.
-
-    ONE ORDER FROM ONE KEY, and it lives beside the subject composer for the
-    composer's reason: on a MULTI-row close the writer's subject and the
-    subject `verdict._closed_wi_ids` re-composes from the diff must agree, or
-    the close stops peeling and every batch lane re-opens the staled-APPROVE
-    failure the peel exists to close. Two independently-chosen sortings agreed
-    by luck; this makes them one. The key is the spec FILENAME's bytes, the
-    only thing both sides read off the same tree - the writer holds the trunk's
-    claimed filenames, the attestor holds the deleted paths of the diff - so
-    the writer passes `str` names and the attestor `bytes` ones and both encode
-    to the same key.
+    A close moves one row, so the composer takes one id and refuses anything
+    else by type: a list caller left behind would otherwise write a subject
+    the attestor's recomposition no longer matches, and the close would stop
+    peeling without a word.
     """
-    return [
-        wi_id
-        for _name, wi_id in sorted(pairs, key=lambda pair: _close_sort_key(pair[0]))
-    ]
-
-
-def _close_sort_key(name):
-    """A spec filename as the bytes both close subject composers sort on."""
-    return name.encode("utf-8") if isinstance(name, str) else name
+    if not isinstance(wi_id, str):
+        raise TypeError(
+            "a mechanical close names one work item id, got {!r}".format(wi_id)
+        )
+    return "{}{}{}".format(MECHANICAL_CLOSE_PREFIX, wi_id, MECHANICAL_CLOSE_SUFFIX)
 
 
 def outcome_of(status_dirs):

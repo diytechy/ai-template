@@ -66,14 +66,6 @@ def test_sanitize_train_rejects_traversal_and_junk(bad):
         agent_loop.sanitize_train(bad)
 
 
-def test_parse_wi_list_orders_and_validates():
-    assert agent_loop.parse_wi_list("WI-201") == ["WI-201"]
-    assert agent_loop.parse_wi_list("WI-201;WI-204") == ["WI-201", "WI-204"]
-    for bad in ("", "WI-", "wi-201", "WI-201;WI-201", "WI-201;junk"):
-        with pytest.raises(ValueError):
-            agent_loop.parse_wi_list(bad)
-
-
 # --- repo scaffolding -----------------------------------------------------------
 
 # Worker mode is exercised against a registry that PREDATES the SafetyClass
@@ -221,6 +213,77 @@ def _setup(tmp_path, train="t1", wis=("WI-201",)):
     return repo, base, ctl, fake
 
 
+# --- one work item per assignment ---------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "WI-201;WI-204",
+        "WI-201,WI-204",
+        "WI-201 WI-204",
+        "WI-201;WI-201",
+        # Adequacy witness: a parser that took any token, or read a
+        # separator-only value as no assignment, would raise no failure for
+        # these three.
+        ";",
+        "WI-",
+        "wi-201",
+    ],
+)
+def test_the_worker_refuses_any_assignment_but_one_id(tmp_path, value):
+    # The worker's assignment is exactly one well-formed work-item id. Any
+    # other value (empty, separator-only, a list in any separator, a repeated
+    # id, a malformed token) is one preflight failure naming the value, before
+    # a provider launches. Both rows exist in the registry, so a list value
+    # cannot be refused for naming an unknown row.
+    repo, _base = _make_train_repo(tmp_path, wis=("WI-201", "WI-204"))
+    template = '"{}" -p {{prompt}}'.format(sys.executable)
+    args = argparse.Namespace(wi=value, train=None, interactive=False)
+    failures = agent_loop.agent_common.preflight(repo, template, args)
+    assert len(failures) == 1, failures
+    assert repr(value) in failures[0], failures
+
+
+def test_the_worker_accepts_one_well_formed_id(tmp_path):
+    # The one allowed form passes the assignment preflight. Adequacy witness:
+    # a refusal that read every assignment as malformed, or that refused a
+    # row for sharing the registry with another, would add a failure here.
+    repo, _base = _make_train_repo(tmp_path, wis=("WI-201", "WI-204"))
+    template = '"{}" -p {{prompt}}'.format(sys.executable)
+    args = argparse.Namespace(wi="WI-201", train=None, interactive=False)
+    assert agent_loop.agent_common.preflight(repo, template, args) == []
+
+
+def test_a_list_assignment_exits_preflight_before_a_provider_launches(tmp_path):
+    # The CLI's assignment argument takes one id; a list exits on the preflight
+    # code, naming the value, and the fake provider records no launch at all.
+    repo, base, ctl, fake = _setup(tmp_path, wis=("WI-201", "WI-204"))
+    relocate_as_lane(repo)  # a worker records from its claimed lane (WI-960)
+    proc = _worker(repo, fake, ctl, "--wi", "WI-201;WI-204", "--train", "t1")
+    assert proc.returncode == agent_loop.EXIT_PREFLIGHT, proc.stdout + proc.stderr
+    assert "WI-201;WI-204" in proc.stdout + proc.stderr
+    assert not (ctl / "prompts.txt").exists()
+
+
+def test_the_wi_help_names_one_work_item(monkeypatch, capsys):
+    # The assignment argument's help says it takes one work item and offers
+    # no list example.
+    monkeypatch.setattr(sys, "argv", ["agent_loop.py", "--help"])
+    with pytest.raises(SystemExit):
+        agent_loop.parse_args()
+    lines = capsys.readouterr().out.splitlines()
+    start = next(i for i, ln in enumerate(lines) if ln.startswith("  --wi "))
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("  -")),
+        len(lines),
+    )
+    wi_help = " ".join(ln.strip() for ln in lines[start:end])
+    assert "WI-201;WI-204" not in wi_help, wi_help
+    assert " one " in " {} ".format(wi_help), wi_help
+
+
 # --- the worker contract end-to-end -------------------------------------------
 
 
@@ -256,13 +319,33 @@ def test_worker_prompt_carries_the_context_block_computed_fresh(tmp_path):
     assert "Context refs" not in prompt2
 
 
-def test_worker_prompt_single_row_carries_no_assignment_block(tmp_path):
-    # WI-580 Done-when 2, the byte-identity half: `{assignment_block}` renders
-    # EMPTY for a one-row lane, so the single-row brief is what it was — the
-    # `- WI:`/`- SR-Refs:`/`- Branch:` lines already say everything the block
-    # would repeat. Driven through the real function, and through the block
-    # helper directly so the emptiness is the mechanism's, not a coincidence of
-    # this fixture's registry.
+def test_the_worker_template_has_no_assignment_block_slot():
+    # The worker brief names the one assigned row; the multi-row assignment
+    # block and its slot are gone from the shipped template.
+    text = (SCRIPTS.parent / "prompts" / "worker.template.md").read_text(
+        encoding="utf-8"
+    )
+    assert "{assignment_block}" not in text
+
+
+_ONE_ROW_GOLDEN = (
+    SCRIPTS.parent.parent / "tests" / "golden" / "worker-prompt-one-row.txt"
+)
+
+
+def test_the_one_row_prompt_renders_as_today(tmp_path):
+    # The one-row worker prompt renders byte for byte as the golden file
+    # tests/golden/worker-prompt-one-row.txt, with the integration base written
+    # there as <BASE>.
+    # Adequacy witness: a template edit that dropped, reordered or reworded an
+    # Assignment line, a rule or the trailer protocol would differ from the
+    # golden and fail here.
+    _git(tmp_path, "init", "-q")
+    hooks_on(tmp_path)
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "T")
+    _git(tmp_path, "commit", "-q", "--allow-empty", "-m", "seed")
+    base = _git(tmp_path, "rev-parse", "HEAD")
     row = {
         "WI-ID": "WI-005",
         "Title": "the assignment",
@@ -270,45 +353,11 @@ def test_worker_prompt_single_row_carries_no_assignment_block(tmp_path):
         "Predecessors": "",
         "SpecRef": "seed.txt",
     }
-    rows = {"WI-005": row}
-    assert (
-        agent_loop.assignment_block(tmp_path, rows, "WI-005", "0" * 7, ["WI-005"]) == ""
+    prompt = agent_loop.worker_prompt(
+        tmp_path, {"WI-005": row}, "WI-005", "wi-005", base
     )
-    prompt = agent_loop.worker_prompt(tmp_path, rows, "WI-005", "wi-005", "0" * 7)
-    assert "WHOLE assignment" not in prompt
-    # An explicit one-element assignment renders the same bytes as the default.
-    assert prompt == agent_loop.worker_prompt(
-        tmp_path, rows, "WI-005", "wi-005", "0" * 7, assigned=["WI-005"]
-    )
-    # The opening sentence no longer claims ONE work item (it was false for a
-    # batch, which is how a session lost a sibling row — plan §0).
-    assert "assigned ONE work item" not in prompt
-    assert "this session's focus" in prompt
-
-
-def test_worker_batch_prompt_names_every_assigned_row_and_its_state(tmp_path):
-    # WI-580 Done-when 2: a two-id assignment lists BOTH rows with id, title
-    # and SpecRef, and the evidence state moves with the walk — session 001
-    # sees `this session's focus` / `not started`, session 002 sees the first
-    # row as `built` off its committed trailer. Measured defect (2026-09-02,
-    # lane `wi-569-…`): the human saw `wi=WI-569;WI-575` in the banner and the
-    # session that took WI-569 never learned WI-575 was on its lane.
-    repo, base, ctl, fake = _setup(tmp_path, wis=("WI-201", "WI-204"))
-    proc = _worker(repo, fake, ctl, "--wi", "WI-201;WI-204", "--train", "t1")
-    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
-    first, second = prompts.split("=== session ===\n")[1:3]
-
-    assert "- The WHOLE assignment (2 rows claimed on this lane" in first
-    assert (
-        "  - WI-201 [this session's focus] Scoped work for WI-201 — "
-        "SpecRef: docs/specs/thing.md" in first
-    )
-    assert "  - WI-204 [not started] Scoped work for WI-204 — SpecRef:" in first
-    # Session 002 took WI-204; WI-201's committed `WI:` trailer is the same
-    # evidence `current_assignment_wi` walked past it on.
-    assert "  - WI-201 [built] Scoped work for WI-201 — SpecRef:" in second
-    assert "  - WI-204 [this session's focus] Scoped work for WI-204" in second
+    expected = _ONE_ROW_GOLDEN.read_text(encoding="utf-8").replace("<BASE>", base)
+    assert prompt == expected
 
 
 def test_worker_brief_names_the_one_turn_close_bar_scratch_and_amendments(tmp_path):
@@ -375,23 +424,6 @@ def test_worker_builds_assignment_and_exits_done(tmp_path):
     assert "WI: WI-201" in prompt  # the trailer protocol
     # (The resume-from-status DEFAULT_PROMPT is retired outright, WI-210 —
     # the assignment prompt is the only build prompt by construction.)
-
-
-def test_worker_multi_wi_assignment_builds_in_order(tmp_path):
-    repo, base, ctl, fake = _setup(tmp_path, wis=("WI-201", "WI-204"))
-    relocate_as_lane(repo)  # a worker records from its claimed lane (WI-960)
-    proc = _worker(repo, fake, ctl, "--wi", "WI-201;WI-204", "--train", "t1")
-    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
-    prompt = (ctl / "prompts.txt").read_text(encoding="utf-8")
-    # Ordered: WI-201's session first, then WI-204's — and WI-204's prompt
-    # carries the train diff of the accepted-but-unintegrated WI-201 commit.
-    assert prompt.index("- WI: WI-201") < prompt.index("- WI: WI-204")
-    assert "Current branch diff" in prompt
-    trailers = _git(repo, "log", "--format=%(trailers:key=WI,valueonly)", "HEAD")
-    assert {"WI-201", "WI-204"} <= set(trailers.split())
-    # Two sessions, two train-scoped logs.
-    logs = sorted((repo / "docs" / "iteration").glob("t1-*.log"))
-    assert len(logs) == 2 and logs[0].name.startswith("t1-001-")
 
 
 def test_worker_blocked_trailer_exits_blocked(tmp_path):
@@ -818,115 +850,55 @@ def test_build_worker_assignment_refuses_an_unreadable_default_base(
 
 
 @env_gate_skipif("git")
-def test_build_worker_assignment_good_base_parses_wi_list(tmp_path):
+def test_build_worker_assignment_good_base_takes_one_id(tmp_path):
     al = load_script("agent_loop")
     repo, base, _worker = _train_repo(tmp_path)
-    args = argparse.Namespace(wi="WI-201;WI-204", train="t1", base=base, rework=None)
+    args = argparse.Namespace(wi="WI-201", train="t1", base=base, rework=None)
     worker, err = al.build_worker_assignment(args, repo)
     assert err is None
     assert worker["train"] == "t1"
-    assert worker["assigned"] == ["WI-201", "WI-204"]
+    assert worker["assigned"] == ("WI-201",)
     assert worker["base"] == base
     assert worker["rework"] == ""
+    # A list value is refused on the preflight code, never parsed into rows.
+    args = argparse.Namespace(wi="WI-201;WI-204", train="t1", base=base, rework=None)
+    worker, err = al.build_worker_assignment(args, repo)
+    assert worker is None
+    assert err == al.EXIT_PREFLIGHT
 
 
-# --- the batch walk: a trailer alone is not a closed row ------------------------
-# Measured 2026-09-03 on the four-row spine batch `wi-589-…`: session 001
-# committed WI-589's build WITH its `WI:` trailer and ran out before the close
-# ritual, so `current_assignment_wi` — which asked the trailer alone — stepped
-# past the row for the rest of the lane and nothing ever moved its spec out of
-# `active/<branch>/`. `integrate.finished_branches` asks the tree, so it never
-# counted the branch finished either, and the lane stranded after its review
-# round. The walk now asks BOTH halves, which is the same question the
-# integrator asks.
+# --- the walk: a lane's one row, built or not ----------------------------------
+# A lane builds one work item, so the walk answers that row. Whether the row is
+# done with asks both halves (its committed `WI:` trailer AND its spec gone from
+# `active/<branch>/`), the same question the integrator asks, read through
+# `lane_completion`.
 
 
-def _batch_repo(tmp_path, branch="wi-batch", wis=("WI-201", "WI-204")):
-    """A lane branch carrying a spec per assigned row in `active/<branch>/`."""
-    repo, base, worker = _train_repo(tmp_path, assigned=wis)
+def _lane_repo(tmp_path, branch="wi-201", wi="WI-201"):
+    """A lane branch carrying its one assigned row's spec in `active/<branch>/`."""
+    repo, base, worker = _train_repo(tmp_path, assigned=(wi,))
     _git(repo, "checkout", "-q", "-b", branch)
     active = repo / "docs" / "work" / "active" / branch
     active.mkdir(parents=True)
-    for wid in wis:
-        (active / "{}-row.md".format(wid)).write_text(
-            '+++\nid = "{}"\n+++\n\n## Context\n\nwork.\n'.format(wid),
-            encoding="utf-8",
-            newline="\n",
-        )
+    (active / "{}-row.md".format(wi)).write_text(
+        '+++\nid = "{}"\n+++\n\n## Context\n\nwork.\n'.format(wi),
+        encoding="utf-8",
+        newline="\n",
+    )
     _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "claim " + ";".join(wis))
+    _git(repo, "commit", "-q", "-m", "claim " + wi)
     worker["base"] = base
     return repo, worker, active
 
 
 @env_gate_skipif("git")
-def test_a_built_but_unclosed_row_is_still_the_walks_next_row(tmp_path):
-    al = load_script("agent_loop")
-    repo, worker, _active = _batch_repo(tmp_path)
-    _build_commit(repo, "WI-201", "t1", worker["base"])
-    # The trailer is committed for WI-201, but its spec never left active/ — the
-    # walk must come back to it rather than move on to the untouched WI-204.
-    assert al.current_assignment_wi(str(repo), worker) == "WI-201"
-    # MUTATION NOTE: without the tree half this reads "WI-204" (the defect), so
-    # the assertion is not vacuous — and the trailer half still matters, which
-    # the closed case below drives.
-
-
-@env_gate_skipif("git")
-def test_a_row_with_both_halves_done_lets_the_walk_move_on(tmp_path):
-    al = load_script("agent_loop")
-    repo, worker, active = _batch_repo(tmp_path)
-    _build_commit(repo, "WI-201", "t1", worker["base"])
-    complete = repo / "docs" / "work" / "complete"
-    complete.mkdir(parents=True, exist_ok=True)
-    (active / "WI-201-row.md").rename(complete / "WI-201-row.md")
-    _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "close WI-201")
-    assert al.current_assignment_wi(str(repo), worker) == "WI-204"
-
-
-@env_gate_skipif("git")
 def test_a_one_row_lane_answers_its_row_either_way(tmp_path):
-    # The behaviour-preserving half: with a single assignment both arms answer
-    # the same row, so only a batch can observe the new read.
+    # The walk answers the lane's one row before its build commit and after it.
     al = load_script("agent_loop")
-    repo, worker, _active = _batch_repo(tmp_path, wis=("WI-201",))
+    repo, worker, _active = _lane_repo(tmp_path)
     assert al.current_assignment_wi(str(repo), worker) == "WI-201"
     _build_commit(repo, "WI-201", "t1", worker["base"])
     assert al.current_assignment_wi(str(repo), worker) == "WI-201"
-
-
-@env_gate_skipif("git")
-def test_the_brief_never_calls_an_unclosed_row_built(tmp_path):
-    # WI-580 review A (MAJOR): the brief block derived doneness from the
-    # trailer ALONE while the walk asked both halves, so a batch that committed
-    # a trailer for a row and never ran its close ritual told the next session
-    # that row was `built` — the same silent-completion miss the walk's two-part
-    # test exists to prevent. Both readers now go through `lane_completion`.
-    al = load_script("agent_loop")
-    repo, worker, active = _batch_repo(tmp_path)
-    _build_commit(repo, "WI-201", "t1", worker["base"])
-    _build_commit(repo, "WI-204", "t1", worker["base"])
-    rows = {w: {"WI-ID": w, "Title": "row " + w} for w in ("WI-201", "WI-204")}
-    focus = al.current_assignment_wi(str(repo), worker)
-    assert focus == "WI-201"  # neither spec left active/, so the walk holds
-    block = al.assignment_block(
-        str(repo), rows, focus, worker["base"], worker["assigned"]
-    )
-    # MUTATION NOTE: on the trailer-alone predicate this line read `[built]`.
-    assert "  - WI-204 [started, not closed] row WI-204" in block
-    assert "[built]" not in block
-    # And the closed half still reads `built`, so the new state is not a
-    # blanket downgrade of every trailer-bearing row.
-    complete = repo / "docs" / "work" / "complete"
-    complete.mkdir(parents=True, exist_ok=True)
-    (active / "WI-204-row.md").rename(complete / "WI-204-row.md")
-    _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "close WI-204")
-    block = al.assignment_block(
-        str(repo), rows, focus, worker["base"], worker["assigned"]
-    )
-    assert "  - WI-204 [built] row WI-204" in block
 
 
 @env_gate_skipif("git")
@@ -936,52 +908,49 @@ def test_the_false_partial_class_turns_only_on_the_close_ritual(tmp_path):
     turn waiting on a ~11-minute suite, and the FINISHED row closed `partial`).
 
     Both readers of that state are driven on ONE scaffold, because the class is
-    the gap between them. With every trailer committed and every spec still in
-    `active/<branch>/`, `lane_completion` calls the rows built but not done and
+    the gap between them. With the trailer committed and the spec still in
+    `active/<branch>/`, `lane_completion` calls the row built but not done and
     `integrate.finished_branches` does not name the branch — so `dispatch`
     takes the `_lane_close` arm (the stall candidate) over the refresh arm.
-    Moving the specs to a terminal directory, and NOTHING else, flips both
+    Moving the spec to a terminal directory, and NOTHING else, flips both
     reads. The close ritual alone separates a merge from a `partial`, which is
     why the shipped brief's close bar has to fit inside one turn.
 
     The `== []` is not an empty scan: the identical call on the identical
-    scaffold answers `["wi-batch"]` four lines later, so the reader is live and
+    scaffold answers `["wi-201"]` four lines later, so the reader is live and
     the first read is a real negative.
     """
     al = load_script("agent_loop")
     integrate = load_script("integrate")
-    repo, worker, active = _batch_repo(tmp_path)
-    for wid in ("WI-201", "WI-204"):
-        _build_commit(repo, wid, "t1", worker["base"])
+    repo, worker, active = _lane_repo(tmp_path)
+    _build_commit(repo, "WI-201", "t1", worker["base"])
 
     built, done = al.lane_completion(str(repo), worker["base"])
-    assert built == {"WI-201", "WI-204"}  # built AND verified …
-    assert done == set()  # … and not one row closed
+    assert built == {"WI-201"}  # built AND verified …
+    assert done == set()  # … and not closed
     assert integrate.finished_branches(repo) == []  # -> the stall candidate
 
     complete = repo / "docs" / "work" / "complete"
     complete.mkdir(parents=True, exist_ok=True)
-    for wid in ("WI-201", "WI-204"):
-        (active / "{}-row.md".format(wid)).rename(complete / "{}-row.md".format(wid))
+    (active / "WI-201-row.md").rename(complete / "WI-201-row.md")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "close the lane")
 
     built, done = al.lane_completion(str(repo), worker["base"])
-    assert built == done == {"WI-201", "WI-204"}
-    assert integrate.finished_branches(repo) == ["wi-batch"]
+    assert built == done == {"WI-201"}
+    assert integrate.finished_branches(repo) == ["wi-201"]
 
 
-# --- the resumed BATCH preflight: a row this branch closed is not stale ---------
-# Measured 2026-09-03 on the four-row spine batch `wi-589-…`. The lane closed
-# three of its rows, so the registry read `done` for them — and the resumed
-# worker's preflight refused all three with "a terminal status (done/cancelled);
-# a stale assignment, so the dispatcher must re-derive the frontier", over rows
-# that were terminal precisely BECAUSE this lane made them so. The status alone
-# cannot tell a stale assignment from a partly-finished batch; this branch's own
-# `WI:` trailer can.
+# --- the resumed preflight: a row this branch closed is not stale --------------
+# A lane that closed its one row and still owes a review round resumes with the
+# registry reading `done` for that row. The preflight's stale-assignment refusal
+# ("a terminal status (done/cancelled); a stale assignment, so the dispatcher
+# must re-derive the frontier") must not fire on a row that is terminal
+# precisely BECAUSE this lane made it so. The status alone cannot tell that
+# from a row closed elsewhere; this branch's own `WI:` trailer can.
 
 
-def _lane_worktree_repo(tmp_path, branch="wi-batch"):
+def _lane_worktree_repo(tmp_path, branch="wi-201"):
     """A primary checkout holding the TRUNK plus a linked lane worktree on
     `branch` — the real topology, and the only one where `merge-base(trunk,
     HEAD)` is anything but HEAD."""

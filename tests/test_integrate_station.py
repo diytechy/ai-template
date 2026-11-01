@@ -539,10 +539,10 @@ def test_a_product_touching_adjudication_lane_fails_toward_the_bar(tmp_path):
     assert not ready
 
 
-def test_a_mixed_claim_still_runs_the_bar(tmp_path):
-    # Fail toward the bar: the no-bar arm arms only when EVERY claimed spec is
-    # the adjudication kind. A batch claim holding one ordinary row beside the
-    # adjudication row bars as usual.
+def test_a_lane_whose_one_row_is_ordinary_runs_the_bar(tmp_path):
+    # Fail toward the bar: the no-bar arm arms only when the lane's one claimed
+    # spec is the adjudication kind. An adjudication row sits queued beside it,
+    # so an arm keyed on any adjudication row in the registry would skip.
     root = claim_repo(tmp_path, safety="adjudication")
     write_spec(root, "queued", "WI-402", slug="extra", specref="seed.txt")
     (root / ".gitignore").write_text(
@@ -559,7 +559,9 @@ def test_a_mixed_claim_still_runs_the_bar(tmp_path):
     )
     (scripts / "check.py").write_text(STUB_CHECK_GREEN, encoding="utf-8", newline="\n")
     _commit(root, "chore: the stub harness and the declared bar", when=T_CODE)
-    assert integ.claim(root, ["WI-401", "WI-402"], "wi-401") == 0
+    assert integ.claim(root, "WI-402", "wi-401") == 0
+    assert integ._claimed_wi_ids(root, "wi-401") == ["WI-402"]
+    assert integ._lane_bar_directives(root, "wi-401") == (False, None, None)
     wt, err = integ.lane_worktree(root, "wi-401")
     assert err is None, err
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")

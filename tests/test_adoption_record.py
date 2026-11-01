@@ -97,7 +97,7 @@ def _with_record(text, record):
 
 
 def _close_subject():
-    return hb.station.mechanical_close_subject(["WI-401"])
+    return hb.station.mechanical_close_subject("WI-401")
 
 
 def _hand_close(

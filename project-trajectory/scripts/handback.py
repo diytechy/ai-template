@@ -338,51 +338,64 @@ def _no_recursion_refusal(root, branch):
     return refusal
 
 
-def _restore(wt, written, refusal):
-    """Un-write every report this close produced, then return `refusal` — the
-    same restore-on-refusal shape `_revert` and the trunk's
+def _restore(wt, rel, refusal):
+    """Un-write the one report this close produced at `rel`, then return
+    `refusal` — the same restore-on-refusal shape `_revert` and the trunk's
     `bookkeeping.commit` use. Leaving a staged report behind would leave the
     lane DIRTY (§5.6 refuses to GC one) and would leave a record on disk for a
     close that did not happen."""
-    for rel in reversed(written):
-        # `git rm` on an UNTRACKED path fails and leaves the file — and the
-        # `cannot stage the close report` arm is reached with the report
-        # written but not yet added, so that is exactly the arm the restore
-        # most needs to work in. Unlink after, unconditionally: the file was
-        # created by this call, and a report on disk for a close that did not
-        # happen is the dirty lane §5.6 refuses to GC.
-        ac.git(wt, "rm", "-q", "-f", "--", rel)
-        try:
-            (wt / rel).unlink()
-        except OSError:
-            pass
+    # `git rm` on an UNTRACKED path fails and leaves the file — and the
+    # `cannot stage the close report` arm is reached with the report written
+    # but not yet added, so that is exactly the arm the restore most needs to
+    # work in. Unlink after, unconditionally: the file was created by this
+    # call, and a report on disk for a close that did not happen is the dirty
+    # lane §5.6 refuses to GC.
+    ac.git(wt, "rm", "-q", "-f", "--", rel)
+    try:
+        (wt / rel).unlink()
+    except OSError:
+        pass
     return refusal
 
 
-def open_claimed_specs(wt, branch, specs):
-    """Of the TRUNK's claimed `specs`, the ones still in `active/<branch>/` on
-    the LANE — the rows a close still has a claim over.
+def _the_one_claimed_spec(root, branch):
+    """The TRUNK's one claimed `(wi_id, name)` for `branch`, as `(spec, None)`,
+    or `(None, refusal)` when the claim holds no spec or more than one.
 
-    ONE HOME FOR THE BATCH FILTER, because both closes need it and neither may
-    answer it differently. The claimed set is read off the trunk, which lists
-    every row of a §A4 batch; a batch closes its rows one at a time, so by the
-    time the lane reaches a close the earlier rows are already in `complete/` on
-    the branch. Reading one of those as a claim made a four-row lane's DONE a
-    FATAL run exit (measured 2026-09-03, `wi-589-…`: "cannot read the claimed
-    spec", which the dispatcher turns into EXIT_PREFLIGHT and the whole loop
-    exits 2), and would have had the partial close move a row a second time,
-    overwriting an outcome the lane itself declared.
+    A lane closes exactly one claimed work item. Both closes ask this first,
+    before they resolve the lane, so a claim of two or more (a historical
+    joined claim record) is refused before any report, residue commit, archive
+    or move, and the refusal names every claimed id.
+
+    Implements: SR-144, SR-220, LLR-144, LLR-312
     """
-    return [
-        (wi_id, name)
-        for wi_id, name in specs
-        if (wt / "{}/{}/{}".format(integrate.ACTIVE, branch, name)).is_file()
-    ]
+    specs = integrate._claimed_specs(root, branch)
+    if not specs:
+        return None, "trunk holds no claimed specs for {}".format(branch)
+    if len(specs) != 1:
+        return None, (
+            "a lane closes exactly one claimed work item; trunk claims {} for "
+            "{}: {}".format(
+                len(specs), branch, ", ".join(wi_id for wi_id, _name in specs)
+            )
+        )
+    return specs[0], None
 
 
-def _existing_report_refusal(wt, branch, specs):
-    """The immutability refusal if any of `specs` already carries a close
-    report, else None.
+def claimed_spec_is_open(wt, branch, name):
+    """Whether the one claimed spec `name` is still in `active/<branch>/` on
+    the LANE — whether a close still has a claim over it.
+
+    Both closes ask it and neither may answer it differently: a lane that has
+    already moved its spec to a terminal folder has declared its own outcome,
+    so the close is a no-op rather than a second move over that outcome.
+    """
+    return (wt / "{}/{}/{}".format(integrate.ACTIVE, branch, name)).is_file()
+
+
+def _existing_report_refusal(wt, branch, wi_id):
+    """The immutability refusal if `wi_id` already carries a close report on
+    `branch`, else None.
 
     IMMUTABLE MEANS IMMUTABLE. The report IS the close event's identity, and an
     identity that can be overwritten is a mutable proxy again — the exact shape
@@ -391,20 +404,19 @@ def _existing_report_refusal(wt, branch, specs):
     means something upstream is wrong and the honest act is to refuse rather
     than to rewrite the record of the first close.
 
-    ASKED BEFORE ANY REPORT IS WRITTEN, which is also why it is asked here
-    rather than per-iteration: nothing is on disk yet, so the refusal needs no
-    restore, and a row this close would otherwise SKIP (already terminal on the
-    branch) is still caught — a second close of a row already in `partial/` must
-    refuse, never pass silently as a no-op.
+    ASKED BEFORE ANY REPORT IS WRITTEN, and before the already-terminal no-op:
+    nothing is on disk yet, so the refusal needs no restore, and a spec this
+    close would otherwise SKIP (already terminal on the branch) is still
+    caught — a second close of a spec already in `partial/` must refuse, never
+    pass silently as a no-op.
     """
-    for wi_id, _name in specs:
-        rep_rel = report_path(branch, wi_id)
-        if (wt / rep_rel).exists():
-            return (
-                "a close report already exists at {} - the report is the close "
-                "EVENT's immutable identity, so a second close of {} on {} is "
-                "refused rather than overwriting it".format(rep_rel, wi_id, branch)
-            )
+    rep_rel = report_path(branch, wi_id)
+    if (wt / rep_rel).exists():
+        return (
+            "a close report already exists at {} - the report is the close "
+            "EVENT's immutable identity, so a second close of {} on {} is "
+            "refused rather than overwriting it".format(rep_rel, wi_id, branch)
+        )
     return None
 
 
@@ -468,84 +480,73 @@ def close_partial(root, branch, reason, fields=None):
     Three deliberate choices. The as-is commit skips the commit hook, because
     "as-is" has to mean it: the branch's own §A2 refresh regenerates and BARS
     this tree before anything merges, so a hook refusal here would only trade a
-    merge that is checked for a branch that hangs. The specs move to the
+    merge that is checked for a branch that hangs. The spec moves to the
     TERMINAL `partial/` rather than back to `queued/`, because terminal is what
     stops a driver claiming, closing and re-claiming the same row forever —
     the property the old contract bought with a `blockref` and a mutable note.
     And the report is written in the SAME COMMIT as the move: a lane that has
     already moved its specs out of `active/` is left alone by the dispatcher
     (it cannot read the claim any more), so a report written in a later commit
-    would be a report the close can no longer produce.
+    would be a report the close can no longer produce. A claim of other than
+    one spec is refused before any of it.
     """
-    specs = integrate._claimed_specs(root, branch)
-    if not specs:
-        return None, "trunk holds no claimed specs for {}".format(branch)
+    spec, refusal = _the_one_claimed_spec(root, branch)
+    if refusal:
+        return None, refusal
+    wi_id, name = spec
     wt, err = _lane(root, branch)
     err = err or _no_recursion_refusal(root, branch)
     if err:
         return None, "cannot close {}: {}".format(branch, err)
-    refusal = _existing_report_refusal(wt, branch, specs)
+    refusal = _existing_report_refusal(wt, branch, wi_id)
     if refusal:
         return None, refusal
-    specs = open_claimed_specs(wt, branch, specs)
-    if not specs:
-        # Every claimed row had already declared its own terminal outcome, so
+    if not claimed_spec_is_open(wt, branch, name):
+        # The claimed spec had already declared its own terminal outcome, so
         # the branch IS finished and there is nothing to close. The dispatcher's
-        # "specs are already out of active/" arm is the ordinary way here; this
-        # is the same answer for a batch that got there one row at a time.
+        # "specs are already out of active/" arm is the ordinary way here.
         return [], None
-    ids = [wi_id for wi_id, _name in specs]
+    ids = [wi_id]
     refusal = _commit_residue_as_is(root, wt, branch, ids, reason)
     if refusal:
         return None, refusal
     span = _span(root, branch)
-    # Every report THIS CALL has written, so a refusal on spec #3 restores #1
-    # and #2 as well. A per-iteration undo only ever cleaned up the current
-    # spec, so a multi-spec lane could refuse and still leave earlier reports
-    # staged beside specs already moved to `partial/` — a half-close, which is
-    # the one state this all-or-nothing ritual exists to make unrepresentable.
-    written = []
-    for wi_id, name in specs:
-        rel = "{}/partial/{}".format(integrate.WORK, name)
-        src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
-        # The report FIRST: it is the event's identity, and a move without one
-        # is the artifact-less return this contract exists to end. Its
-        # immutability rung ran over the whole claimed set above, before
-        # anything was written.
-        rep_rel = report_path(branch, wi_id)
-        dest = wt / rep_rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        with dest.open("w", encoding="utf-8", newline="\n") as fh:
-            fh.write(render_report(wi_id, branch, "partial", reason, span, fields))
-        written.append(rep_rel)
-        code, out = ac.git(wt, "add", "--", rep_rel)
-        if code != 0:
-            return None, _restore(
-                wt,
-                written,
-                "cannot stage the close report {}:\n{}".format(
-                    rep_rel, ac._failure_tail(out)
-                ),
-            )
-        # The move is the link-aware ritual (WI-393): the spec lands in
-        # `partial/` with its own links rebased and every inbound link
-        # redirected, staged into this same commit, never as relink residue.
-        # No `new_text`: the spec's own definition does NOT change — only where
-        # it sits and what the report says about delivery. That is the whole
-        # "scope definitions never change; only whether they were delivered".
-        _touched, refusal = spec_move.move_spec(wt, src_rel, rel)
-        if refusal:
-            # RESTORE, like every sibling refusal path (`_revert`, the trunk's
-            # `bookkeeping.commit`). Leaving the staged report behind would
-            # leave the lane DIRTY — which §5.6 refuses to GC — and would leave
-            # a report on disk for a close that did not happen.
-            return None, _restore(
-                wt, written, "cannot close {}: {}".format(name, refusal)
-            )
+    rel = "{}/partial/{}".format(integrate.WORK, name)
+    src_rel = "{}/{}/{}".format(integrate.ACTIVE, branch, name)
+    # The report FIRST: it is the event's identity, and a move without one is
+    # the artifact-less return this contract exists to end. Its immutability
+    # rung ran above, before anything was written.
+    rep_rel = report_path(branch, wi_id)
+    dest = wt / rep_rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with dest.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(render_report(wi_id, branch, "partial", reason, span, fields))
+    code, out = ac.git(wt, "add", "--", rep_rel)
+    if code != 0:
+        return None, _restore(
+            wt,
+            rep_rel,
+            "cannot stage the close report {}:\n{}".format(
+                rep_rel, ac._failure_tail(out)
+            ),
+        )
+    # The move is the link-aware ritual (WI-393): the spec lands in `partial/`
+    # with its own links rebased and every inbound link redirected, staged into
+    # this same commit, never as relink residue. No `new_text`: the spec's own
+    # definition does NOT change — only where it sits and what the report says
+    # about delivery. That is the whole "scope definitions never change; only
+    # whether they were delivered".
+    _touched, refusal = spec_move.move_spec(wt, src_rel, rel)
+    if refusal:
+        # RESTORE, like every sibling refusal path (`_revert`, the trunk's
+        # `bookkeeping.commit`). Leaving the staged report behind would leave
+        # the lane DIRTY — which §5.6 refuses to GC — and would leave a report
+        # on disk for a close that did not happen.
+        return None, _restore(wt, rep_rel, "cannot close {}: {}".format(name, refusal))
     code, out = _loop_commit(
         root,
         wt,
-        "partial: {} -> partial/ ({})\n\nThe SR-144 outcome: this lane could not finish, so each claimed spec\nmoves to the TERMINAL partial/ and an immutable per-close report lands in\ndocs/handbacks/. The report is the event's identity - the disposition row\nintake mints cites it, so 'is a judgement still owed for THIS close?' is a\npositive-provenance question rather than one of the five reconstructions\nthat leaked. The branch merges like any other; nothing hangs, and nothing\nre-claims a terminal row.".format(
+        "partial: {} -> partial/ ({})\n\nThe SR-144 outcome: this lane could not finish, so the claimed spec\nmoves to the TERMINAL partial/ and an immutable per-close report lands in\ndocs/handbacks/. The report is the event's identity - the disposition row\nintake mints cites it, so 'is a judgement still owed for THIS close?' is a\npositive-provenance question rather than one of the five reconstructions\nthat leaked. The branch merges like any other; nothing hangs, and nothing\nre-claims a terminal row.".format(
             ", ".join(ids), reason
         ),
     )
@@ -964,8 +965,8 @@ def close_adjudication(root, branch):
     Returns `(closed WI ids, None)`; `(None, None)` when the claimed row is NOT
     an adjudication row (the caller leaves the DONE lane to its own tree — a
     non-adjudication worker that did not move its specs is the stall candidate,
-    not this close); or `(None, refusal)` for the refusal invariant or a close
-    failure. THE REFUSAL INVARIANT (OI-73): a row judging a PARTIAL or CANCELLED
+    not this close); or `(None, refusal)` for a claim of other than one spec,
+    the refusal invariant or a close failure. THE REFUSAL INVARIANT (OI-73): a row judging a PARTIAL or CANCELLED
     close (told apart from a clean-close spot check by `intake.owes_successor`,
     the durable title signal) that drafted NO successor is refused — such a close
     must queue at least one successor, an OI alone no longer discharges it, and
@@ -977,32 +978,26 @@ def close_adjudication(root, branch):
 
     Implements: SR-220, LLR-312
     """
-    specs = integrate._claimed_specs(root, branch)
-    if not specs:
-        return None, "trunk holds no claimed specs for {}".format(branch)
+    spec, refusal = _the_one_claimed_spec(root, branch)
+    if refusal:
+        return None, refusal
+    wi_id, name = spec
     wt, err = _lane(root, branch)
     if err:
         return None, "cannot close {}: {}".format(branch, err)
-    specs = open_claimed_specs(wt, branch, specs)
-    if not specs:
-        # Every claimed row has already left `active/` on the branch, so there
+    if not claimed_spec_is_open(wt, branch, name):
+        # The claimed row has already left `active/` on the branch, so there
         # is nothing for this close to do — the no-op the docstring promises,
         # never a refusal.
         return None, None
-    moved_rows = []
-    for wi_id, name in specs:
-        moved, refusal = _archive_one_adjudication_row(root, wt, branch, name)
-        if refusal or not moved:
-            return None, refusal
-        moved_rows.append((name, wi_id))
-    # THROUGH THE SHARED ORDER, not this loop's. On a multi-row close the
-    # attestor re-composes this subject from the diff, and it can only sort on
-    # what the diff carries - see `station.mechanical_close_order`.
-    closed = station.mechanical_close_order(moved_rows)
+    moved, refusal = _archive_one_adjudication_row(root, wt, branch, name)
+    if refusal or not moved:
+        return None, refusal
+    closed = [wi_id]
     code, out = _loop_commit(
         root,
         wt,
-        station.mechanical_close_subject(closed)
+        station.mechanical_close_subject(wi_id)
         + "\n\n"
         "The OI-70/OI-73 adjudication close: the verdict is recorded, so the "
         "machinery archives this row terminal rather than leaving it in active/ "

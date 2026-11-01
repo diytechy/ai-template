@@ -82,7 +82,7 @@ def test_a_wrapper_importing_integrate_is_refused(draining, tmp_path):
     wrapper = tmp_path / "wrapper.py"
     wrapper.write_text(
         "import sys\nsys.path.insert(0, {!r})\nimport integrate\n"
-        "sys.exit(integrate.claim(__import__('pathlib').Path({!r}), ['WI-001'], 'wi-001'))\n".format(
+        "sys.exit(integrate.claim(__import__('pathlib').Path({!r}), 'WI-001', 'wi-001'))\n".format(
             str(SCRIPTS), str(draining)
         ),
         encoding="utf-8",

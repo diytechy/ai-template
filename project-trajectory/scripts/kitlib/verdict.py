@@ -161,7 +161,6 @@ from .config import FINAL_PERSISTED, reviewer_dials
 from .git import git_bytes, git_out
 from .station import (
     BAR_GREEN,
-    mechanical_close_order,
     mechanical_close_subject,
 )
 
@@ -635,7 +634,7 @@ _COMPLETE_SPEC = re.compile(rb"^docs/work/complete/(WI-[0-9]+-[^/]+[.]md)$")
 
 
 def _closed_wi_ids(fields, relinked=None, blobs=None):
-    """The canonically ordered ids moved from active/ to complete/, or None.
+    """The one id moved from active/ to complete/, as `[wi_id]`, or None.
 
     THE ONE CLOSE SHAPE, read two ways (WI-969). With no `relinked` oracle it
     is the peel's reading: every changed path must live under `docs/work/`.
@@ -656,19 +655,13 @@ def _closed_wi_ids(fields, relinked=None, blobs=None):
     unrestricted because `spec_move`'s inbound relink genuinely rewrites other
     rows in place, and a relink only ever modifies.
 
-    THE EMPTY CLOSE refuses on the one-source-branch requirement, and there is
-    deliberately no non-emptiness clause in front of it: `branches` only grows
-    in the same arm that appends to `deleted`, so a commit that moved nothing
-    names zero source branches and `len(branches) != 1` turns it away, and a
-    disjunct that could only fire where that one already had is dead code by
-    construction - which is what the deleted `not deleted` disjunct was. The
-    empty close's refusal is OVER-DETERMINED even so, measured rather than
-    reasoned: delete the branch requirement too and an empty diff derives no
-    ids at all, whose composed subject (`adjudicate:  -> complete/ ...`) cannot
-    equal the one the commit carries, so the caller's exact-subject comparison
-    refuses it anyway. No clause owns that arm; the one-source-branch clause is
-    pinned instead on the case it DOES own, a close reaching into a second
-    lane's `active/`.
+    THE ONE-ROW CLAUSE: a lane claims one work item, so its close moves
+    exactly one row, and any other count of `active/` deletions declines to
+    peel, failing toward more review. It also owns two shapes a separate
+    clause once held. The empty close (no deletion) and a close reaching into
+    a second lane's `active/` (a second deletion) both fail it, and with
+    exactly one deletion there is exactly one source branch, so a
+    one-source-branch clause beside it could never fire and is not written.
     """
     if len(fields) % 2:
         return None
@@ -686,11 +679,11 @@ def _closed_wi_ids(fields, relinked=None, blobs=None):
             added.append(complete.group(1))
         elif status != b"M":
             return None
-    if len(branches) != 1 or sorted(name for name, _ in deleted) != sorted(added):
+    if len(deleted) != 1 or [deleted[0][0]] != added:
         return None
     if not _outside_relinked(outside, branches, deleted, relinked, blobs):
         return None
-    return mechanical_close_order(deleted)
+    return [deleted[0][1]]
 
 
 def _outside_relinked(outside, branches, deleted, relinked, blobs):
@@ -759,15 +752,14 @@ def mechanical_close_attestation(root, rev):
     unchanged.
 
     VERIFIED AGAINST GIT, not read off the message. The changed-path stream is
-    read with rename detection disabled; it must contain paired deletions from
-    one `docs/work/active/<branch>/` and additions of those same spec names to
-    `docs/work/complete/`, and NOTHING ELSE may create or destroy — an
+    read with rename detection disabled; it must contain exactly one deletion
+    from `docs/work/active/<branch>/` and the addition of that same spec name
+    to `docs/work/complete/`, and NOTHING ELSE may create or destroy — an
     unrecognised `A` or `D` refuses the whole commit, so unreviewed data loss
-    and unreviewed new content cannot ride the peel (`_closed_wi_ids`). Their
-    filename ids are ordered by `station.mechanical_close_order`, the one key
-    this reader and the writer share so a multi-row batch cannot fail on a
-    sorting the two chose apart, composed through the writer's
-    `mechanical_close_subject`, and the result must equal the subject exactly.
+    and unreviewed new content cannot ride the peel (`_closed_wi_ids`). A
+    close moving any other number of rows declines to peel. The one row's
+    filename id is composed through the writer's `mechanical_close_subject`,
+    and the result must equal the subject exactly.
     The commit must also have exactly ONE parent (a merge
     is never this), and every changed path must live under `docs/work/`, which
     stops a close whose inbound-link relink reached into product or requirement
@@ -800,7 +792,7 @@ def mechanical_close(root, rev, relinked=None):
     `--name-status --no-renames -z` stream judged by `_closed_wi_ids` (with
     the oracle, a changed path outside `docs/work/` is admitted only as the
     exact inbound relink of the commit's own moves, its blobs read at the
-    parent and at `rev`), and the ids composed through
+    parent and at `rev`), and the one id composed through
     `mechanical_close_subject` equal to the subject. A read git cannot make is
     None, never a close.
 
@@ -826,7 +818,7 @@ def mechanical_close(root, rev, relinked=None):
         )
 
     wi_ids = _closed_wi_ids(fields, relinked, blobs)
-    if wi_ids is None or subject != mechanical_close_subject(wi_ids):
+    if wi_ids is None or subject != mechanical_close_subject(wi_ids[0]):
         return None
     return parent, wi_ids
 

@@ -6,15 +6,16 @@ loop around it is tests/test_dispatch.py's, on real repos):
 
   * an exclusive-kind row on the frontier STOPS new admission — with lanes
     busy the answer is WAIT, never a parallel claim slipped past the barrier;
-  * lanes back in the station -> ALL spine rows admit TOGETHER as one batch
-    (one branch, one worker session, one re-attest window);
+  * lanes back in the station -> the first spine row admits ALONE, exclusive
+    (one work item per lane); later spine rows wait for later exclusive turns;
   * the §A8 kind x gate-policy table exactly as ruled: ordinary/critique
     parallel at every level, high-risk/protected exclusive at every level,
     spine dispatches at every level (building a scope change is WORK, not an
-    approval), attestation/gate does NOT dispatch under `attended` (drain,
-    surface the cards, exit 0), dispatches only as the queued batch once
-    nothing else remains under `single-approve`, and dispatches under
-    `autonomous` (a recorded fresh-context reviewer verdict approves);
+    approval), attestation/gate does NOT dispatch on a human-held tier
+    (drain, surface the cards, exit 0; with `keep_nondependent` other work
+    keeps running and the held rows surface once nothing else remains), and
+    dispatches one at a time, exclusive, on a loop-held tier (a recorded
+    fresh-context reviewer verdict approves);
   * the lanes dial resolves on the established ladder (CLI > AGENT_LANES >
     stack.ini [agent-loop] > code default) and an ABSENT key means 1 — the
     template seeds 2, but no long-adopted repo is upgraded into concurrency
@@ -81,11 +82,9 @@ def test_the_kind_action_table_is_a8_verbatim():
     for kind in ("ordinary", "critique"):
         for held in (True, False):
             assert dsp._kind_action(kind, held) == "parallel", (kind, held)
-    for kind in ("high-risk", "protected", "adjudication"):
+    for kind in ("high-risk", "protected", "adjudication", "spine"):
         for held in (True, False):
             assert dsp._kind_action(kind, held) == "exclusive", (kind, held)
-    for held in (True, False):
-        assert dsp._kind_action("spine", held) == "batch", held
     # The one arm the level decides: a window-CLOSING row is the human's act
     # while the tier is human-held, and dispatches once it is not.
     for kind in ("attestation", "gate"):
@@ -106,17 +105,28 @@ def test_an_exclusive_row_with_a_busy_lane_does_not_admit():
     assert verb == "admit" and payload == [["WI-401"]]
 
 
-def test_lanes_back_in_the_station_the_spine_batch_admits_together():
-    # N spine changes cost ONE re-attest window and one owner sitting: every
-    # spine row on the frontier admits as ONE batch (agent_loop --wi 'A;B'),
-    # ahead of the ordinary work behind it.
+def test_lanes_back_in_the_station_the_first_spine_row_admits_alone():
+    # One work item per lane: the first spine row on the frontier admits
+    # alone, exclusive, ahead of the ordinary work behind it; the second spine
+    # row waits for a later exclusive turn rather than riding the same lane.
     ready = [("WI-500", "spine"), ("WI-501", "spine"), ("WI-401", "ordinary")]
     verb, payload = dsp._admission(ready, True, busy=False, free=2)
     assert verb == "admit-exclusive"
-    assert payload == ["WI-500", "WI-501"]
+    assert payload == ["WI-500"]
 
 
-def test_high_risk_admits_alone_not_batched():
+def test_no_kind_maps_to_a_batch_arm():
+    # The admission table's domain holds no multi-row arm: every declared
+    # kind, under either tier hold, maps to parallel, exclusive or surface,
+    # and a spine row takes the exclusive arm.
+    for kind in sched._KIND_CONCURRENCY:
+        for held in (True, False):
+            assert dsp._kind_action(kind, held) != "batch", (kind, held)
+    for held in (True, False):
+        assert dsp._kind_action("spine", held) == "exclusive", held
+
+
+def test_high_risk_rows_admit_alone_one_per_turn():
     ready = [("WI-500", "high-risk"), ("WI-501", "high-risk")]
     verb, payload = dsp._admission(ready, False, busy=False, free=2)
     assert verb == "admit-exclusive"
@@ -145,8 +155,8 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
     # SN-029 split the retired `single-approve` level into its two independent
     # bits. This is the second one: the tier is HUMAN-HELD (so an approval
     # row surfaces rather than dispatching), and the `keep_nondependent` dial
-    # says other work keeps going around it; the queued batch dispatches only
-    # at the close, when nothing else remains. Under the enum these two facts
+    # says other work keeps going around it; the held rows surface at the
+    # close, when nothing else remains. Under the enum these two facts
     # could only be expressed together, which is why a repo that wanted one
     # had to take the other.
     ready = [("WI-600", "attestation"), ("WI-401", "ordinary")]

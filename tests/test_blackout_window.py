@@ -167,7 +167,7 @@ def test_the_dispatchers_claim_is_refused_inside_the_window(root, monkeypatch, c
         raise AssertionError("the dispatcher's route consulted the context guard")
 
     monkeypatch.setattr(integ.coordinator_guard, "claim_refusal", boom)
-    code = integ.claim(root, ["WI-001"], "wi-001", dispatch_lock_held=True)
+    code = integ.claim(root, "WI-001", "wi-001", dispatch_lock_held=True)
     assert code != 0
     assert "no work item is claimed inside it" in capsys.readouterr().err
 

@@ -1838,8 +1838,8 @@ def test_a_resume_that_cannot_read_its_evidence_still_draws_the_parked_round(
 # legacy rollup. The close is peeled on exactly the refresh commit's argument.
 
 
-#: The one claimed row every peel arm uses, and the second one the BATCH arm
-#: adds. Both are `(WI id, spec filename)`, the pair shape the real writer path
+#: The one claimed row every peel arm uses, and the second row the no-peel arms
+#: add (a second lane's claim, or a second row in the lane's own claim). Both are `(WI id, spec filename)`, the pair shape the real writer path
 #: (`integrate._claimed_specs` -> `handback.close_adjudication`) carries.
 _ROW = ("WI-401", "WI-401-dispose.md")
 _ROW_2 = ("WI-402", "WI-402-adjacent.md")
@@ -1861,7 +1861,7 @@ def _claim_commit(root, when=T_CODE + 10, rows=(_ROW,), seed=(), foreign=()):
 
     `seed` writes further files in the same commit, so a later close can be
     driven DESTROYING one of them; `foreign` puts rows under a SECOND lane's
-    `active/` directory, the shape the one-source-branch requirement owns."""
+    `active/` directory, a second deletion the one-row clause refuses."""
     _git(root, "checkout", "-q", "wi-401")
     body = '+++\nid = "{}"\n+++\n\n## Dispositions\n\nthe judged drafts.\n'
     for lane, lane_rows in (("wi-401", rows), (_OTHER_LANE, foreign)):
@@ -1890,8 +1890,9 @@ def _mechanical_close(
     The keyword arms drive one verification each: `subject` a message the
     machinery would not have composed, `also` a path the close ADDED (outside
     `docs/work/`, or an unpaired one inside it), `remove` a path it DESTROYED,
-    `rows` the multi-row batch shape whose subject order is load-bearing, and
-    `foreign` the rows moved out of a SECOND lane's `active/` directory."""
+    `rows` a close moving more than the lane's one row, and `foreign` the rows
+    moved out of a SECOND lane's `active/` directory. The subject is the one
+    the one-item writer composes, for the lane's first row."""
     _git(root, "checkout", "-q", "wi-401")
     for lane, lane_rows in (("wi-401", rows), (_OTHER_LANE, foreign)):
         for _wi_id, name in lane_rows:
@@ -1906,11 +1907,7 @@ def _mechanical_close(
         _write_file(root, also)
     if remove:
         (root / remove).unlink()
-    composed = ks.mechanical_close_subject(
-        ks.mechanical_close_order(
-            (name, wi_id) for wi_id, name in tuple(rows) + tuple(foreign)
-        )
-    )
+    composed = ks.mechanical_close_subject(rows[0][0])
     _commit(
         root,
         (subject or composed)
@@ -1968,7 +1965,7 @@ def test_a_forged_mechanical_close_middle_does_not_peel(tmp_path):
     root = rounds_repo(tmp_path)
     _claim_commit(root)
     add_round(root, 3)
-    _mechanical_close(root, subject=ks.mechanical_close_subject(["NOT-A-WI-ID"]))
+    _mechanical_close(root, subject=ks.mechanical_close_subject("NOT-A-WI-ID"))
     forged = _rev(root, "wi-401")
     assert kv.mechanical_close_attestation(root, forged) is None
     refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
@@ -2015,13 +2012,12 @@ def test_a_close_that_destroys_an_archived_record_does_not_peel(tmp_path):
 
 
 def test_a_close_reaching_into_a_second_lanes_claims_does_not_peel(tmp_path):
-    # THE ONE-SOURCE-BRANCH REQUIREMENT, driven where it is the ONLY clause
-    # that can refuse: every path is under docs/work/, every deletion is
-    # paired with its own addition, and the subject is the one the writer
-    # composes for exactly these ids - so a close that archived ANOTHER lane's
-    # claimed row would otherwise peel, carrying a row this branch never held
-    # a claim over past the gate. (Measured: with the clause deleted this arm
-    # is the single red in the module.)
+    # A close that also archived ANOTHER lane's claimed row: every path is
+    # under docs/work/, every deletion is paired with its own addition, and
+    # the subject is the one the writer composes for the lane's own row. It is
+    # refused by the one-row clause (two deletions), which implies the one
+    # source branch, so a row this branch never held a claim over cannot ride
+    # the peel past the gate.
     root = rounds_repo(tmp_path)
     _claim_commit(root, foreign=(_ROW_2,))
     add_round(root, 3)
@@ -2031,30 +2027,49 @@ def test_a_close_reaching_into_a_second_lanes_claims_does_not_peel(tmp_path):
     assert refusal is not None and "names its current tree" in refusal
 
 
-def test_a_two_row_batch_close_peels_under_one_canonical_order(tmp_path):
-    # THE BATCH SHAPE, the only one where the writer's id order and the order
-    # the attestor re-derives from the diff can disagree. Both now come from
-    # `station.mechanical_close_order`, so this asserts the shared order is
-    # actually shared - and that the subject a REVERSED order would compose is
-    # not the one the attestor accepts, or the arm would pass on a tie.
+def test_a_mechanical_close_moving_two_rows_does_not_peel(tmp_path):
+    # The peel admits a mechanical close moving exactly one row. A close that
+    # archived two rows out of the lane's own claim, under the joined subject
+    # the earlier multi-row writer composed, is not one the one-item writer
+    # composes, so it declines to peel and the gate fails toward more review:
+    # the round no longer names the lane's tree. The subject is that writer's
+    # literal output, which the one-id composer cannot produce, so this case
+    # pins the historical shape; the case below pins the row count alone.
     root = rounds_repo(tmp_path)
-    rows = (_ROW_2, _ROW)  # deliberately NOT the canonical order
+    rows = (_ROW, _ROW_2)
+    _claim_commit(root, rows=rows)
+    add_round(root, 3)
+    judged = _rev(root, "wi-401")
+    joined = "adjudicate: WI-401, WI-402 -> complete/ (mechanical close)"
+    _mechanical_close(root, rows=rows, subject=joined)
+
+    closed = _rev(root, "wi-401")
+    assert kv.tree_identity(root, closed) != kv.tree_identity(root, judged)
+    assert kv.mechanical_close_attestation(root, closed) is None
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "names its current tree" in refusal
+
+
+def test_a_two_row_close_under_the_one_id_subject_does_not_peel(tmp_path):
+    # The same two-row move out of the lane's own claim, now under the subject
+    # the current writer composes for the lane's first row. The subject
+    # matches what the one-id composer writes, so the row count is the only
+    # rule that can refuse it: a pairing rule that admitted any number of
+    # paired moves would peel this close past the gate.
+    root = rounds_repo(tmp_path)
+    rows = (_ROW, _ROW_2)
     _claim_commit(root, rows=rows)
     add_round(root, 3)
     judged = _rev(root, "wi-401")
     _mechanical_close(root, rows=rows)
 
     closed = _rev(root, "wi-401")
+    message = _git(root, "log", "-1", "--format=%s", closed).strip()
+    assert message == ks.mechanical_close_subject("WI-401")
     assert kv.tree_identity(root, closed) != kv.tree_identity(root, judged)
-    assert kv.mechanical_close_attestation(root, closed) == judged
-    assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, judged)
-    assert integ._verdict_gate(root, "wi-401", {"WI-401": "merged"}) is None
-
-    ordered = ks.mechanical_close_order((name, wi_id) for wi_id, name in rows)
-    assert ordered == ["WI-401", "WI-402"]
-    assert ks.mechanical_close_subject(ordered) != ks.mechanical_close_subject(
-        list(reversed(ordered))
-    )
+    assert kv.mechanical_close_attestation(root, closed) is None
+    refusal = integ._verdict_gate(root, "wi-401", {"WI-401": "merged"})
+    assert refusal is not None and "names its current tree" in refusal
 
 
 def _empty_close(root, when=T_LATER + 300):
@@ -2074,7 +2089,7 @@ def _empty_close(root, when=T_LATER + 300):
         "-q",
         "--allow-empty",
         "-m",
-        ks.mechanical_close_subject(["WI-401"])
+        ks.mechanical_close_subject("WI-401")
         + "\n\nthe machinery archives the judged row.\n\nWI: WI-401",
         env=env,
     )
@@ -2092,15 +2107,13 @@ def test_an_empty_close_is_refused_and_the_walk_covers_it_regardless(tmp_path):
     assert kv.governing_identity(root, "wi-401") == kv.tree_identity(root, judged)
 
     empty = _empty_close(root)
-    # THE BOUNDARY, and its refusal is OVER-DETERMINED rather than owned by one
-    # clause - measured, because a comment naming an owner here has been wrong
-    # twice. A commit that moved nothing names zero `active/<branch>/`
-    # directories, so `len(branches) != 1` refuses first; delete that and the
-    # empty diff derives NO ids, whose composed subject
-    # (`adjudicate:  -> complete/ …`) cannot equal the one this commit carries,
-    # so the exact-subject comparison refuses it anyway. There is deliberately
-    # no third, non-emptiness clause: it could only fire where these already
-    # had, which is the definition of untestable.
+    # THE BOUNDARY, and the one-row clause owns its refusal: a commit that
+    # moved nothing deletes no `active/` row, and a close must delete exactly
+    # one, so the shape is refused before any subject is compared. No empty-id
+    # subject is ever composed either: the subject composer takes one id and
+    # refuses anything else. There is deliberately no separate non-emptiness
+    # clause: it could only fire where the one-row clause already had, which
+    # is the definition of untestable.
     assert kv.mechanical_close_attestation(root, empty) is None
     # AND THE REFUSAL STRANDS NOTHING, which is why it is safe to make it: an
     # empty commit preserves the identity by construction, so `governing_rev`'s

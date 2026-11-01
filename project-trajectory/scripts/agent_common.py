@@ -13,7 +13,7 @@ unchanged). The session engine (agent_loop) and the serial integrator
     descriptor lives HERE, in this module's `_LOCK_FD`, so every caller
     shares one lock namespace);
   - worker-assignment primitives (`WI_TOKEN_RE`, `sanitize_train`,
-    `parse_wi_list`, `load_wi_registry`, `train_evidence`)
+    `parse_wi_id`, `load_wi_registry`, `train_evidence`)
     and the small CSV/ref readers;
   - `parse_map`, `preflight` (launchability refusal, SR-027), and the
     session-log family (size-bounded logs, the regenerated iteration index,
@@ -33,7 +33,7 @@ Contract IF-065: the shared coordinator primitives the session engine and the
     kernel advisory lock, whose held descriptor lives HERE so every caller in a
     process shares one lock namespace and `acquire_lock` / `release_lock` cannot
     disagree about what is held; the worker-assignment primitives
-    (`WI_TOKEN_RE`, `sanitize_train`, `parse_wi_list`, `load_wi_registry`,
+    (`WI_TOKEN_RE`, `sanitize_train`, `parse_wi_id`, `load_wi_registry`,
     `train_evidence`); `loop_claimed`, the one reader of whether the loop
     claimed a lane, which the integrator's merge slot reads a lane's claim
     through and which answers a claim log it cannot read as unreadable, never
@@ -657,24 +657,23 @@ def sanitize_train(name):
     return name
 
 
-def parse_wi_list(spec):
-    """The ordered assigned-WI list from a `;`/`,`/whitespace-joined --wi value.
-    Raises ValueError on an empty list, a malformed token, or a duplicate —
-    a broken assignment must fail preflight, never half-run."""
-    out = []
-    for tok in re.split(r"[;,\s]+", (spec or "").strip()):
-        if not tok:
-            continue
-        if not WI_TOKEN_RE.match(tok):
-            raise ValueError(
-                "--wi token {!r} is not a WI-### id (got --wi {!r})".format(tok, spec)
-            )
-        if tok in out:
-            raise ValueError("--wi names {} twice".format(tok))
-        out.append(tok)
-    if not out:
-        raise ValueError("--wi carries no WI-### id (got {!r})".format(spec))
-    return out
+def parse_wi_id(value, source):
+    """The one work-item id a lane's input names: the worker's assignment and
+    the claim's work item both read it here. A lane claims and builds exactly
+    one work item, so anything but a str that is exactly one WI-### token
+    (empty, separator-only, a list in any separator, a list or tuple of any
+    length, a repeated id, a malformed token) raises ValueError naming
+    `source` (the input's name in its caller's words) and the value's repr; a
+    broken input must refuse before any state changes, never half-run. A
+    command line normalizes its own argument (case, outer whitespace) at its
+    boundary before calling.
+
+    Implements: SR-026, LLR-061
+    """
+    if isinstance(value, str) and WI_TOKEN_RE.fullmatch(value):
+        return value
+    why = "{} takes exactly one WI-### id; got {!r} (a lane takes one work item)"
+    raise ValueError(why.format(source, value))
 
 
 # --- the spec-folder registry reader: ONE home since WI-448 -------------------
@@ -1165,10 +1164,13 @@ def trunk_name(root):
     return name
 
 
-def claim_subject(wi_ids, branch):
-    """The one commit-subject grammar for a claim's durable Git record."""
-    wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
-    return "claim: {} -> active/{} (bookkeeping)".format(";".join(wi_ids), branch)
+def claim_subject(wi_id, branch):
+    """The one commit-subject grammar for a claim's durable Git record: one
+    work item per lane, so one id. A list is a caller error and raises
+    TypeError rather than writing a joined subject no writer may compose."""
+    if not isinstance(wi_id, str):
+        raise TypeError("claim_subject takes one work item id; got {!r}".format(wi_id))
+    return "claim: {} -> active/{} (bookkeeping)".format(wi_id, branch)
 
 
 def name_status(out):
@@ -1220,24 +1222,29 @@ def claim_base(root, branch=None):
     pre-claim worker.  `readable is False` means Git could name the branch but could
     not read its history; that is deliberately distinct so the caller does not
     silently turn an unreadable claim into an empty HEAD..HEAD evidence range.
+
+    A reader of history, so it does not compose through the one-id writer: a
+    subject `claim: <ids> -> active/<branch> (bookkeeping)` whose `;`-split
+    ids are all WI tokens is a claim, so the historical joined subjects of the
+    multi-item claims made before one work item per lane still read as one.
     """
     if branch is None:
         code, out = git(root, "branch", "--show-current")
         branch = out.strip() if code == 0 else ""
     if not branch:
         return None, True
-    suffix = " -> active/{} (bookkeeping)".format(branch)
+    prefix, suffix = "claim: ", " -> active/{} (bookkeeping)".format(branch)
     grep = ("--first-parent", "--fixed-strings", "--grep=" + suffix)
     code, history = git(root, "log", *grep, "--format=%H%x09%s", branch, "--")
     if code != 0:
         return None, False
     for line in history.splitlines():
-        # `%H<TAB>%s`: a line with no tab leaves an empty subject, which no
-        # claim subject equals, so the one comparison below rules on it too.
+        # `%H<TAB>%s`: a line with no tab leaves an empty subject, which is
+        # not claim-shaped, so the one test below rules on it too.
         sha, _sep, subject = line.partition("\t")
-        wi_ids = subject.removeprefix("claim: ").removesuffix(suffix).split(";")
-        ids_ok = all(WI_TOKEN_RE.fullmatch(wi) for wi in wi_ids)
-        if not ids_ok or subject != claim_subject(wi_ids, branch):
+        shaped = subject.startswith(prefix) and subject.endswith(suffix)
+        wi_ids = subject[len(prefix) : len(subject) - len(suffix)].split(";")
+        if not shaped or not all(WI_TOKEN_RE.fullmatch(wi) for wi in wi_ids):
             continue
         valid_move = _is_claim_move(root, sha, branch, wi_ids)
         if valid_move is None:
@@ -2045,19 +2052,21 @@ def preflight(root, template, args):
     # HEAD is an unverifiable checkout.
     wi_spec = getattr(args, "wi", None)
     train = getattr(args, "train", None)
-    if train and not wi_spec:
+    if train is not None and wi_spec is None:
         failures.append(
             "--train is the worker session tag and needs the assignment; "
             "got --train without --wi"
         )
-    if (wi_spec or train) and getattr(args, "interactive", False):
+    if getattr(args, "interactive", False) and (wi_spec, train) != (None, None):
         failures.append(
             "--wi/--train is an unattended worker assignment; it cannot be "
             "combined with --interactive."
         )
-    if wi_spec and not failures:
+    # An empty --wi is an assignment too, so it reaches the parse and refuses
+    # by name rather than reading as "not a worker".
+    if wi_spec is not None and not failures:
         try:
-            assigned = parse_wi_list(wi_spec)
+            wid = parse_wi_id(wi_spec, "--wi")
             if train:
                 sanitize_train(train)
         except ValueError as exc:
@@ -2071,27 +2080,25 @@ def preflight(root, template, args):
                     "not be determined (detached HEAD, or git older than "
                     "2.22) — check the branch out first."
                 )
-            wi_rows = load_wi_registry(root)
-            for wid in assigned:
-                row = wi_rows.get(wid)
-                if row is None:
-                    failures.append(
-                        "assigned {} is not in the docs/work/ registry on "
-                        "this branch — a worker never builds an untracked "
-                        "WI.".format(wid)
-                    )
-                elif stale_terminal_assignment(root, wid, row):
-                    # WI-267: a WI CANCELLED mid-assignment is terminal too — a
-                    # worker must never build a WON'T-BUILD row. The scheduler
-                    # never freshly dispatches a cancelled WI, but an owner can
-                    # cancel one already leased to a worker; this closes that
-                    # narrow mid-flight race the done-only check missed.
-                    status = (row.get("Status") or "").strip().lower()
-                    failures.append(
-                        "assigned {} is already {} — a terminal status "
-                        "(done/cancelled); a stale assignment, so the dispatcher "
-                        "must re-derive the frontier.".format(wid, status)
-                    )
+            row = load_wi_registry(root).get(wid)
+            if row is None:
+                failures.append(
+                    "assigned {} is not in the docs/work/ registry on "
+                    "this branch — a worker never builds an untracked "
+                    "WI.".format(wid)
+                )
+            elif stale_terminal_assignment(root, wid, row):
+                # WI-267: a WI CANCELLED mid-assignment is terminal too — a
+                # worker must never build a WON'T-BUILD row. The scheduler
+                # never freshly dispatches a cancelled WI, but an owner can
+                # cancel one already leased to a worker; this closes that
+                # narrow mid-flight race the done-only check missed.
+                status = (row.get("Status") or "").strip().lower()
+                failures.append(
+                    "assigned {} is already {} — a terminal status "
+                    "(done/cancelled); a stale assignment, so the dispatcher "
+                    "must re-derive the frontier.".format(wid, status)
+                )
     return failures
 
 
@@ -2100,16 +2107,14 @@ def stale_terminal_assignment(root, wid, row):
     some reason other than this branch's own committed `WI:` trailer for it, in
     `merge-base(trunk, HEAD)..HEAD`?
 
-    THE REFUSAL ABOVE IS ABOUT A STALE ASSIGNMENT, and a batch lane resuming its
-    own work is not one. A four-row spine batch (2026-09-03, lane `wi-589-…`)
-    closes its rows one at a time, so its registry reads `done` for every row it
-    has already finished — and the preflight refused THREE of the four on the
-    resume, with "a stale assignment, so the dispatcher must re-derive the
-    frontier", over rows that were terminal precisely BECAUSE this lane made
-    them so. The status alone cannot tell the two apart; the trailer can, and it
-    is the same evidence channel `train_evidence` gives the walk. A row terminal
-    on the TRUNK carries no trailer in this branch's own range, so it still
-    refuses.
+    THE REFUSAL ABOVE IS ABOUT A STALE ASSIGNMENT, and a lane resuming its own
+    work is not one. A finished lane that still owes a review round is resumed
+    with its one row already `done` on the lane, terminal precisely BECAUSE this
+    lane made it so; refusing it as "a stale assignment, so the dispatcher must
+    re-derive the frontier" would strand the lane. The status alone cannot tell
+    the two apart; the trailer can, and it is the same evidence channel
+    `train_evidence` gives the walk. A row terminal on the TRUNK carries no
+    trailer in this branch's own range, so it still refuses.
 
     Fails toward the REFUSAL at every unreadable step (no branch, git silent, an
     unborn HEAD, an undeclared trunk): a preflight that cannot prove the lane
