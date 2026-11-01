@@ -3,12 +3,22 @@ id = "WI-986"
 title = "adjudicate: LLR-058, LLR-061, LLR-123, LLR-144, LLR-149, LLR-150, LLR-151, LLR-152, LLR-161, LLR-207, SR-144, SR-148, SR-156, TC-058, TC-061, TC-138, TC-143, TC-144, TC-145, TC-146, TC-154, TC-156, TC-205 - approved/routed cell(s) amended on merged trunk cf21e8c..dc7e2a5 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-144", "SR-148", "SR-156"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-058", "LLR-061", "LLR-123", "LLR-144", "LLR-149", "LLR-150", "LLR-151", "LLR-152", "LLR-161", "LLR-207", "SR-144", "SR-148", "SR-156", "TC-058", "TC-061", "TC-138", "TC-143", "TC-144", "TC-145", "TC-146", "TC-154", "TC-156", "TC-205"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second
+sitting is held (the re-mint trap, S11 plan section 4.2; owner-agreed
+close, 2026-10-03). WI-977's in-lane whole-set sitting
+`docs/reviews/wi-977/014-ADJUDICATE-fddc055.md` blessed all 23 rows
+(22 MEANING+BLESS, LLR-058 CLARITY), and the lane's act turn took act seq
+163. At the landing dc7e2a5cf the system, low-level and test registries
+are byte-equal to their approved snapshots under docs/archive/last_approved/.
 
 ## Context
 
