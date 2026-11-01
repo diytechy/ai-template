@@ -258,6 +258,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     while Codex is out), move the first one's filed round file outside
     the lane until the second has written its verdict, then put it back
     and file the second (wi-966 D-007).
+  - The render's pytest line is the list the tip was attested with,
+    and a stage attested over a narrow list (a docs or pack stage) hands
+    the round that narrow line. Before a round over a staged build, make
+    one empty attestation commit over the lane's touched test modules;
+    the render finds it beneath record-only commits. Under load that bar
+    ran 50 minutes (wi-977, 2026-10-31): start it with time left for the
+    round's two reviewer runs.
 - **Scope critique:** render
   `"$PY" "$SCRIPTS/review_brief.py" critique --wi WI-NNN --rubric docs/rubrics/scope-critique.md --scratch <dated root> --out <brief>`,
   add the skill's two scope and trust questions, and send it to a fresh Sol
@@ -272,6 +279,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   consumer and for every carrier's failure contract (producer, write route,
   failed-write shape): asked piecemeal, they cost WI-882, WI-884 and WI-887
   three rounds each (2026-10-10).
+  A Done-when that says "every reader" reaches every reader and writer
+  of the carrier, whatever the Context list names: a dispute sitting
+  ruled bootstrap's line-shape writer inside WI-966's "every reader"
+  though its Context named only the checker and the agent layer, and the
+  lane took a fix round and a second gate (wi-966 sitting 006). Ask the
+  critique for every reader and writer by grep.
   Run each critique from a detached scratch checkout at the committed tip
   (`git -C "$REPO.wt/trunk-tmp" checkout --detach <tip>`): the change check
   compares the checkout's HEAD and status before and after, so the
@@ -459,6 +472,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      `## amendment` section the one verdict parser refuses for a single-kind
      brief, after its act was committed, and was discarded (wi-921 D-018).
      Single-kind briefs use bare ids. An empty section refuses the entire composition.
+     An interface row carries no approval status, so no kind token
+     names it: name an amended IF cell as context in the appended arms
+     map (wi-966 D-010).
      A `disposition` row that carries an `## Owner route` section (WI-953,
      coordinator-2026-10-20 D-013): the composer reads only the closed spec,
      its report and the commit facts, never the disposition row's own body,
@@ -1156,6 +1172,11 @@ lane commit being replayed.
   hook's own step list (WI-913 round 2; WI-841's `done-when-blessed` has
   the same gap).
 
+- `attest` refuses a lane worktree holding work the index does not.
+  To commit two stages a builder built together on disjoint files,
+  copy the later stage's file aside, check it out at HEAD, attest the
+  first stage, then restore the file and attest the second (wi-977
+  D-014).
 - `attest --tests` names test files that exist: a missing one
   collects no tests, and the bar refuses with pytest's exit 5, which
   is a bad argument, not a red round (2026-10-23b).
