@@ -8,6 +8,7 @@ needs = ["OI-115"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
+planmode = "single"
 +++
 
 ## Context
@@ -32,9 +33,15 @@ lands alone: it changes the act ledger the cycle runs on.
       act shape the spec lists: an approval or re-attestation act, a traced
       re-anchor naming no row, an act mixing `--approves` on one registry
       with ids in another, and a re-seed.
-- [ ] The ledger's validators refuse a new entry that omits the record, and
-      an entry written before this row reads as the scope critique's
-      disposition rules, driven by a test.
+- [ ] The ledger's validators refuse an entry a commit adds (read against
+      its parent by `seq`, as the ledger's readers already identify added
+      entries) that omits the record or names a registry outside the
+      snapshot's own registry files, and refuse a whole ledger in which an
+      entry omits it after one that carries it. An entry written before
+      this row parses unchanged and reads as copy set unknown, never as an
+      empty one, and no reader infers it. Tests drive both sides. Coverage
+      bound: the ledgers the snapshot writer and the kit's own routes
+      produce (PROCESS.md §6); a hand-edited ledger is outside it.
 - [ ] IF-220's row states the new entry shape, and its consumers list is
       the grep's.
 - [ ] One RESYNC entry tells an adopter what their ledger gains and that no

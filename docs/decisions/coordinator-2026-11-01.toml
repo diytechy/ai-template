@@ -34,3 +34,17 @@ why_not_escalated = "Escalated: the owner confirmed the text in session, 2026-11
 review = ""
 owner = "confirmed"
 done_when = "sha256:f8c62f4a13affe14"
+
+[decision.D-005]
+decided = "Headless leg 28: WI-987's scope critique (Sol, CHANGES-REQUESTED findings=3) answered by adopting all three (planmode single; the Done-when's first-approval and PROCESS.md §6 coverage-bound wording; the architectural delta, amending IF-126's consumed data and IF-074's population, IF-075 unchanged). The row's boundaries were recorded in its spec: the needs file's two tiers only, pending.py's SR-only projection left to a separate row (an unfiled follow-up), PROJECT_STATE.html unchanged, no Trust section owed. The confirming round APPROVEd with no findings."
+alternative = "Reject F2 or F3 as growing the row (S7)."
+reversal_cost = "Low: the row's text, before its claim."
+why_not_escalated = "Each finding names a reachable gap inside the row's intent; recorded for confirm or overrule."
+review = ""
+
+[decision.D-006]
+decided = "Headless leg 28: WI-967's scope critique (Sol, CHANGES-REQUESTED findings=4, all MAJOR) answered by adopting all four. The design calls the dispositions make: the new entry field is named `copied`, the sorted repo-relative registry files the act actually wrote, drawn from SNAPSHOT_TIERS' files; a legacy entry (no `copied`) reads as copy set unknown, never empty, and is never backfilled; the new-versus-legacy boundary is the commit (an entry a commit adds against its parent, by seq, must carry `copied`) plus a whole-file monotone rule (no entry omits it after one that carries it), never a format marker. The spec gains a Trust section whose one shared Ruling is routed to the owner for confirm or overrule. The adopted text leaves the spec more than three times its filing size (2463 to 8412 bytes), so the row is listed under the handoff's For the owner."
+alternative = "A ledger format-version marker as the legacy boundary; or treat a missing field as an empty copy set."
+reversal_cost = "Low before the claim; medium after the build (the field name and boundary are in the producer, validators and IF-220)."
+why_not_escalated = "Within the ruled OI-115 (a) scope; the commit boundary follows the owner's enforce-at-the-commit rule and the readers' existing seq comparison; the Trust ruling is routed for confirm or overrule (coordinator-cycle section 1)."
+review = ""
