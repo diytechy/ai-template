@@ -25,10 +25,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-01a-leg26-coordinator.md](handoff-2026-11-01a-leg26-coordinator.md),
-  run in **headless legs** under the overnight launcher (the handoff
-  carries no stop line: the one-work-item-per-lane row has passed its
-  checkpoint sittings and its second gate, and owes its landing). The owner ruled the review-churn program
+  [handoff-2026-11-01b-leg27-coordinator.md](handoff-2026-11-01b-leg27-coordinator.md).
+  It carries the `Overnight: stop` line: every row left in its queue table
+  holds for the owner (its "For the owner" names what unblocks each). The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
   process-text, strict-lints and plan-gate landing-shapes rows have
@@ -99,20 +98,22 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   policy file's line-shape rule has retired: every reader takes the one
   TOML parse, and bootstrap's in-place policy writer keeps an edit only
   when the parse confirms it; SN-028's re-attestation is the owner's, on
-  trunk (OI-118).
+  trunk (OI-118). The one-work-item-per-lane row has landed: admission,
+  the claim, both `--wi` flags, the resume and the closes each take exactly
+  one work item, and a parked multi-row lane stops the run by name.
   The coordinator's procedure lives in the `coordinator-cycle` skill, its
   headless legs in its section 7. The owner directed (2026-10-18,
   coordinator-2026-10-18 D-004, D-006) that the queue turn toward headless
   runs: its two gate rows, the re-claim reader row and the launcher's
-  follow-ups row, have landed, so the handoff carries no stop line, the owner
-  starts the overnight launcher (`scripts/coordinator/overnight_legs.py`),
+  follow-ups row, have landed, so a handoff without a stop line lets the owner
+  start the overnight launcher (`scripts/coordinator/overnight_legs.py`),
   and the rest of the queue runs in headless legs, continuing the lanes
   claimed attended with no re-claim.
   Delegated decisions take the owner's verdict as `owner = "confirmed"` or
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 161 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 163 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -550,6 +551,20 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   agent_policy row still says "shape and conflict findings"; and LLR-155's
   dial-key rename sentence states a migration obligation SR-138 and
   LLR-156 also hold (clarity);
+  from the one-work-item-per-lane row's gates (wi-977 D-023, D-025;
+  wording on blessed rows, at their next sitting): code names left in sat
+  cells (to plan item 5's migration); SR-148's rationale sentence; TC-146
+  rewritten past its batch clause; TC-061's "a --wi list with a malformed
+  or repeated id" phrase; LLR-123's rationale still saying traincars;
+  LLR-150's tree-signal wording; LLR-149's repeated keep-nondependent
+  sentence and LLR-151's lower-case sentence start;
+  `PROCESS_OPTIONS.md`'s sentence offering batched off-spine dev slices in
+  one BUILD session, which an adopter following it now meets as a preflight
+  refusal (fails closed); and the worker template's "focus row first" rule
+  line; from the same lane: `agent_brief.lane_completion` has no production
+  reader (D-017); two stale `code_symbol` tokens, LLR-058's `ready` and
+  LLR-161's `_split_lines` (D-024); and the coverage-extension note on an
+  id-less parked `WI-*.md` (D-015);
   **owner intake 2026-09-22:** the self-test
   suite should fail fast when its dev toolchain is missing, and name the run
   menu's setup action as the fix. Today a missing pytest-xdist dies on

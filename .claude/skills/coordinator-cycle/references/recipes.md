@@ -600,7 +600,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
 ## 2. Claiming
 
 1. `"$PY" "$SCRIPTS/coordinator_guard.py" take --transcript <path>`.
-   If a stale holder blocks it, the owner releases it.
+   If a stale holder blocks it, the owner releases it. The session
+   prompt's bare `python` can resolve to an interpreter older than 3.11,
+   which fails on `import tomllib` before the take: run it with `$PY`
+   (leg 27, 2026-11-01).
 2. Commit the deletion of `docs/work/pause`, carrying the regenerated
    `docs/open-items.html`. Run `trunk_step.py --regen` first: right after
    a landing the deletion commit was refused for a stale status block and
@@ -746,7 +749,12 @@ commit of its own, move it to trunk's tip
   bless everything, one combined sitting over the whole set at the gated
   tip authorizes the act turn (wi-798 D-023). So re-sit the whole set at
   once when the returns are answered: one sitting, one verdict for the act
-  (wi-958 D-014).
+  (wi-958 D-014). An act turn from one partial verdict is refused by the
+  snapshot, which names the rows a later verdict judged in the registries
+  it copies (wi-977 D-027). So when a re-sit blesses the last return,
+  compose the whole-set sitting in the same leg: every row an
+  `amendment:` token, with the checkpoint's arms map appended. Never hand
+  off a list of act turns, one per partial verdict.
 - **Run the commit bar in the lane after the act turn,** before the
   squash. An act that approves a row arms checks a Drafted row escapes:
   an approved Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
