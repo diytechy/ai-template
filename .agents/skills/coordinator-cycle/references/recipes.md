@@ -164,6 +164,34 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   one, refuses the turn before launch, naming the log and the cause; it
   never starts a fresh thread in its place. Commit the named log, or run
   a first turn without `--resume`.
+  - A checkpoint reconcile over many approved rows can lose text in four
+    ways. All four cost wi-977 a returned sitting, then a re-sit, then a
+    gate MAJOR (wi-977 D-019 to D-024).
+    - **Compression.** Terra summarizes long cells into pointers such as
+      "retain their stated assertions". A pointer-word scan missed the
+      "stated" form.
+    - **Copying instead of editing.** Told to start from the source, it
+      left cells byte-identical to their base, without the change.
+    - **Encoding.** Its scripts read `git show` output through the console
+      code page, which double-encoded `§` and `—` (`Â§`, `â€”`) and wrote
+      U+FFFD.
+    - **Lost traced entries.** It narrowed evidence cells to the new
+      nodes, dropping 86 still-existing tests.
+
+    The checkpoint brief therefore names the source sha and asks for each
+    cell copied from it, with only the batch clause edited, through a
+    guarded UTF-8/LF script. Never ban plain words: a ban displaced base
+    words ("existing" became "prior").
+
+    Before the sitting, check each changed cell mechanically:
+    - source sentences kept;
+    - no cell identical to its source;
+    - no U+FFFD, `Â§` or `â€`;
+    - traced cells keep every entry that still names a real test or
+      symbol.
+
+    A string replace can land on another row holding the same text: one
+    module edit meant for LLR-061 landed on LLR-037.
 - **A review round: render, launch, file** (SKILL Roles and §3; rulings 4
   and 7, revision 37). Never write a review brief by hand. Every round is
   full-lane, from the lane's trunk base to its tip, and runs REVIEW-A and
@@ -218,7 +246,12 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      backgrounds its own pytest can lose the completion notice and stop
      with no verdict: look for its process (its scratch path in the
      command line), then resume that reviewer with SendMessage, never a
-     fresh one (WI-921's gate, 2026-10-15g). A Sol launch whose sandboxed
+     fresh one (WI-921's gate, 2026-10-15g). One that handed its test run to
+     a background sub-agent returned "waiting" with no verdict, in a
+     headless leg. Tell every Claude reviewer to run its tests itself in
+     the foreground. If one still returns early, resume it with SendMessage,
+     ask for a `.done` marker after its verdict, and poll for that marker in
+     one foreground Python loop (wi-977 D-023). A Sol launch whose sandboxed
      shell never returns runs no command and writes no verdict (its
      output says the review was blocked): probe the same entry point with a
      one-command prompt (`git rev-parse HEAD`), then relaunch fresh on
