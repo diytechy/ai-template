@@ -600,6 +600,10 @@ def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
     assert "snapshot-drift" in page  # drift is still one route in
     assert "reaches this view DIRECTLY" in page  # ...but Drafted no longer needs it
     assert "spine row — nothing owes" not in page  # the refuted claim stays gone
+    # The needs file's two tiers are checked too, by the detector the brief reads.
+    assert "stakeholder need" in page
+    assert "docs/requirements/stakeholder-needs.toml" in page
+    assert "needs_owing" in page
 
 
 def test_retired_markdown_surface_is_reported(tmp_path):

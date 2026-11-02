@@ -10114,6 +10114,41 @@ copy holds the slot; then regenerate `prompts/CATALOG.md`),
 `PROCESS_OPTIONS.md` and `README.md`.
 
 
+### The open-items page lists the stakeholder needs and stakeholders owing an act [since 3f4b989df]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** Section 2 of `docs/open-items.html` ("Approval &
+re-attestation") used to read only the SR-chain model, so a drifted or
+unapproved stakeholder need or stakeholder reached the approval brief but
+not the page, and the section printed its empty message. It now also reads
+`baseline_snapshot.needs_owing`, the same detector the brief reads, with no
+second filter.
+
+- **Cards.** One card per row the detector reports, in its order, under the
+  heading "Stakeholder needs and stakeholders owing an act". The card's pill
+  is the detector's reason verbatim. A drifted row shows its moved cells
+  before and after, and the rest of the row as collapsed context. A
+  first-approval row (`Drafted`, or no `Status` cell) shows every cell
+  whole and unclipped, because a first approval rules on all of its text.
+- **Empty message.** It is printed only when no SR chain and no need or
+  stakeholder owes, and it now also names the needs registry and
+  `needs_owing` as checked.
+- **Counts.** The header names the SR chains and the needs owing separately,
+  and its drifted count includes the drifted needs.
+- **Contracts.** IF-126 (the page's read of `baseline_snapshot`) now names
+  `needs_owing`; IF-074 (the page) names the needs owing an act.
+
+**What to do.**
+
+- Regenerate the page (`python scripts/gen_open_items.py`). If any need or
+  stakeholder owes an act in your repo, it gains a card, and `--check` reads
+  the committed page as stale until you do.
+- No data migrates, no setting changes, and no registry schema changes.
+
+**Kit-owned files — overwrite:** `scripts/gen_open_items.py`,
+`scripts/baseline_snapshot.py` (docstring only).
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

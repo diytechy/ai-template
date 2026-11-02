@@ -1,0 +1,40 @@
+# docs/decisions/wi-987.toml — delegated calls the coordinator made in the
+# wi-987 lane (headless leg 28 of loop session 20261101T190826Z-4e6480).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The single plan (a fresh Claude Opus planner, run as the Plan agent type, which has no write tool, so it returned the plan inline and the coordinator placed it de-indented, verbatim) passed its coverage gate; critique 1 (Codex Sol at medium) read CHANGES-REQUESTED with one MAJOR (the first-approval need cards would clip cells at trace.truncate_cell's 1,500 characters, against D1's cells in full) and one MINOR (P5's line re-pin must follow P4). One revision, by a fresh Claude Opus planner from the revision brief, adopted both and passed the coverage gate over critique 1; critique 2 (fresh, convergence stance, a reading exclusion appended) read APPROVE findings=0, and the pass record binds it. The revising planner noted that the Markdown approval brief clips first-approval cells too and left it out of scope: an unfiled follow-up for the owner's handoff."
+alternative = "Re-launch a planner able to write the file instead of placing the inline plan."
+reversal_cost = "Low: plan records in the lane, before any build."
+why_not_escalated = "The single-plan procedure (coordinator-cycle section 3); recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "Terra's intent turn amended IF-126's data (adds needs_owing; kept) and rewrote IF-074's data, dropping the boundary file's name (docs/open-items.html), 'cited' and 'Decisions to review last' to fit the 160-character advisory (the compression failure recipes section 1 names). The coordinator repaired IF-074's cell openly to the approved text with the one clause added, within 160 characters: 'docs/open-items.html — cited pending decisions, uncited items, approval/re-attest chains and owing needs, verdict audit, owner actions; Decisions to review last' ('uncited-item notice' shortened to 'uncited items' to make room). The intent set is committed without a sitting; the checkpoint sitting judges both cells."
+alternative = "Resume Terra for the repair."
+reversal_cost = "Low: one interface cell, judged at the checkpoint."
+why_not_escalated = "A mechanical restoration of approved words, recorded openly (the wi-977 D-019 to D-021 precedent)."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 (001 REVIEW-A Sol, CHANGES-REQUESTED findings=1; 002 REVIEW-B, a Claude Opus high stand-in, recorded as the ruling-7 substitution, CHANGES-REQUESTED findings=3). Triage: REVIEW-B F1 (MAJOR, the page's needs section is traced to no LLR: _need_cards tags SR-178 alone, LLR-118 states section 2 as SR chains only, and the page tests sit on TC-269 whose method states the detector) names no code defect, only row text and the trace tag that follows it; re-graded as checkpoint-owed spine text (the wi-931 D-006 reading): the checkpoint's Terra reconcile amends LLR-271 (module gains gen_open_items.py, code_symbol _need_cards, detail a page clause) and TC-269's method and expected to state the page, the builder then retags _need_cards Implements: SR-178, LLR-271, and the sitting judges and re-attests (the LLR and TC rungs are released). It costs no fix round. REVIEW-A F1 and REVIEW-B F2 (MINOR, the same: IF-074's data names owing needs but not stakeholders) go on the spine change list for the checkpoint, within 160 characters. REVIEW-B F3 (MINOR, the Contract IF-126 docstring's grammar) is fixed in the build pass before the checkpoint. The round has no open BLOCKER or MAJOR code finding, so the checkpoint follows."
+alternative = "Count REVIEW-B F1 as a MAJOR and run a fix round 2 before the checkpoint."
+reversal_cost = "Low: the gate over the checkpoint tip reviews the amended rows and the retag."
+why_not_escalated = "The cycle's own rule that row wording is deferred to the checkpoint (coordinator-cycle section 3, Iterate step 3) and its precedent; recorded for confirm or overrule."
+review = ""
+
+[decision.D-004]
+decided = "Checkpoint sitting 003 (combined, amendment) at d47f01b: MEANING+BLESS for LLR-271 and TC-269. The convergence map before the gate (uncounted, convergence stance), every accepted round-1 finding to its evidence: REVIEW-B F1 (the needs section traced to no LLR) -> sitting 003's MEANING+BLESS of LLR-271's page clause and TC-269's page method, and the corrected tag `Implements: SR-178, LLR-271` on gen_open_items._need_cards with LLR-271's module and code_symbol naming it (inspection at the cited site; trace.py --strict clean); REVIEW-A F1 and REVIEW-B F2 (IF-074 omits stakeholders) -> the corrected IF-074 data cell, 'approval/re-attest chains and owing needs and stakeholders' (the corrected text at docs/requirements/interfaces.toml, IF-074); REVIEW-B F3 (the Contract IF-126 docstring's grammar) -> the corrected text 'The stamp lets a generated surface name WHICH baseline' in baseline_snapshot.py's Contract IF-126 body. The new page behaviour itself is pinned by the three page tests that failed on the pre-build renderer (strict xfail at 2504b2dad). IF-074's cell now runs past the 160-character advisory (warn only), accepted so both tiers are named."
+alternative = "Hold the gate for a further reconcile to bring IF-074 under 160 characters."
+reversal_cost = "Low: the map is the gate's precondition only."
+why_not_escalated = "The convergence-map rule (coordinator-cycle section 3); recorded for confirm or overrule."
+review = ""
+
+[decision.D-005]
+decided = "The gate over the checkpoint tip 5085e93 (uncounted, convergence stance, after D-004's map): 004 REVIEW-A Sol CHANGES-REQUESTED findings=1 (MINOR), 005 REVIEW-B Claude Opus high stand-in (the ruling-7 substitution) APPROVE findings=3 (all MINOR). No open BLOCKER or MAJOR, so no dispute sitting is owed and the act turn follows. The MINORs are not fixed in the lane, so the landing tip is the gated tip; they become unfiled follow-ups in the handoff: IF-074's data at 177 characters, over the 160 advisory (both reviewers); LLR-118 (the page's own Approved LLR) still lists section 2 as SR chains only, and TC-123's evidence now holds a needs assertion its method does not state; and the counts test could also pin the SR-chain count against a double count."
+alternative = "Fix the MINORs in the lane and run another gate."
+reversal_cost = "Low: follow-up rows."
+why_not_escalated = "A MINOR costs no round and goes to a successor or the spine change list (coordinator-cycle section 3, Iterate step 4); recorded for confirm or overrule."
+review = ""

@@ -26,7 +26,10 @@ WHAT IT RENDERS, in the order an owner needs it:
   2. APPROVAL & RE-ATTESTATION — every SR whose `Status` is `Drafted` (owes a
      first approval) or whose chain has DRIFTED from the approved snapshot
      (owes a re-attest — D-9 step 7 retired the `Modified` marker and left the
-     comparison as the whole detector), with its whole chain:
+     comparison as the whole detector), with its whole chain; then every
+     stakeholder need and stakeholder `baseline_snapshot.needs_owing` reports,
+     a drifted one with its moved cells before and after, a first-approval one
+     with its cells whole and unclipped. Each SR chain card shows:
      per-cell before/after, unchanged runs collapsible, additions and deletions
      marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION. An empty
      section reads as *check the baseline*, never as *nothing changed* — the
@@ -50,8 +53,10 @@ WHAT IT RENDERS, in the order an owner needs it:
      beside the work item citing it (WI-818).
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
-in `trace.reattest_model`, and the pending projection lives in
-`pending.pending_block`. This module imports both and RENDERS. It owns no
+in `trace.reattest_model`, the needs owing an act in
+`baseline_snapshot.needs_owing` (the detector the brief reads too), and the
+pending projection in `pending.pending_block`. This module imports them and
+RENDERS. It owns no
 second opinion about what is pending or what changed — if this view and the
 `--approve` brief ever disagree, the brief is authoritative and this is the bug.
 
@@ -74,8 +79,9 @@ Contract IF-074: the generated owner decision surface at `docs/open-items.html` 
     row cites, linked to its registry record, in place of any empty-queue
     claim; an approval
     and re-attestation section listing every SR that owes a first approval or
-    whose chain has drifted from the approved snapshot, with the whole chain's
-    per-cell before/after, unchanged runs collapsible, additions and deletions
+    whose chain has drifted from the approved snapshot, and every stakeholder
+    need and stakeholder owing an approval or a re-attest, with the whole chain's
+    (or the need's moved cells') per-cell before/after, unchanged runs collapsible, additions and deletions
     marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION so an empty
     section reads as *check the baseline* and never as *nothing changed*,
     closed by the audit list of every act-ledger entry that names a verdict
@@ -88,7 +94,8 @@ Contract IF-074: the generated owner decision surface at `docs/open-items.html` 
     work items citing it. It renders and owns no second
     opinion: the queue comes from `pending.open_item_queue`, the decisions from
     `pending.decisions_to_review`, the archaeology and cell comparison from
-    `trace.reattest_model` and the pointers from `pending.pending_block`, so
+    `trace.reattest_model`, the owing needs from
+    `baseline_snapshot.needs_owing` and the pointers from `pending.pending_block`, so
     where this view and the
     `trace.py --approve` brief disagree the brief is authoritative and this is
     the bug. `--check` byte-compares the regenerated document against the
@@ -626,6 +633,33 @@ def _changed_cell_groups(row):
     ]
 
 
+def _cell_diff_html(cells):
+    """Each moved cell `(name, before, after)` as its name, the share of its
+    words that changed, and its word-level diff, the before and after whole.
+    Shared by the SR chain rows and the need cards, so both read alike."""
+    return "".join(
+        '<div class="cellname">{n} <span class="pill">{p}% of the '
+        'words changed</span></div><div class="diff">{d}</div>'.format(
+            n=esc(name), p=changed_percent(before, after), d=word_diff(before, after)
+        )
+        for name, before, after in cells
+    )
+
+
+def _full_cells_html(pairs):
+    """Each `(name, value)` as its name over its escaped value, an empty value
+    skipped. It never clips: whether a value is shortened is the caller's
+    choice, because a context surface may clip and the text a signer rules
+    on may not (`trace._cell_diff_lines`)."""
+    return "".join(
+        '<div class="cellname">{}</div><div class="diff">{}</div>'.format(
+            esc(key), esc(val)
+        )
+        for key, val in pairs
+        if val
+    )
+
+
 def _changed_cell_lines(row):
     """The inner HTML for a `changed` row: its per-cell word-diff under the
     §A5.1 group headings, then the unchanged rest of the row as context.
@@ -644,15 +678,7 @@ def _changed_cell_lines(row):
             continue
         if both and label:
             inner.append('<div class="cellgroup">{}</div>'.format(esc(label)))
-        for name, before, after in cells:
-            inner.append(
-                '<div class="cellname">{n} <span class="pill">{p}% of the '
-                'words changed</span></div><div class="diff">{d}</div>'.format(
-                    n=esc(name),
-                    p=changed_percent(before, after),
-                    d=word_diff(before, after),
-                )
-            )
+        inner.append(_cell_diff_html(cells))
     inner.append(
         _context_block(
             row["full"],
@@ -688,13 +714,12 @@ def _chain_row(row):
                 "This row is here because its own <code>Status</code> asks for "
                 "a human, not because its text moved.</p>"
             )
-        for key, val in (row["full"] or {}).items():
-            if (val or "").strip():
-                inner.append(
-                    '<div class="cellname">{k}</div><div class="diff">{v}</div>'.format(
-                        k=esc(key), v=esc(tr.truncate_cell(val.strip()))
-                    )
-                )
+        inner.append(
+            _full_cells_html(
+                (k, tr.truncate_cell((v or "").strip()))
+                for k, v in (row["full"] or {}).items()
+            )
+        )
     # WIDENED: WHY does this row owe — drift (its state already says so) or a
     # first approval it never received (its own `Drafted` Status, independent
     # of whether its text also moved)? A row whose state is already "drafted"
@@ -731,6 +756,75 @@ _KIND_LABELS = {
 }
 
 
+def _nothing_owed():
+    """Section 2's empty message: printed only when no SR chain and no need
+    or stakeholder owes an act, and saying what was checked for each."""
+    return (
+        '<p class="empty">No <code>Drafted</code> <strong>SR</strong>, '
+        "<strong>LLR</strong>, or <strong>TC</strong> anywhere in the "
+        "spine, and no drifted chain — no SR owes an approval or a "
+        "re-attest. Say only what was checked: an amended row's own "
+        "<code>Status</code> answers for its own cells (owner ruling "
+        "2026-08-17m), so a chain row's TEXT moving under an "
+        "<code>Approved</code> SR reaches this view through the "
+        "snapshot-drift arm — which compares against "
+        "<code>docs/archive/last_approved/</code>, the "
+        "<code>Modified</code> marker having retired at D-9 step 7 — "
+        "but a chain row's <code>Drafted</code> Status reaches this view "
+        "DIRECTLY (the OI-61-sitting widening: it used to be checked on "
+        "the SR row alone, `docs/log.d/2026-08-23-oi61-rule-and-spine-"
+        "approval.md`), not only through drift. "
+        "And no stakeholder need or stakeholder in <code>{}</code> is "
+        "<code>Drafted</code>, lacks a <code>Status</code> cell, or has drifted "
+        "from its recorded copy (<code>baseline_snapshot.needs_owing</code>)."
+        "</p>".format(esc(baseline_snapshot.NEED_TIERS[0][0]))
+    )
+
+
+def _need_cards(owing):
+    """One card per stakeholder need or stakeholder owing an act, as
+    `baseline_snapshot.needs_owing` reports it, in its order, under the
+    approval brief's own heading; `""` when none owes.
+
+    The page holds no second opinion of what owes: each row the detector
+    returns is shown with its reason verbatim. A drifted row shows its moved
+    cells before and after, the rest of the row as collapsed context. Any
+    other row is shown whole and UNCLIPPED: a first approval rules on every
+    cell of it, and a clipped cell would ask the owner to sign text they were
+    not shown.
+
+    Implements: SR-178, LLR-271"""
+    if not owing:
+        return ""
+    cards = []
+    for rid, why, cells, row in owing:
+        if cells:
+            body = _cell_diff_html(cells) + _context_block(
+                row,
+                skip={name for name, _, _ in cells},
+                heading="the rest of this row — unchanged since the snapshot",
+            )
+        else:
+            body = _full_cells_html((k, (v or "").strip()) for k, v in row.items())
+        cards.append(
+            '<article class="card" id="{i}"><h3><span class="rid">{r}</span>'
+            '<span class="pill{cls}">{w}</span></h3>{b}</article>'.format(
+                i=esc(rid + "-attest"),
+                r=esc(rid),
+                cls="" if cells else " approve",
+                w=esc(why),
+                b=body,
+            )
+        )
+    return (
+        "<h3>Stakeholder needs and stakeholders owing an act</h3>"
+        '<p class="sub">Re-anchor a drifted row with <code>intake.py snapshot '
+        "--reattests &lt;ROW-ID&gt;</code> once its moved cells are read; a "
+        "<code>Drafted</code> or Status-less row owes its first approval.</p>"
+        + "".join(cards)
+    )
+
+
 def _attestation_cards(model, srs_by_id=None):
     """One card per SR owing an approval or a re-attest, its chain beneath.
 
@@ -744,23 +838,6 @@ def _attestation_cards(model, srs_by_id=None):
     all (the owner's report, 2026-08-24); without `sr_ctx` a reader diffing a
     child row still had no statement of the requirement it hangs from."""
     srs_by_id = srs_by_id or {}
-    if not model:
-        return (
-            '<p class="empty">No <code>Drafted</code> <strong>SR</strong>, '
-            "<strong>LLR</strong>, or <strong>TC</strong> anywhere in the "
-            "spine, and no drifted chain — no SR owes an approval or a "
-            "re-attest. Say only what was checked: an amended row's own "
-            "<code>Status</code> answers for its own cells (owner ruling "
-            "2026-08-17m), so a chain row's TEXT moving under an "
-            "<code>Approved</code> SR reaches this view through the "
-            "snapshot-drift arm — which compares against "
-            "<code>docs/archive/last_approved/</code>, the "
-            "<code>Modified</code> marker having retired at D-9 step 7 — "
-            "but a chain row's <code>Drafted</code> Status reaches this view "
-            "DIRECTLY (the OI-61-sitting widening: it used to be checked on "
-            "the SR row alone, `docs/log.d/2026-08-23-oi61-rule-and-spine-"
-            "approval.md`), not only through drift.</p>"
-        )
     cards = []
     for entry in model:
         # KeyError on an unknown kind, deliberately (see `_KIND_LABELS`).
@@ -945,6 +1022,8 @@ def render(root):
     # is the arm no cell can carry, and the reason this page survived both the
     # rename and step 7's retirement with nothing to re-key.
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+    # The needs file's two tiers, from the one detector the brief reads.
+    owing = baseline_snapshot.needs_owing(root)
     offspine_rows = tr.offspine_census_rows(root)
     queue = pending.open_item_queue(root)
     pure = pending_block_text(root)
@@ -955,11 +1034,13 @@ def render(root):
     counts = {
         "pending": len(queue["cards"]),
         "attest": len(model),
+        "needs": len(owing),
         "rows": sum(len(e["rows"]) for e in model),
         # The drifted count is the one number that cannot be read off a Status
         # cell: a row whose text moved away from what was approved, while its
         # own Status still claims approval.
-        "drifted": sum(1 for e in model if not e["no_baseline_reason"]),
+        "drifted": sum(1 for e in model if not e["no_baseline_reason"])
+        + sum(1 for o in owing if o[2]),
         "baseline": (
             "<code>{}</code>, each registry's copy named by the commit that "
             "last wrote it:<ul>{}</ul>".format(
@@ -992,11 +1073,13 @@ def render(root):
         '<p class="eyebrow">generated — do not hand-edit · '
         "<code>python project-trajectory/scripts/gen_open_items.py</code></p>\n"
         "<h1>Open items — owner decision surface</h1>\n"
-        '<p class="sub">{pending} pending decision(s) · {attest} spine row(s) owing a '
-        "approval or a re-attest, across {rows} chain row change(s); "
+        '<p class="sub">{pending} pending decision(s) · {attest} SR chain(s) and '
+        "{needs} stakeholder need(s) or stakeholder(s) owing an approval or a "
+        "re-attest, across {rows} chain row change(s); "
         "{drifted} row(s) drifted from the approved snapshot. Briefs are rows "
         "in <code>{registry}</code>; the attestation depth is "
-        "computed by <code>trace.reattest_model</code>, the same code behind "
+        "computed by <code>trace.reattest_model</code> and "
+        "<code>baseline_snapshot.needs_owing</code>, the same code behind "
         "<code>trace.py --approve</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
         '<div class="baseline">Baseline: {baseline}</div>\n'
@@ -1028,9 +1111,13 @@ def render(root):
         js=JS,
         briefs=_brief_cards(queue, live_registry_rel(root).split("docs/", 1)[-1]),
         decisions=decisions_block(*pending.decisions_to_review(root)),
-        attestations=_attestation_cards(
-            model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
-        ),
+        attestations=(
+            _attestation_cards(
+                model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
+            )
+            + _need_cards(owing)
+        )
+        or _nothing_owed(),
         audit=verdict_reattest_block(_ledger_entries(root)),
         pointers=_pointer_list(pure),
         offspine=_offspine_census_block(offspine_rows),

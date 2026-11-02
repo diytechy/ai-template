@@ -675,6 +675,95 @@ def test_a_drifted_approved_stakeholder_is_reported_and_briefed(scaffold):
     assert "  - after: Owns every outcome." in proc.stdout, proc.stdout
 
 
+# --- the owner's open-items page shows the needs owing an act (TC-269) --------
+
+_EMPTY_SECTION_2 = "no SR owes an approval or a re-attest"
+
+
+def _card(page, rid):
+    """The `<article>` the open-items page renders for `rid`'s act, failing
+    the test (not raising a lookup error) when the page has none."""
+    found = re.search(
+        r'<article class="card" id="{}-attest">.*?</article>'.format(re.escape(rid)),
+        page,
+        re.S,
+    )
+    if found is None:
+        pytest.fail("no card for {} on the open-items page".format(rid))
+    return found.group(0)
+
+
+def _drifted_need(root):
+    """One approved need recorded, then its `need` cell moved."""
+    _append(root, NEEDS_REL, _NEED)
+    SNAP.copy_live(root, seed=True)
+    _rewrite(
+        root,
+        NEEDS_REL,
+        'need = "The owner sees every approved need whose text moved."',
+        'need = "The owner sees every approved need whose text moved, at once."',
+    )
+
+
+def test_a_drifted_need_has_its_card_on_the_open_items_page(scaffold):
+    """The page reads the same detector as the brief: a drifted need gets a
+    card in the approval and re-attestation section with its moved cell
+    before and after, and the section no longer says nothing is owed."""
+    root = scaffold
+    _drifted_need(root)
+    page = load_script("gen_open_items").render(root)
+    card = _card(page, "SN-001")
+    assert ">DRIFTED<" in card, card
+    assert '<div class="cellname">Need' in card, card
+    # Before and after: the unchanged run once, the moved words both ways.
+    assert "The owner sees every approved need whose text " in card, card
+    assert "<del>moved.</del><ins>moved, at once.</ins>" in card, card
+    assert _EMPTY_SECTION_2 not in page
+
+
+def test_a_first_approval_need_and_stakeholder_show_their_cells_in_full(scaffold):
+    """A `Drafted` need and a stakeholder with no Status cell each get a card
+    showing every cell whole: a first approval rules on all of the row's
+    text, so a cell past the page's context clip is shown to its end."""
+    root = scaffold
+    trace = load_script("trace")
+    long_why = "x " * (trace.CELL_TRUNCATE_LIMIT // 2 + 50) + "END-OF-WHY"
+    _append(
+        root,
+        NEEDS_REL,
+        '\n[need.SN-002]\nstatus = "Drafted"\n'
+        'need = "The owner reads a new need before approving it."\n'
+        'why = "{}"\npriority = "M"\n'
+        'acceptance = "The need is shown in full."\n'
+        '\n[stakeholder.STK-01]\nname = "The owner"\n'
+        'description = "Owns the outcomes."\n'.format(long_why),
+    )
+    page = load_script("gen_open_items").render(root)
+    need = _card(page, "SN-002")
+    assert ">Drafted, never approved<" in need, need
+    assert "The owner reads a new need before approving it." in need, need
+    assert "END-OF-WHY" in need, need
+    assert "more chars — read the registry row" not in need, need
+    stakeholder = _card(page, "STK-01")
+    assert ">no Status cell, never approved<" in stakeholder, stakeholder
+    assert "The owner" in stakeholder and "Owns the outcomes." in stakeholder
+    for card in (need, stakeholder):
+        assert "<del>" not in card and "<ins>" not in card, card
+
+
+def test_the_open_items_counts_include_the_needs_that_owe(scaffold):
+    """The page's header counts the needs owing an act, and its drifted count
+    takes in a drifted need beside the drifted SR chains."""
+    root = scaffold
+    _drifted_need(root)
+    reg = load_script("trace").load_registries(root / "docs")
+    model = load_script("trace").reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+    sr_drifted = sum(1 for e in model if not e["no_baseline_reason"])
+    page = load_script("gen_open_items").render(root)
+    assert "1 stakeholder need(s) or stakeholder(s)" in page
+    assert "{} row(s) drifted".format(sr_drifted + 1) in page
+
+
 def _complete(label, rid, phase=True):
     row = {label + "-ID": rid, "Status": "Approved"}
     if phase and label != "SN":

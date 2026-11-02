@@ -274,8 +274,10 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # 1549 when WI-790 added the queue-projection cards, the integrity notice
     # and the "Decisions to review" section, all above this site. 1549 -> 1580
     # when WI-818 added the overruled heading and the citing-row field to that
-    # section, all above this site.
-    assert sites == [("gen_open_items.py", 1580)], sites
+    # section, all above this site. 1580 -> 1667 when WI-987 added
+    # `_need_cards`, the shared cell helpers and the needs clauses, all above
+    # this site.
+    assert sites == [("gen_open_items.py", 1667)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

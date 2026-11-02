@@ -144,14 +144,18 @@ Contract IF-125: the drift read — `load_all`, `rows_for`, `is_drifted` and
     harder unanchored finding, owned elsewhere. With no snapshot `load_all`
     returns None and `rows_for` collapses it to `{}`, so a reader reports
     nothing approved rather than everything drifted.
-Contract IF-126: the stamp read — `registry_stamps(root)` and `SNAPSHOT_DIR`
-    — so a generated surface can name WHICH baseline the reader is being shown
-    and where it lives: each registry the record holds a committed copy of,
-    with the commit that last wrote THAT copy, since a refresh copies only what
-    its act authorises and the copies were written at different commits. Advisory and read-only in both directions: the stamp is
-    derived from git and degrades to empty strings off a checkout, and this side
-    never calls `copy_live`, because a generator that refreshed the baseline
-    would erase the very lag it exists to report.
+Contract IF-126: the stamp read — `registry_stamps(root)` and `SNAPSHOT_DIR` —
+    and the needs read, `needs_owing(root)`: one `(id, why, cells, row)` per
+    stakeholder need or stakeholder owing an act, the rows the owner page's
+    approval and re-attestation section lists. The stamp lets a generated
+    surface name WHICH baseline the reader is being shown and where it lives:
+    each registry the record holds a committed copy of, with the commit that
+    last wrote THAT copy, since a refresh copies only what its act authorises
+    and the copies were written at different commits. Advisory and read-only in
+    both directions: the stamp is derived from git and degrades to empty
+    strings off a checkout, and this side never calls `copy_live`, because a
+    generator that refreshed the baseline would erase the very lag it exists to
+    report.
 Contract IF-217: the accepted risk's anchor, read from history.
     `risk_acceptance_act(root, da_id)` returns `(commit, reason)`: the latest
     commit whose approval act names the assumption — an act ledger entry that
