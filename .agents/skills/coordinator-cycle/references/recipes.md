@@ -134,7 +134,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     for any other set states that the turn is no decomposition round. A
     missing or empty `HATS` refuses.
   - Commit a turn's log before the next turn: the call commits it in the
-    lane, and after an exit 4 commit the named log yourself. The resumed
+    lane, and after an exit 4 commit the named log yourself. A builder's
+    unstaged regenerated view (`docs/open-items.html`) makes the log
+    commit's `staged-divergence` step refuse: the exit 4 log then rides the
+    next attest commit with that view (wi-987, leg 28). The resumed
     turn reads its session id from that committed log: a lane resumed
     days later found a noted id only in `~/.codex/sessions/<date>/`, by
     its `cwd` and model (wi-798, 2026-10-20).
@@ -357,7 +360,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   1. Brief: `"$PY" "$SCRIPTS/review_brief.py" plan --wi WI-NNN --scratch <dated root> --out <brief>`;
      launch a fresh Opus sub-agent (Agent tool, `model: "opus"`) given only
      the brief's path. It writes `<dated root>/WI-NNN-plan.md`; copy it
-     verbatim to `docs/plans/WI-NNN/plan.md` and commit it alone.
+     verbatim to `docs/plans/WI-NNN/plan.md` and commit it alone. Launch it
+     as `general-purpose`, never the `Plan` type, which has no write tool:
+     two `Plan` planners returned their plans inline, and the coordinator
+     had to place them de-indented by hand (leg 28, wi-987 D-001).
   2. Gate: `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> docs/plans/WI-NNN/plan.md`;
      only exit 0 goes on. A `DELTA: beyond` plan closes the lane partial.
   3. Critique:
@@ -756,7 +762,10 @@ commit of its own, move it to trunk's tip
   `amendment:` token, with the checkpoint's arms map appended. Never hand
   off a list of act turns, one per partial verdict.
 - **Run the commit bar in the lane after the act turn,** before the
-  squash. An act that approves a row arms checks a Drafted row escapes:
+  squash. When trunk still equals the lane's base (no rebase was owed),
+  the staged squash's tree is the lane tip's, so the bar on the staged
+  squash below is that run; a red there resets the squash and is fixed in
+  the lane (leg 28). An act that approves a row arms checks a Drafted row escapes:
   an approved Smoke TC whose evidence sits in a `SLOW_MODULES` module reds
   `test_every_approved_smoke_case_has_evidence_in_the_smoke_tier`. Fix it
   in the lane (move the case to a fast module, a traced-only change) and

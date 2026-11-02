@@ -25,11 +25,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-01b-leg27-coordinator.md](handoff-2026-11-01b-leg27-coordinator.md).
-  The owner ruled OI-115 and OI-116 on 2026-11-01 and dropped its
-  `Overnight: stop` line: its queue table now leads with movable rows (the
-  open-items page's needs section, then the act ledger's preparatory row),
-  each owing its scope critique before its claim. The owner ruled the review-churn program
+  [handoff-2026-11-01c-leg28-coordinator.md](handoff-2026-11-01c-leg28-coordinator.md).
+  The open-items page's needs section and the act ledger's preparatory
+  row have landed (every new act-ledger entry now records the registries
+  its act copied); its queue table leads with the settled-amendment
+  filter's rebase onto that landing, then the watermark carrier, whose
+  scope critique is answered and confirmed. The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
   process-text, strict-lints and plan-gate landing-shapes rows have
@@ -55,10 +56,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   disposition can adopt an already-filed successor, recorded at the close
   and judged by one commit check that admits the close's exact relinks
   (the hook's `adoption-record` step). The trunk mint's settled-amendment filter
-  (the first new build, owner, 2026-10-20) passed its checkpoint and
-  holds at its gate until the act ledger records what each act copied
-  (OI-115 ruled (a): a preparatory row lands first, then the lane rebases
-  onto it), and the lane
+  (the first new build, owner, 2026-10-20) passed its checkpoint; the act
+  ledger now records what each act copied (OI-115 ruled (a)), so the lane
+  rebases onto that landing and builds its settlement from the ledger, and the lane
   lifecycle design's in-lane mint and station authority rows are
   cancelled, its config-retirement row folded into item 10's program. The
   account-homes row has landed: the adjudicator runs on its declared
@@ -197,7 +197,24 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
   entities · 4 crossings · 3 relationships, watermark-held); `OI-61` (c) stays deferred
   on its condition (a demonstrated residual drift class), not owner-owed.
-- **Unfiled follow-ups** (topics, no ids): from the findings-file
+- **Unfiled follow-ups** (topics, no ids): from the act ledger's
+  preparatory row's gate (wi-967 D-005): its RESYNC entry's overwrite list
+  omits `scripts/acceptance_record.py`, which now owns
+  `added_ledger_entries` (an adopter preserving a local copy gets an
+  AttributeError on every strict-integrity run; fix before the FileBackup
+  re-sync); a merge exempts every entry MERGE_HEAD holds, so a lane's
+  legacy-shaped entry from an un-re-synced writer can land through the
+  slot's merge unjudged; LLR-361 states the commit rule twice and "relative
+  to each parent" is ambiguous; from the open-items page's needs section
+  (wi-987 D-001, D-005): IF-074's data cell is 177 characters, over the
+  160 advisory; LLR-118 (the page's own LLR) still lists section 2 as SR
+  chains only, and TC-123's evidence holds a needs assertion its method
+  does not state; the counts test could also pin the SR-chain count; the
+  Markdown approval brief clips first-approval need cells at 1,500
+  characters, as the page no longer does; `pending.py` projects owing SR
+  rows only and never owing needs (the page's section 3 and dispatch's
+  exit count); an owner-page view of owing assumptions and surrogates is
+  not built; from the findings-file
   binding row's gate (wi-878 D-008): TC-069 moved from Smoke to Full,
   which the tier rule does not require while it cites smoke-tier
   evidence, so its per-commit evidence join is forgone (restore Smoke at
