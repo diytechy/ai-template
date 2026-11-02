@@ -1,0 +1,40 @@
+# docs/decisions/wi-967.toml — delegated calls the coordinator made in the
+# wi-967 lane (headless leg 28 of loop session 20261101T190826Z-4e6480).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The single plan (a fresh Claude Opus planner, run as the Plan agent type, which has no write tool, so it returned the plan inline and the coordinator placed it de-indented, verbatim) passed its coverage gate, and critique 1 (Codex Sol at medium) read APPROVE findings=0; the pass record binds it. The plan's own calls are recorded for confirm or overrule and for the reviewers: the commit-bound rule lives in baseline_snapshot on the hook-run integrity floor (record_findings), not in acceptance_record or a lane-commit rider; membership in the snapshot's registry files is checked only for entries a commit adds, never in the whole-file rule, so a later change to the registry universe cannot make history malformed; a malformed parent ledger yields no commit finding; no new LLR (IF-220 carries the domain) and one new TC; the new TC's first approval is a lane sitting and act, whose entry is the first to carry copied."
+alternative = "A second critique, or an LLR for the commit-bound rule."
+reversal_cost = "Low: plan records in the lane, before any build."
+why_not_escalated = "The single-plan procedure (coordinator-cycle section 3); recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "Terra's intent turn amended IF-220 (data to a schema pointer under 160 characters, notes with the legacy reading, commit boundary and order rule, consumers from the plan's grep, version v2) and drafted TC-400 (minted through --bump-ids). The coordinator repaired two things openly: IF-220's notes regained the field meanings the old data cell carried, which the plan says move to notes and Terra dropped ('Fields: seq (a positive integer, unique and increasing in file order), date (an ISO day), approved = [row ids], reattested = [row ids], verdict (an optional non-empty in-tree verdict path), copied (a non-empty, sorted list of distinct repo-relative registry paths, the files the act wrote).'), and its 'PROCESS.md §6 coverage bound' citation frame became 'the coverage bound, since no supported route produces either' (trace's living-cell advisory); and a blank line before [test.TC-400]. The intent set is committed without a sitting; the checkpoint judges it."
+alternative = "Resume Terra for the repairs."
+reversal_cost = "Low: interface and TC cells, judged at the checkpoint."
+why_not_escalated = "Mechanical restorations recorded openly (the wi-977 D-019 to D-021 precedent)."
+review = ""
+
+[decision.D-003]
+decided = "Counted round 1 (001 REVIEW-A Sol, CHANGES-REQUESTED findings=1; 002 REVIEW-B, a Claude Opus high stand-in, recorded as the ruling-7 substitution, CHANGES-REQUESTED findings=3). Triage: REVIEW-B F1 (MAJOR, the five new act-ledger symbols back-link to Approved LLR-271, the needs tiers, whose detail states none of the copied record or its refusals) names no code defect, only row text and the tags that follow it; re-graded as checkpoint-owed spine text (the wi-931 D-006 reading): the checkpoint's Terra reconcile drafts one new LLR under SR-178 that states the record and its two refusals (module baseline_snapshot.py, the five symbols plus the writer's change), TC-400 verifies it, LLR-271's code_symbol returns to its base, and the builder retags the five symbols Implements: SR-178, LLR-<new>; the sitting judges the new LLR and TC-400 for first approval. It costs no fix round. REVIEW-A F1 (MINOR, the RESYNC recovery for an uncommitted old-writer act does not recover: retaking leaves the earlier uncommitted entry without copied) and REVIEW-B F2 (MINOR, _entries_added restates acceptance_record._added_acts's seq difference: one home both call) and F3 (MINOR, the docstring cites process.md, not PROCESS.md) are fixed in the build pass before the checkpoint. The round has no open BLOCKER or MAJOR code finding, so the checkpoint follows."
+alternative = "Count REVIEW-B F1 as a MAJOR and run a fix round 2 before the checkpoint."
+reversal_cost = "Low: the gate over the checkpoint tip reviews the new row and the retag."
+why_not_escalated = "The cycle's own rule that row wording is deferred to the checkpoint (coordinator-cycle section 3, Iterate step 3) and its precedent; recorded for confirm or overrule."
+review = ""
+
+[decision.D-004]
+decided = "Sitting 003 (combined, first-approval) at feda13c returned LLR-361 (the commit-bound rule stated with no refusal) and TC-400 (a code file named; act shapes undefined); Terra, resumed, answered both, and re-sit 004-ADJUDICATE-822b798 over the whole set (LLR-361 and TC-400, the only rows owing an act) read APPROVE rows=2, so 004 alone authorizes the act. WI-987 then landed (308259971, act seq 164) and its re-mint WI-988 closed (37bcca3b8); this lane rebased onto 37bcca3b8 (pre-rebase tip df8222518, kept for the archive): the id watermark took trunk's and was re-bumped (LLR 361, TC 400, WI 988); LLR-271's two replayed conflicts resolved to trunk's row (WI-987's module, _need_cards and page clause), the lane's net change to LLR-271 staying none; the RESYNC entries ordered trunk's first and the lane's re-anchored at 37bcca3b8. The unchanged-rows check: LLR-361 and TC-400 at the verdict's commit 35bc80fc7 equal the rebased tip's. The convergence map for the gate (uncounted, convergence stance, over the rebased tip): REVIEW-B F1 (the new symbols back-linked to LLR-271) -> sitting 004's APPROVE of LLR-361 and TC-400 and the tags `Implements: SR-178, LLR-361` on the eight symbols LLR-361's code_symbol names (inspection; trace.py --strict clean); REVIEW-A F1 (the old-writer recovery) -> test_an_old_writers_uncommitted_act_is_recovered_by_abandoning_it, which fails on the pre-fix refusal text; REVIEW-B F2 (two homes for the added-entries comparison) -> acceptance_record.added_ledger_entries, the one home both callers use, _entries_added deleted (inspection at the cited sites); REVIEW-B F3 -> the corrected text 'PROCESS.md §6' in the IF-220 contract docstring."
+alternative = "Take the act before the rebase."
+reversal_cost = "Low: the act has not been taken."
+why_not_escalated = "The landing order (acts after the lanes ahead land and the lane rebases) and the convergence-map rule (coordinator-cycle sections 3 and 4); recorded for confirm or overrule."
+review = ""
+
+[decision.D-005]
+decided = "The gate over the rebased checkpoint tip bff202014 (uncounted, convergence stance, after D-004's map): REVIEW-A Sol CHANGES-REQUESTED findings=1 (MINOR), REVIEW-B Claude Opus high stand-in (the ruling-7 substitution) APPROVE findings=3 (all MINOR). No open BLOCKER or MAJOR, so no dispute sitting is owed and the act turn from 004-ADJUDICATE-822b798 follows. The MINORs are not fixed in the lane, so the landing tip is the gated tip; they become unfiled follow-ups in the handoff: the RESYNC entry's overwrite list omits scripts/acceptance_record.py, which now owns added_ledger_entries (both reviewers; an adopter preserving a local acceptance_record.py gets an AttributeError on every strict-integrity run; the pack's general changed-file walk mitigates) — worth fixing before the owner's FileBackup re-sync (OI-98); a merge exempts every entry MERGE_HEAD holds, so a lane's legacy-shaped entry taken by an un-re-synced writer can land through the slot's --no-ff merge unjudged (a re-sync-window scenario); and LLR-361's detail states the commit rule twice, and 'relative to each parent' is ambiguous (the code means absent from every parent)."
+alternative = "Fix the RESYNC overwrite list in the lane and run another gate."
+reversal_cost = "Low: a RESYNC text follow-up on trunk."
+why_not_escalated = "A MINOR costs no round; a gate MINOR whose fix moves the tip is a follow-up (recipes section 3, wi-935 D-005); recorded for confirm or overrule."
+review = ""

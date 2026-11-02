@@ -24,7 +24,9 @@ docs/requirements/components.toml
 
 Beside them, `acts.toml` holds one entry per approval act that copied a
 registry, the first signing included: its number, its day, the rows it carried
-into approval and the rows it re-attested. An accepted risk is anchored to the
+into approval, the rows it re-attested and the registries it copied
+(`copied`). An entry written before `copied` existed keeps its shape; its copy
+set is unknown, and nothing infers one. An accepted risk is anchored to the
 latest act naming its assumption there.
 
 Repo-relative paths are preserved under this root, so `git diff` and an

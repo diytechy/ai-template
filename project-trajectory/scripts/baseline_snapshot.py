@@ -180,16 +180,32 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
     needs file's need and stakeholder tiers among them (`NEED_TIERS`); and
     `reattested`, the sorted ids its `reattests` named; and, only when the act
     named one, `verdict`, the verdict file that ruled those rows — the record a
-    held rung's CLARITY re-attestation carries (OI-100, WI-791). FAILS CLOSED:
+    held rung's CLARITY re-attestation carries (OI-100, WI-791); and `copied`,
+    the sorted canonical `SNAPSHOTTED` paths of the registries the act
+    actually wrote, so a traced re-anchor naming no row, a mixed act and a
+    re-seed each name every file they copied. A copied file is no evidence
+    that its rows were judged. An entry written before `copied` existed is a
+    legacy entry: it parses unchanged, with no `copied` key, and its copy set
+    is unknown, never empty, never inferred or backfilled. FAILS CLOSED:
     `acts_problems(text)` lists every fault (text that does not parse, a field
     missing or mistyped, an id not of the kit's syntax, a `verdict` that is
-    not a non-empty string, `seq` values not
+    not a non-empty string, a `copied` that is not a non-empty sorted list of
+    distinct paths, an entry omitting `copied` after one that carries it,
+    `seq` values not
     unique and increasing in file order), and `parse_acts(text)` returns the
     entries as dicts in file order, `[]` for no text, or raises
     `ActLedgerError` — it never returns the entries it could read.
+    The commit is the boundary for the rest: `added_acts_problems(text,
+    parent_texts)` judges only the entries a commit adds (their `seq` in no
+    parent's ledger, against HEAD and MERGE_HEAD during a merge, as
+    `added_acts_findings(root)` reads the index), which must carry `copied`
+    naming only `SNAPSHOTTED` files. A malformed parent and a hand-edited
+    ledger are outside the coverage bound (PROCESS.md §6): no supported route
+    produces either.
     `read_acts(root)` reads the working tree's; `acts_findings(root)` reports
     its faults as integrity findings, which `record_findings(root)` joins to
-    the unanchored ones for `trace.py --strict-integrity`; a
+    the unanchored ones and the added-entry ones for
+    `trace.py --strict-integrity`; a
     snapshot act on a malformed ledger is refused before it moves any byte of
     the record, and `risk_acceptance_act` reads no anchor through one. The
     README beside it stays prose; nothing parses it.
@@ -208,15 +224,18 @@ from pathlib import Path
 # script's own dir is sys.path[0], and the guard covers an in-process import (a
 # test) whose sys.path does not yet carry scripts/.
 try:
+    import acceptance_record
     import check_trajectory
     import spine_rules
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import acceptance_record
     import check_trajectory
     import spine_rules
     import spine_carrier
 
+from kitlib import git as _kitgit
 from kitlib.observation import OBSERVATIONS_DIR
 from kitlib.spine import is_drafted, toml_fields
 
@@ -236,22 +255,28 @@ SNAPSHOT_DIR = "docs/archive/last_approved"
 README = "README.md"
 
 # THE ACT LEDGER, beside the copies: one typed entry per approval act that
-# copied a registry, naming the rows it carried into approval and the rows it
-# re-attested. Re-accepting a risk is re-attesting its row, and a
-# re-attestation moves no cell a later reader could find in the copies, so the
-# act has to say which rows it named somewhere a reader may parse (SR-202,
-# LLR-239). Each entry carries its own sequence number, so two acts naming the
+# copied a registry, naming the rows it carried into approval, the rows it
+# re-attested and the registries it copied (`copied`, absent on a legacy entry
+# written before it existed, whose copy set is unknown). Re-accepting a risk is
+# re-attesting its row, and a re-attestation moves no cell a later reader could
+# find in the copies, so the act has to say which rows it named somewhere a
+# reader may parse (SR-202, LLR-239); and a traced re-anchor, a mixed act or a
+# re-seed copies files its row lists never name, so it records those too
+# (SR-178). Each entry carries its own sequence number, so two acts naming the
 # same rows on the same day are two entries and the later one is never read as
-# the earlier. Appended by `copy_live`, read by `risk_acceptance_act`; it
-# mirrors no live file, so the mirror rules skip it by name
+# the earlier. Appended by `copy_live`; read by `risk_acceptance_act`, the
+# acceptance record, the sitting rules and the open-items audit list. An entry
+# a commit adds must carry `copied` (`added_acts_findings`). It mirrors no
+# live file, so the mirror rules skip it by name
 # (`acceptance_record.SNAPSHOT_ACTS`, pinned equal by the snapshot tests).
 ACTS = "acts.toml"
 
 _ACTS_HEADER = (
     "# APPROVAL ACTS, appended by `intake.py snapshot` (baseline_snapshot.copy_live).\n"
-    "# One entry per act that copied a registry: the rows it carried into approval\n"
-    "# and the rows it re-attested. Do not edit; accepted risks are anchored to\n"
-    "# these entries, and git holds the commit each act landed in.\n"
+    "# One entry per act that copied a registry: the rows it carried into approval,\n"
+    "# the rows it re-attested and the registries it copied. Do not edit; accepted\n"
+    "# risks are anchored to these entries, and git holds the commit each act\n"
+    "# landed in.\n"
 )
 
 # The registries a signing copies. FOUR SPINE plus THREE OFF-SPINE, and the
@@ -1429,6 +1454,7 @@ def copy_live(root, *, seed=False, approves=None, reattests=None, verdict=None):
             standing,
             _approved_by_act(root, copied_rels, prior),
             reattests or (),
+            copied_rels,
             verdict,
         )
     return written
@@ -1557,7 +1583,50 @@ def _entry_problems(n, entry, last_seq):
         out.append("{}: `date` is missing".format(where))
     elif _date_problem(entry["date"]):
         out.append("{}: `date` {}".format(where, _date_problem(entry["date"])))
-    return out + _named_rows_problems(where, entry)
+    return out + _named_rows_problems(where, entry) + _copied_problems(where, entry)
+
+
+def _copied_problems(where, entry):
+    """The faults of an act entry's `copied`, when it has one: a non-empty list
+    of distinct path strings in sorted order. Membership in `SNAPSHOTTED` is
+    judged only for the entries a commit adds (`added_acts_problems`), so a
+    later change to the registry universe never turns committed history
+    malformed. An entry without `copied` is a legacy entry and no fault here.
+
+    Implements: SR-178, LLR-361"""
+    if "copied" not in entry:
+        return []
+    copied = entry["copied"]
+    if not (
+        isinstance(copied, list)
+        and copied
+        and all(isinstance(c, str) and c.strip() for c in copied)
+    ):
+        return ["{}: `copied` must be a non-empty list of registry paths".format(where)]
+    if copied != sorted(set(copied)):
+        return [
+            "{}: `copied` must be sorted with no repeats, got {!r}".format(
+                where, copied
+            )
+        ]
+    return []
+
+
+def _copied_order_problems(entries):
+    """The entries that omit `copied` after an earlier entry carried it: the
+    writer records it on every act once it records it on one, so a legacy
+    entry only ever precedes the first recorded one.
+
+    Implements: SR-178, LLR-361"""
+    tables = [(n, e) for n, e in enumerate(entries, 1) if isinstance(e, dict)]
+    first = next((n for n, e in tables if "copied" in e), None)
+    return [
+        "act entry {}: `copied` is missing after act entry {} carried it; every "
+        "entry after the first that records its copied registries records "
+        "them".format(n, first)
+        for n, e in tables
+        if first is not None and n > first and "copied" not in e
+    ]
 
 
 def _named_rows_problems(where, entry):
@@ -1584,10 +1653,12 @@ def acts_problems(text):
     no text at all (no ledger). Fails CLOSED: text that does not parse, an
     `act` that is not a list of tables, a missing or mistyped field (`seq` a
     positive integer, `date` an ISO day, `approved` and `reattested` lists of
-    row ids), and `seq` values that are not unique and increasing in file
-    order, since acts are told apart by number alone.
+    row ids, `copied`, when present, a sorted list of distinct paths), `seq`
+    values that are not unique and increasing in file order, since acts are
+    told apart by number alone, and an entry omitting `copied` after one that
+    carries it.
 
-    Implements: SR-202, LLR-239"""
+    Implements: SR-202, LLR-239, SR-178, LLR-361"""
     try:
         data = tomllib.loads(text or "")
     except tomllib.TOMLDecodeError as exc:
@@ -1601,13 +1672,18 @@ def acts_problems(text):
         out += _entry_problems(n, entry, last_seq)
         if isinstance(entry, dict) and type(entry.get("seq")) is int:
             last_seq = entry["seq"] if last_seq is None else max(last_seq, entry["seq"])
-    return out
+    return out + _copied_order_problems(entries)
 
 
 def parse_acts(text):
     """The act ledger's entries as `{seq, date, approved, reattested}` dicts in
-    file order, with `verdict` on an entry that names one; `[]` for no text. RAISES `ActLedgerError` on a malformed ledger
-    (`acts_problems`) rather than returning the entries it could read."""
+    file order, with `verdict` on an entry that names one and `copied` on an
+    entry that records it; `[]` for no text. A legacy entry has no `copied`
+    key, never `[]`: its copy set is unknown, and nothing here infers one.
+    RAISES `ActLedgerError` on a malformed ledger (`acts_problems`) rather
+    than returning the entries it could read.
+
+    Implements: SR-178, LLR-361"""
     problems = acts_problems(text)
     if problems:
         raise ActLedgerError(problems)
@@ -1620,6 +1696,7 @@ def parse_acts(text):
                 "reattested": list(entry["reattested"]),
             },
             **({"verdict": entry["verdict"]} if "verdict" in entry else {}),
+            **({"copied": list(entry["copied"])} if "copied" in entry else {}),
         )
         for entry in tomllib.loads(text or "").get("act", [])
     ]
@@ -1650,11 +1727,75 @@ def acts_findings(root):
     ]
 
 
+def added_acts_problems(text, parent_texts):
+    """Every fault of the entries the ledger `text` adds over the ledgers in
+    `parent_texts` (each None where that parent has none): an added entry
+    without `copied`, or one naming a path outside `SNAPSHOTTED` in its
+    canonical `.toml` spelling. Entries a parent holds are never judged, so a
+    legacy history stays readable. `[]` when `text` is malformed, which the
+    whole-file rule reports, and when a parent is, which no supported route
+    commits.
+
+    Implements: SR-178, LLR-361"""
+    try:
+        parents = [parse_acts(t) for t in parent_texts]
+        added = acceptance_record.added_ledger_entries(parse_acts(text), parents)
+    except ActLedgerError:
+        return []
+    out = []
+    for entry in added:
+        where = "act entry seq {}".format(entry["seq"])
+        foreign = [c for c in entry.get("copied", []) if c not in SNAPSHOTTED]
+        if "copied" not in entry:
+            out.append(
+                "{}: the commit adds it without `copied`, the registries its "
+                "act copied".format(where)
+            )
+        elif foreign:
+            out.append(
+                "{}: `copied` names {} outside the snapshot's registry files".format(
+                    where, ", ".join(foreign)
+                )
+            )
+    return out
+
+
+def added_acts_findings(root):
+    """`added_acts_problems` for the commit being made, as INTEGRITY findings:
+    the index's ledger against HEAD's, and against MERGE_HEAD's too while a
+    merge is in progress. `[]` off git and before the first commit; on a
+    clean tree the index is HEAD and nothing is added.
+
+    Implements: SR-178, LLR-361"""
+    head, merging = _kitgit.staged_heads(root)
+    if not head:
+        return []
+    path = "{}/{}".format(SNAPSHOT_DIR, ACTS)
+    parents = [
+        _git(root, ["show", "{}:{}".format(rev, path)])
+        for rev in (head, merging)
+        if rev
+    ]
+    return [
+        "{}: {} — abandon the unfinished act: restore the uncommitted ledger "
+        "and snapshot copies to their committed state (`git checkout HEAD -- "
+        "{}/`), keep the live registry edits it was authorised for, and take "
+        "the act again with the current `intake.py snapshot`; never add "
+        "`copied` to an entry by hand or edit a committed entry".format(
+            path, p, SNAPSHOT_DIR
+        )
+        for p in added_acts_problems(_git(root, ["show", ":" + path]), parents)
+    ]
+
+
 def record_findings(root):
     """The record's own integrity findings, as `trace.py` joins them to the
-    always-on floor: every unanchored approval (`unanchored_findings`) and
-    every fault of the act ledger (`acts_findings`)."""
-    return unanchored_findings(root) + acts_findings(root)
+    always-on floor: every unanchored approval (`unanchored_findings`), every
+    fault of the act ledger (`acts_findings`) and every fault of the entries
+    the commit being made adds to it (`added_acts_findings`).
+
+    Implements: SR-178, LLR-361"""
+    return unanchored_findings(root) + acts_findings(root) + added_acts_findings(root)
 
 
 def _standing_acts(root):
@@ -1672,11 +1813,15 @@ def _standing_acts(root):
         ) from None
 
 
-def _record_act(base, standing, approved, reattested, verdict=None):
+def _record_act(base, standing, approved, reattested, copied, verdict=None):
     """Append one act's entry to the ledger, numbered one above the `standing`
     entries `_standing_acts` read before the act began, creating the file with
-    its header when the record has none. `verdict` is written only when the
-    act named one, so an entry without it keeps the shape it always had."""
+    its header when the record has none. `copied` is the registries the act
+    actually wrote, by their canonical `SNAPSHOTTED` paths, never a set
+    reconstructed from row ids. `verdict` is written only when the act named
+    one, so an entry without it keeps the shape it always had.
+
+    Implements: SR-178, LLR-361"""
     path = base / ACTS
     text = path.read_text(encoding="utf-8") if path.is_file() else _ACTS_HEADER
     seq = max((a["seq"] for a in standing), default=0) + 1
@@ -1686,6 +1831,7 @@ def _record_act(base, standing, approved, reattested, verdict=None):
             ("date", _today()),
             ("approved", sorted(approved)),
             ("reattested", sorted(reattested)),
+            ("copied", sorted(copied)),
         ]
         + ([("verdict", verdict)] if verdict else [])
     )
@@ -1941,8 +2087,7 @@ def _acts_at(root, sha):
     path = "{}/{}".format(SNAPSHOT_DIR, ACTS)
     new = parse_acts(_git(root, ["show", "{}:{}".format(sha, path)]))
     old = parse_acts(_git(root, ["show", "{}^:{}".format(sha, path)]))
-    held = {a["seq"] for a in old}
-    return [a for a in new if a["seq"] not in held]
+    return acceptance_record.added_ledger_entries(new, [old])
 
 
 def _act_names(root, sha, da_id):

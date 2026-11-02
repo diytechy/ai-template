@@ -321,9 +321,15 @@ def test_each_act_is_a_typed_ledger_entry_naming_what_it_approved_and_re_atteste
 
 
 def test_an_act_that_copies_nothing_adds_no_ledger_entry(tmp_path):
+    """An act that copies no registry appends no entry, so a copy set is never
+    empty. Adequacy witness: a writer that appended an entry for a no-copy act,
+    with `copied = []` or without it, fails the count."""
     root = _seeded(tmp_path)
+    before = SNAP.read_acts(root)
     SNAP.copy_live(root)  # a traced-only refresh: nothing moved, nothing copied
-    assert len(SNAP.read_acts(root)) == 1
+    acts = SNAP.read_acts(root)
+    assert len(acts) == len(before) == 1, acts
+    assert all(a.get("copied") != [] for a in acts), acts
 
 
 def test_a_DRAFTED_rows_amendment_is_not_absorption(tmp_path):
@@ -1682,6 +1688,25 @@ _BAD_LEDGERS = {
     "id not an id": _GOOD_ACT.replace('"SR-001"', '"sr 1"'),
 }
 
+# An act's record of the registries it copied: a non-empty, sorted list of
+# distinct paths when present, and once one entry carries it every later one
+# does. Membership in the snapshot's registry universe is judged only for the
+# entries a commit adds (`added_acts_findings` below), so a later change to
+# that universe cannot turn committed history malformed.
+_RECORDED_ACT = _GOOD_ACT + 'copied = ["{}"]\n'.format(SR_REL)
+_COPIED_DEFECTS = {
+    "copied not a list": _GOOD_ACT + 'copied = "{}"\n'.format(SR_REL),
+    "copied empty": _GOOD_ACT + "copied = []\n",
+    "copied holds a number": _GOOD_ACT + "copied = [1]\n",
+    "copied unsorted": _GOOD_ACT
+    + 'copied = ["docs/test/test-cases.toml", "{}"]\n'.format(SR_REL),
+    "copied repeats a path": _GOOD_ACT + 'copied = ["{0}", "{0}"]\n'.format(SR_REL),
+    "an entry omits copied after one that carries it": _RECORDED_ACT
+    + "\n"
+    + _GOOD_ACT.replace("seq = 1", "seq = 2"),
+}
+_BAD_LEDGERS.update(_COPIED_DEFECTS)
+
 
 @pytest.mark.parametrize("defect", sorted(_BAD_LEDGERS))
 def test_a_malformed_act_ledger_is_refused_whole(defect):
@@ -1992,3 +2017,267 @@ def test_an_assumption_tier_row_is_approved_only_inside_the_approval_act(
     assert SNAP.is_drifted(rel, id_col, live, record)
     assert set(SNAP.drifted_cells(rel, id_col, live, record)) == {cell}
     assert "{} {}: {}".format(rel, rid, cell) in SNAP.refresh_refusal(root)
+
+
+# --- each act's entry names the registries it copied (SR-178, IF-220) ---------
+# A later settlement rule has to know which registries an act re-copied, and a
+# row id list cannot say it: a traced re-anchor names no row, a mixed act names
+# rows in one registry only, and a re-seed names only what it newly approved.
+# The writer therefore records the files it actually copied. An entry written
+# before that record existed keeps its shape, and its copy set is unknown: no
+# reader infers one. The commit is the boundary: an entry a commit adds must
+# carry the record and name only the snapshot's own registry files.
+
+
+def _last_act(root):
+    acts = SNAP.read_acts(root)
+    assert acts, "the act wrote no ledger entry"
+    return acts[-1]
+
+
+def _cli_ok(root, *args):
+    proc = _snapshot_cli(root, *args)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return proc
+
+
+def test_an_approval_act_records_the_registry_it_copied(tmp_path):
+    root = _seeded_with_a_drafted_sr(tmp_path)
+    draft_id, _row = _first_row_at(root, "drafted")
+    _rewrite(root, SR_REL, 'status = "Drafted"', 'status = "Approved"')
+    _cli_ok(root)
+    last = _last_act(root)
+    assert draft_id in last["approved"], last
+    assert last.get("copied") == [SR_REL], last
+
+
+def test_a_reattesting_act_records_the_registry_it_copied(tmp_path):
+    root = _seeded(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
+    _cli_ok(root, "--reattests", sid)
+    last = _last_act(root)
+    assert last["reattested"] == [sid], last
+    assert last.get("copied") == [SR_REL], last
+
+
+def test_a_traced_reanchor_naming_no_row_records_its_registry(tmp_path):
+    """The shape whose row lists are both empty: the entry's only evidence
+    that the act copied a registry is the record of what it copied."""
+    root = _seeded(tmp_path)
+    _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)
+    _cli_ok(root, "--approves", "interfaces.toml=sitting-9")
+    last = _last_act(root)
+    assert last["approved"] == [] and last["reattested"] == [], last
+    assert last.get("copied") == [IF_REL], last
+
+
+def test_a_mixed_approves_and_reattests_act_records_both_registries(tmp_path):
+    root = _seeded(tmp_path)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
+    _rewrite(root, IF_REL, _IF_DRIFT_FROM, _IF_DRIFT_TO)
+    _cli_ok(root, "--approves", "interfaces.toml=sitting-9", "--reattests", sid)
+    last = _last_act(root)
+    assert last["reattested"] == [sid], last  # the rows still name one registry
+    assert last.get("copied") == sorted([IF_REL, SR_REL]), last
+
+
+def test_a_reseed_records_every_registry_it_copied(tmp_path):
+    """A registry with no live carrier is not written, so it is not named."""
+    root = _tree(tmp_path)
+    _without_the_registry(root)
+    expected = sorted(r for r in SNAP.SNAPSHOTTED if r != ASSUMPTIONS_REL)
+    _cli_ok(root, "--seed")
+    _cli_ok(root, "--seed")
+    seed, reseed = SNAP.read_acts(root)
+    assert seed.get("copied") == expected, seed
+    assert reseed.get("copied") == expected, reseed
+
+
+_NEEDS_MD = """## Core needs
+
+| SN-ID | Need | Why | Priority | Acceptance |
+| --- | --- | --- | --- | --- |
+| SN-9001 | A need on the markdown carrier. | A test. | M | It works. |
+"""
+
+
+def test_the_needs_file_is_recorded_by_its_canonical_path(tmp_path):
+    root = _tree(tmp_path)
+    (root / SNAP.NEEDS_REL).unlink()
+    needs_md = root / "docs" / "requirements" / "stakeholder-needs.md"
+    needs_md.write_bytes(_NEEDS_MD.encode("utf-8"))
+    _cli_ok(root, "--seed")
+    copy = SNAP.snapshot_root(root) / "docs" / "requirements" / "stakeholder-needs.md"
+    assert copy.is_file()
+    copied = _last_act(root).get("copied")
+    assert copied and SNAP.NEEDS_REL in copied, copied
+    assert not any(c.endswith(".md") for c in copied), copied
+
+
+def test_a_legacy_entry_parses_unchanged_and_names_no_copy_set():
+    assert SNAP.parse_acts(_GOOD_ACT) == [
+        {"seq": 1, "date": "2026-09-26", "approved": ["SR-001"], "reattested": []}
+    ]
+    text = _GOOD_ACT + "\n" + _RECORDED_ACT.replace("seq = 1", "seq = 2")
+    assert SNAP.acts_problems(text) == []
+    legacy, recorded = SNAP.parse_acts(text)
+    assert "copied" not in legacy, legacy
+    assert recorded.get("copied") == [SR_REL], recorded
+
+
+# The commit-bound rule, over real git repositories.
+
+_LEDGER_REL = "{}/{}".format(SNAP.SNAPSHOT_DIR, SNAP.ACTS)
+
+
+def _legacy_ledger(root, run_git):
+    """Rewrite the committed ledger as one written before the copied-registry
+    record existed, and commit it: every entry without `copied`."""
+    path = root / _LEDGER_REL
+    text = path.read_bytes().decode("utf-8")
+    legacy = re.sub(r"(?m)^copied = \[[^\]]*\]\n", "", text)
+    path.write_bytes(legacy.encode("utf-8"))
+    run_git("add", "-A")
+    run_git("commit", "-q", "--allow-empty", "-m", "a legacy ledger")
+    assert all("copied" not in a for a in SNAP.read_acts(root))
+
+
+def _ledger_entry(seq, copied=None):
+    """One appended `[[act]]` entry, carrying `copied` only when given."""
+    text = '\n[[act]]\nseq = {}\ndate = "2026-11-01"\napproved = []\n'.format(seq)
+    text += 'reattested = ["SR-001"]\n'
+    if copied is not None:
+        text += "copied = [{}]\n".format(", ".join('"{}"'.format(c) for c in copied))
+    return text
+
+
+def _stage_entry(root, run_git, seq, copied=None):
+    with (root / _LEDGER_REL).open("ab") as fh:
+        fh.write(_ledger_entry(seq, copied).encode("utf-8"))
+    run_git("add", "-A")
+
+
+def _naming(findings, needle):
+    return [f for f in findings if needle in f]
+
+
+def test_a_commit_adding_an_entry_without_copied_is_refused(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    _legacy_ledger(root, run_git)
+    _stage_entry(root, run_git, 2)
+    run_git("commit", "-q", "-m", "a second legacy entry")
+    _stage_entry(root, run_git, 3)
+    findings = SNAP.added_acts_findings(root)
+    assert len(findings) == 1 and _naming(findings, "seq 3"), findings
+    assert _naming(findings, "copied"), findings
+    assert _naming(SNAP.record_findings(root), "seq 3")
+
+
+def test_a_commit_adding_an_entry_naming_a_foreign_registry_is_refused(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    _legacy_ledger(root, run_git)
+    for foreign in ("docs/notes.toml", "docs/requirements/stakeholder-needs.md"):
+        _stage_entry(root, run_git, 2, [foreign])
+        assert SNAP.acts_problems((root / _LEDGER_REL).read_text("utf-8")) == []
+        findings = SNAP.added_acts_findings(root)
+        assert _naming(findings, "seq 2") and _naming(findings, foreign), findings
+        run_git("checkout", "HEAD", "--", _LEDGER_REL)
+    _stage_entry(root, run_git, 2, [SR_REL])
+    assert SNAP.added_acts_findings(root) == []
+
+
+def test_legacy_entries_a_commit_does_not_add_are_never_refused(tmp_path):
+    """A commit that adds no entry is never refused for the legacy entries
+    already committed. Adequacy witness: a rule that read every entry in the
+    file, rather than only those the commit adds, would refuse the legacy
+    history of every ledger written before the copied-registry record."""
+    root, run_git = _git_tree(tmp_path)
+    _legacy_ledger(root, run_git)
+    (root / "notes.txt").write_bytes(b"another file\n")
+    run_git("add", "-A")
+    assert _naming(SNAP.record_findings(root), SNAP.ACTS) == []
+    assert SNAP.added_acts_findings(root) == []
+
+
+def test_the_writers_own_entry_passes_both_rules(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    _legacy_ledger(root, run_git)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
+    _cli_ok(root, "--reattests", sid)
+    run_git("add", "-A")
+    assert _last_act(root).get("copied") == [SR_REL]
+    assert SNAP.acts_problems((root / _LEDGER_REL).read_text("utf-8")) == []
+    assert SNAP.added_acts_findings(root) == []
+
+
+def test_an_old_writers_uncommitted_act_is_recovered_by_abandoning_it(tmp_path):
+    """An act an old writer took, not yet committed, leaves an entry without
+    `copied`. Taking the act again on top keeps that entry, so the commit is
+    still refused; abandoning it, by restoring the record to its committed
+    state while keeping the live registry edit, then retaking it with the
+    current writer, clears the refusal."""
+    root, run_git = _git_tree(tmp_path)
+    _legacy_ledger(root, run_git)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
+    amended = (root / SR_REL).read_bytes()
+    _cli_ok(root, "--reattests", sid)
+    # What an old writer leaves: the same entry without `copied`.
+    ledger = root / _LEDGER_REL
+    old = re.sub(r"(?m)^copied = \[[^\]]*\]\n", "", ledger.read_text("utf-8"))
+    ledger.write_bytes(old.encode("utf-8"))
+    run_git("add", "-A")
+    assert _naming(SNAP.added_acts_findings(root), "seq 2")
+    # Retaking it on top does not clear the old entry.
+    _cli_ok(root, "--reattests", sid)
+    run_git("add", "-A")
+    stuck = SNAP.added_acts_findings(root)
+    assert _naming(stuck, "seq 2") and not _naming(stuck, "seq 3"), stuck
+    assert _naming(stuck, "git checkout HEAD -- " + SNAP.SNAPSHOT_DIR), stuck
+    # The recovery the refusal names: abandon the act, keep the live edit.
+    run_git("checkout", "HEAD", "--", SNAP.SNAPSHOT_DIR + "/")
+    assert (root / SR_REL).read_bytes() == amended
+    _cli_ok(root, "--reattests", sid)
+    run_git("add", "-A")
+    assert SNAP.added_acts_findings(root) == []
+    assert _naming(SNAP.record_findings(root), SNAP.ACTS) == []
+    last = _last_act(root)
+    assert last["seq"] == 2 and last.get("copied") == [SR_REL], last
+
+
+def test_a_merge_counts_no_entry_its_other_parent_holds_as_added(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    _legacy_ledger(root, run_git)
+    run_git("checkout", "-q", "-b", "other")
+    _stage_entry(root, run_git, 2)
+    run_git("commit", "-q", "-m", "a legacy entry on the other parent")
+    run_git("checkout", "-q", "-")
+    (root / "notes.txt").write_bytes(b"trunk moves on\n")
+    run_git("add", "-A")
+    run_git("commit", "-q", "-m", "trunk")
+    run_git("merge", "--no-ff", "--no-commit", "other")
+    assert run_git("rev-parse", "-q", "--verify", "MERGE_HEAD").returncode == 0
+    assert SNAP.added_acts_findings(root) == []
+    # An entry neither parent holds is still judged inside the merge.
+    _stage_entry(root, run_git, 3)
+    findings = SNAP.added_acts_findings(root)
+    assert _naming(findings, "seq 3") and not _naming(findings, "seq 2"), findings
+
+
+def test_readers_carry_copied_without_loss(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    _legacy_ledger(root, run_git)
+    base = _head(run_git)
+    sid, row = _first_row_at(root, "approved")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
+    _cli_ok(root, "--reattests", sid)
+    run_git("add", "-A")
+    run_git("commit", "-q", "-m", "an act")
+    (added,) = AR._added_acts(root, base, _head(run_git))
+    assert added.get("copied") == [SR_REL], added
+    entries = load_script("gen_open_items")._ledger_entries(root)
+    assert "copied" not in entries[0], entries
+    assert entries[-1].get("copied") == [SR_REL], entries

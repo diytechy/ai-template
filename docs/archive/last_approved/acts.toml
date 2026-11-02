@@ -996,3 +996,10 @@ seq = 164
 date = "2026-11-01"
 approved = []
 reattested = ["LLR-271", "TC-269"]
+
+[[act]]
+seq = 165
+date = "2026-11-01"
+approved = ["LLR-361", "TC-400"]
+reattested = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]

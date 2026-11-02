@@ -1154,8 +1154,21 @@ def _added_acts(root, base, head):
     before, after = _ledger_acts(root, base), _ledger_acts(root, head)
     if before is None or after is None:
         return []
-    seen = {a.get("seq") for a in before if isinstance(a, dict)}
-    return [a for a in after if isinstance(a, dict) and a.get("seq") not in seen]
+    return added_ledger_entries(after, [before])
+
+
+def added_ledger_entries(entries, parents):
+    """The act-ledger `entries` whose `seq` no ledger in `parents` holds: the
+    ones a commit adds over its parents (each parent a list of entries, `[]`
+    where it has no ledger). Compared by number, never by content, so a second
+    act identical to the first is still an act of its own; an entry that is
+    not a table is skipped on every side. The one reading of "the entries a
+    commit adds", shared by the acceptance record's readers and the snapshot's
+    commit rule and accepted-risk anchor.
+
+    Implements: SR-178, LLR-278"""
+    held = {a.get("seq") for parent in parents for a in parent if isinstance(a, dict)}
+    return [a for a in entries if isinstance(a, dict) and a.get("seq") not in held]
 
 
 def lane_approval_refusal(root, base, head, delta=None, reason=None):

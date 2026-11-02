@@ -10113,7 +10113,6 @@ f4ca1bd5]`, both above.)*
 copy holds the slot; then regenerate `prompts/CATALOG.md`),
 `PROCESS_OPTIONS.md` and `README.md`.
 
-
 ### The open-items page lists the stakeholder needs and stakeholders owing an act [since 3f4b989df]
 
 *(Anchored at the preceding commit: the change lands in the commit after it.)*
@@ -10148,6 +10147,48 @@ second filter.
 
 **Kit-owned files — overwrite:** `scripts/gen_open_items.py`,
 `scripts/baseline_snapshot.py` (docstring only).
+
+### Each act-ledger entry names the registries its act copied [since 37bcca3b8]
+
+*(Anchored at the preceding commit; the change lands in the commit that follows
+it.)*
+
+**What changed.** Every new `[[act]]` entry in
+`docs/archive/last_approved/acts.toml` carries `copied`: the sorted
+repo-relative paths of the registries the act actually wrote (the needs file
+by its `.toml` path, whichever carrier is live). A traced re-anchor that names
+no row, an act mixing `--approves` on one registry with `--reattests` ids in
+another, and a re-seed now each name every file they copied, which their
+`approved` and `reattested` lists never said. A copied file is no evidence
+that its rows were judged. `trace.py --strict-integrity`, and so the
+pre-commit `registry-integrity` step, gains two refusals:
+
+- a ledger in which an entry omits `copied` after an entry that carries it,
+  or carries a `copied` that is not a non-empty, sorted list of distinct
+  paths;
+- an entry the commit being made adds (its `seq` absent from HEAD's ledger,
+  and from MERGE_HEAD's during a merge) that lacks `copied` or names a path
+  outside the snapshot's registry files.
+
+**What to do.**
+
+- **Overwrite** `scripts/baseline_snapshot.py` and
+  `registries/last-approved-README.template.md`.
+- Your existing entries are **legacy** entries: they stay exactly as they
+  are, parse unchanged, and read as copy set unknown. Do not edit or backfill
+  them, and never add `copied` to an entry by hand; your ledger gains
+  `copied` at your next act.
+- An act taken by a writer that has not been re-synced (in another clone or
+  lane) and not yet committed is refused at its commit, and taking it again on
+  top does not clear that: its entry stays in the ledger without `copied`.
+  Abandon the unfinished act instead: restore the uncommitted ledger and
+  snapshot copies to their committed state (`git checkout HEAD --
+  docs/archive/last_approved/`, which resets both the index and the working
+  tree for those paths), keep the live registry edits the act was authorised
+  for, then take the act again with the re-synced `intake.py snapshot`.
+  Committed legacy entries are never edited.
+- No setting changes and no registry schema changes.
+
 
 ## 5. Promotion: when this pack stops being prose
 
