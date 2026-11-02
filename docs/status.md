@@ -25,12 +25,15 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-01c-leg28-coordinator.md](handoff-2026-11-01c-leg28-coordinator.md).
-  The open-items page's needs section and the act ledger's preparatory
-  row have landed (every new act-ledger entry now records the registries
-  its act copied); its queue table leads with the settled-amendment
-  filter's rebase onto that landing, then the watermark carrier, whose
-  scope critique is answered and confirmed. The owner ruled the review-churn program
+  [handoff-2026-11-02a-leg29-coordinator.md](handoff-2026-11-02a-leg29-coordinator.md).
+  The watermark carrier is claimed and built: its plan passed, three
+  counted rounds and one uncounted ran, and both dispute sittings are
+  ruled, so no BLOCKER or MAJOR is open; its queue table leads with that
+  lane's final rebase and self-reservation, then its checkpoint, gate,
+  act and landing, alone. The settled-amendment filter has rebased onto
+  the act ledger's landing but holds for the owner: the item OI-115's
+  ruling added to its Done-when unbinds its plan's pass record (OI-119).
+  The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
   process-text, strict-lints and plan-gate landing-shapes rows have
@@ -57,8 +60,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   and judged by one commit check that admits the close's exact relinks
   (the hook's `adoption-record` step). The trunk mint's settled-amendment filter
   (the first new build, owner, 2026-10-20) passed its checkpoint; the act
-  ledger now records what each act copied (OI-115 ruled (a)), so the lane
-  rebases onto that landing and builds its settlement from the ledger, and the lane
+  ledger now records what each act copied (OI-115 ruled (a)), and the lane
+  has rebased onto that landing; it builds its settlement from the ledger
+  once OI-119 restores its plan binding, and the lane
   lifecycle design's in-lane mint and station authority rows are
   cancelled, its config-retirement row folded into item 10's program. The
   account-homes row has landed: the adjudicator runs on its declared

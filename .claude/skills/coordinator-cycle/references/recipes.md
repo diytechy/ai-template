@@ -430,6 +430,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   homes' reach: run first every step that writes elsewhere (an
   inspection's result, a RESYNC re-anchor, a round and any fix it orders),
   then the edit and its `done-when` sitting (wi-976 D-026).
+  An owner ruling recorded on trunk that adds a Done-when item to a
+  claimed `single` row whose pass record stands unbinds that record as
+  soon as the lane rebases onto it: every replayed commit then carries
+  the item, so the landing walk refuses the pass-record commit and every
+  build commit after it, and the hook refuses each new build commit
+  (wi-963 D-012, OI-119). Write such an item into the claim copy's Trust
+  section at the ruling, as a successor ruling is, never its Done-when.
   So a checkpoint item a handoff or spine change list calls a Done-when
   amendment, on a `single` row whose pass record stands, goes to the
   Trust section instead: once the Done-when digest moves, the plan gate
