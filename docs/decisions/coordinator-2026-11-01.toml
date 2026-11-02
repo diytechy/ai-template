@@ -55,3 +55,17 @@ alternative = "Reject the MINOR as an uncommon correction route (S7)."
 reversal_cost = "Low: the row's text, before its claim."
 why_not_escalated = "Both name a supported route the row's own carrier serves; recorded for confirm or overrule."
 review = ""
+
+[decision.D-008]
+decided = "Headless leg 29: WI-963 (queue row 1) rebased onto trunk 35226d1af (pre-rebase tip 0ae2c5b60; conflicts resolved as recipes section 4 says, the lane's _new_entries folded into trunk's added_ledger_entries, its RESYNC entry re-anchored at 35226d1af, the re-mint recipe kept for what still mints; its six affected modules pass, 273 tests; check-lane passes). The rebase brought OI-115's Done-when item (D-004) under every lane commit, so the plan gate reads the pass record as binding another Done-when (digest sha256:371fa4c3f41d21b6 recorded, sha256:f8c62f4a13affe14 now) and refuses the landing and any build commit; the plan cap is spent. Which way the plan binds again is the owner's (it reverses where D-004 put the owner-confirmed text, or rules a round past the cap, or changes the gate): OI-119 filed pending, with its placeholder WI-989 (OI-102), and WI-963's needs cite it. The lane stays at its rebased tip."
+alternative = "Reset the lane to its pre-rebase tip, or move the item into the Trust section on trunk without a ruling."
+reversal_cost = "Low: records only; the rebased lane is committed and the pre-rebase tip is recorded."
+why_not_escalated = "Escalated: OI-119."
+review = ""
+
+[decision.D-009]
+decided = "With WI-963 held on OI-119, queue row 2 (WI-978) moves without it, as coordinator-2026-10-21 D-004 let WI-940 move past an earlier hold: WI-978 is machinery and lands alone, and its own act turn runs WI-967's changed step (the act ledger's writer recording copied) before its landing, which is the run-through the landing rule asks for. WI-963 then rebases onto WI-978's landing."
+alternative = "Hold WI-978 until WI-963's act has run WI-967's step."
+reversal_cost = "Low: an overrule holds WI-978's landing; nothing is lost."
+why_not_escalated = "Recorded for confirm or overrule; a headless leg moves to the next row when one is owner-held (coordinator-cycle section 7)."
+review = ""
