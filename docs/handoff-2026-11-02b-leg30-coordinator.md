@@ -1,14 +1,17 @@
 # Handoff 2026-11-02b (headless leg 30): WI-978 landed; the queue waits on the owner
 
-Overnight: stop
-
 It replaces [handoff-2026-11-02a-leg29-coordinator.md](handoff-2026-11-02a-leg29-coordinator.md)
 as the resume map. The procedure is in the `coordinator-cycle` skill and its
 recipes; this handoff holds state only. Headless leg 30 ran under loop session
 `20261102T035202Z-8dc8b4`; its coordinator session was
 `238aa103-2701-454c-bac3-3c193c849fa7`. It ran queue row 1 (WI-978) from its
 final rebase to its landing. Every other row waits on the owner, so this
-handoff carries `Overnight: stop`.
+handoff carried `Overnight: stop`.
+
+**Amended in place on 2026-11-02 (attended), after the owner ruled
+OI-119 (a) and took SN-028's and SN-036's act:** the stop line is dropped
+and queue row 1 moves (coordinator-2026-11-02 D-003; commits d58f22e0b to
+cb11c4f85).
 
 ## State (trunk `refactor_again`, nothing pushed)
 
@@ -36,7 +39,7 @@ handoff carries `Overnight: stop`.
   drafting" holds: before a spine author's turn, the coordinator reserves
   the draft's counts (`trace.py --reserve-ids WI-NNN SPACE=N,...`, from
   the lane) and fills the prompt's `RESERVED` slot.
-- **WI-963** (held on OI-119): `landing_id_refusal`, run read-only against
+- **WI-963** (OI-119 ruled (a) on 2026-11-02; before then held on it): `landing_id_refusal`, run read-only against
   its tip, refuses LLR-342 and TC-373 as unreserved. After the ruling and
   its rebase onto trunk, it reserves its LLR and TC ids, renumbers the
   rows if the ranges differ, and only then lands.
@@ -90,7 +93,7 @@ carrier fold) run at the next lane's spine turn and landing.
 
 | # | Row | Next |
 |---|---|---|
-| 1 | WI-963 | Held on OI-119. After the ruling: rebase onto its commit, reserve its LLR and TC ids (`--reserve-ids`) and renumber LLR-342 and TC-373 if the ranges differ, build the FIX (settlement read from the ledger's `copied`; dispute sitting 007's remedy), recount the module sizes, then a checkpoint for any renumbered row, its act turn and landing |
+| 1 | WI-963 | OI-119 ruled (a) at d58f22e0b, its Done-when digest again the pass record's. Rebase onto trunk's tip, reserve its LLR and TC ids (`--reserve-ids`) and renumber LLR-342 and TC-373 if the ranges differ, build the FIX (settlement read from the ledger's `copied`; dispute sitting 007's remedy), recount the module sizes, then a checkpoint for any renumbered row, its act turn and landing |
 | 2 | WI-910 | Held: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push (coordinator-2026-10-25 D-001) |
 | 3 | Filing P8 | Waits on its filing calls (P6 landed as WI-979) |
 
@@ -101,9 +104,6 @@ carrier fold) run at the next lane's spine turn and landing.
 - WI-908 (the owner present);
 - WI-964 (the owner's Mac);
 - WI-827 (attended only; it never lands from a lane);
-- WI-980 and WI-981 (OI-117);
-- WI-984 and WI-985 (OI-118);
-- WI-989 (OI-119's placeholder);
 - WI-991 (TC-055's re-judge), until the owner orders it into this table;
 - the successor rows WI-982 and WI-983, until the owner orders them into
   this table;
@@ -113,14 +113,6 @@ The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
 
 ## For the owner
 
-- **To restart headless legs,** rule OI-119, or order a movable row into
-  the table (WI-991, WI-982 or WI-983, each owing its scope critique
-  before its claim, or P8's filing calls). Then drop `Overnight: stop`.
-- **OI-119** (WI-963): choose how its plan binds again. The
-  recommendation is (a): move OI-115's item, text unchanged, from WI-963's
-  Done-when to its Trust section in the ruling commit. That restores the
-  pass record's digest exactly. The other routes are (b), a plan round past
-  the cap with a re-cut lane, and (c), a plan-gate change.
 - **WI-978's RESYNC forced change** (010-REVIEW-B F2, 006-REVIEW-B F7):
   the entry refuses a local `git merge --squash` of an unclaimed branch
   that adds registry ids, where the spec's Done-when says a trunk-only
@@ -133,14 +125,6 @@ The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
   carries CI's state, or rule that the WSL POSIX evidence route (wi-931
   D-002) stands in for CI on that Done-when item (coordinator-2026-10-25
   D-001).
-- **SN-028's act, on trunk** (OI-118, its owner row WI-985), unchanged:
-  `intake.py snapshot --approves stakeholder-needs=<your ruling record> --reattests SN-028`,
-  adding `--verdict docs/reviews/wi-966/007-ADJUDICATE-d8f6fd3.md`; then
-  rule OI-118. Keep or drop SN-028's `shell` tag (sitting 003).
-- **SN-036's act, on trunk** (OI-117, its owner row WI-981), unchanged:
-  `intake.py snapshot --approves stakeholder-needs=docs/log.d/2026-10-25-wi976-sn036-ruling.md --reattests SN-036`,
-  adding `--verdict docs/reviews/wi-976/016-ADJUDICATE-9d6ad4c.md`; then
-  rule OI-117 (WI-981, WI-980).
 - **The FileBackup re-sync (OI-98):** unblocked. Fix the act ledger
   entry's overwrite list first (it misses `scripts/acceptance_record.py`,
   a follow-up). The re-sync now carries WI-978's forced change: a lane
