@@ -4192,3 +4192,80 @@ options = """- (a) TRUST SECTION: the ruling commit moves the OI-115 item, text 
 - (c) FIX THE PLAN GATE FORWARD: a preparatory row so a pass record stays bound across a Done-when item an owner ruling adds on trunk under a rebased lane, bound by the ruling's recorded digest. FOR: the next owner amendment under a passed plan needs no ruling. AGAINST: it changes the gate the cycle runs on (lands alone, its own critique), and WI-963 waits for it."""
 recommendation = "(a): it is the skill's standing rule for exactly this case, it restores the recorded binding with no new round, and the outcome the item names is already promised by Done-when item 2."
 ruled_date = "2026-11-02"
+
+[open_item.OI-120]
+title = "P8's filing calls: the test-file TC tag, two forced adopter migrations, and refusing a code row that names no SR"
+status = "pending"
+raised = "2026-11-02"
+one_line = "Rule P8's three filing calls so its rows (the review-churn plan's item 13 scoped test set: the test-file TC tag and its one reader, the derived review test set with its refusals, the strict-mark commit check) can be drafted again and filed; recommendation (a) on each."
+decision = """Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), at the owner's request: P8's calls had waited since headless leg 06 as handoff prose only, never on this surface.
+
+WHAT IS TRUE. Item 13 of the review-churn plan (review only a green tip) is ruled as a whole (revision 35); its phase-1 queue row P8 covers what must exist before the gate's scoped test set is enabled. Leg 06 (2026-10-20) drafted P8 as three rows: (1) a test-file TC tag and its one reader (nothing reads test -> TC today); (2) the scoped review test set derived from the tags, refusing an empty or partial set; (3) the strict-mark commit check. The drafter raised three calls for the owner (coordinator-2026-10-20 D-007; the 2026-10-20e handoff). The drafts were kept in that leg's scratch root (p8-draft/), which has since been deleted, so the rows are re-drafted from the plan once the calls are ruled. The counts below are from 2026-10-20 and are re-measured at the re-draft.
+
+WHAT IS HELD. P8's three rows, carried by the placeholder WI-992."""
+blast_radius = """P8 only: its rows are not filed, so the review gate's scoped test set is not enabled and a review still runs the whole bar it names. No lane is held."""
+options = """Each call is ruled separately; (a) is the drafter's proposal.
+- Q1 THE TAG TOKEN. (a) Reuse the existing `Implements:` line in test files, so one grammar points code and tests up. (b) A new test-only token. FOR (a): one grammar, one reader. AGAINST (a): an `Implements:` naming a TC reads differently from one naming an LLR.
+- Q2 TWO FORCED ADOPTER MIGRATIONS. (a) Accept both: adopters tag their test files, and `[bars] red_mark` becomes a required key, each with a RESYNC entry. (b) Ship the scoped set for this repository only until a later row makes it adoptable. FOR (a): one behaviour for the kit and its adopters. AGAINST (a): every adopter edits its tests at the next re-sync.
+- Q3 A CODE-TOUCHING ROW THAT NAMES NO SR. (a) Refuse it, since the scoped set is derived from the row's SRs (8 of 36 open rows named none on 2026-10-20). (b) Fall back to the whole bar for such a row. FOR (a): the set never silently widens. AGAINST (a): those rows need an SR before their claim."""
+recommendation = "(a) on each: the drafter's proposals, and Q3 (a) is the fail-closed reading; (b) for Q3 would add a fallback path."
+
+[open_item.OI-121]
+title = "WI-827: the owner takes SN-029's re-attestation act on trunk after its sitting"
+status = "pending"
+raised = "2026-11-02"
+one_line = "WI-827's SN-029 amendment ends in an act only the owner may take (a held rung); take it on trunk once its sitting has judged the text, or return the text."
+decision = """Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), call (5): pending items for the owner-held rows WI-827, WI-908 and WI-964.
+
+WHAT IS TRUE. OI-106 ruled (2026-10-07) how SN-029's cells are amended; WI-827 carries the amendment, its sitting and the act. SN-029 sits on a held rung, so the act is the owner's, or an attended session's on the owner's explicit delegation, on trunk, text first; it never lands from a lane. The handoffs listed WI-827 as never claimed by a leg, while the generated status read it as ready, since its only cited item (OI-106) is ruled.
+
+WHAT IS HELD. WI-827."""
+blast_radius = """WI-827 only. Until it lands, SN-029's acceptance keeps the two clauses OI-106 found untrue."""
+options = """- (a) RUN IT ATTENDED: an attended session drafts and sits the text, then the owner takes the act on trunk; ruling this item releases WI-827 to that session.
+- (b) RETURN THE TEXT: name what is wrong with OI-106's ruled text; the row is re-scoped."""
+recommendation = "(a): the text is already ruled (OI-106), and only the act needs the owner."
+
+[open_item.OI-122]
+title = "WI-908: the owner provisions a second Claude login and attends the isolation check"
+status = "pending"
+raised = "2026-11-02"
+one_line = "WI-908's login-isolation check needs the owner to sign in a second Claude login under a declared account home and attend the run (OI-114 ruled (a)); say when."
+decision = """Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), call (5).
+
+WHAT IS TRUE. OI-114 ruled (2026-10-14) that the owner provisions the second login once WI-798 has landed, and attends while the coordinator runs WI-908's check. WI-798 has landed. The step needs the owner present, so no leg can take it.
+
+WHAT IS HELD. WI-908."""
+blast_radius = """WI-908 only. Until it runs, login-authenticated non-ambient Claude accounts stay unverified on Windows (token accounts are unaffected)."""
+options = """- (a) SCHEDULE IT: the owner names an attended session, provisions the login there, and this item is ruled when the check has run.
+- (b) DROP THE CHECK: WI-908 closes cancelled and the RESYNC entry records the accounts as unverified."""
+recommendation = "(a): OI-114 already chose to provision; only the owner's time is open."
+
+[open_item.OI-123]
+title = "WI-964: the owner runs the full suite on the Mac after WI-910 lands"
+status = "pending"
+raised = "2026-11-02"
+one_line = "WI-964 needs the owner to run the full unfiltered suite on the Mac at or after WI-910's landing and record the result."
+decision = """Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), call (5).
+
+WHAT IS TRUE. The owner split the Mac run out of WI-910 (coordinator-2026-10-20 D-019). Only the owner's machine can run it.
+
+WHAT IS HELD. WI-964 (it also needs WI-910)."""
+blast_radius = """WI-964 only."""
+options = """- (a) RUN IT: after WI-910 lands, the owner runs `python -m pytest -q -n auto` on the Mac and the result is recorded in a log fragment; a red is filed as its own row.
+- (b) DROP IT: rely on CI's macOS job; WI-964 closes cancelled."""
+recommendation = "(a): CI's macOS job does not run on the owner's own configuration, which is what the owner asked to see."
+
+[open_item.OI-124]
+title = "WI-910: CI's macOS and Linux state on the landing tip needs a push, or the WSL evidence route"
+status = "pending"
+raised = "2026-11-02"
+one_line = "WI-910's Done-when records CI's macOS and Linux state on its landing tip, which exists only after a push; push refactor_again, or rule that the WSL POSIX evidence route stands in for CI on that item."
+decision = """Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004).
+
+WHAT IS TRUE. Pushing is the owner's (docs/process.toml push = "human"). WI-910's Done-when needs CI's state on the landing tip (coordinator-2026-10-25 D-001), so the row has been held in the queue table since leg 22. The WSL POSIX route (wi-931 D-002) already produces POSIX evidence locally.
+
+WHAT IS HELD. WI-910 (queue row 2), and WI-964 after it."""
+blast_radius = """WI-910 and WI-964."""
+options = """- (a) PUSH: the owner pushes refactor_again (and archive/lanes, id-carrier) so CI runs; WI-910 then reads CI's state on its landing tip.
+- (b) WSL STANDS IN: the Done-when item is amended to accept the WSL POSIX run on the landing tip in place of CI's state."""
+recommendation = "(a): CI covers macOS, which WSL cannot; the push is already owed for the branches the handoff lists."

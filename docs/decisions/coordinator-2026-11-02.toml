@@ -26,3 +26,17 @@ why_not_escalated = "Escalated: the owner ruled it in session, 2026-11-02."
 review = ""
 owner = "confirmed"
 done_when = "sha256:371fa4c3f41d21b6"
+
+[decision.D-004]
+decided = "The owner's 2026-10-25 ruling that an owner-held step is an open item, with its seven filing calls, is filed at the owner's request (2026-11-02, attended) as WI-993, its spec of record docs/specs/WI-993.md carrying the ruling and the calls. The original draft spec lived only in that session's scratch directory and is lost, so WI-993's scope critique re-derives the writer's shape from the calls and the code. Call (5) is applied in the same commit: pending items OI-121 (WI-827's SN-029 act), OI-122 (WI-908's second login and attended check) and OI-123 (WI-964's Mac run), each cited in its row's needs, so those rows read Blocked rather than ready. Call (6) was already done (OI-117)."
+alternative = "File the build row only and leave call (5)'s items to it, keeping WI-827, WI-908 and WI-964 reading ready on the generated surfaces until it lands."
+reversal_cost = "Low: queued rows and pending items; an overrule edits them before any claim."
+why_not_escalated = "Escalated: the owner asked in session for the ruling to be filed and for every open surface to come through open-items.html."
+review = ""
+
+[decision.D-005]
+decided = "Two more pending items are filed with D-004, at the owner's request that every open surface come through open-items.html: OI-120, P8's three filing calls (the test-file TC tag token, the two forced adopter migrations, refusing a code-touching row that names no SR), with its placeholder row WI-992 replacing the handoff's 'Filing P8' queue row; and OI-124, WI-910's push (its Done-when reads CI's state on the landing tip; push or rule the WSL POSIX route), cited in WI-910's needs. Call (3)'s 'a routine push files no item' does not cover it: this push is a Done-when's precondition, not routine. P8's drafts were lost with leg 06's scratch root, so OI-120 states the calls from the 2026-10-20 handoffs and WI-992 re-drafts the rows after the ruling."
+alternative = "Keep P8 and WI-910's push as handoff prose until WI-993 lands."
+reversal_cost = "Low: pending items and a placeholder row."
+why_not_escalated = "Escalated: the owner asked in session for P8 to be filed as an open item."
+review = ""

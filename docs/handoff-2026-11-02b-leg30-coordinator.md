@@ -94,16 +94,18 @@ carrier fold) run at the next lane's spine turn and landing.
 | # | Row | Next |
 |---|---|---|
 | 1 | WI-963 | OI-119 ruled (a) at d58f22e0b, its Done-when digest again the pass record's. Rebase onto trunk's tip, reserve its LLR and TC ids (`--reserve-ids`) and renumber LLR-342 and TC-373 if the ranges differ, build the FIX (settlement read from the ledger's `copied`; dispute sitting 007's remedy), recount the module sizes, then a checkpoint for any renumbered row, its act turn and landing |
-| 2 | WI-910 | Held: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push (coordinator-2026-10-25 D-001) |
-| 3 | Filing P8 | Waits on its filing calls (P6 landed as WI-979) |
+| 2 | WI-910 | Held on OI-124: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push, or the owner rules the WSL POSIX route (coordinator-2026-10-25 D-001) |
+| 3 | WI-992 (P8) | Held on OI-120, P8's filing calls; after the ruling, re-draft P8's rows (the drafts were lost with leg 06's scratch root) and file each owing its scope critique |
 
 **Never claimed by a leg:**
 
 - WI-684 (waits on OI-98, the owner's re-sync);
 - WI-795 (OI-105, then WI-820);
-- WI-908 (the owner present);
-- WI-964 (the owner's Mac);
-- WI-827 (attended only; it never lands from a lane);
+- WI-908 (OI-122: the owner present);
+- WI-964 (OI-123: the owner's Mac);
+- WI-827 (OI-121: attended only; it never lands from a lane);
+- WI-993 (the owner-held-step rule's build), until the owner orders it into
+  this table; it owes its scope critique first;
 - WI-991 (TC-055's re-judge), until the owner orders it into this table;
 - the successor rows WI-982 and WI-983, until the owner orders them into
   this table;
@@ -121,10 +123,10 @@ The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
 - **WI-978's fold reading** (wi-978 D-004): the fold takes from the carrier
   tip its records and the marks they justify, never its other mark lines.
   Confirm or overrule.
-- **Rows still held:** push `refactor_again` so WI-910's landing tip
-  carries CI's state, or rule that the WSL POSIX evidence route (wi-931
-  D-002) stands in for CI on that Done-when item (coordinator-2026-10-25
-  D-001).
+- **OI-120 to OI-124** (filed 2026-11-02, attended): P8's filing calls,
+  and the owner-held steps of WI-827, WI-908, WI-964 and WI-910 (push
+  `refactor_again`, or rule the WSL POSIX route). Each renders on
+  `open-items.html`.
 - **The FileBackup re-sync (OI-98):** unblocked. Fix the act ledger
   entry's overwrite list first (it misses `scripts/acceptance_record.py`,
   a follow-up). The re-sync now carries WI-978's forced change: a lane
@@ -161,9 +163,6 @@ The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
     handoffs carried;
   - the `--wi` primary-checkout preflight call (wi-960 D-016);
   - removing the temporary `Bash(codex exec *)` allow rule;
-  - filing your 2026-10-25 ruling that an owner-held step is an open item
-    (attended);
-  - your owner-held rows.
 - **Push** `refactor_again`, `archive/lanes` and `id-carrier`.
 
 ## Session prompt (paste to start the next session)

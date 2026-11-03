@@ -7,7 +7,7 @@ specref = "docs/specs/WI-910.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
-needs = ["WI-909"]
+needs = ["WI-909", "OI-124"]
 +++
 
 ## Context
