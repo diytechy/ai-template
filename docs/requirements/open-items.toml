@@ -4195,10 +4195,12 @@ ruled_date = "2026-11-02"
 
 [open_item.OI-120]
 title = "P8's filing calls: the test-file TC tag, two forced adopter migrations, and refusing a code row that names no SR"
-status = "pending"
+status = "ruled"
 raised = "2026-11-02"
-one_line = "Rule P8's three filing calls so its rows (the review-churn plan's item 13 scoped test set: the test-file TC tag and its one reader, the derived review test set with its refusals, the strict-mark commit check) can be drafted again and filed; recommendation (a) on each."
-decision = """Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), at the owner's request: P8's calls had waited since headless leg 06 as handoff prose only, never on this surface.
+one_line = "RULED 2026-11-02 (a) on each call: Q1 the test-file TC tag reuses the existing Implements: line; Q2 both adopter migrations are accepted (tagged test files, a required [bars] red_mark key), each with a RESYNC entry; Q3 a code-touching row that names no SR is refused. WI-992 re-drafts and files P8's rows under these calls."
+decision = """RULED 2026-11-02 by the owner: option (a) on each call, as recommended ("Accept OI-120 as recommended"). Q1 (a): the test-file TC tag is the existing Implements: line, one grammar and one reader for code and tests. Q2 (a): both forced adopter migrations are accepted (adopters tag their test files; [bars] red_mark becomes a required key), each stated in a RESYNC entry. Q3 (a): a code-touching row that names no SR is refused, since the scoped set is derived from the row's SRs; it never falls back to the whole bar. The ruling commit replaces WI-992's Done-when with the routed work (coordinator-2026-11-02 D-006).
+
+Filed by the attended coordinator on 2026-11-02 under the owner's 2026-10-25 ruling that an owner-held step is an open item (coordinator-2026-11-02 D-004), at the owner's request: P8's calls had waited since headless leg 06 as handoff prose only, never on this surface.
 
 WHAT IS TRUE. Item 13 of the review-churn plan (review only a green tip) is ruled as a whole (revision 35); its phase-1 queue row P8 covers what must exist before the gate's scoped test set is enabled. Leg 06 (2026-10-20) drafted P8 as three rows: (1) a test-file TC tag and its one reader (nothing reads test -> TC today); (2) the scoped review test set derived from the tags, refusing an empty or partial set; (3) the strict-mark commit check. The drafter raised three calls for the owner (coordinator-2026-10-20 D-007; the 2026-10-20e handoff). The drafts were kept in that leg's scratch root (p8-draft/), which has since been deleted, so the rows are re-drafted from the plan once the calls are ruled. The counts below are from 2026-10-20 and are re-measured at the re-draft.
 
@@ -4209,6 +4211,7 @@ options = """Each call is ruled separately; (a) is the drafter's proposal.
 - Q2 TWO FORCED ADOPTER MIGRATIONS. (a) Accept both: adopters tag their test files, and `[bars] red_mark` becomes a required key, each with a RESYNC entry. (b) Ship the scoped set for this repository only until a later row makes it adoptable. FOR (a): one behaviour for the kit and its adopters. AGAINST (a): every adopter edits its tests at the next re-sync.
 - Q3 A CODE-TOUCHING ROW THAT NAMES NO SR. (a) Refuse it, since the scoped set is derived from the row's SRs (8 of 36 open rows named none on 2026-10-20). (b) Fall back to the whole bar for such a row. FOR (a): the set never silently widens. AGAINST (a): those rows need an SR before their claim."""
 recommendation = "(a) on each: the drafter's proposals, and Q3 (a) is the fail-closed reading; (b) for Q3 would add a fallback path."
+ruled_date = "2026-11-02"
 
 [open_item.OI-121]
 title = "WI-827: the owner takes SN-029's re-attestation act on trunk after its sitting"

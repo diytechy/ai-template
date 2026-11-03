@@ -40,3 +40,10 @@ alternative = "Keep P8 and WI-910's push as handoff prose until WI-993 lands."
 reversal_cost = "Low: pending items and a placeholder row."
 why_not_escalated = "Escalated: the owner asked in session for P8 to be filed as an open item."
 review = ""
+
+[decision.D-006]
+decided = "Owner ruling in session (2026-11-02, attended): OI-120 ruled (a) on each call, as recommended. Q1: the test-file TC tag is the existing Implements: line. Q2: both forced adopter migrations are accepted (tagged test files; a required [bars] red_mark key), each in a RESYNC entry. Q3: a code-touching row that names no SR is refused, never falling back to the whole bar. The ruling commit replaces WI-992's Done-when with the routed work (re-draft P8's three rows under the calls, file each owing its scope critique, close citing the filing), and the handoff's queue row 3 moves."
+alternative = "Q1 (b) a test-only token; Q2 (b) the scoped set for this repository only; Q3 (b) the whole bar for a row naming no SR."
+reversal_cost = "Low: nothing is drafted or filed yet; an overrule edits WI-992's Done-when."
+why_not_escalated = "Escalated: the owner ruled it in session, 2026-11-02."
+review = ""

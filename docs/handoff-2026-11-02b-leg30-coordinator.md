@@ -95,7 +95,7 @@ carrier fold) run at the next lane's spine turn and landing.
 |---|---|---|
 | 1 | WI-963 | OI-119 ruled (a) at d58f22e0b, its Done-when digest again the pass record's. Rebase onto trunk's tip, reserve its LLR and TC ids (`--reserve-ids`) and renumber LLR-342 and TC-373 if the ranges differ, build the FIX (settlement read from the ledger's `copied`; dispute sitting 007's remedy), recount the module sizes, then a checkpoint for any renumbered row, its act turn and landing |
 | 2 | WI-910 | Held on OI-124: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push, or the owner rules the WSL POSIX route (coordinator-2026-10-25 D-001) |
-| 3 | WI-992 (P8) | Held on OI-120, P8's filing calls; after the ruling, re-draft P8's rows (the drafts were lost with leg 06's scratch root) and file each owing its scope critique |
+| 3 | WI-992 (P8) | OI-120 ruled (a) on each call (coordinator-2026-11-02 D-006). Re-draft P8's three rows with planner sub-agents under the ruled calls (the drafts were lost with leg 06's scratch root), file each on trunk owing its scope critique, then close WI-992 citing the filing |
 
 **Never claimed by a leg:**
 
@@ -123,8 +123,8 @@ The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
 - **WI-978's fold reading** (wi-978 D-004): the fold takes from the carrier
   tip its records and the marks they justify, never its other mark lines.
   Confirm or overrule.
-- **OI-120 to OI-124** (filed 2026-11-02, attended): P8's filing calls,
-  and the owner-held steps of WI-827, WI-908, WI-964 and WI-910 (push
+- **OI-121 to OI-124** (filed 2026-11-02, attended; OI-120, P8's calls,
+  was ruled the same day): the owner-held steps of WI-827, WI-908, WI-964 and WI-910 (push
   `refactor_again`, or rule the WSL POSIX route). Each renders on
   `open-items.html`.
 - **The FileBackup re-sync (OI-98):** unblocked. Fix the act ledger
