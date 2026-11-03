@@ -875,8 +875,15 @@ commit of its own, move it to trunk's tip
   the run's provenance line as its trailer (SKILL §7).
 - **Sweep:** `"$PY" "$SCRIPTS/intake.py" sweep --merged "WI-a;WI-b" --branch <lane> --before <trunk before> --after <landing>`.
   `--merged` names every row the landing closed, or other rows' Dispositions
-  are skipped silently. The sweep mints first, and its re-mint takes the next
-  WI id: file hand rows after it, or cite them by subject until filed.
+  are skipped silently. The sweep mints first, and a row it mints takes the
+  next WI id: file hand rows after it, or cite them by subject until filed.
+  It mints no row for an amendment the lane's own act settled and the
+  filter can prove settled. One it cannot prove still mints: where a later
+  act in the range copied the row's registry and the row's routed traced
+  cells moved, a row the lane's own act fully judged mints again (LLR-364).
+  Check each minted amendment row against the lane's act: when that act
+  re-attested the row and its text is unchanged since, close the row citing
+  that act. Every other row it mints is real work and stays open.
 - **Successor rows:** for each SUCCESSOR ruling of an accepted dispute
   verdict (its `.requested` binding reads `outcome = accepted`), file one row
   on trunk after the landing, its scope the ruling's reason, citing the
@@ -886,17 +893,17 @@ commit of its own, move it to trunk's tip
 - **A gate MINOR** whose fix would move the tip off the gated one, or
   whose wording lives in homes outside the lane, is a follow-up in
   status.md's unfiled list, never a fix after the gate (wi-935 D-005).
-- **The re-mint:** close it citing the act once `cmp` shows the registries
-  equal their anchors. Compare each file under `docs/archive/last_approved/`
-  with its live path (the test registry is `docs/test/test-cases.toml`): a
-  `cmp` against a missing path reads as a difference (2026-10-16). A close
-  committed after the gate, as WI-911's was, lands only when
-  `git diff --stat <gate tip> HEAD` shows no code and no authored spine row. Two minted rows are real work and stay open: an
-  observation re-judge whose trigger fired, and a goalposts row.
-  When the one registry still off its anchor holds an owner-held act (a
-  held-rung row the sitting ruled MEANING), the re-mint cannot close: give
-  it `needs` on the act's pending open item, filed with the owner row that
-  carries the act (coordinator-2026-10-26 D-002).
+- **What the sweep mints after the act:** a row the merged range settled
+  mints nothing (LLR-364), except an amendment row the filter cannot prove
+  settled (a later act copied its registry and its routed traced cells
+  moved): check it against the lane's own act, as the sweep step says, and
+  close it citing that act. Any other row it mints is real work and stays
+  open:
+  an observation re-judge whose trigger fired, a goalposts row, or an
+  amendment whose registry still holds an owner-held act (a held-rung row
+  the sitting ruled MEANING); give that one `needs` on the act's pending
+  open item, filed with the owner row that carries the act
+  (coordinator-2026-10-26 D-002).
 - **Review rollup:** restore `docs/reviews/rollup/` to its trunk version before
   committing the lane. `trunk_step.py --regen` writes it on trunk at landing,
   from the round files the lane brought in.

@@ -1,0 +1,187 @@
+# docs/decisions/wi-963.toml — delegated calls the coordinator made in the
+# wi-963 lane (headless leg 07 of loop session 20261021T045653Z-213020).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = ["D-011"]
+
+[decision.D-001]
+decided = "The lane's single plan ran its full plan step: plan 90d6fcbe6 (fresh Claude Opus planner, DELTA within, coverage gate exit 0); critique 1 (Codex Sol, medium) CHANGES-REQUESTED with two MAJORs, filed c6019d621; one revision 63f4fcaec (a fresh Opus planner, gated with the first critique's findings to exit 0; it refuted F1's claim that the reviews must follow the act, citing the coordinator-cycle order, and adopted F2's four-way carrier read); critique 2 (convergence stance, the reading exclusion appended by hand) APPROVE findings=0, filed a3d6721a3; pass record ea4aa3d73. The plan commit's bar read 65.4 s OVER with every test green (2971 passed): the first bar in a freshly added worktree reads about 12 s above a warm one (two scratch-worktree parent readings this session read 64.9 and 65.2 s against 52 to 54 s in warm checkouts), a records-only commit (coordinator-2026-10-17 D-011). The critique and pass commits are records only and cite that reading."
+alternative = "None: the skill's single-plan step."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-002]
+decided = "Terra's intent turn (gpt-5.6-terra, medium; session id in its log under the leg's scratch root) authored the change set from the plan's record steps: LLR-342 (new, Drafted, under SR-178) and TC-373 (new, Drafted, verifying SR-178, LLR-342 and IF-091), LLR-153's and LLR-158's details amended by addition (a mechanical check finds each approved text whole: LLR-153's as a prefix, LLR-158's with one sentence inserted between its sentences), and IF-091's data cell widened. Its id floor was SR-242, LLR-342, TC-373 and IF-299, above wi-957's held ids, with wi-940 given a higher floor. The coordinator bumped the mark (LLR 342, TC 373) and ran the bar (both strict lints clean; 2971 passed, 3 skipped; 49.7 s within). Its own pytest run hung on the basetemp, as every Terra turn has."
+alternative = "None."
+reversal_cost = "Low: Drafted rows, judged at the checkpoint."
+why_not_escalated = "The skill's intent order."
+review = ""
+
+[decision.D-003]
+decided = "Build round 1's first stage, the plan's test step (the tests before any code), ran on a fresh kit-builder and is committed alone: tests/test_intake_settled.py (new, in SLOW_MODULES beside test_intake: each case builds a git repo and the replay reads two real landings), 15 cases, 7 strict expected failures each red at its own assertion (re-run by the coordinator with --runxfail: 7 failed, 8 passed; normally 8 passed, 7 xfailed) and 8 unmarked characterization guards, each with its adequacy witness in its docstring. Two departures are accepted: the plan's in-process smoke pin in tests/test_intake.py is not added, because test_intake is itself in SLOW_MODULES, so a pin there pins nothing in the smoke tier, and the intake family keeps smoke-tier modules; and the unreadable-blob fixtures move trunk one act past the range, because a blob dropped at HEAD already refuses the mint today at the scratch worktree's cut, with other wording, which the filter's named refusal must not be confused with. TC-373's tier (Smoke, where its module is slow) goes to the spine change list for the checkpoint. Bar: 2971 passed, 3 skipped; 53.6 s within."
+alternative = "Add the pin to test_intake.py as the plan wrote."
+reversal_cost = "Low: one test."
+why_not_escalated = "Procedural; the pin's purpose (a smoke-tier pin) is unreachable where the plan put it."
+review = ""
+
+[decision.D-004]
+decided = "Build round 1, stage 2 (the code: the plan's P3 to P5) ran on a fresh kit-builder and is committed after the coordinator re-ran its results (touched modules 228 passed; bar 2971 passed, 3 skipped, 54.0 s within; check_resync OK at 7f8e57192). The filter lives in acceptance_record.py (settled_amendments, the four-way _ledger_read and _snapshot_copy_rows), _ledger_acts keeps its contract over the new reader, and intake._routed_amendments and _amendment_drafts return (records or drafts, refusal); intake.py's size stamp moves 1719 to 1730 with its reason. Two builder departures are accepted for the review round to judge: the committed test 10's assertion is corrected (the walk at WI-956's landing also returns two traced-only records, LLR-247 and TC-370, which the mint ignores; the premise is the routed set, and the assertion was never reached before); and scripts/coordinator/preview_mint.py, a caller the plan missed, takes the new tuple. The coordinator-cycle skill's re-mint workaround text is removed in the lane, as the spec asks, and synced."
+alternative = "Hold the stage for a revised test commit."
+reversal_cost = "Low."
+why_not_escalated = "Both are inside the spec's surface; the round reviews them."
+review = ""
+
+[decision.D-005]
+decided = "Counted round 1 over 36e0c8e6b (the lane's first review, its count from zero): REVIEW-A Codex Sol (gpt-6.1-sol, medium), CHANGES-REQUESTED findings=2, both MINOR; REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), CHANGES-REQUESTED findings=4, all MINOR. No BLOCKER or MAJOR: the checkpoint follows round 1. Triage, for the next session: (a) TC-373's tier is Smoke while its only module is in SLOW_MODULES (A, B): the spine change list, for Terra's reconcile (Full). (b) No case pins the routed-traced half of the whole-row comparison: a _row_settled that ignored routed traced cells passes every case (B, by mutant probe): one test case added in a small pre-checkpoint builder stage, with its contrast (an unrouted traced cell moved after the act still settles), before the reconcile, as wi-962 D-004 (b) did. (c) The refusal's recovery for a carrier that does not parse names a same-range sweep that re-reads the same blob and refuses again (B, by probe; the sweep passes with --after at the fixing commit): the wording is corrected in the same stage at every site that states it (intake.py's refusal, the RESYNC entry, the spec's route text) and LLR-342's detail goes to the spine change list. (d) The test module's _drop_blob repeats tests/test_ruling_sync.py's helper (A) and acceptance_record.py repeats existing code at the site B names: consolidation MINORs inside the lane's own surface, built in the same stage where they stay inside the two touched test modules and acceptance_record.py, else a follow-up."
+alternative = "Run a second counted round now."
+reversal_cost = "Low."
+why_not_escalated = "All MINOR; the skill's triage rule."
+review = ""
+
+[decision.D-006]
+decided = "REVIEW-B in counted round 1 is a Claude Opus (high) stand-in for the Gemini slot (review-churn ruling 7; the trial's end, coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter."
+alternative = "None while WI-815's Gemini route has no verified launch."
+reversal_cost = "None."
+why_not_escalated = "Standing substitution, recorded each time."
+review = ""
+
+[decision.D-007]
+decided = "The pre-checkpoint builder stage D-005 (b) to (d) names ran on a fresh kit-builder (headless leg 08 of the same loop session): (b) two cases pin the routed-traced half of the whole-row comparison and its unrouted contrast, each confirmed by a mutant probe of _row_settled (ignore routed traced cells: the routed case fails; compare every traced cell: the contrast fails), named in TC-373's evidence; (c) the unparseable-carrier refusal's recovery now names a sweep with --after at the fixing commit, at intake.py's refusal, the RESYNC entry and the spec's Trust route text (Done-when untouched), pinned by the refusal cases, with LLR-342's detail wording on the spine change list; (d) the test module reuses test_ruling_sync's _drop_blob, and acceptance_record.py gains one carrier loop (_tier_reads) and one re-attested id set (_reattested_ids), both inside the lane's surface. The coordinator re-ran the touched modules (45 passed) and the bar (both strict lints clean; 2971 passed, 3 skipped; 56.3 s within). Terra's retained session for this lane is 01a15d9f-feac-7d32-9bb7-6df04e41266b (its intent turn's log). Not built: REVIEW-B's note that a ledger malformed at the range's before revision leaves no sweep that recovers the range without dropping its amendments; D-005 (c) asked only for the after-side wording, so it goes to status.md's unfiled follow-ups at the landing."
+alternative = "Defer (b) to (d) to successor rows."
+reversal_cost = "Low."
+why_not_escalated = "Builds the triage D-005 recorded."
+review = ""
+
+[decision.D-008]
+decided = "The checkpoint: Terra's reconcile 9f9b2a861 (resumed session; a mechanical check against the trunk base keeps every approved cell's text), the closure check (both strict lints clean in the bar), and one combined sitting, 003-ADJUDICATE-9f9b2a8 (accepted): amendment MEANING rows=2 (LLR-153, LLR-158 blessed), first-approval APPROVE rows=2 (LLR-342, TC-373). The lane then rebased onto trunk's tip 1ca1caf75 (a docs-only close-out commit the lane does not touch; pre-rebase tip 6cef95f30), clean; its diff over the new base has the same patch id as over the old one, RESYNC_PACK excluded, so no post-rebase round is owed, and its RESYNC entry is re-anchored at the new base. The gate reviews the rebased tip that lands; the act turn follows the gate."
+alternative = "Rebase after the gate, then an uncounted round over the rebased tip."
+reversal_cost = "Low."
+why_not_escalated = "The recipes' rebase-before-the-gate rule for a trunk the lane does not touch."
+review = ""
+
+[decision.D-009]
+decided = "The convergence map for the gate (every accepted finding of counted round 1; the reviewers do not read this record). 001-REVIEW-A F1 and 002-REVIEW-B F2 (TC-373's tier Smoke while its module is slow): the corrected text at TC-373's tier cell (Full, reconcile 9f9b2a861), approved in sitting 003. 001-REVIEW-A F2 (the test module's own _drop_blob): inspection, tests/test_intake_settled.py imports _drop_blob from test_ruling_sync and defines none (b5690076d). 002-REVIEW-B F1 (no case pins the routed-traced half): test_a_routed_traced_cell_moved_after_the_act_still_mints and its contrast test_an_unrouted_traced_cell_moved_after_the_act_still_settles; the pre-fix code was correct, so the evidence is the recorded mutant probes (D-007): with _row_settled ignoring routed traced cells the first fails, with it comparing every traced cell the contrast fails. 002-REVIEW-B F3 (the unparseable-carrier recovery names a same-range sweep that refuses again): the five refusal cases, red against 36e0c8e6b's wording (5 failed, 12 passed, the builder's red run in D-007) and green after; test_a_malformed_ledger_refuses_the_mint_by_name also drives the stated recovery (the same-range sweep refuses, the sweep with --after at the fixing commit mints nothing); and the corrected text at intake.py's refusal, the RESYNC entry, the spec's Trust route text and LLR-342's detail (approved in sitting 003). 002-REVIEW-B F4 (acceptance_record.py repeats existing code): inspection, one carrier loop _tier_reads and one id set _reattested_ids, each the only home of its expression (b5690076d)."
+alternative = "None: the skill's convergence map."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-010]
+decided = "The gate over the checkpoint tip aa86c9bb9 (uncounted, convergence stance, after the convergence map D-009): REVIEW-A Codex Sol (gpt-6.1-sol, medium) APPROVE findings=0 (004-REVIEW-A-aa86c9b); REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter, CHANGES-REQUESTED findings=2 (005-REVIEW-B-aa86c9b): one MAJOR tagged convergence-class (a routed traced change made after a row's act settles when a later act in the range re-copies that registry for another row, so the snapshot copy at after does not prove the re-attesting act judged it) and one MINOR (_reattested_added repeats reattested_between in intent). The MAJOR is not contested by the coordinator and goes to one dispute sitting (006-DISPUTE-findings.toml, F1, held by the coordinator with no position), whose ruling is final; the MINOR goes to the spine change list's companion, a follow-up for the fix round if the sitting orders one, else status.md's unfiled follow-ups at the landing."
+alternative = "Have the builder confirm the MAJOR on the real path before the sitting."
+reversal_cost = "Low."
+why_not_escalated = "The skill's gate rule: an open BLOCKER or MAJOR goes to the dispute sitting."
+review = ""
+
+[decision.D-011]
+decided = "The dispute sitting 007-ADJUDICATE-1ae50f4 ruled F1 FIX (convergence-class: a routed traced change after a row's act settles when a later act in the range re-copies the registry). A fresh kit-builder (fix1) built the verdict's remedy, comparing the row with the copy the re-attesting act's own commit wrote (red 2 failed, then 19 passed in the module; 372 passed across nine affected modules), and reported that it changes nothing on a squashed range: every hand landing is a git merge --squash, whose one commit is the act's commit, so the coordinator's own landing route keeps F1 open. A second fresh builder (fix2), briefed to make settlement provable from the act ledger alone, stopped before building with evidence: the act ledger cannot see every registry copy write. A traced re-anchor (intake.py snapshot --approves <registry>=<ref>) copies its registry and appends an entry with approved = [] and reattested = [] (probed through the real copy_live: the unsquashed range mints SR-001, the same range squashed mints nothing); an act mixing --approves on one registry with ids in another lists only the second; a re-seed copies every registry listing only newly approved rows. A sound rule needs the producer to record the registries each entry copied (the act ledger's entry shape, IF-220, its writer and validators), a boundary outside this row's named surface. Under the recipes (a fail-open or Done-when-gap finding whose only fix is a new boundary beyond the spec's surface goes to the owner as a choice; wi-921 D-014) this is the owner's: OI-115 on trunk, cited by WI-963's needs. The fix1 build is kept outside the repository, as the patch l8-963-fix1.patch under the leg's scratch root (it applies cleanly at 1ae50f4ff), with the fix2 probe under fix2-963/; the lane is left at its committed gate tip. Not counted: the gate's MINOR (005-REVIEW-B F2) waits with it."
+alternative = "Build the producer change in this lane, or land WI-963 with the squash route open."
+reversal_cost = "Low: the lane is committed and parked; the owner's choice resumes it."
+why_not_escalated = "Escalated: OI-115."
+review = ""
+
+[decision.D-012]
+decided = "Headless leg 29 rebased the lane onto trunk 35226d1af (pre-rebase tip 0ae2c5b60), as queue row 1 and OI-115's ruling (a) direct. Conflicts: the watermark taken from trunk then --bump-ids (no change; LLR-342 and TC-373 stay lane-held); LLR-153's detail kept trunk's text with the lane's appended sentence (per-cell check: only that cell differs from ours plus theirs-minus-base); acceptance_record.py's IF-091 contract kept trunk's text plus the lane's settled_amendments paragraph, and the lane's _new_entries helper dropped for trunk's shared added_ledger_entries (its two callers moved); the module-size row for intake.py stamped as trunk's note plus the lane's +11 (1861 to 1872) with the lane's reason kept; the recipes' re-mint bullet rewritten to what still mints after the filter (observation re-judges, goalposts rows, an amendment holding an owner-held act, keeping trunk's coordinator-2026-10-26 D-002 guidance) in all three copies; the RESYNC entry re-anchored at 35226d1af. The claim copy took trunk's OI-115 Done-when item (coordinator-2026-11-01 D-004). After the rebase the six affected modules pass (273 tests) and check-lane passes. The plan gate then reads the pass record as binding another Done-when (sha256:371fa4c3f41d21b6 recorded, sha256:f8c62f4a13affe14 now), so no build commit and no landing can pass it: OI-119 on trunk (3ec0e0e62), cited by WI-963's needs. The lane holds at its rebased tip; the FIX build waits for the ruling. The module-size recount is owed with the FIX build, whose code changes the counts again."
+alternative = "Reset to the pre-rebase tip and wait for the ruling before rebasing."
+reversal_cost = "Low: the rebased lane is committed; the pre-rebase tip is recorded."
+why_not_escalated = "Escalated: OI-119."
+review = ""
+
+[decision.D-013]
+decided = "Headless leg 31 (loop session 20261103T054112Z-32c0bd) rebased the lane onto trunk 25a7e4599 (pre-rebase tip 6e3efc56f), after OI-119's ruling (d58f22e0b) put the OI-115 item in the claim copy's Trust section, so the claim copy's Done-when again carries the digest the pass record binds. Conflicts: RESYNC_PACK only, both sides' entries kept with trunk's (the id carrier) first, and the lane's entry re-anchored at 25a7e4599. The lane then reserved its ids on the carrier (`trace.py --reserve-ids WI-963 LLR=1,TC=1`, carrier commit 3a8986276: LLR 364, TC 403) and renumbered LLR-342 to LLR-364 and TC-373 to TC-403 in its rows, code tags, tests, runtime flow and the three recipe copies; records (decisions, reviews, plans, handoffs, logs) keep the numbers they were written with. Sitting 003's approval of the two rows is spent: a renumbered row counts as changed, and both rows are amended again by the FIX, so the checkpoint after the FIX re-sits them under their new ids. After the rebase ten affected modules pass (481 tests) and both strict lints are clean."
+alternative = "Keep LLR-342 and TC-373 and reserve those numbers."
+reversal_cost = "Low: unlanded rows."
+why_not_escalated = "The handoff's queue row 1 and the recipes' reserve-before-drafting rule: a reservation always starts above the carrier's and trunk's marks, so the lane's numbers cannot be reserved."
+review = ""
+
+[decision.D-014]
+decided = "Dispute sitting 007's FIX, built under OI-115 (a)'s route (the Trust section's squashed-landing ruling): settlement reads, from the act ledger's `copied`, which acts wrote the row's registry. A fresh kit-builder first built the plain last-writer rule (the sitting's equivalent route: a later range-added entry that wrote the row's registry, or a legacy entry whose copy set is unknown, leaves the row unsettled). That turned the Done-when's WI-926 replay red (5245ac82c..08bbb71b6: seq 137 re-attests six rows, then legacy seqs 138 and 139 approve LLR-340, SR-240 and TC-370), and the builder stopped as briefed. The coordinator narrowed the rule rather than change the replay's expectation: a later act writing the registry without re-attesting the row cannot absorb an unattested change to the row's approved cells (the builder verified `baseline_snapshot.refresh_refusal` refuses that drift before any copy, through `_unattested_rows`), only to its routed traced cells; so a row is settled when it is re-attested in the range, its whole approved and routed traced cell set at `after` equals its copy there, and either (i) no range-added entry after the latest re-attesting one wrote, or may have written, its registry, or (ii) its routed traced cells at `after` equal those at `before`. Every other case mints. WI-926's six rows moved approved cells only, so (ii) settles them; WI-956's landing holds one entry, so (i) settles its rows; the sitting's two-acts regression mints over an unsquashed and a squashed range."
+alternative = "Keep the plain last-writer rule and take the Done-when's WI-926 replay item to the owner; or (iii) read a legacy entry's copy set from its approved and re-attested ids, which IF-220 forbids (never inferred)."
+reversal_cost = "Low: unlanded code, judged by the re-sitting and the gate."
+why_not_escalated = "Inside the ruled route (OI-115 (a): settlement read from the ledger's record of what each act copied) and the sitting's FIX; it keeps every Done-when item, and the checkpoint sitting and the gate judge it."
+review = ""
+
+[decision.D-015]
+decided = "The fix round committed after the coordinator re-ran the builder's results through `integrate.py attest` (the review bar and the six touched modules). Red before the fix (code at 85683aa7e, new tests only): the two-acts regression over both ranges and the first-form legacy case failed (3 failed, 2 passed); green after: tests/test_intake_settled.py 24 passed, the six modules 326 passed, both strict lints clean, plan_coverage exit 0 over 005-REVIEW-B F1 (F2, the gate's MINOR, excluded as not built in this round). The arm (ii) case was written after the first pass, so it has no red run against code without arm (ii); its witness is the plain last-writer rule, under which it mints. Trace cells only: LLR-364's code_symbol and TC-403's evidence; the RESYNC entry's prose follows the rule, its heading unchanged. No size stamp moved."
+alternative = "None."
+reversal_cost = "Low."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-016]
+decided = "The checkpoint after the dispute-ordered fix round. Terra's reconcile e3d9617 ran as a fresh first turn (the resume refused: no AUTHOR log of the lane's earlier turns is committed at HEAD); a mechanical check found every changed cell's untouched sentences kept, LF endings and no replacement characters. Both strict lints clean. Combined sitting 008-ADJUDICATE-e3d9617 (accepted): amendment MEANING rows=2 (LLR-153 and LLR-158 blessed, both re-sat because the rebases merged trunk changes into their cells), first-approval RETURN rows=2 (LLR-364 approved; TC-403 returned: its method enumerated test functions, code symbols a row may not name). Terra, resumed, removed the enumeration (5f41979); sitting 009-ADJUDICATE-5f41979, TC-403 alone, APPROVE rows=1. The act turn waits for the gate."
+alternative = "None: the skill's checkpoint."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-017]
+decided = "The convergence map for the gate after the fix round (the reviewers do not read this record). 005-REVIEW-B F1 (a routed traced change after a row's act settles when a later act in the range re-copies the registry; ruled FIX by sitting 007): test_a_later_act_copying_the_registry_does_not_settle_a_row_it_did_not_reattest, parametrized over an unsquashed and a squashed range, red on the pre-fix code at 85683aa7e (both cases failed, with the first-form legacy case: 3 failed, 2 passed) and green at 159681026; the corrected text is LLR-364's detail and TC-403's method, approved in sittings 008 and 009. 005-REVIEW-B F2 (MINOR: _reattested_added repeats reattested_between in intent): not built; it goes to status.md's unfiled follow-ups at the landing, with REVIEW-B's ledger-malformed-at-before note (D-007)."
+alternative = "None: the skill's convergence map."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-018]
+decided = "The gate after the fix round, over d3d6ca7 (uncounted, convergence stance, after the convergence map D-017): REVIEW-A Codex Sol (gpt-6.1-sol, medium) CHANGES-REQUESTED findings=1 (010-REVIEW-A-d3d6ca7); REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter, CHANGES-REQUESTED findings=4 (011-REVIEW-B-d3d6ca7). Both reviewers raised the same MAJOR, tagged convergence-class: D-014's arm (ii) reads equal routed cells at the range's two ends as no change after the act, so a routed cell moved before the act, re-attested, then restored to its pre-range value after it and absorbed by a later act's copy settles unjudged, on both range shapes (Done-when items 2 and 5). The finding is right: D-014 judged that sequence contrived, and it is not; the coordinator's narrowing was the defect. It goes to one dispute sitting (012-DISPUTE-findings.toml, F1 Sol's text and F2 Opus's, held by the coordinator with no position, the D-014 fact stated). REVIEW-B's three MINORs (LLR-364's code_symbol names `_new_entries`, defined nowhere; `_reattested_ids` tagged to LLR-364 though only LLR-278's reader calls it; `_reattested_added` repeating `_added_acts` and `reattested_between`'s reads) go to the next fix round if the sitting orders one, else to status.md's unfiled follow-ups at the landing."
+alternative = "Build the deletion now without a sitting."
+reversal_cost = "Low."
+why_not_escalated = "The skill's gate rule: an open BLOCKER or MAJOR goes to the dispute sitting, whose ruling is final."
+review = ""
+
+[decision.D-019]
+decided = "Dispute sitting 013-ADJUDICATE-93526df (accepted), final: F1 (Sol's text) DISMISS not-worth-cost (evidence bound to the re-attesting act's own copy is unrecoverable on a squashed landing without an IF-220 format change, so the deletion would mint every row a later act's copy touches, the standard amendment-then-first-approval act turn and the WI-926 replay included, to report a net-zero routed restore); F2 (Opus's text) FIX: keep the later-writer arm, state its guarantee (equal routed traced cells at the range's two ends) and its one limit (a routed traced cell moved before the row's act and restored after it is re-anchored by a later act's copy of the registry) in LLR-364, TC-403 and the RESYNC entry, pin that case in TC-403, and scope Done-when item 5 through its in-lane blessing to a range with no later copy of the row's registry. The scope is written into the claim copy's Trust section, not its Done-when, so the plan's pass record stays bound (the recipes' rule for a checkpoint item on a passed single plan; OI-119 (a)); the next sitting is briefed to judge it with TC-403."
+alternative = "Edit Done-when item 5 itself and take the unbound pass record to the owner."
+reversal_cost = "Low: one Trust bullet in an unlanded claim copy."
+why_not_escalated = "The sitting's ruling is final; the Trust placement follows the recorded rule for a passed single plan."
+review = ""
+
+[decision.D-020]
+decided = "Fix round 2 (sitting 013's F2 FIX) ran on a fresh kit-builder: no logic changed; `_settled_row`'s and `settled_amendments`' docstrings (and one existing test's) state the arm's guarantee and its limit; two cases pin the limit (a routed traced cell moved before the act and restored after it, a later act copying the registry: settles) and its contrast (no later copy: mints), each over an unsquashed and a squashed range (with the arm switched off the limit pin fails and the contrast passes; a limit pin has no red-before); the RESYNC entry's prose states both. REVIEW-B's two trace MINORs are built: `_new_entries`, defined nowhere, leaves LLR-364's code_symbol, and `_reattested_ids` is retagged to LLR-278 and moves to its code_symbol (a traced cell). Not built: REVIEW-B's consolidation MINOR (`_reattested_added` repeating the merge rung's ledger reads), to status.md's unfiled follow-ups at the landing. The coordinator re-ran the results through `integrate.py attest`. Builder: six modules 330 passed, smoke 3376 passed, both strict lints and check_doc_refs --strict clean."
+alternative = "None."
+reversal_cost = "Low."
+why_not_escalated = "Builds the sitting's FIX."
+review = ""
+
+[decision.D-021]
+decided = "The checkpoint after fix round 2: Terra's resumed reconcile a413eb6 (LLR-364's detail and rationale, TC-403's method and expected; LF, no replacement characters), both strict lints clean, and combined sitting 014-ADJUDICATE-a413eb6 (accepted): first-approval APPROVE rows=2 (LLR-364, TC-403). The sitting judged the claim copy's Trust bullet scoping Done-when item 5 and accepted its placement there (an edited Done-when would unbind the single plan's pass record), noting that a reader of the Done-when alone still sees item 5 unbounded. The act turn waits for the gate."
+alternative = "None."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-022]
+decided = "The convergence map for the gate after fix round 2 (the reviewers do not read this record). 011-REVIEW-B F1 and 010-REVIEW-A F1, the one MAJOR: F1 (Sol's text) was dismissed by sitting 013 (not-worth-cost) and is excluded; F2 (Opus's text) was ruled FIX as a statement-and-pin, not a behaviour change, so its evidence is independently checkable text and the pin: LLR-364's detail and rationale and TC-403's method (approved in sitting 014), the RESYNC entry's prose, `_settled_row`'s and `settled_amendments`' docstrings at ab0ccdc, and the cases test_a_routed_cell_restored_between_two_acts_copying_the_registry_settles and its contrast test_a_routed_cell_restored_after_the_act_with_no_later_copy_still_mints (each over both range shapes; with the arm switched off the pin fails). 011-REVIEW-B's MINORs built: `_new_entries` absent from LLR-364's code_symbol, and `_reattested_ids` tagged LLR-278 and listed in LLR-278's code_symbol (inspection at ab0ccdc). Not built: the consolidation MINOR, to the follow-ups."
+alternative = "None: the skill's convergence map."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-023]
+decided = "The gate after fix round 2, over b505062 (uncounted, convergence stance, after the convergence map D-022): REVIEW-A Codex Sol (gpt-6.1-sol, medium) CHANGES-REQUESTED findings=2 (015-REVIEW-A-b505062): one MAJOR tagged convergence-class (Done-when item 1: a row whose approved text and routed cells were amended and re-attested, with a later act re-attesting another row of the same registry, equals its copy yet mints again, since the later writer and its legitimately moved routed cell fail both arms) and one MINOR (IF-091's data cell is 411 characters, past the 160-character advisory). REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter, APPROVE findings=3 (016-REVIEW-B-b505062), all MINOR: the consolidation MINOR again; LLR-364's code_symbol lists `_tier_reads`, whose tag names only LLR-358; tests/conftest.py's SLOW_MODULES stamp says 17 cases where the module now collects 28. The MAJOR goes to one dispute sitting (017-DISPUTE-findings.toml, F1, held by the coordinator with no position). The MINORs go to the next fix round if the sitting orders one, else to status.md's unfiled follow-ups at the landing."
+alternative = "None."
+reversal_cost = "Low."
+why_not_escalated = "The skill's gate rule."
+review = ""
+
+[decision.D-024]
+decided = "Dispute sitting 018-ADJUDICATE-e5811b9 (accepted), final: F1 FIX, text only: the arm correctly mints a fully judged row whose routed cells moved when a later act copies its registry (on a squashed range it cannot be told from a row whose routed move a later copy absorbed), but Done-when item 1 and the landing recipe promised no row; keep the code, state item 1's scope under a later copy in the Trust section beside item 5's, name the consequence in LLR-364, and narrow the recipes' sweep claim to check such a row against the lane's own act and close it citing that act. Built: the coordinator wrote the Trust bullet (not the Done-when, so the pass record stays bound, D-019) and the recipe text in all three copies (the sweep step and 'What the sweep mints after the act'); Terra, resumed, named the consequence in LLR-364's detail and cut IF-091's data cell to 146 characters (the second gate's MINOR). Two more gate MINORs built by the coordinator as byte-exact trace fixes: `_tier_reads` leaves LLR-364's code_symbol (its tag names only LLR-358), and tests/conftest.py's SLOW_MODULES stamp reads 28 cases (collected: 28). Not built: the consolidation MINOR, to the follow-ups."
+alternative = "None: the sitting's ruling is final."
+reversal_cost = "Low."
+why_not_escalated = "Builds the sitting's FIX."
+review = ""
+
+[decision.D-025]
+decided = "The checkpoint after the sitting-018 fix: combined sitting 019-ADJUDICATE-657fa68 (accepted), first-approval APPROVE rows=1 (LLR-364, its consequence sentence named; the Trust bullet scoping Done-when item 1 judged with it). The convergence map for the third gate (the reviewers do not read this record): 015-REVIEW-A F1 (a fully judged row mints again under a later writer), ruled FIX as text by sitting 018: the claim copy's Trust bullet 'The scope of Done-when item 1 under a later copy', LLR-364's consequence sentence (approved in sitting 019), the recipes' sweep step and 'What the sweep mints after the act' in all three copies (657fa68), and the behaviour pinned by test_a_later_writer_leaves_a_row_with_moved_routed_cells_unsettled. The second gate's MINORs built: IF-091's data at 146 characters, `_tier_reads` absent from LLR-364's code_symbol, tests/conftest.py's stamp at 28 cases (inspection at 657fa68). Not built: the consolidation MINOR."
+alternative = "None."
+reversal_cost = "None."
+why_not_escalated = "Procedural."
+review = ""
+
+[decision.D-026]
+decided = "The third gate, over 596a973 (uncounted, convergence stance, after the convergence map D-025): REVIEW-A Codex Sol (gpt-6.1-sol, medium) APPROVE findings=0 (020-REVIEW-A-596a973); REVIEW-B a Claude Opus (high) stand-in for the Gemini slot (ruling 7; coordinator-2026-10-16 D-008), launched with the Agent tool's model opus and effort high, given only its brief's path, the lane and the interpreter, APPROVE findings=3 (021-REVIEW-B-596a973), all MINOR: the consolidation MINOR a third time (`_reattested_added` repeats `_added_acts` and `reattested_between`'s two-sided read, and its name says re-attested while it returns every added entry); `_row_settled` and `_routed_unmoved` are one comparison written twice; IF-091's data cell elides `settled_amendments`' parameters. No BLOCKER or MAJOR is open, so the lane goes to its act turn. The three MINORs are gate MINORs whose fix would move the tip off the gated one: status.md's unfiled follow-ups at the landing (the recipes' gate-MINOR rule), with 005-REVIEW-B F2 and D-007's ledger-malformed-at-before note. Because the set was judged across sittings 008, 009, 014 and 019, one whole-set combined sitting at the gated tip authorizes the act turn (the recipes' rule, wi-798 D-023)."
+alternative = "A fix round for the MINORs, which would need another gate."
+reversal_cost = "Low."
+why_not_escalated = "The skill's gate rule: MINORs never cost a round."
+review = ""

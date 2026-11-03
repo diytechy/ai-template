@@ -10292,6 +10292,48 @@ DP (those stay minted on the trunk). It exists from the first reservation.
 - No existing file migrates: a watermark without records reads as before.
   No setting changes and no registry schema changes.
 
+### The trunk mint skips amendments a lane already settled [since 25a7e4599]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The trunk mint (the merge slot's post-merge arm and
+`intake.py sweep`, through one filter) stops filing an amendment
+adjudication row for a row the merged range already settled: an act-ledger
+entry the range added re-attests the row, and the row's approved and routed
+traced cells at the range's end equal its copy under
+`docs/archive/last_approved/` there. When a later act in the range copied
+the row's registry without re-attesting the row, that copy could have
+absorbed a routed traced change nobody judged (an unjudged approved-cell
+change it could not, since the snapshot refuses to copy one), so the row then
+also needs its routed traced cells to be the same at the range's two ends.
+That guarantees equality at the ends, not that no routed cell moved in
+between, and has one limit: a routed traced cell moved before the row's
+re-attesting act and restored after it is re-anchored by the later act's
+copy, as any traced refresh is, and the row settles. Which registries each act copied is read from the act ledger's
+`copied` list, so the rule holds on a squashed landing, whose one commit
+carries every act, as on an unsquashed one; an entry with no `copied`
+(written before the ledger recorded it) counts as a later copy of every
+registry. A row amended again after its act, or
+amended with no act in the range, still mints, as does a row whose copy is
+missing. An absent act ledger is no acts, so nothing is filtered. A ledger or
+snapshot copy the tree lists but that cannot be read, or does not parse, now
+refuses the mint by name; the merge stands. For a blob that cannot be read,
+the recovery is a fetch, then `intake.py sweep --before <sha> --after <sha>`
+over the same range; for a carrier fixed in a reviewed commit, it is that
+sweep with `--after` at the fixing commit, since the same range re-reads the
+same broken blob.
+
+**What to do.** Nothing; no data migrates. A landing step of your own that
+closed the redundant row "as already settled" can go; a row the filter
+cannot prove settled (its routed traced cells moved across a range in which a
+later act copied its registry) still mints, and is judged like any other.
+
+**Kit-owned files — overwrite:** `scripts/intake.py`,
+`scripts/acceptance_record.py`.
+
+**Adopter-merged files:** none. No registry, setting or record format
+changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

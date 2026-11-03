@@ -96,6 +96,12 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     `reattest_scope_refusal`, which refuses by name every re-attested row
     outside the `Adjudicates` scope of the amendment rows the lane claims. A
     held rung is the lane rule's (`held_status`, IF-196), not this call's.
+    `settled_amendments(root, base, head, records, routed_cells)` returns
+    `(settled ids, refusal)` for the trunk mint: the records whose row an act
+    ledger entry the range added re-attests (IF-220) and whose approved and
+    routed traced cells at `head` equal the row's snapshot copy there. A
+    ledger or copy the tree lists that cannot be read or does not parse is
+    the refusal, naming the carrier and revision; nothing else suppresses.
 Contract IF-129: the ONE cell-comparison basis.
     `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
     `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
@@ -262,8 +268,11 @@ APPROVAL_ACT_CSVS = SPINE_CSVS + (
 # THE PRE-COMMIT WARN'S SCOPE IS THIS SET TOO, decided in the same change: the
 # warn (`staged_spine_findings`) and the mint (`intake._routed_amendments`) read
 # one walk, `staged_spine_amendments`, so the author is warned at the commit
-# about exactly the rows the merge will route to an adjudicator. The hat arm
-# stays structurally silent on these tiers: none carries `Hat-Refs`.
+# about exactly the rows the merge will route to an adjudicator. The mint then
+# drops the rows the merged range re-attested and left equal to their snapshot
+# copies (`settled_amendments`, LLR-364); the warn reads the unfiltered walk,
+# because it fires before any act. The hat arm stays structurally silent on
+# these tiers: none carries `Hat-Refs`.
 # Implements: SR-178, LLR-158
 AMENDMENT_CSVS = APPROVAL_ACT_CSVS
 
@@ -1067,17 +1076,201 @@ def amendment_scope(metas):
     )
 
 
-def _ledger_acts(root, rev):
-    """The act ledger's `[[act]]` entries at `rev`, `[]` where it is absent, or
-    None when it does not parse (IF-220 is the ledger's shape)."""
-    text = _git(root, ["show", "{}:{}/{}".format(rev, SNAPSHOT_DIR, SNAPSHOT_ACTS)])
+def _ledger_read(root, rev):
+    """`(acts, failure)`: the act ledger's `[[act]]` entries at `rev` (IF-220 is
+    the ledger's shape). `([], None)` when the tree does not list it;
+    `(None, "cannot be read")` when it lists it but its blob cannot be read;
+    `(None, "does not parse")` when its text is not a ledger. The one reader
+    that tells those three apart; `_ledger_acts` is its older two-valued view.
+
+    Implements: SR-178, LLR-364"""
+    try:
+        text = _kitgit.git_show(root, rev + ":", SNAPSHOT_DIR + "/" + SNAPSHOT_ACTS)
+    except _kitgit.UnreadableBlob:
+        return None, "cannot be read"
     if text is None:
-        return []
+        return [], None
     try:
         acts = tomllib.loads(text).get("act", [])
     except tomllib.TOMLDecodeError:
-        return None
-    return acts if isinstance(acts, list) else None
+        return None, "does not parse"
+    return (acts, None) if isinstance(acts, list) else (None, "does not parse")
+
+
+def _ledger_acts(root, rev):
+    """The act ledger's `[[act]]` entries at `rev`, `[]` where it is absent, or
+    None when it does not parse (IF-220 is the ledger's shape). A ledger whose
+    blob cannot be read reads as absent here, the merge rung's contract;
+    `_ledger_read` is the reader that refuses it."""
+    acts, failure = _ledger_read(root, rev)
+    return [] if failure == "cannot be read" else acts
+
+
+def _reattested_added(root, base, head):
+    """`(entries, failure)`: the ledger entries `head` added over `base`, in
+    file order, or the ledger's path, revision and what went wrong when either
+    side cannot be read or does not parse.
+
+    Implements: SR-178, LLR-364"""
+    sides = []
+    for rev in (base, head):
+        acts, failure = _ledger_read(root, rev)
+        if failure:
+            path = SNAPSHOT_DIR + "/" + SNAPSHOT_ACTS
+            return [], "{} {} at {}".format(path, failure, rev)
+        sides.append(acts)
+    return added_ledger_entries(sides[1], [sides[0]]), None
+
+
+def _latest_reattest(added, rid):
+    """The index in the range-added ledger entries `added` of the latest one
+    that re-attests `rid`, or None. Entries are in file order, which IF-220
+    makes `seq` order.
+
+    Implements: SR-178, LLR-364"""
+    marks = [
+        i for i, a in enumerate(added) if rid in map(str, a.get("reattested") or ())
+    ]
+    return marks[-1] if marks else None
+
+
+def _no_later_writer(later, rel_path):
+    """Did none of the ledger entries `later` write `rel_path`? An entry whose
+    `copied` names the registry wrote it, and a legacy entry (no `copied`: its
+    copy set is unknown, IF-220) may have.
+
+    Implements: SR-178, LLR-364"""
+    stem = spine_carrier.stem(rel_path)
+    return not any(
+        "copied" not in a or stem in {spine_carrier.stem(p) for p in a["copied"] or ()}
+        for a in later
+    )
+
+
+def _reattested_ids(before, after):
+    """The row ids re-attested by the ledger entries of `after` whose `seq`
+    `before` does not hold.
+
+    Implements: SR-178, LLR-278"""
+    added = added_ledger_entries(after, [before])
+    return frozenset(str(r) for a in added for r in a.get("reattested") or [])
+
+
+def _snapshot_copy_rows(root, rev, rel_path, id_col):
+    """`(rows, failure)`: `{id: row}` of the snapshot's copy of one tier at
+    `rev`, through its carriers in preference order. `(None, None)` when the
+    tree lists no copy; a listed copy that cannot be read or does not parse is
+    a failure naming its path and revision, never an absence (which
+    `_spine_rows_at` reads all three as).
+
+    Implements: SR-178, LLR-364"""
+    under = SNAPSHOT_DIR + "/"
+    for path, rows, failure in _tier_reads(root, rev + ":", rel_path, id_col, under):
+        if failure:
+            return None, "{} {} at {}".format(path, failure, rev)
+        return rows, None
+    return None, None
+
+
+def _row_settled(rel_path, id_col, copy_row, live_row, routed):
+    """Does the live row equal its snapshot copy in every approved cell and
+    every routed traced cell? A row missing from either side is not settled.
+
+    Implements: SR-178, LLR-364"""
+    if copy_row is None or live_row is None:
+        return False
+    changed = split_changed_cells(rel_path, id_col, copy_row, live_row)
+    return not changed["approved"] and not set(changed["traced"]) & set(routed)
+
+
+def _routed_unmoved(rel_path, id_col, before_row, live_row, routed):
+    """Does the live row carry the routed traced cells it carried before the
+    range? A row missing from either side has moved.
+
+    Implements: SR-178, LLR-364"""
+    if before_row is None or live_row is None:
+        return False
+    changed = split_changed_cells(rel_path, id_col, before_row, live_row)
+    return not set(changed["traced"]) & set(routed)
+
+
+def _tier_sides(root, base, head, rel_path, id_col):
+    """`(sides, failure)`: one tier's `(copy at head, live at head, live at
+    base)` row maps, or the snapshot copy's failure (`_snapshot_copy_rows`).
+
+    Implements: SR-178, LLR-364"""
+    copy, failure = _snapshot_copy_rows(root, head, rel_path, id_col)
+    if failure:
+        return None, failure
+    live = _spine_rows_at(root, head + ":", rel_path, id_col)
+    return (copy or {}, live, _spine_rows_at(root, base + ":", rel_path, id_col)), None
+
+
+def _settled_row(added, rid, rel_path, id_col, sides, routed):
+    """Is `rid` settled by the range-added ledger entries `added`, given its
+    tier's `sides` (`_tier_sides`)? It needs an entry re-attesting it and its
+    whole approved and routed traced cell set equal to its copy at the range's
+    end. That copy is the re-attesting act's own when no later entry wrote the
+    registry. A later writer re-attesting another row cannot have absorbed an
+    approved-cell change to this one (the snapshot refuses to copy unattested
+    approved drift), only a routed traced one, so a later writer still leaves
+    it settled when its routed traced cells are the same at the range's two
+    ends. That proves equality at the ends, not that no routed cell moved in
+    between; its one limit: a routed traced cell moved before the re-attesting
+    act and restored after it is re-anchored by the later copy, as any traced
+    refresh is, and the row settles.
+
+    Implements: SR-178, LLR-364"""
+    mark = _latest_reattest(added, rid)
+    copy, live, before = sides
+    if mark is None or not _row_settled(
+        rel_path, id_col, copy.get(rid), live.get(rid), routed
+    ):
+        return False
+    return _no_later_writer(added[mark + 1 :], rel_path) or _routed_unmoved(
+        rel_path, id_col, before.get(rid), live.get(rid), routed
+    )
+
+
+def settled_amendments(root, base, head, records, routed_cells):
+    """`(settled ids, refusal)`: which amendment `records` the range
+    `base..head` already settled. A record is settled when a ledger entry the
+    range added re-attests its row, the row's whole approved and routed traced
+    cell set at `head` equals its snapshot copy at `head`, AND either no entry
+    the range added after the latest such one wrote (or, a legacy entry, may
+    have written) the row's registry, or the row's routed traced cells are the
+    same at the range's two ends, `base` and `head` (`_settled_row`). That
+    second arm's one limit: a routed traced cell moved before the re-attesting
+    act and restored after it is re-anchored by a later act's copy of the
+    registry, and the row settles. The test reads what each act
+    copied, so it holds on a squashed range whose one commit carries every
+    act. The whole row, not the net diff's cells, so a cell edited after the
+    act and then restored still differs. `routed_cells` is the caller's
+    routing rule, keyed by registry. With no records nothing is read. A
+    ledger or copy the tree lists but that cannot be read or does not parse
+    is the refusal, naming the carrier, revision and which; a missing copy or
+    row is unsettled, so it mints.
+
+    Implements: SR-178, LLR-364"""
+    if not records:
+        return frozenset(), None
+    added, refusal = _reattested_added(root, base, head)
+    if refusal:
+        return frozenset(), refusal
+    routed = {spine_carrier.stem(k): v for k, v in routed_cells.items()}
+    settled, tiers = set(), {}
+    for rid in sorted({rec["id"] for rec in records}):
+        rel, col = _tier_of(rid)
+        if rel is None or _latest_reattest(added, rid) is None:
+            continue
+        if rel + col not in tiers:
+            tiers[rel + col], refusal = _tier_sides(root, base, head, rel, col)
+            if refusal:
+                return frozenset(), refusal
+        stem = spine_carrier.stem(rel)
+        if _settled_row(added, rid, rel, col, tiers[rel + col], routed.get(stem, ())):
+            settled.add(rid)
+    return frozenset(settled), None
 
 
 def reattested_between(root, base, head):
@@ -1094,8 +1287,7 @@ def reattested_between(root, base, head):
                 SNAPSHOT_DIR, SNAPSHOT_ACTS, base if before is None else head
             )
         )
-    added = _added_acts(root, base, head)
-    return frozenset(str(r) for a in added for r in a.get("reattested") or []), None
+    return _reattested_ids(before, after), None
 
 
 def _wrote_ledger(delta):

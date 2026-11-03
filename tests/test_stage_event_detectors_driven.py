@@ -305,7 +305,8 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     _write_stage_value(root, ladder.STAGE_IMPL)
     after = _commit(root, "the merged branch's delta")
 
-    drafts = INTAKE._amendment_drafts(root, before, after)
+    drafts, refusal = INTAKE._amendment_drafts(root, before, after)
+    assert refusal is None, refusal
     assert len(drafts) == 1, drafts
     assert drafts[0]["buildtier"] == "strong"
 
@@ -329,6 +330,7 @@ def test_tier_signals_STRONG_ARM_CAN_ACTUALLY_FIRE_end_to_end(tmp_path):
     _write_stage_value(root2, ladder.STAGE_ARCH)
     after2 = _commit(root2, "the merged branch's delta")
 
-    drafts2 = INTAKE._amendment_drafts(root2, before2, after2)
+    drafts2, refusal2 = INTAKE._amendment_drafts(root2, before2, after2)
+    assert refusal2 is None, refusal2
     assert len(drafts2) == 1, drafts2
     assert drafts2[0]["buildtier"] == "medium"

@@ -1,0 +1,9 @@
+range = "25a7e4599d362894a58f6b981df65061d44cd983..b505062cd47d0fd9e7c5cc8bb8ea96b0b499776a"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = '''
+- [MAJOR] project-trajectory/scripts/acceptance_record.py:1230 -> K1; Done-when 1 is still violated in a supported two-act lane: amend SR-001's approved text and SN-Refs, re-attest SR-001, then amend and re-attest only SR-002 in the same registry; SR-001 is untouched after its act and equals its snapshot in every cell, but the later writer plus its legitimately changed SN-Refs makes _routed_unmoved false and mints another SR-001 adjudication row (observed in d1_probe.py). LLR-364 and test_a_later_writer_leaves_a_row_with_moved_routed_cells_unsettled encode this narrower promise, while D1 and the replacement landing recipe promise suppression of this already-settled row -> replace the range-end proxy with settlement evidence bound to the row's own re-attesting act so this fully judged case settles while the post-act-edit cases still mint; align LLR-364, TC-403 and that regression with D1 and re-attest the changed child content through its authority, preserving parent acceptance and the enduring post-act regressions -> @implementer; convergence-class: yes'''
+position = '''
+Not contested: the coordinator takes no side on this finding. A fact for the sitting: dispute sitting 013-ADJUDICATE-93526df ruled on the same later-writer arm (F1 DISMISS, F2 FIX) and the lane built its F2 FIX; the case this finding names is pinned at the lane's tip as a row that mints.'''

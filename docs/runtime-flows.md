@@ -205,7 +205,7 @@ sequenceDiagram
             Note over Slot: not ready, a lagging watermark included:<br/>refreshed inside the held slot, and that refresh folds
             Slot->>Slot: merge --no-ff, ff trunk, unload, audit
             Slot->>Intake: post-merge arm, still inside the held slot (LLR-154)
-            Intake-->>Slot: rows the merge forces, as ONE bookkeeping commit on trunk (LLR-153)
+            Intake-->>Slot: rows the merge forces, minus amendments the range already settled (LLR-364), as ONE bookkeeping commit on trunk (LLR-153)
         end
     end
     Disp->>Intake: empty frontier — gap census mints gap-closure rows, else drain and exit 0

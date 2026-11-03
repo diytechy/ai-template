@@ -1104,7 +1104,8 @@ def test_a_one_row_amendment_mint_renders_that_row_alone(tmp_path):
     # `_mint` writes) rather than a hand-built row, so the cell the brief reads
     # is the cell the mint produced.
     repo, before, after = _two_drift_repo(tmp_path)
-    drafts = intake._amendment_drafts(repo, before, after)
+    drafts, refusal = intake._amendment_drafts(repo, before, after)
+    assert refusal is None, refusal
     assert len(drafts) == 1
     assert drafts[0]["adjudicates"] == ["SR-001"]
     row = intake._draft_row("WI-301", drafts[0])

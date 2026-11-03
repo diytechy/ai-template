@@ -21,7 +21,10 @@ Four triggers, plus the drafts-not-mints arm:
       record mints when it carries an approved
       change or a ROUTED traced change (`ROUTED_TRACED_CELLS`: `SN-Refs`,
       `Verifies`, and `SR-Refs` — the last ruled traced at WI-388); the other
-      traced cells are silent by ruling. One `adjudication` row per merge,
+      traced cells are silent by ruling. A record the merged range already
+      settled (an act it added re-attests the row, and the row equals its
+      approved-snapshot copy) is dropped through
+      `acceptance_record.settled_amendments`. One `adjudication` row per merge,
       listing each changed row, cell and before/after — the long form in the
       `## Context` body section, because R-A forbids a filled Deliverable on
       an open row.
@@ -698,9 +701,15 @@ def _review_id(name):
 
 
 def _routed_amendments(root, before, after):
-    """The amendment records that are adjudication's to judge: an approved
-    change, or a routed traced change (`ROUTED_TRACED_CELLS`). Everything else
-    in the traced half is silent by ruling."""
+    """`(records, refusal)`: the amendment records that are adjudication's to
+    judge: an approved change, or a routed traced change
+    (`ROUTED_TRACED_CELLS`). Everything else in the traced half is silent by
+    ruling. A record the merged range already settled (re-attested by an act
+    it added and equal to its snapshot copy at `after`) is dropped, and a
+    ledger or copy that cannot be read or does not parse refuses the mint:
+    `acceptance_record.settled_amendments` decides both.
+
+    Implements: SR-178, LLR-364"""
     routed = []
     for rec in acceptance_record.staged_spine_amendments(root, before, after):
         routed_cells = {
@@ -716,7 +725,16 @@ def _routed_amendments(root, before, after):
         }
         if rec["approved"] or routed_cells:
             routed.append(dict(rec, routed=routed_cells))
-    return routed
+    settled, refusal = acceptance_record.settled_amendments(
+        root, before, after, routed, ROUTED_TRACED_CELLS
+    )
+    if refusal:
+        return [], (
+            "the amendment mint was refused: {} (the merge stands); once fetched, "
+            "run `intake.py sweep --before {} --after {}`; once fixed in a reviewed "
+            "commit, with `--after` at the fixing commit".format(refusal, before, after)
+        )
+    return [rec for rec in routed if rec["id"] not in settled], None
 
 
 def _stage_moved(root, before, after):
@@ -811,9 +829,11 @@ def _owning_srs(records):
 
 
 def _amendment_drafts(root, before, after):
-    records = _routed_amendments(root, before, after)
+    """`(drafts, refusal)`: trigger (a)'s one adjudication row, or none, or
+    `_routed_amendments`' refusal."""
+    records, refusal = _routed_amendments(root, before, after)
     if not records:
-        return []
+        return [], refusal
     ids = sorted({rec["id"] for rec in records})
     title = (
         "adjudicate: {} - approved/routed cell(s) amended on merged trunk "
@@ -841,7 +861,7 @@ def _amendment_drafts(root, before, after):
             "specref": records[0]["registry"],
             "context": _amendment_context(records),
         }
-    ]
+    ], None
 
 
 # --- trigger (a2): the Drafted rows a lane hands over -------------------------
@@ -2748,11 +2768,14 @@ def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
     checkpoint runs exactly once per merged work item, judged at `after`.
     All-or-nothing: any refusal mints nothing (the merge itself STANDS;
     recovery is a trunk-side fix plus `python intake.py sweep --before {before}
-    --after {after}`).
+    --after {after}`; the amendment arm reads its carriers AT `after`, so its
+    refusal names `--after` at the fixing commit for a carrier fixed there).
 
     Implements: SR-215, LLR-255
     """
-    drafts = _amendment_drafts(root, before, after)
+    drafts, refusal = _amendment_drafts(root, before, after)
+    if refusal:
+        return [], refusal
     drafts += _first_approval_drafts(root, before, after)
     drafts += _close_drafts(root, outcomes)
     goalposts, refusal = _done_when_drafts(root, before, after, outcomes, branch)

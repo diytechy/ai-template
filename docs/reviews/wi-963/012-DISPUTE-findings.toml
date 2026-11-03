@@ -1,0 +1,25 @@
+range = "25a7e4599d362894a58f6b981df65061d44cd983..d3d6ca74647f38f056b422017aee1645948d0b1d"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = '''
+- [MAJOR] project-trajectory/scripts/acceptance_record.py:1226 -> K1/B1: `_routed_unmoved` mistakes equality at the range endpoints for absence of a post-act change. A supported two-act lane can re-attest SR-001 with SN-002, restore its reference to pre-range SN-001, and then re-attest SR-002, whose whole-registry copy absorbs the restoration. Both actual mint routes return no amendment on squashed and unsquashed landings, silently losing SR-001's required re-adjudication (Done-when 2/5); LLR-364:1552 and TC-403:1539 encode the same unsuitable inference -> replace the endpoint-equality surrogate with settlement evidence bound to the row's own re-attesting act, leaving unproven rows to mint; amend LLR-364 and TC-403 through their authority while preserving parent acceptance/approval and enduring regressions, and cover the restoration sequence through both routes. Apply antidote's "What is the smallest change that makes this fix unnecessary?": copied path names cannot reconstruct overwritten row-level proof, so any stronger proof belongs once at the owning act boundary rather than in another compensating mint guard -> @scripts/acceptance_record convergence-class: yes'''
+position = '''
+Not contested: the coordinator takes no side on this finding. One fact for the sitting, from the lane's record: the arm the finding names was the coordinator's own narrowing (docs/decisions/wi-963.toml D-014), made after the builder's first pass built the rule without it and the Done-when item that replays WI-926's landing (5245ac82c..08bbb71b6) then minted all six of that landing's re-attested rows: seq 137 re-attests them, and legacy seqs 138 and 139, with no copy record, approve LLR-340, SR-240 and TC-370 in the same registries. That replay passes today only through this arm.'''
+
+[[finding]]
+id = "F2"
+held_by = "coordinator"
+finding = '''
+- [MAJOR] project-trajectory/scripts/acceptance_record.py:1226 -> The `_routed_unmoved` escape settles a row whose routed traced cell moved after its act, which is fail-open.
+  - Scenario: a lane amends SR-001 and re-points its `SN-Refs`, and act A re-attests both. The lane then restores `SN-Refs` to its pre-range value, an edit nobody judged. A later act B re-attests another row of the same registry, so its copy absorbs the restore (traced refreshes need no flag in `copy_live`). At `after` the row equals its copy, and its routed cells equal those at `before`, so `_settled_row` returns True and the mint drops SR-001.
+  - That combination (new requirement text traced to the old need) was never judged. The pre-fix code minted it, and the same range without act B still mints it (probe output above).
+  - This breaks Done-when item 5 ("edited after its act and restored to its pre-range text in one cell, still mints") and D-013. The route is supported: multi-act ranges with edits between acts are the pattern `test_a_later_act_copying_the_registry_does_not_settle_a_row_it_did_not_reattest` already treats as in scope.
+  - Base-versus-after equality cannot tell "never moved" from "moved and restored" once the act's own copy has been overwritten.
+  - Fix: delete the `_routed_unmoved` arm so that any later entry writing the row's registry leaves the row unsettled. That costs one redundant row in the `test_a_later_writer_leaves_a_row_with_unmoved_routed_cells_settled` case, which is today's behaviour, and that test flips to assert the mint. Add the restore-under-a-later-writer case to TC-403, and drop the second arm from LLR-364's detail and from RESYNC_PACK.
+  - The alternative needs an IF-220 format change: each entry records its re-attested rows' routed cell values, so the act's own copy is recoverable on a squashed range.
+  - The fix is a deletion, not an added guard. Anchor K1 (LLR-364's detail asserts that the second arm proves "nothing routed moved for a later copy to absorb", which is false for a restore).
+  - @owner convergence-class: yes'''
+position = '''
+Not contested: the coordinator takes no side on this finding. One fact for the sitting, from the lane's record: the arm the finding names was the coordinator's own narrowing (docs/decisions/wi-963.toml D-014), made after the builder's first pass built the rule without it and the Done-when item that replays WI-926's landing (5245ac82c..08bbb71b6) then minted all six of that landing's re-attested rows: seq 137 re-attests them, and legacy seqs 138 and 139, with no copy record, approve LLR-340, SR-240 and TC-370 in the same registries. That replay passes today only through this arm.'''

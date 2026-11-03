@@ -3,13 +3,32 @@ id = "WI-963"
 title = "The trunk mint never mints an amendment row for a row the merged range already settled"
 workstream = "process"
 sr_refs = ["SR-178"]
-specref = "docs/plans/2026-10-03-s11-in-lane-adjudication.md#42-the-re-mint-trap"
+specref = ""
 needs = ["OI-115", "WI-967", "OI-119"]
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
 priority = 5
 +++
+
+## Deliverable
+
+The trunk mint (the merge slot's post-merge arm and `intake.py sweep`,
+through one filter) files no amendment row for a row the merged range
+already settled: an act-ledger entry the range added re-attests the row,
+its whole approved and routed traced cell set at the range's end equals its
+snapshot copy there, and either no later range-added entry wrote (or, a
+legacy entry, may have written) the row's registry, or the row's routed
+traced cells are the same at the range's two ends. The test reads the act
+ledger's record of what each act copied, so it holds on a squashed landing
+as on an unsquashed one. A row the filter cannot prove settled mints; a
+present but unreadable or unparseable ledger or copy refuses the mint by
+name. The Trust section states the arm's one limit and Done-when items 1
+and 5's scope under a later copy (dispute sittings 013 and 018). LLR-153
+and LLR-158 amended (blessed), LLR-364 and TC-403 approved, at whole-set
+sitting 022-ADJUDICATE-66dbd19, acts seq 169 and 170. The
+coordinator-cycle recipes' re-mint workaround is replaced by a check of
+any minted amendment row against the lane's own act.
 
 ## Context
 
@@ -192,8 +211,10 @@ files on disk, read at a git revision).
 - **A refusal on each route:** at the merge slot's post-merge arm the merge
   has already landed, so the refusal says the mint was refused (not that
   nothing was merged) and mints no row; once the named carrier is fixed in a
-  reviewed commit, the recovery is `intake.py sweep --before --after` over the
-  same range. At `intake.py sweep` the refusal ends the sweep with no row
+  reviewed commit, the recovery is `intake.py sweep --before --after` with
+  `--after` at that fixing commit (the same range re-reads the same broken
+  blob; only a blob that could not be read and is then fetched is swept over
+  the same range). At `intake.py sweep` the refusal ends the sweep with no row
   minted, as its other refusals do.
 - **Ruling for the squashed-landing case** (OI-119 ruled 2026-11-02 (a):
   stated here, not in the Done-when, so the plan's pass record stays bound;
@@ -202,6 +223,28 @@ files on disk, read at a git revision).
   each re-attesting act copied from the act ledger, so a row amended after
   its act still mints on a squashed landing as on an unsquashed one (dispute
   sitting 007-ADJUDICATE-1ae50f4's FIX).
+- **The scope of Done-when item 5 under a later copy** (dispute sitting
+  013-ADJUDICATE-93526df's F2 FIX: stated here, not in the Done-when, so the
+  plan's pass record stays bound): a row edited after its act and restored to
+  its pre-range text in one cell still mints whenever no later act in the
+  range copies the row's registry, and always for an approved cell, which a
+  later act cannot copy without re-attesting the row. When a later act
+  re-attesting another row copies that registry, a routed traced cell that
+  moved in the range before the row's act and is restored after it is
+  re-anchored by that copy, and the row settles: the later-writer arm proves
+  only that the row's routed traced cells are the same at the range's two
+  ends.
+- **The scope of Done-when item 1 under a later copy** (dispute sitting
+  018-ADJUDICATE-e5811b9's F1 FIX: stated here, beside item 5's, so the
+  plan's pass record stays bound): a row amended and re-attested in the
+  range that equals its copy yields no amendment row whenever no later act
+  in the range copies the row's registry, or its routed traced cells are the
+  same at the range's two ends. When a later act re-attesting another row
+  copies that registry and the row's routed traced cells moved in the range,
+  the row still mints, even though its own act judged it: on a squashed
+  range it cannot be told from a row whose routed move a later copy
+  absorbed. The coordinator checks such a row against the lane's own act and
+  closes it citing that act (the coordinator-cycle recipes' sweep step).
 
 ## Critique dispositions
 

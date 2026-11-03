@@ -494,7 +494,7 @@ def test_an_amended_approved_need_mints_one_amendment_row(tmp_path):
             r, "stakeholder-needs.toml", NEED_TOML.format("the need")
         ),
     )
-    assert intake._amendment_drafts(root2, before2, after2) == []
+    assert intake._amendment_drafts(root2, before2, after2) == ([], None)
 
 
 def test_amended_approved_assumption_and_surrogate_mint_one_row(tmp_path):
@@ -510,7 +510,8 @@ def test_amended_approved_assumption_and_surrogate_mint_one_row(tmp_path):
             r, "assumptions.toml", ASSUMPTION_TOML.format("it holds", "old")
         ),
     )
-    drafts = intake._amendment_drafts(root, before, after)
+    drafts, refusal = intake._amendment_drafts(root, before, after)
+    assert refusal is None, refusal
     assert len(drafts) == 1, drafts
     assert drafts[0]["adjudicates"] == ["DA-001", "SUR-001"]
     assert drafts[0]["brief"] == "amendment"

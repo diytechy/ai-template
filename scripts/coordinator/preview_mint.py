@@ -22,9 +22,11 @@ def main(argv):
     before = argv[0]
     after = argv[1] if len(argv) > 1 else "HEAD"
     root = Path(".").resolve()
-    drafts = intake._amendment_drafts(root, before, after) + intake._first_approval_drafts(
-        root, before, after
-    )
+    drafts, refusal = intake._amendment_drafts(root, before, after)
+    if refusal:
+        print("preview_mint: " + refusal)
+        return 1
+    drafts += intake._first_approval_drafts(root, before, after)
     if not drafts:
         print("preview_mint: nothing would be minted")
         return 0
