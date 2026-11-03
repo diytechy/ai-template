@@ -1,0 +1,19 @@
+# docs/decisions/coordinator-2026-11-03.toml — delegated calls the coordinator
+# made on trunk in headless leg 31 of loop session 20261103T054112Z-32c0bd.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-963 landed alone as c57796e63, a hand squash after `overnight_legs.py check-lane wi-963` passed (window 65), from the act turn at the lane's base (trunk had not moved since the leg's rebase onto 25a7e4599, so no further rebase was owed). The staged squash ran `trace.py --fold-ids` (the carrier's WI-963 reservation folded), the declared views were regenerated (`trunk_step.py --regen`), and the commit bar passed on the staged squash (smoke 3376 passed, 3 skipped, CPU 466.1 s within the 540 s budget; both strict lints clean). The close moved the claim copy to complete with its Deliverable and an empty specref, and scrubbed WI-963 from status.md's hand text (two follow-up clauses it had made true or moot). The sweep over 25a7e4599..c57796e63 minted nothing: the filter held on its own landing, where seq 169 re-attests LLR-153 and LLR-158 and seq 170 copies the same registry. The lane's tips went to archive/lanes (499bd3de8) with this leg's pre-rebase tip 6e3efc56f and the earlier pre-rebase tips 0ae2c5b60 and 6cef95f30 that hold the verdict-cited shas; its worktree was removed and its branch kept."
+alternative = "Hold the landing for an attended session."
+reversal_cost = "Medium: a landed mechanism change is fixed forward, never reverted (revision 37)."
+why_not_escalated = "The handoff's queue row 1; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "Queue row 3 (WI-992, P8): three planner sub-agents (Claude Opus, general-purpose, one per row, each given only a common brief and its row's scope, writing only under the leg's scratch root) re-drafted P8's rows under OI-120's ruling, each re-measuring its counts (0 of 269 test files carry an Implements: TC tag today; 116 mention a TC id in free text; `[bars]` holds one key, `review`, in docs/stack.ini; the loop attests with an empty test list). Filed on trunk owing their scope critiques: WI-994 (row 1, anchor SR-157), WI-995 (row 2, needs WI-994) and WI-996 (row 3, needs WI-995), each with planmode single. Each drafter named one call beyond OI-120, so the three go to the owner as OI-125 (Q1 the interim tag and evidence equality check, Q2 the partial set's reach to sibling LLRs' TCs, Q3 keeping check_test_first), cited by every row's needs; recommendation (a) on each. WI-992 closes citing the filing; its spec of record is archived. Row 3's drafter placed `red_mark` in docs/stack.ini's `[bars]`, where the key lives today (item 10's fold into process.toml is not queued)."
+alternative = "File the rows with the three calls as handoff prose, or hold the filing until the owner rules them."
+reversal_cost = "Low: queued rows and one pending item; an overrule edits them before any claim."
+why_not_escalated = "WI-992's Done-when routes the filing; the calls only the owner can make are OI-125."
+review = ""

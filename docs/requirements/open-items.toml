@@ -4272,3 +4272,20 @@ blast_radius = """WI-910 and WI-964."""
 options = """- (a) PUSH: the owner pushes refactor_again (and archive/lanes, id-carrier) so CI runs; WI-910 then reads CI's state on its landing tip.
 - (b) WSL STANDS IN: the Done-when item is amended to accept the WSL POSIX run on the landing tip in place of CI's state."""
 recommendation = "(a): CI covers macOS, which WSL cannot; the push is already owed for the branches the handoff lists."
+
+[open_item.OI-125]
+title = "P8's filed rows: three calls their drafters left to the owner (interim tag and evidence equality, the partial set's reach, the test-first check kept)"
+status = "pending"
+raised = "2026-11-03"
+one_line = "WI-994 to WI-996 (P8's rows, filed by headless leg 31 under OI-120's ruling) each raise one call beyond OI-120: whether test-file tags and TC evidence cells are checked equal until item 5 generates the column; whether the derived review set's partial refusal reaches sibling LLRs' untested TCs under the same SR; and whether check_test_first stays (its retirement would be a third forced adopter migration)."
+decision = """Filed by headless leg 31 (loop session 20261103T054112Z-32c0bd) under the owner's 2026-10-25 ruling that a decision only the owner can make, and that holds a row, is a pending open item its row's needs cite (coordinator-2026-11-03 D-002).
+
+WHAT IS TRUE. WI-992 had planner sub-agents re-draft P8's three rows under OI-120's ruling; they are filed as WI-994 (the test-file TC tag on the Implements: line and its one reader), WI-995 (the review test set derived from the row's SRs through the tags, refusing an empty or partial set and a code-touching row naming no SR) and WI-996 (the strict-mark check and the required [bars] red_mark key). Each owes its scope critique. Each drafter named one call it judged beyond OI-120.
+
+WHAT IS HELD. WI-994, WI-995 and WI-996: their claims, not their scope critiques."""
+blast_radius = """P8's three rows only. Q2 also reaches adopters mid-DevStg-Impl (a row under an SR waits for every sibling LLR's failing test); Q3 a shipped step and setting."""
+options = """Each call is ruled separately; (a) is the drafter's proposal.
+- Q1 INTERIM TWO HOMES (WI-994). Until item 5 generates the TC evidence column from the tags, the tags and the evidence cells state the same fact. (a) Check them equal (a strict finding), the check retired when item 5 lands. (b) Freeze the cells and treat the tags as authoritative for WI-995 alone. FOR (a): no silent disagreement. AGAINST (a): ~1970 node tags must agree before the check goes strict.
+- Q2 THE PARTIAL SET'S REACH (WI-995). (a) Partial means any TC in scope (every LLR under the row's SRs) has no tagged test, so a row building one LLR waits for its siblings' failing tests, as test-first implies. (b) Only the TCs of the LLRs the row itself builds. FOR (a): the plan's "reaches untagged TCs"; one scope from the SRs. AGAINST (a): a real cost for adopters mid-implementation.
+- Q3 THE TEST-FIRST CHECK (WI-996). (a) Keep check_test_first untouched: it judges test-case approval order (SR-217), which the mark check does not replace. (b) Retire it into the mark check, as plan item 13's text says, with a third forced adopter migration."""
+recommendation = "Q1 (a), Q2 (a), Q3 (a): the drafters' proposals; Q3 (a) is also the row's smallest scope (the scope rubric's S7)."
