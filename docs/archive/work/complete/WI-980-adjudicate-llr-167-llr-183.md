@@ -3,13 +3,17 @@ id = "WI-980"
 title = "adjudicate: LLR-167, LLR-183, LLR-273, SN-036, SR-161, SR-165, TC-161, TC-178, TC-211 - approved/routed cell(s) amended on merged trunk a51cfae..574cfcd (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-161", "SR-165"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 adjudicates = ["LLR-167", "LLR-183", "LLR-273", "SN-036", "SR-161", "SR-165", "TC-161", "TC-178", "TC-211"]
 needs = ["OI-117"]
 +++
+
+## Deliverable
+
+Already adjudicated in the range this row was minted from, so no second sitting is held (the re-mint trap, S11 plan section 4.2; owner-agreed close, 2026-10-03). WI-976's sitting `docs/reviews/wi-976/016-ADJUDICATE-9d6ad4c.md` judged every row it lists, the lane's act turn re-attested all but SN-036, and SN-036's held-rung act is the owner's act seq 168 (commit 30056da9e), `intake.py snapshot --approves stakeholder-needs=docs/log.d/2026-11-02-owner-reattests-sn028-sn036.md --reattests SN-028,SN-036`, taken in an attended session on the owner's explicit direction of 2026-11-02 (recorded in that file). After that act the needs, system, low-level and test registries are byte-equal to their approved snapshots under docs/archive/last_approved/.
 
 ## Context
 
