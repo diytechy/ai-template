@@ -71,7 +71,7 @@ What it creates in the destination:
     docs/rubrics/architecture-decomposition.md <- rubrics/architecture-decomposition.template.md
                                                (the shared bar a component scope's decomposition is judged against)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
-    scripts/trace.py, trace_text.py, absolute_terms.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, retire.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, trace_text.py, absolute_terms.py, spine_rules.py, derive_stage.py, record_test_evidence.py, record_observation.py, retire.py, id_carrier.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_readability.py, check_complexity.py, flag_axis.py, check_test_first.py, check_assumption_gate.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py, gen_components.py
     scripts/traj_display.py, traj_parse.py, traj_status.py

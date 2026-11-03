@@ -282,11 +282,13 @@ def _drain(root, tier):
     exception the ruling covers: see `_refresh_or_quarantine`.
     """
     for branch in integrate.finished_branches(root):
-        ready, _why = integrate._merge_ready(root, branch)
+        ready, _why = integrate._landing_ready(root, branch)
         if ready:
             # A lane's own refresh (or a hand refresh) already attested this
-            # exact tip against the current trunk — redoing the disposable
-            # commit would spend a full bar to reproduce it.
+            # exact tip against the current trunk, and its watermark holds the
+            # id carrier's fold: the slot's own readiness question, so the slot
+            # will not refresh it again — redoing the disposable commit would
+            # spend a full bar to reproduce it.
             continue
         refusal = _refresh_or_quarantine(root, branch, tier)
         if refusal:

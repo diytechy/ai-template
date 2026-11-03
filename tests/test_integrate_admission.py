@@ -46,7 +46,14 @@ import os
 
 import pytest
 
-from conftest import SCRIPTS, env_gate_skipif, load_script, run_py
+from conftest import (
+    SCRIPTS,
+    env_gate_skipif,
+    load_script,
+    plant_id_carrier,
+    reserved_watermark,
+    run_py,
+)
 from integrate_fixtures import (
     T_BASE,
     T_CODE,
@@ -941,6 +948,9 @@ def test_a_lane_that_mints_a_row_born_approved_is_refused(tmp_path):
     # four lanes (WI-483, WI-500, WI-501, WI-507) minted rows that ARRIVED
     # `Approved`, so no Status ever moved and the approval brief never saw them.
     root = _spine_lane(tmp_path / "born", born=True)
+    # The lane reserved the id it mints, so the reserved-ids rung passes it on
+    # to the rung measured here.
+    plant_id_carrier(root, reserved_watermark({"SR": 2}, [("SR", 2, 2, "WI-401")]))
 
     refusal = refused(root, "wi-401", "smoke")
     assert "SR-002 was minted born Approved" in refusal

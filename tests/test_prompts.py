@@ -524,6 +524,7 @@ def test_the_terra_brief_has_an_intent_form_before_build_round_1():
         "LANE_SLUG",
         "TESTS",
         "HATS",
+        "RESERVED",
     }
     recipes = " ".join(
         (KIT / "skills" / "coordinator-cycle" / "references" / "recipes.md")
@@ -531,6 +532,53 @@ def test_the_terra_brief_has_an_intent_form_before_build_round_1():
         .split()
     )
     assert "At the intent turn fill `CHANGES=none`" in recipes
+
+
+def test_the_terra_brief_drafts_new_ids_only_from_its_reserved_ranges():
+    # The spine author draws a new id from the ranges the coordinator reserved
+    # on the id carrier for this turn, never from its lane's copy of the
+    # watermark, and never runs the watermark's bump: an author short of ids
+    # stops and reports the count, and the coordinator reserves again.
+    text = TERRA_TEMPLATE.read_text(encoding="utf-8")
+    brief = " ".join(text.split())
+    for clause in (
+        "Draft a new id only from the reserved ranges this turn names: @RESERVED@.",
+        "Never count a new id up from `docs/id-watermark`'s mark or the live maximum",
+        "and never touch `docs/id-watermark`",
+        "stop and report how many more ids you need in each space",
+        "the coordinator reserves again",
+    ):
+        assert clause in brief, clause
+    assert "--bump-ids" not in brief
+
+
+@pytest.mark.parametrize("copy", CYCLE_COPIES, ids=["kit", "claude", "agents"])
+def test_the_cycle_reserves_before_drafting_and_folds_the_watermark(copy):
+    # The coordinator reserves a draft's counts on the id carrier before it
+    # dispatches the spine author and names the ranges in the brief; a rebase
+    # or a hand squash settles the watermark by the fold, not by a bump.
+    recipes = " ".join(
+        (copy / "references" / "recipes.md").read_text(encoding="utf-8").split()
+    )
+    assert "**Reserve before drafting.**" in recipes
+    assert '"$PY" "$SCRIPTS/trace.py" --reserve-ids WI-NNN SR=n,LLR=n,TC=n' in recipes
+    assert "as a floor" not in recipes
+    assert (
+        '| `docs/id-watermark` | `"$PY" "$SCRIPTS/trace.py" --fold-ids`, then '
+        "`git add docs/id-watermark` |" in recipes
+    )
+    squash = re.search(
+        r"- \*\*Squash\*\* on trunk with `git merge --squash <lane>`.*?- \*\*Regenerate",
+        recipes,
+    )
+    assert squash, "no squash bullet"
+    assert '"$PY" "$SCRIPTS/trace.py" --fold-ids' in squash.group(0)
+    assert "reserved-ids" in squash.group(0)
+    terra = re.search(r"- \*\*Terra, first turn:\*\*.*?(?=- \*\*)", recipes)
+    assert terra and "RESERVED" in terra.group(0)
+    skill = " ".join((copy / "SKILL.md").read_text(encoding="utf-8").split())
+    assert "so its acts pull up as each lane lands" in skill
+    assert "acts and the id watermark pull up" not in skill
 
 
 # --- the perspectives slot of the spine sitting and author briefs ------------
@@ -620,6 +668,7 @@ def _mkprompt(tmp_path, *extra, sr_refs=""):
             "TESTS=",
             "WTROOT=" + wtroot.as_posix(),
             "PY=python",
+            "RESERVED=none",
             *extra,
         ],
         cwd=tmp_path,

@@ -36,7 +36,19 @@ sync and the overrule sync in `acceptance_record` refuse an unreadable blob.
 ONE CLAIMED-BRANCH READER. `claimed_work_branch` answers whether the checkout
 is a claimed lane. It moved here from `check.py` so every caller that must
 tell a lane from the trunk shares one reader; as with `git_out`, None is
-"no claim found", and each caller declares what that means for it.
+"no claim found", and each caller declares what that means for it. Beside
+it, `claimed_specs` reads WHICH work items a claim folder holds at a
+tree-ish, over the one claimed-spec filename grammar (`SPEC_NAME`), so a
+route that keys on a lane's claim at a revision (the hand squash's landing
+check, the reserve verb's claim check) never parses the folder itself.
+
+A TREE WRITTEN OUT AS FILES, for the landing's live-id sweep, which reads
+files rather than blobs: `write_blobs` writes each blob byte for byte by
+object id, so no attribute (`export-ignore`, `export-subst`, a filter or an
+eol rule) can drop or rewrite a file, and the sweep judges the committed
+registries. Unlike `git_out` it raises (`ArchiveError`): a sweep of a
+half-written tree would answer for a tree that does not exist, so the caller
+names the failure in its own terms.
 
 THE LANE-COMMIT WALK. Every per-commit rule (text then act, the adoption
 record, the plan gate, the held-status step and the merge slot) shares one
@@ -50,11 +62,16 @@ As with `git_out`, the owner never decides what an unlistable range means:
 `squash_lines` hands back the caller's own lines for it, or None.
 """
 
+import re
 import subprocess
 from pathlib import Path
 
 __all__ = [
+    "ACTIVE_DIR",
+    "ArchiveError",
+    "SPEC_NAME",
     "UnreadableBlob",
+    "claimed_specs",
     "claimed_work_branch",
     "git_bytes",
     "git_out",
@@ -62,9 +79,11 @@ __all__ = [
     "git_show",
     "grep_files",
     "lane_commit_walk",
+    "lanes_containing",
     "squash_commits",
     "squash_lines",
     "staged_heads",
+    "write_blobs",
 ]
 
 
@@ -113,14 +132,17 @@ def git_out(root, args, stdin=None):
     )
 
 
-def git_bytes(root, args):
+def git_bytes(root, args, stdin=None):
     """Raw stdout of `git -C <root> <args>`, or None on ANY failure.
 
     This is the binary counterpart to `git_out` for Git protocols whose bytes
     carry identity rather than display text. Callers parse their ASCII framing
-    before deciding whether any field may be decoded.
+    before deciding whether any field may be decoded. `stdin` (bytes) is fed
+    untranslated, so an object written from it (`hash-object --stdin`,
+    `mktree`) holds exactly those bytes on every platform, where text-mode
+    input would turn each newline into the platform's line ending.
     """
-    return _git_stdout(root, args)
+    return _git_stdout(root, args, input=stdin)
 
 
 def git_paths(root, args):
@@ -339,3 +361,107 @@ def claimed_work_branch(root, notice=None):
         root, ["log", "-1", "--format=%H", "--", "docs/work/active/" + branch]
     )
     return branch if (log or "").strip() else None
+
+
+# The claim folders: a claim moves a queued spec to `ACTIVE_DIR/<lane>/`.
+ACTIVE_DIR = "docs/work/active"
+# A claimed spec's filename, `WI-<n>-<slug>.md`, the only shape `claim`
+# writes; group 1 is the work-item id. Strict on purpose: the `.md` suffix
+# and a slug are required, so a handback patch or hand-made residue in a
+# claim folder names no work item.
+SPEC_NAME = re.compile(r"^(WI-\d+)-.+\.md$")
+
+
+def claimed_specs(root, rev, lane=None):
+    """`[(lane, WI id, filename)]`, sorted, of the claimed specs the tree-ish
+    `rev` holds directly in a claim folder `ACTIVE_DIR/<lane>/` (every lane's,
+    or only `lane`'s), each filename read by `SPEC_NAME`; None when git cannot
+    list `rev`. The listing is lossless (`git_paths`). What an absent or an
+    unlistable claim MEANS is each caller's to declare.
+
+    Implements: SR-170, LLR-141
+    """
+    listed = git_paths(root, ["ls-tree", "-r", "--name-only", rev, "--", ACTIVE_DIR])
+    if listed is None:
+        return None
+    found = []
+    for path in listed:
+        folder, _sep, name = path.rpartition("/")
+        owner = folder[len(ACTIVE_DIR) + 1 :]
+        matched = SPEC_NAME.match(name)
+        if matched and owner and (lane is None or owner == lane):
+            found.append((owner, matched.group(1), name))
+    return sorted(found)
+
+
+class ArchiveError(RuntimeError):
+    """git could not write a tree-ish's paths out as files; its `str` names
+    the revision and the reason.
+
+    Implements: SR-166, LLR-181
+    """
+
+
+def _listed_blobs(root, rev, paths):
+    """`[(object id, path)]` of every blob the tree-ish `rev` holds under
+    `paths`, a link or a submodule left out (neither is file content). A path
+    `rev` does not hold lists nothing. Raises `ArchiveError` when git cannot
+    list the tree.
+
+    Implements: SR-166, LLR-181
+    """
+    listed = git_bytes(root, ["ls-tree", "-r", "-z", rev, "--", *paths])
+    if listed is None:
+        raise ArchiveError(
+            "git could not list {} at {}".format(", ".join(paths), rev[:10])
+        )
+    blobs = []
+    for entry in filter(None, listed.split(b"\0")):
+        meta, _tab, path = entry.partition(b"\t")
+        mode, kind, oid = meta.split()
+        if kind == b"blob" and mode != b"120000":
+            blobs.append((oid, path.decode("utf-8", "surrogateescape")))
+    return blobs
+
+
+def write_blobs(root, rev, paths, dest):
+    """Write every file the tree-ish `rev` holds under `paths` to `dest`, each
+    at its own relative path and byte for byte as committed: each blob is read
+    by object id (`ls-tree`, then one `cat-file --batch`), so no attribute can
+    drop or rewrite one. A link or a submodule is not written, and a path
+    `rev` does not hold writes nothing. Raises `ArchiveError` when git cannot
+    list or read them.
+
+    Implements: SR-166, LLR-181
+    """
+    blobs = _listed_blobs(root, rev, paths)
+    if not blobs:
+        return
+    out = git_bytes(
+        root, ["cat-file", "--batch"], stdin=b"".join(oid + b"\n" for oid, _p in blobs)
+    )
+    at = 0
+    for oid, rel in blobs:
+        end = out.find(b"\n", at) if out is not None else -1
+        header = out[at:end].split() if end >= 0 else []
+        if len(header) != 3 or header[0] != oid or header[1] != b"blob":
+            raise ArchiveError("git could not read {} at {}".format(rel, rev[:10]))
+        size = int(header[2])
+        target = Path(dest) / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(out[end + 1 : end + 1 + size])
+        at = end + 2 + size
+
+
+def lanes_containing(root, tip):
+    """The local branches whose history contains `tip` (the lane a squash in
+    progress is landing), or None when git cannot list them. A squash's
+    pre-commit judgements read the lane's claim through these names.
+
+    Implements: SR-154, LLR-337
+    """
+    out = git_out(
+        root,
+        ["for-each-ref", "--format=%(refname:short)", "--contains", tip, "refs/heads/"],
+    )
+    return None if out is None else out.split()

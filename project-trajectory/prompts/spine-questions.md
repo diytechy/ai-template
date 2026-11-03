@@ -59,6 +59,8 @@
   rationale included. An approved cell keeps its approved text verbatim, names
   included, until it is amended through its authority, and an amendment adds no
   name the rule forbids.
+- **Keep or mint:** a row whose meaning changed keeps its id only as
+  `docs/process.md` §4 "Keep or mint" allows.
 
 ## 1. At SN intake — answer these before the need is approved
 <!-- tiers: SN -->

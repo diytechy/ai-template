@@ -55,7 +55,8 @@ Contract IF-257: the retirement records, as files. `docs/log.d/retired/<ID>.md`,
     readers' calls: advisory lines for the checker, and `{id, date, successor,
     reason, commit}` per readable record, in tier then number order, for the
     dashboard, `commit` being `unknown` where git cannot name a landing commit
-    with a parent.
+    with a parent; `recorded_at(root, rev)` the ids a git tree holds a record
+    file for, `{(space, number): relpath}`, for the landing check.
 Contract IF-258: the retirement command's arm and its exit protocol.
     `retire.py <ID> --reason <text> [--successor <ID>] [--date <YYYY-MM-DD>]
     [--root <dir>]` deletes the row's table from its registry and writes its
@@ -78,9 +79,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import id_carrier  # noqa: E402
 import spine_carrier  # noqa: E402
 from kitlib import config as kitconfig  # noqa: E402
-from kitlib.git import git_out  # noqa: E402
+from kitlib.git import ArchiveError, git_out  # noqa: E402
 from kitlib.registry import parse_spec_frontmatter  # noqa: E402
 from kitlib.spine import toml_fields  # noqa: E402
 
@@ -105,7 +107,6 @@ _TIER_ORDER = {space: n for n, (space, _rel) in enumerate(TIERS)}
 _ID_RE = re.compile(r"\A(SN|SR|LLR|TC)-(\d+)\Z")
 _RECORD_NAME_RE = re.compile(r"\A((?:SN|SR|LLR|TC)-\d+)\.md\Z")
 _DATE_RE = re.compile(r"\A\d{4}-\d{2}-\d{2}\Z")
-_MARK_RE = re.compile(r"^([A-Z]+)\s*=\s*(\d+)\s*$")
 _HEADER_RE = re.compile(r"^\[[^\[\]]+\]\s*(?:#.*)?$")
 _RANGE_RE = re.compile(r"\A(\d+)(?:-(\d+))?\Z")
 _EXCLUDE_RE = re.compile(r"\A([A-Z]+)-(\d+)(?:\.\.(\d+))?\Z")
@@ -217,6 +218,25 @@ def record_paths(root):
     return sorted(p for p in folder.iterdir() if _RECORD_NAME_RE.match(p.name))
 
 
+def recorded_at(root, rev):
+    """`{(space, number): relpath}` for each record file the tree-ish `rev`
+    holds under the directory, by name, readable or not (`_recorded`'s reading,
+    at a git tree); `{}` when it holds none. Raises `ArchiveError` when git
+    cannot list the tree.
+
+    Implements: SR-226, LLR-286
+    """
+    listing = git_out(root, ["ls-tree", "--name-only", rev, "--", RETIRED_DIR + "/"])
+    if listing is None:
+        raise ArchiveError("git could not list {} at {}".format(RETIRED_DIR, rev[:10]))
+    out = {}
+    for rel in listing.splitlines():
+        name = rel.rsplit("/", 1)[-1]
+        if _RECORD_NAME_RE.match(name):
+            out[_split(name[:-3])] = rel
+    return out
+
+
 def _recorded(root):
     """`{space: {number}}` named by the record files, readable or not: a record
     that fails to parse is reported on its own, never as a missing one too."""
@@ -254,15 +274,11 @@ def live_ids(root):
 
 
 def read_marks(root):
-    """`{space: mark}` from the id watermark; empty when it cannot be read, so
-    no id reads as spent. The watermark's own integrity is `trace.py`'s."""
-    text = _read(Path(root) / WATERMARK) or ""
-    marks = {}
-    for line in text.splitlines():
-        match = _MARK_RE.match(line.strip())
-        if match:
-            marks[match.group(1)] = int(match.group(2))
-    return marks
+    """`{space: mark}` from the id watermark, read leniently through the one
+    mark-line grammar (`id_carrier.parse_marks`); empty when it cannot be
+    read, so no id reads as spent. The watermark's own integrity is
+    `trace.py`'s."""
+    return id_carrier.parse_marks(_read(Path(root) / WATERMARK) or "")
 
 
 def _ranges(numbers):

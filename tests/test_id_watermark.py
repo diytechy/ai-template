@@ -11,7 +11,18 @@ The one case that bootstraps a real repository (`bootstrap --force` keeps the
 marks) lives in test_id_watermark_driven.py, outside the per-commit smoke tier.
 """
 
-from conftest import load_script
+import subprocess
+import sys
+
+import pytest
+from conftest import (
+    fixture_commit,
+    fixture_git,
+    load_script,
+    pin_autocrlf,
+    reservation_records,
+    reserved_watermark,
+)
 
 TRACE = load_script("trace")
 
@@ -802,3 +813,179 @@ def test_bump_watermark_preserves_a_recorded_correction(tmp_path):
     assert marks["B"] == 8  # untouched — no live B rows to raise it further
     assert "B" not in raised  # the bump itself did not move it; the correction did
     assert TRACE.read_corrections(root)["B"] == [(7, 8, "OI-47")]
+
+
+# --- The reservation record (the id carrier) ---------------------------------
+#
+# A mark may now also rise because a reservation record in the file covers the
+# raise; every writer carries the records verbatim, and a committed record is
+# append-only across every parent. The history rules read git, so these cases
+# commit a real baseline and drive `--strict-integrity` through the CLI, in
+# process, asserting on the EXIT CODE, the way the wiring test above does.
+
+RECORDS = [("SR", 2, 3, "WI-001"), ("TC", 1, 1, "WI-001")]
+
+
+def _write_wm(root, text):
+    (root / TRACE.WATERMARK).write_text(text, encoding="utf-8", newline="\n")
+
+
+def _committed(tmp_path, marks, reservations=()):
+    """A git repository holding SR-001 and a committed watermark carrying
+    `marks` and `reservations`: the baseline the history rules read."""
+    reg = tmp_path / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "system-requirements.csv").write_text(
+        "SR-ID,Title,Status\nSR-001,t,Drafted\n", encoding="utf-8", newline="\n"
+    )
+    _write_wm(tmp_path, reserved_watermark(marks, reservations))
+    fixture_git(tmp_path, "init", "-q")
+    pin_autocrlf(tmp_path)
+    fixture_git(tmp_path, "symbolic-ref", "HEAD", "refs/heads/main")
+    fixture_commit(tmp_path, "seed: the baseline watermark")
+    return tmp_path
+
+
+def _strict_integrity(monkeypatch, capsys, root):
+    """`trace.py --root <root> --strict-integrity`, in process: (code, output)."""
+    monkeypatch.setattr(
+        sys, "argv", ["trace.py", "--root", str(root), "--strict-integrity"]
+    )
+    try:
+        TRACE.main()
+        code = 0
+    except SystemExit as exc:
+        code = exc.code if isinstance(exc.code, int) else 1
+    out, err = capsys.readouterr()
+    return code, out + err
+
+
+def test_an_unchanged_committed_baseline_passes_the_floor(
+    tmp_path, monkeypatch, capsys
+):
+    # The control for the cases below: the fixture tree is clean on the floor,
+    # so each case's exit code is its own rule's, not the tree's. Adequacy
+    # witness: a fixture missing a file the floor requires would red here
+    # first, instead of passing or failing every case below for that reason.
+    root = _committed(tmp_path, {"SR": 1})
+    code, out = _strict_integrity(monkeypatch, capsys, root)
+    assert code == 0, out
+
+
+def test_bump_ids_keeps_every_reservation_record(tmp_path):
+    root = _repo(tmp_path, srs=("SR-001", "SR-004"))
+    _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, RECORDS))
+    TRACE.bump_watermark(root)
+    text = (root / TRACE.WATERMARK).read_text(encoding="utf-8")
+    assert reservation_records(text) == RECORDS
+    assert TRACE.read_watermark(root)["SR"] == 4
+
+
+def test_correct_mark_keeps_every_reservation_record(tmp_path):
+    root = _repo(tmp_path, ruling=True)
+    _write_wm(root, reserved_watermark({"SR": 3, "TC": 1, "B": 7, "OI": 47}, RECORDS))
+    TRACE.correct_watermark(root, "B", 8, "OI-47")
+    text = (root / TRACE.WATERMARK).read_text(encoding="utf-8")
+    assert reservation_records(text) == RECORDS
+    assert TRACE.read_corrections(root)["B"] == [(7, 8, "OI-47")]
+
+
+def test_a_rise_covered_by_a_reservation_record_passes(tmp_path, monkeypatch, capsys):
+    root = _committed(tmp_path, {"SR": 1})
+    _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, RECORDS))
+    code, out = _strict_integrity(monkeypatch, capsys, root)
+    assert code == 0, out
+
+
+def test_a_rise_above_every_record_is_refused(tmp_path, monkeypatch, capsys):
+    # Adequacy witness: an implementation that lets any well-formed record
+    # excuse any rise in its space (rather than only up to the record's high
+    # end) would pass this mark of 9 on a record ending at 3.
+    root = _committed(tmp_path, {"SR": 1})
+    _write_wm(root, reserved_watermark({"SR": 9, "TC": 1}, RECORDS))
+    code, out = _strict_integrity(monkeypatch, capsys, root)
+    assert code == 1, out
+    assert "id watermark for SR stands at 9" in out, out
+
+
+def test_an_altered_committed_record_is_refused(tmp_path, monkeypatch, capsys):
+    root = _committed(tmp_path, {"SR": 3, "TC": 1}, RECORDS)
+    altered = [("SR", 2, 4, "WI-001"), RECORDS[1]]
+    _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, altered))
+    code, out = _strict_integrity(monkeypatch, capsys, root)
+    assert code == 1, out
+    assert "SR 2-3 (WI-001)" in out, out
+
+
+def test_a_deleted_committed_record_is_refused(tmp_path, monkeypatch, capsys):
+    root = _committed(tmp_path, {"SR": 3, "TC": 1}, RECORDS)
+    _write_wm(root, reserved_watermark({"SR": 3, "TC": 1}, RECORDS[1:]))
+    code, out = _strict_integrity(monkeypatch, capsys, root)
+    assert code == 1, out
+    assert "SR 2-3 (WI-001)" in out, out
+
+
+def test_a_merge_dropping_one_parents_record_is_refused(tmp_path, monkeypatch, capsys):
+    # Two branches each take their own record; the merge's resolution keeps
+    # only one side's. A longest-wins read across parents would miss it: the
+    # committed records are a UNION over every parent.
+    root = _committed(tmp_path, {"SR": 1})
+    ours, theirs = ("SR", 2, 3, "WI-001"), ("SR", 4, 5, "WI-002")
+    fixture_git(root, "checkout", "-q", "-b", "other")
+    _write_wm(root, reserved_watermark({"SR": 5}, [theirs]))
+    fixture_commit(root, "other: its own reservation")
+    fixture_git(root, "checkout", "-q", "main")
+    _write_wm(root, reserved_watermark({"SR": 3}, [ours]))
+    fixture_commit(root, "main: its own reservation")
+    merge = subprocess.run(
+        ["git", "-C", str(root), "merge", "-q", "--no-commit", "other"],
+        capture_output=True,
+        text=True,
+    )
+    assert merge.returncode != 0, "the fixture's merge was meant to conflict"
+    _write_wm(root, reserved_watermark({"SR": 5}, [theirs]))
+    fixture_git(root, "add", TRACE.WATERMARK)
+    code, out = _strict_integrity(monkeypatch, capsys, root)
+    assert code == 1, out
+    assert "SR 2-3 (WI-001)" in out, out
+
+
+def test_a_reservation_line_never_reads_as_a_correction():
+    # Adequacy witness: a correction grammar loosened to any `# <word>:` line
+    # carrying a range would read the record as a correction, and the one-shot
+    # and authority arms would then judge a reservation as a ruling.
+    text = reserved_watermark({"SR": 3, "TC": 1}, RECORDS)
+    assert TRACE.parse_corrections(text) == {}
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "# reservation: SR 3-2 (WI-001)",
+        "# reservation: SR 2-3 WI-001",
+        "# reservation: SR 2-3 (WI-001) extra",
+    ],
+    ids=["reversed", "no-parens", "trailing"],
+)
+def test_a_malformed_reservation_line_justifies_nothing(
+    tmp_path, monkeypatch, capsys, line
+):
+    # Adequacy witness: a record reader that searched rather than matched the
+    # whole stripped line, or that did not hold low <= high, would read this
+    # line as a record and let it justify the rise to 3.
+    root = _committed(tmp_path, {"SR": 1})
+    text = reserved_watermark({"SR": 3}).replace("SR = 3", line + "\nSR = 3")
+    _write_wm(root, text)
+    code, out = _strict_integrity(monkeypatch, capsys, root)
+    assert code == 1, out
+    assert "id watermark for SR stands at 3" in out, out
+
+
+def test_the_live_id_finding_points_a_lane_at_the_reserve_verb(tmp_path):
+    root = _repo(
+        tmp_path,
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"SR": 1},
+        srs=("SR-001", "SR-009"),
+    )
+    (finding,) = TRACE.watermark_findings(root)
+    assert "--reserve-ids" in finding, finding

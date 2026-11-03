@@ -678,6 +678,14 @@ approval claim it makes, and `check_trajectory.py` reports one that lands.
 REVIEW-ENFORCED: the delegation record, and an unmarked plain trunk commit,
 which nothing judges: the risk the owner accepts by delegating.
 
+**Keep or mint, when a row's meaning changes.** A changed requirement leans
+toward a new id. It keeps its id only when the id's spirit is retained and
+keeping costs fewer changes overall than minting, and keeping needs a
+cross-reference: every findable user of the id (the rows, the tests and code
+citing it, and known citers in other repositories) is checked against the
+amended meaning, and a user the change breaks is updated, or the row mints
+instead.
+
 **What a signature certifies is NOT derivable from the rung.** Leaving
 `DevStg-Reqs` also requires non-goals captured and a UX sign-off; leaving
 `DevStg-Tests` requires the key runtime flows diagrammed. No derivation can see

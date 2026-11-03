@@ -44,7 +44,7 @@ no key and no override. An absent or unreadable fragment fails generation and
 
 | File | Digest | Fills |
 |---|---|---|
-| [spine-questions.md](spine-questions.md) | `sha256:d740c039ab78` | `{questions}` |
+| [spine-questions.md](spine-questions.md) | `sha256:b91f850e0727` | `{questions}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

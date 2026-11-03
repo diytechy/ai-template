@@ -300,6 +300,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "staged-divergence",
         "approval-immutable",
         "held-status",
+        "reserved-ids",
         "ruling-sync",
         "text-then-act",
         "parent-first",
@@ -1220,6 +1221,19 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
+        # The reserved ids (SR-174): a `git merge --squash` in progress is a
+        # landing, so the staged tree may add only the carrier-space ids the
+        # id carrier's records reserve for the squashed lane's claimed work
+        # item, and its watermark must hold the fold of the carrier's tip.
+        # Every other commit passes at once; the merge slot asks the same
+        # landing check of a branch, so `--no-verify` lands nothing there.
+        (
+            "reserved-ids",
+            (),
+            [sys.executable, str(_SCRIPTS / "check.py"), "--reserved-ids"],
+            _kitladder.STAGE_NEEDS,
+            "process",
+        ),
         # The ruling sync (WI-790, OI-102 Q3): a commit that takes an open item
         # out of `pending` updates the Done-when of each row citing it, or
         # closes or removes the row. Staged tree against HEAD, at every bar and
@@ -2028,6 +2042,75 @@ def _held_status_mode(args):
     sys.exit(1 if refusal else 0)
 
 
+# The hand landing's remedy for a staged watermark behind the id carrier.
+FOLD_REMEDY = (
+    "fold the id carrier into the staged squash: `trace.py --fold-ids`, then "
+    "`git add docs/id-watermark`"
+)
+
+
+def _squash_work_items(root, head, tip):
+    """`(wi_ids, claim_source)` of a squash of `tip` onto `head`: the work
+    items the claim folders of the local branches containing `tip` hold at
+    `head` (`kitlib.git.claimed_specs`); `claim_source` names the read when
+    none is found.
+
+    Implements: SR-174, LLR-363
+    """
+    lanes = _kitgit.lanes_containing(root, tip)
+    if not lanes:
+        return [], "no local branch contains the squashed tip {}".format(tip[:10])
+    claimed = _kitgit.claimed_specs(root, head) or []
+    wi_ids = sorted({wi for lane, wi, _name in claimed if lane in lanes})
+    return wi_ids, "no claimed spec under {}/{}/ at HEAD".format(
+        _kitgit.ACTIVE_DIR, "|".join(lanes)
+    )
+
+
+def _reserved_ids_refusal(root="."):
+    """The `reserved-ids` step's judgement over the staged tree, or None. Only
+    a `git merge --squash` in progress (`kitlib.git.squash_commits`; no
+    MERGE_HEAD) is judged: the staged watermark must hold the fold of the id
+    carrier's tip (`trace.landing_fold_lag`, naming `FOLD_REMEDY`), and the
+    ids the squashed lane adds (its tip over its merge base with HEAD, the
+    delta the merge slot reads) and the ids the staged tree adds over HEAD
+    must sit in the carrier's records for the squashed lane's claimed work
+    items (`trace.landing_id_refusal`). An unreadable merge base refuses. The
+    tracer is imported only when a squash is in progress.
+
+    Implements: SR-174, LLR-363
+    """
+    head, merging = _kitgit.staged_heads(root)
+    squashed = [] if merging or not head else _kitgit.squash_commits(root)
+    if not squashed:
+        return None
+    import trace  # the watermark seam's owner (IF-101); only a squash asks
+
+    tree = (_git_out(root, ["write-tree"]) or "").strip()
+    if not tree:
+        return "the staged squash's tree cannot be written (`git write-tree`)"
+    lines = trace.landing_fold_lag(root, tree)
+    lines += [FOLD_REMEDY] if lines else []
+    wi_ids, source = _squash_work_items(root, head, squashed[0])
+    refusal = trace.landing_id_refusal(root, tree, head, wi_ids, source, squashed[0])
+    lines += [refusal] if refusal else []
+    return "; ".join(lines) or None
+
+
+def _reserved_ids_mode(args):
+    """The `--reserved-ids` entry point, `_held_status_mode`'s shape: EXIT 1
+    printing the refusal, or 0.
+
+    Implements: SR-174, LLR-363
+    """
+    if not args.reserved_ids:
+        return
+    refusal = _reserved_ids_refusal(".")
+    msg = refusal or "no squash landing adds an unreserved id or lags the id carrier"
+    print("  {:5} reserved-ids  {}".format("FAIL" if refusal else "ok", msg))
+    sys.exit(1 if refusal else 0)
+
+
 def _ruling_sync_refusal(root="."):
     """The `ruling-sync` step's judgement: the refusal for a staged tree that
     takes an open item out of `pending` while a row open at HEAD cites it and
@@ -2620,6 +2703,13 @@ def main():
         "outside a claimed lane, refuse a held status move or approval claim",
     )
     ap.add_argument(
+        "--reserved-ids",
+        action="store_true",
+        help="run ONLY the 'reserved-ids' step's body and exit (SR-174): judge "
+        "a squash landing's added registry ids against the id carrier's "
+        "records, and refuse a staged watermark that lags the carrier",
+    )
+    ap.add_argument(
         "--ruling-sync",
         action="store_true",
         help="run ONLY the 'ruling-sync' step's body and exit (WI-790): refuse a "
@@ -2675,6 +2765,7 @@ def main():
     _divergence_mode(args)  # exits when --staged-divergence selects it
     _approval_immutable_mode(args)  # exits when --approval-immutable selects it
     _held_status_mode(args)  # exits when --held-status selects it
+    _reserved_ids_mode(args)  # exits when --reserved-ids selects it
     _ruling_sync_mode(args)  # exits when --ruling-sync selects it
     _text_then_act_mode(args)  # exits when --text-then-act selects it
     _parent_first_mode(args)  # exits when --parent-first selects it

@@ -1,0 +1,7 @@
+range = "c6e982882e81b7369bd4ca323ad1e06ebe93b108..6f02ab8e07c3f11e6fb65b7050556452c65b6a00"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = "[MAJOR] project-trajectory/scripts/id_carrier.py:431 -> [K1, B1] A reservation remains reusable after its own work item retires an allocated identity: the supported reserve SR=1, author SR-006, retire.py SR-006, then author a different SR-006 sequence passes both the hand-squash step and the real merge flow, because range membership alone authorizes it; this violates SR-174 non-reissue and the spec's retired-number refusal, while the existing retired-number test only exercises a number outside the range -> make the owning landing admission boundary distinguish an unspent reservation from an identity already retired, retain the existing refusal matrix and add this real reserve/retire/reuse regression on both callers; amend LLR-363/TC-402 and the IF-101 owner contract through their applicable authority while preserving SR-174 acceptance/approval (this validates authored registry content at the genuine trust boundary in PROCESS §3, rather than compensating for trusted in-process state; antidote's boundary question applies there) -> @implementer convergence-class: yes"
+position = "Nothing is contested: the coordinator takes no side on this finding, and the convergence round's open MAJOR routes it to this sitting."

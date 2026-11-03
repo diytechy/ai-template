@@ -1,0 +1,47 @@
+Reviewed: 6701eec3831f5b3b5d18a61a765caa52dc540768
+
+**Verified.** `git rev-parse HEAD` in the lane printed the reviewed commit. I read the whole spec (`docs/work/active/wi-978/WI-978-watermark-carrier.md`), the full scoped diff, and the rubric `docs/rubrics/kit-change-review.md`. I hunted fail-open landings and data loss first, then crashes on supported routes. Here is what holds:
+- **The reserve verb's table.** `id_carrier.parse_counts` and `check_work_item` admit and refuse as the S3 table says, and `_claimed` reads the claim from trunk's tip. Every refusal is raised before `write_carrier`; `test_id_carrier.py::test_each_reserve_refusal_writes_nothing` and the usage-error case cover this.
+- **Compare-and-swap.** It goes through `update-ref <ref> <new> <old>`, with an empty `old` on first use. A lost race refuses and writes nothing (`test_id_carrier_git.py`, both parametrizations).
+- **Disjoint ranges.** Sequential and stale-base ranges start at max(carrier mark, trunk's committed mark)+1, and a ruled `--correct-mark` raises the floor.
+- **The fold.** It takes each space's maximum mark and the union of records, sorted and de-duplicated, on a clean file and on a conflicted one.
+- **Records survive every writer.** `--bump-ids` and `--correct-mark` carry the records. The committed-record union is checked across every parent. The hand-raise rule takes a rise up to the highest record's `high`.
+- **The landing check.** One function, `id_carrier.landing_refusal` through `trace.landing_id_refusal`, has two callers: the slot rung beside R1, and `check.py --reserved-ids` on a squash. Every landing-table row is driven on both callers in `test_id_landing.py`.
+- **The landing carries the fold.** It is enforced on the slot (lag means not ready, then an in-slot refresh that folds) and on the squash (a lag is refused, naming `--fold-ids`).
+- **Act machinery untouched.** The act ledger, `_record_act` and the act latch are not in the diff.
+- **Text Done-when items present.** Keep-or-mint in PROCESS.md §4, the §0 citation, the prompt, the recipes and SKILL (shipped, `.claude` and `.agents` copies byte-identical), and the RESYNC entry.
+
+**Done-when coverage at this tip:**
+
+| Done-when item | Status at this tip |
+|---|---|
+| The spine rows | Present |
+| The carrier items | Covered as above |
+| The landing items | Covered, except the gap in finding 1 |
+| The text items | Covered |
+| The checkpoint sitting and its act | UNCOVERED here: rows are Drafted and no act exists. The plan schedules it as P15. |
+| "this row's own ids are reserved through its verb" | UNCOVERED here: no `refs/heads/id-carrier` exists and the lane's watermark carries no record, so its own rung would refuse LLR-362/363 and TC-401/402 today. The plan schedules it as P14. |
+| Naming the other open lanes | Landing-time |
+| Generated pages | The trunk step's at landing |
+
+I read these as scheduled steps, not defects of this tip; the landing must not proceed until P14 and P15 are done.
+
+**Probes.** I drove two probes through real code:
+- **Probe 1** called `integrate.refresh` on a lane whose watermark AND a registry both conflict with trunk. Both sides appended SR rows, as two parallel spine lanes do. It raised `SystemExit` from `spine_carrier.load` ("does not parse as TOML"). The lane worktree was left mid-merge (`UU docs/id-watermark`, `AA docs/requirements/system-requirements.toml`), bypassing the refresh's undo.
+- **Probe 2** ran `trace.py --reserve-ids` in a lane cut before trunk minted WI-003, then ran `trace.py --strict-integrity` in that lane. It exited 1 with "id watermark for WI stands at 3 but nothing justifies more than 2".
+
+**Commands**
+- `git rev-parse HEAD` (lane) -> `6701eec3831f5b3b5d18a61a765caa52dc540768`
+- `python -m pytest -q -p no:cacheprovider -n 2 --basetemp .../r1-978-B/wi-978 <the brief's 15 modules>` -> `673 passed, 20 skipped in 1320.40s (0:22:00)` (19 skips gated on posix-shell)
+- `python project-trajectory/scripts/check_trajectory.py --strict` -> `check_trajectory: clean (986 work item(s), 872 done (88%), 34 cancelled, graph acyclic).` exit 0
+- `python project-trajectory/scripts/trace.py --strict-integrity` -> `Traceability: SN=31 SR=138 LLR=329 TC=356 orphans=0 integrity=0 ... drafts=4 ...` exit 0 (and `--strict` gave the same line, exit 0)
+- probe 1, `probe/test_probe_conflict.py` (integrate.refresh, watermark plus registry conflict) -> `SystemExit: spine_carrier: ...system-requirements.toml does not parse as TOML`; `STATUS UU docs/id-watermark / AA docs/requirements/system-requirements.toml`
+- probe 2, `probe/test_probe_wi.py` (reserve in a lane behind trunk on WI, then `--strict-integrity`) -> `PRE exit 0`, `LANE WI MARK 3`, `POST exit 1`, `FINDING (integrity): id watermark for WI stands at 3 but nothing justifies more than 2`
+
+- [MAJOR] project-trajectory/scripts/integrate.py:2705 -> `_fold_watermark_conflict` runs `trace.fold_watermark` whenever the watermark is among the conflicted paths, even when other paths are conflicted too. `fold_watermark` computes the basis from `live_max_ids` over the working tree, and a registry carrying conflict markers makes `spine_carrier.load` raise `SystemExit`, which nothing catches. So a refresh where a registry and the watermark both conflict (two parallel spine lanes appending rows to the same registry, the normal shape this WI exists for) crashes instead of returning the CONFLICTS refusal, skips `undo` (no reset), and leaves the lane worktree mid-merge. At c6e98288 this was a clean refusal, and the slot's in-slot refresh shares the path. LLR-363 says "any other conflict remains refused" (K1). `test_a_watermark_conflict_beside_another_conflict_still_refuses` misses this because its second conflict is a non-registry file (`contested.txt`). -> Fold only when the watermark is the sole path left after the generated-path resolution (`remaining == [WATERMARK]`), so a fold over a conflicted tree is never attempted; this is a deleted path rather than a new guard, with no `SystemExit` catch needed. Add a refresh case whose second conflict is a registry. -> @owner
+- [MAJOR] project-trajectory/scripts/trace.py:1705 -> The reserve verb folds the whole carrier into the lane's working watermark, and the carrier holds trunk's committed marks for every space, WI, OI and DP included (`id_carrier.reserve` folds `trunk_text` in). When trunk has minted a WI, OI or DP id since the lane's base (in this repo, nearly always while a lane is open), or raised any mark without a record, the folded file raises that mark above anything the lane's baseline or records justify. The lane's own pre-commit `--strict-integrity` floor then refuses the commit the recipe orders ("Commit the folded docs/id-watermark in the lane"). The finding's text, "never by hand", misdirects the coordinator. This breaks the S3 promise that the verb "leaves that change for the caller to commit", and no test commits or lints a lane after reserving from a stale base (`test_stale_base_reservations_are_disjoint` stops at the working file). -> Make the lane-side fold carry only what the lane's commit can justify: the records, plus the marks of spaces a record covers. The alternative is to have the verb refuse, naming "refresh the lane first", when the lane's base lags trunk. Either removes the uncommittable state rather than adding a guard on the commit. Add a git case that reserves in a lane behind trunk on WI and commits through the hook. -> @owner
+- [MINOR] project-trajectory/scripts/id_carrier.py:439 -> Back-links (K3). The landing judgement (`landing_lines`, `_outside_lines`, `landing_refusal`, `_added_ids`, `ids_at`, `rev_fold_lag`) and `receiving_sides` are tagged `Implements: SR-174, LLR-362`, although that behaviour is LLR-363's. LLR-363's `module` (low-level-requirements.toml:3760) omits `id_carrier.py`, and LLR-362's `code_symbol` lists `landing_lines`. Many tagged functions appear in neither row's `code_symbol`: `reserve`, `record_history_findings`, `trace.reserve_ids`, `committed_reservations`, `live_ids`, `landing_id_refusal`, `landing_fold_lag`. -> Retag the landing functions as LLR-363, add `id_carrier.py` to LLR-363's module, and reconcile both rows' `code_symbol` at the P15 checkpoint turn. -> @owner
+- [MINOR] docs/requirements/system-requirements.toml:995 -> For clarity (K1). SR-174's amended requirement now governs "each identity it mints", including the registry ids parallel lanes reserve, but its title still reads "Work-item identity is allocated once and never re-issued". A reader scanning titles for the spine-id allocation rule will not find it here. -> Amend the title at the same sitting so it names identity allocation generally, e.g. "Each minted identity is allocated once and never re-issued". -> @owner
+- [MINOR] project-trajectory/scripts/id_carrier.py:89 -> Consolidate, don't duplicate (PROCESS.md §3). `parse_marks` is a third copy of the lenient mark-line reader. Its regex equals `trace._WATERMARK_LINE` (trace.py:884) and its loop equals `retire.read_marks`. Yet trace.py's new comment says the line grammars "live in `id_carrier`", while trace keeps its own `_WATERMARK_LINE` for `read_watermark` and `_committed_marks`. -> Have trace.py read the mark-line pattern from `id_carrier` (one grammar, two strictness policies), and point `retire.read_marks` at `id_carrier.parse_marks`. If that is judged out of scope under the spec's "refactor row of its own", correct the comment and file the row. -> @owner
+
+VERDICT: CHANGES-REQUESTED findings=5

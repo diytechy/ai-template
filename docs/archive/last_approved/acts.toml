@@ -1003,3 +1003,17 @@ date = "2026-11-01"
 approved = ["LLR-361", "TC-400"]
 reattested = []
 copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 166
+date = "2026-11-02"
+approved = []
+reattested = ["SR-174", "TC-158"]
+copied = ["docs/requirements/system-requirements.toml", "docs/test/test-cases.toml"]
+
+[[act]]
+seq = 167
+date = "2026-11-02"
+approved = ["LLR-362", "LLR-363", "TC-401", "TC-402"]
+reattested = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]

@@ -1,0 +1,7 @@
+range = "c6e982882e81b7369bd4ca323ad1e06ebe93b108..82e4ca1a73bc48382f04522c3f71a3ac811048ad"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = "[MAJOR] project-trajectory/scripts/integrate.py:3359 -> [K1, B1; SR-174/LLR-363] The lane's moving merge base erases an unreserved addition before the dispatcher judges it: after the legitimate owner lands SR-006, `_drain` speculatively refreshes the other lane that also drafted SR-006; `_reserved_id_refusal` then sees SR-006 in both tip and base and admits it. The real claims/reserve/land/drain reproduction initially refuses WI-401 and subsequently merges it with drain exit 0, despite its sole reservation being SR-007 -> Make reservation admission own the lane's introduced-ID attribution before refresh can absorb trunk content, and preserve that attribution through landing; add a dispatcher-level regression with two real reservations and the first owner's successful landing, preserving refusal of the second author's collision. This moves validation to the single owning admission boundary rather than adding a compensating post-refresh guard (antidote, .agents/skills/antidote/SKILL.md) -> @implementer convergence-class: yes"
+position = "Nothing is contested: the coordinator takes no side on this finding, and the open MAJOR of the review after the sitting-ordered fix round routes it to this sitting."

@@ -1,0 +1,7 @@
+range = "2f4ebb2a5e00b2be05298ea2d45591fed1b90e06..f7809e313a17bf145b639922b1d84192760f7a66"
+
+[[finding]]
+id = "F1"
+held_by = "coordinator"
+finding = "[MAJOR] project-trajectory/scripts/id_carrier.py:486 -> [K1, B1] Retirement reuse fails open when the spent ID was already live at the lane's base: retire SR-003 with retire.py, commit its record, then author a different SR-003 in the same lane. `_added_ids` subtracts the base-live ID, and `landing_lines` returns before consulting retirement records. Both supported landing routes admitted the probe: the slot landed the different obligation and the squash step exited 0. This violates newly widened SR-174's non-reuse acceptance; TC-402 only covers reuse of an ID first minted after the base -> Amend LLR-363 and TC-402 to preserve SR-174 and judge live identities against authoritative retirement records independently of the net-added reservation set, through the one shared landing trust boundary; extend both route regressions to a base-live ID. This is validation of authored content at the existing trust boundary (PROCESS section 3; antidote), not a compensating guard on trusted in-process state; re-attest the changed child contract and its verification -> @wi-978-owner convergence-class: yes"
+position = "Nothing is contested: the coordinator takes no side on this finding, and the open MAJOR of the gate over the checkpoint tip (an uncounted convergence round) routes it to this sitting."

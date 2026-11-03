@@ -1,0 +1,4 @@
+brief = dispute
+kinds = F1
+outcome = accepted
+findings_file = docs/reviews/wi-978/011-DISPUTE-findings.toml

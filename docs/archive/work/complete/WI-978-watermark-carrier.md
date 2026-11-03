@@ -3,13 +3,34 @@ id = "WI-978"
 title = "One mint across parallel lanes: a watermark carrier every lane reserves its spine ids from, a landing that admits only reserved ids, and the keep-or-mint rule"
 workstream = "process"
 sr_refs = ["SR-174"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#16-one-mint-across-parallel-lanes"
+specref = ""
 needs = ["~WI-977", "OI-116"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+One mint across parallel lanes. A lane reserves its spine and off-spine
+registry ids on a shared id carrier (`refs/heads/id-carrier`, one commit
+per reservation, moved by compare-and-swap) through `trace.py
+--reserve-ids`, which floors each range above the larger of the carrier's
+mark and trunk's committed mark, so reservations from any bases are
+disjoint; a refusal or a lost race writes nothing, and the first use
+creates the carrier from trunk's watermark. The watermark gains reservation
+record lines that every writer keeps and the hand-raise rule reads;
+`--fold-ids` folds the carrier into a working watermark. Both landing
+routes (the merge slot and a hand squash's `reserved-ids` hook step) admit
+an added id only inside a reservation of the landing's claimed work item,
+refuse a retired number (added, or live and named by a retirement record
+the landing brings), and land the carrier's fold; a watermark-only refresh
+conflict resolves to the fold. PROCESS.md section 4 states keep-or-mint
+once; the spine-author prompt drafts from reserved ranges; the recipes
+reserve before drafting. SR-174 widened (blessed) with TC-158; LLR-362,
+LLR-363, TC-401 and TC-402 approved (sitting 019, the acts at seq 166 and
+167). One RESYNC entry, a forced change for an adopter running lanes.
 
 ## Context
 
@@ -149,7 +170,11 @@ no report of its own.
 *The fold:* its inputs are the receiving file (clean, or conflicted, in
 which case index stages 2 and 3 are read) and the carrier tip (when there is
 none, only the working sides are folded). Its output is, for each space, the
-maximum mark; the union of reservation and correction records, sorted by
+maximum mark (the carrier tip contributes its records and the marks they
+justify; its other mark lines are trunk's marks as of each reservation, the
+next reservation's floor and never a landing's authority, so a folded file
+stays committable in a lane cut before a trunk mint); the union of
+reservation and correction records, sorted by
 space and then low; and the basis line recomputed from the receiving tree's
 live ids.
 
@@ -345,58 +370,58 @@ CHANGES-REQUESTED, findings=2):
 ## Done-when
 
 **The spine** (the intent turn, TC first; one checkpoint sitting)
-- [ ] SR-174 (amended), two new LLRs, TC-158 (amended) and two new TCs carry
+- [x] SR-174 (amended), two new LLRs, TC-158 (amended) and two new TCs carry
   the target meaning above, and IF-101 is updated. No cell names a code
   file, function or symbol.
-- [ ] The rows are judged at one checkpoint sitting and acted on from its
+- [x] The rows are judged at one checkpoint sitting and acted on from its
   verdict. The SR, LLR and TC rungs are released, so no act here is the
   owner's.
 
 **The carrier**
-- [ ] The reserve verb admits and refuses exactly as the S3 table says; each
+- [x] The reserve verb admits and refuses exactly as the S3 table says; each
   refusal is driven, with nothing written.
-- [ ] A reservation writes one carrier commit by compare-and-swap. Its first
+- [x] A reservation writes one carrier commit by compare-and-swap. Its first
   use creates the carrier from trunk's committed watermark. A lost race
   refuses with nothing written (driven with two worktrees).
-- [ ] Two reservations in sequence, and two from stale bases, receive
+- [x] Two reservations in sequence, and two from stale bases, receive
   disjoint ranges, each starting one above the carrier's mark. This is the
   folded sittings rule, with a test that fails on today's code; and a
   reservation after a ruled `--correct-mark` on trunk starts above the
   corrected mark.
-- [ ] The fold gives each space's maximum, the union of records, and the
+- [x] The fold gives each space's maximum, the union of records, and the
   basis from the receiving tree's live ids, on a clean file and on a
   conflicted one.
-- [ ] The hand-raise rule admits a rise covered by a record in the commit's
+- [x] The hand-raise rule admits a rise covered by a record in the commit's
   own file and refuses one above every record. A committed record that is
   altered or deleted is refused across every parent. `--bump-ids` and
   `--correct-mark` keep every record. A reservation line never reads as a
   correction.
 
 **The landing**
-- [ ] Every row of the landing table is driven, on both callers (the merge
+- [x] Every row of the landing table is driven, on both callers (the merge
   slot and a hand squash): a stale-base lane that mints another lane's
   reserved number is refused, and a code-only lane passes with no
   reservation.
-- [ ] The landing folds the carrier into trunk's watermark, and a refresh
+- [x] The landing folds the carrier into trunk's watermark, and a refresh
   that conflicts only on `docs/id-watermark` is resolved by the fold.
-- [ ] The act ledger, `_record_act`, act numbering and the act latch are
+- [x] The act ledger, `_record_act`, act numbering and the act latch are
   unchanged (their tests pass untouched).
 
 **The text**
-- [ ] PROCESS.md §4 states keep-or-mint once, beside CLARITY and MEANING.
+- [x] PROCESS.md §4 states keep-or-mint once, beside CLARITY and MEANING.
   Lean toward a new id; keep it when its spirit is retained and keeping
   costs fewer changes overall; keeping needs a cross-reference that checks
   every findable user of the id against the amended meaning, updating one
   the change breaks or minting instead. The `byte-budget-guard` skill
   reports the delta and restamps.
-- [ ] `spine-questions.md` §0 cites it (one line, no restatement).
-- [ ] The coordinator's spine-author prompt
+- [x] `spine-questions.md` §0 cites it (one line, no restatement).
+- [x] The coordinator's spine-author prompt
   (`scripts/coordinator/terra-spine-prompt.template.md`) drafts new ids
   from the reserved ranges its brief names, never from the watermark's
   mark, and its `--bump-ids` instruction is removed; an author who needs
   more ids than a range holds stops and reports the count, and the
   coordinator reserves again.
-- [ ] Recipes §4 replace the floor briefing with "reserve before drafting"
+- [x] Recipes §4 replace the floor briefing with "reserve before drafting"
   (the coordinator reserves the draft's counts before dispatching the spine
   author, and the brief names the reserved ranges). Its rebase row for
   `docs/id-watermark` becomes the fold. SKILL §4 drops "and the id
@@ -404,20 +429,20 @@ CHANGES-REQUESTED, findings=2):
   stay in sync.
 
 **Shipping and the bar**
-- [ ] One RESYNC entry. The carrier exists from the first reservation. A
+- [x] One RESYNC entry. The carrier exists from the first reservation. A
   lane that adds spine or off-spine registry ids reserves them first, or
   its landing is refused (a forced change for an adopter running lanes; a
   trunk-only repository is unaffected). A lane open at upgrade reserves and
   renumbers before it lands. The watermark gains a record line kind, which
   every writer carries, and no existing file migrates. `--bump-ids` is no
   longer the lanes' spine minter.
-- [ ] At this row's landing, every other open lane that adds carrier-space
+- [x] At this row's landing, every other open lane that adds carrier-space
   ids is named, and each reserves and renumbers before its own landing.
   This row's own ids are reserved through its verb, so its landing passes
   its own check.
-- [ ] `docs/cli-reference.md`, `docs/interface-reference.md`,
+- [x] `docs/cli-reference.md`, `docs/interface-reference.md`,
   `prompts/CATALOG.md` and the other generated pages are regenerated.
-- [ ] The commit bar is green, and both strict lints (`trace.py --strict`,
+- [x] The commit bar is green, and both strict lints (`trace.py --strict`,
   `check_trajectory.py --strict`) are clean on the landing tip.
 
 **Ruled by the owner**

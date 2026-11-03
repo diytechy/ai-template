@@ -477,6 +477,10 @@ MAPPING = [
     # and `trace.py` and `gen_trajectory.py` import its readers unguarded, so a
     # scaffold without it can run neither.
     ("scripts/retire.py", "scripts/retire.py"),
+    # The id carrier (SR-174): the reservation record's grammar, the carrier's
+    # plumbing and the fold. `trace.py` imports it unguarded, so a scaffold
+    # without it can run no check at all.
+    ("scripts/id_carrier.py", "scripts/id_carrier.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),

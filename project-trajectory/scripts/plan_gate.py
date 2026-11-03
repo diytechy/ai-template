@@ -523,19 +523,16 @@ def _squash_lines(root, head, tip):
 
     Implements: SR-154, LLR-337
     """
-    lanes = _kitgit.git_out(
-        root,
-        ["for-each-ref", "--format=%(refname:short)", "--contains", tip, "refs/heads/"],
-    )
+    lanes = _kitgit.lanes_containing(root, tip)
     commits = _kitgit.git_out(
         root, ["rev-list", "--reverse", "--topo-order", head + ".." + tip]
     )
     if lanes is None or commits is None:
         return ["the squashed commits of {} cannot be read".format(tip[:10])]
-    if not lanes.split():
+    if not lanes:
         return _unattributed_squash(root, head, tip)
     out = []
-    for lane in lanes.split():
+    for lane in lanes:
         rider = lane_rider(head, lane)
         out += [
             ln

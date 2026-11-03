@@ -122,6 +122,7 @@ Contracts (interfaces): IF-013, IF-040, IF-144, IF-197, IF-267
 | `--strict` | with --staged-divergence: exit 1 on a divergent artifact instead of warning. The ruled promotion path (OI-31: error 'once it has run clean for a program'); the step itself does NOT pass it today |
 | `--approval-immutable` | run ONLY the re-attestation-brief immutability enforcer and exit (WI-503): refuse a STAGED change (other than a plain add) to an existing docs/ratify/<date>-*.md. Fail-closed by default — no --strict, no warn mode. This is the self-invoked body of the 'approval-immutable' step, not a separate contract |
 | `--held-status` | run ONLY the 'held-status' step's body and exit (SR-208): judge a squash landing by its lane commits, and, under the loop marker outside a claimed lane, refuse a held status move or approval claim |
+| `--reserved-ids` | run ONLY the 'reserved-ids' step's body and exit (SR-174): judge a squash landing's added registry ids against the id carrier's records, and refuse a staged watermark that lags the carrier |
 | `--ruling-sync` | run ONLY the 'ruling-sync' step's body and exit (WI-790): refuse a staged tree that rules an open item without updating the Done-when of each row citing it, or closing or removing the row |
 | `--text-then-act` | run ONLY the 'text-then-act' step's body and exit (WI-806): refuse a staged tree that writes the approval record while changing a spine cell other than Status, or adding or removing a row |
 | `--parent-first` | run ONLY the 'parent-first' step's body and exit (WI-850): refuse a staged tree that moves a status so an approved spine row sits under a cited parent that is not approved |
@@ -738,6 +739,8 @@ Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, 
 |---|---|
 | `--strict` | exit 1 if any orphan / status finding |
 | `--bump-ids` | raise every id-watermark mark to the live maximum and exit — the regeneration workflow for docs/id-watermark (a mark only ever rises) |
+| `--reserve-ids` | reserve spine and off-spine registry ids for the claimed work item WI on the shared id carrier (COUNTS: SPACE=N[,SPACE=N...], N 1 to 50; WI, OI and DP are minted on trunk), then fold the carrier into docs/id-watermark for the caller to commit, and exit |
+| `--fold-ids` | fold the id carrier into docs/id-watermark (both sides of a conflicted file included) and exit |
 | `--correct-mark` | one-shot RULED raise of a single id-watermark mark to NEW, recording RULING (e.g. OI-47) in the header — the only other way a mark may rise besides allocation (OI-47 (e)); refuses to replay a space that already carries a recorded correction |
 | `--mint-approval-brief` | WI-503: copy docs/ratify/CURRENT.md to a dated, IMMUTABLE docs/ratify/<date>-SLUG.md and exit — the only sanctioned writer of a dated brief (check.py --approval-immutable refuses any OTHER commit that modifies one). Refuses when CURRENT.md is absent or the destination already exists; --mint-date overrides today's date |
 | `--mint-date` | with --mint-approval-brief: use this date instead of today (testing/backfill; the mint itself does not validate the calendar) |

@@ -1383,9 +1383,9 @@ notes = """intra-component: both endpoints are CMP-008 under the narrow-waist pa
 [interface.IF-101]
 rationale = """Shared rather than duplicated because the mint and the checker must agree on what an id is: a second copy of that rule is the defect the check exists to catch."""
 owner = "scripts/trace"
-requestors = ["scripts/intake", "scripts/plan_artifacts"]
+requestors = ["scripts/intake", "scripts/plan_artifacts", "scripts/integrate", "scripts/check"]
 channel = "call"
-data = "read_watermark and bump_watermark over docs/id-watermark; a mint counts from max(mark, live) + 1"
+data = "read_watermark, bump_watermark, reserve_ids, fold_watermark, landing_id_refusal, landing_fold_lag over docs/id-watermark and the id carrier ref"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -2071,11 +2071,11 @@ rationale = """The owner's approval brief sets apart the owing chains the human-
 owner = "scripts/agent_common"
 requestors = ["scripts/trace"]
 channel = "call"
-data = "human_approves_spine(docs, registry) -> True when the dial holds the registry's rung or no rung map names it; False when the dial releases it"
+data = "human_approves_spine(docs, registry) -> True when the dial holds the registry's rung or no rung map names it; False when the dial releases it; trunk_name(root) -> declared trunk or TrunkUndeclared; parse_wi_id(value, source) -> one WI id or ValueError"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The import is deferred into the brief's rendering, so every other trace run loads nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
+notes = """Cross-component crossing: trace is CMP-006 and agent_common is CMP-008. The imports are deferred: approval-brief rendering reads human_approves_spine, while a reservation reads trunk_name and parse_wi_id; trace paths outside those uses load nothing from the coordinator's primitives. The shipped dial holds every rung, so a repo that has released none sees the brief it saw before."""
 
 [interface.IF-226]
 rationale = """An assumption is approved for what it lets the requirements claim, so the brief an approver reads must show, for each one, the requirements citing it, the needs they reach, where its outcome lands, the test cases that can falsify it and its falsifier. Gathering that chain in the pure join layer that judges the tier keeps the approver reading the same rows, joined the same way, as the checker judges, and keeps the brief's module growing by rendering lines alone."""

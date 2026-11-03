@@ -19,7 +19,11 @@
 # correction: B 7 -> 8 (OI-47)
 # correction: REL 3 -> 4 (OI-47)
 #
-# basis: B=11 CMP=9 DA=17 EXT=7 IF=308 LLR=361 OI=119 PB=4 REL=2 SN=44 SR=246 STK=4 SUR=3 TC=400 WI=989
+# RESERVATIONS — written on the id carrier by --reserve-ids:
+# reservation: LLR 362-363 (WI-978)
+# reservation: TC 401-402 (WI-978)
+#
+# basis: B=11 CMP=9 DA=17 EXT=7 IF=308 LLR=363 OI=119 PB=4 REL=2 SN=44 SR=246 STK=4 SUR=3 TC=402 WI=989
 #
 ASSET = 0
 B = 11
@@ -28,7 +32,7 @@ DA = 17
 DP = 1
 EXT = 7
 IF = 308
-LLR = 361
+LLR = 363
 MOD = 0
 OI = 119
 PART = 0
@@ -39,5 +43,5 @@ SN = 44
 SR = 246
 STK = 4
 SUR = 3
-TC = 400
+TC = 402
 WI = 989

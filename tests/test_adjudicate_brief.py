@@ -2421,6 +2421,7 @@ def test_the_spine_authors_hats_value_puts_the_sittings_questions(tmp_path):
             "CHANGES=SN-001;SR-002",
             "TESTS=",
             "HATS=SN-001;SN-002",
+            "RESERVED=none",
         ],
         cwd=tmp_path,
     )

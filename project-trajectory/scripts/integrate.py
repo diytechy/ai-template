@@ -164,13 +164,13 @@ Contract IF-173: this module as the library its three siblings drive
     dispatcher takes the claim-and-merge vocabulary — `claim` (with
     `dispatch_lock_held=True`, holding the coordinator lock itself),
     `refresh`, `integrate`, `finished_branches`, `branch_outcomes`,
-    `_merge_ready`, `_claimed_wi_ids`, `_claimed_specs`, `_spec_frontmatter`,
+    `_landing_ready`, `_claimed_wi_ids`, `_claimed_specs`, `_spec_frontmatter`,
     `ACTIVE`. The handback takes the worktree and revision readers —
     `lane_worktree`, `_worktree_holding`, `_head`, `_rev`, `_claimed_specs`,
     `_spec_frontmatter`, `WORK`, `ACTIVE`. The lane takes `lane_worktree`
     alone. Every refusal is a RETURN VALUE, never a raise: a code from `claim`
     and `integrate`, a `(sha, refusal)` pair from `refresh`, a `(ready, why)`
-    pair from `_merge_ready`. The `_`-prefixed names above are named on the
+    pair from `_landing_ready`. The `_`-prefixed names above are named on the
     row and are part of the promise, not private detail a caller reached
     past; nothing here pushes, and the trunk moves only inside the slot.
 """
@@ -200,7 +200,7 @@ from kitlib import provenance as _kitprovenance
 from kitlib import registry as kregistry
 from kitlib import done_when as kdone
 from kitlib import verdict as kverdict
-from kitlib.git import git_out, lane_commit_walk
+from kitlib.git import SPEC_NAME, git_out, lane_commit_walk
 from kitlib.station import (
     BAR_GREEN,
     OUTCOME_DIRS,
@@ -259,7 +259,8 @@ _work_tip = kverdict.work_tip
 # the tree, while the watermark is the only record of ids that have been
 # DELETED; regenerating it from live rows is precisely the id re-use the mark
 # exists to prevent.
-BOOKKEEPING_PREFIXES = (WORK + "/", "docs/log.d/", "docs/log.md", "docs/id-watermark")
+WATERMARK = "docs/id-watermark"
+BOOKKEEPING_PREFIXES = (WORK + "/", "docs/log.d/", "docs/log.md", WATERMARK)
 
 
 def fail(msg):
@@ -299,8 +300,9 @@ def _queued_spec(root, wi_id):
 _WI_TOKEN_RE = re.compile(r"\bWI-\d+\b")
 
 # A work-item SPEC filename, `WI-<n>-<slug>.md` - the shape `claim` writes and
-# the shape every state folder holds. See `_spec_id`.
-_SPEC_NAME_RE = re.compile(r"^(WI-\d+)-.+\.md$")
+# the shape every state folder holds: the claim-folder reader's one grammar
+# (`kitlib.git.SPEC_NAME`). See `_spec_id`.
+_SPEC_NAME_RE = SPEC_NAME
 
 
 def normalize_wi_id(wi_id):
@@ -1121,29 +1123,24 @@ def _minted_id_refusal(root, branch, claimed):
     ruling asked for: lane-discovered findings are recorded as PROSE and take an
     id at or after merge.
     """
-    head = _head(root)
-    code, base = ac.git(root, "merge-base", head, branch)
-    if code != 0 or not base.strip():
-        # Fail closed: an unread delta is not an empty one.
-        return (
-            "cannot read the merge base of trunk {} and {}, so the {} delta the "
-            "R1 mint rung reads is unknowable; nothing was merged:\n{}".format(
-                head[:10], branch, WORK, ac._failure_tail(base)
-            )
-        )
+    base, unread = _lane_base(
+        root, branch, "the {} delta the R1 mint rung reads".format(WORK)
+    )
+    if unread:
+        return unread
     code, out = ac.git(
         root,
         "diff",
         "--name-status",
         "--no-renames",
-        base.strip(),
+        base,
         branch,
         "--",
         WORK,
     )
     if code != 0:
         return "cannot read {}'s {} delta against {}; nothing was merged:\n{}".format(
-            branch, WORK, base.strip()[:10], ac._failure_tail(out)
+            branch, WORK, base[:10], ac._failure_tail(out)
         )
     foreign = []
     for status, path in _name_status(out):
@@ -1166,6 +1163,26 @@ def _minted_id_refusal(root, branch, claimed):
             "an id" if len(foreign) == 1 else "ids",
             ", ".join(sorted(claimed)) or "empty",
             "\n".join("  {} minted at {}".format(w, p) for w, p in foreign),
+        )
+    )
+
+
+def _lane_base(root, branch, what):
+    """`(base, None)`: the merge base of trunk and `branch`, the commit the
+    lane's own delta is read over, so whatever trunk did after it sits in the
+    base and never in the delta; or `(None, refusal)` naming `what` as
+    unknowable. Fail closed: an unread delta is not an empty one.
+
+    Implements: SR-174, LLR-363
+    """
+    head = _head(root)
+    code, base = ac.git(root, "merge-base", head, branch)
+    if code == 0 and base.strip():
+        return base.strip(), None
+    return None, (
+        "cannot read the merge base of trunk {} and {}, so {} is unknowable; "
+        "nothing was merged:\n{}".format(
+            head[:10], branch, what, ac._failure_tail(base)
         )
     )
 
@@ -2665,15 +2682,18 @@ def _merge_trunk_in(wt, root, branch, trunk):
     """
     code, out = ac.git(wt, "merge", "--no-ff", "--no-commit", trunk)
     if code == 0:
-        return None, out
+        return _fold_carrier_in(wt), out
     auto, remaining = _resolve_generated_conflicts(wt, root)
+    folded, remaining = _fold_watermark_conflict(wt, remaining)
     note = (
         " (the declared [generated] path(s) {} were auto-resolved to the trunk "
         "side, since the trunk step regenerates them)".format(", ".join(auto))
         if auto
         else ""
+    ) + (
+        " ({} was settled by the id carrier's fold)".format(WATERMARK) if folded else ""
     )
-    if remaining or not auto:
+    if remaining or not (auto or folded):
         return (
             "merging trunk {} in CONFLICTS{}; resolve it on the branch in {} "
             "(git merge {}), commit, then refresh again".format(
@@ -2682,7 +2702,51 @@ def _merge_trunk_in(wt, root, branch, trunk):
             out,
         )
     print("integrate: refresh of {} -{}".format(branch, note))
-    return None, out
+    return _fold_carrier_in(wt), out
+
+
+def _fold_watermark_conflict(wt, remaining):
+    """Settle a conflict on the id watermark by the fold: `(folded, remaining)`.
+    The fold of both sides and the carrier tip is the one deterministic answer,
+    so it is no content question. It is taken only when the watermark is the
+    SOLE conflict left: the fold sweeps the working tree's live ids, which a
+    conflicted registry cannot answer, and any other set is refused (and the
+    merge undone) by the caller anyway. A fold that fails leaves the path
+    remaining, which refuses the refresh.
+
+    Implements: SR-174, LLR-363
+    """
+    if remaining != [WATERMARK]:
+        return [], remaining
+    import trace  # the watermark seam's owner (IF-101); only a conflict asks
+
+    try:
+        trace.fold_watermark(wt)
+    except trace.id_carrier.Refused:
+        return [], remaining
+    if ac.git(wt, "add", "--", WATERMARK)[0] != 0:
+        return [], remaining
+    return [WATERMARK], []
+
+
+def _fold_carrier_in(wt):
+    """The refresh's carrier fold, once trunk is merged in: while an id carrier
+    exists, fold its tip into the lane's watermark and stage it, so the barred
+    tree holds the fold; with no carrier nothing changes. A refusal, or None.
+
+    Implements: SR-174, LLR-363
+    """
+    import trace  # the watermark seam's owner (IF-101)
+
+    if trace.id_carrier.carrier_tip(wt) is None:
+        return None
+    try:
+        trace.fold_watermark(wt)
+    except trace.id_carrier.Refused as exc:
+        return "folding the id carrier into the lane failed: {}".format(exc)
+    if ac.git(wt, "add", "--", WATERMARK)[0] != 0:
+        return "the folded {} could not be staged".format(WATERMARK)
+    return None
 
 
 def refresh(root, branch, tier):
@@ -3283,6 +3347,52 @@ def staged_done_when_refusal(root):
         return str(exc)
 
 
+def _reserved_id_refusal(root, branch, wi_ids):
+    """The reserved-ids rung, beside R1: the landing check (`trace.
+    landing_id_refusal`) over the ids the branch tip holds and the lane's base
+    does not (`_lane_base`, the delta R1 reads), keyed on the work items trunk
+    holds claimed for it. The base, never trunk's tip: the rung runs before
+    any in-slot refresh, and an id trunk retired after the lane's base is
+    still live at an unrefreshed tip without the lane having added it. A
+    refusal, or None.
+
+    Implements: SR-174, LLR-363
+    """
+    base, unread = _lane_base(root, branch, "the ids the lane adds")
+    if unread:
+        return unread
+    import trace  # the watermark seam's owner (IF-101); only the slot asks
+
+    refusal = trace.landing_id_refusal(
+        root,
+        branch,
+        base,
+        wi_ids,
+        claim_source="trunk holds no claimed spec under {}/active/{}/".format(
+            WORK, branch
+        ),
+    )
+    return refusal and "{} - {}; nothing was merged".format(branch, refusal)
+
+
+def _landing_ready(root, branch):
+    """`(ready, why)`: `_merge_ready`, and the tip's watermark holds the fold
+    of the id carrier's tip (`trace.landing_fold_lag`). A lagging tip is not
+    merge-ready, so the slot refreshes it in the slot, and the refresh folds.
+
+    Implements: SR-174, LLR-363
+    """
+    ready, why = _merge_ready(root, branch)
+    if not ready:
+        return ready, why
+    import trace  # the watermark seam's owner (IF-101)
+
+    lag = trace.landing_fold_lag(root, branch)
+    if lag:
+        return False, "its watermark lags the id carrier ({})".format("; ".join(lag))
+    return True, why
+
+
 def _merge_refusal(root, branch, wi_ids):
     """The merge slot's refusal ladder: `(outcomes, refusal)` - the first reason
     this branch may not merge, or the outcomes the merge needs and None.
@@ -3318,7 +3428,9 @@ def _merge_refusal(root, branch, wi_ids):
     )  # SR-144, SR-225, then the Done-when's blessing (WI-841)
     if refusal:
         return outcomes, refusal
-    refusal = _minted_id_refusal(root, branch, wi_ids)  # RULING R1
+    refusal = _minted_id_refusal(  # RULING R1
+        root, branch, wi_ids
+    ) or _reserved_id_refusal(root, branch, wi_ids)  # SR-174, the reserved ids
     if refusal:
         return outcomes, refusal
     refusal = (
@@ -3367,7 +3479,7 @@ def integrate_one(root, branch, tier, held=None):
     if refusal:
         return refusal
 
-    ready, why = _merge_ready(root, branch)
+    ready, why = _landing_ready(root, branch)
     if not ready:
         # THE PESSIMISTIC SEQUENCE - slot already held, so this is exactly
         # "take slot -> merge trunk in -> bar -> merge". It is reached on every

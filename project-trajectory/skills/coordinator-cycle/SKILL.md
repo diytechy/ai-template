@@ -387,9 +387,9 @@ them where reasonable, and the spawner's bounds hold for each one:
 Parallel lanes are normal; adjudication is a latched event. A lane's verdicts
 may be sat at any time; its acts keep landing order (revisions 31 and 32).
 Take a lane's act turn only after the lanes ahead of it have landed and it has
-rebased, so its acts and the id watermark pull up as each lane lands. A lane
-that took acts on an older base gets duplicate act seqs on rebase, and git
-applies the later act commits cleanly. Lanes that take acts land one at a time.
+rebased, so its acts pull up as each lane lands. A lane that took acts on an
+older base gets duplicate act seqs on rebase, and git applies the later act
+commits cleanly. Lanes that take acts land one at a time.
 Before the act turn, check that the rows the verdict judged are unchanged since
 it judged them: the rows at the verdict's own commit, before the rebase,
 against the rebased tip. A renumbered row counts as changed; re-sit any changed

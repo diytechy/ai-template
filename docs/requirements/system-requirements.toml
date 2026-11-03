@@ -992,13 +992,13 @@ phase = 4
 coincident = """The needs ask for generated views that are never committed half-regenerated; ordered regeneration that stops at the first failure and commits no partial set is that outcome."""
 
 [requirement.SR-174]
-title = "Work-item identity is allocated once and never re-issued"
-sn_refs = ["SN-025"]
+title = "Identity is allocated once and never re-issued"
+sn_refs = ["SN-025", "SN-027"]
 boundary_refs = ["B-01"]
 hat_refs = ["INTEGRITY-RECOVERABILITY", "MAINTAINER"]
-requirement = """The delivered loop content shall allocate each work-item identity at most once, so that no two concurrent actors receive the same identity and an identity freed by a deletion is never re-issued."""
-rationale = """Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion."""
-acceptance_criteria = "Two actors finishing against the same tree cannot obtain the same work-item identity; an identity freed by deleting its record is not re-issued to new work; allocation counts from the recorded high-water mark rather than from the live maximum."
+requirement = """The delivered loop content shall allocate each identity it mints at most once. Work items are minted on the integration branch alone. The registry identities that parallel lanes author are drawn from one shared reservation record. No two concurrent actors receive the same identity, and an identity freed by a deletion is never re-issued."""
+rationale = """Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion. It contributes to SN-027 by assigning the registry identities independently authored by parallel lanes from one reservation record, so concurrent lanes cannot receive the same identity."""
+acceptance_criteria = """Two actors finishing against the same tree cannot obtain the same work-item identity; an identity freed by deleting its record is not re-issued to new work; allocation counts from the recorded high-water mark rather than from the live maximum; reservations in sequence or at once, from any bases, receive disjoint ranges; a landing that adds a registry identity outside its own work item's reservation is refused before it lands; a mark rises only by allocation, by a ruled correction, or by a recorded reservation."""
 priority = "M"
 verification = "Test"
 status = "Approved"

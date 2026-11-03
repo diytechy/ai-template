@@ -25,7 +25,14 @@ Real git and the merge slot end to end, so this module is registered slow
 """
 
 import pytest
-from conftest import SCRIPTS, env_gate_skipif, load_script, run_py
+from conftest import (
+    SCRIPTS,
+    env_gate_skipif,
+    load_script,
+    plant_id_carrier,
+    reserved_watermark,
+    run_py,
+)
 from integrate_fixtures import (
     T_BASE,
     T_CODE,
@@ -561,6 +568,8 @@ def test_an_off_spine_demotion_and_a_born_Drafted_row_land_from_a_loop_lane(
         )
 
     _lane(root, monkeypatch, [("WI-401: demote B-02, add B-03", move)], kind="loop")
+    # The lane reserved the id it adds, so the reserved-ids rung passes it on.
+    plant_id_carrier(root, reserved_watermark({"B": 3}, [("B", 3, 3, "WI-401")]))
     _lands(root)
 
 

@@ -431,9 +431,17 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # deferred `trace` edge for the first-approval and re-judge arms, so the
     # arm's copy is a new edge, and `intake` moved rather than joined. The
     # composer imports the new module one way, so no cycle or layer edge grew.
-    assert 14 <= deferred <= 41, (
+    # RE-STAMPED 41 -> 43 (2026-11-02, SR-174, the reserved-ids landing):
+    # integrate -> trace and check -> trace join deferred. Both landing routes
+    # (the merge slot's reserved-ids rung, readiness and refresh folds, and
+    # the pre-commit `reserved-ids` step on a squash) ask the one landing check
+    # through the watermark seam's owner (IF-101) instead of a second copy.
+    # Deferred: check.py keeps its kitlib-only floor and a commit that is not a
+    # squash imports no tracer; integrate pays it only at a refresh or the
+    # slot. trace imports neither module, so no cycle or layer edge grew.
+    assert 14 <= deferred <= 43, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..41 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..43 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "

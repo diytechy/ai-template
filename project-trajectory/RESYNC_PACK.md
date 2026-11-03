@@ -10190,6 +10190,108 @@ pre-commit `registry-integrity` step, gains two refusals:
 - No setting changes and no registry schema changes.
 
 
+### Lanes reserve their registry ids on a shared id carrier [since 2f4ebb2a5]
+
+*(Anchored at the preceding commit; the change lands in the commit that follows
+it.)*
+
+**What changed.** Parallel lanes no longer draw spine or off-spine registry
+ids from their own copy of `docs/id-watermark`, where two lanes cut from
+different trunk commits drew the same number. One shared ref,
+`refs/heads/id-carrier`, holds the watermark for every space except WI, OI and
+DP (those stay minted on the trunk). It exists from the first reservation.
+
+- **The reserve verb.** `trace.py --reserve-ids WI-NNN SPACE=N[,SPACE=N...]`
+  reserves N ids per space (1 to 50) for a work item the trunk's claim holds.
+  Each range starts one above the larger of the carrier's mark and trunk's
+  committed mark. It writes one carrier commit by compare-and-swap (a lost
+  race refuses and writes nothing), then folds the carrier into the working
+  `docs/id-watermark` for you to commit with the rows. Every refusal exits 1
+  with one line and writes nothing.
+- **The fold.** `trace.py --fold-ids` folds the carrier into the working
+  watermark: each space's maximum mark, the union of the records, and the
+  basis from the live ids. The carrier contributes its records and the marks
+  they justify, never its other marks, so a lane cut before trunk minted a
+  work item can commit the folded file. On a conflicted watermark it reads
+  both sides, so a rebase or merge conflict on the file is resolved by it.
+- **The record.** The watermark gains a line kind,
+  `# reservation: <SPACE> <low>-<high> (<WI-NNN>)`. Every writer
+  (`--bump-ids`, `--correct-mark`, the trunk mints through them) carries the
+  records verbatim; a file with none renders exactly as before.
+- **The hand-raise rule.** `trace.py --strict-integrity`, and so the
+  pre-commit floor, admits a mark raised up to the highest record its own file
+  names for that space, and refuses a committed record altered or deleted, the
+  committed records read as the union over every parent.
+- `--bump-ids` is no longer the lanes' spine minter; its live-id finding now
+  points a lane at `--reserve-ids`.
+- **The landing admits only reserved ids.** Both landing routes ask one
+  check: the carrier-space ids a landing adds must each sit in a carrier
+  record naming the landing's claimed work item. Both routes read "added" as
+  the lane's own delta, its tip over its merge base with trunk, so an id
+  trunk retired or another lane landed after the lane was cut never reads as
+  one this lane adds, and a number the lane drafted that another lane landed
+  first still does; a hand squash also judges what its staged tree adds over
+  HEAD, since a conflict resolution can add an id the tip lacks. A landing
+  that adds ids is refused before it lands when one is a retired number (a
+  `docs/log.d/retired/<ID>.md` record in the landing tree or its parent names
+  it, even inside the lane's own reservation), when one sits outside its own
+  records (none, another work item's), when there is no carrier or no
+  readable claim, or when its watermark carries a record that neither the
+  carrier nor that base holds. A landing is also refused, whether it adds
+  ids or not, when an id live in it is named by a retirement record it brings
+  (a row live at the lane's base, retired with `retire.py` and authored again
+  in the same lane); a retired id and live row already paired on trunk before
+  the lane do not refuse it. A code-only landing passes with no reservation.
+- **The landing lands the carrier's fold.** The merge slot treats a lane
+  whose watermark lags the carrier as not merge-ready and refreshes it in the
+  slot; the station refresh folds the carrier into the lane after merging
+  trunk in, and settles a conflict on `docs/id-watermark` alone by the same
+  fold (any other conflict still refuses). The dispatcher's refresh outside
+  the slot asks the same readiness question, so a lane whose watermark lags
+  the carrier is refreshed there, not inside the held slot.
+- **The hand squash.** The pre-commit hook gains a `reserved-ids` step beside
+  `held-status`. During a `git merge --squash` it refuses a staged watermark
+  that lags the carrier, naming the remedy (`trace.py --fold-ids`, then
+  `git add docs/id-watermark`, in the staged squash before the regeneration
+  and the bar), and runs the landing check on the staged tree. Every other
+  commit passes at once.
+- **Keep or mint.** `PROCESS.md` §4 now states when a row whose meaning
+  changed keeps its id (its spirit retained, keeping cheaper overall, and a
+  cross-reference of every findable user of the id against the amended
+  meaning) and when it mints instead; `prompts/spine-questions.md` §0 cites
+  it. Text only: no check reads it.
+
+**What to do.**
+
+- **Overwrite** `scripts/trace.py`, `scripts/integrate.py`, `scripts/check.py`,
+  `scripts/dispatch.py`, `scripts/plan_gate.py`, `scripts/retire.py`,
+  `scripts/kitlib/git.py`, `scripts/bootstrap.py`,
+  `scripts/kitlib/bootstrap_manifest.py`,
+  `hooks/pre-commit`, `PROCESS.md`, `prompts/spine-questions.md` and
+  `prompts/CATALOG.md`, and **add** `scripts/id_carrier.py` (kit-owned;
+  `trace.py` imports it, so a repository without it can run no check). Two
+  `scope: this-repo` skills changed too, only if you vendored them:
+  `skills/coordinator-cycle/` (reserve before drafting, the fold in a rebase
+  and in a hand squash) and `skills/byte-budget-guard/SKILL.md`.
+- **A spine author's brief of your own** that has it count new ids up from
+  the watermark or run `--bump-ids` now drafts from the ranges reserved for
+  its turn instead, and stops and reports when it needs more.
+- **A forced change for a repository running lanes.** Its lanes add registry
+  ids only from reserved ranges: reserve before drafting, and fold in a hand
+  squash before committing it. A lane open at upgrade reserves its counts and
+  renumbers its drafted rows into the ranges before it lands, or its landing
+  is refused.
+- **A forced change for a repository without lanes, at one commit.** A
+  `git merge --squash` of a branch no claim folder names (a feature branch,
+  say) whose staged tree adds registry ids is now refused by the
+  `reserved-ids` step, naming the claim it read: its work item cannot be read
+  from a claim, so no reservation can admit the ids. Claim the branch's work
+  item and reserve its ids before squashing it. Every other commit of such a
+  repository is unaffected: without a carrier nothing is folded, and a commit
+  that is not a squash is not judged.
+- No existing file migrates: a watermark without records reads as before.
+  No setting changes and no registry schema changes.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

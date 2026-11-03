@@ -124,7 +124,29 @@ Contract IF-101: `read_watermark(root) -> {space: int}` reads
     malformed file's error and starting from zero only on the file's first
     creation, so a mark only ever rises and a deleted id is never re-minted. It
     reads the LIVE tree, so a minting caller may only call it once the minted
-    artifact is on disk, or it records a number nothing holds.
+    artifact is on disk, or it records a number nothing holds. It carries every
+    `# reservation: <SPACE> <low>-<high> (<WI-NNN>)` record verbatim, as every
+    writer of the file does. `reserve_ids(root, wi, counts) -> ranges` reserves
+    ids for a work item the trunk claim holds on the id carrier
+    (`refs/heads/id-carrier`, one commit per reservation, moved by
+    compare-and-swap), for every watermark space except WI, OI and DP, which
+    stay trunk-minted; each range starts one above the larger of the carrier's
+    mark and trunk's committed mark, and every refusal writes nothing.
+    `fold_watermark(root)` folds the carrier tip's records, and the marks they
+    justify, into the working file, both sides of a conflicted one included:
+    each space's maximum, the union of the records, and the basis from the
+    live ids. `landing_id_refusal(root,
+    landing_rev, parent_rev, wi_ids, claim_source=...) -> refusal or None` is
+    the one landing check both landing routes ask (the merge slot passes the
+    lane's base, its merge base with trunk, as the parent; a hand squash,
+    HEAD). A landing adding no carrier-space id passes. Otherwise the ids live in the landing tree and
+    not in its parent must sit in a carrier record naming one of the claimed
+    work items, and the landing's watermark may carry no record that neither
+    the carrier nor the parent holds; ids added with no carrier, or with no
+    claimed work item (`claim_source` names the claim read), refuse.
+    `landing_fold_lag(root, rev) -> lines` names how the watermark at a
+    commit or the index's tree lags the carrier's fold: a recorded carrier
+    mark above its own, or a carrier record it lacks; [] with no carrier.
 Contract IF-141: `effective_hats(row, sr_by_id) -> sorted hat names` — one
     design row's effective perspective set: its own `Hat-Refs` unioned with
     those of its SR parents, derived on every read instead of copied down at
@@ -139,9 +161,9 @@ Contract IF-145: the gate verdict the harness reads back from this CLI. Every
     a brief exists, a row still owes a human act, and the rendered text differs
     from the file. Without a strict flag a checking run exits 0 having still
     printed every finding, so a harness reading the code alone must pass one.
-    The writer arms (`--bump-ids`, `--correct-mark`, `--mint-approval-brief`)
-    and the `--tests-for` listing run no checks and exit on their own refusal
-    instead.
+    The writer arms (`--bump-ids`, `--reserve-ids`, `--fold-ids`,
+    `--correct-mark`, `--mint-approval-brief`) and the `--tests-for` listing
+    run no checks and exit on their own refusal instead.
 Contract IF-146: `docs/test/report.md`, rewritten whole on every checking run
     under `--docs`. It carries the metric counts, the SR -> LLR -> TC matrix,
     the orphan, integrity, status and advisory sections, the flag-gated
@@ -252,6 +274,7 @@ try:
     from assumption_rules import interface_bridge_findings, obstacle_hat_findings
     from assumption_rules import observation_evidence_findings
     from assumption_rules import assumption_chain
+    import id_carrier
     import record_observation
     import retire
     from absolute_terms import absolute_advisories, absolute_report_lines
@@ -307,6 +330,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from assumption_rules import interface_bridge_findings, obstacle_hat_findings
     from assumption_rules import observation_evidence_findings
     from assumption_rules import assumption_chain
+    import id_carrier
     import record_observation
     import retire
     from absolute_terms import absolute_advisories, absolute_report_lines
@@ -842,7 +866,7 @@ def enum_integrity_findings(label, rows):
 # The mark closes that. It is machine-written, machine-read, never hand-authored
 # (the §6 F-3 `anchor` class), and it is the SOURCE a mint counts from, rather
 # than `max(live) + 1`.
-WATERMARK = "docs/id-watermark"
+WATERMARK = id_carrier.WATERMARK
 # Every id space in the repo: the ten this module already patterns, plus the
 # seven it does not (SN is the prose tier, WI is directory-as-state, OI is the
 # owner queue, DP is a plan-round directory, and B/EXT/REL are the depth-0 frame
@@ -859,17 +883,17 @@ WATERMARK_SPACES = tuple(
         | {"SN", "WI", "OI", "DP", "B", "EXT", "REL", "STK", "DA", "SUR"}
     )
 )
-_WATERMARK_LINE = re.compile(r"^([A-Z]+)\s*=\s*(\d+)\s*$")
 _ANY_ID = re.compile(r"^([A-Z]+)-(\d+)$")
 # A mark rises by ALLOCATION (the ordinary path above) or, exactly once per
 # space, by a RULED correction — OI-47 (e): a mis-seeded mark corrected by the
 # ruling that authorized it, recorded in the header rather than hand-edited.
 # `# correction: <SPACE> <old> -> <new> (<ruling id>)` — a comment line, so it
 # is invisible to `read_watermark` (comments are skipped there) and visible to
-# `read_corrections` below. Matched against the STRIPPED line, `#` included.
-_CORRECTION_LINE = re.compile(
-    r"^#\s*correction:\s+([A-Z]+)\s+(\d+)\s*->\s*(\d+)\s*\((.+)\)\s*$"
-)
+# `read_corrections` below. The line grammars (this one, the mark line and the
+# reservation record) live in `id_carrier`, whose fold unions them; the strict
+# readers here match its `MARK_LINE`, and `parse_corrections` is that module's
+# reader, named here for its callers.
+parse_corrections = id_carrier.parse_corrections
 
 
 def _csv_ids(docs):
@@ -1025,13 +1049,63 @@ def live_max_ids(root):
     raises the floor while missing something lowers it and frees an id.
     (`intake.next_wi_id` states the same rule for its own mint: "for a MINT, an
     id held anywhere is an id taken".)"""
-    docs = Path(root) / "docs"
     top = {}
-    for reader in (_csv_ids, _spine_ids, _offspine_ids, _sn_ids, _wi_ids, _dp_ids):
-        for space, num in reader(docs):
-            if space in WATERMARK_SPACES and num > top.get(space, 0):
-                top[space] = num
+    for space, num in live_ids(root):
+        if num > top.get(space, 0):
+            top[space] = num
     return top
+
+
+def live_ids(root):
+    """`{(space, number)}` of every id present in the repo at `root`, every
+    watermark space, `-000` placeholders included: the one definition of
+    "live" that `live_max_ids` and the landing check both read.
+
+    Implements: SR-174, LLR-363"""
+    docs = Path(root) / "docs"
+    readers = (_csv_ids, _spine_ids, _offspine_ids, _sn_ids, _wi_ids, _dp_ids)
+    return {
+        (space, num)
+        for reader in readers
+        for space, num in reader(docs)
+        if space in WATERMARK_SPACES
+    }
+
+
+def live_ids_at(root, rev):
+    """`live_ids` of the tree-ish `rev` (a commit, or the index's tree), over
+    the registry directories it holds (`id_carrier.ids_at`).
+
+    Implements: SR-174, LLR-363"""
+    return id_carrier.ids_at(root, rev, live_ids)
+
+
+def landing_id_refusal(
+    root, landing_rev, parent_rev, wi_ids, claim_source="the claim folder", lane=None
+):
+    """The landing check both landing routes ask (the merge slot and a hand
+    squash): the carrier-space ids live at `landing_rev` and not at
+    `parent_rev`, and those the lane's tip `lane` holds and its merge base
+    with `parent_rev` does not (a hand squash's staged tree is not the tip),
+    judged against the retirement records (`retire.recorded_at`) and the
+    carrier tip's records naming one of `wi_ids` (`id_carrier.
+    landing_refusal`). A refusal, or None.
+
+    Implements: SR-174, LLR-363"""
+    spaces = id_carrier.carrier_spaces(WATERMARK_SPACES)
+    revs, retired = (landing_rev, parent_rev), retire.recorded_at
+    return id_carrier.landing_refusal(
+        root, revs, wi_ids, claim_source, live_ids, spaces, retired, lane
+    )
+
+
+def landing_fold_lag(root, rev):
+    """How the watermark at the tree-ish `rev` lags the id carrier's fold
+    (`id_carrier.rev_fold_lag`); [] with no carrier. Both landing routes ask
+    it: the slot refreshes a lagging tip, the squash step refuses one.
+
+    Implements: SR-174, LLR-363"""
+    return id_carrier.rev_fold_lag(root, rev)
 
 
 def read_watermark(root):
@@ -1057,7 +1131,7 @@ def read_watermark(root):
         text = line.strip()
         if not text or text.startswith("#"):
             continue
-        m = _WATERMARK_LINE.match(text)
+        m = id_carrier.MARK_LINE.match(text)
         if not m:
             raise ValueError(
                 "{}:{}: not a `<SPACE> = <int>` line: {!r}".format(
@@ -1066,26 +1140,6 @@ def read_watermark(root):
             )
         marks[m.group(1)] = int(m.group(2))
     return marks
-
-
-def parse_corrections(text):
-    """`{space: [(old, new, ruling_id), ...]}` for one watermark file's TEXT,
-    in file order.
-
-    APPENDS, never overwrites — the 2026-08-21 review's fourth attack. A dict
-    keyed by space made a second correction line for the same space ERASE the
-    first from the parsed record, so the chained forgery destroyed the very
-    audit trail the mechanism exists to create, and it destroyed it inside the
-    reader every other rule consults. A list per space keeps both, which is what
-    lets `_correction_record_findings` report the second as the one-shot breach
-    it is."""
-    out = {}
-    for line in text.splitlines():
-        m = _CORRECTION_LINE.match(line.strip())
-        if m:
-            space, was, now, ruling = m.groups()
-            out.setdefault(space, []).append((int(was), int(now), ruling.strip()))
-    return out
 
 
 def read_corrections(root):
@@ -1155,19 +1209,27 @@ def _mark_covers_live_findings(marks, live):
             )
         elif live.get(space, 0) > marks[space]:
             out.append(
-                "{}-{:03d} exists but the id watermark stands at {} — record it "
-                "with `trace.py --bump-ids` (the spine tiers have no minter, so a "
-                "hand-authored id is expected to arrive this way; the mark is what "
-                "stops the number being handed out again after the row is "
-                "deleted)".format(space, live[space], marks[space])
+                "{}-{:03d} exists but the id watermark stands at {} — in a lane, "
+                "reserve the ids before drafting (`trace.py --reserve-ids WI-NNN "
+                "{}=N`, which folds the reservation into this file); on the trunk, "
+                "record it with `trace.py --bump-ids` (the mark is what stops the "
+                "number being handed out again after the row is "
+                "deleted)".format(space, live[space], marks[space], space)
             )
     return out
 
 
-def _mark_history_findings(marks, live, previous, corrections=None):
+def _mark_history_findings(marks, live, previous, corrections=None, reservations=()):
     """Rules 3 and 4, which need the COMMITTED mark: it never falls, and it never
-    rises past what history justifies — ALLOCATION history, or (OI-47 (e)) a
-    RULED correction recorded in the header, and nothing else.
+    rises past what history justifies — ALLOCATION history, a RESERVATION
+    record in the commit's own file, or (OI-47 (e)) a RULED correction recorded
+    in the header, and nothing else.
+
+    A reservation record (`reservations`, `(space, low, high, wi)` from
+    `id_carrier.parse_reservations`, so a malformed line is no record) justifies
+    a rise up to the highest `high` any record names for that space, never
+    past it; a fall is refused regardless. With no records the rule is the
+    allocation-and-correction rule alone.
 
     Both directions matter and for opposite reasons. A mark that FALLS re-opens
     every id above the new value. A mark that RISES by hand retires that space's
@@ -1192,6 +1254,7 @@ def _mark_history_findings(marks, live, previous, corrections=None):
     (`previous` becomes the forged value), so a check that only ran at the
     raising commit would go quiet exactly one commit too early."""
     corrections = corrections or {}
+    reserved = _reserved_highs(reservations)
     out = []
     for space in WATERMARK_SPACES:
         now = marks.get(space)
@@ -1215,7 +1278,7 @@ def _mark_history_findings(marks, live, previous, corrections=None):
                 "rises, or a retired id becomes mintable again".format(space, was, now)
             )
             continue
-        justified = max(was, live.get(space, 0))
+        justified = max(was, live.get(space, 0), reserved.get(space, 0))
         if now > justified:
             records = corrections.get(space) or []
             # EXACTLY ONE record may justify a raise. Two is the chained
@@ -1226,12 +1289,23 @@ def _mark_history_findings(marks, live, previous, corrections=None):
                 continue
             out.append(
                 "id watermark for {} stands at {} but nothing justifies more than "
-                "{} (the highest committed mark, or the highest live id) — a mark "
-                "rises by allocating an id, never by hand (the one exception is a "
-                "RULED correction recorded via `--correct-mark`, and none is "
-                "recorded for this exact raise)".format(space, now, justified)
+                "{} (the highest committed mark, live id or reservation record) — "
+                "a mark rises by allocating or reserving an id, never by hand (the "
+                "one exception is a RULED correction recorded via "
+                "`--correct-mark`, and none is recorded for this exact "
+                "raise)".format(space, now, justified)
             )
     return out
+
+
+def _reserved_highs(reservations):
+    """`{space: the highest number any record reserves in it}`.
+
+    Implements: SR-174, LLR-362"""
+    highs = {}
+    for space, _low, high, _wi in reservations or ():
+        highs[space] = max(highs.get(space, 0), high)
+    return highs
 
 
 def _one_correction_findings(space, records, rulings):
@@ -1319,50 +1393,76 @@ def committed_corrections(root):
     cannot tell an original record from a rewritten one. Longest-wins across
     parents so resolving a watermark conflict `--ours` cannot drop the other
     side's ruled record. None when git can supply no baseline at all."""
+    texts = _baseline_texts(root)
+    best = {}
+    for text in texts:
+        for space, records in parse_corrections(text).items():
+            if len(records) > len(best.get(space, ())):
+                best[space] = records
+    return best if texts else None
+
+
+def _baseline_texts(root):
+    """The committed watermark text of every baseline a commit is judged
+    against: HEAD, MERGE_HEAD while a merge is in progress, and HEAD's other
+    parents; a baseline with no readable file is left out. The one parent walk
+    the three committed readers share.
+
+    Implements: SR-174, LLR-362"""
     revs = ["HEAD"]
     merge_head = _git_out(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD"])
     if merge_head:
         revs.append(merge_head.strip())
     parents = _git_out(root, ["rev-list", "--parents", "-n", "1", "HEAD"]) or ""
     revs.extend(parents.split()[1:])
-    best = {}
-    seen_any = False
-    for rev in revs:
-        text = _git_out(root, ["show", "{}:{}".format(rev, WATERMARK)])
-        if not text:
-            continue
-        seen_any = True
-        for space, records in parse_corrections(text).items():
-            if len(records) > len(best.get(space, ())):
-                best[space] = records
-    return best if seen_any else None
+    texts = (_git_out(root, ["show", "{}:{}".format(rev, WATERMARK)]) for rev in revs)
+    return [text for text in texts if text]
 
 
-def watermark_findings(root, previous=None, previous_corrections=None):
+def committed_reservations(root):
+    """The reservation records as committed: the UNION over every baseline
+    `_baseline_texts` walks, never longest-wins, so a merge resolution that
+    keeps one side's records cannot drop the other's. None when git can supply
+    no baseline at all.
+
+    Implements: SR-174, LLR-362"""
+    texts = _baseline_texts(root)
+    if not texts:
+        return None
+    return id_carrier.fold(texts)[1]
+
+
+def watermark_findings(
+    root, previous=None, previous_corrections=None, previous_reservations=None
+):
     """The id-watermark rules, integrity-class.
 
-    `previous` is the committed mark (see `committed_watermark`) and
+    `previous` is the committed mark (see `committed_watermark`),
     `previous_corrections` the committed correction records (see
-    `committed_corrections`). When git cannot supply one, the history rules DO
-    NOT RUN and the caller says so — an unrun rule that prints nothing is
-    indistinguishable from one that passed."""
+    `committed_corrections`) and `previous_reservations` the committed
+    reservation records (see `committed_reservations`). When git cannot supply
+    one, the history rules DO NOT RUN and the caller says so — an unrun rule
+    that prints nothing is indistinguishable from one that passed."""
     try:
         marks = read_watermark(root)
     except ValueError as exc:
         return [str(exc)]
     live = live_max_ids(root)
-    corrections = read_corrections(root)
+    text = (Path(root) / WATERMARK).read_text(encoding="utf-8-sig", errors="replace")
+    corrections = parse_corrections(text)
+    reservations = id_carrier.parse_reservations(text)
     out = _mark_covers_live_findings(marks, live)
     if corrections or previous_corrections:
         out += _correction_record_findings(
             corrections, ruled_open_item_texts(root), previous_corrections
         )
+    out += id_carrier.record_history_findings(reservations, previous_reservations)
     if previous is not None:
-        out += _mark_history_findings(marks, live, previous, corrections)
+        out += _mark_history_findings(marks, live, previous, corrections, reservations)
     return out
 
 
-def render_watermark(marks, basis="", corrections=None):
+def render_watermark(marks, basis="", corrections=None, reservations=()):
     """The file's text. One `<SPACE> = <int>` per line, deliberately: a merge
     conflicts per SPACE rather than per file, and a bump can be a line rewrite.
 
@@ -1371,7 +1471,13 @@ def render_watermark(marks, basis="", corrections=None):
     is rendered back verbatim as `# correction: …` lines so a plain
     `--bump-ids` regeneration (which calls this with whatever corrections the
     file already carried) never drops a ruled record; only `correct_watermark`
-    ever ADDS one."""
+    ever ADDS one. `reservations` — `(space, low, high, wi)` records — are
+    rendered back verbatim and in the order given, in a block of their own
+    that appears only when one exists, so a file with none renders
+    byte-identical to one written before records existed; only a reservation
+    writes one and only the fold copies one.
+
+    Implements: SR-174, LLR-362"""
     head = [
         "# ID WATERMARK — generated by scripts/trace.py --bump-ids (do not hand-edit).",
         "#",
@@ -1401,6 +1507,10 @@ def render_watermark(marks, basis="", corrections=None):
                     "# correction: {} {} -> {} ({})".format(space, was, now, ruling)
                 )
         head.append("#")
+    if reservations:
+        head.append("# RESERVATIONS — written on the id carrier by --reserve-ids:")
+        head += [id_carrier.record_line(r) for r in reservations]
+        head.append("#")
     if basis:
         head.append("# basis: {}".format(basis))
         head.append("#")
@@ -1408,17 +1518,18 @@ def render_watermark(marks, basis="", corrections=None):
     return "\n".join(head + body) + "\n"
 
 
-def _watermark_at(root, rev):
-    """The mark as recorded at `rev`, or None when git cannot produce it."""
-    text = _git_out(root, ["show", "{}:{}".format(rev, WATERMARK)])
-    if not text:
-        return None
+def _committed_marks(text):
+    """The marks one committed watermark text records, or None when a line
+    is one the reader would refuse.
+
+    Implements: SR-174, LLR-362
+    """
     marks = {}
     for line in text.splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        m = _WATERMARK_LINE.match(stripped)
+        m = id_carrier.MARK_LINE.match(stripped)
         if not m:
             # A line the reader would REFUSE must not be dropped here. Skipping
             # it silently disables monotonicity for that space alone, which is
@@ -1445,16 +1556,10 @@ def committed_watermark(root):
     only when git can supply NO baseline at all — off-git, a shallow clone, or
     before the file's first commit — and the caller then reports the rule as
     SKIPPED rather than passing it quietly."""
-    revs = ["HEAD"]
-    merge_head = _git_out(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD"])
-    if merge_head:
-        revs.append(merge_head.strip())
-    parents = _git_out(root, ["rev-list", "--parents", "-n", "1", "HEAD"]) or ""
-    revs.extend(parents.split()[1:])
     best = {}
     seen_any = False
-    for rev in revs:
-        marks = _watermark_at(root, rev)
+    for text in _baseline_texts(root):
+        marks = _committed_marks(text)
         if marks is None:
             continue
         seen_any = True
@@ -1480,7 +1585,11 @@ def bump_watermark(root):
     # A regeneration must not DROP a ruled correction just because this run's
     # allocation-driven raises had nothing to do with it — the record's only
     # writer is `correct_watermark`; this one only carries it forward unchanged.
-    corrections = read_corrections(root) if path.is_file() else {}
+    text = (
+        path.read_text(encoding="utf-8-sig", errors="replace") if path.is_file() else ""
+    )
+    corrections = parse_corrections(text)
+    reservations = id_carrier.parse_reservations(text)
     raised = {}
     for space in WATERMARK_SPACES:
         was = marks.get(space, 0)
@@ -1488,13 +1597,22 @@ def bump_watermark(root):
         if now != was:
             raised[space] = (was, now)
         marks[space] = now
-    basis = " ".join(
-        "{}={}".format(s, live.get(s, 0)) for s in WATERMARK_SPACES if live.get(s)
-    )
     (Path(root) / WATERMARK).write_text(
-        render_watermark(marks, basis, corrections), encoding="utf-8", newline="\n"
+        render_watermark(marks, _basis(live), corrections, reservations),
+        encoding="utf-8",
+        newline="\n",
     )
     return marks, raised
+
+
+def _basis(live):
+    """The `# basis:` line's value: each space's highest live id.
+
+    Implements: SR-174, LLR-362
+    """
+    return " ".join(
+        "{}={}".format(s, live.get(s, 0)) for s in WATERMARK_SPACES if live.get(s)
+    )
 
 
 def correct_watermark(root, space, new_value, ruling_id):
@@ -1557,10 +1675,85 @@ def correct_watermark(root, space, new_value, ruling_id):
     basis = basis_match.group(1).strip() if basis_match else ""
     marks[space] = new_value
     corrections[space] = [(was, new_value, str(ruling_id))]
+    reservations = id_carrier.parse_reservations(text)
     path.write_text(
-        render_watermark(marks, basis, corrections), encoding="utf-8", newline="\n"
+        render_watermark(marks, basis, corrections, reservations),
+        encoding="utf-8",
+        newline="\n",
     )
     return marks, corrections
+
+
+def reserve_ids(root, wi, counts):
+    """`--reserve-ids WI SPACE=N[,...]`: reserve on the id carrier
+    (`check_work_item`, then `id_carrier.reserve`, every refusal raised as
+    `id_carrier.Refused` before any write), then fold the moved carrier into
+    the working watermark, left for the caller to commit. Returns the
+    reserved ranges.
+
+    Implements: SR-174, LLR-362"""
+    ranges = id_carrier.reserve(
+        root,
+        check_work_item(wi),
+        counts,
+        WATERMARK_SPACES,
+        lambda marks, records, corr: render_watermark(marks, "", corr, records),
+        lambda: _trunk_name(root),
+    )
+    fold_watermark(root)
+    return ranges
+
+
+def check_work_item(text):
+    """The one work-item id the reserve verb's argument names, read by the
+    kit's one lane-input parser (`agent_common.parse_wi_id`) once the verb's
+    own normalization (outer whitespace) is applied; anything else is
+    `id_carrier.Refused`, one line naming the value.
+
+    Implements: SR-174, LLR-362
+    """
+    import agent_common as ac  # IF-224; deferred: only a reservation asks
+
+    try:
+        return ac.parse_wi_id((text or "").strip(), "work item")
+    except ValueError as exc:
+        raise id_carrier.Refused(str(exc)) from None
+
+
+def _trunk_name(root):
+    """The declared trunk's name, through the kit's one trunk reader, or
+    `id_carrier.Refused` naming the declaration.
+
+    Implements: SR-174, LLR-362
+    """
+    import agent_common as ac  # IF-224; deferred: only a reservation asks
+
+    try:
+        return ac.trunk_name(root)
+    except ac.TrunkUndeclared as exc:
+        raise id_carrier.Refused("the trunk claim cannot be read: {}".format(exc))
+
+
+def fold_watermark(root):
+    """`--fold-ids`: write the fold of the receiving watermark (index stages 2
+    and 3 while it is conflicted, else the working file) and the carrier tip's
+    records with the marks they justify (`id_carrier.carried`; no carrier: the
+    working sides alone) into the working `docs/id-watermark`, with the basis
+    recomputed from the working tree's live ids. Refused when there is nothing
+    to fold. Returns the folded marks.
+
+    Implements: SR-174, LLR-363"""
+    sides = id_carrier.receiving_sides(root)
+    tip = id_carrier.carrier_tip(root)
+    sides.append(id_carrier.carried(id_carrier.carrier_text(root, tip)))
+    if not any(sides):
+        raise id_carrier.Refused(
+            "nothing to fold: no {} and no id carrier".format(WATERMARK)
+        )
+    marks, records, corrections = id_carrier.fold(sides)
+    text = render_watermark(marks, _basis(live_max_ids(root)), corrections, records)
+    (Path(root) / WATERMARK).write_text(text, encoding="utf-8", newline="\n")
+    return marks
 
 
 def triangle_findings(tcs, llrs):
@@ -6371,6 +6564,37 @@ def _cmd_correct_mark(root, space, new_value_text, ruling_id):
     return 0
 
 
+def _cmd_reserve_ids(root, wi, counts):
+    """`--reserve-ids`'s CLI body: one line per reserved range, or one refusal
+    line and exit 1 with nothing written.
+
+    Implements: SR-174, LLR-362
+    """
+    try:
+        ranges = reserve_ids(root, wi, counts)
+    except id_carrier.Refused as exc:
+        print("trace: --reserve-ids refused: {}".format(exc), file=sys.stderr)
+        return 1
+    for record in ranges:
+        print("trace: reserved {}".format(id_carrier.record_line(record)[2:]))
+    print("trace: folded into {}; commit it with the rows".format(WATERMARK))
+    return 0
+
+
+def _cmd_fold_ids(root):
+    """`--fold-ids`'s CLI body.
+
+    Implements: SR-174, LLR-362
+    """
+    try:
+        fold_watermark(root)
+    except id_carrier.Refused as exc:
+        print("trace: --fold-ids refused: {}".format(exc), file=sys.stderr)
+        return 1
+    print("trace: id carrier folded into {}".format(WATERMARK))
+    return 0
+
+
 def mint_approval_brief(root, slug, date=None):
     """`--mint-approval-brief SLUG` (WI-503): copy `docs/ratify/CURRENT.md` to a
     dated, IMMUTABLE `docs/ratify/<date>-<slug>.md` — the one act the
@@ -6439,6 +6663,10 @@ def _writer_mode(args, docs):
     the WI-473 entry below."""
     if args.bump_ids:
         return _cmd_bump_ids(args.root)
+    if args.reserve_ids:
+        return _cmd_reserve_ids(args.root, *args.reserve_ids)
+    if args.fold_ids:
+        return _cmd_fold_ids(args.root)
     if args.correct_mark:
         return _cmd_correct_mark(args.root, *args.correct_mark)
     if args.mint_approval_brief:
@@ -6462,6 +6690,22 @@ def main():
         action="store_true",
         help="raise every id-watermark mark to the live maximum and exit — the "
         "regeneration workflow for docs/id-watermark (a mark only ever rises)",
+    )
+    ap.add_argument(
+        "--reserve-ids",
+        nargs=2,
+        metavar=("WI", "COUNTS"),
+        default=None,
+        help="reserve spine and off-spine registry ids for the claimed work "
+        "item WI on the shared id carrier (COUNTS: SPACE=N[,SPACE=N...], N 1 "
+        "to 50; WI, OI and DP are minted on trunk), then fold the carrier into "
+        "docs/id-watermark for the caller to commit, and exit",
+    )
+    ap.add_argument(
+        "--fold-ids",
+        action="store_true",
+        help="fold the id carrier into docs/id-watermark (both sides of a "
+        "conflicted file included) and exit",
     )
     ap.add_argument(
         "--correct-mark",
@@ -6673,7 +6917,10 @@ def main():
     wm_root = docs.parent if args.docs else Path(args.root)
     committed = committed_watermark(wm_root)
     findings.integrity += watermark_findings(
-        wm_root, committed, committed_corrections(wm_root)
+        wm_root,
+        committed,
+        committed_corrections(wm_root),
+        committed_reservations(wm_root),
     )
     # ARM 1 of OI-41, for the same reason and on the same floor: the allow file
     # and the open-items registry are FILES, so the rule cannot live in the pure

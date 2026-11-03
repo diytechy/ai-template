@@ -10,6 +10,7 @@ import collections
 import hashlib
 import importlib.util
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -441,6 +442,9 @@ SLOW_MODULES = frozenset(
         "test_parent_first_git",  # a tmp git repo per case driven through check.py and the merge slot; its in-process pin is test_parent_first
         # The held-rung state rule on real repositories.
         "test_held_status_git",  # a tmp git repo and claimed lane per case driven through the merge slot, check.py and the loop writers; its in-process pin is test_held_status
+        # The id carrier and the reserved-only landing on real repositories.
+        "test_id_carrier_git",  # a tmp git repo with linked worktrees per case driven through trace.py's reserve and fold verbs; its in-process pin is test_id_carrier
+        "test_id_landing",  # a tmp git repo and claimed lane per case driven through the merge slot, a hand squash and check.py; its in-process pins are test_id_carrier's landing and fold-lag cases
     }
 )
 
@@ -1253,6 +1257,99 @@ def fixture_commit(where, message, *paths):
         "-m",
         message,
     )
+
+
+ID_CARRIER_REF = "refs/heads/id-carrier"
+
+
+_RESERVATION_RECORD = re.compile(
+    r"^# reservation: ([A-Z]+) (\d+)-(\d+) \((WI-\d+)\)$", re.MULTILINE
+)
+
+
+def reserved_watermark(marks, reservations=(), corrections=None, basis=""):
+    """An id-watermark text: every space marked (`marks` over zeros), the
+    `corrections` (`{space: [(old, new, ruling)]}`) as the writer renders them,
+    and one canonical `# reservation: <SPACE> <low>-<high> (<WI>)` line per
+    `(space, low, high, wi)` of `reservations`, in the order given, ahead of
+    the marks. Written here, not by the code under test, so a fixture's file
+    does not depend on the writer it is judging."""
+    trace = load_script("trace")
+    full = {s: 0 for s in trace.WATERMARK_SPACES}
+    full.update(marks)
+    lines = trace.render_watermark(full, basis, corrections).splitlines()
+    first = next(i for i, ln in enumerate(lines) if re.match(r"^[A-Z]+ = \d+$", ln))
+    records = ["# reservation: {} {}-{} ({})".format(*r) for r in reservations]
+    return "\n".join(lines[:first] + records + lines[first:]) + "\n"
+
+
+def reservation_records(text):
+    """`[(space, low, high, wi), ...]`, in file order, of the canonical
+    reservation lines in a watermark text: the test's own reader, independent
+    of the grammar under test."""
+    return [
+        (m.group(1), int(m.group(2)), int(m.group(3)), m.group(4))
+        for m in _RESERVATION_RECORD.finditer(text.replace("\r\n", "\n"))
+    ]
+
+
+def watermark_marks(text):
+    """`{space: int}` of the `<SPACE> = <int>` lines of a watermark text."""
+    return {
+        m.group(1): int(m.group(2))
+        for m in re.finditer(r"^([A-Z]+) = (\d+)\s*$", text, re.MULTILINE)
+    }
+
+
+def plant_id_carrier(root, text):
+    """Move the id carrier ref of the repository at `root` to a new commit
+    whose tree is the one file `docs/id-watermark` holding `text`, parented on
+    the carrier's current tip when one exists, built by git plumbing alone (no
+    worktree, no checkout): a fixture's stand-in for reservations it does not
+    drive through the reserve verb. Returns the new tip."""
+    root = Path(root)
+
+    def plumb(args, stdin):
+        proc = subprocess.run(
+            [shutil.which("git"), "-C", str(root), *args],
+            input=stdin.encode("utf-8"),
+            capture_output=True,
+        )
+        assert proc.returncode == 0, (args, proc.stderr)
+        return proc.stdout.decode("ascii").strip()
+
+    blob = plumb(["hash-object", "-w", "--stdin"], text)
+    docs = plumb(["mktree"], "100644 blob {}\tid-watermark\n".format(blob))
+    tree = plumb(["mktree"], "040000 tree {}\tdocs\n".format(docs))
+    parent = subprocess.run(
+        [shutil.which("git"), "-C", str(root), "rev-parse", "-q", "--verify"]
+        + [ID_CARRIER_REF],
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    tip = fixture_git(
+        root,
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.com",
+        "commit-tree",
+        tree,
+        *(["-p", parent] if parent else []),
+        "-m",
+        "fixture: plant the id carrier",
+    )
+    fixture_git(root, "update-ref", ID_CARRIER_REF, tip)
+    return tip
+
+
+def write_lf(root, rel, text):
+    """Write `text` to `root/rel` as UTF-8 with LF line ends, creating its
+    parent directories: a fixture file whose bytes do not depend on the host's
+    newline convention."""
+    path = Path(root) / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def claimed_lane(tmp, *, files=None, trunk=True, branch="wi-1", wi="WI-1"):

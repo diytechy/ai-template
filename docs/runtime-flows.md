@@ -154,7 +154,7 @@ sequenceDiagram
     end
 ```
 
-### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (LLR-058, LLR-059, LLR-123, LLR-138, LLR-140)
+### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (LLR-058, LLR-059, LLR-123, LLR-138, LLR-140, LLR-363)
 
 One tick of `dispatch.run`. The three properties hardest to read off the rows:
 the **spine barrier** is a property of admission (nothing slips past an
@@ -192,13 +192,17 @@ sequenceDiagram
             Note over Disp: claim stays in active/&lt;branch&gt;/; the next tick<br/>resumes it, bounded by the stall guard
         end
         Disp->>Lane: spawn the refresh — mechanical, no agent
-        Lane->>Lane: merge trunk in, then trunk_step, then the check.py bar
+        Lane->>Lane: merge trunk in, a conflict on docs/id-watermark alone settled by the fold (LLR-363)
+        Lane->>Lane: while an id carrier exists, fold its tip into the lane's watermark (LLR-363)
+        Lane->>Lane: then trunk_step, then the check.py bar
         Lane->>Lane: commit a Bar-Green trailer naming the landing bar (or no-bar), the tree it barred and its work parent
         alt refresh red
             Note over Disp,Hand: a branch asserting DONE stops the run; one that merges<br/>nothing is quarantined once (code reverted, diff kept<br/>as a bar-inert patch) and refreshed again
         else refresh green
             Disp->>Slot: merge this lane's branch only — the slot is sub-second
-            Slot->>Slot: is trunk already an ancestor, and does the tip attest its OWN tree for the landing bar?
+            Slot->>Slot: refusal ladder: R1, then the reserved-ids rung (each carrier-space id the lane adds over its base in the lane's own carrier record, LLR-363), then the rest
+            Slot->>Slot: is trunk already an ancestor, does the tip attest its OWN tree for the landing bar, and does its watermark hold the id carrier's fold?
+            Note over Slot: not ready, a lagging watermark included:<br/>refreshed inside the held slot, and that refresh folds
             Slot->>Slot: merge --no-ff, ff trunk, unload, audit
             Slot->>Intake: post-merge arm, still inside the held slot (LLR-154)
             Intake-->>Slot: rows the merge forces, as ONE bookkeeping commit on trunk (LLR-153)
@@ -368,4 +372,52 @@ sequenceDiagram
         end
     end
     Note over Ingest,Coord: an open last message is named and recorded by a later run once final
+```
+
+### Flow 9 — A reservation, its fold and its two landings (SR-174, LLR-362, LLR-363)
+
+The id carrier (`refs/heads/id-carrier`) has two mode classes: *absent*, until
+the first reservation seeds it from trunk's committed watermark, and *present
+at tip T*, which each later reservation moves to T' by compare-and-swap; a
+refusal or a lost swap is no transition. A lane's watermark, or a landing's,
+either holds the fold of T or lags it (a carrier mark above its own, or a
+carrier record it lacks). Every landing lands a watermark holding the fold of
+the carrier tip it read: the merge slot by refreshing a lagging lane, the hand
+squash by folding in the staged squash, which its hook enforces.
+
+```mermaid
+sequenceDiagram
+    participant Coord as coordinator, from the lane or on trunk
+    participant Verb as reserve and fold verbs (LLR-362)
+    participant Carrier as id carrier ref (absent, or present at T)
+    participant Lane as lane watermark (holds the fold of T, or lags it)
+    participant Slot as merge slot landing (LLR-363)
+    participant Hook as hand squash, reserved-ids step (LLR-363)
+    Coord->>Verb: reserve for WI-NNN, counts per carrier space
+    alt work item malformed or unclaimed on trunk, or a bad count (WI, OI and DP stay minted on trunk)
+        Verb-->>Coord: refused, exit 1 with one line, nothing written
+    else admitted
+        Verb->>Carrier: read the tip (absent: seed from trunk's committed watermark)
+        Verb->>Verb: each range starts one above the larger of the carrier's mark and trunk's committed mark
+        Verb->>Carrier: one commit, then update-ref new over old (compare-and-swap)
+        alt the ref moved since the read (a lost race)
+            Carrier-->>Verb: swap refused
+            Verb-->>Coord: refused, re-run, nothing written
+        else swapped: absent to T, or T to T'
+            Verb->>Lane: fold the tip's records in: each space's maximum (a carrier mark only as its records justify it), the union of records, the basis from live ids
+            Verb-->>Coord: the ranges, the folded watermark left to commit with the rows
+        end
+    end
+    Note over Coord,Lane: the spine author drafts only from the ranges<br/>a rebase conflict on the watermark is settled by the same fold
+    alt the merge slot
+        Slot->>Slot: reserved-ids rung: each carrier-space id the lane adds over its base inside the lane's own record
+        Slot->>Carrier: does the tip's watermark lag the carrier tip?
+        Slot->>Lane: lagging: refreshed inside the slot, which folds the carrier in
+    else a hand squash on trunk
+        Coord->>Verb: fold into the staged squash, then git add
+        Hook->>Carrier: does the staged watermark lag the carrier tip?
+        Hook-->>Coord: lagging (a reservation after the fold): refused, naming the fold
+        Hook->>Hook: each added carrier-space id inside the lane's own record
+    end
+    Note over Slot,Hook: a landing adding no carrier-space id passes. One adding ids is refused on either route<br/>for an id with no record, in another work item's record or a retired number, for ids with<br/>no carrier or no readable claim, or for a record line neither the carrier nor the parent holds
 ```

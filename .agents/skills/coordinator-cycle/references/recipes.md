@@ -125,6 +125,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     does not request a whole subtree or arms map. At the intent turn fill
     `CHANGES=none` and leave `TESTS=` empty: no build has run, so there is
     no change list and no lane test yet.
+  - Fill `RESERVED` at every turn with the ranges reserved for the lane
+    (§4, "Reserve before drafting"), as the reserve verb prints them, e.g.
+    `RESERVED="SR 175-176; TC 403-404"`; `RESERVED=none` states a turn that
+    adds no row. An author that stops short of ids is resumed after the
+    next reservation.
   - Fill `HATS` at every turn. A set that amends a need or adds an SR
     under one is a decomposition round: give the `;`-joined SN ids of
     every need its sitting reaches, which are each need it amends, each
@@ -778,6 +783,12 @@ commit of its own, move it to trunk's tip
   in the lane (move the case to a fast module, a traced-only change) and
   re-anchor there, never on trunk (wi-958 D-019).
 - **Squash** on trunk with `git merge --squash <lane>`, one per lane.
+  Then fold the id carrier into the staged squash before regenerating:
+  `"$PY" "$SCRIPTS/trace.py" --fold-ids`, then `git add docs/id-watermark`.
+  The squash's `reserved-ids` step refuses a staged watermark that lags the
+  carrier (a reservation taken after the fold): fold again. It also refuses
+  an id the lane adds outside its own carrier records: reset the squash and
+  reserve and renumber in the lane.
   Run `git status` in the primary checkout first: a Claude reviewer's
   probe once left a stray file at its root through a redirect from its
   default working directory (wi-798, 2026-10-20). In a
@@ -790,7 +801,7 @@ commit of its own, move it to trunk's tip
   the lane's SOUND full-lane review in the command's description: the
   auto-mode classifier has refused an uncited squash as an unreviewed merge.
   The squash's hook judges text-then-act, held-status (each lane commit's
-  held approval claims, by the lane rule) and ruling-sync, but
+  held approval claims, by the lane rule), reserved-ids and ruling-sync, but
   never the merge slot's approval-act floor, so on this path the act
   turn's verdict-derived command is the only guard until the one-landing
   row moves coordinator landings onto the slot (coordinator-2026-10-17
@@ -900,7 +911,7 @@ lane commit being replayed.
 |---|---|
 | Generated views | `git checkout --ours`, continue, regenerate once at the end |
 | Registries | resolve per table using this replay's base/ours/theirs (`git show :1:<path>`, `:2:<path>`, `:3:<path>`); keep independent changes from both sides and judge same-row conflicts; never take the whole file `--ours` |
-| `docs/id-watermark` | `--ours`, then `"$PY" "$SCRIPTS/trace.py" --bump-ids`; preserve any higher mark for retired lane ids |
+| `docs/id-watermark` | `"$PY" "$SCRIPTS/trace.py" --fold-ids`, then `git add docs/id-watermark` |
 | RESYNC_PACK | both sides' entries, trunk's first; when the replayed commit rewrites the lane's own earlier entry, keep its rewrite and drop the entry it replaces; then re-anchor the lane's own entry at its new base, since the bar's `check_resync` step refuses an entry anchored elsewhere (WI-916, 2026-10-18b) |
 | Byte-budget skill rows | each side's own row |
 | `stack.ini`, size-ratchet notes | both sides' notes |
@@ -916,12 +927,14 @@ lane commit being replayed.
   act: registry-integrity refuses the snapshot copies.
 - Deleting a landed lane's branch raises hold-by-rename errors in other
   lanes; a rebase clears them.
-- Ids collide across unlanded lanes. Brief each lane's Terra with every open
-  lane's ids as a floor, or renumber in the later lane before committing.
-  A floor spends the skipped ids on the lane: once it lands, `trace.py
-  --strict` lists them as spent with no retirement record until their own
-  lanes land. Record the floor in the lane's decisions; never retire them
-  (WI-913 D-004).
+- **Reserve before drafting.** Before dispatching the spine author for a
+  set that adds registry rows, reserve the draft's counts from the lane:
+  `"$PY" "$SCRIPTS/trace.py" --reserve-ids WI-NNN SR=n,LLR=n,TC=n` (any
+  carrier space; WI, OI and DP stay minted on trunk). Commit the folded
+  `docs/id-watermark` in the lane and name the printed ranges in the brief's
+  `RESERVED`. The ranges are disjoint from every other lane's, whatever its
+  base; the landing refuses an added id outside the lane's own records, so
+  a lane holding unreserved rows reserves and renumbers before it lands.
 - A lane whose spine set amends rows another open lane is amending, or
   whose code edits the same functions, waits for that lane's landing and
   rebases onto it before its spine turn and first round. Its text then
