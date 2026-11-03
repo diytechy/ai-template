@@ -25,13 +25,15 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-02b-leg30-coordinator.md](handoff-2026-11-02b-leg30-coordinator.md).
+  [handoff-2026-11-03a-leg31-coordinator.md](handoff-2026-11-03a-leg31-coordinator.md).
   It carries `Overnight: stop`: every queue row waits on the owner. Lanes
-  now reserve their registry ids on the shared id carrier before drafting
+  reserve their registry ids on the shared id carrier before drafting
   (`trace.py --reserve-ids`), and both landing routes admit only reserved
-  ids. The settled-amendment filter rebases onto OI-119's ruling (its
-  plan's pass record binds again), and before its landing it reserves and
-  renumbers its own LLR and TC ids.
+  ids. The trunk mint no longer files an amendment row for a row the
+  merged range already settled (judged from the act ledger's record of
+  what each act copied); a minted amendment row is checked against the
+  lane's own act (the recipes' sweep step). P8's three rows are filed,
+  each owing its scope critique and held on OI-125's three calls.
   The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
@@ -57,11 +59,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   disposition-adoption row's successor has landed on the owner's route: a
   disposition can adopt an already-filed successor, recorded at the close
   and judged by one commit check that admits the close's exact relinks
-  (the hook's `adoption-record` step). The trunk mint's settled-amendment filter
-  (the first new build, owner, 2026-10-20) passed its checkpoint; the act
-  ledger now records what each act copied (OI-115 ruled (a)), and the lane
-  has rebased onto that landing; it builds its settlement from the ledger
-  after its rebase onto OI-119's ruling, and the lane
+  (the hook's `adoption-record` step). The lane
   lifecycle design's in-lane mint and station authority rows are
   cancelled, its config-retirement row folded into item 10's program. The
   account-homes row has landed: the adjudicator runs on its declared
@@ -254,9 +252,17 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   pytest.ini still state a 60 s wall bound, the shipped job module's
   docstring names this repository's own step by path, and its deliverable
   3 says max-tests is unchanged where the lane re-stamped it (wording);
-  from the settled-amendment filter's lane (wi-963 D-007, D-010): a ledger
-  malformed at a range's before revision leaves no sweep that recovers
-  the range, and two ledger readers repeat one seq rule (with OI-115);
+  from the settled-amendment filter's lane (wi-963 D-007, D-010, D-026): a
+  ledger malformed at a range's before revision leaves no sweep that
+  recovers the range; two ledger readers repeat one seq rule (with
+  OI-115), and the filter's range-added entry reader repeats the merge
+  rung's two (`_added_acts`, `reattested_between`), each with its own
+  failure policy, its name saying re-attested where it returns every
+  added entry; its two row comparisons (`_row_settled`, `_routed_unmoved`)
+  are one comparison written twice; IF-091's data cell elides
+  `settled_amendments`' parameters; a reader of the filter's archived
+  Done-when alone sees items 1 and 5 unbounded, their scope under a later
+  copy being in its Trust section (sittings 014 and 019);
   from WI-968's drafter: the bookkeeping and lane harness reads have no
   floor of their own and fall back to the ambient interpreter when a
   pinned repository has no .venv; the wave-11 log's follow-ups (the claim

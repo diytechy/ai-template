@@ -357,7 +357,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   WI-921's found the very step it arms failing open (2026-10-15). Once the
   owner rules a draft's calls, resume the same drafter with the decision ids
   to fold them into a final copy: it keeps its reading (2026-10-15i).
-  Drafts have come back CRLF: normalize to LF as you place them. A claimed
+  Drafts have come back CRLF: normalize to LF as you place them. An open
+  row needs a `specref` that resolves (R-E: a spec of record or a doc
+  anchor), and only a `## Deliverable` section, empty until the close, may
+  precede its `## Context` (R-A): move a draft's opening summary below
+  Context (WI-996, 2026-11-03). A claimed
   row's revised copy is critiqued from its own detached worktree
   (`git worktree add --detach`) with the copy placed uncommitted, never in
   the shared critique checkout (WI-922, 2026-10-16).
@@ -451,6 +455,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   refuses every later commit outside the record homes, the reconcile's
   registry edits, the act and a rebase's RESYNC re-anchor included
   (wi-927 D-010).
+  The composer has no `done-when` kind for an unchanged Done-when, so
+  append such a Trust bullet to the next combined sitting's brief as
+  context and ask the verdict to say whether it states the scope ordered
+  (wi-963 sittings 014 and 019).
   A row claimed `single` whose lane already holds build commits before its
   pass record fails the landing walk at each of them: rebase those commits
   onto the plan, critique and pass commits, or re-cut the lane and run the
@@ -482,6 +490,11 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
   re-attesting act's commit wrote) closed its finding only on an
   unsquashed range, while every hand landing is a squash; ask the
   builder to drive the fix over a squashed range too (wi-963 D-011).
+  When a FIX's builder stops because the remedy breaks another Done-when
+  item, send the conflict to a dispute sitting, the builder's evidence
+  stated as a fact; never design a narrower rule yourself. wi-963's
+  coordinator-added arm settled a routed cell restored between two acts,
+  which both gate reviewers found (wi-963 D-014, D-018).
   Before writing a disposition broader than a finding, read the finding's
   own remedy: a triage that forbade WI ids in shipped comments contradicted
   both reviewers' remedies and a pinned convention (wi-911 D-014). A
