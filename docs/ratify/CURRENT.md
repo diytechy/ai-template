@@ -611,23 +611,4 @@ record runs through the live registry first.
 - DA-010 — A vision model judging the rendered state view against its written rubric reaches the verdict a human reviewer reading the same render would.
 
 
-## Stakeholder needs and stakeholders owing an act
-
-_A drifted row's approved text moved from its `docs/archive/last_approved` copy: once its meaning is ruled, re-anchor it with `intake.py snapshot --reattests <ROW-ID>`; until then an act copying the needs registry is refused. A row with no `Status` cell, or a `Drafted` one, owes its first approval._
-
-### SN-028 — DRIFTED
-
-- **Acceptance**
-  - before: A single declared process-dial file holds every process dial under **bare `[section]` headers**, one `key = value` per line. The SHAPE is a checked contract rather than a convention, because two grammars read the file (a TOML parser and the hooks' plain-sh parse) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files. A legacy one-word file still present alongside its key is a REFUSAL naming both, and a declared migration action — run by bootstrap and by the documented re-sync — converts and deletes the legacy files so an adopter never meets that refusal unaided. A wrong-typed or out-of-range dial is refused, never defaulted.
-  - after: A single declared process-dial file holds every process dial. Every reader obtains its policy answer from the file's TOML parse. A legacy one-word file still present alongside its key is a REFUSAL naming both, and a declared migration action — run by bootstrap and by the documented re-sync — converts and deletes each legacy file it can confirm in the policy declaration and, when it cannot write one, leaves it intact with a named refusal and hand-edit path so an adopter never meets that refusal unaided. A wrong-typed or out-of-range dial is refused, never defaulted.
-- **Why**
-  - before: The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled: it was held in place by the git hooks' pure-sh parse (a Python-less box must still fail closed on a declared privacy gate) and by a 3.8 floor with no `tomllib`. Both reasons are spent. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial is exactly the state where two readers disagree about the same policy, and a precedence rule makes that disagreement invisible instead of loud.
-  - after: The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial can give enforcers different policy values, and a precedence rule makes that disagreement invisible instead of loud.
-
-### SN-036 — DRIFTED
-
-- **Acceptance**
-  - before: Each decomposition has a machine-readable record of the declared perspectives, the applicability decision for each perspective, and the requirements or explicit no-finding result produced from it. A check reports any applicable declared perspective missing from that record. The record proves coverage and provenance; an independent review judges whether the resulting requirements are adequate.
-  - after: Each decomposition round is reviewed against every applicable declared perspective, and the review record names each perspective and its outcome. The record demonstrates coverage and provenance; an independent review judges whether the resulting requirements are adequate.
-
 _No spine row differs from its `docs/archive/last_approved` copy, and no row awaits a first approval._

@@ -260,9 +260,9 @@ status = "Approved"
 stakeholder_refs = ["STK-01"]
 tags = ["shell"]
 need ="""The repo owner can find and change every policy dial in **one home** — a **single hand-edited, machine-read file** — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."""
-why = """The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled: it was held in place by the git hooks' pure-sh parse (a Python-less box must still fail closed on a declared privacy gate) and by a 3.8 floor with no `tomllib`. Both reasons are spent. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial is exactly the state where two readers disagree about the same policy, and a precedence rule makes that disagreement invisible instead of loud."""
+why = """The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial can give enforcers different policy values, and a precedence rule makes that disagreement invisible instead of loud."""
 priority = "S"
-acceptance = """A single declared process-dial file holds every process dial under **bare `[section]` headers**, one `key = value` per line. The SHAPE is a checked contract rather than a convention, because two grammars read the file (a TOML parser and the hooks' plain-sh parse) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files. A legacy one-word file still present alongside its key is a REFUSAL naming both, and a declared migration action — run by bootstrap and by the documented re-sync — converts and deletes the legacy files so an adopter never meets that refusal unaided. A wrong-typed or out-of-range dial is refused, never defaulted."""
+acceptance = """A single declared process-dial file holds every process dial. Every reader obtains its policy answer from the file's TOML parse. A legacy one-word file still present alongside its key is a REFUSAL naming both, and a declared migration action — run by bootstrap and by the documented re-sync — converts and deletes each legacy file it can confirm in the policy declaration and, when it cannot write one, leaves it intact with a named refusal and hand-edit path so an adopter never meets that refusal unaided. A wrong-typed or out-of-range dial is refused, never defaulted."""
 
 [need.SN-029]
 status = "Approved"
@@ -305,7 +305,7 @@ stakeholder_refs = ["STK-01"]
 priority = "S"
 need = """**Scope: template (adopters + this repo).** When a stakeholder's need is turned into detailed requirements, it is examined from every relevant expert and downstream-user perspective so important failure cases are not lost."""
 why = """A decomposition produced from one perspective can omit security, operations, accessibility or first-use failures while still appearing complete. The omission remains invisible unless the review records which relevant perspectives were considered and what each contributed."""
-acceptance = """Each decomposition has a machine-readable record of the declared perspectives, the applicability decision for each perspective, and the requirements or explicit no-finding result produced from it. A check reports any applicable declared perspective missing from that record. The record proves coverage and provenance; an independent review judges whether the resulting requirements are adequate."""
+acceptance = """Each decomposition round is reviewed against every applicable declared perspective, and the review record names each perspective and its outcome. The record demonstrates coverage and provenance; an independent review judges whether the resulting requirements are adequate."""
 
 [need.SN-037]
 status = "Approved"
