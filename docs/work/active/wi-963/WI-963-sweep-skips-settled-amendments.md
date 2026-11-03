@@ -117,10 +117,6 @@ following piece 1 (the coordinator's answer to S1 at critique round 1).
   threat model" bounds a spec's promise. A hand-edited act ledger or snapshot
   copy, hand-chosen name aliases (a row id or registry path in another case
   or spelling) and sub-second timing windows are outside it.
-- OI-115 ruled 2026-11-01 (a): the lane rebases onto WI-967's landing, and
-  settlement reads the registries each re-attesting act copied from the act
-  ledger, so a row amended after its act still mints on a squashed landing
-  as on an unsquashed one (dispute sitting 007-ADJUDICATE-1ae50f4's FIX).
 - Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Trust
@@ -199,6 +195,13 @@ files on disk, read at a git revision).
   reviewed commit, the recovery is `intake.py sweep --before --after` over the
   same range. At `intake.py sweep` the refusal ends the sweep with no row
   minted, as its other refusals do.
+- **Ruling for the squashed-landing case** (OI-119 ruled 2026-11-02 (a):
+  stated here, not in the Done-when, so the plan's pass record stays bound;
+  Done-when item 2 states the outcome): OI-115 ruled 2026-11-01 (a): the
+  lane rebases onto WI-967's landing, and settlement reads the registries
+  each re-attesting act copied from the act ledger, so a row amended after
+  its act still mints on a squashed landing as on an unsquashed one (dispute
+  sitting 007-ADJUDICATE-1ae50f4's FIX).
 
 ## Critique dispositions
 

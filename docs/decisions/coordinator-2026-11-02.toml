@@ -17,3 +17,12 @@ alternative = "Claim WI-991 as an unlisted row."
 reversal_cost = "Low."
 why_not_escalated = "The headless-leg rule (SKILL section 7): only the rows in the table are claimed."
 review = ""
+
+[decision.D-003]
+decided = "Owner ruling in session (2026-11-02, attended, after headless leg 30 stopped): OI-119 ruled (a), the Trust section, as recommended; the owner had no preference between the routes and asked only that the hold be cleared. The ruling commit moves the OI-115 item, text unchanged, from WI-963's trunk claim copy's Done-when into its Trust section (the Ruling for the squashed-landing case). The claim copy's Done-when then has the digest WI-963's pass record binds, so this entry binds that digest and the done-when hold reads the trunk amendment as blessed. WI-989, OI-119's placeholder, closes citing this entry. WI-963 resumes as queue row 1: rebase onto the ruling commit, reserve its LLR and TC ids, renumber if the ranges differ, build the FIX."
+alternative = "(b) a plan round past the cap with a re-cut lane, or (c) a plan-gate change so a pass record survives an owner-added Done-when item."
+reversal_cost = "Low: one Done-when item moved between sections of an unlanded row's claim copy."
+why_not_escalated = "Escalated: the owner ruled it in session, 2026-11-02."
+review = ""
+owner = "confirmed"
+done_when = "sha256:371fa4c3f41d21b6"
