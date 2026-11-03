@@ -197,6 +197,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     - no U+FFFD, `Â§` or `â€`;
     - traced cells keep every entry that still names a real test or
       symbol.
+    - a `code_symbol` cell is one `/`-joined list, so compare it symbol
+      by symbol: a turn that split one row's map across two rows dropped
+      six still-tagged symbols a whole-entry compare missed (wi-978 D-014).
 
     A string replace can land on another row holding the same text: one
     module edit meant for LLR-061 landed on LLR-037.
@@ -828,6 +831,10 @@ commit of its own, move it to trunk's tip
   runs only in the full suite.
   In a working checkout it also reports the gitignored `docs/test/report.md`
   (written by `trace.py`) as an orphan; that one is local, not a finding.
+- **Open claims are what trunk tracks:** list them with
+  `git ls-tree --name-only <trunk> docs/work/active/`; a landed lane can
+  leave its claim folder on disk, empty and untracked (coordinator-2026-11-02
+  D-001).
 - **Close the row:**
   - `## Deliverable` comes before `## Context`, because the parser clips
     everything after Context (the hook refuses a missing one, R-A);

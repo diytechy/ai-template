@@ -1,0 +1,19 @@
+# docs/decisions/coordinator-2026-11-02.toml — delegated calls the coordinator
+# made on trunk in headless leg 30 of loop session 20261102T035202Z-8dc8b4.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-978 landed alone as 889498874, a hand squash after `overnight_legs.py check-lane wi-978` passed (window 65), from the act turn at the lane's final base (trunk had not moved since P14, so the plan's P16 entry condition held and no rebase was owed). The staged squash ran `trace.py --fold-ids` (no change: the lane had folded its own reservation), the declared views were regenerated (`trunk_step.py --regen`), and the commit bar passed on the staged squash (smoke 3376 passed, CPU 544.3 s over the 540 s budget, reported only; both strict lints clean). P16 step 2, the other open lanes: trunk tracks two claim folders, wi-963 and wi-978 (the empty wi-969, wi-971 and wi-979 folders on disk are untracked leftovers, not claims); `trace.landing_id_refusal` read-only against wi-963's tip refuses LLR-342 and TC-373 as unreserved, so WI-963 reserves its ids and renumbers before its own landing. The sweep minted WI-990 (the re-mint, closed at 59d37fab9 citing sitting 019 and act seqs 166 and 167, the three registries equal to their anchors) and WI-991 (TC-055's declared trigger fired: an observation re-judge, real work, left open and outside the queue table). The lane's tips went to archive/lanes with its pre-rebase tip 658a59434; its worktree was removed and its branch kept."
+alternative = "Hold the landing for an attended session."
+reversal_cost = "Medium: a landed mechanism change is fixed forward, never reverted (revision 37)."
+why_not_escalated = "The handoff's queue row 1 and the plan's P16; recorded for confirm or overrule."
+review = ""
+
+[decision.D-002]
+decided = "The leg closes with `Overnight: stop` in its handoff: no queue row can move without the owner. WI-963 waits on OI-119's ruling (and then reserves and renumbers its LLR-342 and TC-373 before landing); WI-910's Done-when needs a push or the owner's ruling on the WSL evidence route; P8 waits on its filing calls; WI-991 and the successor rows WI-982 and WI-983 are not in the queue table until the owner orders them in."
+alternative = "Claim WI-991 as an unlisted row."
+reversal_cost = "Low."
+why_not_escalated = "The headless-leg rule (SKILL section 7): only the rows in the table are claimed."
+review = ""
