@@ -17,3 +17,10 @@ alternative = "File the rows with the three calls as handoff prose, or hold the 
 reversal_cost = "Low: queued rows and one pending item; an overrule edits them before any claim."
 why_not_escalated = "WI-992's Done-when routes the filing; the calls only the owner can make are OI-125."
 review = ""
+
+[decision.D-003]
+decided = "Owner direction in session (2026-11-03, attended): WI-993, WI-991, WI-982 and WI-983 go into the queue table. The leg-31 handoff is amended in place: they become rows 3 to 6, in that order (the coordinator's order: the owner-held-step rule first, then the re-judge, then the two successor rows by id), they leave the never-claimed list, and its Overnight: stop line is dropped, since those rows can now move without the owner. WI-910 and P8's rows stay held on OI-124 and OI-125. WI-993, WI-982 and WI-983 each still owe their scope critique before a claim."
+alternative = "File one pending open item for the four rows and keep the stop line."
+reversal_cost = "Low: queue order only; no row is claimed yet."
+why_not_escalated = "Escalated: the owner directed it in session, 2026-11-03; only the order among the four is the coordinator's, for confirm or overrule."
+review = ""

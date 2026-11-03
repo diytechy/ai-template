@@ -1,6 +1,8 @@
 # Handoff 2026-11-03a (headless leg 31): WI-963 landed; P8's rows filed; the queue waits on the owner
 
-Overnight: stop
+Amended in place 2026-11-03 (attended): the owner ordered WI-993, WI-991,
+WI-982 and WI-983 into the queue table (coordinator-2026-11-03 D-003), so
+the leg's stop line is dropped and those rows run next.
 
 It replaces [handoff-2026-11-02b-leg30-coordinator.md](handoff-2026-11-02b-leg30-coordinator.md)
 as the resume map. The procedure is in the `coordinator-cycle` skill and its
@@ -8,8 +10,7 @@ recipes; this handoff holds state only. Headless leg 31 ran under loop session
 `20261103T054112Z-32c0bd`; its coordinator session was
 `044a4df9-f452-40c7-89a6-ae69b29804d1`. It ran queue row 1 (WI-963) from its
 rebase to its landing, and queue row 3 (WI-992, P8's filing). Row 2 (WI-910)
-and the three filed P8 rows wait on the owner, so this handoff carries
-`Overnight: stop`.
+and the three filed P8 rows wait on the owner.
 
 ## State (trunk `refactor_again`, nothing pushed)
 
@@ -95,6 +96,10 @@ act) runs at the next landing.
 |---|---|---|
 | 1 | WI-910 | Held on OI-124: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push, or the owner rules the WSL POSIX route (coordinator-2026-10-25 D-001) |
 | 2 | WI-994, WI-995, WI-996 (P8) | Held on OI-125. Once it is ruled, fold the rulings into the specs, then run each row's scope critique (fresh Sol), dispositions and confirming round, in `needs` order, before any claim |
+| 3 | WI-993 | Ordered in by the owner (coordinator-2026-11-03 D-003). Scope critique (fresh Sol), dispositions and confirming round, then claim. Its spec of record is `docs/specs/WI-993.md` |
+| 4 | WI-991 | Ordered in by the owner. TC-055's re-judge by its Method (the recipes' section 8); a fail is recorded as a fail |
+| 5 | WI-982 | Ordered in by the owner. Scope critique, dispositions and confirming round, then claim |
+| 6 | WI-983 | Ordered in by the owner. Scope critique, dispositions and confirming round, then claim |
 
 **Never claimed by a leg:**
 
@@ -103,11 +108,6 @@ act) runs at the next landing.
 - WI-908 (OI-122: the owner present);
 - WI-964 (OI-123: the owner's Mac);
 - WI-827 (OI-121: attended only; it never lands from a lane);
-- WI-993 (the owner-held-step rule's build), until the owner orders it into
-  this table; it owes its scope critique first;
-- WI-991 (TC-055's re-judge), until the owner orders it into this table;
-- the successor rows WI-982 and WI-983, until the owner orders them into
-  this table;
 - every row under `docs/work/deferred/` (D-011, D-016).
 
 The queue runs in headless legs (the `coordinator-cycle` skill's section 7).
