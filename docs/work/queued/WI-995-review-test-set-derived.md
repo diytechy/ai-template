@@ -152,8 +152,9 @@ existing reader).
 - More gaps: an SR in S that no TC in T verifies, directly or through an
   LLR in L (a row with SRs but no LLRs is fine while a TC verifies the SR
   directly); an LLR in L that no TC verifies.
-- **The set** is the sorted union of tagged test files. **Empty** means
-  that union is empty. **Partial** means at least one gap. OI-125 Q2 ruled
+- **The set** is the sorted union of tagged test files. **Partial** means
+  at least one gap, whether or not that union is empty, and names every
+  gap. **Empty** means that union is empty with no gap. OI-125 Q2 ruled
   (a) (2026-11-03): the gaps reach every LLR under the row's SRs, so a row
   building one LLR waits for its siblings' failing tests.
 - **Code-touching** means the lane's changed paths (merge base to the
@@ -284,8 +285,9 @@ item 13: "The scoped set is the gate's addition, not a replacement").
       an LLR in scope that no TC verifies; a TC in scope whose evidence
       names a test path but that no test file's `Implements:` line names;
       a TC in scope that no file tags and whose evidence names no path, or
-      a missing one. It is refused as **empty** when no tagged file is
-      reached. A TC whose evidence is only an existing inspection record,
+      a missing one. It is refused as **empty** only when no tagged file
+      is reached and no gap exists; a row with both is partial, naming
+      every gap. A TC whose evidence is only an existing inspection record,
       CI file or document (TC-035, TC-036, TC-209) is listed, not run,
       and is not a gap. Scope is every LLR under the row's SRs, sibling
       LLRs the row does not build included (OI-125 Q2 (a)).
@@ -329,6 +331,15 @@ item 13: "The scoped set is the gate's addition, not a replacement").
       (case or separator spellings of a tests root) and sub-second timing
       windows are outside it.
 - [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+
+## Critique dispositions
+
+Round 1 (fresh Sol, 2026-11-04): CHANGES-REQUESTED, one MINOR.
+
+- **S3, adopted.** The derivation now reads "**Partial** means at least one
+  gap, whether or not that union is empty, and names every gap. **Empty**
+  means that union is empty with no gap", and the Done-when refers to that
+  rule, so a lane with both reads one refusal.
 
 ## Trust
 
