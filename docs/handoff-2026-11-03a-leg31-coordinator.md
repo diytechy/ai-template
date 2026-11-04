@@ -2,7 +2,9 @@
 
 Amended in place 2026-11-03 (attended): the owner ordered WI-993, WI-991,
 WI-982 and WI-983 into the queue table (coordinator-2026-11-03 D-003), so
-the leg's stop line is dropped and those rows run next.
+the leg's stop line is dropped and those rows run next. The owner then
+ruled OI-125 (a) on each call (coordinator-2026-11-03 D-004), so P8's rows
+move too.
 
 It replaces [handoff-2026-11-02b-leg30-coordinator.md](handoff-2026-11-02b-leg30-coordinator.md)
 as the resume map. The procedure is in the `coordinator-cycle` skill and its
@@ -41,7 +43,8 @@ and the three filed P8 rows wait on the owner.
   the `Implements:` line), WI-995 (the review test set derived from the
   row's SRs; needs WI-994) and WI-996 (the strict-mark check and the
   required `[bars] red_mark` key; needs WI-995). Each owes its scope
-  critique and cites OI-125 (three calls the drafters left to the owner).
+  critique and cites OI-125 (three calls the drafters left to the owner,
+  ruled (a) on each on 2026-11-03).
   WI-992 is closed citing the filing (coordinator-2026-11-03 D-002).
 - **Watermark** (trunk): WI 996, SR 246, LLR 364, IF 308, TC 403, OI 125.
   Acts run to seq 170. The carrier holds WI-978's and WI-963's
@@ -95,7 +98,7 @@ act) runs at the next landing.
 | # | Row | Next |
 |---|---|---|
 | 1 | WI-910 | Held on OI-124: its Done-when checks CI's macOS and Linux state on the landing tip, which needs a push, or the owner rules the WSL POSIX route (coordinator-2026-10-25 D-001) |
-| 2 | WI-994, WI-995, WI-996 (P8) | Held on OI-125. Once it is ruled, fold the rulings into the specs, then run each row's scope critique (fresh Sol), dispositions and confirming round, in `needs` order, before any claim |
+| 2 | WI-994, WI-995, WI-996 (P8) | OI-125 ruled (a) on each call, folded into the rows. Run each row's scope critique (fresh Sol), dispositions and confirming round, in `needs` order, before any claim. No tag-migration row exists yet: WI-994's Done-when now files it, and WI-995's gate waits on it here |
 | 3 | WI-993 | Ordered in by the owner (coordinator-2026-11-03 D-003). Scope critique (fresh Sol), dispositions and confirming round, then claim. Its spec of record is `docs/specs/WI-993.md` |
 | 4 | WI-991 | Ordered in by the owner. TC-055's re-judge by its Method (the recipes' section 8); a fail is recorded as a fail |
 | 5 | WI-982 | Ordered in by the owner. Scope critique, dispositions and confirming round, then claim |
@@ -116,10 +119,6 @@ owner's.
 
 ## For the owner
 
-- **OI-125** (P8's three calls; recommendation (a) on each): the interim
-  equality check of test-file tags against TC evidence cells; the derived
-  set's partial refusal reaching sibling LLRs' TCs; keeping
-  `check_test_first`. It renders on `open-items.html`.
 - **OI-124** (WI-910: push `refactor_again`, or rule the WSL POSIX route),
   and OI-121 to OI-123 (WI-827, WI-908, WI-964), unchanged.
 - **WI-963's reading, to confirm or overrule:**

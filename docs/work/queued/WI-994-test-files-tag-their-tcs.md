@@ -183,8 +183,8 @@ shape.
   declared non-executable evidence.
 - It does not compare tags with the `evidence` cells, and it does not
   generate the evidence column. The generated column is item 5 (phase 3).
-  Whether the two homes are checked equal in the meantime is the migration
-  row's call (Migration).
+  OI-125 Q1 ruled (a): the migration row checks the two homes equal in the
+  meantime (Migration).
 - It does not change `trace.py --tests-for` (SR-221), which keeps reading
   the evidence cells, or any review-bar input. The derived review set is
   row 2's, and the strict marks are row 3's.
@@ -196,7 +196,7 @@ shape.
 ## Migration
 
 **This row tags none of this repository's test files.** A measured
-follow-up row tags them. It is filed beside this one, needs this one, and
+follow-up row tags them. This row's Done-when files it; it needs this one, and
 must land before row 2's gate is enabled here, because row 2 refuses a
 partial set. Why not in this row:
 
@@ -209,9 +209,9 @@ partial set. Why not in this row:
   file, and TC-165 and TC-166 carry a parenthetical instead of a path. Each
   needs a judgement: either the cell or the test is wrong.
 - **Two homes in the meantime.** Until item 5 generates the evidence
-  column, the tags and the cells state one fact twice. The migration row
-  states how they are held equal before row 2 reads the tags (see the
-  notes, open question 1).
+  column, the tags and the cells state one fact twice. OI-125 Q1 ruled (a)
+  (2026-11-03): the migration row checks them equal as a strict finding
+  before row 2 reads the tags, and the check retires when item 5 lands.
 
 The seed rule for that row and for adopters is the same. A file-only
 evidence part becomes a module-docstring tag in that file. A `file::node`
@@ -311,6 +311,10 @@ part becomes a tag in that test's docstring.
       non-default pytest `python_files` or class pattern; hand-chosen
       aliases of a TC id (case, zero-padding); and a tests root reached
       through a symlink.
+- [ ] The tag-migration row is filed on trunk before this row closes. It
+      needs this row, seeds this repository's tags (Migration), and checks
+      test-file tags and TC evidence cells equal as a strict finding, the
+      check retired when item 5 generates the column (OI-125 Q1 (a)).
 - [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Scope critique, pre-answered

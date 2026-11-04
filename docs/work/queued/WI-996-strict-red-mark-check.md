@@ -191,7 +191,7 @@ either case.
   "retires into the commit check". It judges test-case approval order,
   which this check does not replace. Retiring it would remove a shipped step
   and its `[checks] test_first_since` key, a third adopter migration that
-  OI-120 did not accept. That is for the owner (see the notes).
+  OI-120 did not accept. OI-125 Q3 ruled (a) (2026-11-03): it stays.
 - **Moving `[bars]` into `process.toml`:** item 10's fold.
 - **The pre-commit hook:** unchanged (see S-answers).
 - **The review render (`review_brief.py`), the merge slot and
@@ -390,6 +390,9 @@ Nothing else is added.
       becomes the new lane base. Marks added and removed before the rebase
       are then not judged, and the pre-rebase review rounds stand as their
       record.
+- [ ] `check_test_first.py` and its `[checks] test_first_since` key are
+      unchanged; the mark check does not replace its judgement of test-case
+      approval order (OI-125 Q3 (a)).
 - [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Trust

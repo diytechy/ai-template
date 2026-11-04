@@ -24,3 +24,10 @@ alternative = "File one pending open item for the four rows and keep the stop li
 reversal_cost = "Low: queue order only; no row is claimed yet."
 why_not_escalated = "Escalated: the owner directed it in session, 2026-11-03; only the order among the four is the coordinator's, for confirm or overrule."
 review = ""
+
+[decision.D-004]
+decided = "Owner ruling in session (2026-11-03, attended): OI-125 ruled (a) on each call, as recommended. Q1: test-file tags and TC evidence cells are checked equal as a strict finding, the check retired when item 5 generates the column. Q2: a partial set means any TC under the row's SRs has no tagged test, sibling LLRs' TCs included. Q3: check_test_first stays untouched. The ruling commit writes each call into the Done-when of WI-994, WI-995 and WI-996 and moves the handoff's queue row 2. Each row still owes its scope critique. WI-994 said the tag-migration row was filed beside it, and none was: Q1's check lives in that row, so WI-994's Done-when now files it."
+alternative = "Q1 (b) freeze the cells; Q2 (b) only the TCs of the LLRs the row builds; Q3 (b) retire check_test_first into the mark check."
+reversal_cost = "Low: no row is claimed; an overrule edits the rows before their critiques."
+why_not_escalated = "Escalated: the owner ruled it in session, 2026-11-03."
+review = ""

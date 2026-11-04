@@ -152,7 +152,9 @@ existing reader).
   LLR in L (a row with SRs but no LLRs is fine while a TC verifies the SR
   directly); an LLR in L that no TC verifies.
 - **The set** is the sorted union of tagged test files. **Empty** means
-  that union is empty. **Partial** means at least one gap.
+  that union is empty. **Partial** means at least one gap. OI-125 Q2 ruled
+  (a) (2026-11-03): the gaps reach every LLR under the row's SRs, so a row
+  building one LLR waits for its siblings' failing tests.
 - **Code-touching** means the lane's changed paths (merge base to the
   staged tree) include one under `[paths] src` or `[paths] tests`. Every
   other path is not code. In this repository, `project-trajectory/hooks/`,
@@ -284,7 +286,8 @@ item 13: "The scoped set is the gate's addition, not a replacement").
       a missing one. It is refused as **empty** when no tagged file is
       reached. A TC whose evidence is only an existing inspection record,
       CI file or document (TC-035, TC-036, TC-209) is listed, not run,
-      and is not a gap.
+      and is not a gap. Scope is every LLR under the row's SRs, sibling
+      LLRs the row does not build included (OI-125 Q2 (a)).
 - [ ] For a row that is not code-touching, gaps are reported and never
       refused.
 - [ ] `integrate.py attest` takes no `--tests`. It derives the set before
