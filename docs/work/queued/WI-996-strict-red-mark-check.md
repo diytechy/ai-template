@@ -19,8 +19,9 @@ P8's three rows (WI-992's filing, the review-churn plan's item 13): row 1 is WI-
 revision 35; mechanism from revisions 20 and 23) proves a test's red-before
 with a strict expected-failure mark. The tests-first commit lands each new
 test under the mark. Its review-bar attestation records the bar it passed,
-so that green bar is the red-before: a strictly marked test passes the bar
-only by failing at an assertion. The code commit removes the marks. "A
+so that green bar is the red-before: a strictly marked test the bar runs
+passes it only by failing at an assertion, and "a skip is a skip, never
+evidence". The code commit removes the marks. "A
 commit-versus-parent check confirms that each removed mark was present in
 the parent, that the parent carries a green attestation of the review bar,
 and that the test now passes under the same bar. That is a static check,
@@ -158,7 +159,7 @@ Removing a mark therefore needs three things:
 
 - the mark was present at the last tree the lane attested;
 - that tree's green bar ran the marked file under the strict mark, which is
-  the red-before;
+  the red-before of each marked test it did not skip;
 - the new bar runs the file unmarked over the same test set, which is the
   green-after.
 
@@ -177,6 +178,18 @@ trunk in.
 bar's to refuse: an unexpected pass under a strict mark fails it. An error
 that is not an assertion failure also fails it. The check does not judge
 either case.
+
+**A marked test the bar skips.** A skip exits 0, so the bar stays green and
+the strict mark judges nothing. The record is then not that test's
+red-before: a skip is a skip, never evidence (item 13). The check cannot see
+this state. `attest` reads the bar's exit code, and reading each test's
+outcome is the evidence record revision 20 replaced ("no separate evidence
+record, scratch tree or junit parsing"). So the procedure closes it: a test
+the bar skips takes no mark. It has no red-before on that machine, and the
+lane names it with its disposition in the decisions record, the route the
+evidence step already gives a test that fits no class. Its green-after is
+the bar wherever the bar runs it. A skipped test left marked is not refused;
+the reviewers judge it with the test's adequacy.
 
 ## Not in this row
 
@@ -228,7 +241,10 @@ now licenses removing a mark. See `## Trust`.
 - the declaration's states (five refusals, one accepted state);
 - the per-file count transitions (the table above);
 - the reference's states (a verified record in the range, or none);
-- the landing tree's count (0, or above 0).
+- the landing tree's count (0, or above 0);
+- a marked test's outcome under the bar (an assertion failure, an unexpected
+  pass, another error, or a skip: "What the bar already does" and "A marked
+  test the bar skips").
 
 Each is enumerated, and git failures refuse. The coverage bound is in the
 Done-when.
@@ -341,7 +357,10 @@ Nothing else is added.
         test set that names each marked file;
       - the code commit that removes the marks names the same set;
       - a refresh refused for a mark ends in the code commit or a
-        quarantine.
+        quarantine;
+      - a test the bar skips takes no mark, because a skip is never
+        evidence: it is named, with its disposition, in the lane's
+        decisions record.
 
       `tests/test_prompts.py`'s clause pins follow the text.
       `project-trajectory/PROCESS.md` §4 "DevStg-Impl" gains one sentence:
@@ -384,7 +403,10 @@ Nothing else is added.
       - a mark spelled in a form other than the declared text (a test whose
         mark is not the declared text is unmarked to this check, and the
         bar runs it as an ordinary test);
-      - a trunk commit made outside a landing.
+      - a trunk commit made outside a landing;
+      - the outcome of one marked test: `attest` reads the bar's exit code,
+        so a marked test the bar skips is not seen, and the procedure keeps
+        it unmarked ("A marked test the bar skips").
 
       A rebase replaces the lane's earlier attestations, so the reference
       becomes the new lane base. Marks added and removed before the rebase
@@ -394,6 +416,37 @@ Nothing else is added.
       unchanged; the mark check does not replace its judgement of test-case
       approval order (OI-125 Q3 (a)).
 - [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+
+## Critique dispositions
+
+Round 1 (fresh Codex session, 2026-11-04): CHANGES-REQUESTED, one MAJOR
+(S3), confirmed: a skip exits 0, so a marked test the bar skips passes it
+with no assertion failure, and the row's sentence said otherwise. Its
+recommendation is split below.
+
+- **S3, the missing state in the rule, Trust and Done-when: adopted.** The
+  Context now reads "a strictly marked test the bar runs passes it only by
+  failing at an assertion, and "a skip is a skip, never evidence"". The rule
+  gains "**A marked test the bar skips.**", ruled "a test the bar skips takes
+  no mark". The Done-when's procedure text gains "a test the bar skips takes
+  no mark, because a skip is never evidence: it is named, with its
+  disposition, in the lane's decisions record", and its coverage bound names
+  "the outcome of one marked test". Trust reads "evidence for the marked
+  tests the bar ran and none for one it skipped". No consumer changes, so
+  later readers still trust the record and re-execute nothing.
+- **S3, a record that skipped the test refuses the removal, and a stated way
+  for the bar to establish an executed assertion failure: rejected.** Either
+  needs each test's outcome, and `attest` has only the exit code of two shell
+  steps. The only means is a parse of per-test results, which is what
+  revision 20 replaced ("no separate evidence record, scratch tree or
+  junit parsing"; "the bar itself is the execution"). The owner ruled the
+  check static, so this reaches past the row's intent. Reopening that is the
+  owner's, not this row's.
+- **S3, a regression test with a runnable and a skipped marked test in one
+  file: rejected.** With no outcome read there is no behaviour for it to
+  drive. It could only pin that the check passes the file, which proves
+  nothing. The new procedure clause is pinned by the Done-when's existing
+  "`tests/test_prompts.py`'s clause pins follow the text".
 
 ## Trust
 
@@ -435,7 +488,9 @@ is owed".
   not an error: nothing is marked.
 - **The reference's states:**
   - a verified `review` record in the range: its tree and its tests
-    digest are read;
+    digest are read. It records the bar's exit, so it is evidence for the
+    marked tests the bar ran and none for one it skipped ("A marked test
+    the bar skips");
   - none in the range: the base, with no record, so every removal refuses;
   - a range git cannot list: refused.
 

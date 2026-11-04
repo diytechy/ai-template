@@ -17,3 +17,31 @@ alternative = "Keep the check to this repository, or give it a dial; either leav
 reversal_cost = "Low: a queued row; an overrule edits its Done-when before any claim."
 why_not_escalated = "OI-125 Q1 ruled the check strict and WI-994's Done-when ordered the row; shipping it beside the reader follows from both, and it is recorded for confirm or overrule."
 review = ""
+
+[decision.D-003]
+decided = "WI-996's round-1 scope critique (one MAJOR, S3) is confirmed and split. Adopted: a marked test the bar skips is ruled in the rule, Trust and Done-when: it takes no mark and goes to the lane's decisions record. Rejected: refusing the mark's removal on a record that skipped it, having the bar establish an executed assertion failure, and the regression that would pin them, since each needs per-test outcomes and the owner's revision 20 made the check static (no separate evidence record, scratch tree or junit parsing). The residual, written into the row: a skipped test left marked is not refused, so only the procedure and the reviewers catch it. For the owner to confirm, or overrule by reopening revision 20."
+alternative = "Reopen revision 20 and parse per-test outcomes."
+reversal_cost = "Low: a queued row; an overrule edits its Done-when before any claim."
+why_not_escalated = "Revision 20 already rules the mechanism; the disposition stays inside it and the residual is stated. Its confirming round judges the rejection."
+review = ""
+
+[decision.D-004]
+decided = "WI-982's round-1 scope critique is adopted whole, with a new `authoring_tags` cell on minted rows. Its branchless case is resolved: a range sweep with no --merged leaves the cell empty and the row widens by its own tags, as a minted row does today. This keeps today's behaviour for a route that names no authoring item; it is no new fallback, though the drafter flagged it as close to the owner's no-fallback rule, so it is for the owner to confirm or overrule."
+alternative = "Refuse a range sweep with no --merged, which breaks a supported route, or infer the lane from history, which the row rules out."
+reversal_cost = "Low: a queued row."
+why_not_escalated = "The row's Done-when left the case to be resolved and stated; recorded for confirm or overrule."
+review = ""
+
+[decision.D-005]
+decided = "WI-983's round-1 scope critique is adopted whole, and its S1 finding forces a split: WI-983's lane holds no decomposition round and a round elsewhere gets the line only after it lands, so the row could not close whole. The TC-211 re-inspection is filed as WI-998, needing WI-983, and stays off the queue table until a sample exists. No row now scheduled is known to draft such a round, so the sample's scheduling goes to the owner."
+alternative = "Keep the row whole, which could never close."
+reversal_cost = "Low: queued rows."
+why_not_escalated = "A split a critique forces is filed before the claim (the coordinator-cycle skill's section 1); recorded for confirm or overrule."
+review = ""
+
+[decision.D-006]
+decided = "WI-993's round-1 scope critique (four MAJORs) is answered in the row: planmode single, a Trust section, the architectural delta and a landing order. The S2 recommendation is adopted in part: claim authority is rejected, since no reader consumes it and the row's call 7 forbids one. Two answers are the owner's and hold the row, so they are filed as OI-126, which WI-993's needs cite: one row or several (the rubric's S1), and whether the held-rung item appears at the landing or at the sitting. Its confirming round waits on that ruling. The row grew past three times its filing size (2175 to about 11100 bytes), so it is listed under the handoff's For the owner."
+alternative = "Take the drafter's recommendation on both and claim."
+reversal_cost = "Low: a queued row and a pending item."
+why_not_escalated = "Escalated as OI-126; the coordinator rules neither call."
+review = ""

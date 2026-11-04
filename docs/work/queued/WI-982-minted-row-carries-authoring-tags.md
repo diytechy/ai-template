@@ -7,6 +7,7 @@ specref = "docs/reviews/wi-976/004-ADJUDICATE-81e623b.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
+planmode = "single"
 +++
 
 ## Context
@@ -36,16 +37,83 @@ the in-lane shape for one SR and asserts one hat set".
 Its scope critique runs before its claim (the `coordinator-cycle` skill,
 section 1).
 
+**Deliverables and order (S1).** Two deliverables, kept together in one
+landing on purpose: the mint writing the provenance cell and the composer
+reading it, with the paired-shape test. A cell nothing reads changes no
+hat, and a reader with no writer reads nothing, so neither lands first.
+The ruling's LLR-360 item needs no work: that row already reads "widens
+each need by the authoring work item's declared tags", and this row leaves
+the clause standing.
+
+**Architectural delta (S5).** No new mode class and no new boundary. The
+row adds one cell, `authoring_tags`, to the work-item row
+(`wi_convert.COLUMNS`, the schema IF-092 names, in the IF-023 carrier). Its
+value domain: the authoring work items' Workstream and SafetyClass values,
+deduplicated and `;`-joined, or empty when no authoring item is known. The
+ruling's alternative, a link, is not taken: the mint already holds the
+rows, so it writes the fact once and a later composition reads that record
+instead of looking a row up (rubric B3). `intake`'s two drafters are the
+only writers. `hats.context_from_work_item` is the only reader: a non-empty
+cell supplies the row's tags in place of its Workstream and SafetyClass,
+never beside them, since beside them a minted row would keep `process` and
+its FIRST-RUN-ADOPTER hat and the sets would still differ. An empty cell
+reads those two cells, as every row does today, so the in-lane route
+changes nothing. The output that moves is the hat set, which now depends
+on the authoring tags on both routes. The routing SafetyClass stays
+`adjudication`.
+
+**Provenance cases (S3).** The cell's source is closed, by the route that
+mints:
+
+- The merge slot: the lane's closed row, the one its outcomes name.
+- `sweep --merged ... --branch`: the named rows, their tags unioned when
+  there are several.
+- A range sweep with no `--merged`, with or without `--with-terminal`: the
+  branchless case. It knows no authoring item (`--branch` alone only labels
+  the commit, and `--with-terminal` holds every close on file), so the
+  default applies: the cell stays empty and the row widens by its own tags,
+  as a minted row does today. A person who knows the lane gets its tags by
+  naming its rows with `--merged`.
+- A bare sweep: it reads HEAD..HEAD, so it mints neither row kind.
+
+An authoring row's tags are the ones it widens by itself, so a minted row
+that authors another passes its cell on. No route infers a lane from
+history. The promise reaches what these routes mint (PROCESS.md §6,
+"Review threat model"); a hand-edited cell is outside it.
+
 ## Done-when
 
-- [ ] Every minted first-approval and amendment row carries the merged
-      lane's Workstream and SafetyClass, or a link to the authoring work
-      item, in a cell other than the routing SafetyClass.
-- [ ] The branchless sweep's case is resolved and stated.
+- [ ] Every first-approval and amendment row minted by a route that names
+      an authoring work item carries that item's Workstream and
+      SafetyClass in `authoring_tags`, a cell other than the routing
+      SafetyClass.
+- [ ] The branchless sweep's case is resolved as "Provenance cases" states:
+      a range sweep with no `--merged` leaves the cell empty, its row
+      widens by its own tags, and a test pins it.
 - [ ] Both routes widen a sitting's parent needs by the authoring work
-      item's declared tags, and LLR-360 states that it is the authoring
-      work item's tags that widen.
+      item's declared tags wherever that item is named, and LLR-360 states
+      that it is the authoring work item's tags that widen.
 - [ ] A test composes the minted row shape and the in-lane shape for one
       SR and asserts one hat set.
 - [ ] The commit bar is green, and both strict lints are clean on the
       landing tip.
+
+## Critique dispositions
+
+Round 1 (fresh Sol, 2026-11-04): CHANGES-REQUESTED, one MAJOR and three
+MINORs.
+
+- **S1, adopted.** The Context now reads "Two deliverables, kept together
+  in one landing on purpose", and records that LLR-360 "already reads".
+- **S3, adopted.** The unresolved bullet is replaced. "Provenance cases"
+  reads "The cell's source is closed, by the route that mints", its
+  branchless default reads "the cell stays empty and the row widens by its
+  own tags", and its bound reads "The promise reaches what these routes
+  mint". The first and third Done-when bullets are narrowed to match.
+- **S4, adopted.** The frontmatter reads `planmode = "single"`: the row
+  touches the mint and the hat composer, and promises behaviour over the
+  mint's routes.
+- **S5, adopted.** The delta reads "No new mode class and no new boundary",
+  names the carrier's domain ("deduplicated and `;`-joined, or empty when
+  no authoring item is known"), its writers and its one reader, and states
+  that the hat set "now depends on the authoring tags on both routes".

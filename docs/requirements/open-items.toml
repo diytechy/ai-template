@@ -4292,3 +4292,19 @@ options = """Each call is ruled separately; (a) is the drafter's proposal.
 - Q3 THE TEST-FIRST CHECK (WI-996). (a) Keep check_test_first untouched: it judges test-case approval order (SR-217), which the mark check does not replace. (b) Retire it into the mark check, as plan item 13's text says, with a third forced adopter migration."""
 recommendation = "Q1 (a), Q2 (a), Q3 (a): the drafters' proposals; Q3 (a) is also the row's smallest scope (the scope rubric's S7)."
 ruled_date = "2026-11-03"
+
+[open_item.OI-126]
+title = "WI-993: one row or several, and whether a held-rung item appears at the landing or at the sitting"
+status = "pending"
+raised = "2026-11-04"
+one_line = "WI-993's scope critique needs two owner answers before its claim: one row or several for its three deliverables, and whether the minted open item for a held-rung MEANING ruling appears at the row's landing or at the sitting."
+decision = """Filed by headless leg 32 (loop session 20261104T181017Z-49d2cc) under the owner's 2026-10-25 ruling that a decision only the owner can make, and that holds a row, is a pending open item its row's needs cite (coordinator-2026-11-04 D-006).
+
+WHAT IS TRUE. WI-993's fresh scope critique found four MAJORs. Three are answered in the row (planmode, a Trust section, the architectural delta). The rubric's S1 leaves keeping deliverables together to the owner. The writer's shape had to be re-derived, because the draft holding the owner-confirmed writer details was lost (coordinator-2026-11-02 D-004).
+
+WHAT IS HELD. WI-993: its confirming round and its claim, not the other queue rows."""
+blast_radius = "WI-993 only. Q2 fixes which route writes the item: the merge slot's intake mint, or a sitting writing to trunk, which no sitting does today."
+options = """Each call is ruled separately; (a) is the drafter's proposal.
+- Q1 ONE ROW OR SEVERAL. (a) One lane, in ordered commits: the claimed citer, the policy text, the mint arm. (b) Split the mint arm into its own row, filed on trunk before the claim. FOR (a): the first two cannot usefully separate, and the third is small. AGAINST (a): the mint arm is independently landable and touches the merge slot's post-merge step.
+- Q2 WHEN THE ITEM APPEARS. (a) At the landing that brings the verdict and the row's text to trunk, written by the merge slot's intake mint in its one commit. (b) At the sitting, as a plain reading of call 1's 'writes' may have meant. FOR (a): one commit writes item, queued row and watermark, so no half-filed state exists, and the verdict gains no hold on a lane. AGAINST (a): the owner learns of the held step only at the landing."""
+recommendation = "Q1 (a) and Q2 (a), the drafter's proposals; Q2 (b) needs a new write route from a sitting to trunk."
