@@ -104,21 +104,15 @@ under SR-157 (the tag rule and its refusals) with its TCs. LLR-204 stays the
 code-side grammar's row under SR-163. The scoped set that gives the tags
 their purpose is row 2's, under SR-241.
 
-**Architectural delta (S5).** This row adds no state. It adds three values
-to the finding domain: a misplaced tag, a malformed tag and an unknown TC.
+**Architectural delta (S5).** This row adds no state. It adds four values
+to the finding domain: a misplaced tag, a malformed tag, an unknown TC and
+an unreadable file.
 It adds one new input to `check_trajectory`'s output, the files under the
 declared tests root. It crosses no new boundary: `check_trajectory`
 (trajectory_arch) already calls `gen_arch_map` over IF-131, "the
 seam-declaration grammar the spine checks read". The lane adds the reader to
 that row's `data` cell, or files a new IF row if in-lane adjudication rules
 it a separate seam.
-
-**Trust (S2).** In this row no deliverable gives a file authority over a
-hold, an act or a gate. A tag can only add a finding to the commit bar. It
-cannot release, skip or pass anything. Authority arrives in row 2, where the
-tags decide which tests the review bar runs. Row 2 therefore carries the
-`## Trust` section, and this reader is its producer. That is why this reader
-fails closed now: a test file it cannot read is a finding, never "no tags".
 
 ## The grammar (settled here)
 
@@ -195,10 +189,10 @@ shape.
 
 ## Migration
 
-**This row tags none of this repository's test files.** A measured
-follow-up row tags them. This row's Done-when files it; it needs this one, and
-must land before row 2's gate is enabled here, because row 2 refuses a
-partial set. Why not in this row:
+**This row tags none of this repository's test files.** WI-997, a
+measured follow-up row, tags them. It is filed before this row's claim; it
+needs this one, and must land before row 2's gate is enabled here, because
+row 2 refuses a partial set. Why not in this row:
 
 - **Size.** Seeding the tags from the evidence cells is about 1970
   test-function docstring tags (1309 of 5792 test functions have a
@@ -311,11 +305,48 @@ part becomes a tag in that test's docstring.
       non-default pytest `python_files` or class pattern; hand-chosen
       aliases of a TC id (case, zero-padding); and a tests root reached
       through a symlink.
-- [ ] The tag-migration row is filed on trunk before this row closes. It
-      needs this row, seeds this repository's tags (Migration), and checks
+- [ ] WI-997, the tag-migration row, is filed on trunk before this row is
+      claimed. It needs this row, seeds this repository's tags (Migration), and checks
       test-file tags and TC evidence cells equal as a strict finding, the
       check retired when item 5 generates the column (OI-125 Q1 (a)).
 - [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+
+## Trust
+
+A tag adds no authority to release, skip or pass anything: it can only add a
+finding. Under `--strict` that finding refuses the commit bar, and an adopter's
+gate from `DevStg-Impl`, so a test file takes part in a gate
+(`project-trajectory/PROCESS.md` §3, "When a guard is owed"). Authority to
+select tests arrives in row 2, whose `## Trust` section names this reader as
+its producer. That is why this reader fails closed now.
+
+- **Producers:** test files, written by a builder in a lane or by an
+  LLM-applied re-sync. No script writes them. A failed write is a file left
+  part edited: undecodable, unparseable, or a tag cut short.
+- **Consumers:** the new reader in `gen_arch_map.py`, read through
+  `trajectory_arch.py` by `check_trajectory.py`, which `run.cmd smoke` and
+  `check.py` run. Nothing else reads it in this row.
+- **Ruling, one for every consumer:** no tests root or no TC registry is
+  vacuous; an untagged file is no finding; a valid tag maps its node ids; a
+  misplaced, malformed or unknown tag is a finding naming file, line and shape;
+  a file that cannot be decoded or parsed is a finding, never "no tags". A
+  finding is a WARN, and an ERROR under `--strict`.
+
+## Critique dispositions
+
+Round 1 (fresh Sol, 2026-11-04): CHANGES-REQUESTED, three MINORs.
+
+- **S2, adopted.** The Context's denial of gate authority is replaced by the
+  `## Trust` section above, which reads "so a test file takes part in a gate"
+  and consolidates the existing behaviour; no check is added.
+- **S5, adopted.** The delta now reads "four values to the finding domain: a
+  misplaced tag, a malformed tag, an unknown TC and an unreadable file".
+- **S1, adopted.** The Done-when now reads "WI-997, the tag-migration row, is
+  filed on trunk before this row is claimed", and WI-997 is filed with this
+  disposition, needing this row. WI-995 needs WI-997, so it lands before row
+  2's gate.
+
+The S6 pre-answer's `needs` was stale beside the frontmatter and is corrected.
 
 ## Scope critique, pre-answered
 
@@ -323,8 +354,8 @@ part becomes a tag in that test's docstring.
   regressions. The text, the spine rows and the RESYNC entry are true only
   once it lands, so they ride with it. The migration of this repository's
   tests is split off as its own row (Migration).
-- **S2.** No authority in this row (Context, "Trust"). Row 2 carries the
-  Trust section.
+- **S2.** A tag can refuse a gate and can pass nothing (`## Trust`). Row 2
+  carries the authority to select tests.
 - **S3.** Closed coverage. Read positions are an enumerated set, every other
   declaration under the tests root is refused (deny by default), non-docstring
   string literals are excluded by construction (AST), and the four refusals
@@ -334,7 +365,8 @@ part becomes a tag in that test's docstring.
   input space.
 - **S5.** Context, "Architectural delta". The change is in scope, on an
   existing seam.
-- **S6.** `needs = ["OI-120"]`, the ruled call that fixes the token. No
+- **S6.** `needs = ["OI-120", "OI-125"]`, the ruled calls that fix the token
+  and the interim check. No
   queued row touches these files (grep of `docs/work/queued` and
   `docs/work/active`). It is stdlib only (`ast`, `tokenize`, `re`), with no
   ledger row.

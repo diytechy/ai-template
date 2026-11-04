@@ -4,7 +4,7 @@ title = "The review test set is derived from the row's SRs through the test-file
 workstream = "process"
 sr_refs = ["SR-241", "SR-156", "SR-154"]
 specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
-needs = ["WI-994", "OI-125"]
+needs = ["WI-994", "WI-997", "OI-125"]
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 5
@@ -26,9 +26,10 @@ those TCs (row 1's reader). It refuses an empty or partial set and refuses a
 code-touching row that names no SR (OI-120 Q3), and it never falls back to
 the whole bar.
 
-**Needs.** `WI-994` (placeholder for P8 row 1: the test-file TC tag on the
-`Implements:` line and its one reader, with this repository's test files
-tagged). This row is that reader's first consumer: without tags, every TC
+**Needs.** `WI-994` (P8 row 1: the test-file TC tag on the `Implements:`
+line and its one reader) and `WI-997` (this repository's test files tagged,
+and tags held equal to the evidence cells). This row is that reader's first
+consumer: without tags, every TC
 in scope reads as untagged and every code-touching row is refused as
 partial. Satisfied already: one work item per lane (item 15, landed; RESYNC
 "One work item per lane"), so a lane has exactly one claimed row whose

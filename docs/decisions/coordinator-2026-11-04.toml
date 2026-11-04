@@ -1,0 +1,19 @@
+# docs/decisions/coordinator-2026-11-04.toml — delegated calls the coordinator
+# made on trunk in headless leg 32 of loop session 20261104T181017Z-49d2cc.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "WI-994's round-1 scope critique (fresh Sol, CHANGES-REQUESTED, three MINORs) is adopted whole. S2: the Context's denial of gate authority was false beside the Done-when's strict refusal, so the row gains a `## Trust` section consolidating what the spec already states, with no new check; its Ruling goes to the owner to confirm or overrule. S5: the delta names four finding values. S1: the tag-migration row is filed before the claim, as the coordinator-cycle skill's section 1 requires of a split."
+alternative = "Reject S2 on the reading that a finding which can only refuse is no authority over a gate, as the drafter's Context held."
+reversal_cost = "Low: spec text on a queued row; nothing is claimed."
+why_not_escalated = "A critique recommendation's disposition is the coordinator's (the skill's section 1); the Trust Ruling is routed to the owner there."
+review = ""
+
+[decision.D-002]
+decided = "WI-997 is filed by hand as the tag-migration row WI-994 splits out, and WI-995's needs gain it, since WI-995's Needs paragraph still promised the tags from WI-994. The row is claimed after WI-994 lands, under queue row 2, which names it: the handoff's table said no such row existed and that WI-995's gate waits on it. Its equality check ships in check_trajectory with no dial, so an adopter with evidence cells and no tags reads one finding per part from DevStg-Impl; the spec states this as the forced migration OI-120 call 2 accepted, not a second one. For the owner to confirm or overrule."
+alternative = "Keep the check to this repository, or give it a dial; either leaves OI-125 Q1's strict finding unshipped or adds a setting no ruling asked for."
+reversal_cost = "Low: a queued row; an overrule edits its Done-when before any claim."
+why_not_escalated = "OI-125 Q1 ruled the check strict and WI-994's Done-when ordered the row; shipping it beside the reader follows from both, and it is recorded for confirm or overrule."
+review = ""
