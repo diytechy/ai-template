@@ -8,6 +8,7 @@ needs = ["WI-983"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
+planmode = "single"
 +++
 
 ## Context
@@ -20,7 +21,10 @@ record until this row closes.
 
 This row stays off the coordinator's queue table until a sample exists. Its
 sample is the first round composed after WI-983's landing whose brief is
-committed beside its verdict. No row now scheduled is known to draft such a
+committed beside its verdict and whose verdict carries the stopping-boundary
+line. A round whose verdict omits the line is no sample: WI-983's line asks
+and nothing checks, so such a verdict is a finding for its own review, and
+this row waits for the next round. No row now scheduled is known to draft such a
 round, so the handoff lists the sample's scheduling for the owner.
 
 **Architectural delta (S5).** None: an approved cell's input list moves through
@@ -39,3 +43,11 @@ the existing amendment route, and the observation writer is unchanged.
       earlier would anchor to the old sample or go stale at once. A fail is
       recorded as a fail.
 - [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+
+## Critique dispositions
+
+Round 1 (fresh Sol, 2026-11-04): CHANGES-REQUESTED, one MAJOR and one MINOR.
+
+- **S3, adopted.** The Context now reads "whose verdict carries the
+  stopping-boundary line. A round whose verdict omits the line is no sample".
+- **S4, adopted.** The frontmatter reads `planmode = "single"`.
