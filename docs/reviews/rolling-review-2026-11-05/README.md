@@ -1157,7 +1157,7 @@ as written, numbers within 5%), PARTIAL (holds with the stated corrections),
 REFUTED. The skeptics' full evidence (commands, outputs, line anchors) is in
 the session's workflow journal; the corrected numbers below reproduce with the
 revised `measure.py`. HEAD moved from `9faf96a97` to `1824c259b` during the
-pass; §1–§6 were not edited. §6's verdicts are appended below as they land.
+pass; §1–§6 were not edited.
 
 **Corrections to §0.** "SN 35 rows" → 31 needs plus 4 stakeholders in a
 separate `[stakeholder.*]` table (the miscount was `measure.py`'s own, now
@@ -1196,7 +1196,11 @@ the hook; 47 steps registered at `--stage all`.
 | 4.7 | MED | PARTIAL | The gap is real and unlisted even in the enforcement audit. Three shipped surfaces disagree: §3 bans carriers, the template mandates them, the skill predicts the ban "gets bent silently". Ruled item 5's commit-time text check is the detector, sequenced "last"; the template-line fix is scheduled nowhere. |
 | 5.1 | HIGH | PARTIAL → MED | The set is mis-drawn: 11 of the 34 modules test shipped behaviour or a shipped surface (`launcher_interpreter`, `hooks_on_routes`, `test_evidence`, `status_vocabulary_contract`, …) and two meta modules were omitted; corrected: ~25 modules, ~10.7k lines (6.8%), 49% of which is prose. The baseline dict holds 9 entries (modules over 1,000 SLOC) and was re-stamped in 277 of 2,986 commits because the ratchet is exact-equality in both directions; the shipped TSV churns too (38 re-stamps in 90 days) — the fix is a grow-only rule, not the carrier. `tests/` never ships, so the adopter cost is zero. Making the sensors warn-only reverses OI-68 (ruled 2026-08-30 with the evidence that advisories were not obeyed here). |
 | 5.2 | LOW | PARTIAL → fold | True wording pins are ≈430–470 asserts (2.4%); 97% of long literals are pinned in one module, so a rewording is a one-module edit; the §6.3 causal link fails for its own example (`test_trajectory_holdban.py` pins two tokens). The heaviest pinners test prompt text, where the wording *is* the behaviour. |
-| 6.1–6.5 | — | pending | The §6 skeptic's verdicts are appended here when they land. |
+| 6.1 | HIGH | PARTIAL (under-scoped) | Reproduced on a depth-50 clone: `approval-fresh`, `registry-integrity` and `open-items` FAIL; after `git fetch --unshallow` all 25 steps PASS. Only `registry-integrity` emits the "NOT byte-identical … has LANDED" text; the other two fail as STALE artefacts downstream of the same misattribution. The mechanism is one `git log --name-only` over the snapshot directory whose first commit at the graft boundary reads as the writer (`acceptance_record.py:1836-1856`); shallow handling exists in four separate implementations (`baseline_snapshot`, `retire`, `check_test_first`, `acceptance_record`) and `kitlib.git` has no `is_shallow`. The true writing commit is 2,349 commits back, so any depth below that misattributes. The shipped `ci/check.yml` checks out at the default depth 1 and fails `registry-integrity` on today's HEAD; the kit never saw it because its own CI fetches full history. A WARN in the integrity finding alone is not enough — the three consumers must receive "unverifiable" as a non-finding or the STALE cascade recurs. |
+| 6.2 | MED | PARTIAL | Eight call sites and 491 route-test lines confirmed (plus a 241-line unit module for the detector). The slot re-check covers the pre-commit floor's rules and the bar, but *not* the commit-msg hook: a hooks-off lane's commit messages are never scanned and the loop-trailer check runs nowhere else. Two of the eight routes commit through plumbing or `git merge --no-ff` and never run the hook anyway, so there the refusal guards nothing. `setup.sh`/`setup.ps1` set `core.hooksPath`, so the cost falls only on a checkout that skipped setup — the cloud and CI case (and §9.1 shows the documented setup command fails under dash). The downgrade amends an Approved SR (SR-240), LLR-340, IF-297 and a CLAUDE.md line: a re-attest, not a patch. Alternative keeping the doctrine: refuse only where the route's own commits would run the hook; warn elsewhere. |
+| 6.3 | MED | PARTIAL (re-anchored) | 80 words, not 90, and 2 of the 350 WARN lines. The rule is owner-ruled (OI-70) and enforced — WARN at the floor, ERROR under `--strict` from DevStg-Impl, this repo's stage. The real defect is a checkout-dependent false positive: the detector reads only `refs/heads/<lane>`, so it fires in any clone that did not fetch the lane branches (this session, CI, cloud) and vanishes when the refs exist. The shipped depth-1 CI therefore reds the `trajectory` step whenever any lane is active. Fix: consult `refs/remotes/*/<lane>` and report "unverifiable in this checkout" as a WARN, never ERROR. Same root as 6.1. |
+| 6.4 | MED | PARTIAL (mis-anchored) | Reproduced: an unrelated staged file plus an unstaged SR text edit is refused — but by four working-tree freshness steps (`derived-stage`, `approval-fresh`, `open-items`, `trajectory-map`), while `registry-integrity` PASSED. The snapshot byte-compare refuses only a commit that *writes* a snapshot file or a landed forgery (`acceptance_record.py:1866`: "the snapshot is deliberately behind live while an amendment is pending, and that lag IS the signal"); it did not fire. Moving `approval-fresh` to the slot removes one of four FAILs; the lever is the floor's working-tree read — the index-reading destination OI-31 already records, or running a freshness step only when the staged diff touches its inputs. The anti-laundering rule (SR-179, Approved) should be left out of this finding. |
+| 6.5 | LOW → MED | PARTIAL (understated) | At least six distinct failure policies across eight-plus reader functions for one file (refuse; read ON; read require; read ask; read the shipped default; translate-and-warn), and `privacy_review` has two readers with two policies. The file's own header documents two outcomes for the same event (IF-037 "a file that does not parse is refused" vs IF-038 "reads `ask`"). The proposed "warn and use the default" is unsafe as stated: `subagent_gate`'s shipped default is `off`, so an unknown value would flip a fail-closed gate open (OI-46 ruled against exactly that). Workable single policy: non-parsing file → refuse; unknown or wrong-typed value → the most restrictive value of that dial's alphabet, with a warning. 49 test files pin the current behaviours. |
 
 **What the verification changes.**
 
@@ -1218,6 +1222,16 @@ the hook; 47 steps registered at `--stage all`.
   ruling argued against the recorded evidence, not a work item: deleting
   `test_rule_sync` (D-7) and making the armed size/complexity sensors
   warn-only (OI-68).
+- **§6.1, §6.3 and §6.4 share one root the first pass did not name:** floor
+  steps read state the checkout may not carry — history depth, local lane
+  refs, the working tree — and report its absence as a defect in the
+  repository. One "unverifiable here → WARN with the repair" idiom in
+  `kitlib.git` discharges 6.1 and 6.3 together; 6.4's lever is the recorded
+  index-reading destination (OI-31), not the snapshot rule. The shipped
+  `ci/check.yml` checks out at depth 1, so an adopter's first CI run on a
+  repo with any pending amendment fails `registry-integrity` with a false
+  "LANDED divergence"; the kit's own CI fetches full history and never sees
+  it (§10.9 reproduces the same fact independently).
 - **The first pass over-weighted code duplication and under-weighted two
   things the second pass surfaced:** the kit's own detectors are blind to
   the altitude defects (§11.4), and the shipped templates manufacture them
