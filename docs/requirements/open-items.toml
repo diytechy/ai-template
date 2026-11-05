@@ -4332,3 +4332,22 @@ options = """- (a) CLOSE PARTIAL: WI-997 closes partial at its stale-part step, 
 - (c) REPAIR FIRST: preparatory rows build LLR-172's derivation-record rule and TC-165's token scan, or retire what is no longer wanted, and they land first. WI-997 then rebases and repoints both cells exactly as its Done-when says. FOR: no text changes, and the trace ends true. AGAINST: an unscoped build of a rule nobody has asked for since it was approved stands ahead of the tag migration and the two rows behind it."""
 recommendation = "(b), with the cells dropping the path: it keeps the migration moving and states no false verification. The two new rows then decide whether SR-165's derivation record and SR-035's token scan get built or retired, which is the larger question this finding raises and is yours in either case."
 wi_refs = ["WI-997", "WI-999"]
+
+[open_item.OI-128]
+title = "WI-991: TC-055's re-judge cannot render, because the dashboard tool's Playwright install is gone"
+status = "pending"
+raised = "2026-11-04"
+one_line = "scripts/dashboard-shots/node_modules is empty, so shoot.mjs cannot render the PNG matrix TC-055's method requires, and a leg may not install software its handoff does not name. Restore the pinned install, or name npm ci in the handoff; recommendation (b)."
+decision = """Raised by the coordinator in headless leg 33 of loop session 20261104T181017Z-49d2cc (coordinator-2026-11-04 D-009), under the owner's 2026-10-25 ruling that anything keeping a lane from building forward is an open item.
+
+WHAT IS TRUE. WI-991 re-judges TC-055 by its method, which takes the rendered matrix from scripts/dashboard-shots/shoot.mjs and makes no judgment on a failed run or an incomplete matrix. shoot.mjs imports playwright. The folder scripts/dashboard-shots/node_modules exists but is empty, last changed 2026-11-01 at 17:29 local. Its cause is not known: no commit near that time touches it, and it was last known working at WI-920's re-judge on 2026-10-25. The pinned Chromium build 1228 is still installed for the user, so only the npm package is missing.
+
+The recipes' route is a junction to this checkout's own install, which no longer exists, and they say never a new install. The session prompt forbids installing software the handoff does not name, so the leg ran no npm command. Playwright does exist in two unrelated projects on this workstation; the leg did not link to either, since neither was given to it, and removing such a link wrongly could damage that project's install.
+
+WHAT IS HELD. WI-991 only, not yet claimed. It is not urgent: TC-055's latest result is a pass that expires 2027-01-23."""
+blast_radius = """WI-991, and any later dashboard render (the render-dashboard-critique skill and TC-055's next trigger) until the install is back."""
+options = """- (a) THE OWNER RESTORES IT: run npm ci in scripts/dashboard-shots, the tool's documented prerequisite, pinned by its package-lock.json. FOR: nothing changes for the legs. AGAINST: it takes the owner's time at the terminal.
+- (b) NAME IT IN THE HANDOFF: the owner rules that a leg may run npm ci in scripts/dashboard-shots, and the next handoff names it. FOR: one word from the owner, and the same pinned install. AGAINST: a leg installs software, once, under this ruling.
+- (c) DROP THE RE-JUDGE FOR NOW: WI-991 waits until the pass nears its expiry. FOR: nothing to do today. AGAINST: the declared trigger has fired, and the row stays open."""
+recommendation = "(b): the same pinned install at no cost of the owner's time, and the row then runs in a leg."
+wi_refs = ["WI-991"]

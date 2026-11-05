@@ -4,6 +4,7 @@ title = "re-judge TC-055: declared trigger fired [sha256:bccad912db94] at merge 
 workstream = "process"
 sr_refs = ["SR-054"]
 specref = "docs/test/test-cases.toml"
+needs = ["OI-128"]
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "rejudge"

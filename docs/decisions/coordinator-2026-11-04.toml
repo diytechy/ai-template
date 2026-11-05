@@ -59,3 +59,10 @@ alternative = "End the leg at the hold with an Overnight stop line, leaving thre
 reversal_cost = "Low: an overrule holds the next landing; nothing is lost."
 why_not_escalated = "Recorded for confirm or overrule; a headless leg moves to the next row when one is owner-held (coordinator-cycle section 7)."
 review = ""
+
+[decision.D-009]
+decided = "WI-991 (queue row 6) is held on OI-128 before any claim: scripts/dashboard-shots/node_modules is empty, so TC-055's rendered matrix cannot be produced, and TC-055's method forbids a judgment on a failed run or an incomplete matrix. The leg ran no npm command, since the prompt forbids installing software the handoff does not name. It did not link to the Playwright installs in two unrelated projects on this workstation: the recipes' junction names this checkout's own install, and neither project was given to this leg. WI-991's needs cite OI-128, with no placeholder row, since the held row carries it (OI-123's form). The leg moves to WI-982."
+alternative = "Run npm ci, which the Never list forbids; or junction another project's install, reaching outside this repository; or judge TC-055 on the 32 stale PNGs in the shots folder, which are not a render of this tree."
+reversal_cost = "Low: records only."
+why_not_escalated = "Escalated: OI-128."
+review = ""
