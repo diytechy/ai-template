@@ -1236,3 +1236,673 @@ the hook; 47 steps registered at `--stage all`.
   things the second pass surfaced:** the kit's own detectors are blind to
   the altitude defects (§11.4), and the shipped templates manufacture them
   (§10.1). Those two are where the leverage is.
+
+## 13. New findings — six finders, one per dimension
+
+**Method and status.** Six independent finders each took one dimension with the
+first pass and §8–§11 as "already found", and returned new findings with
+anchors, numbers and a reproducing command. Their scripts are in `measures/`
+(prefixed by dimension), the test classification data in `tests-census/`, the
+refusal inventory in `guards/TABLE.md`. **Adversarial verification of this
+section is in progress** (seven refuters, two of them with different lenses
+over the spine findings); their verdicts are annotated per finding as they
+land, exactly as §12 did for §1–§6. Until then read each finding as a finder's
+claim with its evidence, not as a settled fact. Findings that only extend an
+earlier section are folded into one line that names it.
+
+### 13.A Surface area and operating cost
+
+**[HIGH] 13.1 The declared per-commit bar is the smoke tier, not the hook.**
+`CLAUDE.md:59` names `run.cmd smoke` the per-commit bar; its `[run]` line runs
+`trace.py --strict` (6.9 s), `check_trajectory.py --strict` (27.2 s),
+`check_docs --stale` (3.4 s), `check_resync` and the smoke tier, which collects
+3,384 of 7,700 tests (44% of the suite) under a budget of 540 CPU-s / 600 s
+wall; the latest handoff records 531 CPU-s for one landing. A "smoke" tier that
+is nine CPU-minutes and half the suite is a full run by another name, paid on
+every commit; §1.4's 33 s under-reports the declared bar by an order of
+magnitude. The `[smoke-budget]` section is 937 comment lines for 3 values, with
+98 "re-stamp" mentions. *Change:* invert the tier default (a test is smoke only
+when its module opts in), target under 60 s, move the rest to `full` at the
+merge slot; the section becomes three lines. Adopters are untouched (their
+`stack.ini` seeds only `[tiers] smoke = -m smoke`).
+
+**[HIGH] 13.2 `RESYNC_PACK.md` §4 is the kit's changelog in disguise, and it
+grows ~120 KB a month.** §4 "concept renames" is 475,709 of 643,982 bytes (74%)
+and holds 207 entries, 12 of which contain a rename; the newest are titled like
+commit messages. Dated by `[since <sha>]`: §3 migrations got 2/30/46/5/0/0
+entries from June to November while §4 got 46/60/87/7 — the switch coincides
+with `scripts/check_resync.py` refusing any change to a shipped file that adds
+no §3/§4 heading, so every lane adds the cheapest heading that passes the
+grammar (164 entries carry the same boilerplate line). An adopter stamped
+2026-08-15 who re-syncs today has 35 §3 + 197 §4 entries in range: 558 KB,
+~93,000 words. That is a re-adoption, not a re-sync. *Change:* the entry
+becomes a row (`since`, `class` migrate|rename|none, `action`, optional prose
+pointer) in a shipped `migrations.toml` that generates §3/§4 and that
+`check_resync.py` checks; `class = none` rows render as one line, which is what
+195 of the current entries are; a byte/entry ratchet on the generated pack.
+Pairs with §10.10.
+
+**[HIGH] 13.3 The record has split in two: `docs/log.md` ("append-only
+history") last changed 2026-09-05, and 159 uncompiled fragments sit in
+`docs/log.d`.** `trunk_step.compile_log` folds fragments into the log and is
+called only by `integrate.py refresh`; `refresh:` commits were 57 in August, 46
+in September and zero since, because the hand-squash landing the recipes now
+prescribe runs only `trunk_step.py --regen` (`coordinator-cycle/references/
+recipes.md:642`). `log.md` is byte-identical at the 09-15, 10-15 and 11-05
+snapshots; 18 kit scripts cite it as the record; nothing warns. *Change:*
+either add `--compile-log` to the hand-landing recipe and a floor WARN when
+`docs/log.d` holds fragments older than N landings, or declare `docs/log.d` the
+record and retire `compile_log`. Pick one; today both homes are live and
+neither is complete.
+
+**[HIGH] 13.4 (extends §8.1) A quarterly re-sync is not performable as
+documented.** For an adopter stamped 2026-08-15: 240 kit files changed (100
+added, 4 deleted, 5 renamed), 147 of 149 scripts touched, 232 pack entries
+(558 KB), 13 hook revisions, 24 `check.py` revisions. The pack's own §1.1
+assumes "a handful of entries". *Change:* a release cadence (monthly or
+quarterly tags), one migration table per release, `bootstrap --sync-kit <tag>`
+taking overwrite-class files wholesale with a diff summary; per-commit `[since]`
+entries become internal.
+
+**[MED] 13.5 `docs/open-items.html` renders 1,071 unreviewed delegated
+decisions as cards.** `docs/decisions/` holds 121 files with 1,122
+`[decision.D-###]` rows, 1,071 of which have no `owner` field (48 confirmed, 3
+overruled); the page carries 1,082 cards (1,073 D-rows, 9 open items) and is
+regenerated and byte-compared on every commit (9.4 s). A queue that grows ~10 a
+day and is never drained is a backlog rendered as a brief. *Change:* render only
+`high_risk` decisions plus a count per lane; auto-expire low-risk rows into the
+record after N landings.
+
+**[MED] 13.6 `open-items.toml` is 92% ruled history parsed on every commit.**
+110 of 120 rows are `ruled`; the header itself says "A ruled row is history, and
+the Decisions log is its record"; a row averages 7.3 KB (OI-14's decision cell
+alone is 16,149 chars); `one_line` has median 323 chars (max 1,504), 97 rows
+exceed 200. *Change:* at ruling, `intake.py` moves the prose cells into a
+`docs/log.d` fragment and leaves a five-field tombstone, or moves the row under
+`docs/archive`; a warn-only 160-char advisory on `one_line`.
+
+**[MED] 13.7 (extends §1.5, §10.15) 104 handoff files at the `docs/` root are
+read by nothing but one exemption list and one "find the newest".** 1.15 MB,
+85 written in October; the skill's own rule says a handoff holds state only and
+"earlier handoffs are history". *Change:* one `docs/handoff.md` overwritten in
+place with the derivable state block generated, and the 103 moved under
+`docs/archive/handoffs/`.
+
+**[MED] 13.8 The commit floor's step list lives in two homes and a test pins
+them equal.** `hooks/pre-commit:288` hard-codes 25 step names; `check.py`'s
+step tuple carries no "floor" attribute; `tests/test_commit_floor_census.py`
+exists to hold the two consistent. The hook changed 62 times as the list grew
+7 → 12 → 17 → 22 → 25, each change a kit-owned file every adopter must re-take.
+*Change:* a `floor` field on the step tuple and `check.py --floor commit`; the
+hook becomes one line that never changes; the census test retires. (Found
+independently by the duplication finder.)
+
+**[MED] 13.9 Configuration is spread over ~24 extensionless `docs/<word>`
+files plus two dial files that are 82–92% comments.** The "one policy home"
+fold (RESYNC §1.3) covered three files and stopped; `agents-enabled`,
+`blackout`, `complexity-baseline`, `coverage-floors`, `declared-absences`,
+`flag-axis-baseline`, `id-watermark`, `*-allow` (5), `okf-export`,
+`status-lint`, `subagent-gate`, … remain, read by three different readers.
+`process.toml.template` is 434 comment lines for 41 values; this repo's
+`stack.ini` 1,251 for 94. A dial file whose values are 8% of its bytes is read
+as a document, not a config. *Change:* fold the dials into `process.toml`
+sections and the baselines into one `docs/baselines.toml`; one reader in
+`kitlib.config`; measurement history out of `stack.ini` into the log.
+
+**[MED] 13.10 The CLI surface an adopter must learn: 60 entry points, 37
+subcommands, 202 distinct flag spellings (167 used by one script), 19 shell
+launcher files for 4 commands, 20 identifier families.** `check.py`'s docstring
+promises "one command that runs every quality gate"; the kit around it is
+sixty. *Change:* one `kit` dispatcher over a `kitlib.cli` shell (§2.4's enabler)
+with the scripts as subcommand modules; one launcher per OS; shims for one
+release.
+
+**[MED] 13.11 The floor spawns ~32 interpreters per commit and re-parses the
+spine in each; the gate-only `check_test_first` replays every registry commit
+with no cache (27.8 s, growing with history).** 7 of the 47 registered steps are
+`check.py` re-spawning itself. *Change:* one process, one parsed spine handed
+to the step modules; a cache keyed by registry blob for `check_test_first`.
+
+**[LOW] 13.12 Skill fan-out tracks 437 KB of byte-identical copies
+(`.claude/skills`, `.agents/skills`) and runs a per-commit `skills-sync` step to
+prove they are identical.** `skills/README.md:107` names the alternative
+(gitignore and regenerate on setup) as "deferred until a real need earns it".
+The 17 domain skills are ~1.2 KB stubs; the recurring cost is the fan-out, not
+the content. *Change:* the README's own deferred design.
+
+### 13.B Code duplication
+
+**[HIGH] 13.13 Two "one owning boundary" rules for which spec copy governs,
+and they pick opposite copies.** `agent_policy.authoritative_spec` ranks
+`docs/archive/work` above `docs/work`; `kitlib.done_when._copy_at`/`spec_at`
+take `max(hits)` over a folder list where `docs/work/*` beats
+`docs/archive/work/*` and a closed copy beats the active one. Three call sites
+go through the first, twelve through the second; reproduced: for the same tree
+they return different files. Duplicated *policy*, not plumbing. *Change:* one
+precedence table in `kitlib`; `authoritative_spec` delegates.
+
+**[HIGH] 13.14 The generator freshness arm is written nine times and the
+generator set has four homes.** Every `gen_*.py --check` hand-rolls render,
+read, compare, STALE, exit, write; the copies diverge on adopter-visible
+decisions (a missing output is "nothing to check" in `gen_arch_map` but
+STALE/exit 1 in `gen_components` and `gen_open_items`; STALE goes to stderr in
+four, stdout in three; `gen_skills_index` calls `sys.exit`). Which generators
+exist is then restated in `check.py` (one step each), `trunk_step.REGEN_STEPS`,
+`docs/stack.ini [generated]` and `test_generated_freshness_wiring.WIRED`; every
+new artifact is five edits plus a meta-test. *Change:*
+`kitlib.generated.check_or_write(...)` and one `GENERATORS` table the steps, the
+regen and the wiring test all read.
+
+**[HIGH] 13.15 458 module-level re-export aliases (287 hops through sibling
+scripts) make three modules façades; four names are bound twice.** When
+behaviour moved, the old module kept `name = new_home.name`: `check_trajectory`
+112 aliases, `agent_loop` 108, `agent_common` 71; `check_trajectory` binds
+`_first_declared_line`, `_process_check`, `_split_refs` and `OPEN_ITEMS_REL`
+twice (the later wins). 77 of 278 test modules load the three façades, so the
+aliases are kept alive by tests, not production callers. *Change:* delete the
+aliases; callers import from the home.
+
+**[MED] 13.16 The `<key> — <reason>` declared-file grammar has five readers
+and four copies of its parse finding; one accepts a hyphen the others refuse**
+(`check_need_form`, `trace`, `trajectory_arch` ×2, `check_doc_refs`). *Change:*
+`kitlib.declared.read_entries`.
+
+**[MED] 13.17 `docs/process.toml` is opened and parsed at nine sites, five of
+them inside `kitlib.config`, each with its own fail-direction arm**; 54 raw
+`tomllib.loads` sites and 27 modules with their own `TOMLDecodeError` arm
+remain. The policies are deliberate (§6.5); the *parse* is copied. *Change:*
+one `process_toml(root)` read; dial readers take the parsed mapping and apply
+their policy explicitly — which makes §6.5's one documented policy a one-line
+change later.
+
+**[MED] 13.18 Marker-block knowledge is spread over ten homes.**
+`traj_status._splice_status` is a copy of `gen_arch_map.splice_region`; the
+"skip GENERATED blocks" loop exists three times (one reads `utf-8-sig`, two
+`utf-8`, so a BOM'd `status.md` is handled differently by the lint and the merge
+slot); `_STATUS_GENERATED_RE` is defined identically twice; the STATUS marker
+literal lives in 6 modules, `stack.ini.template`, and 7 test files, although
+`[generated]` already declares the pair per artifact. *Change:* `kitlib.markers`
+reading the pairs from the profile.
+
+**[MED] 13.19 Row-id regexes: 35 compile sites, no `kitlib.ids`; the WI
+token regex is diverged in one copy** (`trace_text.py:325` is `IGNORECASE` with
+no trailing `\b`, so `wi-12x` is a WI token to the citation detector and to
+nobody else); the tier-prefix list is hard-coded twice and differs. *Change:*
+`kitlib.ids`.
+
+**[MED] 13.20 "Text of a path at a revision" has five readers with four
+contracts; one swaps the argument order and one reads the working tree where
+the others read the index for `rev=None`**; 42 hand-formatted `git show
+rev:path` sites in 23 modules. *Change:* `kitlib.git.text_at(root, rev, path)
+-> (text, why)` keeping the ABSENT/UNREADABLE split the Done-when rules depend
+on.
+
+**[MED] 13.21 The current branch is read at 14 sites with two git commands
+and different detached-HEAD behaviour; "which WI ids does a lane hold" has four
+readers over two read models**, one of which imports the 3,700-line
+`integrate.py` to avoid copying a function that `kitlib.git` already holds.
+
+**[MED] 13.22 Nine live copies are still licensed by the retired F5 rule, and
+one has diverged.** `check._split_template` and `agent_session.split_cmd`
+tokenise the same command grammar, but only the loop sets `lex.commenters = ""`:
+a `stack.ini` command with an unquoted `#` token is truncated by `check.py` and
+run whole by the loop (reproduced). `integrate._RETIRED_BARS` duplicates
+`intake.normalize_bar`'s table (equal today); `bootstrap.LEGACY_DIAL_ORDINALS`
+copies `kitlib.authority`'s with a justification ("bootstrap imports no kit
+sibling") that no longer holds. 71 `F5` mentions remain in scripts. *Change:*
+import the home; drop the matching `rule_sync` pins; grep `F5` to zero.
+
+**[MED] 13.23 Spec frontmatter (`+++`) is parsed four ways**; two of the
+copies accept shapes the home refuses (a regex that reads CRLF differently; a
+`split("+++", 2)` that treats a `+++` in the title as a fence).
+
+**[MED] 13.24 The Python-3.11 interpreter probe is written in 11 launcher and
+hook files with two different Windows candidate orders**, only seven of which
+a test holds equal; on a Windows box where `py` and `python` resolve to
+different installs, `run.cmd` and `agent-resume.cmd` pick different
+interpreters. `hooks/kit-python.sh` already shows the shape (one sourced probe
+for three hooks). *Change:* `kit-python.{sh,cmd,ps1}`.
+
+**[MED] 13.25 Adopter-facing regeneration hints hardcode this repo's kit
+path.** The generated status block, the open-items page header, the
+pending-actions briefs and the dashboard footer tell every adopter to run
+`python project-trajectory/scripts/…`, a path that does not exist in their
+repo (the footer contradicts itself in two lines); `agent_brief.scripts_dir`
+resolves it correctly and is used by one module. CLAUDE.md's own rule: a token
+the kit mandates must mean something in the adopter's repo. *Change:*
+`kitlib.config.kit_scripts(root)` used by every hint.
+
+**[LOW] 13.26–13.30 Smaller duplicates:** three dead copies of the registry
+CSV loader kept alive only by tests (`check_trajectory.read_rows`,
+`schedule.load_rows`, `gen_okf.read_rows`; the live fourth differs from the
+`kitlib` home on encoding); nine Markdown heading regexes in four grammars and
+six section extractors with three termination rules; the cell normalisation
+`(row.get(k) or "").strip()` inlined 247 times in 45 modules beside five named
+`_cell` copies; two identical light/dark palettes, three HTML escapers (the
+`trace.py` one lacks `'`), two Mermaid emitters, 46 raw `endswith("-000")`
+sites beside `is_example`; 59 try/except import prologues that write 242 import
+lines twice, 162 hand-prefixed log lines, and four floor steps that spawn
+`python -c pass` when a kit-only generator is absent (two of them on every
+adopter commit, since `gen_skills_index.py` is not in the manifest).
+
+### 13.C Architecture prose and skills
+
+**[HIGH] 13.31 The IF row count is produced by the "every module is an
+endpoint" warn, not by decomposition decisions.** PROCESS_OPTIONS says the
+connectivity warn is "warn-first FOREVER … every arch-map module is a declared
+IF endpoint" and PROCESS §8 makes the layer default-on; the rubric says
+"Inside a component, interfaces are optional" and the deep-module skill says
+"the cost of a module is its interface". The warn wins: 106 of 121 kit modules
+are IF endpoints, 149 of 255 rows have both endpoints inside one component, 73
+are in-process calls with exactly one requestor, and OPTIONS' own estimate of a
+fully-declared repo is "~30–35 hand-authored IF rows" (7× fewer). The cells
+meant to make rows cheap are unused: `verified_by` 0/255; all 255 `Drafted`,
+240 `v1`. Each row costs a header body (224 bodies, 203 KB), a TC citation or an
+allowlist line, a `Data` cell whose symbols must resolve, a planning-brief row.
+*Change:* delete the every-module warn; record a seam only when it crosses a
+component boundary or leaves the repo; collapse the cli/exit-code/stdout
+triples (13 and 6 owners) to one row; retire or make opt-in `verified_by`,
+`version`, `status`. The kit's own registry can drop ~149 rows. (Check against
+ruled item 11, variant F.)
+
+**[HIGH] 13.32 No home exists for the decision a boundary hides.** Four
+shipped texts each demand a different "stopping record" and name no field
+((d2) in OPTIONS, spine-questions §3, rubric A8, SR-165); LLR-172's own detail
+ends "NOT BUILT YET: the record cells do not exist on the CMP schema today";
+the skill sends the result to "the component registry's partition record",
+which `grep` finds nowhere. What exists: four CMP rows whose `notes` list
+modules — the rubric's own B3 tell ("Its description lists its parts instead
+of naming a decision it hides") — and a 129 KB plan folder SR-165 says is the
+wrong home. *Change:* two optional CMP keys, `hides` and `stops`; the four
+texts point at them; delete or re-scope SR-165/LLR-172; the Arch rung exits
+"when every CMP row names what it hides"; a warn on an empty `hides`.
+
+**[HIGH] 13.33 "Architecture is derived, never committed" is contradicted by
+three committed generated architecture docs the floor keeps fresh.**
+`docs/interface-reference.md` (229 KB, 108 commits, 17 MB of blobs),
+`components.derived.toml` (94 commits) and `cli-reference.md` (57) are
+mandated by §8 and the `interface-reference`/`component-view`/`cli-reference`
+steps. PROCESS §3 spends 40 lines (372 words) on the `--doc`/`--flow`
+marker-routing path the kit retired from its own floor at WI-455 and that no
+live Markdown here carries; the "Routing" paragraph contradicts itself in two
+sentences. Sentence census: §3's architecture prose is 50% machinery, §8 34%
+method / 66% machinery. *Change:* state the true invariant, choose one posture
+for the three committed docs (prefer gitignore + CI publish, §8.2), cut
+§3:375-414 to four lines.
+
+**[MED] 13.34 Two competing "contract at the code" formats.** AGENTS teaches
+an Inputs/Outputs/Config/Raises block that "the code map harvests"; the kit's
+code uses it in 6 places, `gen_arch_map.py` contains no handling of it, and §8
+mandates a different block (224 `Contract IF-###:` bodies). *Change:* one
+shape; delete the harvesting claim.
+
+**[MED] 13.35 The runtime-flows rule is stated in three homes, enforced by
+none, and not followed by the kit's own flows.** "Participants are the planned
+modules (the LLR `Module` column)": `check_flows.py` checks headings, a fence
+and cited ids only; the kit's `runtime-flows.md` names 38 of 49 participants in
+prose (the readable ones), 0 dependency-table rows, flows 4–9 are station
+internals, and the section opens with a 17-line drift-history block plus 7
+WI/OI citations in a living doc. *Change:* relax the rule to roles-or-modules
+(or a 10-line WARN that a module-shaped alias resolves); delete the history
+block; stop routing the A4 table there.
+
+**[MED] 13.36 The planning briefs embed all 255 IF rows verbatim (~48 KB,
+~12k tokens) in every dual-plan planner and critic brief**, and §8 states this
+as a feature. *Change:* filter to rows whose owner or far side intersects the
+work item's scope plus boundary rows.
+
+**[MED] 13.37 Rubric A3 ("a call states its typed request and answer, without
+symbol names") contradicts §8's `Data` cell ("a named symbol or path must
+resolve", enforced by `trace.py`)**; 112 of 255 `Data` cells carry a symbol or
+path; EXAMPLE §9 puts behaviour in the body A3 assigns to the requirement. An
+adopter cannot satisfy both with one cell. *Change:* `Data` is the typed form;
+drop "must resolve" and its advisory.
+
+**[MED] 13.38 Provenance in the shipped OPTIONS architecture layers (13
+WI/OI/ruling citations in ~310 lines) and in both architecture allowlists (all
+7 `kernel-modules-allow` entries open "WI-448/OI-48(d):").** Extends §10.11.
+
+**[MED] 13.39 The rubric's SCR/Parnas grounding is cited, not explained:** ten
+author-year citations with no title or gloss; three defined terms used by no
+anchor; the one knowledge pack that explains the methods
+(`docs/knowledge/system-decomposition-methods.md`, 16 KB) is neither shipped
+nor cited. *Change:* a half-line per citation, delete the unused terms, ship or
+drop the pack.
+
+**[LOW] 13.40–13.44 Smaller:** the `(d2)` label names two different rules in
+two shipped files and the skill cites a bare "(d2)"; EXAMPLE §9, the only
+worked architecture example, shows seam bookkeeping but never applies A1–A8;
+the derived component "partition" places 34 of 162 modules in two or more
+components because membership is a projection of LLR `Module` tags, while A6
+demands one owner; the seam-TC "migration allowlist" grew 116 → 147 entries in
+eleven weeks (a permanent exemption surface with a longer name — make the
+check WARN at every gate and delete the list); the IF owner rule is stated 7
+times in 5 files and the IF column semantics in full 4 times (the concrete cut
+list for §3.1).
+
+### 13.D The spine and the prose that steers it
+
+**[HIGH] 13.45 The schema defines an LLR as "a row that binds to a Python
+symbol".** `REQUIRED_FIELDS['LLR']` makes `Module` and `CodeSymbol` non-empty
+under `--strict-schema`, and `check_doc_refs.symbol_findings` is enforced as
+"THE DECOMPOSITION FLOOR … rung 4 TERMINATES WHERE A TOKEN BINDS"; spine-questions
+§3 then tells the adjudicator the cells "stay filled and binding … never return
+a row for keeping them". Result: 1,995 symbol tokens across 331 LLRs (median
+3; 45 rows list ≥10; LLR-270 lists 80), 113 rows span ≥2 modules, 10 anchor on
+`main`, 12 name only non-`.py` files and are reported "discharge NOT
+computed"; the anchor check itself emits 22 untraced tokens and 53 unbound
+modules on the kit's own spine. This is the structural reason the rows regrow
+after any re-tier (§8.1): a Test-verified SR must have an LLR, that LLR must
+bind a symbol, so the rows mirror the code by construction. A Go or shell
+adopter gets a per-row advisory about a discharge that cannot apply. *Ruled
+item 5 retires both cells*; until it lands, make `CodeSymbol` optional and
+derive binding from `Implements:` tags.
+
+**[HIGH] 13.46 "Every SR and LLR → ≥1 TC" plus the triangle rule produce a
+1:1 TC shadow of the LLR tier.** 285 of 331 LLRs have exactly one TC; 306 of
+363 TCs verify exactly one LLR; 64 TC-N rows verify LLR-N by the same number.
+The triangle rule requires the TC to cite the LLR's SR, a fact derivable from
+`sr_refs` — the "second source that can disagree" the kit's own §6 forbids —
+and spine-questions §3 says the opposite of the bar ("An LLR may be satisfied
+by its parent's coverage"); the bar wins because it has an orphan check. This
+names the two rules behind §8.4's ratio. *Change:* "every SR → ≥1 TC; an LLR
+is covered by its SR's TC unless it names its own"; the LLR-without-TC orphan
+becomes a warn-only count; `verifies` names the leaf and the report derives
+the SR. (Check against ruled decomposition (b).)
+
+**[HIGH] 13.47 (extends §10.1) The vacuous `expected` cell is dictated by
+four shipped sentences, one of which licenses it outright.** The template
+("Cite … by id (do not paraphrase)"), EXAMPLE.md (three "Satisfies SR-001
+AcceptanceCriteria" cells and the prose "cites the acceptance criteria by id
+rather than paraphrasing them"), the machinery reference ("cite … by id"), and
+spine-questions §3: "For a decomposed row the honest AC is usually *the chain,
+passing, closed over the clauses*" — which is "Satisfies SR-x via LLR-y" in
+other words. 202 of 363 cells open "Satisfies"; 104 are nothing but the
+pointer; no detector reads `expected`. *Change:* rewrite all four; a warn-only
+`expected` advisory (cell is only ids, "Satisfies", "folded into").
+
+**[MED] 13.48 The opposite failure: 32 TCs paste the LLR `detail` into
+`expected`** (TC-398 at 98% word overlap with LLR-359; TC-278's is 1,709
+chars); 46 `expected` cells exceed 400 chars. The same fact then lives in
+three cells. *Change:* the one-sentence rule plus a warn at >300 chars and a
+paraphrase advisory one tier down (the LLR-vs-SR one exists).
+
+**[MED] 13.49 TC `method` has become the test module's table of contents,
+and `in-lane.md` generates it.** 72 methods open "Run/Drive the … suite"; 25
+list pytest function names as prose; 16 name an internal function; 186 exceed
+500 chars; TC-205's is 15,874 chars beside a 7,943-char evidence cell. The
+template gives `method` no guidance, and `spine-authoring/references/
+in-lane.md:24` instructs "For each LLR, list what it states … and the TC
+clause that verifies each". *Change:* template guidance (instrument and
+scenario in one or two sentences, never a list of functions); in-lane.md maps
+the arms on a scratch worksheet, not in the row; warn at >400 chars.
+
+**[MED] 13.50 The TC tier is the coverage sink for the 255-row interface
+registry.** `in-lane.md:39` closes every lane with "Each interface row the
+change adds or alters has a citing TC"; 122 of 363 TCs cite an IF id; 35
+verify ≥5 ids; TC-331 verifies 14. A TC that verifies six requirements is a
+test module's manifest. *Change:* derive IF coverage from the LLR → module →
+IF-owner join `trace.py` already has.
+
+**[HIGH] 13.51 The adjudicator's question list never asks the end-user
+question.** §0 opens "state to yourself the obligation it imposes: what a
+builder must do, what a test must check"; §2 (1,592 words) asks about EARS,
+hats, derived labels, absolutes, artifact tokens and fan-out; §3 (793) about
+refactor-proof contracts and coverage. Nowhere is a row asked "who outside the
+system notices when this is unmet, and what do they see?". The only
+stakeholder-facing test is §1(d) at SN intake. The result in the sample: 8 of
+14 SRs state kit mechanism or schema; 131 of 138 SRs are `Test`-verified and 0
+are Demonstration, Attest or Critique, although PROCESS §4 spends ~330 words
+defining those methods and EXAMPLE §7 models them. `KICKOFF_PROMPT.md:170`
+does carry the end-user lens ("what does the user experience, and is it
+safe/clear/recoverable?") as a DevStg-Reqs checklist, composed into no brief.
+*Change:* one §0 bullet composed into every sitting — "Name the witness: the
+party outside the system who notices when the row is unmet and what they see.
+A row whose only witness is another module of this product is a design
+decision: it belongs at LLR, or inside its parent" — and one line in §2(b):
+"If the AC can only be witnessed by reading this product's own source or
+registries, the row is at the wrong tier." This is the single cheapest change
+in the record and the one every re-tier depends on.
+
+**[MED] 13.52 (extends §10.5) Per-sitting method prose is longer than the
+rows it judges.** Reproducing `tier_questions`: the first-approval brief
+composes 2,712 words of questions for an SR+LLR+TC batch (3,406 with the body;
+the amendment sitting 4,072 for all four tiers) against a median SR chain of
+938 words (p90 3,652); ~700 words of §2 describe detectors the judge does not
+run. An authoring session reads 6,973 words before writing a row; the SR
+template row alone is 942. *Change:* cap each § at ~250 words, one question
+per bullet; move the detector descriptions beside the detectors; target
+`{questions}` ≤ 900 words for any tier set.
+
+**[MED] 13.53 (extends §10.1) `KICKOFF_PROMPT.md` teaches "`LLR-###` ↔
+code" and "design expectation (links SR, names module/symbol)".**
+
+**[MED] 13.54 `EXAMPLE.md` models the altitude faults it warns against.**
+SR-002 states a mechanism ("write the export to a temporary file and atomically
+rename it"), LLR-002 restates it ("Write bytes to <path>.tmp, then rename"),
+both TCs carry a pointer `expected` and node-id `evidence`, the prose says the
+evidence column names "a pytest node id", and §5 then tags the Rust test
+file-level — teaching the inconsistency §4.3 measured. The good parts (the SN
+rows, SR-001, LLR-001 "Pure function: records → String … No I/O", TC-201) are
+short and at altitude; an adopter copies the first chain. *Change:* a six-line
+edit (If-then EARS for SR-002, outcome sentences, file-level evidence).
+
+**[MED] 13.55 The `coincident`/`da_refs`/`delivered_with`/`form`
+classification demands an essay per SR whose content is one of two stock
+answers.** `coincident` is filled 71 times (15.8 KB), 50 of them the stock
+phrase "the output is the outcome"; `delivered_with` 8/138, `form` 10/138; 28
+SRs carry none and `trace.py` prints 148 "unclassified" lines about them; the
+template says changing `coincident` re-opens approval. *Change:* derive it from
+`form`/`da_refs`; delete the prose cell (needs one ruling that removing
+boilerplate is CLARITY).
+
+**[LOW] 13.56 `permutations`/`gen_cases.py` is taught as core (~900 words
+across PROCESS, EXAMPLE, KICKOFF, the template; a 326-line script) and used in
+0 of 138 SRs**; TC `parameters` in 26 of 363. It is also where an SR author is
+first told to think in test inputs rather than user outcomes. *Change:* an
+opt-in layer with an applies-when.
+
+**[LOW] 13.57 `test_refs` is a dead reverse pointer** the template seeds as
+`(see TC)` and 331 rows fill by hand ("(see TC-N)" 166, "TC-N" 66, empty 56,
+the literal placeholder 10) — the inverse of `verifies`, which `trace.py`
+already joins; nothing reads it. *Change:* delete the key.
+
+**[MED] 13.58 `in-lane.md` tells authors to pre-fill node ids and symbol
+names for code that does not exist yet** ("Their trace fields … name the tests
+and symbols the build will create, and bind when the set is reconciled") — the
+authoring step that yields the dead node ids and the 22 untraced symbols.
+*Change:* name the test file and the module; symbols bind from `Implements:`
+tags once the code lands.
+
+**[MED] 13.59 (extends §10.4) The worker brief gives no TC-authoring
+guidance; the reviewer brief has the right question ("does it drive the
+interface the requirement names, not handler source? would it fail on a
+plausible wrong implementation?") but asks it only after the fact.** 139 of 363
+TCs are `Unit`; 26 methods say "in memory"; the sampled subtrees verify helpers
+such as `_implausible_branch_notice`. *Change:* the reviewer's question moves
+into the worker bullet and the TC template.
+
+**[MED] 13.60 The altitude detectors are inverted on the live spine.** A
+`trace.py` run prints 210 WARN lines: paraphrase fires twice and fan-out twice
+against 252 identifier-laden details and 32 TC-copies-LLR cells, while the
+absolute-term advisory fires on 388 cells (97% of SRs). A detector that fires
+on nearly every row discriminates nothing and buries the two that fire on
+something. *Change:* sample the absolute-term advisory (a count and five
+examples); extend paraphrase to TC-vs-LLR; ship the identifier advisory.
+
+**[LOW] 13.61–13.62 Smaller:** `requirement` cells carry compound obligations
+the one-`shall` rule cannot see (SR-239 is 968 chars and eight obligations under
+one `shall`; 60 of 138 exceed 300 chars) — a warn at >350 chars or ≥3 clauses;
+the `scope: kit` spine-authoring skill and the composed questions carry six
+ruling stamps and "the kit repository's ruling of record: `OI-72`" into every
+adopter's sitting (extends §3.3, §10.11).
+
+### 13.E Tests, and tests of the test infrastructure
+
+**[HIGH] 13.63 The smoke bar spends 28% of its test time on META tests.** By
+subject (`tests-census/classes.csv`, docstring plus first two tests): PRODUCT
+209 modules / 133,605 lines, PLUMBING 17 / 3,543, META 39 / 15,544, HISTORY 4
+/ 679. In the measured smoke tier (3,384 tests, 60.65 s wall at `-n 4`,
+122.8 s summed) META consumed 33.7 s (27.5%) for 519 tests: `test_import_layers`
+7.4 s (1,061 ms per test), `test_smoke_budget` 4.5, `test_env_gates` 4.0,
+`test_stage_ladder` 3.2, `test_check_resync` 2.6, `test_module_size_ratchet`
+2.5. The 39 split into 12 about the suite/CI, 11 source censuses, 7 this-repo
+tooling, 5 equality pins, 4 ratchets. *Change:* a `meta` marker applied by the
+same collection hook, run at phase close and CI only. (This refines §5.1's
+set: the finder's class includes modules the §5 skeptic kept as product; the
+refuter is asked to adjudicate.)
+
+**[HIGH] 13.64 (extends §8.3, §5.1) `test_module_size_ratchet.py` has been
+touched by 407 of 4,683 commits (30 of the last 722) and is 89% comments**
+(1,859 of 2,098 lines) around a 9-entry dict; an exact-match ratchet re-stamps
+on every honest refactor regardless of carrier, so a TSV relocates the churn.
+*Change:* delete it (the complexity ratchet already answers "no new monolith")
+or make it grow-only.
+
+**[HIGH] 13.65 The smoke membership ratchet `max-tests` has been re-stamped 72
+times in 93 days and sits 26 tests from its next bump**, while `cpu-seconds`
+and `wall-seconds` were each stamped once; the count moves with the tree, not
+the tests (24 modules parametrise over live-tree files: `test_shell_portability`
+6 defs → 50 cases). *Change:* delete `max-tests` and its ratchet test.
+
+**[HIGH] 13.66 The two-tier partition saves compute but its mechanism costs
+more than it saves.** Membership is by module ancestry, not measured cost: 11
+SLOW modules have no test that spawns a process (258 defs excluded from the bar
+for free: `test_traj_views` 56, `test_agent_loop_policy` 43, …) while 7 smoke
+modules spawn in ≥75% of tests, including the bar's costliest,
+`test_adjudicate_act` (14.4 s). The mechanism: `SLOW_MODULES` (139 entries,
+358 lines of which 215 comments, 66 commits), `check_smoke_budget.py` 437
+lines, six budget/meter/census test modules and the root `conftest.py` CPU cap
+(~2,900 lines in all), and 22 "in-process pin" modules (2,050 lines) that exist
+only because tiering is module-granular. The bar as declared runs `-n auto`,
+which the root conftest halves. *Change:* keep a fast tier; derive `slow` from
+a committed per-test durations file regenerated at phase close; delete the
+meter machinery and fold the pin modules back; or wire the existing
+`scripts/check_changed.py` (unwired since 2026-09-06) as the local bar.
+
+**[HIGH] 13.67 The `scaffold` fixture bootstraps a fresh repo per test: 538
+tests × 2.6 s ≈ 1,400 CPU-seconds per full run for identical trees that a
+0.14 s copy reproduces.** 51 further direct `bootstrap.py --dest` sites in 14
+modules; 257 `make_minimal_project` calls. The in-repo precedent exists
+(`test_trace_interfaces.py:1055`, module scope). *Change:* bootstrap once per
+session and `copytree` into `tmp_path` — same fixture name, zero test edits,
+~5 minutes of wall per full run.
+
+**[MED] 13.68 The same scenario is re-tested across modules:** 94 tests in 22
+modules assert "a fresh scaffold passes `trace.py --strict`"; five copies of
+`test_the_pre_commit_hook_runs_the_<step>_step`; three each of "rides the lane
+commit walk" and "squash judged through the shared walk" with a 45-line spy
+helper copied three times; four near-identical "placeholder registry is inert"
+bodies. *Change:* one parametrised test per scenario; delete the per-rule pins
+the generic tests already hold.
+
+**[MED] 13.69 Test helpers are copied, not shared:** a `_git` runner in 45
+modules (28 distinct bodies; one 19-copy cluster) although `conftest` exports
+`fixture_git`; 57 near-duplicate helper clusters, 872 redundant lines; four WI
+registry writers copied across the `test_trajectory*` family; local helper code
+is 19,731 lines (13% of `tests/`); 21 test modules exceed 1,500 lines
+(`test_intake.py`, 3,762, is longer than `intake.py`).
+
+**[MED] 13.70 Seven smoke tests fail in a fresh clone** because tests act on
+the live checkout (`root="."` → `HooksOffRefused` unless the developer's own
+`core.hooksPath` is set) or read the ambient environment (`ANTHROPIC_BASE_URL`,
+~60 `CLAUDE_*` variables in a cloud session; `conftest` scrubs only `AGENT_*`).
+35 modules pass the live checkout into kit functions. An agent running the bar
+in a cloud container sees a red bar unrelated to its change. *Change:* scrub
+the vendor variables; a `hooked_checkout` root for the service tests; treat
+`root="."` in a test as a lint finding.
+
+**[MED] 13.71 553 tests (9%, 98 modules) reach into `_private` names of kit
+modules** (`_verdict_gate` 57, `_load` 42, `_abandoned_claim` 19, …); every
+private rename is a multi-module test edit. This is §4.1's test-tier twin: the
+tests pin the decomposition, not the behaviour. *Change:* test through the
+public verb; promote or delete.
+
+**[MED] 13.72 (extends §5.2) PRODUCT tests by shape:** 34% drive a kit script
+as a subprocess, 22% spawn only git, 45% run in-process; 19% of PRODUCT tests
+(1,003) assert a ≥25-char phrase (§5.2's 40-char cut gave 4%), led by
+`test_trace_rules` (124 of 284 asserts) and `test_prompts` (54 of 183,
+asserting sentences of the shipped prompt templates); four golden byte-pins
+pin whole reports. The kit's findings carry no stable identifier, which is why
+tests pin sentences. *Change:* a stable short code per finding class (the way
+`check.py` already labels steps); assert the code; one golden per renderer.
+
+**[MED] 13.73 The test infrastructure has a test suite larger than itself:**
+~4,100 lines of conftest/fixtures and ~1,900 lines of tests about them
+(`test_cpu_cap` 547 asks the OS what cap the running pytest is under;
+`test_env_gates` 512 includes an AST lint over every test module and tests
+that the lint catches an invented bypass — a test of a lint of the tests), plus
+63 "adequacy witness" tests in 28 product modules that test the module's own
+detector. None can fail on a kit regression; all fail on a refactor of the
+suite.
+
+**[MED] 13.74 Eleven source-census tests re-lint the kit's own code on every
+run and refuse contrived shapes** (an added stdlib import in `acceptance_record`
+fails `assert _imported_roots() == {…}`; a `write_text` without `newline=`
+fails `test_generated_newlines`; 2,566 lines, 1.7–3.2 s each per smoke run).
+Each is a refusal where the owner's stated policy is to warn. *Change:* the
+rules that matter become one warn-only `check.py --run-step kit-lint`; delete
+the import-set, generated-set and pack-structure pins.
+
+**[LOW] 13.75–13.77 Smaller:** `tests/` carries 7,562 `WI-###` citations and
+1,759 date stamps (four times the scripts); four HISTORY modules pin prose
+wording of shipped documents (a copy-edit of PROCESS.md is a test edit);
+`test_wi_convert.py` credits 888 tests to a converter for the retired CSV home
+(retire both); 16 scripts have no test module of their own; this repo's CI runs
+the 7,700-test suite about seven times per push (five matrix cells, a
+smoke-budget job that is the smoke tier again, and the gate job under
+subprocess coverage tracing).
+
+### 13.F Guards vs warnings — the refusal inventory
+
+The finder enumerated 77 refusal sites (`guards/TABLE.md`): **KEEP-REFUSE 50,
+DOWNGRADE-TO-WARN 18, DELETE 7**, two pointing at §6 items. Two sites are
+models of the posture the review wants and need no change:
+`acceptance_record._commit_parents` (a shallow graft → "fetch the parent and
+retry", never read as a root) and `bootstrap.py`'s dirty/tarball kit → WARN,
+exit 0. The ten downgrades and deletions with the best cost/benefit:
+
+| # | anchor | what refuses today | who stops paying | change |
+|---|---|---|---|---|
+| 13.78 **HIGH** | `check.py:1177-1183`, `:1843-1867` | `staged-divergence --strict`: any partial commit while a generated artifact is modified-but-unstaged (`git add -p` workflows); the code calls it "adopter-visible and deliberate", the root fix (OI-31 (a), index-reading steps) "deliberately not taken" | every adopter with a generated artifact | WARN at the commit floor; FAIL where the committed tree is read (CI, the slot) |
+| 13.79 MED | `kitlib/stage.py:395-402`, `:703-706`; `check.py:1531` | a `docs/stage` rung not on the current ladder exits every `check.py` run and every agent route; `parse` refuses *before* the fingerprint miss that would have re-derived (reproduced with a renamed rung) | every adopter at every ladder-vocabulary upgrade | treat the parse error as "no usable record": derive fresh, one WARN |
+| 13.80 MED | `check_privacy.py:348-367` vs `:264-320`; `kit-python.sh:158-168` | a mixed or unparseable privacy policy: the sh hook refuses every commit while the Python checker in the same module resolves the same state (fail-closed, ON) | every re-synced adopter with a legacy file; every `process.toml` typo | the hook takes the checker's resolved answer; delete `refuse=mixed` |
+| 13.81 MED | `check_trajectory.py:942-960`, `:3405-3420` | a `pending` open item that no queued WI cites is an ERROR "whatever the gate", evaluated before the no-work-items vacuity return | adopters using open items without the queue | WARN plain / ERROR `--strict` |
+| 13.82 MED | `check_trajectory.py:1484-1545` | R-A (Deliverable iff terminal) is a hard error at every run; its justification is the agent handoff | human-edited work-item specs | the WARN/`--strict` ladder unless the loop marker is set |
+| 13.83 MED | `trace.py:6472-6495` | `--strict` fails the Impl gate on two prose rules (a provenance frame; >1 `shall`) that are advisories everywhere else, while the kit's own code carries 1,992 WI citations unguarded | every adopter at the Impl gate | move both to the advisory list |
+| 13.84 MED | `hooks/kit-python.sh:85-100` | no Python 3.11 → no commit, on every stack; ADOPTING calls the interpreter "the only requirement" for running checks, the hook makes it a requirement to commit at all | non-Python adopters' contributors | WARN at pre-commit and commit-msg when `privacy=off`; pre-push keeps refusing (publication boundary) |
+| 13.85 MED | `integrate.py:1766-1795`; `agent_common.py:389-489` | the merge slot refuses a repo with no `[product] test` (docs- or spec-only), and a pinned toolchain without `./.venv` although every pinned tool is importable (poetry/conda/uv; reproduced) | station adopters on other environment managers; documentation repos | run the process bar alone; delete the venv-location proxy (`_step_guard` already gates importability) |
+| 13.86 MED | `prompts.py:264-270` | `fill` refuses a template that does not consume every provided value, so an operator override may never drop a field | every `--prompt-map` override | unknown provided keys → one WARN; unfilled slots keep raising |
+| 13.87 LOW | `check.py:1891-1972` | `approval-immutable` refuses deleting, moving or correcting a dated brief although git history holds every byte | anyone archiving briefs | exempt `D`, WARN on `M` |
+
+Further rows: hook/`check.py` version skew refuses every commit on one unknown
+step name (`check.py:2826`; the hook changed 62 times) — skip with a WARN
+naming `bootstrap --sync`; the model-slug regex refuses `@` so Vertex-style ids
+cannot be registered, citing a shell-metacharacter class `@` is not in; two
+copies of the dual-carrier refusal and the retired-`Modified` guard outlive
+their migration window (set an end date, delete at it); a wrong-typed
+`human_approval_through` is refused at the loop's preflight but silently read
+as the most-held rung by the hook step and the slot, and the doc states only
+the refusal (the silent value is right; the missing piece is one warning line —
+extends §6.5); 424 refusal/warning messages exceed 80 chars, 45 exceed 40
+words, 9 exceed 60 (`baseline_snapshot.py:1119` 125 words; six of the ten
+longest would be served by one line; several cite rulings and dates an adopter
+cannot resolve — extends §6.3); three guards whose case cannot occur
+(`[arch-map] mode` exit when "no step here consumes the mode"; a squash of a
+deleted branch "no landing recipe makes"; a watermark correction with no
+open-items registry); and the eight station steps cost 1.82 s of the twenty
+cheap floor steps' 8.97 s on a lane-less repo, answering "nothing to judge"
+eight times (the number §1.2 lacked).
+
+**Counter-findings the finders raised against the first pass** (kept here so
+§14 can honour them): the hooks-on and Python-3.11 downgrades are safe only
+because pre-push, CI and the slot re-run the floor — downgrade pre-commit and
+commit-msg only, keep pre-push; the hooks-on refusal exists only on station
+routes, so a non-station adopter is unaffected either way; "unverifiable →
+WARN" is right for the commit floor and CI's advisory run and wrong for the
+merge slot, which must keep refusing a range it cannot judge; moving
+`approval-fresh` off the floor re-opens the WI-325 defect for a trunk-only
+adopter unless the sitting tool refuses to render a stale brief; a per-class
+WARN summary hides the one new warning among 128 standing ones — print every
+instance whose row id appears in the staged diff; for `human_approval_through`
+the safe fallback is the most-held rung, not the shipped default.

@@ -1,0 +1,270 @@
+module,lines,tests,class,reason
+test_absolute_terms,283,20,PRODUCT,trace advisory on rows
+test_ac_advisory,114,7,PRODUCT,trace AC advisory
+test_acceptance_record,395,13,META,AST/import-surface pins of a split module (source census)
+test_accepted_risk,441,14,PRODUCT,accepted-risk binding via trace
+test_accounts,1184,56,PRODUCT,agents.toml account tables + launch env
+test_adjudicate_act,859,34,PRODUCT,adjudicate_act brief assembler
+test_adjudicate_brief,2576,82,PRODUCT,adjudicate_brief evidence + refusal
+test_adjudicator_token,777,22,PRODUCT,token account auth in session launch
+test_adoption_record,542,22,PRODUCT,adoption record at close/commit check
+test_agent_common_harness,432,20,PLUMBING,"agent_common resolvers (_failure_tail, venv_python...)"
+test_agent_loop,1526,60,PRODUCT,agent_loop end-to-end vs fake agent
+test_agent_loop_critique,514,11,PRODUCT,critique round in agent_loop
+test_agent_loop_env,165,2,PRODUCT,per-pair Env merge at launch
+test_agent_loop_policy,824,43,PRODUCT,declared-policy parsers + dials
+test_agent_loop_review,1642,45,PRODUCT,reviewer dispatch + routing
+test_agent_loop_review_gate,926,18,PRODUCT,review gate + red-round cap
+test_agent_loop_routing,653,32,PRODUCT,RoutingState + outcome ladder
+test_agent_loop_support,227,10,PRODUCT,coordinator lock + session log
+test_agent_loop_worker,996,36,PRODUCT,worker assignment mode
+test_agent_route,1409,61,PRODUCT,model routing selector
+test_approval_level,1540,55,PRODUCT,human-approval dial
+test_architecture_decomposition_rubric,187,6,HISTORY,pins wording/shape of shipped rubric prose
+test_assets,73,4,PRODUCT,ASSET registry via trace
+test_assumption_gate,720,15,PRODUCT,assumption gate steps via check.py
+test_assumption_observation_briefs,105,3,PRODUCT,assumption cases in adjudication briefs
+test_assumption_rules,1393,106,PRODUCT,assumption tier rules on rows
+test_assumptions_registry,213,7,PRODUCT,assumptions registry via trace
+test_bar_attestation,270,13,PRODUCT,Bar-Green grammar + verifier
+test_baseline_drift,76,4,PRODUCT,baseline_snapshot drift corners
+test_baseline_snapshot,2283,94,PRODUCT,last_approved snapshot mechanism
+test_blackout_isolation,249,9,META,the suite must not sleep on a policy dial (test-scaffold hygiene)
+test_blackout_window,1342,54,PRODUCT,blackout window on both routes
+test_bookkeeping,830,17,PRODUCT,trunk bookkeeping commit
+test_bootstrap,1812,74,PRODUCT,bootstrap scaffold green out of box
+test_brief_egress_conventions,59,1,META,source sweep of kit modules/prompts for authorship tokens
+test_cell_classes,157,3,PRODUCT,amendment classifier cell classes
+test_changed_selection,323,18,META,this-repo scripts/check_changed.py selector
+test_check_complexity,577,38,PRODUCT,check_complexity census metric
+test_check_complexity_cli,167,9,PRODUCT,check_complexity CLI
+test_check_coverage,232,15,PRODUCT,check_coverage floors
+test_check_coverage_driven,33,1,PRODUCT,coverage step wired in check.py
+test_check_doc_refs,760,42,PRODUCT,check_doc_refs
+test_check_docs,1182,60,PRODUCT,check_docs navigability
+test_check_dupes_census,99,5,PRODUCT,check_dupes_census (warn-only)
+test_check_figures,318,23,PRODUCT,check_figures CLI
+test_check_figures_rules,40,4,PRODUCT,check_figures marker judgement
+test_check_flows,158,10,PRODUCT,check_flows
+test_check_harness,963,39,PRODUCT,check.py end-to-end
+test_check_lane,453,23,PRODUCT,check.py trunk-lane rule
+test_check_need_form,316,18,PRODUCT,check_need_form CLI
+test_check_need_form_rules,42,3,PRODUCT,check_need_form rule
+test_check_perf,330,20,PRODUCT,check_perf
+test_check_privacy,437,18,PRODUCT,check_privacy lint
+test_check_readability,348,14,PRODUCT,check_readability report
+test_check_resync,333,26,META,this-repo scripts/check_resync.py (RESYNC entry check)
+test_check_skip_guard,77,4,PRODUCT,check.py silent-skip banner
+test_check_smoke_budget,556,26,META,this-repo scripts/check_smoke_budget.py (suite budget step)
+test_check_stubs,214,13,PRODUCT,check_stubs
+test_check_test_first,706,31,PRODUCT,check_test_first from history
+test_check_vendored,215,13,PRODUCT,check_vendored
+test_ci_tier_declaration,463,17,META,CI workflow pinned to the moment->tier table
+test_claude_transcripts,660,16,PRODUCT,session_adapters transcript reader
+test_codex_call,355,13,META,this-repo scripts/coordinator/codex_call.py
+test_codex_call_git,594,16,META,this-repo scripts/coordinator/codex_call.py on git
+test_commit_floor_census,139,4,META,census: every check.py step classified for the commit floor
+test_commit_hooks,241,16,PLUMBING,kitlib.commit_hooks + conftest.hooks_on helper
+test_complexity_ratchet,471,1,META,C901 census == dict-literal baseline
+test_components_registry,300,15,PRODUCT,CMP registry via trace
+test_conftest_isolation,131,4,META,conftest makes kitlib importable (pytest subprocess)
+test_consolidate,1448,65,PRODUCT,consolidate census decisions
+test_consolidate_close,771,18,PRODUCT,consolidate close end-to-end
+test_coordinator_act,592,13,PRODUCT,coordinator act turn
+test_coordinator_adjudicate,1122,42,PRODUCT,coordinator adjudication route
+test_coordinator_code_drift,150,6,PRODUCT,coordinator stops when its code moves
+test_coordinator_guard,1567,75,PRODUCT,coordinator context guard in-process
+test_coordinator_guard_e2e,366,10,PRODUCT,coordinator guard via CLI/launchers
+test_cpu_cap,547,9,META,the conftest's CPU cap
+test_csv_header,232,9,PLUMBING,kitlib.spine csv header stripping
+test_dashboard_size_budget,115,1,META,PROJECT_STATE.html size budget
+test_decision_overrule,660,35,PRODUCT,overrule acted on in same commit
+test_decision_record,368,29,PRODUCT,delegated-decisions record format
+test_decision_record_merge,157,9,PRODUCT,decision record at merge slot
+test_decisions_to_review,237,16,PRODUCT,owner verdict on owner surface
+test_dependency_ledger,150,5,META,repo policy: imports declared in docs/dependencies.md
+test_derive_stage,995,31,PRODUCT,derive_stage effective stage
+test_dispatch,1635,39,PRODUCT,dispatch loop
+test_dispatch_admission,272,17,PRODUCT,dispatch admission table
+test_disposition_adoption,528,14,PRODUCT,disposition adoption grammar
+test_dispute,322,13,PRODUCT,dispute brief
+test_dogfood_sync,918,21,META,this repo's structure == shipped template
+test_dogfood_widening,114,1,META,one-time regression over every live work item
+test_done_when,183,9,PLUMBING,kitlib.done_when pure half
+test_done_when_blessing,1927,84,PRODUCT,Done-when blessing in the lane
+test_dual_plan_round,359,7,PRODUCT,dual-plan round end-to-end
+test_dual_plan_routing,353,15,PRODUCT,routing-ON dual-plan path
+test_env_gates,512,24,META,the suite's environment-gate machinery
+test_evidence_join,334,16,PRODUCT,trace --tests-for + tier findings
+test_evidence_partition,178,6,PRODUCT,assumption evidence partition
+test_external_frame,423,20,PRODUCT,external.toml frame registry via trace
+test_flag_axis,222,14,PRODUCT,flag-axis readability measure
+test_frame_context,170,4,PLUMBING,traj_parse.frame_context read model
+test_frame_rules,139,15,PRODUCT,frame rules on rows
+test_frame_system,136,7,PRODUCT,crossing system cell via trace
+test_gate_policy,199,8,PRODUCT,[attestation] gate policy
+test_gen_arch_map,2103,77,PRODUCT,gen_arch_map
+test_gen_cases,200,9,PRODUCT,gen_cases
+test_gen_components,275,14,PRODUCT,gen_components
+test_gen_okf,329,15,PRODUCT,gen_okf
+test_gen_open_items,910,29,PRODUCT,gen_open_items
+test_gen_open_items_render,450,22,PRODUCT,gen_open_items renderers
+test_gen_release_checklist,182,7,PRODUCT,gen_release_checklist
+test_gen_trajectory,433,21,PRODUCT,gen_trajectory dashboard
+test_gen_trajectory_pending,333,16,PRODUCT,pending projection
+test_gen_trajectory_splice,30,2,PRODUCT,panel splices
+test_generated_freshness_census,121,5,META,census: every generated artifact has a freshness enforcer
+test_generated_freshness_wiring,292,5,META,census + each enforcer can go red (copied harness)
+test_generated_newlines,396,9,META,AST lint over kit source: every write declares LF
+test_generated_set,81,4,META,equality pin: REGEN_STEPS writes == template [generated]
+test_guardrails_payload,88,3,PRODUCT,guardrails payload selection
+test_handback,1378,42,PRODUCT,handback closes on real lanes
+test_handback_records,74,2,PRODUCT,handback text seams
+test_hats,1449,66,PRODUCT,hats roster + injection
+test_held_rung_doctrine,107,3,HISTORY,process.md holds the paragraph once; no restatement elsewhere
+test_held_status,333,14,PRODUCT,held-rung rule pure halves
+test_held_status_git,989,29,PRODUCT,held-rung rule on git
+test_hooks_on_census,197,4,META,census: routes call hooks_refusal first (source scan)
+test_hooks_on_routes,294,14,PRODUCT,routes refuse with hooks off
+test_id_carrier,415,18,PRODUCT,id carrier grammar/fold
+test_id_carrier_git,320,8,PRODUCT,id carrier on git
+test_id_landing,666,28,PRODUCT,reserved-only landing
+test_id_watermark,991,53,PRODUCT,id watermark rules
+test_id_watermark_driven,35,1,PRODUCT,watermark across bootstrap --force
+test_import_layers,618,7,META,import-topology ratchet
+test_intake,3762,108,PRODUCT,intake mint
+test_intake_settled,808,21,PRODUCT,intake skips settled amendments
+test_integrate,1069,49,PRODUCT,integrate claim rung
+test_integrate_admission,1801,69,PRODUCT,merge slot admission
+test_integrate_attest,508,20,PRODUCT,integrate attest
+test_integrate_station,1395,44,PRODUCT,station protocol + merge slot
+test_integrate_unload,755,27,PRODUCT,branch + worktree unload
+test_interface_owner_reach,84,4,PRODUCT,IF owner reachability advisory
+test_kit_path_invariant,217,4,META,bootstrap never copies itself (kit layout invariant)
+test_kitlib_ladder,132,6,PLUMBING,kitlib.ladder constants
+test_kitlib_lane_walk,153,6,PLUMBING,kitlib.git lane walk
+test_kitlib_secret_classes,246,5,PLUMBING,kitlib.secret_classes vocabulary
+test_kitlib_spec_listing,117,2,PLUMBING,kitlib.registry spec listing
+test_kitlib_stage,514,24,PLUMBING,kitlib.stage reader/fingerprint
+test_kitlib_station,80,4,PLUMBING,kitlib.station read model
+test_kitlib_winjob,61,3,PLUMBING,kitlib.winjob
+test_launcher_interpreter,555,16,PRODUCT,"launcher interpreter selection, executed"
+test_loop_order,471,29,PRODUCT,loop-order admission rules
+test_loop_provenance,1219,39,PRODUCT,Loop-Session trailer + history check
+test_mapping_purpose,238,19,PRODUCT,mapping-purpose checker
+test_mapping_purpose_cli,69,3,PRODUCT,mapping-purpose CLI
+test_meta_repo_hook,44,4,META,this repo's .githooks wrapper over the shipped hook
+test_migrate_carrier,879,32,PRODUCT,one-time md/csv -> TOML carrier migration tool
+test_module_size_ratchet,2098,4,META,module line-count ratchet == dict-literal baseline
+test_modules_registry,149,10,PRODUCT,REPO registry via trace
+test_observation_record,299,26,PRODUCT,observation record format
+test_observation_writer,495,17,PRODUCT,record_observation writer
+test_old_kit_resync,736,8,PRODUCT,old-kit scaffold synced forward
+test_onboard_devsetup,702,32,PRODUCT,onboard/dev-setup scripts
+test_open_item_queue,150,7,PLUMBING,kitlib.spine.open_item_queue projection
+test_open_item_readiness,329,20,PRODUCT,WI cites OI it waits on
+test_overnight_legs,565,22,META,this-repo scripts/coordinator/overnight_legs.py
+test_overnight_legs_git,397,18,META,this-repo scripts/coordinator/overnight_legs.py on git
+test_parent_first,382,19,PRODUCT,parent-first rule pure
+test_parent_first_git,319,17,PRODUCT,parent-first on git
+test_perf_budgets,76,6,PRODUCT,PB registry via trace
+test_phase_rule,403,13,PRODUCT,stage-decrease rule
+test_plan_artifacts,429,18,PRODUCT,dual-plan artifact filer
+test_plan_briefs,546,25,PRODUCT,dual-plan brief assembler
+test_plan_coverage,881,46,PRODUCT,plan_coverage pre-pass
+test_plan_coverage_step,224,7,PRODUCT,coverage step adapter
+test_plan_filing,401,21,PRODUCT,plan critique filing on lane
+test_plan_gate,632,26,PRODUCT,plan gate on lane
+test_plan_pass,287,16,PRODUCT,plan pass record + briefs
+test_plan_round,187,16,PRODUCT,plan_round state machine
+test_pre_commit_hook,791,27,PRODUCT,pre-commit hook
+test_pre_push_hook,538,21,PRODUCT,pre-push hook
+test_prereq_toolchain,239,4,META,the suite's toolchain prereq hard stop
+test_process_config,997,27,PRODUCT,process.toml readers + hooks
+test_procurement,78,5,PRODUCT,PART registry via trace
+test_profile,342,16,PRODUCT,conditional scaffold generation
+test_prompts,1179,56,PRODUCT,prompt templates + strict fill (heavy wording pins)
+test_prompts_driven,33,1,PRODUCT,templates reach a scaffold
+test_push_policy,64,5,PRODUCT,push policy
+test_red_rounds_max,56,1,PLUMBING,kitlib.config.red_rounds_max reader
+test_registry_checks,443,26,PRODUCT,trace integrity/placeholder/schema
+test_registry_id_inputs,73,2,PLUMBING,two readers agree on row-id inputs
+test_rejudge,1106,41,PRODUCT,rejudge decision + release checkpoint
+test_rejudge_rubric,18,1,PRODUCT,rubric-reference advisory
+test_release_assumptions,67,4,PRODUCT,release recalls falsifiers
+test_resync_pack,366,12,META,RESYNC_PACK.md structural contract (doc shape)
+test_retire,594,22,PRODUCT,retire command
+test_retire_dashboard,233,12,PRODUCT,dashboard Retired view
+test_review_brief,613,24,PRODUCT,review/critique briefs rendered
+test_review_brief_git,438,13,PRODUCT,review_brief CLI on git
+test_review_scope,65,3,PRODUCT,review-session change scope
+test_routing_and_prompts,327,23,PRODUCT,ADJUDICATE phase routing + prompt files
+test_rule_sync,1784,56,META,equality pins between copies of policy (+ prose about what used to be here)
+test_rule_sync_driven,111,1,PRODUCT,trace --require-verified vs stage derivation
+test_ruling_sync,435,16,PRODUCT,ruling updates citing rows same commit
+test_run_devsetup,1911,42,PRODUCT,run launchers + dev-setup check
+test_run_menu,303,16,PRODUCT,run_menu
+test_schedule,753,50,PRODUCT,schedule frontier/safety
+test_score_reviews,401,25,PRODUCT,score_reviews
+test_seam_resolution,128,4,PRODUCT,IF row shape invariants
+test_selection_at_or_above,428,13,PRODUCT,check selection at/above derived stage
+test_session_adapters,353,22,PRODUCT,per-provider adapters
+test_session_keep,2854,123,PRODUCT,session keep/retention
+test_session_service,1005,36,PRODUCT,session service act/record
+test_session_stdin,663,28,PRODUCT,prompt delivery path
+test_shell_portability,158,6,META,source lint: tracked shell files parse on bash 3.2
+test_shipped_tier,244,7,META,dependency ledger shipped tier
+test_skill_materialization,61,2,PRODUCT,skill materializes whole directory
+test_skills_index,177,9,PRODUCT,gen_skills_index
+test_skills_sync,274,14,PRODUCT,per-agent skill fan-out
+test_smoke_budget,132,4,META,smoke membership ratchet
+test_smoke_budget_meter,205,4,META,smoke budget step CPU meters
+test_smoke_tier,71,3,META,smoke/slow partition invariant
+test_snapshot_readers,1326,48,PRODUCT,acceptance record readers
+test_spec_move,595,21,PRODUCT,spec_move ritual
+test_spine_carrier,466,25,PRODUCT,TOML spine carrier contract
+test_spine_rules,626,10,PLUMBING,spine_rules pure library
+test_stack_profile,1045,36,PRODUCT,stack.ini declared toolchain
+test_stage_event_detectors,359,11,PRODUCT,stage event detectors decisions
+test_stage_event_detectors_driven,336,7,PRODUCT,stage event detectors driven
+test_stage_ladder,340,13,META,source grep census: no lexical ladder compare in kit source
+test_stakeholders,279,15,PRODUCT,stakeholder list via trace
+test_status_vocabulary_contract,364,8,HISTORY,prose vocabulary checked against enforcement constants
+test_step_path_trigger,213,13,PRODUCT,step path trigger below rung
+test_subagent_gate,233,17,PRODUCT,subagent spawn gate hook
+test_test_evidence,414,25,PRODUCT,test-evidence carrier
+test_text_then_act,582,21,PRODUCT,text-then-act on lane commits
+test_trace,1391,52,PRODUCT,trace strict/schema/render
+test_trace_briefs,1583,41,PRODUCT,re-attestation brief
+test_trace_coherence,392,21,PRODUCT,cross-row coherence rules
+test_trace_golden,218,5,PRODUCT,trace golden-master bytes
+test_trace_hats,453,29,PRODUCT,Hat-Refs cell
+test_trace_hats_driven,35,1,PRODUCT,Hat-Refs end to end
+test_trace_interfaces,1270,48,PRODUCT,IF tier via trace
+test_trace_rules,1642,46,PRODUCT,pure registry-rule decisions
+test_traj_graph,954,31,PRODUCT,dashboard geometry/routing
+test_traj_lanes,177,3,PRODUCT,lane separation in SVG
+test_traj_panels,1013,41,PRODUCT,dashboard panels
+test_traj_parse,195,3,PRODUCT,dashboard source loaders
+test_traj_render,1290,32,PRODUCT,render primitives
+test_traj_render_sweeps,932,13,PRODUCT,closure sweeps over emitters
+test_traj_status,415,11,PRODUCT,--status snapshot
+test_traj_views,1776,56,PRODUCT,What/When/How-SW views
+test_trajectory,1278,71,PRODUCT,check_trajectory validator
+test_trajectory_arch,2170,94,PRODUCT,check_trajectory architecture inputs
+test_trajectory_forward_only,21,1,HISTORY,forward-only rule run over this repo's own live records
+test_trajectory_holdban,165,6,PRODUCT,hold-by-rename detector
+test_trajectory_phase,310,10,PRODUCT,phase anchors + approval brief
+test_trajectory_specs,536,25,PRODUCT,spec body decisions
+test_trajectory_staged,1494,47,PRODUCT,--staged git-effect checks
+test_trunk_name,77,3,PLUMBING,agent_common.trunk_name reader
+test_trunk_step,455,16,PRODUCT,trunk_step compile/regen
+test_trunk_step_plan,95,3,PRODUCT,trunk_step regen plan
+test_usage_ingest,781,26,PRODUCT,usage_ingest in process
+test_usage_ingest_git,197,4,PRODUCT,usage_ingest on git
+test_verdict_record,2694,81,PRODUCT,verdict record
+test_verdict_rollup_render,56,3,PRODUCT,verdict rollup render
+test_verification_coherence,91,6,PRODUCT,verification coherence advisory
+test_wi_convert,802,24,PRODUCT,converter for the RETIRED CSV work-item home
+test_wi_folder_loaders,1188,48,PRODUCT,spec-folder readers in three scripts (asserted in lockstep)
+test_wi_loader_sync,555,13,META,equality pins: three WI loaders agree
