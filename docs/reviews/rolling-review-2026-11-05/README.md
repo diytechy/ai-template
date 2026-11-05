@@ -16,7 +16,7 @@ limit. Each finding carries a severity (`[HIGH]`/`[MED]`/`[LOW]`), an anchor
 (file or rule), the issue, and a concrete change. Measurements are reproduced
 with the command that produced them.
 
-**Status:** IN PROGRESS. §1–§6 carry the first pass; §7 is pending. Audit
+**Status:** COMPLETE (first full pass, 2026-11-05). `measure.py` beside this file reproduces every number. Audit
 commits on this branch bypass the commit floor (`--no-verify`) at the owner's
 direction (2026-11-05): §6.1 and §6.4 record why the floor refused them.
 
@@ -36,7 +36,8 @@ wc -c project-trajectory/skills/*/SKILL.md       -> 144,330 bytes, 33 skills
 registries: SN 35 rows, SR 138, LLR 331, TC 363, IF 255, OI 120
 ```
 
-These numbers are the headline finding on their own (see §1).
+These numbers are the headline finding on their own (see §1). Re-derive them
+with `python docs/reviews/rolling-review-2026-11-05/measure.py`.
 
 ---
 
@@ -113,21 +114,37 @@ urdf, sim2real, webgpu, lerobot, ...). They are gated by `--domain`, but they
 are maintained, indexed and re-synced with the process kit. *Change:* ship them
 as a separate `skills-domain/` pack with its own INDEX, or drop them.
 
+**[MED] 1.7 A quarter of recent commits are bookkeeping.** Of the last 400
+commits on this branch, 105 (26%) have subjects `claim:`/`pause:`/`unpause`
+("pause: restored byte-identical after claiming WI-983 (sha256 checked
+against the copy taken before the unpause)"), 38 are `mint:`, 20 `file:`,
+130 `docs:`, and 80 carry a `WI-###` subject. 717 commits landed in the last
+30 days (~24/day; 4,680 since 2026-06-04). A claim is three commits
+(unpause, claim, re-pause) because the pause is a presence-as-semantics file
+and the claim must be its own commit. The record is honest; it is also noise
+that every `git log`, bisect and review has to read past. *Change:* the pause
+and claim become rows in one hand-edited file (`docs/work/station.toml`) and
+a claim is one commit; or keep the ritual but squash the three into one with
+a trailer.
+
 ## 2. Findings — code duplication / consolidation candidates
 
-**[HIGH] 2.1 Duplicated POLICY is licensed by a 1,784-line test instead of
-removed.** `tests/test_rule_sync.py` and `tests/test_wi_loader_sync.py`
-(555 lines) exist to pin that *three* copies of the work-item registry reader
-(`schedule.py`, `check_trajectory.py`, `agent_common.py`) and the remaining
-duplicated dials agree by value. The docstrings record the reasoning: the F5
-ruling ("each script independently copy-able") that justified the copies was
-superseded by D-8 and `kitlib` now exists, yet the three readers and their
-2,300 lines of equality tests remain. The 0→A→B rule in PROCESS §3 says
-extract the shared stage; the test that pins two copies equal is the cost of
-not doing so, paid forever. *Change:* move the spec-folder reader into
-`kitlib.registry` (it already has `read_spec_rows`), make the three callers
-import it, delete the two sync test modules. Expected delta: −2,300 test lines,
-−~600 script lines.
+**[HIGH] 2.1 Duplicated POLICY is licensed by 2,300 lines of equality tests
+instead of removed.** `tests/test_rule_sync.py` (1,784 lines) and
+`tests/test_wi_loader_sync.py` (555) exist to pin that copies of a decision
+agree by value. Their own docstrings record that the F5 ruling ("each script
+independently copy-able") which justified the copies was superseded (D-8), that
+`kitlib` now exists, and that most of the pinned pairs have since been folded
+into it — so much of each file is now prose explaining which tests used to be
+there. Verified 2026-11-05: the spec-folder reader IS consolidated
+(`kitlib.registry.read_spec_rows`, re-exported by `schedule.py` and
+`check_trajectory.py`), but the per-row normaliser still has two copies
+(`schedule.load_wis` 45 lines, `check_trajectory.load_wis` 58 lines) and the
+converter-fidelity and four-way equivalence batteries remain. The 0→A→B rule
+in PROCESS §3 says extract the shared stage; a test that pins two copies equal
+is the cost of not doing so, paid on every run. *Change:* one `load_wis` in
+`kitlib.registry`; delete both sync modules, keeping only the value batteries
+that test behaviour (a dozen cases).
 
 **[MED] 2.2 Six git wrappers.** `kitlib.git.git_out`, `agent_common.git`,
 `check_privacy.git`, `bookkeeping._git`, `derive_stage._git`, `traj_parse._git`
@@ -164,9 +181,11 @@ its `scan()`.
 lines and finds the diverged copies. *Change:* run it as a warn-only step.
 
 **[LOW] 2.6 `check.py` and `integrate.py` each carry `_ruling_sync_refusal`
-and `_text_then_act_refusal`.** They differ only in the tree walked (staged vs
-each lane commit). The walk is already shared (`kitlib.git.lane_commit_walk`);
-the two refusal composers should be one function taking the walk.
+and `_text_then_act_refusal`.** The walk itself is shared
+(`kitlib.git.lane_commit_walk`, used by `integrate._each_lane_commit`); what is
+duplicated is the pair of refusal composers and their 20-line docstrings, which
+differ only in "staged tree" vs "each lane commit". One composer taking the
+tree source would do.
 
 **[LOW] 2.7 Interface contract prose lives at 357 files.** 223 `Contract
 IF-###:` bodies, ~199 KB, sit in file headers while the registry row holds
@@ -277,6 +296,17 @@ from; a one-time re-tier that collapses implementation-mirroring LLRs into
 their SR (keeping `module` as the pointer) would halve the LLR count and is
 the single most persuasive sustainability fix.
 
+**[MED] 4.7 The authoring prose is right; the rows break it; no detector
+closes the gap.** `prompts/spine-questions.md` §3 already says an LLR "names
+no implementation carrier (a code file, function or symbol)" and that the
+`module`/`code_symbol` cells are the trace homes. 252 of 331 LLR rows violate
+that sentence. The SR tier has warn-only advisories for the same altitude
+rule (artifact token, shared artifact, EARS opening, fan-out); the LLR tier
+has only the lexical paraphrase advisory. A rule that is stated but never
+reported is the "unbacked rule" the enforcement audit says to delete or back.
+*Change:* an LLR identifier advisory in `trace_text` (the 20-line regex in
+`measure.py` finds them), warn-only, listed in the report like the SR ones.
+
 **[LOW] 4.6 `SN-001`…`SN-004` and `STK-*` share one table and the sampler has
 to special-case them;** `stakeholder-needs.toml` holds 35 rows of which 31
 are needs. Minor, but a reader counting needs gets the wrong number.
@@ -301,12 +331,12 @@ with Y" pin is replaced by removing the second copy (§2.1); each "the suite
 is partitioned/marked correctly" test is replaced by a one-line pytest plugin
 assertion in conftest.
 
-**[MED] 5.2 Tests assert on the kit's message text.** Spot-check: refusal
-and warning strings are asserted verbatim across the suite (the 2,725
-"refus" occurrences in scripts have a matching assertion density in tests).
-Any wording improvement is a multi-file test edit, which is why the messages
-are never improved. *Change:* assert on a short stable code or the first
-clause; keep wording free.
+**[LOW] 5.2 Tests pin the kit's message wording.** Measured: 724 of 18,491
+`assert` statements (4%) compare against a string literal of 40+ characters,
+spread over 116 of 269 test modules. The share is modest; the cost is that any
+wording improvement to a refusal is a multi-module test edit, which is one
+reason the 90-word warnings in §6.3 persist. *Change:* assert on a short
+stable token or the first clause; keep wording free.
 
 ## 6. Findings — guards vs warnings (contrived cases)
 
@@ -355,4 +385,69 @@ value of the wrong type is "refused at preflight", a `privacy_review` typo
 failure policies for one file. One policy (refuse a non-parsing file; warn and
 use the default for an unknown value) is easier to document and to test.
 
-## 7. Recommendations, ordered by leverage (pending)
+## 7. Recommendations, ordered by leverage
+
+Each item names the findings it discharges and a rough size. "Size" is the
+owner's reading time plus the change; none of these needs new dependencies.
+
+1. **Re-tier the kit's own spine at LLR and TC (§4.1–4.5, §4.7).** The kit's
+   spine is the example every adopter copies and every prompt is tuned on.
+   Collapse implementation-mirroring LLRs into their SR (keep `module` as the
+   pointer), rewrite `expected` as a one-sentence outcome, drop node ids from
+   `evidence`, and ship the LLR identifier advisory so the regression is
+   visible. Target: LLR 331 → ~150, TC `expected` 100% non-vacuous, evidence
+   file-level. Size: large but mechanical; the briefs render the diff.
+   This one change also shrinks `check_trajectory` output and the dashboard.
+
+2. **Ship the station as a layer, not the core (§1.1, §1.2, §1.6).** Move the
+   50 station modules, their `check.py` steps, prompts, and the 17 domain
+   skills under `project-trajectory/layers/<name>/` with a per-layer manifest
+   that bootstrap copies only on opt-in. The core that remains (spine
+   checks, trace, hooks, dashboard, bootstrap: ~45k lines) is what "a
+   reusable kit" promised. Size: a directory move plus manifest rows; the
+   import-layer ratchet already describes the boundary.
+
+3. **Turn the meta-tests into warn-only steps and delete the equality pins
+   (§2.1, §2.3, §5.1).** ~13k test lines and 2.3k pin lines go; two
+   `kitlib.ratchet` TSV baselines replace two dict literals. Size: medium;
+   every deletion is covered by a step that still reports.
+
+4. **One policy for history-dependent checks (§6.1, §6.4).** `is_shallow`
+   once in `kitlib.git`; any check that reads "the commit that last wrote X"
+   says *unverifiable* on a shallow clone. Move `approval-fresh` and the
+   snapshot byte-compare from the commit floor to the merge slot. Size:
+   small; it unblocks every CI and cloud session that clones at depth.
+
+5. **Downgrade hooks-on from refusal to warning (§6.2).** The slot already
+   judges every commit; the refusal only taxes fresh checkouts. Size: tiny
+   code change, ~500 test lines retire.
+
+6. **Strip provenance from code comments and shipped skills (§1.3, §3.3).**
+   Keep the reason, drop the `WI-###`/"owner ruling <date>" frame, the same
+   rule the spine already applies to `Rationale`. Point the existing
+   citation-frame detector at docstrings, warn-only. Size: a sweep;
+   reviewable in chunks per module.
+
+7. **Quiet the floor (§1.4, §6.3).** WARN lines summarised per class with
+   counts; full lists under `--verbose`; `trajectory-map` moves to the slot.
+   Size: small.
+
+8. **Move records out of the working tree (§1.5).** `docs/iteration`,
+   `docs/reviews/*/` rounds and `docs/archive` to a records branch; a
+   one-line index stays. Size: a `git mv` plus one path in `check_docs`.
+
+9. **Consolidate the small plumbing (§2.2, §2.4, §2.5, §2.6, §2.7).** One
+   git wrapper, one checker CLI shell, one `_clip`/`slugify`/`esc`, the
+   AST name census as a warn step, a generated contract banner. Size:
+   small each; do them inside the moves above rather than as their own WIs.
+
+10. **Split PROCESS_OPTIONS into one file per layer; de-duplicate the
+    architecture prose (§3.1, §3.4).** Size: small, prose only.
+
+**What this review did not do.** It did not run the full test suite (the
+owner directed that audit commits bypass the floor; the smoke tier and the
+38-step pre-commit floor were run and are green on the full clone). It did
+not read every module; the §2 duplicates were found by AST census and
+confirmed by reading the named functions. The spine altitude figures are
+lexical proxies (identifier regex, opening-phrase match) and should be read
+as lower bounds on the rows a human adjudicator would re-tier.
