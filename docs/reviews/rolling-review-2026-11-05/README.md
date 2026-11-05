@@ -16,7 +16,10 @@ limit. Each finding carries a severity (`[HIGH]`/`[MED]`/`[LOW]`), an anchor
 (file or rule), the issue, and a concrete change. Measurements are reproduced
 with the command that produced them.
 
-**Status:** COMPLETE (first full pass, 2026-11-05). `measure.py` beside this file reproduces every number. Audit
+**Status:** second pass IN PROGRESS (2026-11-05, same day). The first full pass is §1–§7;
+the second pass adds §8 onward, re-measures with `measure.py` and `trend.py`, and
+adversarially re-verifies §1–§6 (the verdicts land in §9 as they arrive). `measure.py`
+beside this file reproduces every first-pass number; `trend.py` the §8 table. Audit
 commits on this branch bypass the commit floor (`--no-verify`) at the owner's
 direction (2026-11-05): §6.1 and §6.4 record why the floor refused them.
 
@@ -451,3 +454,90 @@ not read every module; the §2 duplicates were found by AST census and
 confirmed by reading the named functions. The spine altitude figures are
 lexical proxies (identifier regex, opening-phrase match) and should be read
 as lower bounds on the rows a human adjudicator would re-tier.
+
+
+---
+
+# Second pass (2026-11-05) — trend, history cost, verification, new findings
+
+The first pass measured a snapshot. Sustainability is a derivative, so the second
+pass starts from the kit's growth curve and the cost its own records impose on
+every clone, then re-verifies §1–§6 adversarially (one skeptic per section, each
+re-measuring every number) and adds what six independent finders, an adopter
+simulation and external research turned up.
+
+## 8. Findings — the trend (reproduced with `trend.py`)
+
+One row per monthly snapshot: the commit at or before that date on this
+branch, then the size of each surface at that commit (`-000` example rows
+excluded; the July registries were still CSV).
+
+| date | commit | SR | LLR | TC | IF | OI | py | pyLines | tests | testLines | PROCESS_KB | OPTIONS_KB | check.py | skills | commits/30d |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-06-15 | 6d98b212 | 0 | 0 | 0 | 0 | 0 | 7 | 1792 | 6 | 557 | 21 | 0 | 218 | 0 | 13 |
+| 2026-07-15 | 31dfb562 | 56 | 57 | 57 | 52 | 0 | 24 | 18919 | 46 | 14490 | 58 | 135 | 960 | 5 | 495 |
+| 2026-08-15 | 0edd71f1 | 149 | 152 | 149 | 115 | 19 | 58 | 51182 | 117 | 57905 | 71 | 167 | 1806 | 27 | 1402 |
+| 2026-09-15 | 607cf609 | 79 | 192 | 194 | 167 | 76 | 84 | 77099 | 154 | 87742 | 86 | 185 | 2495 | 29 | 1492 |
+| 2026-10-15 | 2025f841 | 131 | 302 | 316 | 243 | 105 | 117 | 105782 | 232 | 125960 | 94 | 194 | 2722 | 32 | 796 |
+| 2026-11-05 | 9faf96a9 | 138 | 331 | 363 | 255 | 119 | 128 | 116540 | 269 | 153370 | 96 | 194 | 2878 | 33 | 719 |
+
+**[HIGH] 8.1 Every surface grows linearly and nothing shrinks except once.**
+Over five months the kit added ~25 scripts, ~50 test modules, ~55 LLRs and
+~60 TCs per month, and `check.py` grew from 218 to 2,878 lines. The one
+contraction — SR 149 → 79 between August and September (the spine
+restructure of 2026-08-08, which collapsed SRs) — was followed by regrowth to
+138, while LLRs never fell: the content the SR tier shed moved DOWN a tier
+(LLR 152 → 192 in the same window) and kept growing there. The lesson for
+§7.1 is that a one-time re-tier does not hold unless the *authoring prose and
+detectors* change with it; otherwise the rows come back one tier lower.
+*Change:* pair any re-tier with the LLR identifier advisory (§4.7) and a
+per-SR child-count report in the dashboard, so regrowth is visible monthly.
+
+**[HIGH] 8.2 The commit floor's freshness rule makes a 3.9 MB generated file
+the most-committed path in the repository.** `PROJECT_STATE.html` was
+rewritten in 2,006 of 4,682 commits (43%); its history holds 2,006 blobs,
+4.65 GB uncompressed (delta compression brings `.git` to 82 MB today, but every
+clone unpacks the deltas and every `git log -p`, blame and bisect reads them).
+`docs/open-items.html` adds 764 blobs / 362 MB, `docs/log.md` 648 / 738 MB.
+The kit's own rule (PROCESS §3, "Large composite artifacts … are regenerated
+every run, **gitignored**, and published by CI as artifacts. Don't diff these")
+names exactly this class and the kit's own dashboard violates it: the
+`trajectory-map` floor step requires the committed copy to be fresh, so every
+registry edit re-commits 3.9 MB. *Change:* gitignore `PROJECT_STATE.html` and
+`docs/open-items.html`, publish them from CI (the shipped `ci/check.yml`
+already uploads artifacts) or regenerate them in the merge slot only; the
+freshness *check* can stay as a WARN that the committed copy, if any, is stale.
+Downstream cost: none — adopters who want a committed dashboard keep the step.
+
+```
+git rev-list --objects HEAD -- PROJECT_STATE.html | awk '{print $1}' \
+  | git cat-file --batch-check='%(objecttype) %(objectsize)' \
+  | awk '$1=="blob"{s+=$2;n++} END{printf "%d blobs, %.1f MB\n", n, s/1048576}'
+git log --oneline -- PROJECT_STATE.html | wc -l      # 2006
+```
+
+**[MED] 8.3 The test-side ratchet is the seventh-largest path in history.**
+`tests/test_module_size_ratchet.py` carries 75 MB of cumulative blob bytes
+because its dict-literal baseline is re-stamped on nearly every refactor
+(§2.3, §5.1 in the first pass): a baseline that lives inside a 2,098-line test
+module is rewritten whole each time one number moves. The same query shows
+`docs/requirements/work-items.csv` (retired) at 77 MB and
+`docs/archive/last_approved/…low-level-requirements.toml` at 46 MB — the
+approval snapshot (§6.4) is a second full copy of the LLR registry re-written
+on every approval. *Change:* as §2.3 (TSV baseline, one line per module) and
+§6.4 (snapshot drift judged at the slot, not re-copied per commit).
+
+```
+git rev-list --objects HEAD | git cat-file --batch-check='%(objecttype) %(objectsize) %(rest)' \
+  | awk '$1=="blob"{s[$3]+=$2} END{for(p in s) printf "%.1f MB %s\n", s[p]/1048576, p}' | sort -rn | head -8
+```
+
+**[MED] 8.4 The spine's own ratio has inverted.** In July the tiers were
+roughly 1:1:1 (SR 56, LLR 57, TC 57, one LLR and one TC per SR). Today they
+are 1 : 2.4 : 2.6 (138 : 331 : 363) with 255 IF rows besides — 1,087 traced
+rows for a kit whose 35 needs fit on two screens. The ratio is the measurable
+form of §4.5: the descent from SR to LLR is where the rows multiply, and the
+IF registry (52 → 255) grew faster than any spine tier. A healthy
+downstream spine for a product of this size would be closer to the July
+shape. *Change:* report the per-tier ratio in the dashboard's trajectory tab
+beside the orphan count; it is the one number that shows a re-tier holding.
