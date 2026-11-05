@@ -25,16 +25,17 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** start with the coordinator's
-  [handoff-2026-11-03a-leg31-coordinator.md](handoff-2026-11-03a-leg31-coordinator.md).
-  The owner ordered WI-993, WI-991, WI-982 and WI-983 into its queue, so its
-  stop line is gone; WI-910 waits on the owner. Lanes
+  [handoff-2026-11-04a-leg32-coordinator.md](handoff-2026-11-04a-leg32-coordinator.md).
+  The test-file tag reader has landed and tags nothing yet; the tag-migration
+  row is next, then the review test-set and strict-mark rows, each with its
+  scope critique confirmed. The macOS row and the owner-held-step row wait on
+  the owner, and the handoff's table holds the rest. Lanes
   reserve their registry ids on the shared id carrier before drafting
   (`trace.py --reserve-ids`), and both landing routes admit only reserved
   ids. The trunk mint no longer files an amendment row for a row the
   merged range already settled (judged from the act ledger's record of
   what each act copied); a minted amendment row is checked against the
-  lane's own act (the recipes' sweep step). P8's three rows are filed,
-  each owing its scope critique; OI-125 ruled their three calls (a).
+  lane's own act (the recipes' sweep step).
   The owner ruled the review-churn program
   ([plans/2026-10-11-review-churn/](plans/2026-10-11-review-churn/README.md):
   every call is ruled; read its Status, then its rulings). The batch's
@@ -116,7 +117,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   `"overruled"`; entries not yet seen, high-risk first, render under "Decisions
   to review" in [open-items.html](open-items.html), and an overrule must change
   open work citing it in the same commit.
-  Approval acts run to seq 167 on trunk. The context guard's hooks are machine-local
+  Approval acts run to seq 171 on trunk. The context guard's hooks are machine-local
   (installed through dev-setup's consented offer, or at a lease take run at a terminal; this
   workstation is on), and the guard is live where they are: take the coordinator
   lease (`coordinator_guard.py take`) before any claim, and hand it back
@@ -197,7 +198,21 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 - **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
   entities · 4 crossings · 3 relationships, watermark-held); `OI-61` (c) stays deferred
   on its condition (a demonstrated residual drift class), not owner-owed.
-- **Unfiled follow-ups** (topics, no ids): from the watermark carrier's
+- **Unfiled follow-ups** (topics, no ids): from the test-file tag row's
+  rounds and gate (wi-994 D-002, D-007): the tag entry in the RESYNC pack
+  classes the PROCESS text as adopter-merged where its section 2.2 classes
+  `docs/process.md` as generated (fix before the FileBackup re-sync); a fixture
+  imported under a hand-chosen alias is read as a test; a token after prose
+  outside a read position is neither a declaration nor refused (the review test-set row's
+  partial refusal reports the consequence); a tests root overlapping the source root
+  refuses every source back-link, and a `.cmd` test file has no tag form (both
+  fail closed); no test puts a test def in a non-test file, where the shipped
+  code is right; `EXAMPLE.md`'s TC-001 evidence names the Python file where its
+  section 5 tags the Rust one; LLR-365's rationale could say a file and line are
+  that rule's attribution where SR-157 says row and cell (wording); and the
+  check's added wall time is stated from a loaded box, so a quiet figure is
+  owed;
+  from the watermark carrier's
   landing (wi-978 D-006, D-013, D-021): a code-only landing never judges
   a landing-only watermark record, and the reservation folds trunk's
   records into the carrier as authority (judge the record first, or take

@@ -945,6 +945,8 @@ lane commit being replayed.
 | Smoke-ceiling restamp | trunk's note plus the lane's count; restamp only past the ceiling |
 | Module-size ratchet | per hunk: trunk's note plus the lane's count, the lane's reason kept; never `--ours` the whole file, which also drops the lane's stamps outside the conflict (2026-10-19b) |
 
+- A conflicted `docs/id-watermark` holds conflict markers: run
+  `git checkout --ours docs/id-watermark` before the fold (leg 32).
 - **At a trunk squash,** use `"$PY" "$TOOLS/toml_merge3.py" <branch> <registries...>`
   for registry conflicts; compare parsed tables even after a clean line-merge.
   It merges merge-base/HEAD/branch, not a rebase replay's three stages. It
@@ -1182,6 +1184,10 @@ lane commit being replayed.
   returned: name the rows it may touch, and restore any other row to
   its approved bytes (wi-851 D-012).
 
+- Name a new row's `phase` in the intent brief, read from `docs/stage`'s
+  `phase`: an intent turn stamped seven rows 1 on a phase-6 spine, which
+  the lints pass and a sitting returned, all seven (wi-994 sitting 005).
+
 ## 6. Commits and hooks
 
 - A commit made by hand in a lane worktree runs the hook under the
@@ -1286,6 +1292,10 @@ lane commit being replayed.
   `max-tests` at its first attest: count the tier first
   (`pytest -q -m smoke --collect-only`, against `docs/stack.ini`'s
   `max-tests`) and re-stamp in that commit (wi-856 D-002).
+
+- `attest` appends the run's trailer to a message file that already
+  carries it, so that commit holds it twice. The last wins and `check-lane`
+  passes; leave it out of an attest message (leg 32).
 
 ## 7. Environment and limits
 
@@ -1453,6 +1463,11 @@ lane commit being replayed.
   (`taskkill //PID <the integrate.py pid> //T //F` from Git Bash), re-run
   with a fresh log, and record it; a fresh run passed in 34 minutes
   (wi-851 D-014).
+
+- A builder asked for a timing figure backgrounded the run and returned
+  holding for its notice, in a headless leg. Say in the brief that a timing
+  run stays in the foreground too; the resume with a `.done` poll recovered
+  it (wi-994, leg 32).
 
 ## 8. Re-judge and consolidation recipes
 
