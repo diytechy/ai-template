@@ -34,14 +34,19 @@ META_TESTS = (
     "check_dupes_census shipped_tier ci_tier_declaration smoke_budget smoke_budget_meter "
     "cpu_cap wi_loader_sync status_vocabulary_contract generated_newlines generated_set "
     "csv_header kitlib_spec_listing meta_repo_hook shell_portability launcher_interpreter "
-    "env_gates test_evidence coverage_floors"
+    "env_gates test_evidence"
 ).split()
 
 
-def rows(path):
+def rows(path, table=None):
+    """Rows of one registry; `table` names the tier's own TOML table (need,
+    requirement, design, test) so a sibling table in the same file (the
+    stakeholders beside the needs) is not counted as a row of the tier."""
     data = tomllib.load(open(path, "rb"))
     out = []
-    for value in data.values():
+    for name, value in data.items():
+        if table and name != table:
+            continue
         if isinstance(value, dict):
             for rid, row in value.items():
                 if isinstance(row, dict) and re.match(r"^[A-Z]+-\d+$", rid):
@@ -123,16 +128,41 @@ def main():
                     longstr += 1
     print(f"asserts: {asserts}; asserting a >=40-char string literal: {longstr}")
 
-    sr = rows(ROOT / "docs/requirements/system-requirements.toml")
-    llr = rows(ROOT / "docs/requirements/low-level-requirements.toml")
-    tc = rows(ROOT / "docs/test/test-cases.toml")
+    sn = rows(ROOT / "docs/requirements/stakeholder-needs.toml", "need")
+    stk = rows(ROOT / "docs/requirements/stakeholder-needs.toml", "stakeholder")
+    sr = rows(ROOT / "docs/requirements/system-requirements.toml", "requirement")
+    llr = rows(ROOT / "docs/requirements/low-level-requirements.toml", "design")
+    tc = rows(ROOT / "docs/test/test-cases.toml", "test")
+    # The first pass's broad regex (counts ALLCAPS English such as TOML/HEAD too);
+    # the second pass adds the stricter proxies the §12 verification settled on.
     ident = re.compile(r"\b[a-z]+_[a-z_]+\(?|\b[A-Z][A-Z_]{3,}\b|\.py\b")
-    print(f"SR {len(sr)} LLR {len(llr)} TC {len(tc)}")
+    call_or_py = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\(|\.py\b")
+    snake_call_py = re.compile(r"\b[a-z]+_[a-z_]+\b|\b[A-Za-z_][A-Za-z0-9_]*\(|\.py\b")
+
+    def repeats_own_symbol(r):
+        toks = [t for t in re.split(r"[,;/ ]+", str(r.get("code_symbol", ""))) if len(t) > 2]
+        toks.append(pathlib.Path(str(r.get("module", "")).split(";")[0]).stem)
+        detail = str(r.get("detail", ""))
+        return any(re.search(r"\b" + re.escape(t) + r"\b", detail) for t in toks if t)
+
+    print(f"SN {len(sn)} (+{len(stk)} STK) SR {len(sr)} LLR {len(llr)} TC {len(tc)}")
+    details = [str(r.get("detail", "")) for _, r in llr]
     print(
-        f"LLR detail with code identifiers: {sum(1 for _, r in llr if ident.search(str(r.get('detail', ''))))}; >1500 chars: {sum(1 for _, r in llr if len(str(r.get('detail', ''))) > 1500)}"
+        f"LLR detail with code identifiers (broad regex): {sum(1 for d in details if ident.search(d))}; "
+        f"call syntax or .py: {sum(1 for d in details if call_or_py.search(d))}; "
+        f"snake_case|call|.py: {sum(1 for d in details if snake_call_py.search(d))}; "
+        f"repeating own module/code_symbol token: {sum(1 for _, r in llr if repeats_own_symbol(r))}; "
+        f">600 chars: {sum(1 for d in details if len(d) > 600)}; >1500 chars: {sum(1 for d in details if len(d) > 1500)}"
     )
+    expected = [str(r.get("expected", "")) for _, r in tc]
     print(
-        f"TC expected opening 'Satisfies': {sum(1 for _, r in tc if re.match(r'Satisfies (SR|the)', str(r.get('expected', ''))))}"
+        f"TC expected opening 'Satisfies (SR|the)': {sum(1 for e in expected if re.match(r'Satisfies (SR|the)', e))}; "
+        f"opening 'Satisfies': {sum(1 for e in expected if e.startswith('Satisfies'))}; "
+        f"pointer with <=3 words beyond it (strictly vacuous): {sum(1 for e in expected if e.startswith('Satisfies') and len(re.sub(r'^Satisfies[^:.]*', '', e).split()) <= 3)}"
+    )
+    methods = [str(r.get("method", "")) for _, r in tc]
+    print(
+        f"TC method median chars: {sorted(len(m) for m in methods)[len(methods) // 2]}; max: {max(len(m) for m in methods)}; >300: {sum(1 for m in methods if len(m) > 300)}"
     )
     node_refs = dead = 0
     for rid, r in tc:

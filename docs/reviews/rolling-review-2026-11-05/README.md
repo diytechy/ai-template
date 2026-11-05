@@ -36,7 +36,7 @@ wc -c project-trajectory/PROCESS_OPTIONS.md      -> 199,478 bytes
 wc -c project-trajectory/README.md               ->  93,389 bytes
 wc -c project-trajectory/RESYNC_PACK.md          -> 643,982 bytes
 wc -c project-trajectory/skills/*/SKILL.md       -> 144,330 bytes, 33 skills
-registries: SN 35 rows, SR 138, LLR 331, TC 363, IF 255, OI 120
+registries: SN 31 (+4 STK; the first pass printed 35), SR 138, LLR 331, TC 363, IF 255, OI 120
 ```
 
 These numbers are the headline finding on their own (see §1). Re-derive them
@@ -1146,3 +1146,79 @@ The before-row TC-229 read `expected = "Satisfies SR-199's acceptance clauses
 on the record's fields, the empty digest for a case …"`; LLR-235 opened
 "`record_observation.py --tc TC-### --outcome pass|fail --by <provenance>
 [--expires <UTC>] resolves the test c…`".
+
+## 12. Verification of the first pass — one skeptic per section
+
+**Method.** Six independent reviewers each took one section of §1–§6 with the
+brief to *refute* it: open every anchor, re-measure every number with their own
+command, search for what the kit already does, and judge the proposed change
+against downstream cost and the kit's own principles. Verdicts: CONFIRMED (holds
+as written, numbers within 5%), PARTIAL (holds with the stated corrections),
+REFUTED. The skeptics' full evidence (commands, outputs, line anchors) is in
+the session's workflow journal; the corrected numbers below reproduce with the
+revised `measure.py`. HEAD moved from `9faf96a97` to `1824c259b` during the
+pass; §1–§6 were not edited. §6's verdicts are appended below as they land.
+
+**Corrections to §0.** "SN 35 rows" → 31 needs plus 4 stakeholders in a
+separate `[stakeholder.*]` table (the miscount was `measure.py`'s own, now
+fixed). "116 files" → 97 top-level scripts, 128 with `kitlib/` and
+`rendering/` (116,540 lines). "281 test files" → 278 `.py`, 269 test modules
+(153,370 lines). "1,842 WI citations" → 1,992 (the first pass skipped
+`rendering/`). "38-step floor" → 29 `check.py` steps plus 4 script calls at
+the hook; 47 steps registered at `--stage all`.
+
+| § | first-pass tag | verdict | what stands after verification |
+|---|---|---|---|
+| 1.1 | HIGH | PARTIAL | The size statement holds; "an adopter receives ~1.2 MB of Markdown" does not: the manifest ships 0.53 MB of `.md` plus ≤86 KB of kit-scope skills; `RESYNC_PACK.md` (644 KB) and the kit README stay in the kit checkout, and the pack is range-filtered by design. Re-anchor the headline on what ships: 5.99 MB, of which 5.18 MB Python. |
+| 1.2 | HIGH | PARTIAL | The station is ~48% of the code and its steps are in the floor (confirmed). The LLR share was understated (107 LLRs name only station modules, 159 at least one). The separable station is nearer 42k lines: ~9.4k lines the partition called "station" (`spine_carrier`, `baseline_snapshot`, `acceptance_record`, `agent_common`, `schedule`, `prompts`, `record_observation`) are imported by 10 core modules, and PROCESS.md itself speaks station vocabulary (lane ×12, sitting ×8). The split is a migration — shared modules to `kitlib` first, a declaration-driven hook list, a RESYNC entry moving 52 files — not "a directory move plus manifest rows". |
+| 1.3 | HIGH | PARTIAL | Ratio 0.82 confirmed, but the guide *asks* for header and symbol docstrings, so the ratio is by design. The measurable defect is the per-site provenance frame: 1,992 `WI-###`, 96 of 128 modules citing more than one, 102 "owner ruling", 453 `OI-###`, 512 ISO dates. The rule ("at most once per module, a header pointer") is `AGENTS.template.md:182`, in the Working agreement, and no enforcer backs it. A detector must follow the sweep, or it prints ~3,000 lines. Tag stands on reading cost, not breakage. |
+| 1.4 | MED | PARTIAL | 350 WARN of ≈520 lines, 27 s `trajectory`, 18 s `trajectory-map`: confirmed. The floor is green at HEAD; the "FAIL approval-fresh" was the review's own first commit. 201 of the 350 WARN come from four classes in two steps. The hook already skips the ten `_TRUNK_FRESHNESS_STEPS` on a claimed work branch (`check.py:1658`), so the cost falls on trunk commits — which in this repo are most commits. Moving `trajectory-map` changes a stated rule (PROCESS.md:310); name the whole set. |
+| 1.5 | MED | PARTIAL | Docs are 80% of the tree (understated), but "that no gate reads" is wrong for most of `docs/archive`: 73% of it is live registry input (`work/`, `last_approved/`, `specs/`) read by 13 scripts, and the merge gate's verdict join reads `docs/reviews` and `docs/iteration` (`kitlib/verdict.RECORD_PREFIXES`). A records *branch* would break that join. Re-scope to closed lanes and prose history, or a retention rule in the loop. |
+| 1.6 | LOW | PARTIAL → withdraw | 29 skills ship (4 are `scope: this-repo`); 15, not 17, are domain-gated; the 17 total 22 KB with zero process coupling. A second `skills-domain/` root would duplicate the IF-035 machinery for 22 KB of prose — net-negative under the kit's own one-home rule. Fix the two `any` domain lists if universal shipping is unwanted. |
+| 1.7 | MED | CONFIRMED | Numbers hold within 1%. Window caveat: 26% is the last three weeks (18% over 1,000 commits, 6% over all 4,682); the ritual dates from 2026-08-30 and the scoped-unpause direction from 2026-10-04. Sharper root cause: the pause file is deliberately one-bit while the owner's standing instruction is a *scoped* unpause, which the file cannot express. The proposed `station.toml` conflicts with `process.toml`'s recorded presence-as-semantics exception; a scope key inside the pause file (`allow = ["WI-983"]`) honoured by `integrate.py:681` makes a scoped claim one commit. |
+| 2.1 | HIGH | PARTIAL → MED | The two `load_wis` are projections over a ~10-line shared id-gate with deliberately opposite error policies (validator reports, scheduler skips); 69 live tests pass in 1.8 s; 40%/25% prose, not "most". Deleting `test_rule_sync` collides with ruling D-7 (`docs/stack.ini:1085`). The real unguarded duplicates the finding missed: `WI_ID_RE` verbatim in two modules with no home and no pin, and the `Predecessors` cell split three ways across six modules. Change: a `wi_rows(rows, on_error)` id-gate generator; each caller keeps its projection. |
+| 2.2 | MED | PARTIAL → LOW/MED | 8 named wrappers plus ~10 inline `subprocess.run(["git"…])` sites; `derive_stage._git` already delegates to `kitlib.git.git_out`. They vary on seven axes (return shape, strip, stderr, stdin, env, bytes, OSError policy), so two keyword arguments cannot replace them, and a five-knob wrapper is the mode-flag shape the `deep-module-design` skill forbids. Feasible: one raw `kitlib.git.run` as the single subprocess site with `git_out` and an `(rc, text)` adapter as the two public shapes. |
+| 2.3 | MED | PARTIAL → LOW | Only `read_baseline`/`write_baseline` (~20 lines) are semantic duplicates; `compare`/`_report` carry opposite *policies* (fail both directions vs warn on rise). The test ratchets hold 9 and 41 entries (not "every module"), and `test_complexity_ratchet` measures McCabe through `ruff`, which cannot become a row of the cognitive baseline without a shipped dependency. One TSV read/write pair in `kitlib`; two policies stay two functions. |
+| 2.4 | MED | PARTIAL → LOW | The four-piece shell is written 4 times, a partial variant 13, the literal suffix 2; `check_flows.py` is not a warn-first checker (it exits 1) and `check_stubs` warns under `--strict`. `utf8_console` is already shared. 4–8 scripts × ~10 lines. |
+| 2.5 | MED | REFUTED | `check_dupes_census.py` is not retired: it is the standing warn-only `[step:dupes-census]`; D-7 tore down `check_dupes.py`. 93 of the 94 name collisions have different bodies; of the five named pairs, `slugify` are homonyms, `_clip` two of four are wrappers over the one home, `esc` is a one-liner. Real pairs: `_id_number` ×2 inside `kitlib` (plus `spec_id_number`/`wi_convert`), `gen_release_checklist.load_csv`, two line-clips (~15 lines). A name-census step would add ~90 homonym WARNs and re-open D-7. |
+| 2.6 | LOW | PARTIAL | The composers differ in rider set, remedy composition, squash reading and message frame, not only tree source; ~15 shared lines against 48 docstring lines. A §1.3 instance, not duplication; keep apart (`integrate.py:1338` states why the slot re-judges). |
+| 2.7 | LOW | PARTIAL | 347 tracked files tree-wide, of which 105 kit files, 99 carrying the machine-read `Contracts:` marker; ~240 are records quoting headers (§1.5). The identical frame exists in ~27–30 files, 2.8 KB; the bodies are 228 / 334 KB (median 977). The marker is read by the connectivity check and the generated interface reference — do not delete it; the weight is the body length, the §4.1 problem in another cell. |
+| 3.1 | MED | PARTIAL → LOW | The list names eight homes and omits PROCESS §4 and `spine-questions.md` §4. "The surrounding prose repeats the rubric" is refuted: the rubric's vocabulary appears zero times in PROCESS, OPTIONS or AGENTS. Real restatement is ~1 KB (the derived-map rule three times inside §3; the IF row model in §8 and the OPTIONS layer; two uncited AGENTS bullets). The rubric at 15.7 KB is the single largest architecture home. The proposed change ("§3 keeps only three invariants") is mis-aimed; the IF-model duplication and the derived-map triple are the cut. |
+| 3.2 | MED | PARTIAL | `components.derived.toml` holds 4 entries and is a generated view, not a registry; the "ONE cycle" sentence is stale (the ratchet's baseline is empty, 7 tests pass); the component layer *is* consumed (gen_components, the `component-view` step, cross-component findings, membership join). The evidence that does support the thesis: 229 of 255 IF seams (90%) cross a boundary of only 4 components; 255 rows against the kit's own "~30–35" estimate; 14 multi-tagged modules suppress the seam rule; 6 SRs are unplaced; and the station cut already exists as CMP-008. |
+| 3.3 | MED | REFUTED → LOW | `coordinator-cycle` and `session-protocol` are already `scope: this-repo` and never ship (`bootstrap.py:540`, `test_bootstrap.py:1457`); the `WI-926` example lives only in the this-repo `recipes.md`. The shipped surface carries 3 WI citations and ~5 ruling phrases (gate-advance, spine-authoring, antidote). The real provenance sink is `coordinator-cycle/references/recipes.md`: 102 KB, 61 WI citations, this-repo. Change: strip the handful; generalise `test_skills_index.py`'s stray-WI pin to every kit-scope skill. |
+| 3.4 | LOW | PARTIAL | 27 layers, not 34. The file itself declares a deferred split of the two spec-sized layers (29% of its bytes) and records the +1,101% watch-only growth. Cost is understated: a per-layer split reworks bootstrap's profile omission, the manifest row, 8 dashboard hrefs, the OKF export, 4 test modules, and ~137 section-name cites no checker validates. Cheaper first step: move the two layers behind pointer stubs. |
+| 4.1 | HIGH | PARTIAL | Lengths hold (median 759; 58 > 1,500; 18 > 3,000; LLR-270 11,427). "252 of 331" overcounts — 59 rows match only ALLCAPS English (TOML, HEAD, SCOPE); defensible: 112 name a call or `.py`, 199 by snake_case/call/`.py`, 204–209 repeat a token of their own `module`/`code_symbol`. The LLR-298 warning runs the other way (the cell is stale relative to the code). The proposed §3 prose already landed (B1). The shipped template line 19 is the unfixed authoring surface (§10.1). "Move the symbol list to `code_symbol`" contradicts ruled item 5 (the cells retire; code points up); a 600-char warn would fire on 197/331 of the kit's own rows. |
+| 4.2 | HIGH | PARTIAL → MED | Strictly vacuous pointers are 96–119 (26–33%) depending on the heuristic; 202 open "Satisfies", 81 of those carry an outcome after a colon. The pointer is the shipped convention — template line 26 and `gen_cases.py:210/238` generate it. "Duplicates the test docstring" is refuted: 73% of the evidence functions have none. The measurable defect is `method` (median 516, max 15,874, 233 > 300). An `expected` rewrite is sound only in the exemplar's form (the case's observable outcome, never the AC restated). |
+| 4.3 | HIGH | PARTIAL → tracking | 2,124 node ids and 6 of 269 tagged files: confirmed. Two of the four "dead" ids moved to another module. Deriving evidence from tags is not a gap: it is ruled (2026-10-11 rev 8, rev 35) and in flight — the tag reader landed 2026-11-04 (WI-994), seeding and the equality check are active (WI-997), the generated column is item 5's last step. The ruled design keeps *per-test* tags (replacing `::` cells); "file-level only" contradicts it. |
+| 4.4 | MED | PARTIAL | Numbers hold; add `coincident` (71 rows, 15.5 KB). "Are test procedures" overstates: SR-199's AC names no instrument. Fixed thresholds would warn on 83/138 ACs and 104/138 rationales of the kit's own spine. Lead with the volume (119 KB of rationale for 45 KB of requirements). |
+| 4.5 | MED | PARTIAL | Census holds. The fan-out detector fires for only 2 rows because 7 of the 9 over-bound SRs are re-stamped silent (SR-157 22, SR-148 16, SR-154/054/155 11, SR-244 10, SR-053 8). "Collapse LLRs into their SR keeping `module` as the pointer" is infeasible under the schema (no SR module cell; §2(b) forbids concrete names) and contradicts ruled decomposition (b) (LLRs decompose recursively under parent links) and "Module retires as a spine term". §7.1 is withdrawn in that form. |
+| 4.6 | LOW | REFUTED | SN-001…004 are ordinary Approved needs; the four non-need rows are STK-01…04 in their own table by documented design; the kit's reader special-cases nothing. The miscount was the review's. |
+| 4.7 | MED | PARTIAL | The gap is real and unlisted even in the enforcement audit. Three shipped surfaces disagree: §3 bans carriers, the template mandates them, the skill predicts the ban "gets bent silently". Ruled item 5's commit-time text check is the detector, sequenced "last"; the template-line fix is scheduled nowhere. |
+| 5.1 | HIGH | PARTIAL → MED | The set is mis-drawn: 11 of the 34 modules test shipped behaviour or a shipped surface (`launcher_interpreter`, `hooks_on_routes`, `test_evidence`, `status_vocabulary_contract`, …) and two meta modules were omitted; corrected: ~25 modules, ~10.7k lines (6.8%), 49% of which is prose. The baseline dict holds 9 entries (modules over 1,000 SLOC) and was re-stamped in 277 of 2,986 commits because the ratchet is exact-equality in both directions; the shipped TSV churns too (38 re-stamps in 90 days) — the fix is a grow-only rule, not the carrier. `tests/` never ships, so the adopter cost is zero. Making the sensors warn-only reverses OI-68 (ruled 2026-08-30 with the evidence that advisories were not obeyed here). |
+| 5.2 | LOW | PARTIAL → fold | True wording pins are ≈430–470 asserts (2.4%); 97% of long literals are pinned in one module, so a rewording is a one-module edit; the §6.3 causal link fails for its own example (`test_trajectory_holdban.py` pins two tokens). The heaviest pinners test prompt text, where the wording *is* the behaviour. |
+| 6.1–6.5 | — | pending | The §6 skeptic's verdicts are appended here when they land. |
+
+**What the verification changes.**
+
+- **Refuted:** 2.5, 4.6, and 3.3 as a shipped-skill problem. **Downgraded:**
+  1.6 (withdrawn), 2.1, 2.2, 2.3, 2.4, 3.1, 4.2, 5.1, 5.2. **Confirmed with
+  corrections:** every other finding; 1.7 fully.
+- **The largest single correction is a document the first pass never
+  cited:** the owner's ruled plan,
+  `docs/plans/2026-10-11-review-churn/README.md` (revision 38, "Ruled: every
+  item and call"). Its item 5 already rules the remedy for 4.1, 4.3 and 4.7 —
+  no code carrier in any requirement row, `module`/`code_symbol` retire from
+  the LLR schema, a commit-time text check, the TC evidence column generated
+  from per-test tags in test files — and variant F / decomposition (b) rules
+  that LLRs decompose *recursively* under authored parent links and that
+  "Module retires as a spine term". §7.1's "collapse LLRs into their SR, keep
+  `module` as the pointer" is the reverse of that ruling and is withdrawn; §14
+  re-cuts it as "execute item 5, fix the templates first, re-tier in batches".
+- **Two first-pass changes conflict with recorded rulings** and need a new
+  ruling argued against the recorded evidence, not a work item: deleting
+  `test_rule_sync` (D-7) and making the armed size/complexity sensors
+  warn-only (OI-68).
+- **The first pass over-weighted code duplication and under-weighted two
+  things the second pass surfaced:** the kit's own detectors are blind to
+  the altitude defects (§11.4), and the shipped templates manufacture them
+  (§10.1). Those two are where the leverage is.
