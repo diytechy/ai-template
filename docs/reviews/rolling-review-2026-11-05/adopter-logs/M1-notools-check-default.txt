@@ -1,0 +1,95 @@
+
+=== registry-integrity : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/trace.py --strict-integrity ===
+Traceability: SN=0 SR=0 LLR=0 TC=0 orphans=0 integrity=0. Report -> docs/test/report.md
+
+=== derived-stage : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/derive_stage.py --check ===
+derive_stage: docs/stage up to date (DevStg-Reqs).
+
+=== vocabulary : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check_vocab.py --root . ===
+check_vocab: clean (206 live authored file(s); no retired gate tags).
+
+=== need-form : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check_need_form.py --root . ===
+check_need_form: clean (0 need cell(s); no internal path, implementation identifier or process citation).
+
+=== privacy : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check_docs.py --ignore docs/test/report.md --ignore docs/work/* --ignore docs/archive/work/* --ignore docs/handbacks/* --stale ===
+check_docs: OK - 19 doc(s), 87 intra-repo link(s), 0 broken.
+
+=== test-first : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check_test_first.py --src src ===
+test-first: WARN - history unreadable: this is a shallow clone, so the commits before its graft are missing (git fetch --unshallow restores them). The order was not judged, which is not a pass.
+
+=== approval-fresh : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/trace.py --approve modified --check ===
+trace: approval-check — no brief at docs/ratify/CURRENT.md — nothing to gate
+
+=== skills-index : /usr/local/bin/python3 -c pass ===
+
+=== prompt-catalog : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/gen_prompt_catalog.py --check ===
+gen_prompt_catalog: fresh (14 prompts).
+
+=== verdict-rollup : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/gen_verdict_rollup.py --check ===
+gen_verdict_rollup: fresh (0 review scope(s)).
+
+=== staged-divergence : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check.py --staged-divergence --strict ===
+  ok    staged-divergence  none of the 10 declared generated artifact paths is modified-but-unstaged.
+
+=== approval-immutable : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check.py --approval-immutable ===
+  ok    approval-immutable  no staged change touches an existing dated docs/ratify/ brief.
+
+=== held-status : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check.py --held-status ===
+  ok    held-status  no held status move or held approval claim to refuse
+
+=== reserved-ids : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check.py --reserved-ids ===
+  ok    reserved-ids  no squash landing adds an unreserved id or lags the id carrier
+
+=== ruling-sync : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check.py --ruling-sync ===
+  ok    ruling-sync  no staged ruling leaves a citing row out of sync
+
+=== text-then-act : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check.py --text-then-act ===
+  ok    text-then-act  no staged commit mixes spine text with the approval act
+
+=== parent-first : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check.py --parent-first ===
+  ok    parent-first  no staged status leaves an approved row under an unapproved parent
+
+=== done-when-blessed : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/integrate.py done-when-hold ===
+
+=== plan-gate : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/plan_gate.py ===
+  ok    plan-gate  no `single` row of this lane builds before its plan passes
+
+=== adoption-record : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/adoption_record.py ===
+  ok    adoption-record  no staged commit changes an adoption record only the close may write
+
+=== assumption-gate : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check_assumption_gate.py --root . --step assumption-gate ===
+assumption-gate: 0 finding(s), the assumption gate is off ([checks] assumption_gate), so none fails
+
+=== crossing-allocation : /usr/local/bin/python3 /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/shallow/scripts/check_assumption_gate.py --root . --step crossing-allocation ===
+crossing-allocation: 0 finding(s), the assumption gate is off ([checks] assumption_gate), so none fails
+
+========================================================
+Check summary (stage DevStg-Reqs, tier all):
+  PASS  registry-integrity 0.4s
+  PASS  derived-stage    0.1s
+  PASS  vocabulary       0.6s
+  PASS  need-form        0.1s
+  PASS  privacy          0.4s
+  PASS  doc-navigability 0.1s
+  PASS  test-first       0.1s
+  PASS  approval-fresh   0.2s
+  PASS  skills-index     0.0s
+  PASS  prompt-catalog   0.1s
+  PASS  verdict-rollup   0.1s
+  PASS  staged-divergence 0.1s
+  PASS  approval-immutable 0.1s
+  PASS  held-status      0.1s
+  PASS  reserved-ids     0.1s
+  PASS  ruling-sync      0.1s
+  PASS  text-then-act    0.1s
+  PASS  parent-first     0.1s
+  PASS  done-when-blessed 0.2s
+  PASS  plan-gate        0.1s
+  PASS  adoption-record  0.1s
+  PASS  assumption-gate  0.2s
+  PASS  crossing-allocation 0.2s
+========================================================
+RESULT: PASS

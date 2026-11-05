@@ -1,0 +1,110 @@
+
+=== registry-integrity : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/trace.py --strict-integrity ===
+WARNING (advisory): 2 absolute-term advisories (SN 1, SR 0, LLR 1) — each row and cell is listed in the report's 'Absolute-term advisories' section
+FINDING (integrity): LLR-001 exists but the id watermark stands at 0 — in a lane, reserve the ids before drafting (`trace.py --reserve-ids WI-NNN LLR=N`, which folds the reservation into this file); on the trunk, record it with `trace.py --bump-ids` (the mark is what stops the number being handed out again after the row is deleted)
+FINDING (integrity): SN-001 exists but the id watermark stands at 0 — in a lane, reserve the ids before drafting (`trace.py --reserve-ids WI-NNN SN=N`, which folds the reservation into this file); on the trunk, record it with `trace.py --bump-ids` (the mark is what stops the number being handed out again after the row is deleted)
+FINDING (integrity): SR-001 exists but the id watermark stands at 0 — in a lane, reserve the ids before drafting (`trace.py --reserve-ids WI-NNN SR=N`, which folds the reservation into this file); on the trunk, record it with `trace.py --bump-ids` (the mark is what stops the number being handed out again after the row is deleted)
+FINDING (integrity): STK-001 exists but the id watermark stands at 0 — in a lane, reserve the ids before drafting (`trace.py --reserve-ids WI-NNN STK=N`, which folds the reservation into this file); on the trunk, record it with `trace.py --bump-ids` (the mark is what stops the number being handed out again after the row is deleted)
+FINDING (integrity): TC-001 exists but the id watermark stands at 0 — in a lane, reserve the ids before drafting (`trace.py --reserve-ids WI-NNN TC=N`, which folds the reservation into this file); on the trunk, record it with `trace.py --bump-ids` (the mark is what stops the number being handed out again after the row is deleted)
+Traceability: SN=1 SR=1 LLR=1 TC=1 orphans=0 integrity=5 drafts=4. Report -> docs/test/report.md
+
+=== derived-stage : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/derive_stage.py --check ===
+derive_stage: docs/stage up to date (DevStg-Reqs).
+
+=== vocabulary : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_vocab.py --root . ===
+check_vocab: clean (206 live authored file(s); no retired gate tags).
+
+=== need-form : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_need_form.py --root . ===
+check_need_form: clean (1 need cell(s); no internal path, implementation identifier or process citation).
+
+=== privacy : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_privacy.py --repo ===
+check_privacy: clean (repo sweep; secrets floor).
+
+=== doc-navigability : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_docs.py --ignore docs/test/report.md --ignore docs/work/* --ignore docs/archive/work/* --ignore docs/handbacks/* --stale ===
+check_docs: OK - 19 doc(s), 87 intra-repo link(s), 0 broken.
+
+=== test-first : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_test_first.py --src src ===
+test-first: OK - no requirement approved since the root (no [checks] test_first_since declared) has a test case approved after its implementation landed or not approved
+
+=== approval-fresh : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/trace.py --approve modified --check ===
+trace: approval-check — no brief at docs/ratify/CURRENT.md — nothing to gate
+
+=== skills-index : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python -c pass ===
+
+=== prompt-catalog : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_prompt_catalog.py --check ===
+gen_prompt_catalog: fresh (14 prompts).
+
+=== verdict-rollup : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_verdict_rollup.py --check ===
+gen_verdict_rollup: fresh (0 review scope(s)).
+
+=== staged-divergence : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --staged-divergence --strict ===
+  FAIL  staged-divergence  1 declared generated artifact(s) modified in the working tree but NOT staged — the freshness steps just passed on bytes this commit will not contain:
+      docs/stage
+    Fix: `git add` them, then re-commit — or revert them. Leaving
+    them out is not free: the PLAN step runs --strict (OI-31's ruled
+    promotion, WI-498 close), so the bar vouches for the tree being
+    COMMITTED. This bare detector reports only.
+    GAP, so this is not read as a guarantee: it does NOT catch an
+    artifact that was STAGED WHILE STALE. The freshness gates read the
+    working tree, so a stale blob in the index passes them and passes
+    this. That case needs the staged-tree read (OI-31 option (a)).
+
+=== approval-immutable : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --approval-immutable ===
+  ok    approval-immutable  no staged change touches an existing dated docs/ratify/ brief.
+
+=== held-status : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --held-status ===
+  ok    held-status  no held status move or held approval claim to refuse
+
+=== reserved-ids : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --reserved-ids ===
+  ok    reserved-ids  no squash landing adds an unreserved id or lags the id carrier
+
+=== ruling-sync : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --ruling-sync ===
+  ok    ruling-sync  no staged ruling leaves a citing row out of sync
+
+=== text-then-act : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --text-then-act ===
+  ok    text-then-act  no staged commit mixes spine text with the approval act
+
+=== parent-first : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --parent-first ===
+  ok    parent-first  no staged status leaves an approved row under an unapproved parent
+
+=== done-when-blessed : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/integrate.py done-when-hold ===
+
+=== plan-gate : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/plan_gate.py ===
+  ok    plan-gate  no `single` row of this lane builds before its plan passes
+
+=== adoption-record : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/adoption_record.py ===
+  ok    adoption-record  no staged commit changes an adoption record only the close may write
+
+=== assumption-gate : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_assumption_gate.py --root . --step assumption-gate ===
+assumption-gate: 0 finding(s), the assumption gate is off ([checks] assumption_gate), so none fails
+
+=== crossing-allocation : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_assumption_gate.py --root . --step crossing-allocation ===
+crossing-allocation: 0 finding(s), the assumption gate is off ([checks] assumption_gate), so none fails
+
+========================================================
+Check summary (stage DevStg-Reqs, tier all):
+  FAIL  registry-integrity exit 1 (0.2s)
+  PASS  derived-stage    0.1s
+  PASS  vocabulary       0.7s
+  PASS  need-form        0.0s
+  PASS  privacy          0.3s
+  PASS  doc-navigability 0.1s
+  PASS  test-first       0.1s
+  PASS  approval-fresh   0.2s
+  PASS  skills-index     0.0s
+  PASS  prompt-catalog   0.1s
+  PASS  verdict-rollup   0.1s
+  FAIL  staged-divergence exit 1 (0.1s)
+  PASS  approval-immutable 0.1s
+  PASS  held-status      0.1s
+  PASS  reserved-ids     0.1s
+  PASS  ruling-sync      0.1s
+  PASS  text-then-act    0.1s
+  PASS  parent-first     0.1s
+  PASS  done-when-blessed 0.2s
+  PASS  plan-gate        0.2s
+  PASS  adoption-record  0.1s
+  PASS  assumption-gate  0.1s
+  PASS  crossing-allocation 0.1s
+========================================================
+RESULT: FAIL (2 step(s) failed)

@@ -1,0 +1,67 @@
+# PROPOSED subtree of SR-199 (re-tier exemplar). Kept ids keep their number; a row that absorbs
+# siblings is marked "absorbs". Non-prose cells (refs, priority, verification, status, phase,
+# coincident) are carried over unchanged.
+
+[requirement.SR-199]
+title = "Observation results are recorded apart from their test case"
+sn_refs = ["SN-043", "SN-008", "SN-024"]
+boundary_refs = ["B-05"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = """The delivered process shall keep each result of an observation test as a record of its own, apart from the test case, stating the outcome, who or what observed it, when, until when it stands, and what it judged."""
+rationale = """A result written onto the approved test case would mix what the test is with what it last found and force a re-attestation after every sample. A result carrying a digest of what it judged goes stale when those inputs change, without a clock, and an expiry keeps it from standing forever. One record form serves assumption observations and the verdicts of inspection, critique and attestation alike; automated tests need none, because the harness already binds their results to the tree."""
+acceptance_criteria = """A reader finds the latest result of an observation test as a separate record naming the case, a pass or fail outcome, the observer, the observation time, an expiry no later than the case's declared lifetime, and a digest of the inputs the case declares (empty where it declares none); a record that is incomplete, malformed, aimed at a case that is not an observation test, or expiring beyond that lifetime is reported and is not read as a result; and recording a result leaves the test case's own row unchanged."""
+priority = "M"
+verification = "Test"
+status = "Approved"
+phase = 6
+coincident = """The needs ask for each premise showing whether it has been shown false; the observation result recorded apart, with its outcome, observer, expiry and judged digest, is the record a failing observation is read from."""
+
+[design.LLR-234]
+# keeps its id
+sr_refs = ["SR-199"]
+title = "A result is one whole record in the observation store, or nothing"
+module = "project-trajectory/scripts/kitlib/observation.py"
+code_symbol = "parse/write_atomic"
+detail = """Each result is one file of its own in the observation store, named by its test case and its instant, so results written on different lanes do not collide and a new sample does not edit an old one. A file is a result only when every field is present and well-formed, both instants are in the one canonical UTC form, the expiry is not before the observation and the observer is named; anything short of that reads as no result rather than as a wrong one. A write lands a whole record or leaves nothing where a reader looks."""
+rationale = """A half-written or hand-mangled file must evidence nothing: every way a record can be wrong gets the same answer, so no reader needs a second rule."""
+test_refs = "(see TC-229)"
+status = "Approved"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-235]
+# absorbs LLR-236
+sr_refs = ["SR-199"]
+title = "One record policy, applied when a result is written and when one is found"
+module = "project-trajectory/scripts/record_observation.py;project-trajectory/scripts/assumption_rules.py"
+code_symbol = "record_refusal/observation_record_findings"
+detail = """Results enter the store through one command, which refuses — writing nothing — a result the record policy forbids: a case the registry does not declare or that is automated, an outcome outside pass and fail, a missing observer, or an expiry later than the case's lifetime allows; it does not open the test-case registry for writing. The digest it stamps covers the case's declared inputs in their declared order and reads a file the same whatever its line endings, so only a change of content moves it. The traceability check judges each record it finds by the same policy and fails its strict run naming the file, so a record that reached the repository without the command stands on no other terms."""
+rationale = """Writer and checker share one predicate so they cannot disagree about what may stand; a policy enforced only at the writer would let a hand-placed record pass."""
+test_refs = "(see TC-230)"
+status = "Approved"
+component = "CMP-006"
+phase = 6
+
+[test.TC-229]
+# keeps its id
+verifies = ["SR-199", "LLR-234", "IF-214"]
+level = "Unit"
+method = "pytest over the record module in a temporary directory; no scaffold, subprocess or git."
+tier = "Smoke"
+expected = "A whole, well-formed record reads back as the result it states, while a record missing any field, cut off mid-file, outside the canonical time form, expiring before its observation or naming no observer reads as no result, and no partly written file is visible to a reader at any moment."
+automated = "Yes"
+evidence = "tests/test_observation_record.py"
+status = "Approved"
+phase = 6
+
+[test.TC-230]
+# absorbs TC-231
+verifies = ["SR-199", "LLR-235", "IF-215"]
+level = "Integration"
+method = "pytest over a bootstrapped scaffold, driving the writer and the traceability check as commands."
+tier = "Full"
+expected = "Each result the policy forbids is refused at the command with nothing written and, when planted on disk instead, fails the strict check naming the file; an admitted result leaves the test-case registry byte-identical and carries a digest that changes only when a declared input's content changes."
+automated = "Yes"
+evidence = "tests/test_observation_writer.py"
+status = "Approved"
+phase = 6

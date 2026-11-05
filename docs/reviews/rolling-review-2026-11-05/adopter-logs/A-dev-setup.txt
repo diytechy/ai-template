@@ -1,0 +1,13 @@
+dev-setup — profile=all tier=check
+Developer workstation (process.md §7). Product deps are scripts/setup.sh.
+
+  [ok]      runtime (python3)
+  [ok]      git
+  [ok]      offline Markdown+Mermaid renderer
+  [missing] pre-commit floor (core.hooksPath)  — run --baseline (or: git config core.hooksPath .githooks)
+  [ok]      role: code
+  [missing] role: design  — fill design_CMDS/design_INSTALL in the EDIT block for this role's tools
+
+Product toolchain: run scripts/setup.sh to create .venv + install test tools.
+
+2 component(s) missing. Install them with: sh scripts/dev-setup.sh --baseline

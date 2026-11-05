@@ -1,0 +1,109 @@
+No checks defined at stage all.
+
+=== skills-sync : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python -c pass ===
+  PASS  skills-sync      0.1s
+
+=== skills-index : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python -c pass ===
+  PASS  skills-index     0.1s
+
+=== prompt-catalog : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_prompt_catalog.py --check ===
+gen_prompt_catalog: fresh (14 prompts).
+  PASS  prompt-catalog   0.3s
+
+=== verdict-rollup : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_verdict_rollup.py --check ===
+gen_verdict_rollup: fresh (0 review scope(s)).
+  PASS  verdict-rollup   0.3s
+
+=== okf : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_okf.py --check ===
+gen_okf: OKF bundle up to date (17 file(s)).
+  PASS  okf              0.4s
+
+=== derived-stage : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/derive_stage.py --check ===
+derive_stage: docs/stage up to date (DevStg-Impl).
+  PASS  derived-stage    0.4s
+
+=== cli-reference : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_arch_map.py --src src --cli-doc docs/cli-reference.md --check ===
+no CLI reference at docs/cli-reference.md — nothing to check.
+CLI reference up to date.
+  PASS  cli-reference    0.4s
+
+=== reserved-ids : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --reserved-ids ===
+  ok    reserved-ids  no squash landing adds an unreserved id or lags the id carrier
+  PASS  reserved-ids     0.4s
+
+=== held-status : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --held-status ===
+  ok    held-status  no held status move or held approval claim to refuse
+  PASS  held-status      0.5s
+
+=== interface-reference : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_arch_map.py --src src --contracts-doc docs/interface-reference.md --check ===
+no interface reference at docs/interface-reference.md — nothing to check.
+  PASS  interface-reference 0.5s
+
+=== approval-immutable : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --approval-immutable ===
+  ok    approval-immutable  no staged change touches an existing dated docs/ratify/ brief.
+  PASS  approval-immutable 0.5s
+
+=== staged-divergence : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --staged-divergence --strict ===
+  ok    staged-divergence  none of the 10 declared generated artifact paths is modified-but-unstaged.
+  PASS  staged-divergence 0.5s
+
+=== adoption-record : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/adoption_record.py ===
+  ok    adoption-record  no staged commit changes an adoption record only the close may write
+  PASS  adoption-record  0.5s
+
+=== component-view : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_components.py --check ===
+gen_components: no real CMP row in docs/requirements/components.toml and no docs/requirements/components.derived.toml — nothing to derive (vacuous).
+  PASS  component-view   0.6s
+
+=== parent-first : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --parent-first ===
+  ok    parent-first  no staged status leaves an approved row under an unapproved parent
+  PASS  parent-first     0.5s
+
+=== text-then-act : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --text-then-act ===
+  ok    text-then-act  no staged commit mixes spine text with the approval act
+  PASS  text-then-act    0.5s
+
+=== ruling-sync : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check.py --ruling-sync ===
+  ok    ruling-sync  no staged ruling leaves a citing row out of sync
+  PASS  ruling-sync      0.5s
+
+=== trajectory-map : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_trajectory.py --check ===
+gen_trajectory: no work items (placeholder-only or absent registry) — nothing to render; vacuously clean.
+  PASS  trajectory-map   0.5s
+
+=== trajectory : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/check_trajectory.py ===
+check_trajectory: WARN - connectivity undeclared: the 2-module architecture declares no interfaces — add IF-### rows to docs/requirements/interfaces.toml, or set docs/process.toml [checks] interfaces_check = false
+check_trajectory: clean (no work items — placeholder-only or absent registry; vacuously clean).
+  PASS  trajectory       0.6s
+
+=== status-map : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_trajectory.py --status --check ===
+gen_trajectory: docs/status.md has no GENERATED STATUS markers — vacuous (add the <!-- BEGIN GENERATED STATUS --> / <!-- END GENERATED STATUS --> pair to opt in).
+  PASS  status-map       0.6s
+
+=== plan-gate : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/plan_gate.py ===
+  ok    plan-gate  no `single` row of this lane builds before its plan passes
+  PASS  plan-gate        0.5s
+
+=== open-items : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/gen_open_items.py --check ===
+gen_open_items: 0 pending rows — and nothing contradicts it: 0 parsed entries in docs/provenance-allow (0 unreadable declaring line(s)); 0 fragment declaration(s) read, 0 of them `none`.
+gen_open_items: open-items view up to date.
+  PASS  open-items       0.7s
+
+=== approval-fresh : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/trace.py --approve modified --check ===
+trace: approval-check — no brief at docs/ratify/CURRENT.md — nothing to gate
+  PASS  approval-fresh   0.6s
+
+=== done-when-blessed : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/integrate.py done-when-hold ===
+  PASS  done-when-blessed 0.6s
+
+=== registry-integrity : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/scripts/trace.py --strict-integrity ===
+WARNING (advisory): 2 absolute-term advisories (SN 1, SR 0, LLR 1) — each row and cell is listed in the report's 'Absolute-term advisories' section
+Traceability: SN=1 SR=1 LLR=1 TC=1 orphans=0 integrity=0 verified-mechanized=1 verified-demonstrated=0 verified-attested=0. Report -> docs/test/report.md
+  PASS  registry-integrity 0.7s
+check_privacy: privacy check off (docs/process.toml [policies] privacy_check) — author not checked.
+check_privacy: clean (staged diff; secrets floor).
+
+=== format : /tmp/claude-0/-home-user-ai-template/63050329-4335-47a4-8dc1-a8e1f5b28069/scratchpad/adopter/newrepo/.venv/bin/python -m ruff format --check src tests ===
+3 files already formatted
+  PASS  format           0.0s
+check_privacy: clean (commit message; secrets floor).

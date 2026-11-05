@@ -1,0 +1,166 @@
+# PROPOSED subtree of SR-157 (re-tier exemplar). LLR-911..915 and TC-911..917 are PLACEHOLDER ids
+# for rows that would be minted (their meaning is new, so keep-or-mint says mint); the "absorbs"
+# comment names the current rows each one replaces. Non-prose SR cells are carried over unchanged.
+
+[requirement.SR-157]
+title = "Every declared registry rule violation is reported, naming its row and cell"
+sn_refs = ["SN-002", "SN-012", "SN-025"]
+boundary_refs = ["B-09"]
+hat_refs = ["FIRST-RUN-ADOPTER", "TEST-ENGINEER"]
+requirement = """The delivered harness shall report each violation of a declared spine or work-registry rule naming the row and cell at fault, failing the declared gate on a gating finding while an advisory finding leaves the exit code unchanged."""
+rationale = """The chain from need to test is trusted because it is checked, not asserted, so a violation must be attributable to the row and cell a reader can open and fix. One row, because the contract an adopter observes is one: a named finding at a declared severity. The rules themselves are declared where each checker publishes them, so the inventory can grow without this row changing; a lexical rule about meaning advises rather than gates, because a script cannot settle what only a reader can judge, and gating it would overrule the author on the one question the author is placed to answer."""
+acceptance_criteria = """Each violation of a declared rule is reported naming its row and cell; the gate exits nonzero only while a gating finding is present and exits zero while advisories are listed; an absent optional registry, an example row and a declared opt-out produce no finding; and the rule inventory is whatever the checkers declare at their own sites, so an unreported violation of a declared rule is a defect of this row rather than an amendment to it."""
+priority = "M"
+verification = "Test"
+status = "Approved"
+phase = 1
+coincident = """The needs ask for a chain that is mechanically verified rather than asserted, work-registry contradictions that surface rather than hide, and small changes kept cheap; each declared rule violation reported naming its row and cell, with the declared failure set gating and advisories not, is that verification's verdict as the reader receives it. Whether a row that passes every rule says something worth relying on is not this row's claim."""
+
+[design.LLR-911]
+# absorbs LLR-001, LLR-002, LLR-003, LLR-005, LLR-201 (the engine and its rule kinds)
+sr_refs = ["SR-157"]
+title = "Every rule is a pure predicate composed by one engine"
+module = "project-trajectory/scripts/trace.py;project-trajectory/scripts/coherence.py;project-trajectory/scripts/trace_text.py"
+code_symbol = "analyze"
+detail = """A rule takes loaded rows and returns findings, each naming tier, row and cell; it reads no file, repository or argument. One engine loads the registries, runs every rule, and writes the report and the console, and nothing else calls a rule. Rules that join across rows, rules that read one row's prose, and sweeps that read the carrier itself are kept apart, so a rule's inputs say which kind it is and a new rule has one obvious home."""
+rationale = """A rule that performs its own reads cannot be driven in isolation, and a checker with one engine has one place where the exit code is composed."""
+test_refs = "(see TC-911, TC-912, TC-916)"
+status = "Approved"
+component = "CMP-006"
+phase = 1
+
+[design.LLR-912]
+# absorbs LLR-004, LLR-083, LLR-133, LLR-134, LLR-135, LLR-179, LLR-272, LLR-274 (each a rule; its class is the design decision)
+sr_refs = ["SR-157"]
+title = "A finding's class, declared beside its rule, decides the exit code"
+module = "project-trajectory/scripts/trace.py"
+code_symbol = "exit_code"
+detail = """Each rule declares whether its findings gate or advise, and the class is chosen by decidability: a decidable fault — a broken join, a duplicate or malformed id, a missing or out-of-vocabulary cell, a row carrying its own history, a requirement that is not one testable obligation — gates, while a lexical judgement about meaning — a child re-wording its parent, a condition opened outside the statement pattern, an absolute over an unnamed domain — advises. A gating finding joins the failure set of the strict flag family that owns it and fails the declared gate; an advisory is counted on the console under its own name and listed in the report, and changes the exit code under no flag. An absent optional registry, an example row and a declared opt-out produce no finding of either class."""
+rationale = """A reader acts on the counter's name, so an advisory sharing a gating counter would be read as a failure; a rule that gated on a lexical reading would put standing false accusations in the report."""
+test_refs = "(see TC-911, TC-912, TC-913)"
+status = "Approved"
+component = "CMP-006"
+phase = 1
+
+[design.LLR-913]
+# absorbs LLR-197, LLR-260 (the shared row vocabulary and the evidence-cell reading)
+sr_refs = ["SR-157", "SR-049"]
+title = "What a row's cells mean is defined once, below every reader"
+module = "project-trajectory/scripts/kitlib/spine.py"
+code_symbol = "is_approved/evidence_items"
+detail = """The meaning of a spine row's cells — the closed status vocabulary, which verification methods need no design row, how a phase cell parses, how a reference list splits, what an example row is, and how an evidence cell reads as test paths and nodes — is defined in one place that every reader imports: the checker, the stage derivation and the scaffolder. A reader restates none of it, so two surfaces cannot answer differently about one cell, and a test case's declared tier is judged against where its evidence runs through that same reading."""
+rationale = """A disagreement between the checker and the stage derivation is a false green or a false red at a gate; stating the vocabulary once makes the drift unrepresentable instead of detected."""
+test_refs = "(see TC-914)"
+status = "Approved"
+component = "CMP-006"
+phase = 1
+
+[design.LLR-914]
+# absorbs LLR-034, LLR-075, LLR-077, LLR-084, LLR-097, LLR-160 (the work-registry rules)
+sr_refs = ["SR-157"]
+title = "The work registry is one folder, read once and judged whole"
+module = "project-trajectory/scripts/check_trajectory.py"
+code_symbol = "load_wis/validate"
+detail = """Work items live in one specification folder whose directory is the item's state, and a second carrier of the same registry is itself a finding. Every coherence rule — id shape, predecessor resolution, acyclicity over hard edges, status against deliverable and specification reference, the generated status surface, the overlap pre-filter and the critique closure ratchet — reads the one loaded row set and shares its vacuity: an absent or example-only registry and a declared opt-out silence them all."""
+rationale = """Two readers of the work graph would dispatch two different frontiers; one loaded row set and one vacuity rule keep the checker and the scheduler on the same registry."""
+test_refs = "(see TC-915)"
+status = "Approved"
+component = "CMP-006"
+phase = 1
+
+[design.LLR-915]
+# rewrites LLR-365
+sr_refs = ["SR-157"]
+title = "A test-case declaration in a test file can only add a finding"
+module = "project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/trajectory_arch.py"
+code_symbol = "read_test_tags/tc_tag_findings"
+detail = """A test file declares the test cases it holds at fixed positions, read by one grammar kept apart from source-file reading. A valid declaration maps the case to its test; a misplaced, malformed, unknown or unreadable one is a finding naming file, line and shape, and no declaration can make a test disappear. Without a tests root or a test-case registry there is nothing to judge."""
+rationale = """A tag that silently fails to read would make a test case appear absent with nothing attributable to fix; keeping the grammar apart from source reading stops a new input from changing established source analysis."""
+test_refs = "(see TC-917)"
+status = "Approved"
+component = "CMP-006"
+phase = 1
+
+[test.TC-911]
+# absorbs TC-001, TC-002, TC-003, TC-086, TC-193 (shipping half), TC-197 (rules half), TC-255, TC-270
+verifies = ["SR-157", "LLR-911", "LLR-912", "LLR-913"]
+level = "Integration"
+method = "pytest over a bootstrapped scaffold, running the traceability check as a command under each strict flag family."
+tier = "Full"
+expected = "An orphan at any tier, a duplicate or malformed id, a mis-shaped row, a leftover example row, a missing or out-of-vocabulary status, phase or verification cell, an unresolvable citation and an approved smoke case with no smoke-tier evidence each fail the declared strict run naming the row and cell, while a fully linked, well-formed spine exits clean and an absent optional registry adds nothing."
+automated = "Yes"
+evidence = "tests/test_trace.py; tests/test_registry_checks.py; tests/test_snapshot_readers.py; tests/test_evidence_join.py; tests/test_trace_coherence.py"
+status = "Approved"
+phase = 1
+
+[test.TC-912]
+# absorbs TC-126, TC-127
+verifies = ["SR-157", "LLR-911", "LLR-912"]
+level = "Unit"
+method = "pytest over the gating text rules with rows built in memory."
+tier = "Full"
+expected = "A requirement carrying two obligations, a non-obligation modal, an actorless passive, an unfalsifiable or open-ended term, or a citation of its own history fails the strict run naming row and cell, while a Drafted row, a multi-clause acceptance and a shipped script name do not."
+automated = "Yes"
+evidence = "tests/test_trace_rules.py"
+status = "Approved"
+phase = 1
+
+[test.TC-913]
+# absorbs TC-004, TC-128, TC-174, TC-273, TC-275
+verifies = ["SR-157", "LLR-912", "IF-252"]
+level = "Unit"
+method = "pytest over the advisory rules with rows built in memory, then one planted advisory driven through the engine under every flag."
+tier = "Full"
+expected = "A child that re-words its parent, a requirement opening on a condition outside the statement pattern, a comparative with no predicate, an absolute over an unnamed domain and a verification method contradicting its own prose are each reported naming row and cell with the exit code unchanged under every flag, and a recorded waiver in the tier's reason cell silences the absolute-term advisory."
+automated = "Yes"
+evidence = "tests/test_trace_rules.py; tests/test_ac_advisory.py; tests/test_absolute_terms.py; tests/test_verification_coherence.py"
+status = "Approved"
+phase = 1
+
+[test.TC-914]
+# absorbs TC-193 (vocabulary half), TC-255 (cell-reading half)
+verifies = ["SR-157", "SR-049", "LLR-913"]
+level = "Unit"
+method = "pytest, driving the checker, the stage derivation and a fresh scaffold through the shared row vocabulary."
+tier = "Smoke"
+expected = "The checker, the stage derivation and a fresh scaffold answer alike for a row's status, exemption, phase, references and evidence items — a whitespace-padded or differently cased cell included — and a retired status spelling is approved nowhere."
+automated = "Yes"
+evidence = "tests/test_rule_sync.py; tests/test_evidence_join.py; tests/test_bootstrap.py"
+status = "Approved"
+phase = 1
+
+[test.TC-915]
+# absorbs TC-037, TC-075, TC-077, TC-086 (ratchet half), TC-100, TC-155
+verifies = ["SR-157", "LLR-914"]
+level = "Integration"
+method = "pytest over registries built in temporary work folders, the plain and strict runs as commands."
+tier = "Full"
+expected = "A malformed or duplicate work-item id, an unresolved predecessor, a hard-edge cycle, a done item that still cites a specification or lacks a deliverable, an open item with a dangling specification reference and a done id hand-written into the status surface are each named, warning in the plain run and failing the strict one where the rule gates; the overlap pre-filter and the critique ratchet report on the warn-only line; and an absent or example-only registry, a declared opt-out and the generated status marker are silent."
+automated = "Yes"
+evidence = "tests/test_trajectory.py; tests/test_trajectory_staged.py; tests/test_trajectory_forward_only.py; tests/test_loop_order.py"
+status = "Approved"
+phase = 1
+
+[test.TC-916]
+# absorbs TC-005
+verifies = ["SR-157", "LLR-911"]
+level = "Integration"
+method = "pytest over scaffolds carrying each optional off-spine registry."
+tier = "Full"
+expected = "A budget, repository, part or asset row whose reference resolves to no requirement, design row or module fails the integrity run naming it, and an absent optional registry or an example row adds no finding."
+automated = "Yes"
+evidence = "tests/test_modules_registry.py; tests/test_procurement.py; tests/test_assets.py"
+status = "Approved"
+phase = 1
+
+[test.TC-917]
+# absorbs TC-404, TC-405, TC-406, TC-407, TC-408, TC-409
+verifies = ["SR-157", "LLR-915", "IF-131", "IF-263"]
+level = "Integration"
+method = "pytest over tagged test trees and a bootstrapped scaffold, in plain and strict modes."
+tier = "Full"
+expected = "A valid test-case declaration maps to its test; a misplaced, malformed, unknown or unreadable one is reported naming repository-relative file, line and shape, warning below the implementation rung and failing at it; and a tree with no tests root or no registry yields nothing."
+automated = "Yes"
+evidence = "tests/test_gen_arch_map.py; tests/test_trajectory_arch.py"
+status = "Approved"
+phase = 1

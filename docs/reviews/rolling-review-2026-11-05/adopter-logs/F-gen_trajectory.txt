@@ -1,0 +1,1 @@
+gen_trajectory: no work items (placeholder-only or absent registry) — nothing to render; vacuously clean.

@@ -1,0 +1,7 @@
+run_menu: no run capabilities declared yet.
+Declare them in docs/stack.ini under a [run] section, one line each:
+  [run]
+  serve = python -m yourapp
+  serve.desc = start the app
+The README 'Run it' section documents the underlying commands.
+(A pure library has none — delete the run.* launchers.)

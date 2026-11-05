@@ -1,0 +1,2 @@
+WARNING (advisory): 2 absolute-term advisories (SN 1, SR 0, LLR 1) — each row and cell is listed in the report's 'Absolute-term advisories' section
+Traceability: SN=1 SR=1 LLR=1 TC=1 orphans=0 integrity=0 drafts=4. Report -> docs/test/report.md

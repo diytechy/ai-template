@@ -18,7 +18,7 @@ with the command that produced them.
 
 **Status:** second pass IN PROGRESS (2026-11-05, same day). The first full pass is §1–§7;
 the second pass adds §8 onward, re-measures with `measure.py` and `trend.py`, and
-adversarially re-verifies §1–§6 (the verdicts land in §9 as they arrive). `measure.py`
+adversarially re-verifies §1–§6 (the verdicts land in §12 as they arrive). `measure.py`
 beside this file reproduces every first-pass number; `trend.py` the §8 table. Audit
 commits on this branch bypass the commit floor (`--no-verify`) at the owner's
 direction (2026-11-05): §6.1 and §6.4 record why the floor refused them.
@@ -541,3 +541,608 @@ IF registry (52 → 255) grew faster than any spine tier. A healthy
 downstream spine for a product of this size would be closer to the July
 shape. *Change:* report the per-tier ratio in the dashboard's trajectory tab
 beside the orphan count; it is the one number that shows a re-tier holding.
+
+## 9. Findings — the adopter's first day (reproduced from a fresh scaffold)
+
+**Method.** A reviewer with no history of this repo scaffolded a fresh Python
+project exactly as the shipped docs say (`bootstrap.py --dest … --stack
+python`, then README "How to use", the scaffolded README ladder, `AGENTS.md`
+and ADOPTING §5, literally), wrote and approved one SN→SR→LLR→TC chain in
+their own words, then tried a depth-1 clone and a machine without ruff/pytest.
+Every command, its exit code, wall time and output is in
+`adopter-logs/` beside this file (`t.sh` is the timing wrapper, `NOTES.md` the
+narrative). Nothing in this repository was touched. Not simulated: Windows and
+macOS, the interactive bootstrap prompts, a non-Python stack, a kit re-sync,
+the unattended loop, the adjudicator route.
+
+**What the adopter receives** (`--stack python`, non-interactive, no agent):
+
+| kind | files | bytes |
+|---|---:|---:|
+| `.py` (scripts/, kitlib/, rendering/) | 125 | 5,184,824 |
+| `.md` docs (AGENTS, process, options, glossary, status, log, plan, flows, interfaces, specs, rubrics, knowledge, work) | 22 | 391,024 |
+| `prompts/*.md` | 20 | 139,761 |
+| `.toml` registries + process.toml + agents.toml | 13 | 103,962 |
+| launchers (.sh/.cmd/.command/.ps1) | 17 | 92,769 |
+| hooks | 4 | 43,990 |
+| other (stamps, stage, watermark, allow files, CI, csv, .gitkeep) | 26 | 61,842 |
+| **total** | **227** | **6,018,172** |
+
+86% of the bytes are Python the adopter is told never to edit. The docs they
+are told to read before the first commit (`AGENTS.md` → `docs/process.md` →
+`docs/glossary.md`, with `process-options.md` linked 43 times from process.md)
+total 317,115 bytes / 45,666 words — **183 minutes at 250 wpm**, 115 of them
+`process-options.md`. The registry templates they must fill are 68–85% comment
+lines (`stakeholder-needs.toml` 103 of 121); `process.toml` is 434 comment
+lines of 482.
+
+**The documented command path**, condensed (full table in `adopter-logs/NOTES.md`):
+
+| step | command (where documented) | result |
+|---|---|---|
+| hooks | `sh scripts/setup.sh` (AGENTS.md, README ladder) | **exit 2 in 0.00 s**: `set: Illegal option -o pipefail`; hooks never installed |
+| hooks | `bash scripts/setup.sh` (the adopter's guess) | ok, 12.3 s; prints "Run … `--stage DevStg-Impl`" |
+| bar | `python scripts/check.py` (ADOPTING §5) | PASS, 23 steps, all `[process]`, 3.1 s; 0 product steps |
+| bar | `./scripts/check.sh --stage DevStg-Impl` (as setup told them) | **FAIL**: shipped `-000` rows, shipped example flow |
+| map | `gen_trajectory.py` | "no work items … nothing to render"; no `PROJECT_STATE.html` |
+| menu | `run_menu.py smoke` / `./run.sh` | exit 1: `[run]` ships commented out |
+| chain | first four rows, `trace.py --strict` | **5 FINDINGs**: "id watermark stands at 0 … in a lane, reserve … on the trunk, `--bump-ids`" |
+| chain | commit, attempt 1 | **FAIL** `okf` STALE (docs/okf/ did not exist), `open-items` STALE |
+| chain | `trunk_step.py --regen` → commit, attempt 2 | regen "skipping okf (docs/okf/ absent)"; **FAIL** `okf` again |
+| chain | `gen_okf.py` (undocumented) → commit, attempt 3 | landed; 26 PASS, 20 of them "nothing to check" |
+| approve | Status flips by the author → regen → commit | landed; stage → **DevStg-Impl**; no snapshot, no adjudicator |
+| bar | `check.py` (now at DevStg-Impl) | **FAIL** ×3: `-000` rows, README SN citation, placeholder flow |
+| cleanup | delete `-000` rows, fix flow, cite SN | **FAIL**: "SN placeholder SN-000 still present" — a shipped *comment* on line 4 |
+
+Machine time for the whole path was about a minute. The human time is the
+three hours of reading plus four refused-commit loops, each resolved by a
+command no shipped doc names (`grep -rn gen_okf docs AGENTS.md README.md` → 0).
+
+**[HIGH] 9.1 The documented hook-install command fails on Debian/Ubuntu.**
+`scripts/setup.sh:5` is `set -euo pipefail` (bash); the three places that tell
+the adopter to run it say `sh scripts/setup.sh` (`AGENTS.template.md:64`,
+`kitlib/commit_hooks.py:53`, `dev-setup.template.sh:410`). Under `/bin/sh` →
+dash (Ubuntu's default) it dies before `core.hooksPath` is set, with a message
+naming no fix. The kit's load-bearing rule — every agent route refuses without
+hooks (§6.2) — is defeated by its own instructions on the most common Linux.
+`tests/test_shell_portability.py` runs only `sh -n` (a parse), which cannot
+see a runtime `set -o` error. *Change:* make `setup.sh` POSIX sh or write
+`bash scripts/setup.sh` in all three strings, and one test that executes the
+prologue under dash.
+
+**[HIGH] 9.2 The first chain costs three refused commits and three
+undocumented commands.** The id watermark (`trace.py --bump-ids`, explained in
+lane/trunk/WI vocabulary the adopter has not met), the OKF export
+(`gen_okf.py --check` demands a directory that `trunk_step.py --regen` skips
+creating), and the regen ritual itself appear in no shipped doc. *Change:* on
+trunk, record the watermark in the same commit instead of refusing; make the
+regenerator and the checker agree (regen creates `docs/okf/` once a real row
+exists, or OKF is opt-in); every freshness FAIL names `trunk_step.py --regen`;
+a five-line "after editing a registry" note in `AGENTS.template.md`.
+
+**[HIGH] 9.3 The author's own Status flip moves the stage to DevStg-Impl and
+turns the default bar red.** PROCESS.md says the approval act is an independent
+adjudicator's and writes `docs/archive/last_approved/`; at the floor nothing
+holds that for a trunk-only adopter: five Status-only flips landed with
+`text-then-act`, `held-status` and `parent-first` all PASS and `last_approved/`
+holding only its README. `derive_stage` then wrote `DevStg-Impl`, and the next
+`check.py` failed on the shipped `-000` rows, the shipped example flow and a
+README citation rule — the "red bar from day one" PROCESS §7 says the derived
+stage exists to prevent. *Change:* floor the derived stage at DevStg-Reqs while
+any `-000` row or placeholder flow citation exists; either warn once when a
+Status flip lands without a snapshot, or stop promising adopters a fixed point
+nothing checks.
+
+**[HIGH] 9.4 The bar never touches the adopter's code until DevStg-Impl, and
+most of what it runs reports that it checked nothing.** At the derived stage
+the plan is 23 steps, all `[process]`; format, lint and tests register at
+DevStg-Impl, so the adopter's own pytest test is not executed by any bar for the
+whole requirements phase (it was broken — see 9.5 — and nothing said so).
+`skills-index` is literally `python -c pass` and prints PASS. Of the first
+commit's 26 hook steps, 20 report "no staged … / vacuous / nothing to check"
+by their own text. *Change:* register format/lint/tests from DevStg-Needs (they
+are the adopter's tools and cost ~1 s); drop a step from the plan instead of
+running `-c pass`; register station steps only with the station layer (§1.2);
+collapse "nothing to check" lines into one summary line.
+
+**[MED] 9.5 The kit's `pytest.ini` silently shadows the adopter's
+`pyproject.toml`, and the shipped CI leaves `pip install -e .` commented out.**
+pytest prints "configfile: pytest.ini (WARNING: ignoring pytest config in
+pyproject.toml!)"; a src-layout project's `pythonpath = ["src"]` is lost, so
+the shipped CI (`ci/check.yml:63`) and any clone without an editable install
+fail with `ModuleNotFoundError`. *Change:* bootstrap does not write
+`pytest.ini` when the destination declares `[tool.pytest.ini_options]`; CI
+installs the project when `pyproject.toml` exists.
+
+**[MED] 9.6 README and AGENTS tell the newcomer to start with
+`PROJECT_STATE.html`, which is never generated for a repo without work items**
+(`gen_trajectory.py`: "no work items … nothing to render; vacuously clean"),
+even after four approved rows. The kit retired `docs/architecture.md` in favour
+of this dashboard, so an adopter who skips the work-item layer has no
+architecture view at all. *Change:* render from the spine and the source AST
+alone (work items as one optional tab), or change both sentences.
+
+**[MED] 9.7 Three hours of reading before the first row, and schema
+documentation shipped inside the data files.** Numbers above. *Change:* a
+two-page first-day guide the stubs point at; cell documentation moved out of
+the registry templates into one schema reference; `-000` rows minimal;
+PROCESS_OPTIONS split per layer (§3.4).
+
+**[MED] 9.8 Five places give five different "what next" commands**, and
+setup's is red. `setup.sh:71`/`setup.ps1:91`/`check.sh:4` say `--stage
+DevStg-Impl`; the stage-less `check.py` (the documented default) is green.
+*Change:* one "first green run" block (ADOPTING §5) that every other place
+links to.
+
+**[MED] 9.9 Two guards fire on normal first-day state.** (a) A package of
+`__init__.py` + `core.py` is "the 2-module architecture [that] declares no
+interfaces" on every commit — the first dial the adopter learns is the one that
+silences a check (`trajectory_arch.py:283`). (b) `trace.py --no-placeholders`
+regexes the raw file (`trace.py:2046`), so the shipped schema comment
+`[need.SN-000]` on line 4 fails the gate after every real placeholder is gone,
+and the message does not say it is a comment. *Change:* count cross-module
+import edges (or ≥3 modules) and report once at the gate; scan parsed rows,
+as the other three tiers already do.
+
+**[MED] 9.10 A `--stack python`, no-agent adopter receives the whole station:**
+agent_loop/dispatch/lane/integrate/intake/session_*, 20 prompt briefs,
+agent-resume launchers and a `stack.ini` seeding `[agent-loop] lanes = 2`,
+none of which they can run (`AGENT_CMD` is unfilled by design). This is the
+adopter-side measurement of §1.1/§1.2 and of recommendation 7.2.
+
+**[LOW] 9.11 Low-value warnings on the first rows and the first machine:**
+the first SN ("any non-empty name") and LLR flagged as absolutes; `test-first`
+warns that TC-001 was approved after SR-001's code landed although the test
+predates every requirement; `dev-setup.sh --check` reports a missing `design`
+role nobody declared (`ROLES="code design"` default); one untracked scratch
+file in the kit checkout stamps the scaffold `-dirty`; the watermark advisory
+fires before the first commit with no action available; every hook run begins
+"No checks defined at stage all." Each is a one-line fix named in
+`adopter-logs/NOTES.md`.
+
+**[LOW] 9.12 Shallow-clone and missing-tool behaviour is reasonable on a
+fresh repo, with two edges.** `test-first` says "history unreadable: this is a
+shallow clone … (`git fetch --unshallow`) … which is not a pass" — honest and
+actionable; a bare venv fails format/lint/tests naming `scripts/setup`. But the
+shipped `ci/check.yml` uses `actions/checkout` at its default depth 1, so that
+WARN prints on every CI run forever, and the hook header's "No step of this
+hook is ever skipped" contradicts its own `SKIP format` on a missing tool. The
+§6.1 shallow FAIL did not reproduce here only because nothing ever created a
+`last_approved` snapshot (9.3); it reproduces on this repository (§10.9).
+
+**The ten things an adopter must learn before the first chain is accepted**,
+as the simulation met them (full list in `adopter-logs/NOTES.md`): the TOML
+table grammar and five id spaces; the id watermark and lane/trunk/WI
+vocabulary; the Status vocabulary and that the flip "is the approval act"; the
+regen ritual (`--regen` plus a first `gen_okf.py`); the eight-rung ladder and
+which steps run at which rung; EARS and the SR/TC cell vocabularies; the
+reason-cell rules (no provenance, the altitude waiver, absolute terms); the
+README contract (vision tag, SN citation, anchors); back-link tags and two
+dials; and the optional-but-nagged frame (external.toml, hats, da_refs/form,
+IF rows or the dial that silences them, a Mermaid flow). A small team will not
+absorb this before the first commit; they will meet it as refusals.
+
+## 10. Findings — what published practice says (two research briefs)
+
+**Method and caveat.** Two agents searched for the published practice behind
+the owner's four questions and tied each source to the kit file it bears on.
+Most primary domains (incose.org, faa.gov, abseil.io, eslint.org,
+doc.rust-lang.org, diataxis.fr, …) were outside this session's network
+allowlist, so each source was read either from a GitHub-hosted copy of the
+same document (cited as such) or only as a search snippet (marked). The full
+source tables with quotes, URLs and the not-reached list are
+`research/research-reqs-sources.md` (37 sources) and
+`research/research-tooling-sources.md` (43). Treat snippet-only quotes as
+pointers to verify, not as citations.
+
+**What it bears on the spine (§4).** The standards the kit itself cites read
+the LLR tier the other way from the kit's templates and skill:
+
+- DO-178C defines a low-level requirement as one "from which source code can
+  be directly implemented without further information" — a *completeness* bar
+  for an implementer. EASA's certification memorandum CM-SWCEH-002 §24 states
+  that "the use of pseudo-code to express low-level requirements is not
+  compatible with the … definition", naming the mechanism: "suppliers develop
+  the Source Code and then later on they produce the design in form of a
+  reverse engineering activity". CAST-15 (now DO-248C FAQ #81) refuses merged
+  levels that skip either level's objectives. INCOSE GtWR R31 permits a named
+  solution only "unless there is rationale for constraining the design", and
+  its characteristic C2 *Appropriate* ("amount of detail is appropriate to the
+  level") is the published name for the altitude property §4.1 measured; ISO
+  29148's rule hinges on *unnecessary* constraints. Ivy Hooks (1993) names
+  "writing implementation (HOW) instead of requirements (WHAT)" as the oldest
+  requirements defect.
+- ISO/IEC/IEEE 29119-1 defines a test case by its preconditions, inputs and
+  **expected results**, and 29119-3 keeps the test-case specification apart
+  from the test-procedure specification. DO-178C trace data (item 11.21) and
+  ISO 26262-6 trace requirement ↔ **test case**; nothing cited asks for a link
+  below the test case. Beck's Test Desiderata ("structure-insensitive — tests
+  should not change their result if the structure of the code changes"),
+  Google's "Test Behaviors, Not Methods" / "Change-Detector Tests Considered
+  Harmful", Hyrum's law and Cucumber's "would this phrasing need to change if
+  the implementation changed?" state the test-authoring bar in one line each;
+  van Deursen et al. (2001) name testing one thing through another *Indirect
+  Testing*.
+- On cost: Heindl & Biffl's value-based tracing reached about 35% of full
+  tracing effort by descending only where risk or volatility is high; Mäder &
+  Gotel show unmaintained links "get lost or represent false dependencies";
+  Rath et al. found only ~60% of commits linked to issues in the wild;
+  Mäder & Egyed measured +24% speed and +50% correctness *from the
+  requirement↔test link*; Jones puts requirements change at ~1%/month, against
+  this kit's 30–40%/month growth of LLR/TC rows during the build phase (§8).
+  Gotel & Finkelstein locate most traceability problems on the *need* side.
+
+**[HIGH] 10.1 The two shipped template cells manufacture §4.1 and §4.2.**
+`registries/low-level-requirements.template.toml:19` tells the author
+`detail = "… Name the real (or planned) module + symbol."` while
+`prompts/spine-questions.md:245` says an LLR "names no implementation carrier
+(a code file, function or symbol)". `registries/test-cases.template.toml:26`
+says `expected = "Cite the verified requirement's AcceptanceCriteria by id (do
+not paraphrase)."` — the sentence 202 of 363 live rows obey (they open
+"Satisfies/Cite/See" or name AcceptanceCriteria). Adopters copy the template,
+not the prompt; the template header calls the `-000` row "the only place the
+vocabulary is written down". Measured: 205/331 LLR details repeat a token from
+their own `code_symbol`, 80/331 contain call syntax `name(`. *Change:* line 19
+→ "The design decision this row fixes — which module owns it, what crosses its
+boundary, where it refuses — in words that survive a rename; the carrier is
+named only in `module`/`code_symbol`." Line 26 → "The observable outcome for
+this case's parameters, in the stakeholder's words, with the pass line (one
+sentence); the AC id is already in `verifies`." §11 shows both applied.
+
+**[MED] 10.2 `method` has no guidance and became the test procedure; `evidence`
+is traced a tier deeper than any cited standard.** The template's `method`
+value is "EXAMPLE - delete on first real entry" — the one cell with no
+instruction — and IF-161 (`docs/test/README.md:7-9`) lists it undefined;
+result: median `method` 516 chars vs median `expected` 135. 241/363 `evidence`
+cells carry `::` node ids; the template's own example is file-level
+(`docs/test/manual-smoke.md`) and PROCESS §3 says the registry rows are
+authoritative over `Implements: TC-` tags. *Change:* `method` = one-line
+instrument class ("pytest, the named module" | "inspection <id>" |
+"observation <rubric>"), the procedure in the test docstring; `evidence` = a
+path or command, with node-level binding derived from the tags by
+`check_trajectory`, never typed.
+
+**[MED] 10.3 The `spine-authoring` skill reads "directly implementable" as a
+licence to name design elements (`SKILL.md:51-57`: "naming design elements at
+LLR tier is the expected shape"); the regulators read it as a completeness test
+on the design, and the skill's own failure mode #1 is "Implementation-
+mirroring" (`SKILL.md:176`).** One sentence after line 57 closes it:
+"Directly implementable means complete enough to code from, not written from
+the code; a pseudo-code or symbol-list LLR fails the definition."
+
+**[MED] 10.4 No shipped prose tells a test author to assert behaviour rather
+than wording or structure.** A grep of `AGENTS.template.md`, both PROCESS
+files and all 33 skills for behaviour-vs-wording, exact-message, public-API or
+structure-insensitivity guidance returns nothing; the only test-authoring line
+is "red → green → refactor" (`AGENTS.template.md:41`). The 724 literal-string
+asserts of §5.2 and the structure tests of §11.6 are what authors produce
+without that bar. *Change:* three lines beside line 41: test through the public
+entry point the SR names; assert the outcome and a stable token of a refusal,
+the sentence only where an SN makes the wording the contract; a test that a
+behaviour-preserving refactor breaks, or whose subject is the suite, CI or
+layout rather than the kit, is a test defect (Indirect Testing), not a guard.
+
+**[LOW] 10.5 Altitude guidance is heaviest where the leak is smallest.**
+`spine-questions.md` §2 (SR) is 133 of 315 lines, mostly hat attribution and
+EARS traps, and the SR tier is lexically clean (0/138 ACs with call syntax);
+§3 (LLR+TC), where 80/331 details carry call syntax and 241/363 evidence cells
+carry node ids, gets 15 lines of voice guidance and no definition of
+`expected` or `method`. INCOSE's whole rule set ships as a one-page sheet; EARS
+is five patterns. *Change:* move the (c)–(c3) hat sub-bullets (~60 lines) to
+the hats layer's own doc; add to §3 the completeness test, the C2
+"appropriate to level" length test, and the two TC cell definitions.
+
+**What it bears on the tooling (§1, §2, §6).**
+
+**[HIGH] 10.6 The commit hook is a whole-repository presubmit, not a
+staged-files hook.** pre-commit "only runs on the staged contents of files";
+lint-staged exists because "running a task on a whole project can be slow";
+Google's presubmit rule is "only fast, reliable ones". The kit's hook
+regenerates the dashboard, open-items, CLI and interface references, skills
+index and prompt catalog and re-reads git history on every commit: measured
+here 28.0 s wall / 63.4 s CPU on 4 cores for the 25-step list alone
+(`trajectory` 27.9 s, `trajectory-map` 19.8 s, `open-items` 12.7 s,
+`registry-integrity` 10.1 s, `approval-fresh` 5.9 s; `research/hook-run-full-
+clone.log`). Only the ruff step is scoped to `git diff --cached`. *Change:*
+hook = staged-scoped, sub-10-second steps (format, integrity of the registries
+actually touched, secrets); whole-tree generators and history-dependent checks
+move to `hooks/pre-push` and CI; `--path-triggered` (already at
+`pre-commit:287`) gates generator steps on the paths that feed them.
+
+**[HIGH] 10.7 Permanent advisories are printed row by row on the floor, and
+the warn level has no graduation path.** ESLint's rationale for "warn" is that
+it is transitional ("typically used when introducing a new rule that will
+eventually be set to error"); Rust declares a default level per lint (measured
+over `rustc_lint_defs`: Allow 38 / Warn 80 / Deny 37) and caps lints in
+dependencies so they cannot pollute a build; `#![deny(warnings)]` is a named
+anti-pattern because new lints break builds that used to pass. In the floor
+run 350 of 497 output lines were WARN, 178 of them from three per-row classes
+("SR SR-N declares no Form" ×128, "IF IF-N Data is N characters" ×30, "SR SR-N
+is unclassified" ×20); `check.py:765` and `:911` declare classes "WARN-ONLY
+ALWAYS". A class that can never fail is a report, not a check. *Change:* each
+advisory class is either transitional (declared promotion rung) or report-only;
+report-only classes leave the floor's stdout for the trace report and
+dashboard; the floor prints one line per class with a count and the first
+instance, the full list under `--verbose`; kit-owned rows inside an adopter's
+repo are capped like dependencies.
+
+**[MED] 10.8 Three ratchet representations with opposite policies, and the
+strict one is the known re-stamp anti-pattern.** `check_complexity.py:448-463`
+FAILs when a function *improves* ("RE-STAMP DOWNWARD … in this same commit")
+and keys on the qualified function name (every rename re-stamps);
+`flag_axis.py:136` warns only on a rise; the test-side baseline is a dict
+literal rewritten whole (§8.3). Betterer auto-updates its results file when a
+result improves and fails only on regression; ESLint bulk suppressions key
+file→rule→count with no line numbers and offer `--prune-suppressions`;
+mypy-baseline is "carefully crafted to avoid merge conflicts"; Notion moved
+its ratchet to one TSV line per file+rule for the same reason. *Change:* one
+`kitlib.ratchet` — TSV keyed per file (+rule), count semantics, auto-tighten
+on improvement, FAIL/WARN on regression per one severity table, `--prune` for
+vanished rows; the two test-side dict literals become rows of it (§2.3, §5.1).
+
+**[HIGH] 10.9 The shipped CI clones at depth 1 while the commit floor fails
+closed on shallow history.** `project-trajectory/ci/check.yml:46` uses
+`actions/checkout` with no `fetch-depth` ("Only a single commit is fetched by
+default"); the kit's own `.github/workflows/test.yml` sets `fetch-depth: 0`
+three times, so the kit never sees what every adopter's CI does. Reproduced
+on a depth-50 clone of this repository: `approval-fresh`, `registry-integrity`
+and `open-items` FAIL with "… is NOT byte-identical to … at 37bcca3b, the
+commit that last wrote it" while nine other findings in the same run correctly
+say "unverifiable — its landing lies past this shallow clone's history"
+(`research/floor-run-depth50-clone.log`). setuptools-scm's default is
+`warn_on_shallow`; GitVersion and mkdocs plugins document `fetch-depth: 0`;
+semantic-release unshallows itself; SonarQube warns and degrades. *Change:* one
+`kitlib.git.shallow_boundary(root)`; any last-writer lookup landing on a graft
+commit returns *unverifiable* and the step WARNs with the remedy; `fetch-depth:
+0` with a one-line reason in the shipped workflow. Confirms §6.1 and §7.4.
+
+**[MED] 10.10 Downstream update is a 644 KB prose procedure; file ownership
+and merging are not machine-readable.** Copier and Cruft solved "update an
+already-generated project" with a stamped answers file, regeneration from the
+new template version applied as a diff with conflict markers, a declared
+`skip_if_exists` class for project-owned files, and several small templates
+composed on one project ("1 template = 1 Git repository"); Backstage ships no
+update channel and its community adds Copier because it is "version-aware".
+The kit has the stamp (`docs/kit-version`) but its file classes and migration
+entries are prose an LLM executes, `bootstrap --sync` force-overwrites
+kit-owned files silently (`bootstrap.py:682-699`), and `RESYNC_PACK.md` grows
+monotonically and is read whole on each resync. *Change:* an ownership column
+per path in the bootstrap manifest; a `bootstrap --update` that three-way
+merges old-kit → new-kit onto the adopter tree with conflict markers; a
+"kit-version behind" WARN on the floor; the core, station and domain-skills
+layers each with their own manifest and stamp. RESYNC_PACK shrinks to the
+human-judgement entries per layer.
+
+**[MED] 10.11 Provenance frames in code comments and kit-scope skills break
+the kit's own rule, and the detector covers spine cells only.** Linux kernel
+style ("tell WHAT your code does, not HOW"), Google's Python guide ("never
+describe the code"; bug references belong on TODOs for temporary code) and
+Clean Code's case against journal comments agree with `AGENTS.template.md:182`
+("State the constraint, not its history"). Measured: 1,842 `WI-###` citations
+in scripts, 90 of 122 modules with more than one (against "at most once per
+module"), 42 files stamping "owner ruling", `check.py` 741 comment lines of
+2,878; kit-scope skills `gate-advance` 5, `spine-authoring` 2 citations.
+`trace_text.provenance_advisories` (`:692`) reads registry cells only.
+*Change:* point the detector at `*.py` comments/docstrings and `SKILL.md`
+(warn-only, one header pointer allowed); one sweep keeps the constraint and
+drops the frame (§1.3, §7.6).
+
+**[MED] 10.12 Owner rulings have no immutable, globally numbered record.**
+`decisions.template.toml` is "ONE FILE PER RUN" with `D-001…` restarting per
+run and owner/review cells edited in place; 42 script files cite rulings by
+date. ADR practice (Nygard; adr-tools) keeps one short immutable record per
+decision with a stable id and marks a reversed decision *superseded* rather
+than deleting it. *Change:* `docs/decisions/ADR-NNN` (or a TOML registry with
+global ids and proposed/accepted/superseded status) for owner rulings; living
+docs and code cite nothing (the kit's rule); the log and archive cite the id;
+`docs/archive/retired-vocabulary.md` becomes part of the same log.
+
+**[LOW] 10.13 PROCESS.md and PROCESS_OPTIONS.md mix reference and
+explanation.** Diataxis: reference "should be austere" and only describe;
+explanation is where "design decisions, historical reasons" belong. The rules
+and their rationale interleave across PROCESS (14,092 words), PROCESS_OPTIONS
+(199 KB) and `check.py`'s comment banners, so the reference cannot be read
+austerely and the explanation cannot be skipped. *Change:* PROCESS.md stays the
+austere reference with stable § anchors; one RATIONALE.md absorbs the why;
+options split per layer (§3.4). The kit's own `byte-budget-guard` skill
+records the evidence that this needs a cap, not a watch: "hard caps hold and
+watch-only does not" — capped `AGENTS.template.md` +2.6%, watched PROCESS.md
++91% and PROCESS_OPTIONS.md +1,101% in one 48-day window — yet both files
+remain watch-only.
+
+**[LOW] 10.14 No single table of step default levels.** Severity and strict
+promotion are decided per step in scattered comments and flags
+(`check.py:577-622`, `:1736-1751` "SEVERITY LIVES AT THE WIRING",
+`:1891-1905`); rustc, Ruff and flake8 each publish one default-level table.
+*Change:* a severity table (in `docs/stack.ini` or the `steps()` tuple)
+naming each step's default level and promotion rung; the pre-commit, pre-push
+and CI plans select by level from it.
+
+**[LOW] 10.15 Records sit in the working tree with no owner or freshness
+marker.** 104 `handoff-*.md` at the `docs/` root, 46 MB `docs/iteration`,
+16 MB `docs/reviews`; Software Engineering at Google: "Documents without
+owners become stale", provider-facing documents "kept apart" from what users
+read; git-sizer on object-count costs. Extends §1.5. *Change:* handoffs and
+review rounds under `docs/archive/` with the banner, or a records branch; one
+index with owner and reviewed date; a `check_docs` WARN for a handoff older
+than N days outside the archive.
+
+## 11. The re-tier exemplar — three subtrees rewritten at end-user altitude
+
+**Why.** Recommendation 7.1 is the largest change in this record and the
+easiest to dismiss as taste. So one reviewer rewrote three SR subtrees chosen
+for range — SR-156 (the station's merge seam, 11 LLRs / 15 TCs, 93,262 prose
+chars), SR-199 (observation records, 3 / 3, call syntax in every detail) and
+SR-157 (the trace check every adopter runs, 22 LLRs / 27 TCs, three times the
+fan-out bound) — under the rules the kit already states: no provenance in
+cells, no function or filename in LLR text, no file in SR or SN text, a TC
+`expected` that states a condition. The verbatim BEFORE dumps, the proposed
+AFTER rows as valid TOML, the comparison scripts and the rendered pairs are in
+`exemplar/` beside this file (`python3 -I exemplar/compare.py . exemplar/after
+SR-156 SR-199 SR-157` reproduces every number).
+
+| metric (all three subtrees) | before | after | change |
+|---|---:|---:|---|
+| rows (SR+LLR+TC) | 84 | 31 | −63% |
+| LLR / TC rows | 36 / 45 | 13 / 15 | −64% / −67% |
+| prose chars | 138,627 | 19,692 | −86% |
+| code identifiers in prose (broad regex) | 1,380 | 48 | −97% (residue: "non-fast-forward", "read-only", evidence paths) |
+| evidence node ids (`path::test`) | 350 | 0 | −100% (every one of the 47 evidence *files* still cited) |
+| TC `expected` opening "Satisfies" | 28 | 0 | −100% |
+| longest LLR `detail` / TC `method` | 6,977 / 15,874 chars | 977 / 137 | −86% / −99% |
+| kit's own gating text rules (form, provenance) | 0 findings | 0 findings | the detectors see neither shape |
+| `sr_fanout_advisories` | 1 (SR-156; SR-157 re-stamped) | 0 | — |
+
+The spread is the point: SR-199, already near altitude, loses one LLR and one
+TC; SR-157, one-LLR-per-rule, loses 17 LLRs and 20 TCs.
+
+**[HIGH] 11.1 LLR `detail` is a docstring copy, measurably.** With the kit's
+own paraphrase tokenisation (alphabetic runs ≥4 chars), the median LLR detail
+has **84%** of its significant words already present in the docstrings of the
+module(s) its `module` cell names (303/331 rows ≥50%, 254 ≥70%); against an
+unrelated module the median is 54%, and the own-module share wins on 271/331
+rows (`exemplar/overlap.py`, `overlap_control.py`). The content the rows carry
+is the code's documentation a second time, and it is the copy that rots.
+
+**[HIGH] 11.2 The extreme case: TC-205 is 15,874 chars of `method` and 89 node
+ids; LLR-207 is 6,977 chars of `detail` with 41 `code_symbol` tokens.** The 15
+TCs of SR-156 hold 262 node ids over 47 files. The narrative already exists as
+`tests/test_verdict_record.py`'s module docstring and its 81 test names; the
+symbol list is `verdict.py`'s public surface restated (the anchor rule needs
+*one* binding token, `check_doc_refs.py:592`). Every rename is a registry edit.
+
+**[HIGH] 11.3 SR-157's 22-child fan-out is waived by a re-stamp whose argument
+contradicts the row's own acceptance criteria.** The rationale says "the child
+count tracks the number of declared rules rather than the number of decisions
+this row makes" (`system-requirements.toml:755`); the AC says the rule
+inventory is "recorded at its declaration site, not restated here" (`:756`).
+The 22 LLRs then restate the inventory, one LLR per rule. The proposal keeps
+five LLRs, each one decision (every rule is a pure predicate composed by one
+engine; a finding's class, declared beside its rule, decides the exit code;
+what a row's cells mean is defined once below every reader; the work registry
+is one folder read once; a test-file declaration can only add a finding) and
+moves each rule's firing shape into seven TCs' `expected` cells. 50 rows → 13.
+
+**[HIGH] 11.4 The kit's own advisories are blind to altitude.** Over the BEFORE
+rows the pure text rules return form 0, provenance 0, EARS 0, paraphrase 0,
+comparative 0, SR-artifact 0, fan-out 1; a 15,874-char method and a 6,977-char
+detail raise nothing (`exemplar/kit_rules.py`). The only live altitude signal
+is the fan-out bound, and SR-157 re-stamped it. The registry can regrow to its
+current shape with every detector green — which is what §8.1 shows it did.
+*Change:* three warn-only advisories in `trace_text`, listed in the report like
+the SR ones: LLR detail with call syntax, snake_case or a filename, or over
+~800 chars; TC `expected` opening on a pointer ("Satisfies", "Cite", "See");
+TC `evidence` containing `::`. Plus the per-SR direct-child count in the
+dashboard's trajectory tab (§8.1, §8.4). The twenty-line regexes in
+`measure.py` and `exemplar/compare.py` are the detectors.
+
+**[MED] 11.5 SR acceptance criteria absorbed sibling SRs' content, and TCs
+verify SR-156 only incidentally.** SR-156's 1,665-char AC carries SR-154's
+review-gated-landing clauses and SR-232's Done-when brief grammar; TC-317
+(coordinator guard) and TC-370 (hooks-off refusals) verify SR-156 only because
+the claim's refusal ladder runs before the lock. The proposal's AC is 694
+chars and states only what the row owns; the two TCs re-point to SR-229 and
+SR-240 (not deleted).
+
+**[MED] 11.6 Tests of code structure are traced as test cases.** TC-193 asserts
+"every re-exported name … IS the kitlib.spine object (`is`, not `==`)"; TC-197
+asserts "this module imports no sibling … no nested def". These verify the
+shape of the code, not SR-157's observable. Under the proposal the behavioural
+half survives (TC-914: the checker, the stage derivation and a fresh scaffold
+answer alike for a row's cells) and the structural assertions stay as plain
+tests with no TC row (§5.1).
+
+**[LOW] 11.7 Two small hygiene classes.** `level` doubles as a verification
+method on nine TCs (Analysis 3, Inspection 5, Critique 1) — one field, two
+questions (spine-authoring §6). SN-027's `acceptance` names a spec file and
+`--jobs 1`, SN-008's names `--lenient` and "(SR-006)"; §1(e) forbids both and
+the SN artifact advisory excludes `.md` by design, so neither is reported.
+
+**[MED] 11.8 Projection and order of operations.** Weighted over the three
+subtrees the registry-wide target is roughly LLR 331 → 120–180 and TC 363 →
+120–200, consistent with the first pass's ~150. Three SRs took one reviewer
+session; 138 SRs is weeks of adjudication that §8.1 says will be undone within
+months if new rows keep arriving at the template's altitude. *Order:* the
+template and prompt fix (10.1–10.3) and the three advisories (11.4) first —
+one lane, days; then re-tier in batches starting with the ten largest fan-outs
+(SR-157 22, SR-148 16, SR-154 11, SR-054 11, SR-155 11, SR-156 11, SR-244 10,
+SR-168 8, SR-053 8, SR-006 7) and the call-syntax extreme SR-225 (18 calls,
+9,512 detail chars), each batch judged by the blind re-derivation the
+`spine-authoring` skill §4 prescribes.
+
+**What the rewrite loses, and where it already lives** (full table in
+`exemplar/TABLES.md` §E): the record field tuple, canonical UTC form and
+temp-file naming → `observation.py:21` ("WHAT MAKES A FILE A RECORD…");
+per-rule mechanics (Jaccard window, EARS keyword list, port-script carve-out)
+→ each rule's docstring, the `trace_text.py:5-18` table and
+`docs/registry-machinery-reference.md`; the trailer grammars and 64-hex
+identity → `verdict.py:1-152` and IF-175/IF-242; consolidation history in
+LLR-197/LLR-201 → the log (and `kitlib/spine.py:1-30`, a second target for the
+§1.3 sweep); per-case narratives and 350 node ids → test docstrings and names,
+with evidence derived from `Implements: TC-` tags (the reader exists,
+`gen_arch_map.read_test_tags`; 5 of 269 test files carry a tag today).
+
+**Caveats the exemplar itself records.** It was not a blind re-derivation (the
+reviewer read the rows and the code); each proposed `expected` was not checked
+clause by clause against its evidence module; the interface rows named as the
+new home of lost grammars (IF-175, IF-214, IF-215, IF-242, IF-286, IF-287)
+were not re-read; the proposal was run through the kit's pure text rules but
+not through `trace.py` end to end on a mutated registry, so `--strict-schema`
+and the `CodeSymbol` binding of the new `code_symbol` values are unverified;
+15 absolute-term advisories remain on the AFTER rows ("every rule", "each
+claimed item").
+
+**One pair in full — SR-199 after** (before: 7 rows, 5,794 chars; after: 5
+rows, 2,922 chars; the other two pairs are rendered in `exemplar/TABLES.md`):
+
+> **SR-199** The delivered process shall keep each result of an observation
+> test as a record of its own, apart from the test case, stating the outcome,
+> who or what observed it, when, until when it stands, and what it judged.
+> *AC:* A reader finds the latest result of an observation test as a separate
+> record naming the case, a pass or fail outcome, the observer, the
+> observation time, an expiry no later than the case's declared lifetime, and
+> a digest of the inputs the case declares (empty where it declares none); a
+> record that is incomplete, malformed, aimed at a case that is not an
+> observation test, or expiring beyond that lifetime is reported and is not
+> read as a result; and recording a result leaves the test case's own row
+> unchanged.
+>
+> **LLR-234** *A result is one whole record in the observation store, or
+> nothing* — `module: kitlib/observation.py`, `code_symbol: parse/write_atomic`.
+> Each result is one file of its own in the observation store, named by its
+> test case and its instant, so results written on different lanes do not
+> collide and a new sample does not edit an old one. A file is a result only
+> when every field is present and well-formed, both instants are in the one
+> canonical UTC form, the expiry is not before the observation and the
+> observer is named; anything short of that reads as no result rather than as
+> a wrong one. A write lands a whole record or leaves nothing where a reader
+> looks.
+>
+> **LLR-235** *One record policy, applied when a result is written and when
+> one is found* (absorbs LLR-236) — `record_observation.py;
+> assumption_rules.py`, `record_refusal/observation_record_findings`. Results
+> enter the store through one command, which refuses — writing nothing — a
+> result the record policy forbids …; the traceability check judges each record
+> it finds by the same policy and fails its strict run naming the file, so a
+> record that reached the repository without the command stands on no other
+> terms.
+>
+> **TC-229** *method:* pytest over the record module in a temporary directory.
+> *expected:* A whole, well-formed record reads back as the result it states,
+> while a record missing any field, cut off mid-file, outside the canonical
+> time form, expiring before its observation or naming no observer reads as no
+> result, and no partly written file is visible to a reader at any moment.
+> *evidence:* `tests/test_observation_record.py`
+>
+> **TC-230** (absorbs TC-231) *method:* pytest over a bootstrapped scaffold,
+> driving the writer and the traceability check as commands. *expected:* Each
+> result the policy forbids is refused at the command with nothing written
+> and, when planted on disk instead, fails the strict check naming the file; an
+> admitted result leaves the test-case registry byte-identical and carries a
+> digest that changes only when a declared input's content changes.
+> *evidence:* `tests/test_observation_writer.py`
+
+The before-row TC-229 read `expected = "Satisfies SR-199's acceptance clauses
+on the record's fields, the empty digest for a case …"`; LLR-235 opened
+"`record_observation.py --tc TC-### --outcome pass|fail --by <provenance>
+[--expires <UTC>] resolves the test c…`".

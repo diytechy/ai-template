@@ -1,0 +1,168 @@
+# PROPOSED subtree of SR-156 (re-tier exemplar). LLR-901..906 and TC-901..906 are PLACEHOLDER ids
+# for rows that would be minted; "absorbs" names the current rows each replaces. TC-317 and TC-370
+# leave this subtree by re-pointing their `verifies` at the requirements they actually verify
+# (SR-229 and SR-240); they are not deleted. Non-prose SR cells are carried over unchanged.
+
+[requirement.SR-156]
+title = "Bounded lanes narrowing to one gated landing"
+sn_refs = ["SN-027", "SN-008", "SN-025"]
+boundary_refs = ["B-01", "B-09", "B-10"]
+hat_refs = ["INTEGRITY-RECOVERABILITY", "UNATTENDED-OPS"]
+requirement = """The delivered loop content shall run each claimed work item on its own isolated lane, up to the configured lane ceiling, and land every lane through one serial, fail-closed seam that admits only a tree on which the declared bar and the declared independent review are green — parking a red candidate and stopping the queue loudly, draining to a clean stop under a declared pause, holding a lane whose own completion checklist changed until that change is blessed, and recovering claim and queue state from version-control history alone after a crash."""
+rationale = """Ready work fans out so a team gets more than one item moving at once, and it narrows to one serial seam so the integration branch changes only under the full bar. The two halves fail independently — a perfectly serialized landing can still admit a lane that moved its own goalposts, and a well-guarded seam is useless if two lanes can claim one item — so one row states the lane lifecycle whole: claim, run isolated, close, land. Terminal close and the trunk-only authority over generated artifacts are stated by their own rows; what this row carries of them is that every lane, however it ends, reaches the integration branch through this seam and no other path."""
+acceptance_criteria = """With independent ready work and a lane ceiling of N, N lanes run at once in separate working trees and a ceiling of one keeps the serial behaviour; a claim names exactly one work item and refuses before changing anything otherwise; nothing reaches the integration branch except through the seam, which refuses — naming the reason — a tree whose bar is red, whose review evidence is absent, partial, stale or dissenting, or whose completion checklist changed without a blessing, and parks the candidate; a declared pause stops new claims while in-flight lanes still land; and after a kill at any step a restart re-derives each claim and queue entry from history with no work item assigned twice."""
+priority = "M"
+verification = "Test"
+status = "Approved"
+phase = 4
+da_refs = ["DA-006", "DA-013"]
+
+[design.LLR-901]
+# absorbs LLR-138, LLR-140 (claim, queue, audit), LLR-150, LLR-151
+sr_refs = ["SR-156"]
+title = "Claim, finish and outcome are facts of the tree"
+module = "project-trajectory/scripts/integrate.py;project-trajectory/scripts/dispatch.py;project-trajectory/scripts/lane.py"
+code_symbol = "claim/finished_branches"
+detail = """A claim is one commit that moves one queued work specification into the lane's active folder and cuts the branch; a lane is finished when its tip holds no specification there; and its outcome is the terminal folder the specification moved to. The dispatcher decides and a lane runs — one working tree, one worker process and the lane's own refresh of the bar — so a ceiling of one is the ordinary serial loop and concurrency is a table size, not a second path. A claim refuses before any write: a tracked pause, a claim lock held by a live dispatcher, an unsafe branch name, a specification that is not exactly one readable file, an empty or multi-item input, an item off the ready frontier. A declared pause is a tracked file read fail-closed that stops claims and nothing else. No state file and no back-channel exist; the tree and exit codes are the whole protocol, which is what lets a restart re-derive each claim from history."""
+rationale = """A protocol kept in the tree is recovered by reading the tree; a state file beside it is a second truth that a crash can leave disagreeing with the first."""
+test_refs = "(see TC-901)"
+status = "Approved"
+component = "CMP-008"
+phase = 4
+
+[design.LLR-902]
+# absorbs LLR-140 (integrate_one and audit)
+sr_refs = ["SR-156"]
+title = "A lane lands only when the integration branch is already its ancestor"
+module = "project-trajectory/scripts/integrate.py"
+code_symbol = "integrate_one"
+detail = """The seam admits a branch only when the integration branch is an ancestor of it, so a merge conflict is unrepresentable and the composed tree is the branch tree: the bar runs once per lane, on the branch at its refresh, and a red refresh is attributable to the lane that caused it. The seam reads the bar's result and the review verdict off that tree fail-closed — a nonzero exit or any skipped step refuses — and lands with a non-fast-forward merge, deleting the branch on green and parking the candidate and stopping the queue on red. A window audit names any commit in the landing window that touched product paths outside the bookkeeping set."""
+rationale = """Requiring ancestry moves composition failures to the refresh, where they are attributable, instead of to a candidate worktree where they would need a conflict arm and a half-merge to park."""
+test_refs = "(see TC-902)"
+status = "Approved"
+component = "CMP-008"
+phase = 4
+
+[design.LLR-903]
+# rewrites LLR-145
+sr_refs = ["SR-156"]
+title = "Moving a specification and fixing every link to it is one changeset"
+module = "project-trajectory/scripts/spec_move.py"
+code_symbol = "move_spec"
+detail = """A specification moves between work folders together with every link that pointed at it and every link it carries, re-aimed and staged in the same changeset, so the two-thirds state — moved but not relinked — cannot exist. A crashed claim's own relink writes are recognised as such and excused when the claim is re-cut, while any other edit to prose is not."""
+rationale = """A bare move strands both link directions and the break surfaces late, on the composed tree; a constraint that leaves the broken state unrepresentable beats a check that detects it afterwards."""
+test_refs = "(see TC-903)"
+status = "Approved"
+component = "CMP-008"
+phase = 4
+
+[design.LLR-904]
+# absorbs LLR-207, LLR-262 (review half)
+sr_refs = ["SR-156", "SR-154"]
+title = "A verdict counts only while it names the tree it judged"
+module = "project-trajectory/scripts/kitlib/verdict.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/agent_loop.py"
+code_symbol = "tree_identity/governing_rev"
+detail = """The identity of a lane's work is a digest of its tree with the record paths — reviews, logs, iteration notes — left out, so a verdict names that identity and counts only while it is unchanged; there is no ordering rule and no time comparison. One reader answers both questions asked of the evidence — may this branch land, and which review phase does this lane still owe — over the same declared phase count, so the two cannot disagree. Review evidence is a round read as the session that produced it committed it, joined to that session's log for its phase and scope, and a dissent counts as served while refusing the landing. Machine-authored commits that move the tree without changing what the lane claims — the bar refresh and the machinery's own close of an adjudicated row — are verified as such and seen through, and each unverified case resolves toward more review. A trailer written back onto the commit is a cross-check that can refuse but cannot create an approval."""
+rationale = """A verdict judged by commit time or by position promotes an approval of earlier work onto later work; binding it to the tree it saw answers staleness directly and lets two readers share one answer."""
+test_refs = "(see TC-902, TC-904)"
+status = "Approved"
+component = "CMP-008"
+phase = 4
+
+[design.LLR-905]
+# absorbs LLR-307, LLR-308 (hold-relevant half), LLR-309, LLR-262 (Done-when half)
+sr_refs = ["SR-156"]
+title = "A completion checklist is fixed at claim and released only by a blessing"
+module = "project-trajectory/scripts/kitlib/done_when.py;project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/integrate.py"
+code_symbol = "blessing_owed/lane_hold"
+detail = """Each claimed item's completion checklist is read at the claim and compared with its current text with ticks and appended evidence in the closed form stripped, so a tick with evidence is not a change and any other rewording, narrowing, deletion or addition is. One predicate — the item's id with the digest of its carried checklist — is asked at the lane's next build dispatch, at a hand close, at the landing and at an ordinary commit on the integration branch, and is released only by an accepted verdict or an owner ruling that binds that exact digest; a later change owes a fresh blessing. The commit that makes the change, review and critique sessions, adjudication rows and test runs are not held; an unreadable claim or current copy holds naming why, and an absent claim releases."""
+rationale = """A release condition that a lane can keep consuming its changed goalpost through is no condition; one predicate at every transition makes the verdict or ruling the sole release without forbidding the edit that creates the obligation."""
+test_refs = "(see TC-905)"
+status = "Approved"
+component = "CMP-008"
+phase = 4
+
+[design.LLR-906]
+# rewrites LLR-339
+sr_refs = ["SR-156"]
+title = "The integration branch is one declared name"
+module = "project-trajectory/scripts/agent_common.py;project-trajectory/scripts/bootstrap.py"
+code_symbol = "trunk_name"
+detail = """Every reader that judges or writes against the integration branch takes its name from one declaration in the policy home and does not infer it from the branch a checkout is on, so a linked working tree and a single checkout agree about the same branch; an absent, empty, non-text or non-local declaration is refused by name by each such reader. A new scaffold writes the branch it is created on into a policy configuration it creates itself and leaves an adopter's existing file alone."""
+rationale = """Guessing the trunk from a checkout lets linked worktrees and single checkouts disagree about the same integration branch."""
+test_refs = "(see TC-906)"
+status = "Approved"
+component = "CMP-008"
+phase = 4
+
+[test.TC-901]
+# absorbs TC-131, TC-132 (claim and station half), TC-144, TC-145
+verifies = ["SR-156", "LLR-901", "IF-186"]
+level = "Integration"
+method = "pytest over real git repositories, the dispatcher and the integrator driven with the real bar."
+tier = "Full"
+expected = "Independent ready work runs on as many lanes as the ceiling allows; each claim moves exactly one specification in one commit and refuses by name, before anything is written, an empty or multi-item input, a pause, a held claim lock or an unsafe name; a finished lane is detected from its tree; a pause lets in-flight lanes land and stops new claims; and a kill at any lifecycle step is resumed from history with no item assigned twice."
+automated = "Yes"
+evidence = "tests/test_dispatch.py; tests/test_integrate.py; tests/test_integrate_admission.py; tests/test_bookkeeping.py; tests/test_agent_loop_policy.py"
+status = "Approved"
+phase = 4
+
+[test.TC-902]
+# absorbs TC-132 (verdict and attest half), TC-205
+verifies = ["SR-156", "SR-154", "LLR-902", "LLR-904", "IF-175"]
+level = "Integration"
+method = "pytest over two-branch git fixtures with the integration branch checked out, the seam and both evidence readers driven on the same trees."
+tier = "Full"
+expected = "A branch lands only with the integration branch already its ancestor, its refreshed bar green and a verdict from a logged reviewer session naming its current identity; a red bar parks the candidate and stops the queue; a verdict naming an earlier tree, a dissent, a missing phase, a narrow or retained-session round, or a trailer contradicting the rounds refuses by name; a verified refresh or mechanical close moves the tip without re-owing a round; and the loop and the seam give one answer about what the lane owes."
+automated = "Yes"
+evidence = "tests/test_verdict_record.py; tests/test_integrate_station.py; tests/test_bar_attestation.py; tests/test_integrate_attest.py"
+status = "Approved"
+phase = 4
+
+[test.TC-903]
+# rewrites TC-139
+verifies = ["SR-156", "LLR-903"]
+level = "Unit"
+method = "pytest over fixture trees and a real repository, the move driven with and without its relink half."
+tier = "Full"
+expected = "An archival move leaves every inbound and outbound link true and the documentation check green, the same move without its relink half fails that check, and a crashed claim whose only extra writes are its own relinks is re-cut while one with any other prose edit is convicted."
+automated = "Yes"
+evidence = "tests/test_spec_move.py; tests/test_integrate.py; tests/test_handback.py"
+status = "Approved"
+phase = 4
+
+[test.TC-904]
+# absorbs TC-257, TC-259
+verifies = ["SR-156", "SR-154", "LLR-904", "IF-242"]
+level = "Integration"
+method = "pytest over git repositories and the loop driven with a fake agent."
+tier = "Full"
+expected = "A review session's range may change only its own verdict file — any other path stops the run for a human or refuses the landing by name from the committed logs; a later rewrite of a round or of a session log changes nothing the seam counts; an uncommitted verdict is not acted on; and a review whose leftovers cannot be stashed stops the run with nothing re-drawn."
+automated = "Yes"
+evidence = "tests/test_review_scope.py; tests/test_agent_loop_review.py; tests/test_agent_loop_critique.py; tests/test_verdict_record.py"
+status = "Approved"
+phase = 4
+
+[test.TC-905]
+# absorbs TC-325, TC-326, TC-327 (hold half), TC-328
+verifies = ["SR-156", "LLR-905", "IF-286"]
+level = "Integration"
+method = "pytest over git fixtures holding a claimed specification, each hold point driven with and without a binding blessing."
+tier = "Full"
+expected = "A lane that rewords, narrows, deletes or adds a checklist item is held at its next build dispatch, at a hand close, at the landing and at an ordinary trunk commit until an accepted verdict or owner ruling binds that exact text, while a tick with evidence, the editing commit itself, a review or adjudication session and a test run are not held; the uncovered change is minted as an adjudication at the landing and a covered one is not."
+automated = "Yes"
+evidence = "tests/test_done_when_blessing.py; tests/test_done_when.py; tests/test_intake.py"
+status = "Approved"
+phase = 4
+
+[test.TC-906]
+# rewrites TC-369
+verifies = ["SR-156", "LLR-906", "IF-179", "IF-189"]
+level = "Integration"
+method = "pytest over repositories with and without the declaration, in single checkouts and linked working trees, plus a fresh scaffold."
+tier = "Full"
+expected = "The declared branch is read without consulting the current checkout; each absent, empty, non-text or non-local declaration is refused by name by every reader that judges or writes against the integration branch; a linked working tree on that branch is judged as it; and a fresh scaffold records the branch it was created on while an existing policy file keeps its value."
+automated = "Yes"
+evidence = "tests/test_trunk_name.py; tests/test_done_when_blessing.py; tests/test_bootstrap.py; tests/test_process_config.py; tests/test_step_path_trigger.py"
+status = "Approved"
+phase = 4

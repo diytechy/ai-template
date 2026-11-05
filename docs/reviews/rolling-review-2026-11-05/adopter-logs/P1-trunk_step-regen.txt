@@ -1,0 +1,10 @@
+trunk_step: regen — skipping okf (docs/okf/ absent).
+trunk_step: regen — derived-stage ok.
+trunk_step: regen — trajectory ok.
+trunk_step: regen — skipping status (docs/status.md absent or carries no generated-status markers).
+trunk_step: regen — open-items ok.
+trunk_step: regen — component-view ok.
+trunk_step: regen — skipping cli-reference (docs/cli-reference.md absent or carries no CLI REFERENCE markers).
+trunk_step: regen — skipping interface-reference (docs/interface-reference.md absent or carries no INTERFACE REFERENCE markers).
+trunk_step: regen — skipping verdict-rollup (docs/reviews/ absent).
+trunk_step: regen — skipping approval-brief (docs/ratify/CURRENT.md absent).

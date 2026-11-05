@@ -1,0 +1,20 @@
+dev-setup — profile=all tier=run
+Developer workstation (process.md §7). Product deps are scripts/setup.sh.
+
+  [ok]      runtime (python3)
+  [ok]      git
+  [ok]      offline Markdown+Mermaid renderer
+  [ok]      pre-commit floor (core.hooksPath)
+  [ok]      role: code
+  [missing] role: design  — fill design_CMDS/design_INSTALL in the EDIT block for this role's tools
+
+Product toolchain: .venv present (run scripts/setup.sh to refresh).
+
+No interactive terminal: nothing is offered (run dev-setup at a terminal to install).
+run_menu: no run capabilities declared yet.
+Declare them in docs/stack.ini under a [run] section, one line each:
+  [run]
+  serve = python -m yourapp
+  serve.desc = start the app
+The README 'Run it' section documents the underlying commands.
+(A pure library has none — delete the run.* launchers.)

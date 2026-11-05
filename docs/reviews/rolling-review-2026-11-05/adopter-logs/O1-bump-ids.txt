@@ -1,0 +1,6 @@
+trace: id watermark LLR 0 -> 1
+trace: id watermark SN 0 -> 1
+trace: id watermark SR 0 -> 1
+trace: id watermark STK 0 -> 1
+trace: id watermark TC 0 -> 1
+trace: id watermark written -> docs/id-watermark (20 space(s), 5 raised)
