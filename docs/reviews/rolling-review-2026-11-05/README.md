@@ -16,8 +16,8 @@ limit. Each finding carries a severity (`[HIGH]`/`[MED]`/`[LOW]`), an anchor
 (file or rule), the issue, and a concrete change. Measurements are reproduced
 with the command that produced them.
 
-**Status:** second pass WRITTEN (2026-11-05, same day); two verification
-blocks still pending (§13.E, §13.F). The first full pass is §1–§7; the
+**Status:** second pass COMPLETE (2026-11-05, same day); every section
+verified. The first full pass is §1–§7; the
 second pass adds §8–§14: the growth trend, the adopter's first day, external
 research, a re-tier exemplar, the adversarial verification of §1–§6 (§12), six
 finders' new findings with their own verification (§13), and the revised,
@@ -1251,8 +1251,7 @@ anchors, numbers and a reproducing command. Their scripts are in `measures/`
 refusal inventory in `guards/TABLE.md`. **Adversarial verification:** seven
 refuters (two with different lenses over the spine findings) re-measured each
 finding and checked each change against the owner's ruled plan; their verdicts
-close each sub-section (13.A–13.D below; 13.E and 13.F follow as they land). A finding without a verdict is a finder's claim with its
-evidence, not a settled fact. Findings that only extend an
+close each sub-section below. Findings that only extend an
 earlier section are folded into one line that names it.
 
 ### 13.A Surface area and operating cost
@@ -2175,6 +2174,113 @@ the 7,700-test suite about seven times per push (five matrix cells, a
 smoke-budget job that is the smoke tier again, and the gate job under
 subprocess coverage tracing).
 
+**Verification of 13.E** (one skeptic; the finder's junit data re-split per
+test, the slow tier's figures added, every change checked against OI-68, D-7,
+OI-21, WI-940 and ruled item 13). Two CONFIRMED (13.67, 13.69), one refuted
+(the `wi_convert` retirement in 13.75–13.77), one duplicate (13.64 → §8.3), the
+rest PARTIAL — and the pattern repeats §13.D's: the measurements hold, the
+deletions mostly reverse a ruling.
+
+- **13.63 → MED.** The META class mixes three kinds: strict meta (suite, CI,
+  ratchets, equality pins) 22.3 s / 18.2% of the smoke tier's summed time;
+  censuses over *shipped* code 7.6 s / 6.2%; this-repo tooling with behaviour
+  tests 3.8 s / 3.1%. "Tests that cannot catch a kit regression" is false for
+  the second and third kinds: `stage_ladder` enforces the OI-21 ban on lexical
+  rung compares, `generated_newlines` closed a live Windows CRLF defect
+  (WI-348), `hooks_on_census` is SR-240, `shipped_tier` is TC-149. A `meta`
+  marker is feasible and costs adopters nothing, but moving the censuses out
+  of the bar reverses the reason they were made tests. `test_import_layers`
+  (7.4 s) and `test_smoke_budget` (one nested `pytest --collect-only`, 4.3 s)
+  are 35% of the META time on their own. Over the whole suite META is 4.5%; the
+  costliest META module anywhere is `test_prereq_toolchain`, 135.7 s for four
+  tests in the slow tier, which the finder never named.
+- **13.64 → duplicate of §8.3**, with two new facts: 380 of the 407 commits
+  changed a baseline *number* (3.6 a day over 106 days), against 38 stamps of
+  the shipped complexity TSV in 90 days — so the carrier matters more than the
+  §12 skeptic allowed, and the dict is also pinned to its own docstring
+  wording. "Delete the size ratchet" is OI-68's declined option 1a; grow-only
+  is compatible with "armed".
+- **13.65 → LOW/MED.** `max-tests` is the one deterministic, machine-
+  independent growth sensor (`docs/stack.ini:85`, `test.yml:89`); CPU and wall
+  were stamped once by design (WI-940 declares a breach a finding, not a
+  re-stamp). 72 stamps are 1.9% of the window's commits. Deleting it needs a
+  ruling; a 10% headroom or stamping at phase close does not. The 865-line
+  history log is already ruled out of the file (item 10 step 4).
+- **13.66 → MED.** The mechanism cost is real; the misfiling evidence is not:
+  spawn count is the wrong criterion and the finder's own junit shows 6 of the
+  11 "misfiled" modules are the heaviest in-process modules in the suite
+  (misfiled reduces to ~83 defs / 1.9 s). Stale the other way:
+  `conftest.py:393` still says `test_wi_convert` costs 107 s; measured 0.9 s.
+  `check_smoke_budget.py` *is* the bar's tier runner (`[run] smoke`), so it
+  cannot be deleted; a committed durations file is the ratchet's own kind of
+  bookkeeping. The 60 s tier is ruled (plan `:966`).
+- **13.67 CONFIRMED, HIGH.** 586 runtime instances, ≈1,500 CPU-s of the full
+  run's ≈4,750 s summed (~30%); the slow tier measured 1,178 s wall at `-n 4`
+  (4,240 passed, 4 failed, 72 skipped). Zero scaffold tests in the smoke tier,
+  so it does not touch the bar. Hand out copies, never the template.
+- **13.68 → LOW.** 94 tests share a setup step, not a subject (~9 are the
+  scenario). The per-rule hook and lane-walk pins assert *specific* wiring the
+  generic tests do not (a rider in `LANE_COMMIT_RIDERS`; a step in the hook's
+  line and not in `_TRUNK_FRESHNESS_STEPS`), and the git-dependency tests exist
+  so the env-gate skip is counted (WI-326). Parametrise them; do not delete.
+- **13.69 CONFIRMED.** The 28 distinct `_git` bodies differ in return shape, so
+  one runner needs two public shapes (the §12-2.2 point). OI-68 2a has the
+  complexity census cover `tests/`, but the module-size ratchet is scripts-only,
+  so test-module growth has no sensor — which this finding evidences.
+- **13.70 — higher, not lower.** Two of the three "ambient" failures are a
+  POSIX case-folding defect in `test_accounts` that fails on every Linux/macOS
+  box regardless of environment since 2026-10-20, so the kit's own Linux and
+  macOS CI cells should be red (checked below). The slow tier adds four more
+  fresh-clone reds: two `run.command` → `./run.sh: Permission denied` (exec
+  bit) and two `check.sh: set: Illegal option -o pipefail` under dash — the
+  §9.1 defect in a second launcher. The env scrub fixes one test; the hooked
+  checkout fixture exists (`conftest.py:627`).
+- **13.77a NEW, HIGH — the kit's own CI has not produced a green run since at
+  least 2026-10-14.** Checked on GitHub Actions (`kit-tests`, 117 runs): every
+  one of the fifteen most recent runs on the declared trunk `refactor_again`
+  (2026-10-14 → 2026-11-05) ended `failure` or `cancelled`; none succeeded. The
+  five full-suite matrix cells and the gate job are cancelled at exactly the
+  20-minute `timeout-minutes` on every run (the owner's own commit message of
+  2026-10-19 records the full suite at 22 min 43 s locally), and the
+  `smoke-budget` job fails in 54 s with six red tests: four
+  `test_session_adapters` `HooksOffRefused` (the runner's checkout has no
+  `core.hooksPath`, §13.70) and the two `test_accounts` "DID NOT RAISE
+  SigninRefused" platform failures (CPU 98.7 s, well within the 540 s budget).
+  `test.yml`'s own rationale for every-branch CI — "an independent environment
+  sees" the blind spot a local gate misses — is void while it is red by
+  construction. *Change:* first make CI able to go green (hooked checkout for
+  the service tests, fix or skip-with-reason the two platform failures, a
+  timeout the suite can meet or the smoke tier in the matrix with the full
+  suite nightly), then treat any red as a finding. No downstream cost; the
+  shipped `ci/check.yml` is a different workflow.
+- **13.71.** The example pins an owner-ruled rank table; 7–9%; aligned with
+  ruled item 13 point 4 ("does each test drive the interface the requirement
+  names, and not handler source").
+- **13.72.** In-process share 49%; drop `test_prompts` as the exemplar (the
+  wording *is* the behaviour, §12-5.2); stable finding codes are sound for
+  `trace`/`check_trajectory` findings and must come before any assert rewrite.
+- **13.73 → LOW.** Adequacy witnesses are a ruled convention (item 13 rev 16
+  requires "a stated adequacy witness"); `test_commit_hooks` tests shipped code.
+  The valid core is a lint of the tests with its own mutation tests
+  (`test_env_gates:378-502`).
+- **13.74 → LOW.** Three of the five named rules closed live defects (WI-348,
+  OI-21) or enforce a CLAUDE.md principle (the dependency ledger); the
+  import-set pin in `test_acceptance_record` is the one contrived refusal.
+  D-7's recorded lesson is that warn-only checks "earn the ignore".
+- **13.75–13.77.** The HISTORY set is mis-drawn (`status_vocabulary_contract`
+  guards a shipped template; the rubric test pins anchor structure, not
+  wording); the provenance half is §1.3. **Retiring `wi_convert` is refuted**:
+  `kitlib.registry` and `kitlib.spine` import it, so the shipped folder
+  registry would break. The CI count holds with two corrections: the gate job
+  runs the smoke tier a second time (eight runs, not seven), and
+  `timeout-minutes` is 20, not 360; dropping cells removes 3.11-on-Windows and
+  every-branch CI is ruled (OI-8).
+
+Counter-findings: codes-before-asserts CONFIRMED (a true-by-construction
+assert was repaired 2026-08-20); the hooks-on downgrade must also retire 32
+modules / 56 fixture sites CONFIRMED; "a TSV churns just as often" PARTIAL
+(38 vs 380 stamps says otherwise).
+
 ### 13.F Guards vs warnings — the refusal inventory
 
 The finder enumerated 77 refusal sites (`guards/TABLE.md`): **KEEP-REFUSE 50,
@@ -2228,6 +2334,83 @@ adopter unless the sitting tool refuses to render a stale brief; a per-class
 WARN summary hides the one new warning among 128 standing ones — print every
 instance whose row id appears in the staged diff; for `human_approval_through`
 the safe fallback is the most-held rung, not the shipped default.
+
+**Verification of 13.F** (one skeptic; 50+ of the 77 inventory rows opened,
+five false fires reproduced in clones, every downgrade checked against the
+recorded rulings). Every opened anchor exists and fires where the row says.
+But the downgrade list shrinks sharply: of the ten ranked changes, **one is
+confirmed (13.87's narrowed form and the `@` slug), one is refuted as
+infeasible (13.84), four conflict with a recorded ruling, and the rest are
+LOW**. Corrections to the inventory: rows 1–2, 4, 5, 8, 22, 40 and 62 become
+KEEP; row 24 needs an OI-21 amendment; rows 31 and 42 are ruling conflicts;
+row 55 conflicts with a review ruling; `hooks_refusal` has 8 call sites, not 9.
+
+- **13.78 → MED, ruling conflict.** The `--strict` promotion is **ruled**
+  (OI-31: "promotion to error is its own later act once it has run clean for a
+  program"), taken at the WI-498 close on measured evidence: a forgotten
+  `git add` after regenerating `docs/stage` passed every freshness step. A
+  modified-but-unstaged declared artifact *does* mean the committed tree will
+  be stale; the question is who catches it, and the §9 trunk-only adopter has
+  no CI or slot downstream — so "downstream cost: none" is wrong for that
+  class. The honest destination remains OI-31 option (a). Needs a ruling.
+- **13.79 → LOW.** The mechanism is false: after a rung rename the fingerprint
+  *still matches* (the ladder vocabulary is not a declared derivation input),
+  so no re-derivation would have followed; without the refusal every
+  `stage_ord` comparison raises anyway. The refusal implements OI-21 ("RAISES
+  on unknown"), and RESYNC already names `derive_stage.py` as the migration
+  step. Once per vocabulary upgrade; one documented command.
+- **13.80 → LOW, and the new fact is the reverse.** The checker reads **OFF**
+  for a both-false mixed config (an OR), while its own docstring says a mixed
+  config "reads ON" — a doc/code mismatch worth recording. The hook's refusal
+  is the documented posture ("refused, never resolved by precedence"), kept by
+  plan item 10 and pinned by TC-021; the proposal would resolve by precedence.
+  "Q12" resolves to no privacy ruling; the record is OI-46 plus IF-037.
+- **13.81 → LOW.** The owner surface does *not* render an uncited pending row
+  as a card (an integrity notice only), so the stated harm partly holds for a
+  non-station repo too; the design is WI-790's and OI-70 exit (B). A
+  vacuity-aware rule (ERROR only once a real work item exists) honours both.
+- **13.82 → LOW.** R-A is the record defect itself ("done records what shipped;
+  cancelled records why it never will", WI-267), loop or not; a marker-
+  conditional severity adds a §6.5-class two-posture rule. Keep it hard;
+  improve the message.
+- **13.83 → LOW or withdraw.** The provenance gate under `--strict` is an owner
+  ruling of 2026-07-27 made because 43 rows accumulated under warn ("a warn
+  nobody must act on"); the form patterns were promoted on measurement
+  (each fires on 0–1 rows); plan ruling 6 names the two-`shall` catch as a
+  wanted instrument. "Downstream cost: none" is wrong: the adopter's Impl bar
+  weakens.
+- **13.84 REFUTED.** Infeasible as written: the privacy answer is computed by
+  `$PY check_privacy.py --hook-policy` *after* the interpreter probe, so a
+  machine without Python 3.11 has no answer, and reading the policy in shell
+  is exactly the grep the owner retired after it failed open on a decoy
+  comment (plan item 10). The commit floor also carries the secrets scan. A
+  documented adoption prerequisite, not a contrived guard.
+- **13.85 → LOW.** (b) inverts the proxies: `requirements-dev.txt` pins
+  versions and importability does not check pins — the false-green shape
+  ruled at WI-286's review; the floor arms only when that file exists, so
+  conda/poetry users opt out by in-project venvs. (a) stands (station only).
+- **13.86 → LOW.** The strictness is WI-418's design (a value the engine
+  believes delivered, silently absent from the brief); the better fix is to
+  preflight every prompt-map key the way REVIEW already is.
+- **13.87 LOW, narrowed.** Exempting `D` outright re-opens the rewrite-by-
+  rename WI-503 closed; exempt `D` only when the same commit stages no `A` of a
+  dated brief; `M` stays refused.
+- **Further rows.** Skipping an unknown step name with a WARN fails open on
+  skew (the single-home `--floor` fix is the safe one); the model-slug `@`
+  fix is CONFIRMED; the second dual-carrier copy is forced by the kitlib
+  import boundary, and the `intake.py:3403` deletion is a **misread** (it
+  guards `Drafted`/`Founded` → `Approved` mechanical flips); the long-message
+  census holds (median 22 words) but its "ten longest" table is not the cited
+  script's output; of the three "small deletions", the `[arch-map] mode` check
+  is config validation whose value *is* consumed, and the unattributed-squash
+  hold closes a bypass, so both are withdrawn; the eight station steps cost
+  0.3 s per commit (one concurrent spawn), not 1.82 s.
+
+Counter-findings: CF1 (floor-only downgrade; the slot keeps refusing)
+CONFIRMED; CF2 CONFIRMED and strengthened — `trace.py --mint-approval-brief`
+has no staleness check, so without `approval-fresh` at the floor an owner can
+mint and attest from a stale brief, the WI-325 defect; CF3 (print the staged
+diff's instances) feasible; CF4 (most-held fallback) is §12-6.5 verbatim.
 
 ## 14. Recommendations, revised — ordered by leverage and positioned against the ruled plan
 
@@ -2351,37 +2534,50 @@ already covers it; such items need scheduling, not debate.
    moves the measurement history out of config. *Size:* small. *Downstream:*
    one hook re-take, then zero hook churn.
 
-7. **Downgrade the ten guards §13.F ranks, keep the fifty** (verdicts
-   pending): `staged-divergence` WARN at commit; a renamed rung re-derives;
-   the privacy hook takes the checker's resolved answer; uncited open items and
-   R-A join the WARN/`--strict` ladder; `trace.py --strict`'s two prose rules
-   become advisories; the Python-3.11 and scripts-dir refusals warn at
-   pre-commit and commit-msg when `privacy=off` (pre-push keeps refusing — the
-   publication boundary); the slot runs the process bar when no product test
-   is declared and drops the `./.venv` location proxy; `prompts.fill` warns on
-   an unknown provided key; `approval-immutable` exempts deletes. The hooks-on
-   refusal (§6.2) is a spine amendment (SR-240, LLR-340, IF-297) and bites only
-   station routes — downgrade it there, after §9.1 makes the setup command
-   work. *Ruled:* the Q12 privacy fail-closed, OI-46's `UNPARSEABLE`, OI-70's
-   ban and SR-179's snapshot rule all stay. *Size:* small each. *Downstream:*
-   strictly looser.
+7. **Keep the fifty refusals; downgrade the few the verification left
+   standing.** The §13.F verdicts shrank the finder's ten downgrades to a
+   short list that conflicts with no ruling: add `@` to the model-slug class
+   (§13.F); exempt a dated brief's deletion only when the same commit stages
+   no new dated brief (§13.87); preflight every `--prompt-map` key the way
+   REVIEW already is (§13.86); a vacuity-aware rule for an uncited pending open
+   item (§13.81); the process bar alone when no product test is declared
+   (§13.85a); fix the `check_privacy` docstring that says a mixed config
+   "reads ON" when the code reads OFF (§13.80); keep R-A hard and improve its
+   message (§13.82). The hooks-on refusal (§6.2) is a spine amendment (SR-240,
+   LLR-340, IF-297) that bites only station routes — downgrade it there, after
+   §9.1 makes the setup command work, and retire the 32 modules of fixtures
+   with it. Everything else the finder ranked is either a recorded ruling
+   (`staged-divergence` at `--strict`: OI-31 at the WI-498 close; the
+   provenance and form gates under `trace.py --strict`: owner ruling
+   2026-07-27 and plan ruling 6; the rung parse: OI-21; the `./.venv` floor:
+   WI-286's review) or infeasible (the Python-3.11 downgrade needs the shell
+   policy grep the owner retired after it failed open on a decoy comment).
+   *Ruled:* as listed. *Size:* small each. *Downstream:* strictly looser where
+   anything changes.
 
-8. **Cut the suite's own tax (this repo only).** Bootstrap the scaffold once
-   per session and copy it (§13.67, ~1,400 CPU-s per run, zero test edits);
-   a `meta` marker that keeps the 39 META modules out of the smoke bar
-   (§13.63); the module-size ratchet grow-only or gone and `max-tests` gone
-   (§13.64, §13.65); one shared git fixture and one WI writer (§13.69); scrub
-   the vendor environment and give the service tests a hooked checkout, so a
-   fresh clone's bar is green (§13.70); a stable short code per finding class
-   so tests assert the code, not the sentence (§13.72, then §5.2); test through
-   public verbs (§13.71). The partition mechanism (`SLOW_MODULES`, the
-   budget/meter/census modules, the 22 pin modules) is replaced by a committed
-   per-test durations file (§13.66). *Ruled:* OI-68 keeps the sensors armed
-   here and D-7 names `test_rule_sync` the anti-drift instrument — the
-   warn-only and deletion halves need a ruling argued against OI-68's recorded
-   evidence; the opt-in smoke default reverses the 2026-10-20 ruling. *Size:*
-   medium. *Downstream:* none (`tests/` never ships). Verdicts for §13.E are
-   pending; the fixture and env-scrub items stand on reproduced measurements.
+8. **Make the kit's own CI green, then cut the suite's tax (this repo only).**
+   First the red CI (§13.77a): a hooked checkout for the service tests, the
+   two `test_accounts` platform failures fixed, the `check.sh`/`run.command`
+   dash and exec-bit defects the slow tier exposed (§13.70), and a timeout the
+   full suite can meet — or the smoke tier in the matrix and the full suite
+   nightly. Then the verified savings: bootstrap the scaffold once per session
+   and copy it (§13.67: ≈1,500 CPU-s, 30% of the full run, no effect on the
+   60 s bar); one shared git fixture with two return shapes and one WI writer
+   (§13.69); a `meta` marker for the strict-meta kind only (18% of the smoke
+   tier's time — the shipped-shape censuses stay in the bar, §13.63); the
+   module-size ratchet grow-only (§8.3, §13.64 — not deleted: OI-68) and
+   `max-tests` stamped at phase close with headroom (not deleted: it is the
+   one machine-independent sensor, §13.65); the stale `SLOW_MODULES` comment
+   and `test_prereq_toolchain`'s 135.7 s for four tests (§13.66); a stable
+   short code per finding class before any assert rewrite (§13.72, §5.2);
+   tests through public verbs, per ruled item 13 (§13.71). Withdrawn: retiring
+   `wi_convert` (the shipped folder registry imports it), the partition
+   mechanism's replacement by a durations file (the 60 s tier is ruled and a
+   durations file is the ratchet by another name), and the deletion of the
+   adequacy witnesses (a ruled convention, item 13). *Ruled:* OI-68, D-7,
+   OI-21, WI-940 and item 13 all constrain this item; the CI fix and the
+   fixture change conflict with nothing. *Size:* medium. *Downstream:* none
+   (`tests/` never ships).
 
 9. **Ship the station as a layer — by attribute first.** Tag each step and
    module with its layer, filter the bootstrap manifest on it, move the seven
@@ -2456,13 +2652,18 @@ already covers it; such items need scheduling, not debate.
 
 **What needs an owner ruling before any lane** (each conflicts with a recorded
 ruling or changes a gate bar every adopter signs): deleting `test_rule_sync`
-(D-7); making the size/complexity sensors warn-only (OI-68); the hooks-on
-downgrade (SR-240); moving `approval-fresh` off the floor (WI-325's defect);
-removing `coincident` (the 2026-09-20 assumption-tier plan); an opt-in smoke
-default (2026-10-20); mechanising the resync pack (ruling 10, §5's trigger);
-the DevStg-Tests bar text "every SR and LLR → ≥1 TC" and the enumerated-
-dimensions criterion (PROCESS §4); retiring the every-module IF warn (item
-11); retiring or sampling the absolute-term advisory (SR-157/LLR-274).
+(D-7); making the size/complexity sensors warn-only (OI-68); deleting
+`max-tests` (WI-940); the hooks-on downgrade (SR-240); moving `approval-fresh`
+off the floor (WI-325's defect — the mint brief has no staleness check);
+`staged-divergence` as a WARN at commit (OI-31, promoted at the WI-498 close);
+the provenance and form gates under `trace.py --strict` (owner ruling
+2026-07-27; plan ruling 6); the rung-parse refusal (OI-21); removing
+`coincident` (the 2026-09-20 assumption-tier plan); an opt-in smoke default
+(2026-10-20); mechanising the resync pack (ruling 10, §5's trigger); the
+DevStg-Tests bar text "every SR and LLR → ≥1 TC" and the enumerated-
+dimensions criterion (PROCESS §4); gitignoring `interface-reference.md`
+(OI-66 (a)); the seam-TC allowlist (OI-43 (a)); retiring or sampling the
+absolute-term advisory (SR-157/LLR-274).
 
 **What this second pass did not do.** No blind re-derivation of any subtree
 (the exemplar's author read the rows and the code); no Windows or macOS run of
@@ -2470,8 +2671,7 @@ the hooks or launchers; the full suite was run once, by the meta finder, with
 seven environment failures it diagnosed (§13.70); external sources were read
 from GitHub-hosted copies or search snippets because the primary domains were
 outside this session's network allowlist, and are marked as such in
-`research/`; the §13.C, §13.E and §13.F verdicts were still pending when this
-section was written and are annotated in place when they land; the hand
-classifications (SR witness, META test subject) are readings, not script
-output, and say so. Every number elsewhere reproduces from `measure.py`,
+`research/`; the hand classifications (SR witness, META test subject) are
+readings, not script output, and say so; the CI history was read for the
+trunk's fifteen most recent runs, not its whole history. Every number elsewhere reproduces from `measure.py`,
 `trend.py`, `exemplar/compare.py` or the scripts in `measures/`.
