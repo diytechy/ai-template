@@ -16,10 +16,15 @@ limit. Each finding carries a severity (`[HIGH]`/`[MED]`/`[LOW]`), an anchor
 (file or rule), the issue, and a concrete change. Measurements are reproduced
 with the command that produced them.
 
-**Status:** second pass IN PROGRESS (2026-11-05, same day). The first full pass is §1–§7;
-the second pass adds §8 onward, re-measures with `measure.py` and `trend.py`, and
-adversarially re-verifies §1–§6 (the verdicts land in §12 as they arrive). `measure.py`
-beside this file reproduces every first-pass number; `trend.py` the §8 table. Audit
+**Status:** second pass WRITTEN (2026-11-05, same day); three verification
+blocks still pending (§13.C, §13.E, §13.F). The first full pass is §1–§7; the
+second pass adds §8–§14: the growth trend, the adopter's first day, external
+research, a re-tier exemplar, the adversarial verification of §1–§6 (§12), six
+finders' new findings with their own verification (§13), and the revised,
+ruling-positioned recommendations (§14). `measure.py` reproduces the first-pass
+numbers, `trend.py` the §8 table, `exemplar/compare.py` §11, and `measures/`
+the §13 figures. **Read §14 first; §12 and §13's verification blocks say what to
+trust in §1–§7 and §13.** Audit
 commits on this branch bypass the commit floor (`--no-verify`) at the owner's
 direction (2026-11-05): §6.1 and §6.4 record why the floor refused them.
 
@@ -2133,3 +2138,241 @@ adopter unless the sitting tool refuses to render a stale brief; a per-class
 WARN summary hides the one new warning among 128 standing ones — print every
 instance whose row id appears in the staged diff; for `human_approval_through`
 the safe fallback is the most-held rung, not the shipped default.
+
+## 14. Recommendations, revised — ordered by leverage and positioned against the ruled plan
+
+**How the second pass changes the picture.** The first pass's §7 treated the
+four concerns as roughly equal and led with the spine re-tier and the station
+split. After verification the weight sits differently:
+
+- **Spine altitude is the largest lever, and the kit already knows what to
+  do about it.** The shipped templates manufacture the defects (§10.1), the
+  schema and two orphan rules force them (§13.45, §13.46), the detectors are
+  blind to them (§11.4), and the question list never asks who outside the
+  system would notice (§13.51). The owner's ruled plan item 5 — no code carrier
+  in any requirement row, `module`/`code_symbol` retired, a commit-time text
+  check, test evidence generated from tags — is the remedy, is sequenced
+  "last", and has no queued work item. The exemplar (§11) shows what the rows
+  look like afterwards: 84 → 31 rows, prose −86%, every evidence file kept.
+- **Guards-vs-warnings has one root, not twenty.** Of 77 refusal sites, 50
+  should stay refusals. The downgrades cluster around a single defect: floor
+  steps read state a checkout may not carry (history depth, local lane refs,
+  the working tree) and report its absence as a repository defect (§6.1,
+  §6.3, §6.4, §10.9, §13.78). The shipped CI checks out at depth 1, so this is
+  an adopter's first CI experience.
+- **Consolidation is real but second-order, and it is mostly *policy*
+  duplication.** The line-count duplicates are ~20-line pairs; what matters
+  is two precedence rules that pick opposite spec copies (§13.13), nine
+  freshness arms that disagree on exit codes (§13.14), a tokenizer that
+  truncates what another copy runs (§13.22), and 458 façade aliases that keep
+  old import paths alive (§13.15). Several first-pass consolidations were
+  mode-flag merges the kit's own skill forbids (§12).
+- **The test suite's cost is this repo's, not the adopter's** — `tests/`
+  never ships — but it is the kit developers' daily tax: the declared
+  per-commit bar is a 98 s tier with a ratchet re-stamped 72 times, a scaffold
+  rebuilt 538 times per run, and ~10% of the lines (28% of the smoke time)
+  testing the suite itself (§13.63–13.67). Several fixes reverse rulings
+  (OI-68, D-7) and need a ruling, not a lane.
+
+**The list.** Each item names what it discharges, its ruling status, size and
+downstream cost. "Ruled" means the owner's 2026-10-11 plan (revision 38)
+already covers it; such items need scheduling, not debate.
+
+1. **Land the authoring half of item 5 now, before any re-tier.** Rewrite the
+   two template cells that produce the altitude defects
+   (`low-level-requirements.template.toml:19`, `test-cases.template.toml:26`),
+   give `method` and `evidence` their missing guidance (§10.2), fix the five
+   EXAMPLE.md pointer rows and SR-002 (§13.54), the two KICKOFF lines, the SR
+   template's "contract with the Test Engineer" (§13.D), and the skill's
+   DO-178C sentence (§10.3). Add the one bullet to spine-questions §0 that asks
+   for the witness (§13.51; add, do not reword the ruled bullets). Ship three
+   warn-only advisories (§11.4): LLR detail with call syntax or a filename, TC
+   `expected` that only points, TC `expected` that copies its LLR (§13.48).
+   *Discharges* §4.1, §4.2, §4.7, §10.1–10.5, §11.4, §13.47–13.49, §13.53,
+   §13.54, §13.58, §13.59. *Ruled:* item 5 layer 3 and B1 for the §3 text; the
+   template, EXAMPLE, KICKOFF and §0 additions are unruled but compatible.
+   *Size:* days, one lane. *Downstream:* one template resync; existing rows
+   untouched (warn-only). Without this, §8.1 says any re-tier regrows.
+
+2. **Then re-tier in batches, under the ruled shape.** Not §7.1's "collapse
+   LLRs into their SR, keep `module` as the pointer" (withdrawn: no SR module
+   cell, "Module retires", decomposition (b) decomposes LLRs *recursively*).
+   Land the three exemplar subtrees first (§11; blind re-derivation per the
+   spine-authoring skill §4), then the ten largest fan-outs (SR-157 22, SR-148
+   16, SR-154/054/155 11, SR-244 10, SR-168 8, SR-053 8, SR-006 7) and the
+   call-syntax extreme SR-225. Re-cut the two orphan rules as part of
+   decomposition (b): coverage flows up (children plus an integration TC
+   discharge a parent), `verifies` names the leaf (§13.46). Schedule item 5's
+   schema lane so the cells cannot come back. *Discharges* §4.3–4.5, §8.4,
+   §11, §13.45, §13.46. *Ruled:* item 5 layers 1–2, decomposition (b),
+   WI-994/997 in flight. *Size:* weeks of adjudication. *Downstream:* the
+   ruled migration's own RESYNC entry.
+
+3. **One checkout-tolerance idiom.** A `kitlib.git` helper that answers "is
+   this history, ref or tree readable here?"; any last-writer, lane-ref or
+   working-tree read that lands on a boundary reports **unverifiable → WARN
+   with the repair** at the commit floor and in CI's advisory run, and keeps
+   refusing at the merge slot (the slot must not land a range it cannot
+   judge). Apply it to the snapshot writer lookup (§6.1), hold-by-rename
+   (§6.3), `staged-divergence --strict` (§13.78), the stage-file rung parse
+   (§13.79) and `check_test_first`. Add `fetch-depth: 0` with a one-line
+   reason to the shipped `ci/check.yml` (§10.9). *Discharges* §6.1, §6.3,
+   §6.4, §7.4, §10.9, §13.78, §13.79. *Ruled:* unruled; conflicts with
+   nothing. *Size:* small. *Downstream:* none; it removes a false red from
+   every adopter's first CI run.
+
+4. **Stop committing the generated views.** `PROJECT_STATE.html`,
+   `docs/open-items.html` (§8.2) and the three generated architecture docs
+   `interface-reference.md`, `components.derived.toml`, `cli-reference.md`
+   (§13.33, verdict pending) become CI-published artifacts, as PROCESS §3
+   already says composites should be; the freshness steps become a WARN that
+   a committed copy, if present, is stale. Sequence it after the hand-landing
+   recipe regains its compile step (§13.3): today the merge-slot route nobody
+   runs is where "move it to the slot" would send the work. *Discharges*
+   §1.4 (half), §8.2, §8.3 (half), §10.6 (half), §13.33. *Ruled:* consistent
+   with PROCESS §3; ruling 6 keeps the hook itself. *Size:* small plus a
+   `[generated]` edit. *Downstream:* adopters who want a committed dashboard
+   keep the step.
+
+5. **Fix the first day.** `setup.sh` must run under `sh` (§9.1); the derived
+   stage floors at DevStg-Reqs while any `-000` row or placeholder flow exists
+   (§9.3); format, lint and tests register from DevStg-Needs (§9.4); the regen
+   ritual agrees with its checker and is documented, and every freshness FAIL
+   names `trunk_step.py --regen` (§9.2); `bootstrap` respects a `pyproject.toml`
+   pytest section and the shipped CI installs the project (§9.5); the
+   dashboard renders without work items or the two sentences change (§9.6);
+   one "first green run" block that the five "what next" places link to
+   (§9.8); the connectivity warn and the placeholder scan stop firing on
+   first-day state (§9.9); the first-day warnings in §9.11. *Ruled:* unruled.
+   *Size:* days. *Downstream:* positive for every new adopter.
+
+6. **Quiet the floor and declare its policy once.** One line per WARN class
+   with a count — but print every instance whose row id is in the staged diff,
+   or the one new warning hides among 128 standing ones (§13.F
+   counter-finding); report-only classes leave stdout for the report and
+   dashboard (§10.7; the Form advisory alone is 61% of the console, §13.60);
+   a per-step level table — default level, promotion rung, floor/gate/never —
+   that the hook, pre-push and CI plans select from (§10.14, §13.8), so the
+   hook's 25-name list disappears; move the station steps behind the station
+   layer (§1.2, §9.4). *Ruled:* ruling 6 keeps the hook as a hook; item 10
+   moves the measurement history out of config. *Size:* small. *Downstream:*
+   one hook re-take, then zero hook churn.
+
+7. **Downgrade the ten guards §13.F ranks, keep the fifty** (verdicts
+   pending): `staged-divergence` WARN at commit; a renamed rung re-derives;
+   the privacy hook takes the checker's resolved answer; uncited open items and
+   R-A join the WARN/`--strict` ladder; `trace.py --strict`'s two prose rules
+   become advisories; the Python-3.11 and scripts-dir refusals warn at
+   pre-commit and commit-msg when `privacy=off` (pre-push keeps refusing — the
+   publication boundary); the slot runs the process bar when no product test
+   is declared and drops the `./.venv` location proxy; `prompts.fill` warns on
+   an unknown provided key; `approval-immutable` exempts deletes. The hooks-on
+   refusal (§6.2) is a spine amendment (SR-240, LLR-340, IF-297) and bites only
+   station routes — downgrade it there, after §9.1 makes the setup command
+   work. *Ruled:* the Q12 privacy fail-closed, OI-46's `UNPARSEABLE`, OI-70's
+   ban and SR-179's snapshot rule all stay. *Size:* small each. *Downstream:*
+   strictly looser.
+
+8. **Cut the suite's own tax (this repo only).** Bootstrap the scaffold once
+   per session and copy it (§13.67, ~1,400 CPU-s per run, zero test edits);
+   a `meta` marker that keeps the 39 META modules out of the smoke bar
+   (§13.63); the module-size ratchet grow-only or gone and `max-tests` gone
+   (§13.64, §13.65); one shared git fixture and one WI writer (§13.69); scrub
+   the vendor environment and give the service tests a hooked checkout, so a
+   fresh clone's bar is green (§13.70); a stable short code per finding class
+   so tests assert the code, not the sentence (§13.72, then §5.2); test through
+   public verbs (§13.71). The partition mechanism (`SLOW_MODULES`, the
+   budget/meter/census modules, the 22 pin modules) is replaced by a committed
+   per-test durations file (§13.66). *Ruled:* OI-68 keeps the sensors armed
+   here and D-7 names `test_rule_sync` the anti-drift instrument — the
+   warn-only and deletion halves need a ruling argued against OI-68's recorded
+   evidence; the opt-in smoke default reverses the 2026-10-20 ruling. *Size:*
+   medium. *Downstream:* none (`tests/` never ships). Verdicts for §13.E are
+   pending; the fixture and env-scrub items stand on reproduced measurements.
+
+9. **Ship the station as a layer — by attribute first.** Tag each step and
+   module with its layer, filter the bootstrap manifest on it, move the seven
+   shared plumbing modules (`spine_carrier`, `baseline_snapshot`,
+   `acceptance_record`, `agent_common`, `schedule`, `prompts`,
+   `record_observation`) into `kitlib` or a core package, and only then move
+   directories — a directory move today is a §4 rename of fifty authored
+   paths in the pack §13.2 calls unreadable, and the import boundary is
+   tangled in ten core modules (§12-1.2). CMP-008 "W3 Autonomy" already names
+   the cut; item 12's W3 dry run is the place to record it. *Discharges*
+   §1.1, §1.2, §9.10, §13.F's eight vacuous station steps. *Ruled:* consistent
+   with the Unattended layer's applies-when; item 12 ruled the decomposition
+   moments. *Size:* large; the first-pass "directory move plus manifest rows"
+   was wrong. *Downstream:* a non-station adopter stops receiving 52 scripts,
+   20 prompts and the launchers.
+
+10. **Consolidate the policy duplicates, not the homonyms.** In `kitlib`,
+    themed, never a `common.py`: one spec-precedence table (and fix the
+    active-beside-closed tie-break, §13.13); one generator `check_or_write`
+    with a per-generator missing policy (§13.14); one `process.toml` parse
+    taking text, each dial's fail-direction kept explicit (§13.17, already a
+    `status.md` row); `kitlib.ids`, `kitlib.markers`, `kitlib.declared`, one
+    `text_at` with the three-way shape (§13.18–13.20); the five frontmatter
+    grammars → the home, CRLF-tolerant (§13.23); the F5-licensed copies →
+    their homes, the shlex divergence first (§13.22); the kit-path hints →
+    one resolver (§13.25); a probe per shell dialect that adopter-owned
+    launchers call (§13.24). Leave the git-wrapper, ratchet and refusal-
+    composer merges the skeptics judged as mode-flag shapes (§12-2.2, 2.3,
+    2.6). Delete the façade aliases only after the re-tier retires the rows
+    that record them as the delivered shape (§13.15). *Ruled:* several are
+    recorded consolidation rows (wi-856, wi-958, wi-960, wi-962); item 10
+    covers `_pget` and the dial readers. *Size:* small each. *Downstream:*
+    none, except the shlex fix (a bare `#` token stops truncating).
+
+11. **Architecture prose: fewer rows, one home per decision** (verdicts for
+    §13.C pending). Record a seam only when it crosses a component boundary or
+    leaves the repo, and retire the every-module-endpoint warn (§13.31; check
+    the wording against ruled item 11 / variant F, which keeps the IF row's
+    form and owner); give the decision a boundary hides a home — two optional
+    CMP keys, `hides` and `stops` — and point the four texts at it (§13.32);
+    fix the "derived, never committed" invariant text and cut §3's 40 lines on
+    the retired marker routing (§13.33); one contract-at-code format (§13.34);
+    relax the flows participant rule to what the kit's own flows do (§13.35);
+    filter the planning-brief IF surface to the work item's scope (§13.36);
+    reconcile rubric A3 with the `Data` cell (§13.37); gloss the rubric's
+    citations and ship or drop the knowledge pack (§13.39); de-duplicate the IF
+    model between §8 and the OPTIONS layer (§12-3.1). *Ruled:* item 11
+    (variant F) and item 12 govern the registry shape; the prose edits are
+    unruled. *Size:* prose, plus a one-time registry trim. *Downstream:* no
+    adopter row breaks.
+
+12. **Records, provenance and the pack.** Compile the log or declare
+    `docs/log.d` the record (§13.3); tombstone ruled open items after writing
+    the record (§13.6); render only high-risk decisions and a count (§13.5,
+    owner call); one `docs/handoff.md` and the 103 archived (§10.15, §13.7);
+    a byte/entry ratchet on `RESYNC_PACK.md` now and a per-release migration
+    table when ruling 10's trigger fires (§13.2, §13.4, §10.10); the
+    provenance sweep across code comments, shipped skills, prompts and tests
+    with the detector pointed at them afterwards (§1.3, §3.3, §10.11, §13.62,
+    §13.75); an immutable, globally numbered home for owner rulings (§10.12);
+    PROCESS.md as the austere reference with its rationale in one explanation
+    document, and a cap on it — the kit's own skill proves watch-only fails
+    (§10.13). *Ruled:* ruling 10 forbids mechanising the pack beyond its
+    trigger; item 10 moves history out of config. *Size:* a sweep. *Downstream:*
+    none.
+
+**What needs an owner ruling before any lane** (each conflicts with a recorded
+ruling or changes a gate bar every adopter signs): deleting `test_rule_sync`
+(D-7); making the size/complexity sensors warn-only (OI-68); the hooks-on
+downgrade (SR-240); moving `approval-fresh` off the floor (WI-325's defect);
+removing `coincident` (the 2026-09-20 assumption-tier plan); an opt-in smoke
+default (2026-10-20); mechanising the resync pack (ruling 10, §5's trigger);
+the DevStg-Tests bar text "every SR and LLR → ≥1 TC" and the enumerated-
+dimensions criterion (PROCESS §4); retiring the every-module IF warn (item
+11); retiring or sampling the absolute-term advisory (SR-157/LLR-274).
+
+**What this second pass did not do.** No blind re-derivation of any subtree
+(the exemplar's author read the rows and the code); no Windows or macOS run of
+the hooks or launchers; the full suite was run once, by the meta finder, with
+seven environment failures it diagnosed (§13.70); external sources were read
+from GitHub-hosted copies or search snippets because the primary domains were
+outside this session's network allowlist, and are marked as such in
+`research/`; the §13.C, §13.E and §13.F verdicts were still pending when this
+section was written and are annotated in place when they land; the hand
+classifications (SR witness, META test subject) are readings, not script
+output, and say so. Every number elsewhere reproduces from `measure.py`,
+`trend.py`, `exemplar/compare.py` or the scripts in `measures/`.
