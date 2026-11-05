@@ -79,9 +79,9 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
 - **One fact, one home — in code, and across it.** No copy-paste logic;
   consolidate duplicates into a shared stage (PROCESS.md §3, 0→A→B).
 - **Intention-revealing names; no cryptic abbreviations.**
-- **Back-link to requirements** as far as `[checks] backlink_coverage_min`
-  asks: `Implements: SR-007, LLR-014` on implementing symbols; test names
-  embed the verified id.
+- **Back-link to requirements** per `[checks] backlink_coverage_min`:
+  `Implements: SR-007, LLR-014` on implementing symbols; TC ids in test files
+  (process.md §3).
 - **Match the surrounding style.** Read a neighboring file first; mirror its
   idioms.
 - **Fail loudly, never silently.** No bare excepts; nonzero exit on failure

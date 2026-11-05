@@ -10334,6 +10334,77 @@ later act copied its registry) still mints, and is judged like any other.
 **Adopter-merged files:** none. No registry, setting or record format
 changes.
 
+### Test files name their test cases on the `Implements:` line [since dca41256c]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A test file now declares the test cases it runs on the same
+`Implements:` line code uses, with the same token and opening rule: the token
+opens its line, with nothing before it but whitespace, comment markers or
+quotes. In a test file the rest of the line must be one or more `TC-<digits>`
+ids separated by commas, with nothing else, for example
+`Implements: TC-201, TC-202`.
+
+Where it is read, under the declared `[paths] tests` root:
+
+- **Python** (`test_*.py`, `*_test.py`): the module docstring, covering every
+  test in the file, and the docstring of a test, covering that test. A test is
+  a `test*` function at module scope or a `test*` method of a `Test*` class
+  nested only in `Test*` classes; a def decorated `fixture` or `pytest.fixture`,
+  called or not, is no test whatever its name. The two levels union, and a test
+  repeating its module's id is no finding. A parametrized test's tag covers all
+  its cases.
+- **Any other stack:** a non-`.py` file whose extension is a back-link
+  extension, where every line is read at file level.
+
+`check_trajectory.py` prints four refusals, each naming file, line and shape: a
+WARN, and an ERROR under `--strict`, so your gate refuses from `DevStg-Impl`,
+the rung where `check.py` adds `--strict`.
+
+- **Misplaced:** a declaration anywhere else under the tests root, in any other
+  docstring or any comment of any `.py` file, `conftest.py` and fixture modules
+  included. A string literal that is not a docstring is never a declaration, and
+  a backtick-quoted token is a mention.
+- **Malformed:** in a read position, a list that is not test-case ids only: an
+  empty list, a trailing comma, a list wrapped onto the next line, an SN, SR or
+  LLR id, or prose, `and` or a range after the ids. So is a read-position line
+  where the token follows prose and a test-case id follows the token, the
+  one-line docstring `"""Checks X. Implements: TC-12"""`. In a non-Python file a
+  `/* Implements: TC-1 */` block comment is malformed too, because of its `*/`:
+  use a line comment or give the tag its own line. In Python a comment tag is
+  misplaced, so give the tag its own line in the module docstring or a test's
+  docstring.
+- **Unknown:** an id no live test-case row carries. A `-000` example id is not
+  live; a Drafted row is, so a test may be tagged before its test case is
+  approved.
+- **Unreadable:** a file under the tests root that cannot be decoded as UTF-8 or
+  parsed, refused by name rather than read as carrying no tags.
+
+An untagged test file is no finding. With no tests root or no test-case registry
+the check is vacuous. A tag can only add a finding, and source files are read
+exactly as before.
+
+**What to do (forced migration).** Overwrite the kit-owned files below and take
+the PROCESS.md and AGENTS.md text. Then **tag your test files**: for each test
+case whose `evidence` names a test file, add `Implements: TC-NNN` to that file's
+module docstring; for each `file::test` node, add it to that test's docstring.
+Nothing refuses an untagged test at this entry, but the review test set a later
+entry ships refuses a test case with no tagged test, so tag before re-syncing
+past it. Fix any misplaced or malformed tag the check now reports, including a
+one-line docstring whose token follows prose. A deliberately unparseable fixture
+module under your tests root is now refused as unreadable: move it out of the
+root or change its suffix. No setting and no registry schema changes, and your
+evidence cells stay as they are.
+
+**Not in this entry:** the kit repository's own test-file tags (its migration
+row), the derived review test set and its refusals, the strict-mark commit check
+and `[bars] red_mark`, and the generated evidence column. Each is a later change.
+
+**Kit-owned files — overwrite:** `scripts/gen_arch_map.py`,
+`scripts/check_trajectory.py`, `scripts/trajectory_arch.py`.
+
+**Adopter-merged files:** the `AGENTS.md` and PROCESS text.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

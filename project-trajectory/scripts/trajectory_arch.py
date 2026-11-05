@@ -11,9 +11,10 @@ Contracts: IF-263 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-263: ``check_trajectory`` imports and re-exports this module's
-architecture rule surface. Inputs are a repository root and the spine/config
-files beneath it; outputs are normalized inventories or finding strings. The
-module performs no writes and exposes no command-line entry point.
+architecture rule surface. Inputs are a repository root, the spine/config
+files beneath it and, for `tc_tag_findings`, the test files under the declared
+tests root; outputs are normalized inventories or finding strings. The module
+performs no writes and exposes no command-line entry point.
 """
 
 import ast
@@ -1060,6 +1061,30 @@ def codesymbol_crosscheck_findings(root):
     return findings
 
 
+def tc_tag_findings(root, tests_dir):
+    """Each refused test-file tag under `tests_dir`, the declared tests root, as
+    a `<file>:<line>: <shape>: <detail>` string. `check_trajectory` owns the
+    declared-root read, so the value is handed in.
+
+    `[]` (vacuous) with no TC registry, and with no tests root, which
+    `read_test_tags` walks as no files. `[arch-map] mode = files` is no reason to
+    be vacuous: this reads test files, not the source surface. A registry holding
+    only `-000` rows is not vacuous either, so every tag there is unknown. No
+    `hasattr` guard, unlike this module's other `gen_arch_map` reads: a stale
+    sibling must fail loudly, since "no tags" is the reading this rule refuses.
+
+    Implements: SR-157, LLR-365"""
+    if gen_arch_map is None or spine_carrier.resolve(root / TC_CSV) is None:
+        return []
+    rows = spine_carrier.load(root / TC_CSV, "TC-ID", False)
+    live_tcs = {(r.get("TC-ID") or "").strip() for r in rows}
+    _tags, findings = gen_arch_map.read_test_tags(root, tests_dir, live_tcs)
+    return [
+        "{}:{}: {}: {}".format(f["file"], f["line"], f["shape"], f["detail"])
+        for f in findings
+    ]
+
+
 # --- the How-SW top-view right-sizing rule (WI-073/FB5) ------------------------
 # The software-architecture diagram's first view is bounded at TOP_VIEW_MAX
 # items = top-level components (a CMP with no PartOf that contains ≥1 arch-map
@@ -1782,6 +1807,7 @@ __all__ = (
     "_codesymbol_candidates",
     "_codesymbol_site_finding",
     "codesymbol_crosscheck_findings",
+    "tc_tag_findings",
     "load_cmps",
     "_cmp_roots",
     "module_components",

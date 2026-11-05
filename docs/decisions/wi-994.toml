@@ -1,0 +1,54 @@
+# docs/decisions/wi-994.toml — delegated calls the coordinator made on lane
+# wi-994, headless leg 32 of loop session 20261104T181017Z-49d2cc.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "REVIEW-B is the Claude Opus (high) stand-in sub-agent for the Gemini slot (coordinator-2026-10-16 D-008), recorded here as the substitution each lane records, for every round of this lane."
+alternative = "Wait for WI-815's Gemini route."
+reversal_cost = "Low: a reviewer choice per round."
+why_not_escalated = "The owner chose the stand-in; this is its per-lane record."
+review = ""
+
+[decision.D-002]
+decided = "Round 1 triage (001-REVIEW-A, 002-REVIEW-B). Fix round owed: Sol's MAJOR, the comma-led wrap, which Opus also found with an `and` wrap and graded MINOR, stands as a MAJOR because the spec names a list wrapped onto the next line as malformed, so it is a Done-when gap. Two MINORs ride the fix: the opening rule's repeat, since the Done-when says no second opening rule, and the missing bare-declaration case in a closed docstring. The continuation docstring's claim is corrected with them. To the spine change list: LLR-365's missing one-line clause. Re-graded, no defect: the open P7 and P8 obligations, the cycle's next steps. Not fixed: the token after prose outside a read position, which is no declaration by the grammar, which a test pins as prose on purpose, and whose consequence WI-995's partial refusal reports; it goes to status.md's follow-ups with the two coverage-extension notes (a tests root overlapping the source root, and a `.cmd` test file having no tag form)."
+alternative = "Widen the misplaced rule to token-after-prose lines, which re-pins an intended test and reads prose mentions as refusals."
+reversal_cost = "Low: a later row can widen the rule."
+why_not_escalated = "Triage under the review threat model is the coordinator's; Opus graded the unfixed finding MINOR and neither reviewer contests it."
+review = ""
+
+[decision.D-003]
+decided = "Round 2 triage (003-REVIEW-A, 004-REVIEW-B): no BLOCKER or MAJOR, so the checkpoint follows at two counted rounds. Two MINORs ride the checkpoint stage, each cheap and real: the malformed message sent a Python author to a line comment the same reader refuses, and a `test*`-named pytest fixture was read as a test, which the spec's closed list refuses. LLR-365's two unstated malformed shapes go to the reconcile. The log fragment's owed items are written. The added wall time is stated from a loaded box (median 80.59 s to 83.10 s, three interleaved runs a side), so the plan's quiet figure is still owed; the Done-when asks for it measured and stated, which the fragment does, naming the load."
+alternative = "Send the two code MINORs to successor rows; each would be a new row for a few lines."
+reversal_cost = "Low: small changes inside the spec's surface, reviewed at the gate."
+why_not_escalated = "Triage is the coordinator's; the gate reviews the tip that lands."
+review = ""
+
+[decision.D-004]
+decided = "The arms map found 30 arms and 4 gaps at the reconcile tip, closed in one Terra turn. LLR-365's clause `A declaration can only add a finding` is removed: it states authority, no test exercises it and no TC states it, and the spec's Trust section is its home; the plan's P1 named the clause, and the Done-when does not, so the row departs from the plan's row sketch here. TC-406 now states the next-line wrap, and LLR-365 states that a test repeating its module's test case is no finding."
+alternative = "Keep the clause and add a test for a negative, which would pin nothing a reader of the code cannot see."
+reversal_cost = "Low: one clause of a Drafted row, judged at the sitting."
+why_not_escalated = "Spine text is judged at the sitting that follows; recorded for confirm or overrule."
+review = ""
+
+[decision.D-005]
+decided = "Convergence map for the gate over the checkpoint tip; each accepted finding maps to a regression test that fails on the pre-fix code, or to independently checkable evidence. The wrapped list (Sol, round 1; Opus, round 1): tests/test_gen_arch_map.py::test_each_malformed_shape_is_named wrap cases (led by a comma, by `and`, by both, and in a line comment) and tests/test_trajectory_arch.py::test_a_wrapped_tag_list_is_refused_under_strict. The opening rule's repeat: test_backlink_ids_applies_the_tag_readers_opening_rule. The bare declaration in a closed docstring: the helper-bare-token and helper-no-ids cases of test_each_misplaced_shape_is_named, a pin with no pre-fix red, whose evidence is the mutant replacing the opening test with backlink_ids (two failed). The Python repair message: test_the_malformed_advice_for_python_repairs_to_a_clean_result. The test-named fixture: the six fixture cases of test_each_misplaced_shape_is_named. LLR-365's unstated shapes: the corrected text at the row, judged at sitting 006. The log fragment's owed items: the corrected text in docs/log.d/WI-994-test-files-tag-their-tcs.md. The open adjudication record: sitting 006, accepted, whose act follows the gate."
+alternative = "None: the map is the round's precondition (the coordinator-cycle skill's section 3)."
+reversal_cost = "Low: a record."
+why_not_escalated = "The coordinator's check before a convergence round."
+review = ""
+
+[decision.D-006]
+decided = "The lane rebased onto trunk dca41256c before the gate, trunk having moved only by docs filings this lane does not touch, so the gate reviews the tip that lands. The one conflict was docs/id-watermark, resolved by fold (trunk's WI and OI marks, the lane's LLR and TC reservations). The RESYNC entry is re-anchored at the new base. Sitting 006's judged rows were compared with the rebased tip and are unchanged."
+alternative = "Rebase after the gate, owing a further round."
+reversal_cost = "Low: the pre-rebase tip is archived at landing."
+why_not_escalated = "The recipes' order; recorded because the verdicts cite the pre-rebase tip."
+review = ""
+
+[decision.D-007]
+decided = "The gate over the checkpoint tip (c70603454): Opus APPROVE with four MINORs, Sol CHANGES-REQUESTED on one MINOR; no BLOCKER or MAJOR. Every fix would move the tip off the gated one, so all five are follow-ups in status.md's unfiled list (wi-935 D-005): a fixture imported under a hand-chosen alias is read as a test; no test puts a test def in a non-test file, the shipped code being right; the RESYNC entry classes PROCESS text as adopter-merged where section 2.2 classes docs/process.md as generated, to fix before the FileBackup re-sync; EXAMPLE.md's TC-001 evidence names the Python file where section 5 tags the Rust one; and LLR-365's rationale could say a file and line are this rule's attribution where SR-157 says row and cell. The lane proceeds to its act turn at two counted rounds and one uncounted gate."
+alternative = "Fix them and run another gate, which the recipe rules out for MINORs."
+reversal_cost = "Low: each is a small follow-up."
+why_not_escalated = "The recipes settle a gate MINOR; none is a convergence-class finding. Sol's alias case is a hand-chosen alias of a pytest name, which the review threat model places low."
+review = ""

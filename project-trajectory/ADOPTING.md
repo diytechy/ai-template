@@ -223,7 +223,8 @@ and affected SRs before backfilling its implementation.
   Coverage grows along the paths that actually change — which is where the
   risk is.
 - Existing tests can be adopted as TCs: give each meaningful test a `TC-###`
-  row and put the id in the test name — no rewrite needed.
+  row and tag the test with `Implements: TC-###` (process.md §3) — no rewrite
+  needed.
 
 ## 5. First green run
 

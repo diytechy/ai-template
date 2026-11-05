@@ -1543,6 +1543,72 @@ evidence = "tests/test_intake_settled.py::test_a_row_reattested_in_range_and_equ
 status = "Approved"
 phase = 6
 
+[test.TC-404]
+verifies = ["SR-157", "LLR-365"]
+level = "Unit"
+method = "Drive Python module and test-docstring read positions, their union and a repeated declaration; drive a supported non-Python test file and an unsupported text file; confirm a fixture string and a backticked mention are not declarations; read a BOM file; and preserve the source-side reader outputs and signatures."
+tier = "Full"
+expected = "The declared read positions yield their test-node ids, Python levels union without a repeat finding, supported non-Python files yield file-level ids, excluded text is silent, fixture strings and mentions do not declare ids, BOM files read, and source-side reads remain unchanged."
+automated = "Yes"
+evidence = "tests/test_gen_arch_map.py::test_the_tag_reader_reads_each_python_read_position; tests/test_gen_arch_map.py::test_tags_at_both_levels_union_and_a_repeat_is_clean; tests/test_gen_arch_map.py::test_a_non_python_test_file_is_read_at_file_level; tests/test_gen_arch_map.py::test_a_backticked_token_is_a_mention; tests/test_gen_arch_map.py::test_a_fixture_string_opening_a_line_with_the_token_is_no_tag; tests/test_gen_arch_map.py::test_a_bom_file_reads_its_tags; tests/test_gen_arch_map.py::test_the_code_side_readers_keep_their_output_over_the_scripts_tree; tests/test_gen_arch_map.py::test_backlink_ids_applies_the_tag_readers_opening_rule"
+status = "Approved"
+phase = 6
+
+[test.TC-405]
+verifies = ["SR-157", "LLR-365"]
+level = "Unit"
+method = "Drive declarations at each Python position outside a read position: helpers, classes, nested defs, methods of a non-test class, every pytest-fixture decorator form, a conftest file, a non-test module, and comments above, beside and bare."
+tier = "Full"
+expected = "Each declaration outside a permitted read position, including a pytest-fixture docstring, is a misplaced finding that names its file, line and shape."
+automated = "Yes"
+evidence = "tests/test_gen_arch_map.py::test_each_misplaced_shape_is_named; tests/test_gen_arch_map.py::test_a_comment_tag_above_a_test_is_misplaced"
+status = "Approved"
+phase = 6
+
+[test.TC-406]
+verifies = ["SR-157", "LLR-365"]
+level = "Unit"
+method = "Drive invalid declaration lists, a one-line docstring with prose before the token, and a backticked mention beside a valid declaration."
+tier = "Full"
+expected = "Each invalid declaration, including a next line continuing a valid list, is a malformed finding that names its file, line and shape, the one-line message directs the declaration to its own line, and a mention does not prevent a valid declaration from mapping."
+automated = "Yes"
+evidence = "tests/test_gen_arch_map.py::test_each_malformed_shape_is_named; tests/test_gen_arch_map.py::test_a_one_line_docstring_with_the_token_after_prose_is_malformed; tests/test_gen_arch_map.py::test_a_backticked_token_is_a_mention; tests/test_gen_arch_map.py::test_prose_after_a_tag_naming_an_id_later_is_no_wrap; tests/test_gen_arch_map.py::test_the_malformed_advice_for_python_repairs_to_a_clean_result"
+status = "Approved"
+phase = 6
+
+[test.TC-407]
+verifies = ["SR-157", "LLR-365"]
+level = "Unit"
+method = "Drive declarations naming absent, example and live test-case ids, then drive Drafted, example and deleted registry rows through the surface."
+tier = "Full"
+expected = "Absent, example and retired ids are unknown findings while a live id still maps and a Drafted test case is clean."
+automated = "Yes"
+evidence = "tests/test_gen_arch_map.py::test_a_tag_naming_no_live_tc_is_unknown; tests/test_trajectory_arch.py::test_a_draft_tc_is_clean_and_an_absent_one_is_refused"
+status = "Approved"
+phase = 6
+
+[test.TC-408]
+verifies = ["SR-157", "LLR-365"]
+level = "Unit"
+method = "Drive undecodable and unparseable supported test files, including a fixture module."
+tier = "Full"
+expected = "Each unreadable test file yields an unreadable finding that names its file, line and shape."
+automated = "Yes"
+evidence = "tests/test_gen_arch_map.py::test_a_file_that_cannot_be_read_is_refused"
+status = "Approved"
+phase = 6
+
+[test.TC-409]
+verifies = ["SR-157", "LLR-365", "IF-131", "IF-263"]
+level = "Integration"
+method = "Run the trajectory check over tagged test trees in plain and strict modes, absent tests-root and registry cases, a nested tests root, and a bootstrapped scaffold before and at the implementation rung."
+tier = "Full"
+expected = "Each finding is a plain warning and a strict error naming file, line and shape; absent inputs are vacuous; reported paths are repository-relative; and a newly created project warns below its implementation rung and fails at it."
+automated = "Yes"
+evidence = "tests/test_trajectory_arch.py::test_tag_findings_warn_plain_and_error_under_strict; tests/test_trajectory_arch.py::test_the_tag_check_is_vacuous_with_no_tests_root_or_no_registry; tests/test_trajectory_arch.py::test_a_nested_tests_root_reports_repo_relative_paths; tests/test_trajectory_arch.py::test_the_tag_check_on_a_bootstrapped_scaffold; tests/test_trajectory_arch.py::test_a_wrapped_tag_list_is_refused_under_strict"
+status = "Approved"
+phase = 6
+
 [test.TC-154]
 verifies = ["SR-148", "LLR-159"]
 level = "Integration"

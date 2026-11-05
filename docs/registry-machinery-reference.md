@@ -395,6 +395,16 @@ the falsification worklist, and an accepted risk reopened since the act that
 accepted it (SR-201, SR-202). An assumption carries no evidence level: a
 passing record raises nothing, and only a person sets `Standing`.
 
+**Test-file tags name a case from the test side.** A test file names the cases
+it runs on the `Implements:` line; `PROCESS.md` §3 states the rule.
+`check_trajectory.py` enforces it over the declared `[paths] tests` root, reading
+through `gen_arch_map.read_test_tags`: a misplaced tag, a malformed tag, an
+unknown TC and an unreadable file are each a finding naming file, line and
+shape, a WARN and under `--strict` an ERROR. A `Drafted` row is live, so a test
+may be tagged before its TC is approved. An untagged test or TC is no finding,
+and tags and the `Evidence` cell are not compared: `trace.py` still reads the
+cell.
+
 ### 5.1 The SR/LLR/TC triangle rule
 
 A TC may cite an SR *and* an LLR together, so one test discharges both the "SR

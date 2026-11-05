@@ -2012,3 +2012,159 @@ def test_spec_interfaces_readme_and_example_not_armed(tmp_path):
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "IF-999" not in proc.stderr
+
+
+# --- Test files name their test cases: the check's surface --------------------
+# A finding prints as `<level> - <repo-relative file>:<line>: <shape>`, so one
+# prefix proves all three, and a path that is not repo-relative fails it.
+
+TAG_CLEAN_FILE = '"""Module text.\n\nImplements: TC-001\n"""\n'
+TAG_MISPLACED_FILE = '"""Module text."""\n\n# Implements: TC-001\n'
+TAG_UNKNOWN_FILE = '"""Module text.\n\nImplements: TC-404\n"""\n'
+
+
+def _tag_finding(proc, level, rel, line, shape):
+    """The lines of `proc`'s stderr reporting one finding at `level`."""
+    prefix = "check_trajectory: {} - {}:{}: {}".format(level, rel, line, shape)
+    return [ln for ln in proc.stderr.splitlines() if ln.startswith(prefix)]
+
+
+def _tc_rows(statuses):
+    """TC registry text holding one row per `{id: status}`."""
+    return "".join(
+        '[test.{}]\nverifies = ["SR-001"]\nlevel = "Unit"\nmethod = "m"\n'
+        'tier = "Full"\nexpected = "e"\nautomated = "Yes"\n'
+        'evidence = "tests/test_tagged.py"\nstatus = "{}"\n\n'.format(tc, status)
+        for tc, status in statuses.items()
+    )
+
+
+def _write_tc_rows(root, statuses):
+    path = root / "docs" / "test" / "test-cases.toml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_tc_rows(statuses), encoding="utf-8")
+
+
+def _write_test_file(root, rel, text):
+    path = root / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "work_items", [False, True], ids=["no-work-items", "with-work-items"]
+)
+def test_tag_findings_warn_plain_and_error_under_strict(tmp_path, work_items):
+    if work_items:
+        write_wis(tmp_path, "WI-001,A,scripts,,,done,Shipped it.\n")
+    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    rel = "tests/test_tagged.py"
+    _write_test_file(tmp_path, rel, TAG_CLEAN_FILE)
+    clean = run_traj(tmp_path, "--strict")
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+
+    _write_test_file(tmp_path, rel, TAG_MISPLACED_FILE)
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert _tag_finding(plain, "WARN", rel, 3, "misplaced"), plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert _tag_finding(strict, "ERROR", rel, 3, "misplaced"), strict.stderr
+
+
+@pytest.mark.parametrize("wrap", [", TC-002", "and TC-002"], ids=["comma", "and"])
+def test_a_wrapped_tag_list_is_refused_under_strict(tmp_path, wrap):
+    _write_tc_rows(tmp_path, {"TC-001": "Approved", "TC-002": "Approved"})
+    rel = "tests/test_tagged.py"
+    text = '"""Module text.\n\nImplements: TC-001\n{}\n"""\n'.format(wrap)
+    _write_test_file(tmp_path, rel, text)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert _tag_finding(proc, "ERROR", rel, 4, "malformed"), proc.stderr
+
+
+def test_the_tag_check_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
+    rel = "tests/test_tagged.py"
+    _write_test_file(tmp_path, rel, TAG_UNKNOWN_FILE)
+    no_registry = run_traj(tmp_path, "--strict")
+    assert no_registry.returncode == 0, no_registry.stdout + no_registry.stderr
+    assert rel not in no_registry.stderr
+
+    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    paired = run_traj(tmp_path, "--strict")
+    assert paired.returncode == 1, paired.stdout + paired.stderr
+    assert _tag_finding(paired, "ERROR", rel, 3, "unknown"), paired.stderr
+
+    shutil.rmtree(tmp_path / "tests")
+    no_tests = run_traj(tmp_path, "--strict")
+    assert no_tests.returncode == 0, no_tests.stdout + no_tests.stderr
+    assert rel not in no_tests.stderr
+
+
+def test_a_nested_tests_root_reports_repo_relative_paths(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\ntests = qa/tests\n", encoding="utf-8"
+    )
+    _write_tc_rows(tmp_path, {"TC-001": "Approved"})
+    rel = "qa/tests/test_tagged.py"
+    _write_test_file(tmp_path, rel, TAG_MISPLACED_FILE)
+    _write_test_file(tmp_path, "tests/test_undeclared.py", TAG_MISPLACED_FILE)
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert _tag_finding(proc, "ERROR", rel, 3, "misplaced"), proc.stderr
+    assert "test_undeclared" not in proc.stderr
+
+
+def test_a_draft_tc_is_clean_and_an_absent_one_is_refused(tmp_path):
+    rel = "tests/test_tagged.py"
+    example = '"""Module text.\n\nImplements: TC-000\n"""\n'
+    _write_tc_rows(tmp_path, {"TC-000": "Drafted", "TC-001": "Drafted"})
+    _write_test_file(tmp_path, rel, example)
+    example_row = run_traj(tmp_path, "--strict")
+    assert example_row.returncode == 1, example_row.stdout + example_row.stderr
+    assert _tag_finding(example_row, "ERROR", rel, 3, "unknown"), example_row.stderr
+
+    _write_test_file(tmp_path, rel, TAG_CLEAN_FILE)
+    draft = run_traj(tmp_path, "--strict")
+    assert draft.returncode == 0, draft.stdout + draft.stderr
+    live = load_script("spine_carrier").load(
+        tmp_path / "docs" / "test" / "test-cases.toml", "TC-ID", False
+    )
+    tags, _findings = load_script("gen_arch_map").read_test_tags(
+        tmp_path, "tests", {row["TC-ID"] for row in live}
+    )
+    assert tags == {"TC-001": [rel]}
+
+    _write_tc_rows(tmp_path, {"TC-002": "Approved"})
+    deleted = run_traj(tmp_path, "--strict")
+    assert deleted.returncode == 1, deleted.stdout + deleted.stderr
+    assert _tag_finding(deleted, "ERROR", rel, 3, "unknown"), deleted.stderr
+
+
+def test_the_tag_check_on_a_bootstrapped_scaffold(scaffold):
+    registry = scaffold / "docs" / "test" / "test-cases.toml"
+    registry.write_text(
+        registry.read_text(encoding="utf-8") + "\n" + _tc_rows({"TC-001": "Approved"}),
+        encoding="utf-8",
+    )
+    rel = "tests/test_tagged.py"
+
+    def trajectory_at(stage):
+        return run_py(
+            ["scripts/check.py", "--stage", stage, "--run-steps", "trajectory"],
+            cwd=scaffold,
+        )
+
+    _write_test_file(scaffold, rel, TAG_CLEAN_FILE)
+    clean = trajectory_at("DevStg-Impl")
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+
+    _write_test_file(scaffold, rel, TAG_MISPLACED_FILE)
+    below = trajectory_at("DevStg-Tests")
+    assert below.returncode == 0, below.stdout + below.stderr
+    assert "{}:3: misplaced".format(rel) in below.stdout + below.stderr
+    at_rung = trajectory_at("DevStg-Impl")
+    assert at_rung.returncode != 0, at_rung.stdout + at_rung.stderr
+    assert "=== trajectory" in at_rung.stdout, at_rung.stdout
+    assert "ERROR - {}:3: misplaced".format(rel) in at_rung.stdout + at_rung.stderr

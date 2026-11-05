@@ -142,6 +142,11 @@ Contract IF-131: the ARCH-INVENTORY and seam-declaration grammar the spine check
     and `Contract IF-###:` body grammar. Every entry point is optional at the
     call site: an absent or older copy of this module degrades those rules to
     silence rather than breaking a run that also serves the pre-commit hook.
+    `read_test_tags(root, tests_dir, live_tcs)` is the one exception. It hands
+    the test-file tag rule `({TC id: sorted node ids}, [finding])`, each finding
+    carrying `file`, `line`, `shape` (`misplaced`, `malformed`, `unknown` or
+    `unreadable`) and `detail`, and its caller keeps no guard for an older copy,
+    so a stale module fails loudly and never reads as a tree with no tags.
 Contract IF-132: the dashboard's How-SW module source — `scan_inventory(src_roots)`
     over the declared src root, from which the view keeps the modules carrying
     at least one public function symbol. Files mode and an absent src root
@@ -168,8 +173,10 @@ Contract IF-199: the back-link GRAMMAR, offered for reading history.
 
 import argparse
 import ast
+import io
 import re
 import sys
+import tokenize
 import tomllib
 from pathlib import Path
 
@@ -322,6 +329,13 @@ def signature(node):
     return "({})".format(", ".join(parts))
 
 
+def _opens_declaration(line):
+    """Whether the token opens `line`, ids or no ids: the one application of the
+    opening rule, which `backlink_ids` and the test-tag reader both call."""
+    before, marker, _after = line.partition(IMPLEMENTS_MARKER)
+    return bool(marker) and _DECL_OPENING.match(before) is not None
+
+
 def backlink_ids(line):
     """The spine ids ONE line of text DECLARES as back-links — the kit's single
     definition of a back-link (WI-486 / OI-42 ruled (b)+(e)).
@@ -357,10 +371,9 @@ def backlink_ids(line):
     (No example of the token is spelled out in this docstring on purpose: this
     function's own prose is inside the surface it scans, and an illustration
     would be harvested as a real declaration — the very defect it describes.)"""
-    before, marker, after = line.partition(IMPLEMENTS_MARKER)
-    if not marker or not _DECL_OPENING.match(before):
+    if not _opens_declaration(line):
         return []
-    return IMPLEMENTS_RE.findall(after)
+    return IMPLEMENTS_RE.findall(line.partition(IMPLEMENTS_MARKER)[2])
 
 
 def implements(node, source_lines):
@@ -1907,6 +1920,226 @@ def implements_report(src_roots):
         known.update(qualname for _s, _e, qualname in _scope_index(tree))
         known.update(name for _start, name in _top_level_targets(tree))
     return sites, known
+
+
+# --- Test files name their test cases ----------------------------------------
+# One token, one opening rule and one id pattern, shared with code. A test file
+# differs in which ids it may name and where the reader looks: it holds fixture
+# text a line scan would misread, so a Python test file is read through the AST
+# (docstrings) and `tokenize` (comments), and a string literal that is not a
+# docstring is never looked at.
+_TAG_PLACEMENT = (
+    "a tag is read only in a test file's module docstring or in a test's docstring"
+)
+_TAG_LIST = (
+    "the list must be test-case ids only, comma-separated, with nothing else on "
+    "the line; in Python, give the tag its own line in the module docstring or a "
+    "test's docstring; in a non-Python file, use a line comment or give the tag "
+    "its own line"
+)
+_TAG_AFTER_PROSE = (
+    "the token follows prose, so nothing is declared; "
+    "put the token at the start of its own line"
+)
+_TAG_WRAPPED = (
+    "an id on the line after a declaration is not declared; "
+    "keep the whole list on the token's line"
+)
+# What may join a wrapped list's next line to the list above it.
+_TAG_LIST_JOIN = re.compile(r"(?:,(?:\s*and)?|\band)\s*$")
+# A def under one of these decorators, called or not, is a fixture: no test.
+_FIXTURE_DECORATORS = {"fixture", "pytest.fixture"}
+
+
+def _tc_id_list(text):
+    """The ids of a list that is test-case ids only, comma-separated; else `[]`.
+
+    `IMPLEMENTS_RE` is the one id pattern, so this adds no second id grammar: an
+    empty list, a trailing comma, a range, a missing comma and any other tier's
+    id each leave a part that does not qualify."""
+    parts = [part.strip() for part in text.split(",")]
+    if all(IMPLEMENTS_RE.fullmatch(p) and p.startswith("TC-") for p in parts):
+        return parts
+    return []
+
+
+def _tag_line(line):
+    """`(ids, detail)` for one line in a read position: the ids of a valid
+    declaration, or the reason it is malformed; both empty for prose.
+
+    A token after prose declares nothing under `backlink_ids`, so a test-case id
+    following it is refused here rather than dropping out with no word. A
+    backtick straight before the token makes it a mention, as it does for code."""
+    before, marker, after = line.partition(IMPLEMENTS_MARKER)
+    if not marker or before.endswith("`"):
+        return [], ""
+    if _opens_declaration(line):
+        return (backlink_ids(line), "") if _tc_id_list(after) else ([], _TAG_LIST)
+    if any(rid.startswith("TC-") for rid in IMPLEMENTS_RE.findall(after)):
+        return [], _TAG_AFTER_PROSE
+    return [], ""
+
+
+def _continues_tag_list(line):
+    """Whether `line` carries on the list above it: a spine id comes first, after
+    the opening characters and at most one leading `,`, `and` or `, and`."""
+    match = IMPLEMENTS_RE.search(line)
+    if match is None:
+        return False
+    return bool(_DECL_OPENING.match(_TAG_LIST_JOIN.sub("", line[: match.start()])))
+
+
+def _read_text_tags(lines, first_lineno, node):
+    """`(sites, problems)` for `lines`, all of them read positions of `node`.
+
+    A site is `(node, lineno, ids)` and a problem `(lineno, shape, detail)`. The
+    line straight after a valid declaration, and only that line, is read for a
+    list wrapped with no trailing comma, which the declaration line alone cannot
+    show; any other line ends the check, a blank one included."""
+    sites, problems, after_tag = [], [], False
+    for lineno, line in enumerate(lines, first_lineno):
+        ids, detail = _tag_line(line)
+        if after_tag and not ids and not detail and _continues_tag_list(line):
+            detail = _TAG_WRAPPED
+        after_tag = bool(ids)
+        if ids:
+            sites.append((node, lineno, ids))
+        if detail:
+            problems.append((lineno, "malformed", detail))
+    return sites, problems
+
+
+def _is_test_def(node):
+    """Whether a def is `test*`-named and no fixture, which pytest never runs as
+    a test whatever its name."""
+    decorators = (ast.unparse(getattr(d, "func", d)) for d in node.decorator_list)
+    return node.name.startswith("test") and _FIXTURE_DECORATORS.isdisjoint(decorators)
+
+
+def _docstring_sites(node, scope, in_test_scope):
+    """Yield `(owner, suffix)` for each def and class under `node`: `suffix` is
+    its `::`-joined node suffix when its docstring is a read position, else None.
+
+    A `test*` def that is no fixture is a test only while `in_test_scope` holds.
+    A `Test*` class keeps it, any other class or any def clears it, and other
+    statements pass it through, so a test under a module-scope `if` is a test and
+    a def inside a test is not. Expressions are skipped: a def cannot sit inside
+    one."""
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, ast.expr):
+            continue
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            is_test = in_test_scope and _is_test_def(child)
+            yield child, "{}::{}".format(scope, child.name) if is_test else None
+            yield from _docstring_sites(child, scope, False)
+        elif isinstance(child, ast.ClassDef):
+            yield child, None
+            yield from _docstring_sites(
+                child,
+                "{}::{}".format(scope, child.name),
+                in_test_scope and child.name.startswith("Test"),
+            )
+        else:
+            yield from _docstring_sites(child, scope, in_test_scope)
+
+
+def _read_docstring(owner, node):
+    """`(sites, problems)` for `owner`'s docstring, with `node` its node id, or
+    None when the docstring is no read position and a declaration is misplaced.
+    Each line's number is the string's first line plus the line's offset."""
+    text = ast.get_docstring(owner, clean=False)
+    if text is None:
+        return [], []
+    lines = text.splitlines()
+    first_lineno = owner.body[0].value.lineno
+    if node is not None:
+        return _read_text_tags(lines, first_lineno, node)
+    numbered = enumerate(lines, first_lineno)
+    return [], [
+        (lineno, "misplaced", _TAG_PLACEMENT)
+        for lineno, line in numbered
+        if _opens_declaration(line)
+    ]
+
+
+def _read_python_tags(text, rel, is_test_file):
+    """`(sites, problems)` for one `.py` file under the tests root. Every comment
+    is outside a read position, and in a file pytest would not collect by name
+    so is every docstring: a tag there is refused, never ignored. A file that
+    does not parse is one `unreadable` problem at the line it stopped on."""
+    try:
+        tree = ast.parse(text)
+        tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (SyntaxError, ValueError) as exc:
+        lineno = getattr(exc, "lineno", None) or 1
+        return [], [(lineno, "unreadable", "does not parse: {}".format(exc))]
+    except tokenize.TokenError as exc:
+        lineno = exc.args[1][0]
+        return [], [(lineno, "unreadable", "does not parse: {}".format(exc.args[0]))]
+    sites = []
+    problems = [
+        (token.start[0], "misplaced", _TAG_PLACEMENT)
+        for token in tokens
+        if token.type == tokenize.COMMENT and _opens_declaration(token.string)
+    ]
+    owners = [(tree, "" if is_test_file else None)]
+    owners.extend(_docstring_sites(tree, "", is_test_file))
+    for owner, suffix in owners:
+        node = None if suffix is None else rel + suffix
+        found, refused = _read_docstring(owner, node)
+        sites.extend(found)
+        problems.extend(refused)
+    return sites, problems
+
+
+def _read_test_file(path, rel):
+    """`(sites, problems)` for one file under the tests root. Text a file cannot
+    give up is refused by name: an unreadable file never reads as no tags, and
+    with no parse to stop on, its finding names line 1. `utf-8-sig`, because
+    `ast.parse` refuses a leading byte-order mark a valid file may carry."""
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except (UnicodeDecodeError, OSError) as exc:
+        return [], [(1, "unreadable", "cannot be read as UTF-8: {}".format(exc))]
+    if path.suffix.lower() != ".py":
+        return _read_text_tags(text.splitlines(), 1, rel)
+    is_test_file = path.stem.startswith("test_") or path.stem.endswith("_test")
+    return _read_python_tags(text, rel, is_test_file)
+
+
+def read_test_tags(root, tests_dir, live_tcs):
+    """`({TC id: sorted node ids}, [finding])` for the files under `tests_dir`,
+    the declared tests root, read relative to the repo `root`. Pure apart from
+    reading those files; it never reads the source tree.
+
+    A node id is the repo-relative path for a module docstring or a non-Python
+    file, and `path::name` or `path::Class::name` for a test's docstring. Levels
+    union. A finding is `{file, line, shape, detail}`, `shape` one of `misplaced`,
+    `malformed`, `unknown` and `unreadable`, and findings sort by file, line and
+    shape. A valid line naming a live id and an id outside `live_tcs` maps the
+    live one and adds an `unknown` finding, so a tag can only add a finding.
+
+    Implements: SR-157, LLR-365"""
+    root = Path(root)
+    tags, findings = {}, []
+    for _scan_root, _base, path in _walk_roots([root / tests_dir], "*"):
+        if not path.is_file() or path.suffix.lower() not in BACKLINK_EXTS:
+            continue
+        rel = path.relative_to(root).as_posix()
+        sites, problems = _read_test_file(path, rel)
+        for node, lineno, ids in sites:
+            for tc in ids:
+                if tc in live_tcs:
+                    tags.setdefault(tc, set()).add(node)
+                else:
+                    detail = "{} is no live row of the test-case registry".format(tc)
+                    problems.append((lineno, "unknown", detail))
+        findings.extend(
+            {"file": rel, "line": line, "shape": shape, "detail": detail}
+            for line, shape, detail in problems
+        )
+    findings.sort(key=lambda f: (f["file"], f["line"], f["shape"], f["detail"]))
+    return {tc: sorted(nodes) for tc, nodes in sorted(tags.items())}, findings
 
 
 def read_backlink_min(root):

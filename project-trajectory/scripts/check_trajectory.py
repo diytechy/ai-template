@@ -112,6 +112,15 @@ burn-down expectation — never a permanent exemption). Shares the
 blocks) an allowlist entry that has gone stale (its seam gained a TC, or its id
 no longer resolves), so the burn-down is visible rather than silently absorbed.
 
+**Test-file tags — WARN plain, ERROR under `--strict`.** A test file names the
+test cases it runs on the back-link line, in its module docstring or a test's
+docstring (`gen_arch_map.read_test_tags`). `tc_tag_findings` reports a tag that
+is misplaced, malformed or unknown, and a file under the declared tests root
+that is unreadable, each by file, line and shape. It reads no tag as a pass: an
+untagged file is no finding, and with no tests root or no TC registry it is
+vacuous. An adopter's gate refuses from `DevStg-Impl`, where `check.py` first
+adds `--strict`.
+
 **How-SW top-view right-sizing** (WI-073/FB5; process-options.md "Component
 layer"). The software-architecture diagram's *first view* must show at most
 ``TOP_VIEW_MAX`` (10) items: top-level components (a `CMP-###` with no `PartOf`
@@ -162,8 +171,8 @@ Contract IF-009: the work-item registry's verdict, delivered as a CLI. Exit 0 wh
     resolves to nothing, a cycle over the hard edges, a stray `work-items.csv`,
     or a `Deliverable` that disagrees with `Status` (R-A); 2 on usage or
     environment. R-A gates every run. R-D, R-E, R-F, the promotable seam-TC
-    coverage half and the How-SW top-view bound are WARN plain and ERROR under
-    `--strict`. Architecture-connectivity coverage, allowlist hygiene, the
+    coverage half, the test-file tag rule and the How-SW top-view bound are WARN
+    plain and ERROR under `--strict`. Architecture-connectivity coverage, allowlist hygiene, the
     soft-edge cycle warn, the long-Title warn and the phase-drop detector are
     advisory at every stage and never reach the exit code.
 Contract IF-056: the derivation-loader surface the dashboard renders THROUGH.
@@ -325,6 +334,7 @@ _CODESYMBOL_SPLIT_RE = _trajectory_arch._CODESYMBOL_SPLIT_RE
 _codesymbol_candidates = _trajectory_arch._codesymbol_candidates
 _codesymbol_site_finding = _trajectory_arch._codesymbol_site_finding
 codesymbol_crosscheck_findings = _trajectory_arch.codesymbol_crosscheck_findings
+tc_tag_findings = _trajectory_arch.tc_tag_findings
 load_cmps = _trajectory_arch.load_cmps
 _cmp_roots = _trajectory_arch._cmp_roots
 module_components = _trajectory_arch.module_components
@@ -3374,6 +3384,7 @@ def main():
         if_tc_coverage_findings(root)
         + if_tc_allow_parse_findings(root)
         + contract_body_findings(root)
+        + tc_tag_findings(root, _tests_dir(root))
     ):
         if args.strict:
             if_tc_errors.append(msg)

@@ -176,8 +176,15 @@ Stable, zero-padded, never reused.
   ID/parent columns; it reports **orphans** (req with no child/test; test/LLR
   with no parent). Hand-maintaining the matrix is forbidden.
 - **Code carries back-links to the depth you declare** (`Implements: SR-007,
-  LLR-014`); test names embed the verified ID. The registry rows are
-  authoritative. The obligation is a DIAL, not a blanket rule:
+  LLR-014`). **Test files name their test cases on the same line**, TC ids
+  only (`Implements: TC-021, TC-022`), opening its own line in the module
+  docstring, for every test in the file, or in a test's docstring, for that
+  test; a test file in another language declares it on a comment line, for the
+  whole file. `check_trajectory.py` reports a tag anywhere else, a list that is
+  not TC ids alone, an id no live TC row carries, and a test file it cannot
+  read, as errors under `--strict`; an untagged test is no finding. The
+  registry rows are authoritative. The code-side obligation is a DIAL, not a
+  blanket rule:
   `docs/process.toml` `[checks] backlink_coverage_min` is the minimum share of
   live LLR rows a literal `Implements:` declaration must name, and the harness
   reports the measured share every run. It ships at `0` — report the number,

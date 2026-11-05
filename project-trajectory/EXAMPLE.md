@@ -214,17 +214,25 @@ generator produce the combinations.**
 ## 5. Code back-links (in the source)
 
 ```rust
+// src/export.rs
 /// Serialize records to RFC-4180 CSV (header + one row each).
 // Implements: SR-001, LLR-001
 pub fn to_csv(schema: &Schema, records: &[Record]) -> String { /* ... */ }
-
-#[test]
-fn to_csv_quotes_special_fields_sr001() { /* ...asserts SR-001 AC... */ }
 ```
 
-The test name embeds the verified id, and the item is annotated `Implements:`.
-The registry rows are authoritative; these annotations keep code and registries
-honest and greppable.
+```rust
+// tests/test_export.rs
+// Implements: TC-001
+
+#[test]
+fn to_csv_quotes_special_fields() { /* ...asserts SR-001 AC... */ }
+```
+
+The item is annotated `Implements:` with what it satisfies, and the test file
+names its test case on the same line, file-level because this is not Python (the
+rule: process.md §3). The test sits in its own file because a tag is read only
+under the declared tests root. The registry rows are authoritative; these
+annotations keep code and registries honest and greppable.
 
 ## 6. The traceability result
 

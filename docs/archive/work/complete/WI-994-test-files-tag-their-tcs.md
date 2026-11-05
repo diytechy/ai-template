@@ -3,13 +3,24 @@ id = "WI-994"
 title = "Test files name their test cases on the existing Implements: line, read by the one back-link reader, which refuses a malformed tag and an unknown test case"
 workstream = "process"
 sr_refs = ["SR-157"]
-specref = "docs/plans/2026-10-11-review-churn/README.md#13-review-only-a-green-tip-review-test-cases-in-stages"
+specref = ""
 needs = ["OI-120", "OI-125"]
 buildtier = "medium"
 safety_class = "ordinary"
 planmode = "single"
 priority = 5
 +++
+
+## Deliverable
+
+Test files name their test cases on the existing `Implements:` line, read by
+one reader in `gen_arch_map.py` beside the code-side grammar: a Python module
+docstring or a test's docstring, or file level in another supported type. The
+reader refuses a misplaced, malformed, unknown or unreadable tag, each finding
+naming file, line and shape, and `check_trajectory.py` reports them as a WARN
+and, under `--strict`, an ERROR. It landed green with no test file tagged:
+WI-997 seeds this repository's tags. LLR-365 and TC-404 to TC-409 are approved
+(act seq 171), and the RESYNC entry states the adopters' forced migration.
 
 ## Context
 
@@ -213,7 +224,7 @@ part becomes a tag in that test's docstring.
 
 ## Done-when
 
-- [ ] **The reader.** `project-trajectory/scripts/gen_arch_map.py` gains one
+- [x] **The reader.** `project-trajectory/scripts/gen_arch_map.py` gains one
       test-tag reader beside `declaration_sites`. It is built on
       `IMPLEMENTS_MARKER` and the `_DECL_OPENING` rule `backlink_ids`
       applies: no second token and no second opening rule. It takes the
@@ -224,14 +235,14 @@ part becomes a tag in that test's docstring.
       `implements_report` keep their signatures and outputs. A regression
       asserts that `implements_report` and `scan_backlinks` over
       `project-trajectory/scripts` give the same output before and after.
-- [ ] **The grammar.** The reader implements "The grammar (settled here)"
+- [x] **The grammar.** The reader implements "The grammar (settled here)"
       exactly: the Python read positions (module docstring; a test's
       docstring, with `path::name` / `path::Class::name` node ids); the
       file-level line reading for non-`.py` test files in `BACKLINK_EXTS`;
       the union of levels; and the four refusals: misplaced, malformed
       (each listed shape, the token-after-prose one-liner included), unknown
       (`-000` included) and unreadable.
-- [ ] **The surface.** `check_trajectory.py`, through `trajectory_arch.py`
+- [x] **The surface.** `check_trajectory.py`, through `trajectory_arch.py`
       beside the CodeSymbol crosscheck, reads the tests root (`[paths]
       tests`, through the existing `_tests_dir` reader) and the live TC ids.
       It prints each finding as a WARN, and as an ERROR under `--strict`, the
@@ -242,7 +253,7 @@ part becomes a tag in that test's docstring.
       or no TC registry and no tags. It lands green on trunk: 0 findings
       measured. Its added wall time on the bar is measured and stated in
       the log (the scratch prototype read all 279 files in about 1.3 s).
-- [ ] **Regressions** (`tests/test_gen_arch_map.py`, and the
+- [x] **Regressions** (`tests/test_gen_arch_map.py`, and the
       `check_trajectory` / `trajectory_arch` suite for the surface):
       - each read position yields its node ids;
       - each refusal shape is named;
@@ -256,7 +267,7 @@ part becomes a tag in that test's docstring.
       - a file that does not parse is refused as unreadable;
       - a test file tagging a Draft TC is clean;
       - a tag naming a TC absent from the registry is refused.
-- [ ] **One home for the rule, in text.** `project-trajectory/PROCESS.md`
+- [x] **One home for the rule, in text.** `project-trajectory/PROCESS.md`
       §3's back-link bullet replaces "test names embed the verified ID"
       with the tag rule: test files name their test cases on the same
       `Implements:` line, in the module docstring or a test's docstring.
@@ -267,14 +278,14 @@ part becomes a tag in that test's docstring.
       `docs/registry-machinery-reference.md` (the TC tier) and
       `docs/enforcement-audit.md` (beside the back-link row) name the new
       rule and its enforcer.
-- [ ] **Spine.** One LLR under SR-157 states the test-file tag rule and its
+- [x] **Spine.** One LLR under SR-157 states the test-file tag rule and its
       four refusals in contract voice, with no code named in the row text,
       and TCs verify each arm. The IF row carrying the trajectory checks'
       read of `gen_arch_map` (IF-131) names the reader in its `data` cell,
       or in-lane adjudication rules a new IF row. The set passes in-lane
       adjudication. The new reader's own `Implements:` line names SR-157
       and the new LLR.
-- [ ] **RESYNC entry** in `project-trajectory/RESYNC_PACK.md`, anchored at
+- [x] **RESYNC entry** in `project-trajectory/RESYNC_PACK.md`, anchored at
       the trunk commit carrying the reader: "Test files name their test
       cases on the `Implements:` line". **What changed:** the grammar above,
       its read positions, and the four refusals in `check_trajectory`
@@ -290,11 +301,11 @@ part becomes a tag in that test's docstring.
       misplaced or malformed tag the check now reports, including a
       one-line docstring whose token follows prose. No setting and no
       registry schema changes, and your evidence cells stay as they are.
-- [ ] **Not in this row**, stated in the RESYNC entry and the log: this
+- [x] **Not in this row**, stated in the RESYNC entry and the log: this
       repository's own tags (the migration follow-up), the derived review
       set and its refusals (row 2), the strict-mark commit check and
       `[bars] red_mark` (row 3), and the generated evidence column (item 5).
-- [ ] Coverage bound: the promise reaches the test files, TC registries and
+- [x] Coverage bound: the promise reaches the test files, TC registries and
       `[paths] tests` declarations that supported workflows and the kit's
       own routes produce: a builder or an LLM-applied re-sync writing tags,
       a TC row authored or retired through a lane, and `bootstrap.py`'s
@@ -305,11 +316,11 @@ part becomes a tag in that test's docstring.
       non-default pytest `python_files` or class pattern; hand-chosen
       aliases of a TC id (case, zero-padding); and a tests root reached
       through a symlink.
-- [ ] WI-997, the tag-migration row, is filed on trunk before this row is
+- [x] WI-997, the tag-migration row, is filed on trunk before this row is
       claimed. It needs this row, seeds this repository's tags (Migration), and checks
       test-file tags and TC evidence cells equal as a strict finding, the
       check retired when item 5 generates the column (OI-125 Q1 (a)).
-- [ ] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
+- [x] Review bar: A+B (REVIEW-A plus an independent REVIEW-B).
 
 ## Trust
 

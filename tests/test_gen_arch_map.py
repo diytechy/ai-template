@@ -1,11 +1,14 @@
 """gen_arch_map.py: map content, flow entry resolution, the Mermaid dependency
 diagram, and splice safety."""
 
+import ast
+import inspect
+import re
 from pathlib import Path
 
 import pytest
 
-from conftest import load_script
+from conftest import SCRIPTS, load_script
 
 gen_arch_map = load_script("gen_arch_map")
 
@@ -1392,3 +1395,709 @@ def test_a_lossy_marker_in_a_file_header_is_reported_by_name(tmp_path):
     found = gen_arch_map.file_grammar_findings("docs/x.toml", ini)
     assert len(found) == 1 and "docs/x.toml" in found[0]
     assert "declares no parsable id list" in found[0]
+
+
+# --- Test files name their test cases: the tag reader -------------------------
+# Every tag below is fixture text in a string literal, which the reader never
+# takes for a declaration. These tests compare whole values and never index a
+# result, so an empty reply fails the assertion and nothing else.
+
+TAG_LIVE_IDS = {"TC-{}".format(n) for n in range(1, 10)}
+
+
+def _read_tags(root):
+    """The reader over `root`'s `tests` folder, with `TAG_LIVE_IDS` live."""
+    return gen_arch_map.read_test_tags(root, "tests", TAG_LIVE_IDS)
+
+
+def _tags_and_sites(root):
+    """The tag map, and each finding as `(file, line, shape)`."""
+    tags, findings = _read_tags(root)
+    return tags, [(f["file"], f["line"], f["shape"]) for f in findings]
+
+
+def _write_tag_tree(root, files):
+    """Write `{repo-relative path: text or bytes}` under `root`, byte for byte."""
+    for rel, content in files.items():
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = content if isinstance(content, bytes) else content.encode("utf-8")
+        path.write_bytes(data)
+
+
+def _tagged_test(*lines):
+    """A test whose docstring holds `lines` from its line 4 on."""
+    body = "".join("    {}\n".format(line) for line in lines)
+    return 'def test_x():\n    """Text.\n\n{}    """\n'.format(body)
+
+
+TAG_POSITIONS = '''"""Module text.
+
+Implements: TC-1
+"""
+
+import pytest
+
+
+def test_plain():
+    """Plain.
+
+    Implements: TC-2
+    """
+
+
+async def test_async():
+    """Async.
+
+    Implements: TC-3
+    """
+
+
+class TestOuter:
+    def test_method(self):
+        """Method.
+
+        Implements: TC-4
+        """
+
+    class TestInner:
+        def test_nested(self):
+            """Nested.
+
+            Implements: TC-5
+            """
+
+
+if True:
+
+    def test_guarded():
+        """Guarded.
+
+        Implements: TC-6
+        """
+
+
+@pytest.mark.parametrize("n", [1, 2])
+def test_cases(n):
+    """Parametrized.
+
+    Implements: TC-7
+    """
+
+
+def test_one_line():
+    """Implements: TC-8"""
+
+
+def test_two_ids():
+    """Two.
+
+    Implements: TC-8,TC-9
+    """
+'''
+
+
+def test_the_tag_reader_reads_each_python_read_position(tmp_path):
+    _write_tag_tree(
+        tmp_path,
+        {
+            "tests/test_positions.py": TAG_POSITIONS,
+            "tests/sub/suffix_test.py": '"""Suffix form.\n\nImplements: TC-1\n"""\n',
+        },
+    )
+    node = "tests/test_positions.py"
+    assert _tags_and_sites(tmp_path) == (
+        {
+            "TC-1": ["tests/sub/suffix_test.py", node],
+            "TC-2": [node + "::test_plain"],
+            "TC-3": [node + "::test_async"],
+            "TC-4": [node + "::TestOuter::test_method"],
+            "TC-5": [node + "::TestOuter::TestInner::test_nested"],
+            "TC-6": [node + "::test_guarded"],
+            "TC-7": [node + "::test_cases"],
+            "TC-8": [node + "::test_one_line", node + "::test_two_ids"],
+            "TC-9": [node + "::test_two_ids"],
+        },
+        [],
+    )
+
+
+TAG_LEVELS = '''"""Module text.
+
+Implements: TC-1
+"""
+
+
+def test_repeats_its_module():
+    """Repeat.
+
+    Implements: TC-1
+    """
+
+
+def test_adds_its_own():
+    """Own.
+
+    Implements: TC-2
+    """
+'''
+
+
+def test_tags_at_both_levels_union_and_a_repeat_is_clean(tmp_path):
+    _write_tag_tree(tmp_path, {"tests/test_levels.py": TAG_LEVELS})
+    node = "tests/test_levels.py"
+    assert _tags_and_sites(tmp_path) == (
+        {
+            "TC-1": [node, node + "::test_repeats_its_module"],
+            "TC-2": [node + "::test_adds_its_own"],
+        },
+        [],
+    )
+
+
+def test_a_non_python_test_file_is_read_at_file_level(tmp_path):
+    _write_tag_tree(
+        tmp_path,
+        {
+            "tests/integration.rs": (
+                "// Implements: TC-1\n"
+                "#[test]\n"
+                "fn adds() {\n"
+                "    // Implements: TC-3\n"
+                "}\n"
+            ),
+            "tests/notes.txt": "Implements: TC-2\nImplements: SR-1\n",
+        },
+    )
+    node = "tests/integration.rs"
+    assert _tags_and_sites(tmp_path) == ({"TC-1": [node], "TC-3": [node]}, [])
+
+
+MISPLACED_DOCSTRING = '"""Shared.\n\nImplements: TC-1\n"""\n'
+FIXTURE_IMPORTS = "import pytest\nfrom pytest import fixture\n\n\n"
+FIXTURE_DEF = 'def test_client():\n    """Client.\n\n    Implements: TC-1\n    """\n'
+FIXTURE_METHOD = (
+    "    def test_client(self):\n"
+    '        """Client.\n\n        Implements: TC-1\n        """\n'
+)
+
+
+@pytest.mark.parametrize(
+    "rel, text, line",
+    [
+        pytest.param(
+            "tests/test_m.py",
+            'def helper():\n    """Helper.\n\n    Implements: TC-1\n    """\n',
+            4,
+            id="helper",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            'def helper():\n    """Helper.\n\n    Implements:\n    """\n',
+            4,
+            id="helper-bare-token",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            'def helper():\n    """Helper.\n\n    Implements: the reader\n    """\n',
+            4,
+            id="helper-no-ids",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            "import pytest\n\n\n@pytest.fixture\ndef rows():\n"
+            '    """Rows.\n\n    Implements: TC-1\n    """\n',
+            8,
+            id="fixture",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            FIXTURE_IMPORTS + "@pytest.fixture\n" + FIXTURE_DEF,
+            9,
+            id="test-named-fixture",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            FIXTURE_IMPORTS + '@pytest.fixture(scope="module")\n' + FIXTURE_DEF,
+            9,
+            id="test-named-fixture-called",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            FIXTURE_IMPORTS + "@fixture\n" + FIXTURE_DEF,
+            9,
+            id="test-named-bare-fixture",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            FIXTURE_IMPORTS + "@fixture()\n" + FIXTURE_DEF,
+            9,
+            id="test-named-bare-fixture-called",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            FIXTURE_IMPORTS
+            + "class TestThing:\n    @pytest.fixture\n"
+            + FIXTURE_METHOD,
+            10,
+            id="test-named-fixture-method",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            FIXTURE_IMPORTS + "class TestThing:\n    @fixture()\n" + FIXTURE_METHOD,
+            10,
+            id="test-named-bare-fixture-method-called",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            'class TestThing:\n    """Thing.\n\n    Implements: TC-1\n    """\n',
+            4,
+            id="class",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            "def test_outer():\n    def test_inner():\n"
+            '        """Inner.\n\n        Implements: TC-1\n        """\n',
+            5,
+            id="nested-def",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            "class Helper:\n    def test_method(self):\n"
+            '        """Method.\n\n        Implements: TC-1\n        """\n',
+            5,
+            id="method-of-a-non-test-class",
+        ),
+        pytest.param("tests/conftest.py", MISPLACED_DOCSTRING, 3, id="conftest"),
+        pytest.param("tests/helpers.py", MISPLACED_DOCSTRING, 3, id="non-test-module"),
+    ],
+)
+def test_each_misplaced_shape_is_named(tmp_path, rel, text, line):
+    _write_tag_tree(tmp_path, {rel: text})
+    assert _tags_and_sites(tmp_path) == ({}, [(rel, line, "misplaced")])
+
+
+TAG_COMMENTS = """\"\"\"Module text.\"\"\"
+
+
+# Implements: TC-1
+def test_above():
+    pass
+
+
+def test_trailing():  # Implements: TC-2
+    pass
+
+
+# Implements:
+def test_bare():
+    pass
+
+
+# See Implements: TC-3 for the rule, which is prose.
+def test_prose():
+    pass
+"""
+
+
+def test_a_comment_tag_above_a_test_is_misplaced(tmp_path):
+    _write_tag_tree(
+        tmp_path,
+        {
+            "tests/helpers.py": "# Implements: TC-1\n",
+            "tests/test_comments.py": TAG_COMMENTS,
+        },
+    )
+    node = "tests/test_comments.py"
+    assert _tags_and_sites(tmp_path) == (
+        {},
+        [
+            ("tests/helpers.py", 1, "misplaced"),
+            (node, 4, "misplaced"),
+            (node, 9, "misplaced"),
+            (node, 13, "misplaced"),
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "rel, text, line, tags",
+    [
+        pytest.param(
+            "tests/test_m.py", _tagged_test("Implements:"), 4, {}, id="empty-list"
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1,"),
+            4,
+            {},
+            id="trailing-comma",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1,", "TC-2"),
+            4,
+            {},
+            id="wrap-with-a-comma",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1", "TC-2"),
+            5,
+            {"TC-1": ["tests/test_m.py::test_x"]},
+            id="wrap-with-no-comma",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1", ", TC-2"),
+            5,
+            {"TC-1": ["tests/test_m.py::test_x"]},
+            id="wrap-led-by-a-comma",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1", "and TC-2"),
+            5,
+            {"TC-1": ["tests/test_m.py::test_x"]},
+            id="wrap-led-by-and",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1", ", and TC-2"),
+            5,
+            {"TC-1": ["tests/test_m.py::test_x"]},
+            id="wrap-led-by-a-comma-and-and",
+        ),
+        pytest.param(
+            "tests/tagged.rs",
+            "// Implements: TC-1\n// , TC-2\n",
+            2,
+            {"TC-1": ["tests/tagged.rs"]},
+            id="wrap-led-by-a-comma-in-a-line-comment",
+        ),
+        pytest.param(
+            "tests/tagged.rs",
+            "// Implements: TC-1\n// and TC-2\n",
+            2,
+            {"TC-1": ["tests/tagged.rs"]},
+            id="wrap-led-by-and-in-a-line-comment",
+        ),
+        pytest.param(
+            "tests/test_m.py", _tagged_test("Implements: SN-1"), 4, {}, id="sn-id"
+        ),
+        pytest.param(
+            "tests/test_m.py", _tagged_test("Implements: SR-1"), 4, {}, id="sr-id"
+        ),
+        pytest.param(
+            "tests/test_m.py", _tagged_test("Implements: LLR-1"), 4, {}, id="llr-id"
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1, SR-2"),
+            4,
+            {},
+            id="mixed-list",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1 because it adds"),
+            4,
+            {},
+            id="prose-after",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1 and TC-2"),
+            4,
+            {},
+            id="and",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1..TC-3"),
+            4,
+            {},
+            id="range",
+        ),
+        pytest.param(
+            "tests/test_m.py",
+            _tagged_test("Implements: TC-1 TC-2"),
+            4,
+            {},
+            id="no-comma",
+        ),
+        pytest.param(
+            "tests/tagged.rs", "/* Implements: TC-1 */\n", 1, {}, id="block-comment"
+        ),
+    ],
+)
+def test_each_malformed_shape_is_named(tmp_path, rel, text, line, tags):
+    _write_tag_tree(tmp_path, {rel: text})
+    assert _tags_and_sites(tmp_path) == (tags, [(rel, line, "malformed")])
+
+
+def test_the_malformed_advice_for_python_repairs_to_a_clean_result(tmp_path):
+    """Every Python comment is refused as misplaced, so a Python author is sent
+    to a docstring, and any comment advice is qualified as another language's."""
+    rel = "tests/test_m.py"
+    _write_tag_tree(tmp_path, {rel: _tagged_test("Implements: TC-1, because prose")})
+    tags, findings = _read_tags(tmp_path)
+    assert (tags, [(f["line"], f["shape"]) for f in findings]) == (
+        {},
+        [(4, "malformed")],
+    )
+    detail = "".join(f["detail"] for f in findings)
+    python_advice, qualifier, _other = detail.partition("in a non-Python file")
+    assert qualifier
+    assert "module docstring" in python_advice
+    assert "a test's docstring" in python_advice
+    assert "comment" not in python_advice
+
+    repaired = '"""Module text.\n\nImplements: TC-1\n"""\n\n\n'
+    _write_tag_tree(tmp_path, {rel: repaired + _tagged_test("Implements: TC-2")})
+    assert _tags_and_sites(tmp_path) == (
+        {"TC-1": [rel], "TC-2": [rel + "::test_x"]},
+        [],
+    )
+
+
+@pytest.mark.parametrize(
+    "prose",
+    ["and then TC-2 runs", "Band TC-2 is another row", "See, TC-2 runs too"],
+    ids=["and-then-words", "and-inside-a-word", "comma-after-a-word"],
+)
+def test_prose_after_a_tag_naming_an_id_later_is_no_wrap(tmp_path, prose):
+    _write_tag_tree(
+        tmp_path, {"tests/test_m.py": _tagged_test("Implements: TC-1", prose)}
+    )
+    assert _tags_and_sites(tmp_path) == (
+        {"TC-1": ["tests/test_m.py::test_x"]},
+        [],
+    )
+
+
+TAG_ONE_LINERS = '''"""Checks the module. Implements: TC-2"""
+
+
+def test_x():
+    """Checks X. Implements: TC-1"""
+
+
+def test_y():
+    """Says what the Implements: token is, and names no id."""
+'''
+
+
+def test_a_one_line_docstring_with_the_token_after_prose_is_malformed(tmp_path):
+    _write_tag_tree(tmp_path, {"tests/test_one.py": TAG_ONE_LINERS})
+    tags, findings = _read_tags(tmp_path)
+    assert (tags, [(f["line"], f["shape"]) for f in findings]) == (
+        {},
+        [(1, "malformed"), (5, "malformed")],
+    )
+    assert ["own line" in f["detail"] for f in findings] == [True, True]
+
+
+TAG_MENTIONS = '''def test_x():
+    """Says `Implements: TC-2` in a sentence.
+
+    `Implements: TC-3` opens this line, quoted.
+
+    Implements: TC-1
+    """
+'''
+
+
+def test_a_backticked_token_is_a_mention(tmp_path):
+    _write_tag_tree(tmp_path, {"tests/test_mention.py": TAG_MENTIONS})
+    assert _tags_and_sites(tmp_path) == (
+        {"TC-1": ["tests/test_mention.py::test_x"]},
+        [],
+    )
+
+
+TAG_FIXTURE_STRINGS = '''"""Module text."""
+
+FIXTURE = """
+Implements: SR-001
+"""
+
+
+def test_x():
+    """Text.
+
+    Implements: TC-1
+    """
+    """
+    Implements: LLR-002
+    """
+    text = "Implements: TC-3"
+    assert text
+'''
+
+
+def test_a_fixture_string_opening_a_line_with_the_token_is_no_tag(tmp_path):
+    _write_tag_tree(tmp_path, {"tests/test_fixture.py": TAG_FIXTURE_STRINGS})
+    assert _tags_and_sites(tmp_path) == (
+        {"TC-1": ["tests/test_fixture.py::test_x"]},
+        [],
+    )
+
+
+TAG_UNKNOWN = '''"""Module text.
+
+Implements: TC-99
+"""
+
+
+def test_example():
+    """Example.
+
+    Implements: TC-000
+    """
+
+
+def test_mixed():
+    """Mixed.
+
+    Implements: TC-1, TC-99
+    """
+'''
+
+
+def test_a_tag_naming_no_live_tc_is_unknown(tmp_path):
+    _write_tag_tree(tmp_path, {"tests/test_unknown.py": TAG_UNKNOWN})
+    node = "tests/test_unknown.py"
+    assert _tags_and_sites(tmp_path) == (
+        {"TC-1": [node + "::test_mixed"]},
+        [(node, 3, "unknown"), (node, 10, "unknown"), (node, 17, "unknown")],
+    )
+
+
+def test_a_file_that_cannot_be_read_is_refused(tmp_path):
+    # A syntax error names the line the parser stopped on; a file that cannot
+    # be decoded has no line to name, so its finding names line 1.
+    _write_tag_tree(
+        tmp_path,
+        {
+            "tests/conftest.py": "def broken(:\n",
+            "tests/data.bin": b"\xff\xfe\x00",
+            "tests/test_binary.py": b"def test_x():\n    pass\n\xff\xfe\n",
+            "tests/test_binary.rs": b"// text\n\xff\xfe\n",
+            "tests/test_syntax.py": '"""Module text."""\n\ndef test_x(:\n',
+        },
+    )
+    assert _tags_and_sites(tmp_path) == (
+        {},
+        [
+            ("tests/conftest.py", 1, "unreadable"),
+            ("tests/test_binary.py", 1, "unreadable"),
+            ("tests/test_binary.rs", 1, "unreadable"),
+            ("tests/test_syntax.py", 3, "unreadable"),
+        ],
+    )
+
+
+def test_a_bom_file_reads_its_tags(tmp_path):
+    bom = b"\xef\xbb\xbf"
+    _write_tag_tree(
+        tmp_path,
+        {
+            "tests/test_bom.py": bom + b'"""Module text.\n\nImplements: TC-1\n"""\n',
+            "tests/bom.rs": bom + b"// Implements: TC-2\n",
+        },
+    )
+    assert _tags_and_sites(tmp_path) == (
+        {"TC-1": ["tests/test_bom.py"], "TC-2": ["tests/bom.rs"]},
+        [],
+    )
+
+
+# The code side's line rule, transcribed as it stood before the test-tag reader
+# arrived, and deliberately not read from the module under test.
+FROZEN_TOKEN = "Implements:"
+FROZEN_OPENING = re.compile(r"^[\s#/\-*;%<!\"']*$")
+FROZEN_IDS = re.compile(r"\b(?:SR|LLR|SN|TC)-\d+\b")
+
+
+def _frozen_ids(line):
+    before, marker, after = line.partition(FROZEN_TOKEN)
+    if not marker or not FROZEN_OPENING.match(before):
+        return []
+    return FROZEN_IDS.findall(after)
+
+
+def _frozen_source_files(root, exts):
+    """Every non-hidden `exts` file under `root` that decodes, as `(rel, text)`."""
+    for path in sorted(root.rglob("*")):
+        parts = path.relative_to(root).parts
+        hidden = any(p.startswith(".") or p == "__pycache__" for p in parts)
+        if hidden or not path.is_file() or path.suffix.lower() not in exts:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        yield path.relative_to(root.parent).as_posix(), text
+
+
+def _frozen_scan_backlinks(root):
+    found = {}
+    for rel, text in _frozen_source_files(root, gen_arch_map.BACKLINK_EXTS):
+        for line in text.splitlines():
+            for rid in _frozen_ids(line):
+                found.setdefault(rid, set()).add(rel)
+    return {rid: sorted(paths) for rid, paths in sorted(found.items())}
+
+
+def _frozen_implements_report(root):
+    sites, known = {}, set()
+    for rel, text in _frozen_source_files(root, (".py",)):
+        tree = ast.parse(text)
+        scopes = gen_arch_map._scope_index(tree)
+        top_level = gen_arch_map._top_level_targets(tree)
+        found = [
+            (lineno, ids, gen_arch_map.enclosing_symbol(scopes, top_level, lineno))
+            for lineno, ids in (
+                (n, _frozen_ids(line))
+                for n, line in enumerate(text.splitlines(), start=1)
+            )
+            if ids
+        ]
+        if found:
+            sites[rel] = found
+        known.update(qualname for _s, _e, qualname in scopes)
+        known.update(name for _start, name in top_level)
+    return sites, known
+
+
+def test_backlink_ids_applies_the_tag_readers_opening_rule(monkeypatch):
+    """One application of the opening rule: the code side's line reader takes
+    its answer from the helper the tag reader calls, in both directions."""
+    monkeypatch.setattr(gen_arch_map, "_opens_declaration", lambda line: False)
+    assert gen_arch_map.backlink_ids("Implements: SR-1") == []
+    monkeypatch.setattr(gen_arch_map, "_opens_declaration", lambda line: True)
+    assert gen_arch_map.backlink_ids("Prose. Implements: SR-1") == ["SR-1"]
+
+
+def test_the_code_side_readers_keep_their_output_over_the_scripts_tree():
+    """Characterises the code-side reads, which the test-tag reader leaves alone.
+
+    Adequacy witness: a test-tag reader that loosens `_DECL_OPENING` for its own
+    use, or widens `scan_backlinks` to read test ids from anywhere the frozen
+    rule above does not, makes the live report differ from the frozen one, and
+    so does any change to the four signatures pinned here."""
+    assert gen_arch_map.scan_backlinks([SCRIPTS]) == _frozen_scan_backlinks(SCRIPTS)
+    assert gen_arch_map.implements_report([SCRIPTS]) == _frozen_implements_report(
+        SCRIPTS
+    )
+    assert [
+        list(inspect.signature(reader).parameters)
+        for reader in (
+            gen_arch_map.backlink_ids,
+            gen_arch_map.scan_backlinks,
+            gen_arch_map.declaration_sites,
+            gen_arch_map.implements_report,
+        )
+    ] == [["line"], ["src_roots", "exts"], ["path"], ["src_roots"]]
+    assert any(rid.startswith("LLR-") for rid in _frozen_scan_backlinks(SCRIPTS))

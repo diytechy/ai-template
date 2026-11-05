@@ -22,10 +22,12 @@
 # RESERVATIONS — written on the id carrier by --reserve-ids:
 # reservation: LLR 362-363 (WI-978)
 # reservation: LLR 364-364 (WI-963)
+# reservation: LLR 365-365 (WI-994)
 # reservation: TC 401-402 (WI-978)
 # reservation: TC 403-403 (WI-963)
+# reservation: TC 404-409 (WI-994)
 #
-# basis: B=11 CMP=9 DA=17 EXT=7 IF=308 LLR=364 OI=126 PB=4 REL=2 SN=44 SR=246 STK=4 SUR=3 TC=403 WI=998
+# basis: B=11 CMP=9 DA=17 EXT=7 IF=308 LLR=365 OI=126 PB=4 REL=2 SN=44 SR=246 STK=4 SUR=3 TC=409 WI=998
 #
 ASSET = 0
 B = 11
@@ -34,7 +36,7 @@ DA = 17
 DP = 1
 EXT = 7
 IF = 308
-LLR = 364
+LLR = 365
 MOD = 0
 OI = 126
 PART = 0
@@ -45,5 +47,5 @@ SN = 44
 SR = 246
 STK = 4
 SUR = 3
-TC = 403
+TC = 409
 WI = 998

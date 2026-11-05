@@ -1556,6 +1556,18 @@ status = "Approved"
 component = "CMP-008"
 phase = 6
 
+[design.LLR-365]
+sr_refs = ["SR-157"]
+title = "Test-file declarations of their test cases"
+module = "project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/trajectory_arch.py"
+code_symbol = "read_test_tags/tc_tag_findings"
+detail = "A test-file back-link declaration names test cases, and each named id must be a live test case. In a Python test file, declarations in the module docstring and in a test's docstring are read; in another supported test-file type, declarations are read at file level. A byte-order mark at the start of a file does not change its reading. The two Python levels union. A test repeating its module's test case is no finding. A non-docstring string literal, a backtick-quoted token and an unsupported test-file type make no declaration. A declaration outside a read position, including a pytest-fixture docstring, is refused as misplaced. The following are refused as malformed: a declaration whose list is not test-case ids only; a read-position line whose token follows prose and names a test case; and a next line that continues a valid list. The after-prose refusal directs the declaration to the start of its own line. An id absent from the live test-case registry, including an example or retired id, is refused as unknown; a Drafted test case is live. A test file that cannot be decoded or parsed is refused as unreadable. Every live id in a valid declaration maps to its test node. Each refusal names the repository-relative file, line and shape. Reading test files does not change source-file declaration reading. An absent tests root, or an absent test-case registry, makes the check vacuous. Findings warn without strict checking and error under strict checking; they gate from DevStg-Impl and remain warnings below that rung, including in a newly created project. The contract covers test files, test-case registries and declared tests roots produced by supported workflows; non-Python fixture text, non-default test-collection patterns, hand-chosen test-case aliases and tests roots reached through a symlink are outside it."
+rationale = "A tag that is silently misplaced, malformed, dangling or unreadable can make a test case appear absent without an attributable finding. Keeping the declaration grammar separate from source-file reading prevents this added input from changing established source analysis."
+test_refs = "TC-404; TC-405; TC-406; TC-407; TC-408; TC-409"
+status = "Approved"
+component = "CMP-006"
+phase = 6
+
 [design.LLR-154]
 sr_refs = ["SR-174"]
 title = "The merge slot's post-merge intake arm"

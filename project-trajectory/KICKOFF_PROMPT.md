@@ -104,8 +104,9 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   (requirements with no child/test; tests/LLRs with no parent). Drive orphans to
   zero before the relevant gate.
 - **Code carries back-links**: annotate the implementing item with
-  `Implements: SR-007, LLR-014`; name tests so the verified ID is visible. The
-  registry columns are authoritative; code annotations keep code and docs honest.
+  `Implements: SR-007, LLR-014`; test files name their test cases on the same
+  line (`Implements: TC-021`). The registry columns are authoritative; code
+  annotations keep code and docs honest.
 - **Modularity & dedup in code**: shared logic lives in exactly one place (no
   copy-paste); separate **pure, unit-testable cores** from I/O / network / GUI
   shells (the shells are Demonstration-tested). Keep functions small and the
