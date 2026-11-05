@@ -355,6 +355,49 @@ def test_the_work_item_context_is_the_two_typed_classification_cells():
     assert "scope" not in ctx and "kind" not in ctx
 
 
+@pytest.mark.parametrize(
+    "row",
+    [
+        {
+            "Workstream": "process",
+            "SafetyClass": "adjudication",
+            "AuthoringTags": "unattended;ordinary",
+        },
+        {
+            "workstream": "process",
+            "safety_class": "adjudication",
+            "authoring_tags": ["unattended", "ordinary"],
+        },
+    ],
+    ids=["column", "frontmatter"],
+)
+def test_a_non_empty_authoring_cell_supplies_the_tags_in_place_of_the_row_cells(row):
+    """A minted row routes as `process` / `adjudication`, so those two cells
+    must drop out when its authoring cell speaks: read beside the cell they
+    would keep the `process` hats on a lane that never declared them.
+
+    Implements: TC-399"""
+    assert hats.context_from_work_item(row) == {"tags": ["unattended", "ordinary"]}
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        {"Workstream": "process", "SafetyClass": "adjudication", "AuthoringTags": ""},
+        {"workstream": "process", "safety_class": "adjudication", "authoring_tags": []},
+    ],
+    ids=["column", "frontmatter"],
+)
+def test_an_empty_authoring_cell_reads_the_two_row_cells(row):
+    """Every row the cell does not speak for widens as it always has.
+
+    Adequacy witness: an implementation that stops at a present-but-empty cell
+    returns no tags here.
+
+    Implements: TC-399"""
+    assert hats.context_from_work_item(row) == {"tags": ["process", "adjudication"]}
+
+
 def test_the_need_context_reads_only_typed_cells():
     assert hats.context_from_need({"kind": "core", "scope": "template"}) == {
         "kind": "core",

@@ -10405,6 +10405,46 @@ and `[bars] red_mark`, and the generated evidence column. Each is a later change
 
 **Adopter-merged files:** the `AGENTS.md` and PROCESS text.
 
+### A minted adjudication row carries its authoring work item's tags [since de3838360]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** The work-item row gains one cell, `AuthoringTags`, the
+frontmatter key `authoring_tags`, after `Adopted`. It holds the `Workstream`
+and `SafetyClass` values of the work items a minted first-approval or
+amendment row was authored under, deduplicated, or nothing when no route named
+one. The routing `SafetyClass` stays `adjudication` and `Workstream` stays
+`process`.
+
+The mint fills the cell by route:
+
+- **The merge slot:** the closed row the merge names.
+- **`intake.py sweep --merged ... --branch`:** the named rows, their tags
+  unioned.
+- **A range sweep with no `--merged`, with or without `--with-terminal`:**
+  empty, since it knows no authoring item. Name a lane's rows with `--merged`
+  to get its tags.
+
+The hat composer reads a non-empty cell in place of the row's `Workstream` and
+`SafetyClass`, never beside them, and an empty cell reads those two as before.
+So a minted row's hat block now follows the authoring item, and a
+`process`-keyed hat such as a first-run-adopter perspective can drop off a
+minted sitting whose lane is not `process`-tagged. That is intended: both
+adjudication routes now compose one hat set for one requirement. A row minted
+from a closed adjudication row passes that row's cell on.
+
+**What to do (no forced migration).** Overwrite the kit-owned files below. An
+absent key reads as an empty cell, so the spec folder needs no edit, and rows
+already minted keep today's widening: nothing backfills them. No setting
+changes. Only a repo still carrying the retired legacy CSV adds `AuthoringTags`
+after `Adopted`. If a roster of yours keys a hat on `process` or `adjudication`
+to reach every minted sitting, read it again, since those sittings now widen by
+the lane's own tags.
+
+**Kit-owned files — overwrite:** `scripts/intake.py`, `scripts/hats.py`,
+`scripts/wi_convert.py`, `scripts/plan_artifacts.py`,
+`scripts/kitlib/registry.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

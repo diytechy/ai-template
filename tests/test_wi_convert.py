@@ -743,6 +743,47 @@ def test_an_adopted_cell_round_trips_through_the_converter(tmp_path):
     assert _cell_mismatches([row], [back["WI-044"]]) == []
 
 
+def test_the_authoring_tags_cell_round_trips_through_the_spec_form(tmp_path):
+    """The mint writes the cell through this converter and the hat composer
+    reads it back through the registry, so a writer that dropped it would
+    leave every minted row widening by its routing cells. Both readers are
+    held: the converter's own and the registry's. The routing `SafetyClass`
+    beside it stays its own cell.
+
+    Implements: TC-399"""
+    from kitlib import registry
+
+    row = dict.fromkeys(wi_convert.COLUMNS, "")
+    row.update(
+        {
+            "WI-ID": "WI-045",
+            "Title": "ADJUDICATE - FIRST APPROVAL: SR-001",
+            "Status": "queued",
+            "Workstream": "process",
+            "SafetyClass": "adjudication",
+            "AuthoringTags": "unattended;ordinary",
+        }
+    )
+    work = tmp_path / "work"
+    rel = wi_convert.write_spec_file(work, row)
+    text = (work / rel).read_text(encoding="utf-8")
+    assert 'authoring_tags = ["unattended", "ordinary"]' in text
+    back = {r["WI-ID"]: r for r in registry.read_spec_rows(work)}
+    assert [r.get("AuthoringTags") for r in back.values()] == ["unattended;ordinary"]
+    assert [r["SafetyClass"] for r in back.values()] == ["adjudication"]
+    converted = [
+        r.get("AuthoringTags") for r, _order, _rel in wi_convert.read_specs(work)
+    ]
+    assert converted == ["unattended;ordinary"]
+    assert _cell_mismatches([row], list(back.values())) == []
+    # A row the mint names no author for reads back an empty cell, not a dash.
+    row2 = dict.fromkeys(wi_convert.COLUMNS, "")
+    row2.update({"WI-ID": "WI-046", "Title": "ordinary", "Status": "queued"})
+    wi_convert.write_spec_file(work, row2)
+    cells = {r["WI-ID"]: r.get("AuthoringTags") for r in registry.read_spec_rows(work)}
+    assert cells == {"WI-045": "unattended;ordinary", "WI-046": ""}
+
+
 def test_the_toml_emitter_escapes_what_tomllib_must_read_back():
     """Direct unit cover for the hand-rolled serializer, including a control
     character no registry cell contains today — the escaper must be correct for

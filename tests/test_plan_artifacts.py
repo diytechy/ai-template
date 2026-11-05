@@ -53,7 +53,7 @@ WI_HEADER_LINE = (
     "WI-ID,Title,Workstream,SR-Refs,Predecessors,Status,Deliverable,SpecRef,"
     "BuildTier,CritiqueBudget,CritiqueExhaustion,Priority,Exclusive,"
     "EstTokens,SafetyClass,PlanMode,Bar,Supersedes,Brief,Adjudicates,Digests,"
-    "Adopted\n"
+    "Adopted,AuthoringTags\n"
 )
 
 

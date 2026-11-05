@@ -1,0 +1,60 @@
+# docs/decisions/wi-982.toml — delegated calls in WI-982's lane.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "REVIEW-B stands in as Claude Opus at high for each round of this lane (ruling 7; coordinator-2026-10-16 D-008), recorded here as the substitution each lane owes until WI-815's Gemini route has one verified launch."
+alternative = "None: the slot has no other route today."
+reversal_cost = "Low: a round re-runs."
+why_not_escalated = "A standing owner ruling."
+review = ""
+
+[decision.D-002]
+decided = "The build ran as two fresh foreground builders, tests then code, in place of one resumed builder, since a resumed builder reports only in the background in a headless leg. Three differences from the plan are accepted as within its scope. tests/test_wi_loader_sync.py gained the new key in its six row fixtures, the same edit Adopted and Digests took, or the smoke tier errors with KeyError. intake.py grew 18 SLOC where the plan said about 13, stamped per row (1872 to 1890). The WI-000 row of the work-items template was already short of its header, and this row leaves that as it found it, the row being inert."
+alternative = "Stop for a plan revision over a test fixture the schema change forces, which would spend a critique on no change of approach."
+reversal_cost = "Low: lane work under review."
+why_not_escalated = "No change of approach: each follows from the plan's own column."
+review = ""
+
+[decision.D-003]
+decided = "Two byte-exact RESYNC corrections made openly by the coordinator before the first attest of the code. The entry's overwrite list drops registries/work-items.template.csv, which bootstrap_manifest deliberately does not deliver to adopters, so an LLM-applied re-sync would look for a file it never received; the plan's list named it, and the plan is unedited. The anchor takes the pack's short sha, which the coordinator's own brief had asked for in full by mistake."
+alternative = "Leave the list as the plan wrote it, repeating the overwrite-list defect status.md's follow-ups already carry for another entry."
+reversal_cost = "Low: one line of a lane's entry."
+why_not_escalated = "A byte-exact correction of text the plan's own intent governs; recorded for confirm or overrule."
+review = ""
+
+[decision.D-004]
+decided = "LLR-360's detail gains two sentences by addition, every approved sentence kept byte for byte, stating what Done-when items 2 and 4 promise: a minted row's recorded authoring tags stand in place of its own, a route naming no author records none, a minted author passes its record on, and the two routes reach one perspective set. Terra's checkpoint turn stopped, as briefed, on finding that neither LLR-360 nor IF-092 stated the clauses TC-399 was to add, and a TC states only what its rows state. The plan's P7 says no text is added to LLR-360; the spec says only that the existing clause stands, which it does, and the Done-when is unchanged, so the pass record stays bound. The plan is not edited. The sitting judges the amendment."
+alternative = "Narrow TC-399 to what LLR-360 already states, which leaves built, Done-when-promised behaviour with no requirement."
+reversal_cost = "Low: lane row text, judged at the sitting before any act."
+why_not_escalated = "A row-text call inside the lane's own LLR, judged independently at the sitting; recorded for confirm or overrule."
+review = ""
+
+[decision.D-005]
+decided = "Round 1 triage (001-REVIEW-A, 002-REVIEW-B): no BLOCKER or MAJOR, so the round ends the counted rounds and the checkpoint follows. REVIEW-B's one MINOR, TC-399's text not yet carrying the behaviour, is the checkpoint's own step and costs no round; the checkpoint answers it. Its coverage-extension note (an authoring row declaring neither Workstream nor SafetyClass) carries no severity and goes to status.md's follow-ups, as does its observation on the roster's comment text in docs/requirements/hats.toml, which is owner text."
+alternative = "Hold a fix round for a MINOR, which rulings 1 and 4 say never costs one."
+reversal_cost = "Low: a recorded triage."
+why_not_escalated = "Severity and routing follow the review shape the owner ruled."
+review = ""
+
+[decision.D-006]
+decided = "Sitting 003 returned LLR-360 (plain MEANING, its added sentence broader than the build) and blessed TC-399; the build was not in question. Terra narrows the added sentence as the verdict orders, and the coordinator adds one change the verdict did not name: the next sentence's 'A row minted from a minted row' becomes 'Such a row', since it was over-broad in the same way. The verdict's Dispositions move under another heading, answered in the lane, so the landing sweep mints no rework row. The whole set is re-sat in one sitting, so one verdict authorizes the act."
+alternative = "Apply only the sentence the verdict named, inviting a second return on its twin."
+reversal_cost = "Low: lane row text, judged at the re-sit."
+why_not_escalated = "A return's rework inside the lane."
+review = ""
+
+[decision.D-007]
+decided = "The convergence map before the gate. One accepted finding: 002-REVIEW-B's MINOR (TC-399's method and expected did not carry the behaviour its citation claimed), a wording fix with no executable test, mapped to independently checkable evidence: the corrected text in TC-399's method and expected at this tip, judged in 004-ADJUDICATE-f8f3572. Sitting 003's return on LLR-360 maps the same way: the narrowed sentences at this tip, blessed by the same verdict. Rows and tests were not otherwise changed by a finding: no code moved after round 1. Trunk has not moved since the lane's base, so no rebase is owed."
+alternative = "None: the round cannot start unmapped."
+reversal_cost = "Low: a record."
+why_not_escalated = "A coordinator's step the cycle orders."
+review = ""
+
+[decision.D-008]
+decided = "The gate (005-REVIEW-A APPROVE, 006-REVIEW-B APPROVE with two MINORs): no BLOCKER or MAJOR, so the lane goes to its act. Finding 1, that nothing grants LLR-360's added sentences, is answered by D-004, which the convergence stance bars the reviewer from reading; the reviewer states the sentences are true and belong there, and the Done-when and plan stay unedited so the pass record binds. Finding 2, that the overwrite list should name the work-items template, is refuted: bootstrap_manifest deliberately does not deliver that file, so an adopter holds no copy to keep stale, the entry already tells a repository still carrying the retired CSV what to do, and the round-1 REVIEW-B confirmed the correction (D-003). The Adopted entry the finding cites shows the older form, not a rule. Neither moves the gated tip."
+alternative = "Edit the list or the spec after the gate, moving the tip the gate reviewed."
+reversal_cost = "Low: a one-line follow-up either way."
+why_not_escalated = "MINORs never cost a round, and a gate MINOR is never fixed after the gate; D-003 and D-004 stay open for the owner to confirm or overrule."
+review = ""

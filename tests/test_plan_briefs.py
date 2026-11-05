@@ -499,6 +499,21 @@ def test_the_work_items_tags_widen_each_need_and_sibling_needs_never_merge(tmp_p
     assert "both question?" in widened
 
 
+def test_the_authoring_cell_widens_each_need_and_sibling_needs_never_merge(tmp_path):
+    """The authoring cell reaches each parent need as the row's own tags do:
+    `b` beside SN-4's `a` makes BOTH applicable, while the two needs alone
+    still never merge.
+
+    Implements: TC-399"""
+    root = _round_repo(tmp_path)
+    fn = _round_fn("sitting_hat_block")
+    minted = {"WI-ID": "WI-1", "Workstream": "process", "SafetyClass": "adjudication"}
+    apart = fn(root, minted, [], ["SN-4", "SN-5"])
+    assert "both question?" not in apart, "sibling needs' tags were merged"
+    widened = fn(root, dict(minted, AuthoringTags="b"), [], ["SN-4", "SN-5"])
+    assert "both question?" in widened
+
+
 def test_an_absent_roster_yields_the_opt_out_line_in_a_round(tmp_path):
     root = _round_repo(tmp_path, roster=None)
     block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], ["SN-1"])

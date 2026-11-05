@@ -473,15 +473,24 @@ def context_from_work_item(row):
     """The decomposition context for a WORK-ITEM row — the shape the dual-plan
     decomposition round actually has in hand.
 
-    `tags` are the row's two typed classification cells, `Workstream` and
-    `SafetyClass`; `scope` and `kind` are left UNDECLARED because a work item
+    `tags` are the row's `AuthoringTags` cell when it is non-empty, in place of
+    its two typed classification cells, never beside them: a minted row's own
+    `process` and `adjudication` say how it routes, not what its authoring work
+    item was. An empty cell reads those two cells, `Workstream` and
+    `SafetyClass`. `scope` and `kind` are left UNDECLARED because a work item
     carries neither, so a roster clause keyed on them stays silent here instead
     of matching by accident. A need-level composer supplies those two through
-    `context_from_need` once the need registry carries them as fields."""
+    `context_from_need` once the need registry carries them as fields.
+
+    Implements: SR-161, LLR-360
+    """
     # The scope FIELD that would make the scope-keyed hats fire is the subject
     # of stakeholder need SN-039 (a declared scope value, not prose to infer).
     # Named in a comment rather than the docstring so the arch-map harvest does
     # not read a POINTER to a need as a claim to implement one.
+    authoring = _as_tags(_first(row, "AuthoringTags", "authoring_tags"))
+    if authoring:
+        return {"tags": authoring}
     tags = []
     for key in ("Workstream", "workstream", "SafetyClass", "safety_class"):
         value = (row or {}).get(key)

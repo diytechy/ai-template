@@ -88,7 +88,8 @@ Contract IF-078: plan_artifacts files a selected Plan-WI as a spec through this
     that does not read back as what it was given.
 
 Contract IF-092: the unified mint builds its row against COLUMNS, the
-    19-column schema this module owns, and materializes it with
+    schema this module owns, with AuthoringTags (the authoring tags,
+    `;`-joined, or empty), and materializes it with
     `write_spec_file(work_dir, row)` — the format's single writer, so no spec
     can be produced by a path that skips the read-back verification. A row this
     module cannot file raises ConvertError, which is the mint's
@@ -193,6 +194,13 @@ COLUMNS = [
     # key where this writer would, so a round trip of the closed spec is
     # byte-stable. Validated only by `kitlib.adoption.record_ids`.
     "Adopted",
+    # WI-982 THE AUTHORING TAGS: the Workstream and SafetyClass values of the
+    # work items a minted first-approval or amendment row was authored under,
+    # deduplicated and `;`-joined, or empty when no route named one. NOT the
+    # routing `SafetyClass`, which stays `adjudication`: this cell only feeds
+    # the hat composer, `hats.context_from_work_item`. A REAL COLUMN for the
+    # reason above: the mint writes it through this table.
+    "AuthoringTags",
 ]
 
 # Status <-> directory (§2.1; WI-384). One directory per state, both terminals
@@ -248,6 +256,7 @@ LIST_FIELDS = (
     ("Predecessors", "needs"),
     ("Adjudicates", "adjudicates"),
     ("Adopted", "adopted"),
+    ("AuthoringTags", "authoring_tags"),
 )
 # Columns emitted as TOML integers when — and only when — the round-trip is
 # exact (`str(int(cell)) == cell`). A cell like `01` stays a string rather than

@@ -877,6 +877,37 @@ The brief renders BOTH the recorded pair and the pair as the tree stands
 a number with nothing to compare against — the slot exists so a stale verdict is
 detectable rather than assumed fresh.
 
+### The `AuthoringTags` cell — whose tags a sitting widens by
+
+A minted first-approval or amendment row always carries `Workstream = process`
+and the routing `SafetyClass = adjudication`, so those two cells say how the row
+routes, not what its authoring work item was. `AuthoringTags` holds that fact:
+the authoring work items' `Workstream` and `SafetyClass` values, deduplicated
+and `;`-joined, or empty when no authoring item is known. `intake`'s two drafters
+are its only writers, and a `## Dispositions` block declaring the key is refused
+as unknown. `hats.context_from_work_item` is its only reader: a non-empty cell
+supplies the row's tags in place of the two cells, never beside them, and an
+empty cell reads the two cells.
+
+| Route | Source | Cell |
+|---|---|---|
+| merge slot | the closed rows its `outcomes` name | their tags |
+| `sweep --merged ... --branch` | the named rows | their union, in sorted-id order |
+| range sweep with no `--merged`, with or without `--with-terminal` or `--branch` | none | empty |
+| bare sweep | none, and it reads HEAD..HEAD | mints neither row kind |
+
+The route test is `branch`, not `outcomes`: `--with-terminal` hands every close
+on file, and only the routes that name their rows hand a claim branch. An
+authoring row's tags are read through the same function, so a minted row that
+authors another passes its cell on. A row already minted keeps its cell, so a
+later `--merged` sweep over a range already minted writes nothing.
+
+It is a REAL COLUMN for the reason `Supersedes` and `Brief` share: `intake` writes
+it through `wi_convert.write_spec_file`, which serializes from
+`wi_convert.COLUMNS`, and a frontmatter key outside that table is dropped by
+`parse_spec`. A column also lets a later composition read the recorded fact
+instead of looking a row up.
+
 **Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
 whenever a child read the retired `Modified` marker, asserting the retired

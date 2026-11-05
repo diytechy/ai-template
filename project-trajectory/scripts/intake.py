@@ -176,6 +176,7 @@ import baseline_snapshot
 import bookkeeping
 import census
 import consolidate
+import hats
 import rejudge
 import schedule
 import trace
@@ -828,9 +829,10 @@ def _owning_srs(records):
     return sorted(srs)[:8]
 
 
-def _amendment_drafts(root, before, after):
+def _amendment_drafts(root, before, after, authoring_tags=()):
     """`(drafts, refusal)`: trigger (a)'s one adjudication row, or none, or
-    `_routed_amendments`' refusal."""
+    `_routed_amendments`' refusal. `authoring_tags` is `_authoring_tags`'
+    answer, written on the row as the composer's tags."""
     records, refusal = _routed_amendments(root, before, after)
     if not records:
         return [], refusal
@@ -858,6 +860,7 @@ def _amendment_drafts(root, before, after):
             # the brief re-derives its rows from a repo-wide model, so without
             # this every amendment row was handed every drifted row in the tree.
             "adjudicates": ids,
+            "authoring_tags": list(authoring_tags),
             "specref": records[0]["registry"],
             "context": _amendment_context(records),
         }
@@ -934,7 +937,7 @@ def _first_approval_context(records):
     return "\n".join(lines)
 
 
-def _first_approval_drafts(root, before, after):
+def _first_approval_drafts(root, before, after, authoring_tags=()):
     records = _released_drafted_rows(root, before, after)
     if not records:
         return []
@@ -977,6 +980,7 @@ def _first_approval_drafts(root, before, after):
             # this one is the act's boundary, and a boundary with a `[:8]` on it
             # silently authorises the ninth row or silently strands it.
             "adjudicates": ids,
+            "authoring_tags": list(authoring_tags),
             "specref": records[0]["registry"],
             "context": _first_approval_context(records),
         }
@@ -1026,6 +1030,33 @@ def _closed_spec(root, wi_id, dirs=("partial", "cancelled")):
                 continue
             return hit.relative_to(Path(root)).as_posix(), meta
     return None
+
+
+def _authoring_tags(root, outcomes, branch):
+    """The tags a minted row's `AuthoringTags` cell carries: the closed rows a
+    route names, each read through `hats.context_from_work_item`, so a minted
+    author passes its own cell on. Deduplicated, in sorted-id order.
+
+    `branch` is the route test, not `outcomes`: `--with-terminal` and a bare
+    sweep hand every close on file, and only the merge slot and `--merged` hand
+    a branch, so a route that names no authoring row gets the empty answer.
+    All three terminal folders are searched, since `_closed_spec`'s default
+    pair omits `complete/`, the usual close.
+
+    Implements: SR-161, LLR-360
+    """
+    if not branch:
+        return []
+    closed = [
+        _closed_spec(root, wi, tuple(SWEEP_OUTCOMES)) for wi in sorted(outcomes or ())
+    ]
+    tags = [
+        tag
+        for hit in closed
+        if hit
+        for tag in hats.context_from_work_item(hit[1]).get("tags", ())
+    ]
+    return list(dict.fromkeys(tags))
 
 
 def _close_reports(root, wi_id):
@@ -2325,6 +2356,9 @@ def _draft_row(wi_id, draft):
     # that re-derives its population live intersects against this, so the act
     # can never widen past the rows the merge handed over.
     row["Adjudicates"] = ";".join(draft.get("adjudicates") or [])
+    # WI-982: the tags the composer widens a sitting by, in a cell of its own
+    # because `SafetyClass` above is this row's routing.
+    row["AuthoringTags"] = ";".join(draft.get("authoring_tags") or [])
     # The consolidation census's recursion guard (restructure plan §1.3):
     # `<queue sha>|<spine sha>`. Written by the same one line the other typed
     # adjudication cells are, because a cell the mint computes and the writer
@@ -2773,10 +2807,11 @@ def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
 
     Implements: SR-215, LLR-255
     """
-    drafts, refusal = _amendment_drafts(root, before, after)
+    authoring_tags = _authoring_tags(root, outcomes, branch)
+    drafts, refusal = _amendment_drafts(root, before, after, authoring_tags)
     if refusal:
         return [], refusal
-    drafts += _first_approval_drafts(root, before, after)
+    drafts += _first_approval_drafts(root, before, after, authoring_tags)
     drafts += _close_drafts(root, outcomes)
     goalposts, refusal = _done_when_drafts(root, before, after, outcomes, branch)
     if refusal:

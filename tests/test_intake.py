@@ -45,6 +45,7 @@ pytestmark = env_gate_skipif("git")
 intake = load_script("intake")
 ac = load_script("agent_common")
 wi_convert = load_script("wi_convert")
+plan_briefs = load_script("plan_briefs")
 # The stage carrier's ONE home since WI-498 slice 1 — imported as a package (not
 # via `load_script`, which loads a single `scripts/*.py`); `scripts/` is already
 # on sys.path by here, because `load_script` puts it there.
@@ -3194,17 +3195,26 @@ def test_merged_needs_a_real_range_and_the_lane_branch(tmp_path, capsys):
     assert _rev(root) == head
 
 
-def hand_lane_repo(tmp_path):
+def hand_lane_repo(tmp_path, tags=None):
     """`(root, before, after)`: ONE hand merge that lands four closes and an
     SR row handed over `Drafted`. Before it, trunk holds WI-007's claim under
     `active/wi-007/` with its Done-when; the merge closes WI-007 into
     `complete/` with that Done-when reworded, closes the clean row WI-008 (the
     spot check samples every 4th id), and merges the adjudication WI-009 whose
     `## Dispositions` drafts a follow-up. A clean close WI-012 already on file
-    (also sampled) is one this merge did not land."""
+    (also sampled) is one this merge did not land. `tags`, `{id: frontmatter}`,
+    gives WI-007, WI-008 and WI-012 their declared tags."""
+    tags = tags or {}
     root = git_repo(tmp_path)
     write_sr(root)
-    write_spec(root, "complete", "WI-012", slug="older", specref="seed.txt")
+    write_spec(
+        root,
+        "complete",
+        "WI-012",
+        slug="older",
+        specref="seed.txt",
+        **tags.get("WI-012", {}),
+    )
     write_spec(
         root, "active/wi-007", "WI-007", specref="seed.txt", body=DONE_WHEN_AT_CLAIM
     )
@@ -3213,8 +3223,15 @@ def hand_lane_repo(tmp_path):
     for stale in (root / "docs" / "work" / "active" / "wi-007").glob("*.md"):
         stale.unlink()
     reworded = DONE_WHEN_AT_CLAIM.replace("60 fps", "30 fps")
-    write_spec(root, "complete", "WI-007", body=reworded)
-    write_spec(root, "complete", "WI-008", slug="clean", specref="seed.txt")
+    write_spec(root, "complete", "WI-007", body=reworded, **tags.get("WI-007", {}))
+    write_spec(
+        root,
+        "complete",
+        "WI-008",
+        slug="clean",
+        specref="seed.txt",
+        **tags.get("WI-008", {}),
+    )
     write_spec(
         root,
         "complete",
@@ -3549,3 +3566,197 @@ def test_a_lane_that_only_ticks_its_done_when_with_evidence_mints_nothing(tmp_pa
     )
     assert refusal is None, refusal
     assert minted == []
+
+
+# --- the authoring tags a minted row carries -----------------------------------
+#
+# A minted first-approval or amendment row routes as `process` / `adjudication`,
+# so its own two cells say nothing about the lane that handed the row over. Its
+# `AuthoringTags` cell carries that lane's tags, and only a route that names the
+# authoring rows fills it: the merge slot and `sweep --merged`.
+
+UNATTENDED_QUESTION = "what happens at 3am with nobody watching?"
+ADOPTER_QUESTION = "can a new adopter do this from the guidance alone?"
+
+# The two hats the SR-161 case turned on: one keyed on the lane's `unattended`,
+# one keyed on the mint's own `process`.
+AUTHORING_ROSTER = """
+[hat.UNATTENDED-OPS]
+applies_when = 'tags contains "unattended" or tags contains "loop"'
+asks = "{}"
+listens_for = "a failure that pages nobody"
+
+[hat.FIRST-RUN-ADOPTER]
+applies_when = 'tags contains "scripts" or tags contains "process"'
+asks = "{}"
+listens_for = "a step only a project insider could take"
+""".format(UNATTENDED_QUESTION, ADOPTER_QUESTION)
+
+LANE_TAGS = {"workstream": "unattended", "safety_class": "ordinary"}
+ROW_KINDS = {
+    "first-approval": lambda r: write_sr(r, requirement="fresh", status="Drafted"),
+    "amendment": lambda r: write_sr(r, requirement="the AMENDED text"),
+}
+
+
+def authored_merge(tmp_path, kind="first-approval", **closed):
+    """`(root, before, after)`: one merge whose delta owes a `kind` row and which
+    closes WI-007 into `complete/` carrying the frontmatter `closed`, over an
+    approved need and the two-hat roster."""
+
+    def seed(root):
+        write_sn(root, status="Approved")
+        _write_toml(root, "hats.toml", AUTHORING_ROSTER)
+
+    def amend(root):
+        ROW_KINDS[kind](root)
+        write_spec(root, "complete", "WI-007", specref="seed.txt", **closed)
+
+    root, before, after = amended_repo(tmp_path, amend, seed=seed)
+    _released(root)
+    return root, before, after
+
+
+def _of_kind(root, kind):
+    return [r for r in queued_rows(root).values() if r["Brief"] == kind]
+
+
+def _slot_mint(root, before, after):
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-007": "merged"}, "wi-007"
+    )
+    assert refusal is None, refusal
+    return minted
+
+
+@pytest.mark.parametrize("kind", sorted(ROW_KINDS))
+def test_the_slot_mint_carries_the_closed_lanes_tags_on_both_row_kinds(tmp_path, kind):
+    """The merge slot names the lane by its outcomes, so both row kinds carry
+    its tags, and the two routing cells keep their values beside them.
+
+    Implements: TC-399"""
+    root, before, after = authored_merge(tmp_path, kind, **LANE_TAGS)
+    _slot_mint(root, before, after)
+    cells = [
+        (r.get("AuthoringTags"), r["SafetyClass"], r["Workstream"])
+        for r in _of_kind(root, kind)
+    ]
+    assert cells == [("unattended;ordinary", "adjudication", "process")]
+
+
+def test_a_merged_sweep_unions_the_named_rows_tags(tmp_path):
+    """Several named rows union, deduplicated and in sorted-id order whatever
+    order they were named in, and a tagged close on file that the sweep does
+    not name adds nothing.
+
+    Implements: TC-399"""
+    tags = {
+        "WI-007": LANE_TAGS,
+        "WI-008": {"workstream": "scripts", "safety_class": "ordinary"},
+        "WI-012": {"workstream": "never-named"},
+    }
+    root, before, after = hand_lane_repo(tmp_path, tags=tags)
+    argv = ("--before", before, "--after", after, "--branch", "wi-007")
+    assert _sweep(root, *argv, "--merged", "WI-008;WI-007") == 0
+    cells = [r.get("AuthoringTags") for r in _of_kind(root, "first-approval")]
+    assert cells == ["unattended;ordinary;scripts"]
+
+
+def test_a_minted_author_passes_its_cell_on(tmp_path):
+    """A closed adjudication row authors by the tags it widens by itself, its
+    cell and not its routing cells, so a lane's tags survive a second mint.
+
+    Implements: TC-399"""
+    root, before, after = authored_merge(
+        tmp_path,
+        workstream="process",
+        safety_class="adjudication",
+        authoring_tags=["unattended", "ordinary"],
+    )
+    _slot_mint(root, before, after)
+    cells = [r.get("AuthoringTags") for r in _of_kind(root, "first-approval")]
+    assert cells == ["unattended;ordinary"]
+
+
+def test_a_real_mint_and_the_lane_row_compose_one_hat_set(tmp_path):
+    """One system requirement, one hat set, whichever route composes it. The
+    minted shape comes from a real mint, and the in-lane shape is the one the
+    coordinator's lane composer builds: the lane's own row with `Brief`,
+    `Adjudicates` and `SR-Refs` overridden. The adopter hat staying out is
+    what catches a cell read beside the row's two cells, not in their place.
+
+    Implements: TC-399"""
+    root, before, after = authored_merge(tmp_path, **LANE_TAGS)
+    _slot_mint(root, before, after)
+    rows = {r["WI-ID"]: r for r in ac.read_spec_rows(root / "docs" / "work")}
+    in_lane = dict(rows["WI-007"], Brief="first-approval", Adjudicates="SR-001")
+    in_lane["SR-Refs"] = "SR-001"
+    lane_block = plan_briefs.sitting_hat_block(root, in_lane, ["SR-001"], [])
+    minted_blocks = [
+        plan_briefs.sitting_hat_block(root, row, ["SR-001"], [])
+        for row in _of_kind(root, "first-approval")
+    ]
+    assert minted_blocks == [lane_block]
+    assert UNATTENDED_QUESTION in lane_block
+    assert ADOPTER_QUESTION not in lane_block
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [(), ("--with-terminal",), ("--branch", "wi-007")],
+    ids=["plain", "with-terminal", "branch-alone"],
+)
+def test_a_range_sweep_with_no_merged_leaves_the_cell_empty_and_widens_by_its_own_tags(
+    tmp_path, extra
+):
+    """A range sweep names no authoring row: `--with-terminal` holds every close
+    on file and `--branch` alone only labels the commit. So the cell stays empty
+    and the row widens by its own `process`.
+
+    Adequacy witness: an implementation keyed on `outcomes` rather than on the
+    claim stamps WI-007's tags on the `--with-terminal` case.
+
+    Implements: TC-399"""
+    root, before, after = authored_merge(tmp_path, **LANE_TAGS)
+    assert _sweep(root, "--before", before, "--after", after, *extra) == 0
+    rows = _of_kind(root, "first-approval")
+    assert [r["Adjudicates"] for r in rows] == ["SR-001"]
+    assert not any(r.get("AuthoringTags") for r in rows)
+    blocks = [plan_briefs.sitting_hat_block(root, r, ["SR-001"], []) for r in rows]
+    assert all(ADOPTER_QUESTION in block for block in blocks)
+    assert not any(UNATTENDED_QUESTION in block for block in blocks)
+
+
+@pytest.mark.parametrize("kind", sorted(ROW_KINDS))
+def test_a_bare_sweep_mints_neither_row_kind(tmp_path, kind):
+    """A bare sweep reads HEAD..HEAD, so a delta that owes a row at HEAD stays
+    unminted until a range names it; the range sweep after it shows the delta
+    did owe one.
+
+    Adequacy witness: a bare sweep that widened its range past HEAD..HEAD mints
+    a row here.
+
+    Implements: TC-399"""
+    root, before, after = authored_merge(tmp_path, kind, **LANE_TAGS)
+    assert _sweep(root) == 0
+    assert _of_kind(root, kind) == []
+    assert _sweep(root, "--before", before, "--after", after) == 0
+    assert len(_of_kind(root, kind)) == 1
+
+
+def test_a_dispositions_block_may_not_declare_authoring_tags(tmp_path):
+    """The two drafters are the cell's only writers, so a drafted follow-up that
+    declares it is refused as an unknown key and mints nothing.
+
+    Adequacy witness: adding the key to the drafted-keys set admits a third
+    writer, and this mint then succeeds.
+
+    Implements: TC-399"""
+    bad = DISPOSITIONS.replace('planmode = "dual"', 'authoring_tags = ["unattended"]')
+    root = merged_adjudication_repo(tmp_path, body=bad)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-008": "merged"}, "wi-008"
+    )
+    assert minted == []
+    assert refusal is not None and "authoring_tags" in refusal

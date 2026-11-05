@@ -84,6 +84,7 @@ def _row(wid, **kw):
         "Adjudicates": "",
         "Digests": "",
         "Adopted": "",
+        "AuthoringTags": "",
         "Deliverable": "",
         "SpecRef": "",
     }
@@ -192,6 +193,7 @@ CONVERTIBLE_ROWS = [
         "Adjudicates": "",
         "Digests": "",
         "Adopted": "",
+        "AuthoringTags": "",
     },
     {
         "WI-ID": "WI-002",
@@ -228,6 +230,7 @@ CONVERTIBLE_ROWS = [
         "Adjudicates": "LLR-001;LLR-002",
         "Digests": "",
         "Adopted": "",
+        "AuthoringTags": "",
     },
     {
         "WI-ID": "WI-003",
@@ -253,6 +256,7 @@ CONVERTIBLE_ROWS = [
         "Adjudicates": "",
         "Digests": "",
         "Adopted": "",
+        "AuthoringTags": "",
     },
     {
         "WI-ID": "WI-005",
@@ -278,6 +282,7 @@ CONVERTIBLE_ROWS = [
         "Adjudicates": "",
         "Digests": "",
         "Adopted": "",
+        "AuthoringTags": "",
     },
     {
         "WI-ID": "WI-000",
@@ -303,6 +308,7 @@ CONVERTIBLE_ROWS = [
         "Adjudicates": "",
         "Digests": "",
         "Adopted": "",
+        "AuthoringTags": "",
     },
 ]
 

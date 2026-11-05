@@ -121,6 +121,13 @@ WI_COLUMNS = (
     # `kitlib.adoption.record_ids`, so a malformed record never breaks every
     # registry read.
     "Adopted",
+    # WI-982 THE AUTHORING TAGS. The `;`-joined Workstream and SafetyClass
+    # values of the work items a minted first-approval or amendment row was
+    # authored under, or empty when no route named one. NOT the routing
+    # `SafetyClass`, which stays `adjudication`: the one reader is the hat
+    # composer, `hats.context_from_work_item`. A real column for the
+    # `Supersedes` reason above: `intake` writes it through this table.
+    "AuthoringTags",
 )
 SPEC_SCALARS = (
     ("Title", "title"),
@@ -147,6 +154,7 @@ SPEC_LISTS = (
     ("Predecessors", "needs"),
     ("Adjudicates", "adjudicates"),
     ("Adopted", "adopted"),
+    ("AuthoringTags", "authoring_tags"),
 )
 # The scalars whose frontmatter key may ALSO be written as a TOML list, read
 # either way into the same `;`-joined cell. `supersedes` is the one (the

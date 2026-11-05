@@ -3,12 +3,24 @@ id = "WI-982"
 title = "Both adjudication routes widen a sitting's hats by the authoring work item's tags: the minted first-approval and amendment rows carry the merged lane's tags"
 workstream = "process"
 sr_refs = ["SR-161"]
-specref = "docs/reviews/wi-976/004-ADJUDICATE-81e623b.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+Both adjudication routes now widen a sitting's hats by the authoring work
+item's tags. The mint writes a new `AuthoringTags` cell on the first-approval
+and amendment rows a naming route mints, deduplicated across the authors it
+names, and passes on a minted author's own record. The hat composer reads a
+non-empty cell in place of the row's `Workstream` and `SafetyClass`, and an
+empty cell reads those two as before. A range sweep with no `--merged` leaves
+the cell empty. The routing `SafetyClass` stays `adjudication`. LLR-360 states
+the rule by addition and TC-399 verifies it, both re-attested at act seq 172
+under `docs/reviews/wi-982/004-ADJUDICATE-f8f3572.md`.
 
 ## Context
 
@@ -83,19 +95,19 @@ history. The promise reaches what these routes mint (PROCESS.md §6,
 
 ## Done-when
 
-- [ ] Every first-approval and amendment row minted by a route that names
+- [x] Every first-approval and amendment row minted by a route that names
       an authoring work item carries that item's Workstream and
       SafetyClass in `authoring_tags`, a cell other than the routing
       SafetyClass.
-- [ ] The branchless sweep's case is resolved as "Provenance cases" states:
+- [x] The branchless sweep's case is resolved as "Provenance cases" states:
       a range sweep with no `--merged` leaves the cell empty, its row
       widens by its own tags, and a test pins it.
-- [ ] Both routes widen a sitting's parent needs by the authoring work
+- [x] Both routes widen a sitting's parent needs by the authoring work
       item's declared tags wherever that item is named, and LLR-360 states
       that it is the authoring work item's tags that widen.
-- [ ] A test composes the minted row shape and the in-lane shape for one
+- [x] A test composes the minted row shape and the in-lane shape for one
       SR and asserts one hat set.
-- [ ] The commit bar is green, and both strict lints are clean on the
+- [x] The commit bar is green, and both strict lints are clean on the
       landing tip.
 
 ## Critique dispositions
