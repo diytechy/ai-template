@@ -2,7 +2,7 @@
 # made on trunk in headless leg 32 of loop session 20261104T181017Z-49d2cc.
 # Format: project-trajectory/decisions.template.toml.
 
-high_risk = []
+high_risk = ["D-011"]
 
 [decision.D-001]
 decided = "WI-994's round-1 scope critique (fresh Sol, CHANGES-REQUESTED, three MINORs) is adopted whole. S2: the Context's denial of gate authority was false beside the Done-when's strict refusal, so the row gains a `## Trust` section consolidating what the spec already states, with no new check; its Ruling goes to the owner to confirm or overrule. S5: the delta names four finding values. S1: the tag-migration row is filed before the claim, as the coordinator-cycle skill's section 1 requires of a split."
@@ -65,4 +65,18 @@ decided = "WI-991 (queue row 6) is held on OI-128 before any claim: scripts/dash
 alternative = "Run npm ci, which the Never list forbids; or junction another project's install, reaching outside this repository; or judge TC-055 on the 32 stale PNGs in the shots folder, which are not a render of this tree."
 reversal_cost = "Low: records only."
 why_not_escalated = "Escalated: OI-128."
+review = ""
+
+[decision.D-010]
+decided = "WI-983 landed after WI-982 on the reading that the cycle ran through WI-982's changed step: the mint's new path ran at WI-982's own sweep and minted no row, as leg 32 read WI-963's. That step writes a cell only when a mint draws a row, so a row-writing run has not been seen live; the lane's tests drive it through the real mint."
+alternative = "Hold WI-983 until a sweep mints a row, which no scheduled landing is known to do."
+reversal_cost = "Low: WI-983 is a brief line, and a defect is fixed forward."
+why_not_escalated = "Recorded for confirm or overrule; leg 32 took the same reading."
+review = ""
+
+[decision.D-011]
+decided = "The primary checkout moved from refactor_again to a new branch, rolling_review, at 00:22 local on 2026-11-05, during this leg, with both branches pushed, and a cloud session pushed four review commits to origin/rolling_review. This leg did neither and read it as the owner's own work. Noticed only after the landing, WI-983's commit ef2d68610 had gone onto local rolling_review. The leg fast-forwarded refactor_again to it by a guarded update from e73e49cf8, the one step its landing authority covers, and ran the full suite and the close-out from the trunk-tmp worktree, detaching that worktree at the end so refactor_again stays free to check out. It did not switch the primary checkout or take its commit off rolling_review: that branch and checkout are the owner's, and a hard reset there is destructive. The launcher stops the run on this, as it should."
+alternative = "Switch the primary back and reset rolling_review, which undoes what the owner set up without asking and clears the launcher's check; or commit the close-out on rolling_review, leaving trunk behind."
+reversal_cost = "Low: the fast-forward holds a reviewed landing, and the handoff gives the two commands that restore the owner's branch."
+why_not_escalated = "No one can answer in a headless leg, so the leg took the smallest authorized step and left the rest; it is first under the handoff's For the owner."
 review = ""

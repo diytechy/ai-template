@@ -376,6 +376,13 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      as `general-purpose`, never the `Plan` type, which has no write tool:
      two `Plan` planners returned their plans inline, and the coordinator
      had to place them de-indented by hand (leg 28, wi-987 D-001).
+     Tell the planner a TC states only what its rows state, so its plan
+     says which row states each new behaviour: a plan reading "no text is
+     added" to an LLR cost wi-982 a stopped Terra turn and a returned
+     sitting (wi-982 D-004), and the plan briefed this way met one sitting
+     (wi-983). A headless planner's stop report goes to the row's own
+     stop clause first: confirm the finding yourself, and never amend the
+     clause to get past it (coordinator-2026-11-04 D-007).
   2. Gate: `"$PY" "$SCRIPTS/plan_coverage.py" --item <spec> docs/plans/WI-NNN/plan.md`;
      only exit 0 goes on. A `DELTA: beyond` plan closes the lane partial.
   3. Critique:
@@ -807,7 +814,15 @@ commit of its own, move it to trunk's tip
   reserve and renumber in the lane.
   Run `git status` in the primary checkout first: a Claude reviewer's
   probe once left a stray file at its root through a redirect from its
-  default working directory (wi-798, 2026-10-20). In a
+  default working directory (wi-798, 2026-10-20). Then read
+  `git branch --show-current` against `docs/process.toml`'s `trunk`: the
+  owner can move the checkout during a leg, nothing fails when the new
+  branch starts at trunk's tip, and a landing then commits off trunk.
+  Never switch or reset the owner's checkout: fast-forward trunk by a
+  guarded `git update-ref refs/heads/<trunk> <landing> <old tip>`, run the
+  rest from `trunk-tmp` on the trunk branch, detach `trunk-tmp` afterwards
+  so the branch stays free to check out, and put it first in the handoff
+  (coordinator-2026-11-04 D-011). In a
   headless leg, first run `"$PY" "$TOOLS/overnight_legs.py" check-lane <lane>`
   and squash only on exit 0 (SKILL §7). Never
   `git stash` between the squash and its commit: the stash's reset deletes
@@ -1528,7 +1543,8 @@ lane commit being replayed.
   - a freshly added lane worktree has no `scripts/dashboard-shots/node_modules`
     (gitignored): link it to the primary checkout's install with a
     directory junction (PowerShell `New-Item -ItemType Junction`), never
-    a new install;
+    a new install, and never another project's: an empty primary install
+    is an open item (OI-128);
   - a Claude operator sub-agent may render, tile, brief, launch the six
     judges (`codex exec -m gpt-6-luna -c model_reasoning_effort=high -s
     read-only`, each verdict captured with `-o`, all six children of
