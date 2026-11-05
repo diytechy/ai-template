@@ -46,9 +46,12 @@
                    decomposition round: the slot carries the question of each
                    declared hat applicable to that SR's parent need, widened
                    by the work item's tags, and asks the verdict for one
-                   `- HAT` outcome line per hat. Any other judged set says it
-                   is no decomposition round. A roster that exists and does
-                   not parse refuses the render, naming it.
+                   `- HAT` outcome line per hat. It also asks the verdict for
+                   one `- STOPPING BOUNDARY` line per retained chain, and a
+                   round with no applicable hat still carries that. Any other
+                   judged set says it is no decomposition round. A roster
+                   that exists and does not parse refuses the render, naming
+                   it.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 

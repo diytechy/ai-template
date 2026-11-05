@@ -1,0 +1,39 @@
+# docs/decisions/wi-983.toml — delegated calls in WI-983's lane.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "REVIEW-B stands in as Claude Opus at high for each round of this lane (ruling 7; coordinator-2026-10-16 D-008), recorded here as the substitution each lane owes until WI-815's Gemini route has one verified launch."
+alternative = "None: the slot has no other route today."
+reversal_cost = "Low: a round re-runs."
+why_not_escalated = "A standing owner ruling."
+review = ""
+
+[decision.D-002]
+decided = "The build ran as two fresh foreground builders, tests then code, as in wi-982 D-002. Differences from the plan, accepted as within it: the tests parametrize further over the plan's own decision 5; prompts/CATALOG.md does not move, because prompts.load strips the dispatcher notes before digesting and the change edits only those notes, so the plan's statement that the digest moves was wrong and no regenerated catalogue is owed; and the RESYNC overwrite list leaves out the catalogue, which bootstrap_manifest does not deliver to adopters."
+alternative = "Stop for a plan revision, which would spend a critique on no change of approach."
+reversal_cost = "Low: lane work under review."
+why_not_escalated = "No change of approach."
+review = ""
+
+[decision.D-003]
+decided = "Round 1 triage (001-REVIEW-A, 002-REVIEW-B): no BLOCKER or MAJOR, so the checkpoint follows. REVIEW-A's MINOR, that LLR-360 and TC-399 do not yet state the behaviour, is the checkpoint's own step and costs no round. REVIEW-B's first MINOR is real: the placement sentence was pinned only for a no-hats round. Its one assertion is added openly by the coordinator as a byte-exact fix, and the reviewer's mutant reddens it (3 failed on the mutant, 3 passed restored). REVIEW-B's second MINOR, a three-line duplicate in a test helper, and its coverage-extension note go to status.md's follow-ups."
+alternative = "Hold a fix round for MINORs, which rulings 1 and 4 say never cost one."
+reversal_cost = "Low: a recorded triage and one assertion."
+why_not_escalated = "Severity and routing follow the review shape the owner ruled."
+review = ""
+
+[decision.D-004]
+decided = "TC-399's expected drops the plan's clause that TC-211 inspects SR-186's recorded-stopping-decision acceptance. Terra's checkpoint turn stopped on it as briefed: no sentence of LLR-360 states it, and it is no behaviour TC-399 verifies, so TC-211's own row carries it. The plan is not edited, the Done-when is unchanged and the pass record stays bound."
+alternative = "Add a sentence to LLR-360 about another test case, which is not a requirement on the sitting brief."
+reversal_cost = "Low: lane row text, judged at the sitting."
+why_not_escalated = "A row-text call inside the lane, judged at the sitting; recorded for confirm or overrule."
+review = ""
+
+[decision.D-005]
+decided = "The convergence map before the gate. Two accepted findings. 001-REVIEW-A's MINOR, a wording fix with no executable test, maps to the corrected text in LLR-360's and TC-399's cells at this tip, judged in 003-ADJUDICATE-e19a5cd.md. 002-REVIEW-B's first MINOR maps to the assertion added to test_a_combined_round_carries_the_stopping_boundary_line_once_after_its_last_section, shown failing on the reviewer's mutant and passing on the restored code (D-003). No shipped code moved after round 1. Trunk has not moved since the lane's base, so no rebase is owed."
+alternative = "None: the round cannot start unmapped."
+reversal_cost = "Low: a record."
+why_not_escalated = "A coordinator's step the cycle orders."
+review = ""

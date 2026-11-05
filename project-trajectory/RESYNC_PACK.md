@@ -10445,6 +10445,26 @@ the lane's own tags.
 `scripts/wi_convert.py`, `scripts/plan_artifacts.py`,
 `scripts/kitlib/registry.py`.
 
+### A decomposition round's sitting brief asks a stopping-boundary line [since e73e49cf8]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A decomposition round's sitting brief now asks for one
+`- STOPPING BOUNDARY` line per retained chain, beside the hat outcome lines,
+including a round with no roster or no applicable hat. A combined sitting
+carries it once, and now says under which section the verdict writes its
+lines, a no-hats round included.
+
+**What to do (no forced migration).** Overwrite the kit-owned files below. A
+template override declaring `{hats}` gets the line, and one without the slot
+composes unchanged. No setting or registry changes. A reader of your verdicts
+needs no edit, since the line is no row ruling and no machine line. Verdicts
+now owe the line, and a missing one is a finding for the verdict's review.
+
+**Kit-owned files — overwrite:** `scripts/plan_briefs.py`,
+`prompts/adjudicate-first-approval.template.md`,
+`prompts/adjudicate-amendment.template.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

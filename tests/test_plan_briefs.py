@@ -517,7 +517,7 @@ def test_the_authoring_cell_widens_each_need_and_sibling_needs_never_merge(tmp_p
 def test_an_absent_roster_yields_the_opt_out_line_in_a_round(tmp_path):
     root = _round_repo(tmp_path, roster=None)
     block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], ["SN-1"])
-    assert block == hats_roster.NO_HATS
+    assert hats_roster.NO_HATS in block
     assert "- HAT " not in block
 
 
@@ -544,3 +544,109 @@ def test_the_round_block_asks_one_outcome_line_per_hat_in_a_non_ruling_form(
         assert not any(re.search(r"\b{}:".format(k), form) for k in keywords), form
         for kind in kverdict.ROW_RULINGS:
             assert kverdict.row_rulings(form, kind) == {}, form
+
+
+# --- the stopping-boundary line a decomposition round's brief carries ---------
+#
+# A round's verdict states, for each chain it retains, why further splitting
+# would only paraphrase or duplicate. The tests match the line's literal form,
+# as the tests above match `- HAT `, so a missing symbol cannot stand in for a
+# red.
+
+_STOPPING_FORM = "- STOPPING BOUNDARY "
+
+# OTHER is the only hat, and SN-1 carries no `other` tag.
+_UNAPPLIED_ROSTER = """
+[hat.OTHER]
+applies_when = 'tags contains "other"'
+asks = "other question?"
+listens_for = "other failure"
+"""
+
+
+def test_a_round_block_asks_a_stopping_boundary_line_beside_the_hat_outcome_lines(
+    tmp_path,
+):
+    """A round's block asks each retained chain's stopping reason once, after
+    the hat outcome instruction.
+
+    Implements: TC-399"""
+    root = _round_repo(tmp_path)
+    block = _round_fn("round_hat_block")(root, {"WI-ID": "WI-1"}, needs=("SN-1",))
+    assert "- HAT " in block
+    assert block.count(_STOPPING_FORM) == 1
+    assert block.index(_STOPPING_FORM) > block.rindex("- HAT ")
+    assert "each chain" in block
+    assert "paraphrase or duplicate" in block
+
+
+@pytest.mark.parametrize(
+    "roster", [None, _UNAPPLIED_ROSTER], ids=["no-roster", "no-applicable-hat"]
+)
+def test_a_round_with_no_applicable_hat_still_carries_the_stopping_boundary_line(
+    tmp_path, roster
+):
+    """The stopping decision rests on no hat, so a round with no hat to name
+    carries the line beside the no-hats line, and still asks no hat outcome.
+
+    Implements: TC-399"""
+    root = _round_repo(tmp_path, roster=roster)
+    block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], ["SN-1"])
+    assert hats_roster.NO_HATS in block
+    assert "- HAT " not in block
+    assert block.count(_STOPPING_FORM) == 1
+
+
+def test_a_stopping_boundary_form_is_no_row_line_and_no_machine_line(tmp_path):
+    """The line's stated form opens with no row tag, holds no machine keyword
+    and reads as no ruling for any kind.
+
+    Implements: TC-399"""
+    root = _round_repo(tmp_path)
+    block = _round_fn("round_hat_block")(root, {"WI-ID": "WI-1"}, needs=("SN-1",))
+    forms = re.findall(r"- STOPPING BOUNDARY [^`\n]*", block)
+    assert forms, "the block states no `- STOPPING BOUNDARY ...` line form"
+    row_tags = [tag for tags, _wins in kverdict.ROW_RULINGS.values() for tag in tags]
+    keywords = [grammar[0] for grammar in ksitting.GRAMMAR.values()]
+    for form in forms:
+        assert not any(form.startswith(tag) for tag in row_tags), form
+        assert not any(re.search(r"\b{}:".format(k), form) for k in keywords), form
+        for kind in kverdict.ROW_RULINGS:
+            assert kverdict.row_rulings(form, kind) == {}, form
+
+
+@pytest.mark.parametrize(
+    "key, parents",
+    [
+        (pb.prompts.ADJUDICATE_FIRST_APPROVAL, (("SR-1",), (), ())),
+        (pb.prompts.ADJUDICATE_AMENDMENT, ((), ("SN-1",), ())),
+    ],
+    ids=["first-approval", "amendment"],
+)
+def test_each_shipped_sitting_template_carries_the_stopping_boundary_line(
+    tmp_path, key, parents
+):
+    """The real shipped template, its `{hats}` slot filled for a round and its
+    other slots stubbed, carries the line: a template that lost the slot
+    composes without it.
+
+    Implements: TC-399"""
+    root = _round_repo(tmp_path)
+    base = pb.prompts.load(key)
+    values = {pb.HAT_PARENTS: parents}
+    pb.fill_hat_slot(root, {"WI-ID": "WI-1"}, base, values)
+    stubs = dict.fromkeys(pb.prompts.slots(base) - set(values), "stub")
+    text = pb.prompts.fill(key, base, {**stubs, **values})
+    assert text.count(_STOPPING_FORM) == 1
+
+
+def test_a_non_round_carries_no_stopping_boundary_line(tmp_path):
+    """A sitting that is no round keeps its one line. Adequacy witness: the
+    instruction appended in `sitting_hat_block` ahead of its round test puts
+    the line in this block.
+
+    Implements: TC-399"""
+    root = _round_repo(tmp_path)
+    block = _round_fn("sitting_hat_block")(root, {"WI-ID": "WI-1"}, [], [])
+    assert block == _not_a_round()
+    assert _STOPPING_FORM not in block

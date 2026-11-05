@@ -387,7 +387,8 @@ def hat_surface_for_work_item(root, row, needs=()):
 # A sitting that judges a system requirement awaiting its first approval, or an
 # approved need whose text is amended, is a decomposition round: its brief puts
 # every applicable hat's question and asks the verdict for one outcome line per
-# hat. The outcome lines are review text, read by the review of the verdict;
+# hat, and, with or without a hat, for one stopping-boundary line per retained
+# chain. Both kinds of line are review text, read by the review of the verdict;
 # no code counts them, and a missing one is a finding, never a check.
 
 # The optional single-brace slot the two spine sitting templates declare.
@@ -412,6 +413,17 @@ _OUTCOME_INSTRUCTION = (
     "-> <why>\n\n"
     "An outcome line rules no row and is no machine line. A listed hat with no "
     "outcome line is a finding for the review of this verdict, never a check."
+)
+
+_STOPPING_INSTRUCTION = (
+    "For each chain this round retains, state why further splitting would "
+    "only paraphrase or duplicate, on its own line beside your row lines and "
+    "under no heading of its own:\n\n"
+    "    - STOPPING BOUNDARY <chain, top row first> -> <why further splitting "
+    "would only paraphrase or duplicate>\n\n"
+    "A stopping-boundary line rules no row and is no machine line. A retained "
+    "chain with no stopping-boundary line is a finding for the review of this "
+    "verdict, never a check."
 )
 
 _POINTER = (
@@ -439,14 +451,16 @@ def round_questions(root, row, srs=(), needs=()):
 def round_hat_block(root, row, needs=(), srs=()):
     """The block a decomposition round's brief carries: the round's questions
     (`round_questions`), then the instruction to name each hat's outcome
-    once. With no applicable hat, or no roster, it is the roster's stated
-    no-hats line and asks for nothing.
+    once, then the instruction to state each retained chain's stopping
+    boundary. With no applicable hat, or no roster, the roster's stated
+    no-hats line stands in for the first two: the stopping decision rests on
+    no hat, so its instruction stays.
 
-    Implements: SR-161, LLR-360"""
+    Implements: SR-161, SR-186, LLR-360"""
     block = round_questions(root, row, srs, needs)
-    if block == hats_roster.NO_HATS:
-        return block
-    return block + "\n\n" + _OUTCOME_INSTRUCTION
+    if block != hats_roster.NO_HATS:
+        block += "\n\n" + _OUTCOME_INSTRUCTION
+    return block + "\n\n" + _STOPPING_INSTRUCTION
 
 
 def sitting_hat_block(root, row, srs, needs, amended=()):
@@ -493,7 +507,7 @@ def sitting_tail(root, row, sitting):
     `("", None)` when no section's template declared the slot, or
     `(None, reason)` naming the roster when it cannot be read.
 
-    Implements: SR-161, LLR-360"""
+    Implements: SR-161, SR-186, LLR-360"""
     if not any(declared for _parents, declared in sitting):
         return "", None
     union = [
@@ -506,9 +520,9 @@ def sitting_tail(root, row, sitting):
         return None, _roster_refusal(exc)
     where = (
         ""
-        if block in (NOT_A_ROUND, hats_roster.NO_HATS)
-        else "\n\nWrite these outcome lines once for the whole sitting, under "
-        "the last section's `## <kind>` heading."
+        if block == NOT_A_ROUND
+        else "\n\nWrite these lines once for the whole sitting, under the last "
+        "section's `## <kind>` heading."
     )
     return "{}\n\n{}{}".format(_PERSPECTIVES_HEAD, block, where), None
 

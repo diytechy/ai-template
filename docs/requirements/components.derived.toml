@@ -20,8 +20,8 @@
 components = 4
 design_rows = 331
 seam_rows = 255
-requirements_placed = 132
-requirements_unplaced = 6
+requirements_placed = 133
+requirements_unplaced = 5
 seams_unplaced = 0
 
 [component_view.CMP-006]
@@ -658,6 +658,7 @@ sr_refs = [
   "SR-176",
   "SR-177",
   "SR-178",
+  "SR-186",
   "SR-208",
   "SR-209",
   "SR-215",
@@ -832,6 +833,7 @@ hat_refs = [
   "LEGAL",
   "MAINTAINER",
   "PERFORMANCE",
+  "PRODUCT-FITNESS",
   "SECURITY",
   "TEST-ENGINEER",
   "UNATTENDED-OPS",
@@ -1395,6 +1397,5 @@ sr_refs = [
   "SR-114",
   "SR-184",
   "SR-185",
-  "SR-186",
 ]
 seam_refs = []

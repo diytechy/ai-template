@@ -2574,3 +2574,168 @@ def test_hat_outcome_lines_change_no_ruling(brief, kinds, verdict):
     with_hats = _rulings(verdict + _HAT_LINES, brief, kinds)
     assert with_hats == plain
     assert plain[2], "the fixture verdict authorizes no act"
+
+
+# --- the stopping-boundary line a round's composed brief carries --------------
+
+_STOPPING_FORM = "- STOPPING BOUNDARY "
+_PLACEMENT = "under the last section's `## <kind>` heading"
+_NO_HATS = plan_briefs.hats_roster.NO_HATS
+
+# UNREACHED is the only hat, and neither need carries its tag.
+_UNREACHED_ROSTER = """
+[hat.UNREACHED]
+applies_when = 'tags contains "nobody"'
+asks = "unreached question?"
+listens_for = "unreached failure"
+"""
+
+
+def _draft_llr(repo):
+    llrs = repo / "docs" / "requirements" / "low-level-requirements.csv"
+    text = llrs.read_text(encoding="utf-8")
+    text = text.replace("TC-001,Approved,", "TC-001,Drafted,")
+    llrs.write_text(text, encoding="utf-8")
+
+
+def _round_by_first_approval(tmp_path):
+    """A combined sitting whose drafted SR-002 alone makes the round."""
+    repo = _hat_repo(tmp_path, drafted_sr=True)
+    _amend(repo)
+    return repo, "amendment:SR-001;first-approval:SR-002"
+
+
+def _round_by_amendment(tmp_path):
+    """A combined sitting whose amended SN-001 alone makes the round."""
+    repo = _hat_repo(tmp_path, amend_need=True)
+    _draft_llr(repo)
+    return repo, "amendment:SN-001;first-approval:LLR-001"
+
+
+def _round_by_both(tmp_path, roster=_HAT_ROSTER):
+    """A combined sitting that both its sections make a round."""
+    repo = _hat_repo(tmp_path, roster=roster, amend_need=True, drafted_sr=True)
+    return repo, "amendment:SN-001;first-approval:SR-002"
+
+
+def _sr_amended_alone(tmp_path):
+    return _write_roster(_amendment_repo(tmp_path), _HAT_ROSTER), _am_row()
+
+
+def _llr_and_tc_rows_only(tmp_path):
+    return _write_roster(_first_approval_repo(tmp_path), _HAT_ROSTER), _fa_row()
+
+
+def _combined_non_round(tmp_path):
+    repo = _first_approval_repo(tmp_path)
+    _amend(repo)
+    scope = "amendment:SR-001;first-approval:LLR-001"
+    row = _fa_row(Brief="combined", Adjudicates=scope)
+    return _write_roster(repo, _HAT_ROSTER), row
+
+
+@pytest.mark.parametrize(
+    "made_by, row",
+    [
+        ({"drafted_sr": True}, _fa_row(Adjudicates="SR-002")),
+        ({"amend_need": True}, _am_row(Adjudicates="SN-001")),
+    ],
+    ids=["drafted-sr", "amended-need"],
+)
+def test_a_round_sitting_composed_alone_carries_the_stopping_boundary_line_once(
+    tmp_path, made_by, row
+):
+    """The real `compose` of either kind of round carries the line once,
+    beside the hat outcome form.
+
+    Implements: TC-399"""
+    text = _composed(_hat_repo(tmp_path, **made_by), row)
+    assert "- HAT " in text
+    assert text.count(_STOPPING_FORM) == 1
+
+
+@pytest.mark.parametrize(
+    "build",
+    [_round_by_first_approval, _round_by_amendment, _round_by_both],
+    ids=["first-approval-makes-it", "amendment-makes-it", "both-make-it"],
+)
+def test_a_combined_round_carries_the_stopping_boundary_line_once_after_its_last_section(
+    tmp_path, build
+):
+    """Whichever section makes the round, the sitting carries the line once,
+    in the perspectives part that follows its last section.
+
+    Implements: TC-399"""
+    repo, scope = build(tmp_path)
+    text = _composed(repo, _am_row(Brief="combined", Adjudicates=scope))
+    assert text.count(_SECTION_HEAD) == 2
+    assert text.count(_STOPPING_FORM) == 1
+    head = text.index(_PERSPECTIVES_HEAD)
+    assert head > text.rindex(_SECTION_HEAD)
+    assert text.index(_STOPPING_FORM) > head
+    assert _PLACEMENT in text[head:]
+
+
+@pytest.mark.parametrize(
+    "roster", [None, _UNREACHED_ROSTER], ids=["no-roster", "no-applicable-hat"]
+)
+def test_a_combined_round_with_no_applicable_hat_is_told_where_to_write_the_line(
+    tmp_path, roster
+):
+    """A combined round with no hat to name has no outcome lines, yet its
+    perspectives part carries the line and says which section it goes under.
+
+    Implements: TC-399"""
+    repo, scope = _round_by_both(tmp_path, roster=roster)
+    text = _composed(repo, _am_row(Brief="combined", Adjudicates=scope))
+    tail = text[text.index(_PERSPECTIVES_HEAD) :]
+    assert _NO_HATS in tail
+    assert "- HAT " not in tail
+    assert tail.count(_STOPPING_FORM) == 1
+    assert _PLACEMENT in tail
+
+
+@pytest.mark.parametrize(
+    "build",
+    [_sr_amended_alone, _llr_and_tc_rows_only, _combined_non_round],
+    ids=["sr-amended-alone", "llr-and-tc-rows-only", "combined-non-round"],
+)
+def test_a_sitting_that_is_no_round_carries_no_stopping_boundary_line(tmp_path, build):
+    """Each sitting outside the round classification says so once and carries
+    no line. Adequacy witness: a line added to the template text reaches all
+    three, and a round test widened to `amended` reaches the first and third.
+
+    Implements: TC-399"""
+    repo, row = build(tmp_path)
+    text = _composed(repo, row)
+    assert text.count(_not_a_round()) == 1
+    assert _STOPPING_FORM not in text
+
+
+# Names a row each verdict below rules, so a reader taking any line that names
+# a row as a ruling is caught.
+_STOPPING_LINES = (
+    "- STOPPING BOUNDARY SR-001, LLR-001, TC-001 -> further splitting would "
+    "only paraphrase the rows\n"
+)
+
+
+@pytest.mark.parametrize(
+    "brief, kinds, verdict",
+    [
+        ("amendment", ("amendment",), _AMENDMENT_VERDICT),
+        ("first-approval", ("first-approval",), _FIRST_APPROVAL_VERDICT),
+        (ksitting.SITTING, ("amendment", "first-approval"), _COMBINED_VERDICT),
+    ],
+    ids=["amendment", "first-approval", "combined"],
+)
+def test_stopping_boundary_lines_change_no_ruling(brief, kinds, verdict):
+    """A verdict carrying a `- STOPPING BOUNDARY` line parses to the same
+    machine lines, row rulings and authorized rows as the same verdict without
+    it. Adequacy witness: a reader counting any `- ` line, or any line naming
+    a row, as a ruling adds or overwrites one for the row the chain names.
+
+    Implements: TC-399"""
+    plain = _rulings(verdict, brief, kinds)
+    assert _rulings(verdict + _STOPPING_LINES, brief, kinds) == plain
+    assert plain[2], "the fixture verdict authorizes no act"

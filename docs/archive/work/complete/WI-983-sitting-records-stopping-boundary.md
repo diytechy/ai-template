@@ -3,12 +3,24 @@ id = "WI-983"
 title = "A decomposition round's sitting brief names a stopping-boundary line, so the verdict states why each retained chain stops"
 workstream = "process"
 sr_refs = ["SR-186", "SR-161"]
-specref = "docs/reviews/wi-976/021-ADJUDICATE-095bb79.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 5
 planmode = "single"
 +++
+
+## Deliverable
+
+A decomposition round's sitting brief now asks the verdict for one named
+stopping-boundary line per retained chain, beside the hat outcome lines,
+stating why further splitting would only paraphrase or duplicate. A round with
+no roster or no applicable hat still carries it, a sitting that is no round
+carries none, and a combined sitting carries it once and says which section
+takes its lines. The line rules no row and no check reads it. Both shipped
+sitting templates are pinned by test. LLR-360 and TC-399 state it and cite
+SR-186, re-attested at act seq 173. WI-998, the re-inspection row, was filed
+before this claim and stays off the queue until a sample exists.
 
 ## Context
 
@@ -81,15 +93,15 @@ same rulings with or without it.
 
 ## Done-when
 
-- [ ] A decomposition round's sitting brief carries a named
+- [x] A decomposition round's sitting brief carries a named
       stopping-boundary line beside the hat outcome lines, asking the
       verdict to state, for each retained chain, why further splitting
       would only paraphrase or duplicate, for the set "Which briefs carry
       the line" closes.
-- [ ] A test pins that the shipped sitting templates carry it.
-- [ ] WI-998, the re-inspection row, is filed on trunk before this row is claimed,
+- [x] A test pins that the shipped sitting templates carry it.
+- [x] WI-998, the re-inspection row, is filed on trunk before this row is claimed,
       and carries the steps and order "The re-inspection row" states.
-- [ ] One RESYNC entry; the commit bar is green, and both strict lints
+- [x] One RESYNC entry; the commit bar is green, and both strict lints
       are clean on the landing tip.
 
 ## Critique dispositions
