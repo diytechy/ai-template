@@ -16,8 +16,8 @@ limit. Each finding carries a severity (`[HIGH]`/`[MED]`/`[LOW]`), an anchor
 (file or rule), the issue, and a concrete change. Measurements are reproduced
 with the command that produced them.
 
-**Status:** second pass WRITTEN (2026-11-05, same day); three verification
-blocks still pending (§13.C, §13.E, §13.F). The first full pass is §1–§7; the
+**Status:** second pass WRITTEN (2026-11-05, same day); two verification
+blocks still pending (§13.E, §13.F). The first full pass is §1–§7; the
 second pass adds §8–§14: the growth trend, the adopter's first day, external
 research, a re-tier exemplar, the adversarial verification of §1–§6 (§12), six
 finders' new findings with their own verification (§13), and the revised,
@@ -1251,8 +1251,7 @@ anchors, numbers and a reproducing command. Their scripts are in `measures/`
 refusal inventory in `guards/TABLE.md`. **Adversarial verification:** seven
 refuters (two with different lenses over the spine findings) re-measured each
 finding and checked each change against the owner's ruled plan; their verdicts
-close each sub-section (13.A, 13.B and 13.D below; 13.C, 13.E and 13.F follow
-as they land). A finding without a verdict is a finder's claim with its
+close each sub-section (13.A–13.D below; 13.E and 13.F follow as they land). A finding without a verdict is a finder's claim with its
 evidence, not a settled fact. Findings that only extend an
 earlier section are folded into one line that names it.
 
@@ -1705,6 +1704,97 @@ eleven weeks (a permanent exemption surface with a longer name — make the
 check WARN at every gate and delete the list); the IF owner rule is stated 7
 times in 5 files and the IF column semantics in full 4 times (the concrete cut
 list for §3.1).
+
+**Verification of 13.C** (one skeptic; every count re-derived, the `hides`/
+`stops` probe run in a clone, each change checked against ruled items 11 and
+12). One finding refuted (13.43), two duplicates (13.41's template half →
+§10.1; 13.44 → §3.1, where its census is the cut list §12 lacked), one
+CONFIRMED (13.40), the rest PARTIAL. Five proposed changes collide with a
+ruling and three are already ruled in the finder's direction:
+
+- **13.31 → MED.** "149 internal seams" counts (row, component) refs: 132
+  distinct rows are internal to at least one component view, 106 of those are
+  boundary seams in another view (the 34 multi-component modules of §13.42),
+  and only **26 rows (10%) are internal in every view**; 229 cross a boundary,
+  as §12-3.2 records. The warn-produces-the-rows causation is plausible (87% of
+  modules are endpoints; the warn still fires on 20) but not demonstrated.
+  Variant F already requires interfaces "at every architectural boundary at
+  any depth; optional inside" and names the per-module warn as something item
+  11's migration "must migrate explicitly" — sequence (1) and (2) inside that
+  phase. Collapsing the cli/exit-code/stdout triples contradicts OI-67 (a)'s
+  one-row-one-channel rule; `status` must stay (OI-112 approves interfaces
+  through sittings) and `version` is what a consuming side pins.
+- **13.32 HIGH stands.** Facts hold (an Approved, Test-verified requirement
+  unbuilt for 11.7 weeks; four incompatible specifications; the B3 tell).
+  Corrections to the change: SR-165/LLR-172/TC-166 are Approved rows under
+  SN-040 — deleting them is an amendment act and re-orphans the need unless
+  `hides`/`stops` is minted as its replacement SR (the finder's own cheaper
+  route, moving SR-165 under the dual-plan layer, is better); the skill's line
+  18 ("the procedure never adds a file or a field") must change with it; rubric
+  A8's four descend tests are ruled text (F-call 6) and stay. The cells
+  themselves are unruled and compatible with ruling 5; the loader ignores
+  unknown keys (probe).
+- **13.33 → MED, and the gitignore route needs a re-ruling.** The `:193`
+  invariant is scoped to the module map, import graph and seams; the committed
+  `interface-reference.md` is **OI-66 ruled (a) GO** after a priced build, and
+  §8 states it explicitly — a deliberate exception, not drift. The squarely
+  contradicting file is `components.derived.toml` (25 KB). The three files'
+  21 MB of history is 0.5% of §8.2's. Neither reference ships in the manifest
+  (the step is vacuous when the doc is absent). The prose fix to `:193-196`
+  and the 40 retired-routing lines stands; the anchor `pre-commit:288` should
+  read `docs/stack.ini:1318`.
+- **13.34 → LOW.** `gen_arch_map` *does* harvest the one-line summary and
+  `Implements:` back-links the sentence claims; what is unharvested is the
+  Inputs/Outputs/Config/Raises fields it never claimed. The two shapes describe
+  different objects (a function's API vs the seam a module owns); the defect is
+  the shared heading "interface contract". The proposed text is sound.
+- **13.35.** "Flows 4–9 are station internals" is a judgement (for the
+  station's operator the coordinator is the user); the provenance anchor is
+  `AGENTS.template.md:182`, not PROCESS §3. Option (a) is **already ruled in
+  substance** (revisions 35/36 retire "Module" and name `RUNTIME_FLOWS.template`
+  in the sweep); option (b) would be built on the cell item 5 retires. Mode
+  classes *are* ruled to live in `runtime-flows.md` (item 12); re-home the A4
+  table only after 13.32's cells exist.
+- **13.36.** The rendered surface is 52,889 B (~13k tokens), and the SR
+  surface (55 KB) is as large and omitted. Aligned with the ruled build-brief
+  component-context block (item 11); apply the same derivation to both slots.
+- **13.37 → execute, don't decide.** The recommended option **is the ruled
+  one** (item 11 decision 2: "a `call` form is its typed request and answer
+  without symbol names"; F-call 9 makes `data` the form's home until generated
+  from the body). `PROCESS.md:1318` and the template are pre-ruling text
+  awaiting phase 3; strike the alternative; the EXAMPLE sub-change conflicts
+  with the owner's Terms.
+- **13.38 → LOW.** `kernel-modules-allow` and `if-tc-coverage-allow` are not
+  shipped (absent from the manifest), so the provenance there is legitimate
+  this-repo data and the kernel list's grammar *requires* a reason per entry;
+  the finding holds only for the 13 tokens in the shipped OPTIONS layers.
+  Extends §10.11.
+- **13.39.** The rubric's ten terms are exactly the ten of the plan's
+  value-domain research §4, and **F-call 7 rules that all ten go into the
+  rubric** — the deletion contradicts it. Glossing each citation and shipping
+  or citing the knowledge pack stand.
+- **13.40 CONFIRMED (LOW/MED).** Prefer the reverse of the proposed direction:
+  F-call 6 makes spine-questions §3 the ruled home of the stopping and descend
+  rules, so OPTIONS' "(d2)" should become the pointer.
+- **13.42.** Both measures stand (§12-3.2's 14 multi-tagged LLRs; this
+  finding's 34 modules named by LLRs of different components), and the 34 are
+  what inflates 13.31's internal count. The root cause is **already ruled away**
+  (variant F point 1: membership declared on the realization; LLR → CMP
+  retires); the glob key would be a third home against ruling 5 — drop it.
+- **13.43 REFUTED.** Every seam minted since 2026-09-01 (93) arrived with a TC
+  citation and none was added to the allowlist, which has not grown since
+  2026-09-05 (152 → 147): the growth was the migration seed settling. What
+  stands: a stale "116" header and 16 prunable entries. WARN-everywhere-and-
+  delete-the-list contradicts OI-43 (a) and variant F's derived check.
+
+The finder's counter-findings hold in part: "derived map" is not an invariant
+the kit keeps today (`components.derived.toml`), the 0→A→B rule is cited by §
+from three shipped files so §3 cannot shrink to three invariants, "run the
+procedure on the kit" is already ruled as item 12's `run.cmd audit`, and a hard
+participants check would read the cell item 5 removes. The contract-body census
+differs between the finder (224 / 203 KB), the kit's own reader (225 / 190 KB)
+and §12-2.7 (228 / 334 KB) only by body-extent convention; cite the kit's
+`module_contract_bodies` grammar.
 
 ### 13.D The spine and the prose that steers it
 
@@ -2221,12 +2311,15 @@ already covers it; such items need scheduling, not debate.
    nothing. *Size:* small. *Downstream:* none; it removes a false red from
    every adopter's first CI run.
 
-4. **Stop committing the generated views.** `PROJECT_STATE.html`,
-   `docs/open-items.html` (§8.2) and the three generated architecture docs
-   `interface-reference.md`, `components.derived.toml`, `cli-reference.md`
-   (§13.33, verdict pending) become CI-published artifacts, as PROCESS §3
-   already says composites should be; the freshness steps become a WARN that
-   a committed copy, if present, is stale. Sequence it after the hand-landing
+4. **Stop committing the generated views.** `PROJECT_STATE.html` and
+   `docs/open-items.html` (§8.2) become CI-published artifacts, as PROCESS §3
+   already says composites should be, and `components.derived.toml` — the one
+   committed *derived structural view*, which the §3 invariant squarely
+   contradicts (§13.33) — goes with them; the freshness steps become a WARN
+   that a committed copy, if present, is stale. The committed
+   `interface-reference.md` is OI-66 ruled (a) after a priced build and its
+   history cost is 0.5% of the dashboard's, so leave it unless the owner
+   re-rules; fix the `:193` invariant text so it states the exception. Sequence it after the hand-landing
    recipe regains its compile step (§13.3): today the merge-slot route nobody
    runs is where "move it to the slot" would send the work. *Discharges*
    §1.4 (half), §8.2, §8.3 (half), §10.6 (half), §13.33. *Ruled:* consistent
@@ -2323,22 +2416,28 @@ already covers it; such items need scheduling, not debate.
     covers `_pget` and the dial readers. *Size:* small each. *Downstream:*
     none, except the shlex fix (a bare `#` token stops truncating).
 
-11. **Architecture prose: fewer rows, one home per decision** (verdicts for
-    §13.C pending). Record a seam only when it crosses a component boundary or
-    leaves the repo, and retire the every-module-endpoint warn (§13.31; check
-    the wording against ruled item 11 / variant F, which keeps the IF row's
-    form and owner); give the decision a boundary hides a home — two optional
-    CMP keys, `hides` and `stops` — and point the four texts at it (§13.32);
-    fix the "derived, never committed" invariant text and cut §3's 40 lines on
-    the retired marker routing (§13.33); one contract-at-code format (§13.34);
-    relax the flows participant rule to what the kit's own flows do (§13.35);
-    filter the planning-brief IF surface to the work item's scope (§13.36);
-    reconcile rubric A3 with the `Data` cell (§13.37); gloss the rubric's
-    citations and ship or drop the knowledge pack (§13.39); de-duplicate the IF
-    model between §8 and the OPTIONS layer (§12-3.1). *Ruled:* item 11
-    (variant F) and item 12 govern the registry shape; the prose edits are
-    unruled. *Size:* prose, plus a one-time registry trim. *Downstream:* no
-    adopter row breaks.
+11. **Architecture prose: fewer rows, one home per decision — inside item
+    11's migration.** Retire the every-module-endpoint warn and record a seam
+    only at a component boundary or the repo edge, as variant F already
+    requires and as item 11's phase 3 "must migrate explicitly" (§13.31; only
+    26 of 255 rows are internal in every view, so the registry trim is smaller
+    than the finder claimed); give the decision a boundary hides a home — two
+    optional CMP keys, `hides` and `stops`, minted as SN-040's replacement for
+    the unbuilt SR-165 (§13.32); fix the "derived, never committed" invariant
+    text and cut §3's 40 lines on the retired marker routing (§13.33); one
+    contract-at-code heading (§13.34); the flows participant rule follows the
+    ruled "Module retires" sweep (§13.35); the planning briefs take the same
+    derived component context the build brief is ruled to get, for both the IF
+    and SR slots (§13.36); execute item 11 decision 2 on `PROCESS.md:1318` and
+    the template so `Data` is the form (§13.37); gloss the rubric's ten ruled
+    terms and ship or cite the knowledge pack (§13.39); de-duplicate the IF
+    model between §8 and the OPTIONS layer (§12-3.1, §13.44). *Ruled:* items
+    11 and 12 govern the shape and several of these are their phase-3 work;
+    the `hides`/`stops` cells and the prose edits are unruled and compatible.
+    Not in this list because a ruling forbids them: deleting the rubric's
+    terms (F-call 7), a CMP module glob (ruling 5), removing the seam-TC
+    allowlist (OI-43 (a); §13.43 was refuted). *Size:* prose plus the ruled
+    migration. *Downstream:* no adopter row breaks.
 
 12. **Records, provenance and the pack.** Compile the log or declare
     `docs/log.d` the record (§13.3); tombstone ruled open items after writing
