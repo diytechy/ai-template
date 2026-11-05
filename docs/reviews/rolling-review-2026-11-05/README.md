@@ -1243,11 +1243,12 @@ the hook; 47 steps registered at `--stage all`.
 first pass and §8–§11 as "already found", and returned new findings with
 anchors, numbers and a reproducing command. Their scripts are in `measures/`
 (prefixed by dimension), the test classification data in `tests-census/`, the
-refusal inventory in `guards/TABLE.md`. **Adversarial verification of this
-section is in progress** (seven refuters, two of them with different lenses
-over the spine findings); their verdicts are annotated per finding as they
-land, exactly as §12 did for §1–§6. Until then read each finding as a finder's
-claim with its evidence, not as a settled fact. Findings that only extend an
+refusal inventory in `guards/TABLE.md`. **Adversarial verification:** seven
+refuters (two with different lenses over the spine findings) re-measured each
+finding and checked each change against the owner's ruled plan; their verdicts
+close each sub-section (13.A, 13.B and 13.D below; 13.C, 13.E and 13.F follow
+as they land). A finding without a verdict is a finder's claim with its
+evidence, not a settled fact. Findings that only extend an
 earlier section are folded into one line that names it.
 
 ### 13.A Surface area and operating cost
@@ -1370,6 +1371,66 @@ prove they are identical.** `skills/README.md:107` names the alternative
 The 17 domain skills are ~1.2 KB stubs; the recurring cost is the fan-out, not
 the content. *Change:* the README's own deferred design.
 
+**Verification of 13.A** (one skeptic; every number re-derived in a fresh clone,
+the smoke tier run twice). 13.3, 13.5 and 13.12 CONFIRMED; 13.4 and 13.7 are
+duplicates of §8.1/§10.10 and §10.15 (their new pieces — the adopter's
+quarterly load table and the generated single-handoff form — are folded there);
+the rest PARTIAL:
+
+- **13.1 → MED.** `SLOW_MODULES` lists 139 modules, not 21. On a quiet 4-core
+  box the declared bar costs ~38 s of lints plus ~98 s of tier (≈115 CPU-s), a
+  sixth of the full suite by time; "nine CPU-minutes" is the owner's box and the
+  540 budget is calibrated to it. The opt-out default is an owner-ruled design
+  (2026-10-20), and moving the comment history out of config is already ruled
+  (plan item 10 step 4). What stands unruled: a ceiling re-stamped 72 times
+  sitting 0.7% above the live count.
+- **13.2 → MED.** Substance holds (195 of 207 are not renames; §3 stopped in
+  September; `check_resync.py` created the incentive). 22, not 35, hand-step
+  entries. Mechanising the pack contradicts ruling 10 ("re-sync is carried out
+  mainly by an LLM, so it doesn't need to be mechanized") and the pack's own §5
+  promotion trigger; the finding must argue the trigger has fired. The
+  byte/entry ratchet is the unruled, cheap piece.
+- **13.3 CONFIRMED, MED.** `--compile-log` already exists (`trunk_step.py:667`),
+  so the fix is one recipe line; `recipes.md:823` records the hand-landing as
+  temporary "until the one-landing row moves coordinator landings onto the slot"
+  — the route change was recorded, the compile dependency it broke was not.
+  Fragments: Sep 46, Oct 105, Nov 18.
+- **13.5 CONFIRMED.** Inflow is ~32 a day, not ~10; high-risk-first is already
+  the render order; `docs/status.md:648` already shows "Decisions to review:
+  1070". Auto-expiry changes what "delegated decision" promises the owner — an
+  owner call; the per-lane count is the safe first step.
+- **13.6.** "The kit carries each ruling twice" fails: the log records 16 OI
+  rulings, so for ~94 ruled rows the registry cell is the only record. The
+  tombstone proposal stands but must write the record first. Sizes hold.
+- **13.8.** The census test is 139 lines; there are three homes, not two (the
+  hook line, the absent attribute, `_TRUNK_FRESHNESS_STEPS`); the hook also runs
+  `format` by name with the staged file list, which the new field must encode.
+  Merge with §10.14's level table.
+- **13.9.** "~24 files" conflates 12 live declared files with legacy names and
+  generated stamps, and ~10 policy files were folded, not three. The dial fold
+  and the history move are **already ruled** (plan item 10, "one TOML file",
+  4–6 WIs); filing them again risks a second adopter migration, which the ruling
+  explicitly avoids. The unruled remainder: eight allow-list/baseline files and
+  three readers.
+- **13.10.** `--root` is in 47 scripts; the 19 launchers serve 8 commands. The
+  proposal is under-priced: a `kit` dispatcher renames 60 script paths at once
+  (plan item 11 counts 203 of 243 IF owners as `scripts/…` paths) — the largest
+  §4 rename the kit would ship, landing in the pack 13.2 calls unreadable. Do
+  §2.4's shell first; a dispatcher only after item 11 makes paths generated.
+- **13.11.** `check_test_first` is gate-only, not per-commit. A single-process
+  floor collides with the hook's ruled design (ruling 6: "the pre-commit hook
+  stays as it is") and with adopters' own `[step:*]` commands, which are
+  subprocesses by contract. New and low-risk: a gitignored cache for
+  `check_test_first` keyed by registry blob.
+- **13.12 CONFIRMED.** The kit's stated flip trigger is "agent-specific
+  frontmatter"; the finding should argue the trigger is mis-set.
+
+The finder's five counter-findings against the first pass all **hold** and are
+stronger than stated: 21 shipped scripts read `docs/reviews` and 13 read
+`last_approved`; 57 scripts insert `sys.path`; the refresh route has had zero
+commits since September, so "move the step to the slot" moves it to a route
+nobody runs until the one-landing row lands.
+
 ### 13.B Code duplication
 
 **[HIGH] 13.13 Two "one owning boundary" rules for which spec copy governs,
@@ -1484,6 +1545,66 @@ sites beside `is_example`; 59 try/except import prologues that write 242 import
 lines twice, 162 hand-prefixed log lines, and four floor steps that spawn
 `python -c pass` when a kit-only generator is absent (two of them on every
 adopter commit, since `gen_skills_index.py` is not in the manifest).
+
+**Verification of 13.B** (one skeptic; the finder's eight scripts re-run in a
+clone, 13.13 reproduced with a git fixture, 13.22 with `stack.ini`-style
+commands). Twelve CONFIRMED (13.16–13.18, 13.20–13.23, 13.26, 13.27–13.29),
+eight PARTIAL; none refuted:
+
+- **13.13 → MED.** Precedence-bearing `done_when` callers are 3 external + 1
+  internal, not 12; `adoption_record` carries a third policy (refuse on
+  ambiguity). The headline case (archive ranked above work) needs the same WI in
+  both homes, which no kit route writes; the realistic trigger is an active copy
+  beside a closed copy under `docs/work`, where `authoritative_spec`'s
+  alphabetical tie-break picks the ACTIVE copy against its own rationale — a
+  real defect in its own right. `review_brief.py` reads the same spec under both
+  rules (`:257` vs `:688`).
+- **13.14 → MED.** Two stdout writers, not three; three no-op CRLF replaces. The
+  missing-file divergence is a deliberate opt-in posture for optional docs, so
+  the helper needs a per-generator missing policy. A single `GENERATORS` table
+  cannot live in `kitlib` as proposed: `REGEN_STEPS`' component predicate imports
+  `spine_carrier`, which `kitlib` may not.
+- **13.15 → MED.** The four double bindings rebind the same object (redundancy,
+  not a defect). `agent_loop`'s aliases are mostly its own call sites and
+  `agent_common` is the shared layer by design; 239 internal call sites would be
+  re-pointed, and five traced LLR rows plus TC-193 record the façade as the
+  delivered shape ("re-exports every name under its former spelling so no caller
+  had to move") — the re-tier (§11) has to go first.
+- **13.16 CONFIRMED (+1).** `check_doc_refs.py:348` reads `utf-8` with no BOM
+  strip where the other four read `utf-8-sig`: a BOM'd declared-absences file
+  hides its first entry.
+- **13.17 CONFIRMED.** `observation_cadence` has no fail arm at all (a tenth
+  policy: crash); `authority.dial_from_config` reads the file at a revision, so
+  the shared parse must take text, not a path+mtime cache. Already a recorded
+  consolidation row (`docs/status.md`, wi-962/wi-958).
+- **13.19.** Three in-text WI token shapes among six copies; the anchored id has
+  six copies, not five; `trace_text`'s case-insensitivity is deliberate for
+  prose, so the one home needs a prose variant.
+- **13.20–13.21 CONFIRMED.** `plan_coverage`'s working-tree read is a different
+  *source* and stays a separate call, not a flag; the claim-reader half is
+  already a `status.md` row (wi-960).
+- **13.22 CONFIRMED.** `kitlib.shell_line` is the wrong home (it reads whole
+  shell lines for the guard); the right one is `agent_session.split_cmd`. Live
+  impact of the `#` divergence is nil today; it is a reachable latent one.
+- **13.23 CONFIRMED (+2).** `intake.py:341` and `:2177` add a fifth, CRLF-
+  tolerant grammar: five grammars across six sites; partly recorded (wi-856).
+- **13.24.** `tests/test_launcher_interpreter.py` does execute the launchers for
+  the venv-first and 3.11 rules; only the PATH-candidate *order* is unpinned.
+  Only 4 of the 11 files are kit-owned: the `run.*`/`agent-resume.*` launchers
+  are adopter-owned ("preserve always"), so the fit is a kit-owned probe per
+  dialect that adopter-owned launchers `call`.
+- **13.25.** ADOPTING tells adopters to keep the kit at `project-trajectory/`
+  "alongside or inside"; inside, the path resolves to the kit's copy. The defect
+  is inconsistency across eight surfaces. Move `agent_brief.scripts_dir` into
+  `kitlib` rather than add a second resolver.
+- **13.26–13.30.** Bypass sites are 11, not 18 (seven are the wrapper bodies);
+  the heading regexes reduce to four generic grammars across five modules
+  (`sitting`'s narrow one is deliberate); the `_pget` half is ruled by plan item
+  10 step 1; the vacuous spawns are §9.4.
+
+All eight of the finder's counter-findings cite real constraints
+(`kitlib/__init__.py:26-30`, `test_import_layers.py:52-62`,
+`test_bootstrap.py:1680-1710`, OI-46 1a) and seven hold as written.
 
 ### 13.C Architecture prose and skills
 
@@ -1736,6 +1857,112 @@ one `shall`; 60 of 138 exceed 300 chars) — a warn at >350 chars or ≥3 clause
 the `scope: kit` spine-authoring skill and the composed questions carry six
 ruling stamps and "the kit repository's ruling of record: `OI-72`" into every
 adopter's sitting (extends §3.3, §10.11).
+
+**Verification of 13.D** (two skeptics with different lenses: the mechanized
+rules, and the authoring prose read in context; both checked every change
+against the ruled plan). The pattern is clear and matters for §14: **the
+diagnoses mostly hold, and most of the proposed changes are either already
+ruled (item 5) or contradict a ruling (variant F, decomposition (b), revisions
+8/15/35/36).** Only 13.51, 13.48, 13.54 and 13.56 enter as clean new findings.
+
+- **13.45 → MED, as a measurement footnote to §12's item-5 correction.** The
+  anchor rule needs ONE binding token (`check_doc_refs.py:592`); the 1,995-token
+  lists are authoring on top of it. Both rules bite only from DevStg-Impl.
+  The remedy is largely ruled (item 5 layer 1 deletes *both* cells and makes the
+  loader refuse undeclared keys); where it differs it contradicts "Module
+  retires" (rev 35), the owner's withdrawal of a per-module `Implements:`
+  mandate (rev 15: "encouraged, not mandated … the dial measures it") and rev
+  36's instruction that the §3 sentence stay until item 5's lane. A one-line
+  `REQUIRED_FIELDS` relaxation would land twice; do it inside item 5. Nothing
+  is scheduled: no queued WI touches the schema.
+- **13.46 → MED.** The mechanism is misattributed: the SR citation on every TC
+  is forced by `coherence._sr_orphan_findings` reading `Verifies` *literally*
+  (an SR is uncovered unless some TC names it directly), not by
+  `triangle_findings`, which only checks coherence when both ids are present.
+  59 of the 64 same-number rows are the July 1:1:1 seeding. `PROCESS.md:821` is
+  a third home. The proposed downward coverage runs against decomposition (b),
+  under which coverage flows *up* (children plus an integration TC discharge a
+  parent) — re-cut the rule there; changing `PROCESS.md:525` edits the
+  DevStg-Tests bar every adopter signs.
+- **13.47 → fold into §10.1** as extra anchors (the machinery reference's
+  "cite by id"; EXAMPLE.md's five pointer rows and its `:177-179` sentence).
+  `spine-questions.md:293-294` is over-read: it is an SR-AC sentence (TCs have
+  no AC cell), and the preceding bullet already states the condition rule.
+  `trace_text` does read `expected` for citation frames; what is missing is the
+  vacuity detector §11.4 proposes. "Never an id" would collide with the Attest
+  convention, where the TC's Parameters/Expected record who attested.
+- **13.48 CONFIRMED, MED.** Two cells, not three (73% of evidence functions have
+  no docstring); only 10 of the 32 copies open "Satisfies", so this is a shape
+  distinct from the pointer. Fire rates on the kit's own rows: `expected` > 300
+  chars 72/363; > 60% overlap with the cited detail 73/363.
+- **13.49 → LOW.** The causal claim is **refuted by dates**: "Map the arms"
+  first appears 2026-10-09 (WI-848); a 15,092-char `method` already existed at
+  the 2026-09-15 snapshot (27 cells > 500 chars in August, 69 in September, 169
+  in October, 186 now). In context the bullet is a judging worksheet. A
+  400-char warn would fire on 210/363 (58%); the exemplar's shape is the
+  target, not a cap. New: 25 test-name lists, 16 internal-function methods.
+- **13.50 → LOW.** The generator is OI-43(a)'s seam-TC coverage rule (ERROR
+  under `--strict` from DevStg-Tests; 154 of 255 seams allowlisted), not
+  in-lane prose; IF rows also carry `VerifiedBy`. The proposed derivation runs
+  through the `Module` cell item 5 removes and contradicts variant F; the ruled
+  F-call 3 check already owns the symptom.
+- **13.51 CONFIRMED by one lens, PARTIAL by the other — record at HIGH/MED.**
+  The tier test exists in the kit's *frame* vocabulary (§2(b3): a row whose
+  output crosses no boundary "is a design decision and belongs at LLR";
+  `boundary_refs` filled on 137/138 SRs; §0 sends back "an acceptance condition
+  nobody could observe"); what is missing is the per-row prose cue, and the SR
+  classification is a hand reading. Consistent with item 5 layer 3; §0 is ruled
+  text (WI-911), so add a bullet, do not reword the ruled ones. Still the
+  cheapest change in the record.
+- **13.52.** The sub-bullet weights are swapped: (c)–(c3) = 697 words, (d)–(d2)
+  = 375. Item 14 wired the hat *questions* into the briefs deliberately — move
+  the mechanics, keep the questions. A 250-word cap collides with pinned ruled
+  text (`test_prompts.py` pins §3's rev-35/36 clauses) and §-letters other kit
+  text cites. Keep the per-sitting totals as the measurement.
+- **13.53 → fold into §10.1** (the KICKOFF anchors); ruled in direction (rev
+  35's "Module" sweep covers "shipped text that uses it as a spine unit").
+- **13.54 CONFIRMED, MED (+1).** SR-002 is `verification = "Demonstration"`
+  while its TC-002 is `automated = "Yes"` with asserts. The evidence wording
+  must follow the ruled tag design (per-test tags, generated column), not
+  "file-level".
+- **13.55 → LOW.** "148 unclassified lines" is 20; the other 128 are "declares no
+  Form" (two warn-only rules, both vacuous until a DA row exists). `coincident`
+  is a ruled design (the 2026-09-20 assumption-tier plan made it an explicit
+  waiver cell); deleting it needs an owner ruling. The stock frame holds (52 of
+  71 contain "outcome") with row-specific content inside it.
+- **13.56.** The block is 365 words, not 608, and "downstream cost: none" is
+  wrong: `PROCESS.md:528-529` makes enumerated dimensions a DevStg-Tests gate
+  criterion — which the kit's own spine fails (0 of 138), a dogfood gap.
+- **13.57.** Three scripts read `test_refs` (intake renders it in the approval
+  brief; two classify it); no check validates it — that part holds. Deletion
+  must coordinate with item 5's strict loader and remove the key from rows.
+- **13.58 → LOW.** The sentence describes what the current schema forces
+  (`--strict-schema` plus `Automated=Yes` needs `Evidence`); the proposed
+  wording ("TC Evidence names the test FILE") contradicts revisions 8 and 35
+  (a generated column; tags may sit on a test function).
+- **13.59 → fold into §10.4**, correcting it: `reviewer.template.md:68` does
+  carry the behaviour-vs-helper sentence. The proposed rule is right for
+  SR-tier TCs and over-broad for LLR-tier ones (the kit's own modelled shape is
+  a Unit TC over a pure function).
+- **13.60 REFUTED as stated.** The absolute-term advisory already prints one
+  console summary line; the 388 rows appear only in `report.md`, where a
+  per-row worklist is the section's purpose. The console's bulk is the Form
+  advisory: 128 of 210 WARN lines (61%), which no finding had named. The
+  paraphrase and fan-out blindness is §11.4 and §12-4.5. Withdrawn; the
+  388/2/2 counts stay as a footnote to §11.4.
+- **13.61.** > 350 chars fires on 46/138; ≥ 3 semicolons on 6/138 — the narrow,
+  defensible detector. The owner softened single-`shall` to a guideline with
+  reasoned exceptions (2026-08-13v).
+- **13.62.** `SKILL.md:264` is §6's quoted bad example, so 5 tokens at 3 sites;
+  the composed body carries 3 tokens (2026-08-18 twice, `OI-72`) into every
+  adopter's brief — the new fact.
+
+Also confirmed as a valid new anchor: the SR template's `acceptance_criteria`
+guidance "Measurable condition a test/demo asserts (the contract with the Test
+Engineer)" frames the AC as a test assertion (Volere's fit criterion is the
+measure of meaning). Thresholds the finder proposed, measured on the kit's own
+rows: `method` > 400 chars 210/363; `expected` > 300 chars 72/363;
+`requirement` > 350 chars 46/138.
 
 ### 13.E Tests, and tests of the test infrastructure
 
