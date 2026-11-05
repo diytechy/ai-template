@@ -45,3 +45,17 @@ alternative = "Take the drafter's recommendation on both and claim."
 reversal_cost = "Low: a queued row and a pending item."
 why_not_escalated = "Escalated as OI-126; the coordinator rules neither call."
 review = ""
+
+[decision.D-007]
+decided = "Headless leg 33: WI-997 (queue row 2) was claimed and planned, and it stops at its plan. Its planner reported the Done-when's stop condition met, and the coordinator confirmed it against the lane at 913ac5bb7: TC-166 has no test and no code behind it, and TC-165's token-scan half has no test. The planner's recommendation to amend the stale-part item and continue is not taken: that item and the handoff's queue row both say the row stops and reports, so rewriting the condition that stopped the row is the owner's, not a leg's. OI-127 is filed pending with its placeholder WI-999 (OI-102), and WI-997's needs cite it, as the owner's 2026-10-25 ruling asks of a lane keeping its claim at an owner-held step. Its plan is committed in the lane; no critique ran, because the ruling may change the plan and a critique would spend the plan cap on a shape that may not stand."
+alternative = "Close the lane partial now (OI-70's route), which forecloses the owner's cheaper routes; or sit a done-when amendment and continue, which removes the row's own stop clause without the owner."
+reversal_cost = "Low: records only; the lane holds one plan commit, and every option stays open."
+why_not_escalated = "Escalated: OI-127."
+review = ""
+
+[decision.D-008]
+decided = "With WI-997 held on OI-127, WI-995 and WI-996 cannot claim (each needs the row before it) and WI-993 stays held on OI-126, so the leg moves to queue rows 6 to 8 in order (WI-991, WI-982, WI-983), as coordinator-2026-11-01 D-009 moved past an earlier hold. None of the three needs WI-997."
+alternative = "End the leg at the hold with an Overnight stop line, leaving three movable rows unworked."
+reversal_cost = "Low: an overrule holds the next landing; nothing is lost."
+why_not_escalated = "Recorded for confirm or overrule; a headless leg moves to the next row when one is owner-held (coordinator-cycle section 7)."
+review = ""
