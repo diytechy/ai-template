@@ -23,9 +23,11 @@
 # reservation: LLR 362-363 (WI-978)
 # reservation: LLR 364-364 (WI-963)
 # reservation: LLR 365-365 (WI-994)
+# reservation: LLR 366-366 (WI-997)
 # reservation: TC 401-402 (WI-978)
 # reservation: TC 403-403 (WI-963)
 # reservation: TC 404-409 (WI-994)
+# reservation: TC 410-412 (WI-997)
 #
 # basis: B=11 CMP=9 DA=17 EXT=7 IF=308 LLR=365 OI=129 PB=4 REL=2 SN=44 SR=246 STK=4 SUR=3 TC=409 WI=1001
 #
@@ -36,7 +38,7 @@ DA = 17
 DP = 1
 EXT = 7
 IF = 308
-LLR = 365
+LLR = 366
 MOD = 0
 OI = 129
 PART = 0
@@ -47,5 +49,5 @@ SN = 44
 SR = 246
 STK = 4
 SUR = 3
-TC = 409
+TC = 412
 WI = 1001
