@@ -6,13 +6,13 @@ _Baseline: `docs/archive/last_approved` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-11-02 (30056da9e)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-11-02 (889498874)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-05 (ef2d68610)._
-_Baseline: `docs/test/test-cases.toml` copied 2026-11-05 (ef2d68610)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-06 (0c5fc7696)._
+_Baseline: `docs/test/test-cases.toml` copied 2026-11-06 (0c5fc7696)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-08-30 (580df781e)._
 _Baseline: `docs/requirements/external.toml` copied 2026-09-27 (efa9e3cd1)._
 _Baseline: `docs/requirements/components.toml` copied 2026-08-30 (580df781e)._
 
-_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 880ad86e1 (2026-11-04) — the record's maturity cells have not moved since._
+_Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 0c5fc7696 (2026-11-06) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 

@@ -10,3 +10,10 @@ alternative = "Claim nothing until WI-996 lands, leaving the rows that can move 
 reversal_cost = "Low: an unbuilt lane can be returned to the queue."
 why_not_escalated = "The queue table orders the rows and their needs settle what can start; the skill makes parallel lanes normal."
 review = ""
+
+[decision.D-002]
+decided = "Leg 34 closes at its context reading, with no stop line: the review test-set row can claim and the owner-held-step lane can triage its round. WI-1001's round-1 critique is recorded in its spec of record with its dispositions owed, since WI-997's landing only now lets them be judged against the real tags, and its first MAJOR (needs on the two debt rows, or exceptions named in the row) is put to the owner under the handoff's For the owner."
+alternative = "Disposition WI-1001 now and spend the leg's remaining context on it."
+reversal_cost = "Low: the findings are recorded and no row moved."
+why_not_escalated = "Nothing is held: the row is last in the queue table."
+review = ""

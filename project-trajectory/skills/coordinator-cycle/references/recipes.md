@@ -1488,6 +1488,17 @@ lane commit being replayed.
   run stays in the foreground too; the resume with a `.done` poll recovered
   it (wi-994, leg 32).
 
+- Tool calls in one message run one after the other, an Agent call included:
+  a planner's 54 minutes passed before the two Sol critiques beside it began
+  (leg 34). Real overlap needs one script that starts its children and waits.
+- A landed lane's deleted branch reds the next attest of an open lane whose
+  base still holds that claim folder (hold-by-rename). Rebase the open lane
+  first, with `git stash` around staged work (wi-993, leg 34).
+- Tell every builder to exclude `OWNER_SCRATCHPAD.md` from a broad search: a
+  repo-wide grep returned two of its lines (leg 34).
+- A long registry cell is a triple-quoted string: a guarded append matches
+  the cell's own quote form and parses before it writes (leg 34).
+
 ## 8. Re-judge and consolidation recipes
 
 - **A disposition row's lane** (WI-953): compose and sit it from the lane
