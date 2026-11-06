@@ -38,15 +38,17 @@ hand-filed item for a planned step cites the claimed row, and a held-rung
 MEANING act, which can never land from a lane (`held_status`, wi-976 D-023),
 is carried by the minted queued row. The lane updates IF-073 (`data`, `notes`
 and its version), IF-074's `data`, LLR-299 (it says "a citer that is not
-queued does not count"), LLR-153, TC-314 and Flow 4. No refactor row is owed.
+queued does not count"), LLR-118 (the owner page's pending items and its
+uncited notice, both worded for queued citers), LLR-153, TC-314 and Flow 4.
+No refactor row is owed.
 
 ## Landing order
 
 Three deliverables could land alone. The RESYNC entry is written with the
 last of them and is not a fourth.
 
-1. **The claimed citer** (the owner queue item, with IF-073, IF-074, LLR-299
-   and TC-314). It lands first: until it does, an item only a claimed row
+1. **The claimed citer** (the owner queue item, with IF-073, IF-074, LLR-299,
+   LLR-118 and TC-314). It lands first: until it does, an item only a claimed row
    cites is the checker's uncited-item error, so the policy text would
    instruct a filing the bar refuses.
 2. **The policy text** (the PROCESS.md, claim, push and closure items). It
@@ -201,3 +203,12 @@ D-004 directs.
   IF-073's citers of a pending item become queued or claimed rows", names the
   writer "a new arm of Flow 4's post-merge step" and lists the records the
   lane updates. Nothing is beyond the row's scope.
+
+Round 2, confirming (fresh Sol, 2026-11-06, convergence stance):
+CHANGES-REQUESTED, one MINOR. Every round-1 adoption is confirmed.
+
+- **S5, adopted.** LLR-118 joins the lane's records: the Context now names
+  "LLR-118 (the owner page's pending items and its uncited notice, both worded
+  for queued citers)", and deliverable 1 lists it. Confirmed by reading the
+  row. A MINOR in a confirming round takes its disposition here with no
+  further round.

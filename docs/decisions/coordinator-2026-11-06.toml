@@ -1,0 +1,12 @@
+# docs/decisions/coordinator-2026-11-06.toml — calls headless leg 34 recorded on
+# trunk on 2026-11-06.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "While WI-997 builds, WI-993 and WI-991 are claimed under one scoped unpause, ahead of WI-995 and WI-996, which each wait on the landing before them. Lanes land one at a time, in the queue table's order where a landing is ready; the machinery rule still holds for each landing."
+alternative = "Claim nothing until WI-996 lands, leaving the rows that can move idle behind the tag migration."
+reversal_cost = "Low: an unbuilt lane can be returned to the queue."
+why_not_escalated = "The queue table orders the rows and their needs settle what can start; the skill makes parallel lanes normal."
+review = ""
