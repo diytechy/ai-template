@@ -2005,7 +2005,8 @@ the id a draft is holding (the mint itself reads filenames and is safe either
 way, so the declaration makes the reservation checked, not merely possible);
 `blocked` has
 no directory of its own — the `blockref` mechanism that once expressed it
-retired at WI-553/OI-70, and a stopped lane now closes PARTIAL; and `cancelled`
+retired at WI-553/OI-70, and a stopped lane now closes PARTIAL, save a planned
+owner-held step (process.md §5, "Open items"); and `cancelled`
 (WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately
 from `done`, never scheduled, its reason in the body. `partial` (SR-144) is the

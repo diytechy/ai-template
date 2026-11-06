@@ -943,11 +943,12 @@ def load_known_ois(root):
 
 
 def uncited_open_item_findings(root, wi_rows):
-    """Each pending open item NO queued work item cites in its `needs` (WI-790):
-    the queue is the only route a decision reaches the owner by, so such an
-    item is invisible, and it is an ERROR whatever the gate. Read off the one
-    queue projection (`kitlib.spine.open_item_queue`) the owner surface and the
-    status snapshot also read. Vacuous without an open-items registry.
+    """Each pending open item NO queued or claimed work item cites in its
+    `needs` (WI-790): the queue is the only route a decision reaches the owner
+    by, so such an item is invisible, and it is an ERROR whatever the gate.
+    Read off the one queue projection (`kitlib.spine.open_item_queue`) the
+    owner surface and the status snapshot also read. Vacuous without an
+    open-items registry.
 
     Implements: SR-148, LLR-299
     """
@@ -956,9 +957,9 @@ def uncited_open_item_findings(root, wi_rows):
         return []
     queue = _kitspine.open_item_queue(wi_rows, spine_carrier.load(path, "OI-ID"))
     return [
-        "{}: pending, but no queued work item cites it in `needs`, so the "
-        "decision never reaches the owner's queue — file a queued placeholder "
-        "row citing it (WI-790)".format(oid)
+        "{}: pending, but no queued or claimed work item cites it in `needs`, "
+        "so the decision never reaches the owner's queue — cite it from the row "
+        "it holds, or file a queued placeholder row (WI-790)".format(oid)
         for oid in queue["uncited"]
     ]
 
@@ -2560,7 +2561,8 @@ def branch_length_findings(root):
 def holdbyrename_findings(root):
     """A `docs/work/active/<branch>/` claim directory with NO matching git
     branch ref — the exact signature of a HOLD-BY-RENAME, which OI-70 BANS: a
-    lane that must stop CLOSES PARTIAL (the only sanctioned stop), it is never
+    lane that must stop CLOSES PARTIAL (the only sanctioned stop, save a planned
+    owner-held step, process.md §5 "Open items"), it is never
     parked by renaming its ref (`git branch -m ... -HELD`) while its claim stays
     on trunk. That mismatch is also the phantom head the scheduler/dispatcher
     disagree over: the row reads `ready` off the claim while the dispatcher
@@ -3406,7 +3408,7 @@ def main():
     wis, integrity = load_wis(wi_rows)
     integrity = registry_errors + integrity
     # The uncited-pending ERROR (WI-790) is evaluated BEFORE the vacuity
-    # return: a repo whose only open item has no queued row to cite it is
+    # return: a repo whose only open item has no row to cite it is
     # exactly the repo that has no work items, and it must not read clean.
     oi_errors = uncited_open_item_findings(root, wi_rows)
     if not wis and not integrity:

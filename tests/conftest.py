@@ -299,6 +299,7 @@ SLOW_MODULES = frozenset(
         "test_coordinator_act",  # WI-912: 39 cases, 48.0 s at -n 2 (3 to 6 s each): real git lanes + the act turn through a stub adjudicator; the tier read 26 s over its parent in one window; test_adjudicate_act keeps the family's in-process pin
         "test_intake",  # 26 tests, 23.5 s: a real `git init`/commit repo built per test (test_handback's class)
         "test_intake_settled",  # 28 cases, about 2 s each: a real git repo and snapshot acts per case, sweep subprocesses, and two landings replayed from the kit's own history (test_intake's class)
+        "test_intake_held_act",  # WI-993: 20 cases, 37.5 s at -n 2 (about 3.5 s each): a real git repo, snapshot and bookkeeping commit per case, some with sweep subprocesses (test_intake_settled's class)
         # Nothing here is deleted or weakened: all five still run in full at
         # slice/phase close and in CI. Re-stamped seconds/max-tests together
         # below with the reason (docs/log.d/2026-08-23-wi496-smoke-retier.md).

@@ -16,11 +16,11 @@ as `work-items.csv` is, i.e. never.
 
 WHAT IT RENDERS, in the order an owner needs it:
 
-  1. PENDING DECISIONS — one card per `Status=pending` row a QUEUED work
-     item's `needs` cites (the queue projection, `pending.open_item_queue`,
+  1. PENDING DECISIONS — one card per `Status=pending` row a QUEUED or CLAIMED
+     work item's `needs` cites (the queue projection, `pending.open_item_queue`,
      WI-790): the one-line, what is being decided, blast radius, options,
-     recommendation, and the queued rows it holds. A pending row NO queued row
-     cites is not a card; it is named in an integrity notice above the cards,
+     recommendation, and the rows it holds. A pending row NO such row cites
+     is not a card; it is named in an integrity notice above the cards,
      linked to its registry record, and while one exists the section never
      claims the owner queue is empty.
   2. APPROVAL & RE-ATTESTATION — every SR whose `Status` is `Drafted` (owes a
@@ -73,11 +73,11 @@ of record in docs/requirements/interfaces.toml).
 
 Contract IF-074: the generated owner decision surface at `docs/open-items.html` —
     the one document a human reads to rule. It carries, in this order: a card
-    per `Status=pending` open-item row a queued work item's `needs` cites (the
-    one-line, the blast radius, the options, the recommendation and the queued
-    rows it holds), with an integrity notice naming each pending row no queued
-    row cites, linked to its registry record, in place of any empty-queue
-    claim; an approval
+    per `Status=pending` open-item row a queued or claimed work item's `needs`
+    cites (the one-line, the blast radius, the options, the recommendation and
+    the queued or claimed rows it holds), with an integrity notice naming each
+    pending row no queued or claimed row cites, linked to its registry record,
+    in place of any empty-queue claim; an approval
     and re-attestation section listing every SR that owes a first approval or
     whose chain has drifted from the approved snapshot, and every stakeholder
     need and stakeholder owing an approval or a re-attest, with the whole chain's
@@ -458,7 +458,7 @@ _BRIEF_FIELDS = (
 
 
 def _brief_card(row, citers):
-    """One pending decision's card, the queued rows it holds beside its brief.
+    """One pending decision's card, the rows it holds beside its brief.
 
     Implements: SR-049, LLR-118
     """
@@ -471,7 +471,8 @@ def _brief_card(row, citers):
                 '<div class="v">{}</div></div>'.format(esc(label), md_block(val))
             )
     fields.append(
-        '<div class="field"><span class="k">Holds (queued work items citing it)'
+        '<div class="field"><span class="k">'
+        "Holds (queued or claimed work items citing it)"
         '</span><div class="v">{}</div></div>'.format(esc(", ".join(citers)))
     )
     return (
@@ -485,9 +486,10 @@ def _brief_card(row, citers):
 
 
 def _uncited_notice(uncited, registry):
-    """The integrity notice (OI-102 Q2): each pending open item NO queued work
-    item cites, linked to its registry record. Such an item is invisible to the
-    queue, so the page says so rather than reading as an empty queue.
+    """The integrity notice (OI-102 Q2): each pending open item NO queued or
+    claimed work item cites, linked to its registry record. Such an item is
+    invisible to the queue, so the page says so rather than reading as an
+    empty queue.
 
     Implements: SR-049, LLR-118
     """
@@ -497,8 +499,9 @@ def _uncited_notice(uncited, registry):
     )
     return (
         '<p class="empty notice" role="alert">{n} pending open item(s) that no '
-        "queued work item cites, so the queue cannot surface the decision: {l}. "
-        "File a queued placeholder row whose <code>needs</code> cites each one "
+        "queued or claimed work item cites, so the queue cannot surface the "
+        "decision: {l}. Cite each one in the <code>needs</code> of the row it "
+        "holds, or file a queued placeholder row that does "
         "(<code>check_trajectory</code> reports this as an error).</p>".format(
             n=len(uncited), l=links
         )
@@ -507,8 +510,8 @@ def _uncited_notice(uncited, registry):
 
 def _brief_cards(queue, registry="requirements/open-items.toml"):
     """Section 1 from the one queue projection: the integrity notice for any
-    uncited pending item, then one card per decision a queued row cites. The
-    "owner queue is empty" line is said only when both are empty.
+    uncited pending item, then one card per decision a queued or claimed row
+    cites. The "owner queue is empty" line is said only when both are empty.
 
     Implements: SR-049, LLR-118
     """

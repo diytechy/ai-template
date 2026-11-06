@@ -10,10 +10,12 @@ Implements: TC-301
 
 from copy import deepcopy
 
+import pytest
 from conftest import SCRIPTS, load_script, run_py
 
 sched = load_script("schedule")
 ct = load_script("check_trajectory")
+gen = load_script("gen_open_items")
 status = load_script("traj_status")
 panels = load_script("gen_trajectory").traj_panels
 
@@ -204,7 +206,7 @@ def test_an_uncited_pending_item_is_an_error_even_with_no_work_items(tmp_path):
     _items(tmp_path, ("OI-5", "pending"), ("OI-6", "ruled"))
     proc = _check(tmp_path)
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "OI-5: pending, but no queued work item cites it" in proc.stderr
+    assert "OI-5: pending, but no queued or claimed work item cites it" in proc.stderr
     assert "OI-6" not in proc.stderr
     # A draft or deferred citer does not surface the decision either.
     _spec(tmp_path, "WI-001", where="deferred", needs=["OI-5"])
@@ -216,6 +218,48 @@ def test_an_uncited_pending_item_is_an_error_even_with_no_work_items(tmp_path):
     path.rename(queued / path.name)
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def _uncited(root):
+    return ct.uncited_open_item_findings(root, ct.read_registry_rows(root / ct.WI_CSV))
+
+
+def test_an_item_only_a_claimed_row_cites_is_no_error(tmp_path):
+    """Implements: TC-314"""
+    # IF-073, LLR-299: a lane at a planned owner-held step cites its item from
+    # the claim copy, and the checker must not refuse that filing.
+    _items(tmp_path, ("OI-5", "pending"))
+    _spec(tmp_path, "WI-001", where="active/wi-001", needs=["OI-5"])
+    assert _uncited(tmp_path) == []
+
+
+def test_a_claimed_citer_is_a_card_and_on_the_blocked_list(tmp_path):
+    """Implements: TC-123, TC-314"""
+    # LLR-118, IF-074: the page and the snapshot read the one projection, so a
+    # claimed citer is a card beside its row and a Blocked line, and the page
+    # raises no integrity notice.
+    _items(tmp_path, ("OI-5", "pending"))
+    _spec(tmp_path, "WI-001", where="active/wi-001", needs=["OI-5"])
+    page = gen.render(tmp_path)
+    section = page.split("1 · Pending decisions", 1)[1].split("2 · Approval", 1)[0]
+    assert 'id="OI-5"' in section and "WI-001" in section
+    assert 'role="alert"' not in section
+    block = status.status_block(tmp_path)
+    assert "**OI-5**" in block and "_(holds WI-001)_" in block
+    blocked = block.split("- **Blocked**", 1)[1]
+    assert "**WI-001**" in blocked and "open-items.html#OI-5" in blocked
+
+
+@pytest.mark.parametrize("where", ["draft", "deferred", "cancelled"])
+def test_a_draft_or_deferred_citer_still_reads_uncited(tmp_path, where):
+    """Implements: TC-314"""
+    # LLR-299: only queued and claimed rows count. Witness: a filter widened to
+    # "any open row" lets the draft and deferred cases through, and one that
+    # drops the status test lets the closed case through.
+    _items(tmp_path, ("OI-5", "pending"))
+    _spec(tmp_path, "WI-001", where=where, needs=["OI-5"])
+    (finding,) = _uncited(tmp_path)
+    assert finding.startswith("OI-5: pending")
 
 
 def test_a_ruled_items_row_may_not_keep_the_registry_as_its_specref(tmp_path):

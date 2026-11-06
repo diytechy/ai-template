@@ -12,18 +12,22 @@
 # Delete it on the first real entry.
 #
 # `status` leaves `pending` when the ruling lands in docs/log.md's Decisions
-# log; `scripts/gen_open_items.py` renders every pending row a queued work
-# item cites into the generated docs/open-items.html the owner actually reads.
+# log; `scripts/gen_open_items.py` renders every pending row a queued or
+# claimed work item cites into the generated docs/open-items.html the owner
+# actually reads.
 #
-# WORK ITEMS POINT TO OPEN ITEMS, NEVER THE REVERSE. A work item that waits on
-# a decision cites it in its own `needs` (`needs = ["OI-7"]`) and reads
+# WORK ITEMS POINT TO OPEN ITEMS, NEVER THE REVERSE. What an item is, and when
+# one is filed, is process.md §5, "Open items". The held work item
+# cites it in its own `needs` (`needs = ["OI-7"]`) and reads
 # `blocked` until the item is ruled; an open item carries no work-item
 # pointer. Older registries may still carry a `wi_refs` cell on rows filed
 # before this changed: it is history, preserved as written, and nothing reads
 # it. New rows carry none.
 #
-# FILE EVERY OPEN ITEM WITH ITS PLACEHOLDER. A pending item no queued work item
-# cites never reaches the owner's queue, so the checker reports it as an error.
+# FILE EVERY OPEN ITEM WITH ITS PLACEHOLDER. A pending item no queued or claimed
+# work item cites never reaches the owner's queue, so the checker reports it as
+# an error. A claimed row citing the item, for a step its Done-when names, needs
+# no placeholder beside it; any other item gets a queued one.
 # The placeholder may hold nothing but its item: a `title`, a `safety_class`,
 # `needs = ["OI-7"]` and `specref = "docs/requirements/open-items.toml#OI-7"`.
 #
@@ -34,8 +38,10 @@
 # performed"), point its `specref` at a real spec, and move `title`,
 # `buildtier`, `sr_refs` or `safety_class` where the ruling changes them — or
 # close the row. The commit-time check refuses a ruling that leaves a citing
-# row's Done-when untouched. The rule's home is the work-item format's
-# readiness contract (IF-054) and this registry's (IF-073).
+# row's Done-when untouched. A claimed citer's Done-when already names the
+# step: the ruling commit ticks that item and adds no evidence there. The rule's
+# home is the work-item format's readiness contract (IF-054) and this
+# registry's (IF-073).
 #
 # WRITE FOR A RULER, NOT FOR THE RECORD. These cells are read by a human
 # deciding, usually several at a sitting, and a brief that buries its question

@@ -102,6 +102,14 @@ Contract IF-091: the staged spine-amendment set, offered as a call.
     routed traced cells at `head` equal the row's snapshot copy there. A
     ledger or copy the tree lists that cannot be read or does not parse is
     the refusal, naming the carrier and revision; nothing else suppresses.
+    `text_as_bound(root, head, ruled)` returns the ids of `ruled` still at the
+    text their accepted verdict's binding records.
+    `unanchored_rows(root, head, ids, routed_cells)` returns `({row id:
+    registry}, refusal)` for the mint's held-act arm: the `ids` whose row at
+    `head` is not settled against its snapshot copy there, by the one
+    comparison `settled_amendments` makes. A missing row or copy reads as
+    differing, an id in no tier is left out, and a copy the tree lists that
+    cannot be read or does not parse is the refusal.
 Contract IF-129: the ONE cell-comparison basis.
     `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
     `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
@@ -1271,6 +1279,60 @@ def settled_amendments(root, base, head, records, routed_cells):
         if _settled_row(added, rid, rel, col, tiers[rel + col], routed.get(stem, ())):
             settled.add(rid)
     return frozenset(settled), None
+
+
+def unanchored_rows(root, head, ids, routed_cells):
+    """`({row id: registry}, refusal)`: the `ids` whose live row at `head`
+    differs from its snapshot copy there, in an approved cell or a routed
+    traced one (`_row_settled`). A missing row or copy reads as differing, an
+    id in no tier is left out, and a copy the tree lists that cannot be read
+    or does not parse is the refusal, naming the carrier and revision.
+    `routed_cells` is the caller's routing rule, keyed by registry.
+
+    Implements: SR-174, LLR-153"""
+    routed = {spine_carrier.stem(k): v for k, v in routed_cells.items()}
+    found, tiers = {}, {}
+    for rid in sorted(ids):
+        rel, col = _tier_of(rid)
+        if rel is None:
+            continue
+        if rel + col not in tiers:
+            copy, failure = _snapshot_copy_rows(root, head, rel, col)
+            if failure:
+                return {}, failure
+            live = _spine_rows_at(root, head + ":", rel, col)
+            tiers[rel + col] = copy or {}, live
+        copy, live = tiers[rel + col]
+        cells = routed.get(spine_carrier.stem(rel), ())
+        if not _row_settled(rel, col, copy.get(rid), live.get(rid), cells):
+            found[rid] = rel
+    return found, None
+
+
+def text_as_bound(root, head, ruled):
+    """The ids of `ruled` (`{row id: accepted verdict path}`) whose approved
+    text at `head` is the text their verdict's binding records. A row gone
+    from its registry has no text to differ, so it counts; a binding that
+    records no text for the row (`kitlib.sitting.accepted_identities`) does
+    not, and neither does an id in no tier.
+
+    Implements: SR-174, LLR-153"""
+    kept, tiers, bound = set(), {}, {}
+    for rid, verdict in ruled.items():
+        rel, col = _tier_of(rid)
+        if rel is None:
+            continue
+        if rel + col not in tiers:
+            tiers[rel + col] = _spine_rows_at(root, head + ":", rel, col)
+        if verdict not in bound:
+            identities, _why = _kitsitting.accepted_identities(root, head, verdict)
+            bound[verdict] = identities or {}
+        row = tiers[rel + col].get(rid)
+        if row is None or (
+            bound[verdict].get(rid) == approved_text_digest(rel, col, row)
+        ):
+            kept.add(rid)
+    return kept
 
 
 def reattested_between(root, base, head):

@@ -249,10 +249,15 @@ def split_pred_edges(value):
     return hard_wi, hard_oi, soft
 
 
+# The work-row statuses whose `needs` hold a pending open item on the owner's
+# queue: a queued row, and a claimed row at a step its Done-when names.
+_CITER_STATUSES = frozenset({"queued", "active"})
+
+
 def open_item_queue(work_rows, oi_rows):
     """THE ONE QUEUE PROJECTION of the owner's pending decisions (WI-790): which
-    pending open items a QUEUED work item cites in its `needs`, and which no
-    queued row cites.
+    pending open items a QUEUED or CLAIMED work item cites in its `needs`, and
+    which no such row cites.
 
     Returns `{"cards": [(oi_row, [citing ids])], "uncited": [OI ids],
     "held": {WI id: [OI ids]}}`, every list in id order. `cards` is what the
@@ -264,8 +269,8 @@ def open_item_queue(work_rows, oi_rows):
 
     `work_rows` are registry rows (`WI-ID`, `Status`, `Predecessors`) and
     `oi_rows` open-item rows (`OI-ID`, `Status`); `-000` example rows on either
-    side are inert. A row that is not `queued` (drafted, deferred, claimed or
-    closed) surfaces nothing: the decision reaches the owner through the queue.
+    side are inert. A row outside `_CITER_STATUSES` (drafted, deferred or closed)
+    surfaces nothing: the decision reaches the owner through the queue.
 
     Implements: SR-148, LLR-299
     """
@@ -311,15 +316,16 @@ def open_items_at(oi_rows, status):
 
 
 def _held_rows(work_rows, pending):
-    """`{WI id: [pending OI ids its needs cite]}` for every real queued row
-    citing at least one item in `pending`.
+    """`{WI id: [pending OI ids its needs cite]}` for every real queued or
+    claimed row citing at least one item in `pending`.
 
     Implements: SR-148, LLR-299
     """
     held = {}
     for row in work_rows:
         wid = (row.get("WI-ID") or "").strip()
-        if is_example(wid) or (row.get("Status") or "").strip() != "queued":
+        status = (row.get("Status") or "").strip()
+        if is_example(wid) or status not in _CITER_STATUSES:
             continue
         cited = {
             o for o in split_pred_edges(row.get("Predecessors"))[1] if o in pending

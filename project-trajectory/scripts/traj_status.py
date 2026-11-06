@@ -17,10 +17,11 @@ Contract IF-164: the generated region of `docs/status.md` — the block between
     the GENERATED STATUS markers, and nothing outside them. It carries derived
     facts only: a banner naming the command that regenerates it, the derived
     stage line with its per-phase detail, one spine line (SN/SR/LLR/TC counts,
-    drafts, seams, components), the open items a queued work item cites (one
-    line each, naming the rows they hold) with any uncited pending item named
-    beside them and the count of delegated decisions left to review, then the
-    dependency-ready frontier in build order and the Blocked list (each row an
+    drafts, seams, components), the open items a queued or claimed work item
+    cites (one line each, naming the rows they hold) with any uncited pending
+    item named beside them and the count of delegated decisions left to
+    review, then the dependency-ready frontier in build order and the Blocked
+    list (each row an
     open item holds, beside each pending item that holds it), so a closed row
     drops out of the file on the next run. Deterministic — sorted inputs, no clock — and written
     LF on every platform, so `--check` byte-compares it and reports STALE rather
@@ -155,9 +156,10 @@ def _first_sentence(s):
 
 def _open_item_oneliners(root, queue=None):
     """`[(OI-id, one-liner, [citing WI ids])]` for every pending decision a
-    QUEUED work item cites, id-order — the status snapshot's one-line-per-item
-    projection, read off the one queue projection (`pending.open_item_queue`,
-    WI-790) so the snapshot lists exactly the cards the owner surface renders.
+    QUEUED or CLAIMED work item cites, id-order — the status snapshot's
+    one-line-per-item projection, read off the one queue projection
+    (`pending.open_item_queue`, WI-790) so the snapshot lists exactly the cards
+    the owner surface renders.
 
     The one-liner is the row's `OneLine` cell, else the first sentence of its
     `Recommendation` — the same fallback the markdown contract had, kept so a
@@ -177,11 +179,11 @@ def _open_item_oneliners(root, queue=None):
 
 
 def _open_item_lines(root, queue):
-    """The snapshot's open-items block: one bullet per decision a queued row
-    cites, naming the rows it holds; the uncited pending items, which no queued
-    row surfaces (a `check_trajectory` ERROR); and the count of delegated
-    decisions left to review, linked to the owner surface's section. Empty when
-    there is nothing to say."""
+    """The snapshot's open-items block: one bullet per decision a queued or
+    claimed row cites, naming the rows it holds; the uncited pending items,
+    which no such row surfaces (a `check_trajectory` ERROR); and the count of
+    delegated decisions left to review, linked to the owner surface's section.
+    Empty when there is nothing to say."""
     ois = _open_item_oneliners(root, queue)
     entries = decisions_to_review(root)[0]
     if not ois and not queue["uncited"] and entries is None:
@@ -198,10 +200,10 @@ def _open_item_lines(root, queue):
             ).suffix
         )
         lines.append(
-            "- **Open items** _(the pending rows of [{oi}]({oi}) a queued work "
-            "item cites; each item's blast radius, options and recommendation "
-            "render in [open-items.html](open-items.html), the generated owner "
-            "surface):_".format(oi=oi_rel)
+            "- **Open items** _(the pending rows of [{oi}]({oi}) a queued or "
+            "claimed work item cites; each item's blast radius, options and "
+            "recommendation render in [open-items.html](open-items.html), the "
+            "generated owner surface):_".format(oi=oi_rel)
         )
         lines.extend(
             "  - **{}** — {} _(holds {})_".format(oid, one, ", ".join(citers))
@@ -209,8 +211,8 @@ def _open_item_lines(root, queue):
         )
     if queue["uncited"]:
         lines.append(
-            "  - _Uncited — pending, but no queued work item cites it, so the "
-            "queue cannot surface it:_ {}".format(", ".join(queue["uncited"]))
+            "  - _Uncited — pending, but no queued or claimed work item cites it, "
+            "so the queue cannot surface it:_ {}".format(", ".join(queue["uncited"]))
         )
     if entries is not None:
         lines.append(
@@ -371,9 +373,9 @@ _FRONTIER_CAP = 12
 def _frontier_lines(root, queue=None):
     """The `- **Ready frontier**` generated bullet: dependency-ready WIs in
     scheduler order, id + one-line title, followed by the Blocked list — each
-    queued row an open item holds, beside each pending item that holds it, read
-    off the same queue projection as the open-items block (WI-790). Empty when
-    neither list has rows or schedule.py is unavailable."""
+    queued or claimed row an open item holds, beside each pending item that
+    holds it, read off the same queue projection as the open-items block
+    (WI-790). Empty when neither list has rows or schedule.py is unavailable."""
     if traj_parse.schedule is None:
         return []
     queue = queue if queue is not None else open_item_queue(root)
@@ -416,8 +418,9 @@ def _frontier_lines(root, queue=None):
 
 
 def _blocked_lines(blocked, queue, titles):
-    """The Blocked list: one bullet per queued row a pending open item holds,
-    in id order, each gate linked to its card on the owner surface."""
+    """The Blocked list: one bullet per queued or claimed row a pending open
+    item holds, in id order, each gate linked to its card on the owner
+    surface."""
     oi_titles = {
         row["OI-ID"].strip(): (row.get("Title") or "").strip()
         for row, _citers in queue["cards"]

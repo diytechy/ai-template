@@ -1,0 +1,67 @@
+# docs/decisions/wi-993.toml — delegated calls in WI-993's lane.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Each round's REVIEW-B is a Claude Opus (high) stand-in (ruling 7; coordinator-2026-10-16 D-008), and the lane's count starts at zero at its first round. IF-074's data cell was restored around the one clause the row changes: the intent turn had replaced the whole cell, dropping what the page still serves. Flow 4's edit moved to P5, since Terra's turn edits registries only and the line describes P5's arm. The new `unanchored_rows` refusal test's node was added to TC-147's evidence by a guarded replace. `intake.py` grows by 65 SLOC under the plan's limit, its stamp carrying the reason."
+alternative = "Hold Flow 4 for the checkpoint."
+reversal_cost = "Low."
+why_not_escalated = "Each follows the accepted plan or the recipes."
+review = ""
+
+[decision.D-002]
+decided = "Round 1 triage. REVIEW-B's MAJOR is confirmed on the real path, so the round costs a fix: the mint files one owner row and item per landing per registry, its command names every row it carries, passes a verdict only when one verdict covers them all, and option (a) states that the act copies the whole registry. REVIEW-B's three MINORs are confirmed and taken in the same round, each small and inside the spec's surface: the non-TOML remedy is the conversion (the old carrier removed in that commit), the skill's stop sentence points at PROCESS.md section 5, and a row off the text its verdict bound stays on the amendment row. REVIEW-A's MINOR is row text and goes to the spine change list, with LLR-153, TC-147 and IF-091. The claim copy's Trust table states the new arms; its Done-when is unchanged, so the pass record stands. Plan decisions 5 and 8 and its Downstream paragraph are superseded by this round and the plan is unedited, since an edited plan holds the lane. Each fix's regression test failed before the fix; the builder's notes hold the map."
+alternative = "File the MINORs as follow-ups and fix the MAJOR alone."
+reversal_cost = "Low: lane code under review."
+why_not_escalated = "A confirmed reviewer finding inside the spec's surface; rulings 1 and 4 place the triage here."
+review = ""
+
+[decision.D-003]
+decided = "A retired held row still mints, since a row gone from its registry has no text to compare and its act exits 0. A hand sweep spanning two landings that each already minted builds a title covering both, and files a second item beside them: the per-verdict title was immune to that, and one owner act rules all of them. Replaying the same range stays safe. Recorded as a residual, not built against: only a hand sweep across landings reaches it."
+alternative = "Dedup item by item across a registry."
+reversal_cost = "Low."
+why_not_escalated = "A cosmetic second card; the act it names stays correct."
+review = ""
+
+[decision.D-004]
+decided = "Round 2 triage. REVIEW-B's first MAJOR is confirmed by driving the minted command: the act recorded the verdict and the owner page listed it as a session's CLARITY act, so the published command now carries no verdict flag at all and the item's prose keeps naming the verdict. Its second MAJOR is re-graded to MINOR: LLR-153 and TC-147 lag the code, whose remedy is the checkpoint's reconcile, the cycle's next step, and row wording is deferred there (SKILL section 3, Iterate step 3). With REVIEW-A's same MINOR and REVIEW-B's LLR-364 and IF-091 MINORs it is on the spine change list. The README's partial-close sentence, in both round files, is fixed in the round."
+alternative = "Reconcile the rows before the third round."
+reversal_cost = "Low."
+why_not_escalated = "Triage under PROCESS.md section 6 and the recipes' round-finding rule (wi-931 D-006)."
+review = ""
+
+[decision.D-005]
+decided = "Convergence map for the third counted round, which sees no verdicts. Round 1: the refused command -> test_two_verdicts_on_one_registry_file_one_item_whose_command_runs, test_two_landings_widen_the_act_as_the_item_states and test_each_registry_files_its_own_row_and_item, each red before the fix; the non-TOML remedy -> test_a_non_toml_registry_refuses_and_the_merge_stands, red before; the stop sentence -> the corrected text in project-trajectory/skills/coordinator-cycle/SKILL.md section 5 and its copies; the off-text row -> test_a_row_off_its_bound_text_stays_on_the_amendment_row and test_a_bound_row_mints_beside_one_edited_after_the_sitting, red before; IF-073's notes -> the checkpoint's reconcile. Round 2: the verdict on the owner's act -> test_the_owner_act_is_never_listed_as_a_sessions_own, red before; the README's sentence -> the corrected text at project-trajectory/README.md line 40; LLR-153, TC-147, LLR-364 and IF-091's text -> the checkpoint's reconcile, sitting and act (wi-931 D-006)."
+alternative = "None: the round cannot start unmapped."
+reversal_cost = "Low."
+why_not_escalated = "The cycle's own step."
+review = ""
+
+[decision.D-006]
+decided = "Round 3, in convergence stance, holds no BLOCKER or MAJOR, so the checkpoint follows; the lane spent its three counted rounds. Its MINORs: the rows' text (LLR-153, TC-147, IF-091) goes to the checkpoint's reconcile; the spec's Context now lists the rows the lane changes and the IF-224 read; and the recipes' sweep step says an amendment row sharing a registry with a minted held act takes `needs` on that item at the landing, the instruction the retired hand step used to carry. The mint does not write that edge: the spec's table rules every other state writes nothing, and the sweep step already reads each minted row. The commit filing round 3 carries only the round files: its message also names these two text edits, whose script had stopped on its guard, and they land in the reconcile's commit instead."
+alternative = "Have the mint write the edge."
+reversal_cost = "Low: one sentence of procedure."
+why_not_escalated = "A MINOR whose remedy the reviewer offered, inside the row's text sites."
+review = ""
+
+[decision.D-007]
+decided = "Sitting 007 blessed six rows and returned LLR-153 for its non-TOML refusal, the actor who widens the act, and one routing statement of the carry. Terra amended the one cell. The disposition is answered in the lane, so its heading moved; the whole set re-sits in one combined sitting, one verdict for the act (wi-958 D-014). TC-147 joined LLR-364's and SR-178's citations before sitting 007, since it verifies LLR-364's carried-record sentence."
+alternative = "Re-sit LLR-153 alone."
+reversal_cost = "Low."
+why_not_escalated = "The recipes' re-sit rule."
+review = ""
+
+[decision.D-008]
+decided = "Convergence map for the gate, extending D-005. Round 3's rows text (LLR-153, TC-147, IF-091) -> sitting 008's whole-set blessing and the act turn; the sibling amendment row -> the corrected recipes bullet under landing's sweep; the Context's row list -> the corrected text in the claim copy. Sitting 007's return on LLR-153 -> sitting 008's blessing. The rebase onto ee2b19b9e replayed cleanly over docs-only commits the lane does not touch, so the gate reviews the tip that lands, and the RESYNC entry re-anchors there."
+alternative = "None: the gate cannot start unmapped."
+reversal_cost = "Low."
+why_not_escalated = "The cycle's own step."
+review = ""
+
+[decision.D-009]
+decided = "The gate: REVIEW-A approved; REVIEW-B holds one MAJOR and one MINOR. The MAJOR (the dispatcher's parked-lane resume relaunches a claimed row citing a pending item) is confirmed by reading the code and went to dispute sitting 012, which ruled it SUCCESSOR, so it is filed on trunk at the landing and stated in the Trust section, never the Done-when. The MINOR (LLR-153 labels the trigger (d), its module (f)) goes to status.md's follow-ups: fixing it would move a blessed cell after the gate (wi-935 D-005)."
+alternative = "Fix the resume in this lane."
+reversal_cost = "Low: the successor row carries the fix."
+why_not_escalated = "The sitting's ruling on a gate finding is final."
+review = ""

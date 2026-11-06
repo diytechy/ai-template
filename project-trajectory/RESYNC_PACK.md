@@ -10538,6 +10538,68 @@ changed too, only if you vendored them: `skills/coordinator-cycle/` and
 
 **Adopter-merged files:** none.
 
+### An owner-held step is an open item [since ee2b19b9e]
+
+*(Anchored at the preceding commit: the change lands in the commit after it.)*
+
+**What changed.** A claimed work item's `needs` now counts as a citer of a
+pending open item, beside a queued row's. An item only a claimed row cites
+is a card on `docs/open-items.html` beside the row it holds, it is on the
+status snapshot's open-items and Blocked lists, and `check_trajectory` no
+longer reports it as uncited. A draft, deferred or closed citer still does
+not count, and such an item stays the uncited-item error. The page, the
+snapshot, the error and the open-items template's header say "queued or
+claimed". The claim itself is unchanged: nothing reads an open item to keep,
+drop or release one.
+
+`process.md` §5, "Open items", now defines an open item as anything keeping a
+row from building forward, not only an owner decision, and every site that
+stated the narrower rule points there. A lane keeps its claim at a planned
+owner-held step, one its Done-when names, only while the item is filed and
+cited on trunk, so the partial close is no longer the only stop; the ban on
+parking a lane by renaming its ref stands. A held-rung approval is never such a
+step: the lane lands its text and the act is ruled on trunk. A routine push
+files no item, and an act's item closes by the owner's ruling or a delegated
+decision. The open-items template's header says that ruling a claimed citer
+ticks the Done-when item naming the step.
+
+The merge slot's intake mint now files that held act itself. An accepted
+verdict in the merged range whose latest amendment ruling on a row is MEANING,
+blessed or not, on a rung the approval dial holds, with the row differing from
+its approved-snapshot copy and still at the text the verdict bound, yields one
+queued owner row per registry and one pending open item naming the rows, their
+verdicts and the act's command, in the mint's one commit, and those rows leave
+the landing's amendment row. The item is the registry's because the act copies
+a whole registry: its option (a) says to name any other row of that registry
+still unanchored beside these. The command names no `--verdict`: the act is
+the owner's, and the ledger's verdict marks a session's own CLARITY act. A row
+edited after its sitting stays on the amendment row and is sat again. Every
+other state writes nothing. On a non-TOML open-items registry the mint refuses
+by name at a landing that owes an item and the merge stands: convert the registry with
+`migrate_carrier.py`, removing the old carrier in that commit, then run
+`intake.py sweep` over the range.
+
+**What to do (no forced migration).** Overwrite the kit-owned files below and
+regenerate `docs/open-items.html` and the status block. No setting, schema or
+registry row changes. Your own `docs/requirements/open-items.toml` header is
+yours: bring its placeholder, work-items-point and ruling paragraphs into
+step with the template's, and file a pending item for each owner-held step your
+rows hold today. A queued row you filed only to surface an item a claimed row also cites can now
+close, once its `needs` edge is on the claimed row.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`scripts/check_trajectory.py`, `scripts/gen_open_items.py`,
+`scripts/traj_status.py`, `scripts/bootstrap.py`, `scripts/intake.py`,
+`scripts/acceptance_record.py`, `scripts/agent_common.py`,
+`registries/open-items.template.toml`, `README.md`, `STATUS.template.md`,
+`work/WI-000.template.md`, `prompts/adjudicate-disposition.template.md`,
+`skills/spine-authoring/`. Three `scope: this-repo` skills changed too, only if
+you vendored them: `skills/coordinator-cycle/`, `skills/session-protocol/` and
+`skills/byte-budget-guard/SKILL.md`.
+
+**Regenerated files:** `docs/process.md`, `docs/process-options.md`,
+`prompts/CATALOG.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

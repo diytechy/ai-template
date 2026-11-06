@@ -23,7 +23,7 @@ is a refusal rather than a silently empty instruction.
 | `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:2c8703015364` | `{aftermath}`, `{baseline}`, `{hats}`, `{identity}`, `{questions}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-COMBINED` | [adjudicate-combined.template.md](adjudicate-combined.template.md) | `sha256:d16b4841c8b2` | `{kinds}`, `{sections}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONSOLIDATE` | [adjudicate-consolidate.template.md](adjudicate-consolidate.template.md) | `sha256:861339ff1d07` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{prior}`, `{spine}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:c336c79bbbee` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:3c639127d8b4` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPUTE` | [adjudicate-dispute.template.md](adjudicate-dispute.template.md) | `sha256:dd163810eb3a` | `{commits}`, `{findings}`, `{process_doc}`, `{range}`, `{request}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DONE-WHEN` | [adjudicate-done-when.template.md](adjudicate-done-when.template.md) | `sha256:2fd58110f42b` | `{anchor}`, `{changes}`, `{claimed}`, `{context}`, `{current}`, `{digest}`, `{subject}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-FIRST-APPROVAL` | [adjudicate-first-approval.template.md](adjudicate-first-approval.template.md) | `sha256:6c89249ffcea` | `{baseline}`, `{chain}`, `{hats}`, `{questions}`, `{verdict}`, `{wi}` |

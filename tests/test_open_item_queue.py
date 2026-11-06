@@ -3,9 +3,9 @@
 One queue projection, `kitlib.spine.open_item_queue`, feeds the owner
 surface's cards and counts, its integrity notice, the status snapshot's
 open-items and Blocked lists and the checker's uncited-pending error. A pending
-open item shows only when a queued work item cites it in `needs`, beside the
-rows it holds; a pending item no queued row cites is named in an integrity
-notice instead, and the page then never claims the queue is empty.
+open item shows only when a queued or claimed work item cites it in `needs`,
+beside the rows it holds; a pending item no such row cites is named in an
+integrity notice instead, and the page then never claims the queue is empty.
 
 Implements: TC-123
 """
@@ -54,6 +54,22 @@ def test_the_projection_surfaces_only_what_a_queued_row_cites():
     assert queue["held"] == {"WI-1": ["OI-5"], "WI-2": ["OI-5"]}
 
 
+def test_a_claimed_citer_counts_beside_a_queued_one():
+    """Implements: TC-314"""
+    # IF-073, LLR-299: `active` is a claimed row, and it holds its item as a
+    # queued row does. An item only the claimed row cites is no longer uncited.
+    queue = _queue(
+        [("WI-1", "queued", "OI-5"), ("WI-2", "active", "OI-5;OI-6")],
+        [("OI-5", "pending"), ("OI-6", "pending")],
+    )
+    assert [(row["OI-ID"], citers) for row, citers in queue["cards"]] == [
+        ("OI-5", ["WI-1", "WI-2"]),
+        ("OI-6", ["WI-2"]),
+    ]
+    assert queue["uncited"] == []
+    assert queue["held"] == {"WI-1": ["OI-5"], "WI-2": ["OI-5", "OI-6"]}
+
+
 def _spec(root, wid, needs=(), where="queued"):
     path = root / "docs/work" / where / "{}-row.md".format(wid)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -87,7 +103,7 @@ def test_a_cited_pending_item_is_a_card_beside_the_rows_it_holds(tmp_path):
     _spec(tmp_path, "WI-001", ["OI-5"])
     section = _section1(tmp_path)
     assert 'id="OI-5"' in section and "WI-001" in section
-    assert "Holds (queued work items citing it)" in section
+    assert "Holds (queued or claimed work items citing it)" in section
     assert 'role="alert"' not in section
     assert "1 pending decision(s)" in gen.render(tmp_path)
 
@@ -124,7 +140,7 @@ def test_the_status_snapshot_lists_the_same_projection(tmp_path):
     block = status.status_block(tmp_path)
     assert "  - **OI-5** — rule OI-5 _(holds WI-001)_" in block
     assert "**OI-6**" not in block and "OI-7" not in block
-    assert "no queued work item cites it" in block and "OI-6" in block
+    assert "no queued or claimed work item cites it" in block and "OI-6" in block
     blocked = block.split("- **Blocked**", 1)[1]
     assert "**WI-001**" in blocked and "[OI-5 — OI-5 title](open-items.html#OI-5)" in (
         blocked

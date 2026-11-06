@@ -927,11 +927,12 @@ commit of its own, move it to trunk's tip
   moved): check it against the lane's own act, as the sweep step says, and
   close it citing that act. Any other row it mints is real work and stays
   open:
-  an observation re-judge whose trigger fired, a goalposts row, or an
-  amendment whose registry still holds an owner-held act (a held-rung row
-  the sitting ruled MEANING); give that one `needs` on the act's pending
-  open item, filed with the owner row that carries the act
-  (coordinator-2026-10-26 D-002).
+  an observation re-judge whose trigger fired, or a goalposts row. A
+  held-rung row the sitting ruled MEANING arrives minted, as a queued
+  owner row citing the act's pending open item, and leaves the amendment
+  row; nothing is filed by hand. An amendment row the sweep mints for
+  another row of that registry waits on the same act, since the act copies
+  the whole registry: give it `needs` on that item at the landing.
 - **Review rollup:** restore `docs/reviews/rollup/` to its trunk version before
   committing the lane. `trunk_step.py --regen` writes it on trunk at landing,
   from the round files the lane brought in.
@@ -1519,8 +1520,8 @@ lane commit being replayed.
   neither drafts nor adopts is still refused at the close and at the
   landing's sweep (OI-73). Since WI-901 (2026-10-11) a close whose commit
   range is empty composes its disposition brief.
-- **Close a lane partial for an owner decision** (OI-70: never park it
-  claimed). Save any uncommitted build outside the repository and revert the
+- **Close a lane partial for an owner answer that re-scopes it** (OI-70: never
+  park it claimed, save a planned step under PROCESS.md §5, "Open items"). Save any uncommitted build outside the repository and revert the
   lane first: `handback.close_partial` commits residue as-is with the hook
   skipped. Call it as `handback.close_partial(Path(root).resolve(), branch,
   reason, fields)` (a `str` root raises), from the primary checkout; then

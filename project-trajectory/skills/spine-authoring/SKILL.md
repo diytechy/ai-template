@@ -108,7 +108,7 @@ Choose the mode before writing. The `human_approval_through` dial in
 |---|---|---|
 | **From the vision** | The first breakdown | Tier by tier: approve each tier before deriving the next (§1–§3) |
 | **In a lane, released rungs** | A defect or new scope whose changed rows are all on released rungs | One change set, authored whole and judged in one sitting |
-| **In a lane, a held rung** | The change touches a held rung | Split at the dial: held first drafts and MEANING changes wait for the owner; the sitting may re-attest only held amendments ruled CLARITY in its verdict |
+| **In a lane, a held rung** | The change touches a held rung | Split at the dial: the lane lands held first drafts and MEANING changes, and their act is ruled on trunk; the sitting may re-attest only held amendments ruled CLARITY in its verdict |
 
 **In every mode, a child is approved only after its parent.** An SR waits for
 every SN it cites, an LLR for every SR, and a TC for every SR and LLR it

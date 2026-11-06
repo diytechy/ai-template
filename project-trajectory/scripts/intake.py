@@ -12,7 +12,7 @@ deterministic — no model anywhere in the path; a detected event becomes a row
 with a **derived** description, so the work is forced into the registry with
 nobody watching.
 
-Four triggers, plus the drafts-not-mints arm:
+Five triggers, plus the drafts-not-mints arm:
 
   (a) **the approved-cell diff on the merged commit** — via
       `acceptance_record.staged_spine_amendments(root, before, after)` (the
@@ -62,6 +62,13 @@ Four triggers, plus the drafts-not-mints arm:
       has none, and none while that case's row is open. The decision is
       `rejudge.checkpoint_drafts`, which hashes files at the commit and runs
       no model.
+  (f) **a held row a sitting ruled MEANING** — an accepted verdict in the
+      merged range whose latest amendment ruling on a row is MEANING, on a
+      rung the dial holds, with the row differing from its snapshot copy
+      (`acceptance_record.unanchored_rows`) and still at the text the verdict
+      bound (`acceptance_record.text_as_bound`): the act cannot land from a
+      lane, so one queued owner row per registry citing one pending open
+      item, and those rows leave the amendment row.
 
 **Tier signals are measurable, never judged**: rows touched and a moved
 `docs/stage` (trigger a), the handback reason class (trigger b), and the census
@@ -85,8 +92,8 @@ declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-090: the trunk-side intake mint, by importer.
     `intake_after_merge(root, before, after, outcomes, branch, label="")` is integrate's
-    post-merge arm: it mints one landed merge's forced rows — the amendment
-    adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
+    post-merge arm: it mints one landed merge's forced rows — the owner rows
+    for held acts, the amendment adjudications, the FIRST-APPROVAL adjudications over the `Drafted` rows the
     lane handed over on rungs the dial releases (owner ruling 2026-09-01: a lane
     authors, an adjudicator approves), the close dispositions, the drafts a
     close names and one adjudication per row whose lane changed its own
@@ -413,8 +420,9 @@ def _mint_open_item(root, brief, *, date=None):
     bookkeeping commit (`trunk_step --regen` runs `gen_open_items`), so the
     surface and the registry land in the same commit. `(oi_id, None)` or
     `(None, refusal)` — refuses on a non-TOML carrier, since appending a table
-    is a TOML act; a downstream repo on a CSV open-items registry keeps its
-    hand-authored path rather than getting a malformed row.
+    is a TOML act; a downstream repo on a CSV open-items registry converts it
+    rather than getting a malformed row, and the replay's exact-title dedup
+    never matches a hand-filed row, so filing by hand clears nothing.
 
     `brief` is the draft's validated `[open_item]` table, and its cells are
     written VERBATIM, so a minted row has the shape of a hand-filed pending row
@@ -426,7 +434,8 @@ def _mint_open_item(root, brief, *, date=None):
     if live is None or live.suffix != ".toml":
         return None, (
             "the OI mint needs a TOML open-items registry at {} (found {}); "
-            "the human-owed answer must be recorded by hand".format(
+            "convert it with `migrate_carrier.py`, removing the old carrier in "
+            "that commit, then run `intake.py sweep` over the range".format(
                 OPEN_ITEMS_REL, live.name if live is not None else "none"
             )
         )
@@ -829,11 +838,13 @@ def _owning_srs(records):
     return sorted(srs)[:8]
 
 
-def _amendment_drafts(root, before, after, authoring_tags=()):
+def _amendment_drafts(root, before, after, authoring_tags=(), carried=()):
     """`(drafts, refusal)`: trigger (a)'s one adjudication row, or none, or
     `_routed_amendments`' refusal. `authoring_tags` is `_authoring_tags`'
-    answer, written on the row as the composer's tags."""
+    answer, written on the row as the composer's tags. `carried` is the ids
+    an owner row carries (`_held_act_drafts`), left out of the row."""
     records, refusal = _routed_amendments(root, before, after)
+    records = [rec for rec in records if rec["id"] not in carried]
     if not records:
         return [], refusal
     ids = sorted({rec["id"] for rec in records})
@@ -865,6 +876,94 @@ def _amendment_drafts(root, before, after, authoring_tags=()):
             "context": _amendment_context(records),
         }
     ], None
+
+
+# --- trigger (f): the held row a sitting ruled MEANING ------------------------
+
+
+def _latest_rulings(root, before, after):
+    """`{row id: (ruling, verdict path)}`: each row's last amendment ruling
+    among the verdicts `before..after` brought, read in `branch_verdicts`' path
+    order, which is sitting order within a lane. A verdict `accepted_at` does
+    not read as accepted at `after` rules nothing.
+
+    Implements: SR-174, LLR-153"""
+    latest = {}
+    for path in ksitting.branch_verdicts(root, before, after):
+        part = (ksitting.accepted_at(root, after, path) or {}).get("amendment")
+        if part:
+            latest.update({rid: (word, path) for rid, word in part[3].items()})
+    return latest
+
+
+def _held_act_draft(registry, rows):
+    """The owner row and item for `rows` (`{row id: verdict path}`), the rows of
+    one `registry` held for the owner's act. The command names no verdict: the
+    ledger's verdict marks a session's own CLARITY act, and this act is the
+    owner's. It copies the whole registry, so option (a) states what widens it.
+    The title is the event's identity, so a replay mints nothing.
+
+    Implements: SR-174, LLR-153"""
+    names, by = ", ".join(sorted(rows)), " and ".join(sorted(set(rows.values())))
+    command = 'intake.py snapshot --approves "{}" --reattests {}'.format(
+        baseline_snapshot.format_approves({registry: "<record>"}),
+        ",".join(sorted(rows)),
+    )
+    return {
+        "title": "owner act: {} ruled MEANING on a held rung by {}".format(names, by),
+        "kind": "ordinary",
+        "workstream": "process",
+        "context": "The sitting {} ruled these rows MEANING on a held rung, so the "
+        "act is the owner's, on trunk. The open item this row cites names the "
+        "command.".format(by),
+        "open_item": {
+            "one_line": "Take the act on {} or return the text: {} ruled MEANING on "
+            "a held rung.".format(names, by),
+            "blast_radius": "The owner row only, held by its needs edge. Until "
+            "the act, the snapshot records the older text and the approval brief "
+            "lists the rows as drifted.",
+            "options": "- (a) TAKE THE ACT: on trunk, in its own commit after the "
+            "text, run `{}`, with <record> naming your record of the act. The act "
+            "copies the whole registry: name beside these rows any other row of it "
+            "unanchored by then, another landing's waiting item included. The ruling "
+            "commit writes the owner row's Done-when or closes it.\n- (b) RETURN THE "
+            "TEXT: name what is wrong; the rows are reworked and sat again, and the "
+            "ruling commit does the same.".format(command),
+            "recommendation": "Read the verdict and the live rows: the sitting's own "
+            "recommendation is in the verdict, and this mint adds none.",
+        },
+    }
+
+
+def _held_act_drafts(root, before, after):
+    """`(drafts, row ids, refusal)`: one owner row per registry over the rows the
+    range's latest accepted rulings hold for the owner's act (MEANING, blessed
+    or not, unanchored at `after`, on a rung the dial holds, at the text the
+    verdict bound). A snapshot act copies a whole registry, so its item is the
+    registry's, not a verdict's. A copy that cannot be read refuses the mint.
+
+    Implements: SR-174, LLR-153"""
+    ruled = _latest_rulings(root, before, after)
+    meaning = {rid: path for rid, (word, path) in ruled.items() if word == "MEANING"}
+    unanchored, refusal = acceptance_record.unanchored_rows(
+        root, after, meaning, ROUTED_TRACED_CELLS
+    )
+    if refusal:
+        refusal = (
+            "the held-act mint was refused: {} (the merge stands); once fetched, "
+            "run `intake.py sweep --before {} --after {}`; once fixed in a reviewed "
+            "commit, with `--after` at the fixing commit".format(refusal, before, after)
+        )
+        return [], (), refusal
+    docs = Path(root) / "docs"
+    by_registry = {}
+    for rid in acceptance_record.text_as_bound(
+        root, after, {rid: meaning[rid] for rid in unanchored}
+    ):
+        if ac.human_approves_spine(docs, unanchored[rid]):
+            by_registry.setdefault(unanchored[rid], {})[rid] = meaning[rid]
+    drafts = [_held_act_draft(reg, rows) for reg, rows in sorted(by_registry.items())]
+    return drafts, {rid for rows in by_registry.values() for rid in rows}, None
 
 
 # --- trigger (a2): the Drafted rows a lane hands over -------------------------
@@ -2796,7 +2895,7 @@ def _mint_message(minted, subject_verb, adopted=()):
 
 
 def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
-    """THE MERGE-SLOT ARM: triggers (a), (a2), (b), (d) and (e) for one landed
+    """THE MERGE-SLOT ARM: triggers (a), (a2), (b), (d), (e) and (f) for one landed
     merge. `([(wi_id, relpath)], refusal)`. Serial by construction — the caller
     is `integrate.integrate_one`, inside the held slot, so SR-215's merge
     checkpoint runs exactly once per merged work item, judged at `after`.
@@ -2807,10 +2906,14 @@ def intake_after_merge(root, before, after, outcomes=None, branch="", label=""):
 
     Implements: SR-215, LLR-255
     """
-    authoring_tags = _authoring_tags(root, outcomes, branch)
-    drafts, refusal = _amendment_drafts(root, before, after, authoring_tags)
+    held_acts, carried, refusal = _held_act_drafts(root, before, after)
     if refusal:
         return [], refusal
+    authoring_tags = _authoring_tags(root, outcomes, branch)
+    drafts, refusal = _amendment_drafts(root, before, after, authoring_tags, carried)
+    if refusal:
+        return [], refusal
+    drafts += held_acts
     drafts += _first_approval_drafts(root, before, after, authoring_tags)
     drafts += _close_drafts(root, outcomes)
     goalposts, refusal = _done_when_drafts(root, before, after, outcomes, branch)

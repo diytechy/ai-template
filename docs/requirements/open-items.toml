@@ -9,14 +9,17 @@
 # Contract IF-073: one `[open_item.OI-###]` table per owner decision, carrying
 #     `title`, `status`, `raised`, `one_line`, `decision`, `blast_radius`,
 #     `options` and `recommendation`. `status` is `pending` or `ruled`. WORK
-#     ITEMS POINT TO OPEN ITEMS (WI-790): a work item that waits on a ruling
+#     ITEMS POINT TO OPEN ITEMS (WI-790): what an item is, and when one is
+#     filed, is process.md §5, "Open items". The held work item
 #     cites the item in its own `needs` and reads `blocked` until the item
 #     leaves `pending`; an open item carries no work-item pointer. Rows filed
 #     before WI-790 may carry `wi_refs`: it is history, preserved as written,
 #     and no reader derives a relationship from it; new rows carry none.
-#     Every pending row is filed together with a queued work item citing it —
-#     only a pending row a queued work item cites renders as a brief card, and
-#     a pending row no queued work item cites is an error. RULING an item
+#     Every pending row is filed together with a queued or claimed work item
+#     citing it: a queued citer is the item's placeholder, and a claimed citer
+#     holds a step its Done-when names. Only a pending row such a work item
+#     cites renders as a brief card, and a pending row no queued or claimed
+#     work item cites is an error. RULING an item
 #     updates the rows that cite it IN THE SAME COMMIT: each citing row's
 #     Done-when gains the decided criteria citing the item (a gate on a
 #     person's act gets a confirmation criterion, e.g. "OI-98 ruled
@@ -24,7 +27,9 @@
 #     registry for a real spec, and its `title`, `buildtier`, `sr_refs` and
 #     `safety_class` move where the ruling changes them — or the row closes.
 #     A commit that rules an item and leaves a citing row's Done-when
-#     untouched is refused. A ruled row is history, and the Decisions log is
+#     untouched is refused. A claimed citer's Done-when already names the
+#     step: the ruling commit ticks that item and adds no evidence there.
+#     A ruled row is history, and the Decisions log is
 #     its record. `-000` example rows are dropped, and an absent registry
 #     renders an empty queue rather than failing, so a repo carrying no
 #     decisions still has the surface.

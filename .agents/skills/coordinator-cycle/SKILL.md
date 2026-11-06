@@ -425,11 +425,12 @@ Two landing rules for the machinery itself (owner, 2026-10-14; revision 37):
 Record calls not already settled by the spec or a ruled item in
 `docs/decisions/<branch>.toml` (`coordinator-<date>.toml` for calls on trunk),
 with the riskiest in `high_risk`. Ask the owner to **confirm or overrule**,
-never to approve. A decision only the owner can make, and that blocks a row,
-becomes a pending open item cited by the row's `needs` in the same commit; then
-move to the next row. Stop that row for an owner signature on a new need, a
-frame external crossing or an explicit owner checkpoint. A high-risk finding
-goes to the owner. Leave held signatures and open-item rulings to the owner,
+never to approve. Anything keeping a row from building forward is filed as
+`project-trajectory/PROCESS.md` §5, "Open items", states; then move to the next
+row. A held-rung approval stops no lane, a new need's or a frame external
+crossing's included: the lane lands its text, and §5 says what stays in the
+lane. An explicit owner checkpoint is a planned step, held as §5 states. A
+high-risk finding goes to the owner. Leave held signatures and open-item rulings to the owner,
 along with push and merge to main.
 
 ## 6. Close-out
@@ -500,11 +501,12 @@ a leg's work stays in lane worktrees.
 
 **Owner-held steps.** A leg never takes a step only the owner can take:
 
-- an act the marker refuses (a status move on a held rung);
+- an act the marker refuses (a status move on a held rung): the lane lands its
+  text, and the act is ruled on trunk;
 - an ESCALATE ruling;
 - an open item's ruling;
 - a Done-when item that needs an owner act or credential;
-- a push or a merge to main.
+- a push or a merge to main (a routine push files no item).
 
 Any other step the session prompt's Never list or §5 reserves to the owner is
 treated the same way. For each such step, the leg:
@@ -512,8 +514,8 @@ treated the same way. For each such step, the leg:
 1. brings the lane to a safe committed point;
 2. records the step and its evidence (the verdict, the rows, the command) in
    the lane's decisions record and under the new handoff's "For the owner";
-3. turns a decision only the owner can make into a pending open item that the
-   row's `needs` cites (§5, unchanged);
+3. files the step as an open item where none holds it
+   (`project-trajectory/PROCESS.md` §5, "Open items");
 4. moves to the next row.
 
 When no row can move without the owner, the leg closes out with the

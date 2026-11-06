@@ -72,7 +72,8 @@ always true.
 - **The coordinator's procedure has one home, the `coordinator-cycle` skill**
   (adjudication, rendered review briefs, the rework coverage gate, disputes).
 - **A stopped lane CLOSES; it is never held by renaming its ref (OI-70).** The
-  only sanctioned stop is the partial close (§4): the spec moves to the terminal
+  only sanctioned stop, save a planned owner-held step (process.md §5, "Open items"), is
+  the partial close (§4): the spec moves to the terminal
   `docs/archive/work/partial/` with a handback report an adjudicator then judges
   (queue a successor, or mint an open item). Parking a lane by renaming its
   branch ref away from its `docs/work/active/<branch>/` claim is BANNED — a lane
@@ -207,7 +208,8 @@ session's results are recorded.
   pause point, the last finished step whose evidence is committed; a lane
   whose next step is a review, rework or any launch the window refuses stops
   there, and the review cycle is not completed to reach a pause; a lane stays
-  `active`, and only a stop the owner must act on closes partial. (2) Write the
+  `active`, and a stop the owner must act on follows process.md §5, "Open items".
+  (2) Write the
   handoff naming each lane and its next obligation. (3) End the session: no
   relaunch is requested inside the window (a pending one is cancelled at the
   exit), and the lease is kept, not handed back. To resume after the window,

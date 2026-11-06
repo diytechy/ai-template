@@ -1795,8 +1795,8 @@ STACK_OI3_ROW = (
 
 
 # OI-3's PLACEHOLDER ROW (WI-790, A5): every pending open item is filed with a
-# queued work item whose `needs` cites it, or the queue cannot surface the
-# decision and the scaffold's first check reports it uncited. A fresh scaffold
+# queued or claimed work item whose `needs` cites it, or the queue cannot surface
+# the decision and the scaffold's first check reports it uncited. A fresh scaffold
 # holds only the inert WI-000 exemplar, so the placeholder is WI-001: a title,
 # a safety class, the `OI-3` edge and the item's own registry record as its
 # spec of record until the ruling, which writes its criteria.

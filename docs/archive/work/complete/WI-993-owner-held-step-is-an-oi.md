@@ -3,13 +3,26 @@ id = "WI-993"
 title = "An owner-held step is an open item: any step only the owner can take is filed as a pending item the row's needs cites, never only as handoff prose"
 workstream = "process"
 sr_refs = ["SR-049"]
-specref = "docs/specs/WI-993.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 planmode = "single"
 needs = ["OI-126"]
 +++
+
+## Deliverable
+
+PROCESS.md section 5 states the ruling once: an open item is anything keeping a
+row from building forward, filed as a pending row the held row's `needs` cites.
+The queue, the owner page and the Blocked list count claimed citers; a lane keeps
+its claim at a planned owner-held step while the item is filed on trunk; a
+held-rung approval never stops a lane. The merge slot's intake mint writes one
+queued owner row and one pending item per landing per registry for held MEANING
+rows at the text their verdict bound, its published command carrying no verdict
+flag, and those rows leave the amendment row. LLR-118, LLR-153, LLR-299, LLR-364,
+TC-123, TC-147 and TC-314 are re-attested at the lane's act under sitting 008.
+The dispatcher's parked-lane resume is the gate's successor row (sitting 012).
 
 ## Context
 
@@ -29,8 +42,8 @@ or closed row still does not count. Two outputs gain an input: the queue
 projection (`kitlib/spine.py`, feeding the owner page, the status snapshot's
 Blocked list and the uncited-item error) now reads claimed rows, and the
 merge slot's intake mint (CMP-008, the writer's owner) now reads the accepted
-verdicts of the merged range and the held dial, both across seams it already
-holds (IF-287, `intake.adjudication_action`). Flow 6 stays as it is: the
+verdicts of the merged range, across IF-287, which it already holds, and the
+held dial, across IF-224, which gains it as a requestor. Flow 6 stays as it is: the
 judging turn stops at its verdict, and a sitting writes nothing to trunk. The
 writer is a new arm of Flow 4's post-merge step, so its citer is a queued
 row and a claim copy is never touched. The two citers do not overlap: a
@@ -39,7 +52,8 @@ MEANING act, which can never land from a lane (`held_status`, wi-976 D-023),
 is carried by the minted queued row. The lane updates IF-073 (`data`, `notes`
 and its version), IF-074's `data`, LLR-299 (it says "a citer that is not
 queued does not count"), LLR-118 (the owner page's pending items and its
-uncited notice, both worded for queued citers), LLR-153, TC-314 and Flow 4.
+uncited notice, both worded for queued citers), LLR-153, LLR-364, TC-123,
+TC-147, TC-314, IF-091, IF-224 and Flow 4.
 No refactor row is owed.
 
 ## Landing order
@@ -120,8 +134,8 @@ The guard follows `project-trajectory/PROCESS.md` §3, "When a guard is owed".
   (`_inject_open_item`), so item, row and watermark are one bookkeeping
   commit. A failed write mints nothing, the merge stands, the refusal is
   named (a non-TOML registry included) and `intake.py sweep` replays it. The
-  draft's title is built from the verdict and its rows, so the mint's
-  exact-title dedup makes a replay safe. An item without its citation is not
+  draft's title is built from its rows and verdicts, so the mint's
+  exact-title dedup makes a replay of the same range safe. An item without its citation is not
   a state this route produces.
 - *A hand-filed item and edge on a claimed row.* A person or the coordinator,
   in one trunk commit, on the claim copy. It is filed when the lane reaches
@@ -134,7 +148,8 @@ The guard follows `project-trajectory/PROCESS.md` §3, "When a guard is owed".
   it `pending.py`, `gen_open_items.py`, `traj_status.py` and
   `check_trajectory.py` (`uncited_open_item_findings`).
 - New reader: `intake.py`, reading verdicts through `kitlib/sitting.py`
-  (`branch_verdicts`, `accepted_at`).
+  (`branch_verdicts`, `accepted_at`, and `accepted_identities` through
+  `acceptance_record.text_as_bound`).
 - Unchanged: `schedule.py`, and through it `integrate.py` (the claim),
   `dispatch.py`, `agent_brief.py` and `traj_status.py`; and
   `acceptance_record.py` (`ruling_sync_lines`).
@@ -145,7 +160,8 @@ its latest accepted verdict in the range.
 
 | Verdict in the merged range | Row at the landing | Result |
 | --- | --- | --- |
-| Accepted, the row ruled MEANING, blessed or not, on a held rung | differs from its anchored copy | one owner row and one pending item |
+| Accepted, the row ruled MEANING, blessed or not, on a held rung | differs from its anchored copy and equals the text the verdict bound, or is gone from its registry | one owner row and one pending item per landing per registry, naming every such row of that registry |
+| Accepted, the same ruling, on a held rung | differs from the text the verdict bound, or the verdict bound none | nothing; the row stays on the amendment row, as an unsettled row does, and is sat again |
 | Accepted, the same ruling | equals its copy | nothing |
 | Accepted, any other ruling, or a released rung | any | nothing; the act route is unchanged |
 | No binding, or pending, failed or invalid | any | nothing; an unsettled row stays on the amendment row, as today, and is sat again |
@@ -167,6 +183,12 @@ decision lives in the item. An item on a claimed row whose Done-when names no
 such step keeps today's route, OI-119's: the sync demands a Done-when edit, a
 `single` row's pass record then unbinds, and that goes to the owner. This row
 changes neither rule.
+
+**Successor.** The dispatcher's parked-lane resume reads no schedule, so on the
+unattended route a claimed row citing a pending item is still relaunched, against
+"a claimed one draws no worker assignment" above. The gate's dispute sitting
+(`docs/reviews/wi-993/012-ADJUDICATE-26b4d09.md`) ruled it a successor, filed on
+trunk at this row's landing.
 
 **The bound** (PROCESS.md §6, "Review threat model"). The promise reaches what
 supported workflows and the kit's own routes produce. A hand edit of a

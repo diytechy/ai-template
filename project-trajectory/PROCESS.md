@@ -679,7 +679,7 @@ CLARITY — that approves no new text, it records that the owner's signature
 still describes the row — bound to the text it judged: the verdict's binding
 records it, and an edit after the verdict refuses the act. The act names its
 verdict (`--verdict`) for audit. A MEANING row and a first draft stay the
-owner's. MECHANICAL: the merge slot judges every lane commit against trunk's
+owner's, and neither holds a lane (§5, "Open items"). MECHANICAL: the merge slot judges every lane commit against trunk's
 dial, so a held row's approval lands from a lane only as such a bound
 re-attestation (`scripts/held_status.py`), and `check.py`'s `held-status` step
 judges a squash landing by its lane commits. A loop-started commit must carry
@@ -924,13 +924,27 @@ A retired spine row is deleted and leaves one record, `docs/log.d/retired/<ID>.m
 are for **lookup, not browsing**: read the record of a spent id you meet; never
 survey the set.
 
-**Open items — the owner decision surface, always shipped.** A decision deferred
-to the owner is a **row** in `docs/requirements/open-items.toml`, rendered by
+**Open items — the owner decision surface, always shipped.** An open item is
+anything keeping a row from building forward: an owner decision, an owner act,
+an approval or signature, a credential, the owner's presence. It is a **row** in
+`docs/requirements/open-items.toml`, rendered by
 `gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <human>`
-bullets stay one-liners pointing at it. A work item that waits on a decision
-cites it in its `needs` and reads `blocked`; every pending item is filed with
-the queued row citing it, and ruling it updates that row in the same commit
-(IF-073 in the registry's header, IF-054 in `docs/work/README.md`). Every
+bullets stay one-liners pointing at it. It is filed as a pending row the held
+work item's `needs` cites in the same commit, and that work item reads
+`blocked`; every pending item is filed with the queued or claimed row citing
+it, and ruling it updates that row in the same commit
+(IF-073 in the registry's header, IF-054 in `docs/work/README.md`). A routine
+push files no item, and an act's item closes by the owner's ruling or a
+delegated decision. A lane keeps its claim at a planned owner-held step, one its
+claim copy's Done-when names, only while the item is filed and cited on trunk;
+the item goes on the claim copy when the lane reaches the step, since a row
+citing a pending item cannot be claimed. Otherwise, or on an owner answer that
+re-scopes the row, the lane closes partial. A held-rung approval is never such
+a step: the lane lands its text and the act is ruled on trunk, on
+`open-items.html`, and the merge slot's mint files that item for a row a sitting
+ruled MEANING. An approval on a released rung, or one delegated to the
+adjudicator, stays in the lane. Nothing reads an item to keep, drop or release a
+claim: that is the coordinator's rule, and review holds it. Every
 scaffold gets both whatever its
 profile — *you deferred and no `OI` row resolves it* is a finding only a repo
 that HAS the registry can act on. Three mechanisms keep the announcement and the

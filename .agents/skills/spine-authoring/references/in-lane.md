@@ -69,7 +69,9 @@ Use the same authoring and closure checks, then split approval authority:
   may re-attest it, and that verdict, bound to the text it was shown, is what
   permits the act: edit the row after the sitting and the act is refused, so
   re-sit it. Naming the verdict in the act's `--verdict` is for audit.
-  A MEANING change awaits the owner. Leave existing statuses unchanged.
+  A MEANING change is the owner's: the lane lands its text, and the act is
+  ruled on trunk (`docs/process.md` §5, "Open items"). Leave existing statuses
+  unchanged.
 - **Released children wait for their held parent.** They may be judged in the
   same sitting, but approved only after the parent is approved for its current
   text. The status half is checked at the commit (the `parent-first` step and

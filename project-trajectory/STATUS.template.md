@@ -8,7 +8,7 @@ decisions, session notes — appends to the log this header points at, never her
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
 - **Owner decision surface:** [requirements/open-items.toml](requirements/open-items.toml)
   _(rendered to `docs/open-items.html` by `scripts/gen_open_items.py` — one row per
-  pending Needs-\<human> decision, with blast radius, options and recommendation,
+  pending Needs-\<human> item, with blast radius, options and recommendation,
   plus the before/after of every spine row owing an approval or re-attest. The
   bullet here stays a one-liner. A ruling appends to the log's Decisions and the
   row's `Status` leaves `pending`.)_

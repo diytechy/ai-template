@@ -55,7 +55,8 @@ Contract IF-224: `human_approves_spine(docs, registry)`, read by the owner's
     releases to an adjudicator: True (held) for a spine registry whose rung the
     dial holds and for one no rung map names, False for a released one. The
     brief asks it once per spine tier per rendering and keeps no rung table of
-    its own.
+    its own. The intake mint asks it once per row a sitting ruled MEANING, so
+    each row is read at its own rung.
 """
 
 import hashlib
