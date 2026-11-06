@@ -1,7 +1,8 @@
 # The LLM re-sync pack (bringing an adopted repo forward to a newer kit)
 
 **Who reads this:** an LLM agent (or a human) carrying a repo that adopted this
-kit at some earlier commit forward to a newer one. It is the single home for the
+kit at some earlier commit forward to a newer one, or rebuilding its stale
+requirements spine with selected current tooling. It is the single home for the
 re-sync *rules* — the file classes, the per-change migration entries, the
 concept renames. `ADOPTING.md` §6 frames the job and points here; the
 `downstream-resync` skill sequences it and points here. **If a rule is wrong,
@@ -32,10 +33,91 @@ that range. See §5 for what happens when the entries stop being prose.
 
 ---
 
+## 0. Choose the scope
+
+A **kit upgrade** changes the process/tooling version; a **spine rebuild**
+rechecks what the product owes its users. Choose from the user's request:
+
+| Request | Route |
+| --- | --- |
+| Update the adopted kit, preserving sound project requirements | Full upgrade: §1–§4, selecting migrations by commit range. |
+| Reassess stale requirements and reconnect them to an existing or replacement implementation | Spine rebuild: §0.1. Take only the supporting kit changes it needs. |
+| Do both | Track the two outcomes separately; use §1 for the full upgrade and §0.1 for the semantic work. |
+
+Routine tooling updates do not require whole-spine rederivation. A spine rebuild
+need not adopt the coordinator, work-item lanes, dashboard or every optional
+check. Existing project obligations and approval authority still apply.
+
+### 0.1 Spine rebuild: the short route
+
+Keep one scoped rebuild record with the selected kit commit, current step,
+owner decisions, remaining gaps and next action. Link the live registries and
+review evidence; avoid copying their prose into parallel summaries. Use the
+[spine-authoring skill](skills/spine-authoring/SKILL.md) for tier questions and
+approval rules rather than inventing another method.
+
+1. **Establish the baseline.** Work on an isolated branch/worktree when the
+   existing checkout is active. Read the product vision, user workflows, existing
+   requirements and a bounded sample of implementation/tests. Record what is
+   implemented, intended, obsolete or unknown; current behavior is evidence, not
+   automatically a requirement. Keep the previous definitions recoverable in git
+   or an archive. If an independent fresh derivation is useful, give that reviewer
+   the agreed inputs without legacy requirements/code; call other reviews informed
+   reviews, not blind derivations.
+2. **Refresh the minimum coherent tooling.** Select a committed kit revision and
+   compare its spine templates and checkers with the adopter's. Preserve filled
+   registries, project policies and stack-specific harnesses. Follow §2's ownership
+   and set-together rules and only the §3 migrations needed by the selected files.
+   An isolated vendored checker copy must include its imports/resources, provenance
+   and license; exercise it against this project's carriers before switching over.
+   Record the selected files, revision and deferred integration in the rebuild
+   record. **Do not advance the whole-kit stamp for this partial resync**, and do
+   not run whole-repo bootstrap merely to copy spine tools: it can re-stamp the
+   repo. With owner authorization, new optional hooks may stay disabled while
+   relevant spine checks run manually and are enabled as integration becomes ready.
+   Preserve existing enforced checks unless the owner explicitly changes them.
+3. **Review stakeholder needs, then the frame and assumptions.** Recheck users,
+   outcomes and applicable review perspectives against the product's purpose.
+   Draft needs in user terms, including realistic limits on guarantees. Review
+   system boundaries, external actors and assumptions before deriving SRs. An
+   assumption that needs detection or a response must have an explicit requirement
+   disposition. Present each affected approval scope when ready; obtain its required
+   acceptance before treating it as the baseline for the next tier. Do not reopen
+   accepted material merely because another review round starts.
+4. **Derive and reconcile SRs.** Derive measurable system obligations from those
+   accepted inputs, then compare with legacy requirements and their rationales.
+   Keep IDs when meaning survives; record splits, replacements and retirements.
+   Distinguish a missing requirement from an unmet requirement that needs code.
+   Seek cross-review where useful and available: prioritize material omissions,
+   contradictions, unsafe promises and infeasible budgets. Disposition suggestions
+   against actual users and failure impact; a hypothetical edge case alone does
+   not justify another mechanism. Reviews advise; the declared authority accepts.
+5. **Break down the accepted SRs into a buildable design.** Allocate modules,
+   interfaces, LLRs and verification cases with trace links. Document contracts at
+   real seams and reuse common behavior. Reconcile existing code and tests against
+   this design: retain, adapt, replace or remove. With authorized cleanup, remove
+   obsolete live definitions and stale links; git/archive preserves their history.
+   Planned tests and passing legacy tests do not establish verification of a newly
+   changed obligation. Record actual evidence only when it exists.
+6. **Validate and hand off to implementation.** Run the selected target-version
+   integrity/schema/trace and documentation checks against the adopter, plus its
+   applicable product checks. Resolve affected broken links and contradictions;
+   list remaining findings and their effect on readiness without suppressing them
+   to obtain a green result. Hand off the accepted inputs, reviewed design and
+   interfaces, implementation/test bindings, and a short ordered work plan. State
+   which approvals or evidence remain outstanding. Implementation readiness is
+   not full verification, release qualification or a completed whole-kit upgrade.
+
+Resume from the recorded step and accepted decisions. Expand into the detailed
+migration entries only when the selected tooling actually needs them.
+
+---
+
 ## 1. The procedure
 
-Bounded on purpose: this is what to read, in what order, and where the judgement
-sits. Do not improvise a wider sweep — the deviation review in §2 is the sweep.
+For a full kit upgrade, this is what to read, in what order, and where the
+judgement sits. Do not improvise a wider sweep — the deviation review in §2 is
+the sweep.
 
 ### 1.1 Establish the range
 
@@ -2632,6 +2714,22 @@ The meta-repo's `scripts/check_changed.py` is local test-selection assistance,
 not shipped kit machinery. It keeps CI and phase-close Full unchanged, and
 never labels a selected run as Full. No Worktrunk dependency or replacement
 runner is introduced by this slice.
+
+### Spine rebuilds have a scoped route alongside full kit upgrades [since ee2b19b9e]
+
+*(Anchored at the preceding commit: the change lands after it.)*
+
+**What changed.** §0 separates full-kit migration from reassessing a project's
+needs and rebuilding its traced design. §0.1 provides the short route, including
+partial-tooling provenance, staged check integration under owner authority,
+parent-first acceptance, reconciliation and an implementation handoff. It does
+not change approval policy, checker behavior or the full-upgrade procedure.
+
+**What to do.** Refresh the `downstream-resync` skill and generated skill index;
+read §0 from the target kit when choosing scope. No registry conversion is
+required by this documentation change. A partial spine resync keeps the previous
+whole-kit stamp and records its selected tooling separately.
+
 
 ## 4. Translation helper — concept renames
 
